@@ -301,6 +301,21 @@ namespace TestRunner
                 Console.WriteLine("Process: {0}\n", Process.GetCurrentProcess().Id);
             }
 
+            // DIAGNOSTIC (GC-leak UIA exploration): confirm whether the legacy-accessibility
+            // AppContext switches are actually live in this process (config-applied vs silently
+            // dropped). Lets us trust/discard the UseLegacyAccessibilityFeatures experiment.
+            foreach (var accessibilitySwitch in new[]
+            {
+                "Switch.UseLegacyAccessibilityFeatures",
+                "Switch.UseLegacyAccessibilityFeatures.2",
+                "Switch.UseLegacyAccessibilityFeatures.3",
+                "Switch.UseLegacyAccessibilityFeatures.4"
+            })
+            {
+                AppContext.TryGetSwitch(accessibilitySwitch, out var isOn);
+                Console.WriteLine("AppContext {0} = {1}", accessibilitySwitch, isOn);
+            }
+
             if (commandLineArgs.HasArg("debug"))
             {
                 Console.WriteLine("*** Launching debugger ***\n\n");
