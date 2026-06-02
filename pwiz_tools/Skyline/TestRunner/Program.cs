@@ -272,6 +272,22 @@ namespace TestRunner
         static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+
+            // EXPERIMENT: force a deterministic WinForms accessibility level before any control is
+            // created, overriding config/framework-quirk defaults, so the UseLegacyAccessibilityFeatures
+            // (#2) test isn't confounded by an unknown switch state. SetSwitch wins over config when it
+            // runs before the level is first read. Flag A below logs the resulting state.
+            //   SKYLINE_LEGACY_ACCESSIBILITY=1 -> full legacy (Level0); =0 -> latest (Level4); unset -> defaults.
+            var legacyAccessibility = Environment.GetEnvironmentVariable("SKYLINE_LEGACY_ACCESSIBILITY");
+            if (legacyAccessibility == "1" || legacyAccessibility == "0")
+            {
+                var useLegacy = legacyAccessibility == "1";
+                AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures", useLegacy);
+                AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.2", useLegacy);
+                AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.3", useLegacy);
+                AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.4", useLegacy);
+            }
+
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 
