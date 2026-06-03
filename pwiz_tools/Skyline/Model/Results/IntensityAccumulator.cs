@@ -19,13 +19,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
     public class IntensityAccumulator
     {
-        // Idotp threshold for keeping an IM bin in the cross-isotope COG reduction.
+        // Idotp threshold for keeping an IM bin in the cross-isotope reduction.
         // Below this, the bin is treated as interferent-dominated and discarded.
         // Mirrors the 0.7 cutoff that's commonly accepted as "good fit" in Skyline UI.
         public const double IDOTP_THRESHOLD_FOR_ION_MOBILITY_GUARD = 0.7;
@@ -168,23 +171,118 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Cross-isotope idotp guard for the observed-IM reduction. Combines the
-        /// per-channel (IM -> summed intensity) histograms of an MS1 isotope group
-        /// into a single Dict[IM, double[channels]] (taking the union of IM keys,
-        /// zero-filling channels that didn't observe a triplet at a given IM),
-        /// then drops IM bins whose isotope intensity vector doesn't match the
-        /// expected envelope (low idotp, or missing signal where >=10% expected).
-        /// The surviving bins are reduced via COG-bin-index, weighted by total
-        /// intensity across isotopes at each bin.
-        ///
-        /// Returns null when no bin survives the guard (e.g., all bins are
-        /// interferent-dominated, or input is empty); the caller may fall back to
-        /// per-channel COG in that case.
+        /// Cross-isotope idotp guard for the observed-IM reduction. See the tiered
+        /// overload below for the algorithm; this entry point omits the diagnostic
+        /// context. Returns null when no bin survives either tier; the caller may
+        /// fall back to per-channel COG in that case.
         /// </summary>
         public static double? ResolveObservedIonMobilityWithIdotpGuard(
             Dictionary<double, double>[] perChannelBins,
             IList<float> expectedProportions)
         {
+            return ResolveObservedIonMobilityWithIdotpGuard(perChannelBins, expectedProportions, null);
+        }
+
+        // Tiered idotp guard with optional diagnostic emission.
+        //
+        // Tier 1 - exact-bin guard: each candidate IM reads each channel's exact
+        // bin. Precise on precursors with clean, well-sampled isotope envelopes.
+        //
+        // Tier 2 - windowed-guard fallback: when the exact-bin guard rejects every
+        // bin, retry with each channel summed over the monoisotope channel's own
+        // IM peak width (see DeriveHalfWindow). That bridges the detection-limit
+        // gap - the strong M0 channel spans many IM bins while weak M+1/M+2 only
+        // clear detection near the apex, so on the exact-bin path the shoulder
+        // bins zero-fill and get wrongly dropped by missing-where-expected.
+        //
+        // Both tiers reduce via CogOverSurvivors. When neither tier produces a
+        // survivor the result is null and the caller falls back to per-channel COG.
+        //
+        // When <paramref name="diagContext"/> is non-null and the
+        // IdotpStrategyDumpWriter is enabled (via SKYLINE_IM_STRATEGY_DUMP), the
+        // dump additionally records the no-guard baseline (monoisotope per-channel
+        // COG) and the rejection-reason split for both tiers.
+        public static double? ResolveObservedIonMobilityWithIdotpGuard(
+            Dictionary<double, double>[] perChannelBins,
+            IList<float> expectedProportions,
+            IdotpGuardDiagnosticContext diagContext)
+        {
+            // Tier 1: exact-bin guard.
+            var exactSurvivors = CollectSurvivingBins(perChannelBins, expectedProportions, 0,
+                out int rejectedByIdotp, out int rejectedByMissing);
+            int numExact = exactSurvivors?.Count ?? 0;
+            double? exactCog = numExact > 0 ? CogOverSurvivors(exactSurvivors) : null;
+
+            // Tier 2: windowed-guard fallback. Computed when the exact-bin guard
+            // found nothing, or unconditionally when emitting the diagnostic dump.
+            bool dumping = diagContext != null && IdotpStrategyDumpWriter.Enabled;
+            double halfWindow = (numExact == 0 || dumping) ? DeriveHalfWindow(perChannelBins) : 0;
+            List<SurvivingBin> windowedSurvivors = null;
+            int windowedRejByIdotp = 0, windowedRejByMissing = 0;
+            if (halfWindow > 0)
+            {
+                windowedSurvivors = CollectSurvivingBins(perChannelBins, expectedProportions, halfWindow,
+                    out windowedRejByIdotp, out windowedRejByMissing);
+            }
+            int numWindowed = windowedSurvivors?.Count ?? 0;
+            double? windowedCog = numWindowed > 0 ? CogOverSurvivors(windowedSurvivors) : null;
+
+            if (dumping)
+            {
+                // No-guard baseline: COG of the monoisotope channel's histogram alone.
+                double? perChannelCogM0 = null;
+                if (perChannelBins != null && perChannelBins.Length > 0 &&
+                    perChannelBins[0] != null && perChannelBins[0].Count > 0)
+                {
+                    perChannelCogM0 = CogIonMobility(perChannelBins[0]);
+                }
+                IdotpStrategyDumpWriter.WriteRow(diagContext,
+                    perChannelCogM0,
+                    numExact, rejectedByIdotp, rejectedByMissing, exactCog,
+                    numWindowed, windowedRejByIdotp, windowedRejByMissing, windowedCog);
+            }
+
+            // Tiered production result: exact-bin guard, then windowed-guard
+            // fallback, then null (caller falls back to per-channel COG).
+            if (numExact > 0)
+                return exactCog;
+            if (numWindowed > 0)
+                return windowedCog;
+            return null;
+        }
+
+        // Per-bin record produced by the guard's collect-survivors pass and
+        // consumed by CogOverSurvivors.
+        private struct SurvivingBin
+        {
+            public double Im;
+            public double Total;
+            public double Idotp;
+        }
+
+        // Builds the union-of-IM-keys cross-channel histogram, computes idotp per
+        // bin, and applies the threshold + missing-where-expected guard. The
+        // returned list is the input that CogOverSurvivors consumes.
+        //
+        // When halfWindow > 0, each channel's value at a candidate IM is summed
+        // over [center - halfWindow, center + halfWindow] instead of read from
+        // the exact bin. That bridges the discretization offset between isotope
+        // channels - M0, M+1, M+2 are extracted at slightly different m/z and so
+        // land in slightly different discrete IM bins, which on the exact-bin
+        // path produces spurious zero-fills that the missing-where-expected
+        // guard then rejects.
+        //
+        // rejectedByIdotp / rejectedByMissing report how many bins were dropped
+        // by each guard, so the diagnostic dump can attribute the rejection rate.
+        private static List<SurvivingBin> CollectSurvivingBins(
+            Dictionary<double, double>[] perChannelBins,
+            IList<float> expectedProportions,
+            double halfWindow,
+            out int rejectedByIdotp,
+            out int rejectedByMissing)
+        {
+            rejectedByIdotp = 0;
+            rejectedByMissing = 0;
             if (perChannelBins == null || perChannelBins.Length == 0 || expectedProportions == null)
                 return null;
             int channelCount = Math.Min(perChannelBins.Length, expectedProportions.Count);
@@ -202,12 +300,39 @@ namespace pwiz.Skyline.Model.Results
             if (unionIms.Count == 0)
                 return null;
 
+            // For windowed aggregation, pre-sort each channel's (im, intensity)
+            // pairs. Candidates (unionIms) and each channel are both iterated in
+            // ascending IM order, so the window sum is maintained with a
+            // forward-only two-pointer sweep - O(channelEntries) per channel
+            // total, rather than a binary search per (candidate, channel) cell.
+            KeyValuePair<double, double>[][] sortedChannels = null;
+            int[] loIdx = null, hiIdx = null;
+            double[] winSum = null;
+            if (halfWindow > 0)
+            {
+                sortedChannels = new KeyValuePair<double, double>[channelCount][];
+                for (int c = 0; c < channelCount; c++)
+                {
+                    if (perChannelBins[c] == null)
+                    {
+                        sortedChannels[c] = Array.Empty<KeyValuePair<double, double>>();
+                        continue;
+                    }
+                    var pairs = new List<KeyValuePair<double, double>>(perChannelBins[c]);
+                    pairs.Sort((a, b) => a.Key.CompareTo(b.Key));
+                    sortedChannels[c] = pairs.ToArray();
+                }
+                loIdx = new int[channelCount];
+                hiIdx = new int[channelCount];
+                winSum = new double[channelCount];
+            }
+
             var expectedVector = new double[channelCount];
             for (int c = 0; c < channelCount; c++)
                 expectedVector[c] = expectedProportions[c];
             var statExpected = new Statistics(expectedVector);
 
-            var survivingBins = new Dictionary<double, double>();
+            var survivors = new List<SurvivingBin>();
             var observed = new double[channelCount];
             foreach (var im in unionIms)
             {
@@ -215,29 +340,125 @@ namespace pwiz.Skyline.Model.Results
                 double total = 0;
                 for (int c = 0; c < channelCount; c++)
                 {
-                    if (perChannelBins[c] != null &&
-                        perChannelBins[c].TryGetValue(im, out var intensity))
+                    double v;
+                    if (halfWindow > 0)
                     {
-                        observed[c] = intensity;
-                        total += intensity;
+                        var arr = sortedChannels[c];
+                        double hi = im + halfWindow;
+                        while (hiIdx[c] < arr.Length && arr[hiIdx[c]].Key <= hi)
+                        {
+                            winSum[c] += arr[hiIdx[c]].Value;
+                            hiIdx[c]++;
+                        }
+                        double lo = im - halfWindow;
+                        while (loIdx[c] < hiIdx[c] && arr[loIdx[c]].Key < lo)
+                        {
+                            winSum[c] -= arr[loIdx[c]].Value;
+                            loIdx[c]++;
+                        }
+                        v = winSum[c];
                     }
+                    else if (perChannelBins[c] != null && perChannelBins[c].TryGetValue(im, out var intensity))
+                    {
+                        v = intensity;
+                    }
+                    else
+                    {
+                        v = 0;
+                    }
+                    observed[c] = v;
+                    total += v;
                 }
                 if (total <= 0)
                     continue;
-
                 if (HasMissingExpectedSignal(observed, expectedVector))
+                {
+                    rejectedByMissing++;
                     continue;
-
-                var statObserved = new Statistics(observed);
-                var idotp = statExpected.Angle(statObserved);
+                }
+                var idotp = statExpected.Angle(new Statistics(observed));
                 if (double.IsNaN(idotp) || idotp < IDOTP_THRESHOLD_FOR_ION_MOBILITY_GUARD)
+                {
+                    rejectedByIdotp++;
                     continue;
-
-                survivingBins[im] = total;
+                }
+                survivors.Add(new SurvivingBin { Im = im, Total = total, Idotp = idotp });
             }
-            if (survivingBins.Count == 0)
+            return survivors;
+        }
+
+        // Half-window for the windowed guard variant, derived from the
+        // monoisotope (M0) channel's own observed IM peak width: half the IM
+        // interval that contains the central 80% of M0's intensity. M0 is the
+        // strong, reliable channel, so its spread directly measures the natural
+        // IM peak width for this precursor on this instrument - independent of
+        // whether a user IM filter is set. The weaker isotope channels borrow
+        // that scale when their signal is summed, which lets a shoulder bin
+        // still see the weak channels' near-apex signal instead of a spurious
+        // zero. Returns 0 when M0 has too little signal to estimate a width.
+        private static double DeriveHalfWindow(Dictionary<double, double>[] perChannelBins)
+        {
+            if (perChannelBins == null || perChannelBins.Length == 0 || perChannelBins[0] == null)
+                return 0;
+            var m0 = perChannelBins[0];
+            if (m0.Count < 3)
+                return 0;
+            var sorted = new KeyValuePair<double, double>[m0.Count];
+            int idx = 0;
+            foreach (var kvp in m0)
+                sorted[idx++] = kvp;
+            Array.Sort(sorted, (a, b) => a.Key.CompareTo(b.Key));
+            double total = 0;
+            foreach (var kvp in sorted)
+                total += kvp.Value;
+            if (total <= 0)
+                return 0;
+            // IM at the 10th and 90th intensity percentiles - the central 80% of M0.
+            double tail = total * 0.1;
+            double acc = 0;
+            double lowIm = sorted[0].Key;
+            for (int i = 0; i < sorted.Length; i++)
+            {
+                acc += sorted[i].Value;
+                if (acc >= tail)
+                {
+                    lowIm = sorted[i].Key;
+                    break;
+                }
+            }
+            acc = 0;
+            double highIm = sorted[sorted.Length - 1].Key;
+            for (int i = sorted.Length - 1; i >= 0; i--)
+            {
+                acc += sorted[i].Value;
+                if (acc >= tail)
+                {
+                    highIm = sorted[i].Key;
+                    break;
+                }
+            }
+            double width = highIm - lowIm;
+            return width > 0 ? width / 2.0 : 0;
+        }
+
+        // Intensity-weighted COG of bin positions across surviving bins.
+        // Reuses the same averaging idea as CogIonMobility, so non-linear IM
+        // coordinates (1/K0) stay correct.
+        private static double? CogOverSurvivors(List<SurvivingBin> survivors)
+        {
+            survivors.Sort((a, b) => a.Im.CompareTo(b.Im));
+            double weightedIndexSum = 0;
+            double total = 0;
+            for (int i = 0; i < survivors.Count; i++)
+            {
+                weightedIndexSum += i * survivors[i].Total;
+                total += survivors[i].Total;
+            }
+            if (total == 0)
                 return null;
-            return CogIonMobility(survivingBins);
+            int cog = (int)Math.Round(weightedIndexSum / total);
+            cog = Math.Max(0, Math.Min(survivors.Count - 1, cog));
+            return survivors[cog].Im;
         }
 
         private static bool HasMissingExpectedSignal(double[] observed, double[] expected)
@@ -248,6 +469,133 @@ namespace pwiz.Skyline.Model.Results
                     return true;
             }
             return false;
+        }
+    }
+
+    /// <summary>
+    /// Per-precursor context passed to the idotp guard so the strategy-comparison
+    /// dump can attribute each row. Lightweight by design - just enough to identify
+    /// the precursor and compute deviation vs target IM in post-processing.
+    /// </summary>
+    public class IdotpGuardDiagnosticContext
+    {
+        public string FileName { get; set; }
+        public double PrecursorMz { get; set; }
+        public int Charge { get; set; }
+        public double? TargetIm { get; set; }       // midpoint of MinIM/MaxIM
+        public double? RetentionTime { get; set; }
+        public string IonMobilityUnits { get; set; } // for the post-process script
+    }
+
+    /// <summary>
+    /// One-shot diagnostic CSV writer for evaluating the idotp guard on real
+    /// extraction runs. Enabled by setting the SKYLINE_IM_STRATEGY_DUMP environment
+    /// variable to a writable file path. Production code paths are unaffected when
+    /// the env var is not set.
+    ///
+    /// Each row records, for one precursor call to the guard:
+    ///  - the no-guard baseline (monoisotope per-channel COG) and its deviation;
+    ///  - the exact-bin guard result, survivor count, and rejection-reason split
+    ///    (bins dropped by the idotp threshold vs by missing-where-expected);
+    ///  - the same for the windowed-guard variant.
+    /// This lets the post-process answer (a) does the guard beat the baseline and
+    /// (b) why does the exact-bin guard reject so many bins.
+    ///
+    /// Use <c>ai/.tmp/Summarize-IMStrategyDump.ps1</c> to post-process.
+    /// </summary>
+    public static class IdotpStrategyDumpWriter
+    {
+        private const string ENV_VAR = "SKYLINE_IM_STRATEGY_DUMP";
+        private static readonly object _lock = new object();
+        private static readonly string _path;
+        private static bool _headerWritten;
+
+        /// <summary>
+        /// Updated by the extractor when starting a new data file. Each dump row
+        /// records the file it came from, so a single CSV can hold results from
+        /// multiple runs without ambiguity. Optional - if not set, FileName is empty.
+        /// </summary>
+        public static string CurrentFileName { get; set; }
+
+        static IdotpStrategyDumpWriter()
+        {
+            _path = Environment.GetEnvironmentVariable(ENV_VAR);
+            if (!string.IsNullOrEmpty(_path))
+            {
+                // Truncate at startup so each run begins with a clean dump.
+                try
+                {
+                    var dir = Path.GetDirectoryName(_path);
+                    if (!string.IsNullOrEmpty(dir))
+                        Directory.CreateDirectory(dir);
+                    File.WriteAllText(_path, string.Empty);
+                }
+                catch (IOException)
+                {
+                    // If the path is bad, silently disable the dump - we don't
+                    // want diagnostic emission to break the test run.
+                    _path = null;
+                }
+            }
+        }
+
+        public static bool Enabled => !string.IsNullOrEmpty(_path);
+
+        public static void WriteRow(IdotpGuardDiagnosticContext ctx,
+            double? perChannelCogM0,
+            int numSurvivors, int rejectedByIdotp, int rejectedByMissing, double? cogResult,
+            int windowedNumSurvivors, int windowedRejByIdotp, int windowedRejByMissing, double? windowedCog)
+        {
+            if (!Enabled || ctx == null)
+                return;
+            lock (_lock)
+            {
+                if (!_headerWritten)
+                {
+                    File.AppendAllText(_path,
+                        @"FileName,PrecursorMz,Charge,IonMobilityUnits,TargetIm,RetentionTime," +
+                        @"PerChannelCogM0,DevPerChannelCogM0," +
+                        @"NumSurvivors,RejectedByIdotp,RejectedByMissing,Cog,DevCog," +
+                        @"WindowedNumSurvivors,WindowedRejectedByIdotp,WindowedRejectedByMissing,WindowedCog,DevWindowedCog" +
+                        Environment.NewLine);
+                    _headerWritten = true;
+                }
+                File.AppendAllText(_path, FormatRow(ctx, perChannelCogM0,
+                    numSurvivors, rejectedByIdotp, rejectedByMissing, cogResult,
+                    windowedNumSurvivors, windowedRejByIdotp, windowedRejByMissing, windowedCog));
+            }
+        }
+
+        private static string FormatRow(IdotpGuardDiagnosticContext ctx,
+            double? perChannelCogM0,
+            int numSurvivors, int rejectedByIdotp, int rejectedByMissing, double? cogResult,
+            int windowedNumSurvivors, int windowedRejByIdotp, int windowedRejByMissing, double? windowedCog)
+        {
+            var inv = CultureInfo.InvariantCulture;
+            string Field(double? v) => v.HasValue ? v.Value.ToString(@"R", inv) : string.Empty;
+            string Dev(double? v) => v.HasValue && ctx.TargetIm.HasValue
+                ? (v.Value - ctx.TargetIm.Value).ToString(@"R", inv) : string.Empty;
+            return string.Join(",", new[]
+            {
+                ctx.FileName ?? string.Empty,
+                ctx.PrecursorMz.ToString(@"R", inv),
+                ctx.Charge.ToString(inv),
+                ctx.IonMobilityUnits ?? string.Empty,
+                Field(ctx.TargetIm),
+                Field(ctx.RetentionTime),
+                Field(perChannelCogM0),
+                Dev(perChannelCogM0),
+                numSurvivors.ToString(inv),
+                rejectedByIdotp.ToString(inv),
+                rejectedByMissing.ToString(inv),
+                Field(cogResult),
+                Dev(cogResult),
+                windowedNumSurvivors.ToString(inv),
+                windowedRejByIdotp.ToString(inv),
+                windowedRejByMissing.ToString(inv),
+                Field(windowedCog),
+                Dev(windowedCog),
+            }) + Environment.NewLine;
         }
     }
 }

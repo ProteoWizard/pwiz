@@ -43,6 +43,7 @@ namespace pwiz.SkylineTest
             TestIdotpGuardEmptyInputs();
             TestIdotpGuardMissingExpectedSignalRejection();
             TestIdotpGuardUnionsImKeysAcrossChannels();
+            TestIdotpGuardCogOverSurviversAveragesByIntensity();
         }
 
         // Summed extractor: ObservedIonMobility comes from COG of the IM histogram
@@ -169,6 +170,27 @@ namespace pwiz.SkylineTest
 
             var resolved = IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(perChannel, expected);
             Assert.IsNull(resolved);
+        }
+
+        // CogOverSurvivors: surviving bins are averaged by intensity, so the
+        // heavier real-signal bins drag the result toward the actual peak.
+        private static void TestIdotpGuardCogOverSurviversAveragesByIntensity()
+        {
+            var expected = new[] { 0.55f, 0.30f, 0.15f };
+            // Three bins along the IM peak, all clearing 0.7:
+            //   IM=1.04 (lower shoulder, total ~ 110 + 60 + 30 = 200)
+            //   IM=1.05 (apex, total ~ 4500)
+            //   IM=1.06 (upper shoulder, total ~ 200)
+            // Sorted bin indices 0,1,2 with totals 200, 4500, 200.
+            // COG bin = (0*200 + 1*4500 + 2*200) / 4900 = 4900/4900 = 1.0 -> bin 1 -> IM=1.05
+            var perChannel = new Dictionary<double, double>[3];
+            perChannel[0] = new Dictionary<double, double> { { 1.04, 110 }, { 1.05, 2475 }, { 1.06, 110 } };
+            perChannel[1] = new Dictionary<double, double> { { 1.04, 60  }, { 1.05, 1350 }, { 1.06, 60  } };
+            perChannel[2] = new Dictionary<double, double> { { 1.04, 30  }, { 1.05, 675  }, { 1.06, 30  } };
+
+            var resolved = IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(perChannel, expected);
+            Assert.IsTrue(resolved.HasValue);
+            Assert.AreEqual(1.05, resolved.Value, EPSILON);
         }
 
         // Channels can disagree on which IMs they observed. The resolver takes

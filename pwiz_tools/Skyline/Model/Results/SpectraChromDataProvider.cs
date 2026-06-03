@@ -91,6 +91,10 @@ namespace pwiz.Skyline.Model.Results
         {
             _document = document;
             _cachePath = cachePath;
+            // Tag the strategy-comparison diagnostic dump (no-op unless the
+            // SKYLINE_IM_STRATEGY_DUMP env var is set) with this file's name so
+            // a multi-replicate run produces one CSV with per-file attribution.
+            IdotpStrategyDumpWriter.CurrentFileName = System.IO.Path.GetFileName(fileInfo.FilePath?.GetFilePath());
             _globalChromatogramExtractor = new GlobalChromatogramExtractor(dataFile);
             if (_document.Settings.TransitionSettings.FullScan.IsEnabledMs 
                 && !_globalChromatogramExtractor.IsTicChromatogramUsable())
