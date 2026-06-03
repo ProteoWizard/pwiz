@@ -1398,12 +1398,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public TimeIntensitiesGroup ToGroupOfTimeIntensities(bool useRawTimes)
+        public TimeIntensitiesGroup ToGroupOfTimeIntensities(bool useRawTimes, int observedIonMobilityScale)
         {
             if (useRawTimes)
             {
                 var rawTimeIntensities = new RawTimeIntensities(_listChromData.Select(chromData => chromData.RawTimeIntensities),
-                    InterpolationParams);
+                    InterpolationParams, observedIonMobilityScale);
                 if (TimeIntervals != null)
                 {
                     rawTimeIntensities = rawTimeIntensities.ChangeTimeIntervals(TimeIntervals);
@@ -1411,7 +1411,7 @@ namespace pwiz.Skyline.Model.Results
 
                 return rawTimeIntensities;
             }
-            return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities), 
+            return new InterpolatedTimeIntensities(_listChromData.Select(chromData=>chromData.TimeIntensities),
                 _listChromData.Select(chromData=>chromData.PrimaryKey.Source));
         }
 
@@ -1466,7 +1466,8 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramGroupInfo ToChromatogramGroupInfo(FeatureNames featureNames, ChromCachedFile chromCachedFile)
         {
-            var timeIntensitiesGroup = ToGroupOfTimeIntensities(true);
+            var timeIntensitiesGroup = ToGroupOfTimeIntensities(true,
+                RawTimeIntensities.GetObservedIonMobilityScaleOrZero(chromCachedFile.IonMobilityUnits));
             var groupHeaderInfo = MakeChromGroupHeaderInfo(timeIntensitiesGroup, -1, -1);
             var chromTransitions = Chromatograms.Select(chromData => chromData.MakeChromTransition()).ToList();
             var chromPeaks = Chromatograms.SelectMany(chromData => chromData.Peaks).ToList();

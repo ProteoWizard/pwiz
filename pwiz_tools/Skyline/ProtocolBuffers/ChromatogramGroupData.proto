@@ -19,7 +19,7 @@ message ChromatogramGroupData {
 		repeated float massErrorsDeprecated = 3;
 		repeated sint32 massErrors100X = 5;
 		int32 scanIdListIndex = 4; // One-based index into "scanIdLists" or zero if no scanIds
-		repeated float observedIonMobilities = 6; // Per-time-point intensity-weighted observed IM, raw IM units. Field 6 reused (was sint32 ionMobilityErrors100X in unreleased v20 builds).
+		repeated sint32 observedIonMobilitiesScaled = 6; // Per-time-point intensity-weighted observed IM, encoded as round(raw * ChromatogramGroupData.observedIonMobilityScale).
 	}
 	message TimeIntervals {
 		repeated float startTimes = 1;
@@ -32,6 +32,7 @@ message ChromatogramGroupData {
 	double interpolatedDelta = 7;
 	bool inferZeroes = 9;
 	TimeIntervals timeIntervals = 10;
+	int32 observedIonMobilityScale = 11; // Multiplier applied to observedIonMobilitiesScaled values to recover raw IM. Typically 10000 for 1/K0, 100 for drift time ms. Zero when no IM data is stored.
 }
 message ResultFileMetaDataProto {
 	message SpectrumMetadata {
