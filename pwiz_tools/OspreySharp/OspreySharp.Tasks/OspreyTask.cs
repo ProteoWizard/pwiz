@@ -101,6 +101,20 @@ namespace pwiz.OspreySharp.Tasks
         public virtual bool Rehydrate(PipelineContext ctx) => Run(ctx);
 
         /// <summary>
+        /// Whether this task participates in the pipeline for the current
+        /// configuration. Driver-owned membership predicate: the orchestrator
+        /// iterates only the included tasks and runs those whose outputs are
+        /// not already on disk, while excluded tasks lazy-rehydrate their state
+        /// through <see cref="PipelineContext.Demand{T}"/> when an included task
+        /// reaches for it. Replaces the <c>DeriveStartAtTask</c> /
+        /// <c>DeriveStopAfterTask</c> range gating (the membership becomes a
+        /// per-task fact rather than a contiguous [start..stop] window).
+        /// Default <c>true</c>; tasks that run only in some HPC modes override
+        /// to gate on the relevant <see cref="OspreyConfig"/> flags.
+        /// </summary>
+        public virtual bool IsIncluded(PipelineContext ctx) => true;
+
+        /// <summary>
         /// File paths this task reads as inputs. Reported in the
         /// <c>.osprey.task</c> sidecar so a human inspecting a
         /// completed-output sidecar can see what the task consumed.

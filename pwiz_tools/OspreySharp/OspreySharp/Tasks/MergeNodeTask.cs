@@ -54,6 +54,21 @@ namespace pwiz.OspreySharp.Tasks
 
         public override string Name => @"MergeNode";
 
+        /// <summary>
+        /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in
+        /// straight-through, the --join-at-pass=2 merge, and the --input-scores
+        /// full-pipeline. Excluded in --no-join, --join-only, and the rescore
+        /// worker (all of which stop before the merge node).
+        /// </summary>
+        public override bool IsIncluded(PipelineContext ctx)
+        {
+            var c = ctx.Config;
+            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
+            return (!inputs && !c.NoJoin)
+                || (inputs && c.ExpectReconciledInput)
+                || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
+        }
+
         // Phase B resume surface. Reads each file's reconciled
         // .scores.parquet, writes the .2nd-pass.fdr_scores.bin
         // sidecars (only when protein-FDR is enabled) and the

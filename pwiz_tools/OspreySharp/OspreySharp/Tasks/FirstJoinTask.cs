@@ -68,6 +68,22 @@ namespace pwiz.OspreySharp.Tasks
     {
         public override string Name => @"FirstJoin";
 
+        /// <summary>
+        /// Computes the Stage 5 first-join (Percolator first-pass FDR + Stage 6
+        /// planning) in straight-through, --join-only (StopAfterStage5), and
+        /// the --input-scores full-pipeline. Excluded in --no-join (stops at
+        /// Stage 1-4), the rescore worker, and the --join-at-pass=2 merge
+        /// (where it rehydrates the bundle rather than recomputing).
+        /// </summary>
+        public override bool IsIncluded(PipelineContext ctx)
+        {
+            var c = ctx.Config;
+            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
+            return (!inputs && !c.NoJoin)
+                || (inputs && c.StopAfterStage5)
+                || (inputs && !c.NoJoin && !c.ExpectReconciledInput);
+        }
+
         // Outputs reached by downstream tasks through ctx.Demand<FirstJoinTask>().
         // DidPlan is the gate downstream consumers (PerFileRescoreTask)
         // check to decide whether the Stage 6 planning state below is

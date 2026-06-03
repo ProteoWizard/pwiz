@@ -54,6 +54,27 @@ namespace pwiz.OspreySharp
 
             try
             {
+                // Worker-mode entry normalization: in --input-scores modes
+                // without explicit -i, synthesize InputFiles from the parquet
+                // stems ONCE here, at pipeline entry, so the driver's
+                // Outputs/IsTaskAlreadyDone skip checks and every per-task
+                // accessor see a populated InputFiles regardless of which task
+                // the run starts at. (Mutation-contract: InputFiles is a
+                // pipeline-populated field that does NOT feed any identity
+                // hash, so it may be written once at entry -- see
+                // PipelineContext.Config. Previously this lived inside
+                // PerFileScoringTask's join-only load, which the driver never
+                // reached when PerFileScoring was the StartAt task, e.g.
+                // `--join-at-pass=1 --input-scores`.)
+                if (config.InputScores != null && config.InputScores.Count > 0
+                    && (config.InputFiles == null || config.InputFiles.Count == 0))
+                {
+                    var synthetic = new List<string>(config.InputScores.Count);
+                    foreach (var p in config.InputScores)
+                        synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
+                    config.InputFiles = synthetic;
+                }
+
                 var pipelineTasks = CanonicalPipeline();
                 var startAt = DeriveStartAtTask(config);
                 var stopAfter = DeriveStopAfterTask(config);

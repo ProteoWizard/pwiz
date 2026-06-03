@@ -110,6 +110,22 @@ namespace pwiz.OspreySharp.Tasks
         public override string Name => @"PerFileRescore";
 
         /// <summary>
+        /// Computes the Stage 6 rescore in straight-through, the rescore worker
+        /// (--join-at-pass=1 --no-join --input-scores), and the --input-scores
+        /// full-pipeline. Excluded in --no-join, --join-only (stops at Stage 5),
+        /// and the --join-at-pass=2 merge (where it rehydrates rather than
+        /// re-scoring, the merge node having no mzMLs).
+        /// </summary>
+        public override bool IsIncluded(PipelineContext ctx)
+        {
+            var c = ctx.Config;
+            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
+            return (!inputs && !c.NoJoin)
+                || (inputs && c.NoJoin)
+                || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
+        }
+
+        /// <summary>
         /// The post-rescore per-file entries. Mutated in place by
         /// <see cref="ExecuteRescore"/>; when this task short-circuits
         /// (no FirstJoinTask plan) the list is the unchanged upstream

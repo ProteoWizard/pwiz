@@ -99,6 +99,18 @@ namespace pwiz.OspreySharp.Tasks
 
         public override string Name => @"PerFileScoring";
 
+        /// <summary>
+        /// Computes per-file scores from spectra only when no per-file scores
+        /// were supplied via --input-scores. Under --input-scores it is
+        /// excluded: a downstream task lazy-rehydrates the supplied scores
+        /// through <c>ctx.Demand&lt;PerFileScoringTask&gt;()</c>.
+        /// </summary>
+        public override bool IsIncluded(PipelineContext ctx)
+        {
+            bool inputs = ctx.Config.InputScores != null && ctx.Config.InputScores.Count > 0;
+            return !inputs;
+        }
+
         // Outputs reached by downstream tasks through ctx.Demand<PerFileScoringTask>().
         // Defaults are non-null empty collections so callers querying
         // outputs from a not-yet-run task never NPE on the accessor.
@@ -376,17 +388,10 @@ namespace pwiz.OspreySharp.Tasks
 
             int nFiles = config.InputScores.Count;
 
-            // In --input-scores mode without explicit -i, synthesize
-            // InputFiles from the parquet stems so downstream code
-            // (Stage 6 rescore's fileNameToIdx in particular) can map
-            // each file_name back to a real (synthetic) input path.
-            if (config.InputFiles == null || config.InputFiles.Count == 0)
-            {
-                var synthetic = new List<string>(config.InputScores.Count);
-                foreach (var p in config.InputScores)
-                    synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
-                config.InputFiles = synthetic;
-            }
+            // InputFiles is synthesized from the --input-scores parquet stems
+            // once at pipeline entry (AnalysisPipeline.Run), so downstream code
+            // (Stage 6 rescore's fileNameToIdx in particular) already has the
+            // synthetic input paths by the time this load runs.
 
             // Mirror Run's EffectiveFileParallelism bookkeeping (unused by the
             // disk-load path, which never calls ProcessFile, but kept so the
