@@ -19,9 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -171,83 +168,41 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Cross-isotope idotp guard for the observed-IM reduction. See the tiered
-        /// overload below for the algorithm; this entry point omits the diagnostic
-        /// context. Returns null when no bin survives either tier; the caller may
-        /// fall back to per-channel COG in that case.
+        /// Cross-isotope idotp guard for the observed-IM reduction.
+        ///
+        /// Tier 1 - exact-bin guard: each candidate IM reads each channel's exact
+        /// bin. Precise on precursors with clean, well-sampled isotope envelopes.
+        ///
+        /// Tier 2 - windowed-guard fallback: when the exact-bin guard rejects every
+        /// bin, retry with each channel summed over the monoisotope channel's own
+        /// IM peak width (see DeriveHalfWindow). That bridges the detection-limit
+        /// gap - the strong M0 channel spans many IM bins while weak M+1/M+2 only
+        /// clear detection near the apex, so on the exact-bin path the shoulder
+        /// bins zero-fill and get wrongly dropped by missing-where-expected.
+        ///
+        /// Both tiers reduce via CogOverSurvivors. Returns null when no bin
+        /// survives either tier; the caller may fall back to per-channel COG.
         /// </summary>
         public static double? ResolveObservedIonMobilityWithIdotpGuard(
             Dictionary<double, double>[] perChannelBins,
             IList<float> expectedProportions)
         {
-            return ResolveObservedIonMobilityWithIdotpGuard(perChannelBins, expectedProportions, null);
-        }
-
-        // Tiered idotp guard with optional diagnostic emission.
-        //
-        // Tier 1 - exact-bin guard: each candidate IM reads each channel's exact
-        // bin. Precise on precursors with clean, well-sampled isotope envelopes.
-        //
-        // Tier 2 - windowed-guard fallback: when the exact-bin guard rejects every
-        // bin, retry with each channel summed over the monoisotope channel's own
-        // IM peak width (see DeriveHalfWindow). That bridges the detection-limit
-        // gap - the strong M0 channel spans many IM bins while weak M+1/M+2 only
-        // clear detection near the apex, so on the exact-bin path the shoulder
-        // bins zero-fill and get wrongly dropped by missing-where-expected.
-        //
-        // Both tiers reduce via CogOverSurvivors. When neither tier produces a
-        // survivor the result is null and the caller falls back to per-channel COG.
-        //
-        // When <paramref name="diagContext"/> is non-null and the
-        // IdotpStrategyDumpWriter is enabled (via SKYLINE_IM_STRATEGY_DUMP), the
-        // dump additionally records the no-guard baseline (monoisotope per-channel
-        // COG) and the rejection-reason split for both tiers.
-        public static double? ResolveObservedIonMobilityWithIdotpGuard(
-            Dictionary<double, double>[] perChannelBins,
-            IList<float> expectedProportions,
-            IdotpGuardDiagnosticContext diagContext)
-        {
             // Tier 1: exact-bin guard.
-            var exactSurvivors = CollectSurvivingBins(perChannelBins, expectedProportions, 0,
-                out int rejectedByIdotp, out int rejectedByMissing);
-            int numExact = exactSurvivors?.Count ?? 0;
-            double? exactCog = numExact > 0 ? CogOverSurvivors(exactSurvivors) : null;
+            var exactSurvivors = CollectSurvivingBins(perChannelBins, expectedProportions, 0);
+            if ((exactSurvivors?.Count ?? 0) > 0)
+                return CogOverSurvivors(exactSurvivors);
 
-            // Tier 2: windowed-guard fallback. Computed when the exact-bin guard
-            // found nothing, or unconditionally when emitting the diagnostic dump.
-            bool dumping = diagContext != null && IdotpStrategyDumpWriter.Enabled;
-            double halfWindow = (numExact == 0 || dumping) ? DeriveHalfWindow(perChannelBins) : 0;
-            List<SurvivingBin> windowedSurvivors = null;
-            int windowedRejByIdotp = 0, windowedRejByMissing = 0;
+            // Tier 2: windowed-guard fallback, summing each channel over the M0
+            // channel's own IM peak width to bridge the detection-limit gap.
+            double halfWindow = DeriveHalfWindow(perChannelBins);
             if (halfWindow > 0)
             {
-                windowedSurvivors = CollectSurvivingBins(perChannelBins, expectedProportions, halfWindow,
-                    out windowedRejByIdotp, out windowedRejByMissing);
-            }
-            int numWindowed = windowedSurvivors?.Count ?? 0;
-            double? windowedCog = numWindowed > 0 ? CogOverSurvivors(windowedSurvivors) : null;
-
-            if (dumping)
-            {
-                // No-guard baseline: COG of the monoisotope channel's histogram alone.
-                double? perChannelCogM0 = null;
-                if (perChannelBins != null && perChannelBins.Length > 0 &&
-                    perChannelBins[0] != null && perChannelBins[0].Count > 0)
-                {
-                    perChannelCogM0 = CogIonMobility(perChannelBins[0]);
-                }
-                IdotpStrategyDumpWriter.WriteRow(diagContext,
-                    perChannelCogM0,
-                    numExact, rejectedByIdotp, rejectedByMissing, exactCog,
-                    numWindowed, windowedRejByIdotp, windowedRejByMissing, windowedCog);
+                var windowedSurvivors = CollectSurvivingBins(perChannelBins, expectedProportions, halfWindow);
+                if ((windowedSurvivors?.Count ?? 0) > 0)
+                    return CogOverSurvivors(windowedSurvivors);
             }
 
-            // Tiered production result: exact-bin guard, then windowed-guard
-            // fallback, then null (caller falls back to per-channel COG).
-            if (numExact > 0)
-                return exactCog;
-            if (numWindowed > 0)
-                return windowedCog;
+            // Neither tier produced a survivor; caller falls back to per-channel COG.
             return null;
         }
 
@@ -257,7 +212,6 @@ namespace pwiz.Skyline.Model.Results
         {
             public double Im;
             public double Total;
-            public double Idotp;
         }
 
         // Builds the union-of-IM-keys cross-channel histogram, computes idotp per
@@ -271,18 +225,11 @@ namespace pwiz.Skyline.Model.Results
         // land in slightly different discrete IM bins, which on the exact-bin
         // path produces spurious zero-fills that the missing-where-expected
         // guard then rejects.
-        //
-        // rejectedByIdotp / rejectedByMissing report how many bins were dropped
-        // by each guard, so the diagnostic dump can attribute the rejection rate.
         private static List<SurvivingBin> CollectSurvivingBins(
             Dictionary<double, double>[] perChannelBins,
             IList<float> expectedProportions,
-            double halfWindow,
-            out int rejectedByIdotp,
-            out int rejectedByMissing)
+            double halfWindow)
         {
-            rejectedByIdotp = 0;
-            rejectedByMissing = 0;
             if (perChannelBins == null || perChannelBins.Length == 0 || expectedProportions == null)
                 return null;
             int channelCount = Math.Min(perChannelBins.Length, expectedProportions.Count);
@@ -372,17 +319,11 @@ namespace pwiz.Skyline.Model.Results
                 if (total <= 0)
                     continue;
                 if (HasMissingExpectedSignal(observed, expectedVector))
-                {
-                    rejectedByMissing++;
                     continue;
-                }
                 var idotp = statExpected.Angle(new Statistics(observed));
                 if (double.IsNaN(idotp) || idotp < IDOTP_THRESHOLD_FOR_ION_MOBILITY_GUARD)
-                {
-                    rejectedByIdotp++;
                     continue;
-                }
-                survivors.Add(new SurvivingBin { Im = im, Total = total, Idotp = idotp });
+                survivors.Add(new SurvivingBin { Im = im, Total = total });
             }
             return survivors;
         }
@@ -469,133 +410,6 @@ namespace pwiz.Skyline.Model.Results
                     return true;
             }
             return false;
-        }
-    }
-
-    /// <summary>
-    /// Per-precursor context passed to the idotp guard so the strategy-comparison
-    /// dump can attribute each row. Lightweight by design - just enough to identify
-    /// the precursor and compute deviation vs target IM in post-processing.
-    /// </summary>
-    public class IdotpGuardDiagnosticContext
-    {
-        public string FileName { get; set; }
-        public double PrecursorMz { get; set; }
-        public int Charge { get; set; }
-        public double? TargetIm { get; set; }       // midpoint of MinIM/MaxIM
-        public double? RetentionTime { get; set; }
-        public string IonMobilityUnits { get; set; } // for the post-process script
-    }
-
-    /// <summary>
-    /// One-shot diagnostic CSV writer for evaluating the idotp guard on real
-    /// extraction runs. Enabled by setting the SKYLINE_IM_STRATEGY_DUMP environment
-    /// variable to a writable file path. Production code paths are unaffected when
-    /// the env var is not set.
-    ///
-    /// Each row records, for one precursor call to the guard:
-    ///  - the no-guard baseline (monoisotope per-channel COG) and its deviation;
-    ///  - the exact-bin guard result, survivor count, and rejection-reason split
-    ///    (bins dropped by the idotp threshold vs by missing-where-expected);
-    ///  - the same for the windowed-guard variant.
-    /// This lets the post-process answer (a) does the guard beat the baseline and
-    /// (b) why does the exact-bin guard reject so many bins.
-    ///
-    /// Use <c>ai/.tmp/Summarize-IMStrategyDump.ps1</c> to post-process.
-    /// </summary>
-    public static class IdotpStrategyDumpWriter
-    {
-        private const string ENV_VAR = "SKYLINE_IM_STRATEGY_DUMP";
-        private static readonly object _lock = new object();
-        private static readonly string _path;
-        private static bool _headerWritten;
-
-        /// <summary>
-        /// Updated by the extractor when starting a new data file. Each dump row
-        /// records the file it came from, so a single CSV can hold results from
-        /// multiple runs without ambiguity. Optional - if not set, FileName is empty.
-        /// </summary>
-        public static string CurrentFileName { get; set; }
-
-        static IdotpStrategyDumpWriter()
-        {
-            _path = Environment.GetEnvironmentVariable(ENV_VAR);
-            if (!string.IsNullOrEmpty(_path))
-            {
-                // Truncate at startup so each run begins with a clean dump.
-                try
-                {
-                    var dir = Path.GetDirectoryName(_path);
-                    if (!string.IsNullOrEmpty(dir))
-                        Directory.CreateDirectory(dir);
-                    File.WriteAllText(_path, string.Empty);
-                }
-                catch (IOException)
-                {
-                    // If the path is bad, silently disable the dump - we don't
-                    // want diagnostic emission to break the test run.
-                    _path = null;
-                }
-            }
-        }
-
-        public static bool Enabled => !string.IsNullOrEmpty(_path);
-
-        public static void WriteRow(IdotpGuardDiagnosticContext ctx,
-            double? perChannelCogM0,
-            int numSurvivors, int rejectedByIdotp, int rejectedByMissing, double? cogResult,
-            int windowedNumSurvivors, int windowedRejByIdotp, int windowedRejByMissing, double? windowedCog)
-        {
-            if (!Enabled || ctx == null)
-                return;
-            lock (_lock)
-            {
-                if (!_headerWritten)
-                {
-                    File.AppendAllText(_path,
-                        @"FileName,PrecursorMz,Charge,IonMobilityUnits,TargetIm,RetentionTime," +
-                        @"PerChannelCogM0,DevPerChannelCogM0," +
-                        @"NumSurvivors,RejectedByIdotp,RejectedByMissing,Cog,DevCog," +
-                        @"WindowedNumSurvivors,WindowedRejectedByIdotp,WindowedRejectedByMissing,WindowedCog,DevWindowedCog" +
-                        Environment.NewLine);
-                    _headerWritten = true;
-                }
-                File.AppendAllText(_path, FormatRow(ctx, perChannelCogM0,
-                    numSurvivors, rejectedByIdotp, rejectedByMissing, cogResult,
-                    windowedNumSurvivors, windowedRejByIdotp, windowedRejByMissing, windowedCog));
-            }
-        }
-
-        private static string FormatRow(IdotpGuardDiagnosticContext ctx,
-            double? perChannelCogM0,
-            int numSurvivors, int rejectedByIdotp, int rejectedByMissing, double? cogResult,
-            int windowedNumSurvivors, int windowedRejByIdotp, int windowedRejByMissing, double? windowedCog)
-        {
-            var inv = CultureInfo.InvariantCulture;
-            string Field(double? v) => v.HasValue ? v.Value.ToString(@"R", inv) : string.Empty;
-            string Dev(double? v) => v.HasValue && ctx.TargetIm.HasValue
-                ? (v.Value - ctx.TargetIm.Value).ToString(@"R", inv) : string.Empty;
-            return string.Join(",", new[]
-            {
-                ctx.FileName ?? string.Empty,
-                ctx.PrecursorMz.ToString(@"R", inv),
-                ctx.Charge.ToString(inv),
-                ctx.IonMobilityUnits ?? string.Empty,
-                Field(ctx.TargetIm),
-                Field(ctx.RetentionTime),
-                Field(perChannelCogM0),
-                Dev(perChannelCogM0),
-                numSurvivors.ToString(inv),
-                rejectedByIdotp.ToString(inv),
-                rejectedByMissing.ToString(inv),
-                Field(cogResult),
-                Dev(cogResult),
-                windowedNumSurvivors.ToString(inv),
-                windowedRejByIdotp.ToString(inv),
-                windowedRejByMissing.ToString(inv),
-                Field(windowedCog),
-                Dev(windowedCog),
-            }) + Environment.NewLine;
         }
     }
 }

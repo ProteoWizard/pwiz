@@ -449,22 +449,9 @@ namespace pwiz.Skyline.Model.Results
                     // It returns a single observed IM that's assigned to every channel
                     // (they share the same physical IM). On null, fall through to
                     // per-channel COG so we still produce *some* observed IM.
-                    IdotpGuardDiagnosticContext diagContext = null;
-                    if (expectedIsotopeProportions != null && IdotpStrategyDumpWriter.Enabled)
-                    {
-                        diagContext = new IdotpGuardDiagnosticContext
-                        {
-                            FileName = IdotpStrategyDumpWriter.CurrentFileName,
-                            PrecursorMz = Q1.RawValue,
-                            Charge = 0, // Charge isn't carried on SpectrumFilterPair; PrecursorMz + RT is enough to identify
-                            TargetIm = IonMobilityInfo.IsEmpty ? (double?)null : IonMobilityInfo.IonMobility.Mobility,
-                            RetentionTime = spectra.Length > 0 ? spectra[0].RetentionTime : null,
-                            IonMobilityUnits = IonMobilityInfo.IsEmpty ? null : IonMobilityInfo.IonMobility.Units.ToString(),
-                        };
-                    }
                     double? guardedIonMobility = expectedIsotopeProportions != null
                         ? IntensityAccumulator.ResolveObservedIonMobilityWithIdotpGuard(
-                            perTargetIonMobilityIntensityBins, expectedIsotopeProportions, diagContext)
+                            perTargetIonMobilityIntensityBins, expectedIsotopeProportions)
                         : null;
                     if (guardedIonMobility.HasValue)
                     {
