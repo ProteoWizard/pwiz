@@ -357,7 +357,7 @@ namespace pwiz.Common.SystemUtil
                         exeName = Path.GetFileNameWithoutExtension(psi.FileName);
                         if (!string.IsNullOrEmpty(exeName))
                         {
-                            tmpDirForCleanup = Path.Combine(tmpDirForCleanup, exeName + "_" + Path.GetRandomFileName());
+                            tmpDirForCleanup = Path.Combine(tmpDirForCleanup, exeName + @"_" + Path.GetRandomFileName());
                         }
                     }
 
