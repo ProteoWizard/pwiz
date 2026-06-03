@@ -113,15 +113,14 @@ namespace pwiz.OspreySharp.Tasks
         /// The post-rescore per-file entries. Mutated in place by
         /// <see cref="ExecuteRescore"/>; when this task short-circuits
         /// (no FirstJoinTask plan) the list is the unchanged upstream
-        /// reference. Materializes on the first call when this task was
-        /// skipped by the driver (i.e. <see cref="PipelineContext.StartAtTask"/>
-        /// is downstream): <see cref="RunOrHydrate"/> picks the compute
-        /// path (<see cref="Run"/>) or the --join-at-pass=2 disk-load path
-        /// (<see cref="Rehydrate"/>), so consumers always see populated state.
+        /// reference. Pure read: the caller materializes this task first via
+        /// <see cref="PipelineContext.Demand{T}"/> (compute <see cref="Run"/>
+        /// for the rescore-capable modes, or the --join-at-pass=2
+        /// <see cref="Rehydrate"/> disk-load), so the field is populated by the
+        /// time any consumer reads it.
         /// </summary>
         public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx)
         {
-            if (!_runOrHydrated) RunOrHydrate(ctx);
             if (_perFileEntries == null)
                 throw new InvalidOperationException(
                     @"PerFileRescoreTask.GetPerFileEntries called before Run populated the field.");
@@ -169,27 +168,6 @@ namespace pwiz.OspreySharp.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
-        /// <summary>
-        /// Dispatch the first materialization of this task to the disk-load
-        /// path (<see cref="Rehydrate"/>) under --join-at-pass=2, where every
-        /// input parquet is already reconciled and the merge node has no mzMLs
-        /// to rescore from, or to the compute path (<see cref="Run"/>) for
-        /// every other mode (straight-through and the stage6 rescore worker,
-        /// which both actually re-score). The driver loop calls
-        /// <see cref="Run"/> directly (it only reaches this task in the
-        /// non--join-at-pass=2 modes); the accessor path
-        /// (<see cref="GetPerFileEntries"/>) comes through here so a
-        /// --join-at-pass=2 merge consumer triggers <see cref="Rehydrate"/>.
-        /// Transitional: removed at the Phase B5 driver-loop flip.
-        /// </summary>
-        private void RunOrHydrate(PipelineContext ctx)
-        {
-            if (ctx.Config.ExpectReconciledInput)
-                Rehydrate(ctx);
-            else
-                Run(ctx);
-        }
-
         public override bool Run(PipelineContext ctx)
         {
             // Compute path (Stage 6 rescore): re-score each file's entries
@@ -197,13 +175,13 @@ namespace pwiz.OspreySharp.Tasks
             // reconciled parquets. Used by the straight-through pipeline and
             // the stage6 rescore worker. The --join-at-pass=2 merge node,
             // which has only reconciled parquets + sidecars (no mzMLs to
-            // rescore from), takes Rehydrate instead; until the Phase B5
-            // driver flip every entry funnels through RunOrHydrate, so this
-            // task is only ever reached here in the rescore-capable modes.
+            // rescore from), takes Rehydrate instead: the driver reaches this
+            // task here only in the rescore-capable modes, and a merge-node
+            // consumer materializes it via ctx.Demand, which routes to Rehydrate.
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 
             // Self-gate: rescore + reconciliation only run when there is
@@ -224,7 +202,7 @@ namespace pwiz.OspreySharp.Tasks
             // the strict --join-at-pass=2 merge path. Downstream
             // MergeNodeTask still gets _perFileEntries via our accessor
             // (falls through to the upstream reference).
-            var firstJoin = ctx.GetTask<FirstJoinTask>();
+            var firstJoin = ctx.Demand<FirstJoinTask>();
             bool didPlan = firstJoin.DidPlan(ctx);
             var rescoreBundle = perFileScoring.GetRescoreInputs(ctx);
             bool anyPass2Present = false;
@@ -342,7 +320,7 @@ namespace pwiz.OspreySharp.Tasks
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 
             var bundle = perFileScoring.GetRescoreInputs(ctx);

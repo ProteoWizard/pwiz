@@ -68,7 +68,7 @@ namespace pwiz.OspreySharp.Tasks
     {
         public override string Name => @"FirstJoin";
 
-        // Outputs reached by downstream tasks through ctx.GetTask<FirstJoinTask>().
+        // Outputs reached by downstream tasks through ctx.Demand<FirstJoinTask>().
         // DidPlan is the gate downstream consumers (PerFileRescoreTask)
         // check to decide whether the Stage 6 planning state below is
         // meaningful or whether planning was skipped. Defaults are
@@ -88,36 +88,32 @@ namespace pwiz.OspreySharp.Tasks
         // mechanism; FirstJoinTask uses the same idempotent Run pattern.
         private bool _runOrHydrated;
 
-        public bool DidPlan(PipelineContext ctx) { EnsureHydrated(ctx); return _didPlan; }
+        public bool DidPlan(PipelineContext ctx) { return _didPlan; }
 
         public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets(PipelineContext ctx)
         {
-            EnsureHydrated(ctx);
             if (_didPlan) return _perFileConsensusTargets;
             return ConsensusTargetsFromBundleOrEmpty(ctx);
         }
 
         public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions(PipelineContext ctx)
         {
-            EnsureHydrated(ctx);
             if (_didPlan) return _reconciliationActions;
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            var bundle = ctx.Demand<PerFileScoringTask>().GetRescoreInputs(ctx);
             return bundle != null ? bundle.ReconciliationActions : _reconciliationActions;
         }
 
         public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations(PipelineContext ctx)
         {
-            EnsureHydrated(ctx);
             if (_didPlan) return _refinedCalibrations;
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            var bundle = ctx.Demand<PerFileScoringTask>().GetRescoreInputs(ctx);
             return bundle != null ? bundle.RefinedCalibrations : _refinedCalibrations;
         }
 
         public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore(PipelineContext ctx)
         {
-            EnsureHydrated(ctx);
             if (_didPlan) return _perFileGapFillForRescore;
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            var bundle = ctx.Demand<PerFileScoringTask>().GetRescoreInputs(ctx);
             return bundle != null ? bundle.PerFileGapFill : _perFileGapFillForRescore;
         }
 
@@ -130,7 +126,7 @@ namespace pwiz.OspreySharp.Tasks
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>
             ConsensusTargetsFromBundleOrEmpty(PipelineContext ctx)
         {
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
+            var bundle = ctx.Demand<PerFileScoringTask>().GetRescoreInputs(ctx);
             if (bundle == null) return _perFileConsensusTargets;
             if (bundle.PerFileConsensusTargets != null) return bundle.PerFileConsensusTargets;
             var computed = new Dictionary<string,
@@ -142,12 +138,6 @@ namespace pwiz.OspreySharp.Tasks
             }
             bundle.PerFileConsensusTargets = computed;
             return computed;
-        }
-
-        private void EnsureHydrated(PipelineContext ctx)
-        {
-            if (_runOrHydrated) return;
-            RunOrHydrate(ctx);
         }
 
         // Phase B resume surface. Reads each file's .scores.parquet,
@@ -181,45 +171,20 @@ namespace pwiz.OspreySharp.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
-        /// <summary>
-        /// Dispatch the first materialization of this task to the compute
-        /// path (<see cref="Run"/>, the full Stage 5+6 work) or the disk-load
-        /// path (<see cref="Rehydrate"/>) based on whether the upstream
-        /// PerFileScoring task hydrated a rescore bundle from sibling sidecars
-        /// on disk. When it did, Stage 5 work (Percolator first-pass FDR,
-        /// first-pass protein FDR, 1st-pass sidecar write) and Stage 6
-        /// planning are already encoded in that bundle's q-values and
-        /// reconciliation state, so only compaction remains. The driver loop
-        /// calls <see cref="Run"/> directly (it only reaches this task in the
-        /// straight-through / --join-only modes where the bundle is absent and
-        /// the full path is correct); the accessor/<see cref="EnsureHydrated"/>
-        /// path comes through here so a worker-mode consumer triggers
-        /// <see cref="Rehydrate"/>. Transitional: removed at the Phase B5
-        /// driver-loop flip.
-        /// </summary>
-        private void RunOrHydrate(PipelineContext ctx)
-        {
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
-            if (bundle != null)
-                Rehydrate(ctx);
-            else
-                Run(ctx);
-        }
-
         public override bool Run(PipelineContext ctx)
         {
             // Compute path (Stage 5 first-pass FDR + Stage 6 planning): the
             // upstream PerFileScoring task did NOT hydrate a rescore bundle, so
             // this run owns the full first-join work. The bundle-present
-            // disk-load counterpart lives in Rehydrate; until the Phase B5
-            // driver flip every entry funnels through RunOrHydrate, so this
-            // task is only ever reached here in the bundle-absent modes
-            // (straight-through, --join-only).
+            // disk-load counterpart lives in Rehydrate. The driver reaches this
+            // task here only in the bundle-absent modes (straight-through,
+            // --join-only); a worker-mode consumer materializes it via
+            // ctx.Demand which routes to Rehydrate.
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
 
             // Mid-Run crash safety: clear stale sidecars for the outputs
             // this task is about to produce. A crash before the matching
@@ -335,7 +300,7 @@ namespace pwiz.OspreySharp.Tasks
             _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
             var bundle = perFileScoring.GetRescoreInputs(ctx);
             var perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 

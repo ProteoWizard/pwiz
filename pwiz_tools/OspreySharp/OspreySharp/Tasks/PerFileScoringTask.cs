@@ -99,7 +99,7 @@ namespace pwiz.OspreySharp.Tasks
 
         public override string Name => @"PerFileScoring";
 
-        // Outputs reached by downstream tasks through ctx.GetTask<PerFileScoringTask>().
+        // Outputs reached by downstream tasks through ctx.Demand<PerFileScoringTask>().
         // Defaults are non-null empty collections so callers querying
         // outputs from a not-yet-run task never NPE on the accessor.
         private List<LibraryEntry> _fullLibrary = new List<LibraryEntry>();
@@ -137,8 +137,8 @@ namespace pwiz.OspreySharp.Tasks
         // IReadOnlyList would cascade through scoring-engine + FDR-project
         // signatures (RunCoelutionScoring, RunFdr, ProteinFdr, ...), out of
         // proportion to the value. Deferred to a future cross-project sweep.
-        public List<LibraryEntry> GetFullLibrary(PipelineContext ctx) { EnsureHydrated(ctx); return _fullLibrary; }
-        public IReadOnlyDictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { EnsureHydrated(ctx); return _libraryById; }
+        public List<LibraryEntry> GetFullLibrary(PipelineContext ctx) { return _fullLibrary; }
+        public IReadOnlyDictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { return _libraryById; }
         // GetPerFileEntries is DELIBERATELY a live, mutable, shared buffer --
         // NOT a read-only view, by design. The same
         // List<KeyValuePair<string, List<FdrEntry>>> reference is the
@@ -147,9 +147,9 @@ namespace pwiz.OspreySharp.Tasks
         // place -- all on this one instance. The no-copy cross-task hand-off
         // is load-bearing (copying it is a measured perf regression at
         // Astral scale). Do NOT "fix" this to IReadOnly or to return a copy.
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileEntries; }
-        public IReadOnlyDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileCalibrations; }
-        public IReadOnlyDictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { EnsureHydrated(ctx); return _perFileParquetPaths; }
+        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { return _perFileEntries; }
+        public IReadOnlyDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { return _perFileCalibrations; }
+        public IReadOnlyDictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { return _perFileParquetPaths; }
 
         /// <summary>
         /// The probe-the-disk reconciliation bundle, or <c>null</c> when
@@ -159,24 +159,7 @@ namespace pwiz.OspreySharp.Tasks
         /// this bundle so the worker hydration path and the in-pipeline
         /// path produce identical post-Stage-5 state.
         /// </summary>
-        public RescoreInputs GetRescoreInputs(PipelineContext ctx) { EnsureHydrated(ctx); return _rescoreInputs; }
-
-        /// <summary>
-        /// Lazy-rehydrate seam: when a downstream task queries one of this
-        /// task's outputs and neither <see cref="Run"/> nor <see cref="Rehydrate"/>
-        /// has executed (i.e. this task is before
-        /// <see cref="PipelineContext.StartAtTask"/>), materialize its state
-        /// now. <see cref="RunOrHydrate"/> picks the compute path
-        /// (<see cref="Run"/>) or the disk-load path (<see cref="Rehydrate"/>)
-        /// from the same <c>--input-scores</c> signal the straight-through run
-        /// would, so the populated state is identical either way. Idempotent;
-        /// subsequent calls are no-ops.
-        /// </summary>
-        private void EnsureHydrated(PipelineContext ctx)
-        {
-            if (_runOrHydrated) return;
-            RunOrHydrate(ctx);
-        }
+        public RescoreInputs GetRescoreInputs(PipelineContext ctx) { return _rescoreInputs; }
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
@@ -202,37 +185,14 @@ namespace pwiz.OspreySharp.Tasks
             }
         }
 
-        /// <summary>
-        /// Dispatch the first materialization of this task to the compute
-        /// path (<see cref="Run"/>) or the disk-load path
-        /// (<see cref="Rehydrate"/>) based on the same <c>--input-scores</c>
-        /// signal a straight-through invocation reads. The driver loop calls
-        /// <see cref="Run"/> directly (it only reaches this task in the
-        /// non-<c>--input-scores</c> modes where compute is correct); the
-        /// accessor/<see cref="EnsureHydrated"/> path comes through here so a
-        /// worker-mode consumer triggers <see cref="Rehydrate"/> instead.
-        /// Transitional: removed with the driver-loop flip in Phase B5.
-        /// </summary>
-        private void RunOrHydrate(PipelineContext ctx)
-        {
-            bool joinOnly = ctx.Config.InputScores != null && ctx.Config.InputScores.Count > 0;
-            // The success/stop bool is meaningful only to the driver loop,
-            // which calls Run directly; the accessor hydration that comes
-            // through here just needs the producer's state populated.
-            if (joinOnly)
-                Rehydrate(ctx);
-            else
-                Run(ctx);
-        }
-
         public override bool Run(PipelineContext ctx)
         {
             // Compute path (Stages 1-4): load the library and score every
             // input mzML from spectra. The worker-mode disk-load counterpart
-            // (--input-scores) lives in Rehydrate; until the Phase B5 driver
-            // flip every entry funnels through RunOrHydrate, so this task is
-            // only ever reached here in the non---input-scores modes where
-            // computing from spectra is the right thing.
+            // (--input-scores) lives in Rehydrate; the driver reaches this task
+            // here only in the non---input-scores modes (where computing from
+            // spectra is right), and a worker-mode consumer materializes it via
+            // ctx.Demand, which routes to Rehydrate.
             //
             // Idempotent re-entry guard: a lazy-rehydrate via an accessor may
             // have already executed this task body; the driver loop's call

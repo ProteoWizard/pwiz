@@ -110,8 +110,8 @@ namespace pwiz.OspreySharp.Tasks
             // perFileEntries comes from PerFileRescoreTask -- it owns
             // the post-rescore version (mutated in place; or the
             // unchanged upstream reference when planning was skipped).
-            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries(ctx);
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var perFileEntries = ctx.Demand<PerFileRescoreTask>().GetPerFileEntries(ctx);
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
             var fullLibrary = perFileScoring.GetFullLibrary(ctx);
             var libraryById = perFileScoring.GetLibraryById(ctx);
             var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
