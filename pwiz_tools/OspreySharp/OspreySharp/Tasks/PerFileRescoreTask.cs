@@ -165,7 +165,7 @@ namespace pwiz.OspreySharp.Tasks
         public override string ValidityKey(PipelineContext ctx)
         {
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
         public override bool Run(PipelineContext ctx)
@@ -373,7 +373,7 @@ namespace pwiz.OspreySharp.Tasks
         /// <see cref="ParquetScoreCache.WriteScoresParquet(string, List{FdrEntry}, Dictionary{string, string}, Dictionary{uint, LibraryEntry}, string)"/>
         /// with reconciliation metadata
         /// (<c>osprey.reconciled = "true"</c> +
-        /// <c>osprey.reconciliation_hash = config.ReconciliationParameterHash()</c>).
+        /// <c>osprey.reconciliation_hash = config.Identity.ReconciliationParameterHash()</c>).
         /// The original parquet is read-only here -- it is never overwritten,
         /// so it survives intact for files whose reconciliation is a no-op and
         /// as a crash-safe Stage 4 record. Mirrors Rust pipeline.rs:3050-3110.
@@ -465,13 +465,13 @@ namespace pwiz.OspreySharp.Tasks
             //    pipeline where config.InputFiles already has all files,
             //    or v1 backward compat).
             string reconciliationHash = (joinFileStems != null && joinFileStems.Count > 0)
-                ? config.ReconciliationParameterHashForStems(joinFileStems)
-                : config.ReconciliationParameterHash();
+                ? config.Identity.ReconciliationParameterHashForStems(joinFileStems)
+                : config.Identity.ReconciliationParameterHash();
             var metadata = new Dictionary<string, string>
             {
                 { @"osprey.version", Program.VERSION },
-                { @"osprey.search_hash", config.SearchParameterHash() },
-                { @"osprey.library_hash", config.LibraryIdentityHash() },
+                { @"osprey.search_hash", config.Identity.SearchParameterHash() },
+                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                 { @"osprey.reconciled", @"true" },
                 { @"osprey.reconciliation_hash", reconciliationHash },
             };
@@ -627,7 +627,7 @@ namespace pwiz.OspreySharp.Tasks
                 // the MS2-calibrated tolerance (AnalysisPipeline.cs ~line 3552);
                 // without a per-file clone the mutation persists on the outer
                 // config, leaks into subsequent files, AND poisons the
-                // WriteReconciledParquet hash stamp (config.SearchParameterHash()
+                // WriteReconciledParquet hash stamp (config.Identity.SearchParameterHash()
                 // would then reflect the calibrated tolerance, not the value
                 // a fresh --join-at-pass=2 invocation recomputes from CLI
                 // defaults -- causing search_hash mismatch errors). Mirrors

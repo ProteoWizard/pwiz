@@ -243,7 +243,7 @@ namespace pwiz.OspreySharp.Tasks
             // Pre-compute the parquet footer metadata ONCE, against the
             // unmutated outer config. ProcessFile clones the config per
             // file and mutates FragmentTolerance during MS2 calibration,
-            // so reading config.SearchParameterHash() inside ProcessFile
+            // so reading config.Identity.SearchParameterHash() inside ProcessFile
             // would produce a hash that the join-only validator would
             // not recognize. Built unconditionally (in any non-joinOnly
             // mode) because Stage 6 reconciliation needs the per-file
@@ -256,8 +256,8 @@ namespace pwiz.OspreySharp.Tasks
                 parquetFooterMetadata = new Dictionary<string, string>
                 {
                     { @"osprey.version", Program.VERSION },
-                    { @"osprey.search_hash", config.SearchParameterHash() },
-                    { @"osprey.library_hash", config.LibraryIdentityHash() },
+                    { @"osprey.search_hash", config.Identity.SearchParameterHash() },
+                    { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                     { @"osprey.reconciled", @"false" },
                 };
             }
@@ -269,14 +269,14 @@ namespace pwiz.OspreySharp.Tasks
 
             // Determine how many files will actually run concurrently so
             // ProcessFile can divide the inner main-search thread budget
-            // and avoid oversubscription. Stored on the config so the
-            // per-file clones inherit it.
+            // and avoid oversubscription. Stored on the per-run RunPlan
+            // (driver-owned run state), not on the parsed OspreyConfig.
             if (nFiles == 1 || maxParallelFiles == 1)
-                config.EffectiveFileParallelism = 1;
+                ctx.RunPlan.EffectiveFileParallelism = 1;
             else if (maxParallelFiles > 1)
-                config.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
+                ctx.RunPlan.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
             else
-                config.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
+                ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
 
             var swAllFiles = Stopwatch.StartNew();
             if (joinOnly)
@@ -1005,12 +1005,12 @@ namespace pwiz.OspreySharp.Tasks
             // 32 threads on a 32-core box, the prior 96-way oversubscription
             // produced 45-95s wall-time variance on Stellar; a fair share
             // (10 threads each) holds the run near steady-state.
-            if (config.EffectiveFileParallelism > 1)
+            if (_ctx.RunPlan.EffectiveFileParallelism > 1)
             {
-                int perFileThreads = Math.Max(1, config.NThreads / config.EffectiveFileParallelism);
+                int perFileThreads = Math.Max(1, config.NThreads / _ctx.RunPlan.EffectiveFileParallelism);
                 _ctx.LogInfo(string.Format(
                     "[BENCH] Per-file thread cap: {0} ({1} total / {2} files in parallel)",
-                    perFileThreads, config.NThreads, config.EffectiveFileParallelism));
+                    perFileThreads, config.NThreads, _ctx.RunPlan.EffectiveFileParallelism));
                 config.NThreads = perFileThreads;
             }
 
@@ -1020,7 +1020,7 @@ namespace pwiz.OspreySharp.Tasks
             List<Spectrum> spectra;
             List<MS1Spectrum> ms1Spectra;
             var swParse = Stopwatch.StartNew();
-            LoadSpectra(inputFile, config.EffectiveFileParallelism > 1,
+            LoadSpectra(inputFile, _ctx.RunPlan.EffectiveFileParallelism > 1,
                 out spectra, out ms1Spectra);
             swParse.Stop();
 

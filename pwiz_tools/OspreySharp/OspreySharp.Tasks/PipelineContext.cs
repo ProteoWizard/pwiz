@@ -55,22 +55,29 @@ namespace pwiz.OspreySharp.Tasks
         /// The configuration parsed from CLI args and the input library.
         ///
         /// Mutation contract: fields that feed
-        /// <see cref="OspreyConfig.SearchParameterHash"/> /
-        /// <see cref="OspreyConfig.LibraryIdentityHash"/> /
-        /// <see cref="OspreyConfig.ReconciliationParameterHash"/> must
+        /// <see cref="SearchIdentity.SearchParameterHash"/> /
+        /// <see cref="SearchIdentity.LibraryIdentityHash"/> /
+        /// <see cref="SearchIdentity.ReconciliationParameterHash"/> must
         /// remain stable for the life of the run, so a worker can
         /// reproduce the same hash a straight-through invocation would
         /// stamp into its parquet footers. Pipeline-populated fields
         /// that do NOT feed those hashes (e.g. the worker-mode
-        /// synthesis of <c>InputFiles</c> from <c>InputScores</c>, the
-        /// pipeline's choice of <c>EffectiveFileParallelism</c>) may be
-        /// written once at pipeline entry. For per-file scratch that
+        /// synthesis of <c>InputFiles</c> from <c>InputScores</c>) may be
+        /// written once at pipeline entry. Run-time state that is not parsed
+        /// config (e.g. file parallelism) lives on <see cref="RunPlan"/>
+        /// instead. For per-file scratch that
         /// mutates hash-affecting fields (e.g. the MS2-calibrated
         /// FragmentTolerance), tasks must use
         /// <c>OspreyConfig.ShallowClone</c> so the mutation stays
         /// scoped to one file.
         /// </summary>
         public OspreyConfig Config { get; }
+
+        /// <summary>
+        /// Per-run, driver-owned pipeline state (not parsed config, not part
+        /// of any cache / identity hash). See <see cref="RunPlan"/>.
+        /// </summary>
+        public RunPlan RunPlan { get; } = new RunPlan();
 
         /// <summary>
         /// Process exit code requested by a task that has returned

@@ -118,16 +118,16 @@ namespace pwiz.OspreySharp.Tasks
         /// output's <c>.osprey.task</c> sidecar after Run; checked on
         /// the next invocation before deciding whether to skip Run.
         ///
-        /// Default includes <see cref="OspreyConfig.SearchParameterHash"/>
-        /// and <see cref="OspreyConfig.LibraryIdentityHash"/> — the
+        /// Default includes <see cref="SearchIdentity.SearchParameterHash"/>
+        /// and <see cref="SearchIdentity.LibraryIdentityHash"/> — the
         /// two hashes that already participate in the parquet-metadata
         /// integrity check downstream. Tasks with extra per-task state
-        /// that affects their output (e.g. <see cref="OspreyConfig.ReconciliationParameterHash"/>
+        /// that affects their output (e.g. <see cref="SearchIdentity.ReconciliationParameterHash"/>
         /// for the rescore task) override and append.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
             @"search={0};library={1}",
-            ctx.Config.SearchParameterHash(),
-            ctx.Config.LibraryIdentityHash());
+            ctx.Config.Identity.SearchParameterHash(),
+            ctx.Config.Identity.LibraryIdentityHash());
     }
 }
