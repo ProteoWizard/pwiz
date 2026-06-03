@@ -273,20 +273,26 @@ namespace TestRunner
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            // EXPERIMENT: force a deterministic WinForms accessibility level before any control is
-            // created, overriding config/framework-quirk defaults, so the UseLegacyAccessibilityFeatures
-            // (#2) test isn't confounded by an unknown switch state. SetSwitch wins over config when it
-            // runs before the level is first read. Flag A below logs the resulting state.
-            //   SKYLINE_LEGACY_ACCESSIBILITY=1 -> full legacy (Level0); =0 -> latest (Level4); unset -> defaults.
-            var legacyAccessibility = Environment.GetEnvironmentVariable("SKYLINE_LEGACY_ACCESSIBILITY");
-            if (legacyAccessibility == "1" || legacyAccessibility == "0")
-            {
-                var useLegacy = legacyAccessibility == "1";
-                AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures", useLegacy);
-                AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.2", useLegacy);
-                AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.3", useLegacy);
-                AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.4", useLegacy);
-            }
+            // Opt the test runner into the latest WinForms accessibility level by explicitly setting
+            // all four UseLegacyAccessibilityFeatures switches to false BEFORE any control is created.
+            // This is test-host only -- it does not change shipping Skyline behavior.
+            //
+            // Why: at this exe's framework-default accessibility level (it targets .NET 4.7.2), closing
+            // a window does not release some UI Automation accessible-object provider handles, so the
+            // post-test GC check reports SkylineWindow/SrmDocument as not collected. Opting into the
+            // latest level (which carries the accessible-object lifetime fix) clears it. Subtlety:
+            // AppContext.TryGetSwitch reads the same whether a switch is unset or explicitly false, but
+            // the *effective* WinForms accessibility level differs -- so these must be set explicitly
+            // here, not merely left unset (the framework default is what leaks).
+            //
+            // Alternative: setting all four to TRUE (legacy accessibility) also stops the leak, by
+            // disabling the modern UI Automation provider path entirely. That is a larger behavioral
+            // change, but worth keeping in mind if a future framework regresses the lifetime fix at the
+            // latest level, or if we ever want to fully sidestep UIA providers in the test host.
+            AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures", false);
+            AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.2", false);
+            AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.3", false);
+            AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.4", false);
 
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
@@ -315,47 +321,6 @@ namespace TestRunner
             {
                 Console.WriteLine("TestRunner " + string.Join(" ", args) + "\n");
                 Console.WriteLine("Process: {0}\n", Process.GetCurrentProcess().Id);
-            }
-
-            // DIAGNOSTIC (GC-leak UIA exploration): confirm whether the legacy-accessibility
-            // AppContext switches are actually live in this process (config-applied vs silently
-            // dropped). Lets us trust/discard the UseLegacyAccessibilityFeatures experiment.
-            foreach (var accessibilitySwitch in new[]
-            {
-                "Switch.UseLegacyAccessibilityFeatures",
-                "Switch.UseLegacyAccessibilityFeatures.2",
-                "Switch.UseLegacyAccessibilityFeatures.3",
-                "Switch.UseLegacyAccessibilityFeatures.4"
-            })
-            {
-                AppContext.TryGetSwitch(accessibilitySwitch, out var isOn);
-                Console.WriteLine("AppContext {0} = {1}", accessibilitySwitch, isOn);
-            }
-
-            // DIAGNOSTIC (debug-only, not for merge): the AppContext switches above can read the
-            // same via TryGetSwitch whether unset or explicitly false, yet behave differently. Read
-            // the EFFECTIVE WinForms AccessibilityImprovements level (internal) to see the real state.
-            try
-            {
-                var aiType = typeof(System.Windows.Forms.Control).Assembly
-                    .GetType("System.Windows.Forms.AccessibilityImprovements");
-                if (aiType != null)
-                {
-                    foreach (var prop in aiType.GetProperties(System.Reflection.BindingFlags.Static
-                                 | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public))
-                    {
-                        if (prop.Name.StartsWith("Level") && prop.PropertyType == typeof(bool))
-                            Console.WriteLine("AccessibilityImprovements.{0} = {1}", prop.Name, prop.GetValue(null));
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("AccessibilityImprovements type not found for level readout");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("AccessibilityImprovements level readout failed: {0}", ex.Message);
             }
 
             if (commandLineArgs.HasArg("debug"))

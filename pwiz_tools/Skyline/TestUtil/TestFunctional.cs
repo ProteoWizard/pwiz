@@ -2759,14 +2759,6 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        // EXPERIMENT: when env SKYLINE_PRECLOSE_UIA_DISCONNECT=1, disconnect UI Automation
-        // providers while the window's controls still have live HWNDs (see GC-LEAK investigation).
-        private static readonly bool PreCloseUiaDisconnect =
-            "1".Equals(Environment.GetEnvironmentVariable("SKYLINE_PRECLOSE_UIA_DISCONNECT"));
-
-        [System.Runtime.InteropServices.DllImport("UIAutomationCore.dll")]
-        private static extern int UiaDisconnectAllProviders();
-
         private void EndTest()
         {
             if (_pauseAndContinueForm is { IsDisposed: false })
@@ -2775,19 +2767,6 @@ namespace pwiz.SkylineTestUtil
             }
 
             var skylineWindow = Program.MainWindow;
-
-            // EXPERIMENT (SKYLINE_PRECLOSE_UIA_DISCONNECT=1): disconnect UI Automation providers
-            // while the window's controls still have live HWNDs, to test whether #4248's post-close
-            // disconnect in MemoryManagement.FlushMemory runs too late to reclaim these accessibility
-            // RefCounted handles that pin SkylineWindow/SrmDocument as GC-LEAK survivors.
-            if (PreCloseUiaDisconnect && skylineWindow is { IsDisposed: false } && IsFormOpen(skylineWindow))
-            {
-                RunUI(() =>
-                {
-                    try { UiaDisconnectAllProviders(); }
-                    catch (Exception ex) { Console.WriteLine(@"pre-close UiaDisconnectAllProviders failed: {0}", ex); }
-                });
-            }
             if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
             {
                 var startWindow = Program.StartWindow;
