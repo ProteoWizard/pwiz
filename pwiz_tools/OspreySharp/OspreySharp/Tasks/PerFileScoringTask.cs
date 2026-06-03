@@ -119,10 +119,11 @@ namespace pwiz.OspreySharp.Tasks
         // a separate code path.
         private RescoreInputs _rescoreInputs;
 
-        // Phase B lazy-rehydrate gate. Set to true at the start of Run
-        // and by EnsureHydrated. Once set, neither path re-executes the
-        // body (multiple accessors querying state from a single skipped
-        // task all hit a fast no-op after the first hydration).
+        // Phase B lazy-rehydrate gate. Set to true at the start of both
+        // Run (compute) and Rehydrate (disk-load). Once set, neither path
+        // re-executes the body (multiple accessors querying state from a
+        // single skipped task all hit a fast no-op after the first
+        // materialization).
         private bool _runOrHydrated;
 
         // Producer accessors. The backing fields are built and mutated ONLY
@@ -161,17 +162,20 @@ namespace pwiz.OspreySharp.Tasks
         public RescoreInputs GetRescoreInputs(PipelineContext ctx) { EnsureHydrated(ctx); return _rescoreInputs; }
 
         /// <summary>
-        /// Lazy-rehydrate seam: when a downstream task queries one of
-        /// this task's outputs and <see cref="Run"/> has not executed
-        /// (i.e. this task is before <see cref="PipelineContext.StartAtTask"/>),
-        /// invoke Run so the same code path that populates state on a
-        /// straight-through run also populates state here. Idempotent;
+        /// Lazy-rehydrate seam: when a downstream task queries one of this
+        /// task's outputs and neither <see cref="Run"/> nor <see cref="Rehydrate"/>
+        /// has executed (i.e. this task is before
+        /// <see cref="PipelineContext.StartAtTask"/>), materialize its state
+        /// now. <see cref="RunOrHydrate"/> picks the compute path
+        /// (<see cref="Run"/>) or the disk-load path (<see cref="Rehydrate"/>)
+        /// from the same <c>--input-scores</c> signal the straight-through run
+        /// would, so the populated state is identical either way. Idempotent;
         /// subsequent calls are no-ops.
         /// </summary>
         private void EnsureHydrated(PipelineContext ctx)
         {
             if (_runOrHydrated) return;
-            Run(ctx);
+            RunOrHydrate(ctx);
         }
 
         // Phase B resume surface: the library and every input mzML are
@@ -198,11 +202,41 @@ namespace pwiz.OspreySharp.Tasks
             }
         }
 
+        /// <summary>
+        /// Dispatch the first materialization of this task to the compute
+        /// path (<see cref="Run"/>) or the disk-load path
+        /// (<see cref="Rehydrate"/>) based on the same <c>--input-scores</c>
+        /// signal a straight-through invocation reads. The driver loop calls
+        /// <see cref="Run"/> directly (it only reaches this task in the
+        /// non-<c>--input-scores</c> modes where compute is correct); the
+        /// accessor/<see cref="EnsureHydrated"/> path comes through here so a
+        /// worker-mode consumer triggers <see cref="Rehydrate"/> instead.
+        /// Transitional: removed with the driver-loop flip in Phase B5.
+        /// </summary>
+        private void RunOrHydrate(PipelineContext ctx)
+        {
+            bool joinOnly = ctx.Config.InputScores != null && ctx.Config.InputScores.Count > 0;
+            // The success/stop bool is meaningful only to the driver loop,
+            // which calls Run directly; the accessor hydration that comes
+            // through here just needs the producer's state populated.
+            if (joinOnly)
+                Rehydrate(ctx);
+            else
+                Run(ctx);
+        }
+
         public override bool Run(PipelineContext ctx)
         {
-            // Idempotent re-entry guard: a lazy-rehydrate via an
-            // accessor may have already executed this task body; the
-            // driver loop's call here is then a no-op.
+            // Compute path (Stages 1-4): load the library and score every
+            // input mzML from spectra. The worker-mode disk-load counterpart
+            // (--input-scores) lives in Rehydrate; until the Phase B5 driver
+            // flip every entry funnels through RunOrHydrate, so this task is
+            // only ever reached here in the non---input-scores modes where
+            // computing from spectra is the right thing.
+            //
+            // Idempotent re-entry guard: a lazy-rehydrate via an accessor may
+            // have already executed this task body; the driver loop's call
+            // here is then a no-op.
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
@@ -219,48 +253,30 @@ namespace pwiz.OspreySharp.Tasks
             // Per-file RT calibration handles harvested by ProcessFile so
             // Stage 6 reconciliation has the live RTCalibration objects.
             var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
-            // fileName -> .scores.parquet path. Populated by --join-only
-            // (which already knows the paths) so Stage 6 reconciliation
-            // can lazily load CWT candidates per file via
+            // fileName -> .scores.parquet path, populated below so Stage 6
+            // reconciliation can lazily load CWT candidates per file via
             // ParquetScoreCache.LoadCwtCandidatesFromParquet.
             var perFileParquetPaths = new Dictionary<string, string>();
 
-            bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
-            int nFiles = joinOnly ? config.InputScores.Count : config.InputFiles.Count;
-
-            // In --input-scores mode without explicit -i, synthesize
-            // InputFiles from the parquet stems so downstream code
-            // (Stage 6 rescore's fileNameToIdx in particular) can map
-            // each file_name back to a real (synthetic) input path.
-            if (joinOnly && (config.InputFiles == null || config.InputFiles.Count == 0))
-            {
-                var synthetic = new List<string>(config.InputScores.Count);
-                foreach (var p in config.InputScores)
-                    synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
-                config.InputFiles = synthetic;
-            }
+            int nFiles = config.InputFiles.Count;
 
             // Pre-compute the parquet footer metadata ONCE, against the
             // unmutated outer config. ProcessFile clones the config per
             // file and mutates FragmentTolerance during MS2 calibration,
             // so reading config.Identity.SearchParameterHash() inside ProcessFile
             // would produce a hash that the join-only validator would
-            // not recognize. Built unconditionally (in any non-joinOnly
-            // mode) because Stage 6 reconciliation needs the per-file
-            // .scores.parquet on disk to lazily load CWT candidates --
-            // matches Rust's end-to-end behavior, which always writes
-            // the parquet sidecar regardless of --no-join.
-            Dictionary<string, string> parquetFooterMetadata = null;
-            if (!joinOnly)
+            // not recognize. Built unconditionally because Stage 6
+            // reconciliation needs the per-file .scores.parquet on disk to
+            // lazily load CWT candidates -- matches Rust's end-to-end
+            // behavior, which always writes the parquet sidecar regardless
+            // of --no-join.
+            var parquetFooterMetadata = new Dictionary<string, string>
             {
-                parquetFooterMetadata = new Dictionary<string, string>
-                {
-                    { @"osprey.version", Program.VERSION },
-                    { @"osprey.search_hash", config.Identity.SearchParameterHash() },
-                    { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
-                    { @"osprey.reconciled", @"false" },
-                };
-            }
+                { @"osprey.version", Program.VERSION },
+                { @"osprey.search_hash", config.Identity.SearchParameterHash() },
+                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
+                { @"osprey.reconciled", @"false" },
+            };
 
             // File-level parallelism is configurable via
             // OSPREY_MAX_PARALLEL_FILES. See AnalysisPipeline (and
@@ -279,11 +295,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
 
             var swAllFiles = Stopwatch.StartNew();
-            if (joinOnly)
-            {
-                LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths, perFileCalibrations);
-            }
-            else if (config.InputFiles.Count == 1)
+            if (config.InputFiles.Count == 1)
             {
                 // Single file: process directly (no parallel overhead)
                 string inputFile = config.InputFiles[0];
@@ -354,19 +366,84 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
 
-            // End-to-end (non-joinOnly) modes: populate perFileParquetPaths
-            // from config.InputFiles so Stage 6 reconciliation can locate
-            // each file's freshly-written .scores.parquet to lazy-load CWT
-            // candidates from. ProcessFile writes the parquet whenever
-            // parquetFooterMetadata != null (now always set in non-joinOnly mode).
-            if (!joinOnly)
+            // Populate perFileParquetPaths from config.InputFiles so Stage 6
+            // reconciliation can locate each file's freshly-written
+            // .scores.parquet to lazy-load CWT candidates from. ProcessFile
+            // always writes the parquet (parquetFooterMetadata is non-null).
+            foreach (string inputFile in config.InputFiles)
             {
-                foreach (string inputFile in config.InputFiles)
-                {
-                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    perFileParquetPaths[fileName] = ParquetScoreCache.GetScoresPath(inputFile);
-                }
+                string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                perFileParquetPaths[fileName] = ParquetScoreCache.GetScoresPath(inputFile);
             }
+
+            int totalScored = 0;
+            foreach (var kvp in perFileEntries)
+                totalScored += kvp.Value.Count;
+
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(string.Format(
+                @"Coelution analysis complete. {0} total scored entries across {1} files",
+                totalScored, nFiles));
+
+            return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
+                perFileParquetPaths, nFiles, totalScored);
+        }
+
+        public override bool Rehydrate(PipelineContext ctx)
+        {
+            // Disk-load path for worker-mode entry (--input-scores): the
+            // per-file Stage 2-4 scores already exist on disk, so load the
+            // FdrEntry stubs + PIN features straight from the parquets
+            // (Stage 1 library still loads -- Stage 5+ needs it) instead of
+            // recomputing them from spectra, then adopt any reconciliation
+            // bundle that the merge node will read. The compute-from-spectra
+            // counterpart is Run.
+            if (_runOrHydrated) return true;
+            _runOrHydrated = true;
+            _ctx = ctx;
+            var config = ctx.Config;
+
+            // Stage 1: library + decoys (needed by Stage 5+ even though the
+            // per-file scores are loaded rather than computed).
+            if (!LoadLibraryAndDecoys(config, out _))
+                return false;
+
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+            var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+            // fileName -> .scores.parquet path; LoadJoinOnlyScores already
+            // knows each input parquet path and fills this in.
+            var perFileParquetPaths = new Dictionary<string, string>();
+
+            int nFiles = config.InputScores.Count;
+
+            // In --input-scores mode without explicit -i, synthesize
+            // InputFiles from the parquet stems so downstream code
+            // (Stage 6 rescore's fileNameToIdx in particular) can map
+            // each file_name back to a real (synthetic) input path.
+            if (config.InputFiles == null || config.InputFiles.Count == 0)
+            {
+                var synthetic = new List<string>(config.InputScores.Count);
+                foreach (var p in config.InputScores)
+                    synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
+                config.InputFiles = synthetic;
+            }
+
+            // Mirror Run's EffectiveFileParallelism bookkeeping (unused by the
+            // disk-load path, which never calls ProcessFile, but kept so the
+            // RunPlan reflects the same per-run state either way).
+            int maxParallelFiles = OspreyEnvironment.MaxParallelFiles;
+            if (nFiles == 1 || maxParallelFiles == 1)
+                ctx.RunPlan.EffectiveFileParallelism = 1;
+            else if (maxParallelFiles > 1)
+                ctx.RunPlan.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
+            else
+                ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
+
+            var swAllFiles = Stopwatch.StartNew();
+            LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths, perFileCalibrations);
+            swAllFiles.Stop();
+            ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds));
 
             int totalScored = 0;
             foreach (var kvp in perFileEntries)
@@ -389,18 +466,31 @@ namespace pwiz.OspreySharp.Tasks
             // sidecars present yet) skips this block and _rescoreInputs
             // stays null.
             //
-            // Replaces the prior --join-at-pass=2-gated 1st-pass overlay:
-            // the disk state determines the hydration shape, not the CLI
+            // The disk state determines the hydration shape, not the CLI
             // flag (Phase C principle: mechanism-driven, not flag-driven).
-            if (joinOnly)
-            {
-                if (!HydrateRescoreBundleIfPresent(config, perFileEntries))
-                    return false;
-            }
+            if (!HydrateRescoreBundleIfPresent(config, perFileEntries))
+                return false;
 
-            // Surface per-file outputs for downstream tasks before any
-            // early-exit so a partial-success caller still sees the
-            // populated collections.
+            return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
+                perFileParquetPaths, nFiles, totalScored);
+        }
+
+        /// <summary>
+        /// Shared tail for <see cref="Run"/> and <see cref="Rehydrate"/>:
+        /// surface the per-file outputs for downstream tasks (before any
+        /// early-exit, so a partial-success caller still sees the populated
+        /// collections), then apply the two success-but-stop boundaries --
+        /// an empty score set (cannot run FDR) and <c>--no-join</c> (Stage
+        /// 1-4 only). Returns <c>true</c> to continue the pipeline, or
+        /// <c>false</c> with <see cref="PipelineContext.ExitCode"/> = 0 at
+        /// either boundary.
+        /// </summary>
+        private bool FinalizeAndCheck(PipelineContext ctx,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            Dictionary<string, string> perFileParquetPaths,
+            int nFiles, int totalScored)
+        {
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
             _perFileParquetPaths = perFileParquetPaths;
@@ -415,7 +505,7 @@ namespace pwiz.OspreySharp.Tasks
             // --no-join: stop here. Per-file `.scores.parquet` files are
             // now on disk; a separate `--join-only` invocation (typically
             // on a merge node) will pick them up and run Stage 5+.
-            if (config.NoJoin)
+            if (ctx.Config.NoJoin)
             {
                 ctx.LogInfo(string.Format(
                     @"--no-join: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
