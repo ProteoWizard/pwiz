@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Tasks
@@ -50,6 +51,15 @@ namespace pwiz.OspreySharp.Tasks
         private readonly Action<string> _logWarning;
         private readonly Action<string> _logError;
         private readonly Dictionary<Type, OspreyTask> _tasksByType;
+
+        /// <summary>
+        /// Producer types whose <see cref="OspreyTask.Rehydrate"/> has already
+        /// been driven by a <see cref="Demand{T}"/> first-touch this run.
+        /// Reproduces the one-shot semantics of each task's former
+        /// <c>_runOrHydrated</c> guard: a producer is materialized at most
+        /// once, no matter how many consumers demand it.
+        /// </summary>
+        private readonly HashSet<Type> _materialized = new HashSet<Type>();
 
         /// <summary>
         /// The configuration parsed from CLI args and the input library.
@@ -188,6 +198,58 @@ namespace pwiz.OspreySharp.Tasks
             if (_tasksByType.TryGetValue(typeof(T), out var task))
                 return (T)task;
             throw new UnknownTaskException(typeof(T));
+        }
+
+        /// <summary>
+        /// Resolve an upstream producer and ensure its state is materialized
+        /// before returning it. The first consumer to demand a given producer
+        /// triggers its <see cref="OspreyTask.Rehydrate"/> (lazy disk-load of
+        /// the producer's outputs); subsequent demands return the same
+        /// instance without re-materializing, via the <see cref="_materialized"/>
+        /// one-shot guard. This is the lazy-rehydrate replacement for the
+        /// <c>EnsureHydrated</c>-inside-getter pattern: callers ask the context
+        /// for what they need and the context owns when the producer's state
+        /// comes into being, rather than each accessor side-effecting a
+        /// hydrate/run on read.
+        ///
+        /// (Transitional note: until the per-task Run/Rehydrate split lands,
+        /// <see cref="OspreyTask.Rehydrate"/> defaults to <see cref="OspreyTask.Run"/>,
+        /// so a first-touch Demand reproduces today's "getter ran the upstream
+        /// task" behavior exactly.)
+        /// </summary>
+        public T Demand<T>() where T : OspreyTask
+        {
+            var task = GetTask<T>();
+            if (_materialized.Add(typeof(T)))
+                task.Rehydrate(this);
+            return task;
+        }
+
+        /// <summary>
+        /// Driver-owned skip predicate: <c>true</c> when every file
+        /// <paramref name="task"/> declares in <see cref="OspreyTask.Outputs"/>
+        /// already exists on disk with a matching
+        /// <see cref="OspreyTask.ValidityKey"/> sidecar — i.e. the task's work
+        /// is durably present and need not be recomputed. A task that declares
+        /// no outputs can never be skipped (returns <c>false</c>), matching the
+        /// "purely-in-memory transformation" posture documented on
+        /// <see cref="OspreyTask.Outputs"/>.
+        ///
+        /// Lifted verbatim from <c>AnalysisPipeline.IsTaskAlreadyDone</c> so the
+        /// driver loop can ask the context "can this rehydrate instead of run?"
+        /// rather than re-running the same outputs-valid check itself.
+        /// </summary>
+        public bool CanRehydrate(OspreyTask task)
+        {
+            var outputs = new List<string>(task.Outputs(this));
+            if (outputs.Count == 0) return false;
+            string key = task.ValidityKey(this);
+            foreach (var output in outputs)
+            {
+                if (!File.Exists(output)) return false;
+                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
+            }
+            return true;
         }
     }
 

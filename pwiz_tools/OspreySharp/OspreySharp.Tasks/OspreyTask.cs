@@ -82,6 +82,25 @@ namespace pwiz.OspreySharp.Tasks
         public abstract bool Run(PipelineContext ctx);
 
         /// <summary>
+        /// Lazily bring this task's outputs into memory from its on-disk
+        /// artifacts, without recomputing them — the disk-load counterpart to
+        /// the compute-only <see cref="Run"/>. Invoked at most once per run by
+        /// <see cref="PipelineContext.Demand{T}"/> when a downstream consumer
+        /// first reaches for this producer's state and the producer's own
+        /// <see cref="Run"/> was never called (e.g. a worker-mode invocation
+        /// that starts mid-pipeline). Returns the same <c>bool</c> contract as
+        /// <see cref="Run"/>.
+        ///
+        /// Transitional default: forwards to <see cref="Run"/>, preserving the
+        /// legacy "an upstream getter hydrates-or-runs on first touch"
+        /// behavior byte-for-byte. The per-task Run/Rehydrate split (Phase B2)
+        /// overrides this with the producer's actual rehydrate path and moves
+        /// compute-only work into <see cref="Run"/>; once that split and the
+        /// driver-loop flip land, this default is removed.
+        /// </summary>
+        public virtual bool Rehydrate(PipelineContext ctx) => Run(ctx);
+
+        /// <summary>
         /// File paths this task reads as inputs. Reported in the
         /// <c>.osprey.task</c> sidecar so a human inspecting a
         /// completed-output sidecar can see what the task consumed.
