@@ -178,7 +178,7 @@ namespace pwiz.OspreySharp.Tasks
         public override string ValidityKey(PipelineContext ctx)
         {
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
         public override bool Run(PipelineContext ctx)
@@ -835,8 +835,8 @@ namespace pwiz.OspreySharp.Tasks
             OspreyConfig config,
             out Dictionary<string, List<GapFillTarget>> gapFillByFileOut)
         {
-            string searchHash = config.SearchParameterHash();
-            string libraryHash = config.LibraryIdentityHash();
+            string searchHash = config.Identity.SearchParameterHash();
+            string libraryHash = config.Identity.LibraryIdentityHash();
             var actions = reconciliationActions
                 ?? new Dictionary<(string File, int Index), ReconcileAction>();
 

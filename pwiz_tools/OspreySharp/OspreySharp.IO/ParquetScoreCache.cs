@@ -1161,8 +1161,8 @@ namespace pwiz.OspreySharp.IO
             string currentVersion,
             Action<string> logWarning)
         {
-            string expectedSearch = config.SearchParameterHash();
-            string expectedLibrary = config.LibraryIdentityHash();
+            string expectedSearch = config.Identity.SearchParameterHash();
+            string expectedLibrary = config.Identity.LibraryIdentityHash();
 
             foreach (string path in paths)
             {

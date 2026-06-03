@@ -85,7 +85,7 @@ namespace pwiz.OspreySharp.Tasks
         public override string ValidityKey(PipelineContext ctx)
         {
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
         public override bool Run(PipelineContext ctx)
