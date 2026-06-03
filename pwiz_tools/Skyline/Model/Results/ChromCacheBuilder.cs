@@ -1324,7 +1324,9 @@ namespace pwiz.Skyline.Model.Results
         private void WriteChromDataSet(int indexInFile, ChromDataSet chromDataSet, Dictionary<IList<float>, int> dictScoresToIndex, bool saveRawTimes, bool isProcessedScans)
         {
             long location = _fs.Stream.Position;
-            var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes);
+            int observedIonMobilityScale = RawTimeIntensities.GetObservedIonMobilityScaleOrZero(
+                _ionMobilityConverter?.IonMobilityUnits ?? eIonMobilityUnits.none);
+            var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes, observedIonMobilityScale);
             // Write the raw chromatogram points
             MemoryStream pointsMemoryStream = new MemoryStream();
             groupOfTimeIntensities.WriteToStream(pointsMemoryStream);

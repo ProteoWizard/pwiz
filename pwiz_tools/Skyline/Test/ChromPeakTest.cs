@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -300,6 +302,88 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(25f, timeIntensities8.Intensities[2]);
             Assert.AreEqual(-5f, timeIntensities8.MassErrors[2]);
             Assert.AreEqual(2, timeIntensities8.ScanIds[2]);
+        }
+
+        [TestMethod]
+        public void TestObservedIonMobilityScaleHelpers()
+        {
+            // Strict variant: returns the scale for tracked units, throws otherwise.
+            Assert.AreEqual(10000, RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.inverse_K0_Vsec_per_cm2));
+            Assert.AreEqual(100, RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.drift_time_msec));
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() =>
+                RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.compensation_V));
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() =>
+                RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.waters_sonar));
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() =>
+                RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.none));
+            AssertEx.ThrowsException<ArgumentOutOfRangeException>(() =>
+                RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.unknown));
+
+            // Gate-friendly variant: returns scale for tracked units, zero for others.
+            Assert.AreEqual(10000, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.inverse_K0_Vsec_per_cm2));
+            Assert.AreEqual(100, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.drift_time_msec));
+            Assert.AreEqual(0, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.compensation_V));
+            Assert.AreEqual(0, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.waters_sonar));
+            Assert.AreEqual(0, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.none));
+            Assert.AreEqual(0, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.unknown));
+        }
+
+        [TestMethod]
+        public void TestRawTimeIntensitiesObservedIonMobilityRoundTrip()
+        {
+            // 1/K0 (scale 10000): instrument resolution is 0.001-0.01, so 0.0001-step
+            // encoding is well sub-resolution. Test values span the proteomics range.
+            AssertObservedIonMobilityRoundTrip(eIonMobilityUnits.inverse_K0_Vsec_per_cm2,
+                new[] { 0.7234f, 1.1567f, 1.8901f, 2.3456f });
+
+            // Drift time ms (scale 100): instrument resolution is 0.01-0.1 ms, so
+            // 0.01-step encoding is well sub-resolution.
+            AssertObservedIonMobilityRoundTrip(eIonMobilityUnits.drift_time_msec,
+                new[] { 4.23f, 17.45f, 58.91f, 142.07f });
+        }
+
+        [TestMethod]
+        public void TestRawTimeIntensitiesNoObservedIonMobility()
+        {
+            // A RawTimeIntensities with no observed IM data should round-trip cleanly
+            // with scale=0 and no ObservedIonMobilities array emitted.
+            var ti = new TimeIntensities(new[] { 0f, 1f }, new[] { 10f, 20f }, null, null);
+            var raw = new RawTimeIntensities(new[] { ti }, null, 0);
+
+            var encoded = raw.ToChromatogramGroupData();
+            Assert.AreEqual(0, encoded.ObservedIonMobilityScale);
+            Assert.AreEqual(0, encoded.Chromatograms[0].ObservedIonMobilitiesScaled.Count);
+
+            var decoded = RawTimeIntensities.FromChromatogramGroupData(encoded);
+            Assert.AreEqual(0, decoded.ObservedIonMobilityScale);
+            Assert.IsNull(decoded.TransitionTimeIntensities[0].ObservedIonMobilities);
+        }
+
+        private static void AssertObservedIonMobilityRoundTrip(eIonMobilityUnits units, float[] observedIms)
+        {
+            var times = Enumerable.Range(0, observedIms.Length).Select(i => (float)i).ToArray();
+            var intensities = observedIms.Select(_ => 100f).ToArray();
+            var ti = new TimeIntensities(times, intensities, null, null, observedIms);
+            var scale = RawTimeIntensities.GetObservedIonMobilityScale(units);
+            var raw = new RawTimeIntensities(new[] { ti }, null, scale);
+
+            var encoded = raw.ToChromatogramGroupData();
+            Assert.AreEqual(scale, encoded.ObservedIonMobilityScale);
+            Assert.AreEqual(observedIms.Length, encoded.Chromatograms[0].ObservedIonMobilitiesScaled.Count);
+
+            var decoded = RawTimeIntensities.FromChromatogramGroupData(encoded);
+            Assert.AreEqual(scale, decoded.ObservedIonMobilityScale);
+            var decodedIms = decoded.TransitionTimeIntensities[0].ObservedIonMobilities;
+            Assert.IsNotNull(decodedIms);
+            Assert.AreEqual(observedIms.Length, decodedIms.Count);
+
+            // Maximum quantization error from rounding is 0.5/scale.
+            double tolerance = 0.5 / scale;
+            for (int i = 0; i < observedIms.Length; i++)
+            {
+                Assert.AreEqual(observedIms[i], decodedIms[i], tolerance,
+                    $@"IM at index {i} ({observedIms[i]}) decoded to {decodedIms[i]}, tolerance {tolerance}");
+            }
         }
     }
 }
