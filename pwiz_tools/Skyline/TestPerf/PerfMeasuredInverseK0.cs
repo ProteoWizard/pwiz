@@ -122,6 +122,9 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             });
 
             document = WaitForDocumentChangeLoaded(docChangedDriftTimePredictor);
+
+            PauseTest("Bruker TIMS data, reimported with IM filtering. Guard: tiered idotp (exact-bin Cog -> M0-width windowed Cog fallback -> per-channel COG). Open the full-scan view on a peak point (right-click chromatogram > 'Show full scan'). Things to verify: (1) BOTH the heatmap purple band AND the IM-vs-intensity sidecar should show two dark-violet lines - DASHED at target IM, DOTTED at the per-PEAK observed IM (matches Document Grid's TransitionResult.ObservedIonMobility - stable across scans within the peak). (2) Hovering near either line shows a tooltip - target line: Target [units] / Target CCS; observed line: Measured [units] / IM error % / Measured CCS / CCS error %. (3) Hover ON a data point - the data point tooltip wins (lines are lower priority).");
+
             var transitionsNew = document.MoleculeTransitions.ToArray();
             var nChanges = 0;
             var nNonEmpty = 0;

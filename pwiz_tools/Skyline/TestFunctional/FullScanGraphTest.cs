@@ -69,6 +69,7 @@ namespace pwiz.SkylineTestFunctional
                 {"RetentionTime",33.05.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobility",3.477.ToString(CultureInfo.CurrentCulture) + " msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
+                {"PeakRetentionTime",33.03.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobilityRange",TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
                 {"ScanId","1.0.309201 - 1.0.309400"},
@@ -89,6 +90,7 @@ namespace pwiz.SkylineTestFunctional
                 {"RetentionTime", (33.1).ToString(CultureInfo.CurrentCulture)},
                 {"IonMobility", (3.326).ToString(CultureInfo.CurrentCulture) + " msec"},
                 {"IsolationWindow","50:2000 (-975:+975)"},
+                {"PeakRetentionTime",33.03.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobilityRange", TextUtil.AppendColon(0.069.ToString(CultureInfo.CurrentCulture)) + 13.8.ToString(CultureInfo.CurrentCulture)},
                 {"IonMobilityFilterRange",TextUtil.AppendColon(3.152.ToString(CultureInfo.CurrentCulture)) + 3.651.ToString(CultureInfo.CurrentCulture)},
                 {"ScanId","2.0.309601 - 2.0.309800"},
@@ -111,6 +113,7 @@ namespace pwiz.SkylineTestFunctional
                 { "RetentionTime", (32.96).ToString(CultureInfo.CurrentCulture) },
                 { "IonMobility", (5.716).ToString(CultureInfo.CurrentCulture) + " msec" },
                 { "IsolationWindow", "50:2000 (-975:+975)" },
+                { "PeakRetentionTime", 33.03.ToString(CultureInfo.CurrentCulture) },
                 {
                     "IonMobilityRange",
                     TextUtil.AppendColon((0.069).ToString(CultureInfo.CurrentCulture)) + (13.8).ToString(CultureInfo.CurrentCulture)
