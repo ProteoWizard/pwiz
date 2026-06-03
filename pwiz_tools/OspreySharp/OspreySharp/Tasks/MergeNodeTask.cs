@@ -88,6 +88,18 @@ namespace pwiz.OspreySharp.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
+        /// <summary>
+        /// No-op disk-load: MergeNode is the terminal aggregator. Its output
+        /// (the .blib + 2nd-pass FDR sidecars) is an external artifact that no
+        /// other task consumes in-memory, so there is no cross-task state to
+        /// rehydrate and nothing ever <see cref="PipelineContext.Demand{T}"/>s
+        /// this task. The driver runs <see cref="Run"/> directly when the
+        /// output is absent and skips it (resume) when the output is already
+        /// valid; this override exists only to keep the contract satisfied once
+        /// the transitional base Rehydrate=Run shim is removed (Phase B6).
+        /// </summary>
+        public override bool Rehydrate(PipelineContext ctx) => true;
+
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
