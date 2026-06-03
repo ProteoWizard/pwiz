@@ -332,6 +332,32 @@ namespace TestRunner
                 Console.WriteLine("AppContext {0} = {1}", accessibilitySwitch, isOn);
             }
 
+            // DIAGNOSTIC (debug-only, not for merge): the AppContext switches above can read the
+            // same via TryGetSwitch whether unset or explicitly false, yet behave differently. Read
+            // the EFFECTIVE WinForms AccessibilityImprovements level (internal) to see the real state.
+            try
+            {
+                var aiType = typeof(System.Windows.Forms.Control).Assembly
+                    .GetType("System.Windows.Forms.AccessibilityImprovements");
+                if (aiType != null)
+                {
+                    foreach (var prop in aiType.GetProperties(System.Reflection.BindingFlags.Static
+                                 | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public))
+                    {
+                        if (prop.Name.StartsWith("Level") && prop.PropertyType == typeof(bool))
+                            Console.WriteLine("AccessibilityImprovements.{0} = {1}", prop.Name, prop.GetValue(null));
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("AccessibilityImprovements type not found for level readout");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("AccessibilityImprovements level readout failed: {0}", ex.Message);
+            }
+
             if (commandLineArgs.HasArg("debug"))
             {
                 Console.WriteLine("*** Launching debugger ***\n\n");
