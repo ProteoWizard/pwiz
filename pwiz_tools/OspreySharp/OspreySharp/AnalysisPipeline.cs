@@ -81,26 +81,29 @@ namespace pwiz.OspreySharp
                 var ctx = new PipelineContext(config, pipelineTasks,
                     LogInfo, LogWarning, LogError, startAt, stopAfter);
 
-                // Phase B range-gating: tasks before StartAt are skipped
-                // silently (their state lazy-rehydrates from disk via the
-                // producer-task accessors when a downstream task queries
-                // it); tasks at-or-after StartAt run normally through
-                // RunTask's sidecar dance; iteration stops after StopAfter.
-                bool inRange = false;
-                foreach (var task in ctx.Tasks)
+                // Phase B5 driver-owned dataflow: walk the canonical pipeline
+                // and run each INCLUDED task whose outputs are not already
+                // valid on disk. Membership is a per-task fact
+                // (OspreyTask.IsIncluded) rather than a contiguous
+                // [StartAt..StopAfter] window. Excluded tasks -- and included
+                // tasks whose outputs already exist (ctx.CanRehydrate) -- are
+                // not run here; their state lazy-rehydrates through ctx.Demand
+                // when a running task reaches for it. A task returning false is
+                // still the signal to stop and propagate ctx.ExitCode (e.g. an
+                // empty score set or a sidecar-write failure).
+                foreach (var task in pipelineTasks)
                 {
-                    if (!inRange)
+                    if (!task.IsIncluded(ctx))
+                        continue;
+
+                    if (ctx.CanRehydrate(task))
                     {
-                        if (task.GetType() != ctx.StartAtTask)
-                            continue;
-                        inRange = true;
+                        LogInfo(string.Format(@"[task] {0}: skipping (outputs valid)", task.Name));
+                        continue;
                     }
 
                     if (!RunTask(task, ctx))
                         return ctx.ExitCode;
-
-                    if (task.GetType() == ctx.StopAfterTask)
-                        break;
                 }
 
                 stopwatch.Stop();
@@ -199,24 +202,14 @@ namespace pwiz.OspreySharp
         /// short-circuit on <c>false</c> and propagate
         /// <see cref="PipelineContext.ExitCode"/>.
         ///
-        /// Phase B skip-if-outputs-valid: before invoking
-        /// <see cref="OspreyTask.Run"/>, check whether every output declared
-        /// by <see cref="OspreyTask.Outputs"/> exists with a matching
-        /// <c>.osprey.task</c> sidecar (validity-key check against
-        /// <see cref="OspreyTask.ValidityKey"/>). If so, the task's work is
-        /// already on disk -- log and return true without executing.
-        /// Otherwise, stale sidecars are cleared (so a mid-Run crash leaves
-        /// no false-positive sidecar), the task is run, and fresh sidecars
-        /// are written next to each declared output on success.
+        /// The skip-if-outputs-valid decision now lives in the driver loop
+        /// (<see cref="PipelineContext.CanRehydrate"/>): this is only called
+        /// for a task that is included and whose outputs are not already on
+        /// disk. The task is run and fresh <c>.osprey.task</c> sidecars are
+        /// written next to each declared output on success.
         /// </summary>
         private static bool RunTask(OspreyTask task, PipelineContext ctx)
         {
-            if (IsTaskAlreadyDone(task, ctx))
-            {
-                ctx.LogInfo(string.Format(@"[task] {0}: skipping (outputs valid)", task.Name));
-                return true;
-            }
-
             // Note: stale-sidecar cleanup is the responsibility of each
             // task body. A task-level pre-Run delete here would wipe the
             // per-file sidecars that <see cref="PerFileScoringTask"/>
@@ -261,19 +254,6 @@ namespace pwiz.OspreySharp
                 WriteTaskSidecars(task, ctx);
 
             return keepGoing;
-        }
-
-        private static bool IsTaskAlreadyDone(OspreyTask task, PipelineContext ctx)
-        {
-            var outputs = new List<string>(task.Outputs(ctx));
-            if (outputs.Count == 0) return false;
-            string key = task.ValidityKey(ctx);
-            foreach (var output in outputs)
-            {
-                if (!File.Exists(output)) return false;
-                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
-            }
-            return true;
         }
 
         private static void WriteTaskSidecars(OspreyTask task, PipelineContext ctx)

@@ -743,8 +743,12 @@ namespace pwiz.OspreySharp.Tasks
                     @"complete; wrote {0} reconciliation.json + matching fdr_scores.bin " +
                     @"sidecar pair(s). Exiting before Stage 6 rescore.",
                     perFileEntries.Count));
+                // Success: return true (not false). The stop after Stage 5 is now
+                // a membership fact -- PerFileRescore and MergeNode are excluded
+                // by IsIncluded under --join-only, so the driver loop iterates no
+                // further. The failure path above keeps ExitCode=1; return false.
                 _ctx.ExitCode = 0;
-                return false;
+                return true;
             }
 
             // Surface outputs for the next task.
