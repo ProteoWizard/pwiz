@@ -682,13 +682,13 @@
     <value>添加的谱图过滤器</value>
   </data>
   <data name="imputed_boundaries" xml:space="preserve">
-    <value>对“{0}”进行边界插补</value>
+    <value>对“{0}”进行边界划定</value>
   </data>
   <data name="files_tree_node_renamed" xml:space="preserve">
     <value>已在文件窗口将节点 {0} 重新命名为 {1}</value>
   </data>
   <data name="files_tree_node_drag_and_drop" xml:space="preserve">
-    <value>已在文件窗口将 {0} 个节点拖放到 {1}</value>
+    <value>已在文件窗口将 {0} 节点拖放到 {1}</value>
   </data>
   <data name="files_tree_nodes_drag_and_drop" xml:space="preserve">
     <value>已在文件窗口将 {0} 个节点拖放到 {1}</value>

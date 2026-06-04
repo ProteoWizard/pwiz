@@ -117,16 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="keyboardShortcutsHelpMenuItem.Text" xml:space="preserve">
-    <value>键盘快捷键(&amp;K)</value>
-  </data>
   <metadata name="modeUIHandler.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
-  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <!-- averageReplicatesContextMenuItem, singleReplicateRTContextMenuItem, bestReplicateRTContextMenuItem,
-       replicatesRTContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
+       replicatesRTContextMenuItem moved to ContextMenuControl.resx -->
   <data name="toolStripSeparator24.Size" type="System.Drawing.Size, System.Drawing">
     <value>187, 6</value>
   </data>
@@ -134,13 +130,13 @@
     <value>187, 6</value>
   </data>
   <!-- peptideOrderContextMenuItem, peptideOrderDocumentContextMenuItem, peptideOrderRTContextMenuItem,
-       peptideOrderAreaContextMenuItem, peptideOrderMassErrorContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
-  <!-- replicateOrderContextMenuItem, replicateOrderDocumentContextMenuItem, replicateOrderAcqTimeContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
-  <!-- scopeContextMenuItem, documentScopeContextMenuItem, proteinScopeContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
+       peptideOrderAreaContextMenuItem, peptideOrderMassErrorContextMenuItem moved to ContextMenuControl.resx -->
+  <!-- replicateOrderContextMenuItem, replicateOrderDocumentContextMenuItem, replicateOrderAcqTimeContextMenuItem moved to ContextMenuControl.resx -->
+  <!-- scopeContextMenuItem, documentScopeContextMenuItem, proteinScopeContextMenuItem moved to ContextMenuControl.resx -->
   <data name="toolStripSeparator28.Size" type="System.Drawing.Size, System.Drawing">
     <value>206, 6</value>
   </data>
-  <!-- groupReplicatesByContextMenuItem, groupByReplicateContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
+  <!-- groupReplicatesByContextMenuItem, groupByReplicateContextMenuItem moved to ContextMenuControl.resx -->
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dockPanel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Top, Bottom, Left, Right</value>
@@ -151,6 +147,7 @@
   <data name="dockPanel.Size" type="System.Drawing.Size, System.Drawing">
     <value>736, 444</value>
   </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="dockPanel.TabIndex" type="System.Int32, mscorlib">
     <value>0</value>
   </data>
@@ -188,10 +185,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;panel1.ZOrder" xml:space="preserve">
-    <value>6</value>
+    <value>0</value>
   </data>
   <metadata name="statusStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>447, 17</value>
+    <value>267, 17</value>
   </metadata>
   <data name="statusStrip.AutoSize" type="System.Boolean, mscorlib">
     <value>False</value>
@@ -275,10 +272,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;statusStrip.ZOrder" xml:space="preserve">
-    <value>7</value>
+    <value>1</value>
   </data>
   <metadata name="mainToolStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>1480, 17</value>
+    <value>376, 17</value>
   </metadata>
   <data name="newToolBarButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Magenta</value>
@@ -410,10 +407,10 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;mainToolStrip.ZOrder" xml:space="preserve">
-    <value>8</value>
+    <value>2</value>
   </data>
   <metadata name="menuMain.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>337, 17</value>
+    <value>155, 17</value>
   </metadata>
   <data name="startPageMenuItem.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
     <value>Fuchsia</value>
@@ -803,7 +800,7 @@
     <value>外部工具(&amp;E)…</value>
   </data>
   <data name="searchToolsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>180, 22</value>
+    <value>178, 22</value>
   </data>
   <data name="searchToolsMenuItem.Text" xml:space="preserve">
     <value>搜索工具(&amp;S)…</value>
@@ -827,7 +824,7 @@
     <value>选项(&amp;O)…</value>
   </data>
   <data name="toolsMenu.Size" type="System.Drawing.Size, System.Drawing">
-    <value>46, 20</value>
+    <value>47, 20</value>
   </data>
   <data name="toolsMenu.Text" xml:space="preserve">
     <value>工具(&amp;T)</value>
@@ -857,19 +854,25 @@
     <value>教程(&amp;T)</value>
   </data>
   <data name="reportsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="reportsHelpMenuItem.Text" xml:space="preserve">
     <value>报告(&amp;R)</value>
   </data>
   <data name="commandLineHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="commandLineHelpMenuItem.Text" xml:space="preserve">
     <value>命令行(&amp;C)</value>
   </data>
+  <data name="keyboardShortcutsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>177, 22</value>
+  </data>
+  <data name="keyboardShortcutsHelpMenuItem.Text" xml:space="preserve">
+    <value>键盘快捷键(&amp;K)</value>
+  </data>
   <data name="otherDocsHelpMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>156, 22</value>
+    <value>177, 22</value>
   </data>
   <data name="otherDocsHelpMenuItem.Text" xml:space="preserve">
     <value>其他(&amp;O)</value>
@@ -953,7 +956,7 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;menuMain.ZOrder" xml:space="preserve">
-    <value>9</value>
+    <value>3</value>
   </data>
   <data name="eSPFeaturesMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>183, 22</value>
@@ -983,10 +986,10 @@
     <value>modeUIHandler</value>
   </data>
   <data name="&gt;&gt;modeUIHandler.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline-daily, Version=26.1.1.69, Culture=neutral, PublicKeyToken=null</value>
   </data>
   <!-- >>replicatesRTContextMenuItem, >>averageReplicatesContextMenuItem, >>singleReplicateRTContextMenuItem,
-       >>bestReplicateRTContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
+       >>bestReplicateRTContextMenuItem moved to ContextMenuControl.resx -->
   <data name="&gt;&gt;toolStripSeparator24.Name" xml:space="preserve">
     <value>toolStripSeparator24</value>
   </data>
@@ -1000,16 +1003,16 @@
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <!-- >>peptideOrderContextMenuItem, >>peptideOrderDocumentContextMenuItem, >>peptideOrderRTContextMenuItem,
-       >>peptideOrderAreaContextMenuItem, >>peptideOrderMassErrorContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
-  <!-- >>replicateOrderContextMenuItem, >>replicateOrderDocumentContextMenuItem, >>replicateOrderAcqTimeContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
-  <!-- >>scopeContextMenuItem, >>documentScopeContextMenuItem, >>proteinScopeContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
+       >>peptideOrderAreaContextMenuItem, >>peptideOrderMassErrorContextMenuItem moved to ContextMenuControl.resx -->
+  <!-- >>replicateOrderContextMenuItem, >>replicateOrderDocumentContextMenuItem, >>replicateOrderAcqTimeContextMenuItem moved to ContextMenuControl.resx -->
+  <!-- >>scopeContextMenuItem, >>documentScopeContextMenuItem, >>proteinScopeContextMenuItem moved to ContextMenuControl.resx -->
   <data name="&gt;&gt;toolStripSeparator28.Name" xml:space="preserve">
     <value>toolStripSeparator28</value>
   </data>
   <data name="&gt;&gt;toolStripSeparator28.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <!-- >>groupReplicatesByContextMenuItem, >>groupByReplicateContextMenuItem moved to ContextMenuControl.zh-CHS.resx -->
+  <!-- >>groupReplicatesByContextMenuItem, >>groupByReplicateContextMenuItem moved to ContextMenuControl.resx -->
   <data name="&gt;&gt;statusGeneral.Name" xml:space="preserve">
     <value>statusGeneral</value>
   </data>
@@ -1514,6 +1517,12 @@
   <data name="&gt;&gt;configureToolsMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;searchToolsMenuItem.Name" xml:space="preserve">
+    <value>searchToolsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;searchToolsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;toolStripSeparator46.Name" xml:space="preserve">
     <value>toolStripSeparator46</value>
   </data>
@@ -1586,6 +1595,12 @@
   <data name="&gt;&gt;commandLineHelpMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="&gt;&gt;keyboardShortcutsHelpMenuItem.Name" xml:space="preserve">
+    <value>keyboardShortcutsHelpMenuItem</value>
+  </data>
+  <data name="&gt;&gt;keyboardShortcutsHelpMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="&gt;&gt;otherDocsHelpMenuItem.Name" xml:space="preserve">
     <value>otherDocsHelpMenuItem</value>
   </data>
@@ -1646,16 +1661,10 @@
   <data name="&gt;&gt;eSPFeaturesMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;searchToolsMenuItem.Name" xml:space="preserve">
-    <value>searchToolsMenuItem</value>
-  </data>
-  <data name="&gt;&gt;searchToolsMenuItem.Type" xml:space="preserve">
-    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="&gt;&gt;$this.Name" xml:space="preserve">
     <value>SkylineWindow</value>
   </data>
   <data name="&gt;&gt;$this.Type" xml:space="preserve">
-    <value>pwiz.Skyline.Util.FormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+    <value>pwiz.Skyline.Util.FormEx, Skyline-daily, Version=26.1.1.69, Culture=neutral, PublicKeyToken=null</value>
   </data>
 </root>

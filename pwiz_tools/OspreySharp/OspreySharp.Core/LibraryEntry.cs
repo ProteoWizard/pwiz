@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace pwiz.OspreySharp.Core
@@ -31,6 +32,16 @@ namespace pwiz.OspreySharp.Core
     /// </summary>
     public class LibraryEntry
     {
+        /// <summary>
+        /// High bit of <see cref="Id"/> marking a decoy entry. The
+        /// <c>base_id = Id &amp; 0x7FFFFFFF</c> convention pairs a target
+        /// with its decoy. Generated decoys (<c>DecoyGenerator</c>) inherit
+        /// this from the target; library-supplied decoys get the bit set
+        /// during post-load marking when they match a configured prefix.
+        /// Maps to Rust <c>osprey_core::types::DECOY_ID_BIT</c>.
+        /// </summary>
+        public const uint DECOY_ID_BIT = 0x80000000u;
+
         public uint Id { get; set; }
         public string Sequence { get; set; }
         public string ModifiedSequence { get; set; }
@@ -57,6 +68,43 @@ namespace pwiz.OspreySharp.Core
             Fragments = new List<LibraryFragment>();
             ProteinIds = new List<string>();
             GeneNames = new List<string>();
+        }
+
+        /// <summary>
+        /// Tests whether this entry should be treated as a decoy based on a
+        /// configured prefix list. Returns true if ANY protein accession
+        /// starts (case-insensitively) with any of the prefixes.
+        ///
+        /// Used only when the user has set <c>DecoysInLibrary = true</c>
+        /// (or <c>DecoyMethod = FromLibrary</c>). For Osprey-generated
+        /// decoys, <see cref="IsDecoy"/> is set directly by
+        /// <c>DecoyGenerator</c> and this function is not called.
+        ///
+        /// Returns false if the prefix list or the entry's protein list is
+        /// empty. Empty prefix strings are ignored.
+        /// Maps to Rust <c>LibraryEntry::looks_like_library_decoy</c>.
+        /// </summary>
+        public bool LooksLikeLibraryDecoy(IList<string> prefixes)
+        {
+            if (prefixes == null || prefixes.Count == 0 ||
+                ProteinIds == null || ProteinIds.Count == 0)
+                return false;
+            for (int i = 0; i < ProteinIds.Count; i++)
+            {
+                string acc = ProteinIds[i];
+                if (acc == null)
+                    continue;
+                for (int j = 0; j < prefixes.Count; j++)
+                {
+                    string p = prefixes[j];
+                    if (string.IsNullOrEmpty(p))
+                        continue;
+                    if (acc.Length >= p.Length &&
+                        acc.StartsWith(p, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+            return false;
         }
     }
 }

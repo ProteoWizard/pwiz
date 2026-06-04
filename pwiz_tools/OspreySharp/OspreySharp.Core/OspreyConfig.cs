@@ -23,9 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace pwiz.OspreySharp.Core
 {
@@ -68,8 +65,52 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Decoy generation method.</summary>
         public DecoyMethod DecoyMethod { get; set; } = DecoyMethod.Reverse;
 
-        /// <summary>Whether library already contains decoys.</summary>
+        /// <summary>
+        /// Whether library already contains decoys. When true (or when
+        /// <see cref="DecoyMethod"/> = <see cref="DecoyMethod.FromLibrary"/>),
+        /// <c>DecoyGenerator</c> is skipped and existing entries are
+        /// scanned for <see cref="DecoyPrefixes"/> matches on their
+        /// protein accessions; matching entries get
+        /// <see cref="LibraryEntry.IsDecoy"/> = true and the high bit of
+        /// their <see cref="LibraryEntry.Id"/> set.
+        /// </summary>
         public bool DecoysInLibrary { get; set; }
+
+        /// <summary>
+        /// Protein-accession prefixes that identify decoys when the
+        /// library already contains them (case-insensitive). Default
+        /// covers the three common conventions: Osprey's own
+        /// <c>DECOY_</c>, plus <c>rev_</c> / <c>decoy_</c> used by tools
+        /// like DIA-NN, EncyclopeDIA, and Carafe.
+        /// Maps to Rust <c>OspreyConfig::decoy_prefixes</c>.
+        /// </summary>
+        public List<string> DecoyPrefixes { get; set; } = new List<string>
+        {
+            @"DECOY_",
+            @"rev_",
+            @"decoy_",
+        };
+
+        /// <summary>
+        /// Minimum fraction of decoys that must pair successfully with a
+        /// target when <see cref="DecoysInLibrary"/> is set. Below this,
+        /// OspreySharp bails with a clear error rather than running with
+        /// broken target-decoy competition (FDR would be optimistic).
+        /// Maps to Rust <c>OspreyConfig::decoy_pair_min_fraction</c>.
+        /// </summary>
+        public double DecoyPairMinFraction { get; set; } = 0.80;
+
+        /// <summary>
+        /// Optional path to a FDRBench-style pairing manifest (5-column
+        /// TSV: <c>sequence, decoy, proteins, peptide_type,
+        /// peptide_pair_index</c>). When set together with
+        /// <see cref="DecoysInLibrary"/>, the pipeline runs manifest-based
+        /// pairing first and then falls back to composition-based pairing
+        /// for decoys the manifest didn't cover. Recommended for
+        /// FDRBench-generated entrapment libraries.
+        /// Maps to Rust <c>OspreyConfig::decoy_pairing_manifest</c>.
+        /// </summary>
+        public string DecoyPairingManifestPath { get; set; }
 
         /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
@@ -89,8 +130,15 @@ namespace pwiz.OspreySharp.Core
         /// <summary>How to handle shared peptides for protein inference.</summary>
         public SharedPeptideMode SharedPeptides { get; set; } = SharedPeptideMode.All;
 
-        /// <summary>FDR filtering level for output.</summary>
-        public FdrLevel FdrLevel { get; set; } = FdrLevel.Both;
+        /// <summary>
+        /// FDR filtering level. Default <see cref="FdrLevel.Precursor"/> matches
+        /// Rust osprey-core/src/config.rs (FdrLevel::default() = Precursor).
+        /// Cross-impl bisection requires identical defaults; the previous
+        /// <c>Both</c> default silently shifted every downstream q-value-gated
+        /// step (compaction, Stage 7 detected-peptides filter, blib output)
+        /// toward a stricter pool than Rust uses.
+        /// </summary>
+        public FdrLevel FdrLevel { get; set; } = FdrLevel.Precursor;
 
         /// <summary>Number of threads to use.</summary>
         public int NThreads { get; set; } = Environment.ProcessorCount;
@@ -112,13 +160,27 @@ namespace pwiz.OspreySharp.Core
         public List<string> InputScores { get; set; }
 
         /// <summary>
-        /// How many files will actually run concurrently in the current
-        /// invocation. Set by the pipeline before per-file ProcessFile()
-        /// calls; used to divide the inner main-search thread budget so
-        /// total thread demand stays near core count. Defaults to 1
-        /// (no scaling).
+        /// HPC: when true, exit after Stage 5 + reconciliation planning,
+        /// having written the boundary files
+        /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
+        /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
+        /// Skips Stage 6 + 7 + 8. Set by the
+        /// <c>--join-at-pass=1 --join-only</c> flag combination.
         /// </summary>
-        public int EffectiveFileParallelism { get; set; } = 1;
+        public bool StopAfterStage5 { get; set; }
+
+        /// <summary>
+        /// HPC: when true, every <c>--input-scores</c> parquet must carry
+        /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
+        /// by <c>--join-at-pass=2</c>; the post-Stage-6 (reconciled)
+        /// entry point. Stages 1-6 are skipped: the pipeline loads
+        /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
+        /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,
+        /// protein parsimony + picked-protein FDR, blib output). Mirrors
+        /// Rust's <c>config.expect_reconciled_input</c> wired from
+        /// <c>main.rs</c> at the same flag.
+        /// </summary>
+        public bool ExpectReconciledInput { get; set; }
 
         /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
@@ -134,87 +196,16 @@ namespace pwiz.OspreySharp.Core
         }
 
         /// <summary>
-        /// Compute SHA-256 hash of parameters that affect first-pass scoring.
-        /// If this hash changes, cached .scores.parquet files are invalid.
+        /// The bit-parity-critical identity hashing for this run. Split out
+        /// of <see cref="OspreyConfig"/> into <see cref="SearchIdentity"/>
+        /// so this type is only the configuration bag and the SHA hashing is
+        /// its own single-responsibility unit. A fresh instance is returned
+        /// per access; it reads this config's hash-affecting fields at call
+        /// time, preserving the historical behavior of the former instance
+        /// methods. The hash recipes live on <see cref="SearchIdentity"/>
+        /// and MUST stay byte-identical with Rust.
         /// </summary>
-        public string SearchParameterHash()
-        {
-            // Cross-impl bit-equivalence with Rust requires:
-            //  - Booleans: Rust prints "true"/"false" (lowercase). C# default
-            //    bool.ToString() is "True"/"False". Use lowercase explicitly.
-            //  - Numbers: invariant culture (no locale-dependent separators).
-            using (var sha256 = SHA256.Create())
-            {
-                var ic = System.Globalization.CultureInfo.InvariantCulture;
-                Func<bool, string> b = v => v ? "true" : "false";
-                var sb = new StringBuilder();
-                sb.AppendFormat(ic, "resolution_mode:{0}\n", ResolutionMode);
-                sb.AppendFormat(ic, "fragment_tolerance:{0},{1}\n", FragmentTolerance.Tolerance, FragmentTolerance.Unit);
-                sb.AppendFormat(ic, "precursor_tolerance:{0},{1}\n", PrecursorTolerance.Tolerance, PrecursorTolerance.Unit);
-                sb.AppendFormat(ic, "prefilter_enabled:{0}\n", b(PrefilterEnabled));
-                sb.AppendFormat(ic, "decoy_method:{0}\n", DecoyMethod);
-                sb.AppendFormat(ic, "decoys_in_library:{0}\n", b(DecoysInLibrary));
-                sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(RtCalibration.Enabled));
-                sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);
-                sb.AppendFormat(ic, "rt_cal.rt_tolerance_factor:{0}\n", RtCalibration.RtToleranceFactor);
-                sb.AppendFormat(ic, "rt_cal.min_rt_tolerance:{0}\n", RtCalibration.MinRtTolerance);
-                sb.AppendFormat(ic, "rt_cal.max_rt_tolerance:{0}\n", RtCalibration.MaxRtTolerance);
-                sb.AppendFormat(ic, "rt_cal.loess_bandwidth:{0}\n", RtCalibration.LoessBandwidth);
-                sb.AppendFormat(ic, "rt_cal.min_calibration_points:{0}\n", RtCalibration.MinCalibrationPoints);
-                sb.AppendFormat(ic, "rt_cal.calibration_sample_size:{0}\n", RtCalibration.CalibrationSampleSize);
-                sb.AppendFormat(ic, "rt_cal.calibration_retry_factor:{0}\n", RtCalibration.CalibrationRetryFactor);
-                sb.AppendFormat(ic, "reconciliation.top_n_peaks:{0}\n", Reconciliation.TopNPeaks);
-
-                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
-                var result = new StringBuilder(64);
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    result.Append(hashBytes[i].ToString("x2"));
-                }
-                return result.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Compute a fast identity hash for the library file (file name + size
-        /// + mtime). Filesystem metadata only -- no content hashing. The
-        /// directory portion is deliberately NOT in the hash so the same
-        /// library identifies identically across Rust / .NET / OS variations
-        /// (drive letter case, forward vs back slash, relative vs absolute,
-        /// HPC node-local vs shared paths). Mirrors the
-        /// <c>reconciliation_parameter_hash</c> precedent that hashes only
-        /// sorted file stems for the input set. Same recipe as Rust's
-        /// <c>library_identity_hash</c>.
-        /// </summary>
-        public string LibraryIdentityHash()
-        {
-            string libPath = LibrarySource != null ? LibrarySource.Path : string.Empty;
-            using (var sha256 = SHA256.Create())
-            {
-                var sb = new StringBuilder();
-                string fileName = string.IsNullOrEmpty(libPath)
-                    ? string.Empty
-                    : Path.GetFileName(libPath);
-                sb.AppendFormat("file_name:{0}\n", fileName);
-                if (!string.IsNullOrEmpty(libPath) && File.Exists(libPath))
-                {
-                    var info = new FileInfo(libPath);
-                    sb.AppendFormat(System.Globalization.CultureInfo.InvariantCulture,
-                        "size:{0}\n", info.Length);
-                    // Unix seconds matching Rust's library_identity_hash
-                    // (SystemTime::duration_since(UNIX_EPOCH).as_secs()).
-                    long mtimeSecs = (long)(info.LastWriteTimeUtc
-                        - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
-                    sb.AppendFormat(System.Globalization.CultureInfo.InvariantCulture,
-                        "mtime:{0}\n", mtimeSecs);
-                }
-                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
-                var result = new StringBuilder(64);
-                for (int i = 0; i < hashBytes.Length; i++)
-                    result.Append(hashBytes[i].ToString("x2"));
-                return result.ToString();
-            }
-        }
+        public SearchIdentity Identity => new SearchIdentity(this);
     }
 
     /// <summary>

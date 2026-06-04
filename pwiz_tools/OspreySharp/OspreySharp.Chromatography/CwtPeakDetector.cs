@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Chromatography
@@ -167,12 +168,20 @@ namespace pwiz.OspreySharp.Chromatography
                 if (intensities.Length < 5)
                     continue;
 
-                // Find apex
+                // Find apex. Rust at cwt.rs:97-102 uses
+                // `intensities.iter().enumerate().max_by(|a, b| a.1.total_cmp(b.1))`,
+                // which returns the LAST equal element on ties (per
+                // Iterator::max_by docs). Use `>=` here to match — the
+                // strict `>` form would keep the FIRST equal element and
+                // produce divergent FWHM estimates whenever two scans
+                // share the f64 max intensity (rare but visible on flat
+                // tops or when intensities round to the same f64 after
+                // f32 widening).
                 int apexIdx = 0;
                 double apexVal = intensities[0];
                 for (int i = 1; i < intensities.Length; i++)
                 {
-                    if (intensities[i] > apexVal)
+                    if (intensities[i] >= apexVal)
                     {
                         apexIdx = i;
                         apexVal = intensities[i];
@@ -322,11 +331,17 @@ namespace pwiz.OspreySharp.Chromatography
                 apexCoeffs.Add(consensus[nScans - 1]);
             }
 
-            // Sort by consensus coefficient descending
-            int[] sortOrder = new int[apexIndices.Count];
-            for (int i = 0; i < sortOrder.Length; i++)
-                sortOrder[i] = i;
-            Array.Sort(sortOrder, (a, b) => apexCoeffs[b].CompareTo(apexCoeffs[a]));
+            // Sort by consensus coefficient descending. Rust at
+            // cwt.rs:295-296 uses `apex_indices.sort_by(|a, b|
+            // b.1.total_cmp(&a.1))`, which is STABLE (slice::sort_by is
+            // stable). Array.Sort with a Comparison<T> is introsort
+            // (unstable) and reorders ties; switch to LINQ
+            // OrderByDescending (stable per .NET contract) so that two
+            // apexes at the same consensus coefficient stay in
+            // detection order across both impls.
+            int[] sortOrder = Enumerable.Range(0, apexIndices.Count)
+                .OrderByDescending(i => apexCoeffs[i])
+                .ToArray();
 
             List<XICPeakBounds> peaks = new List<XICPeakBounds>();
 
@@ -404,12 +419,19 @@ namespace pwiz.OspreySharp.Chromatography
                 if (endIdx - startIdx + 1 < 3)
                     continue;
 
-                // Find the actual apex in the reference signal within boundaries
+                // Find the actual apex in the reference signal within
+                // boundaries. Rust at cwt.rs:374-380 uses
+                // `ref_signal[start_idx..=end_idx].iter().enumerate().max_by(|a, b| a.1.total_cmp(b.1))`,
+                // which returns the LAST equal element on ties. Use `>=`
+                // here to match — strict `>` would keep the FIRST equal
+                // element and produce divergent peak_apex / area / SNR
+                // when ref_signal has flat-top maxima (sums of f32
+                // intensities round into the same f64).
                 int refApexIdx = startIdx;
                 double refApexIntensity = refSignal[startIdx];
                 for (int i = startIdx + 1; i <= endIdx; i++)
                 {
-                    if (refSignal[i] > refApexIntensity)
+                    if (refSignal[i] >= refApexIntensity)
                     {
                         refApexIdx = i;
                         refApexIntensity = refSignal[i];
@@ -437,6 +459,39 @@ namespace pwiz.OspreySharp.Chromatography
             }
 
             return peaks;
+        }
+
+        /// <summary>
+        /// Diagnostic helper: run the first half of
+        /// <see cref="DetectConsensusPeaks"/> (sigma, kernel, convolve,
+        /// median consensus) and return the consensus signal so a
+        /// cross-impl bisection dump can compare it directly. Returns
+        /// null when the input is too small for CWT (matches the
+        /// validation in <see cref="DetectConsensusPeaks"/>).
+        /// </summary>
+        /// <param name="xics">Fragment XICs (all must share the same time axis).</param>
+        /// <param name="sigma">Out: estimated CWT scale used to build the kernel.</param>
+        /// <returns>Consensus CWT signal (size = nScans), or null on validation failure.</returns>
+        public static double[] GetConsensusSignal(List<XicData> xics, out double sigma)
+        {
+            sigma = 0.0;
+            if (xics == null || xics.Count < 2)
+                return null;
+            int nScans = xics[0].Intensities.Length;
+            if (nScans < 5)
+                return null;
+            for (int i = 1; i < xics.Count; i++)
+            {
+                if (xics[i].Intensities.Length != nScans)
+                    return null;
+            }
+            sigma = EstimateScale(xics);
+            int kernelRadius = Math.Min((int)Math.Ceiling(5.0 * sigma), nScans / 2);
+            double[] kernel = MexicanHatKernel(sigma, kernelRadius);
+            double[][] cwtCoeffs = new double[xics.Count][];
+            for (int f = 0; f < xics.Count; f++)
+                cwtCoeffs[f] = Convolve(xics[f].Intensities, kernel);
+            return ConsensusMedianCwt(cwtCoeffs, nScans);
         }
 
         /// <summary>
@@ -526,7 +581,7 @@ namespace pwiz.OspreySharp.Chromatography
                 return 0.0;
 
             double[] sorted = values.ToArray();
-            Array.Sort(sorted);
+            Array.Sort(sorted); // Array.Sort OK: median of single primitive array, no parallel data
             int n = sorted.Length;
             if (n % 2 == 0)
                 return (sorted[n / 2 - 1] + sorted[n / 2]) / 2.0;
@@ -541,7 +596,7 @@ namespace pwiz.OspreySharp.Chromatography
             if (values.Length == 0)
                 return 0.0;
 
-            Array.Sort(values);
+            Array.Sort(values); // Array.Sort OK: median of single primitive array, no parallel data
             int n = values.Length;
             if (n % 2 == 0)
                 return (values[n / 2 - 1] + values[n / 2]) / 2.0;

@@ -162,9 +162,32 @@
     <Reference Include="ParquetNet">
       <HintPath>..\Shared\Lib\Parquet\ParquetNet.dll</HintPath>
     </Reference>
+    <Reference Include="IronCompress">
+      <HintPath>..\Shared\Lib\Parquet\IronCompress.dll</HintPath>
+    </Reference>
     <Reference Include="System.Reflection.Emit.Lightweight">
       <HintPath>..\Shared\Lib\Parquet\System.Reflection.Emit.Lightweight.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.IO.RecyclableMemoryStream, Version=3.0.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35">
+      <SpecificVersion>True</SpecificVersion>
+      <HintPath>..\Shared\Lib\Parquet\Microsoft.IO.RecyclableMemoryStream.dll</HintPath>
+    </Reference>
+    <Reference Include="Snappier">
+      <HintPath>..\Shared\Lib\Parquet\Snappier.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json">
+      <HintPath>..\Shared\Lib\Parquet\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ZstdSharp">
+      <HintPath>..\Shared\Lib\Parquet\ZstdSharp.dll</HintPath>
+    </Reference>
+    <Content Include="..\Shared\Lib\Parquet\nironcompress.dll">
+      <Link>nironcompress.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Reference Include="PrmPasefScheduler, Version=0.0.0.0, Culture=neutral, processorArchitecture=AnyCPU">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\ProteowizardWrapper\obj\$(Platform)\PrmPasefScheduler.dll</HintPath>
@@ -2546,11 +2569,8 @@
     <Compile Include="FileUI\ExportMethodDlg.Designer.cs">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="FileUI\BaseFileDialogNE.cs">
+    <Compile Include="FileUI\SkylineFileDialogNE.cs">
       <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="FileUI\BaseFileDialogNE.designer.cs">
-      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\DocSettings\Modification.cs" />
     <Compile Include="Model\V01\XmlSrmDocument.cs" />
@@ -3866,14 +3886,6 @@
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.zh-CHS.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\BaseFileDialogNE.ja.resx">
-      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\BaseFileDialogNE.zh-CHS.resx">
-      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.ja.resx">
       <DependentUpon>BuildPeptideSearchLibraryControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -5025,10 +5037,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\MProphetFeaturesDlg.resx">
       <DependentUpon>MProphetFeaturesDlg.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="FileUI\BaseFileDialogNE.resx">
-      <DependentUpon>BaseFileDialogNE.cs</DependentUpon>
-      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.resx">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
@@ -7170,6 +7178,10 @@
     <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj">
       <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
       <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
+      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
+      <Name>CommonFileDialogs</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\CommonMsData\CommonMsData.csproj">
       <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>

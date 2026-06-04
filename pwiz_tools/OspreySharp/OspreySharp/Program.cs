@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.IO;
 
 namespace pwiz.OspreySharp
 {
@@ -33,12 +34,23 @@ namespace pwiz.OspreySharp
     /// Parses CLI arguments and launches the analysis pipeline.
     /// Port of osprey/src/main.rs.
     /// </summary>
-    class Program
+    static class Program
     {
         // Tracks the Rust Osprey upstream version this OspreySharp port
         // is aligned with. Used in parquet footer metadata; the Phase 3
         // validator requires same major.minor across cross-impl handoff.
-        internal const string VERSION = "26.4.0";
+        // TODO: 26.6.1 bumped the version string but the algorithmic
+        // payload of v26.6.1 (reconciliation pairing library-supplied
+        // decoys by base_id instead of stripping a DECOY_ prefix in
+        // compute_consensus_rts + plan_reconciliation) is NOT yet
+        // ported to this side. It does not affect reverse-decoy mode
+        // (Stellar, DecoysInLibrary=false), but it WILL affect any
+        // dataset run with --decoys-in-library. See osprey
+        // release-notes/RELEASE_NOTES_v26.6.1.md and the
+        // test_consensus_rts_pairs_library_decoy_by_base_id +
+        // test_plan_reconciliation_includes_library_decoy_via_base_id
+        // regression tests on the Rust side.
+        internal const string VERSION = "26.6.1";
         internal const string VERSION_STRING = VERSION;
 
         static int Main(string[] args)
@@ -96,7 +108,7 @@ namespace pwiz.OspreySharp
                     }
                 }
 
-                string normErr = NormalizeHpcArgs(joinAtPass, ref noJoinFlag, ref joinOnlyFlag);
+                string normErr = NormalizeHpcArgs(joinAtPass, ref noJoinFlag, ref joinOnlyFlag, out bool joinOnlyModifier);
                 if (normErr != null)
                 {
                     LogError(normErr);
@@ -104,7 +116,13 @@ namespace pwiz.OspreySharp
                 }
 
                 OspreyConfig config = ParseArgs(args);
-                string err = ValidateArgs(config, noJoinFlag, joinOnlyFlag);
+                config.StopAfterStage5 = joinOnlyModifier;
+                // --join-at-pass=2 sets the strict-reconciled-input gate;
+                // the pipeline asserts every --input-scores parquet has
+                // osprey.reconciled = "true" via ParquetScoreCache
+                // validation. Mirrors Rust's main.rs:613 wiring.
+                config.ExpectReconciledInput = joinAtPass.HasValue && joinAtPass.Value == 2;
+                string err = ValidateArgs(config, noJoinFlag, joinOnlyFlag, joinOnlyModifier);
                 if (err != null)
                 {
                     LogError(err);
@@ -113,8 +131,13 @@ namespace pwiz.OspreySharp
                 bool joinOnly = joinOnlyFlag
                                 || (config.InputScores != null && config.InputScores.Count > 0);
 
-                // Non-fatal warning: --no-join with --output supplied.
-                if (config.NoJoin && !string.IsNullOrEmpty(config.OutputBlib))
+                // Non-fatal warning: --no-join with --output supplied — but
+                // ONLY for the Stage 1-4 worker mode (`--no-join --input
+                // ...`) where --output truly is ignored. The Stage 6 worker
+                // mode (`--join-at-pass=1 --no-join --input-scores ...`)
+                // requires --output (per ValidateArgs at line ~642), so
+                // the warning would be incorrect/confusing there.
+                if (config.NoJoin && !joinOnly && !string.IsNullOrEmpty(config.OutputBlib))
                 {
                     LogWarning("--no-join: --output is ignored (no blib is written). " +
                                "Per-file `.scores.parquet` files will be written next to each input mzML.");
@@ -159,7 +182,12 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
 
-                // Run the pipeline
+                // Single entry point. Stage 6 worker mode
+                // (--join-at-pass=1 --no-join --input-scores) is routed
+                // by AnalysisPipeline.DeriveStartAtTask / DeriveStopAfterTask
+                // to start and stop on PerFileRescoreTask; PerFileScoring's
+                // lazy-rehydrate populates the upstream state from the
+                // boundary files on disk.
                 var pipeline = new AnalysisPipeline();
                 return pipeline.Run(config);
             }
@@ -174,7 +202,7 @@ namespace pwiz.OspreySharp
         /// Parse command-line arguments into an OspreyConfig.
         /// Handles the same flags as the Rust CLI.
         /// </summary>
-        private static OspreyConfig ParseArgs(string[] args)
+        internal static OspreyConfig ParseArgs(string[] args)
         {
             var config = new OspreyConfig();
             var inputFiles = new List<string>();
@@ -305,6 +333,36 @@ namespace pwiz.OspreySharp
 
                     case "--no-prefilter":
                         config.PrefilterEnabled = false;
+                        i++;
+                        break;
+
+                    case "--decoys-in-library":
+                        // Flat boolean override matching Rust osprey's
+                        // --decoys-in-library: flips true, never overrides
+                        // a YAML `true` back to false. When set together
+                        // with --decoy-pairing-manifest, the pipeline runs
+                        // the FDRBench manifest pass first; composition-
+                        // based pairing fills whatever the manifest didn't
+                        // cover. Hard error if no library entries match
+                        // any of DecoyPrefixes / Decoy column / manifest.
+                        config.DecoysInLibrary = true;
+                        i++;
+                        break;
+
+                    case "--decoy-pairing-manifest":
+                        i++;
+                        // Reject a missing value (end of args) AND reject
+                        // the next token starting with `--` (i.e. the next
+                        // option), which would otherwise silently consume
+                        // a sibling flag like --decoys-in-library as the
+                        // manifest path. Both produce the same usage
+                        // error so the user knows the option needs a path.
+                        if (i >= args.Length || args[i].StartsWith(@"--", StringComparison.Ordinal))
+                        {
+                            throw new ArgumentException(
+                                @"--decoy-pairing-manifest requires a path argument.");
+                        }
+                        config.DecoyPairingManifestPath = args[i];
                         i++;
                         break;
 
@@ -510,6 +568,25 @@ namespace pwiz.OspreySharp
                 }
             }
 
+            // Warn on the silent no-op combination `--decoy-pairing-manifest`
+            // without `--decoys-in-library`. The manifest path is folded
+            // into SearchParameterHash, so it busts the .scores.parquet
+            // cache, but the pipeline only consults it inside the
+            // library-supplies-decoys branch. Mirrors Rust v26.6.0 (which
+            // is also silent here) -- the warning is a C#-only courtesy
+            // and does not change the hash or the run behaviour, so it
+            // preserves cross-impl byte parity.
+            if (!config.DecoysInLibrary &&
+                !string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                LogWarning(
+                    @"--decoy-pairing-manifest is set without --decoys-in-library; " +
+                    @"the manifest will NOT be consulted by the pipeline, but it " +
+                    @"still contributes to the search-parameter hash and will " +
+                    @"invalidate cached .scores.parquet files. Pass " +
+                    @"--decoys-in-library to actually enable library-decoy mode.");
+            }
+
             return config;
         }
 
@@ -526,18 +603,21 @@ namespace pwiz.OspreySharp
         /// fan-out. <c>--join-at-pass=1</c> selects the post-Stage-4 entry
         /// point; <c>--join-at-pass=2</c> the post-Stage-6 entry point.
         ///
-        /// PR 1 wires the rename only — combinations that need the
-        /// Stage 5 → Stage 6 boundary persistence (--join-at-pass=1 with
-        /// either modifier) error as "not yet implemented", and
-        /// --join-at-pass=2 errors the same way until the Stage 6 →
-        /// Stage 7 path lands. Mirrors normalize_hpc_args() in
-        /// osprey/src/main.rs.
+        /// Status (post-PR-2): --join-at-pass=1 with --join-only is now
+        /// supported and writes the Stage 5 → Stage 6 boundary file pair
+        /// before exiting. Plain --join-at-pass=1 (no modifier) runs
+        /// Stages 5-8 from a Stage-4-parquet entry point. The remaining
+        /// "not yet implemented" combinations are --join-at-pass=1 with
+        /// --no-join (Stage 6 worker mode) and --join-at-pass=2. Mirrors
+        /// normalize_hpc_args() in osprey/src/main.rs.
         ///
         /// Returns null on success, or an error message string on failure.
         /// Internal so OspreySharp.Test can exercise it.
         /// </summary>
-        internal static string NormalizeHpcArgs(int? joinAtPass, ref bool noJoinFlag, ref bool joinOnlyFlag)
+        internal static string NormalizeHpcArgs(int? joinAtPass, ref bool noJoinFlag, ref bool joinOnlyFlag, out bool joinOnlyModifier)
         {
+            joinOnlyModifier = false;
+
             // Modifiers are mutually exclusive: can't be both per-file-only
             // and join-only simultaneously.
             if (noJoinFlag && joinOnlyFlag)
@@ -563,18 +643,43 @@ namespace pwiz.OspreySharp
             switch (joinAtPass.Value)
             {
                 case 1:
-                    // PR 2 will implement these modifier combinations
-                    // against persisted Stage 5 → Stage 6 boundary files.
-                    if (joinOnlyFlag)
-                        return "--join-at-pass=1 --join-only (run only Stage 5) is not yet implemented.";
                     if (noJoinFlag)
-                        return "--join-at-pass=1 --no-join (run only Stage 6 from persisted Stage 5 outputs) is not yet implemented.";
-                    // Plain --join-at-pass=1: route through the existing
-                    // Stage 5+ entry path that reads joinOnlyFlag.
+                    {
+                        // `--join-at-pass=1 --no-join` is the per-file
+                        // rescore worker entry point. noJoinFlag stays
+                        // true; joinOnlyFlag stays false. Dispatch in
+                        // Main routes to RescoreWorker.Run instead of
+                        // the in-process AnalysisPipeline.Run.
+                        return null;
+                    }
+                    // `--join-at-pass=1 --join-only` (modifier present) means
+                    // "run only the Stage 5 join phase, write boundary
+                    // files, exit before Stage 6 rescore." Plain
+                    // `--join-at-pass=1` (no modifier) runs Stages 5-8.
+                    // In both cases joinOnlyFlag drives the existing Stage
+                    // 5+ entry path; the modifier-vs-plain distinction is
+                    // captured separately for the post-planning early
+                    // exit decision.
+                    joinOnlyModifier = joinOnlyFlag;
                     joinOnlyFlag = true;
                     return null;
                 case 2:
-                    return "--join-at-pass=2 (Stage 6 reconciled-parquet input) is not yet implemented.";
+                    if (noJoinFlag)
+                    {
+                        return "--join-at-pass=2 --no-join: per-file Stage 7 worker mode is not implemented (reconciled input + Stage 7-8 in-process is the supported path).";
+                    }
+                    // `--join-at-pass=2` is the post-Stage-6 entry point.
+                    // The pipeline reads reconciled .scores.parquet via
+                    // --input-scores plus the per-file
+                    // .{1st,2nd}-pass.fdr_scores.bin sidecars, skips
+                    // Stages 1-6, and runs Stages 7-8. ExpectReconciledInput
+                    // is set on the config after NormalizeHpcArgs by the
+                    // caller (Main needs the joinAtPass value to be visible
+                    // there). Routes through the same joinOnly path Stage 5+
+                    // input-scores uses; the in-pipeline reconciled-parquet
+                    // gate enforces the strict input contract.
+                    joinOnlyFlag = true;
+                    return null;
                 default:
                     return string.Format("--join-at-pass must be 1 or 2 (got {0}).", joinAtPass.Value);
             }
@@ -586,7 +691,8 @@ namespace pwiz.OspreySharp
         /// message string on failure. Does not log warnings (those stay in
         /// <see cref="Main"/>). Internal so OspreySharp.Test can exercise it.
         /// </summary>
-        internal static string ValidateArgs(OspreyConfig config, bool noJoinFlag, bool joinOnlyFlag)
+        internal static string ValidateArgs(OspreyConfig config, bool noJoinFlag, bool joinOnlyFlag,
+            bool joinOnlyModifier)
         {
             if (noJoinFlag && joinOnlyFlag)
                 return "--no-join and --join-only are mutually exclusive.";
@@ -599,8 +705,24 @@ namespace pwiz.OspreySharp
 
             if (config.NoJoin)
             {
-                if (joinOnly)
-                    return "--no-join cannot be combined with --input-scores.";
+                // Two distinct --no-join modes (mutually exclusive):
+                //   - Standalone --no-join: Stage 1-4 worker (mzML in,
+                //     per-file .scores.parquet out).
+                //   - --join-at-pass=1 --no-join: Stage 6 worker (Stage 4
+                //     parquets + boundary files in, reconciled per-file
+                //     parquets out).
+                // The Stage 6 worker mode is identified by the presence of
+                // --input-scores; the Stage 1-4 worker mode is identified
+                // by --input. Reject the cross.
+                if (hasInputScores)
+                {
+                    if (config.InputFiles.Count > 0)
+                        return "--join-at-pass=1 --no-join cannot be combined with --input. " +
+                               "Use --input-scores; mzML paths are derived from the parquet stems.";
+                    if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                        return "--join-at-pass=1 --no-join requires --library and --output.";
+                    return null;
+                }
                 if (config.InputFiles.Count == 0)
                     return "--no-join requires --input <mzML...>.";
                 if (config.LibrarySource == null)
@@ -613,6 +735,26 @@ namespace pwiz.OspreySharp
                     return "--join-at-pass=1 cannot be combined with --input. Use --input-scores instead.";
                 if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
                     return "--join-at-pass=1 requires --library and --output.";
+                // `--join-at-pass=1 --join-only` (modifier present) writes the
+                // Stage 5 → Stage 6 boundary file pair, which is only
+                // meaningful when (a) there are siblings to reconcile against
+                // and (b) reconciliation is enabled. Reject early — running
+                // Stages 1-5 only to silently produce nothing useful (or to
+                // fall through to Stage 8 in single-file misconfigurations)
+                // is worse than failing fast with a clear message.
+                if (joinOnlyModifier)
+                {
+                    if (config.InputScores.Count < 2)
+                        return string.Format(
+                            "--join-at-pass=1 --join-only requires --input-scores with 2+ parquet files " +
+                            "(got {0}). The Stage 5 → Stage 6 boundary file pair is only meaningful for " +
+                            "multi-file fan-back-in.",
+                            config.InputScores.Count);
+                    if (!config.Reconciliation.Enabled)
+                        return "--join-at-pass=1 --join-only requires Reconciliation.Enabled = true " +
+                               "(got false from config). The Stage 5 → Stage 6 boundary file pair is " +
+                               "only meaningful when reconciliation runs.";
+                }
                 return null;
             }
 
@@ -631,6 +773,15 @@ namespace pwiz.OspreySharp
         /// non-recursive list of *.scores.parquet files in it; explicit file
         /// paths are passed through unchanged. Throws if the directory is
         /// empty or any explicit path doesn't exist.
+        ///
+        /// Directory mode collects both the Stage 4 <c>*.scores.parquet</c> files
+        /// and the Stage 6 <c>*.scores-reconciled.parquet</c> siblings, then
+        /// dedupes per stem: for any stem that has both, only the reconciled file
+        /// is returned (the authoritative later pass; the <c>--join-at-pass=2</c>
+        /// reconciled-input gate expects reconciled parquets). A stem with only an
+        /// original is returned as-is. The two suffixes are unambiguous, so this
+        /// never returns both files for one stem (see
+        /// <see cref="ParquetScoreCache.ReconciledScoresParquetSuffix"/>).
         /// </summary>
         internal static List<string> ResolveInputScores(List<string> paths)
         {
@@ -640,12 +791,27 @@ namespace pwiz.OspreySharp
             if (paths.Count == 1 && Directory.Exists(paths[0]))
             {
                 string dir = paths[0];
-                string[] found = Directory.GetFiles(dir, "*.scores.parquet", SearchOption.TopDirectoryOnly);
-                if (found.Length == 0)
+                // Glob *.parquet and classify by suffix in code rather than
+                // relying on multi-dot search-pattern matching (which differs
+                // across platforms). Keep only the two known scores suffixes.
+                var originals = new List<string>();
+                var reconciledSet = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string f in Directory.GetFiles(dir, "*.parquet", SearchOption.TopDirectoryOnly))
+                {
+                    if (ParquetScoreCache.IsReconciledScoresPath(f))
+                        reconciledSet.Add(f);
+                    else if (f.EndsWith(ParquetScoreCache.ScoresParquetSuffix, StringComparison.Ordinal))
+                        originals.Add(f);
+                }
+                if (originals.Count == 0 && reconciledSet.Count == 0)
                     throw new ArgumentException(string.Format(
                         "No *.scores.parquet files found in --input-scores directory: {0}", dir));
-                Array.Sort(found, StringComparer.Ordinal);
-                return new List<string>(found);
+                var result = new List<string>(reconciledSet);            // reconciled: authoritative
+                foreach (string f in originals)
+                    if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
+                        result.Add(f);                                   // original with no reconciled sibling
+                result.Sort(StringComparer.Ordinal); // unique filenames, no ties
+                return result;
             }
 
             foreach (string p in paths)
@@ -687,11 +853,20 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --protein-fdr <threshold>     Protein-level FDR threshold (optional)");
             Console.Error.WriteLine("    --threads <count>             Number of threads (default: all cores)");
             Console.Error.WriteLine("    --fdr-method <method>         FDR method: percolator, simple (default: percolator)");
-            Console.Error.WriteLine("    --fdr-level <level>           FDR level: precursor, peptide, both (default: both)");
+            Console.Error.WriteLine("    --fdr-level <level>           FDR level: precursor, peptide, both (default: precursor)");
             Console.Error.WriteLine("    --shared-peptides <mode>      Shared peptide handling: all, razor, unique (default: all)");
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");
             Console.Error.WriteLine("    --write-pin                   Write PIN files for external tools");
+            Console.Error.WriteLine("    --decoys-in-library           Trust decoys already in the spectral library");
+            Console.Error.WriteLine("                                    (DIA-NN Decoy column / decoy_/rev_/DECOY_ protein");
+            Console.Error.WriteLine("                                    prefix / manifest) instead of generating reverse");
+            Console.Error.WriteLine("                                    decoys. Hard error if no decoys are recognised.");
+            Console.Error.WriteLine("    --decoy-pairing-manifest <PATH>");
+            Console.Error.WriteLine("                                  FDRBench 5-column pairing manifest (TSV) used");
+            Console.Error.WriteLine("                                    with --decoys-in-library. Manifest is the");
+            Console.Error.WriteLine("                                    authoritative source for peptide_type and");
+            Console.Error.WriteLine("                                    (optional) clean protein accessions.");
             Console.Error.WriteLine("    --join-at-pass=<N>            HPC: enter the pipeline at a join checkpoint.");
             Console.Error.WriteLine("                                    1 = consume Stage 4 outputs, run Stages 5-8.");
             Console.Error.WriteLine("                                    2 = consume Stage 6 outputs, run Stages 7-8.");

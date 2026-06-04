@@ -829,6 +829,16 @@ namespace TestRunnerLib
             private static extern int SetProcessWorkingSetSize(IntPtr process, int minimumWorkingSetSize, int
                 maximumWorkingSetSize);
 
+            // Windows UI Automation pins WinForms controls via RefCounted handles
+            // on their AccessibleObjects. Once any UIA client (Narrator, RDP, a
+            // screen reader, automation tooling) queries an accessible control,
+            // the runtime keeps a strong ref to that control's AccessibleObject
+            // until the process exits -- transitively rooting SkylineWindow and
+            // its undo stack through every dialog's back-pointer. This call
+            // releases all such roots so the next GC can reclaim normally.
+            [DllImport("UIAutomationCore.dll")]
+            private static extern int UiaDisconnectAllProviders();
+
             [DllImport("kernel32.dll", SetLastError = true)]
             public static extern UInt32 GetProcessHeaps(
                 UInt32 NumberOfHeaps,
@@ -1100,6 +1110,30 @@ namespace TestRunnerLib
 
             public static void FlushMemory()
             {
+                // Release UI Automation accessibility roots before GC so
+                // accessibility-pinned dialogs can be reclaimed normally.
+                // Non-fatal -- but log unexpected failures so the diagnostic is
+                // visible in test output (UIAutomationCore.dll should always be
+                // present on supported Windows versions).
+                if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+                {
+                    try
+                    {
+                        UiaDisconnectAllProviders();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Should never happen on supported Windows targets -- if it does,
+                        // accessibility-rooted Controls (and any SkylineWindow they
+                        // transitively pin) may still be reachable through Windows UI
+                        // Automation refs and appear as GC-LEAK survivors in this run.
+                        Console.WriteLine(
+                            @"UiaDisconnectAllProviders (UIAutomationCore.dll) failed: {0}. " +
+                            @"Accessibility-pinned controls may be reported as GC-LEAK survivors.",
+                            ex);
+                    }
+                }
+
                 GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
