@@ -125,6 +125,14 @@ namespace pwiz.OspreySharp.Tasks
                 || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
         }
 
+        // The final milestone of the shared mutable entry buffer: this task
+        // overlays the Stage 6 rescore (or, in the --join-at-pass=2 merge path,
+        // applies its own compaction) onto the same backing list. MergeNode
+        // pulls RescoredEntries, so a cache miss lazily materializes this task --
+        // which is exactly what triggers the rescore/compaction in merge mode
+        // where the driver does not run this task.
+        public override IEnumerable<Type> Publishes => new[] { typeof(RescoredEntries) };
+
         /// <summary>
         /// The post-rescore per-file entries. Mutated in place by
         /// <see cref="ExecuteRescore"/>; when this task short-circuits
@@ -199,6 +207,13 @@ namespace pwiz.OspreySharp.Tasks
             _ctx = ctx;
             var perFileScoring = ctx.Demand<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
+
+            // Publish the RescoredEntries milestone over the shared backing list
+            // now, while we hold its reference. ExecuteRescore (below) overlays
+            // it in place, and the self-gate may leave it unchanged; either way a
+            // consumer reading RescoredEntries.Value later sees the final buffer
+            // (milestone token over a shared store -- see PipelineByproducts.cs).
+            ctx.Publish(new RescoredEntries(_perFileEntries));
 
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
@@ -349,6 +364,10 @@ namespace pwiz.OspreySharp.Tasks
             _ctx = ctx;
             var perFileScoring = ctx.Demand<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
+
+            // Publish the RescoredEntries milestone over the shared backing list
+            // (the merge path applies its own compaction below, in place).
+            ctx.Publish(new RescoredEntries(_perFileEntries));
 
             var bundle = perFileScoring.GetRescoreInputs(ctx);
             if (bundle != null)

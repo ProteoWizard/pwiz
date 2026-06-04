@@ -111,6 +111,17 @@ namespace pwiz.OspreySharp.Tasks
             return !inputs;
         }
 
+        // Stage 1-4 byproducts this task publishes for downstream consumers to
+        // pull by type. ScoredEntries is the first milestone of the shared
+        // mutable entry buffer (FirstJoin and PerFileRescore publish the later
+        // CompactedEntries / RescoredEntries milestones of the same backing
+        // list); see PipelineByproducts.cs.
+        public override IEnumerable<Type> Publishes => new[]
+        {
+            typeof(FullLibrary), typeof(LibraryById), typeof(PerFileCalibrations),
+            typeof(PerFileParquetPaths), typeof(RescoreBundle), typeof(ScoredEntries)
+        };
+
         // Outputs reached by downstream tasks through ctx.Demand<PerFileScoringTask>().
         // Defaults are non-null empty collections so callers querying
         // outputs from a not-yet-run task never NPE on the accessor.
@@ -473,6 +484,20 @@ namespace pwiz.OspreySharp.Tasks
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
             _perFileParquetPaths = perFileParquetPaths;
+
+            // Publish the Stage 1-4 byproducts once, in the shared Run/Rehydrate
+            // tail, before any success-but-stop early exit -- so a downstream
+            // consumer pulling them by type (ctx.Get<T>) sees the same values
+            // regardless of which path materialized this task. The getters still
+            // back the existing consumers in this commit; the cache is populated
+            // but not yet read (additive, byte-neutral). RescoreBundle wraps the
+            // nullable bundle (null at a Stage-5 entry / straight-through run).
+            ctx.Publish(new FullLibrary(_fullLibrary));
+            ctx.Publish(new LibraryById(_libraryById));
+            ctx.Publish(new PerFileCalibrations(_perFileCalibrations));
+            ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
+            ctx.Publish(new ScoredEntries(_perFileEntries));
+            ctx.Publish(new RescoreBundle(_rescoreInputs));
 
             if (perFileEntries.Count == 0 || totalScored == 0)
             {

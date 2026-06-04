@@ -84,6 +84,19 @@ namespace pwiz.OspreySharp.Tasks
                 || (inputs && !c.NoJoin && !c.ExpectReconciledInput);
         }
 
+        // Stage 5/6 planning byproducts this task publishes. The same four types
+        // are published from Run (Stage-5 computed values) and from the
+        // bundle-adopt Rehydrate path -- publishing into one typed slot from
+        // both producers is what dissolves the former dual-source getters
+        // (_didPlan ? computed : bundle.X), since a consumer reads the slot
+        // without caring which path filled it.
+        public override IEnumerable<Type> Publishes => new[]
+        {
+            typeof(PerFileConsensusTargets), typeof(ReconciliationActions),
+            typeof(RefinedCalibrations), typeof(PerFileGapFillForRescore),
+            typeof(CompactedEntries)
+        };
+
         // Outputs reached by downstream tasks through ctx.Demand<FirstJoinTask>().
         // DidPlan is the gate downstream consumers (PerFileRescoreTask)
         // check to decide whether the Stage 6 planning state below is
@@ -297,6 +310,16 @@ namespace pwiz.OspreySharp.Tasks
                     return false;
             }
 
+            // Publish the Stage 6 planning byproducts (computed values, or the
+            // empty defaults when PlanStage6 was skipped / stopped after Stage
+            // 5), plus the CompactedEntries milestone of the shared buffer that
+            // CompactFirstPass produced above. Getters still serve existing
+            // consumers in this commit.
+            ctx.Publish(new PerFileConsensusTargets(_perFileConsensusTargets));
+            ctx.Publish(new ReconciliationActions(_reconciliationActions));
+            ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
+            ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
+            ctx.Publish(new CompactedEntries(perFileEntries));
             return true;
         }
 
@@ -342,6 +365,16 @@ namespace pwiz.OspreySharp.Tasks
             // indices for PerFileRescoreTask.
             CompactFirstPass(perFileEntries, bundle, config);
 
+            // Publish the SAME four planning byproducts as Run, but sourced from
+            // the adopted bundle (post-compaction). A consumer pulls
+            // ctx.Get<ReconciliationActions>() etc. without knowing whether this
+            // task computed them (Run) or adopted them from the worker bundle
+            // (here) -- the dual-source getter fallback collapses into one slot.
+            ctx.Publish(new ReconciliationActions(bundle.ReconciliationActions));
+            ctx.Publish(new RefinedCalibrations(bundle.RefinedCalibrations));
+            ctx.Publish(new PerFileGapFillForRescore(bundle.PerFileGapFill));
+            ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundleOrEmpty(ctx)));
+            ctx.Publish(new CompactedEntries(perFileEntries));
             return true;
         }
 
