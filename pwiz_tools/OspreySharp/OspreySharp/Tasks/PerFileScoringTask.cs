@@ -142,13 +142,6 @@ namespace pwiz.OspreySharp.Tasks
         // a separate code path.
         private RescoreInputs _rescoreInputs;
 
-        // Phase B lazy-rehydrate gate. Set to true at the start of both
-        // Run (compute) and Rehydrate (disk-load). Once set, neither path
-        // re-executes the body (multiple accessors querying state from a
-        // single skipped task all hit a fast no-op after the first
-        // materialization).
-        private bool _runOrHydrated;
-
         // The backing fields above are built and mutated ONLY inside this task
         // (during Run / hydration) and published once in FinalizeAndCheck as the
         // FullLibrary / LibraryById / PerFileCalibrations / PerFileParquetPaths /
@@ -200,12 +193,6 @@ namespace pwiz.OspreySharp.Tasks
             // here only in the non---input-scores modes (where computing from
             // spectra is right), and a worker-mode consumer materializes it via
             // ctx.Demand, which routes to Rehydrate.
-            //
-            // Idempotent re-entry guard: a lazy-rehydrate via an accessor may
-            // have already executed this task body; the driver loop's call
-            // here is then a no-op.
-            if (_runOrHydrated) return true;
-            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
 
@@ -358,8 +345,6 @@ namespace pwiz.OspreySharp.Tasks
 
         public override bool Rehydrate(PipelineContext ctx)
         {
-            if (_runOrHydrated) return true;
-
             // Without --input-scores there are no worker-supplied per-file
             // scores to load. A Demand still reaches this task here on a
             // straight-through resume: the driver skipped its Run because its
@@ -380,7 +365,6 @@ namespace pwiz.OspreySharp.Tasks
             // recomputing them from spectra, then adopt any reconciliation
             // bundle that the merge node will read. The compute-from-spectra
             // counterpart is Run.
-            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
 

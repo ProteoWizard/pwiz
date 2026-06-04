@@ -103,10 +103,6 @@ namespace pwiz.OspreySharp.Tasks
         // PerFileScoringTask.
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
 
-        // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
-        // mechanism.
-        private bool _runOrHydrated;
-
         public override string Name => @"PerFileRescore";
 
         /// <summary>
@@ -188,8 +184,6 @@ namespace pwiz.OspreySharp.Tasks
             // rescore from), takes Rehydrate instead: the driver reaches this
             // task here only in the rescore-capable modes, and a merge-node
             // consumer materializes it via ctx.Demand, which routes to Rehydrate.
-            if (_runOrHydrated) return true;
-            _runOrHydrated = true;
             _ctx = ctx;
             // CompactedEntries: the post-first-join buffer. Demanding it
             // materializes FirstJoin (running its compaction + Stage 6 planning
@@ -337,8 +331,7 @@ namespace pwiz.OspreySharp.Tasks
             // The compaction reads first-pass q-values already overlaid onto
             // each entry from the .1st-pass.fdr_scores.bin sidecar by
             // PerFileScoringTask's bundle hydration; no fresh FDR computation.
-            if (_runOrHydrated) return true;
-
+            //
             // Only the --join-at-pass=2 merge entry rehydrates here (reconciled
             // parquets on disk, no mzMLs to rescore). Any other entry that
             // reaches this task via Demand -- straight-through resume where the
@@ -349,7 +342,6 @@ namespace pwiz.OspreySharp.Tasks
             if (!ctx.Config.ExpectReconciledInput)
                 return Run(ctx);
 
-            _runOrHydrated = true;
             _ctx = ctx;
             // ScoredEntries, NOT CompactedEntries: the merge path must NOT
             // materialize FirstJoin (that would re-run Stage 5 Percolator on the

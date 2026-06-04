@@ -53,11 +53,13 @@ namespace pwiz.OspreySharp.Tasks
         private readonly Dictionary<Type, OspreyTask> _tasksByType;
 
         /// <summary>
-        /// Producer types whose <see cref="OspreyTask.Rehydrate"/> has already
-        /// been driven by a <see cref="Demand{T}"/> first-touch this run.
-        /// Reproduces the one-shot semantics of each task's former
-        /// <c>_runOrHydrated</c> guard: a producer is materialized at most
-        /// once, no matter how many consumers demand it.
+        /// Task types whose state is already in memory this run -- either the
+        /// driver ran them (it calls <see cref="MarkMaterialized"/> after
+        /// <see cref="OspreyTask.Run"/>) or a <see cref="Demand{T}"/> /
+        /// <see cref="Get{TInfo}"/> first-touch drove their
+        /// <see cref="OspreyTask.Rehydrate"/>. A task is materialized at most
+        /// once, no matter how many consumers reach it; this single guard
+        /// replaces the per-task <c>_runOrHydrated</c> field.
         /// </summary>
         private readonly HashSet<Type> _materialized = new HashSet<Type>();
 
@@ -198,6 +200,22 @@ namespace pwiz.OspreySharp.Tasks
             if (materialize && _materialized.Add(taskType))
                 task.Rehydrate(this);
             return task;
+        }
+
+        /// <summary>
+        /// Record that the driver has run <paramref name="task"/>, so a later
+        /// <see cref="Demand{T}"/> / <see cref="Get{TInfo}"/> for it returns the
+        /// already-computed state instead of driving <see cref="OspreyTask.Rehydrate"/>.
+        /// Called by <c>AnalysisPipeline.RunTask</c> after each
+        /// <see cref="OspreyTask.Run"/>. This is what lets tasks drop their former
+        /// per-instance <c>_runOrHydrated</c> guard: the context's
+        /// <see cref="_materialized"/> set now coordinates the driver-Run path and
+        /// the lazy-Rehydrate path with a single source of truth.
+        /// </summary>
+        public void MarkMaterialized(OspreyTask task)
+        {
+            if (task == null) throw new ArgumentNullException(nameof(task));
+            _materialized.Add(task.GetType());
         }
 
         /// <summary>

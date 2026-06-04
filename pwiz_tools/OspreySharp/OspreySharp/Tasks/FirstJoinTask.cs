@@ -114,10 +114,6 @@ namespace pwiz.OspreySharp.Tasks
         private IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFillForRescore
             = new Dictionary<string, List<GapFillTarget>>();
 
-        // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
-        // mechanism; FirstJoinTask uses the same idempotent Run pattern.
-        private bool _runOrHydrated;
-
         public bool DidPlan(PipelineContext ctx) { return _didPlan; }
 
         // Bundle.PerFileConsensusTargets is null at hydration time (consensus
@@ -183,8 +179,6 @@ namespace pwiz.OspreySharp.Tasks
             // task here only in the bundle-absent modes (straight-through,
             // --join-only); a worker-mode consumer materializes it via
             // ctx.Demand which routes to Rehydrate.
-            if (_runOrHydrated) return true;
-            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
 
@@ -310,7 +304,6 @@ namespace pwiz.OspreySharp.Tasks
             // compute_fdr_from_stubs skip, pipeline.rs:3916). All that remains
             // is to adopt the bundle and compact. The compute counterpart is
             // Run.
-            if (_runOrHydrated) return true;
             var bundle = ctx.Get<RescoreBundle>().Value;
 
             // No rescore bundle (straight-through resume, or any non-worker
@@ -324,7 +317,6 @@ namespace pwiz.OspreySharp.Tasks
             if (bundle == null)
                 return Run(ctx);
 
-            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
