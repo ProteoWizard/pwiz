@@ -62,6 +62,35 @@ namespace pwiz.OspreySharp.Tasks
         private readonly HashSet<Type> _materialized = new HashSet<Type>();
 
         /// <summary>
+        /// Typed byproduct cache: state that one task computes and one or more
+        /// downstream tasks read, keyed by the byproduct's purpose type. Modeled
+        /// directly on Skyline's
+        /// <c>pwiz_tools/Skyline/Model/Results/Scoring/IPeakScoringModel.cs</c>
+        /// <c>PeakScoringContext</c> (its <c>AddInfo&lt;TInfo&gt;</c> /
+        /// <c>TryGetInfo&lt;TInfo&gt;</c> pair): a producer publishes a value once
+        /// and consumers retrieve it by type without naming the producer. Publish
+        /// is once-only (a second publish of the same type is a programming
+        /// defect). A consumer reaching for a byproduct whose producer has not yet
+        /// run materializes it lazily through <see cref="Get{TInfo}"/>, which
+        /// demands the registered producer (see <see cref="_producerByByproduct"/>).
+        /// </summary>
+        private readonly Dictionary<Type, object> _byproducts = new Dictionary<Type, object>();
+
+        /// <summary>
+        /// Maps each byproduct purpose type to the concrete task that publishes
+        /// it, built once at construction from each task's
+        /// <see cref="OspreyTask.Publishes"/>. This is the single registration
+        /// point that lets <see cref="Get{TInfo}"/> lazily materialize a skipped
+        /// producer on a cache miss, replacing the former pattern of every
+        /// consumer naming the producer task at its call site. A byproduct that
+        /// is a shared mutable buffer (in-place mutated by several tasks rather
+        /// than published once and read) is deliberately NOT registered here: its
+        /// materialization is a task-ordering dependency the consumer expresses
+        /// by demanding the correct mutator directly, not a value-presence miss.
+        /// </summary>
+        private readonly Dictionary<Type, Type> _producerByByproduct = new Dictionary<Type, Type>();
+
+        /// <summary>
         /// The configuration parsed from CLI args and the input library.
         ///
         /// Mutation contract: fields that feed
@@ -128,6 +157,23 @@ namespace pwiz.OspreySharp.Tasks
                     throw new ArgumentException(@"Pipeline task list contains a null entry.", nameof(tasks));
                 _tasksByType.Add(task.GetType(), task);
             }
+
+            // Invert each producer's declared byproducts into the
+            // byproduct -> producer registry that Get{TInfo} resolves a cache
+            // miss through. A byproduct with two producers is a definition
+            // defect (the registry could not pick which task to materialize),
+            // so fail fast at construction rather than silently lose one.
+            foreach (var task in list)
+            {
+                foreach (var byproductType in task.Publishes)
+                {
+                    if (_producerByByproduct.ContainsKey(byproductType))
+                        throw new ArgumentException(string.Format(
+                            @"Byproduct type '{0}' is published by more than one task; each registered byproduct must have a single producer.",
+                            byproductType.FullName), nameof(tasks));
+                    _producerByByproduct.Add(byproductType, task.GetType());
+                }
+            }
             Tasks = list;
         }
 
@@ -146,9 +192,26 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private T GetTask<T>() where T : OspreyTask
         {
-            if (_tasksByType.TryGetValue(typeof(T), out var task))
-                return (T)task;
-            throw new UnknownTaskException(typeof(T));
+            return (T)DemandByType(typeof(T), materialize: false);
+        }
+
+        /// <summary>
+        /// Resolve a registered task by its runtime <see cref="Type"/>, optionally
+        /// materializing it. Shared core behind the generic <see cref="Demand{T}"/>
+        /// and the registry-driven lazy materialization in
+        /// <see cref="Get{TInfo}"/> (which knows the producer only as a
+        /// <see cref="Type"/> from <see cref="_producerByByproduct"/>, so it cannot
+        /// use the generic overload). When <paramref name="materialize"/> is true,
+        /// the producer's <see cref="OspreyTask.Rehydrate"/> is driven at most once
+        /// via the <see cref="_materialized"/> one-shot guard.
+        /// </summary>
+        private OspreyTask DemandByType(Type taskType, bool materialize)
+        {
+            if (!_tasksByType.TryGetValue(taskType, out var task))
+                throw new UnknownTaskException(taskType);
+            if (materialize && _materialized.Add(taskType))
+                task.Rehydrate(this);
+            return task;
         }
 
         /// <summary>
@@ -171,10 +234,66 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         public T Demand<T>() where T : OspreyTask
         {
-            var task = GetTask<T>();
-            if (_materialized.Add(typeof(T)))
-                task.Rehydrate(this);
-            return task;
+            return (T)DemandByType(typeof(T), materialize: true);
+        }
+
+        /// <summary>
+        /// Publish a byproduct value for downstream tasks, keyed by its purpose
+        /// type <typeparamref name="TInfo"/>. Once-only: publishing the same type
+        /// twice in a run is a programming defect (two producers, or a producer
+        /// running twice) and throws. The <c>AddInfo&lt;TInfo&gt;</c> counterpart
+        /// of Skyline's <c>PeakScoringContext</c>.
+        /// </summary>
+        public void Publish<TInfo>(TInfo info)
+        {
+            _byproducts.Add(typeof(TInfo), info);
+        }
+
+        /// <summary>
+        /// Read a byproduct value if it has been published, without triggering
+        /// any producer. Pure cache lookup -- the <c>TryGetInfo&lt;TInfo&gt;</c>
+        /// counterpart of Skyline's <c>PeakScoringContext</c>. Use
+        /// <see cref="Get{TInfo}"/> when a miss should lazily materialize the
+        /// registered producer instead of returning <c>false</c>.
+        /// </summary>
+        public bool TryGet<TInfo>(out TInfo info)
+        {
+            if (_byproducts.TryGetValue(typeof(TInfo), out var obj))
+            {
+                info = (TInfo)obj;
+                return true;
+            }
+            info = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Retrieve a published byproduct, lazily materializing its producer on a
+        /// miss. If <typeparamref name="TInfo"/> is not yet in the cache, the
+        /// registered producer (<see cref="_producerByByproduct"/>) is demanded --
+        /// its <see cref="OspreyTask.Rehydrate"/> runs and publishes the value --
+        /// and the cache is read again. This is the public dataflow surface that
+        /// replaces consumers reaching through a named producer task's getter:
+        /// the consumer asks the context for the value by type and the context
+        /// owns when (and by which task) it comes into being.
+        ///
+        /// Throws <see cref="UnknownByproductException"/> if the type has no
+        /// registered producer, or if the producer ran but did not publish it --
+        /// both programming defects (a missing <see cref="OspreyTask.Publishes"/>
+        /// registration, or a producer path that forgot to publish), surfaced
+        /// loudly rather than returning a silent default.
+        /// </summary>
+        public TInfo Get<TInfo>()
+        {
+            if (TryGet(out TInfo info))
+                return info;
+            if (_producerByByproduct.TryGetValue(typeof(TInfo), out var producerType))
+            {
+                DemandByType(producerType, materialize: true);
+                if (TryGet(out info))
+                    return info;
+            }
+            throw new UnknownByproductException(typeof(TInfo));
         }
 
         /// <summary>
@@ -206,11 +325,12 @@ namespace pwiz.OspreySharp.Tasks
     }
 
     /// <summary>
-    /// Thrown by <see cref="PipelineContext.GetTask{T}"/> when a task
-    /// asks for an upstream producer that was not added to the pipeline
-    /// at construction time. This is always a programming defect (the
-    /// pipeline definition is missing the producer); fail fast and hard
-    /// so it surfaces in testing rather than at runtime.
+    /// Thrown by <see cref="PipelineContext.Demand{T}"/> (and the
+    /// registry-driven materialization in <see cref="PipelineContext.Get{TInfo}"/>)
+    /// when a task asks for an upstream producer that was not added to the
+    /// pipeline at construction time. This is always a programming defect (the
+    /// pipeline definition is missing the producer); fail fast and hard so it
+    /// surfaces in testing rather than at runtime.
     /// </summary>
     public sealed class UnknownTaskException : Exception
     {
@@ -218,6 +338,26 @@ namespace pwiz.OspreySharp.Tasks
 
         public UnknownTaskException(Type requestedType)
             : base(string.Format(@"Task type '{0}' is not registered in the current pipeline.",
+                requestedType?.FullName))
+        {
+            RequestedType = requestedType;
+        }
+    }
+
+    /// <summary>
+    /// Thrown by <see cref="PipelineContext.Get{TInfo}"/> when a byproduct type
+    /// has no registered producer, or when its producer ran but did not publish
+    /// the value. Both are programming defects -- a missing
+    /// <see cref="OspreyTask.Publishes"/> registration, or a producer code path
+    /// that neglected to <see cref="PipelineContext.Publish{TInfo}"/> -- and are
+    /// surfaced loudly rather than degrading to a silent default value.
+    /// </summary>
+    public sealed class UnknownByproductException : Exception
+    {
+        public Type RequestedType { get; }
+
+        public UnknownByproductException(Type requestedType)
+            : base(string.Format(@"Byproduct type '{0}' has no registered producer, or its producer did not publish it.",
                 requestedType?.FullName))
         {
             RequestedType = requestedType;
