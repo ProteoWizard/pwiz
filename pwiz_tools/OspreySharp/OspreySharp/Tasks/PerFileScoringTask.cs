@@ -454,12 +454,15 @@ namespace pwiz.OspreySharp.Tasks
             _perFileParquetPaths = perFileParquetPaths;
 
             // Publish the Stage 1-4 byproducts once, in the shared Run/Rehydrate
-            // tail, before any success-but-stop early exit -- so a downstream
-            // consumer pulling them by type (ctx.Get<T>) sees the same values
-            // regardless of which path materialized this task. The getters still
-            // back the existing consumers in this commit; the cache is populated
-            // but not yet read (additive, byte-neutral). RescoreBundle wraps the
-            // nullable bundle (null at a Stage-5 entry / straight-through run).
+            // tail, BEFORE the success-but-stop early exits below -- so a
+            // downstream consumer pulling them by type (ctx.Get<T>) sees the
+            // same values regardless of which path materialized this task, even
+            // when this task then stops the pipeline. Because those stops keep
+            // ExitCode == 0, a lazy Demand that drove this Rehydrate still gets
+            // the published state and PipelineContext.DemandByType's
+            // failure-throw (which fires only on a false return WITH ExitCode != 0)
+            // correctly treats them as benign. RescoreBundle wraps the nullable
+            // bundle (null at a Stage-5 entry / straight-through run).
             ctx.Publish(new FullLibrary(_fullLibrary));
             ctx.Publish(new LibraryById(_libraryById));
             ctx.Publish(new PerFileCalibrations(_perFileCalibrations));

@@ -198,7 +198,20 @@ namespace pwiz.OspreySharp.Tasks
             if (!_tasksByType.TryGetValue(taskType, out var task))
                 throw new UnknownTaskException(taskType);
             if (materialize && _materialized.Add(taskType))
-                task.Rehydrate(this);
+            {
+                // Lazily drive the producer. Unlike the driver loop -- which
+                // inspects Run's bool and stops the pipeline on false -- a
+                // consumer's lazy Demand/Get has no return channel, so a failed
+                // Rehydrate would otherwise be swallowed and the consumer would
+                // proceed with default (empty) state. Surface a genuine failure
+                // (one that set a non-zero ExitCode -- e.g. a library load or
+                // empty-scores error) as a throw so the run fails loudly. A
+                // success-stop that returns false with ExitCode == 0 (e.g. the
+                // --no-join boundary, whose byproducts were already published
+                // before the stop) is intentionally left benign.
+                if (!task.Rehydrate(this) && ExitCode != 0)
+                    throw new RehydrateFailedException(taskType, ExitCode);
+            }
             return task;
         }
 
@@ -365,6 +378,30 @@ namespace pwiz.OspreySharp.Tasks
                 requestedType?.FullName))
         {
             RequestedType = requestedType;
+        }
+    }
+
+    /// <summary>
+    /// Thrown by <see cref="PipelineContext.Get{TInfo}"/> /
+    /// <see cref="PipelineContext.Demand{T}"/> when a lazily-driven
+    /// <see cref="OspreyTask.Rehydrate"/> reports failure (returns <c>false</c>)
+    /// and has set a non-zero <see cref="PipelineContext.ExitCode"/>. The driver
+    /// loop stops the pipeline on a false Run return, but a consumer's lazy
+    /// materialization has no such return channel, so this surfaces the failure
+    /// rather than letting the consumer proceed with default state. Carries the
+    /// task type and the exit code the failing task requested.
+    /// </summary>
+    public sealed class RehydrateFailedException : Exception
+    {
+        public Type TaskType { get; }
+        public int ExitCode { get; }
+
+        public RehydrateFailedException(Type taskType, int exitCode)
+            : base(string.Format(@"Task '{0}' failed to rehydrate its state (exit code {1}).",
+                taskType?.FullName, exitCode))
+        {
+            TaskType = taskType;
+            ExitCode = exitCode;
         }
     }
 }
