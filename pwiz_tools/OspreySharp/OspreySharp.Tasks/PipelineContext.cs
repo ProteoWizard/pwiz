@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Tasks
@@ -50,6 +51,15 @@ namespace pwiz.OspreySharp.Tasks
         private readonly Action<string> _logWarning;
         private readonly Action<string> _logError;
         private readonly Dictionary<Type, OspreyTask> _tasksByType;
+
+        /// <summary>
+        /// Producer types whose <see cref="OspreyTask.Rehydrate"/> has already
+        /// been driven by a <see cref="Demand{T}"/> first-touch this run.
+        /// Reproduces the one-shot semantics of each task's former
+        /// <c>_runOrHydrated</c> guard: a producer is materialized at most
+        /// once, no matter how many consumers demand it.
+        /// </summary>
+        private readonly HashSet<Type> _materialized = new HashSet<Type>();
 
         /// <summary>
         /// The configuration parsed from CLI args and the input library.
@@ -91,47 +101,18 @@ namespace pwiz.OspreySharp.Tasks
 
         /// <summary>
         /// The tasks participating in this pipeline, in execution order.
-        /// The driver walks this list; tasks that need state from an
-        /// upstream sibling look it up by type via <see cref="GetTask{T}"/>.
+        /// The driver walks this list (running each that is
+        /// <see cref="OspreyTask.IsIncluded"/> and not already valid on disk);
+        /// tasks that need state from an upstream sibling reach it through
+        /// <see cref="Demand{T}"/>.
         /// </summary>
         public IReadOnlyList<OspreyTask> Tasks { get; }
-
-        /// <summary>
-        /// First task in <see cref="Tasks"/> whose <see cref="OspreyTask.Run"/>
-        /// will be invoked. Tasks before this one are present in the registry
-        /// (so consumers can still <see cref="GetTask{T}"/> them and pull
-        /// state through their lazy-rehydrate accessors) but their
-        /// <c>Run</c> is never called. Defaults to the first entry in
-        /// <see cref="Tasks"/>. Set once by the pipeline entry point from
-        /// CLI-derived <see cref="OspreyConfig"/> flags; immutable thereafter.
-        /// </summary>
-        public Type StartAtTask { get; }
-
-        /// <summary>
-        /// Last task in <see cref="Tasks"/> whose <see cref="OspreyTask.Run"/>
-        /// will be invoked. Tasks after this one are not reached. Defaults
-        /// to the last entry in <see cref="Tasks"/>. Set once by the
-        /// pipeline entry point from CLI-derived <see cref="OspreyConfig"/>
-        /// flags; immutable thereafter.
-        /// </summary>
-        public Type StopAfterTask { get; }
 
         public PipelineContext(OspreyConfig config,
             IEnumerable<OspreyTask> tasks,
             Action<string> logInfo,
             Action<string> logWarning,
             Action<string> logError)
-            : this(config, tasks, logInfo, logWarning, logError, null, null)
-        {
-        }
-
-        public PipelineContext(OspreyConfig config,
-            IEnumerable<OspreyTask> tasks,
-            Action<string> logInfo,
-            Action<string> logWarning,
-            Action<string> logError,
-            Type startAtTask,
-            Type stopAfterTask)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             if (tasks == null) throw new ArgumentNullException(nameof(tasks));
@@ -148,25 +129,6 @@ namespace pwiz.OspreySharp.Tasks
                 _tasksByType.Add(task.GetType(), task);
             }
             Tasks = list;
-
-            if (list.Count == 0)
-            {
-                StartAtTask = startAtTask;
-                StopAfterTask = stopAfterTask;
-            }
-            else
-            {
-                StartAtTask = startAtTask ?? list[0].GetType();
-                StopAfterTask = stopAfterTask ?? list[list.Count - 1].GetType();
-                if (!_tasksByType.ContainsKey(StartAtTask))
-                    throw new ArgumentException(
-                        string.Format(@"StartAtTask '{0}' is not in the pipeline task list.",
-                            StartAtTask.FullName), nameof(startAtTask));
-                if (!_tasksByType.ContainsKey(StopAfterTask))
-                    throw new ArgumentException(
-                        string.Format(@"StopAfterTask '{0}' is not in the pipeline task list.",
-                            StopAfterTask.FullName), nameof(stopAfterTask));
-            }
         }
 
         public void LogInfo(string message) { _logInfo(message); }
@@ -174,20 +136,72 @@ namespace pwiz.OspreySharp.Tasks
         public void LogError(string message) { _logError(message); }
 
         /// <summary>
-        /// Look up a task by its concrete type. Used by a task's
-        /// <see cref="OspreyTask.Run"/> implementation to reach the
-        /// typed accessor methods on an upstream producer
-        /// (e.g. <c>ctx.GetTask&lt;FirstJoinTask&gt;().GetReconciliationActions()</c>).
-        /// Throws <see cref="UnknownTaskException"/> if the requested
-        /// type is not in the pipeline; treat that as a programming
-        /// defect at pipeline-construction time rather than a runtime
-        /// condition to handle.
+        /// Look up a registered task by its concrete type. Internal lookup
+        /// backing <see cref="Demand{T}"/>; consumers reach producers through
+        /// <see cref="Demand{T}"/> (which materializes on first touch), not
+        /// this raw accessor. Throws <see cref="UnknownTaskException"/> if the
+        /// requested type is not in the pipeline; treat that as a
+        /// programming defect at pipeline-construction time rather than a
+        /// runtime condition to handle.
         /// </summary>
-        public T GetTask<T>() where T : OspreyTask
+        private T GetTask<T>() where T : OspreyTask
         {
             if (_tasksByType.TryGetValue(typeof(T), out var task))
                 return (T)task;
             throw new UnknownTaskException(typeof(T));
+        }
+
+        /// <summary>
+        /// Resolve an upstream producer and ensure its state is materialized
+        /// before returning it. The first consumer to demand a given producer
+        /// triggers its <see cref="OspreyTask.Rehydrate"/>; subsequent demands
+        /// return the same instance without re-materializing, via the
+        /// <see cref="_materialized"/> one-shot guard. This is the
+        /// lazy-rehydrate replacement for the <c>EnsureHydrated</c>-inside-getter
+        /// pattern: callers ask the context for what they need and the context
+        /// owns when the producer's state comes into being, rather than each
+        /// accessor side-effecting a hydrate/run on read.
+        ///
+        /// A producer whose <see cref="OspreyTask.Run"/> already executed
+        /// (driver ran it this pass) no-ops via its own one-shot guard. Each
+        /// producer's <see cref="OspreyTask.Rehydrate"/> dispatches on its mode:
+        /// it disk-loads worker-supplied state when present, else defers to
+        /// <see cref="OspreyTask.Run"/> (whose per-file load picks up already-valid
+        /// outputs on a straight-through resume).
+        /// </summary>
+        public T Demand<T>() where T : OspreyTask
+        {
+            var task = GetTask<T>();
+            if (_materialized.Add(typeof(T)))
+                task.Rehydrate(this);
+            return task;
+        }
+
+        /// <summary>
+        /// Driver-owned skip predicate: <c>true</c> when every file
+        /// <paramref name="task"/> declares in <see cref="OspreyTask.Outputs"/>
+        /// already exists on disk with a matching
+        /// <see cref="OspreyTask.ValidityKey"/> sidecar — i.e. the task's work
+        /// is durably present and need not be recomputed. A task that declares
+        /// no outputs can never be skipped (returns <c>false</c>), matching the
+        /// "purely-in-memory transformation" posture documented on
+        /// <see cref="OspreyTask.Outputs"/>.
+        ///
+        /// Lifted verbatim from <c>AnalysisPipeline.IsTaskAlreadyDone</c> so the
+        /// driver loop can ask the context "can this rehydrate instead of run?"
+        /// rather than re-running the same outputs-valid check itself.
+        /// </summary>
+        public bool CanRehydrate(OspreyTask task)
+        {
+            var outputs = new List<string>(task.Outputs(this));
+            if (outputs.Count == 0) return false;
+            string key = task.ValidityKey(this);
+            foreach (var output in outputs)
+            {
+                if (!File.Exists(output)) return false;
+                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
+            }
+            return true;
         }
     }
 

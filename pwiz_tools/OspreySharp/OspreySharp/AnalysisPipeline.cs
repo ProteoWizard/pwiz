@@ -54,32 +54,54 @@ namespace pwiz.OspreySharp
 
             try
             {
-                var pipelineTasks = CanonicalPipeline();
-                var startAt = DeriveStartAtTask(config);
-                var stopAfter = DeriveStopAfterTask(config);
-                var ctx = new PipelineContext(config, pipelineTasks,
-                    LogInfo, LogWarning, LogError, startAt, stopAfter);
-
-                // Phase B range-gating: tasks before StartAt are skipped
-                // silently (their state lazy-rehydrates from disk via the
-                // producer-task accessors when a downstream task queries
-                // it); tasks at-or-after StartAt run normally through
-                // RunTask's sidecar dance; iteration stops after StopAfter.
-                bool inRange = false;
-                foreach (var task in ctx.Tasks)
+                // Worker-mode entry normalization: in --input-scores modes
+                // without explicit -i, synthesize InputFiles from the parquet
+                // stems ONCE here, at pipeline entry, so the driver's
+                // Outputs/IsTaskAlreadyDone skip checks and every per-task
+                // accessor see a populated InputFiles regardless of which task
+                // the run starts at. (Mutation-contract: InputFiles is a
+                // pipeline-populated field that does NOT feed any identity
+                // hash, so it may be written once at entry -- see
+                // PipelineContext.Config. Previously this lived inside
+                // PerFileScoringTask's join-only load, which the driver never
+                // reached when PerFileScoring was the StartAt task, e.g.
+                // `--join-at-pass=1 --input-scores`.)
+                if (config.InputScores != null && config.InputScores.Count > 0
+                    && (config.InputFiles == null || config.InputFiles.Count == 0))
                 {
-                    if (!inRange)
+                    var synthetic = new List<string>(config.InputScores.Count);
+                    foreach (var p in config.InputScores)
+                        synthetic.Add(RescoreHydration.SyntheticInputFromParquet(p));
+                    config.InputFiles = synthetic;
+                }
+
+                var pipelineTasks = CanonicalPipeline();
+                var ctx = new PipelineContext(config, pipelineTasks,
+                    LogInfo, LogWarning, LogError);
+
+                // Phase B5 driver-owned dataflow: walk the canonical pipeline
+                // and run each INCLUDED task whose outputs are not already
+                // valid on disk. Membership is a per-task fact
+                // (OspreyTask.IsIncluded) rather than a contiguous
+                // [StartAt..StopAfter] window. Excluded tasks -- and included
+                // tasks whose outputs already exist (ctx.CanRehydrate) -- are
+                // not run here; their state lazy-rehydrates through ctx.Demand
+                // when a running task reaches for it. A task returning false is
+                // still the signal to stop and propagate ctx.ExitCode (e.g. an
+                // empty score set or a sidecar-write failure).
+                foreach (var task in pipelineTasks)
+                {
+                    if (!task.IsIncluded(ctx))
+                        continue;
+
+                    if (ctx.CanRehydrate(task))
                     {
-                        if (task.GetType() != ctx.StartAtTask)
-                            continue;
-                        inRange = true;
+                        LogInfo(string.Format(@"[task] {0}: skipping (outputs valid)", task.Name));
+                        continue;
                     }
 
                     if (!RunTask(task, ctx))
                         return ctx.ExitCode;
-
-                    if (task.GetType() == ctx.StopAfterTask)
-                        break;
                 }
 
                 stopwatch.Stop();
@@ -101,12 +123,11 @@ namespace pwiz.OspreySharp
         /// The canonical four-task pipeline in execution order:
         /// PerFileScoring -> FirstJoin -> PerFileRescore -> MergeNode.
         /// Single source of truth for the task list. Tasks read upstream
-        /// state through ctx.GetTask&lt;T&gt;().GetX() rather than
-        /// constructor args; each task short-circuits its own work when
-        /// there is nothing to do (e.g. PerFileRescoreTask checks
-        /// FirstJoinTask.DidPlan internally and returns true as a no-op
-        /// when planning was skipped). Returning false from any task is
-        /// the signal to stop and propagate ctx.ExitCode.
+        /// state through ctx.Demand&lt;T&gt;().GetX() rather than constructor
+        /// args; the driver runs each task that is
+        /// <see cref="OspreyTask.IsIncluded"/> for the current config and whose
+        /// outputs are not already valid on disk. Returning false from any task
+        /// is the signal to stop and propagate ctx.ExitCode.
         /// </summary>
         internal static OspreyTask[] CanonicalPipeline()
         {
@@ -119,56 +140,6 @@ namespace pwiz.OspreySharp
             };
         }
 
-        /// <summary>
-        /// Derives the StartAt task for <paramref name="config"/> from the
-        /// HPC CLI flags it carries. The four mass-spec pipeline tasks
-        /// (PerFileScoring -> FirstJoin -> PerFileRescore -> MergeNode) are
-        /// always present in the registry; this picks which one
-        /// <see cref="AnalysisPipeline.Run"/> starts at, leaving any
-        /// earlier tasks unrun (their lazy-rehydrate accessors fetch state
-        /// from disk if a downstream task needs it).
-        /// </summary>
-        internal static Type DeriveStartAtTask(OspreyConfig config)
-        {
-            bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
-            if (hasInputScores)
-            {
-                // --join-at-pass=2 --input-scores ...
-                if (config.ExpectReconciledInput)
-                    return typeof(MergeNodeTask);
-                // --join-at-pass=1 --no-join --input-scores ... (rescore worker)
-                if (config.NoJoin)
-                    return typeof(PerFileRescoreTask);
-                // --join-at-pass=1 --join-only --input-scores ...
-                if (config.StopAfterStage5)
-                    return typeof(FirstJoinTask);
-            }
-            return typeof(PerFileScoringTask);
-        }
-
-        /// <summary>
-        /// Derives the StopAfter task for <paramref name="config"/> from the
-        /// HPC CLI flags it carries. See <see cref="DeriveStartAtTask"/>
-        /// for the parallel start-point derivation.
-        /// </summary>
-        internal static Type DeriveStopAfterTask(OspreyConfig config)
-        {
-            bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
-            // --no-join (no --input-scores): only Stages 1-4
-            if (config.NoJoin && !hasInputScores)
-                return typeof(PerFileScoringTask);
-            // --join-at-pass=1 --no-join --input-scores ... (rescore worker)
-            if (config.NoJoin && hasInputScores)
-                return typeof(PerFileRescoreTask);
-            // --join-at-pass=1 --join-only (with or without --input-scores)
-            if (config.StopAfterStage5)
-                return typeof(FirstJoinTask);
-            // --join-at-pass=2 --input-scores ... (post-reconciled merge only)
-            if (config.ExpectReconciledInput && hasInputScores)
-                return typeof(MergeNodeTask);
-            return typeof(MergeNodeTask);
-        }
-
         #region Utility Methods
 
         /// <summary>
@@ -178,24 +149,14 @@ namespace pwiz.OspreySharp
         /// short-circuit on <c>false</c> and propagate
         /// <see cref="PipelineContext.ExitCode"/>.
         ///
-        /// Phase B skip-if-outputs-valid: before invoking
-        /// <see cref="OspreyTask.Run"/>, check whether every output declared
-        /// by <see cref="OspreyTask.Outputs"/> exists with a matching
-        /// <c>.osprey.task</c> sidecar (validity-key check against
-        /// <see cref="OspreyTask.ValidityKey"/>). If so, the task's work is
-        /// already on disk -- log and return true without executing.
-        /// Otherwise, stale sidecars are cleared (so a mid-Run crash leaves
-        /// no false-positive sidecar), the task is run, and fresh sidecars
-        /// are written next to each declared output on success.
+        /// The skip-if-outputs-valid decision now lives in the driver loop
+        /// (<see cref="PipelineContext.CanRehydrate"/>): this is only called
+        /// for a task that is included and whose outputs are not already on
+        /// disk. The task is run and fresh <c>.osprey.task</c> sidecars are
+        /// written next to each declared output on success.
         /// </summary>
         private static bool RunTask(OspreyTask task, PipelineContext ctx)
         {
-            if (IsTaskAlreadyDone(task, ctx))
-            {
-                ctx.LogInfo(string.Format(@"[task] {0}: skipping (outputs valid)", task.Name));
-                return true;
-            }
-
             // Note: stale-sidecar cleanup is the responsibility of each
             // task body. A task-level pre-Run delete here would wipe the
             // per-file sidecars that <see cref="PerFileScoringTask"/>
@@ -240,19 +201,6 @@ namespace pwiz.OspreySharp
                 WriteTaskSidecars(task, ctx);
 
             return keepGoing;
-        }
-
-        private static bool IsTaskAlreadyDone(OspreyTask task, PipelineContext ctx)
-        {
-            var outputs = new List<string>(task.Outputs(ctx));
-            if (outputs.Count == 0) return false;
-            string key = task.ValidityKey(ctx);
-            foreach (var output in outputs)
-            {
-                if (!File.Exists(output)) return false;
-                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
-            }
-            return true;
         }
 
         private static void WriteTaskSidecars(OspreyTask task, PipelineContext ctx)

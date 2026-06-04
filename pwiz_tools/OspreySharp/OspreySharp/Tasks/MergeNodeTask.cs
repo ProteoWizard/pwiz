@@ -54,6 +54,21 @@ namespace pwiz.OspreySharp.Tasks
 
         public override string Name => @"MergeNode";
 
+        /// <summary>
+        /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in
+        /// straight-through, the --join-at-pass=2 merge, and the --input-scores
+        /// full-pipeline. Excluded in --no-join, --join-only, and the rescore
+        /// worker (all of which stop before the merge node).
+        /// </summary>
+        public override bool IsIncluded(PipelineContext ctx)
+        {
+            var c = ctx.Config;
+            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
+            return (!inputs && !c.NoJoin)
+                || (inputs && c.ExpectReconciledInput)
+                || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
+        }
+
         // Phase B resume surface. Reads each file's reconciled
         // .scores.parquet, writes the .2nd-pass.fdr_scores.bin
         // sidecars (only when protein-FDR is enabled) and the
@@ -88,6 +103,18 @@ namespace pwiz.OspreySharp.Tasks
                 + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
+        /// <summary>
+        /// No-op disk-load: MergeNode is the terminal aggregator. Its output
+        /// (the .blib + 2nd-pass FDR sidecars) is an external artifact that no
+        /// other task consumes in-memory, so there is no cross-task state to
+        /// rehydrate and nothing ever <see cref="PipelineContext.Demand{T}"/>s
+        /// this task. The driver runs <see cref="Run"/> directly when the
+        /// output is absent and skips it (resume) when the output is already
+        /// valid; this override exists only to keep the contract satisfied once
+        /// the transitional base Rehydrate=Run shim is removed (Phase B6).
+        /// </summary>
+        public override bool Rehydrate(PipelineContext ctx) => true;
+
         public override bool Run(PipelineContext ctx)
         {
             _ctx = ctx;
@@ -98,8 +125,8 @@ namespace pwiz.OspreySharp.Tasks
             // perFileEntries comes from PerFileRescoreTask -- it owns
             // the post-rescore version (mutated in place; or the
             // unchanged upstream reference when planning was skipped).
-            var perFileEntries = ctx.GetTask<PerFileRescoreTask>().GetPerFileEntries(ctx);
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var perFileEntries = ctx.Demand<PerFileRescoreTask>().GetPerFileEntries(ctx);
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
             var fullLibrary = perFileScoring.GetFullLibrary(ctx);
             var libraryById = perFileScoring.GetLibraryById(ctx);
             var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
