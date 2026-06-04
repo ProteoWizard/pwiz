@@ -84,11 +84,14 @@ namespace pwiz.OspreySharp.Tasks
         /// <see cref="OspreyTask.Publishes"/>. This is the single registration
         /// point that lets <see cref="Get{TInfo}"/> lazily materialize a skipped
         /// producer on a cache miss, replacing the former pattern of every
-        /// consumer naming the producer task at its call site. A byproduct that
-        /// is a shared mutable buffer (in-place mutated by several tasks rather
-        /// than published once and read) is deliberately NOT registered here: its
-        /// materialization is a task-ordering dependency the consumer expresses
-        /// by demanding the correct mutator directly, not a value-presence miss.
+        /// consumer naming the producer task at its call site. Every registered
+        /// byproduct has exactly one producer (the constructor throws on a
+        /// duplicate). The one shared mutable buffer is registered like the rest:
+        /// it is modeled as three single-producer milestone types over the same
+        /// backing list (ScoredEntries -> PerFileScoring, CompactedEntries ->
+        /// FirstJoin, RescoredEntries -> PerFileRescore), so a consumer demanding
+        /// a given milestone resolves through this registry to the task that
+        /// brings the buffer to that state. See PipelineByproducts.cs.
         /// </summary>
         private readonly Dictionary<Type, Type> _producerByByproduct = new Dictionary<Type, Type>();
 
