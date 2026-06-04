@@ -363,6 +363,21 @@ namespace pwiz.OspreySharp.Tasks
 
         public override bool Rehydrate(PipelineContext ctx)
         {
+            if (_runOrHydrated) return true;
+
+            // Without --input-scores there are no worker-supplied per-file
+            // scores to load. A Demand still reaches this task here on a
+            // straight-through resume: the driver skipped its Run because its
+            // own .scores.parquet outputs were already valid on disk
+            // (CanRehydrate), and a downstream task is the first to touch its
+            // state. The right re-materialization there is the compute path,
+            // whose per-file ScoreOrLoadForFile loads those valid parquets
+            // (rather than re-scoring) -- so defer to Run. The worker-mode
+            // join-only disk-load below applies only when --input-scores
+            // actually supplied the per-file scores.
+            if (ctx.Config.InputScores == null || ctx.Config.InputScores.Count == 0)
+                return Run(ctx);
+
             // Disk-load path for worker-mode entry (--input-scores): the
             // per-file Stage 2-4 scores already exist on disk, so load the
             // FdrEntry stubs + PIN features straight from the parquets
@@ -370,7 +385,6 @@ namespace pwiz.OspreySharp.Tasks
             // recomputing them from spectra, then adopt any reconciliation
             // bundle that the merge node will read. The compute-from-spectra
             // counterpart is Run.
-            if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;

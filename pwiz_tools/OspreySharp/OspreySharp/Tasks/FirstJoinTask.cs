@@ -313,11 +313,23 @@ namespace pwiz.OspreySharp.Tasks
             // is to adopt the bundle and compact. The compute counterpart is
             // Run.
             if (_runOrHydrated) return true;
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
+            var bundle = perFileScoring.GetRescoreInputs(ctx);
+
+            // No rescore bundle (straight-through resume, or any non-worker
+            // entry that reaches this task via Demand): the full Stage 5 work
+            // is required, so defer to the compute path. Reached when the
+            // driver skipped this task's Run because its 1st-pass sidecars
+            // were already valid on disk and a downstream task is the first to
+            // touch its state -- recomputing is deterministic and matches
+            // those sidecars. The bundle-adopt disk-load below applies only
+            // when PerFileScoring hydrated a bundle from sibling sidecars.
+            if (bundle == null)
+                return Run(ctx);
+
             _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
-            var perFileScoring = ctx.Demand<PerFileScoringTask>();
-            var bundle = perFileScoring.GetRescoreInputs(ctx);
             var perFileEntries = perFileScoring.GetPerFileEntries(ctx);
 
             ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");

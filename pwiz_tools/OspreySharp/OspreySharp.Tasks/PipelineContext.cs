@@ -154,19 +154,20 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Resolve an upstream producer and ensure its state is materialized
         /// before returning it. The first consumer to demand a given producer
-        /// triggers its <see cref="OspreyTask.Rehydrate"/> (lazy disk-load of
-        /// the producer's outputs); subsequent demands return the same
-        /// instance without re-materializing, via the <see cref="_materialized"/>
-        /// one-shot guard. This is the lazy-rehydrate replacement for the
-        /// <c>EnsureHydrated</c>-inside-getter pattern: callers ask the context
-        /// for what they need and the context owns when the producer's state
-        /// comes into being, rather than each accessor side-effecting a
-        /// hydrate/run on read.
+        /// triggers its <see cref="OspreyTask.Rehydrate"/>; subsequent demands
+        /// return the same instance without re-materializing, via the
+        /// <see cref="_materialized"/> one-shot guard. This is the
+        /// lazy-rehydrate replacement for the <c>EnsureHydrated</c>-inside-getter
+        /// pattern: callers ask the context for what they need and the context
+        /// owns when the producer's state comes into being, rather than each
+        /// accessor side-effecting a hydrate/run on read.
         ///
-        /// (Transitional note: until the per-task Run/Rehydrate split lands,
-        /// <see cref="OspreyTask.Rehydrate"/> defaults to <see cref="OspreyTask.Run"/>,
-        /// so a first-touch Demand reproduces today's "getter ran the upstream
-        /// task" behavior exactly.)
+        /// A producer whose <see cref="OspreyTask.Run"/> already executed
+        /// (driver ran it this pass) no-ops via its own one-shot guard. Each
+        /// producer's <see cref="OspreyTask.Rehydrate"/> dispatches on its mode:
+        /// it disk-loads worker-supplied state when present, else defers to
+        /// <see cref="OspreyTask.Run"/> (whose per-file load picks up already-valid
+        /// outputs on a straight-through resume).
         /// </summary>
         public T Demand<T>() where T : OspreyTask
         {

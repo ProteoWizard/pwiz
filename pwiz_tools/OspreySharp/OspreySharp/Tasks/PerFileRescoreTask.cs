@@ -334,6 +334,17 @@ namespace pwiz.OspreySharp.Tasks
             // each entry from the .1st-pass.fdr_scores.bin sidecar by
             // PerFileScoringTask's bundle hydration; no fresh FDR computation.
             if (_runOrHydrated) return true;
+
+            // Only the --join-at-pass=2 merge entry rehydrates here (reconciled
+            // parquets on disk, no mzMLs to rescore). Any other entry that
+            // reaches this task via Demand -- straight-through resume where the
+            // reconciled parquets are already valid on disk and a downstream
+            // task is the first to touch its state -- must take the compute
+            // path, whose per-file ScoreOrLoadForFile loads the valid
+            // reconciled parquets rather than re-scoring.
+            if (!ctx.Config.ExpectReconciledInput)
+                return Run(ctx);
+
             _runOrHydrated = true;
             _ctx = ctx;
             var perFileScoring = ctx.Demand<PerFileScoringTask>();
