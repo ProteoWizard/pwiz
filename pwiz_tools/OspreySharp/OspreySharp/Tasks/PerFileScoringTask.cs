@@ -149,40 +149,24 @@ namespace pwiz.OspreySharp.Tasks
         // materialization).
         private bool _runOrHydrated;
 
-        // Producer accessors. The backing fields are built and mutated ONLY
-        // inside this task (during Run / hydration); consumers in other tasks
-        // only read them. The dictionary accessors return IReadOnly* views to
-        // make the "Scoring owns this state; downstream only reads" contract
-        // explicit (the compiler now enforces no external mutation).
+        // The backing fields above are built and mutated ONLY inside this task
+        // (during Run / hydration) and published once in FinalizeAndCheck as the
+        // FullLibrary / LibraryById / PerFileCalibrations / PerFileParquetPaths /
+        // ScoredEntries / RescoreBundle byproducts; downstream tasks pull them by
+        // type via ctx.Get<T>() rather than through producer-typed getters.
         //
-        // GetFullLibrary is read-only by the same contract, but its return
-        // type stays List<LibraryEntry> for now: tightening it to
-        // IReadOnlyList would cascade through scoring-engine + FDR-project
-        // signatures (RunCoelutionScoring, RunFdr, ProteinFdr, ...), out of
-        // proportion to the value. Deferred to a future cross-project sweep.
-        public List<LibraryEntry> GetFullLibrary(PipelineContext ctx) { return _fullLibrary; }
-        public IReadOnlyDictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { return _libraryById; }
-        // GetPerFileEntries is DELIBERATELY a live, mutable, shared buffer --
-        // NOT a read-only view, by design. The same
-        // List<KeyValuePair<string, List<FdrEntry>>> reference is the
-        // pipeline's working set: PerFileScoring produces it, FirstJoin
-        // compacts it in place, PerFileRescore overlays rescored entries in
-        // place -- all on this one instance. The no-copy cross-task hand-off
-        // is load-bearing (copying it is a measured perf regression at
-        // Astral scale). Do NOT "fix" this to IReadOnly or to return a copy.
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { return _perFileEntries; }
-        public IReadOnlyDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { return _perFileCalibrations; }
-        public IReadOnlyDictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { return _perFileParquetPaths; }
-
-        /// <summary>
-        /// The probe-the-disk reconciliation bundle, or <c>null</c> when
-        /// no per-file 1st-pass sidecar was found at joinOnly hydration
-        /// time (Stage 5 entry, or any non-joinOnly run). When non-null,
-        /// FirstJoinTask's reconciliation-state accessors fall back to
-        /// this bundle so the worker hydration path and the in-pipeline
-        /// path produce identical post-Stage-5 state.
-        /// </summary>
-        public RescoreInputs GetRescoreInputs(PipelineContext ctx) { return _rescoreInputs; }
+        // _perFileEntries stays a live, mutable, shared
+        // List<KeyValuePair<string, List<FdrEntry>>>: FirstJoin compacts it and
+        // PerFileRescore overlays it in place on this one instance (the no-copy
+        // hand-off is load-bearing at Astral scale). Its three in-place
+        // milestones are the ScoredEntries / CompactedEntries / RescoredEntries
+        // byproduct types -- see PipelineByproducts.cs.
+        //
+        // The FullLibrary byproduct wraps List<LibraryEntry> rather than
+        // IReadOnlyList: tightening it would cascade through RunCoelutionScoring /
+        // RunFdr / ProteinFdr signatures, out of proportion to the value.
+        // _rescoreInputs is the probe-the-disk reconciliation bundle (null at a
+        // Stage-5 entry / any non-joinOnly run), published wrapped in RescoreBundle.
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.

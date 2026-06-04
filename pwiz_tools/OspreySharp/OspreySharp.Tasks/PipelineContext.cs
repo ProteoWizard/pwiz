@@ -33,13 +33,13 @@ namespace pwiz.OspreySharp.Tasks
     ///
     /// Carries the <see cref="OspreyConfig"/>, logging callbacks, and
     /// the registry of <see cref="OspreyTask"/> instances participating
-    /// in the current pipeline. Downstream tasks query upstream tasks
-    /// through <see cref="GetTask{T}"/> and read their typed accessor
-    /// methods rather than receiving constructor parameters. Each
-    /// producer task owns the state it computes; consumers reach it
-    /// through the producer, which lets producers transparently
-    /// rehydrate their outputs from sibling artifacts (e.g. the worker
-    /// entry path) when their <see cref="OspreyTask.Run"/> never ran.
+    /// in the current pipeline. Downstream tasks read upstream state as
+    /// typed byproducts through <see cref="Get{TInfo}"/> rather than
+    /// receiving constructor parameters; a <see cref="Get{TInfo}"/> miss
+    /// lazily materializes the producing task (via <see cref="Demand{T}"/>),
+    /// which lets producers transparently rehydrate their outputs from
+    /// sibling artifacts (e.g. the worker entry path) when their
+    /// <see cref="OspreyTask.Run"/> never ran.
     ///
     /// The context is constructed once at the top of
     /// <c>AnalysisPipeline.Run</c> (or <c>RescoreWorker.Run</c>) and
@@ -180,20 +180,6 @@ namespace pwiz.OspreySharp.Tasks
         public void LogInfo(string message) { _logInfo(message); }
         public void LogWarning(string message) { _logWarning(message); }
         public void LogError(string message) { _logError(message); }
-
-        /// <summary>
-        /// Look up a registered task by its concrete type. Internal lookup
-        /// backing <see cref="Demand{T}"/>; consumers reach producers through
-        /// <see cref="Demand{T}"/> (which materializes on first touch), not
-        /// this raw accessor. Throws <see cref="UnknownTaskException"/> if the
-        /// requested type is not in the pipeline; treat that as a
-        /// programming defect at pipeline-construction time rather than a
-        /// runtime condition to handle.
-        /// </summary>
-        private T GetTask<T>() where T : OspreyTask
-        {
-            return (T)DemandByType(typeof(T), materialize: false);
-        }
 
         /// <summary>
         /// Resolve a registered task by its runtime <see cref="Type"/>, optionally
