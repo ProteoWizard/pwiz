@@ -30,93 +30,64 @@ using pwiz.OspreySharp.Tasks;
 namespace pwiz.OspreySharp.Test
 {
     /// <summary>
-    /// Oracle for the Phase B5 driver-loop flip: proves the per-task
-    /// <see cref="OspreyTask.IsIncluded"/> membership predicate reproduces the
-    /// pipeline run-set that the legacy <c>DeriveStartAtTask</c> /
-    /// <c>DeriveStopAfterTask</c> range gating produces, across every HPC mode.
-    /// IsIncluded is not yet wired into the driver (B4); this test pins the
-    /// equivalence so B5 can replace the range walk with
-    /// <c>CanonicalPipeline().Where(t =&gt; t.IsIncluded(ctx))</c> without
-    /// changing which tasks run.
+    /// Pins the per-task <see cref="OspreyTask.IsIncluded"/> membership
+    /// predicate -- the driver-owned dataflow's source of truth for which
+    /// tasks run in each HPC mode -- against an explicit expected truth table.
     ///
-    /// One cell diverges by design: under the --input-scores full-pipeline mode
-    /// (--join-at-pass=1 --input-scores, no other join modifier) the old range
-    /// starts at PerFileScoring and so includes it, but PerFileScoring should
-    /// NOT compute there -- it must lazy-rehydrate the supplied scores. The old
-    /// range only "worked" because the pre-split monolithic Run dispatched to
-    /// the join-only load internally; after the Run/Rehydrate split the range
-    /// made the driver re-score from absent mzMLs (the mode-6 regression).
-    /// IsIncluded corrects this, so the test asserts the divergence explicitly.
+    /// The table is the run-set the legacy
+    /// <c>DeriveStartAtTask</c>/<c>DeriveStopAfterTask</c> range produced and
+    /// that this test proved IsIncluded reproduced before the range gating was
+    /// flipped (B4 oracle) and then removed (B6). It is kept as a permanent
+    /// regression guard so a future edit to an IsIncluded override that breaks
+    /// the membership of any mode fails here rather than silently mis-routing
+    /// the pipeline.
     /// </summary>
     [TestClass]
     public class PipelineMembershipTest
     {
-        private static OspreyConfig Inputs()
+        private static OspreyConfig WithInputScores(Action<OspreyConfig> set)
         {
-            return new OspreyConfig { InputScores = new List<string> { @"a.scores.parquet" } };
-        }
-
-        /// <summary>The six distinct (StartAt, StopAfter) pipeline modes.</summary>
-        private static IEnumerable<(string Name, OspreyConfig Config)> Modes()
-        {
-            yield return (@"straight-through", new OspreyConfig());
-            yield return (@"--no-join", new OspreyConfig { NoJoin = true });
-
-            var joinOnly = Inputs(); joinOnly.StopAfterStage5 = true;
-            yield return (@"--join-only", joinOnly);
-
-            var rescore = Inputs(); rescore.NoJoin = true;
-            yield return (@"rescore-worker", rescore);
-
-            var merge = Inputs(); merge.ExpectReconciledInput = true;
-            yield return (@"merge", merge);
-
-            yield return (@"input-scores-full", Inputs());
-        }
-
-        private static int IndexOfType(OspreyTask[] tasks, Type type)
-        {
-            for (int i = 0; i < tasks.Length; i++)
-                if (tasks[i].GetType() == type) return i;
-            return -1;
+            var config = new OspreyConfig { InputScores = new List<string> { @"a.scores.parquet" } };
+            set(config);
+            return config;
         }
 
         [TestMethod]
-        public void TestIsIncludedMatchesDeriveRange()
+        public void TestIsIncludedMembershipTable()
         {
-            foreach (var mode in Modes())
+            // Expected membership per mode, in CanonicalPipeline order
+            // [PerFileScoring, FirstJoin, PerFileRescore, MergeNode].
+            var cases = new (string Name, OspreyConfig Config, bool[] Expected)[]
+            {
+                (@"straight-through",  new OspreyConfig(),
+                    new[] { true,  true,  true,  true  }),
+                (@"--no-join",         new OspreyConfig { NoJoin = true },
+                    new[] { true,  false, false, false }),
+                (@"--join-only",       WithInputScores(c => c.StopAfterStage5 = true),
+                    new[] { false, true,  false, false }),
+                (@"rescore-worker",    WithInputScores(c => c.NoJoin = true),
+                    new[] { false, false, true,  false }),
+                (@"merge",             WithInputScores(c => c.ExpectReconciledInput = true),
+                    new[] { false, false, false, true  }),
+                // --join-at-pass=1 --input-scores (no other join modifier): the
+                // single-node full pipeline. PerFileScoring lazy-rehydrates the
+                // supplied scores rather than computing them, so it is excluded;
+                // FirstJoin..MergeNode compute Stages 5-8.
+                (@"input-scores-full", WithInputScores(_ => { }),
+                    new[] { false, true,  true,  true  }),
+            };
+
+            foreach (var c in cases)
             {
                 var tasks = AnalysisPipeline.CanonicalPipeline();
-                var ctx = new PipelineContext(mode.Config, tasks, null, null, null);
-
-                int startIdx = IndexOfType(tasks, AnalysisPipeline.DeriveStartAtTask(mode.Config));
-                int stopIdx = IndexOfType(tasks, AnalysisPipeline.DeriveStopAfterTask(mode.Config));
-                Assert.IsTrue(startIdx >= 0 && stopIdx >= 0,
-                    string.Format(@"{0}: DeriveStartAt/StopAfter not in CanonicalPipeline", mode.Name));
+                var ctx = new PipelineContext(c.Config, tasks, null, null, null);
+                Assert.AreEqual(tasks.Length, c.Expected.Length,
+                    string.Format(@"{0}: expected-row length must match task count", c.Name));
 
                 for (int i = 0; i < tasks.Length; i++)
                 {
-                    var task = tasks[i];
-                    bool inRange = startIdx <= i && i <= stopIdx;
-                    bool included = task.IsIncluded(ctx);
-
-                    bool knownDivergence = mode.Name == @"input-scores-full"
-                                           && task is PerFileScoringTask;
-                    if (knownDivergence)
-                    {
-                        Assert.IsFalse(included, string.Format(
-                            @"{0}/{1}: PerFileScoring must be excluded (lazy-rehydrate the supplied scores)",
-                            mode.Name, task.Name));
-                        Assert.IsTrue(inRange, string.Format(
-                            @"{0}/{1}: expected the legacy range to (wrongly) include it -- documents the corrected divergence",
-                            mode.Name, task.Name));
-                    }
-                    else
-                    {
-                        Assert.AreEqual(inRange, included, string.Format(
-                            @"{0}/{1}: IsIncluded ({2}) must match the DeriveStartAt..StopAfter range membership ({3})",
-                            mode.Name, task.Name, included, inRange));
-                    }
+                    Assert.AreEqual(c.Expected[i], tasks[i].IsIncluded(ctx), string.Format(
+                        @"{0}/{1}: IsIncluded must be {2}", c.Name, tasks[i].Name, c.Expected[i]));
                 }
             }
         }

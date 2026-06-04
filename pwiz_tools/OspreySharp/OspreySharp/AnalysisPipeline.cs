@@ -76,10 +76,8 @@ namespace pwiz.OspreySharp
                 }
 
                 var pipelineTasks = CanonicalPipeline();
-                var startAt = DeriveStartAtTask(config);
-                var stopAfter = DeriveStopAfterTask(config);
                 var ctx = new PipelineContext(config, pipelineTasks,
-                    LogInfo, LogWarning, LogError, startAt, stopAfter);
+                    LogInfo, LogWarning, LogError);
 
                 // Phase B5 driver-owned dataflow: walk the canonical pipeline
                 // and run each INCLUDED task whose outputs are not already
@@ -125,12 +123,11 @@ namespace pwiz.OspreySharp
         /// The canonical four-task pipeline in execution order:
         /// PerFileScoring -> FirstJoin -> PerFileRescore -> MergeNode.
         /// Single source of truth for the task list. Tasks read upstream
-        /// state through ctx.GetTask&lt;T&gt;().GetX() rather than
-        /// constructor args; each task short-circuits its own work when
-        /// there is nothing to do (e.g. PerFileRescoreTask checks
-        /// FirstJoinTask.DidPlan internally and returns true as a no-op
-        /// when planning was skipped). Returning false from any task is
-        /// the signal to stop and propagate ctx.ExitCode.
+        /// state through ctx.Demand&lt;T&gt;().GetX() rather than constructor
+        /// args; the driver runs each task that is
+        /// <see cref="OspreyTask.IsIncluded"/> for the current config and whose
+        /// outputs are not already valid on disk. Returning false from any task
+        /// is the signal to stop and propagate ctx.ExitCode.
         /// </summary>
         internal static OspreyTask[] CanonicalPipeline()
         {
@@ -141,56 +138,6 @@ namespace pwiz.OspreySharp
                 new PerFileRescoreTask(),
                 new MergeNodeTask(),
             };
-        }
-
-        /// <summary>
-        /// Derives the StartAt task for <paramref name="config"/> from the
-        /// HPC CLI flags it carries. The four mass-spec pipeline tasks
-        /// (PerFileScoring -> FirstJoin -> PerFileRescore -> MergeNode) are
-        /// always present in the registry; this picks which one
-        /// <see cref="AnalysisPipeline.Run"/> starts at, leaving any
-        /// earlier tasks unrun (their lazy-rehydrate accessors fetch state
-        /// from disk if a downstream task needs it).
-        /// </summary>
-        internal static Type DeriveStartAtTask(OspreyConfig config)
-        {
-            bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
-            if (hasInputScores)
-            {
-                // --join-at-pass=2 --input-scores ...
-                if (config.ExpectReconciledInput)
-                    return typeof(MergeNodeTask);
-                // --join-at-pass=1 --no-join --input-scores ... (rescore worker)
-                if (config.NoJoin)
-                    return typeof(PerFileRescoreTask);
-                // --join-at-pass=1 --join-only --input-scores ...
-                if (config.StopAfterStage5)
-                    return typeof(FirstJoinTask);
-            }
-            return typeof(PerFileScoringTask);
-        }
-
-        /// <summary>
-        /// Derives the StopAfter task for <paramref name="config"/> from the
-        /// HPC CLI flags it carries. See <see cref="DeriveStartAtTask"/>
-        /// for the parallel start-point derivation.
-        /// </summary>
-        internal static Type DeriveStopAfterTask(OspreyConfig config)
-        {
-            bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
-            // --no-join (no --input-scores): only Stages 1-4
-            if (config.NoJoin && !hasInputScores)
-                return typeof(PerFileScoringTask);
-            // --join-at-pass=1 --no-join --input-scores ... (rescore worker)
-            if (config.NoJoin && hasInputScores)
-                return typeof(PerFileRescoreTask);
-            // --join-at-pass=1 --join-only (with or without --input-scores)
-            if (config.StopAfterStage5)
-                return typeof(FirstJoinTask);
-            // --join-at-pass=2 --input-scores ... (post-reconciled merge only)
-            if (config.ExpectReconciledInput && hasInputScores)
-                return typeof(MergeNodeTask);
-            return typeof(MergeNodeTask);
         }
 
         #region Utility Methods

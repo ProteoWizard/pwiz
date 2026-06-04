@@ -183,11 +183,10 @@ namespace pwiz.OspreySharp
                 LogInfo("");
 
                 // Single entry point. Stage 6 worker mode
-                // (--join-at-pass=1 --no-join --input-scores) is routed
-                // by AnalysisPipeline.DeriveStartAtTask / DeriveStopAfterTask
-                // to start and stop on PerFileRescoreTask; PerFileScoring's
-                // lazy-rehydrate populates the upstream state from the
-                // boundary files on disk.
+                // (--join-at-pass=1 --no-join --input-scores) includes only
+                // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
+                // lazy-rehydrate (via ctx.Demand) populates the upstream state
+                // from the boundary files on disk.
                 var pipeline = new AnalysisPipeline();
                 return pipeline.Run(config);
             }

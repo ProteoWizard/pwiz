@@ -85,20 +85,16 @@ namespace pwiz.OspreySharp.Tasks
         /// Lazily bring this task's outputs into memory from its on-disk
         /// artifacts, without recomputing them — the disk-load counterpart to
         /// the compute-only <see cref="Run"/>. Invoked at most once per run by
-        /// <see cref="PipelineContext.Demand{T}"/> when a downstream consumer
-        /// first reaches for this producer's state and the producer's own
+        /// <see cref="PipelineContext.Demand{T}"/> when a consumer first
+        /// reaches for this producer's state and the producer's own
         /// <see cref="Run"/> was never called (e.g. a worker-mode invocation
-        /// that starts mid-pipeline). Returns the same <c>bool</c> contract as
-        /// <see cref="Run"/>.
-        ///
-        /// Transitional default: forwards to <see cref="Run"/>, preserving the
-        /// legacy "an upstream getter hydrates-or-runs on first touch"
-        /// behavior byte-for-byte. The per-task Run/Rehydrate split (Phase B2)
-        /// overrides this with the producer's actual rehydrate path and moves
-        /// compute-only work into <see cref="Run"/>; once that split and the
-        /// driver-loop flip land, this default is removed.
+        /// that starts mid-pipeline). A producer whose <see cref="Run"/> did
+        /// already execute returns early via its own one-shot guard, so this is
+        /// a no-op there. Returns the same <c>bool</c> contract as
+        /// <see cref="Run"/>. A purely-aggregating terminal task that nothing
+        /// consumes implements this as a no-op returning <c>true</c>.
         /// </summary>
-        public virtual bool Rehydrate(PipelineContext ctx) => Run(ctx);
+        public abstract bool Rehydrate(PipelineContext ctx);
 
         /// <summary>
         /// Whether this task participates in the pipeline for the current
