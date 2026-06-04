@@ -110,17 +110,33 @@ namespace pwiz.OspreySharp.Tasks
         public override string Name => @"PerFileRescore";
 
         /// <summary>
+        /// Computes the Stage 6 rescore in straight-through, the rescore worker
+        /// (--join-at-pass=1 --no-join --input-scores), and the --input-scores
+        /// full-pipeline. Excluded in --no-join, --join-only (stops at Stage 5),
+        /// and the --join-at-pass=2 merge (where it rehydrates rather than
+        /// re-scoring, the merge node having no mzMLs).
+        /// </summary>
+        public override bool IsIncluded(PipelineContext ctx)
+        {
+            var c = ctx.Config;
+            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
+            return (!inputs && !c.NoJoin)
+                || (inputs && c.NoJoin)
+                || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
+        }
+
+        /// <summary>
         /// The post-rescore per-file entries. Mutated in place by
         /// <see cref="ExecuteRescore"/>; when this task short-circuits
         /// (no FirstJoinTask plan) the list is the unchanged upstream
-        /// reference. Lazy-rehydrates by invoking <see cref="Run"/> on
-        /// the first call when this task was skipped by the driver
-        /// (i.e. <see cref="PipelineContext.StartAtTask"/> is downstream),
-        /// so consumers always see populated state.
+        /// reference. Pure read: the caller materializes this task first via
+        /// <see cref="PipelineContext.Demand{T}"/> (compute <see cref="Run"/>
+        /// for the rescore-capable modes, or the --join-at-pass=2
+        /// <see cref="Rehydrate"/> disk-load), so the field is populated by the
+        /// time any consumer reads it.
         /// </summary>
         public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx)
         {
-            if (!_runOrHydrated) Run(ctx);
             if (_perFileEntries == null)
                 throw new InvalidOperationException(
                     @"PerFileRescoreTask.GetPerFileEntries called before Run populated the field.");
@@ -170,81 +186,19 @@ namespace pwiz.OspreySharp.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
+            // Compute path (Stage 6 rescore): re-score each file's entries
+            // against the consensus + reconciliation boundaries and write the
+            // reconciled parquets. Used by the straight-through pipeline and
+            // the stage6 rescore worker. The --join-at-pass=2 merge node,
+            // which has only reconciled parquets + sidecars (no mzMLs to
+            // rescore from), takes Rehydrate instead: the driver reaches this
+            // task here only in the rescore-capable modes, and a merge-node
+            // consumer materializes it via ctx.Demand, which routes to Rehydrate.
             if (_runOrHydrated) return true;
             _runOrHydrated = true;
             _ctx = ctx;
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
             _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
-
-            // Hard short-circuit for --join-at-pass=2: every input parquet
-            // already has osprey.reconciled = "true" (asserted by
-            // ParquetScoreCache.CheckParquetMetadata when ExpectReconciledInput
-            // is set), so Stage 5 first-pass Percolator AND Stage 6
-            // planning / rescore have ALREADY been performed upstream by
-            // the worker nodes that wrote those parquets. We must NOT
-            // touch FirstJoinTask here -- doing so transitively triggers
-            // FirstJoinTask.Run via EnsureHydrated, which re-runs Stage 5
-            // first-pass Percolator from scratch on the reconciled parquets
-            // (producing wildly different action counts than the planner
-            // saw on the raw Stage 4 inputs) and then attempts a Stage 6
-            // rescore that needs mzML files the merge node does not have
-            // (in production HPC, the merge node ships only sidecars +
-            // reconciled parquets, no mzMLs). MergeNodeTask is responsible
-            // for 2nd-pass Percolator (Bug C) and protein FDR + blib
-            // output starting from this hydrated, reconciled state.
-            // Mirrors Rust pipeline.rs:3313-3344 which gates the entire
-            // Stage 5+6 block on `!config.expect_reconciled_input`.
-            //
-            // Compaction still needs to run though: PerFileScoringTask's
-            // bundle-hydration path loads ALL entries from the parquet,
-            // including ones that failed first-pass FDR. FirstJoinTask's
-            // normal flow would run this compaction inline after first-pass
-            // Percolator (and we're skipping FirstJoinTask entirely here).
-            // Without it, MergeNodeTask's 2nd-pass Percolator would train
-            // on ~3x too many entries -- specifically the non-passing
-            // first-pass entries whose 1st-pass q-values are 1.0 -- and
-            // the SVM would learn a much worse decision boundary than the
-            // in-memory pipeline's, producing different per-precursor
-            // scores and different protein-FDR results. The compaction
-            // reads first-pass q-values that are already overlaid onto
-            // each entry from the .1st-pass.fdr_scores.bin sidecar by
-            // PerFileScoringTask's bundle hydration; no fresh FDR
-            // computation needed.
-            if (ctx.Config.ExpectReconciledInput)
-            {
-                var bundle = perFileScoring.GetRescoreInputs(ctx);
-                if (bundle != null)
-                {
-                    // First-pass protein FDR BEFORE compaction. The 1st-pass FDR
-                    // sidecar v3 already carries RunProteinQvalue from the original
-                    // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
-                    // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
-                    // it inline in the --join-at-pass=2 path. The recompute uses the
-                    // post-rehydration detected_peptides set + best_peptide_scores
-                    // (which differ from the original write-time inputs whenever any
-                    // upstream rebuild has nudged peptide q-values or score values
-                    // even at the ULP level). Without this matching recompute on the
-                    // C# side, the protein-rescue branch of compaction below sees
-                    // slightly stale RunProteinQvalue values and the post-compaction
-                    // detected_peptides set diverges from Rust by ~19 peptides on
-                    // Stellar Single (1 protein delta at Stage 7). Only runs when
-                    // protein FDR is enabled — the recompute is the protein-rescue
-                    // input and is meaningless otherwise. Mirrors Rust pipeline.rs:
-                    // 4292-4358.
-                    if (ctx.Config.ProteinFdr.HasValue && bundle.PerFileEntries.Count > 0)
-                    {
-                        var fullLibrary = perFileScoring.GetFullLibrary(ctx);
-                        ProteinFdr.RunFirstPassProteinFdr(
-                            bundle.PerFileEntries, fullLibrary, ctx.Config);
-                    }
-                    var stats = RescoreCompaction.Apply(bundle, ctx.Config);
-                    ctx.LogInfo(string.Format(
-                        @"--join-at-pass=2 compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
-                        stats.EntriesBefore, stats.EntriesAfter,
-                        stats.FirstPassBaseIds, stats.DroppedActions));
-                }
-                return true;
-            }
 
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
@@ -264,7 +218,7 @@ namespace pwiz.OspreySharp.Tasks
             // the strict --join-at-pass=2 merge path. Downstream
             // MergeNodeTask still gets _perFileEntries via our accessor
             // (falls through to the upstream reference).
-            var firstJoin = ctx.GetTask<FirstJoinTask>();
+            var firstJoin = ctx.Demand<FirstJoinTask>();
             bool didPlan = firstJoin.DidPlan(ctx);
             var rescoreBundle = perFileScoring.GetRescoreInputs(ctx);
             bool anyPass2Present = false;
@@ -344,6 +298,87 @@ namespace pwiz.OspreySharp.Tasks
             OspreyDiagnostics.CloseMpInputsDump();
             OspreyDiagnostics.ClosePredictRtDump();
             OspreyDiagnostics.CloseCwtPathDump();
+            return true;
+        }
+
+        public override bool Rehydrate(PipelineContext ctx)
+        {
+            // Disk-load path for --join-at-pass=2: every input parquet already
+            // has osprey.reconciled = "true" (asserted by
+            // ParquetScoreCache.CheckParquetMetadata when ExpectReconciledInput
+            // is set), so Stage 5 first-pass Percolator AND Stage 6 planning /
+            // rescore have ALREADY been performed upstream by the worker nodes
+            // that wrote those parquets. We must NOT touch FirstJoinTask here --
+            // demanding it would re-run Stage 5 first-pass Percolator from
+            // scratch on the reconciled parquets (producing wildly different
+            // action counts than the planner saw on the raw Stage 4 inputs) and
+            // then attempt a Stage 6 rescore that needs mzML files the merge
+            // node does not have (in production HPC the merge node ships only
+            // sidecars + reconciled parquets, no mzMLs). MergeNodeTask is
+            // responsible for 2nd-pass Percolator (Bug C) and protein FDR + blib
+            // output starting from this hydrated, reconciled state. Mirrors Rust
+            // pipeline.rs:3313-3344 which gates the entire Stage 5+6 block on
+            // `!config.expect_reconciled_input`.
+            //
+            // Compaction still needs to run though: PerFileScoringTask's
+            // bundle-hydration path loads ALL entries from the parquet,
+            // including ones that failed first-pass FDR. FirstJoinTask's normal
+            // flow would run this compaction inline after first-pass Percolator
+            // (and we skip FirstJoinTask entirely here). Without it,
+            // MergeNodeTask's 2nd-pass Percolator would train on ~3x too many
+            // entries -- specifically the non-passing first-pass entries whose
+            // 1st-pass q-values are 1.0 -- and the SVM would learn a much worse
+            // decision boundary than the in-memory pipeline's, producing
+            // different per-precursor scores and different protein-FDR results.
+            // The compaction reads first-pass q-values already overlaid onto
+            // each entry from the .1st-pass.fdr_scores.bin sidecar by
+            // PerFileScoringTask's bundle hydration; no fresh FDR computation.
+            if (_runOrHydrated) return true;
+
+            // Only the --join-at-pass=2 merge entry rehydrates here (reconciled
+            // parquets on disk, no mzMLs to rescore). Any other entry that
+            // reaches this task via Demand -- straight-through resume where the
+            // reconciled parquets are already valid on disk and a downstream
+            // task is the first to touch its state -- must take the compute
+            // path, whose per-file ScoreOrLoadForFile loads the valid
+            // reconciled parquets rather than re-scoring.
+            if (!ctx.Config.ExpectReconciledInput)
+                return Run(ctx);
+
+            _runOrHydrated = true;
+            _ctx = ctx;
+            var perFileScoring = ctx.Demand<PerFileScoringTask>();
+            _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
+
+            var bundle = perFileScoring.GetRescoreInputs(ctx);
+            if (bundle != null)
+            {
+                // First-pass protein FDR BEFORE compaction. The 1st-pass FDR
+                // sidecar v3 already carries RunProteinQvalue from the original
+                // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
+                // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
+                // it inline in the --join-at-pass=2 path. The recompute uses the
+                // post-rehydration detected_peptides set + best_peptide_scores
+                // (which differ from the original write-time inputs whenever any
+                // upstream rebuild has nudged peptide q-values or score values
+                // even at the ULP level). Without this matching recompute on the
+                // C# side, the protein-rescue branch of compaction below sees
+                // slightly stale RunProteinQvalue values and the post-compaction
+                // detected_peptides set diverges from Rust by ~19 peptides on
+                // Stellar Single (1 protein delta at Stage 7). Only runs when
+                // protein FDR is enabled. Mirrors Rust pipeline.rs:4292-4358.
+                if (ctx.Config.ProteinFdr.HasValue && bundle.PerFileEntries.Count > 0)
+                {
+                    var fullLibrary = perFileScoring.GetFullLibrary(ctx);
+                    ProteinFdr.RunFirstPassProteinFdr(
+                        bundle.PerFileEntries, fullLibrary, ctx.Config);
+                }
+                var stats = RescoreCompaction.Apply(bundle, ctx.Config);
+                ctx.LogInfo(string.Format(
+                    @"--join-at-pass=2 compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
+                    stats.EntriesBefore, stats.EntriesAfter,
+                    stats.FirstPassBaseIds, stats.DroppedActions));
+            }
             return true;
         }
 
