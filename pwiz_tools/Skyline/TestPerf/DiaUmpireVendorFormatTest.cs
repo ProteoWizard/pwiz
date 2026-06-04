@@ -139,6 +139,23 @@ namespace TestPerf
 
         protected override void DoTest()
         {
+            // DiaUmpire writes <name>-diaumpire.mz5 and <name>-diaumpire.mzid.gz next to each input
+            // in the persistent directory (and the test deletes+regenerates them below). Note them so
+            // the persistent-dir change detection doesn't flag them as unexpected new files when the
+            // area starts pristine -- e.g. on the shared CI download area, which is restored between
+            // runs (a developer box masks this because the files linger and end up in the baseline).
+            TestFilesDirs[0].PotentialAdditionalPersistentFileSet = new HashSet<string>(
+                DiaFiles.SelectMany(f =>
+                {
+                    var dir = Path.GetDirectoryName(f) ?? string.Empty;
+                    var baseName = Path.GetFileNameWithoutExtension(f);
+                    return new[]
+                    {
+                        Path.Combine(dir, baseName + "-diaumpire.mz5"),
+                        Path.Combine(dir, baseName + "-diaumpire.mzid.gz")
+                    };
+                }));
+
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
                 d => d.ChangeSettings(SrmSettingsList.GetDefault())));
