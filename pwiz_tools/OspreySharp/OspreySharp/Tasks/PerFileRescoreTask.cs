@@ -81,11 +81,11 @@ namespace pwiz.OspreySharp.Tasks
     /// (<c>--join-at-pass=1 --no-join --input-scores</c>). The worker
     /// mode previously had a separate <c>RunWorker</c> entry that
     /// hand-assembled the upstream hydration; Phase C collapsed that
-    /// path so the canonical pipeline's StartAt/StopAfter + the
-    /// upstream tasks' lazy-rehydrate accessors handle it. Run reads
-    /// upstream state from sibling tasks through
-    /// <c>ctx.GetTask&lt;PerFileScoringTask&gt;()</c> and
-    /// <c>ctx.GetTask&lt;FirstJoinTask&gt;()</c>, dispatches into
+    /// path so the canonical pipeline's IsIncluded membership + the
+    /// upstream tasks' lazy-rehydrate handle it. Run reads upstream state
+    /// as typed byproducts through <c>ctx.Get&lt;CompactedEntries&gt;()</c>,
+    /// <c>ctx.Get&lt;ReconciliationActions&gt;()</c>, etc. (a cache miss
+    /// materializes the producing task), dispatches into
     /// <see cref="ExecuteRescore"/>, then runs the per-process
     /// diagnostic-writer close + cross-impl bisection dump. Inherits
     /// the scoring engine (RunCoelutionScoring, LoadLibrary,
@@ -102,10 +102,6 @@ namespace pwiz.OspreySharp.Tasks
         // the list reference falls through unchanged from
         // PerFileScoringTask.
         private List<KeyValuePair<string, List<FdrEntry>>> _perFileEntries;
-
-        // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
-        // mechanism.
-        private bool _runOrHydrated;
 
         public override string Name => @"PerFileRescore";
 
@@ -125,23 +121,17 @@ namespace pwiz.OspreySharp.Tasks
                 || (inputs && !c.NoJoin && !c.StopAfterStage5 && !c.ExpectReconciledInput);
         }
 
-        /// <summary>
-        /// The post-rescore per-file entries. Mutated in place by
-        /// <see cref="ExecuteRescore"/>; when this task short-circuits
-        /// (no FirstJoinTask plan) the list is the unchanged upstream
-        /// reference. Pure read: the caller materializes this task first via
-        /// <see cref="PipelineContext.Demand{T}"/> (compute <see cref="Run"/>
-        /// for the rescore-capable modes, or the --join-at-pass=2
-        /// <see cref="Rehydrate"/> disk-load), so the field is populated by the
-        /// time any consumer reads it.
-        /// </summary>
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx)
-        {
-            if (_perFileEntries == null)
-                throw new InvalidOperationException(
-                    @"PerFileRescoreTask.GetPerFileEntries called before Run populated the field.");
-            return _perFileEntries;
-        }
+        // The final milestone of the shared mutable entry buffer: this task
+        // overlays the Stage 6 rescore (or, in the --join-at-pass=2 merge path,
+        // applies its own compaction) onto the same backing list. MergeNode
+        // pulls RescoredEntries, so a cache miss lazily materializes this task --
+        // which is exactly what triggers the rescore/compaction in merge mode
+        // where the driver does not run this task.
+        public override IEnumerable<Type> Publishes => new[] { typeof(RescoredEntries) };
+
+        // _perFileEntries is the shared buffer this task overlays in place; it is
+        // published as the RescoredEntries milestone (in Run and the merge-mode
+        // Rehydrate) for MergeNode to pull via ctx.Get<RescoredEntries>().
 
         // Phase B resume surface. The reconciled parquet is written to a
         // SEPARATE <stem>.scores-reconciled.parquet sibling, leaving the
@@ -194,11 +184,20 @@ namespace pwiz.OspreySharp.Tasks
             // rescore from), takes Rehydrate instead: the driver reaches this
             // task here only in the rescore-capable modes, and a merge-node
             // consumer materializes it via ctx.Demand, which routes to Rehydrate.
-            if (_runOrHydrated) return true;
-            _runOrHydrated = true;
             _ctx = ctx;
-            var perFileScoring = ctx.Demand<PerFileScoringTask>();
-            _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
+            // CompactedEntries: the post-first-join buffer. Demanding it
+            // materializes FirstJoin (running its compaction + Stage 6 planning
+            // when the driver skipped it in worker-rescore mode), which is also
+            // what makes the planning byproducts read by ExecuteRescore below
+            // available -- one Get expresses the whole dependency.
+            _perFileEntries = ctx.Get<CompactedEntries>().Value;
+
+            // Publish the RescoredEntries milestone over the shared backing list
+            // now, while we hold its reference. ExecuteRescore (below) overlays
+            // it in place, and the self-gate may leave it unchanged; either way a
+            // consumer reading RescoredEntries.Value later sees the final buffer
+            // (milestone token over a shared store -- see PipelineByproducts.cs).
+            ctx.Publish(new RescoredEntries(_perFileEntries));
 
             // Self-gate: rescore + reconciliation only run when there is
             // planning state to act on AND the rescore hasn't already been
@@ -215,12 +214,11 @@ namespace pwiz.OspreySharp.Tasks
             // ExpectReconciledInput gate (Phase C: mechanism-driven, not
             // flag-driven) for the worker self-gate cases below;
             // ExpectReconciledInput keeps the hard short-circuit above for
-            // the strict --join-at-pass=2 merge path. Downstream
-            // MergeNodeTask still gets _perFileEntries via our accessor
-            // (falls through to the upstream reference).
+            // the strict --join-at-pass=2 merge path. Downstream MergeNodeTask
+            // reads the RescoredEntries milestone of this same backing list.
             var firstJoin = ctx.Demand<FirstJoinTask>();
             bool didPlan = firstJoin.DidPlan(ctx);
-            var rescoreBundle = perFileScoring.GetRescoreInputs(ctx);
+            var rescoreBundle = ctx.Get<RescoreBundle>().Value;
             bool anyPass2Present = false;
             if (ctx.Config.InputFiles != null)
             {
@@ -267,13 +265,13 @@ namespace pwiz.OspreySharp.Tasks
 
             var rescoreStats = ExecuteRescore(
                 _perFileEntries,
-                firstJoin.GetPerFileConsensusTargets(ctx),
-                firstJoin.GetReconciliationActions(ctx),
-                firstJoin.GetRefinedCalibrations(ctx),
-                perFileScoring.GetPerFileCalibrations(ctx),
-                firstJoin.GetPerFileGapFillForRescore(ctx),
-                perFileScoring.GetPerFileParquetPaths(ctx),
-                perFileScoring.GetFullLibrary(ctx),
+                ctx.Get<PerFileConsensusTargets>().Value,
+                ctx.Get<ReconciliationActions>().Value,
+                ctx.Get<RefinedCalibrations>().Value,
+                ctx.Get<PerFileCalibrations>().Value,
+                ctx.Get<PerFileGapFillForRescore>().Value,
+                ctx.Get<PerFileParquetPaths>().Value,
+                ctx.Get<FullLibrary>().Value,
                 ctx.Config,
                 joinFileStems);
             ctx.LogInfo(string.Format(
@@ -333,8 +331,7 @@ namespace pwiz.OspreySharp.Tasks
             // The compaction reads first-pass q-values already overlaid onto
             // each entry from the .1st-pass.fdr_scores.bin sidecar by
             // PerFileScoringTask's bundle hydration; no fresh FDR computation.
-            if (_runOrHydrated) return true;
-
+            //
             // Only the --join-at-pass=2 merge entry rehydrates here (reconciled
             // parquets on disk, no mzMLs to rescore). Any other entry that
             // reaches this task via Demand -- straight-through resume where the
@@ -345,12 +342,19 @@ namespace pwiz.OspreySharp.Tasks
             if (!ctx.Config.ExpectReconciledInput)
                 return Run(ctx);
 
-            _runOrHydrated = true;
             _ctx = ctx;
-            var perFileScoring = ctx.Demand<PerFileScoringTask>();
-            _perFileEntries = perFileScoring.GetPerFileEntries(ctx);
+            // ScoredEntries, NOT CompactedEntries: the merge path must NOT
+            // materialize FirstJoin (that would re-run Stage 5 Percolator on the
+            // reconciled parquets); it applies its own compaction below. Reading
+            // the pre-compaction milestone keeps the dependency on PerFileScoring
+            // alone, mirroring the old explicit Demand<PerFileScoringTask>.
+            _perFileEntries = ctx.Get<ScoredEntries>().Value;
 
-            var bundle = perFileScoring.GetRescoreInputs(ctx);
+            // Publish the RescoredEntries milestone over the shared backing list
+            // (the merge path applies its own compaction below, in place).
+            ctx.Publish(new RescoredEntries(_perFileEntries));
+
+            var bundle = ctx.Get<RescoreBundle>().Value;
             if (bundle != null)
             {
                 // First-pass protein FDR BEFORE compaction. The 1st-pass FDR
@@ -369,7 +373,7 @@ namespace pwiz.OspreySharp.Tasks
                 // protein FDR is enabled. Mirrors Rust pipeline.rs:4292-4358.
                 if (ctx.Config.ProteinFdr.HasValue && bundle.PerFileEntries.Count > 0)
                 {
-                    var fullLibrary = perFileScoring.GetFullLibrary(ctx);
+                    var fullLibrary = ctx.Get<FullLibrary>().Value;
                     ProteinFdr.RunFirstPassProteinFdr(
                         bundle.PerFileEntries, fullLibrary, ctx.Config);
                 }

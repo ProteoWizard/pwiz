@@ -79,17 +79,39 @@ namespace pwiz.OspreySharp.Tasks
         {
             var c = ctx.Config;
             bool inputs = c.InputScores != null && c.InputScores.Count > 0;
+            // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
+            // invariant: StopAfterStage5 (--join-only) is a modifier of
+            // --join-at-pass=<N>, and --join-at-pass=1 requires --input-scores,
+            // so StopAfterStage5 implies inputs at parse time -- a --join-only
+            // run can never reach here without InputScores.
+            // ProgramTests.TestValidateJoinOnlyRequiresInputScores pins that
+            // rejection, since the membership truth table (PipelineMembershipTest)
+            // does not encode the cross-flag dependency on its own.
             return (!inputs && !c.NoJoin)
                 || (inputs && c.StopAfterStage5)
                 || (inputs && !c.NoJoin && !c.ExpectReconciledInput);
         }
 
-        // Outputs reached by downstream tasks through ctx.Demand<FirstJoinTask>().
-        // DidPlan is the gate downstream consumers (PerFileRescoreTask)
-        // check to decide whether the Stage 6 planning state below is
-        // meaningful or whether planning was skipped. Defaults are
-        // non-null empty collections so an accessor on a not-yet-run
-        // (or no-op) task never NPEs.
+        // Stage 5/6 planning byproducts this task publishes. The same four types
+        // are published from Run (Stage-5 computed values) and from the
+        // bundle-adopt Rehydrate path -- publishing into one typed slot from
+        // both producers is what dissolves the former dual-source getters
+        // (_didPlan ? computed : bundle.X), since a consumer reads the slot
+        // without caring which path filled it.
+        public override IEnumerable<Type> Publishes => new[]
+        {
+            typeof(PerFileConsensusTargets), typeof(ReconciliationActions),
+            typeof(RefinedCalibrations), typeof(PerFileGapFillForRescore),
+            typeof(CompactedEntries)
+        };
+
+        // Stage 6 planning state. Set by PlanStage6 (Run) and published into the
+        // typed byproduct slots that downstream consumers pull via ctx.Get<T>();
+        // the bundle-adopt Rehydrate path publishes the same slots from the
+        // worker bundle instead. DidPlan remains the gate PerFileRescore's
+        // self-gate checks to tell "planning ran" from "planning was skipped."
+        // Defaults are non-null empty collections so a published slot from a
+        // no-op / stopped-after-Stage-5 run is never null.
         private bool _didPlan;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
@@ -100,38 +122,7 @@ namespace pwiz.OspreySharp.Tasks
         private IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFillForRescore
             = new Dictionary<string, List<GapFillTarget>>();
 
-        // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
-        // mechanism; FirstJoinTask uses the same idempotent Run pattern.
-        private bool _runOrHydrated;
-
         public bool DidPlan(PipelineContext ctx) { return _didPlan; }
-
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets(PipelineContext ctx)
-        {
-            if (_didPlan) return _perFileConsensusTargets;
-            return ConsensusTargetsFromBundleOrEmpty(ctx);
-        }
-
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions(PipelineContext ctx)
-        {
-            if (_didPlan) return _reconciliationActions;
-            var bundle = ctx.Demand<PerFileScoringTask>().GetRescoreInputs(ctx);
-            return bundle != null ? bundle.ReconciliationActions : _reconciliationActions;
-        }
-
-        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations(PipelineContext ctx)
-        {
-            if (_didPlan) return _refinedCalibrations;
-            var bundle = ctx.Demand<PerFileScoringTask>().GetRescoreInputs(ctx);
-            return bundle != null ? bundle.RefinedCalibrations : _refinedCalibrations;
-        }
-
-        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore(PipelineContext ctx)
-        {
-            if (_didPlan) return _perFileGapFillForRescore;
-            var bundle = ctx.Demand<PerFileScoringTask>().GetRescoreInputs(ctx);
-            return bundle != null ? bundle.PerFileGapFill : _perFileGapFillForRescore;
-        }
 
         // Bundle.PerFileConsensusTargets is null at hydration time (consensus
         // is meaningful only post-compaction); compute on demand from the
@@ -142,7 +133,7 @@ namespace pwiz.OspreySharp.Tasks
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>
             ConsensusTargetsFromBundleOrEmpty(PipelineContext ctx)
         {
-            var bundle = ctx.Demand<PerFileScoringTask>().GetRescoreInputs(ctx);
+            var bundle = ctx.Get<RescoreBundle>().Value;
             if (bundle == null) return _perFileConsensusTargets;
             if (bundle.PerFileConsensusTargets != null) return bundle.PerFileConsensusTargets;
             var computed = new Dictionary<string,
@@ -196,11 +187,8 @@ namespace pwiz.OspreySharp.Tasks
             // task here only in the bundle-absent modes (straight-through,
             // --join-only); a worker-mode consumer materializes it via
             // ctx.Demand which routes to Rehydrate.
-            if (_runOrHydrated) return true;
-            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
-            var perFileScoring = ctx.Demand<PerFileScoringTask>();
 
             // Mid-Run crash safety: clear stale sidecars for the outputs
             // this task is about to produce. A crash before the matching
@@ -209,10 +197,12 @@ namespace pwiz.OspreySharp.Tasks
             foreach (var output in Outputs(ctx))
                 TaskValiditySidecar.Delete(output, Name);
 
-            var perFileEntries = perFileScoring.GetPerFileEntries(ctx);
-            var perFileCalibrations = perFileScoring.GetPerFileCalibrations(ctx);
-            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
-            var fullLibrary = perFileScoring.GetFullLibrary(ctx);
+            // ScoredEntries (pre-compaction) -- this task is the one that
+            // compacts the shared buffer below, so it reads it before that.
+            var perFileEntries = ctx.Get<ScoredEntries>().Value;
+            var perFileCalibrations = ctx.Get<PerFileCalibrations>().Value;
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            var fullLibrary = ctx.Get<FullLibrary>().Value;
 
             // Stage 5: First-pass FDR.
             ctx.LogInfo(string.Empty);
@@ -297,6 +287,16 @@ namespace pwiz.OspreySharp.Tasks
                     return false;
             }
 
+            // Publish the Stage 6 planning byproducts (computed values, or the
+            // empty defaults when PlanStage6 was skipped / stopped after Stage
+            // 5), plus the CompactedEntries milestone of the shared buffer that
+            // CompactFirstPass produced above. Getters still serve existing
+            // consumers in this commit.
+            ctx.Publish(new PerFileConsensusTargets(_perFileConsensusTargets));
+            ctx.Publish(new ReconciliationActions(_reconciliationActions));
+            ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
+            ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
+            ctx.Publish(new CompactedEntries(perFileEntries));
             return true;
         }
 
@@ -312,9 +312,7 @@ namespace pwiz.OspreySharp.Tasks
             // compute_fdr_from_stubs skip, pipeline.rs:3916). All that remains
             // is to adopt the bundle and compact. The compute counterpart is
             // Run.
-            if (_runOrHydrated) return true;
-            var perFileScoring = ctx.Demand<PerFileScoringTask>();
-            var bundle = perFileScoring.GetRescoreInputs(ctx);
+            var bundle = ctx.Get<RescoreBundle>().Value;
 
             // No rescore bundle (straight-through resume, or any non-worker
             // entry that reaches this task via Demand): the full Stage 5 work
@@ -327,10 +325,9 @@ namespace pwiz.OspreySharp.Tasks
             if (bundle == null)
                 return Run(ctx);
 
-            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
-            var perFileEntries = perFileScoring.GetPerFileEntries(ctx);
+            var perFileEntries = ctx.Get<ScoredEntries>().Value;
 
             ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
 
@@ -342,6 +339,16 @@ namespace pwiz.OspreySharp.Tasks
             // indices for PerFileRescoreTask.
             CompactFirstPass(perFileEntries, bundle, config);
 
+            // Publish the SAME four planning byproducts as Run, but sourced from
+            // the adopted bundle (post-compaction). A consumer pulls
+            // ctx.Get<ReconciliationActions>() etc. without knowing whether this
+            // task computed them (Run) or adopted them from the worker bundle
+            // (here) -- the dual-source getter fallback collapses into one slot.
+            ctx.Publish(new ReconciliationActions(bundle.ReconciliationActions));
+            ctx.Publish(new RefinedCalibrations(bundle.RefinedCalibrations));
+            ctx.Publish(new PerFileGapFillForRescore(bundle.PerFileGapFill));
+            ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundleOrEmpty(ctx)));
+            ctx.Publish(new CompactedEntries(perFileEntries));
             return true;
         }
 

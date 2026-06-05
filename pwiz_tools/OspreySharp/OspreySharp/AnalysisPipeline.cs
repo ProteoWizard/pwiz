@@ -169,6 +169,11 @@ namespace pwiz.OspreySharp
             var sw = Stopwatch.StartNew();
             ctx.LogInfo(string.Format(@"[task] {0}: starting", task.Name));
             bool keepGoing = task.Run(ctx);
+            // The driver has now run this task, so its state is in memory: mark it
+            // materialized so a later Demand/Get by a downstream task returns the
+            // computed state instead of driving Rehydrate. Replaces the per-task
+            // _runOrHydrated guard that formerly bridged the Run and Rehydrate paths.
+            ctx.MarkMaterialized(task);
             sw.Stop();
             ctx.LogInfo(string.Format(@"[task] {0}: done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
