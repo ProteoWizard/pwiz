@@ -139,25 +139,6 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            // DiaUmpire writes <name>-diaumpire.mz5 and <name>-diaumpire.mzid.gz next to each input in
-            // the persistent (shared, downloaded) directory. These are transient: the test deletes them
-            // before the run to force fresh regeneration, and deletes them again at the end (below) so
-            // they don't linger in this shared source directory. Declare them as potentially-missing so the
-            // change check tolerates that removal on a box whose baseline already had them (e.g. left by
-            // an earlier or failed run); on a pristine area there is simply nothing to exempt. (Contrast
-            // PotentialAdditionalPersistentFileSet, which is for files intentionally KEPT for reuse.)
-            TestFilesDirs[0].PotentialMissingPersistentFileSet = new HashSet<string>(
-                DiaFiles.SelectMany(f =>
-                {
-                    var dir = Path.GetDirectoryName(f) ?? string.Empty;
-                    var baseName = Path.GetFileNameWithoutExtension(f);
-                    return new[]
-                    {
-                        Path.Combine(dir, baseName + "-diaumpire.mz5"),
-                        Path.Combine(dir, baseName + "-diaumpire.mzid.gz")
-                    };
-                }));
-
             string[] searchFiles = DiaFiles.Select(GetVendorFileTestPath).ToArray();
             foreach (var searchFile in searchFiles)
                 Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
@@ -318,35 +299,47 @@ namespace TestPerf
                 Assert.AreEqual(0.05, importPeptideSearchDlg.SearchSettingsControl.CutoffScore);
             });
 
-            RunUI(() =>
+            // The search runs DiaUmpire, which (re)writes the -diaumpire outputs. Wrap it in try/finally
+            // so they are cleaned from the persistent (shared) source dir even if the search assertion
+            // below fails. (Nothing is generated before this point, so earlier failures leave nothing.)
+            try
             {
-                // Run the search
-                Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
+                RunUI(() =>
+                {
+                    // Run the search
+                    Assert.IsTrue(importPeptideSearchDlg.ClickNextButton());
 
-                importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
-                importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
-            });
+                    importPeptideSearchDlg.SearchControl.SearchFinished += (success) => searchSucceeded = success;
+                    importPeptideSearchDlg.BuildPepSearchLibControl.IncludeAmbiguousMatches = true;
+                });
 
-            WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
-            Assert.IsTrue(searchSucceeded.Value);
+                WaitForConditionUI(120 * 600000, () => searchSucceeded.HasValue);
+                Assert.IsTrue(searchSucceeded.Value);
 
-            RunUI(() => importPeptideSearchDlg.ClickCancelButton());
-
-            // Remove the regenerated DiaUmpire outputs so they don't linger in the persistent (shared,
-            // downloaded) source directory. These are transient, not cached for reuse -- we delete them
-            // at the start precisely to force regeneration.
-            RemoveDiaUmpireFiles();
+                RunUI(() => importPeptideSearchDlg.ClickCancelButton());
+            }
+            finally
+            {
+                RemoveDiaUmpireFiles();
+            }
 
             void RemoveDiaUmpireFiles()
             {
-                // Delete the generated -diaumpire outputs (full paths, found by globbing each input's
-                // directory) so they get regenerated instead of reused, and don't linger in the
-                // persistent (shared, downloaded) source directory.
+                // Delete the generated -diaumpire outputs (found by globbing each input's directory), and
+                // register each one we delete in its persistent dir's PotentialMissingPersistentFileSet so
+                // the persistent-dir modification check tolerates the deletion and stays in sync with the
+                // glob (same pattern as DeleteFilesForScreenshots in DiaSwathTutorialTest).
+                var testFilesDir = TestFilesDirs[0];
                 foreach (var searchFile in searchFiles)
                 {
                     var searchFileDir = Path.GetDirectoryName(searchFile) ?? string.Empty;
                     foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire.*"))
+                    {
+                        testFilesDir.PotentialMissingPersistentFileSet ??= new HashSet<string>();
+                        testFilesDir.PotentialMissingPersistentFileSet.Add(
+                            PathEx.GetRelativePath(testFilesDir.PersistentFilesDir, diaumpireFile));
                         FileEx.SafeDelete(diaumpireFile);
+                    }
                 }
             }
         }
