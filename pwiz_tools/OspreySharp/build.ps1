@@ -185,12 +185,16 @@ foreach ($fw in $testFrameworks) {
     if ($Coverage) {
         $dcvrPath = Join-Path $trxDir "OspreySharp.Test-$Configuration-$fw.dcvr"
         Write-Progress-Tc "Running tests under dotCover ($fw)"
-        & $dotcover cover-dotnet `
+        # Use the universal `cover` command (the only one available in dotCover Console
+        # Runner 2026.1.x); `cover-dotnet` only exists in the older Global Tools
+        # package and silently prints help + exits 0 on agents without it.
+        & $dotcover cover `
+            --TargetExecutable=$vstest `
             --Output=$dcvrPath `
             --Filters='+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks' `
             --AttributeFilters='System.CodeDom.Compiler.GeneratedCodeAttribute' `
             -- `
-            $vstest @vstestArgs
+            @vstestArgs
         $exit = $LASTEXITCODE
         if ($TeamCity -and (Test-Path $dcvrPath)) {
             Write-Host ("##teamcity[importData type='dotNetCoverage' tool='dotcover' path='{0}']" -f (Format-TcMessage $dcvrPath))
@@ -205,12 +209,36 @@ foreach ($fw in $testFrameworks) {
     if ($TeamCity -and (Test-Path $trxPath)) {
         Write-Host ("##teamcity[importData type='vstest' path='{0}']" -f (Format-TcMessage $trxPath))
     }
+    # Guard against silent runner failures: vstest didn't actually execute if no
+    # TRX was produced.  Has happened with dotCover printing help-on-bad-command
+    # and exiting 0 (see build #4030001).
+    if ($exit -eq 0 -and -not (Test-Path $trxPath)) {
+        Write-Problem-Tc ("Tests ($fw) reported success but no TRX at $trxPath -- runner likely didn't execute")
+        $exit = 2
+    }
     if ($exit -eq 0) {
         Write-Host ("Tests ($fw) passed in {0:F1}s" -f $testSec) -ForegroundColor Green
     } else {
         Write-Problem-Tc ("Tests ($fw) FAILED in {0:F1}s (exit {1})" -f $testSec, $exit)
         $overallTestExit = $exit
     }
+}
+
+# --- TeamCity artifact publication ------------------------------------------
+# Emit publishArtifacts service messages from pwsh (not cmd.exe echo) so they
+# reach the agent reliably.  Paths use the repo-root-relative form so this
+# script works from either C:\pwiz (TC) or any other working directory.
+if ($TeamCity) {
+    $repoRoot = (Resolve-Path (Join-Path $scriptRoot '..\..')).Path
+    function Publish-Tc([string]$relSrc, [string]$dest) {
+        $abs = Join-Path $repoRoot $relSrc
+        if (Test-Path $abs) {
+            Write-Host ("##teamcity[publishArtifacts '{0} => {1}']" -f (Format-TcMessage $relSrc), (Format-TcMessage $dest))
+        }
+    }
+    Publish-Tc 'pwiz_tools/OspreySharp/OspreySharp/bin/x64/Release/net8.0' 'OspreySharp-net8.0.zip'
+    Publish-Tc 'pwiz_tools/OspreySharp/OspreySharp/bin/x64/Release/net472' 'OspreySharp-net472.zip'
+    Publish-Tc 'pwiz_tools/OspreySharp/TestResults' 'test-results'
 }
 
 exit $overallTestExit
