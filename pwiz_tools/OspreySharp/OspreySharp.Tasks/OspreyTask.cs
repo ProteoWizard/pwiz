@@ -111,6 +111,22 @@ namespace pwiz.OspreySharp.Tasks
         public virtual bool IsIncluded(PipelineContext ctx) => true;
 
         /// <summary>
+        /// The byproduct purpose types this task publishes for downstream tasks
+        /// to consume by type through <see cref="PipelineContext.Get{TInfo}"/>.
+        /// The pipeline context inverts these at construction into the
+        /// byproduct -> producer registry, so a consumer's cache miss can
+        /// lazily materialize this task. Each declared type must be published
+        /// (via <see cref="PipelineContext.Publish{TInfo}"/>) on every path this
+        /// task can run -- both <see cref="Run"/> and <see cref="Rehydrate"/> --
+        /// so a consumer sees the same value regardless of how the producer was
+        /// materialized. Default empty: a task that produces no by-type
+        /// consumable state (a terminal aggregator, or one whose only shared
+        /// output is an in-place-mutated buffer demanded directly) overrides
+        /// nothing.
+        /// </summary>
+        public virtual IEnumerable<Type> Publishes => Array.Empty<Type>();
+
+        /// <summary>
         /// File paths this task reads as inputs. Reported in the
         /// <c>.osprey.task</c> sidecar so a human inspecting a
         /// completed-output sidecar can see what the task consumed.

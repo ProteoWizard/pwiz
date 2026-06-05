@@ -122,14 +122,14 @@ namespace pwiz.OspreySharp.Tasks
             foreach (var output in Outputs(ctx))
                 TaskValiditySidecar.Delete(output, Name);
             var config = ctx.Config;
-            // perFileEntries comes from PerFileRescoreTask -- it owns
-            // the post-rescore version (mutated in place; or the
-            // unchanged upstream reference when planning was skipped).
-            var perFileEntries = ctx.Demand<PerFileRescoreTask>().GetPerFileEntries(ctx);
-            var perFileScoring = ctx.Demand<PerFileScoringTask>();
-            var fullLibrary = perFileScoring.GetFullLibrary(ctx);
-            var libraryById = perFileScoring.GetLibraryById(ctx);
-            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
+            // RescoredEntries is the final milestone of the shared buffer:
+            // demanding it materializes PerFileRescore (running its rescore /
+            // merge-mode compaction when the driver skipped it), which is what
+            // produces the post-rescore version this stage reads.
+            var perFileEntries = ctx.Get<RescoredEntries>().Value;
+            var fullLibrary = ctx.Get<FullLibrary>().Value;
+            var libraryById = ctx.Get<LibraryById>().Value;
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
             // Stage 8: Protein FDR (optional)
             if (config.ProteinFdr.HasValue)

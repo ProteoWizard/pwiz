@@ -111,6 +111,17 @@ namespace pwiz.OspreySharp.Tasks
             return !inputs;
         }
 
+        // Stage 1-4 byproducts this task publishes for downstream consumers to
+        // pull by type. ScoredEntries is the first milestone of the shared
+        // mutable entry buffer (FirstJoin and PerFileRescore publish the later
+        // CompactedEntries / RescoredEntries milestones of the same backing
+        // list); see PipelineByproducts.cs.
+        public override IEnumerable<Type> Publishes => new[]
+        {
+            typeof(FullLibrary), typeof(LibraryById), typeof(PerFileCalibrations),
+            typeof(PerFileParquetPaths), typeof(RescoreBundle), typeof(ScoredEntries)
+        };
+
         // Outputs reached by downstream tasks through ctx.Demand<PerFileScoringTask>().
         // Defaults are non-null empty collections so callers querying
         // outputs from a not-yet-run task never NPE on the accessor.
@@ -131,47 +142,24 @@ namespace pwiz.OspreySharp.Tasks
         // a separate code path.
         private RescoreInputs _rescoreInputs;
 
-        // Phase B lazy-rehydrate gate. Set to true at the start of both
-        // Run (compute) and Rehydrate (disk-load). Once set, neither path
-        // re-executes the body (multiple accessors querying state from a
-        // single skipped task all hit a fast no-op after the first
-        // materialization).
-        private bool _runOrHydrated;
-
-        // Producer accessors. The backing fields are built and mutated ONLY
-        // inside this task (during Run / hydration); consumers in other tasks
-        // only read them. The dictionary accessors return IReadOnly* views to
-        // make the "Scoring owns this state; downstream only reads" contract
-        // explicit (the compiler now enforces no external mutation).
+        // The backing fields above are built and mutated ONLY inside this task
+        // (during Run / hydration) and published once in FinalizeAndCheck as the
+        // FullLibrary / LibraryById / PerFileCalibrations / PerFileParquetPaths /
+        // ScoredEntries / RescoreBundle byproducts; downstream tasks pull them by
+        // type via ctx.Get<T>() rather than through producer-typed getters.
         //
-        // GetFullLibrary is read-only by the same contract, but its return
-        // type stays List<LibraryEntry> for now: tightening it to
-        // IReadOnlyList would cascade through scoring-engine + FDR-project
-        // signatures (RunCoelutionScoring, RunFdr, ProteinFdr, ...), out of
-        // proportion to the value. Deferred to a future cross-project sweep.
-        public List<LibraryEntry> GetFullLibrary(PipelineContext ctx) { return _fullLibrary; }
-        public IReadOnlyDictionary<uint, LibraryEntry> GetLibraryById(PipelineContext ctx) { return _libraryById; }
-        // GetPerFileEntries is DELIBERATELY a live, mutable, shared buffer --
-        // NOT a read-only view, by design. The same
-        // List<KeyValuePair<string, List<FdrEntry>>> reference is the
-        // pipeline's working set: PerFileScoring produces it, FirstJoin
-        // compacts it in place, PerFileRescore overlays rescored entries in
-        // place -- all on this one instance. The no-copy cross-task hand-off
-        // is load-bearing (copying it is a measured perf regression at
-        // Astral scale). Do NOT "fix" this to IReadOnly or to return a copy.
-        public List<KeyValuePair<string, List<FdrEntry>>> GetPerFileEntries(PipelineContext ctx) { return _perFileEntries; }
-        public IReadOnlyDictionary<string, RTCalibration> GetPerFileCalibrations(PipelineContext ctx) { return _perFileCalibrations; }
-        public IReadOnlyDictionary<string, string> GetPerFileParquetPaths(PipelineContext ctx) { return _perFileParquetPaths; }
-
-        /// <summary>
-        /// The probe-the-disk reconciliation bundle, or <c>null</c> when
-        /// no per-file 1st-pass sidecar was found at joinOnly hydration
-        /// time (Stage 5 entry, or any non-joinOnly run). When non-null,
-        /// FirstJoinTask's reconciliation-state accessors fall back to
-        /// this bundle so the worker hydration path and the in-pipeline
-        /// path produce identical post-Stage-5 state.
-        /// </summary>
-        public RescoreInputs GetRescoreInputs(PipelineContext ctx) { return _rescoreInputs; }
+        // _perFileEntries stays a live, mutable, shared
+        // List<KeyValuePair<string, List<FdrEntry>>>: FirstJoin compacts it and
+        // PerFileRescore overlays it in place on this one instance (the no-copy
+        // hand-off is load-bearing at Astral scale). Its three in-place
+        // milestones are the ScoredEntries / CompactedEntries / RescoredEntries
+        // byproduct types -- see PipelineByproducts.cs.
+        //
+        // The FullLibrary byproduct wraps List<LibraryEntry> rather than
+        // IReadOnlyList: tightening it would cascade through RunCoelutionScoring /
+        // RunFdr / ProteinFdr signatures, out of proportion to the value.
+        // _rescoreInputs is the probe-the-disk reconciliation bundle (null at a
+        // Stage-5 entry / any non-joinOnly run), published wrapped in RescoreBundle.
 
         // Phase B resume surface: the library and every input mzML are
         // read; per-file .scores.parquet + .calibration.json are written.
@@ -205,12 +193,6 @@ namespace pwiz.OspreySharp.Tasks
             // here only in the non---input-scores modes (where computing from
             // spectra is right), and a worker-mode consumer materializes it via
             // ctx.Demand, which routes to Rehydrate.
-            //
-            // Idempotent re-entry guard: a lazy-rehydrate via an accessor may
-            // have already executed this task body; the driver loop's call
-            // here is then a no-op.
-            if (_runOrHydrated) return true;
-            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
 
@@ -363,20 +345,17 @@ namespace pwiz.OspreySharp.Tasks
 
         public override bool Rehydrate(PipelineContext ctx)
         {
-            if (_runOrHydrated) return true;
-
             // Without --input-scores there are no worker-supplied per-file
             // scores to load. A Demand still reaches this task here on a
             // straight-through resume: the driver skipped its Run because its
             // own .scores.parquet outputs were already valid on disk
             // (CanRehydrate), and a downstream task is the first to touch its
-            // state. The right re-materialization there is the compute path,
-            // whose per-file ScoreOrLoadForFile loads those valid parquets
-            // (rather than re-scoring) -- so defer to Run. The worker-mode
-            // join-only disk-load below applies only when --input-scores
-            // actually supplied the per-file scores.
+            // state. Load those valid parquets straight from disk (never
+            // compute) so Rehydrate stays pure -- Run is outer-loop-only. The
+            // worker-mode join-only disk-load below applies only when
+            // --input-scores actually supplied the per-file scores.
             if (ctx.Config.InputScores == null || ctx.Config.InputScores.Count == 0)
-                return Run(ctx);
+                return RehydrateFromOwnOutputs(ctx);
 
             // Disk-load path for worker-mode entry (--input-scores): the
             // per-file Stage 2-4 scores already exist on disk, so load the
@@ -385,7 +364,6 @@ namespace pwiz.OspreySharp.Tasks
             // recomputing them from spectra, then adopt any reconciliation
             // bundle that the merge node will read. The compute-from-spectra
             // counterpart is Run.
-            _runOrHydrated = true;
             _ctx = ctx;
             var config = ctx.Config;
 
@@ -455,6 +433,91 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         /// <summary>
+        /// Pure load-from-own-outputs rehydrate for a straight-through resume:
+        /// the driver skipped this task's <see cref="Run"/> because its per-file
+        /// <c>.scores.parquet</c> outputs were already valid on disk
+        /// (<see cref="PipelineContext.CanRehydrate"/>), and a downstream task is
+        /// the first to touch its state. Load the library and each file's stubs +
+        /// PIN features + calibration straight from those valid parquets -- the
+        /// same disk-load <see cref="ScoreOrLoadForFile"/> takes on its fast-skip
+        /// arm, but with no <see cref="ProcessFile"/> compute fallback, so a lazy
+        /// Demand never triggers scoring (Run stays outer-loop-only). Produces
+        /// the identical post-Stage-4 state Run leaves on a resume:
+        /// <see cref="_rescoreInputs"/> stays null (a straight-through run wrote
+        /// no reconciliation bundle), and the same byproducts publish through the
+        /// shared <see cref="FinalizeAndCheck"/> tail. Because CanRehydrate gated
+        /// the outputs as valid, a load failure here is a genuine fault (not a
+        /// "fall back to rescore" case) and stops the pipeline.
+        /// </summary>
+        private bool RehydrateFromOwnOutputs(PipelineContext ctx)
+        {
+            _ctx = ctx;
+            var config = ctx.Config;
+
+            // Stage 1: library + decoys (needed by Stage 5+ even though the
+            // per-file scores are loaded rather than computed).
+            if (!LoadLibraryAndDecoys(config, out _))
+                return false;
+
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+            var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+            var perFileParquetPaths = new Dictionary<string, string>();
+
+            int nFiles = config.InputFiles?.Count ?? 0;
+
+            // Mirror Run's EffectiveFileParallelism bookkeeping (unused by the
+            // disk-load path, which never calls ProcessFile, but kept so the
+            // RunPlan reflects the same per-run state either way).
+            int maxParallelFiles = OspreyEnvironment.MaxParallelFiles;
+            if (nFiles == 1 || maxParallelFiles == 1)
+                ctx.RunPlan.EffectiveFileParallelism = 1;
+            else if (maxParallelFiles > 1)
+                ctx.RunPlan.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
+            else
+                ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
+
+            var swAllFiles = Stopwatch.StartNew();
+            if (config.InputFiles != null)
+            {
+                // Sequential in InputFiles order to match Run's "collect in
+                // original order" -- downstream FirstJoin iterates perFileEntries.
+                foreach (string inputFile in config.InputFiles)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                    string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+                    // Strict load: CanRehydrate already certified these outputs
+                    // valid, so a failure is a genuine fault, not a "fall back to
+                    // rescore" case -- TryLoadStubsAndCalibration logs it as an
+                    // error (no misleading "will rescore" warning). Fail loudly;
+                    // Rehydrate must not compute.
+                    var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx, resumeStrict: true);
+                    if (stubs == null)
+                    {
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                    perFileParquetPaths[fileName] = scoresPath;
+                }
+            }
+            swAllFiles.Stop();
+            ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds));
+
+            int totalScored = 0;
+            foreach (var kvp in perFileEntries)
+                totalScored += kvp.Value.Count;
+
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(string.Format(
+                @"Coelution analysis complete. {0} total scored entries across {1} files",
+                totalScored, nFiles));
+
+            return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
+                perFileParquetPaths, nFiles, totalScored);
+        }
+
+        /// <summary>
         /// Shared tail for <see cref="Run"/> and <see cref="Rehydrate"/>:
         /// surface the per-file outputs for downstream tasks (before any
         /// early-exit, so a partial-success caller still sees the populated
@@ -473,6 +536,23 @@ namespace pwiz.OspreySharp.Tasks
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
             _perFileParquetPaths = perFileParquetPaths;
+
+            // Publish the Stage 1-4 byproducts once, in the shared Run/Rehydrate
+            // tail, BEFORE the success-but-stop early exits below -- so a
+            // downstream consumer pulling them by type (ctx.Get<T>) sees the
+            // same values regardless of which path materialized this task, even
+            // when this task then stops the pipeline. Because those stops keep
+            // ExitCode == 0, a lazy Demand that drove this Rehydrate still gets
+            // the published state and PipelineContext.DemandByType's
+            // failure-throw (which fires only on a false return WITH ExitCode != 0)
+            // correctly treats them as benign. RescoreBundle wraps the nullable
+            // bundle (null at a Stage-5 entry / straight-through run).
+            ctx.Publish(new FullLibrary(_fullLibrary));
+            ctx.Publish(new LibraryById(_libraryById));
+            ctx.Publish(new PerFileCalibrations(_perFileCalibrations));
+            ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
+            ctx.Publish(new ScoredEntries(_perFileEntries));
+            ctx.Publish(new RescoreBundle(_rescoreInputs));
 
             if (perFileEntries.Count == 0 || totalScored == 0)
             {
@@ -987,15 +1067,23 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Best-effort load of one file's stubs + PIN features from a
         /// <c>.scores.parquet</c> plus the calibration sibling. Returns
-        /// the stub list on success or <c>null</c> on any read failure
-        /// (caller treats null as "fall back to rescore"). Mirrors the
-        /// load logic in the <c>--join-only</c> branch above.
+        /// the stub list on success or <c>null</c> on a stub/feature read
+        /// failure. With <paramref name="resumeStrict"/> = <c>false</c> (the
+        /// default, used by <see cref="ScoreOrLoadForFile"/>) the caller falls
+        /// back to rescoring, so a failure logs a "will rescore" warning. With
+        /// <paramref name="resumeStrict"/> = <c>true</c> (the pure-load resume
+        /// path, where <see cref="PipelineContext.CanRehydrate"/> already
+        /// certified the outputs valid and there is NO rescore fallback) a
+        /// failure is a genuine fault and logs an error instead -- no misleading
+        /// "will rescore" messaging. Mirrors the load logic in the
+        /// <c>--join-only</c> branch above.
         /// </summary>
         private static List<FdrEntry> TryLoadStubsAndCalibration(
             string scoresPath,
             string fileName,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            bool resumeStrict = false)
         {
             List<FdrEntry> stubs;
             try
@@ -1004,9 +1092,14 @@ namespace pwiz.OspreySharp.Tasks
                 var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
                 if (features.Count != stubs.Count)
                 {
-                    ctx.LogWarning(string.Format(
-                        @"  Per-file resume: {0} has {1} stubs but {2} feature rows; will rescore.",
-                        scoresPath, stubs.Count, features.Count));
+                    if (resumeStrict)
+                        ctx.LogError(string.Format(
+                            @"  Resume rehydrate: {0} has {1} stubs but {2} feature rows; cannot load valid-on-disk scores.",
+                            scoresPath, stubs.Count, features.Count));
+                    else
+                        ctx.LogWarning(string.Format(
+                            @"  Per-file resume: {0} has {1} stubs but {2} feature rows; will rescore.",
+                            scoresPath, stubs.Count, features.Count));
                     return null;
                 }
                 for (int j = 0; j < stubs.Count; j++)
@@ -1014,9 +1107,14 @@ namespace pwiz.OspreySharp.Tasks
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(string.Format(
-                    @"  Per-file resume: failed to load {0}: {1}; will rescore.",
-                    scoresPath, ex.Message));
+                if (resumeStrict)
+                    ctx.LogError(string.Format(
+                        @"  Resume rehydrate: failed to load valid-on-disk scores from {0}: {1}",
+                        scoresPath, ex.Message));
+                else
+                    ctx.LogWarning(string.Format(
+                        @"  Per-file resume: failed to load {0}: {1}; will rescore.",
+                        scoresPath, ex.Message));
                 return null;
             }
 
