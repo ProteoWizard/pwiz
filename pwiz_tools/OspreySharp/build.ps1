@@ -202,28 +202,22 @@ foreach ($fw in $testFrameworks) {
     if ($Coverage) {
         $dcvrPath = Join-Path $trxDir "OspreySharp.Test-$Configuration-$fw.dcvr"
         Write-Progress-Tc "Running tests under dotCover ($fw)"
-        # Invoke dotcover via System.Diagnostics.Process.Start with an
-        # explicit Arguments string (same approach as Skyline's TestRunner
-        # in pwiz_tools/Skyline/TestRunner/Program.cs).  PowerShell's
-        # own native-command arg passing dropped the dotcover flags in
-        # builds #4030007/#4030034/#4030050; wrapping in `cmd /c` only
-        # added a second layer of quote mangling (#4030067).  Process.Start
-        # hands CreateProcess the verbatim string we build here, and
-        # standard double-quoting around paths with spaces survives to
-        # dotcover's own argv parser unchanged.
+        # dotCover 2026.1+ renamed every flag to kebab-case
+        # (--target-executable, --snapshot-output, ...).  The legacy
+        # /PascalCase=value form is silently ignored, which is why every
+        # earlier attempt (--, /, cmd /c, Process.Start) saw dotcover
+        # autodetect dotnet.exe and run nothing.  The Skyline TestRunner
+        # still works on the old syntax because it pins dotCover 2023.3.3.
+        #
+        # https://www.jetbrains.com/help/dotcover/dotCover__Console_Runner_Commands.html
         function Quote-IfNeeded([string]$s) {
             if ($s -match '\s') { return '"' + $s + '"' }
             return $s
         }
-        $dcFilters = '+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks'
         $dcArgs = @(
             'cover',
-            ('/TargetExecutable=' + (Quote-IfNeeded $vstest)),
-            ('/Output=' + (Quote-IfNeeded $dcvrPath)),
-            ('/Filters=' + $dcFilters),
-            '/AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute',
-            '/ReturnTargetExitCode',
-            '/AnalyzeTargetArguments=false',
+            '--target-executable', (Quote-IfNeeded $vstest),
+            '--snapshot-output', (Quote-IfNeeded $dcvrPath),
             '--'
         ) + ($vstestArgs | ForEach-Object { Quote-IfNeeded $_ })
         $dcArgString = $dcArgs -join ' '
