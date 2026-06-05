@@ -35,6 +35,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Numerics;
 using System.Threading;
 
 namespace pwiz.OspreySharp.ML
@@ -512,14 +513,57 @@ namespace pwiz.OspreySharp.ML
 
                 double maxPgViolation = 0.0;
 
+                int vecSize = Vector<double>.Count;
                 for (int idx = 0; idx < n; idx++)
                 {
                     int i = indices[idx];
                     int rowStart = cols * i;
 
-                    // w . x_i (augmented: includes bias w[p] * 1.0)
-                    double wx = 0.0;
-                    for (int k = 0; k < cols; k++)
+                    // w . x_i (augmented: includes bias w[p] * 1.0).
+                    // Hand-vectorized via System.Numerics.Vector<double>: the
+                    // canonical Rust pattern w[..p].iter().zip(row).map(...).sum()
+                    // gets auto-vectorized by LLVM into AVX2/AVX-512 FMA, but
+                    // RyuJIT does not auto-vectorize the equivalent scalar
+                    // indexed loop. For p=21 features the AVX2 path is 5
+                    // vector iters + 1 scalar tail, ~3.5x fewer instructions
+                    // than the scalar form.
+                    //
+                    // f64 reduction order vs Rust: Rust does a strict
+                    // left-fold scalar sum over the row.  This path
+                    // accumulates per-lane partial sums (lane stride =
+                    // Vector<double>.Count, which is 4 on AVX2, 8 on
+                    // AVX-512, 2 on ARM NEON) then horizontal-sums via
+                    // Vector.Dot.  Per-op drift is sub-ULP; cumulative
+                    // drift on the n*iter dot products stays inside the
+                    // 1e-9 cross-impl parity gate at p=21.  Note that
+                    // the gate's headroom now implicitly assumes a
+                    // lane-stride-stable runtime -- a future CPU/runtime
+                    // swap (e.g. AVX2 -> AVX-512 in production) shifts
+                    // the lane stride and therefore the divergence
+                    // pattern.  If parity ever drifts past 1e-9 after
+                    // such a swap, bisect by forcing the scalar tail
+                    // (set vecSize to a value > cols) to confirm.
+                    double wx;
+                    int k = 0;
+                    if (cols >= vecSize)
+                    {
+                        Vector<double> sumVec = Vector<double>.Zero;
+                        for (; k + vecSize <= cols; k += vecSize)
+                        {
+                            var wv = new Vector<double>(w, k);
+                            var xv = new Vector<double>(data, rowStart + k);
+                            sumVec += wv * xv;
+                        }
+                        // Vector.Sum is .NET 7+; Vector.Dot with the ones
+                        // vector gives the same horizontal sum and is
+                        // available on the net472 target as well.
+                        wx = Vector.Dot(sumVec, Vector<double>.One);
+                    }
+                    else
+                    {
+                        wx = 0.0;
+                    }
+                    for (; k < cols; k++)
                         wx += w[k] * data[rowStart + k];
                     wx += w[p];
 
@@ -539,9 +583,22 @@ namespace pwiz.OspreySharp.ML
                         alpha[i] = Math.Max(alpha[i] - g / diag[i], 0.0);
                         double d = (alpha[i] - alphaOld) * y[i];
 
-                        // Update w += d * x_i (augmented)
-                        for (int k = 0; k < cols; k++)
-                            w[k] += d * data[rowStart + k];
+                        // Update w += d * x_i (augmented). Same SIMD pattern
+                        // as the dot product above; LLVM vectorizes the Rust
+                        // iter_mut().zip() form natively.
+                        int k2 = 0;
+                        if (cols >= vecSize)
+                        {
+                            var dVec = new Vector<double>(d);
+                            for (; k2 + vecSize <= cols; k2 += vecSize)
+                            {
+                                var wv = new Vector<double>(w, k2);
+                                var xv = new Vector<double>(data, rowStart + k2);
+                                (wv + dVec * xv).CopyTo(w, k2);
+                            }
+                        }
+                        for (; k2 < cols; k2++)
+                            w[k2] += d * data[rowStart + k2];
                         w[p] += d; // bias feature = 1.0
                     }
                 }

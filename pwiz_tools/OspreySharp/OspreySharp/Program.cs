@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.IO;
 
 namespace pwiz.OspreySharp
 {
@@ -182,11 +183,10 @@ namespace pwiz.OspreySharp
                 LogInfo("");
 
                 // Single entry point. Stage 6 worker mode
-                // (--join-at-pass=1 --no-join --input-scores) is routed
-                // by AnalysisPipeline.DeriveStartAtTask / DeriveStopAfterTask
-                // to start and stop on PerFileRescoreTask; PerFileScoring's
-                // lazy-rehydrate populates the upstream state from the
-                // boundary files on disk.
+                // (--join-at-pass=1 --no-join --input-scores) includes only
+                // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
+                // lazy-rehydrate (via ctx.Demand) populates the upstream state
+                // from the boundary files on disk.
                 var pipeline = new AnalysisPipeline();
                 return pipeline.Run(config);
             }
@@ -772,6 +772,15 @@ namespace pwiz.OspreySharp
         /// non-recursive list of *.scores.parquet files in it; explicit file
         /// paths are passed through unchanged. Throws if the directory is
         /// empty or any explicit path doesn't exist.
+        ///
+        /// Directory mode collects both the Stage 4 <c>*.scores.parquet</c> files
+        /// and the Stage 6 <c>*.scores-reconciled.parquet</c> siblings, then
+        /// dedupes per stem: for any stem that has both, only the reconciled file
+        /// is returned (the authoritative later pass; the <c>--join-at-pass=2</c>
+        /// reconciled-input gate expects reconciled parquets). A stem with only an
+        /// original is returned as-is. The two suffixes are unambiguous, so this
+        /// never returns both files for one stem (see
+        /// <see cref="ParquetScoreCache.ReconciledScoresParquetSuffix"/>).
         /// </summary>
         internal static List<string> ResolveInputScores(List<string> paths)
         {
@@ -781,12 +790,27 @@ namespace pwiz.OspreySharp
             if (paths.Count == 1 && Directory.Exists(paths[0]))
             {
                 string dir = paths[0];
-                string[] found = Directory.GetFiles(dir, "*.scores.parquet", SearchOption.TopDirectoryOnly);
-                if (found.Length == 0)
+                // Glob *.parquet and classify by suffix in code rather than
+                // relying on multi-dot search-pattern matching (which differs
+                // across platforms). Keep only the two known scores suffixes.
+                var originals = new List<string>();
+                var reconciledSet = new HashSet<string>(StringComparer.Ordinal);
+                foreach (string f in Directory.GetFiles(dir, "*.parquet", SearchOption.TopDirectoryOnly))
+                {
+                    if (ParquetScoreCache.IsReconciledScoresPath(f))
+                        reconciledSet.Add(f);
+                    else if (f.EndsWith(ParquetScoreCache.ScoresParquetSuffix, StringComparison.Ordinal))
+                        originals.Add(f);
+                }
+                if (originals.Count == 0 && reconciledSet.Count == 0)
                     throw new ArgumentException(string.Format(
                         "No *.scores.parquet files found in --input-scores directory: {0}", dir));
-                Array.Sort(found, StringComparer.Ordinal); // Array.Sort OK: filenames are unique, no ties possible
-                return new List<string>(found);
+                var result = new List<string>(reconciledSet);            // reconciled: authoritative
+                foreach (string f in originals)
+                    if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
+                        result.Add(f);                                   // original with no reconciled sibling
+                result.Sort(StringComparer.Ordinal); // unique filenames, no ties
+                return result;
             }
 
             foreach (string p in paths)
