@@ -349,6 +349,33 @@ namespace pwiz.OspreySharp.Tasks
             {
                 _ctx = ctx;
                 _perFileEntries = ctx.Get<CompactedEntries>().Value;
+
+                // PR-E: a fresh ExecuteRescore would overlay each file's reconciled
+                // boundaries/area/features onto its CompactedEntries rows + append
+                // gap-fill. On resume the driver skipped Run because the reconciled
+                // parquets are already valid, so do the equivalent in-place overlay
+                // from each file's OWN .scores-reconciled.parquet -- otherwise the
+                // buffer stays at 1st-pass RTs and MergeNode (which reads ApexRt/
+                // StartRt/EndRt/BoundsArea straight off these entries) writes 1st-pass
+                // RTs into the final blib instead of the Stage 6 reconciled values.
+                // Files with no reconciled sibling on disk are no-work files; a fresh
+                // run leaves their entries at 1st-pass too, so they are left unchanged.
+                var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
+                var parquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+                foreach (var kv in _perFileEntries)
+                {
+                    if (parquetPaths == null ||
+                        !parquetPaths.TryGetValue(kv.Key, out string scoresPath))
+                        continue;
+                    string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
+                    if (!File.Exists(reconciledPath))
+                        continue;
+                    IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                    if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
+                        gapFillForFile = gfList;
+                    OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile, ctx);
+                }
+
                 ctx.Publish(new RescoredEntries(_perFileEntries));
                 return true;
             }
@@ -625,6 +652,19 @@ namespace pwiz.OspreySharp.Tasks
                     _ctx.LogInfo(string.Format(
                         @"[file] {0}/{1} {2}: skipping (outputs valid)",
                         fileNum + 1, nTotalFiles, fileName));
+
+                    // PR-E: a partial resume skips this already-rescored file, but
+                    // a downstream consumer (MergeNode, in the full pipeline) reads
+                    // ApexRt/StartRt/EndRt/BoundsArea straight off these in-memory
+                    // entries. Without overlaying the reconciled values they stay at
+                    // the 1st-pass state and the final blib carries 1st-pass RTs.
+                    // Reproduce the fresh end state in place from the valid reconciled
+                    // parquet we just confirmed on disk + this file's gap-fill targets.
+                    IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                    if (perFileGapFill != null &&
+                        perFileGapFill.TryGetValue(fileName, out var gfList))
+                        gapFillForFile = gfList;
+                    OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile, _ctx);
                     continue;
                 }
                 // About to (re-)rescore this file: clear any stale sidecar
@@ -1031,6 +1071,131 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
             return (nOverlay, nNoPeak);
+        }
+
+        /// <summary>
+        /// Resume overlay: reproduce a fresh Stage 6 ExecuteRescore's in-memory
+        /// end state for a single file by loading that file's OWN
+        /// <c>.scores-reconciled.parquet</c> and overlaying its reconciled
+        /// boundary / area / feature / blob columns onto the post-compaction
+        /// buffer entries (matched by <see cref="FdrEntry.EntryId"/>), then
+        /// appending the file's gap-fill rows.
+        ///
+        /// This is the parity-safe counterpart to <see cref="OverlayRescoredEntries"/>
+        /// + <see cref="RunGapFillTwoPass"/> for the resume paths, where the
+        /// reconciled parquet is already valid on disk and re-running the scoring
+        /// engine would be both wasteful and (on a merge node) impossible. Both
+        /// resume paths -- the straight-through <see cref="Rehydrate"/> no-op and
+        /// the per-file skip inside <see cref="ExecuteRescore"/> -- previously
+        /// left the buffer at its 1st-pass <see cref="CompactedEntries"/> state,
+        /// so MergeNode (which reads ApexRt/StartRt/EndRt/BoundsArea DIRECTLY off
+        /// these entries) wrote 1st-pass RTs into the final blib instead of the
+        /// Stage 6 reconciled RTs.
+        ///
+        /// Mirrors the fresh end state exactly: the reconciled parquet row's
+        /// reconciled boundary fields are copied in place, the original
+        /// ParquetIndex + 1st-pass Score / q-values are PRESERVED (matching what
+        /// CompactedEntries + the PR-D worker-strict gate established), and
+        /// gap-fill rows are appended with <c>ParquetIndex = uint.MaxValue</c>.
+        /// Non-passing reconciled rows (compacted out of the buffer) are skipped,
+        /// matching the buffer a fresh run produces.
+        /// </summary>
+        private void OverlayReconciledIntoBuffer(List<FdrEntry> fileEntries,
+            string reconciledPath, IReadOnlyList<GapFillTarget> gapFillForFile,
+            PipelineContext ctx)
+        {
+            List<FdrEntry> loaded;
+            try
+            {
+                loaded = ParquetScoreCache.LoadFullFdrEntries(reconciledPath);
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(
+                    @"Stage 6 resume overlay: failed to reload {0}: {1} (leaving entries at 1st-pass state)",
+                    reconciledPath, ex.Message));
+                return;
+            }
+
+            // Index reconciled rows by EntryId. The reconciled parquet carries the
+            // full original entry set (incl. non-passing rows) re-sorted by
+            // (entry_id, charge, scan) plus appended gap-fill; a given EntryId can
+            // appear more than once (multiple charges / scans). Keep the FIRST row
+            // for a given EntryId -- the existing OverlayRescoredEntries path also
+            // matches a single rescored entry per EntryId, and the buffer carries
+            // at most one row per EntryId after compaction.
+            var byId = new Dictionary<uint, FdrEntry>(loaded.Count);
+            foreach (var r in loaded)
+            {
+                if (!byId.ContainsKey(r.EntryId))
+                    byId[r.EntryId] = r;
+            }
+
+            // Overlay reconciled boundary / area / feature / blob columns onto the
+            // existing buffer rows IN PLACE, preserving each row's ParquetIndex and
+            // 1st-pass Score / q-values (FdrEntry is a reference type, so mutating
+            // fields updates the shared list element directly).
+            var existingIds = new HashSet<uint>();
+            foreach (var entry in fileEntries)
+            {
+                existingIds.Add(entry.EntryId);
+                if (!byId.TryGetValue(entry.EntryId, out FdrEntry r))
+                    continue;
+                entry.ApexRt = r.ApexRt;
+                entry.StartRt = r.StartRt;
+                entry.EndRt = r.EndRt;
+                entry.BoundsArea = r.BoundsArea;
+                entry.BoundsSnr = r.BoundsSnr;
+                entry.Features = r.Features;
+                entry.CwtCandidates = r.CwtCandidates;
+                entry.FragmentMzs = r.FragmentMzs;
+                entry.FragmentIntensities = r.FragmentIntensities;
+                entry.ReferenceXicRts = r.ReferenceXicRts;
+                entry.ReferenceXicIntensities = r.ReferenceXicIntensities;
+            }
+
+            // Append gap-fill rows. A fresh run appends one stub per gap-fill
+            // target (decoys already excluded by the planner) with ParquetIndex =
+            // uint.MaxValue. Pull the reconciled row for each target EntryId that
+            // is not already in the buffer; append in ascending TargetEntryId order
+            // for determinism. Targets whose reconciled row is missing (no peak)
+            // are skipped -- a fresh run would not have appended a stub either.
+            if (gapFillForFile != null && gapFillForFile.Count > 0)
+            {
+                var gapFillIds = new SortedSet<uint>();
+                foreach (var t in gapFillForFile)
+                    gapFillIds.Add(t.TargetEntryId);
+                foreach (var gid in gapFillIds)
+                {
+                    if (existingIds.Contains(gid))
+                        continue;
+                    if (!byId.TryGetValue(gid, out FdrEntry g))
+                        continue;
+                    g.ParquetIndex = uint.MaxValue;
+                    fileEntries.Add(g);
+                    existingIds.Add(gid);
+                }
+            }
+
+            // Re-sort by (EntryId, Charge, ScanNumber, ParquetIndex) to match the
+            // canonical order a fresh run establishes: COLD's MergeNode runs
+            // FirstJoinTask.RunPercolatorFdr, which sorts each file's list by this
+            // exact key before any downstream consumer reads it -- so gap-fill rows
+            // (appended last here) are interleaved by EntryId, not left at the tail.
+            // WARM skips that 2nd-pass Percolator (its sidecars are valid), so
+            // without this sort MergeNode's BuildSharedBoundaries would iterate a
+            // different order and, on q-value ties between charge states of a
+            // peptide, pick a different shared (modseq, file) boundary than COLD.
+            fileEntries.Sort((a, b) =>
+            {
+                int c = a.EntryId.CompareTo(b.EntryId);
+                if (c != 0) return c;
+                c = a.Charge.CompareTo(b.Charge);
+                if (c != 0) return c;
+                c = a.ScanNumber.CompareTo(b.ScanNumber);
+                if (c != 0) return c;
+                return a.ParquetIndex.CompareTo(b.ParquetIndex);
+            });
         }
 
         /// <summary>
