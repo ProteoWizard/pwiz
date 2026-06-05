@@ -227,15 +227,17 @@ foreach ($fw in $testFrameworks) {
         # cmd.exe's re-parse cleanly, so dotcover sees a broken path and
         # falls back.  Skyline's TestRunner sidesteps this because its
         # dotcover paths live under c:\pwiz (no spaces).
-        # Convert paths to 8.3 short names so no quoting is needed.
+        # Convert paths to 8.3 short names so no quoting is needed -- but
+        # only for paths that actually contain spaces (vstest.console.exe
+        # and dotcover.exe live under "C:\Program Files\..." / dotnet
+        # tools).  Don't short-path the test DLL or ResultsDirectory:
+        # vstest opens the DLL and looks for <basename>.runtimeconfig.json
+        # next to it, and the short->long round-trip is non-deterministic
+        # (build #4030347 ended up looking for a hashed-prefix sibling
+        # that doesn't exist).
         $vstestShort = Get-ShortPath $vstest
         $dotcoverShort = Get-ShortPath $dotcover
-        $vstestArgsShort = $vstestArgs | ForEach-Object {
-            if ($_ -is [string] -and $_ -notmatch '^[/-]' -and (Test-Path $_)) {
-                Get-ShortPath $_
-            } else { $_ }
-        }
-        $vstestArgsStr = $vstestArgsShort -join ' '
+        $vstestArgsStr = $vstestArgs -join ' '
         $dcFilters = '+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks'
         $dcCmd = "$dotcoverShort cover /TargetExecutable=$vstestShort /Output=$dcvrPath /Filters=$dcFilters /AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute /ReturnTargetExitCode /AnalyzeTargetArguments=false -- $vstestArgsStr"
         Write-Host "DC CMD: $dcCmd"
