@@ -82,6 +82,51 @@ namespace pwiz.OspreySharp.Tasks
         public abstract bool Run(PipelineContext ctx);
 
         /// <summary>
+        /// Lazily bring this task's outputs into memory from its on-disk
+        /// artifacts, without recomputing them — the disk-load counterpart to
+        /// the compute-only <see cref="Run"/>. Invoked at most once per run by
+        /// <see cref="PipelineContext.Demand{T}"/> when a consumer first
+        /// reaches for this producer's state and the producer's own
+        /// <see cref="Run"/> was never called (e.g. a worker-mode invocation
+        /// that starts mid-pipeline). A producer whose <see cref="Run"/> did
+        /// already execute returns early via its own one-shot guard, so this is
+        /// a no-op there. Returns the same <c>bool</c> contract as
+        /// <see cref="Run"/>. A purely-aggregating terminal task that nothing
+        /// consumes implements this as a no-op returning <c>true</c>.
+        /// </summary>
+        public abstract bool Rehydrate(PipelineContext ctx);
+
+        /// <summary>
+        /// Whether this task participates in the pipeline for the current
+        /// configuration. Driver-owned membership predicate: the orchestrator
+        /// iterates only the included tasks and runs those whose outputs are
+        /// not already on disk, while excluded tasks lazy-rehydrate their state
+        /// through <see cref="PipelineContext.Demand{T}"/> when an included task
+        /// reaches for it. Replaces the <c>DeriveStartAtTask</c> /
+        /// <c>DeriveStopAfterTask</c> range gating (the membership becomes a
+        /// per-task fact rather than a contiguous [start..stop] window).
+        /// Default <c>true</c>; tasks that run only in some HPC modes override
+        /// to gate on the relevant <see cref="OspreyConfig"/> flags.
+        /// </summary>
+        public virtual bool IsIncluded(PipelineContext ctx) => true;
+
+        /// <summary>
+        /// The byproduct purpose types this task publishes for downstream tasks
+        /// to consume by type through <see cref="PipelineContext.Get{TInfo}"/>.
+        /// The pipeline context inverts these at construction into the
+        /// byproduct -> producer registry, so a consumer's cache miss can
+        /// lazily materialize this task. Each declared type must be published
+        /// (via <see cref="PipelineContext.Publish{TInfo}"/>) on every path this
+        /// task can run -- both <see cref="Run"/> and <see cref="Rehydrate"/> --
+        /// so a consumer sees the same value regardless of how the producer was
+        /// materialized. Default empty: a task that produces no by-type
+        /// consumable state (a terminal aggregator, or one whose only shared
+        /// output is an in-place-mutated buffer demanded directly) overrides
+        /// nothing.
+        /// </summary>
+        public virtual IEnumerable<Type> Publishes => Array.Empty<Type>();
+
+        /// <summary>
         /// File paths this task reads as inputs. Reported in the
         /// <c>.osprey.task</c> sidecar so a human inspecting a
         /// completed-output sidecar can see what the task consumed.
