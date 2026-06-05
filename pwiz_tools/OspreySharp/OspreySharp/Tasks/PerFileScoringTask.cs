@@ -485,12 +485,14 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
                     string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-                    var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx);
+                    // Strict load: CanRehydrate already certified these outputs
+                    // valid, so a failure is a genuine fault, not a "fall back to
+                    // rescore" case -- TryLoadStubsAndCalibration logs it as an
+                    // error (no misleading "will rescore" warning). Fail loudly;
+                    // Rehydrate must not compute.
+                    var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx, resumeStrict: true);
                     if (stubs == null)
                     {
-                        ctx.LogError(string.Format(
-                            @"Resume rehydrate: failed to load valid-on-disk scores for {0} ({1})",
-                            fileName, scoresPath));
                         ctx.ExitCode = 1;
                         return false;
                     }
@@ -1065,15 +1067,23 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Best-effort load of one file's stubs + PIN features from a
         /// <c>.scores.parquet</c> plus the calibration sibling. Returns
-        /// the stub list on success or <c>null</c> on any read failure
-        /// (caller treats null as "fall back to rescore"). Mirrors the
-        /// load logic in the <c>--join-only</c> branch above.
+        /// the stub list on success or <c>null</c> on a stub/feature read
+        /// failure. With <paramref name="resumeStrict"/> = <c>false</c> (the
+        /// default, used by <see cref="ScoreOrLoadForFile"/>) the caller falls
+        /// back to rescoring, so a failure logs a "will rescore" warning. With
+        /// <paramref name="resumeStrict"/> = <c>true</c> (the pure-load resume
+        /// path, where <see cref="PipelineContext.CanRehydrate"/> already
+        /// certified the outputs valid and there is NO rescore fallback) a
+        /// failure is a genuine fault and logs an error instead -- no misleading
+        /// "will rescore" messaging. Mirrors the load logic in the
+        /// <c>--join-only</c> branch above.
         /// </summary>
         private static List<FdrEntry> TryLoadStubsAndCalibration(
             string scoresPath,
             string fileName,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            bool resumeStrict = false)
         {
             List<FdrEntry> stubs;
             try
@@ -1082,9 +1092,14 @@ namespace pwiz.OspreySharp.Tasks
                 var features = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
                 if (features.Count != stubs.Count)
                 {
-                    ctx.LogWarning(string.Format(
-                        @"  Per-file resume: {0} has {1} stubs but {2} feature rows; will rescore.",
-                        scoresPath, stubs.Count, features.Count));
+                    if (resumeStrict)
+                        ctx.LogError(string.Format(
+                            @"  Resume rehydrate: {0} has {1} stubs but {2} feature rows; cannot load valid-on-disk scores.",
+                            scoresPath, stubs.Count, features.Count));
+                    else
+                        ctx.LogWarning(string.Format(
+                            @"  Per-file resume: {0} has {1} stubs but {2} feature rows; will rescore.",
+                            scoresPath, stubs.Count, features.Count));
                     return null;
                 }
                 for (int j = 0; j < stubs.Count; j++)
@@ -1092,9 +1107,14 @@ namespace pwiz.OspreySharp.Tasks
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(string.Format(
-                    @"  Per-file resume: failed to load {0}: {1}; will rescore.",
-                    scoresPath, ex.Message));
+                if (resumeStrict)
+                    ctx.LogError(string.Format(
+                        @"  Resume rehydrate: failed to load valid-on-disk scores from {0}: {1}",
+                        scoresPath, ex.Message));
+                else
+                    ctx.LogWarning(string.Format(
+                        @"  Per-file resume: failed to load {0}: {1}; will rescore.",
+                        scoresPath, ex.Message));
                 return null;
             }
 
