@@ -1,11 +1,11 @@
 @echo off
 REM TeamCity entry point: build + test OspreySharp with dotCover
 REM and TeamCity service messages.  TeamCity invokes this batch
-REM directly as the build step; no other configuration needed in the
-REM build config except a working directory and the file trigger
-REM (pwiz_tools/OspreySharp/**).
+REM directly as the build step; smart-build trigger wiring for
+REM pwiz_tools/OspreySharp/** is in scripts/misc/vcs_trigger_and_paths_config.py.
 REM
 REM Pre-requisites on the build agent:
+REM   * pwsh (PowerShell 7+) on PATH (project standard; no powershell.exe fallback)
 REM   * Visual Studio Build Tools (MSBuild + vstest.console.exe)
 REM   * .NET 8 SDK
 REM   * JetBrains.dotCover.GlobalTools (dotnet tool install -g)

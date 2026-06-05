@@ -193,7 +193,7 @@ foreach ($fw in $testFrameworks) {
             $vstest @vstestArgs
         $exit = $LASTEXITCODE
         if ($TeamCity -and (Test-Path $dcvrPath)) {
-            Write-Host ("##teamcity[importData type='dotNetCoverage' tool='dotcover' path='{0}']" -f $dcvrPath)
+            Write-Host ("##teamcity[importData type='dotNetCoverage' tool='dotcover' path='{0}']" -f (Format-TcMessage $dcvrPath))
         }
     } else {
         Write-Progress-Tc "Running tests ($fw)"
@@ -203,7 +203,7 @@ foreach ($fw in $testFrameworks) {
     $testSec = ((Get-Date) - $testStart).TotalSeconds
 
     if ($TeamCity -and (Test-Path $trxPath)) {
-        Write-Host ("##teamcity[importData type='vstest' path='{0}']" -f $trxPath)
+        Write-Host ("##teamcity[importData type='vstest' path='{0}']" -f (Format-TcMessage $trxPath))
     }
     if ($exit -eq 0) {
         Write-Host ("Tests ($fw) passed in {0:F1}s" -f $testSec) -ForegroundColor Green
