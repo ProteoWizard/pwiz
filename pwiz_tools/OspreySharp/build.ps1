@@ -95,21 +95,6 @@ function Write-Problem-Tc([string]$msg) {
     Write-Host "ERROR: $msg" -ForegroundColor Red
 }
 
-# --- GetShortPathName helper --------------------------------------------
-# Used to convert paths with spaces into 8.3 short names so they can be
-# passed through cmd /c without quoting (see dotcover invocation below).
-Add-Type -MemberDefinition @'
-[System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet=System.Runtime.InteropServices.CharSet.Unicode, EntryPoint="GetShortPathNameW")]
-public static extern int GetShortPathName(string lpszLongPath, System.Text.StringBuilder lpszShortPath, int cchBuffer);
-'@ -Name OspreyWin32 -Namespace OspreySharpBuild -ErrorAction SilentlyContinue
-function Get-ShortPath([string]$p) {
-    $sb = New-Object System.Text.StringBuilder 260
-    [void][OspreySharpBuild.OspreyWin32]::GetShortPathName($p, $sb, $sb.Capacity)
-    $s = $sb.ToString()
-    if ([string]::IsNullOrEmpty($s)) { return $p }  # path doesn't exist or no short name; return original
-    return $s
-}
-
 # --- Tool discovery -----------------------------------------------------
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (-not (Test-Path $vswhere)) {
@@ -217,32 +202,39 @@ foreach ($fw in $testFrameworks) {
     if ($Coverage) {
         $dcvrPath = Join-Path $trxDir "OspreySharp.Test-$Configuration-$fw.dcvr"
         Write-Progress-Tc "Running tests under dotCover ($fw)"
-        # Use the universal `cover` command (the only one available in dotCover Console
-        # Runner 2026.1.x); `cover-dotnet` only exists in the older Global Tools
-        # package and silently prints help + exits 0 on agents without it.
-        #
-        # Build #4030067 showed the cmd /c command line was assembled
-        # correctly but dotcover still autodetected dotnet.exe -- the quotes
-        # around "C:\Program Files\...\vstest.console.exe" don't survive
-        # cmd.exe's re-parse cleanly, so dotcover sees a broken path and
-        # falls back.  Skyline's TestRunner sidesteps this because its
-        # dotcover paths live under c:\pwiz (no spaces).
-        # Convert paths to 8.3 short names so no quoting is needed -- but
-        # only for paths that actually contain spaces (vstest.console.exe
-        # and dotcover.exe live under "C:\Program Files\..." / dotnet
-        # tools).  Don't short-path the test DLL or ResultsDirectory:
-        # vstest opens the DLL and looks for <basename>.runtimeconfig.json
-        # next to it, and the short->long round-trip is non-deterministic
-        # (build #4030347 ended up looking for a hashed-prefix sibling
-        # that doesn't exist).
-        $vstestShort = Get-ShortPath $vstest
-        $dotcoverShort = Get-ShortPath $dotcover
-        $vstestArgsStr = $vstestArgs -join ' '
+        # Invoke dotcover via System.Diagnostics.Process.Start with an
+        # explicit Arguments string (same approach as Skyline's TestRunner
+        # in pwiz_tools/Skyline/TestRunner/Program.cs).  PowerShell's
+        # own native-command arg passing dropped the dotcover flags in
+        # builds #4030007/#4030034/#4030050; wrapping in `cmd /c` only
+        # added a second layer of quote mangling (#4030067).  Process.Start
+        # hands CreateProcess the verbatim string we build here, and
+        # standard double-quoting around paths with spaces survives to
+        # dotcover's own argv parser unchanged.
+        function Quote-IfNeeded([string]$s) {
+            if ($s -match '\s') { return '"' + $s + '"' }
+            return $s
+        }
         $dcFilters = '+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks'
-        $dcCmd = "$dotcoverShort cover /TargetExecutable=$vstestShort /Output=$dcvrPath /Filters=$dcFilters /AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute /ReturnTargetExitCode /AnalyzeTargetArguments=false -- $vstestArgsStr"
-        Write-Host "DC CMD: $dcCmd"
-        & cmd /c $dcCmd
-        $exit = $LASTEXITCODE
+        $dcArgs = @(
+            'cover',
+            ('/TargetExecutable=' + (Quote-IfNeeded $vstest)),
+            ('/Output=' + (Quote-IfNeeded $dcvrPath)),
+            ('/Filters=' + $dcFilters),
+            '/AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute',
+            '/ReturnTargetExitCode',
+            '/AnalyzeTargetArguments=false',
+            '--'
+        ) + ($vstestArgs | ForEach-Object { Quote-IfNeeded $_ })
+        $dcArgString = $dcArgs -join ' '
+        Write-Host "DC ARGS: $dcArgString"
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $dotcover
+        $psi.Arguments = $dcArgString
+        $psi.UseShellExecute = $false
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        $proc.WaitForExit()
+        $exit = $proc.ExitCode
         if ($TeamCity -and (Test-Path $dcvrPath)) {
             Write-Host ("##teamcity[importData type='dotNetCoverage' tool='dotcover' path='{0}']" -f (Format-TcMessage $dcvrPath))
         }
