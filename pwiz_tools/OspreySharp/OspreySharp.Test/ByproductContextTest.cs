@@ -76,6 +76,46 @@ namespace pwiz.OspreySharp.Test
             }
         }
 
+        /// <summary>A second producer type that also publishes
+        /// <see cref="StubByproduct"/>, to drive the single-producer
+        /// registration check in <see cref="PipelineContext"/>'s constructor.</summary>
+        private sealed class SecondStubProducerTask : OspreyTask
+        {
+            public override string Name => @"SecondStubProducer";
+            public override IEnumerable<Type> Publishes => new[] { typeof(StubByproduct) };
+            public override bool Run(PipelineContext ctx) => true;
+            public override bool Rehydrate(PipelineContext ctx) => true;
+        }
+
+        /// <summary>Counts how many times its Rehydrate is driven, so a test can
+        /// assert the <see cref="PipelineContext"/> one-shot materialization guard
+        /// (driver-Run vs lazy-Demand) holds.</summary>
+        private sealed class CountingProducerTask : OspreyTask
+        {
+            public int RehydrateCount;
+            public override string Name => @"CountingProducer";
+            public override IEnumerable<Type> Publishes => new[] { typeof(StubByproduct) };
+            public override bool Run(PipelineContext ctx) => true;
+
+            public override bool Rehydrate(PipelineContext ctx)
+            {
+                RehydrateCount++;
+                ctx.Publish(new StubByproduct { Value = 99 });
+                return true;
+            }
+        }
+
+        /// <summary>A producer whose Rehydrate succeeds (returns true) but neglects
+        /// to publish its declared byproduct -- a programming defect that
+        /// <see cref="PipelineContext.Get{TInfo}"/> must surface loudly.</summary>
+        private sealed class ForgetfulProducerTask : OspreyTask
+        {
+            public override string Name => @"ForgetfulProducer";
+            public override IEnumerable<Type> Publishes => new[] { typeof(StubByproduct) };
+            public override bool Run(PipelineContext ctx) => true;
+            public override bool Rehydrate(PipelineContext ctx) => true;
+        }
+
         private static PipelineContext ContextFor(OspreyTask task)
         {
             return new PipelineContext(new OspreyConfig(), new[] { task }, null, null, null);
@@ -128,6 +168,72 @@ namespace pwiz.OspreySharp.Test
             catch (ArgumentException)
             {
                 // expected: Dictionary.Add rejects the duplicate key
+            }
+        }
+
+        [TestMethod]
+        public void TestDuplicateProducerThrowsAtConstruction()
+        {
+            // Two tasks declaring the same byproduct in Publishes is a definition
+            // defect: the registry could not pick which task to materialize on a
+            // cache miss, so the constructor must fail fast rather than silently
+            // drop one producer.
+            try
+            {
+                var unused = new PipelineContext(new OspreyConfig(),
+                    new OspreyTask[] { new StubProducerTask(publishBeforeStop: false, exitCode: 0), new SecondStubProducerTask() },
+                    null, null, null);
+                Assert.Fail(@"Expected duplicate-producer registration to throw");
+            }
+            catch (ArgumentException)
+            {
+                // expected: each registered byproduct must have a single producer
+            }
+        }
+
+        [TestMethod]
+        public void TestMarkMaterializedSuppressesRehydrate()
+        {
+            // The driver calls MarkMaterialized after Run; a later Demand/Get for
+            // that task must then NOT drive Rehydrate (its state is already in
+            // memory). This is the single guard coordinating the driver-Run path
+            // and the lazy-Rehydrate path.
+            var task = new CountingProducerTask();
+            var ctx = ContextFor(task);
+            ctx.MarkMaterialized(task);
+            var resolved = ctx.Demand<CountingProducerTask>();
+            Assert.AreSame(task, resolved);
+            Assert.AreEqual(0, task.RehydrateCount);
+        }
+
+        [TestMethod]
+        public void TestDemandRehydratesAtMostOnce()
+        {
+            // The first consumer's Demand drives Rehydrate; subsequent demands
+            // return the same instance without re-materializing (the _materialized
+            // one-shot guard that replaced the per-task _runOrHydrated field).
+            var task = new CountingProducerTask();
+            var ctx = ContextFor(task);
+            ctx.Demand<CountingProducerTask>();
+            ctx.Demand<CountingProducerTask>();
+            Assert.AreEqual(1, task.RehydrateCount);
+        }
+
+        [TestMethod]
+        public void TestGetThrowsWhenProducerRehydratesButDoesNotPublish()
+        {
+            // A producer whose Rehydrate succeeds but forgets to publish its
+            // declared byproduct is a programming defect; Get must surface it as
+            // UnknownByproductException rather than degrade to a silent default.
+            var ctx = ContextFor(new ForgetfulProducerTask());
+            try
+            {
+                ctx.Get<StubByproduct>();
+                Assert.Fail(@"Expected UnknownByproductException");
+            }
+            catch (UnknownByproductException ex)
+            {
+                Assert.AreEqual(typeof(StubByproduct), ex.RequestedType);
             }
         }
     }

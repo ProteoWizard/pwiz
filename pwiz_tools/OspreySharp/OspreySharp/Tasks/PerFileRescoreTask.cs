@@ -332,15 +332,26 @@ namespace pwiz.OspreySharp.Tasks
             // each entry from the .1st-pass.fdr_scores.bin sidecar by
             // PerFileScoringTask's bundle hydration; no fresh FDR computation.
             //
-            // Only the --join-at-pass=2 merge entry rehydrates here (reconciled
-            // parquets on disk, no mzMLs to rescore). Any other entry that
-            // reaches this task via Demand -- straight-through resume where the
-            // reconciled parquets are already valid on disk and a downstream
-            // task is the first to touch its state -- must take the compute
-            // path, whose per-file ScoreOrLoadForFile loads the valid
-            // reconciled parquets rather than re-scoring.
+            // Straight-through resume: the driver skipped this task's Run
+            // because its reconciled parquets are already valid on disk
+            // (CanRehydrate) and a downstream task (MergeNode) is the first to
+            // touch its state. A resumed Run self-gates to a no-op here --
+            // FirstJoin rehydrates (so DidPlan is false) and there is no rescore
+            // bundle, so ExecuteRescore never runs and the shared buffer is left
+            // at its post-compaction (CompactedEntries) state; MergeNode reloads
+            // the rescored features from the valid reconciled parquets on disk.
+            // Reproduce exactly that end state by loading the CompactedEntries
+            // milestone (which materializes FirstJoin's own pure rehydrate) and
+            // publishing it as RescoredEntries -- never calling Run, so Rehydrate
+            // stays pure. The --join-at-pass=2 merge path (ExpectReconciledInput)
+            // below is a different rehydrate that must NOT materialize FirstJoin.
             if (!ctx.Config.ExpectReconciledInput)
-                return Run(ctx);
+            {
+                _ctx = ctx;
+                _perFileEntries = ctx.Get<CompactedEntries>().Value;
+                ctx.Publish(new RescoredEntries(_perFileEntries));
+                return true;
+            }
 
             _ctx = ctx;
             // ScoredEntries, NOT CompactedEntries: the merge path must NOT

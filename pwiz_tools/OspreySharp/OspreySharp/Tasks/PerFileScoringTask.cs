@@ -350,13 +350,12 @@ namespace pwiz.OspreySharp.Tasks
             // straight-through resume: the driver skipped its Run because its
             // own .scores.parquet outputs were already valid on disk
             // (CanRehydrate), and a downstream task is the first to touch its
-            // state. The right re-materialization there is the compute path,
-            // whose per-file ScoreOrLoadForFile loads those valid parquets
-            // (rather than re-scoring) -- so defer to Run. The worker-mode
-            // join-only disk-load below applies only when --input-scores
-            // actually supplied the per-file scores.
+            // state. Load those valid parquets straight from disk (never
+            // compute) so Rehydrate stays pure -- Run is outer-loop-only. The
+            // worker-mode join-only disk-load below applies only when
+            // --input-scores actually supplied the per-file scores.
             if (ctx.Config.InputScores == null || ctx.Config.InputScores.Count == 0)
-                return Run(ctx);
+                return RehydrateFromOwnOutputs(ctx);
 
             // Disk-load path for worker-mode entry (--input-scores): the
             // per-file Stage 2-4 scores already exist on disk, so load the
@@ -428,6 +427,89 @@ namespace pwiz.OspreySharp.Tasks
             // flag (Phase C principle: mechanism-driven, not flag-driven).
             if (!HydrateRescoreBundleIfPresent(config, perFileEntries))
                 return false;
+
+            return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
+                perFileParquetPaths, nFiles, totalScored);
+        }
+
+        /// <summary>
+        /// Pure load-from-own-outputs rehydrate for a straight-through resume:
+        /// the driver skipped this task's <see cref="Run"/> because its per-file
+        /// <c>.scores.parquet</c> outputs were already valid on disk
+        /// (<see cref="PipelineContext.CanRehydrate"/>), and a downstream task is
+        /// the first to touch its state. Load the library and each file's stubs +
+        /// PIN features + calibration straight from those valid parquets -- the
+        /// same disk-load <see cref="ScoreOrLoadForFile"/> takes on its fast-skip
+        /// arm, but with no <see cref="ProcessFile"/> compute fallback, so a lazy
+        /// Demand never triggers scoring (Run stays outer-loop-only). Produces
+        /// the identical post-Stage-4 state Run leaves on a resume:
+        /// <see cref="_rescoreInputs"/> stays null (a straight-through run wrote
+        /// no reconciliation bundle), and the same byproducts publish through the
+        /// shared <see cref="FinalizeAndCheck"/> tail. Because CanRehydrate gated
+        /// the outputs as valid, a load failure here is a genuine fault (not a
+        /// "fall back to rescore" case) and stops the pipeline.
+        /// </summary>
+        private bool RehydrateFromOwnOutputs(PipelineContext ctx)
+        {
+            _ctx = ctx;
+            var config = ctx.Config;
+
+            // Stage 1: library + decoys (needed by Stage 5+ even though the
+            // per-file scores are loaded rather than computed).
+            if (!LoadLibraryAndDecoys(config, out _))
+                return false;
+
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
+            var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+            var perFileParquetPaths = new Dictionary<string, string>();
+
+            int nFiles = config.InputFiles?.Count ?? 0;
+
+            // Mirror Run's EffectiveFileParallelism bookkeeping (unused by the
+            // disk-load path, which never calls ProcessFile, but kept so the
+            // RunPlan reflects the same per-run state either way).
+            int maxParallelFiles = OspreyEnvironment.MaxParallelFiles;
+            if (nFiles == 1 || maxParallelFiles == 1)
+                ctx.RunPlan.EffectiveFileParallelism = 1;
+            else if (maxParallelFiles > 1)
+                ctx.RunPlan.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
+            else
+                ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
+
+            var swAllFiles = Stopwatch.StartNew();
+            if (config.InputFiles != null)
+            {
+                // Sequential in InputFiles order to match Run's "collect in
+                // original order" -- downstream FirstJoin iterates perFileEntries.
+                foreach (string inputFile in config.InputFiles)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                    string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+                    var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx);
+                    if (stubs == null)
+                    {
+                        ctx.LogError(string.Format(
+                            @"Resume rehydrate: failed to load valid-on-disk scores for {0} ({1})",
+                            fileName, scoresPath));
+                        ctx.ExitCode = 1;
+                        return false;
+                    }
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                    perFileParquetPaths[fileName] = scoresPath;
+                }
+            }
+            swAllFiles.Stop();
+            ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
+                swAllFiles.Elapsed.TotalSeconds));
+
+            int totalScored = 0;
+            foreach (var kvp in perFileEntries)
+                totalScored += kvp.Value.Count;
+
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(string.Format(
+                @"Coelution analysis complete. {0} total scored entries across {1} files",
+                totalScored, nFiles));
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
                 perFileParquetPaths, nFiles, totalScored);
