@@ -93,9 +93,10 @@ namespace pwiz.OspreySharp.Test
         private sealed class CountingProducerTask : OspreyTask
         {
             public int RehydrateCount;
+            public int RunCount;
             public override string Name => @"CountingProducer";
             public override IEnumerable<Type> Publishes => new[] { typeof(StubByproduct) };
-            public override bool Run(PipelineContext ctx) => true;
+            public override bool Run(PipelineContext ctx) { RunCount++; return true; }
 
             public override bool Rehydrate(PipelineContext ctx)
             {
@@ -217,6 +218,22 @@ namespace pwiz.OspreySharp.Test
             ctx.Demand<CountingProducerTask>();
             ctx.Demand<CountingProducerTask>();
             Assert.AreEqual(1, task.RehydrateCount);
+        }
+
+        [TestMethod]
+        public void TestDemandDrivesRehydrateNeverRun()
+        {
+            // The decisive dataflow invariant at the machinery level: a lazy
+            // Demand materializes a producer through Rehydrate (load), NEVER Run
+            // (compute) -- Run is the driver loop's job alone. This is the
+            // unit-speed guard for the "Run is outer-loop-only" constraint that
+            // the per-task pure-load rehydrate paths uphold (their end-to-end
+            // coverage is the straight-through-resume smoke).
+            var task = new CountingProducerTask();
+            var ctx = ContextFor(task);
+            ctx.Demand<CountingProducerTask>();
+            Assert.AreEqual(1, task.RehydrateCount);
+            Assert.AreEqual(0, task.RunCount);
         }
 
         [TestMethod]
