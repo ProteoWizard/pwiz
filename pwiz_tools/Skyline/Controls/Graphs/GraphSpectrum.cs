@@ -1950,9 +1950,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 _toolTip.SetTipProvider(new ToolTipImplementation(peakRmi), new Rectangle(e.Location, new Size()), e.Location);
                 return;
             }
+            // No Invalidate here: UpdateHoveredPeak above already invalidates when the
+            // ruler series actually changes, and hiding the tooltip popup doesn't need a
+            // graph repaint.
             _toolTip?.HideTip();
             _toolTip = null;
-            graphControl.Invalidate();
         }
 
         private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
