@@ -1425,6 +1425,10 @@ namespace pwiz.Skyline.Controls.Graphs
                                 : mirrorSpectrum.SpectrumPeaksInfo;
                             MirrorGraphItem = MakeGraphItem(mirrorSpectrum, selection, settings, peaksInfo);
                             MirrorGraphItem.Invert = true;
+                            // Only the top item renders the ruler ladder; cross-link the
+                            // mirror so its matched peaks can extend the drop-line lookup.
+                            if (GraphItem != null)
+                                GraphItem.MirrorItem = MirrorGraphItem;
 
                             _graphHelper.AddSpectrum(MirrorGraphItem, false);
 
@@ -1966,10 +1970,10 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Equals(newKey, GraphItem?.HoveredSeriesKey))
                 return;
 
+            // Only the top item owns the ruler — the mirror item shares matched-peak data
+            // via GraphItem.MirrorItem and does not render its own ladder.
             if (GraphItem != null)
                 GraphItem.HoveredSeriesKey = newKey;
-            if (MirrorGraphItem != null)
-                MirrorGraphItem.HoveredSeriesKey = newKey;
 
             graphControl.Invalidate();
         }
@@ -2000,11 +2004,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void SyncPinnedSeriesToGraphItems()
         {
-            var readOnly = _pinnedSeriesKeys.AsReadOnly();
+            // Only the top item owns the ruler — pinned keys live on GraphItem; the mirror
+            // contributes matched-peak data via GraphItem.MirrorItem.
             if (GraphItem != null)
-                GraphItem.PinnedSeriesKeys = readOnly;
-            if (MirrorGraphItem != null)
-                MirrorGraphItem.PinnedSeriesKeys = readOnly;
+                GraphItem.PinnedSeriesKeys = _pinnedSeriesKeys.AsReadOnly();
         }
 
         // The sequence ruler is driven by mouse-over and context-menu commands, neither of

@@ -42,18 +42,27 @@ namespace pwiz.Skyline.Controls.Graphs
         public double[] Boundaries { get; }
 
         /// <summary>
-        /// Observed peak intensity keyed by 1-based ordinal.
-        /// Absent entries have no matched peak (drop line goes to x-axis).
+        /// Observed peak intensity in the main spectrum keyed by 1-based ordinal.
+        /// Absent entries have no matched peak in the main panel.
         /// </summary>
         public IReadOnlyDictionary<int, double> PeakIntensities { get; }
 
+        /// <summary>
+        /// Observed peak intensity in the mirror spectrum (positive values; the mirror
+        /// panel renders them inverted) keyed by 1-based ordinal. Null when there is no
+        /// mirror panel; absent entries have no matched peak in the mirror.
+        /// </summary>
+        public IReadOnlyDictionary<int, double> MirrorPeakIntensities { get; }
+
         public IonSeriesData(IonType ionType, double[] boundaries,
-            IReadOnlyDictionary<int, double> peakIntensities)
+            IReadOnlyDictionary<int, double> peakIntensities,
+            IReadOnlyDictionary<int, double> mirrorPeakIntensities = null)
         {
             IonType = ionType;
             Color = IonTypeExtension.GetTypeColor(ionType);
             Boundaries = boundaries;
             PeakIntensities = peakIntensities;
+            MirrorPeakIntensities = mirrorPeakIntensities;
         }
     }
 
@@ -182,7 +191,14 @@ namespace pwiz.Skyline.Controls.Graphs
             var gState = g.Save();
             g.SetClip(chartRect, CombineMode.Intersect);
 
-            // 1. Drop lines — light grey, all series
+            // 1. Drop lines — light grey, all series.
+            // Each drop line ends at the topmost (smallest screen Y) of: the matched main
+            // peak top, the matched mirror peak top (its top is at -intensity since the
+            // mirror panel is inverted), and the x-axis. In a single (non-mirror) spectrum
+            // this is the main peak top if matched, else the x-axis. In mirror mode, a
+            // peak matched only in the mirror still leaves the drop line at the x-axis
+            // since the mirror peak sits below it.
+            float xAxisY = graphPane.YAxis.Scale.Transform(0);
             using (var dropPen = new Pen(Color.LightGray, 1f))
             {
                 for (int si = 0; si < _series.Count; si++)
@@ -193,11 +209,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     for (int k = 0; k < fragmentCount; k++)
                     {
                         int ordinal = k + 1;
-                        float bottomY;
-                        if (series.PeakIntensities.TryGetValue(ordinal, out double intensity))
-                            bottomY = graphPane.YAxis.Scale.Transform(intensity);
-                        else
-                            bottomY = chartRect.Bottom;
+                        float bottomY = xAxisY;
+                        if (series.PeakIntensities.TryGetValue(ordinal, out double mainIntensity))
+                        {
+                            float yMain = graphPane.YAxis.Scale.Transform(mainIntensity);
+                            if (yMain < bottomY) bottomY = yMain;
+                        }
+                        if (series.MirrorPeakIntensities != null &&
+                            series.MirrorPeakIntensities.TryGetValue(ordinal, out double mirrorIntensity))
+                        {
+                            float yMirror = graphPane.YAxis.Scale.Transform(-mirrorIntensity);
+                            if (yMirror < bottomY) bottomY = yMirror;
+                        }
                         g.DrawLine(dropPen, screenX[k], lineY, screenX[k], bottomY);
                     }
                 }

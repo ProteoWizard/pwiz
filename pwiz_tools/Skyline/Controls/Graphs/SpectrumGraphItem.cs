@@ -142,6 +142,14 @@ namespace pwiz.Skyline.Controls.Graphs
         public IReadOnlyList<IonSeriesKey> PinnedSeriesKeys { get; set; } = new IonSeriesKey[0];
 
         /// <summary>
+        /// In a mirror-spectrum display, the SpectrumGraphItem rendering the inverted
+        /// (negative-intensity) panel below the x-axis. The single ruler is always drawn
+        /// from the top item; setting MirrorItem on the top item lets its drop lines also
+        /// consider matched peaks on the mirror side when picking where to stop.
+        /// </summary>
+        public SpectrumGraphItem MirrorItem { get; set; }
+
+        /// <summary>
         /// Whether amino-acid sequence rulers apply to this spectrum. False for small
         /// molecules (no defined sequence), crosslinked peptides, or when settings are
         /// unavailable — in those cases no ruler is drawn, hovered, or offered for pinning.
@@ -311,25 +319,37 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Build matched-peak intensity lookup keyed by ion identity including losses,
             // so non-loss and loss series resolve to their own matched peaks independently.
-            var intensityLookup = new Dictionary<(IonType, int, int, TransitionLosses), double>();
-            foreach (var rmi in SpectrumInfo.PeaksMatched)
-            {
-                if (rmi.MatchedIons == null) continue;
-                foreach (var mfi in rmi.MatchedIons)
-                {
-                    intensityLookup[(mfi.IonType, mfi.Charge.AdductCharge, mfi.Ordinal, mfi.Losses)] = rmi.Intensity;
-                }
-            }
+            var intensityLookup = BuildIntensityLookup(SpectrumInfo);
+            // For mirror-spectrum displays, also look up matches in the mirror panel so the
+            // drop lines can choose the topmost endpoint between the two spectra.
+            var mirrorIntensityLookup = MirrorItem != null
+                ? BuildIntensityLookup(MirrorItem.SpectrumInfo)
+                : null;
 
             for (int slot = 0; slot < groupOrder.Count; slot++)
             {
                 var gk = groupOrder[slot];
                 float yLine = 0.04f + slot * RULER_SLOT_HEIGHT;
                 var ladder = BuildGroupLadder(gk, groupIonTypes[gk], allResidues, ionMasses,
-                    nSeq, precursorMass, intensityLookup, yLine);
+                    nSeq, precursorMass, intensityLookup, mirrorIntensityLookup, yLine);
                 if (ladder != null)
                     annotations.Add(ladder);
             }
+        }
+
+        private static Dictionary<(IonType, int, int, TransitionLosses), double>
+            BuildIntensityLookup(LibraryRankedSpectrumInfo spectrumInfo)
+        {
+            var lookup = new Dictionary<(IonType, int, int, TransitionLosses), double>();
+            foreach (var rmi in spectrumInfo.PeaksMatched)
+            {
+                if (rmi.MatchedIons == null) continue;
+                foreach (var mfi in rmi.MatchedIons)
+                {
+                    lookup[(mfi.IonType, mfi.Charge.AdductCharge, mfi.Ordinal, mfi.Losses)] = rmi.Intensity;
+                }
+            }
+            return lookup;
         }
 
         private AminoAcidLadderObj BuildGroupLadder(
@@ -340,6 +360,7 @@ namespace pwiz.Skyline.Controls.Graphs
             int nSeq,
             TypedMass precursorMass,
             Dictionary<(IonType ionType, int charge, int ordinal, TransitionLosses losses), double> intensityLookup,
+            Dictionary<(IonType ionType, int charge, int ordinal, TransitionLosses losses), double> mirrorIntensityLookup,
             float yLine)
         {
             // Subtract the loss mass from each boundary so loss-ion rulers sit at the
@@ -361,13 +382,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 boundaries[nSeq] = SequenceMassCalc.GetMZ(precursorMass - lossMass, key.Charge);
 
                 var peakIntensities = new Dictionary<int, double>();
+                Dictionary<int, double> mirrorPeakIntensities = null;
                 for (int ordinal = 1; ordinal <= nSeq; ordinal++)
                 {
                     if (intensityLookup.TryGetValue((ionType, key.Charge, ordinal, key.Losses), out double intensity))
                         peakIntensities[ordinal] = intensity;
+                    if (mirrorIntensityLookup != null &&
+                        mirrorIntensityLookup.TryGetValue((ionType, key.Charge, ordinal, key.Losses), out double mirrorIntensity))
+                    {
+                        mirrorPeakIntensities = mirrorPeakIntensities ?? new Dictionary<int, double>();
+                        mirrorPeakIntensities[ordinal] = mirrorIntensity;
+                    }
                 }
 
-                seriesList.Add(new IonSeriesData(ionType, boundaries, peakIntensities));
+                seriesList.Add(new IonSeriesData(ionType, boundaries, peakIntensities, mirrorPeakIntensities));
             }
 
             if (seriesList.Count == 0)
