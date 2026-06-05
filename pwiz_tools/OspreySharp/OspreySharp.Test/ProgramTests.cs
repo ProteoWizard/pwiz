@@ -64,8 +64,8 @@ namespace pwiz.OspreySharp.Test
             };
             string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
             Assert.IsNotNull(err);
-            // Error refers to the canonical flag the user typed.
-            StringAssert.Contains(err, "--join-at-pass=1");
+            // Error refers to the task the user selected via --task.
+            StringAssert.Contains(err, "--task FirstJoin");
             StringAssert.Contains(err, "--input-scores");
         }
 
@@ -81,7 +81,7 @@ namespace pwiz.OspreySharp.Test
             };
             string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--join-at-pass=1");
+            StringAssert.Contains(err, "--task FirstJoin");
             StringAssert.Contains(err, "cannot be combined with --input");
         }
 
@@ -94,7 +94,7 @@ namespace pwiz.OspreySharp.Test
             };
             string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--join-at-pass=1");
+            StringAssert.Contains(err, "--task FirstJoin");
             StringAssert.Contains(err, "--library and --output");
         }
 
@@ -200,7 +200,7 @@ namespace pwiz.OspreySharp.Test
             string err = Program.ValidateArgs(config,
                 noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: true);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--join-at-pass=1 --join-only");
+            StringAssert.Contains(err, "--task FirstJoin");
             StringAssert.Contains(err, "2+ parquet files");
         }
 
@@ -376,6 +376,118 @@ namespace pwiz.OspreySharp.Test
             Assert.IsNull(err);
             Assert.IsFalse(noJoin);
             Assert.IsFalse(joinOnly);
+        }
+
+        // --- ResolveTask (--task) -----------------------------------------
+
+        [TestMethod]
+        public void TestResolveTaskPerFileScoring()
+        {
+            // --task PerFileScoring == --no-join: noJoin only, no entry point.
+            string err = Program.ResolveTask("PerFileScoring",
+                out bool noJoin, out bool joinOnly, out int? joinAtPass);
+            Assert.IsNull(err);
+            Assert.IsTrue(noJoin);
+            Assert.IsFalse(joinOnly);
+            Assert.IsFalse(joinAtPass.HasValue);
+        }
+
+        [TestMethod]
+        public void TestResolveTaskFirstJoin()
+        {
+            // --task FirstJoin == --join-at-pass=1 --join-only.
+            string err = Program.ResolveTask("FirstJoin",
+                out bool noJoin, out bool joinOnly, out int? joinAtPass);
+            Assert.IsNull(err);
+            Assert.IsFalse(noJoin);
+            Assert.IsTrue(joinOnly);
+            Assert.AreEqual(1, joinAtPass);
+        }
+
+        [TestMethod]
+        public void TestResolveTaskPerFileRescore()
+        {
+            // --task PerFileRescore == --join-at-pass=1 --no-join.
+            string err = Program.ResolveTask("PerFileRescore",
+                out bool noJoin, out bool joinOnly, out int? joinAtPass);
+            Assert.IsNull(err);
+            Assert.IsTrue(noJoin);
+            Assert.IsFalse(joinOnly);
+            Assert.AreEqual(1, joinAtPass);
+        }
+
+        [TestMethod]
+        public void TestResolveTaskMergeNode()
+        {
+            // --task MergeNode == --join-at-pass=2.
+            string err = Program.ResolveTask("MergeNode",
+                out bool noJoin, out bool joinOnly, out int? joinAtPass);
+            Assert.IsNull(err);
+            Assert.IsFalse(noJoin);
+            Assert.IsFalse(joinOnly);
+            Assert.AreEqual(2, joinAtPass);
+        }
+
+        [TestMethod]
+        public void TestResolveTaskIsCaseInsensitive()
+        {
+            string err = Program.ResolveTask("perfilerescore",
+                out bool noJoin, out bool joinOnly, out int? joinAtPass);
+            Assert.IsNull(err);
+            Assert.IsTrue(noJoin);
+            Assert.IsFalse(joinOnly);
+            Assert.AreEqual(1, joinAtPass);
+        }
+
+        [TestMethod]
+        public void TestResolveTaskUnknownErrors()
+        {
+            string err = Program.ResolveTask("Bogus",
+                out _, out _, out _);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "unknown task");
+            StringAssert.Contains(err, "Bogus");
+        }
+
+        [TestMethod]
+        public void TestResolveTaskMapsToExpectedConfigFlags()
+        {
+            // End-to-end: each task name, run through ResolveTask ->
+            // NormalizeHpcArgs (the same wiring Main uses), must produce the
+            // (NoJoin, StopAfterStage5, ExpectReconciledInput) config tuple
+            // that the four tasks' IsIncluded methods read. Mirrors the
+            // membership rows in PipelineMembershipTest.
+            //   task             | NoJoin | StopAfterStage5 | ExpectReconciled
+            //   PerFileScoring   | true   | false           | false
+            //   FirstJoin        | false  | true            | false
+            //   PerFileRescore   | true   | false           | false
+            //   MergeNode        | false  | false           | true
+            var cases = new (string Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
+            {
+                ("PerFileScoring", true,  false, false),
+                ("FirstJoin",      false, true,  false),
+                ("PerFileRescore", true,  false, false),
+                ("MergeNode",      false, false, true),
+            };
+            foreach (var c in cases)
+            {
+                string resolveErr = Program.ResolveTask(c.Task,
+                    out bool noJoin, out bool joinOnly, out int? joinAtPass);
+                Assert.IsNull(resolveErr, c.Task);
+                string normErr = Program.NormalizeHpcArgs(joinAtPass,
+                    ref noJoin, ref joinOnly, out bool joinOnlyModifier);
+                Assert.IsNull(normErr, c.Task);
+                // Main applies these same three assignments after ParseArgs.
+                bool cfgNoJoin = noJoin;
+                bool cfgStopAfterStage5 = joinOnlyModifier;
+                bool cfgExpectReconciled = joinAtPass.HasValue && joinAtPass.Value == 2;
+                Assert.AreEqual(c.NoJoin, cfgNoJoin,
+                    string.Format("{0}: NoJoin", c.Task));
+                Assert.AreEqual(c.StopAfterStage5, cfgStopAfterStage5,
+                    string.Format("{0}: StopAfterStage5", c.Task));
+                Assert.AreEqual(c.ExpectReconciled, cfgExpectReconciled,
+                    string.Format("{0}: ExpectReconciledInput", c.Task));
+            }
         }
 
         // --- ResolveInputScores -------------------------------------------
