@@ -188,13 +188,21 @@ foreach ($fw in $testFrameworks) {
         # Use the universal `cover` command (the only one available in dotCover Console
         # Runner 2026.1.x); `cover-dotnet` only exists in the older Global Tools
         # package and silently prints help + exits 0 on agents without it.
-        & $dotcover cover `
-            --TargetExecutable=$vstest `
-            --Output=$dcvrPath `
-            --Filters='+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks' `
-            --AttributeFilters='System.CodeDom.Compiler.GeneratedCodeAttribute' `
-            -- `
-            @vstestArgs
+        #
+        # Build args as an explicit array so paths with spaces ($vstest at
+        # "C:\Program Files\...") round-trip correctly through PowerShell's
+        # native-command arg parsing.  Inline `--TargetExecutable=$vstest`
+        # got split on the space in build #4030007 and dotCover fell back to
+        # autodetection (which picked dotnet.exe and ran nothing).
+        $dcArgs = @(
+            'cover',
+            "--TargetExecutable=$vstest",
+            "--Output=$dcvrPath",
+            '--Filters=+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks',
+            '--AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute',
+            '--'
+        ) + $vstestArgs
+        & $dotcover @dcArgs
         $exit = $LASTEXITCODE
         if ($TeamCity -and (Test-Path $dcvrPath)) {
             Write-Host ("##teamcity[importData type='dotNetCoverage' tool='dotcover' path='{0}']" -f (Format-TcMessage $dcvrPath))
