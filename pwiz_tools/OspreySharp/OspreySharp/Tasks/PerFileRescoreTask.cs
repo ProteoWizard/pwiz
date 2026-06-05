@@ -364,16 +364,25 @@ namespace pwiz.OspreySharp.Tasks
                 var parquetPaths = ctx.Get<PerFileParquetPaths>().Value;
                 foreach (var kv in _perFileEntries)
                 {
-                    if (parquetPaths == null ||
-                        !parquetPaths.TryGetValue(kv.Key, out string scoresPath))
-                        continue;
-                    string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
-                    if (!File.Exists(reconciledPath))
-                        continue;
-                    IReadOnlyList<GapFillTarget> gapFillForFile = null;
-                    if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
-                        gapFillForFile = gfList;
-                    OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
+                    // Overlay each file's reconciled boundaries when its
+                    // .scores-reconciled.parquet is present; no-work files (none on
+                    // disk) keep their 1st-pass boundaries, matching a fresh run.
+                    if (parquetPaths != null &&
+                        parquetPaths.TryGetValue(kv.Key, out string scoresPath))
+                    {
+                        string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
+                        if (File.Exists(reconciledPath))
+                        {
+                            IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                            if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
+                                gapFillForFile = gfList;
+                            OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
+                        }
+                    }
+                    // Canonical sort for EVERY file (incl. no-work files) so the WARM
+                    // buffer order matches the order COLD establishes in
+                    // RunPercolatorFdr, independent of whether the file was rescored.
+                    SortFileEntriesCanonical(kv.Value);
                 }
 
                 ctx.Publish(new RescoredEntries(_perFileEntries));
@@ -665,6 +674,7 @@ namespace pwiz.OspreySharp.Tasks
                         perFileGapFill.TryGetValue(fileName, out var gfList))
                         gapFillForFile = gfList;
                     OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile);
+                    SortFileEntriesCanonical(fdrEntries);
                     continue;
                 }
                 // About to (re-)rescore this file: clear any stale sidecar
@@ -1182,15 +1192,28 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
 
-            // Re-sort by (EntryId, Charge, ScanNumber, ParquetIndex) to match the
-            // canonical order a fresh run establishes: COLD's MergeNode runs
-            // FirstJoinTask.RunPercolatorFdr, which sorts each file's list by this
-            // exact key before any downstream consumer reads it -- so gap-fill rows
-            // (appended last here) are interleaved by EntryId, not left at the tail.
-            // WARM skips that 2nd-pass Percolator (its sidecars are valid), so
-            // without this sort MergeNode's BuildSharedBoundaries would iterate a
-            // different order and, on q-value ties between charge states of a
-            // peptide, pick a different shared (modseq, file) boundary than COLD.
+            // The canonical (EntryId, Charge, ScanNumber, ParquetIndex) re-sort is
+            // applied by the CALLER via SortFileEntriesCanonical -- it runs for every
+            // file in the resume path, not only files with a reconciled parquet.
+        }
+
+        /// <summary>
+        /// Sort one file's entry list by (EntryId, Charge, ScanNumber, ParquetIndex) --
+        /// the exact order a COLD run establishes via
+        /// <see cref="FirstJoinTask.RunPercolatorFdr"/> (run by MergeNode's 2nd-pass,
+        /// which a WARM straight-through resume skips when the <c>.2nd-pass</c> sidecars
+        /// are already valid on disk). Both resume paths apply this to EVERY file's
+        /// list, including no-work files with no reconciled parquet, so the WARM buffer
+        /// order matches COLD regardless of whether the file was rescored -- otherwise
+        /// MergeNode's <c>BuildSharedBoundaries</c> could iterate a different order and,
+        /// on a q-value tie between charge states of a peptide, pick a different shared
+        /// (modseq, file) boundary. A no-work file already lands in this order today via
+        /// the single-key compaction sort (compacted EntryIds are unique per file), but
+        /// sorting unconditionally future-proofs the tie-break against any later change
+        /// that retains multiple rows per EntryId.
+        /// </summary>
+        private static void SortFileEntriesCanonical(List<FdrEntry> fileEntries)
+        {
             fileEntries.Sort((a, b) =>
             {
                 int c = a.EntryId.CompareTo(b.EntryId);
