@@ -148,6 +148,23 @@ if ($Coverage) {
     $dotcover = $cmd.Source
 }
 
+# --- Pre-build cleanup ---------------------------------------------------
+# The old pwiz Jamfile (Jamfile.jam before this PR) wrote
+# Properties/AssemblyInfo.cs into every OspreySharp project as a bjam
+# side-effect.  Those files are .gitignored / untracked, so on a CI agent
+# that reuses its C:\pwiz checkout across configs they survive `git
+# checkout` of any PR branch -- and SDK auto-gen on our build then
+# conflicts with them and fails with CS0579 (see builds #4029769,
+# #4030329).  The Jamfile in this PR no longer writes these files;
+# delete any residual ones so the build is reproducible on a shared
+# agent until master picks up the fix.
+$staleAsmInfo = Get-ChildItem -Path $scriptRoot -Filter AssemblyInfo.cs -Recurse -ErrorAction SilentlyContinue |
+    Where-Object { $_.FullName -match '\\Properties\\AssemblyInfo\.cs$' -and $_.FullName -notmatch '\\(obj|bin)\\' }
+foreach ($f in $staleAsmInfo) {
+    Write-Host "Removing stale $($f.FullName)" -ForegroundColor Yellow
+    Remove-Item $f.FullName -Force
+}
+
 # --- Build --------------------------------------------------------------
 Write-Progress-Tc "Building OspreySharp.sln ($Configuration|$platform)"
 $buildStart = Get-Date
