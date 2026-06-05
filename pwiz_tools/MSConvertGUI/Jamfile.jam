@@ -89,6 +89,24 @@ if [ modules.peek : NT ]
     }
 
 
+    # Single <location> for install-native-dependencies, matching the
+    # Debug/Release choice used by do_msconvert_build and build-location.
+    # Always returns exactly one <location> (never the incoming property list)
+    # so the stage target's <translate-path> is not re-injected into translate.
+    rule install-native-dependencies-location ( properties * )
+    {
+        if <variant>debug in $(properties) ||
+           <debug-symbols>on in $(properties)
+        {
+            return <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Debug ;
+        }
+        else
+        {
+            return <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Release ;
+        }
+    }
+
+
     # Shared rule for setting build properties on test targets (same as do_msconvert_build).
     rule build-properties ( targets + : sources * : properties * )
     {
@@ -101,8 +119,15 @@ if [ modules.peek : NT ]
             ../../pwiz_tools/commandline//msdiff
             ../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
         : # requirements
-            <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Release
-            <variant>debug:<location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Debug
+            # <location> is a free feature, so an unconditional value plus a
+            # conditional one accumulate (both appear) rather than override,
+            # which feeds a 2-element list to path.relative and breaks debug
+            # builds. Use a conditional rule that always returns a single
+            # <location> matching build-location's Debug/Release choice.
+            # (build-location itself can't be reused here: its else branch
+            # echoes back all properties, which re-injects the stage target's
+            # <translate-path> and crashes property.translate.)
+            <conditional>@install-native-dependencies-location
             <install-type>EXE
             <install-type>CONFIG
             <install-type>SHARED_LIB
