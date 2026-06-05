@@ -373,7 +373,7 @@ namespace pwiz.OspreySharp.Tasks
                     IReadOnlyList<GapFillTarget> gapFillForFile = null;
                     if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
                         gapFillForFile = gfList;
-                    OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile, ctx);
+                    OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
                 }
 
                 ctx.Publish(new RescoredEntries(_perFileEntries));
@@ -664,7 +664,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (perFileGapFill != null &&
                         perFileGapFill.TryGetValue(fileName, out var gfList))
                         gapFillForFile = gfList;
-                    OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile, _ctx);
+                    OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile);
                     continue;
                 }
                 // About to (re-)rescore this file: clear any stale sidecar
@@ -1101,8 +1101,7 @@ namespace pwiz.OspreySharp.Tasks
         /// matching the buffer a fresh run produces.
         /// </summary>
         private void OverlayReconciledIntoBuffer(List<FdrEntry> fileEntries,
-            string reconciledPath, IReadOnlyList<GapFillTarget> gapFillForFile,
-            PipelineContext ctx)
+            string reconciledPath, IReadOnlyList<GapFillTarget> gapFillForFile)
         {
             List<FdrEntry> loaded;
             try
@@ -1111,10 +1110,16 @@ namespace pwiz.OspreySharp.Tasks
             }
             catch (Exception ex)
             {
-                ctx.LogWarning(string.Format(
-                    @"Stage 6 resume overlay: failed to reload {0}: {1} (leaving entries at 1st-pass state)",
-                    reconciledPath, ex.Message));
-                return;
+                // CanRehydrate already certified this reconciled parquet valid on
+                // disk, so a load failure here is a genuine fault -- and neither
+                // resume path has a compute fallback (straight-through resume does
+                // not re-score; the per-file skip explicitly trusts on-disk
+                // outputs). Leaving the buffer at its 1st-pass state would silently
+                // write wrong RTs to the blib, so fail loudly: the throw propagates
+                // to Program's top-level handler (exit code 1).
+                throw new InvalidDataException(string.Format(
+                    @"Stage 6 resume overlay: failed to reload valid-on-disk reconciled parquet {0}: {1}",
+                    reconciledPath, ex.Message), ex);
             }
 
             // Index reconciled rows by EntryId. The reconciled parquet carries the
