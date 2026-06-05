@@ -139,12 +139,14 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            // DiaUmpire writes <name>-diaumpire.mz5 and <name>-diaumpire.mzid.gz next to each input
-            // in the persistent directory (and the test deletes+regenerates them below). Note them so
-            // the persistent-dir change detection doesn't flag them as unexpected new files when the
-            // area starts pristine -- e.g. on the shared CI download area, which is restored between
-            // runs (a developer box masks this because the files linger and end up in the baseline).
-            TestFilesDirs[0].PotentialAdditionalPersistentFileSet = new HashSet<string>(
+            // DiaUmpire writes <name>-diaumpire.mz5 and <name>-diaumpire.mzid.gz next to each input in
+            // the persistent (shared, downloaded) directory. These are transient: the test deletes them
+            // before the run to force fresh regeneration, and deletes them again at the end (below) so
+            // the persistent dir is left as it was found. Declare them as potentially-missing so the
+            // change check tolerates that removal on a box whose baseline already had them (e.g. left by
+            // an earlier or failed run); on a pristine area there is simply nothing to exempt. (Contrast
+            // PotentialAdditionalPersistentFileSet, which is for files intentionally KEPT for reuse.)
+            TestFilesDirs[0].PotentialMissingPersistentFileSet = new HashSet<string>(
                 DiaFiles.SelectMany(f =>
                 {
                     var dir = Path.GetDirectoryName(f) ?? string.Empty;
@@ -155,6 +157,8 @@ namespace TestPerf
                         Path.Combine(dir, baseName + "-diaumpire.mzid.gz")
                     };
                 }));
+
+            string[] searchFiles = DiaFiles.Select(GetVendorFileTestPath).ToArray();
 
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
@@ -168,15 +172,8 @@ namespace TestPerf
             // Launch the wizard
             var importPeptideSearchDlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
-            string[] searchFiles = DiaFiles.Select(p => GetVendorFileTestPath(p)).ToArray();
-            foreach (var searchFile in searchFiles)
-            {
-                // delete -diaumpire files so they get regenerated instead of reused
-                var searchFileDir = Path.GetDirectoryName(searchFile) ?? string.Empty;
-                foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire.*"))
-                    FileEx.SafeDelete(diaumpireFile);
-                Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
-            }
+            // delete -diaumpire files so they get regenerated instead of reused
+            RemoveDiaUmpireFiles();
 
             string fastaPathForImport = GetFastaTestPath(_instrumentValues.FastaPath);
             Assert.IsTrue(File.Exists(fastaPathForImport));
@@ -332,6 +329,24 @@ namespace TestPerf
             Assert.IsTrue(searchSucceeded.Value);
 
             RunUI(() => importPeptideSearchDlg.ClickCancelButton());
+
+            // Remove the regenerated DiaUmpire outputs so this test leaves the persistent (shared,
+            // downloaded) source directory exactly as it found it. These are transient, not cached for
+            // reuse -- we delete them at the start precisely to force regeneration.
+            RemoveDiaUmpireFiles();
+
+            void RemoveDiaUmpireFiles()
+            {
+                // Delete the generated -diaumpire outputs (full paths, found by globbing each input's
+                // directory) so they get regenerated instead of reused, and don't linger in the
+                // persistent (shared, downloaded) source directory.
+                foreach (var searchFile in searchFiles)
+                {
+                    var searchFileDir = Path.GetDirectoryName(searchFile) ?? string.Empty;
+                    foreach (var diaumpireFile in Directory.GetFiles(searchFileDir, "*-diaumpire.*"))
+                        FileEx.SafeDelete(diaumpireFile);
+                }
+            }
         }
     }
 }
