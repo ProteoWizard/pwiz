@@ -95,6 +95,21 @@ function Write-Problem-Tc([string]$msg) {
     Write-Host "ERROR: $msg" -ForegroundColor Red
 }
 
+# --- GetShortPathName helper --------------------------------------------
+# Used to convert paths with spaces into 8.3 short names so they can be
+# passed through cmd /c without quoting (see dotcover invocation below).
+Add-Type -MemberDefinition @'
+[System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet=System.Runtime.InteropServices.CharSet.Unicode, EntryPoint="GetShortPathNameW")]
+public static extern int GetShortPathName(string lpszLongPath, System.Text.StringBuilder lpszShortPath, int cchBuffer);
+'@ -Name OspreyWin32 -Namespace OspreySharpBuild -ErrorAction SilentlyContinue
+function Get-ShortPath([string]$p) {
+    $sb = New-Object System.Text.StringBuilder 260
+    [void][OspreySharpBuild.OspreyWin32]::GetShortPathName($p, $sb, $sb.Capacity)
+    $s = $sb.ToString()
+    if ([string]::IsNullOrEmpty($s)) { return $p }  # path doesn't exist or no short name; return original
+    return $s
+}
+
 # --- Tool discovery -----------------------------------------------------
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
 if (-not (Test-Path $vswhere)) {
@@ -189,16 +204,23 @@ foreach ($fw in $testFrameworks) {
         # Runner 2026.1.x); `cover-dotnet` only exists in the older Global Tools
         # package and silently prints help + exits 0 on agents without it.
         #
-        # PowerShell's native-command argument passing kept silently dropping
-        # the dotcover flags (builds #4030007, #4030034, #4030050) regardless
-        # of `--Foo=Bar` vs `/Foo=Bar` syntax -- dotcover fell back to
-        # autodetection and wrapped dotnet.exe.  Build a single command-line
-        # string and run it via cmd /c, matching the exact working pattern
-        # used by pwiz_tools/Skyline/TestRunner/Program.cs (which uses C#
-        # Process.Start with a verbatim string for the same reason).
-        $vstestArgsStr = ($vstestArgs | ForEach-Object { "`"$_`"" }) -join ' '
+        # Build #4030067 showed the cmd /c command line was assembled
+        # correctly but dotcover still autodetected dotnet.exe -- the quotes
+        # around "C:\Program Files\...\vstest.console.exe" don't survive
+        # cmd.exe's re-parse cleanly, so dotcover sees a broken path and
+        # falls back.  Skyline's TestRunner sidesteps this because its
+        # dotcover paths live under c:\pwiz (no spaces).
+        # Convert paths to 8.3 short names so no quoting is needed.
+        $vstestShort = Get-ShortPath $vstest
+        $dotcoverShort = Get-ShortPath $dotcover
+        $vstestArgsShort = $vstestArgs | ForEach-Object {
+            if ($_ -is [string] -and $_ -notmatch '^[/-]' -and (Test-Path $_)) {
+                Get-ShortPath $_
+            } else { $_ }
+        }
+        $vstestArgsStr = $vstestArgsShort -join ' '
         $dcFilters = '+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks'
-        $dcCmd = "`"$dotcover`" cover /TargetExecutable=`"$vstest`" /Output=`"$dcvrPath`" `"/Filters=$dcFilters`" /AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute /ReturnTargetExitCode /AnalyzeTargetArguments=false -- $vstestArgsStr"
+        $dcCmd = "$dotcoverShort cover /TargetExecutable=$vstestShort /Output=$dcvrPath /Filters=$dcFilters /AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute /ReturnTargetExitCode /AnalyzeTargetArguments=false -- $vstestArgsStr"
         Write-Host "DC CMD: $dcCmd"
         & cmd /c $dcCmd
         $exit = $LASTEXITCODE
