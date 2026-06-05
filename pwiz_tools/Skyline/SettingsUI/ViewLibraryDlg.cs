@@ -264,13 +264,13 @@ namespace pwiz.Skyline.SettingsUI
                 var key = hoveredKey.Value;
                 if (_pinnedSeriesKeys.Contains(key))
                 {
-                    var item = new ToolStripMenuItem(@"Unpin Ruler");
+                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinRuler);
                     item.Click += (s, e) => UnpinRuler(key);
                     menuStrip.Items.Insert(insertAt++, item);
                 }
                 else
                 {
-                    var item = new ToolStripMenuItem(@"Pin Ruler");
+                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_PinRuler);
                     item.Click += (s, e) => PinRuler(key);
                     menuStrip.Items.Insert(insertAt++, item);
                 }
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (hasPinned)
             {
-                var item = new ToolStripMenuItem(@"Unpin All Rulers");
+                var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinAllRulers);
                 item.Click += (s, e) => UnpinAllRulers();
                 menuStrip.Items.Insert(insertAt++, item);
             }

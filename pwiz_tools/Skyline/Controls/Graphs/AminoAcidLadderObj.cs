@@ -177,7 +177,9 @@ namespace pwiz.Skyline.Controls.Graphs
             float xStart = seriesScreenX.Min(sx => sx[0]);
             float xEnd   = seriesScreenX.Max(sx => sx[sx.Length - 1]);
 
-            var savedClip = g.Clip;
+            // Use Save()/Restore() (rather than saving g.Clip directly) so the cloned
+            // Region's native GDI handle doesn't leak when Draw is called repeatedly.
+            var gState = g.Save();
             g.SetClip(chartRect, CombineMode.Intersect);
 
             // 1. Drop lines — light grey, all series
@@ -217,15 +219,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            // 4. Residue labels at reference interval midpoints — neutral grey
+            // 4. Residue labels at reference interval midpoints — neutral grey.
+            // Properties are assigned inside the using body so an exception in a setter
+            // would still dispose the StringFormat (it's already captured by `using`).
             using (var font  = new Font(FONT_FACE, _fontSize * scaleFactor))
             using (var brush = new SolidBrush(LABEL_COLOR))
-            using (var fmt = new StringFormat
+            using (var fmt = new StringFormat())
             {
-                Alignment = StringAlignment.Center,
-                LineAlignment = StringAlignment.Far   // bottom of text at labelY
-            })
-            {
+                fmt.Alignment = StringAlignment.Center;
+                fmt.LineAlignment = StringAlignment.Far;   // bottom of text at labelY
                 for (int i = 0; i < _intervalLabels.Length; i++)
                 {
                     float midX = (refScreenX[i] + refScreenX[i + 1]) / 2f;
@@ -238,7 +240,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // ruler extends offscreen left and the label has to be clamped to the chart edge.
             DrawGroupLabel(g, scaleFactor, chartRect, xStart, xEnd, labelY);
 
-            g.Clip = savedClip;
+            g.Restore(gState);
         }
 
         private void DrawGroupLabel(Graphics g, float scaleFactor, RectangleF chartRect,
@@ -261,7 +263,11 @@ namespace pwiz.Skyline.Controls.Graphs
             Color lossColor = ionTokens.Count > 0 ? ionTokens[0].Color : LABEL_COLOR;
 
             using (var font = new Font(FONT_FACE, _fontSize * scaleFactor))
+            using (var fmt = new StringFormat())
             {
+                fmt.Alignment     = StringAlignment.Near;
+                fmt.LineAlignment = StringAlignment.Far;  // text bottom at labelY
+
                 float totalWidth = ionTokens.Sum(t => g.MeasureString(t.Text, font).Width);
                 if (_lossText.Length > 0)
                     totalWidth += g.MeasureString(_lossText, font).Width;
@@ -273,12 +279,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Y-axis ticks) so the label stays fully on-chart.
                 float labelLeft = Math.Max(xStart - totalWidth,
                     chartRect.Left + GROUP_LABEL_LEFT_MARGIN_PX);
-
-                var fmt = new StringFormat
-                {
-                    Alignment     = StringAlignment.Near,
-                    LineAlignment = StringAlignment.Far  // text bottom at labelY
-                };
 
                 float curX = labelLeft;
                 foreach (var (color, text) in ionTokens)

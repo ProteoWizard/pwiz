@@ -1323,7 +1323,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 currentProperties = msGraph.PropertiesSheet.SelectedObject as SpectrumProperties;
                 Assert.IsNotNull(currentProperties);
-                Assert.AreEqual(isSmallMolecules ? 118 : 4000, currentProperties?.SpectrumCount);
+                Assert.AreEqual(isSmallMolecules ? 118 : 4000, currentProperties.SpectrumCount);
             });
             IdentityPath oldPath = null;
             RunUI(() => { oldPath = SkylineWindow.SequenceTree.SelectedPath; });

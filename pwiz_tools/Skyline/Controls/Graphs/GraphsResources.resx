@@ -823,4 +823,13 @@ Here are the last 3 errors:
   <data name="RulerGroupKey_ToString__0__terminal_z__1_" xml:space="preserve">
     <value>{0}-terminal z={1}</value>
   </data>
+  <data name="SequenceRulerMenu_PinRuler" xml:space="preserve">
+    <value>Pin Ruler</value>
+  </data>
+  <data name="SequenceRulerMenu_UnpinRuler" xml:space="preserve">
+    <value>Unpin Ruler</value>
+  </data>
+  <data name="SequenceRulerMenu_UnpinAllRulers" xml:space="preserve">
+    <value>Unpin All Rulers</value>
+  </data>
 </root>

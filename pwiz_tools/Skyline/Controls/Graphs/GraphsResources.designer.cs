@@ -2031,7 +2031,34 @@ namespace pwiz.Skyline.Controls.Graphs {
                 return ResourceManager.GetString("RulerGroupKey_ToString__0__terminal_z__1_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Pin Ruler.
+        /// </summary>
+        public static string SequenceRulerMenu_PinRuler {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_PinRuler", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unpin Ruler.
+        /// </summary>
+        public static string SequenceRulerMenu_UnpinRuler {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_UnpinRuler", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unpin All Rulers.
+        /// </summary>
+        public static string SequenceRulerMenu_UnpinAllRulers {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_UnpinAllRulers", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Detection.
         /// </summary>
