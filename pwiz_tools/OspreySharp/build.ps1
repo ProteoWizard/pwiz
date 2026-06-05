@@ -189,26 +189,18 @@ foreach ($fw in $testFrameworks) {
         # Runner 2026.1.x); `cover-dotnet` only exists in the older Global Tools
         # package and silently prints help + exits 0 on agents without it.
         #
-        # Skyline's TestRunner uses the `/Foo=Bar` prefix form, which is what
-        # dotCover Console Runner actually parses for its flags (the `--Foo=Bar`
-        # form shown in `dotcover help cover` was silently ignored on the agent
-        # in builds #4030007/#4030034 -- dotcover fell back to autodetection
-        # and ran dotnet.exe with no args).
-        # /ReturnTargetExitCode propagates the wrapped runner's exit code so
-        # test failures actually fail the build.
-        # /AnalyzeTargetArguments=false stops dotcover from rewriting paths in
-        # the wrapped command line.
-        $dcArgs = @(
-            'cover',
-            "/TargetExecutable=$vstest",
-            "/Output=$dcvrPath",
-            '/Filters=+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks',
-            '/AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute',
-            '/ReturnTargetExitCode',
-            '/AnalyzeTargetArguments=false',
-            '--'
-        ) + $vstestArgs
-        & $dotcover @dcArgs
+        # PowerShell's native-command argument passing kept silently dropping
+        # the dotcover flags (builds #4030007, #4030034, #4030050) regardless
+        # of `--Foo=Bar` vs `/Foo=Bar` syntax -- dotcover fell back to
+        # autodetection and wrapped dotnet.exe.  Build a single command-line
+        # string and run it via cmd /c, matching the exact working pattern
+        # used by pwiz_tools/Skyline/TestRunner/Program.cs (which uses C#
+        # Process.Start with a verbatim string for the same reason).
+        $vstestArgsStr = ($vstestArgs | ForEach-Object { "`"$_`"" }) -join ' '
+        $dcFilters = '+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks'
+        $dcCmd = "`"$dotcover`" cover /TargetExecutable=`"$vstest`" /Output=`"$dcvrPath`" `"/Filters=$dcFilters`" /AttributeFilters=System.CodeDom.Compiler.GeneratedCodeAttribute /ReturnTargetExitCode /AnalyzeTargetArguments=false -- $vstestArgsStr"
+        Write-Host "DC CMD: $dcCmd"
+        & cmd /c $dcCmd
         $exit = $LASTEXITCODE
         if ($TeamCity -and (Test-Path $dcvrPath)) {
             Write-Host ("##teamcity[importData type='dotNetCoverage' tool='dotcover' path='{0}']" -f (Format-TcMessage $dcvrPath))
