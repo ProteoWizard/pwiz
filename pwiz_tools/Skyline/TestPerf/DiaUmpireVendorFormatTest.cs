@@ -142,7 +142,7 @@ namespace TestPerf
             // DiaUmpire writes <name>-diaumpire.mz5 and <name>-diaumpire.mzid.gz next to each input in
             // the persistent (shared, downloaded) directory. These are transient: the test deletes them
             // before the run to force fresh regeneration, and deletes them again at the end (below) so
-            // the persistent dir is left as it was found. Declare them as potentially-missing so the
+            // they don't linger in this shared source directory. Declare them as potentially-missing so the
             // change check tolerates that removal on a box whose baseline already had them (e.g. left by
             // an earlier or failed run); on a pristine area there is simply nothing to exempt. (Contrast
             // PotentialAdditionalPersistentFileSet, which is for files intentionally KEPT for reuse.)
@@ -159,6 +159,8 @@ namespace TestPerf
                 }));
 
             string[] searchFiles = DiaFiles.Select(GetVendorFileTestPath).ToArray();
+            foreach (var searchFile in searchFiles)
+                Assert.IsTrue(File.Exists(searchFile), string.Format("File {0} does not exist.", searchFile));
 
             // Clean-up before running the test
             RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
@@ -330,9 +332,9 @@ namespace TestPerf
 
             RunUI(() => importPeptideSearchDlg.ClickCancelButton());
 
-            // Remove the regenerated DiaUmpire outputs so this test leaves the persistent (shared,
-            // downloaded) source directory exactly as it found it. These are transient, not cached for
-            // reuse -- we delete them at the start precisely to force regeneration.
+            // Remove the regenerated DiaUmpire outputs so they don't linger in the persistent (shared,
+            // downloaded) source directory. These are transient, not cached for reuse -- we delete them
+            // at the start precisely to force regeneration.
             RemoveDiaUmpireFiles();
 
             void RemoveDiaUmpireFiles()
