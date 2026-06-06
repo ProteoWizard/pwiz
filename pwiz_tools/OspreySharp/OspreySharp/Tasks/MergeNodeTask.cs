@@ -424,7 +424,7 @@ namespace pwiz.OspreySharp.Tasks
                 // written to it). RunProteinFdr's detected_peptides gate filters on
                 // ExperimentPrecursorQvalue, which has to be the 2nd-pass value to
                 // match Rust pipeline.rs:4480-4494's reload-then-second-pass-FDR
-                // sequence. Without this reload, single-file --join-at-pass=2 runs
+                // sequence. Without this reload, single-file --task MergeNode runs
                 // include ~19 borderline peptides whose 1st-pass q-value passes
                 // <=1% but 2nd-pass q-value does not, producing a 1-protein delta
                 // in the Stage 7 picked-protein output cross-impl.

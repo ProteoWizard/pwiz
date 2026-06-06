@@ -145,7 +145,7 @@ namespace pwiz.OspreySharp.Test
         public void TestGetSucceedsWhenRehydrateStopsWithExitCodeZero()
         {
             // Rehydrate returns false but keeps ExitCode == 0 (a success-but-stop,
-            // e.g. the --no-join boundary) AFTER publishing its byproduct: Get
+            // e.g. the --task PerFileScoring boundary) AFTER publishing its byproduct: Get
             // must return the published value without throwing.
             var ctx = ContextFor(new StubProducerTask(publishBeforeStop: true, exitCode: 0));
             var info = ctx.Get<StubByproduct>();

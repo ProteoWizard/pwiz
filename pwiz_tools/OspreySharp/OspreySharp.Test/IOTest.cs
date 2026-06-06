@@ -1307,7 +1307,7 @@ namespace pwiz.OspreySharp.Test
         /// <summary>
         /// Verifies ReconciledPathFromScoresPath swaps the ".scores.parquet"
         /// suffix for ".scores-reconciled.parquet" and is idempotent on an
-        /// already-reconciled path (the --join-at-pass=2 case where the input IS
+        /// already-reconciled path (the --task MergeNode case where the input IS
         /// the reconciled file).
         /// </summary>
         [TestMethod]
@@ -1791,7 +1791,7 @@ namespace pwiz.OspreySharp.Test
 
         /// <summary>
         /// Caller may pass a SUPERSET of the sidecar's entries — a real
-        /// case for --join-at-pass=2 stage 7 entry where the reconciled
+        /// case for --task MergeNode stage 7 entry where the reconciled
         /// parquet has gap-fill stubs the 1st-pass sidecar (written
         /// pre-gap-fill) does not. Sidecar records overlay onto matching
         /// entry_ids; entries with no matching record keep their default

@@ -648,12 +648,12 @@ namespace pwiz.OspreySharp.FDR
         /// and downstream consumption.
         ///
         /// Used by FirstJoinTask for the in-process pipeline (runs after first-pass FDR,
-        /// before compaction) and by PerFileRescoreTask for the <c>--join-at-pass=2</c>
+        /// before compaction) and by PerFileRescoreTask for the <c>--task MergeNode</c>
         /// rehydration path (runs after sidecar load, before compaction) so the protein-
         /// rescue branch of compaction has fresh <c>RunProteinQvalue</c> values matching
         /// what Rust computes inline. Without it, the rehydrated C# pipeline used only
         /// the <c>RunProteinQvalue</c> values stored in the 1st-pass FDR sidecar; for
-        /// single-file <c>--join-at-pass=2</c> runs that left 19 peptides outside Rust's
+        /// single-file <c>--task MergeNode</c> runs that left 19 peptides outside Rust's
         /// post-compaction detected set on Stellar Single, causing a 1-protein delta in
         /// Stage 7 picked-protein output.
         /// </summary>

@@ -49,7 +49,7 @@ namespace pwiz.OspreySharp.Tasks
     /// skips Run when every output exists with a matching key. The
     /// same skip-if-valid check applies to every CLI mode — cross-impl
     /// / worker-mode invocations (<c>--input-scores</c> /
-    /// <c>--join-at-pass=*</c>) flow through the same driver, so
+    /// <c>--task &lt;Name&gt;</c>) flow through the same driver, so
     /// validity-key match drives the decision rather than any CLI
     /// flag gate. (Cross-impl correctness on <c>--input-scores</c>
     /// parquets is enforced separately by the parquet

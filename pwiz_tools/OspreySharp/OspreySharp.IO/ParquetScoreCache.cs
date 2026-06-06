@@ -89,10 +89,10 @@ namespace pwiz.OspreySharp.IO
 
         // Schema column types and names are aligned with the Rust impl's
         // parquet schema (UInt32 for entry_id/scan_number, UInt8 for charge)
-        // so a C#-written parquet can be loaded by Rust's `--join-only`
+        // so a C#-written parquet can be loaded by Rust's `--task FirstJoin`
         // (which does strict downcasts) and vice versa. Reading is also
         // strict: pre-2026-04-19 C#-written parquets used Int32 for these
-        // fields and need to be regenerated via a fresh `--no-join` run.
+        // fields and need to be regenerated via a fresh `--task PerFileScoring` run.
         //
         // Fields are declared in the same order Rust writes them. Order
         // doesn't affect Parquet correctness (columns are name-indexed),
@@ -301,7 +301,7 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// Write FdrEntry results to a Parquet file. Same schema as the
-        /// CoelutionScoredEntry overload — used by --no-join HPC mode where
+        /// CoelutionScoredEntry overload — used by --task PerFileScoring HPC mode where
         /// the pipeline keeps full features on the FdrEntry directly
         /// (FdrEntry.Features is the already-extracted 21-feature vector).
         /// Library lookup (by entry_id) supplies the sequence / precursor_mz
@@ -989,7 +989,7 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// The path a post-Stage-6 reader (Stage 7 feature reload, resume /
-        /// <c>--join-at-pass=2</c>) should consume for a given original
+        /// <c>--task MergeNode</c>) should consume for a given original
         /// <c>.scores.parquet</c> path: the reconciled sibling when it exists
         /// on disk, otherwise the original. This per-file selection is the
         /// read-side contract that makes the separate-reconciled-file design
@@ -1043,7 +1043,7 @@ namespace pwiz.OspreySharp.IO
 
         #endregion
 
-        #region Phase 3: --join-only group validation
+        #region Phase 3: --task FirstJoin group validation
 
         /// <summary>
         /// Read all key-value pairs from a parquet footer. Returns an empty
@@ -1153,7 +1153,7 @@ namespace pwiz.OspreySharp.IO
         /// library hashes. Returns null on success (logging a warning to
         /// <paramref name="logWarning"/> for any patch-version drift) or an
         /// error message naming the offending file. Used at the start of
-        /// --join-only mode.
+        /// --task FirstJoin mode.
         /// </summary>
         public static string ValidateScoresParquetGroup(
             IEnumerable<string> paths,
@@ -1189,7 +1189,7 @@ namespace pwiz.OspreySharp.IO
                 if (warning != null && logWarning != null)
                     logWarning(warning);
 
-                // --join-at-pass=2 strict reconciled-input gate. Mirrors
+                // --task MergeNode strict reconciled-input gate. Mirrors
                 // Rust pipeline.rs:3313-3344: every input parquet must
                 // carry osprey.reconciled = "true" so the operator
                 // cannot mix raw Stage 4 parquets into a Stages 7-8-only
@@ -1203,10 +1203,10 @@ namespace pwiz.OspreySharp.IO
                     if (!string.Equals(cachedReconciled, "true", StringComparison.Ordinal))
                     {
                         return string.Format(
-                            "--join-at-pass=2 requires a reconciled (post-Stage-6) parquet, " +
+                            "--task MergeNode requires a reconciled (post-Stage-6) parquet, " +
                             "but {0} has osprey.reconciled = '{1}'. Either it is a Stage 4 " +
-                            "(raw) parquet — in which case use --join-at-pass=1 — or run a " +
-                            "full pipeline first to produce reconciled parquets.",
+                            "(raw) parquet — run --task PerFileRescore to produce reconciled " +
+                            "parquets first — or run the full pipeline.",
                             path, cachedReconciled ?? "<unset>");
                     }
                 }
