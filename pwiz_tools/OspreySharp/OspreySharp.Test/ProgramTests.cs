@@ -498,6 +498,19 @@ namespace pwiz.OspreySharp.Test
             Program.ParseArgs(new[] { "--task=MergeNode", "-l", "ref.blib", "-o", "out.blib" });
         }
 
+        [TestMethod]
+        public void TestParseArgsRejectsTaskWithoutValue()
+        {
+            // A bare --task (or --task followed by another flag) must throw,
+            // like the other required-value flags, so it can't be silently
+            // ignored when ParseArgs runs outside Main's pre-scan.
+            var ex = Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--task" }));
+            StringAssert.Contains(ex.Message, "--task");
+            Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--task", "-l", "ref.blib" }));
+        }
+
         // --- ResolveInputScores -------------------------------------------
 
         [TestMethod]

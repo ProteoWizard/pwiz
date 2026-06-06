@@ -144,11 +144,14 @@ namespace pwiz.OspreySharp.Core
         public int NThreads { get; set; } = Environment.ProcessorCount;
 
         /// <summary>
-        /// HPC scoring split: when true, run Stages 1-4 only and exit. Each
-        /// input mzML produces a {stem}.scores.parquet next to it; no FDR
-        /// is run and no blib is written. Set by <c>--task PerFileScoring</c>
-        /// (and <c>--task PerFileRescore</c>, which is the same membership with
-        /// <see cref="InputScores"/> instead of mzML input).
+        /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
+        /// include only the per-file fan-out, not the join. Set by both
+        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescore</c>; the
+        /// concrete behavior depends on the input type. With <c>-i</c> mzML it
+        /// is the Stage 1-4 worker — each input produces a
+        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
+        /// <see cref="InputScores"/> it is the Stage 6 rescore worker. The two
+        /// are told apart by input type (see <see cref="SelectedTask"/>).
         /// </summary>
         public bool NoJoin { get; set; }
 

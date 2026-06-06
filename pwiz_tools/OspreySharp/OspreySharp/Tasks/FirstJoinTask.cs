@@ -72,7 +72,7 @@ namespace pwiz.OspreySharp.Tasks
         /// Computes the Stage 5 first-join (Percolator first-pass FDR + Stage 6
         /// planning) in straight-through, --task FirstJoin (StopAfterStage5), and
         /// the --input-scores full-pipeline. Excluded in --task PerFileScoring
-        /// (stops at Stage 1-4), the rescore worker, and the --task MergeNode
+        /// (stops at Stage 1-4), --task PerFileRescore, and the --task MergeNode
         /// stage (where it rehydrates the bundle rather than recomputing).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)

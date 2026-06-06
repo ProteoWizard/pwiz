@@ -371,13 +371,16 @@ namespace pwiz.OspreySharp
                         break;
 
                     case "--task":
-                        // The HPC task selector is resolved in Main's pre-scan
-                        // (ResolveTask -> config membership flags). Consume the
-                        // flag + its value here so ParseArgs doesn't reject it
-                        // as an unknown flag.
+                        // The HPC task selector is resolved + validated in Main's
+                        // pre-scan (ResolveTask). Consume the flag + its required
+                        // value here; throw on a missing value (mirrors the other
+                        // required-value flags) so a bare --task fails fast even
+                        // when ParseArgs is exercised directly, outside Main.
                         i++; // consume flag
-                        if (i < args.Length && !args[i].StartsWith("-"))
-                            i++; // consume value
+                        if (i >= args.Length || args[i].StartsWith("-"))
+                            throw new ArgumentException(
+                                "--task requires a task name (PerFileScoring, FirstJoin, PerFileRescore, or MergeNode).");
+                        i++; // consume value
                         break;
 
                     case "--input-scores":

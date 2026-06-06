@@ -58,7 +58,7 @@ namespace pwiz.OspreySharp.Tasks
         /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in
         /// straight-through, the --task MergeNode stage, and the --input-scores
         /// full-pipeline. Excluded in --task PerFileScoring, --task FirstJoin,
-        /// and the rescore worker (all of which stop before the merge node).
+        /// and --task PerFileRescore (all of which stop before the merge node).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
         {
