@@ -139,7 +139,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public IonSeriesKey? HoveredSeriesKey { get; set; }
 
         /// <summary>Individual ion series pinned by the user, in order of pinning.</summary>
-        public IReadOnlyList<IonSeriesKey> PinnedSeriesKeys { get; set; } = new IonSeriesKey[0];
+        public IReadOnlyList<IonSeriesKey> PinnedSeriesKeys { get; set; } = Array.Empty<IonSeriesKey>();
 
         /// <summary>
         /// In a mirror-spectrum display, the SpectrumGraphItem rendering the inverted
@@ -176,9 +176,19 @@ namespace pwiz.Skyline.Controls.Graphs
             double bestError = double.MaxValue;
             foreach (var mfi in peakRmi.MatchedIons)
             {
+                // Skip ions that don't have a positional sequence ladder. Precursor and
+                // custom ion types aren't fragment series, so picking one as the hover
+                // key would set HoveredSeriesKey to something the renderer can't draw
+                // and leave the user with no visible ruler on a hovered peak.
+                if (mfi.IonType == IonType.precursor || mfi.IonType == IonType.custom)
+                    continue;
                 double error = Math.Abs(SequenceMassCalc.GetPpm(mfi.PredictedMz,
                     mfi.PredictedMz - peakRmi.ObservedMz));
-                if (error < bestError)
+                // On an exact-tie ppm error, fall back to a deterministic secondary key
+                // (IonType, Ordinal, |charge|) so the chosen ruler doesn't depend on the
+                // MatchedIons insertion order.
+                if (bestIon == null || error < bestError ||
+                    (error == bestError && CompareIonTieBreak(mfi, bestIon) < 0))
                 {
                     bestError = error;
                     bestIon = mfi;
@@ -187,6 +197,15 @@ namespace pwiz.Skyline.Controls.Graphs
             return bestIon == null
                 ? (IonSeriesKey?)null
                 : new IonSeriesKey(bestIon.IonType, bestIon.Charge.AdductCharge, bestIon.Losses);
+        }
+
+        private static int CompareIonTieBreak(MatchedFragmentIon a, MatchedFragmentIon b)
+        {
+            int c = a.IonType.CompareTo(b.IonType);
+            if (c != 0) return c;
+            c = a.Ordinal.CompareTo(b.Ordinal);
+            if (c != 0) return c;
+            return Math.Abs(a.Charge.AdductCharge).CompareTo(Math.Abs(b.Charge.AdductCharge));
         }
 
         public SpectrumGraphItem(PeptideDocNode peptideDocNode,
