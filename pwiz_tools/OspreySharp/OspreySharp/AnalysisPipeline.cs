@@ -199,7 +199,7 @@ namespace pwiz.OspreySharp
             // non-zero exit code. Several tasks intentionally return
             // false on success to stop the pipeline at a configured
             // boundary (PerFileScoringTask under --task PerFileScoring, FirstJoinTask
-            // under --task FirstJoin-with-StopAfterStage5); gating on
+            // under --task FirstJoin with StopAfterStage5); gating on
             // keepGoing alone would skip sidecar writes for those
             // successful early-exit modes and break resume.
             if (ctx.ExitCode == 0)
