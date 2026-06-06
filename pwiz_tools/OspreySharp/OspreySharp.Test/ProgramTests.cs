@@ -43,17 +43,136 @@ namespace pwiz.OspreySharp.Test
     [TestClass]
     public class ProgramTests
     {
-        // --- ValidateArgs --------------------------------------------------
+        // --- ValidateArgs: --task is authoritative over input type --------
+
+        private static OspreyConfig TaskConfig(HpcTask task)
+        {
+            // Mirror Main's wiring: ResolveTask -> SelectedTask + derived flags.
+            return new OspreyConfig
+            {
+                SelectedTask = task,
+                NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
+                StopAfterStage5 = task == HpcTask.FirstJoin,
+                ExpectReconciledInput = task == HpcTask.MergeNode,
+            };
+        }
+
+        // -- PerFileScoring (mzML in) --
+
+        [TestMethod]
+        public void TestValidatePerFileScoringHappyPath()
+        {
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            Assert.IsNull(Program.ValidateArgs(config));
+        }
+
+        [TestMethod]
+        public void TestValidatePerFileScoringRequiresInput()
+        {
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileScoring");
+            StringAssert.Contains(err, "--input <mzML");
+        }
+
+        [TestMethod]
+        public void TestValidatePerFileScoringRequiresLibrary()
+        {
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.InputFiles = new List<string> { "a.mzML" };
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileScoring");
+            StringAssert.Contains(err, "--library");
+        }
+
+        [TestMethod]
+        public void TestValidatePerFileScoringRejectsInputScores()
+        {
+            // --task is authoritative: PerFileScoring + --input-scores must
+            // error, not silently dispatch PerFileRescore.
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.InputScores = new List<string> { "a.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileScoring");
+            StringAssert.Contains(err, "not --input-scores");
+        }
+
+        // -- PerFileRescore (--input-scores in) --
+
+        [TestMethod]
+        public void TestValidatePerFileRescoreHappyPath()
+        {
+            var config = TaskConfig(HpcTask.PerFileRescore);
+            config.InputScores = new List<string> { "a.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
+        }
+
+        [TestMethod]
+        public void TestValidatePerFileRescoreRequiresInputScores()
+        {
+            var config = TaskConfig(HpcTask.PerFileRescore);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileRescore");
+            StringAssert.Contains(err, "--input-scores");
+        }
+
+        [TestMethod]
+        public void TestValidatePerFileRescoreRequiresLibraryAndOutput()
+        {
+            var config = TaskConfig(HpcTask.PerFileRescore);
+            config.InputScores = new List<string> { "a.scores.parquet" };
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileRescore");
+            StringAssert.Contains(err, "--library and --output");
+        }
+
+        [TestMethod]
+        public void TestValidatePerFileRescoreRejectsInputMzml()
+        {
+            // Authoritative: PerFileRescore + -i mzML must error, not silently
+            // dispatch PerFileScoring. Error must name the task the user typed.
+            var config = TaskConfig(HpcTask.PerFileRescore);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileRescore");
+            StringAssert.Contains(err, "not -i <mzML>");
+        }
+
+        // -- FirstJoin (--input-scores in, 2+ files, reconciliation on) --
+
+        [TestMethod]
+        public void TestValidateFirstJoinHappyPath()
+        {
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
+        }
 
         [TestMethod]
         public void TestValidateFirstJoinRequiresInputScores()
         {
-            var config = new OspreyConfig
-            {
-                StopAfterStage5 = true,   // --task FirstJoin
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "--task FirstJoin");
@@ -63,14 +182,11 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestValidateFirstJoinRejectsInputMzml()
         {
-            var config = new OspreyConfig
-            {
-                StopAfterStage5 = true,   // --task FirstJoin
-                InputFiles = new List<string> { "a.mzML" },
-                InputScores = new List<string> { "a.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "--task FirstJoin");
@@ -80,11 +196,8 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestValidateFirstJoinRequiresLibraryAndOutput()
         {
-            var config = new OspreyConfig
-            {
-                StopAfterStage5 = true,   // --task FirstJoin
-                InputScores = new List<string> { "a.scores.parquet" }
-            };
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "--task FirstJoin");
@@ -92,108 +205,14 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
-        public void TestValidateNoJoinRequiresInput()
-        {
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                LibrarySource = LibrarySource.FromPath("ref.blib")
-            };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--input <mzML");
-        }
-
-        [TestMethod]
-        public void TestValidateNoJoinRejectsInputScores()
-        {
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                InputFiles = new List<string> { "a.mzML" },
-                InputScores = new List<string> { "a.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib")
-            };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--input-scores");
-        }
-
-        [TestMethod]
-        public void TestValidateNoJoinWorkerHappyPath()
-        {
-            // --join-at-pass=1 --no-join (per-file rescore worker):
-            // requires --input-scores, --library, and --output. No
-            // --input mzML.
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                InputScores = new List<string> { "a.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib",
-            };
-            Assert.IsNull(
-                Program.ValidateArgs(config));
-        }
-
-        [TestMethod]
-        public void TestValidateNoJoinWorkerRequiresLibraryAndOutput()
-        {
-            // Worker mode without --library or --output — like the in-process
-            // --join-at-pass=1 path, both are required so the per-file
-            // parquet write-back has somewhere to go.
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                InputScores = new List<string> { "a.scores.parquet" },
-                // missing LibrarySource and OutputBlib
-            };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--library and --output");
-        }
-
-        [TestMethod]
-        public void TestValidateNoJoinHappyPath()
-        {
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                InputFiles = new List<string> { "a.mzML" },
-                LibrarySource = LibrarySource.FromPath("ref.blib")
-            };
-            Assert.IsNull(Program.ValidateArgs(config));
-        }
-
-        [TestMethod]
-        public void TestValidateFullFromScoresHappyPath()
-        {
-            // Default full pipeline started from --input-scores (no --task):
-            // all membership flags false. Stages 5-8 run from the parquet
-            // entry point.
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
-            Assert.IsNull(Program.ValidateArgs(config));
-        }
-
-        [TestMethod]
         public void TestValidateFirstJoinRejectsSingleFile()
         {
-            // --task FirstJoin writes the Stage 5 → Stage 6 boundary file
-            // pair; that's only meaningful with siblings, so a single-file
-            // invocation should error fast rather than running Stages 1-5 and
-            // silently producing nothing useful.
-            var config = new OspreyConfig
-            {
-                StopAfterStage5 = true,   // --task FirstJoin
-                InputScores = new List<string> { "only.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
+            // FirstJoin writes the Stage 5 -> Stage 6 boundary pair, only
+            // meaningful with siblings; a single-file run errors fast.
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputScores = new List<string> { "only.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "--task FirstJoin");
@@ -203,35 +222,85 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestValidateFirstJoinRequiresReconciliationEnabled()
         {
-            var config = new OspreyConfig
-            {
-                StopAfterStage5 = true,   // --task FirstJoin
-                InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
             config.Reconciliation.Enabled = false;
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "Reconciliation.Enabled");
         }
 
+        // -- MergeNode (reconciled --input-scores in) --
+
         [TestMethod]
-        public void TestValidateFullFromScoresAcceptsSingleFile()
+        public void TestValidateMergeNodeHappyPath()
         {
-            // Default full pipeline from a single --input-scores file (no
-            // --task): a degenerate but legal case, not rejected here.
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "only.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
             Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestValidateDefaultModeIsUnaffected()
+        public void TestValidateMergeNodeRequiresInputScores()
+        {
+            // Uncontested gap from ultrareview: --task MergeNode without
+            // --input-scores (even with -i mzML) used to pass validation and
+            // silently run the full pipeline. It must now fail fast.
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task MergeNode");
+            // -i present -> the cross is reported first; either way it must not pass.
+        }
+
+        [TestMethod]
+        public void TestValidateMergeNodeRequiresInputScoresNoMzml()
+        {
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "--input-scores");
+        }
+
+        [TestMethod]
+        public void TestValidateMergeNodeRequiresLibraryAndOutput()
+        {
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "--library and --output");
+        }
+
+        [TestMethod]
+        public void TestValidateMergeNodeRejectsInputMzml()
+        {
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "cannot be combined with --input");
+        }
+
+        // -- Default (no --task): full pipeline from -i mzML or --input-scores --
+
+        [TestMethod]
+        public void TestValidateDefaultFullHappyPath()
         {
             var config = new OspreyConfig
             {
@@ -256,48 +325,25 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
-        public void TestValidateMergeNodeRequiresLibraryAndOutput()
+        public void TestValidateFullFromScoresHappyPath()
         {
-            // --task MergeNode (ExpectReconciledInput) enters the shared
-            // join-only branch via --input-scores. A missing --output must name
-            // MergeNode, not FirstJoin.
+            // No --task + --input-scores: the full pipeline started from scores
+            // (PerFileScoring lazy-rehydrates). A single file is a legal,
+            // degenerate case.
             var config = new OspreyConfig
             {
-                ExpectReconciledInput = true,
-                InputScores = new List<string> { "a.scores-reconciled.parquet", "b.scores-reconciled.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                // missing OutputBlib
-            };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task MergeNode");
-            StringAssert.Contains(err, "--library and --output");
-        }
-
-        [TestMethod]
-        public void TestValidateMergeNodeRejectsInputMzml()
-        {
-            var config = new OspreyConfig
-            {
-                ExpectReconciledInput = true,
-                InputFiles = new List<string> { "a.mzML" },
-                InputScores = new List<string> { "a.scores-reconciled.parquet" },
+                InputScores = new List<string> { "only.scores.parquet" },
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            string err = Program.ValidateArgs(config);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task MergeNode");
-            StringAssert.Contains(err, "cannot be combined with --input");
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestValidateFullPipelineFromScoresNamesInputScores()
+        public void TestValidateFullFromScoresRequiresLibraryAndOutput()
         {
-            // Default full pipeline started from --input-scores (no --task):
-            // neither joinOnlyFlag nor ExpectReconciledInput. The shared
-            // join-only branch should reference --input-scores, not a task name
-            // the user never selected.
+            // No --task: the error references --input-scores, not a task the
+            // user never selected.
             var config = new OspreyConfig
             {
                 InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" },
@@ -311,100 +357,92 @@ namespace pwiz.OspreySharp.Test
             Assert.IsFalse(err.Contains("--task"), "full-from-scores error must not name a --task: " + err);
         }
 
+        [TestMethod]
+        public void TestValidateFullFromScoresRejectsInputMzml()
+        {
+            var config = new OspreyConfig
+            {
+                InputFiles = new List<string> { "a.mzML" },
+                InputScores = new List<string> { "a.scores.parquet" },
+                LibrarySource = LibrarySource.FromPath("ref.blib"),
+                OutputBlib = "out.blib"
+            };
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "cannot be combined with --input");
+        }
+
         // --- ResolveTask (--task) -----------------------------------------
 
         [TestMethod]
         public void TestResolveTaskPerFileScoring()
         {
-            string err = Program.ResolveTask("PerFileScoring",
-                out bool noJoin, out bool stopAfterStage5, out bool expectReconciled);
-            Assert.IsNull(err);
-            Assert.IsTrue(noJoin);
-            Assert.IsFalse(stopAfterStage5);
-            Assert.IsFalse(expectReconciled);
+            Assert.IsNull(Program.ResolveTask("PerFileScoring", out HpcTask task));
+            Assert.AreEqual(HpcTask.PerFileScoring, task);
         }
 
         [TestMethod]
         public void TestResolveTaskFirstJoin()
         {
-            string err = Program.ResolveTask("FirstJoin",
-                out bool noJoin, out bool stopAfterStage5, out bool expectReconciled);
-            Assert.IsNull(err);
-            Assert.IsFalse(noJoin);
-            Assert.IsTrue(stopAfterStage5);
-            Assert.IsFalse(expectReconciled);
+            Assert.IsNull(Program.ResolveTask("FirstJoin", out HpcTask task));
+            Assert.AreEqual(HpcTask.FirstJoin, task);
         }
 
         [TestMethod]
         public void TestResolveTaskPerFileRescore()
         {
-            string err = Program.ResolveTask("PerFileRescore",
-                out bool noJoin, out bool stopAfterStage5, out bool expectReconciled);
-            Assert.IsNull(err);
-            Assert.IsTrue(noJoin);
-            Assert.IsFalse(stopAfterStage5);
-            Assert.IsFalse(expectReconciled);
+            Assert.IsNull(Program.ResolveTask("PerFileRescore", out HpcTask task));
+            Assert.AreEqual(HpcTask.PerFileRescore, task);
         }
 
         [TestMethod]
         public void TestResolveTaskMergeNode()
         {
-            string err = Program.ResolveTask("MergeNode",
-                out bool noJoin, out bool stopAfterStage5, out bool expectReconciled);
-            Assert.IsNull(err);
-            Assert.IsFalse(noJoin);
-            Assert.IsFalse(stopAfterStage5);
-            Assert.IsTrue(expectReconciled);
+            Assert.IsNull(Program.ResolveTask("MergeNode", out HpcTask task));
+            Assert.AreEqual(HpcTask.MergeNode, task);
         }
 
         [TestMethod]
         public void TestResolveTaskIsCaseInsensitive()
         {
-            string err = Program.ResolveTask("perfilerescore",
-                out bool noJoin, out bool stopAfterStage5, out bool expectReconciled);
-            Assert.IsNull(err);
-            Assert.IsTrue(noJoin);
-            Assert.IsFalse(stopAfterStage5);
-            Assert.IsFalse(expectReconciled);
+            Assert.IsNull(Program.ResolveTask("perfilerescore", out HpcTask task));
+            Assert.AreEqual(HpcTask.PerFileRescore, task);
         }
 
         [TestMethod]
         public void TestResolveTaskUnknownErrors()
         {
-            string err = Program.ResolveTask("Bogus",
-                out _, out _, out _);
+            string err = Program.ResolveTask("Bogus", out _);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "unknown task");
             StringAssert.Contains(err, "Bogus");
         }
 
         [TestMethod]
-        public void TestResolveTaskMapsToExpectedConfigFlags()
+        public void TestResolveTaskMapsToExpectedMembershipFlags()
         {
-            // Each task name must resolve to the (NoJoin, StopAfterStage5,
-            // ExpectReconciledInput) config tuple the four tasks' IsIncluded
-            // methods read. Mirrors the membership rows in PipelineMembershipTest.
+            // Each task must derive (via Main's wiring, mirrored by TaskConfig)
+            // the (NoJoin, StopAfterStage5, ExpectReconciledInput) tuple the four
+            // tasks' IsIncluded methods read. Mirrors PipelineMembershipTest.
             //   task             | NoJoin | StopAfterStage5 | ExpectReconciled
             //   PerFileScoring   | true   | false           | false
             //   FirstJoin        | false  | true            | false
             //   PerFileRescore   | true   | false           | false
             //   MergeNode        | false  | false           | true
-            var cases = new (string Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
+            var cases = new (HpcTask Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
             {
-                ("PerFileScoring", true,  false, false),
-                ("FirstJoin",      false, true,  false),
-                ("PerFileRescore", true,  false, false),
-                ("MergeNode",      false, false, true),
+                (HpcTask.PerFileScoring, true,  false, false),
+                (HpcTask.FirstJoin,      false, true,  false),
+                (HpcTask.PerFileRescore, true,  false, false),
+                (HpcTask.MergeNode,      false, false, true),
             };
             foreach (var c in cases)
             {
-                string resolveErr = Program.ResolveTask(c.Task,
-                    out bool noJoin, out bool stopAfterStage5, out bool expectReconciled);
-                Assert.IsNull(resolveErr, c.Task);
-                Assert.AreEqual(c.NoJoin, noJoin, string.Format("{0}: NoJoin", c.Task));
-                Assert.AreEqual(c.StopAfterStage5, stopAfterStage5,
+                var config = TaskConfig(c.Task);
+                Assert.AreEqual(c.NoJoin, config.NoJoin, string.Format("{0}: NoJoin", c.Task));
+                Assert.AreEqual(c.StopAfterStage5, config.StopAfterStage5,
                     string.Format("{0}: StopAfterStage5", c.Task));
-                Assert.AreEqual(c.ExpectReconciled, expectReconciled,
+                Assert.AreEqual(c.ExpectReconciled, config.ExpectReconciledInput,
                     string.Format("{0}: ExpectReconciledInput", c.Task));
             }
         }

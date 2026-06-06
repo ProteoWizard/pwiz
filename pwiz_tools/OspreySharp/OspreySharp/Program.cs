@@ -97,28 +97,29 @@ namespace pwiz.OspreySharp
                     }
                 }
 
-                bool taskNoJoin = false;
-                bool taskStopAfterStage5 = false;
-                bool taskExpectReconciledInput = false;
+                HpcTask? selectedTask = null;
                 if (taskName != null)
                 {
-                    string taskErr = ResolveTask(taskName,
-                        out taskNoJoin, out taskStopAfterStage5, out taskExpectReconciledInput);
+                    string taskErr = ResolveTask(taskName, out HpcTask resolved);
                     if (taskErr != null)
                     {
                         LogError(taskErr);
                         return 1;
                     }
+                    selectedTask = resolved;
                 }
 
                 OspreyConfig config = ParseArgs(args);
-                // --task sets the pipeline-membership flags the tasks' IsIncluded
-                // methods read. ExpectReconciledInput additionally arms the
-                // strict-reconciled-input gate (every --input-scores parquet must
-                // carry osprey.reconciled = "true"). Mirrors Rust's main.rs wiring.
-                config.NoJoin = taskNoJoin;
-                config.StopAfterStage5 = taskStopAfterStage5;
-                config.ExpectReconciledInput = taskExpectReconciledInput;
+                // --task selects one pipeline task; derive the membership flags
+                // the tasks' IsIncluded methods read. ExpectReconciledInput also
+                // arms the strict-reconciled-input gate (every --input-scores
+                // parquet must carry osprey.reconciled = "true"). Mirrors Rust's
+                // main.rs wiring. SelectedTask is kept so ValidateArgs can enforce
+                // the task<->input-type contract and name the typed task.
+                config.SelectedTask = selectedTask;
+                config.NoJoin = selectedTask == HpcTask.PerFileScoring || selectedTask == HpcTask.PerFileRescore;
+                config.StopAfterStage5 = selectedTask == HpcTask.FirstJoin;
+                config.ExpectReconciledInput = selectedTask == HpcTask.MergeNode;
                 string err = ValidateArgs(config);
                 if (err != null)
                 {
@@ -588,135 +589,129 @@ namespace pwiz.OspreySharp
 
         /// <summary>
         /// Resolve a <c>--task &lt;Name&gt;</c> selector (case-insensitive,
-        /// matched against each task's stable <c>Name</c>) into the three
-        /// pipeline-membership config flags the four tasks' <c>IsIncluded</c>
-        /// methods read. One node = one task on HPC:
-        ///   PerFileScoring -> NoJoin                 (Stages 1-4 per file)
-        ///   FirstJoin      -> StopAfterStage5        (Stage 5 join)
-        ///   PerFileRescore -> NoJoin                 (Stage 6 rescore; with --input-scores)
-        ///   MergeNode      -> ExpectReconciledInput  (Stages 7-8)
-        /// PerFileScoring and PerFileRescore share <c>NoJoin</c>; the pipeline
-        /// distinguishes them by input type (mzML vs <c>--input-scores</c>).
-        /// <c>--input-scores</c> is an input specifier, not a mode flag, and is
-        /// validated separately by <see cref="ValidateArgs"/>.
+        /// matched against each task's stable <c>Name</c>) to its
+        /// <see cref="HpcTask"/>. One node = one task on HPC. The caller derives
+        /// the pipeline-membership flags (<c>NoJoin</c>, <c>StopAfterStage5</c>,
+        /// <c>ExpectReconciledInput</c>) from the result and keeps the
+        /// <see cref="HpcTask"/> on the config so <see cref="ValidateArgs"/> can
+        /// enforce the task&#8596;input-type contract.
         ///
         /// Returns null on success, or an error message string for an unknown
         /// task name. Internal so OspreySharp.Test can exercise it.
         /// </summary>
-        internal static string ResolveTask(string taskName, out bool noJoin, out bool stopAfterStage5,
-            out bool expectReconciledInput)
+        internal static string ResolveTask(string taskName, out HpcTask task)
         {
-            noJoin = false;
-            stopAfterStage5 = false;
-            expectReconciledInput = false;
-
             if (string.Equals(taskName, "PerFileScoring", StringComparison.OrdinalIgnoreCase))
             {
-                noJoin = true;
+                task = HpcTask.PerFileScoring;
                 return null;
             }
             if (string.Equals(taskName, "FirstJoin", StringComparison.OrdinalIgnoreCase))
             {
-                stopAfterStage5 = true;
+                task = HpcTask.FirstJoin;
                 return null;
             }
             if (string.Equals(taskName, "PerFileRescore", StringComparison.OrdinalIgnoreCase))
             {
-                noJoin = true;
+                task = HpcTask.PerFileRescore;
                 return null;
             }
             if (string.Equals(taskName, "MergeNode", StringComparison.OrdinalIgnoreCase))
             {
-                expectReconciledInput = true;
+                task = HpcTask.MergeNode;
                 return null;
             }
+            task = default;
             return string.Format(
                 "--task: unknown task '{0}'. Valid tasks: PerFileScoring, FirstJoin, PerFileRescore, MergeNode.",
                 taskName);
         }
 
         /// <summary>
-        /// Validate the parsed config against the selected <c>--task</c>
-        /// (whose three membership flags <see cref="ResolveTask"/> has already
-        /// set on the config: <see cref="OspreyConfig.NoJoin"/>,
-        /// <see cref="OspreyConfig.StopAfterStage5"/> = FirstJoin,
-        /// <see cref="OspreyConfig.ExpectReconciledInput"/> = MergeNode) and the
-        /// <c>--input-scores</c> input specifier. Returns null on success or an
-        /// error message string on failure. Does not log warnings (those stay
+        /// Validate the parsed config against the selected
+        /// <see cref="OspreyConfig.SelectedTask"/> (or the default full pipeline
+        /// when none was given). When a <c>--task</c> is selected the task is
+        /// authoritative: it dictates the input type, and the cross
+        /// (e.g. <c>--task PerFileScoring --input-scores</c>) is rejected rather
+        /// than silently dispatching the other task. Returns null on success or
+        /// an error message string on failure. Does not log warnings (those stay
         /// in <see cref="Main"/>). Internal so OspreySharp.Test can exercise it.
         /// </summary>
         internal static string ValidateArgs(OspreyConfig config)
         {
             bool hasInputScores = config.InputScores != null && config.InputScores.Count > 0;
+            bool hasInputFiles = config.InputFiles != null && config.InputFiles.Count > 0;
 
-            // --task FirstJoin (StopAfterStage5) consumes score parquets.
-            if (config.StopAfterStage5 && !hasInputScores)
-                return "--task FirstJoin requires --input-scores <path...>.";
-
-            if (config.NoJoin)
+            if (config.SelectedTask.HasValue)
             {
-                // PerFileScoring and PerFileRescore both set NoJoin; the input
-                // type tells them apart:
-                //   - --task PerFileScoring: Stage 1-4 worker (mzML in,
-                //     per-file .scores.parquet out).
-                //   - --task PerFileRescore: Stage 6 worker (--input-scores in,
-                //     reconciled per-file parquets out).
-                // Reject the cross.
-                if (hasInputScores)
+                switch (config.SelectedTask.Value)
                 {
-                    if (config.InputFiles.Count > 0)
-                        return "--task PerFileRescore cannot be combined with --input. " +
-                               "Use --input-scores; mzML paths are derived from the parquet stems.";
-                    if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                        return "--task PerFileRescore requires --library and --output.";
-                    return null;
+                    case HpcTask.PerFileScoring:
+                        // Stage 1-4 worker: mzML in, per-file .scores.parquet out.
+                        if (hasInputScores)
+                            return "--task PerFileScoring takes -i <mzML>, not --input-scores " +
+                                   "(did you mean --task PerFileRescore?).";
+                        if (!hasInputFiles)
+                            return "--task PerFileScoring requires --input <mzML...>.";
+                        if (config.LibrarySource == null)
+                            return "--task PerFileScoring requires --library.";
+                        return null;
+
+                    case HpcTask.PerFileRescore:
+                        // Stage 6 worker: --input-scores in, reconciled per-file out.
+                        if (hasInputFiles)
+                            return "--task PerFileRescore takes --input-scores, not -i <mzML> " +
+                                   "(mzML paths are derived from the parquet stems).";
+                        if (!hasInputScores)
+                            return "--task PerFileRescore requires --input-scores <path...>.";
+                        if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                            return "--task PerFileRescore requires --library and --output.";
+                        return null;
+
+                    case HpcTask.FirstJoin:
+                        if (hasInputFiles)
+                            return "--task FirstJoin cannot be combined with --input. Use --input-scores instead.";
+                        if (!hasInputScores)
+                            return "--task FirstJoin requires --input-scores <path...>.";
+                        if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                            return "--task FirstJoin requires --library and --output.";
+                        // FirstJoin writes the Stage 5 → Stage 6 boundary file
+                        // pair, only meaningful with 2+ siblings to reconcile
+                        // against and reconciliation enabled. Reject early.
+                        if (config.InputScores.Count < 2)
+                            return string.Format(
+                                "--task FirstJoin requires --input-scores with 2+ parquet files " +
+                                "(got {0}). The Stage 5 → Stage 6 boundary file pair is only meaningful for " +
+                                "multi-file fan-back-in.",
+                                config.InputScores.Count);
+                        if (!config.Reconciliation.Enabled)
+                            return "--task FirstJoin requires Reconciliation.Enabled = true " +
+                                   "(got false from config). The Stage 5 → Stage 6 boundary file pair is " +
+                                   "only meaningful when reconciliation runs.";
+                        return null;
+
+                    case HpcTask.MergeNode:
+                        if (hasInputFiles)
+                            return "--task MergeNode cannot be combined with --input. Use --input-scores instead.";
+                        if (!hasInputScores)
+                            return "--task MergeNode requires --input-scores <path...>.";
+                        if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
+                            return "--task MergeNode requires --library and --output.";
+                        return null;
                 }
-                if (config.InputFiles.Count == 0)
-                    return "--task PerFileScoring requires --input <mzML...>.";
-                if (config.LibrarySource == null)
-                    return "--task PerFileScoring requires --library.";
-                return null;
             }
 
-            // Any non-NoJoin run that consumes --input-scores: --task FirstJoin
-            // (StopAfterStage5), --task MergeNode (ExpectReconciledInput), or the
-            // default full pipeline started from --input-scores (neither). These
-            // share the same input requirements; name the task the user actually
-            // selected so the guidance is correct, falling back to the
-            // --input-scores trigger when no --task was given.
+            // No --task: the full pipeline, started from either -i mzML or
+            // --input-scores (PerFileScoring lazy-rehydrates the supplied scores).
             if (hasInputScores)
             {
-                string selector = config.StopAfterStage5 ? "--task FirstJoin"
-                    : config.ExpectReconciledInput ? "--task MergeNode"
-                    : "--input-scores";
-                if (config.InputFiles.Count > 0)
-                    return selector + " cannot be combined with --input. Use --input-scores instead.";
+                if (hasInputFiles)
+                    return "--input-scores cannot be combined with --input. Use one or the other.";
                 if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                    return selector + " requires --library and --output.";
-                // --task FirstJoin writes the Stage 5 → Stage 6 boundary file
-                // pair, which is only meaningful when (a) there are siblings to
-                // reconcile against and (b) reconciliation is enabled. Reject
-                // early — running Stages 1-5 only to silently produce nothing
-                // useful (or to fall through to Stage 8 in single-file
-                // misconfigurations) is worse than failing fast.
-                if (config.StopAfterStage5)
-                {
-                    if (config.InputScores.Count < 2)
-                        return string.Format(
-                            "--task FirstJoin requires --input-scores with 2+ parquet files " +
-                            "(got {0}). The Stage 5 → Stage 6 boundary file pair is only meaningful for " +
-                            "multi-file fan-back-in.",
-                            config.InputScores.Count);
-                    if (!config.Reconciliation.Enabled)
-                        return "--task FirstJoin requires Reconciliation.Enabled = true " +
-                               "(got false from config). The Stage 5 → Stage 6 boundary file pair is " +
-                               "only meaningful when reconciliation runs.";
-                }
+                    return "--input-scores requires --library and --output.";
                 return null;
             }
-
-            // Default mode: original required-args checks.
-            if (config.InputFiles.Count == 0)
+            if (!hasInputFiles)
                 return "No input files specified. Use -i <file1.mzML> [file2.mzML ...]";
             if (config.LibrarySource == null)
                 return "No spectral library specified. Use -l <library.tsv>";

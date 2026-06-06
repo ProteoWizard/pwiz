@@ -567,7 +567,7 @@ namespace pwiz.OspreySharp.Tasks
             if (ctx.Config.NoJoin)
             {
                 ctx.LogInfo(string.Format(
-                    @"--no-join: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
+                    @"--task PerFileScoring: Stage 1-4 complete. {0} entries scored across {1} file(s). " +
                     @"Per-file `.scores.parquet` written next to each input mzML. " +
                     @"Skipping FDR and blib output.",
                     totalScored, nFiles));
@@ -858,7 +858,7 @@ namespace pwiz.OspreySharp.Tasks
                 throw new InvalidDataException(validationError);
 
             _ctx.LogInfo(string.Format(
-                @"--join-only: loading {0} per-file score parquet(s)",
+                @"--input-scores: loading {0} per-file score parquet(s)",
                 config.InputScores.Count));
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
             {
@@ -879,7 +879,7 @@ namespace pwiz.OspreySharp.Tasks
                 if (features.Count != stubs.Count)
                 {
                     throw new InvalidDataException(string.Format(
-                        @"--join-only: parquet {0} has {1} stubs but {2} feature rows",
+                        @"--input-scores: parquet {0} has {1} stubs but {2} feature rows",
                         parquetPath, stubs.Count, features.Count));
                 }
                 for (int j = 0; j < stubs.Count; j++)
