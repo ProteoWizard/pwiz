@@ -186,7 +186,7 @@ namespace pwiz.OspreySharp.Tasks
             // this run owns the full first-join work. The bundle-present
             // disk-load counterpart lives in Rehydrate. The driver reaches this
             // task here only in the bundle-absent modes (straight-through,
-            // --join-only); a worker-mode consumer materializes it via
+            // --task FirstJoin); a worker-mode consumer materializes it via
             // ctx.Demand which routes to Rehydrate.
             _ctx = ctx;
             var config = ctx.Config;
@@ -543,7 +543,7 @@ namespace pwiz.OspreySharp.Tasks
         /// <see cref="_didPlan"/> output fields the next task
         /// (PerFileRescoreTask) consumes and returns true. Returns false
         /// (with <see cref="PipelineContext.ExitCode"/> set) on the
-        /// --join-at-pass=1 --join-only StopAfterStage5 exit paths.
+        /// --task FirstJoin StopAfterStage5 exit paths.
         /// Mirrors pipeline.rs Stage 6 entry
         /// block at lines 3208-3273. The caller gates this on
         /// bundle == null (Stage 6 state already exists upstream on the
@@ -799,7 +799,7 @@ namespace pwiz.OspreySharp.Tasks
             // Stage 5 → Stage 6 boundary: write the per-file
             // .reconciliation.json envelope (the .fdr_scores.bin
             // companion was already written above pre-compaction).
-            // Pairs with the --join-at-pass=1 --no-join Stage 6
+            // Pairs with the --task PerFileRescore Stage 6
             // worker mode (next sprint).
             //
             // Surfaces gap-fill targets via out param so the in-
@@ -833,7 +833,7 @@ namespace pwiz.OspreySharp.Tasks
                     perFileEntries.Count));
                 // Success: return true (not false). The stop after Stage 5 is now
                 // a membership fact -- PerFileRescore and MergeNode are excluded
-                // by IsIncluded under --join-only, so the driver loop iterates no
+                // by IsIncluded under --task FirstJoin, so the driver loop iterates no
                 // further. The failure path above keeps ExitCode=1; return false.
                 _ctx.ExitCode = 0;
                 return true;
@@ -906,7 +906,7 @@ namespace pwiz.OspreySharp.Tasks
         /// pre-compaction). Mirrors the matching block in
         /// osprey/src/pipeline.rs immediately after
         /// dump_stage6_reconciliation. The file is written sibling to
-        /// the input mzML (or, in --join-only mode, the synthetic input
+        /// the input mzML (or, in --task FirstJoin mode, the synthetic input
         /// path derived from the parquet stem).
         /// </summary>
         /// <returns>
@@ -1006,7 +1006,7 @@ namespace pwiz.OspreySharp.Tasks
             // The multi-file stems set goes into every per-file
             // reconciliation.json so a worker rescoring its single
             // parquet can compute the join-wide reconciliation hash that
-            // --join-at-pass=2 will validate against. Sort + dedup once;
+            // --task MergeNode will validate against. Sort + dedup once;
             // BuildReconciliationFile copies the list into the wire form.
             var joinFileStems = new List<string>(perFileEntries.Count);
             foreach (var fEntry in perFileEntries)
@@ -1068,7 +1068,7 @@ namespace pwiz.OspreySharp.Tasks
         /// Resolve a path whose stem matches <paramref name="fileName"/>, used
         /// only as the base for sidecar file naming (the path itself need
         /// not exist). In normal mode this is the input mzML; in
-        /// --join-only mode where InputFiles is empty we synthesize the
+        /// --task FirstJoin mode where InputFiles is empty we synthesize the
         /// path from the matching .scores.parquet by replacing the
         /// `.scores.parquet` suffix with `.mzML`. Mirrors the Rust
         /// `synthetic_input_from_parquet` helper.
@@ -1093,7 +1093,7 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
             }
-            // --join-only fallback: derive a synthetic mzML path from the
+            // --task FirstJoin fallback: derive a synthetic mzML path from the
             // matching parquet stem so all the existing sidecar path
             // helpers keep working without conditional branches.
             if (perFileParquetPaths != null
@@ -1695,7 +1695,7 @@ namespace pwiz.OspreySharp.Tasks
         {
             // Detected-peptide count for logging only; the core computation +
             // propagation lives in ProteinFdr.RunFirstPassProteinFdr so the
-            // join-at-pass=2 rehydration path (PerFileRescoreTask) can run the
+            // --task MergeNode rehydration path (PerFileRescoreTask) can run the
             // same logic without duplicating it.
             int detectedCount = 0;
             var detectedTracker = new HashSet<string>(StringComparer.Ordinal);

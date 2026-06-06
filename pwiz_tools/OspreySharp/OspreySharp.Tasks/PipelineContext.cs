@@ -210,7 +210,7 @@ namespace pwiz.OspreySharp.Tasks
                 // (one that set a non-zero ExitCode -- e.g. a library load or
                 // empty-scores error) as a throw so the run fails loudly. A
                 // success-stop that returns false with ExitCode == 0 (e.g. the
-                // --no-join boundary, whose byproducts were already published
+                // --task PerFileScoring boundary, whose byproducts were already published
                 // before the stop) is intentionally left benign.
                 if (!task.Rehydrate(this) && ExitCode != 0)
                     throw new RehydrateFailedException(taskType, ExitCode);

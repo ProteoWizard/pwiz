@@ -130,14 +130,14 @@ namespace pwiz.OspreySharp
                 // MergeNode, or the default full pipeline started from scores)
                 // have no mzML inputs to validate and ignore --output handling
                 // differently from per-file scoring.
-                bool joinOnly = config.InputScores != null && config.InputScores.Count > 0;
+                bool fromInputScores = config.InputScores != null && config.InputScores.Count > 0;
 
                 // Non-fatal warning: --task PerFileScoring with --output
                 // supplied — that Stage 1-4 worker mode ignores --output. The
                 // rescore worker (--task PerFileRescore, identified by
                 // --input-scores) requires --output, so the warning would be
                 // incorrect/confusing there.
-                if (config.NoJoin && !joinOnly && !string.IsNullOrEmpty(config.OutputBlib))
+                if (config.NoJoin && !fromInputScores && !string.IsNullOrEmpty(config.OutputBlib))
                 {
                     LogWarning("--task PerFileScoring: --output is ignored (no blib is written). " +
                                "Per-file `.scores.parquet` files will be written next to each input mzML.");
@@ -146,7 +146,7 @@ namespace pwiz.OspreySharp
                 // Validate input files exist on disk (skip when consuming
                 // --input-scores, where there are no mzML inputs; --input-scores
                 // paths were already validated by ResolveInputScores during parsing).
-                if (!joinOnly)
+                if (!fromInputScores)
                 {
                     foreach (string inputFile in config.InputFiles)
                     {
@@ -240,94 +240,54 @@ namespace pwiz.OspreySharp
 
                     case "-l":
                     case "--library":
+                        libraryPath = RequireValue(args, ref i, arg);
                         i++;
-                        if (i < args.Length)
-                        {
-                            libraryPath = args[i];
-                            i++;
-                        }
                         break;
 
                     case "-o":
                     case "--output":
+                        outputPath = RequireValue(args, ref i, arg);
                         i++;
-                        if (i < args.Length)
-                        {
-                            outputPath = args[i];
-                            i++;
-                        }
                         break;
 
                     case "--resolution":
+                        resolution = RequireValue(args, ref i, arg).ToLowerInvariant();
                         i++;
-                        if (i < args.Length)
-                        {
-                            resolution = args[i].ToLowerInvariant();
-                            i++;
-                        }
                         break;
 
                     case "--run-fdr":
+                        config.RunFdr = ParseDouble(RequireValue(args, ref i, arg), "--run-fdr");
                         i++;
-                        if (i < args.Length)
-                        {
-                            config.RunFdr = ParseDouble(args[i], "--run-fdr");
-                            i++;
-                        }
                         break;
 
                     case "--experiment-fdr":
+                        config.ExperimentFdr = ParseDouble(RequireValue(args, ref i, arg), "--experiment-fdr");
                         i++;
-                        if (i < args.Length)
-                        {
-                            config.ExperimentFdr = ParseDouble(args[i], "--experiment-fdr");
-                            i++;
-                        }
                         break;
 
                     case "--protein-fdr":
+                        config.ProteinFdr = ParseDouble(RequireValue(args, ref i, arg), "--protein-fdr");
                         i++;
-                        if (i < args.Length)
-                        {
-                            config.ProteinFdr = ParseDouble(args[i], "--protein-fdr");
-                            i++;
-                        }
                         break;
 
                     case "--threads":
+                        config.NThreads = int.Parse(RequireValue(args, ref i, arg));
                         i++;
-                        if (i < args.Length)
-                        {
-                            config.NThreads = int.Parse(args[i]);
-                            i++;
-                        }
                         break;
 
                     case "--fragment-tolerance":
+                        fragmentTolerance = ParseDouble(RequireValue(args, ref i, arg), "--fragment-tolerance");
                         i++;
-                        if (i < args.Length)
-                        {
-                            fragmentTolerance = ParseDouble(args[i], "--fragment-tolerance");
-                            i++;
-                        }
                         break;
 
                     case "--fragment-unit":
+                        fragmentUnit = RequireValue(args, ref i, arg).ToLowerInvariant();
                         i++;
-                        if (i < args.Length)
-                        {
-                            fragmentUnit = args[i].ToLowerInvariant();
-                            i++;
-                        }
                         break;
 
                     case "--report":
+                        config.OutputReport = RequireValue(args, ref i, arg);
                         i++;
-                        if (i < args.Length)
-                        {
-                            config.OutputReport = args[i];
-                            i++;
-                        }
                         break;
 
                     case "--no-prefilter":
@@ -349,19 +309,11 @@ namespace pwiz.OspreySharp
                         break;
 
                     case "--decoy-pairing-manifest":
-                        i++;
-                        // Reject a missing value (end of args) AND reject
-                        // the next token starting with `--` (i.e. the next
-                        // option), which would otherwise silently consume
-                        // a sibling flag like --decoys-in-library as the
-                        // manifest path. Both produce the same usage
-                        // error so the user knows the option needs a path.
-                        if (i >= args.Length || args[i].StartsWith(@"--", StringComparison.Ordinal))
-                        {
-                            throw new ArgumentException(
-                                @"--decoy-pairing-manifest requires a path argument.");
-                        }
-                        config.DecoyPairingManifestPath = args[i];
+                        // Reject a missing value (end of args) AND reject a
+                        // following option token (starts with '-'), which would
+                        // otherwise silently consume a sibling flag like
+                        // --decoys-in-library as the manifest path.
+                        config.DecoyPairingManifestPath = RequireValue(args, ref i, arg);
                         i++;
                         break;
 
@@ -403,10 +355,9 @@ namespace pwiz.OspreySharp
                         break;
 
                     case "--fdr-method":
-                        i++;
-                        if (i < args.Length)
                         {
-                            switch (args[i].ToLowerInvariant())
+                            string fdrMethodValue = RequireValue(args, ref i, arg);
+                            switch (fdrMethodValue.ToLowerInvariant())
                             {
                                 case "percolator":
                                     config.FdrMethod = FdrMethod.Percolator;
@@ -416,7 +367,7 @@ namespace pwiz.OspreySharp
                                     break;
                                 default:
                                     LogWarning(string.Format(
-                                        "Unknown FDR method '{0}', defaulting to percolator", args[i]));
+                                        "Unknown FDR method '{0}', defaulting to percolator", fdrMethodValue));
                                     config.FdrMethod = FdrMethod.Percolator;
                                     break;
                             }
@@ -425,10 +376,9 @@ namespace pwiz.OspreySharp
                         break;
 
                     case "--fdr-level":
-                        i++;
-                        if (i < args.Length)
                         {
-                            switch (args[i].ToLowerInvariant())
+                            string fdrLevelValue = RequireValue(args, ref i, arg);
+                            switch (fdrLevelValue.ToLowerInvariant())
                             {
                                 case "precursor":
                                     config.FdrLevel = FdrLevel.Precursor;
@@ -441,7 +391,7 @@ namespace pwiz.OspreySharp
                                     break;
                                 default:
                                     LogWarning(string.Format(
-                                        "Unknown FDR level '{0}', defaulting to both", args[i]));
+                                        "Unknown FDR level '{0}', defaulting to both", fdrLevelValue));
                                     break;
                             }
                             i++;
@@ -449,10 +399,9 @@ namespace pwiz.OspreySharp
                         break;
 
                     case "--shared-peptides":
-                        i++;
-                        if (i < args.Length)
                         {
-                            switch (args[i].ToLowerInvariant())
+                            string sharedPeptidesValue = RequireValue(args, ref i, arg);
+                            switch (sharedPeptidesValue.ToLowerInvariant())
                             {
                                 case "all":
                                     config.SharedPeptides = SharedPeptideMode.All;
@@ -466,7 +415,7 @@ namespace pwiz.OspreySharp
                                 default:
                                     LogWarning(string.Format(
                                         "Unknown shared peptides mode '{0}', defaulting to all",
-                                        args[i]));
+                                        sharedPeptidesValue));
                                     break;
                             }
                             i++;
@@ -588,6 +537,21 @@ namespace pwiz.OspreySharp
             }
 
             return config;
+        }
+
+        /// <summary>
+        /// Consumes the value token following a single-value option flag.
+        /// Advances <paramref name="i"/> to the value and returns it; throws if
+        /// the value is missing or looks like the next option (starts with '-'),
+        /// so e.g. <c>-o -l x</c> fails fast instead of swallowing <c>-l</c> as
+        /// the value. Callers advance past the value with their own <c>i++</c>.
+        /// </summary>
+        private static string RequireValue(string[] args, ref int i, string flag)
+        {
+            i++;
+            if (i >= args.Length || args[i].StartsWith("-"))
+                throw new ArgumentException(string.Format("{0} requires a value.", flag));
+            return args[i];
         }
 
         /// <summary>

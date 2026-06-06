@@ -49,7 +49,7 @@ namespace pwiz.OspreySharp.Tasks
     /// Phase A scope: this task is a thin orchestration wrapper that
     /// delegates to AnalysisPipeline's existing private (now
     /// <c>internal</c>) methods (LoadLibrary, GenerateDecoys,
-    /// ProcessFile) plus the --join-only / --join-at-pass=2 input
+    /// ProcessFile) plus the --task FirstJoin / --task MergeNode input
     /// loading paths that share the same per-file collection layout.
     /// The inline Stage 1-4 block from <c>AnalysisPipeline.Run</c>
     /// moved here verbatim; the only changes are LogInfo / LogWarning
@@ -223,7 +223,7 @@ namespace pwiz.OspreySharp.Tasks
             // reconciliation needs the per-file .scores.parquet on disk to
             // lazily load CWT candidates -- matches Rust's end-to-end
             // behavior, which always writes the parquet sidecar regardless
-            // of --no-join.
+            // of --task PerFileScoring.
             var parquetFooterMetadata = new Dictionary<string, string>
             {
                 { @"osprey.version", Program.VERSION },
@@ -522,7 +522,7 @@ namespace pwiz.OspreySharp.Tasks
         /// surface the per-file outputs for downstream tasks (before any
         /// early-exit, so a partial-success caller still sees the populated
         /// collections), then apply the two success-but-stop boundaries --
-        /// an empty score set (cannot run FDR) and <c>--no-join</c> (Stage
+        /// an empty score set (cannot run FDR) and <c>--task PerFileScoring</c> (Stage
         /// 1-4 only). Returns <c>true</c> to continue the pipeline, or
         /// <c>false</c> with <see cref="PipelineContext.ExitCode"/> = 0 at
         /// either boundary.
@@ -561,8 +561,8 @@ namespace pwiz.OspreySharp.Tasks
                 return false;
             }
 
-            // --no-join: stop here. Per-file `.scores.parquet` files are
-            // now on disk; a separate `--join-only` invocation (typically
+            // --task PerFileScoring: stop here. Per-file `.scores.parquet` files are
+            // now on disk; a separate `--task FirstJoin` invocation (typically
             // on a merge node) will pick them up and run Stage 5+.
             if (ctx.Config.NoJoin)
             {
@@ -636,7 +636,7 @@ namespace pwiz.OspreySharp.Tasks
             List<LibraryEntry> decoys;
             if (config.ExpectReconciledInput)
             {
-                // --join-at-pass=2: decoy LibraryEntries are unused
+                // --task MergeNode: decoy LibraryEntries are unused
                 // downstream. The reconciled parquet already carries
                 // both target and decoy FDR rows with their stage-1-4
                 // scores; Stage 5 is skipped, Stage 6 is skipped, and
@@ -826,7 +826,7 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         /// <summary>
-        /// --join-only: load per-file FdrEntry stubs + PIN features directly
+        /// --task FirstJoin: load per-file FdrEntry stubs + PIN features directly
         /// from each <c>.scores.parquet</c> listed via <c>--input-scores</c>
         /// (skips the per-file Stage 2-4 scoring; Stage 1 library load
         /// already ran in <see cref="Run"/>), plus a best-effort
@@ -843,7 +843,7 @@ namespace pwiz.OspreySharp.Tasks
             Dictionary<string, string> perFileParquetPaths,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations)
         {
-            // --join-only: load per-file FdrEntry stubs directly from
+            // --task FirstJoin: load per-file FdrEntry stubs directly from
             // each .scores.parquet listed via --input-scores. Skips the
             // per-file Stage 2-4 scoring (Stage 1 library load already ran
             // in Run). Also loads a best-effort calibration JSON sibling
@@ -1076,7 +1076,7 @@ namespace pwiz.OspreySharp.Tasks
         /// certified the outputs valid and there is NO rescore fallback) a
         /// failure is a genuine fault and logs an error instead -- no misleading
         /// "will rescore" messaging. Mirrors the load logic in the
-        /// <c>--join-only</c> branch above.
+        /// <c>--task FirstJoin</c> branch above.
         /// </summary>
         private static List<FdrEntry> TryLoadStubsAndCalibration(
             string scoresPath,
@@ -1417,13 +1417,13 @@ namespace pwiz.OspreySharp.Tasks
 
             // Persist the full FdrEntry results (with features) to
             // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
-            // CWT candidates per file, and (b) a subsequent --join-only
+            // CWT candidates per file, and (b) a subsequent --task FirstJoin
             // invocation can pick them up without re-running Stages 1-4.
             // Same path convention as Rust (`scores_path_for_input`).
             // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
             // as a Phase 4 follow-up. The metadata dictionary is precomputed
             // in Run() against the original (un-mutated) outer config — see
-            // Run() for why. Skipped only in --join-only mode (no Stages 1-4
+            // Run() for why. Skipped only in --task FirstJoin mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
             if (parquetFooterMetadata != null)
             {

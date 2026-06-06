@@ -78,7 +78,7 @@ namespace pwiz.OspreySharp.Tasks
     /// Single entry point: <see cref="Run"/> is invoked by
     /// <see cref="AnalysisPipeline"/>'s task driver during both
     /// straight-through pipeline runs and the stage6 worker mode
-    /// (<c>--join-at-pass=1 --no-join --input-scores</c>). The worker
+    /// (<c>--task PerFileRescore</c>). The worker
     /// mode previously had a separate <c>RunWorker</c> entry that
     /// hand-assembled the upstream hydration; Phase C collapsed that
     /// path so the canonical pipeline's IsIncluded membership + the
@@ -107,9 +107,9 @@ namespace pwiz.OspreySharp.Tasks
 
         /// <summary>
         /// Computes the Stage 6 rescore in straight-through, the rescore worker
-        /// (--join-at-pass=1 --no-join --input-scores), and the --input-scores
-        /// full-pipeline. Excluded in --no-join, --join-only (stops at Stage 5),
-        /// and the --join-at-pass=2 merge (where it rehydrates rather than
+        /// (--task PerFileRescore), and the --input-scores
+        /// full-pipeline. Excluded in --task PerFileScoring, --task FirstJoin (stops at Stage 5),
+        /// and the --task MergeNode merge (where it rehydrates rather than
         /// re-scoring, the merge node having no mzMLs).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
@@ -122,7 +122,7 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         // The final milestone of the shared mutable entry buffer: this task
-        // overlays the Stage 6 rescore (or, in the --join-at-pass=2 merge path,
+        // overlays the Stage 6 rescore (or, in the --task MergeNode merge path,
         // applies its own compaction) onto the same backing list. MergeNode
         // pulls RescoredEntries, so a cache miss lazily materializes this task --
         // which is exactly what triggers the rescore/compaction in merge mode
@@ -179,7 +179,7 @@ namespace pwiz.OspreySharp.Tasks
             // Compute path (Stage 6 rescore): re-score each file's entries
             // against the consensus + reconciliation boundaries and write the
             // reconciled parquets. Used by the straight-through pipeline and
-            // the stage6 rescore worker. The --join-at-pass=2 merge node,
+            // the stage6 rescore worker. The --task MergeNode merge node,
             // which has only reconciled parquets + sidecars (no mzMLs to
             // rescore from), takes Rehydrate instead: the driver reaches this
             // task here only in the rescore-capable modes, and a merge-node
@@ -214,7 +214,7 @@ namespace pwiz.OspreySharp.Tasks
             // ExpectReconciledInput gate (Phase C: mechanism-driven, not
             // flag-driven) for the worker self-gate cases below;
             // ExpectReconciledInput keeps the hard short-circuit above for
-            // the strict --join-at-pass=2 merge path. Downstream MergeNodeTask
+            // the strict --task MergeNode merge path. Downstream MergeNodeTask
             // reads the RescoredEntries milestone of this same backing list.
             var firstJoin = ctx.Demand<FirstJoinTask>();
             bool didPlan = firstJoin.DidPlan(ctx);
@@ -241,7 +241,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // Join file stems for the reconciled parquet metadata hash.
             // In the in-process pipeline _perFileEntries has every file in
-            // the run; in worker mode (--join-at-pass=1 --no-join) it has
+            // the run; in worker mode (--task PerFileRescore) it has
             // a single file and the planner's full set comes from
             // RescoreInputs.JoinFileStems (read from reconciliation.json
             // v2+). Pass _perFileEntries keys when there's more than one;
@@ -301,7 +301,7 @@ namespace pwiz.OspreySharp.Tasks
 
         public override bool Rehydrate(PipelineContext ctx)
         {
-            // Disk-load path for --join-at-pass=2: every input parquet already
+            // Disk-load path for --task MergeNode: every input parquet already
             // has osprey.reconciled = "true" (asserted by
             // ParquetScoreCache.CheckParquetMetadata when ExpectReconciledInput
             // is set), so Stage 5 first-pass Percolator AND Stage 6 planning /
@@ -343,7 +343,7 @@ namespace pwiz.OspreySharp.Tasks
             // Reproduce exactly that end state by loading the CompactedEntries
             // milestone (which materializes FirstJoin's own pure rehydrate) and
             // publishing it as RescoredEntries -- never calling Run, so Rehydrate
-            // stays pure. The --join-at-pass=2 merge path (ExpectReconciledInput)
+            // stays pure. The --task MergeNode merge path (ExpectReconciledInput)
             // below is a different rehydrate that must NOT materialize FirstJoin.
             if (!ctx.Config.ExpectReconciledInput)
             {
@@ -408,7 +408,7 @@ namespace pwiz.OspreySharp.Tasks
                 // sidecar v3 already carries RunProteinQvalue from the original
                 // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
                 // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
-                // it inline in the --join-at-pass=2 path. The recompute uses the
+                // it inline in the --task MergeNode path. The recompute uses the
                 // post-rehydration detected_peptides set + best_peptide_scores
                 // (which differ from the original write-time inputs whenever any
                 // upstream rebuild has nudged peptide q-values or score values
@@ -426,7 +426,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 var stats = RescoreCompaction.Apply(bundle, ctx.Config);
                 ctx.LogInfo(string.Format(
-                    @"--join-at-pass=2 compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
+                    @"--task MergeNode compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
                     stats.EntriesBefore, stats.EntriesAfter,
                     stats.FirstPassBaseIds, stats.DroppedActions));
             }
@@ -435,7 +435,7 @@ namespace pwiz.OspreySharp.Tasks
 
         // RunWorker + its helpers (AddIfNotNull, LoadOriginalRtCalibration)
         // were removed in Phase C. The stage6 worker mode
-        // (--join-at-pass=1 --no-join --input-scores) now routes through
+        // (--task PerFileRescore) now routes through
         // AnalysisPipeline.Run with StartAt = StopAfter =
         // PerFileRescoreTask. Upstream state previously assembled in
         // RunWorker (library load, hydration, compaction, consensus,
@@ -518,7 +518,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // 3. Append gap-fill rows at the end. Reassign each gap-fill
             //    stub's ParquetIndex to its new row position so a
-            //    downstream --join-at-pass=2 worker can locate its
+            //    downstream --task MergeNode worker can locate its
             //    features.
             int nAppended = 0;
             foreach (var entry in fdrEntries)
@@ -543,7 +543,7 @@ namespace pwiz.OspreySharp.Tasks
             //    (over every file in the planner step), not the worker's
             //    single-file InputFiles hash; without that, a worker
             //    rescoring a single parquet stamps a single-file hash
-            //    that the downstream --join-at-pass=2 merge node rejects
+            //    that the downstream --task MergeNode merge node rejects
             //    on hash mismatch. The join file stems come from the
             //    planner's reconciliation.json (v2+) via
             //    RescoreInputs.JoinFileStems; fall back to config-derived
@@ -729,7 +729,7 @@ namespace pwiz.OspreySharp.Tasks
                 // config, leaks into subsequent files, AND poisons the
                 // WriteReconciledParquet hash stamp (config.Identity.SearchParameterHash()
                 // would then reflect the calibrated tolerance, not the value
-                // a fresh --join-at-pass=2 invocation recomputes from CLI
+                // a fresh --task MergeNode invocation recomputes from CLI
                 // defaults -- causing search_hash mismatch errors). Mirrors
                 // the per-file clone pattern in ProcessFile.
                 var fileConfig = config.ShallowClone();
