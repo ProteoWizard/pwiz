@@ -511,6 +511,34 @@ namespace pwiz.OspreySharp.Test
                 () => Program.ParseArgs(new[] { "--task", "-l", "ref.blib" }));
         }
 
+        [TestMethod]
+        public void TestParseArgsRejectsValueFlagsWithoutValue()
+        {
+            // Single-value option flags must reject both a missing value (flag
+            // is the last token) and a following option token (the next arg
+            // starts with '-'), so e.g. `-o -l x` can't silently swallow `-l`
+            // as the output path. Representative coverage across the path,
+            // numeric, and enum flags.
+            var missingOrFlagFollowed = new[]
+            {
+                new[] { "-l" },
+                new[] { "-o", "-l", "x.blib" },
+                new[] { "--output" },
+                new[] { "--resolution", "--protein-fdr", "0.01" },
+                new[] { "--protein-fdr" },
+                new[] { "--threads", "-i", "f.mzML" },
+                new[] { "--decoy-pairing-manifest" },
+                new[] { "--fdr-method", "-o", "out.blib" },
+                new[] { "--fdr-level" },
+                new[] { "--shared-peptides", "--threads", "4" },
+            };
+            foreach (var args in missingOrFlagFollowed)
+            {
+                Assert.ThrowsException<ArgumentException>(
+                    () => Program.ParseArgs(args));
+            }
+        }
+
         // --- ResolveInputScores -------------------------------------------
 
         [TestMethod]
