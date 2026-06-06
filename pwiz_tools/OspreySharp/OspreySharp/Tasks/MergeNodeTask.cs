@@ -56,9 +56,9 @@ namespace pwiz.OspreySharp.Tasks
 
         /// <summary>
         /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in
-        /// straight-through, the --join-at-pass=2 merge, and the --input-scores
-        /// full-pipeline. Excluded in --no-join, --join-only, and the rescore
-        /// worker (all of which stop before the merge node).
+        /// straight-through, the --task MergeNode stage, and the --input-scores
+        /// full-pipeline. Excluded in --task PerFileScoring, --task FirstJoin,
+        /// and --task PerFileRescore (all of which stop before the merge node).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
         {
@@ -164,7 +164,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (unmatchedKeys.Count > 0)
                     {
                         ctx.LogWarning(string.Format(
-                            "--join-at-pass=2: {0} perFileEntries key(s) have no matching " +
+                            "--task MergeNode: {0} perFileEntries key(s) have no matching " +
                             "config.InputFiles entry and will be skipped: [{1}]. This usually " +
                             "indicates an input-file rename or path drift between Stage 5 and " +
                             "Stage 7; the skipped files will not get a 2nd-pass sidecar.",
@@ -184,7 +184,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (missingPass2 > 0)
                     {
                         ctx.LogInfo(string.Format(
-                            "--join-at-pass=2: {0}/{1} file(s) lack a 2nd-pass sidecar -- running " +
+                            "--task MergeNode: {0}/{1} file(s) lack a 2nd-pass sidecar -- running " +
                             "second-pass FDR to compute scores from reconciled features " +
                             "(HPC distribution path; mirrors Rust pipeline.rs:4394-4468).",
                             missingPass2, totalFiles));
@@ -465,7 +465,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (filesReloaded > 0)
                     {
                         ctx.LogInfo(string.Format(
-                            "--join-at-pass=2: reloaded 2nd-pass FDR sidecar for {0}/{1} file(s) post-compaction",
+                            "--task MergeNode: reloaded 2nd-pass FDR sidecar for {0}/{1} file(s) post-compaction",
                             filesReloaded, filesReloaded + filesMissing));
                     }
                 }

@@ -70,21 +70,21 @@ namespace pwiz.OspreySharp.Tasks
 
         /// <summary>
         /// Computes the Stage 5 first-join (Percolator first-pass FDR + Stage 6
-        /// planning) in straight-through, --join-only (StopAfterStage5), and
-        /// the --input-scores full-pipeline. Excluded in --no-join (stops at
-        /// Stage 1-4), the rescore worker, and the --join-at-pass=2 merge
-        /// (where it rehydrates the bundle rather than recomputing).
+        /// planning) in straight-through, --task FirstJoin (StopAfterStage5), and
+        /// the --input-scores full-pipeline. Excluded in --task PerFileScoring
+        /// (stops at Stage 1-4), --task PerFileRescore, and the --task MergeNode
+        /// stage (where it rehydrates the bundle rather than recomputing).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
         {
             var c = ctx.Config;
             bool inputs = c.InputScores != null && c.InputScores.Count > 0;
             // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
-            // invariant: StopAfterStage5 (--join-only) is a modifier of
-            // --join-at-pass=<N>, and --join-at-pass=1 requires --input-scores,
-            // so StopAfterStage5 implies inputs at parse time -- a --join-only
-            // run can never reach here without InputScores.
-            // ProgramTests.TestValidateJoinOnlyRequiresInputScores pins that
+            // invariant: StopAfterStage5 is set by --task FirstJoin, which
+            // requires --input-scores, so StopAfterStage5 implies inputs at
+            // parse time -- a --task FirstJoin run can never reach here without
+            // InputScores.
+            // ProgramTests.TestValidateFirstJoinRequiresInputScores pins that
             // rejection, since the membership truth table (PipelineMembershipTest)
             // does not encode the cross-flag dependency on its own.
             return (!inputs && !c.NoJoin)
@@ -247,7 +247,7 @@ namespace pwiz.OspreySharp.Tasks
             if (fdrSidecarFailures > 0 && config.StopAfterStage5)
             {
                 ctx.LogError(string.Format(
-                    @"--join-at-pass=1 --join-only: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
+                    @"--task FirstJoin: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
                     @"writes failed; boundary file pair is incomplete. See warnings above.",
                     fdrSidecarFailures, perFileEntries.Count));
                 ctx.ExitCode = 1;
@@ -820,14 +820,14 @@ namespace pwiz.OspreySharp.Tasks
                 if (reconWriteFailures > 0)
                 {
                     _ctx.LogError(string.Format(
-                        @"--join-at-pass=1 --join-only: {0}/{1} reconciliation.json " +
+                        @"--task FirstJoin: {0}/{1} reconciliation.json " +
                         @"writes failed; boundary file pair is incomplete. See warnings above.",
                         reconWriteFailures, perFileEntries.Count));
                     _ctx.ExitCode = 1;
                     return false;
                 }
                 _ctx.LogInfo(string.Format(
-                    @"--join-at-pass=1 --join-only: Stage 5 + reconciliation planning " +
+                    @"--task FirstJoin: Stage 5 + reconciliation planning " +
                     @"complete; wrote {0} reconciliation.json + matching fdr_scores.bin " +
                     @"sidecar pair(s). Exiting before Stage 6 rescore.",
                     perFileEntries.Count));

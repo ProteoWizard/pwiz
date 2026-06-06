@@ -43,201 +43,264 @@ namespace pwiz.OspreySharp.Test
     [TestClass]
     public class ProgramTests
     {
-        // --- ValidateArgs --------------------------------------------------
+        // --- ValidateArgs: --task is authoritative over input type --------
+
+        private static OspreyConfig TaskConfig(HpcTask task)
+        {
+            // Mirror Main's wiring: ResolveTask -> SelectedTask + derived flags.
+            return new OspreyConfig
+            {
+                SelectedTask = task,
+                NoJoin = task == HpcTask.PerFileScoring || task == HpcTask.PerFileRescore,
+                StopAfterStage5 = task == HpcTask.FirstJoin,
+                ExpectReconciledInput = task == HpcTask.MergeNode,
+            };
+        }
+
+        // -- PerFileScoring (mzML in) --
 
         [TestMethod]
-        public void TestValidateNoJoinAndJoinOnlyIsMutex()
+        public void TestValidatePerFileScoringHappyPath()
         {
-            var config = new OspreyConfig();
-            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: true, joinOnlyModifier: false);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "mutually exclusive");
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestValidateJoinOnlyRequiresInputScores()
+        public void TestValidatePerFileScoringRequiresInput()
         {
-            var config = new OspreyConfig
-            {
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
-            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            // Error refers to the canonical flag the user typed.
-            StringAssert.Contains(err, "--join-at-pass=1");
-            StringAssert.Contains(err, "--input-scores");
-        }
-
-        [TestMethod]
-        public void TestValidateJoinOnlyRejectsInputMzml()
-        {
-            var config = new OspreyConfig
-            {
-                InputFiles = new List<string> { "a.mzML" },
-                InputScores = new List<string> { "a.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
-            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--join-at-pass=1");
-            StringAssert.Contains(err, "cannot be combined with --input");
-        }
-
-        [TestMethod]
-        public void TestValidateJoinOnlyRequiresLibraryAndOutput()
-        {
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "a.scores.parquet" }
-            };
-            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--join-at-pass=1");
-            StringAssert.Contains(err, "--library and --output");
-        }
-
-        [TestMethod]
-        public void TestValidateNoJoinRequiresInput()
-        {
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                LibrarySource = LibrarySource.FromPath("ref.blib")
-            };
-            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false);
-            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileScoring");
             StringAssert.Contains(err, "--input <mzML");
         }
 
         [TestMethod]
-        public void TestValidateNoJoinRejectsInputScores()
+        public void TestValidatePerFileScoringRequiresLibrary()
         {
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                InputFiles = new List<string> { "a.mzML" },
-                InputScores = new List<string> { "a.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib")
-            };
-            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false);
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.InputFiles = new List<string> { "a.mzML" };
+            string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileScoring");
+            StringAssert.Contains(err, "--library");
+        }
+
+        [TestMethod]
+        public void TestValidatePerFileScoringRejectsInputScores()
+        {
+            // --task is authoritative: PerFileScoring + --input-scores must
+            // error, not silently dispatch PerFileRescore.
+            var config = TaskConfig(HpcTask.PerFileScoring);
+            config.InputScores = new List<string> { "a.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileScoring");
+            StringAssert.Contains(err, "not --input-scores");
+        }
+
+        // -- PerFileRescore (--input-scores in) --
+
+        [TestMethod]
+        public void TestValidatePerFileRescoreHappyPath()
+        {
+            var config = TaskConfig(HpcTask.PerFileRescore);
+            config.InputScores = new List<string> { "a.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
+        }
+
+        [TestMethod]
+        public void TestValidatePerFileRescoreRequiresInputScores()
+        {
+            var config = TaskConfig(HpcTask.PerFileRescore);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileRescore");
             StringAssert.Contains(err, "--input-scores");
         }
 
         [TestMethod]
-        public void TestValidateNoJoinWorkerHappyPath()
+        public void TestValidatePerFileRescoreRequiresLibraryAndOutput()
         {
-            // --join-at-pass=1 --no-join (per-file rescore worker):
-            // requires --input-scores, --library, and --output. No
-            // --input mzML.
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                InputScores = new List<string> { "a.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib",
-            };
-            Assert.IsNull(
-                Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false));
-        }
-
-        [TestMethod]
-        public void TestValidateNoJoinWorkerRequiresLibraryAndOutput()
-        {
-            // Worker mode without --library or --output — like the in-process
-            // --join-at-pass=1 path, both are required so the per-file
-            // parquet write-back has somewhere to go.
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                InputScores = new List<string> { "a.scores.parquet" },
-                // missing LibrarySource and OutputBlib
-            };
-            string err = Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false);
+            var config = TaskConfig(HpcTask.PerFileRescore);
+            config.InputScores = new List<string> { "a.scores.parquet" };
+            string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task PerFileRescore");
             StringAssert.Contains(err, "--library and --output");
         }
 
         [TestMethod]
-        public void TestValidateNoJoinHappyPath()
+        public void TestValidatePerFileRescoreRejectsInputMzml()
         {
-            var config = new OspreyConfig
-            {
-                NoJoin = true,
-                InputFiles = new List<string> { "a.mzML" },
-                LibrarySource = LibrarySource.FromPath("ref.blib")
-            };
-            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: true, joinOnlyFlag: false, joinOnlyModifier: false));
-        }
-
-        [TestMethod]
-        public void TestValidateJoinOnlyHappyPath()
-        {
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
-            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false));
-        }
-
-        [TestMethod]
-        public void TestValidateJoinOnlyModifierRejectsSingleFile()
-        {
-            // --join-at-pass=1 --join-only writes the Stage 5 → Stage 6
-            // boundary file pair; that's only meaningful with siblings,
-            // so a single-file invocation should error fast rather than
-            // running Stages 1-5 and silently producing nothing useful.
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "only.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
-            string err = Program.ValidateArgs(config,
-                noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: true);
+            // Authoritative: PerFileRescore + -i mzML must error, not silently
+            // dispatch PerFileScoring. Error must name the task the user typed.
+            var config = TaskConfig(HpcTask.PerFileRescore);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--join-at-pass=1 --join-only");
+            StringAssert.Contains(err, "--task PerFileRescore");
+            StringAssert.Contains(err, "not -i <mzML>");
+        }
+
+        // -- FirstJoin (--input-scores in, 2+ files, reconciliation on) --
+
+        [TestMethod]
+        public void TestValidateFirstJoinHappyPath()
+        {
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
+        }
+
+        [TestMethod]
+        public void TestValidateFirstJoinRequiresInputScores()
+        {
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task FirstJoin");
+            StringAssert.Contains(err, "--input-scores");
+        }
+
+        [TestMethod]
+        public void TestValidateFirstJoinRejectsInputMzml()
+        {
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task FirstJoin");
+            StringAssert.Contains(err, "cannot be combined with --input");
+        }
+
+        [TestMethod]
+        public void TestValidateFirstJoinRequiresLibraryAndOutput()
+        {
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task FirstJoin");
+            StringAssert.Contains(err, "--library and --output");
+        }
+
+        [TestMethod]
+        public void TestValidateFirstJoinRejectsSingleFile()
+        {
+            // FirstJoin writes the Stage 5 -> Stage 6 boundary pair, only
+            // meaningful with siblings; a single-file run errors fast.
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputScores = new List<string> { "only.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task FirstJoin");
             StringAssert.Contains(err, "2+ parquet files");
         }
 
         [TestMethod]
-        public void TestValidateJoinOnlyModifierRequiresReconciliationEnabled()
+        public void TestValidateFirstJoinRequiresReconciliationEnabled()
         {
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
+            var config = TaskConfig(HpcTask.FirstJoin);
+            config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
             config.Reconciliation.Enabled = false;
-            string err = Program.ValidateArgs(config,
-                noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: true);
+            string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "Reconciliation.Enabled");
         }
 
+        // -- MergeNode (reconciled --input-scores in) --
+
         [TestMethod]
-        public void TestValidateJoinOnlyPlainAcceptsSingleFile()
+        public void TestValidateMergeNodeHappyPath()
         {
-            // Plain --join-at-pass=1 (no modifier) runs Stages 5-8 from
-            // the parquet entry point; a 1-file run is a degenerate but
-            // legal case and shouldn't be rejected here.
-            var config = new OspreyConfig
-            {
-                InputScores = new List<string> { "only.scores.parquet" },
-                LibrarySource = LibrarySource.FromPath("ref.blib"),
-                OutputBlib = "out.blib"
-            };
-            Assert.IsNull(Program.ValidateArgs(config,
-                noJoinFlag: false, joinOnlyFlag: true, joinOnlyModifier: false));
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestValidateDefaultModeIsUnaffected()
+        public void TestValidateMergeNodeRequiresInputScores()
+        {
+            // Uncontested gap from ultrareview: --task MergeNode without
+            // --input-scores (even with -i mzML) used to pass validation and
+            // silently run the full pipeline. It must now fail fast.
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task MergeNode");
+            // -i present -> the cross is reported first; either way it must not pass.
+        }
+
+        [TestMethod]
+        public void TestValidateMergeNodeRequiresInputScoresNoMzml()
+        {
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "--input-scores");
+        }
+
+        [TestMethod]
+        public void TestValidateMergeNodeRequiresLibraryAndOutput()
+        {
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "--library and --output");
+        }
+
+        [TestMethod]
+        public void TestValidateMergeNodeRejectsInputMzml()
+        {
+            var config = TaskConfig(HpcTask.MergeNode);
+            config.InputFiles = new List<string> { "a.mzML" };
+            config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
+            config.LibrarySource = LibrarySource.FromPath("ref.blib");
+            config.OutputBlib = "out.blib";
+            string err = Program.ValidateArgs(config);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "cannot be combined with --input");
+        }
+
+        // -- Default (no --task): full pipeline from -i mzML or --input-scores --
+
+        [TestMethod]
+        public void TestValidateDefaultFullHappyPath()
         {
             var config = new OspreyConfig
             {
@@ -245,7 +308,7 @@ namespace pwiz.OspreySharp.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            Assert.IsNull(Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: false, joinOnlyModifier: false));
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
@@ -256,126 +319,196 @@ namespace pwiz.OspreySharp.Test
                 LibrarySource = LibrarySource.FromPath("ref.blib"),
                 OutputBlib = "out.blib"
             };
-            string err = Program.ValidateArgs(config, noJoinFlag: false, joinOnlyFlag: false, joinOnlyModifier: false);
+            string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "No input files");
         }
 
-        // --- NormalizeHpcArgs (--join-at-pass) ----------------------------
-
         [TestMethod]
-        public void TestNormalizeJoinAtPass1MapsToJoinOnly()
+        public void TestValidateFullFromScoresHappyPath()
         {
-            bool noJoin = false, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
-            Assert.IsNull(err);
-            Assert.IsTrue(joinOnly, "joinOnly should be set to true so existing Stage 5+ path runs");
-            Assert.IsFalse(noJoin);
+            // No --task + --input-scores: the full pipeline started from scores
+            // (PerFileScoring lazy-rehydrates). A single file is a legal,
+            // degenerate case.
+            var config = new OspreyConfig
+            {
+                InputScores = new List<string> { "only.scores.parquet" },
+                LibrarySource = LibrarySource.FromPath("ref.blib"),
+                OutputBlib = "out.blib"
+            };
+            Assert.IsNull(Program.ValidateArgs(config));
         }
 
         [TestMethod]
-        public void TestNormalizeJoinAtPass2InProcessSucceeds()
+        public void TestValidateFullFromScoresRequiresLibraryAndOutput()
         {
-            // `--join-at-pass=2` (without --no-join) is the post-Stage-6
-            // reconciled-parquet entry point. Routes through the existing
-            // joinOnly Stage 5+ path; the in-pipeline reconciled-input
-            // gate enforces the strict input contract.
-            bool noJoin = false, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 2, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
-            Assert.IsNull(err);
-            Assert.IsTrue(joinOnly, "joinOnly should be set so Stage 5+ input-scores path runs");
-            Assert.IsFalse(noJoin);
-        }
-
-        [TestMethod]
-        public void TestNormalizeJoinAtPass2NoJoinNotImplemented()
-        {
-            // `--join-at-pass=2 --no-join` is the per-file Stage 7 worker
-            // mode (not yet ported); should still error.
-            bool noJoin = true, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 2, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
+            // No --task: the error references --input-scores, not a task the
+            // user never selected.
+            var config = new OspreyConfig
+            {
+                InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" },
+                LibrarySource = LibrarySource.FromPath("ref.blib"),
+                // missing OutputBlib
+            };
+            string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "not implemented");
+            StringAssert.Contains(err, "--input-scores");
+            StringAssert.Contains(err, "--library and --output");
+            Assert.IsFalse(err.Contains("--task"), "full-from-scores error must not name a --task: " + err);
         }
 
         [TestMethod]
-        public void TestNormalizeJoinAtPassInvalidValueErrors()
+        public void TestValidateFullFromScoresRejectsInputMzml()
         {
-            bool noJoin = false, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 3, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
+            var config = new OspreyConfig
+            {
+                InputFiles = new List<string> { "a.mzML" },
+                InputScores = new List<string> { "a.scores.parquet" },
+                LibrarySource = LibrarySource.FromPath("ref.blib"),
+                OutputBlib = "out.blib"
+            };
+            string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "must be 1 or 2");
+            StringAssert.Contains(err, "cannot be combined with --input");
+        }
+
+        // --- ResolveTask (--task) -----------------------------------------
+
+        [TestMethod]
+        public void TestResolveTaskPerFileScoring()
+        {
+            Assert.IsNull(Program.ResolveTask("PerFileScoring", out HpcTask task));
+            Assert.AreEqual(HpcTask.PerFileScoring, task);
         }
 
         [TestMethod]
-        public void TestNormalizeJoinAtPass1WithJoinOnlyModifierSetsStopFlag()
+        public void TestResolveTaskFirstJoin()
         {
-            // `--join-at-pass=1 --join-only` means "run only Stage 5 + planning,
-            // write boundary files, exit." Both joinOnly (existing
-            // Stage 5+ entry path) and joinOnlyModifier (post-planning
-            // early exit signal) should be set.
-            bool noJoin = false, joinOnly = true;
-            string err = Program.NormalizeHpcArgs(
-                joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly,
-                joinOnlyModifier: out bool joinOnlyModifier);
-            Assert.IsNull(err);
-            Assert.IsTrue(joinOnly);
-            Assert.IsTrue(joinOnlyModifier);
+            Assert.IsNull(Program.ResolveTask("FirstJoin", out HpcTask task));
+            Assert.AreEqual(HpcTask.FirstJoin, task);
         }
 
         [TestMethod]
-        public void TestNormalizeJoinAtPass1WithNoJoinModifierKeepsBothFlags()
+        public void TestResolveTaskPerFileRescore()
         {
-            // --join-at-pass=1 --no-join is the per-file rescore worker
-            // mode. Normalize keeps noJoinFlag true and joinOnlyFlag false
-            // (they're not flipped); Main routes the combination to
-            // RescoreWorker.Run.
-            bool noJoin = true, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out bool joinOnlyModifier);
-            Assert.IsNull(err, "got: {0}", err);
-            Assert.IsTrue(noJoin, "noJoinFlag should remain true");
-            Assert.IsFalse(joinOnly, "joinOnlyFlag should remain false");
-            Assert.IsFalse(joinOnlyModifier, "joinOnlyModifier should be false");
+            Assert.IsNull(Program.ResolveTask("PerFileRescore", out HpcTask task));
+            Assert.AreEqual(HpcTask.PerFileRescore, task);
         }
 
         [TestMethod]
-        public void TestNormalizeJoinOnlyAloneErrorsNoEntryPoint()
+        public void TestResolveTaskMergeNode()
         {
-            bool noJoin = false, joinOnly = true;
-            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
+            Assert.IsNull(Program.ResolveTask("MergeNode", out HpcTask task));
+            Assert.AreEqual(HpcTask.MergeNode, task);
+        }
+
+        [TestMethod]
+        public void TestResolveTaskIsCaseInsensitive()
+        {
+            Assert.IsNull(Program.ResolveTask("perfilerescore", out HpcTask task));
+            Assert.AreEqual(HpcTask.PerFileRescore, task);
+        }
+
+        [TestMethod]
+        public void TestResolveTaskUnknownErrors()
+        {
+            string err = Program.ResolveTask("Bogus", out _);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "modifier");
+            StringAssert.Contains(err, "unknown task");
+            StringAssert.Contains(err, "Bogus");
         }
 
         [TestMethod]
-        public void TestNormalizeNoJoinAndJoinOnlyModifiersAreMutex()
+        public void TestResolveTaskMapsToExpectedMembershipFlags()
         {
-            bool noJoin = true, joinOnly = true;
-            string err = Program.NormalizeHpcArgs(joinAtPass: 1, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
-            Assert.IsNotNull(err);
-            StringAssert.Contains(err, "mutually exclusive");
+            // Each task must derive (via Main's wiring, mirrored by TaskConfig)
+            // the (NoJoin, StopAfterStage5, ExpectReconciledInput) tuple the four
+            // tasks' IsIncluded methods read. Mirrors PipelineMembershipTest.
+            //   task             | NoJoin | StopAfterStage5 | ExpectReconciled
+            //   PerFileScoring   | true   | false           | false
+            //   FirstJoin        | false  | true            | false
+            //   PerFileRescore   | true   | false           | false
+            //   MergeNode        | false  | false           | true
+            var cases = new (HpcTask Task, bool NoJoin, bool StopAfterStage5, bool ExpectReconciled)[]
+            {
+                (HpcTask.PerFileScoring, true,  false, false),
+                (HpcTask.FirstJoin,      false, true,  false),
+                (HpcTask.PerFileRescore, true,  false, false),
+                (HpcTask.MergeNode,      false, false, true),
+            };
+            foreach (var c in cases)
+            {
+                var config = TaskConfig(c.Task);
+                Assert.AreEqual(c.NoJoin, config.NoJoin, string.Format("{0}: NoJoin", c.Task));
+                Assert.AreEqual(c.StopAfterStage5, config.StopAfterStage5,
+                    string.Format("{0}: StopAfterStage5", c.Task));
+                Assert.AreEqual(c.ExpectReconciled, config.ExpectReconciledInput,
+                    string.Format("{0}: ExpectReconciledInput", c.Task));
+            }
+        }
+
+        // --- ParseArgs: unknown / retired flags fail fast -----------------
+
+        [TestMethod]
+        public void TestParseArgsRejectsRetiredNoJoin()
+        {
+            // The retired HPC mode flags are now unknown options. ParseArgs
+            // must throw rather than silently dropping them (which would run
+            // the full pipeline in the wrong mode). Replaced by --task <Name>.
+            var ex = Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--no-join", "-i", "a.mzML" }));
+            StringAssert.Contains(ex.Message, "--no-join");
         }
 
         [TestMethod]
-        public void TestNormalizeNoJoinAloneUnchanged()
+        public void TestParseArgsRejectsRetiredJoinOnly()
         {
-            // Stage 1 entry path with `-i ...` + `--no-join` keeps its
-            // existing meaning: do per-file work only = Stages 1-4.
-            bool noJoin = true, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
-            Assert.IsNull(err);
-            Assert.IsTrue(noJoin);
-            Assert.IsFalse(joinOnly);
+            var ex = Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--join-only" }));
+            StringAssert.Contains(ex.Message, "--join-only");
         }
 
         [TestMethod]
-        public void TestNormalizeDefaultModeIsNoop()
+        public void TestParseArgsRejectsRetiredJoinAtPass()
         {
-            bool noJoin = false, joinOnly = false;
-            string err = Program.NormalizeHpcArgs(joinAtPass: null, noJoinFlag: ref noJoin, joinOnlyFlag: ref joinOnly, joinOnlyModifier: out _);
-            Assert.IsNull(err);
-            Assert.IsFalse(noJoin);
-            Assert.IsFalse(joinOnly);
+            var ex = Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--join-at-pass=2" }));
+            StringAssert.Contains(ex.Message, "--join-at-pass=2");
+
+            // Space-separated form too.
+            Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--join-at-pass", "1" }));
+        }
+
+        [TestMethod]
+        public void TestParseArgsRejectsUnknownFlag()
+        {
+            // Any unrecognized option fails fast (e.g. a typo), not just the
+            // retired flags.
+            var ex = Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--bogus-flag" }));
+            StringAssert.Contains(ex.Message, "--bogus-flag");
+        }
+
+        [TestMethod]
+        public void TestParseArgsAcceptsTaskAndValidArgs()
+        {
+            // --task and ordinary flags must NOT throw.
+            Program.ParseArgs(new[] { "--task", "FirstJoin", "-l", "ref.blib", "-o", "out.blib" });
+            Program.ParseArgs(new[] { "--task=MergeNode", "-l", "ref.blib", "-o", "out.blib" });
+        }
+
+        [TestMethod]
+        public void TestParseArgsRejectsTaskWithoutValue()
+        {
+            // A bare --task (or --task followed by another flag) must throw,
+            // like the other required-value flags, so it can't be silently
+            // ignored when ParseArgs runs outside Main's pre-scan.
+            var ex = Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--task" }));
+            StringAssert.Contains(ex.Message, "--task");
+            Assert.ThrowsException<ArgumentException>(
+                () => Program.ParseArgs(new[] { "--task", "-l", "ref.blib" }));
         }
 
         // --- ResolveInputScores -------------------------------------------
