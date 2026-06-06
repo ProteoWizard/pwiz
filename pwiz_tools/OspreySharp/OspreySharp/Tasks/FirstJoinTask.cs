@@ -80,11 +80,11 @@ namespace pwiz.OspreySharp.Tasks
             var c = ctx.Config;
             bool inputs = c.InputScores != null && c.InputScores.Count > 0;
             // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
-            // invariant: StopAfterStage5 (--join-only) is a modifier of
-            // --join-at-pass=<N>, and --join-at-pass=1 requires --input-scores,
-            // so StopAfterStage5 implies inputs at parse time -- a --join-only
-            // run can never reach here without InputScores.
-            // ProgramTests.TestValidateJoinOnlyRequiresInputScores pins that
+            // invariant: StopAfterStage5 is set by --task FirstJoin, which
+            // requires --input-scores, so StopAfterStage5 implies inputs at
+            // parse time -- a --task FirstJoin run can never reach here without
+            // InputScores.
+            // ProgramTests.TestValidateFirstJoinRequiresInputScores pins that
             // rejection, since the membership truth table (PipelineMembershipTest)
             // does not encode the cross-flag dependency on its own.
             return (!inputs && !c.NoJoin)
