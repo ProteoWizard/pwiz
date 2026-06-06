@@ -61,18 +61,18 @@ namespace pwiz.OspreySharp.Test
             {
                 (@"straight-through",  new OspreyConfig(),
                     new[] { true,  true,  true,  true  }),
-                (@"--no-join",         new OspreyConfig { NoJoin = true },
+                (@"PerFileScoring",    new OspreyConfig { NoJoin = true },
                     new[] { true,  false, false, false }),
-                (@"--join-only",       WithInputScores(c => c.StopAfterStage5 = true),
+                (@"FirstJoin",         WithInputScores(c => c.StopAfterStage5 = true),
                     new[] { false, true,  false, false }),
-                (@"rescore-worker",    WithInputScores(c => c.NoJoin = true),
+                (@"PerFileRescore",    WithInputScores(c => c.NoJoin = true),
                     new[] { false, false, true,  false }),
-                (@"merge",             WithInputScores(c => c.ExpectReconciledInput = true),
+                (@"MergeNode",         WithInputScores(c => c.ExpectReconciledInput = true),
                     new[] { false, false, false, true  }),
-                // --join-at-pass=1 --input-scores (no other join modifier): the
-                // single-node full pipeline. PerFileScoring lazy-rehydrates the
-                // supplied scores rather than computing them, so it is excluded;
-                // FirstJoin..MergeNode compute Stages 5-8.
+                // --input-scores with no --task: the single-node full pipeline.
+                // PerFileScoring lazy-rehydrates the supplied scores rather than
+                // computing them, so it is excluded; FirstJoin..MergeNode compute
+                // Stages 5-8.
                 (@"input-scores-full", WithInputScores(_ => { }),
                     new[] { false, true,  true,  true  }),
             };
