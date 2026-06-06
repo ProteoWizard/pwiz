@@ -211,6 +211,10 @@ namespace pwiz.Skyline.Controls.Graphs
         private SpectrumDisplayInfo _spectrum;
         private NodeTip _toolTip;
         private readonly List<IonSeriesKey> _pinnedSeriesKeys = new List<IonSeriesKey>();
+        // Identity of the precursor whose pinned rulers _pinnedSeriesKeys currently holds.
+        // Used to preserve pins across graph redraws (e.g. annotation-toggle context menu
+        // clicks) and only reset them when the user navigates to a different precursor.
+        private object _lastPrecursorId;
         private bool _contextMenuOpen;
                 
         private string _userSelectedSpectrum;
@@ -980,6 +984,14 @@ namespace pwiz.Skyline.Controls.Graphs
         private SpectrumGraphItem MakeGraphItem(SpectrumDisplayInfo spectrum, SpectrumNodeSelection selection, SrmSettings settings, SpectrumPeaksInfo spectrumPeaksOverride = null)
         {
             var precursor = selection.NodeTranGroup ?? SelectedPrecursor.DocNode;
+            // Reset pinned rulers whenever the user navigates to a different precursor.
+            // Same pattern used by GraphFullScan and ViewLibraryDlg. Idempotent for the
+            // mirror-spectrum call right after main, since both share the same selection.
+            if (!Equals(_lastPrecursorId, precursor.Id))
+            {
+                _pinnedSeriesKeys.Clear();
+                _lastPrecursorId = precursor.Id;
+            }
             var peptide = selection.GetPeptide(precursor);
 
             var group = precursor.TransitionGroup;
@@ -1182,7 +1194,9 @@ namespace pwiz.Skyline.Controls.Graphs
             graphPane.GraphObjList.Clear();
             GraphItem = null;
             AllowDisplayTip = false;
-            _pinnedSeriesKeys.Clear();
+            // Don't clear _pinnedSeriesKeys here — annotation-toggle context-menu commands
+            // also rebuild the graph and the user's pinned rulers should survive. The
+            // pinned list is reset only when MakeGraphItem detects a new precursor.
 
             GraphHelper.FormatGraphPane(graphControl.GraphPane);
             GraphHelper.FormatFontSize(graphControl.GraphPane, Settings.Default.SpectrumFontSize);
@@ -1388,6 +1402,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (spectrum != null)
                     {
                         GraphItem = MakeGraphItem(spectrum, selection, settings);
+                        // Re-apply pinned rulers to the freshly-built item so they survive
+                        // annotation-toggle redraws on the same precursor.
+                        SyncPinnedSeriesToGraphItems();
                         AllowDisplayTip = true;
                     }
 
