@@ -384,6 +384,28 @@ namespace pwiz.OspreySharp
             DumpDetectedPeptides || DumpLoessFit || LoessFitOnly ||
             DiagXicEntryId.HasValue || DiagSearchEntryIds != null || DiagMpScan.HasValue;
 
+        /// <summary>
+        /// Guard for a temporarily-disabled diagnostic. OSPREY_DUMP_PREDICT_RT's
+        /// producer was a per-candidate scoring hotspot and is commented out, so
+        /// enabling the env var would otherwise silently emit nothing. Fail
+        /// loudly instead, naming exactly what to uncomment to restore it.
+        /// </summary>
+        public OspreyFileDiagnostics()
+        {
+            // TO RESTORE OSPREY_DUMP_PREDICT_RT: uncomment WritePredictRtCall in
+            // OspreySharp/Tasks/AbstractScoringTask.cs (ScoreCandidate) and the
+            // paired WritePredictRtArrays / ClosePredictRtDump in
+            // OspreySharp/Tasks/PerFileRescoreTask.cs, then comment out this throw.
+            if (DumpPredictRt)
+                throw new NotImplementedException(
+                    @"OSPREY_DUMP_PREDICT_RT is temporarily disabled: its per-candidate " +
+                    @"producer was removed from the scoring hotspot. To restore, uncomment " +
+                    @"WritePredictRtCall in OspreySharp/Tasks/AbstractScoringTask.cs and the " +
+                    @"paired WritePredictRtArrays / ClosePredictRtDump in " +
+                    @"OspreySharp/Tasks/PerFileRescoreTask.cs, then comment out this throw. " +
+                    @"See ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.");
+        }
+
         // ----- Shared utilities -----
 
         /// <summary>

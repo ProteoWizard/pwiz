@@ -899,7 +899,9 @@ namespace pwiz.OspreySharp.Tasks
             // call cost a call + branch each candidate, so it is commented
             // out rather than routed through the diagnostics sink. To
             // restore, re-enable this and the paired WritePredictRtArrays /
-            // ClosePredictRtDump in PerFileRescoreTask. Mirrors Rust's
+            // ClosePredictRtDump in PerFileRescoreTask, and remove the
+            // OSPREY_DUMP_PREDICT_RT guard (NotImplementedException) in
+            // OspreyFileDiagnostics's constructor. Mirrors Rust's
             // dump_predict_rt_call at pipeline.rs ~7014. See
             // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
             // OspreyDiagnostics.WritePredictRtCall(

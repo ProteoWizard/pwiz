@@ -52,16 +52,21 @@ namespace pwiz.OspreySharp
         private static OspreyFileDiagnostics s_sink;
         private static bool s_initialized;
 
-        // Lazily initialize from env on first access when the driver never
-        // called Initialize -- preserves env-var-only bisection workflows. An
-        // explicit Initialize(true) from the -d flag must run BEFORE first use
-        // to add the forced dump bundle.
+        // Contract: Initialize() runs once, single-threaded, at pipeline entry
+        // (Program.Main) before any diagnostics call. We deliberately do NOT
+        // lazily self-init here -- a lazy init first touched from the parallel
+        // scoring loop would be a data race. Accessing the sink before
+        // Initialize is a programming error (an entry point that forgot to call
+        // it), so it is surfaced loudly rather than racily self-initialized.
+        // Env-only bisection workflows still work: Initialize self-enables the
+        // sink from the OSPREY_DUMP_* / OSPREY_DIAG_* env vars.
         private static OspreyFileDiagnostics Sink
         {
             get
             {
                 if (!s_initialized)
-                    Initialize(false);
+                    throw new InvalidOperationException(
+                        @"OspreyDiagnostics.Initialize must be called once at pipeline entry before any diagnostics call.");
                 return s_sink;
             }
         }
@@ -115,9 +120,9 @@ namespace pwiz.OspreySharp
                         Environment.SetEnvironmentVariable(envVar, @"1");
                 }
             }
-            s_initialized = true;
             var sink = new OspreyFileDiagnostics();
             s_sink = sink.AnyEnabled ? sink : null;
+            s_initialized = true;   // publish s_sink before marking initialized
         }
 
         /// <summary>
