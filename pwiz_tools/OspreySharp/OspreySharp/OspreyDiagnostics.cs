@@ -116,7 +116,8 @@ namespace pwiz.OspreySharp
             {
                 foreach (string envVar in s_forcedDumpBundle)
                 {
-                    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(envVar)))
+                    // Force-on: override "0" / unset / anything except already-"1".
+                    if (Environment.GetEnvironmentVariable(envVar) != @"1")
                         Environment.SetEnvironmentVariable(envVar, @"1");
                 }
             }

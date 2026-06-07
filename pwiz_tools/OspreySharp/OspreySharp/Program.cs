@@ -187,11 +187,6 @@ namespace pwiz.OspreySharp
                 // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
                 // lazy-rehydrate (via ctx.Demand) populates the upstream state
                 // from the boundary files on disk.
-                // Select the diagnostics sink before any task runs: -d forces
-                // the dump bundle on; otherwise the sink self-enables only if a
-                // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
-                OspreyDiagnostics.Initialize(config.Diagnostics);
-
                 var pipeline = new AnalysisPipeline();
                 return pipeline.Run(config);
             }
@@ -788,6 +783,7 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");
             Console.Error.WriteLine("    --write-pin                   Write PIN files for external tools");
+            Console.Error.WriteLine("    -d, --diagnostics             Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)");
             Console.Error.WriteLine("    --decoys-in-library           Trust decoys already in the spectral library");
             Console.Error.WriteLine("                                    (DIA-NN Decoy column / decoy_/rev_/DECOY_ protein");
             Console.Error.WriteLine("                                    prefix / manifest) instead of generating reverse");

@@ -1044,7 +1044,7 @@ namespace pwiz.OspreySharp
             return DiagMpScan.HasValue &&
                 (int)apexScanNumber == DiagMpScan.Value &&
                 candidateModifiedSequence != null &&
-                candidateModifiedSequence.StartsWith(@"DECOY_ALQFAQWWK");
+                candidateModifiedSequence.StartsWith(@"DECOY_ALQFAQWWK", StringComparison.Ordinal);
         }
 
         /// <summary>
@@ -2060,7 +2060,14 @@ namespace pwiz.OspreySharp
             const string path = @"cs_stage7_detected_peptides.txt";
             var sorted = new List<string>(detectedPeptides);
             sorted.Sort(StringComparer.Ordinal);
-            File.WriteAllLines(path, sorted);
+            // Force LF (not File.WriteAllLines' OS newline) so this cross-impl
+            // bisection artifact stays byte-stable across platforms.
+            using (var w = new StreamWriter(path))
+            {
+                w.NewLine = LF;
+                foreach (var p in sorted)
+                    w.WriteLine(p);
+            }
             LogAction(string.Format(@"[DIAG] Wrote {0} ({1} entries)", path, sorted.Count));
         }
 
