@@ -891,15 +891,19 @@ namespace pwiz.OspreySharp.Tasks
             double expectedRt = rtCalibration != null
                 ? rtCalibration.Predict(candidate.RetentionTime)
                 : candidate.RetentionTime;
-            // Bisection seam: dump (entry_id, library_rt -> expected_rt)
-            // for every per-window candidate scoring. Mirrors Rust's
-            // dump_predict_rt_call at pipeline.rs ~7014. Pair with
-            // WritePredictRtArrays at the top of the rescore loop to
-            // narrow whether RT divergences come from cal arrays
-            // diverging or from Predict() output differing on identical
-            // arrays.
-            OspreyDiagnostics.WritePredictRtCall(
-                candidate.Id, candidate.RetentionTime, expectedRt);
+            // Bisection seam DISABLED (perf hotspot): this dumped
+            // (entry_id, library_rt -> expected_rt) for every per-window
+            // candidate. In the per-candidate inner loop even the gated-off
+            // call cost a call + branch each candidate, so it is commented
+            // out rather than routed through the diagnostics sink. To
+            // restore, re-enable this and the paired WritePredictRtArrays /
+            // ClosePredictRtDump in PerFileRescoreTask, and remove the
+            // OSPREY_DUMP_PREDICT_RT guard (NotImplementedException) in
+            // OspreyFileDiagnostics's constructor. Mirrors Rust's
+            // dump_predict_rt_call at pipeline.rs ~7014. See
+            // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
+            // OspreyDiagnostics.WritePredictRtCall(
+            //     candidate.Id, candidate.RetentionTime, expectedRt);
             double rtTolerance = globalRtTolerance;
 
             if (diag)

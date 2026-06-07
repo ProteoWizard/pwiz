@@ -322,6 +322,12 @@ namespace pwiz.OspreySharp
                         i++;
                         break;
 
+                    case "-d":
+                    case "--diagnostics":
+                        config.Diagnostics = true;
+                        i++;
+                        break;
+
                     case "--task":
                         // The HPC task selector is resolved + validated in Main's
                         // pre-scan (ResolveTask). Consume the flag + its required
@@ -777,6 +783,7 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --report <file>               Write TSV report to file");
             Console.Error.WriteLine("    --no-prefilter                Disable coelution signal pre-filter");
             Console.Error.WriteLine("    --write-pin                   Write PIN files for external tools");
+            Console.Error.WriteLine("    -d, --diagnostics             Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)");
             Console.Error.WriteLine("    --decoys-in-library           Trust decoys already in the spectral library");
             Console.Error.WriteLine("                                    (DIA-NN Decoy column / decoy_/rev_/DECOY_ protein");
             Console.Error.WriteLine("                                    prefix / manifest) instead of generating reverse");
