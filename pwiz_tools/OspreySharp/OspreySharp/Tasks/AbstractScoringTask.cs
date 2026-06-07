@@ -286,16 +286,14 @@ namespace pwiz.OspreySharp.Tasks
         }
 
 
-        // The shared scoring infrastructure (ExtractTopNFragmentXics
-        // etc.) reads CAL_TOP_N_FRAGMENTS from PerFileScoringTask;
-        // see that class for the canonical declaration.
-
         /// <summary>
         /// Extract XICs for the top N most intense library fragments across the
         /// supplied (pre-filtered) spectra list. Returns only fragments that have
         /// at least one non-zero intensity point.
+        /// Calibration-only today; <c>internal static</c> so the extracted
+        /// <see cref="Calibrator"/> can call it without inheriting this class.
         /// </summary>
-        protected List<XicData> ExtractTopNFragmentXics(
+        internal static List<XicData> ExtractTopNFragmentXics(
             LibraryEntry entry,
             List<Spectrum> candidateSpectra,
             double[] rts,
@@ -2260,7 +2258,7 @@ namespace pwiz.OspreySharp.Tasks
         /// Find the MS1 spectrum with retention time closest to the given RT.
         /// Assumes MS1 spectra are sorted by RT.
         /// </summary>
-        protected static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
+        internal static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
         {
             if (ms1Spectra == null || ms1Spectra.Count == 0)
                 return null;
@@ -2419,7 +2417,7 @@ namespace pwiz.OspreySharp.Tasks
         /// value (called once per scored entry, not in the hot prefilter loop).
         /// The prefilter uses HasTopNFragmentMatch instead for speed.
         /// </summary>
-        protected byte CountTop6Matches(
+        internal static byte CountTop6Matches(
             LibraryEntry entry, Spectrum spectrum, OspreyConfig config)
         {
             if (entry.Fragments == null || entry.Fragments.Count == 0)
