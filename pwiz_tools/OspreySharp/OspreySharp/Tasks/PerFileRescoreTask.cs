@@ -294,7 +294,9 @@ namespace pwiz.OspreySharp.Tasks
             // these, the in-process pipeline path can leave the writers
             // unflushed and produce truncated bisection dumps.
             OspreyDiagnostics.CloseMpInputsDump();
-            OspreyDiagnostics.ClosePredictRtDump();
+            // ClosePredictRtDump disabled with the rest of the predict-rt
+            // diagnostic (perf hotspot); restore alongside WritePredictRtCall.
+            // OspreyDiagnostics.ClosePredictRtDump();
             OspreyDiagnostics.CloseCwtPathDump();
             return true;
         }
@@ -770,14 +772,18 @@ namespace pwiz.OspreySharp.Tasks
                 if (!refinedCalibrations.TryGetValue(fileName, out RTCalibration rtCal))
                     perFileCalibrations.TryGetValue(fileName, out rtCal);
 
-                // Bisection seam: dump the cal's library_rts +
-                // fitted_values once per file. Mirrors Rust's
-                // dump_predict_rt_arrays at pipeline.rs ~2886.
-                if (rtCal != null)
-                {
-                    OspreyDiagnostics.WritePredictRtArrays(
-                        fileName, rtCal.LibraryRts, rtCal.FittedValues);
-                }
+                // Bisection seam DISABLED (paired with the per-candidate
+                // WritePredictRtCall, which was removed from the scoring
+                // hotspot). Dumped the cal's library_rts + fitted_values once
+                // per file. Mirrors Rust's dump_predict_rt_arrays at
+                // pipeline.rs ~2886. To restore, re-enable this and the
+                // WritePredictRtCall in AbstractScoringTask. See
+                // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
+                // if (rtCal != null)
+                // {
+                //     OspreyDiagnostics.WritePredictRtArrays(
+                //         fileName, rtCal.LibraryRts, rtCal.FittedValues);
+                // }
 
                 // Build the scoring context with the boundary overrides.
                 // RunCoelutionScoring inspects context.BoundaryOverrides

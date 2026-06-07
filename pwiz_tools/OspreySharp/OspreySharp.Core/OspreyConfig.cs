@@ -118,6 +118,13 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Write PIN files for external tools.</summary>
         public bool WritePin { get; set; }
 
+        /// <summary>
+        /// -d / --diagnostics: master switch that turns on the cross-impl
+        /// bisection dump bundle (see <c>OspreyDiagnostics.Initialize</c>).
+        /// Runtime toggle only -- intentionally NOT part of any identity hash.
+        /// </summary>
+        public bool Diagnostics { get; set; }
+
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 
