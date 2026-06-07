@@ -187,6 +187,11 @@ namespace pwiz.OspreySharp
                 // PerFileRescoreTask (OspreyTask.IsIncluded); PerFileScoring's
                 // lazy-rehydrate (via ctx.Demand) populates the upstream state
                 // from the boundary files on disk.
+                // Select the diagnostics sink before any task runs: -d forces
+                // the dump bundle on; otherwise the sink self-enables only if a
+                // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
+                OspreyDiagnostics.Initialize(config.Diagnostics);
+
                 var pipeline = new AnalysisPipeline();
                 return pipeline.Run(config);
             }
@@ -319,6 +324,12 @@ namespace pwiz.OspreySharp
 
                     case "--write-pin":
                         config.WritePin = true;
+                        i++;
+                        break;
+
+                    case "-d":
+                    case "--diagnostics":
+                        config.Diagnostics = true;
                         i++;
                         break;
 
