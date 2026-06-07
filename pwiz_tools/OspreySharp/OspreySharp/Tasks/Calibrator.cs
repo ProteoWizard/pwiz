@@ -910,7 +910,6 @@ namespace pwiz.OspreySharp.Tasks
             out double measuredRt)
         {
             var config = context.Config;
-            var resolution = context.Resolution;
             signalToNoise = 0.0;
             libraryRt = entry.RetentionTime;
             measuredRt = 0.0;
