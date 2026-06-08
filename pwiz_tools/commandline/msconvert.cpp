@@ -917,10 +917,11 @@ void calculateSourceFilePtrSHA1(const SourceFilePtr& sourceFilePtr)
 }
 
 
-/// Writes an MSData object to a .partial file first, then renames to the final filename on success,
-/// so that incomplete output from a failed conversion is not mistaken for a valid file. If an output
-/// file already exists at outputFilename, it is preserved under a temporary backup name until the
-/// new file has been promoted, and restored if the final rename fails.
+/// Writes an MSData object to a .partial file first, then renames it onto the final filename on
+/// success, so that incomplete output from a failed conversion is not mistaken for a valid file.
+/// bfs::rename atomically replaces any existing output (MoveFileEx with MOVEFILE_REPLACE_EXISTING
+/// on Windows, ::rename on POSIX); since .partial sits in the same directory as the output, the
+/// replacement is on the same volume and therefore atomic.
 void writeAtomically(const MSData& msd,
                      const string& outputFilename,
                      const MSDataFile::WriteConfig& writeConfig,
@@ -928,29 +929,7 @@ void writeAtomically(const MSData& msd,
 {
     string partialFilename = outputFilename + ".partial";
     MSDataFile::write(msd, partialFilename, writeConfig, pILR);
-
-    // bfs::rename fails on Windows if the destination already exists, so preserve any existing
-    // output under a temporary backup name until the new file has been promoted.
-    string backupFilename;
-    if (bfs::exists(outputFilename))
-    {
-        backupFilename = outputFilename + ".backup-" + bfs::unique_path("%%%%-%%%%").string();
-        bfs::rename(outputFilename, backupFilename);
-    }
-
-    try
-    {
-        bfs::rename(partialFilename, outputFilename);
-    }
-    catch (...)
-    {
-        if (!backupFilename.empty())
-            bfs::rename(backupFilename, outputFilename); // restore old output
-        throw;
-    }
-
-    if (!backupFilename.empty())
-        bfs::remove(backupFilename);
+    bfs::rename(partialFilename, outputFilename);
 }
 
 
