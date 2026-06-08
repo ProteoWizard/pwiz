@@ -1054,7 +1054,7 @@ namespace pwiz.OspreySharp
             XICPeakBounds bestPeak, int peakLen,
             double mpCosine, double mpResidualRatio, double mpMinFragmentR2, double mpResidualCorr,
             TukeyMedianPolishResult polish,
-            IList<KeyValuePair<int, double[]>> peakXics)
+            IReadOnlyList<KeyValuePair<int, double[]>> peakXics)
         {
             var inv = CultureInfo.InvariantCulture;
             using (var dw = new StreamWriter(@"cs_mp_diag.txt"))

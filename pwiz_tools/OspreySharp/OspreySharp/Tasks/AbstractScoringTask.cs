@@ -734,7 +734,7 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     var fdrEntry = ScoreCandidate(
                         candidate, windowSpectra, windowRts,
-                        ms1Spectra, rtCalibration, ms1Calibration,
+                        rtCalibration,
                         globalRtTolerance, rtSigma,
                         scorer, context,
                         ospreyContext, ospreyPeakData);
@@ -856,9 +856,7 @@ namespace pwiz.OspreySharp.Tasks
             LibraryEntry candidate,
             List<Spectrum> windowSpectra,
             double[] windowRts,
-            List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
-            MzCalibrationResult ms1Calibration,
             double globalRtTolerance,
             double rtSigma,
             SpectralScorer scorer,

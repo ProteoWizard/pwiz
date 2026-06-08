@@ -43,9 +43,9 @@ namespace pwiz.OspreySharp.Scoring
         public TukeyMedianPolishResult Polish { get; }
 
         /// <summary>The peak-cropped per-fragment XIC slices passed to Compute (for WriteMpDump).</summary>
-        public IList<KeyValuePair<int, double[]>> PeakXics { get; }
+        public IReadOnlyList<KeyValuePair<int, double[]>> PeakXics { get; }
 
-        public MedianPolishByproduct(TukeyMedianPolishResult polish, IList<KeyValuePair<int, double[]>> peakXics)
+        public MedianPolishByproduct(TukeyMedianPolishResult polish, IReadOnlyList<KeyValuePair<int, double[]>> peakXics)
         {
             Polish = polish;
             PeakXics = peakXics;

@@ -312,7 +312,7 @@ namespace pwiz.OspreySharp
             XICPeakBounds bestPeak, int peakLen,
             double mpCosine, double mpResidualRatio, double mpMinFragmentR2, double mpResidualCorr,
             TukeyMedianPolishResult polish,
-            IList<KeyValuePair<int, double[]>> peakXics)
+            IReadOnlyList<KeyValuePair<int, double[]>> peakXics)
         {
             Sink?.WriteMpDump(candidate, apexScanNumber, bestPeak, peakLen,
                 mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr, polish, peakXics);
