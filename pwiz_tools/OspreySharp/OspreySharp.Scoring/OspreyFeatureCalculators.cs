@@ -75,6 +75,10 @@ namespace pwiz.OspreySharp.Scoring
             calculators[11] = new RtDeviationCalc();
             calculators[12] = new AbsRtDeviationCalc();
 
+            // MS1 family (HRAM only): precursor coelution + isotope-envelope cosine.
+            calculators[13] = new Ms1PrecursorCoelutionCalc();
+            calculators[14] = new Ms1IsotopeCosineCalc();
+
             // Median-polish family: cosine / residual-ratio / min-fragment-R^2 /
             // residual-correlation of the Tukey median-polish fit.
             calculators[15] = new MedianPolishCosineCalc();

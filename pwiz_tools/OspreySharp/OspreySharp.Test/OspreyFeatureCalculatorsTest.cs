@@ -195,6 +195,38 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
+        /// MS1 family (ms1_precursor_coelution / ms1_isotope_cosine): both features
+        /// are HRAM-only. The HRAM gate is on the context -- when SetMs1Machinery was
+        /// never called (so HasMs1Features stays false and Ms1Spectra is null), both
+        /// calculators short-circuit to exactly 0.0 before any byproduct work. The
+        /// numeric path (calibration, reference-XIC pick, nearest-MS1 sampling,
+        /// isotope envelope) is covered by the end-to-end 1e-9 cross-impl parity gate
+        /// against the Rust reference on the HRAM datasets.
+        /// </summary>
+        [TestMethod]
+        public void TestMs1Calculators()
+        {
+            var rts = new double[] { 0, 1, 2, 3, 4 };
+            var frag0 = new double[] { 1, 2, 3, 2, 1 };
+            var peakData = new FakeDetailedPeakData(
+                new List<XicData> { new XicData(0, rts, frag0) },
+                new XICPeakBounds { StartIndex = 0, EndIndex = 4, ApexIndex = 2 },
+                candidate: new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0),
+                scanRetentionTimes: rts);
+
+            // No SetMs1Machinery -> HasMs1Features is false -> HRAM gate returns 0.0
+            // for both features, without touching the (null) MS1 spectra.
+            var context = new OspreyScoringContext(null);
+            context.ClearByproducts();
+            Assert.IsFalse(context.HasMs1Features);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(13).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(14).Calculate(context, peakData), TOLERANCE);
+
+            Assert.AreEqual("ms1_precursor_coelution", OspreyFeatureCalculators.Get(13).Name);
+            Assert.AreEqual("ms1_isotope_cosine", OspreyFeatureCalculators.Get(14).Name);
+        }
+
+        /// <summary>
         /// Apex-match family: consecutive_ions (longest matched b/y ordinal run),
         /// explained_intensity (matched / total apex intensity), and the signed /
         /// absolute mean fragment mass error. The mass-accuracy trio share one
@@ -339,12 +371,14 @@ namespace pwiz.OspreySharp.Test
             private readonly int _windowStartIndex;
             private readonly int _windowLength;
             private readonly IReadOnlyList<Spectrum> _windowSpectra;
+            private readonly IReadOnlyList<double> _scanRetentionTimes;
 
             public FakeDetailedPeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
                 double apexRetentionTime = 0.0, double expectedRt = 0.0,
                 LibraryEntry candidate = null, Spectrum apexSpectrum = null,
                 int apexGlobalIndex = 0, int apexLocalIndex = 0, int windowStartIndex = 0,
-                int windowLength = 0, IReadOnlyList<Spectrum> windowSpectra = null)
+                int windowLength = 0, IReadOnlyList<Spectrum> windowSpectra = null,
+                IReadOnlyList<double> scanRetentionTimes = null)
             {
                 _xics = xics;
                 _peakBounds = peakBounds;
@@ -357,6 +391,7 @@ namespace pwiz.OspreySharp.Test
                 _windowStartIndex = windowStartIndex;
                 _windowLength = windowLength;
                 _windowSpectra = windowSpectra;
+                _scanRetentionTimes = scanRetentionTimes;
             }
 
             public LibraryEntry Candidate { get { return _candidate; } }
@@ -370,6 +405,7 @@ namespace pwiz.OspreySharp.Test
             public int WindowStartIndex { get { return _windowStartIndex; } }
             public int WindowLength { get { return _windowLength; } }
             public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
+            public IReadOnlyList<double> ScanRetentionTimes { get { return _scanRetentionTimes; } }
         }
 
         /// <summary>

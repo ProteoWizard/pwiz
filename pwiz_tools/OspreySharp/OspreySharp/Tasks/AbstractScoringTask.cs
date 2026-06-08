@@ -724,6 +724,7 @@ namespace pwiz.OspreySharp.Tasks
             var ospreyContext = new OspreyScoringContext(config);
             ospreyContext.SetWindow(context.Resolution, preprocessedXcorr, scorer,
                 context.XcorrScratchPool);
+            ospreyContext.SetMs1Machinery(context.Resolution.HasMs1Features, ms1Spectra, ms1Calibration);
             var ospreyPeakData = new OspreyPeakData();
 
             try
@@ -1436,30 +1437,11 @@ namespace pwiz.OspreySharp.Tasks
             // (features 7-10) moved to the apex-match calculators below.
             byte top6Matches = CountTop6Matches(candidate, apexSpectrum, config);
 
-            // MS1 features: precursor coelution, isotope cosine.
-            // Rust pipeline.rs:5362 gates on is_hram - unit resolution skips MS1.
-            double ms1PrecursorCoelution = 0.0;
-            double ms1IsotopeCosine = 0.0;
-            if (resolution.HasMs1Features && ms1Spectra != null && ms1Spectra.Count > 0)
-            {
-                // Find reference XIC (highest total intensity) for MS1 coelution.
-                // Same selection as ComputePeakShapeFeatures and Rust pipeline.rs.
-                int ms1RefIdx = 0;
-                double ms1BestTotal = 0.0;
-                for (int f = 0; f < xics.Count; f++)
-                {
-                    double total = 0.0;
-                    double[] inten = xics[f].Intensities;
-                    for (int k = 0; k < inten.Length; k++)
-                        total += inten[k];
-                    if (total >= ms1BestTotal) { ms1BestTotal = total; ms1RefIdx = f; }
-                }
-                ComputeMs1Features(
-                    candidate, xics, ms1RefIdx, bestPeak,
-                    windowRts, startScan,
-                    ms1Spectra, ms1Calibration, config,
-                    out ms1PrecursorCoelution, out ms1IsotopeCosine);
-            }
+            // MS1 features (precursor coelution, isotope cosine) are computed by the
+            // MS1 calculators (features 13, 14) below from the published per-window
+            // MS1 machinery (ospreyContext.SetMs1Machinery) and the per-candidate
+            // ScanRetentionTimes slice built into ospreyPeakData.Set. The HRAM gate
+            // (Rust pipeline.rs:5362 is_hram) lives in the calculators.
 
             // Per-candidate state for the modular feature calculators. Reused
             // window-local instances (see RunCoelutionScoring); ClearByproducts
@@ -1468,8 +1450,15 @@ namespace pwiz.OspreySharp.Tasks
             // calculators. Calculator-backed features mirror Skyline's
             // IPeakFeatureCalculator; the rest stay inline until extracted.
             ospreyContext.ClearByproducts();
+            // Per-candidate scan-RT slice for the MS1 family (features 13, 14): the
+            // inline ComputeMs1Features mapped XIC index i -> windowRts[startScan + i].
+            // Reproduce THAT array exactly (do not substitute Xics[*].RetentionTimes).
+            int ms1Len = xics.Count > 0 ? xics[0].Intensities.Length : 0;
+            var scanRts = new double[ms1Len];
+            for (int i = 0; i < ms1Len; i++)
+                scanRts[i] = windowRts[startScan + i];
             ospreyPeakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt, apexSpectrum,
-                apexGlobalIdx, bestPeak.ApexIndex, startScan, rangeLen, windowSpectra);
+                apexGlobalIdx, bestPeak.ApexIndex, startScan, rangeLen, windowSpectra, scanRts);
 
             // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The crop,
             // WriteMpInputsRow, and Compute stay here because the bisection
@@ -1522,8 +1511,8 @@ namespace pwiz.OspreySharp.Tasks
             features[10] = OspreyFeatureCalculators.Get(10).Calculate(ospreyContext, ospreyPeakData);
             features[11] = OspreyFeatureCalculators.Get(11).Calculate(ospreyContext, ospreyPeakData);
             features[12] = OspreyFeatureCalculators.Get(12).Calculate(ospreyContext, ospreyPeakData);
-            features[13] = ms1PrecursorCoelution;
-            features[14] = ms1IsotopeCosine;
+            features[13] = OspreyFeatureCalculators.Get(13).Calculate(ospreyContext, ospreyPeakData);
+            features[14] = OspreyFeatureCalculators.Get(14).Calculate(ospreyContext, ospreyPeakData);
             features[15] = OspreyFeatureCalculators.Get(15).Calculate(ospreyContext, ospreyPeakData);
             features[16] = OspreyFeatureCalculators.Get(16).Calculate(ospreyContext, ospreyPeakData);
             features[17] = OspreyFeatureCalculators.Get(17).Calculate(ospreyContext, ospreyPeakData);
@@ -1790,137 +1779,15 @@ namespace pwiz.OspreySharp.Tasks
 
 
         /// <summary>
-        /// Compute MS1 features: correlation between the summed fragment XIC and the
-        /// precursor MS1 XIC, and cosine similarity between the observed isotope envelope
-        /// at the apex MS1 scan and the theoretical averagine envelope.
-        /// </summary>
-        private void ComputeMs1Features(
-            LibraryEntry candidate,
-            List<XicData> xics,
-            int refXicIdx,
-            XICPeakBounds peak,
-            double[] windowRts, int startScan,
-            List<MS1Spectrum> ms1Spectra,
-            MzCalibrationResult ms1Calibration,
-            OspreyConfig config,
-            out double ms1PrecursorCoelution,
-            out double ms1IsotopeCosine)
-        {
-            ms1PrecursorCoelution = 0.0;
-            ms1IsotopeCosine = 0.0;
-
-            if (xics.Count == 0 || ms1Spectra == null || ms1Spectra.Count == 0)
-                return;
-
-            int len = xics[0].Intensities.Length;
-            if (len == 0)
-                return;
-
-            int start = Math.Max(0, peak.StartIndex);
-            int end = Math.Min(len - 1, peak.EndIndex);
-            if (end - start + 1 < 3)
-                return;
-
-            // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
-            // Matches Rust pipeline.rs:5363-5370 (reverse_calibrate_mz + calibrated_tolerance_ppm).
-            double baseTolPpm = 10.0;
-            double ms1TolPpm = baseTolPpm;
-            double searchMz = candidate.PrecursorMz;
-            if (ms1Calibration != null && ms1Calibration.Calibrated)
-            {
-                // calibrated_tolerance_ppm: max(3*SD, 1.0) ppm
-                ms1TolPpm = Math.Max(3.0 * ms1Calibration.SD, 1.0);
-                // reverse_calibrate_mz: observed ~ theoretical + offset
-                if (ms1Calibration.Unit == "Th")
-                    searchMz = candidate.PrecursorMz + ms1Calibration.Mean;
-                else
-                    searchMz = candidate.PrecursorMz * (1.0 + ms1Calibration.Mean / 1e6);
-            }
-
-            // Correlate MS1 precursor intensity with reference XIC (not summed fragment).
-            // Rust pipeline.rs:5373-5389: uses ref_xic[start..=end], skips missing MS1.
-            double[] refIntensities = xics[refXicIdx].Intensities;
-            var ms1Intensities = new List<double>();
-            var refValues = new List<double>();
-
-            for (int i = start; i <= end; i++)
-            {
-                double rt = windowRts[startScan + i];
-                var ms1 = FindNearestMs1(ms1Spectra, rt);
-                if (ms1 != null)
-                {
-                    var peakInfo = ms1.FindPeakPpm(searchMz, ms1TolPpm);
-                    double intensity = peakInfo.HasValue ? peakInfo.Value.Intensity : 0.0;
-                    ms1Intensities.Add(intensity);
-                    refValues.Add(i < refIntensities.Length ? refIntensities[i] : 0.0);
-                }
-            }
-
-            if (ms1Intensities.Count >= 3)
-            {
-                double[] ms1Arr = ms1Intensities.ToArray();
-                double[] refArr = refValues.ToArray();
-                ms1PrecursorCoelution = ScoringMath.PearsonCorrelationInRange(ms1Arr, refArr, 0, ms1Arr.Length - 1);
-                if (double.IsNaN(ms1PrecursorCoelution))
-                    ms1PrecursorCoelution = 0.0;
-            }
-
-            // Isotope cosine at apex MS1 scan.
-            // Rust pipeline.rs:5393-5404: gates on envelope.has_m0().
-            int apex = Math.Max(start, Math.Min(end, peak.ApexIndex));
-            double apexRt = windowRts[startScan + apex];
-            var apexMs1 = FindNearestMs1(ms1Spectra, apexRt);
-            if (apexMs1 != null)
-            {
-                int charge = candidate.Charge > 0 ? candidate.Charge : 1;
-                var envelope = IsotopeEnvelope.Extract(
-                    apexMs1, searchMz, charge, ms1TolPpm);
-
-                // Gate: skip if M0 peak is missing (matches Rust envelope.has_m0())
-                if (envelope.Intensities != null && envelope.Intensities.Length > 1
-                    && envelope.Intensities[1] > 0.0) // index 1 = M0 (M-1 at 0)
-                {
-                    // Sequence-based isotope distribution, matching Rust
-                    // pipeline.rs:5400 peptide_isotope_cosine.
-                    double score = IsotopeDistribution.PeptideIsotopeCosine(
-                        candidate.Sequence, envelope.Intensities);
-                    if (score >= 0.0)
-                        ms1IsotopeCosine = score;
-                }
-            }
-        }
-
-
-        /// <summary>
         /// Find the MS1 spectrum with retention time closest to the given RT.
-        /// Assumes MS1 spectra are sorted by RT.
+        /// Assumes MS1 spectra are sorted by RT. Thin forwarder to the single
+        /// implementation in Core (<see cref="MS1Spectrum.FindNearest"/>) so the
+        /// harness (here + <c>Calibrator</c>) and the MS1 feature calculators share
+        /// one binary search / tie-break and cannot drift.
         /// </summary>
         internal static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
         {
-            if (ms1Spectra == null || ms1Spectra.Count == 0)
-                return null;
-
-            int lo = 0;
-            int hi = ms1Spectra.Count;
-            while (lo < hi)
-            {
-                int mid = lo + (hi - lo) / 2;
-                if (ms1Spectra[mid].RetentionTime < rt)
-                    lo = mid + 1;
-                else
-                    hi = mid;
-            }
-
-            if (lo >= ms1Spectra.Count)
-                return ms1Spectra[ms1Spectra.Count - 1];
-            if (lo == 0)
-                return ms1Spectra[0];
-
-            var prev = ms1Spectra[lo - 1];
-            var next = ms1Spectra[lo];
-            return Math.Abs(prev.RetentionTime - rt) <= Math.Abs(next.RetentionTime - rt)
-                ? prev
-                : next;
+            return MS1Spectrum.FindNearest(ms1Spectra, rt);
         }
 
 

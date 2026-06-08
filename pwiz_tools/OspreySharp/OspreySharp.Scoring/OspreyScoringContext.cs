@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Scoring
@@ -92,6 +93,41 @@ namespace pwiz.OspreySharp.Scoring
             PreprocessedXcorr = preprocessedXcorr;
             Scorer = scorer;
             XcorrScratchPool = xcorrScratchPool;
+        }
+
+        /// <summary>
+        /// True when the run has MS1 features (HRAM). The MS1 family (features 13,
+        /// 14) is exactly 0.0 for unit-resolution runs; the calculators gate on this
+        /// before doing any work. Window-level -- set via <see cref="SetMs1Machinery"/>.
+        /// </summary>
+        public bool HasMs1Features { get; private set; }
+
+        /// <summary>
+        /// The window's MS1 full-scan spectra (sorted by RT), used by the MS1 family
+        /// to sample the precursor-intensity trace and the apex isotope envelope.
+        /// Window-level -- set via <see cref="SetMs1Machinery"/>.
+        /// </summary>
+        public IReadOnlyList<MS1Spectrum> Ms1Spectra { get; private set; }
+
+        /// <summary>
+        /// The m/z calibration result used to reverse-calibrate the precursor search
+        /// m/z and derive the MS1 tolerance. Per-run; null when uncalibrated.
+        /// Window-level -- set via <see cref="SetMs1Machinery"/>.
+        /// </summary>
+        public MzCalibrationResult Ms1Calibration { get; private set; }
+
+        /// <summary>
+        /// Set the per-window MS1 machinery the MS1 family (features 13, 14) reads.
+        /// Called once per window after construction. These are window-level and
+        /// deliberately survive <see cref="ClearByproducts"/> (which only resets the
+        /// per-candidate byproduct cache).
+        /// </summary>
+        public void SetMs1Machinery(bool hasMs1Features, IReadOnlyList<MS1Spectrum> ms1Spectra,
+            MzCalibrationResult ms1Calibration)
+        {
+            HasMs1Features = hasMs1Features;
+            Ms1Spectra = ms1Spectra;
+            Ms1Calibration = ms1Calibration;
         }
 
         /// <summary>
