@@ -727,6 +727,15 @@ namespace pwiz.OspreySharp.Tasks
             var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(
                 windowSpectra, scorer, context.XcorrScratchPool);
 
+            // Reused per-window scoring context + peak-data adapter for the
+            // modular feature calculators. The per-candidate loop mutates them in
+            // place (ClearByproducts + Set) so scoring allocates no context /
+            // peak-data per candidate. Windows are scored on separate threads
+            // (Parallel.For above), so these are window-local, never shared task
+            // state.
+            var ospreyContext = new OspreyScoringContext(config);
+            var ospreyPeakData = new OspreyPeakData();
+
             try
             {
                 // Score each candidate
@@ -737,7 +746,8 @@ namespace pwiz.OspreySharp.Tasks
                         preprocessedXcorr,
                         ms1Spectra, rtCalibration, ms1Calibration,
                         globalRtTolerance, rtSigma,
-                        scorer, context);
+                        scorer, context,
+                        ospreyContext, ospreyPeakData);
 
                     if (fdrEntry != null)
                         entries.Add(fdrEntry);
@@ -863,7 +873,9 @@ namespace pwiz.OspreySharp.Tasks
             double globalRtTolerance,
             double rtSigma,
             SpectralScorer scorer,
-            ScoringContext context)
+            ScoringContext context,
+            OspreyScoringContext ospreyContext,
+            OspreyPeakData ospreyPeakData)
         {
             var config = context.Config;
             var resolution = context.Resolution;
@@ -1445,11 +1457,6 @@ namespace pwiz.OspreySharp.Tasks
             ComputeCoelutionStats(xics, bestPeak,
                 out coelutionSum, out coelutionMax, out nCoelutingFragments);
 
-            // Peak shape features: apex, area, sharpness
-            double peakApex, peakArea, peakSharpness;
-            ComputePeakShapeFeatures(xics, bestPeak,
-                out peakApex, out peakArea, out peakSharpness);
-
             // RT deviation (absolute even if calibration disabled - measured vs library RT)
             double rtDeviation = apexSpectrum.RetentionTime - expectedRt;
             double absRtDeviation = Math.Abs(rtDeviation);
@@ -1561,14 +1568,22 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
 
+            // Per-candidate state for the modular feature calculators. Reused
+            // window-local instances (see RunCoelutionScoring); ClearByproducts
+            // resets the per-candidate byproduct cache. Calculator-backed features
+            // mirror Skyline's IPeakFeatureCalculator; the rest stay inline until
+            // their family is extracted.
+            ospreyContext.ClearByproducts();
+            ospreyPeakData.Set(candidate, bestPeak, xics);
+
             // Build full 21-element PIN feature vector
             double[] features = new double[NUM_PIN_FEATURES];
             features[0] = coelutionSum;
             features[1] = coelutionMax;
             features[2] = nCoelutingFragments;
-            features[3] = peakApex;
-            features[4] = peakArea;
-            features[5] = peakSharpness;
+            features[3] = OspreyFeatureCalculators.Get(3).Calculate(ospreyContext, ospreyPeakData);
+            features[4] = OspreyFeatureCalculators.Get(4).Calculate(ospreyContext, ospreyPeakData);
+            features[5] = OspreyFeatureCalculators.Get(5).Calculate(ospreyContext, ospreyPeakData);
             features[6] = xcorr;
             features[7] = consecutiveIons;
             features[8] = explainedIntensity;
@@ -1880,111 +1895,6 @@ namespace pwiz.OspreySharp.Tasks
                 if (fragCorrCount[i] > 0 && fragCorrSum[i] / fragCorrCount[i] > 0.0)
                     nCoeluting++;
             }
-        }
-
-
-        /// <summary>
-        /// Compute peak shape features at the detected peak boundaries: summed XIC
-        /// apex intensity, area under the summed XIC, and sharpness (apex / mean edge).
-        /// </summary>
-        private void ComputePeakShapeFeatures(
-            List<XicData> xics, XICPeakBounds peak,
-            out double peakApex, out double peakArea, out double peakSharpness)
-        {
-            peakApex = 0.0;
-            peakArea = 0.0;
-            peakSharpness = 0.0;
-
-            if (xics.Count == 0)
-                return;
-
-            int len = xics[0].Intensities.Length;
-            if (len == 0)
-                return;
-
-            int start = Math.Max(0, peak.StartIndex);
-            int end = Math.Min(len - 1, peak.EndIndex);
-            int apex = Math.Max(start, Math.Min(end, peak.ApexIndex));
-
-            if (start > end)
-                return;
-
-            // Use reference XIC (highest total intensity), matching Rust
-            // pipeline.rs:7140-7148. Rust's `xics.iter().max_by(...)`
-            // returns the LAST equal element on ties (per Iterator::max_by
-            // doc), so use `>=` here, NOT `>`. Without this, the first
-            // tied fragment wins on the C# side while Rust picks the
-            // last, producing divergent peak_apex / peak_area /
-            // peak_sharpness when fragments tie on total intensity.
-            int refIdx = 0;
-            double bestTotal = -1.0;
-            for (int f = 0; f < xics.Count; f++)
-            {
-                double total = 0.0;
-                double[] inten = xics[f].Intensities;
-                for (int i = 0; i < inten.Length; i++)
-                    total += inten[i];
-                if (total >= bestTotal)
-                {
-                    bestTotal = total;
-                    refIdx = f;
-                }
-            }
-
-            double[] refInten = xics[refIdx].Intensities;
-            double[] refRts = xics[refIdx].RetentionTimes;
-
-            // peak_apex == intensity at peak.ApexIndex in the reference
-            // XIC. This matches Rust pipeline.rs:6547 which sets
-            // `peak_apex: peak.apex_intensity` (the value already
-            // assigned in BuildOverridePeaks / the CWT-path FindPeaks).
-            //
-            // Earlier C# implementations recomputed apex as the local
-            // max in `ref_xic[start..=end]`. That recomputation diverges
-            // from Rust on the OVERRIDE path: there, Rust deliberately
-            // uses the override-supplied apex_index even when a
-            // different scan in [start..=end] has higher intensity (the
-            // override is the authoritative apex for reconciliation /
-            // gap-fill scoring). The local-max approach put C# at
-            // ~32k row peak_apex / peak_sharpness divergence vs Rust on
-            // the reconciled .scores.parquet.
-            //
-            // Use peak.ApexIndex (clipped above) and look up the
-            // intensity directly. Sharpness slopes below also use this
-            // apex position so the left/right edges align with what
-            // Rust computes.
-            int apexIdx = apex;
-            double apexVal = refInten[apexIdx];
-            peakApex = apexVal;
-
-            // Area: trapezoidal integration on the reference XIC.
-            // Matches Rust trapezoidal_area(ref_xic[si..=ei]).
-            double area = 0.0;
-            for (int i = start; i < end; i++)
-            {
-                double dt = refRts[i + 1] - refRts[i];
-                double avgHeight = (refInten[i] + refInten[i + 1]) * 0.5;
-                area += avgHeight * dt;
-            }
-            peakArea = area;
-
-            // Sharpness: mean of left and right slopes on the reference XIC.
-            // Matches Rust pipeline.rs:5212-5234.
-            double leftSlope = 0.0;
-            if (apexIdx > start)
-            {
-                double dt = refRts[apexIdx] - refRts[start];
-                if (dt > 1e-10)
-                    leftSlope = (apexVal - refInten[start]) / dt;
-            }
-            double rightSlope = 0.0;
-            if (end > apexIdx)
-            {
-                double dt = refRts[end] - refRts[apexIdx];
-                if (dt > 1e-10)
-                    rightSlope = (apexVal - refInten[end]) / dt;
-            }
-            peakSharpness = (leftSlope + rightSlope) * 0.5;
         }
 
 
