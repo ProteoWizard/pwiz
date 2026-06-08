@@ -58,6 +58,10 @@ namespace pwiz.OspreySharp.Scoring
             calculators[4] = new PeakAreaCalc();
             calculators[5] = new PeakSharpnessCalc();
 
+            // RT-deviation family: apex RT minus expected RT, and its absolute value.
+            calculators[11] = new RtDeviationCalc();
+            calculators[12] = new AbsRtDeviationCalc();
+
             // Median-polish family: cosine / residual-ratio / min-fragment-R^2 /
             // residual-correlation of the Tukey median-polish fit.
             calculators[15] = new MedianPolishCosineCalc();

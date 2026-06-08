@@ -1451,10 +1451,6 @@ namespace pwiz.OspreySharp.Tasks
 
 
 
-            // RT deviation (absolute even if calibration disabled - measured vs library RT)
-            double rtDeviation = apexSpectrum.RetentionTime - expectedRt;
-            double absRtDeviation = Math.Abs(rtDeviation);
-
             // Count consecutive ions
             byte consecutiveIons = CountConsecutiveIons(candidate, apexSpectrum, config);
 
@@ -1518,7 +1514,7 @@ namespace pwiz.OspreySharp.Tasks
             // calculators. Calculator-backed features mirror Skyline's
             // IPeakFeatureCalculator; the rest stay inline until extracted.
             ospreyContext.ClearByproducts();
-            ospreyPeakData.Set(candidate, bestPeak, xics);
+            ospreyPeakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt);
 
             // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The crop,
             // WriteMpInputsRow, and Compute stay here because the bisection
@@ -1569,8 +1565,8 @@ namespace pwiz.OspreySharp.Tasks
             features[8] = explainedIntensity;
             features[9] = massAccuracyMean;
             features[10] = absMassAccuracyMean;
-            features[11] = rtDeviation;
-            features[12] = absRtDeviation;
+            features[11] = OspreyFeatureCalculators.Get(11).Calculate(ospreyContext, ospreyPeakData);
+            features[12] = OspreyFeatureCalculators.Get(12).Calculate(ospreyContext, ospreyPeakData);
             features[13] = ms1PrecursorCoelution;
             features[14] = ms1IsotopeCosine;
             features[15] = OspreyFeatureCalculators.Get(15).Calculate(ospreyContext, ospreyPeakData);

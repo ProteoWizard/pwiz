@@ -41,16 +41,23 @@ namespace pwiz.OspreySharp.Tasks
         private LibraryEntry _candidate;
         private XICPeakBounds _peakBounds;
         private IReadOnlyList<XicData> _xics;
+        private double _apexRetentionTime;
+        private double _expectedRt;
 
-        public void Set(LibraryEntry candidate, XICPeakBounds peakBounds, IReadOnlyList<XicData> xics)
+        public void Set(LibraryEntry candidate, XICPeakBounds peakBounds, IReadOnlyList<XicData> xics,
+            double apexRetentionTime, double expectedRt)
         {
             _candidate = candidate;
             _peakBounds = peakBounds;
             _xics = xics;
+            _apexRetentionTime = apexRetentionTime;
+            _expectedRt = expectedRt;
         }
 
         public LibraryEntry Candidate { get { return _candidate; } }
         public XICPeakBounds PeakBounds { get { return _peakBounds; } }
+        public double ApexRetentionTime { get { return _apexRetentionTime; } }
+        public double ExpectedRt { get { return _expectedRt; } }
         public IReadOnlyList<XicData> Xics { get { return _xics; } }
     }
 }

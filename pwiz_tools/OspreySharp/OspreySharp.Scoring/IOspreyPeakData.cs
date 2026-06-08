@@ -44,6 +44,18 @@ namespace pwiz.OspreySharp.Scoring
         /// scan axis), already resolved upstream (override or detected).
         /// </summary>
         XICPeakBounds PeakBounds { get; }
+
+        /// <summary>
+        /// Retention time of the apex MS2 spectrum (the chosen peak apex). Mirrors
+        /// Skyline's <c>ISummaryPeakData.RetentionTime</c>.
+        /// </summary>
+        double ApexRetentionTime { get; }
+
+        /// <summary>
+        /// The expected (calibration-predicted) retention time the harness computed
+        /// once for this candidate; feeds rt_deviation. Not recomputed per feature.
+        /// </summary>
+        double ExpectedRt { get; }
     }
 
     /// <summary>

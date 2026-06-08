@@ -169,20 +169,51 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual("median_polish_residual_correlation", OspreyFeatureCalculators.Get(20).Name);
         }
 
+        /// <summary>
+        /// RT-deviation family: rt_deviation = apex RT - expected RT (signed), and
+        /// abs_rt_deviation = its absolute value.
+        /// </summary>
+        [TestMethod]
+        public void TestRtDeviationCalculators()
+        {
+            var context = new OspreyScoringContext(null);
+            context.ClearByproducts();
+
+            var late = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+                apexRetentionTime: 12.5, expectedRt: 10.0);
+            Assert.AreEqual(2.5, OspreyFeatureCalculators.Get(11).Calculate(context, late), TOLERANCE);
+            Assert.AreEqual(2.5, OspreyFeatureCalculators.Get(12).Calculate(context, late), TOLERANCE);
+
+            // Earlier-than-expected apex -> negative deviation, positive absolute.
+            var early = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+                apexRetentionTime: 8.0, expectedRt: 10.0);
+            Assert.AreEqual(-2.0, OspreyFeatureCalculators.Get(11).Calculate(context, early), TOLERANCE);
+            Assert.AreEqual(2.0, OspreyFeatureCalculators.Get(12).Calculate(context, early), TOLERANCE);
+
+            Assert.AreEqual("rt_deviation", OspreyFeatureCalculators.Get(11).Name);
+            Assert.AreEqual("abs_rt_deviation", OspreyFeatureCalculators.Get(12).Name);
+        }
+
         private sealed class FakeDetailedPeakData : IOspreyDetailedPeakData
         {
             private readonly IReadOnlyList<XicData> _xics;
             private readonly XICPeakBounds _peakBounds;
+            private readonly double _apexRetentionTime;
+            private readonly double _expectedRt;
 
-            public FakeDetailedPeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds)
+            public FakeDetailedPeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
+                double apexRetentionTime = 0.0, double expectedRt = 0.0)
             {
                 _xics = xics;
                 _peakBounds = peakBounds;
+                _apexRetentionTime = apexRetentionTime;
+                _expectedRt = expectedRt;
             }
 
-            // Peak-shape calculators read only Xics and PeakBounds.
             public LibraryEntry Candidate { get { return null; } }
             public XICPeakBounds PeakBounds { get { return _peakBounds; } }
+            public double ApexRetentionTime { get { return _apexRetentionTime; } }
+            public double ExpectedRt { get { return _expectedRt; } }
             public IReadOnlyList<XicData> Xics { get { return _xics; } }
         }
     }
