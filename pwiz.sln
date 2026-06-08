@@ -11,7 +11,8 @@ Global
 		BrowseOnly|x64 = BrowseOnly|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{69BD51D3-2BBA-4462-A5A4-FC8EF88A52FD}.BrowseOnly|Win32.ActiveCfg = BrowseOnly|x64
+		{69BD51D3-2BBA-4462-A5A4-FC8EF88A52FD}.BrowseOnly|Win32.ActiveCfg = BrowseOnly|Win32
+		{69BD51D3-2BBA-4462-A5A4-FC8EF88A52FD}.BrowseOnly|Win32.Build.0 = BrowseOnly|Win32
 		{69BD51D3-2BBA-4462-A5A4-FC8EF88A52FD}.BrowseOnly|x64.ActiveCfg = BrowseOnly|x64
 		{69BD51D3-2BBA-4462-A5A4-FC8EF88A52FD}.BrowseOnly|x64.Build.0 = BrowseOnly|x64
 	EndGlobalSection
