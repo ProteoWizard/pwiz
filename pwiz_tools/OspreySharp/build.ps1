@@ -214,28 +214,30 @@ foreach ($fw in $testFrameworks) {
             if ($s -match '\s') { return '"' + $s + '"' }
             return $s
         }
-        # One-shot diagnostic: dump the agent's `dotcover help cover` so we
-        # have an authoritative flag list in the build log.  Tiny (a few
-        # seconds), and lets us add new flags from observed names rather
-        # than guessing from doc pages of unclear vintage.
-        if ($TeamCity) {
-            Write-Host "--- dotcover help cover ---"
-            $helpPsi = New-Object System.Diagnostics.ProcessStartInfo
-            $helpPsi.FileName = $dotcover
-            $helpPsi.Arguments = 'help cover'
-            $helpPsi.UseShellExecute = $false
-            $helpProc = [System.Diagnostics.Process]::Start($helpPsi)
-            $helpProc.WaitForExit()
-            Write-Host "--- end help ---"
-        }
+        # dotCover 2026.1.1's `cover` command only supports EXCLUDE filters
+        # (verified via `dotcover help cover` in build #4030563):
+        #   --exclude-assemblies <list>
+        #   --exclude-attributes <list>
+        #   --exclude-processes  <list>
+        # There is no include-side flag.  Translation of the old
+        # /Filters=+:OspreySharp.* allowlist: list the third-party + test
+        # assemblies we want OUT of the coverage report, and let dotcover
+        # cover everything else (which includes the OspreySharp.* assemblies
+        # we care about).  Wildcards (*) work, per the help text for
+        # --exclude-processes; assumed to be the same parser for assemblies.
+        $excludeAssemblies = @(
+            'OspreySharp.Test',
+            'Apache.Arrow', 'DotNetZip', 'IronCompress',
+            'JetBrains.*', 'MathNet.*', 'Microsoft.*', 'Newtonsoft.*',
+            'Parquet', 'Snappier', 'System.*', 'ZstdSharp',
+            'MSTest.*', 'testhost*', 'vstest.*'
+        ) -join ','
         $dcArgs = @(
             'cover',
             '--target-executable', (Quote-IfNeeded $vstest),
             '--snapshot-output', (Quote-IfNeeded $dcvrPath),
-            '--filters=+:OspreySharp.*;+:OspreySharp.Core;+:OspreySharp.ML;+:OspreySharp.Chromatography;+:OspreySharp.FDR;+:OspreySharp.IO;+:OspreySharp.Scoring;+:OspreySharp.Tasks',
-            '--attribute-filters=System.CodeDom.Compiler.GeneratedCodeAttribute',
-            '--return-target-exit-code',
-            '--analyze-target-arguments=false',
+            '--exclude-assemblies', $excludeAssemblies,
+            '--exclude-attributes', 'System.CodeDom.Compiler.GeneratedCodeAttribute',
             '--'
         ) + ($vstestArgs | ForEach-Object { Quote-IfNeeded $_ })
         $dcArgString = $dcArgs -join ' '
