@@ -194,27 +194,108 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual("abs_rt_deviation", OspreyFeatureCalculators.Get(12).Name);
         }
 
+        /// <summary>
+        /// Apex-match family: consecutive_ions (longest matched b/y ordinal run),
+        /// explained_intensity (matched / total apex intensity), and the signed /
+        /// absolute mean fragment mass error. The mass-accuracy trio share one
+        /// ApexFragmentMatchSet pass; the no-match abs fallback is the live
+        /// FragmentTolerance.Tolerance, NOT 0.0 (the historical ~65-row Astral bug).
+        /// </summary>
+        [TestMethod]
+        public void TestApexMatchCalculators()
+        {
+            // Apex MS2 spectrum: four sorted peaks, total intensity 100.
+            var apex = new Spectrum
+            {
+                Mzs = new[] { 100.0, 200.0, 300.0, 400.0 },
+                Intensities = new[] { 10f, 20f, 30f, 40f },
+            };
+            // Da tolerance so the expected arithmetic is exact and easy to read.
+            var config = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5) };
+
+            // b1/b2 and y1 match (consecutive b-run of 2); y2 has no peak.
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment>
+                {
+                    Frag(100.05, IonType.B, 1),
+                    Frag(200.0, IonType.B, 2),
+                    Frag(300.0, IonType.Y, 1),
+                    Frag(999.0, IonType.Y, 2),
+                },
+            };
+            var peakData = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+                candidate: candidate, apexSpectrum: apex);
+
+            var context = new OspreyScoringContext(config);
+            context.ClearByproducts();
+
+            // consecutive_ions: b-ordinals {1,2} -> run 2; y-ordinals {1} -> run 1.
+            Assert.AreEqual(2.0, OspreyFeatureCalculators.Get(7).Calculate(context, peakData), TOLERANCE);
+            // explained_intensity: matched (10+20+30) / total 100 = 0.60.
+            Assert.AreEqual(0.60, OspreyFeatureCalculators.Get(8).Calculate(context, peakData), TOLERANCE);
+            // mass_accuracy_deviation_mean: signed errors (-0.05, 0, 0) / 3.
+            Assert.AreEqual(-0.05 / 3.0, OspreyFeatureCalculators.Get(9).Calculate(context, peakData), TOLERANCE);
+            // abs_mass_accuracy_deviation_mean: absolute errors (0.05, 0, 0) / 3.
+            Assert.AreEqual(0.05 / 3.0, OspreyFeatureCalculators.Get(10).Calculate(context, peakData), TOLERANCE);
+
+            Assert.AreEqual("consecutive_ions", OspreyFeatureCalculators.Get(7).Name);
+            Assert.AreEqual("explained_intensity", OspreyFeatureCalculators.Get(8).Name);
+            Assert.AreEqual("mass_accuracy_deviation_mean", OspreyFeatureCalculators.Get(9).Name);
+            Assert.AreEqual("abs_mass_accuracy_deviation_mean", OspreyFeatureCalculators.Get(10).Name);
+
+            // No matched fragments: consecutive / explained / signed-mean are 0.0,
+            // but the abs mean falls back to the live tolerance (0.5), NOT 0.0.
+            var noMatch = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0)
+            {
+                Fragments = new List<LibraryFragment> { Frag(999.0, IonType.B, 1) },
+            };
+            var noMatchData = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+                candidate: noMatch, apexSpectrum: apex);
+            var noMatchContext = new OspreyScoringContext(config);
+            noMatchContext.ClearByproducts();
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(7).Calculate(noMatchContext, noMatchData), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(8).Calculate(noMatchContext, noMatchData), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(9).Calculate(noMatchContext, noMatchData), TOLERANCE);
+            Assert.AreEqual(0.5, OspreyFeatureCalculators.Get(10).Calculate(noMatchContext, noMatchData), TOLERANCE);
+        }
+
+        private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
+        {
+            return new LibraryFragment
+            {
+                Mz = mz,
+                Annotation = new FragmentAnnotation { IonType = ionType, Ordinal = ordinal },
+            };
+        }
+
         private sealed class FakeDetailedPeakData : IOspreyDetailedPeakData
         {
             private readonly IReadOnlyList<XicData> _xics;
             private readonly XICPeakBounds _peakBounds;
             private readonly double _apexRetentionTime;
             private readonly double _expectedRt;
+            private readonly LibraryEntry _candidate;
+            private readonly Spectrum _apexSpectrum;
 
             public FakeDetailedPeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
-                double apexRetentionTime = 0.0, double expectedRt = 0.0)
+                double apexRetentionTime = 0.0, double expectedRt = 0.0,
+                LibraryEntry candidate = null, Spectrum apexSpectrum = null)
             {
                 _xics = xics;
                 _peakBounds = peakBounds;
                 _apexRetentionTime = apexRetentionTime;
                 _expectedRt = expectedRt;
+                _candidate = candidate;
+                _apexSpectrum = apexSpectrum;
             }
 
-            public LibraryEntry Candidate { get { return null; } }
+            public LibraryEntry Candidate { get { return _candidate; } }
             public XICPeakBounds PeakBounds { get { return _peakBounds; } }
             public double ApexRetentionTime { get { return _apexRetentionTime; } }
             public double ExpectedRt { get { return _expectedRt; } }
             public IReadOnlyList<XicData> Xics { get { return _xics; } }
+            public Spectrum ApexSpectrum { get { return _apexSpectrum; } }
         }
     }
 }

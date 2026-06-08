@@ -58,6 +58,13 @@ namespace pwiz.OspreySharp.Scoring
             calculators[4] = new PeakAreaCalc();
             calculators[5] = new PeakSharpnessCalc();
 
+            // Apex-match family: longest consecutive b/y run, explained intensity,
+            // and signed / absolute mean fragment mass error at the apex spectrum.
+            calculators[7] = new ConsecutiveIonsCalc();
+            calculators[8] = new ExplainedIntensityCalc();
+            calculators[9] = new MassAccuracyMeanCalc();
+            calculators[10] = new AbsMassAccuracyMeanCalc();
+
             // RT-deviation family: apex RT minus expected RT, and its absolute value.
             calculators[11] = new RtDeviationCalc();
             calculators[12] = new AbsRtDeviationCalc();

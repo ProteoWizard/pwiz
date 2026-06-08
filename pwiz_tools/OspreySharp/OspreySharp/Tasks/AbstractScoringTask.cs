@@ -1451,16 +1451,10 @@ namespace pwiz.OspreySharp.Tasks
 
 
 
-            // Count consecutive ions
-            byte consecutiveIons = CountConsecutiveIons(candidate, apexSpectrum, config);
-
-            // Count fragment matches
+            // Count fragment matches (top-6 dedup byproduct, NOT a PIN feature;
+            // stays inline). consecutive_ions / explained_intensity / mass-accuracy
+            // (features 7-10) moved to the apex-match calculators below.
             byte top6Matches = CountTop6Matches(candidate, apexSpectrum, config);
-
-            // Explained intensity, mass accuracy at apex
-            double explainedIntensity, massAccuracyMean, absMassAccuracyMean;
-            ComputeApexMatchFeatures(candidate, apexSpectrum, config,
-                out explainedIntensity, out massAccuracyMean, out absMassAccuracyMean);
 
             // MS1 features: precursor coelution, isotope cosine.
             // Rust pipeline.rs:5362 gates on is_hram - unit resolution skips MS1.
@@ -1514,7 +1508,7 @@ namespace pwiz.OspreySharp.Tasks
             // calculators. Calculator-backed features mirror Skyline's
             // IPeakFeatureCalculator; the rest stay inline until extracted.
             ospreyContext.ClearByproducts();
-            ospreyPeakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt);
+            ospreyPeakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt, apexSpectrum);
 
             // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The crop,
             // WriteMpInputsRow, and Compute stay here because the bisection
@@ -1561,10 +1555,10 @@ namespace pwiz.OspreySharp.Tasks
             features[4] = OspreyFeatureCalculators.Get(4).Calculate(ospreyContext, ospreyPeakData);
             features[5] = OspreyFeatureCalculators.Get(5).Calculate(ospreyContext, ospreyPeakData);
             features[6] = xcorr;
-            features[7] = consecutiveIons;
-            features[8] = explainedIntensity;
-            features[9] = massAccuracyMean;
-            features[10] = absMassAccuracyMean;
+            features[7] = OspreyFeatureCalculators.Get(7).Calculate(ospreyContext, ospreyPeakData);
+            features[8] = OspreyFeatureCalculators.Get(8).Calculate(ospreyContext, ospreyPeakData);
+            features[9] = OspreyFeatureCalculators.Get(9).Calculate(ospreyContext, ospreyPeakData);
+            features[10] = OspreyFeatureCalculators.Get(10).Calculate(ospreyContext, ospreyPeakData);
             features[11] = OspreyFeatureCalculators.Get(11).Calculate(ospreyContext, ospreyPeakData);
             features[12] = OspreyFeatureCalculators.Get(12).Calculate(ospreyContext, ospreyPeakData);
             features[13] = ms1PrecursorCoelution;
@@ -1901,104 +1895,6 @@ namespace pwiz.OspreySharp.Tasks
 
 
         /// <summary>
-        /// Compute apex-level match features: explained intensity fraction, and mean
-        /// signed / absolute mass error (in the tolerance unit, typically ppm).
-        /// </summary>
-        private void ComputeApexMatchFeatures(
-            LibraryEntry candidate, Spectrum apexSpectrum, OspreyConfig config,
-            out double explainedIntensity,
-            out double massAccuracyMean,
-            out double absMassAccuracyMean)
-        {
-            explainedIntensity = 0.0;
-            massAccuracyMean = 0.0;
-            absMassAccuracyMean = 0.0;
-
-            // Do NOT early-return when apex spectrum or candidate fragments
-            // are empty. Rust's compute_mass_accuracy
-            // (osprey-scoring/src/lib.rs:464) handles empty inputs by
-            // returning (0.0, tolerance, tolerance) — so a candidate that
-            // reaches this function with no matchable fragments still
-            // contributes the calibrated tolerance as its abs mass error.
-            // The early-return form left absMassAccuracyMean at 0 instead,
-            // producing ~65 divergent rows on Astral (file 49: 2 rows,
-            // 55: 27 rows, 60: 36 rows). Let the matching loop run with
-            // zero iterations and fall through to the nMatched==0 fallback
-            // at the bottom of the function for cross-impl symmetry.
-            double totalIntensity = 0.0;
-            if (apexSpectrum.Intensities != null)
-            {
-                for (int i = 0; i < apexSpectrum.Intensities.Length; i++)
-                    totalIntensity += apexSpectrum.Intensities[i];
-            }
-
-            double matchedIntensity = 0.0;
-            double massErrSum = 0.0;
-            double absMassErrSum = 0.0;
-            int nMatched = 0;
-
-            if (apexSpectrum.Mzs != null && apexSpectrum.Intensities != null &&
-                candidate.Fragments != null)
-            {
-                foreach (var frag in candidate.Fragments)
-                {
-                    double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
-                    double lower = frag.Mz - tolDa;
-                    double upper = frag.Mz + tolDa;
-
-                    int lo = ScoringMath.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
-                    double bestError = double.MaxValue;
-                    double bestIntensity = 0.0;
-                    double bestMz = 0.0;
-                    bool found = false;
-
-                    // Match closest peak by m/z (not most intense).
-                    // Matches Rust SpectralScorer::match_fragments in lib.rs:2239.
-                    for (int k = lo; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
-                    {
-                        double errorDa = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
-                        if (errorDa < bestError)
-                        {
-                            bestError = errorDa;
-                            bestIntensity = apexSpectrum.Intensities[k];
-                            bestMz = apexSpectrum.Mzs[k];
-                            found = true;
-                        }
-                    }
-
-                    if (found)
-                    {
-                        matchedIntensity += bestIntensity;
-                        double err = config.FragmentTolerance.MassError(frag.Mz, bestMz);
-                        massErrSum += err;
-                        absMassErrSum += Math.Abs(err);
-                        nMatched++;
-                    }
-                }
-            }
-
-            if (totalIntensity > 1e-12)
-                explainedIntensity = matchedIntensity / totalIntensity;
-
-            if (nMatched > 0)
-            {
-                massAccuracyMean = massErrSum / nMatched;
-                absMassAccuracyMean = absMassErrSum / nMatched;
-            }
-            else
-            {
-                // No matched fragments: report worst-case (calibrated) tolerance
-                // as the absolute mass error, matching Rust compute_mass_accuracy
-                // which returns (0.0, tolerance, tolerance) on empty matches
-                // (osprey-scoring/src/lib.rs:462-465). This penalizes unmatched
-                // entries in FDR instead of giving them a spurious 0 error.
-                massAccuracyMean = 0.0;
-                absMassAccuracyMean = config.FragmentTolerance.Tolerance;
-            }
-        }
-
-
-        /// <summary>
         /// Compute MS1 features: correlation between the summed fragment XIC and the
         /// precursor MS1 XIC, and cosine similarity between the observed isotope envelope
         /// at the apex MS1 scan and the theoretical averagine envelope.
@@ -2191,66 +2087,6 @@ namespace pwiz.OspreySharp.Tasks
                 return 0.0;
 
             return Math.Max(0.0, Math.Min(1.0, dot / denom));
-        }
-
-
-        /// <summary>
-        /// Count consecutive b/y ion matches at the apex spectrum.
-        /// </summary>
-        private byte CountConsecutiveIons(
-            LibraryEntry entry, Spectrum spectrum, OspreyConfig config)
-        {
-            if (entry.Fragments == null || entry.Fragments.Count == 0)
-                return 0;
-
-            // Group fragments by ion type and check which ordinals match
-            var bMatched = new HashSet<int>();
-            var yMatched = new HashSet<int>();
-
-            foreach (var frag in entry.Fragments)
-            {
-                if (SpectralScorer.HasMatch(frag.Mz, spectrum.Mzs, config.FragmentTolerance))
-                {
-                    if (frag.Annotation.IonType == IonType.B)
-                        bMatched.Add(frag.Annotation.Ordinal);
-                    else if (frag.Annotation.IonType == IonType.Y)
-                        yMatched.Add(frag.Annotation.Ordinal);
-                }
-            }
-
-            // Find longest consecutive run
-            byte maxConsecutive = 0;
-            maxConsecutive = Math.Max(maxConsecutive, LongestConsecutiveRun(bMatched));
-            maxConsecutive = Math.Max(maxConsecutive, LongestConsecutiveRun(yMatched));
-
-            return maxConsecutive;
-        }
-
-
-        private byte LongestConsecutiveRun(HashSet<int> ordinals)
-        {
-            if (ordinals.Count == 0)
-                return 0;
-
-            var sorted = ordinals.OrderBy(x => x).ToList();
-            byte maxRun = 1;
-            byte currentRun = 1;
-
-            for (int i = 1; i < sorted.Count; i++)
-            {
-                if (sorted[i] == sorted[i - 1] + 1)
-                {
-                    currentRun++;
-                    if (currentRun > maxRun)
-                        maxRun = currentRun;
-                }
-                else
-                {
-                    currentRun = 1;
-                }
-            }
-
-            return maxRun;
         }
 
 

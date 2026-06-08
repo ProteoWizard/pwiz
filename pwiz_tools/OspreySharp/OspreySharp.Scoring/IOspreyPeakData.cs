@@ -72,5 +72,15 @@ namespace pwiz.OspreySharp.Scoring
         /// shared scan axis. The full set is iterated to select the reference XIC.
         /// </summary>
         IReadOnlyList<XicData> Xics { get; }
+
+        /// <summary>
+        /// The MS2 spectrum at the chosen peak apex
+        /// (windowSpectra[startScan + bestPeak.ApexIndex]). This is the spectral
+        /// surface Skyline's chromatogram-centric results layer cannot supply -- a
+        /// Skyline implementation of this interface would throw here. The
+        /// apex-match family matches the candidate's theoretical fragments against
+        /// this spectrum's sorted m/z and index-aligned intensity arrays.
+        /// </summary>
+        Spectrum ApexSpectrum { get; }
     }
 }
