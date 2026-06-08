@@ -52,6 +52,8 @@ public sealed class AgilentRawData : IDisposable
 
     private IMidacImsReader? _imsReader;
     private bool? _hasImsData;
+    private IImsCcsInfoReader? _imsCcsReader;
+    private bool _imsCcsReaderResolved;
 
     /// <summary>True when the .d directory contains Agilent ion-mobility data (IMSFrame.bin
     /// etc.). Mirrors cpp <c>MassHunterData::hasIonMobilityData</c>.</summary>
@@ -79,6 +81,58 @@ public sealed class AgilentRawData : IDisposable
             catch { _imsReader = null; }
             return _imsReader;
         }
+    }
+
+    /// <summary>MIDAC's CCS-conversion bridge. Returns null when the file isn't IM or
+    /// when MIDAC fails to construct an <see cref="ImsCcsInfoReader"/> (older drivers,
+    /// missing calibration metadata, etc.). cpp constructs this once at file-open time;
+    /// we defer until first use because most callers never ask for CCS.</summary>
+    public IImsCcsInfoReader? ImsCcsReader
+    {
+        get
+        {
+            if (_imsCcsReaderResolved) return _imsCcsReader;
+            _imsCcsReaderResolved = true;
+            if (!HasIonMobilityData) return null;
+            try { _imsCcsReader = new ImsCcsInfoReader(); _imsCcsReader.Read(Path); }
+            catch { _imsCcsReader = null; }
+            return _imsCcsReader;
+        }
+    }
+
+    /// <summary>True iff this .d carries a single-field CCS calibration. Mirrors cpp
+    /// <c>MidacDataImpl::canConvertDriftTimeAndCCS</c> -> <c>imsCcsReader_-&gt;HasSingleFieldCcsInformation</c>.</summary>
+    public bool CanConvertDriftTimeAndCcs
+    {
+        get
+        {
+            var r = ImsCcsReader;
+            if (r is null) return false;
+            try { return r.HasSingleFieldCcsInformation; }
+            catch { return false; }
+        }
+    }
+
+    /// <summary>Converts a drift time (ms) to a collisional cross section. Returns
+    /// <see cref="double.NaN"/> if MIDAC's solver fails (the "cannot solve cubic fit"
+    /// path that throws <see cref="System.IO.InvalidDataException"/> in cpp). Throws
+    /// <see cref="InvalidOperationException"/> when called on a non-IM file.</summary>
+    public double DriftTimeToCcs(double driftTimeMsec, double mz, int charge)
+    {
+        var r = ImsCcsReader ?? throw new InvalidOperationException(
+            "[AgilentRawData.DriftTimeToCcs] file has no IM / CCS calibration");
+        try { return r.CcsFromDriftTime(driftTimeMsec, mz, System.Math.Abs(charge)); }
+        catch (System.IO.InvalidDataException) { return double.NaN; }
+    }
+
+    /// <summary>Inverse of <see cref="DriftTimeToCcs"/>. Same NaN-on-solver-failure /
+    /// throw-on-non-IM semantics.</summary>
+    public double CcsToDriftTime(double ccs, double mz, int charge)
+    {
+        var r = ImsCcsReader ?? throw new InvalidOperationException(
+            "[AgilentRawData.CcsToDriftTime] file has no IM / CCS calibration");
+        try { return r.DriftTimeFromCcs(ccs, mz, System.Math.Abs(charge)); }
+        catch (System.IO.InvalidDataException) { return double.NaN; }
     }
 
     private int[]? _imsFrameNumbersCache;

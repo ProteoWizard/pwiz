@@ -24,7 +24,7 @@ namespace Pwiz.Vendor.Agilent;
 /// Skipped: ion-mobility frames (MIDAC), non-MS UV/DAD spectra, all-ions scan promotion. Each is
 /// a follow-up port; current scope covers the bulk of Q-TOF / TQ files.
 /// </remarks>
-public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectrumList
+public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectrumList, IIonMobilityCcsConversion
 {
     /// <summary>True iff the .d directory carries IMS data (delegates to
     /// <see cref="AgilentRawData.HasIonMobilityData"/>).</summary>
@@ -43,9 +43,18 @@ public sealed class SpectrumList_Agilent : SpectrumListBase, IIonMobilitySpectru
     /// <inheritdoc/>
     public bool IsWatersSonar => false;
 
-    // CCS conversion (cpp's ionMobilityToCCS / ccsToIonMobility) requires the MIDAC
-    // SDK's CalibrationCS bridge, which sharp's AgilentRawData doesn't expose yet.
-    // Wire IIonMobilityCcsConversion as a follow-up when that bridge is added.
+    /// <inheritdoc cref="IIonMobilityCcsConversion.CanConvertIonMobilityAndCcs"/>
+    /// <remarks>Delegates to MIDAC's <c>ImsCcsInfoReader.HasSingleFieldCcsInformation</c>;
+    /// false for non-IM files and IM files without a single-field calibration.</remarks>
+    public bool CanConvertIonMobilityAndCcs => _raw.CanConvertDriftTimeAndCcs;
+
+    /// <inheritdoc/>
+    public double IonMobilityToCcs(double ionMobility, double mz, int charge) =>
+        _raw.DriftTimeToCcs(ionMobility, mz, charge);
+
+    /// <inheritdoc/>
+    public double CcsToIonMobility(double ccs, double mz, int charge) =>
+        _raw.CcsToDriftTime(ccs, mz, charge);
     private readonly AgilentRawData _raw;
     private readonly bool _ownsRaw;
     private readonly InstrumentConfiguration? _defaultIc;
