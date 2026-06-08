@@ -33,6 +33,7 @@ using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
+using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp.Test
 {
@@ -1291,6 +1292,98 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
+        /// Verifies GetReconciledScoresPath returns the reconciled sibling path
+        /// (Stage 6's separate output, not an overwrite of Stage 4's).
+        /// </summary>
+        [TestMethod]
+        public void TestGetReconciledScoresPath()
+        {
+            Assert.AreEqual(@"C:\data\sample1.scores-reconciled.parquet",
+                ParquetScoreCache.GetReconciledScoresPath(@"C:\data\sample1.mzML"));
+            Assert.AreEqual(@"D:\runs\experiment.raw.scores-reconciled.parquet",
+                ParquetScoreCache.GetReconciledScoresPath(@"D:\runs\experiment.raw.mzML"));
+        }
+
+        /// <summary>
+        /// Verifies ReconciledPathFromScoresPath swaps the ".scores.parquet"
+        /// suffix for ".scores-reconciled.parquet" and is idempotent on an
+        /// already-reconciled path (the --task MergeNode case where the input IS
+        /// the reconciled file).
+        /// </summary>
+        [TestMethod]
+        public void TestReconciledPathFromScoresPath()
+        {
+            Assert.AreEqual(@"C:\data\sample1.scores-reconciled.parquet",
+                ParquetScoreCache.ReconciledPathFromScoresPath(@"C:\data\sample1.scores.parquet"));
+            // Idempotent: an already-reconciled path is returned unchanged.
+            Assert.AreEqual(@"C:\data\sample1.scores-reconciled.parquet",
+                ParquetScoreCache.ReconciledPathFromScoresPath(@"C:\data\sample1.scores-reconciled.parquet"));
+            // Composes with GetScoresPath to equal GetReconciledScoresPath.
+            const string mzml = @"D:\runs\experiment.raw.mzML";
+            Assert.AreEqual(ParquetScoreCache.GetReconciledScoresPath(mzml),
+                ParquetScoreCache.ReconciledPathFromScoresPath(ParquetScoreCache.GetScoresPath(mzml)));
+        }
+
+        /// <summary>
+        /// Regression for the suffix-ambiguity Copilot flagged on PR #4261: an
+        /// input stem that itself ends in ".reconciled" must NOT be mistaken for
+        /// a Stage 6 reconciled output. Because the marker sits AFTER ".scores"
+        /// (".scores-reconciled.parquet"), the Stage 4 file is unambiguously an
+        /// original and maps to a distinct reconciled sibling (no overwrite).
+        /// </summary>
+        [TestMethod]
+        public void TestReconciledNamingUnambiguousForReconciledStem()
+        {
+            // Input "sample.reconciled.mzML" -> Stage 4 "sample.reconciled.scores.parquet".
+            string stage4 = ParquetScoreCache.GetScoresPath(@"C:\data\sample.reconciled.mzML");
+            Assert.AreEqual(@"C:\data\sample.reconciled.scores.parquet", stage4);
+            // It must be classified as an original, not a reconciled output...
+            Assert.IsFalse(ParquetScoreCache.IsReconciledScoresPath(stage4));
+            // ...and map to a DISTINCT reconciled sibling (not back onto itself).
+            string reconciled = ParquetScoreCache.ReconciledPathFromScoresPath(stage4);
+            Assert.AreEqual(@"C:\data\sample.reconciled.scores-reconciled.parquet", reconciled);
+            Assert.AreNotEqual(stage4, reconciled);
+            Assert.IsTrue(ParquetScoreCache.IsReconciledScoresPath(reconciled));
+        }
+
+        /// <summary>
+        /// Verifies EffectiveScoresPathFromScoresPath returns the reconciled
+        /// sibling when it exists on disk, else the original -- the per-file
+        /// read contract that makes the separate-reconciled-file design
+        /// byte-equivalent to the former in-place overwrite.
+        /// </summary>
+        [TestMethod]
+        public void TestEffectiveScoresPathFromScoresPath()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_eff_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string original = Path.Combine(dir, "sample1.scores.parquet");
+                string reconciled = Path.Combine(dir, "sample1.scores-reconciled.parquet");
+                File.WriteAllText(original, "x");
+
+                // No reconciled sibling -> original (no-work file).
+                Assert.AreEqual(original,
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(original));
+
+                // Reconciled sibling present -> reconciled (rescored file).
+                File.WriteAllText(reconciled, "y");
+                Assert.AreEqual(reconciled,
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(original));
+
+                // An already-reconciled input that exists is returned as-is.
+                Assert.AreEqual(reconciled,
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(reconciled));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch { /* best-effort */ }
+            }
+        }
+
+        /// <summary>
         /// Verifies that writing an empty list does not create a file.
         /// </summary>
         [TestMethod]
@@ -1697,14 +1790,18 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
-        /// If the sidecar's header entry-count disagrees with the
-        /// caller's stub list, the reader must refuse rather than silently
-        /// truncate or pad.
+        /// Caller may pass a SUPERSET of the sidecar's entries — a real
+        /// case for --task MergeNode stage 7 entry where the reconciled
+        /// parquet has gap-fill stubs the 1st-pass sidecar (written
+        /// pre-gap-fill) does not. Sidecar records overlay onto matching
+        /// entry_ids; entries with no matching record keep their default
+        /// (Score=0, q=1) values. Reader must accept and overlay only
+        /// the matched records.
         /// </summary>
         [TestMethod]
-        public void TestFdrScoresSidecarCountMismatchRejected()
+        public void TestFdrScoresSidecarSupersetEntries()
         {
-            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_cm_" + Guid.NewGuid().ToString("N"));
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_super_" + Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(dir);
             try
             {
@@ -1713,12 +1810,89 @@ namespace pwiz.OspreySharp.Test
                     new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
                     FdrScoresSidecar.Pass.FirstPass);
 
-                var wrongCount = new List<FdrEntry>
+                // entry_id=99 is the gap-fill stub (no sidecar record).
+                var entries = new List<FdrEntry>
                 {
                     MakeFdrEntry(0, 0.0, 0.0, 0.0),
-                    MakeFdrEntry(1, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(99, 0.0, 0.0, 0.0),
                 };
-                Assert.IsFalse(FdrScoresSidecar.TryRead(path, wrongCount, FdrScoresSidecar.Pass.FirstPass));
+                Assert.IsTrue(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
+                Assert.AreEqual(-3.5, entries[0].Score, 0.0);
+                Assert.AreEqual(0.001, entries[0].RunPrecursorQvalue, 0.0);
+                // Gap-fill stub at index 1: untouched (no sidecar record
+                // for entry_id=99). MakeFdrEntry's q=0.0 placeholder
+                // survives unchanged.
+                Assert.AreEqual(0.0, entries[1].Score, 0.0);
+                Assert.AreEqual(0.0, entries[1].RunPrecursorQvalue, 0.0);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// If a sidecar record's entry_id has no match in the caller's
+        /// stub list, the reader must refuse rather than silently dropping
+        /// the record. Detects "sidecar from a different parquet" and
+        /// "sidecar from a different binary version" corruption.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarStaleRecordRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_stale_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                // Sidecar record for entry_id=0, but the caller's stubs
+                // don't contain entry_id=0 — only entry_id=42.
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry> { MakeFdrEntry(0, -3.5, 0.001, 0.02) },
+                    FdrScoresSidecar.Pass.FirstPass);
+
+                var unrelated = new List<FdrEntry> { MakeFdrEntry(42, 0.0, 0.0, 0.0) };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, unrelated, FdrScoresSidecar.Pass.FirstPass));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A corrupt or malicious sidecar with a huge headerCount would
+        /// otherwise wrap int when computing
+        /// <c>HeaderLength + headerCount * RecordLength</c> and let the
+        /// size check pass spuriously, leading to out-of-bounds reads in
+        /// the record loop. Both <see cref="FdrScoresSidecar.TryRead"/>
+        /// and <see cref="FdrScoresSidecar.TryReadOverlay"/> must reject
+        /// the load via the checked-arithmetic guard.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarOversizedHeaderRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_oversized_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string path = Path.Combine(dir, "test.1st-pass.fdr_scores.bin");
+                // Write a valid 1-entry sidecar to get the right magic /
+                // version / pass byte layout, then truncate to header-only
+                // and overwrite headerCount with ulong.MaxValue.
+                FdrScoresSidecar.Write(path,
+                    new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) },
+                    FdrScoresSidecar.Pass.FirstPass);
+                byte[] header = File.ReadAllBytes(path);
+                Array.Resize(ref header, FdrScoresSidecar.HeaderLength);
+                BitConverter.GetBytes(ulong.MaxValue).CopyTo(header, 16);
+                File.WriteAllBytes(path, header);
+
+                var entries = new List<FdrEntry> { MakeFdrEntry(0, 0.0, 0.0, 0.0) };
+                Assert.IsFalse(FdrScoresSidecar.TryRead(path, entries, FdrScoresSidecar.Pass.FirstPass));
+
+                var dict = new Dictionary<uint, FdrEntry> { { 0, entries[0] } };
+                Assert.IsFalse(FdrScoresSidecar.TryReadOverlay(path, dict, FdrScoresSidecar.Pass.FirstPass));
             }
             finally
             {
@@ -1777,6 +1951,7 @@ namespace pwiz.OspreySharp.Test
                     new ForcedIntegrationEntry { EntryId = 201, ExpectedRt = 18.5,   HalfWidth = 0.05  },
                 },
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                FileStems = new List<string> { "round_trip" },
                 GapFillTargets = new List<GapFillEntry>
                 {
                     new GapFillEntry
@@ -2063,6 +2238,7 @@ namespace pwiz.OspreySharp.Test
                 var reconFile = new ReconciliationFile
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                    FileStems = new List<string> { stem },
                     SearchHash = "abc123",
                     LibraryHash = "lib-h",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2198,6 +2374,7 @@ namespace pwiz.OspreySharp.Test
                 var reconFile = new ReconciliationFile
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
+                    FileStems = new List<string> { stem },
                     SearchHash = "x",
                     LibraryHash = "y",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2241,23 +2418,38 @@ namespace pwiz.OspreySharp.Test
         /// does between first-pass FDR and Stage 6 — see
         /// AnalysisPipeline's "First-pass compaction" block.
         ///
+        /// Compaction predicate is the UNION of (a) the local-FDR
+        /// predicate (peptide_q OR protein_q pass) AND (b) every
+        /// base_id that has a reconciliation action emitted by the
+        /// planner. The planner runs cross-file consensus rescue
+        /// (ConsensusRts.Compute), so an entry whose own file fails
+        /// local first-pass FDR can still be a reconciliation target
+        /// when its peptide passes FDR in a sibling file. Without the
+        /// union, the local-FDR-only predicate drops those entries and
+        /// their planner actions are silently dropped too -- the
+        /// reconciled .scores.parquet ends up with stale Stage 4 apex_rt
+        /// / bounds for the rescued entries and the blib output diverges
+        /// from the in-memory straight-through pipeline.
+        ///
         /// Test layout (single file, five entries):
         ///   idx 0: target id=1, peptide_q=0.005 (PASS peptide)
         ///   idx 1: decoy  id=0x80000001, base=1 (retained via target's base_id)
-        ///   idx 2: target id=2, peptide_q=0.5  (FAIL — non-passing)
-        ///   idx 3: decoy  id=0x80000002, base=2 (dropped because base=2 not in pass set)
+        ///   idx 2: target id=2, peptide_q=0.5  (FAIL local; PLANNER ACTION at (f,2))
+        ///   idx 3: decoy  id=0x80000002, base=2 (retained via target's base_id from action)
         ///   idx 4: target id=3, peptide_q=0.5, protein_q=0.005 (PASS via protein-rescue)
         ///
-        /// With ProteinFdr=0.01, base_ids {1, 3} pass. After compaction:
-        ///   idx 0: id=1, idx 1: id=0x80000001, idx 2: id=3.
+        /// With ProteinFdr=0.01 AND the planner-action union:
+        ///   local-FDR pass: base_ids {1, 3}
+        ///   planner action targets: base_ids {1, 2, 3}
+        ///   UNION: base_ids {1, 2, 3} — all 5 entries survive compaction.
         ///
         /// Reconciliation actions are seeded at:
-        ///   (f, 0) on id=1  → should remain at (f, 0)
-        ///   (f, 4) on id=3  → should move to (f, 2)
-        ///   (f, 2) on id=2  → should be dropped (entry compacted away)
+        ///   (f, 0) on id=1  → remains at (f, 0) (no compaction shift)
+        ///   (f, 4) on id=3  → remains at (f, 4)
+        ///   (f, 2) on id=2  → remains at (f, 2) (entry survives via union)
         /// </summary>
         [TestMethod]
-        public void TestRescoreCompactionRekeysActionsAndDropsNonpassing()
+        public void TestRescoreCompactionUnionsActionsWithLocalFdrPredicate()
         {
             const string fileName = "f1";
             var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
@@ -2293,30 +2485,30 @@ namespace pwiz.OspreySharp.Test
                 ProteinFdr = 0.01,
             });
 
-            // Compaction stats.
+            // Compaction stats: planner-action union keeps base 2 alive.
             Assert.AreEqual(5, stats.EntriesBefore);
-            Assert.AreEqual(3, stats.EntriesAfter);
-            Assert.AreEqual(2, stats.FirstPassBaseIds);   // base_ids {1, 3}
-            Assert.AreEqual(1, stats.DroppedActions);     // the (f, 2) action
+            Assert.AreEqual(5, stats.EntriesAfter);
+            Assert.AreEqual(3, stats.FirstPassBaseIds);   // base_ids {1, 2, 3}
+            Assert.AreEqual(0, stats.DroppedActions);     // no actions dropped
 
-            // Per-file list compacted.
+            // Per-file list unchanged (all base_ids survived).
             Assert.AreEqual(1, inputs.PerFileEntries.Count);
             var got = inputs.PerFileEntries[0].Value;
-            Assert.AreEqual(3, got.Count);
+            Assert.AreEqual(5, got.Count);
             Assert.AreEqual(1u, got[0].EntryId);
             Assert.AreEqual(0x80000001u, got[1].EntryId);
-            Assert.AreEqual(3u, got[2].EntryId);
+            Assert.AreEqual(2u, got[2].EntryId);
+            Assert.AreEqual(0x80000002u, got[3].EntryId);
+            Assert.AreEqual(3u, got[4].EntryId);
 
-            // Reconciliation actions re-keyed.
-            Assert.AreEqual(2, inputs.ReconciliationActions.Count);
+            // All 3 reconciliation actions preserved.
+            Assert.AreEqual(3, inputs.ReconciliationActions.Count);
             Assert.IsInstanceOfType(
                 inputs.ReconciliationActions[(fileName, 0)], typeof(ReconcileAction.UseCwtPeak));
             Assert.IsInstanceOfType(
-                inputs.ReconciliationActions[(fileName, 2)],
-                typeof(ReconcileAction.ForcedIntegration));
-            // The action at the dropped entry is gone, NOT silently re-keyed
-            // to a different surviving entry.
-            Assert.IsFalse(inputs.ReconciliationActions.ContainsKey((fileName, 1)));
+                inputs.ReconciliationActions[(fileName, 2)], typeof(ReconcileAction.UseCwtPeak));
+            Assert.IsInstanceOfType(
+                inputs.ReconciliationActions[(fileName, 4)], typeof(ReconcileAction.ForcedIntegration));
         }
 
         /// <summary>
@@ -2428,6 +2620,213 @@ namespace pwiz.OspreySharp.Test
                 RunProteinQvalue = runProteinQ,
                 ModifiedSequence = "PEPTIDE",
             };
+        }
+
+        #endregion
+
+        #region TaskValiditySidecar Tests
+
+        private const string TASK_NAME = "PerFileScoring";
+        private const string TASK_VERSION = "26.6.0";
+
+        /// <summary>
+        /// Write a sidecar with a known validity_key, then confirm
+        /// <see cref="TaskValiditySidecar.IsValid"/> reports true when
+        /// queried with the same key. Baseline round-trip.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarRoundTrip()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_rt_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                File.WriteAllText(output, "stub");
+                const string key = "search=abc123;library=def456";
+
+                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
+                    new[] { Path.Combine(dir, "in.mzML"), Path.Combine(dir, "lib.tsv") });
+
+                Assert.IsTrue(File.Exists(TaskValiditySidecar.PathFor(output, TASK_NAME)));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key + "_modified"));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Validity keys containing quotes, backslashes, newlines, and
+        /// other control characters must round-trip exactly through the
+        /// JSON escape/unescape path. A naive writer would emit invalid
+        /// JSON; a naive reader would scramble the key. Either failure
+        /// would silently invalidate every sidecar with a path-derived
+        /// key on Windows (backslashes in paths).
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarJsonEscapes()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_esc_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                // Mix of every escape branch in TaskValiditySidecar.JsonString:
+                // quote, backslash, \b \f \n \r \t, and a sub-0x20 control
+                // character ("\u0001") that exercises the \u escape branch.
+                const string key = "k=\"v\";path=C:\\proj\\ai;ctrl=\b\f\n\r\t\u0001";
+
+                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key,
+                    new[] { "path with \"quotes\".mzML", "C:\\path\\with\\slashes.tsv" });
+
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// A missing sidecar must yield <c>IsValid == false</c> without
+        /// throwing. "I can't tell" is the conservative answer; throwing
+        /// would crash the pipeline driver on its first invocation.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarMissingFile()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_miss_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "never_written.scores.parquet");
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, "any-key"));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Malformed sidecar contents (truncated mid-field, missing
+        /// validity_key, raw garbage) must yield
+        /// <c>IsValid == false</c> without throwing. Each shape exercises
+        /// a different reader path: truncated → unterminated string;
+        /// missing field → ExtractStringField returns null; garbage →
+        /// the field-name needle is never found.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarMalformedRejected()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_bad_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                string sidecar = TaskValiditySidecar.PathFor(output, TASK_NAME);
+                const string key = "the-key";
+
+                // Truncated mid-key: writer wrote the validity_key opening
+                // quote and a few chars, then died. Unterminated string
+                // returns null (which IsValid maps to false).
+                File.WriteAllText(sidecar, "{\n  \"task\": \"PerFileScoring\",\n  \"validity_key\": \"the-");
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                // Missing validity_key field entirely.
+                File.WriteAllText(sidecar, "{\n  \"task\": \"PerFileScoring\",\n  \"version\": \"26.5.0\"\n}\n");
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                // Not-JSON garbage.
+                File.WriteAllText(sidecar, "not json at all");
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                // Empty file.
+                File.WriteAllText(sidecar, string.Empty);
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Two tasks writing sidecars for the same output path must not
+        /// trample each other. Naming includes the task name, so
+        /// PerFileScoring's sidecar and PerFileRescore's sidecar are
+        /// distinct files on disk. This is the load-bearing property
+        /// that lets PerFileRescore overwrite a parquet in place while
+        /// PerFileScoring's "I produced this" record survives untouched.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarPerTaskNamingCollision()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_coll_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                const string scoringKey = "scoring-key";
+                const string rescoreKey = "rescore-key";
+
+                TaskValiditySidecar.Write(output, "PerFileScoring", TASK_VERSION,
+                    scoringKey, new string[0]);
+                TaskValiditySidecar.Write(output, "PerFileRescore", TASK_VERSION,
+                    rescoreKey, new string[0]);
+
+                string scoringPath = TaskValiditySidecar.PathFor(output, "PerFileScoring");
+                string rescorePath = TaskValiditySidecar.PathFor(output, "PerFileRescore");
+                Assert.AreNotEqual(scoringPath, rescorePath);
+                Assert.IsTrue(File.Exists(scoringPath));
+                Assert.IsTrue(File.Exists(rescorePath));
+
+                // Each task's IsValid sees its own key, not the other's.
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileScoring", scoringKey));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileRescore", rescoreKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileScoring", rescoreKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileRescore", scoringKey));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// <see cref="TaskValiditySidecar.Delete"/> removes an existing
+        /// sidecar (subsequent IsValid → false) and is a silent no-op
+        /// when the sidecar is absent. The no-op contract matters because
+        /// task Run methods call Delete unconditionally before producing
+        /// outputs.
+        /// </summary>
+        [TestMethod]
+        public void TestTaskValiditySidecarDelete()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "task_sidecar_del_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string output = Path.Combine(dir, "out.scores.parquet");
+                const string key = "k";
+
+                TaskValiditySidecar.Write(output, TASK_NAME, TASK_VERSION, key, new string[0]);
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                TaskValiditySidecar.Delete(output, TASK_NAME);
+                Assert.IsFalse(File.Exists(TaskValiditySidecar.PathFor(output, TASK_NAME)));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, TASK_NAME, key));
+
+                // Second Delete on the now-absent sidecar must not throw.
+                TaskValiditySidecar.Delete(output, TASK_NAME);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
         }
 
         #endregion

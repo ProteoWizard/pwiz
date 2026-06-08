@@ -24,4 +24,16 @@
     <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
   </ItemGroup>
 
+  <!-- DotNetZip (Ionic.Zlib) for stock-zlib-compatible deflate output.
+       Matches Skyline's BlibData writer (Util/Extensions/UtilDB.Compress)
+       so OspreySharp .blib peak blobs are byte-identical to Skyline's
+       and to Rust osprey's flate2 output. .NET's built-in DeflateStream
+       produces a 4-byte-shorter non-stock-zlib variant which would split
+       cross-impl byte parity. -->
+  <ItemGroup>
+    <Reference Include="DotNetZip">
+      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.Scoring;
+using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp.Test
 {
@@ -405,8 +406,14 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestCalibrationFilenameForInput()
         {
+            // Use Path.Combine for the directory-prefixed case so the test
+            // runs on both Windows (\) and Linux (/). Path.GetFileNameWithoutExtension
+            // only recognizes its host OS's separator, so a hard-coded
+            // Windows literal would fail under Linux/WSL even though the
+            // production code handles either OS correctly given an
+            // OS-native input path.
             Assert.AreEqual("sample.calibration.json",
-                CalibrationIO.CalibrationFilenameForInput(@"C:\data\sample.mzML"));
+                CalibrationIO.CalibrationFilenameForInput(Path.Combine("data", "sample.mzML")));
             Assert.AreEqual("test.dia.calibration.json",
                 CalibrationIO.CalibrationFilenameForInput("test.dia.mzML"));
             Assert.AreEqual("experiment.calibration.json",
@@ -525,7 +532,7 @@ namespace pwiz.OspreySharp.Test
         /// LOH and trigger gen-2 GC pressure during the all-windows-at-once
         /// pre-preprocessing step.
         ///
-        /// If a future change makes AnalysisPipeline.s_calXcorrScorer
+        /// If a future change makes AbstractScoringTask.s_calXcorrScorer
         /// construct with BinConfig.HRAM() (or any other non-unit bin config),
         /// these asserts fail loudly and cite the Rust design doc. Mirrors
         /// the calibration_scorer_uses_unit_bins_for_* tests in Rust osprey
@@ -534,7 +541,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestCalibrationXcorrScorerUsesUnitBins()
         {
-            int calBins = AnalysisPipeline.s_calXcorrScorer.BinConfig.NBins;
+            int calBins = AbstractScoringTask.s_calXcorrScorer.BinConfig.NBins;
             int unitBins = new SpectralScorer(BinConfig.UnitResolution()).BinConfig.NBins;
             int hramBins = new SpectralScorer(BinConfig.HRAM()).BinConfig.NBins;
 

@@ -105,10 +105,12 @@
     <None Include="Resources\Panorama.bmp" />
     <None Include="Resources\OpenRemoteFolder.png" />
     <Content Include="SkylineBatch.ico" />
-    <Content Include="SkylineDailyRunner.exe">
+    <Content Include="..\..\SkylineRunner\Binaries\SkylineDailyRunner.exe">
+      <Link>SkylineDailyRunner.exe</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="SkylineRunner.exe">
+    <Content Include="..\..\SkylineRunner\Binaries\SkylineRunner.exe">
+      <Link>SkylineRunner.exe</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\OpenFolder.bmp" />

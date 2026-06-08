@@ -136,25 +136,13 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static TutorialImageMetadata FetchTutorialImage(string name, string imageFilename, string language, string filePath = null)
         {
-            var tutorial = TutorialCatalog.FindTutorial(name);
-            if (tutorial == null)
-            {
-                var known = string.Join(@", ", TutorialCatalog.Tutorials.Select(t => t.FolderName));
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Unknown tutorial: {0}. Available tutorials: {1}", name, known));
-            }
+            var tutorial = ResolveTutorial(name);
+            ValidateTutorialImageFilename(imageFilename);
 
-            var t = tutorial.Value;
-
-            // Validate image filename to prevent path traversal
-            if (imageFilename.IndexOfAny(new[] { '\\', '/' }) >= 0 || imageFilename.Contains(@".."))
-                throw new ArgumentException(new LlmInstruction(@"Image filename must not contain path separators"));
-
-            string url = string.Format(@"{0}/{1}/{2}/{3}/{4}/{5}",
-                GITHUB_RAW_BASE, GetGitHash(), TUTORIALS_PATH, t.FolderName, language, imageFilename);
+            string url = BuildTutorialImageUrl(tutorial, language, imageFilename);
 
             // Download image
-            filePath = filePath ?? GetTutorialImageFilePath(t.FolderName, language, imageFilename);
+            filePath = filePath ?? GetTutorialImageFilePath(tutorial.FolderName, language, imageFilename);
             DirectoryEx.CreateForFilePath(filePath);
 
             using (var client = new HttpClientWithProgress())
@@ -176,6 +164,82 @@ namespace pwiz.Skyline.ToolsUI
                 FilePath = filePath.ToForwardSlashPath(),
                 Image = imageFilename
             };
+        }
+
+        /// <summary>
+        /// Fetch a tutorial image from GitHub and return the bytes in memory plus a
+        /// server-suggested file path. The file is NOT written by this call - the
+        /// caller decides whether to emit the bytes inline or persist them to the
+        /// suggested path as a fallback.
+        /// </summary>
+        public static ImageBytesMetadata FetchTutorialImageBytes(string name, string imageFilename, string language)
+        {
+            var tutorial = ResolveTutorial(name);
+            ValidateTutorialImageFilename(imageFilename);
+
+            string url = BuildTutorialImageUrl(tutorial, language, imageFilename);
+
+            byte[] bytes;
+            using (var client = new HttpClientWithProgress())
+            {
+                try
+                {
+                    bytes = client.DownloadData(url);
+                }
+                catch (Exception ex)
+                {
+                    throw new IOException(LlmInstruction.Format(
+                        @"Failed to fetch tutorial image from {0}: {1}",
+                        url, ex.Message), ex);
+                }
+            }
+
+            return new ImageBytesMetadata
+            {
+                Data = bytes,
+                FilePath = GetTutorialImageFilePath(tutorial.FolderName, language, imageFilename)
+                    .ToForwardSlashPath(),
+                MimeType = GuessImageMimeType(imageFilename)
+            };
+        }
+
+        private static TutorialInfo ResolveTutorial(string name)
+        {
+            var tutorial = TutorialCatalog.FindTutorial(name);
+            if (tutorial == null)
+            {
+                var known = string.Join(@", ", TutorialCatalog.Tutorials.Select(t => t.FolderName));
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Unknown tutorial: {0}. Available tutorials: {1}", name, known));
+            }
+            return tutorial.Value;
+        }
+
+        private static void ValidateTutorialImageFilename(string imageFilename)
+        {
+            if (imageFilename.IndexOfAny(new[] { '\\', '/' }) >= 0 || imageFilename.Contains(@".."))
+                throw new ArgumentException(new LlmInstruction(@"Image filename must not contain path separators"));
+        }
+
+        private static string BuildTutorialImageUrl(TutorialInfo tutorial, string language, string imageFilename)
+        {
+            return string.Format(@"{0}/{1}/{2}/{3}/{4}/{5}",
+                GITHUB_RAW_BASE, GetGitHash(), TUTORIALS_PATH, tutorial.FolderName, language, imageFilename);
+        }
+
+        private static string GuessImageMimeType(string imageFilename)
+        {
+            string ext = Path.GetExtension(imageFilename).ToLowerInvariant();
+            switch (ext)
+            {
+                case @".png": return @"image/png";
+                case @".jpg":
+                case @".jpeg": return @"image/jpeg";
+                case @".gif": return @"image/gif";
+                case @".bmp": return @"image/bmp";
+                case @".webp": return @"image/webp";
+                default: return @"application/octet-stream";
+            }
         }
 
         /// <summary>

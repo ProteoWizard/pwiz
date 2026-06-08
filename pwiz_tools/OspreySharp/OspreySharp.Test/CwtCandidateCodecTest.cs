@@ -357,7 +357,7 @@ namespace pwiz.OspreySharp.Test
         public void TestLoadCwtCandidatesFromRustParquet()
         {
             string baseDir = System.Environment.GetEnvironmentVariable(@"OSPREY_TEST_BASE_DIR")
-                             ?? @"D:\test\osprey-runs";
+                             ?? DefaultTestBaseDir();
             string path = System.IO.Path.Combine(baseDir, @"astral",
                 @"_stage6_planning", @"Astral",
                 @"Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_49.scores.parquet");
@@ -408,8 +408,8 @@ namespace pwiz.OspreySharp.Test
         /// Resolve the Stellar test data directory via the
         /// <c>OSPREY_TEST_BASE_DIR</c> environment variable used by
         /// <c>ai/scripts/OspreySharp/Dataset-Config.ps1</c>, falling back
-        /// to <c>D:\test\osprey-runs</c> for the default Windows
-        /// developer setup. Tests that read parquets call
+        /// to <see cref="DefaultTestBaseDir"/> for the default developer
+        /// setup. Tests that read parquets call
         /// <c>Assert.Inconclusive</c> when the resolved file is missing,
         /// keeping the suite portable to environments without the test
         /// dataset.
@@ -417,8 +417,22 @@ namespace pwiz.OspreySharp.Test
         private static string StellarBaseDir()
         {
             string baseDir = System.Environment.GetEnvironmentVariable(@"OSPREY_TEST_BASE_DIR")
-                             ?? @"D:\test\osprey-runs";
+                             ?? DefaultTestBaseDir();
             return System.IO.Path.Combine(baseDir, @"stellar");
+        }
+
+        /// <summary>
+        /// Default test-data root when <c>OSPREY_TEST_BASE_DIR</c> is not
+        /// set. Maps the Windows <c>D:\test\osprey-runs</c> developer layout
+        /// to its WSL/drvfs equivalent <c>/mnt/d/test/osprey-runs</c> on
+        /// Linux, so the parquet-dependent tests run out of the box under
+        /// WSL without requiring the env var to be set manually.
+        /// </summary>
+        private static string DefaultTestBaseDir()
+        {
+            return System.IO.Path.DirectorySeparatorChar == '/'
+                ? @"/mnt/d/test/osprey-runs"
+                : @"D:\test\osprey-runs";
         }
 
         private static void AssertBitEqual(double expected, double actual, string label)

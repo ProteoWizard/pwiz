@@ -26,7 +26,7 @@ using pwiz.OspreySharp.Core;
 namespace pwiz.OspreySharp
 {
     /// <summary>
-    /// Top-level entry point for the <c>--join-at-pass=1 --no-join</c>
+    /// Top-level entry point for the <c>--task PerFileRescore</c>
     /// per-file rescore worker. Mirrors <c>run_rescore</c> in
     /// <c>osprey/crates/osprey/src/rescore.rs</c>.
     ///
@@ -79,14 +79,15 @@ namespace pwiz.OspreySharp
         /// </summary>
         public static int Run(OspreyConfig config)
         {
-            // Thin facade — all worker logic lives on AnalysisPipeline so
-            // it can share the in-process Stage 6 code path. Keeps
-            // Program.Main's dispatch unchanged while letting the heavy
-            // lifting (library load, hydration, compaction, rescore loop,
-            // future gap-fill + parquet write-back) live alongside the
-            // rest of the pipeline.
-            var pipeline = new AnalysisPipeline();
-            return pipeline.RunWorker(config);
+            // Phase C: the worker is now an alias for the canonical
+            // pipeline entry. The driver runs only the included tasks
+            // (OspreyTask.IsIncluded): a NoJoin+InputScores config includes
+            // PerFileRescoreTask, while PerFileScoringTask's probe-the-disk
+            // joinOnly Rehydrate (reached via ctx.Demand) hydrates the upstream
+            // state (stubs, 1st-pass overlay, reconciliation actions, refined
+            // calibrations, gap-fill targets) from the boundary files,
+            // matching what the deleted RunWorker assembled by hand.
+            return new AnalysisPipeline().Run(config);
         }
     }
 }

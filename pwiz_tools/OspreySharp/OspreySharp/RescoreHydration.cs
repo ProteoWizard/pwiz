@@ -59,7 +59,7 @@ namespace pwiz.OspreySharp
         /// <c>entry_id</c> against the loaded stub list. Keep actions
         /// are implicitly absent (the planner never persists them).
         /// </summary>
-        public Dictionary<(string FileName, int VecIdx), ReconcileAction> ReconciliationActions { get; set; }
+        public Dictionary<(string FileName, int Index), ReconcileAction> ReconciliationActions { get; set; }
 
         /// <summary>
         /// Refined per-file RT calibrations reconstructed from
@@ -75,6 +75,28 @@ namespace pwiz.OspreySharp
         /// <c>reconciliation.json</c>'s <c>gap_fill_targets</c> array.
         /// </summary>
         public Dictionary<string, List<GapFillTarget>> PerFileGapFill { get; set; }
+
+        /// <summary>
+        /// Per-file multi-charge consensus rescore targets. Populated
+        /// only by callers that compute it post-compaction (consensus
+        /// is meaningful only against the surviving entry set). Left
+        /// null when the bundle is built ahead of compaction; the
+        /// downstream task computes it on demand in that case.
+        /// </summary>
+        public Dictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> PerFileConsensusTargets { get; set; }
+
+        /// <summary>
+        /// Full set of file stems participating in the planner's join, as
+        /// read from <c>reconciliation.json</c>'s <c>file_stems</c> field
+        /// (v2+). Per-file Stage 6 rescore workers carry this through so
+        /// they can compute the join-wide reconciliation parameter hash —
+        /// the worker's <c>OspreyConfig.InputFiles</c> only has its single
+        /// parquet, but the hash that the downstream
+        /// <c>--task MergeNode</c> merge node validates is computed over
+        /// all files. Empty list when reading a v1 envelope (the worker
+        /// falls back to its <c>InputFiles</c> stems in that case).
+        /// </summary>
+        public List<string> JoinFileStems { get; set; }
 
         /// <summary>Total non-Keep reconciliation actions across all files.</summary>
         public int TotalActions => ReconciliationActions.Count;
@@ -138,10 +160,6 @@ namespace pwiz.OspreySharp
                 throw new InvalidDataException("HydrateForRescore: parquetPaths is empty");
 
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>(parquetPaths.Count);
-            var refinedCalibrations = new Dictionary<string, RTCalibration>();
-            var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
-            var reconciliationActions = new Dictionary<(string, int), ReconcileAction>();
-
             foreach (var parquetPath in parquetPaths)
             {
                 string syntheticInput = SyntheticInputFromParquet(parquetPath);
@@ -153,8 +171,8 @@ namespace pwiz.OspreySharp
                         parquetPath));
                 }
 
-                // 1. Stubs from parquet (entry_id, charge, modseq, RTs,
-                //    parquet_index assigned by LoadFdrStubsFromParquet).
+                // Stubs from parquet (entry_id, charge, modseq, RTs,
+                // parquet_index assigned by LoadFdrStubsFromParquet).
                 List<FdrEntry> stubs;
                 try
                 {
@@ -166,21 +184,76 @@ namespace pwiz.OspreySharp
                         "HydrateForRescore: failed to load stubs from {0}: {1}",
                         parquetPath, ex.Message), ex);
                 }
+                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+            }
 
-                // 2. Overlay SVM scores + 4 q-values + PEP +
-                //    RunProteinQvalue from .1st-pass.fdr_scores.bin v3.
-                //    expected_pass = FirstPass: the planner's actions were
-                //    computed against first-pass FDR, and the worker
-                //    compaction predicate uses first-pass q-values.
+            return HydrateReconciliationOverlay(perFileEntries, parquetPaths);
+        }
+
+        /// <summary>
+        /// Overlay the per-file 1st-pass FDR sidecars and parse the per-file
+        /// <c>reconciliation.json</c> envelopes onto an already-loaded
+        /// <paramref name="perFileEntries"/> list. The per-file element at
+        /// index <c>i</c> in <paramref name="perFileEntries"/> must
+        /// correspond to <paramref name="parquetPaths"/>[<c>i</c>] — the
+        /// fileName key is rederived from the parquet path for the sidecar
+        /// path computation.
+        ///
+        /// Used by both the worker-mode <see cref="HydrateForRescore"/>
+        /// wrapper (which loads stubs first) and the in-pipeline joinOnly
+        /// dispatch (which already has stubs loaded with PIN features +
+        /// calibration siblings, and just needs the rescore overlay added
+        /// to share state with FirstJoin / PerFileRescore).
+        ///
+        /// The returned <see cref="RescoreInputs"/> references the SAME
+        /// <see cref="FdrEntry"/> list objects passed in
+        /// <paramref name="perFileEntries"/>; this method mutates those
+        /// lists' element fields via the FDR sidecar overlay.
+        /// <see cref="RescoreInputs.PerFileConsensusTargets"/> is left
+        /// null; callers that need it compute it post-compaction.
+        /// </summary>
+        public static RescoreInputs HydrateReconciliationOverlay(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IList<string> parquetPaths)
+        {
+            if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
+            if (parquetPaths == null) throw new ArgumentNullException(nameof(parquetPaths));
+            if (perFileEntries.Count != parquetPaths.Count)
+            {
+                throw new InvalidDataException(string.Format(
+                    "HydrateReconciliationOverlay: perFileEntries.Count ({0}) != parquetPaths.Count ({1})",
+                    perFileEntries.Count, parquetPaths.Count));
+            }
+
+            var refinedCalibrations = new Dictionary<string, RTCalibration>();
+            var perFileGapFill = new Dictionary<string, List<GapFillTarget>>();
+            var reconciliationActions = new Dictionary<(string, int), ReconcileAction>();
+            // Captured from the first envelope's file_stems field (v2+);
+            // every subsequent envelope must carry the same set so the
+            // worker's join-wide reconciliation hash matches the planner's.
+            // Mirrors the consistency check in Rust hydrate_for_rescore.
+            List<string> joinFileStems = null;
+
+            for (int i = 0; i < perFileEntries.Count; i++)
+            {
+                string parquetPath = parquetPaths[i];
+                string syntheticInput = SyntheticInputFromParquet(parquetPath);
+                string fileName = perFileEntries[i].Key;
+                var stubs = perFileEntries[i].Value;
+
+                // Overlay SVM scores + 4 q-values + PEP + RunProteinQvalue
+                // from .1st-pass.fdr_scores.bin v3. expected_pass = FirstPass:
+                // the planner's actions were computed against first-pass FDR,
+                // and the worker compaction predicate uses first-pass q-values.
                 string sidecarPath = FdrScoresSidecar.Pass1Path(syntheticInput);
                 if (!FdrScoresSidecar.TryRead(sidecarPath, stubs, FdrScoresSidecar.Pass.FirstPass))
                 {
                     throw new InvalidDataException(string.Format(
-                        "HydrateForRescore: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
+                        "HydrateReconciliationOverlay: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
                         "(expected at {1})", fileName, sidecarPath));
                 }
 
-                // 3. Parse reconciliation.json.
+                // Parse reconciliation.json.
                 string reconPath = ReconciliationFile.PathForInput(syntheticInput);
                 ReconciliationFile envelope;
                 try
@@ -190,19 +263,43 @@ namespace pwiz.OspreySharp
                 catch (Exception ex)
                 {
                     throw new InvalidDataException(string.Format(
-                        "HydrateForRescore: failed to read {0}: {1}",
+                        "HydrateReconciliationOverlay: failed to read {0}: {1}",
                         reconPath, ex.Message), ex);
                 }
 
-                // 3a. Build entry_id → vec_idx map from the loaded stubs
-                //     so the planner's entry_id-keyed actions can be
-                //     rehomed onto (file_name, vec_idx) keys the rescore
-                //     engine consumes.
+                // Capture / validate file_stems across all envelopes.
+                // ReconciliationFile.Load already rejects any envelope whose
+                // format_version != CurrentFormatVersion (currently 2), so by
+                // the time we reach here `envelope.FileStems` must be the
+                // planner's full join file set -- a non-empty list, identical
+                // across every envelope produced by a single planner step.
+                // Any disagreement (including unexpected empty stems) means
+                // the on-disk envelopes were produced by different planner
+                // steps and indicates a corrupted hand-off. Mirrors the
+                // consistency check in Rust's hydrate_for_rescore.
+                var envelopeStems = NormalizeStems(envelope.FileStems);
+                if (joinFileStems == null)
+                {
+                    joinFileStems = envelopeStems;
+                }
+                else if (!StemsEqual(joinFileStems, envelopeStems))
+                {
+                    throw new InvalidDataException(string.Format(
+                        "HydrateReconciliationOverlay: reconciliation.json {0} carries a " +
+                        "different file_stems set than its siblings (planner inconsistency). " +
+                        "Expected: [{1}]; got: [{2}]",
+                        reconPath,
+                        string.Join(", ", joinFileStems),
+                        string.Join(", ", envelopeStems)));
+                }
+
+                // Build entry_id -> vec_idx map from the loaded stubs so the
+                // planner's entry_id-keyed actions can be rehomed onto
+                // (file_name, vec_idx) keys the rescore engine consumes.
                 var idToIdx = new Dictionary<uint, int>(stubs.Count);
                 for (int idx = 0; idx < stubs.Count; idx++)
                     idToIdx[stubs[idx].EntryId] = idx;
 
-                // 3b. UseCwtPeak actions.
                 if (envelope.UseCwtPeakActions != null)
                 {
                     foreach (var entry in envelope.UseCwtPeakActions)
@@ -210,7 +307,7 @@ namespace pwiz.OspreySharp
                         if (!idToIdx.TryGetValue(entry.EntryId, out int vecIdx))
                         {
                             throw new InvalidDataException(string.Format(
-                                "HydrateForRescore: use_cwt_peak entry_id {0} in {1} not found " +
+                                "HydrateReconciliationOverlay: use_cwt_peak entry_id {0} in {1} not found " +
                                 "in stubs (parquet drift?)", entry.EntryId, reconPath));
                         }
                         reconciliationActions[(fileName, vecIdx)] = new ReconcileAction.UseCwtPeak(
@@ -218,7 +315,6 @@ namespace pwiz.OspreySharp
                     }
                 }
 
-                // 3c. ForcedIntegration actions.
                 if (envelope.ForcedIntegrationActions != null)
                 {
                     foreach (var entry in envelope.ForcedIntegrationActions)
@@ -226,7 +322,7 @@ namespace pwiz.OspreySharp
                         if (!idToIdx.TryGetValue(entry.EntryId, out int vecIdx))
                         {
                             throw new InvalidDataException(string.Format(
-                                "HydrateForRescore: forced_integration entry_id {0} in {1} not " +
+                                "HydrateReconciliationOverlay: forced_integration entry_id {0} in {1} not " +
                                 "found in stubs (parquet drift?)", entry.EntryId, reconPath));
                         }
                         reconciliationActions[(fileName, vecIdx)] = new ReconcileAction.ForcedIntegration(
@@ -234,8 +330,6 @@ namespace pwiz.OspreySharp
                     }
                 }
 
-                // 3d. Refined RT calibration (optional — null when
-                //     Stage 5's LOESS refit failed for this file).
                 if (envelope.RefinedRtCalibration != null)
                 {
                     var cal = RTCalibration.FromModelParams(
@@ -246,7 +340,6 @@ namespace pwiz.OspreySharp
                     refinedCalibrations[fileName] = cal;
                 }
 
-                // 3e. Gap-fill targets.
                 if (envelope.GapFillTargets != null && envelope.GapFillTargets.Count > 0)
                 {
                     var gapFill = new List<GapFillTarget>(envelope.GapFillTargets.Count);
@@ -264,8 +357,6 @@ namespace pwiz.OspreySharp
                     }
                     perFileGapFill[fileName] = gapFill;
                 }
-
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
             }
 
             return new RescoreInputs
@@ -274,13 +365,56 @@ namespace pwiz.OspreySharp
                 ReconciliationActions = reconciliationActions,
                 RefinedCalibrations = refinedCalibrations,
                 PerFileGapFill = perFileGapFill,
+                PerFileConsensusTargets = null,
+                JoinFileStems = joinFileStems ?? new List<string>(),
             };
         }
 
         /// <summary>
+        /// Sort + dedup a list of file stems (Ordinal). Returns a new list;
+        /// the input is not mutated. Empty / null input becomes an empty
+        /// list. Used to canonicalize the <c>file_stems</c> field from
+        /// each <c>reconciliation.json</c> envelope before consistency
+        /// checks across siblings.
+        /// </summary>
+        private static List<string> NormalizeStems(IList<string> stems)
+        {
+            if (stems == null || stems.Count == 0)
+                return new List<string>();
+            var result = new List<string>(stems.Count);
+            foreach (var s in stems)
+            {
+                if (!string.IsNullOrEmpty(s))
+                    result.Add(s);
+            }
+            result.Sort(StringComparer.Ordinal);
+            for (int i = result.Count - 1; i > 0; i--)
+            {
+                if (string.Equals(result[i], result[i - 1], StringComparison.Ordinal))
+                    result.RemoveAt(i);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Ordinal element-wise equality on two pre-normalized stem lists.
+        /// </summary>
+        private static bool StemsEqual(IList<string> a, IList<string> b)
+        {
+            if (a.Count != b.Count) return false;
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (!string.Equals(a[i], b[i], StringComparison.Ordinal))
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Inverse of <c>scores_path_for_input</c>: given
-        /// <c>/data/sample1.scores.parquet</c>, produce a synthetic input
-        /// path <c>/data/sample1.mzML</c> whose stem matches what the
+        /// <c>/data/sample1.scores.parquet</c> (or its reconciled sibling
+        /// <c>/data/sample1.scores-reconciled.parquet</c>), produce a synthetic
+        /// input path <c>/data/sample1.mzML</c> whose stem matches what the
         /// worker used. This lets the worker reuse the existing
         /// path-derivation helpers (FDR sidecars, calibration JSON,
         /// reconciliation JSON) without duplicating them. The synthetic
@@ -293,9 +427,17 @@ namespace pwiz.OspreySharp
             // GetFileNameWithoutExtension returns "" not null for valid paths
             // and throws on invalid input, so the result is never null here.
             string stem = Path.GetFileNameWithoutExtension(parquetPath);
-            // Strip a trailing ".scores" if present.
+            // Strip the trailing ".scores-reconciled" (Stage 6 reconciled output)
+            // or ".scores" (Stage 4 output). These two tokens never collide with
+            // an input stem because Stage 4 always appends exactly ".scores"
+            // (so the only way a name ends in ".scores-reconciled" is Stage 6).
+            // GetFileNameWithoutExtension of "x.scores-reconciled.parquet" is
+            // "x.scores-reconciled"; check the longer token first.
+            const string ReconciledScoresSuffix = ".scores-reconciled";
             const string ScoresSuffix = ".scores";
-            if (stem.EndsWith(ScoresSuffix, StringComparison.Ordinal))
+            if (stem.EndsWith(ReconciledScoresSuffix, StringComparison.Ordinal))
+                stem = stem.Substring(0, stem.Length - ReconciledScoresSuffix.Length);
+            else if (stem.EndsWith(ScoresSuffix, StringComparison.Ordinal))
                 stem = stem.Substring(0, stem.Length - ScoresSuffix.Length);
             string parent = Path.GetDirectoryName(parquetPath);
             string filename = stem + ".mzML";

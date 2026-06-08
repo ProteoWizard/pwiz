@@ -26,6 +26,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using pwiz.OspreySharp.Core;
@@ -57,8 +59,6 @@ namespace pwiz.OspreySharp.IO
         private const string CV_32BIT_FLOAT = "MS:1000521";
         private const string CV_ZLIB_COMPRESSION = "MS:1000574";
         private const string CV_NO_COMPRESSION = "MS:1000576";
-
-        private const double DEFAULT_ISOLATION_HALF_WIDTH = 12.5;
 
         #endregion
 
@@ -236,33 +236,27 @@ namespace pwiz.OspreySharp.IO
                         else if (currentContext == "selectedIon")
                         {
                             if (accession == CV_SELECTED_ION_MZ && value != null)
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out precursorMz);
+                                TryParseXmlDouble(value, out precursorMz);
                             else if (accession == CV_PEAK_INTENSITY && value != null)
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out precursorIntensity);
+                                TryParseXmlDouble(value, out precursorIntensity);
                         }
                         else if (currentContext == "isolationWindow")
                         {
                             if (accession == CV_ISOLATION_WINDOW_TARGET && value != null)
                             {
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out isoTarget);
+                                TryParseXmlDouble(value, out isoTarget);
                                 hasIsolationWindow = true;
                             }
                             else if (accession == CV_ISOLATION_WINDOW_LOWER && value != null)
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out isoLower);
+                                TryParseXmlDouble(value, out isoLower);
                             else if (accession == CV_ISOLATION_WINDOW_UPPER && value != null)
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out isoUpper);
+                                TryParseXmlDouble(value, out isoUpper);
                         }
                         else if (currentContext == "scan")
                         {
                             if (accession == CV_SCAN_START_TIME_MINUTES && value != null)
                             {
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out retentionTime);
+                                TryParseXmlDouble(value, out retentionTime);
                                 // Check unitName for seconds
                                 string unitName = subtree.GetAttribute("unitName");
                                 if (unitName != null && unitName.IndexOf("second", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -271,8 +265,7 @@ namespace pwiz.OspreySharp.IO
                             else if (accession == CV_RETENTION_TIME_SECONDS && value != null)
                             {
                                 double seconds;
-                                if (double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out seconds))
+                                if (TryParseXmlDouble(value, out seconds))
                                     retentionTime = seconds / 60.0;
                             }
                             else if (accession == CV_MS_LEVEL && value != null)
@@ -337,9 +330,10 @@ namespace pwiz.OspreySharp.IO
             }
 
             if (mzArray == null)
-                mzArray = new double[0];
+                mzArray = Array.Empty<double>();
             if (intensityArray == null)
-                intensityArray = new float[0];
+                intensityArray = Array.Empty<float>();
+            EnsureSortedSpectrum(spectrumIndex, ref mzArray, ref intensityArray);
 
             // Build spectrum based on MS level
             if (msLevel == 1)
@@ -359,10 +353,28 @@ namespace pwiz.OspreySharp.IO
                 if (center <= 0)
                     return; // Skip spectra without precursor info
 
-                double lowerOffset = isoLower > 0 ? isoLower : DEFAULT_ISOLATION_HALF_WIDTH;
-                double upperOffset = isoUpper > 0 ? isoUpper : DEFAULT_ISOLATION_HALF_WIDTH;
+                // Fail fast on missing offsets rather than substituting a
+                // 12.5 hardcoded default. DIA processing cannot proceed
+                // without true isolation windows, and a silent default
+                // produces bogus results that are very hard to diagnose
+                // downstream. The error names the spectrum index and which
+                // cvParam is missing. Mirrors the equivalent fail-fast
+                // change in osprey/crates/osprey-io/src/mzml/parser.rs
+                // (PR #39 on maccoss/osprey).
+                if (isoLower <= 0)
+                    throw new InvalidDataException(string.Format(
+                        "spectrum index {0}: no valid isolation-window lower offset " +
+                        "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
+                        "without true isolation windows.",
+                        spectrumIndex));
+                if (isoUpper <= 0)
+                    throw new InvalidDataException(string.Format(
+                        "spectrum index {0}: no valid isolation-window upper offset " +
+                        "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
+                        "without true isolation windows.",
+                        spectrumIndex));
 
-                var isoWindow = new IsolationWindow(center, lowerOffset, upperOffset);
+                var isoWindow = new IsolationWindow(center, isoLower, isoUpper);
 
                 ms2List.Add(new Spectrum
                 {
@@ -517,30 +529,25 @@ namespace pwiz.OspreySharp.IO
                         else if (currentContext == "selectedIon")
                         {
                             if (accession == CV_SELECTED_ION_MZ && value != null)
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out raw.PrecursorMz);
+                                TryParseXmlDouble(value, out raw.PrecursorMz);
                         }
                         else if (currentContext == "isolationWindow")
                         {
                             if (accession == CV_ISOLATION_WINDOW_TARGET && value != null)
                             {
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out raw.IsoTarget);
+                                TryParseXmlDouble(value, out raw.IsoTarget);
                                 raw.HasIsolationWindow = true;
                             }
                             else if (accession == CV_ISOLATION_WINDOW_LOWER && value != null)
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out raw.IsoLower);
+                                TryParseXmlDouble(value, out raw.IsoLower);
                             else if (accession == CV_ISOLATION_WINDOW_UPPER && value != null)
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out raw.IsoUpper);
+                                TryParseXmlDouble(value, out raw.IsoUpper);
                         }
                         else if (currentContext == "scan")
                         {
                             if (accession == CV_SCAN_START_TIME_MINUTES && value != null)
                             {
-                                double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out raw.RetentionTime);
+                                TryParseXmlDouble(value, out raw.RetentionTime);
                                 string unitName = subtree.GetAttribute("unitName");
                                 if (unitName != null && unitName.IndexOf("second", StringComparison.OrdinalIgnoreCase) >= 0)
                                     raw.RetentionTime /= 60.0;
@@ -548,8 +555,7 @@ namespace pwiz.OspreySharp.IO
                             else if (accession == CV_RETENTION_TIME_SECONDS && value != null)
                             {
                                 double seconds;
-                                if (double.TryParse(value, System.Globalization.NumberStyles.Float,
-                                    System.Globalization.CultureInfo.InvariantCulture, out seconds))
+                                if (TryParseXmlDouble(value, out seconds))
                                     raw.RetentionTime = seconds / 60.0;
                             }
                             else if (accession == CV_MS_LEVEL && value != null)
@@ -615,6 +621,10 @@ namespace pwiz.OspreySharp.IO
                     intensityArray = DecodeBinaryArrayAsFloat(arrayInfo);
             }
 
+            mzArray = mzArray ?? Array.Empty<double>();
+            intensityArray = intensityArray ?? Array.Empty<float>();
+            EnsureSortedSpectrum(raw.Index, ref mzArray, ref intensityArray);
+
             return new DecodedSpectrum
             {
                 Index = raw.Index,
@@ -626,9 +636,89 @@ namespace pwiz.OspreySharp.IO
                 IsoUpper = raw.IsoUpper,
                 HasPrecursor = raw.HasPrecursor,
                 HasIsolationWindow = raw.HasIsolationWindow,
-                MzArray = mzArray ?? new double[0],
-                IntensityArray = intensityArray ?? new float[0],
+                MzArray = mzArray,
+                IntensityArray = intensityArray,
             };
+        }
+
+        /// <summary>
+        /// Some mzML producers emit peaks that are not strictly ascending in
+        /// m/z (observed in a HeLa Astral 3 mz DIA file: ~0.07% of spectra
+        /// have a single inverted pair of consecutive centroids). Downstream
+        /// fragment matching binary-searches the spectrum; the Rust
+        /// partition_point and BinarySearchLowerBound here use procedurally
+        /// different step patterns, so an unsorted region produces UB-style
+        /// divergence between the two impls. Sort once at load time so every
+        /// downstream consumer sees a well-defined ordering. The leading O(n)
+        /// sortedness check is the common-case fast path; the OrderBy
+        /// permutation only runs on inversions. LINQ OrderBy is stable
+        /// (matches Rust slice::sort_by); Array.Sort on parallel arrays is
+        /// unstable introsort and would reorder ties differently.
+        /// </summary>
+        // Cap on [unsorted-spectrum] log lines per process — otherwise an
+        // Astral 3-file run with millions of spectra and a 0.07% inversion
+        // rate produces thousands of interleaved lines from concurrent
+        // ProcessFile calls. After the cap, we suppress further lines
+        // (the first ones already prove the case is happening).
+        private static int s_unsortedLogCount;
+        private const int MaxUnsortedLogLines = 10;
+
+        private static void EnsureSortedSpectrum(uint spectrumIndex,
+            ref double[] mzArray, ref float[] intensityArray)
+        {
+            if (mzArray == null || mzArray.Length < 2)
+                return;
+            // Defensive guard: a malformed mzML where the m/z and intensity
+            // arrays are not the same length would IndexOutOfRange on the
+            // permutation step. Skip sorting in that case (downstream code
+            // already has its own length checks).
+            if (intensityArray == null || intensityArray.Length != mzArray.Length)
+                return;
+            // Walk the array once: detect NaN m/z (malformed mzML — fail
+            // loudly so a user report surfaces) and check sortedness in
+            // the same pass. NaN comparison semantics differ between
+            // Comparer<double>.Default and Rust's total_cmp, so we cannot
+            // sort consistently across impls; better to refuse the
+            // spectrum than silently diverge.
+            bool sorted = true;
+            for (int i = 0; i < mzArray.Length; i++)
+            {
+                if (double.IsNaN(mzArray[i]))
+                {
+                    throw new InvalidDataException(string.Format(
+                        "NaN m/z at index {0} of spectrum_index={1} (n_peaks={2}); " +
+                        "cannot sort or fragment-match a malformed centroid array.",
+                        i, spectrumIndex, mzArray.Length));
+                }
+                if (i > 0 && mzArray[i] < mzArray[i - 1])
+                    sorted = false;
+            }
+            if (sorted)
+                return;
+            int logCount = Interlocked.Increment(ref s_unsortedLogCount);
+            if (logCount <= MaxUnsortedLogLines)
+            {
+                Console.Error.WriteLine(
+                    $"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
+                if (logCount == MaxUnsortedLogLines)
+                {
+                    Console.Error.WriteLine(
+                        $"[unsorted-spectrum] suppressing further lines (>{MaxUnsortedLogLines} per process)");
+                }
+            }
+            int n = mzArray.Length;
+            double[] keyMz = mzArray;
+            int[] order = Enumerable.Range(0, n)
+                .OrderBy(i => keyMz[i]).ToArray();
+            double[] sortedMzs = new double[n];
+            float[] sortedInts = new float[n];
+            for (int i = 0; i < n; i++)
+            {
+                sortedMzs[i] = mzArray[order[i]];
+                sortedInts[i] = intensityArray[order[i]];
+            }
+            mzArray = sortedMzs;
+            intensityArray = sortedInts;
         }
 
         #endregion
@@ -687,15 +777,27 @@ namespace pwiz.OspreySharp.IO
                 if (center <= 0)
                     return null;
 
-                double lowerOffset = IsoLower > 0 ? IsoLower : DEFAULT_ISOLATION_HALF_WIDTH;
-                double upperOffset = IsoUpper > 0 ? IsoUpper : DEFAULT_ISOLATION_HALF_WIDTH;
+                // Fail fast on missing offsets (see the equivalent block
+                // in the linear convert path above for the rationale).
+                if (IsoLower <= 0)
+                    throw new InvalidDataException(string.Format(
+                        "spectrum index {0}: no valid isolation-window lower offset " +
+                        "(cvParam MS:1000828 missing or non-positive); cannot process DIA data " +
+                        "without true isolation windows.",
+                        Index));
+                if (IsoUpper <= 0)
+                    throw new InvalidDataException(string.Format(
+                        "spectrum index {0}: no valid isolation-window upper offset " +
+                        "(cvParam MS:1000829 missing or non-positive); cannot process DIA data " +
+                        "without true isolation windows.",
+                        Index));
 
                 return new Spectrum
                 {
                     ScanNumber = Index,
                     RetentionTime = RetentionTime,
                     PrecursorMz = PrecursorMz > 0 ? PrecursorMz : center,
-                    IsolationWindow = new IsolationWindow(center, lowerOffset, upperOffset),
+                    IsolationWindow = new IsolationWindow(center, IsoLower, IsoUpper),
                     Mzs = MzArray,
                     Intensities = IntensityArray,
                 };
@@ -703,6 +805,29 @@ namespace pwiz.OspreySharp.IO
         }
 
         #endregion
+
+        /// <summary>
+        /// IEEE-754 correct double parser for mzML cvParam values.
+        /// .NET Framework 4.7.2's double.TryParse can be off by 1-2 ULPs
+        /// on 16-digit scientific values; XmlConvert.ToDouble is required
+        /// by XML schema spec to be IEEE-correct, matching Rust mzdata's
+        /// parser. Without this, cvParams like scan_start_time
+        /// "17.0286203070330" parse to slightly different f64 cross-impl,
+        /// producing 2-ULP apex_rt drift downstream.
+        /// </summary>
+        private static bool TryParseXmlDouble(string s, out double result)
+        {
+            try
+            {
+                result = XmlConvert.ToDouble(s);
+                return true;
+            }
+            catch
+            {
+                result = 0.0;
+                return false;
+            }
+        }
     }
 
     /// <summary>
