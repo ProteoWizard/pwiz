@@ -54,6 +54,47 @@ namespace pwiz.OspreySharp.Scoring
         public OspreyConfig Config { get; }
 
         /// <summary>
+        /// Resolution strategy (Unit/HRAM) -- window-level. Drives the f64/f32 cache
+        /// dispatch inside <see cref="IResolutionStrategy.ScoreXcorr"/>; must not be
+        /// bypassed. Set once per window via <see cref="SetWindow"/>.
+        /// </summary>
+        public IResolutionStrategy Resolution { get; private set; }
+
+        /// <summary>
+        /// Per-window preprocessed XCorr cache (f64 doubles for Unit, f32 floats for
+        /// HRAM), produced once before the candidate loop. Window-level.
+        /// </summary>
+        public WindowXcorrCache PreprocessedXcorr { get; private set; }
+
+        /// <summary>
+        /// Main-search spectral scorer (resolution-mode bin config) -- window-level.
+        /// Not the unit-resolution calibration scorer.
+        /// </summary>
+        public SpectralScorer Scorer { get; private set; }
+
+        /// <summary>
+        /// Rented XCorr scratch / VisitedBins pool -- window-level. MUST be threaded
+        /// into <see cref="IResolutionStrategy.ScoreXcorr"/> so HRAM scoring avoids
+        /// per-call LOH allocation (perf-critical: the xcorr family is the perf gate).
+        /// </summary>
+        public XcorrScratchPool XcorrScratchPool { get; private set; }
+
+        /// <summary>
+        /// Set the per-window machinery the xcorr / Savitzky-Golay calculators read.
+        /// Called once per window after construction, before the candidate loop.
+        /// These are window-level and deliberately survive <see cref="ClearByproducts"/>
+        /// (which only resets the per-candidate byproduct cache).
+        /// </summary>
+        public void SetWindow(IResolutionStrategy resolution, WindowXcorrCache preprocessedXcorr,
+            SpectralScorer scorer, XcorrScratchPool xcorrScratchPool)
+        {
+            Resolution = resolution;
+            PreprocessedXcorr = preprocessedXcorr;
+            Scorer = scorer;
+            XcorrScratchPool = xcorrScratchPool;
+        }
+
+        /// <summary>
         /// Publish a byproduct keyed by its type for sibling calculators to read.
         /// Throws if one of this type was already published for the current
         /// candidate (mirrors Skyline's <c>AddInfo</c>); producers publish once,

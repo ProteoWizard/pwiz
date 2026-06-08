@@ -108,18 +108,6 @@ namespace pwiz.OspreySharp.Tasks
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
 
-        // Savitzky-Golay quadratic filter weights for length 5, center offset.
-        // Matches Rust pipeline.rs sg_weights: [-3/35, 12/35, 17/35, 12/35, -3/35].
-        private static readonly double[] SG_WEIGHTS =
-        {
-            -3.0 / 35.0,
-            12.0 / 35.0,
-            17.0 / 35.0,
-            12.0 / 35.0,
-            -3.0 / 35.0,
-        };
-
-
         // Calibration XCorr always uses unit-resolution bins (~2K) regardless of
         // instrument resolution mode. Matches the spec in Rust osprey
         // docs/02-calibration.md ("Comet-style XCorr (unit resolution, BLAS
@@ -734,6 +722,8 @@ namespace pwiz.OspreySharp.Tasks
             // (Parallel.For above), so these are window-local, never shared task
             // state.
             var ospreyContext = new OspreyScoringContext(config);
+            ospreyContext.SetWindow(context.Resolution, preprocessedXcorr, scorer,
+                context.XcorrScratchPool);
             var ospreyPeakData = new OspreyPeakData();
 
             try
@@ -743,7 +733,6 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     var fdrEntry = ScoreCandidate(
                         candidate, windowSpectra, windowRts,
-                        preprocessedXcorr,
                         ms1Spectra, rtCalibration, ms1Calibration,
                         globalRtTolerance, rtSigma,
                         scorer, context,
@@ -866,7 +855,6 @@ namespace pwiz.OspreySharp.Tasks
             LibraryEntry candidate,
             List<Spectrum> windowSpectra,
             double[] windowRts,
-            WindowXcorrCache preprocessedXcorr,
             List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
             MzCalibrationResult ms1Calibration,
@@ -1443,14 +1431,6 @@ namespace pwiz.OspreySharp.Tasks
             // LibCosine at apex
             double libCosine = scorer.LibCosine(apexSpectrum, candidate, config.FragmentTolerance);
 
-            // XCorr at apex via the resolution strategy. Pool avoids per-
-            // call 100K-bin LOH allocation on HRAM (no-op on Unit-res).
-            double xcorr = resolution.ScoreXcorr(
-                preprocessedXcorr, apexGlobalIdx, apexSpectrum, candidate, scorer,
-                context.XcorrScratchPool);
-
-
-
             // Count fragment matches (top-6 dedup byproduct, NOT a PIN feature;
             // stays inline). consecutive_ions / explained_intensity / mass-accuracy
             // (features 7-10) moved to the apex-match calculators below.
@@ -1481,26 +1461,6 @@ namespace pwiz.OspreySharp.Tasks
                     out ms1PrecursorCoelution, out ms1IsotopeCosine);
             }
 
-            // Savitzky-Golay weighted spectral scores at apex +/- 2 scans.
-            // Matches Rust pipeline.rs sg_xcorr / sg_cosine. Uses candidate-local
-            // indices (within startScan..endScan) not global window indices, matching
-            // Rust's cand_spectra bounds. Cosine uses mass-range-filtered matching
-            // (compute_cosine_at_scan) not LibCosine.
-            double sgXcorr = 0.0;
-            double sgCosine = 0.0;
-            for (int offset = -2; offset <= 2; offset++)
-            {
-                double weight = SG_WEIGHTS[offset + 2];
-                int candIdx = bestPeak.ApexIndex + offset;
-                if (candIdx < 0 || candIdx >= rangeLen)
-                    continue;
-                int globalIdx = startScan + candIdx;
-                var s = windowSpectra[globalIdx];
-                sgXcorr += resolution.ScoreXcorr(preprocessedXcorr, globalIdx, s, candidate, scorer,
-                    context.XcorrScratchPool) * weight;
-                sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;
-            }
-
             // Per-candidate state for the modular feature calculators. Reused
             // window-local instances (see RunCoelutionScoring); ClearByproducts
             // resets the per-candidate byproduct cache. Done BEFORE the
@@ -1508,7 +1468,8 @@ namespace pwiz.OspreySharp.Tasks
             // calculators. Calculator-backed features mirror Skyline's
             // IPeakFeatureCalculator; the rest stay inline until extracted.
             ospreyContext.ClearByproducts();
-            ospreyPeakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt, apexSpectrum);
+            ospreyPeakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt, apexSpectrum,
+                apexGlobalIdx, bestPeak.ApexIndex, startScan, rangeLen, windowSpectra);
 
             // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The crop,
             // WriteMpInputsRow, and Compute stay here because the bisection
@@ -1554,7 +1515,7 @@ namespace pwiz.OspreySharp.Tasks
             features[3] = OspreyFeatureCalculators.Get(3).Calculate(ospreyContext, ospreyPeakData);
             features[4] = OspreyFeatureCalculators.Get(4).Calculate(ospreyContext, ospreyPeakData);
             features[5] = OspreyFeatureCalculators.Get(5).Calculate(ospreyContext, ospreyPeakData);
-            features[6] = xcorr;
+            features[6] = OspreyFeatureCalculators.Get(6).Calculate(ospreyContext, ospreyPeakData);
             features[7] = OspreyFeatureCalculators.Get(7).Calculate(ospreyContext, ospreyPeakData);
             features[8] = OspreyFeatureCalculators.Get(8).Calculate(ospreyContext, ospreyPeakData);
             features[9] = OspreyFeatureCalculators.Get(9).Calculate(ospreyContext, ospreyPeakData);
@@ -1565,8 +1526,8 @@ namespace pwiz.OspreySharp.Tasks
             features[14] = ms1IsotopeCosine;
             features[15] = OspreyFeatureCalculators.Get(15).Calculate(ospreyContext, ospreyPeakData);
             features[16] = OspreyFeatureCalculators.Get(16).Calculate(ospreyContext, ospreyPeakData);
-            features[17] = sgXcorr;
-            features[18] = sgCosine;
+            features[17] = OspreyFeatureCalculators.Get(17).Calculate(ospreyContext, ospreyPeakData);
+            features[18] = OspreyFeatureCalculators.Get(18).Calculate(ospreyContext, ospreyPeakData);
             features[19] = OspreyFeatureCalculators.Get(19).Calculate(ospreyContext, ospreyPeakData);
             features[20] = OspreyFeatureCalculators.Get(20).Calculate(ospreyContext, ospreyPeakData);
 
@@ -1825,72 +1786,6 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return xics;
-        }
-
-
-        /// <summary>
-        /// Compute cosine similarity at a single scan, filtering fragments to the
-        /// spectrum's observed m/z range. Matches Rust compute_cosine_at_scan in
-        /// osprey-scoring/src/lib.rs:382. Unlike LibCosine, fragments outside the
-        /// spectrum's mass range are excluded (not treated as zero-intensity pairs).
-        /// </summary>
-        private static double ComputeCosineAtScan(
-            LibraryEntry candidate, Spectrum spectrum, OspreyConfig config)
-        {
-            if (candidate.Fragments == null || candidate.Fragments.Count == 0 ||
-                spectrum.Mzs == null || spectrum.Mzs.Length == 0)
-                return 0.0;
-
-            double specMzMin = spectrum.Mzs[0];
-            double specMzMax = spectrum.Mzs[spectrum.Mzs.Length - 1];
-
-            var libPre = new List<double>();
-            var obsPre = new List<double>();
-
-            foreach (var frag in candidate.Fragments)
-            {
-                // Skip fragments outside the spectrum's mass range
-                if (frag.Mz < specMzMin || frag.Mz > specMzMax)
-                    continue;
-
-                double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
-                double lower = frag.Mz - tolDa;
-                double upper = frag.Mz + tolDa;
-
-                int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
-                double bestIntensity = 0.0;
-                double bestDiff = double.MaxValue;
-
-                for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
-                {
-                    double diff = Math.Abs(spectrum.Mzs[k] - frag.Mz);
-                    if (diff < bestDiff)
-                    {
-                        bestDiff = diff;
-                        bestIntensity = spectrum.Intensities[k];
-                    }
-                }
-
-                libPre.Add(Math.Sqrt(frag.RelativeIntensity));
-                obsPre.Add(Math.Sqrt(bestIntensity));
-            }
-
-            if (libPre.Count == 0)
-                return 0.0;
-
-            // L2 normalize and dot product
-            double libNorm = 0, obsNorm = 0, dot = 0;
-            for (int i = 0; i < libPre.Count; i++)
-            {
-                libNorm += libPre[i] * libPre[i];
-                obsNorm += obsPre[i] * obsPre[i];
-                dot += libPre[i] * obsPre[i];
-            }
-            libNorm = Math.Sqrt(libNorm);
-            obsNorm = Math.Sqrt(obsNorm);
-            if (libNorm < 1e-12 || obsNorm < 1e-12)
-                return 0.0;
-            return dot / (libNorm * obsNorm);
         }
 
 

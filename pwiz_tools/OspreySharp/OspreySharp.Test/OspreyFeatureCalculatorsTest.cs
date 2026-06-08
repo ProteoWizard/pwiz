@@ -260,6 +260,63 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual(0.5, OspreyFeatureCalculators.Get(10).Calculate(noMatchContext, noMatchData), TOLERANCE);
         }
 
+        /// <summary>
+        /// Xcorr + Savitzky-Golay family (xcorr / sg_weighted_xcorr /
+        /// sg_weighted_cosine). Uses an <see cref="IResolutionStrategy"/> fake whose
+        /// ScoreXcorr returns the spectrum index, so the SG-weighted sum, the
+        /// apex+/-2 window, the candidate-local -> global mapping, and the asymmetric
+        /// edge skip are analytically checkable. Cosine is 0 here (fragment-less
+        /// candidate), which also exercises the empty-fragment guard.
+        /// </summary>
+        [TestMethod]
+        public void TestXcorrSgCalculators()
+        {
+            // 20 placeholder spectra so any window-global index in range resolves.
+            var windowSpectra = new List<Spectrum>();
+            for (int i = 0; i < 20; i++)
+                windowSpectra.Add(new Spectrum { Mzs = new double[0], Intensities = new float[0] });
+
+            // Fragment-less candidate: sg_weighted_cosine collapses to 0 (empty-frag
+            // guard), isolating the xcorr-side weighting under test.
+            var candidate = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0);
+            var config = new OspreyConfig { FragmentTolerance = FragmentToleranceConfig.UnitResolution(0.5) };
+
+            var context = new OspreyScoringContext(config);
+            context.SetWindow(new IndexEchoResolution(), null, null, null);
+
+            // Interior apex: startScan=10, apexLocal=5, rangeLen=8 -> candIdx 3..7 all
+            // in range, globalIdx 13..17. ScoreXcorr echoes the index.
+            var interior = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+                candidate: candidate, apexSpectrum: windowSpectra[15],
+                apexGlobalIndex: 15, apexLocalIndex: 5, windowStartIndex: 10,
+                windowLength: 8, windowSpectra: windowSpectra);
+            context.ClearByproducts();
+
+            // xcorr (6) = ScoreXcorr at ApexGlobalIndex 15.
+            Assert.AreEqual(15.0, OspreyFeatureCalculators.Get(6).Calculate(context, interior), TOLERANCE);
+            // sg_weighted_xcorr (17): weights .* [13,14,15,16,17] = 15.0 (SG weights
+            // sum to 1, so a linear score returns the center value).
+            Assert.AreEqual(15.0, OspreyFeatureCalculators.Get(17).Calculate(context, interior), TOLERANCE);
+            // sg_weighted_cosine (18) = 0 (fragment-less candidate).
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(18).Calculate(context, interior), TOLERANCE);
+
+            Assert.AreEqual("xcorr", OspreyFeatureCalculators.Get(6).Name);
+            Assert.AreEqual("sg_weighted_xcorr", OspreyFeatureCalculators.Get(17).Name);
+            Assert.AreEqual("sg_weighted_cosine", OspreyFeatureCalculators.Get(18).Name);
+
+            // Edge apex: apexLocal=0 -> offsets -2,-1 skip (candIdx<0); offsets 0,1,2
+            // -> globalIdx 10,11,12. NO renormalization: only those weights apply.
+            // 10*(17/35) + 11*(12/35) + 12*(-3/35) = 266/35 = 7.6.
+            var edge = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+                candidate: candidate, apexSpectrum: windowSpectra[10],
+                apexGlobalIndex: 10, apexLocalIndex: 0, windowStartIndex: 10,
+                windowLength: 8, windowSpectra: windowSpectra);
+            var edgeContext = new OspreyScoringContext(config);
+            edgeContext.SetWindow(new IndexEchoResolution(), null, null, null);
+            edgeContext.ClearByproducts();
+            Assert.AreEqual(266.0 / 35.0, OspreyFeatureCalculators.Get(17).Calculate(edgeContext, edge), TOLERANCE);
+        }
+
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
         {
             return new LibraryFragment
@@ -277,10 +334,17 @@ namespace pwiz.OspreySharp.Test
             private readonly double _expectedRt;
             private readonly LibraryEntry _candidate;
             private readonly Spectrum _apexSpectrum;
+            private readonly int _apexGlobalIndex;
+            private readonly int _apexLocalIndex;
+            private readonly int _windowStartIndex;
+            private readonly int _windowLength;
+            private readonly IReadOnlyList<Spectrum> _windowSpectra;
 
             public FakeDetailedPeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
                 double apexRetentionTime = 0.0, double expectedRt = 0.0,
-                LibraryEntry candidate = null, Spectrum apexSpectrum = null)
+                LibraryEntry candidate = null, Spectrum apexSpectrum = null,
+                int apexGlobalIndex = 0, int apexLocalIndex = 0, int windowStartIndex = 0,
+                int windowLength = 0, IReadOnlyList<Spectrum> windowSpectra = null)
             {
                 _xics = xics;
                 _peakBounds = peakBounds;
@@ -288,6 +352,11 @@ namespace pwiz.OspreySharp.Test
                 _expectedRt = expectedRt;
                 _candidate = candidate;
                 _apexSpectrum = apexSpectrum;
+                _apexGlobalIndex = apexGlobalIndex;
+                _apexLocalIndex = apexLocalIndex;
+                _windowStartIndex = windowStartIndex;
+                _windowLength = windowLength;
+                _windowSpectra = windowSpectra;
             }
 
             public LibraryEntry Candidate { get { return _candidate; } }
@@ -296,6 +365,33 @@ namespace pwiz.OspreySharp.Test
             public double ExpectedRt { get { return _expectedRt; } }
             public IReadOnlyList<XicData> Xics { get { return _xics; } }
             public Spectrum ApexSpectrum { get { return _apexSpectrum; } }
+            public int ApexGlobalIndex { get { return _apexGlobalIndex; } }
+            public int ApexLocalIndex { get { return _apexLocalIndex; } }
+            public int WindowStartIndex { get { return _windowStartIndex; } }
+            public int WindowLength { get { return _windowLength; } }
+            public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
+        }
+
+        /// <summary>
+        /// Minimal <see cref="IResolutionStrategy"/> fake whose ScoreXcorr returns
+        /// the spectrum index it was asked to score. That makes the Savitzky-Golay
+        /// weighted sum and the apex index analytic: a linear "score = index"
+        /// function lets the test pin the weights, the apex+/-2 window, the
+        /// candidate-local -> global mapping, and the asymmetric edge skip.
+        /// </summary>
+        private sealed class IndexEchoResolution : IResolutionStrategy
+        {
+            public bool HasMs1Features { get { return false; } }
+            public SpectralScorer CreateScorer() { return null; }
+            public WindowXcorrCache PreprocessWindowSpectra(IList<Spectrum> spectra,
+                SpectralScorer scorer, XcorrScratchPool scratchPool) { return null; }
+            public void ReleaseWindowCache(WindowXcorrCache cache, XcorrScratchPool scratchPool) { }
+            public double ScoreXcorr(WindowXcorrCache preprocessed, int spectrumIndex,
+                Spectrum spectrum, LibraryEntry entry, SpectralScorer scorer,
+                XcorrScratchPool scratchPool)
+            {
+                return spectrumIndex;
+            }
         }
     }
 }

@@ -44,9 +44,16 @@ namespace pwiz.OspreySharp.Tasks
         private double _apexRetentionTime;
         private double _expectedRt;
         private Spectrum _apexSpectrum;
+        private int _apexGlobalIndex;
+        private int _apexLocalIndex;
+        private int _windowStartIndex;
+        private int _windowLength;
+        private IReadOnlyList<Spectrum> _windowSpectra;
 
         public void Set(LibraryEntry candidate, XICPeakBounds peakBounds, IReadOnlyList<XicData> xics,
-            double apexRetentionTime, double expectedRt, Spectrum apexSpectrum)
+            double apexRetentionTime, double expectedRt, Spectrum apexSpectrum,
+            int apexGlobalIndex, int apexLocalIndex, int windowStartIndex, int windowLength,
+            IReadOnlyList<Spectrum> windowSpectra)
         {
             _candidate = candidate;
             _peakBounds = peakBounds;
@@ -54,6 +61,11 @@ namespace pwiz.OspreySharp.Tasks
             _apexRetentionTime = apexRetentionTime;
             _expectedRt = expectedRt;
             _apexSpectrum = apexSpectrum;
+            _apexGlobalIndex = apexGlobalIndex;
+            _apexLocalIndex = apexLocalIndex;
+            _windowStartIndex = windowStartIndex;
+            _windowLength = windowLength;
+            _windowSpectra = windowSpectra;
         }
 
         public LibraryEntry Candidate { get { return _candidate; } }
@@ -62,5 +74,10 @@ namespace pwiz.OspreySharp.Tasks
         public double ExpectedRt { get { return _expectedRt; } }
         public IReadOnlyList<XicData> Xics { get { return _xics; } }
         public Spectrum ApexSpectrum { get { return _apexSpectrum; } }
+        public int ApexGlobalIndex { get { return _apexGlobalIndex; } }
+        public int ApexLocalIndex { get { return _apexLocalIndex; } }
+        public int WindowStartIndex { get { return _windowStartIndex; } }
+        public int WindowLength { get { return _windowLength; } }
+        public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
     }
 }

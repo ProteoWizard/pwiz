@@ -58,6 +58,12 @@ namespace pwiz.OspreySharp.Scoring
             calculators[4] = new PeakAreaCalc();
             calculators[5] = new PeakSharpnessCalc();
 
+            // Xcorr + Savitzky-Golay family: apex xcorr and SG-weighted xcorr /
+            // cosine over the apex +/- 2 scans.
+            calculators[6] = new XcorrCalc();
+            calculators[17] = new SgXcorrCalc();
+            calculators[18] = new SgCosineCalc();
+
             // Apex-match family: longest consecutive b/y run, explained intensity,
             // and signed / absolute mean fragment mass error at the apex spectrum.
             calculators[7] = new ConsecutiveIonsCalc();

@@ -82,5 +82,40 @@ namespace pwiz.OspreySharp.Scoring
         /// this spectrum's sorted m/z and index-aligned intensity arrays.
         /// </summary>
         Spectrum ApexSpectrum { get; }
+
+        /// <summary>
+        /// Window-global spectrum index of the chosen apex
+        /// (= <see cref="WindowStartIndex"/> + <see cref="ApexLocalIndex"/>). The
+        /// xcorr feature indexes the preprocessed cache HERE. INDEX TRAP: this is a
+        /// distinct index space from the Savitzky-Golay sweep's candidate-local
+        /// index -- see <see cref="ApexLocalIndex"/> / <see cref="WindowLength"/>.
+        /// </summary>
+        int ApexGlobalIndex { get; }
+
+        /// <summary>
+        /// Candidate-local apex index within the scoring range
+        /// (= bestPeak.ApexIndex). The SG sweep builds candIdx = ApexLocalIndex +
+        /// offset and bound-checks it against [0, <see cref="WindowLength"/>).
+        /// </summary>
+        int ApexLocalIndex { get; }
+
+        /// <summary>
+        /// startScan: the offset mapping a candidate-local index to a window-global
+        /// index (globalIdx = WindowStartIndex + candIdx). Kept distinct from
+        /// <see cref="ApexGlobalIndex"/>; at offset 0 they coincide by construction.
+        /// </summary>
+        int WindowStartIndex { get; }
+
+        /// <summary>
+        /// rangeLen = endScan - startScan + 1. The SG sweep bounds the
+        /// candidate-local index against THIS, NOT <see cref="WindowSpectra"/>.Count.
+        /// </summary>
+        int WindowLength { get; }
+
+        /// <summary>
+        /// The window's MS2 spectra (sorted by RT). The SG sweep reads
+        /// WindowSpectra[globalIdx] for each apex+/-2 offset.
+        /// </summary>
+        IReadOnlyList<Spectrum> WindowSpectra { get; }
     }
 }
