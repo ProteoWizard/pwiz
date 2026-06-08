@@ -91,6 +91,55 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(5).Calculate(context, empty), TOLERANCE);
         }
 
+        /// <summary>
+        /// Coelution family (fragment_coelution_sum / _max / n_coeluting_fragments):
+        /// all three are served from one shared pairwise-Pearson pass over the peak
+        /// range, published once to the context byproduct cache.
+        /// </summary>
+        [TestMethod]
+        public void TestCoelutionCalculators()
+        {
+            // Two perfectly-correlated fragments (frag1 = 10 * frag0) over the peak
+            // range -> a single pairwise correlation, positive and identical.
+            var rts = new double[] { 0, 1, 2, 3, 4 };
+            var frag0 = new double[] { 1, 2, 3, 2, 1 };
+            var frag1 = new double[] { 10, 20, 30, 20, 10 };
+            var xics = new List<XicData>
+            {
+                new XicData(0, rts, frag0),
+                new XicData(1, rts, frag1),
+            };
+            var bounds = new XICPeakBounds { StartIndex = 0, EndIndex = 4, ApexIndex = 2 };
+            var peakData = new FakeDetailedPeakData(xics, bounds);
+
+            double expectedCorr = ScoringMath.PearsonCorrelationInRange(frag0, frag1, 0, 4);
+            Assert.IsTrue(expectedCorr > 0.0, "fixture fragments should positively correlate");
+
+            var context = new OspreyScoringContext(null);
+            context.ClearByproducts();
+            double sum = OspreyFeatureCalculators.Get(0).Calculate(context, peakData);
+            double max = OspreyFeatureCalculators.Get(1).Calculate(context, peakData);
+            double nCoeluting = OspreyFeatureCalculators.Get(2).Calculate(context, peakData);
+
+            // One pair -> sum == max == that correlation; both fragments have a mean
+            // pairwise correlation > 0, so n_coeluting = 2.
+            Assert.AreEqual(expectedCorr, sum, TOLERANCE);
+            Assert.AreEqual(expectedCorr, max, TOLERANCE);
+            Assert.AreEqual(2.0, nCoeluting, TOLERANCE);
+
+            Assert.AreEqual("fragment_coelution_sum", OspreyFeatureCalculators.Get(0).Name);
+            Assert.AreEqual("fragment_coelution_max", OspreyFeatureCalculators.Get(1).Name);
+            Assert.AreEqual("n_coeluting_fragments", OspreyFeatureCalculators.Get(2).Name);
+
+            // Fewer than two fragments -> all coelution features 0.
+            var single = new FakeDetailedPeakData(
+                new List<XicData> { new XicData(0, rts, frag0) }, bounds);
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(0).Calculate(context, single), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(1).Calculate(context, single), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(2).Calculate(context, single), TOLERANCE);
+        }
+
         private sealed class FakeDetailedPeakData : IOspreyDetailedPeakData
         {
             private readonly IReadOnlyList<XicData> _xics;

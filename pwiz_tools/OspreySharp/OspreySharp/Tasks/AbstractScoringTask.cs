@@ -1451,12 +1451,6 @@ namespace pwiz.OspreySharp.Tasks
 
 
 
-            // Compute pairwise coelution features (sum, max, n_positive).
-            double coelutionSum, coelutionMax;
-            int nCoelutingFragments;
-            ComputeCoelutionStats(xics, bestPeak,
-                out coelutionSum, out coelutionMax, out nCoelutingFragments);
-
             // RT deviation (absolute even if calibration disabled - measured vs library RT)
             double rtDeviation = apexSpectrum.RetentionTime - expectedRt;
             double absRtDeviation = Math.Abs(rtDeviation);
@@ -1578,9 +1572,9 @@ namespace pwiz.OspreySharp.Tasks
 
             // Build full 21-element PIN feature vector
             double[] features = new double[NUM_PIN_FEATURES];
-            features[0] = coelutionSum;
-            features[1] = coelutionMax;
-            features[2] = nCoelutingFragments;
+            features[0] = OspreyFeatureCalculators.Get(0).Calculate(ospreyContext, ospreyPeakData);
+            features[1] = OspreyFeatureCalculators.Get(1).Calculate(ospreyContext, ospreyPeakData);
+            features[2] = OspreyFeatureCalculators.Get(2).Calculate(ospreyContext, ospreyPeakData);
             features[3] = OspreyFeatureCalculators.Get(3).Calculate(ospreyContext, ospreyPeakData);
             features[4] = OspreyFeatureCalculators.Get(4).Calculate(ospreyContext, ospreyPeakData);
             features[5] = OspreyFeatureCalculators.Get(5).Calculate(ospreyContext, ospreyPeakData);
@@ -1722,8 +1716,8 @@ namespace pwiz.OspreySharp.Tasks
                 ApexRt = apexSpectrum.RetentionTime,
                 StartRt = windowRts[startScan + bestPeak.StartIndex],
                 EndRt = windowRts[startScan + bestPeak.EndIndex],
-                CoelutionSum = coelutionSum,
-                Score = coelutionSum,
+                CoelutionSum = features[0],
+                Score = features[0],
                 ModifiedSequence = candidate.ModifiedSequence,
                 Features = features,
                 CwtCandidates = cwtCandidatesOut,
@@ -1839,62 +1833,6 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return xics;
-        }
-
-
-        /// <summary>
-        /// Compute coelution sum/max and count of positively-correlated fragments
-        /// from pairwise fragment correlations.
-        /// </summary>
-        private void ComputeCoelutionStats(
-            List<XicData> xics, XICPeakBounds peak,
-            out double sum, out double max, out int nCoeluting)
-        {
-            sum = 0.0;
-            max = 0.0;
-            nCoeluting = 0;
-
-            if (xics.Count < 2)
-                return;
-
-            // Per-fragment mean pairwise correlation. A fragment is "coeluting" if
-            // its mean pairwise correlation is > 0. Matches Rust pipeline.rs:5049-5058
-            // which averages per_frag_corr_sum[i]/count and checks > 0.
-            double[] fragCorrSum = new double[xics.Count];
-            int[] fragCorrCount = new int[xics.Count];
-            bool haveAny = false;
-            double maxCorr = double.NegativeInfinity;
-
-            for (int i = 0; i < xics.Count; i++)
-            {
-                for (int j = i + 1; j < xics.Count; j++)
-                {
-                    double corr = ScoringMath.PearsonCorrelationInRange(
-                        xics[i].Intensities, xics[j].Intensities,
-                        peak.StartIndex, peak.EndIndex);
-                    if (double.IsNaN(corr))
-                        continue;
-
-                    sum += corr;
-                    if (corr > maxCorr)
-                        maxCorr = corr;
-                    haveAny = true;
-
-                    fragCorrSum[i] += corr;
-                    fragCorrCount[i]++;
-                    fragCorrSum[j] += corr;
-                    fragCorrCount[j]++;
-                }
-            }
-
-            if (haveAny)
-                max = maxCorr;
-
-            for (int i = 0; i < xics.Count; i++)
-            {
-                if (fragCorrCount[i] > 0 && fragCorrSum[i] / fragCorrCount[i] > 0.0)
-                    nCoeluting++;
-            }
         }
 
 

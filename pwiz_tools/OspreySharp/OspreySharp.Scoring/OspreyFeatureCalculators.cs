@@ -48,6 +48,11 @@ namespace pwiz.OspreySharp.Scoring
         {
             var calculators = new IOspreyFeatureCalculator[FeatureCount];
 
+            // Coelution family: pairwise fragment-correlation sum / max / count.
+            calculators[0] = new FragmentCoelutionSumCalc();
+            calculators[1] = new FragmentCoelutionMaxCalc();
+            calculators[2] = new NCoelutingFragmentsCalc();
+
             // Peak-shape family: reference-XIC apex / area / sharpness.
             calculators[3] = new PeakApexCalc();
             calculators[4] = new PeakAreaCalc();
