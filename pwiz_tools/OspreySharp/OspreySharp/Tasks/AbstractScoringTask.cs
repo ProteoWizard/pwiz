@@ -1511,13 +1511,23 @@ namespace pwiz.OspreySharp.Tasks
                 sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;
             }
 
-            // Tukey median polish features (15, 16, 19, 20).
+            // Per-candidate state for the modular feature calculators. Reused
+            // window-local instances (see RunCoelutionScoring); ClearByproducts
+            // resets the per-candidate byproduct cache. Done BEFORE the
+            // median-polish publish below so that byproduct survives to the
+            // calculators. Calculator-backed features mirror Skyline's
+            // IPeakFeatureCalculator; the rest stay inline until extracted.
+            ospreyContext.ClearByproducts();
+            ospreyPeakData.Set(candidate, bestPeak, xics);
+
+            // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The crop,
+            // WriteMpInputsRow, and Compute stay here because the bisection
+            // diagnostics live in the exe layer that OspreySharp.Scoring cannot
+            // reference; the four feature values are computed by the calculators
+            // from the published MedianPolishByproduct, and the optional
+            // WriteMpDump fires after the feature vector below.
             // Crop XICs to the peak range so the polish operates only on signal,
             // not the wider RT search window. Matches Rust pipeline.rs:5198-5212.
-            double mpCosine = 0.0;
-            double mpResidualRatio = 1.0;
-            double mpMinFragmentR2 = 0.0;
-            double mpResidualCorr = 0.0;
             int peakLen = bestPeak.EndIndex - bestPeak.StartIndex + 1;
             if (peakLen >= 3)
             {
@@ -1543,32 +1553,8 @@ namespace pwiz.OspreySharp.Tasks
                     candidate.Id, apexSpectrum.ScanNumber, peakXics, peakRts);
 
                 var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
-                if (polish != null)
-                {
-                    mpCosine = TukeyMedianPolish.LibCosine(polish, candidate.Fragments);
-                    mpResidualRatio = TukeyMedianPolish.ResidualRatio(polish);
-                    mpMinFragmentR2 = TukeyMedianPolish.MinFragmentR2(polish);
-                    mpResidualCorr = TukeyMedianPolish.ResidualCorrelation(polish);
-
-                    // Median polish diagnostic for bisection
-                    if (OspreyDiagnostics.ShouldDumpMpFor(apexSpectrum.ScanNumber, candidate.ModifiedSequence))
-                    {
-                        OspreyDiagnostics.WriteMpDump(
-                            candidate, apexSpectrum.ScanNumber,
-                            bestPeak, peakLen,
-                            mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr,
-                            polish, peakXics);
-                    }
-                }
+                ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
             }
-
-            // Per-candidate state for the modular feature calculators. Reused
-            // window-local instances (see RunCoelutionScoring); ClearByproducts
-            // resets the per-candidate byproduct cache. Calculator-backed features
-            // mirror Skyline's IPeakFeatureCalculator; the rest stay inline until
-            // their family is extracted.
-            ospreyContext.ClearByproducts();
-            ospreyPeakData.Set(candidate, bestPeak, xics);
 
             // Build full 21-element PIN feature vector
             double[] features = new double[NUM_PIN_FEATURES];
@@ -1587,12 +1573,28 @@ namespace pwiz.OspreySharp.Tasks
             features[12] = absRtDeviation;
             features[13] = ms1PrecursorCoelution;
             features[14] = ms1IsotopeCosine;
-            features[15] = mpCosine;
-            features[16] = mpResidualRatio;
+            features[15] = OspreyFeatureCalculators.Get(15).Calculate(ospreyContext, ospreyPeakData);
+            features[16] = OspreyFeatureCalculators.Get(16).Calculate(ospreyContext, ospreyPeakData);
             features[17] = sgXcorr;
             features[18] = sgCosine;
-            features[19] = mpMinFragmentR2;
-            features[20] = mpResidualCorr;
+            features[19] = OspreyFeatureCalculators.Get(19).Calculate(ospreyContext, ospreyPeakData);
+            features[20] = OspreyFeatureCalculators.Get(20).Calculate(ospreyContext, ospreyPeakData);
+
+            // Median-polish bisection dump (after the feature vector so the four
+            // values are available). Reads the polish + cropped inputs from the
+            // byproduct published above; gated by ShouldDumpMpFor as before. The
+            // standard parity gate compares Stage 7 + blib, not the -d dumps.
+            if (peakLen >= 3
+                && ospreyContext.TryGetInfo(out MedianPolishByproduct mpByproduct)
+                && mpByproduct.Polish != null
+                && OspreyDiagnostics.ShouldDumpMpFor(apexSpectrum.ScanNumber, candidate.ModifiedSequence))
+            {
+                OspreyDiagnostics.WriteMpDump(
+                    candidate, apexSpectrum.ScanNumber,
+                    bestPeak, peakLen,
+                    features[15], features[16], features[19], features[20],
+                    mpByproduct.Polish, mpByproduct.PeakXics);
+            }
 
             // Stage 6 reconciliation input: capture the top-N CWT peak
             // candidates ranked by penalized rank score, with each kept

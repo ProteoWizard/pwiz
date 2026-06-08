@@ -140,6 +140,35 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(2).Calculate(context, single), TOLERANCE);
         }
 
+        /// <summary>
+        /// Median-polish family defaults: when no fit is published (peakLen &lt; 3 or
+        /// a non-convergent Compute), each calculator returns its family-specific
+        /// default -- critically median_polish_residual_ratio is 1.0, the others 0.0.
+        /// A shared "return 0.0" would corrupt feature 16.
+        /// </summary>
+        [TestMethod]
+        public void TestMedianPolishCalculatorDefaults()
+        {
+            var rts = new double[] { 0, 1, 2 };
+            var frag0 = new double[] { 1, 2, 1 };
+            var peakData = new FakeDetailedPeakData(
+                new List<XicData> { new XicData(0, rts, frag0) },
+                new XICPeakBounds { StartIndex = 0, EndIndex = 2, ApexIndex = 1 });
+
+            // No MedianPolishByproduct published -> each calculator uses its default.
+            var context = new OspreyScoringContext(null);
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(15).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(1.0, OspreyFeatureCalculators.Get(16).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(19).Calculate(context, peakData), TOLERANCE);
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(20).Calculate(context, peakData), TOLERANCE);
+
+            Assert.AreEqual("median_polish_cosine", OspreyFeatureCalculators.Get(15).Name);
+            Assert.AreEqual("median_polish_residual_ratio", OspreyFeatureCalculators.Get(16).Name);
+            Assert.AreEqual("median_polish_min_fragment_r2", OspreyFeatureCalculators.Get(19).Name);
+            Assert.AreEqual("median_polish_residual_correlation", OspreyFeatureCalculators.Get(20).Name);
+        }
+
         private sealed class FakeDetailedPeakData : IOspreyDetailedPeakData
         {
             private readonly IReadOnlyList<XicData> _xics;

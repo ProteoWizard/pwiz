@@ -58,6 +58,13 @@ namespace pwiz.OspreySharp.Scoring
             calculators[4] = new PeakAreaCalc();
             calculators[5] = new PeakSharpnessCalc();
 
+            // Median-polish family: cosine / residual-ratio / min-fragment-R^2 /
+            // residual-correlation of the Tukey median-polish fit.
+            calculators[15] = new MedianPolishCosineCalc();
+            calculators[16] = new MedianPolishResidualRatioCalc();
+            calculators[19] = new MedianPolishMinFragmentR2Calc();
+            calculators[20] = new MedianPolishResidualCorrelationCalc();
+
             return calculators;
         }
 
