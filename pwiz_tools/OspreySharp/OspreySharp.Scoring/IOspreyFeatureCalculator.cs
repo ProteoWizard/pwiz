@@ -21,6 +21,8 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace pwiz.OspreySharp.Scoring
 {
     /// <summary>
@@ -60,7 +62,15 @@ namespace pwiz.OspreySharp.Scoring
 
         public double Calculate(OspreyScoringContext context, IOspreyPeakData peakData)
         {
-            return Calculate(context, (IOspreyDetailedPeakData) peakData);
+            // Every Osprey calculator reads detailed (chromatogram/spectrum) data, so
+            // the SPI accepts the summary base for Skyline-shape parity but narrows
+            // here. Throw a clear error rather than a raw InvalidCastException if a
+            // caller passes a summary-only implementation.
+            var detailed = peakData as IOspreyDetailedPeakData;
+            if (detailed == null)
+                throw new InvalidOperationException(
+                    @"OspreySharp feature calculators require IOspreyDetailedPeakData; a summary-only IOspreyPeakData was provided.");
+            return Calculate(context, detailed);
         }
 
         protected abstract double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData);

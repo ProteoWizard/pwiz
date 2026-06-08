@@ -212,7 +212,7 @@ namespace pwiz.OspreySharp.Test
                 new List<XicData> { new XicData(0, rts, frag0) },
                 new XICPeakBounds { StartIndex = 0, EndIndex = 4, ApexIndex = 2 },
                 candidate: new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0),
-                scanRetentionTimes: rts);
+                windowRetentionTimes: rts);
 
             // No SetMs1Machinery -> HasMs1Features is false -> HRAM gate returns 0.0
             // for both features, without touching the (null) MS1 spectra.
@@ -371,14 +371,14 @@ namespace pwiz.OspreySharp.Test
             private readonly int _windowStartIndex;
             private readonly int _windowLength;
             private readonly IReadOnlyList<Spectrum> _windowSpectra;
-            private readonly IReadOnlyList<double> _scanRetentionTimes;
+            private readonly IReadOnlyList<double> _windowRetentionTimes;
 
             public FakeDetailedPeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
                 double apexRetentionTime = 0.0, double expectedRt = 0.0,
                 LibraryEntry candidate = null, Spectrum apexSpectrum = null,
                 int apexGlobalIndex = 0, int apexLocalIndex = 0, int windowStartIndex = 0,
                 int windowLength = 0, IReadOnlyList<Spectrum> windowSpectra = null,
-                IReadOnlyList<double> scanRetentionTimes = null)
+                IReadOnlyList<double> windowRetentionTimes = null)
             {
                 _xics = xics;
                 _peakBounds = peakBounds;
@@ -391,7 +391,7 @@ namespace pwiz.OspreySharp.Test
                 _windowStartIndex = windowStartIndex;
                 _windowLength = windowLength;
                 _windowSpectra = windowSpectra;
-                _scanRetentionTimes = scanRetentionTimes;
+                _windowRetentionTimes = windowRetentionTimes;
             }
 
             public LibraryEntry Candidate { get { return _candidate; } }
@@ -405,7 +405,7 @@ namespace pwiz.OspreySharp.Test
             public int WindowStartIndex { get { return _windowStartIndex; } }
             public int WindowLength { get { return _windowLength; } }
             public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
-            public IReadOnlyList<double> ScanRetentionTimes { get { return _scanRetentionTimes; } }
+            public IReadOnlyList<double> WindowRetentionTimes { get { return _windowRetentionTimes; } }
         }
 
         /// <summary>

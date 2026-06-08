@@ -31,11 +31,10 @@ namespace pwiz.OspreySharp.Scoring
     /// <c>.cs_features.tsv</c> dump. This is the single place that order lives as
     /// data.
     ///
-    /// While the inline <c>ScoreCandidate</c> feature block is being decomposed one
-    /// family at a time, the slots whose feature is still computed inline are null;
-    /// <see cref="Get"/> returns null for those and the harness keeps filling them
-    /// inline. When every feature has been extracted the array is null-free and is
-    /// the canonical ordered calculator set.
+    /// All 21 PIN features are now extracted, so every slot is populated and
+    /// <see cref="Get"/> never returns null; this array is the canonical ordered
+    /// calculator set. (Scores the Rust engine computes but excludes from the 21 PIN
+    /// features are intentionally NOT here -- see the non-PIN-scores backlog.)
     /// </summary>
     public static class OspreyFeatureCalculators
     {
@@ -90,9 +89,8 @@ namespace pwiz.OspreySharp.Scoring
         }
 
         /// <summary>
-        /// The calculator for the given PIN feature index, or null when that
-        /// feature has not yet been extracted (still computed inline in
-        /// <c>ScoreCandidate</c>).
+        /// The calculator for the given PIN feature index (0..20). All 21 are
+        /// populated, so this never returns null.
         /// </summary>
         public static IOspreyFeatureCalculator Get(int featureIndex)
         {

@@ -119,14 +119,13 @@ namespace pwiz.OspreySharp.Scoring
         IReadOnlyList<Spectrum> WindowSpectra { get; }
 
         /// <summary>
-        /// The candidate-local scan retention-time axis: ScanRetentionTimes[i] is the
-        /// RT of XIC scan index i (= windowRts[startScan + i]). The MS1 family
-        /// (features 13, 14) maps an XIC index to an absolute RT to find the nearest
-        /// MS1 scan, so this hides the window/startScan offset arithmetic from the
-        /// calculator. Precomputed once per candidate in <c>Set</c>; this is just RT,
-        /// not a spectral surface, so unlike <see cref="ApexSpectrum"/> a
-        /// chromatogram-centric implementation can supply it.
+        /// The window's per-scan retention-time axis (the shared <c>windowRts</c>
+        /// reference, a per-window value -- not a per-candidate copy). The MS1 family
+        /// (features 13, 14) maps an XIC scan index i to an absolute RT via
+        /// WindowRetentionTimes[<see cref="WindowStartIndex"/> + i] to find the nearest
+        /// MS1 scan. Just RT, not a spectral surface, so unlike
+        /// <see cref="ApexSpectrum"/> a chromatogram-centric implementation can supply it.
         /// </summary>
-        IReadOnlyList<double> ScanRetentionTimes { get; }
+        IReadOnlyList<double> WindowRetentionTimes { get; }
     }
 }

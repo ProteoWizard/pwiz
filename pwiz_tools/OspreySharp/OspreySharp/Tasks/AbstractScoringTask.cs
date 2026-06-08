@@ -1439,9 +1439,9 @@ namespace pwiz.OspreySharp.Tasks
 
             // MS1 features (precursor coelution, isotope cosine) are computed by the
             // MS1 calculators (features 13, 14) below from the published per-window
-            // MS1 machinery (ospreyContext.SetMs1Machinery) and the per-candidate
-            // ScanRetentionTimes slice built into ospreyPeakData.Set. The HRAM gate
-            // (Rust pipeline.rs:5362 is_hram) lives in the calculators.
+            // MS1 machinery (ospreyContext.SetMs1Machinery) and the window RT axis
+            // (windowRts) passed to ospreyPeakData.Set. The HRAM gate (Rust
+            // pipeline.rs:5362 is_hram) lives in the calculators.
 
             // Per-candidate state for the modular feature calculators. Reused
             // window-local instances (see RunCoelutionScoring); ClearByproducts
@@ -1449,16 +1449,12 @@ namespace pwiz.OspreySharp.Tasks
             // median-polish publish below so that byproduct survives to the
             // calculators. Calculator-backed features mirror Skyline's
             // IPeakFeatureCalculator; the rest stay inline until extracted.
+            // windowRts is passed by reference (no per-candidate copy); the MS1
+            // family maps an XIC index i to an absolute RT via windowRts[startScan + i]
+            // (= WindowRetentionTimes[WindowStartIndex + i]).
             ospreyContext.ClearByproducts();
-            // Per-candidate scan-RT slice for the MS1 family (features 13, 14): the
-            // inline ComputeMs1Features mapped XIC index i -> windowRts[startScan + i].
-            // Reproduce THAT array exactly (do not substitute Xics[*].RetentionTimes).
-            int ms1Len = xics.Count > 0 ? xics[0].Intensities.Length : 0;
-            var scanRts = new double[ms1Len];
-            for (int i = 0; i < ms1Len; i++)
-                scanRts[i] = windowRts[startScan + i];
             ospreyPeakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt, apexSpectrum,
-                apexGlobalIdx, bestPeak.ApexIndex, startScan, rangeLen, windowSpectra, scanRts);
+                apexGlobalIdx, bestPeak.ApexIndex, startScan, rangeLen, windowSpectra, windowRts);
 
             // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The crop,
             // WriteMpInputsRow, and Compute stay here because the bisection
@@ -1493,7 +1489,13 @@ namespace pwiz.OspreySharp.Tasks
                     candidate.Id, apexSpectrum.ScanNumber, peakXics, peakRts);
 
                 var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
-                ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
+                // Only publish when the fit converged. Every consumer (the four
+                // calculators and the WriteMpDump guard) treats a missing byproduct
+                // and a byproduct with null Polish identically (family default / no
+                // dump), so skipping the publish on a null fit is value-identical and
+                // avoids the allocation.
+                if (polish != null)
+                    ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
             }
 
             // Build full 21-element PIN feature vector

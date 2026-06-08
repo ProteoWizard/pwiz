@@ -128,7 +128,11 @@ namespace pwiz.OspreySharp.Scoring
                     searchMz = peakData.Candidate.PrecursorMz * (1.0 + ms1Calibration.Mean / 1e6);
             }
 
-            var scanRts = peakData.ScanRetentionTimes;
+            // Map an XIC scan index i to its absolute RT via the window axis:
+            // windowRts[startScan + i]. Reproduces the inline ComputeMs1Features
+            // indexing exactly (no per-candidate slice copy).
+            var windowRts = peakData.WindowRetentionTimes;
+            int startScan = peakData.WindowStartIndex;
 
             // Correlate MS1 precursor intensity with reference XIC (not summed fragment).
             // Rust pipeline.rs:5373-5389: uses ref_xic[start..=end], skips missing MS1.
@@ -138,7 +142,7 @@ namespace pwiz.OspreySharp.Scoring
 
             for (int i = start; i <= end; i++)
             {
-                double rt = scanRts[i];
+                double rt = windowRts[startScan + i];
                 var ms1 = MS1Spectrum.FindNearest(ms1Spectra, rt);
                 if (ms1 != null)
                 {
@@ -162,7 +166,7 @@ namespace pwiz.OspreySharp.Scoring
             // Isotope cosine at apex MS1 scan.
             // Rust pipeline.rs:5393-5404: gates on envelope.has_m0().
             int apex = Math.Max(start, Math.Min(end, peak.ApexIndex));
-            double apexRt = scanRts[apex];
+            double apexRt = windowRts[startScan + apex];
             var apexMs1 = MS1Spectrum.FindNearest(ms1Spectra, apexRt);
             if (apexMs1 != null)
             {
