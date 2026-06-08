@@ -89,10 +89,10 @@ namespace pwiz.OspreySharp.IO
 
         // Schema column types and names are aligned with the Rust impl's
         // parquet schema (UInt32 for entry_id/scan_number, UInt8 for charge)
-        // so a C#-written parquet can be loaded by Rust's `--join-only`
+        // so a C#-written parquet can be loaded by Rust's `--task FirstJoin`
         // (which does strict downcasts) and vice versa. Reading is also
         // strict: pre-2026-04-19 C#-written parquets used Int32 for these
-        // fields and need to be regenerated via a fresh `--no-join` run.
+        // fields and need to be regenerated via a fresh `--task PerFileScoring` run.
         //
         // Fields are declared in the same order Rust writes them. Order
         // doesn't affect Parquet correctness (columns are name-indexed),
@@ -301,7 +301,7 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// Write FdrEntry results to a Parquet file. Same schema as the
-        /// CoelutionScoredEntry overload — used by --no-join HPC mode where
+        /// CoelutionScoredEntry overload — used by --task PerFileScoring HPC mode where
         /// the pipeline keeps full features on the FdrEntry directly
         /// (FdrEntry.Features is the already-extracted 21-feature vector).
         /// Library lookup (by entry_id) supplies the sequence / precursor_mz
@@ -932,6 +932,79 @@ namespace pwiz.OspreySharp.IO
             return Path.Combine(dir, stem + ".scores.parquet");
         }
 
+        // The reconciled-output marker is appended AFTER the ".scores" token
+        // (".scores-reconciled.parquet"), NOT inserted before it. Stage 4 always
+        // writes exactly "<stem>.scores.parquet" (GetScoresPath appends that
+        // literal), so a Stage 4 path can never end in ".scores-reconciled.parquet"
+        // even when the input stem itself ends in ".reconciled". That makes the
+        // suffix an UNAMBIGUOUS "this is a Stage 6 reconciled output" signal --
+        // no parquet-metadata read needed to tell the two apart.
+        public const string ScoresParquetSuffix = ".scores.parquet";
+        public const string ReconciledScoresParquetSuffix = ".scores-reconciled.parquet";
+
+        /// <summary>
+        /// Returns the reconciled scores Parquet path for a given mzML path:
+        /// {stem}.scores-reconciled.parquet in the same directory. Stage 6
+        /// (<c>PerFileRescoreTask</c>) writes this file instead of overwriting
+        /// the Stage 4 <see cref="GetScoresPath"/> output, so the original
+        /// per-file scores survive a reconciliation pass (and a partial Stage 6
+        /// crash can no longer leave the Stage 4 parquet in an indeterminate
+        /// half-rewritten state).
+        /// </summary>
+        public static string GetReconciledScoresPath(string mzmlPath)
+        {
+            string dir = Path.GetDirectoryName(mzmlPath) ?? string.Empty;
+            string stem = Path.GetFileNameWithoutExtension(mzmlPath);
+            return Path.Combine(dir, stem + ReconciledScoresParquetSuffix);
+        }
+
+        /// <summary>
+        /// True if <paramref name="path"/> is a Stage 6 reconciled-scores parquet
+        /// (ends in <c>.scores-reconciled.parquet</c>). Unambiguous: see the note
+        /// on <see cref="ReconciledScoresParquetSuffix"/>.
+        /// </summary>
+        public static bool IsReconciledScoresPath(string path)
+        {
+            return !string.IsNullOrEmpty(path)
+                && path.EndsWith(ReconciledScoresParquetSuffix, StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Map an original <c>.scores.parquet</c> path to its reconciled sibling
+        /// <c>.scores-reconciled.parquet</c> by swapping the trailing suffix. A
+        /// path that is already a reconciled output is returned unchanged (safe
+        /// and unambiguous, since the two suffixes never collide).
+        /// </summary>
+        public static string ReconciledPathFromScoresPath(string scoresPath)
+        {
+            if (string.IsNullOrEmpty(scoresPath))
+                return scoresPath;
+            if (scoresPath.EndsWith(ReconciledScoresParquetSuffix, StringComparison.Ordinal))
+                return scoresPath;
+            if (scoresPath.EndsWith(ScoresParquetSuffix, StringComparison.Ordinal))
+                return scoresPath.Substring(0, scoresPath.Length - ScoresParquetSuffix.Length)
+                    + ReconciledScoresParquetSuffix;
+            return scoresPath;
+        }
+
+        /// <summary>
+        /// The path a post-Stage-6 reader (Stage 7 feature reload, resume /
+        /// <c>--task MergeNode</c>) should consume for a given original
+        /// <c>.scores.parquet</c> path: the reconciled sibling when it exists
+        /// on disk, otherwise the original. This per-file selection is the
+        /// read-side contract that makes the separate-reconciled-file design
+        /// byte-equivalent to the former in-place overwrite: files that had
+        /// reconciliation work read the reconciled bytes (which used to be
+        /// written over the original), while files with no Stage 6 work -- which
+        /// <c>PerFileRescoreTask</c> deliberately skips, leaving no reconciled
+        /// file -- read the untouched original (which used to be left in place).
+        /// </summary>
+        public static string EffectiveScoresPathFromScoresPath(string scoresPath)
+        {
+            string reconciled = ReconciledPathFromScoresPath(scoresPath);
+            return File.Exists(reconciled) ? reconciled : scoresPath;
+        }
+
         /// <summary>
         /// Check if an existing Parquet file's custom metadata matches the expected values.
         /// Returns true if all expected keys exist with matching values.
@@ -970,7 +1043,7 @@ namespace pwiz.OspreySharp.IO
 
         #endregion
 
-        #region Phase 3: --join-only group validation
+        #region Phase 3: --task FirstJoin group validation
 
         /// <summary>
         /// Read all key-value pairs from a parquet footer. Returns an empty
@@ -1080,7 +1153,7 @@ namespace pwiz.OspreySharp.IO
         /// library hashes. Returns null on success (logging a warning to
         /// <paramref name="logWarning"/> for any patch-version drift) or an
         /// error message naming the offending file. Used at the start of
-        /// --join-only mode.
+        /// --task FirstJoin mode.
         /// </summary>
         public static string ValidateScoresParquetGroup(
             IEnumerable<string> paths,
@@ -1088,8 +1161,8 @@ namespace pwiz.OspreySharp.IO
             string currentVersion,
             Action<string> logWarning)
         {
-            string expectedSearch = config.SearchParameterHash();
-            string expectedLibrary = config.LibraryIdentityHash();
+            string expectedSearch = config.Identity.SearchParameterHash();
+            string expectedLibrary = config.Identity.LibraryIdentityHash();
 
             foreach (string path in paths)
             {
@@ -1116,7 +1189,7 @@ namespace pwiz.OspreySharp.IO
                 if (warning != null && logWarning != null)
                     logWarning(warning);
 
-                // --join-at-pass=2 strict reconciled-input gate. Mirrors
+                // --task MergeNode strict reconciled-input gate. Mirrors
                 // Rust pipeline.rs:3313-3344: every input parquet must
                 // carry osprey.reconciled = "true" so the operator
                 // cannot mix raw Stage 4 parquets into a Stages 7-8-only
@@ -1130,10 +1203,10 @@ namespace pwiz.OspreySharp.IO
                     if (!string.Equals(cachedReconciled, "true", StringComparison.Ordinal))
                     {
                         return string.Format(
-                            "--join-at-pass=2 requires a reconciled (post-Stage-6) parquet, " +
+                            "--task MergeNode requires a reconciled (post-Stage-6) parquet, " +
                             "but {0} has osprey.reconciled = '{1}'. Either it is a Stage 4 " +
-                            "(raw) parquet — in which case use --join-at-pass=1 — or run a " +
-                            "full pipeline first to produce reconciled parquets.",
+                            "(raw) parquet — run --task PerFileRescore to produce reconciled " +
+                            "parquets first — or run the full pipeline.",
                             path, cachedReconciled ?? "<unset>");
                     }
                 }

@@ -56,7 +56,7 @@ namespace pwiz.OspreySharp.IO
         /// v1: initial format.
         /// v2: added <c>file_stems</c> so per-file Stage 6 rescore workers
         ///     can compute the reconciliation parameter hash that the
-        ///     downstream <c>--join-at-pass=2</c> merge node expects (the
+        ///     downstream <c>--task MergeNode</c> merge node expects (the
         ///     hash is computed over all files in the join, not the
         ///     worker's single parquet). Old v1 files deserialize with an
         ///     empty <see cref="FileStems"/> list; the worker falls back
@@ -114,7 +114,7 @@ namespace pwiz.OspreySharp.IO
             // v2 envelopes must carry the planner's full join file_stems set;
             // a deserialized v2 file with file_stems missing or empty would
             // silently flow through RescoreHydration with joinFileStems = []
-            // and cause downstream --join-at-pass=2 to compute a single-file
+            // and cause downstream --task MergeNode to compute a single-file
             // ReconciliationParameterHash for what was meant to be a
             // multi-file join. JsonProperty does not enforce required, so
             // assert it here. Matches the Rust serde behavior (file_stems is
