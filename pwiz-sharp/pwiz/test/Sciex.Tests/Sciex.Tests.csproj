@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+  </ItemGroup>
+
+  <!-- Reference/ holds pwiz-sharp-specific reference mzMLs AND, for fixtures the cpp
+       tree doesn't ship, the source vendor data (.wiff / .wiff.scan etc.). Both kinds
+       are picked up by VendorReaderTestHarness — checks <bin>/Reference/<filename>
+       first, then falls back to the cpp tree. Copying these to bin keeps edits to
+       pwiz-sharp references from retriggering the cpp vendor TC configs. The split
+       is temporary: once the port is complete the location will be consolidated.
+       README.md documents the policy. -->
+  <ItemGroup>
+    <None Update="Reference\*.mzML">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Reference\*.wiff">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Reference\*.wiff.scan">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\..\src\TestHarness\TestHarness.csproj" />
+    <ProjectReference Include="..\..\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj"
+                      Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+    <!-- OFX.Logging stub: see comment in Sciex.csproj. The Content/CopyToOutputDirectory
+         pattern doesn't propagate transitively through Sciex.dll, so we repeat the
+         reference in each consumer that needs the stub at runtime. -->
+    <ProjectReference Include="..\..\src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"
+                      Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <OutputItemType>Content</OutputItemType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Target Name="StageWiff2NativeAssembliesForTests" AfterTargets="Build"
+          Condition="'$(IAgreeToVendorLicenses)' == 'true'">
+    <PropertyGroup>
+      <_SciexWiff2DepsDir>$(MSBuildThisFileDirectory)..\..\..\vendor-archives\Sciex</_SciexWiff2DepsDir>
+      <_SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Sciex</_SciexAssembliesDir>
+    </PropertyGroup>
+    <MakeDir Directories="$(OutputPath)wiff2" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexAssembliesDir)\SQLite.Interop.dll" DestinationFiles="$(OutputPath)wiff2\SQLite.Interop.dll" OverwriteReadOnlyFiles="true" />
+    <Copy SourceFiles="$(_SciexWiff2DepsDir)\Unity.Abstractions.dll" DestinationFiles="$(OutputPath)wiff2\Unity.Abstractions.dll" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+</Project>

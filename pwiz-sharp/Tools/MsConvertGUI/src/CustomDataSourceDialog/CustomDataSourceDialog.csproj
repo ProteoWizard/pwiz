@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>CustomDataSourceDialog</RootNamespace>
+    <AssemblyName>CustomDataSourceDialog</AssemblyName>
+    <Description>Custom file-browse dialog used by MSConvertGUI. Lifted verbatim from pwiz_tools/MSConvertGUI/CustomDataSourceDialog/ — same separate-project shape the cpp solution uses, so embedded-resource names resolve as "CustomDataSourceDialog.X.resources" without an MSConvertGUI prefix.</Description>
+
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <Nullable>disable</Nullable>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <NoWarn>$(NoWarn);CS0618;CS1591;CS8981;CA1416;CA1822;CA1031;CA1051;CA1715;CA2200;CA1825;NU1701;SYSLIB0003;SYSLIB0011;SYSLIB0050;SYSLIB0051</NoWarn>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <AnalysisLevel>none</AnalysisLevel>
+  </PropertyGroup>
+
+  <!-- FolderListIcons used to live as a BinaryFormatter-serialized ImageListStreamer
+       in OpenDataSourceDialog.resx; replaced with individual embedded PNGs that
+       OpenDataSourceDialog.FolderListIcons_Load reads via GetManifestResourceStream.
+       The logical name "CustomDataSourceDialog.Resources.<Name>.png" matches the
+       default mapping (RootNamespace + relative path). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\RecentDocuments.png" />
+    <EmbeddedResource Include="Resources\Desktop.png" />
+    <EmbeddedResource Include="Resources\MyDocuments.png" />
+    <EmbeddedResource Include="Resources\MyComputer.png" />
+    <EmbeddedResource Include="Resources\MyNetworkPlaces.png" />
+    <EmbeddedResource Include="Resources\LocalDrive.png" />
+    <EmbeddedResource Include="Resources\OpticalDrive.png" />
+    <EmbeddedResource Include="Resources\NetworkDrive.png" />
+    <EmbeddedResource Include="Resources\folder.png" />
+    <EmbeddedResource Include="Resources\DataProcessingFolder.png" />
+    <EmbeddedResource Include="Resources\DataProcessing.png" />
+  </ItemGroup>
+
+</Project>

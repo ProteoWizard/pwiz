@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.Common</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.Common</AssemblyName>
+    <Description>Runtime loader for vendor SDK assemblies. Resolves ThermoFisher.* / Clearcore2.* / MIDAC.* / etc. on demand by downloading the matching vendor_api_&lt;Vendor&gt;.7z from the manifest, extracting into a per-user cache, and Assembly.LoadFrom-ing the DLLs. Lets the installer MSI ship only pwiz-sharp's own DLLs; vendor SDKs come down on first use.</Description>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Bundled 7za.exe for decrypting the password-protected vendor archives. Same
+         binary the build-time ExtractXxxAssemblies targets use. ~750 KB; small price
+         for not depending on a managed 7z library that handles AES encryption. -->
+    <None Include="..\..\..\..\..\libraries\7za.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>7za.exe</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- VendorSdkPins.generated.cs is .gitignored. It's regenerated on every build
+       below from the vendor 7z archives' SHA-256 + commit history. The
+       Compile Remove+Include pair ensures it's in the Compile list even when
+       the file doesn't exist at project-evaluation time (fresh checkout); the
+       BeforeTargets target creates it before CoreCompile reads source. -->
+  <ItemGroup>
+    <Compile Remove="VendorSdkPins.generated.cs" />
+    <Compile Include="VendorSdkPins.generated.cs" />
+  </ItemGroup>
+
+  <Target Name="RegenerateVendorSdkPins" BeforeTargets="CoreCompile">
+    <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\..\..\installer\Refresh-VendorPins.ps1&quot;"
+          StandardOutputImportance="low" />
+  </Target>
+
+</Project>

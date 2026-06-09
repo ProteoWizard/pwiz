@@ -37,8 +37,15 @@ dotnet_diagnostic.CS8603.severity = error
 dotnet_sort_system_directives_first = true
 csharp_using_directive_placement = outside_namespace:warning
 
-# Test method naming: Given_When_Then / Method_Scenario_Expected conventions use underscores
-[test/**/*.cs]
-dotnet_diagnostic.CA1707.severity = none
+# Test method naming: Given_When_Then / Method_Scenario_Expected conventions use underscores.
 # Inline array literals in CollectionAssert / DataRow are idiomatic in test code.
+# Two patterns — direct children of test/ and deeper descendants — because the .NET
+# editorconfig glob impl treats `**/` as one-or-more, so `**/test/**/*.cs` doesn't
+# match files directly under test/ (post-flatten layout).
+[**/test/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1861.severity = none
+
+[**/test/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none
 dotnet_diagnostic.CA1861.severity = none

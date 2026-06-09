@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Tools.BiblioSpec</RootNamespace>
+    <AssemblyName>Pwiz.Tools.BiblioSpec</AssemblyName>
+    <Description>BiblioSpec library: build / read / filter / search peptide-spectral .blib libraries. Port of pwiz_tools/BiblioSpec/src/.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\MsData\MsData.csproj" />
+    <!-- IdentData supplies CV-mapped PSM types (mzIdentML, pepXML) that several
+         BiblioSpec readers translate from. -->
+    <ProjectReference Include="..\..\..\..\pwiz\src\IdentData\IdentData.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- BiblioSpec's .blib format is a SQLite schema; this is the same package
+         pin (1.0.119) UIMF / Bruker / MsConvert use. The native Interop.dll
+         per-RID is included automatically. -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="BiblioSpec.Tests" />
+  </ItemGroup>
+
+</Project>

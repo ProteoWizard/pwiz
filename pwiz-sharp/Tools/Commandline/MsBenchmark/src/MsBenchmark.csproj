@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.MsBenchmark</RootNamespace>
+    <AssemblyName>msbenchmark-sharp</AssemblyName>
+    <Description>Read-only benchmark: enumerates an MSData file's spectra and reports timing + peak memory, without writing output. Port of pwiz_tools/examples/msbenchmark.cpp. Useful for measuring reader speed under filter chains (e.g. an index-range filter that lazy readers can satisfy without touching most of the file).</Description>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="System.GC.ConserveMemory" Value="9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Common\Vendor.Common.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\UIMF\UIMF.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Mobilion\Mobilion.csproj" />
+  </ItemGroup>
+
+</Project>

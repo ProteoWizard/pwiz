@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Pwiz.Vendor.UNIFI</RootNamespace>
+    <AssemblyName>Pwiz.Vendor.UNIFI</AssemblyName>
+    <Description>Waters UNIFI / waters_connect HTTP-API reader. Speaks the
+      OAuth + protobuf REST endpoints exposed by Waters' UNIFI and waters_connect
+      sample-result servers.</Description>
+    <!-- protoc-generated code uses all-lowercase using-aliases (pb, pbc, pbr, scg) for
+         google.protobuf namespaces — those trip C# 11's CS8981 "all-lowercase identifier"
+         analyzer. We don't own the generated source so suppress the warning at the
+         project level. Same situation applies in any project that consumes Google.Protobuf
+         output. -->
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Util\Util.csproj" />
+    <ProjectReference Include="..\..\Common\Common.csproj" />
+    <ProjectReference Include="..\..\MsData\MsData.csproj" />
+    <ProjectReference Include="..\..\Analysis\Analysis.csproj" />
+  </ItemGroup>
+
+  <!-- Match Skyline's protobuf stack 1:1: reference the checked-in Google.Protobuf.dll 3.7.0
+       and use the same protoc.exe 3.8.0 (also checked in under pwiz_tools/Skyline/ProtocolBuffers).
+       Generated C# is committed under Protobuf/GeneratedCode/ — same convention Skyline uses
+       (Skyline.csproj's PreBuildEvents.bat invokes ProtocolBuffers/generatecode.bat). To
+       regenerate, run Protobuf/generatecode.bat after editing the .proto files.
+
+       cpp UNIFI uses protobuf-net via unifi-protobuf-net.dll; the wire format is identical
+       (both speak the protobuf spec) but we pick Google.Protobuf to avoid carrying a second
+       serializer alongside Skyline. -->
+  <ItemGroup>
+    <Reference Include="Google.Protobuf">
+      <HintPath>$(MSBuildThisFileDirectory)..\..\..\..\..\pwiz_tools\Shared\Lib\Google.Protobuf.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Protobuf\*.proto" />
+    <None Include="Protobuf\generatecode.bat" />
+  </ItemGroup>
+
+  <!-- Unlike file-based vendor readers, UNIFI / waters_connect do not require an encrypted
+       vendor SDK archive — they communicate over HTTP/protobuf with Waters-hosted endpoints,
+       and the OAuth + protobuf code is plain managed C#. The IAgreeToVendorLicenses guard is
+       still useful as a feature flag so an unflagged build compiles with NO_VENDOR_SUPPORT
+       (Identify works, Read throws), matching the other vendor readers' behavior. -->
+  <PropertyGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <DefineConstants>$(DefineConstants);NO_VENDOR_SUPPORT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IAgreeToVendorLicenses)' != 'true'">
+    <!-- SDK-bound source files go here once the data layer lands. -->
+  </ItemGroup>
+
+</Project>

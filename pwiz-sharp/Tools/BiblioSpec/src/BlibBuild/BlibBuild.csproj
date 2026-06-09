@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Pwiz.Tools.BiblioSpec.BlibBuild</RootNamespace>
+    <AssemblyName>BlibBuild</AssemblyName>
+    <Description>BlibBuild CLI tool. Port of pwiz_tools/BiblioSpec/src/BlibBuild.cpp.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BiblioSpec\BiblioSpec.csproj" />
+  </ItemGroup>
+
+</Project>

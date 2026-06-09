@@ -5,107 +5,125 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{1044EA12-4417-4A1F-802D-3B7E0AE3324E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Analysis", "src\Analysis\Analysis.csproj", "{957777E5-7844-455D-9904-8E732CCDBA36}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Analysis", "pwiz\src\Analysis\Analysis.csproj", "{957777E5-7844-455D-9904-8E732CCDBA36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "src\Common\Common.csproj", "{46619ED3-35E4-42DD-BB01-354A81C80335}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "pwiz\src\Common\Common.csproj", "{46619ED3-35E4-42DD-BB01-354A81C80335}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsData", "src\MsData\MsData.csproj", "{045D1FB5-E589-461F-873E-D46A5ECABA27}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsData", "pwiz\src\MsData\MsData.csproj", "{045D1FB5-E589-461F-873E-D46A5ECABA27}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsConvert", "src\MsConvert\MsConvert.csproj", "{1FDEF28D-918A-40D0-B37E-448FFA8F3285}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsConvert", "Tools\Commandline\MsConvert\src\MsConvert.csproj", "{1FDEF28D-918A-40D0-B37E-448FFA8F3285}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "src\MSGraph\MSGraph.csproj", "{BADAB2A8-E78D-41E5-8D52-1D821418F778}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "pwiz\src\MSGraph\MSGraph.csproj", "{BADAB2A8-E78D-41E5-8D52-1D821418F778}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeeMS", "src\SeeMS\SeeMS.csproj", "{6D67D1A9-E233-4B99-9F14-FA729C78B340}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SeeMS", "Tools\SeeMS\src\SeeMS.csproj", "{6D67D1A9-E233-4B99-9F14-FA729C78B340}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Util", "src\Util\Util.csproj", "{98420C60-F708-4E49-96BF-415F565F086F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Util", "pwiz\src\Util\Util.csproj", "{98420C60-F708-4E49-96BF-415F565F086F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "src\ZedGraph\ZedGraph.csproj", "{86ABF081-ED7A-4BFF-84BA-ED964E6B97D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZedGraph", "pwiz\src\ZedGraph\ZedGraph.csproj", "{86ABF081-ED7A-4BFF-84BA-ED964E6B97D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHarness", "src\TestHarness\TestHarness.csproj", "{B62561EA-ED36-453B-BF00-AEC114CC9824}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestHarness", "pwiz\src\TestHarness\TestHarness.csproj", "{B62561EA-ED36-453B-BF00-AEC114CC9824}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agilent", "src\Vendor\Agilent\Agilent.csproj", "{524AA8B2-F075-47A5-B9CB-EDE8E3FC8FD9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agilent", "pwiz\src\Vendor\Agilent\Agilent.csproj", "{524AA8B2-F075-47A5-B9CB-EDE8E3FC8FD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruker", "src\Vendor\Bruker\Bruker.csproj", "{59465805-E42C-4034-896D-86807CAFD0BF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruker", "pwiz\src\Vendor\Bruker\Bruker.csproj", "{59465805-E42C-4034-896D-86807CAFD0BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sciex", "src\Vendor\Sciex\Sciex.csproj", "{5AE01CB0-5887-402E-94F1-F9ED8BAFDCCE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sciex", "pwiz\src\Vendor\Sciex\Sciex.csproj", "{5AE01CB0-5887-402E-94F1-F9ED8BAFDCCE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sciex.Wiff2", "src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj", "{8347DD4F-2CBC-4B27-958D-BF2CCF2C7F15}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sciex.Wiff2", "pwiz\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj", "{8347DD4F-2CBC-4B27-958D-BF2CCF2C7F15}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OfxLoggingStub", "src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj", "{B4F7E2C9-3A1D-4F8B-A05E-D6C1B2F9038A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OfxLoggingStub", "pwiz\src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj", "{B4F7E2C9-3A1D-4F8B-A05E-D6C1B2F9038A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thermo", "src\Vendor\Thermo\Thermo.csproj", "{8E17B7F2-C8CC-452B-B755-754E7D9744EA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thermo", "pwiz\src\Vendor\Thermo\Thermo.csproj", "{8E17B7F2-C8CC-452B-B755-754E7D9744EA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waters", "src\Vendor\Waters\Waters.csproj", "{800B7786-66C4-4400-A91D-766E0D330ACC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waters", "pwiz\src\Vendor\Waters\Waters.csproj", "{800B7786-66C4-4400-A91D-766E0D330ACC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{9B31505B-3D7C-4F5F-88CC-2C018DCC041A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Analysis.Tests", "test\Analysis.Tests\Analysis.Tests.csproj", "{7344C0F7-16B5-4635-91E1-1EA59F127BC8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Analysis.Tests", "pwiz\test\Analysis.Tests\Analysis.Tests.csproj", "{7344C0F7-16B5-4635-91E1-1EA59F127BC8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Tests", "test\Common.Tests\Common.Tests.csproj", "{ACB4E55E-6394-4374-A4F6-16C2669048F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common.Tests", "pwiz\test\Common.Tests\Common.Tests.csproj", "{ACB4E55E-6394-4374-A4F6-16C2669048F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsData.Tests", "test\MsData.Tests\MsData.Tests.csproj", "{B3B7D255-581B-40C6-A95E-E4F0A9E84D9A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsData.Tests", "pwiz\test\MsData.Tests\MsData.Tests.csproj", "{B3B7D255-581B-40C6-A95E-E4F0A9E84D9A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsConvert.Tests", "test\MsConvert.Tests\MsConvert.Tests.csproj", "{35E0B9B1-F4A0-4002-95E3-E509C0A6D5AF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsConvert.Tests", "Tools\Commandline\MsConvert\test\MsConvert.Tests.csproj", "{35E0B9B1-F4A0-4002-95E3-E509C0A6D5AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Util.Tests", "test\Util.Tests\Util.Tests.csproj", "{663059CC-FE7C-4194-B291-6C8F6B2A8310}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Util.Tests", "pwiz\test\Util.Tests\Util.Tests.csproj", "{663059CC-FE7C-4194-B291-6C8F6B2A8310}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thermo.Tests", "test\Thermo.Tests\Thermo.Tests.csproj", "{B70C3662-C884-4C38-B126-EF039CDD85C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Thermo.Tests", "pwiz\test\Thermo.Tests\Thermo.Tests.csproj", "{B70C3662-C884-4C38-B126-EF039CDD85C3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruker.Tests", "test\Bruker.Tests\Bruker.Tests.csproj", "{C3A43935-695B-49DF-BB37-6449D851846F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruker.Tests", "pwiz\test\Bruker.Tests\Bruker.Tests.csproj", "{C3A43935-695B-49DF-BB37-6449D851846F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waters.Tests", "test\Waters.Tests\Waters.Tests.csproj", "{43E0D43C-EAC7-4B89-8183-9CFDE748A740}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Waters.Tests", "pwiz\test\Waters.Tests\Waters.Tests.csproj", "{43E0D43C-EAC7-4B89-8183-9CFDE748A740}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sciex.Tests", "test\Sciex.Tests\Sciex.Tests.csproj", "{431565D7-5B90-4DDF-807C-241B3C957BCB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sciex.Tests", "pwiz\test\Sciex.Tests\Sciex.Tests.csproj", "{431565D7-5B90-4DDF-807C-241B3C957BCB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agilent.Tests", "test\Agilent.Tests\Agilent.Tests.csproj", "{5D485D9A-D2C6-43F7-8881-84116B815520}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agilent.Tests", "pwiz\test\Agilent.Tests\Agilent.Tests.csproj", "{5D485D9A-D2C6-43F7-8881-84116B815520}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shimadzu", "src\Vendor\Shimadzu\Shimadzu.csproj", "{3FEE07F4-94D0-469D-95A0-5E90254058E9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shimadzu", "pwiz\src\Vendor\Shimadzu\Shimadzu.csproj", "{3FEE07F4-94D0-469D-95A0-5E90254058E9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shimadzu.Tests", "test\Shimadzu.Tests\Shimadzu.Tests.csproj", "{F13A70B4-7C04-4E02-8D2E-7F92E05824C2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shimadzu.Tests", "pwiz\test\Shimadzu.Tests\Shimadzu.Tests.csproj", "{F13A70B4-7C04-4E02-8D2E-7F92E05824C2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Vendor", "Vendor", "{050D548F-5BA2-4CC0-839A-A485500BF642}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UNIFI", "src\Vendor\UNIFI\UNIFI.csproj", "{161C856E-E033-465F-82F3-63DB3E4C7331}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UNIFI", "pwiz\src\Vendor\UNIFI\UNIFI.csproj", "{161C856E-E033-465F-82F3-63DB3E4C7331}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UNIFI.Tests", "test\UNIFI.Tests\UNIFI.Tests.csproj", "{2782ECB9-A6F3-4B09-ABBC-C344F1D9C18B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UNIFI.Tests", "pwiz\test\UNIFI.Tests\UNIFI.Tests.csproj", "{2782ECB9-A6F3-4B09-ABBC-C344F1D9C18B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIMF", "src\Vendor\UIMF\UIMF.csproj", "{A3D2B4D7-7B0C-47DF-8992-29F1D8E517AE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIMF", "pwiz\src\Vendor\UIMF\UIMF.csproj", "{A3D2B4D7-7B0C-47DF-8992-29F1D8E517AE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIMF.Tests", "test\UIMF.Tests\UIMF.Tests.csproj", "{1AA937FE-7A2D-4889-A4FE-4F44E202DF9B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UIMF.Tests", "pwiz\test\UIMF.Tests\UIMF.Tests.csproj", "{1AA937FE-7A2D-4889-A4FE-4F44E202DF9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobilion", "src\Vendor\Mobilion\Mobilion.csproj", "{D7E3B2F5-9B8C-4A0D-A1F2-7C5E14A8B3D9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobilion", "pwiz\src\Vendor\Mobilion\Mobilion.csproj", "{D7E3B2F5-9B8C-4A0D-A1F2-7C5E14A8B3D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobilion.Tests", "test\Mobilion.Tests\Mobilion.Tests.csproj", "{E2F8C4A1-5D6B-4E37-89A2-3F1C8D62B074}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mobilion.Tests", "pwiz\test\Mobilion.Tests\Mobilion.Tests.csproj", "{E2F8C4A1-5D6B-4E37-89A2-3F1C8D62B074}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentData", "src\IdentData\IdentData.csproj", "{0B510759-7066-4611-A2FD-C76424A1C778}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentData", "pwiz\src\IdentData\IdentData.csproj", "{0B510759-7066-4611-A2FD-C76424A1C778}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentData.Tests", "test\IdentData.Tests\IdentData.Tests.csproj", "{D35303C1-B0E5-4FD8-AE1E-0E031B0EF071}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IdentData.Tests", "pwiz\test\IdentData.Tests\IdentData.Tests.csproj", "{D35303C1-B0E5-4FD8-AE1E-0E031B0EF071}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsConvertGUI", "src\MsConvertGUI\MsConvertGUI.csproj", "{AC003EA5-9B05-41DF-B12E-01ACDF6E469E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsConvertGUI", "Tools\MsConvertGUI\src\MsConvertGUI.csproj", "{AC003EA5-9B05-41DF-B12E-01ACDF6E469E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomDataSourceDialog", "src\MsConvertGUI\CustomDataSourceDialog\CustomDataSourceDialog.csproj", "{60F4808D-EDB1-406D-BC32-E33EF3F69FD9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomDataSourceDialog", "Tools\MsConvertGUI\src\CustomDataSourceDialog\CustomDataSourceDialog.csproj", "{60F4808D-EDB1-406D-BC32-E33EF3F69FD9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsConvertGUI.Tests", "test\MsConvertGUI.Tests\MsConvertGUI.Tests.csproj", "{F7111772-1E2C-4309-B61E-24CA0D330C28}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsConvertGUI.Tests", "Tools\MsConvertGUI\test\MsConvertGUI.Tests.csproj", "{F7111772-1E2C-4309-B61E-24CA0D330C28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vendor.Common", "src\Vendor\Common\Vendor.Common.csproj", "{FF96077C-6894-4611-8B73-211F356B88A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vendor.Common", "pwiz\src\Vendor\Common\Vendor.Common.csproj", "{FF96077C-6894-4611-8B73-211F356B88A5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Installer.Tests", "test\Installer.Tests\Installer.Tests.csproj", "{2A9B3D7E-4C81-4F12-9E3A-58D1F2B7E406}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Installer.Tests", "pwiz\test\Installer.Tests\Installer.Tests.csproj", "{2A9B3D7E-4C81-4F12-9E3A-58D1F2B7E406}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsBenchmark", "src\MsBenchmark\MsBenchmark.csproj", "{20ABA6CB-AA2D-40B2-99B0-DD7A85BC94DF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsBenchmark", "Tools\Commandline\MsBenchmark\src\MsBenchmark.csproj", "{20ABA6CB-AA2D-40B2-99B0-DD7A85BC94DF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraData", "src\TraData\TraData.csproj", "{8F972942-1D04-4F46-B541-6CBC521FF292}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraData", "pwiz\src\TraData\TraData.csproj", "{8F972942-1D04-4F46-B541-6CBC521FF292}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraData.Tests", "test\TraData.Tests\TraData.Tests.csproj", "{DC3E3099-0E07-44E1-8F04-055DD3FD3572}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TraData.Tests", "pwiz\test\TraData.Tests\TraData.Tests.csproj", "{DC3E3099-0E07-44E1-8F04-055DD3FD3572}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruker.PrmScheduling", "src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj", "{F6D07FD2-A9F1-4A86-8F3C-9370E1EBF5C7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruker.PrmScheduling", "pwiz\src\Vendor\Bruker.PrmScheduling\Bruker.PrmScheduling.csproj", "{F6D07FD2-A9F1-4A86-8F3C-9370E1EBF5C7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BullseyeSharp", "src\BullseyeSharp\BullseyeSharp.csproj", "{F8E4E70D-2D4B-497A-980A-C2394D5BB18B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BullseyeSharp", "Tools\BullseyeSharp\src\BullseyeSharp.csproj", "{F8E4E70D-2D4B-497A-980A-C2394D5BB18B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruker.PrmScheduling.Tests", "test\Bruker.PrmScheduling.Tests\Bruker.PrmScheduling.Tests.csproj", "{E0908E81-182C-4E92-8FFC-43DEED34D1BB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bruker.PrmScheduling.Tests", "pwiz\test\Bruker.PrmScheduling.Tests\Bruker.PrmScheduling.Tests.csproj", "{E0908E81-182C-4E92-8FFC-43DEED34D1BB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsData.NativeAot", "src\MsData.NativeAot\MsData.NativeAot.csproj", "{FC4C2766-BACA-40E8-A0A7-66074D3AFA4E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsData.NativeAot", "pwiz\src\MsData.NativeAot\MsData.NativeAot.csproj", "{FC4C2766-BACA-40E8-A0A7-66074D3AFA4E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsData.NativeAot.Tests", "test\MsData.NativeAot.Tests\MsData.NativeAot.Tests.csproj", "{6F8C6015-E3CB-462C-B3EC-24A303A49C15}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MsData.NativeAot.Tests", "pwiz\test\MsData.NativeAot.Tests\MsData.NativeAot.Tests.csproj", "{6F8C6015-E3CB-462C-B3EC-24A303A49C15}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec", "Tools\BiblioSpec\src\BiblioSpec\BiblioSpec.csproj", "{3D5C23B3-4BCC-4822-AAC1-6431FD5C2D65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlibBuild", "Tools\BiblioSpec\src\BlibBuild\BlibBuild.csproj", "{A1B2C3D4-E5F6-4789-9012-34567890ABCD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec.Tests", "Tools\BiblioSpec\test\BiblioSpec.Tests\BiblioSpec.Tests.csproj", "{DC0AA159-FD72-462A-86C6-0E78CE63DC79}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{12A3005C-05B1-4D8F-821A-8D12E143AAB2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BiblioSpec", "BiblioSpec", "{92D4759D-193D-47D5-A836-4EB404C95BC4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AB21F0EB-4D51-47A0-9C13-CDD55D071B02}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlibFilter", "Tools\BiblioSpec\src\BlibFilter\BlibFilter.csproj", "{C22235C4-A3FD-4149-9A4F-F1CBD33DC5BC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlibSearch", "Tools\BiblioSpec\src\BlibSearch\BlibSearch.csproj", "{E93E7BF9-B41A-4625-B18F-2108DA839961}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlibToMs2", "Tools\BiblioSpec\src\BlibToMs2\BlibToMs2.csproj", "{6ACB22F8-6187-4885-9089-4D3866AEA659}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -312,6 +330,30 @@ Global
 		{6F8C6015-E3CB-462C-B3EC-24A303A49C15}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F8C6015-E3CB-462C-B3EC-24A303A49C15}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F8C6015-E3CB-462C-B3EC-24A303A49C15}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D5C23B3-4BCC-4822-AAC1-6431FD5C2D65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D5C23B3-4BCC-4822-AAC1-6431FD5C2D65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D5C23B3-4BCC-4822-AAC1-6431FD5C2D65}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D5C23B3-4BCC-4822-AAC1-6431FD5C2D65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-9012-34567890ABCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-9012-34567890ABCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-E5F6-4789-9012-34567890ABCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-E5F6-4789-9012-34567890ABCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC0AA159-FD72-462A-86C6-0E78CE63DC79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC0AA159-FD72-462A-86C6-0E78CE63DC79}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC0AA159-FD72-462A-86C6-0E78CE63DC79}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC0AA159-FD72-462A-86C6-0E78CE63DC79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C22235C4-A3FD-4149-9A4F-F1CBD33DC5BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C22235C4-A3FD-4149-9A4F-F1CBD33DC5BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C22235C4-A3FD-4149-9A4F-F1CBD33DC5BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C22235C4-A3FD-4149-9A4F-F1CBD33DC5BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E93E7BF9-B41A-4625-B18F-2108DA839961}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E93E7BF9-B41A-4625-B18F-2108DA839961}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E93E7BF9-B41A-4625-B18F-2108DA839961}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E93E7BF9-B41A-4625-B18F-2108DA839961}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6ACB22F8-6187-4885-9089-4D3866AEA659}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6ACB22F8-6187-4885-9089-4D3866AEA659}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6ACB22F8-6187-4885-9089-4D3866AEA659}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6ACB22F8-6187-4885-9089-4D3866AEA659}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{957777E5-7844-455D-9904-8E732CCDBA36} = {1044EA12-4417-4A1F-802D-3B7E0AE3324E}
@@ -364,5 +406,13 @@ Global
 		{E0908E81-182C-4E92-8FFC-43DEED34D1BB} = {9B31505B-3D7C-4F5F-88CC-2C018DCC041A}
 		{FC4C2766-BACA-40E8-A0A7-66074D3AFA4E} = {1044EA12-4417-4A1F-802D-3B7E0AE3324E}
 		{6F8C6015-E3CB-462C-B3EC-24A303A49C15} = {9B31505B-3D7C-4F5F-88CC-2C018DCC041A}
+		{3D5C23B3-4BCC-4822-AAC1-6431FD5C2D65} = {1044EA12-4417-4A1F-802D-3B7E0AE3324E}
+		{A1B2C3D4-E5F6-4789-9012-34567890ABCD} = {1044EA12-4417-4A1F-802D-3B7E0AE3324E}
+		{DC0AA159-FD72-462A-86C6-0E78CE63DC79} = {9B31505B-3D7C-4F5F-88CC-2C018DCC041A}
+		{92D4759D-193D-47D5-A836-4EB404C95BC4} = {12A3005C-05B1-4D8F-821A-8D12E143AAB2}
+		{AB21F0EB-4D51-47A0-9C13-CDD55D071B02} = {92D4759D-193D-47D5-A836-4EB404C95BC4}
+		{C22235C4-A3FD-4149-9A4F-F1CBD33DC5BC} = {AB21F0EB-4D51-47A0-9C13-CDD55D071B02}
+		{E93E7BF9-B41A-4625-B18F-2108DA839961} = {AB21F0EB-4D51-47A0-9C13-CDD55D071B02}
+		{6ACB22F8-6187-4885-9089-4D3866AEA659} = {AB21F0EB-4D51-47A0-9C13-CDD55D071B02}
 	EndGlobalSection
 EndGlobal
