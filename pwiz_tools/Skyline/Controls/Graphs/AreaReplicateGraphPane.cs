@@ -1334,7 +1334,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                         nodeGroup.GetChromInfoEntry(replicateIndex));
                                     return (ratio?.HasDotProduct ?? false) ? (double?) ratio.DotProduct : null;
                                 })
-                                .Where(value => value.HasValue)
+                                // Ignore missing (null) and NaN dot-products so one bad
+                                // replicate doesn't void the whole group's averaged value.
+                                .Where(value => value.HasValue && !double.IsNaN(value.Value))
                                 .Cast<double>()
                                 .ToList();
                             if (ratioDotProducts.Any())
