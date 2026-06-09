@@ -70,8 +70,8 @@ for /d /r "%SCRIPT_DIR%\examples" %%d in (build) do (
 
 REM # Vendor SDK pins are regenerated on every build (Refresh-VendorPins.ps1
 REM # is invoked as a pre-CoreCompile target in Vendor.Common.csproj).
-if exist src\Vendor\Common\VendorSdkPins.generated.cs (
-    del /q src\Vendor\Common\VendorSdkPins.generated.cs
+if exist pwiz\src\Vendor\Common\VendorSdkPins.generated.cs (
+    del /q pwiz\src\Vendor\Common\VendorSdkPins.generated.cs
 )
 
 REM # Caches: preserved by default; wiped only with --all.

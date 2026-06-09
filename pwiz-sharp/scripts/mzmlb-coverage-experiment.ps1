@@ -46,7 +46,7 @@ $report    = Join-Path $OutDir 'coverage.xml'
 
 Write-Host "[$label] running MsData.Tests (filter: $mzmlbFilter)" -ForegroundColor Cyan
 & dotnet dotcover dotnet --Output="$snapshot1" --Filters="$coverageFilters" -- `
-    test "$repo/test/MsData.Tests/MsData.Tests.csproj" -c Release `
+    test "$repo/pwiz/test/MsData.Tests/MsData.Tests.csproj" -c Release `
         --no-build --no-restore --nologo `
         --filter "$mzmlbFilter" 2>&1 | Where-Object { $_ -match 'Passed|Failed|Error|test files matched|Total tests' } | ForEach-Object { Write-Host "  $_" }
 
@@ -58,7 +58,7 @@ $thermoArgs = @(
     "--Output=$snapshot2",
     "--Filters=$coverageFilters",
     '--',
-    'test', "$repo/test/Thermo.Tests/Thermo.Tests.csproj",
+    'test', "$repo/pwiz/test/Thermo.Tests/Thermo.Tests.csproj",
     '-c', 'Release',
     '--no-build', '--no-restore', '--nologo',
     '-p:IAgreeToVendorLicenses=true',

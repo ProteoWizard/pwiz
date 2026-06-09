@@ -87,7 +87,7 @@ if %EXIT% NEQ 0 (set "ERROR_TEXT=build.bat failed" & goto error)
 REM # ------------------------------------------------------------------------
 REM # MsData.NativeAot end-to-end (Native AOT publish + C++ CTest).
 REM #
-REM # The managed shim is unit-tested via test\MsData.NativeAot.Tests inside
+REM # The managed shim is unit-tested via pwiz\test\MsData.NativeAot.Tests inside
 REM # build.bat above. THIS section additionally verifies the AOT compile +
 REM # the native ABI surface by:
 REM #   1. dotnet publish the shim for win-x64 (Native AOT -> pwiz_msdata.dll).
@@ -163,7 +163,7 @@ REM # cmake not separately installed" agent layout.
 set "PATH=%VS_INSTALL%\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin;%PATH%"
 
 echo ##teamcity[progressMessage 'dotnet publish MsData.NativeAot ^(win-x64 Native AOT^)']
-dotnet publish "%SCRIPT_DIR%\src\MsData.NativeAot\MsData.NativeAot.csproj" -c Release -r win-x64 --verbosity minimal -nologo
+dotnet publish "%SCRIPT_DIR%\pwiz\src\MsData.NativeAot\MsData.NativeAot.csproj" -c Release -r win-x64 --verbosity minimal -nologo
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=Native AOT publish failed" & goto error)
 

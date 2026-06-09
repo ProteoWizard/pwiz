@@ -12,9 +12,9 @@ $repo = Resolve-Path "$PSScriptRoot/.."
 # Discover MzMlb test method names from the test source files (cheap parse:
 # every `public void Foo()` inside an [TestMethod]).
 $testFiles = @(
-    "$repo/test/MsData.Tests/MzMlbConnectionTests.cs",
-    "$repo/test/MsData.Tests/MzMlbReaderTests.cs",
-    "$repo/test/MsData.Tests/MzMlbRoundTripTests.cs"
+    "$repo/pwiz/test/MsData.Tests/MzMlbConnectionTests.cs",
+    "$repo/pwiz/test/MsData.Tests/MzMlbReaderTests.cs",
+    "$repo/pwiz/test/MsData.Tests/MzMlbRoundTripTests.cs"
 )
 $tests = @()
 foreach ($f in $testFiles) {

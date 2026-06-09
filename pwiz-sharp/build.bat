@@ -93,7 +93,7 @@ if %IAGREE%==1 (
     echo ##teamcity[message text='Vendor support: DISABLED ^(no --i-agree-to-the-vendor-licenses^); building core only']
     REM # No-vendor build: build msconvert + tests that don't depend on vendors.
     REM # Vendor projects in Pwiz.sln are skipped via explicit project list.
-    set BUILD_TARGET=src\MsConvert\MsConvert.csproj
+    set BUILD_TARGET=Tools\Commandline\MsConvert\src\MsConvert.csproj
 )
 
 echo ##teamcity[progressMessage 'dotnet --version']
@@ -145,8 +145,8 @@ REM # Installer.Tests is vendor-only because its smoke test runs the installed
 REM # msconvert-sharp against a Thermo .raw to exercise VendorSdkLoader +
 REM # Reader_Thermo end-to-end. With no vendor support the conversion would
 REM # fail (and the installer itself wouldn't have vendor-enabled binaries).
-set TEST_TARGET=test\Util.Tests\Util.Tests.csproj test\Common.Tests\Common.Tests.csproj test\MsData.Tests\MsData.Tests.csproj test\MsData.NativeAot.Tests\MsData.NativeAot.Tests.csproj test\IdentData.Tests\IdentData.Tests.csproj test\Analysis.Tests\Analysis.Tests.csproj test\MsConvert.Tests\MsConvert.Tests.csproj
-if %IAGREE%==1 set TEST_TARGET=%TEST_TARGET% test\Agilent.Tests\Agilent.Tests.csproj test\Bruker.Tests\Bruker.Tests.csproj test\Mobilion.Tests\Mobilion.Tests.csproj test\Sciex.Tests\Sciex.Tests.csproj test\Shimadzu.Tests\Shimadzu.Tests.csproj test\Thermo.Tests\Thermo.Tests.csproj test\UIMF.Tests\UIMF.Tests.csproj test\UNIFI.Tests\UNIFI.Tests.csproj test\Waters.Tests\Waters.Tests.csproj test\Installer.Tests\Installer.Tests.csproj
+set TEST_TARGET=pwiz\test\Util.Tests\Util.Tests.csproj pwiz\test\Common.Tests\Common.Tests.csproj pwiz\test\MsData.Tests\MsData.Tests.csproj pwiz\test\MsData.NativeAot.Tests\MsData.NativeAot.Tests.csproj pwiz\test\IdentData.Tests\IdentData.Tests.csproj pwiz\test\Analysis.Tests\Analysis.Tests.csproj Tools\Commandline\MsConvert\test\MsConvert.Tests.csproj
+if %IAGREE%==1 set TEST_TARGET=%TEST_TARGET% pwiz\test\Agilent.Tests\Agilent.Tests.csproj pwiz\test\Bruker.Tests\Bruker.Tests.csproj pwiz\test\Mobilion.Tests\Mobilion.Tests.csproj pwiz\test\Sciex.Tests\Sciex.Tests.csproj pwiz\test\Shimadzu.Tests\Shimadzu.Tests.csproj pwiz\test\Thermo.Tests\Thermo.Tests.csproj pwiz\test\UIMF.Tests\UIMF.Tests.csproj pwiz\test\UNIFI.Tests\UNIFI.Tests.csproj pwiz\test\Waters.Tests\Waters.Tests.csproj pwiz\test\Installer.Tests\Installer.Tests.csproj
 
 REM # Test step: scripts\Run-Tests-Parallel.ps1 spawns one parallel
 REM # `dotnet test <project>` job per csproj, each redirected to its own log

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Regenerate src/Vendor/Common/VendorSdkPins.generated.cs from the vendor 7z archives
+Regenerate pwiz/src/Vendor/Common/VendorSdkPins.generated.cs from the vendor 7z archives
 currently in the pwiz repo.
 
 .DESCRIPTION
@@ -27,7 +27,7 @@ dev builds use whatever .generated.cs is checked in.
 $ErrorActionPreference = 'Stop'
 
 $pwizRoot = (Resolve-Path "$PSScriptRoot/../..").Path
-$outPath  = Join-Path $pwizRoot "pwiz-sharp/src/Vendor/Common/VendorSdkPins.generated.cs"
+$outPath  = Join-Path $pwizRoot "pwiz-sharp/pwiz/src/Vendor/Common/VendorSdkPins.generated.cs"
 $repo     = "ProteoWizard/pwiz"
 
 # (Name, RepoRelativeArchivePath, AssemblyPrefixes...) — the source of truth for

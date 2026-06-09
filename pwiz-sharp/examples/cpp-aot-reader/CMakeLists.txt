@@ -15,7 +15,7 @@ if(NOT DEFINED PWIZ_MSDATA_NATIVE_DIR)
         set(PWIZ_MSDATA_RID "linux-x64")
     endif()
     set(PWIZ_MSDATA_NATIVE_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}/../../src/MsData.NativeAot/bin/Release/net8.0/${PWIZ_MSDATA_RID}/native"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../pwiz/pwiz/src/MsData.NativeAot/bin/Release/net8.0/${PWIZ_MSDATA_RID}/native"
         CACHE PATH "AOT-published pwiz_msdata native artifacts (.dll + .lib on Windows, .so on POSIX)")
 endif()
 
@@ -23,7 +23,7 @@ if(NOT EXISTS "${PWIZ_MSDATA_NATIVE_DIR}")
     message(FATAL_ERROR
         "PWIZ_MSDATA_NATIVE_DIR does not exist: ${PWIZ_MSDATA_NATIVE_DIR}\n"
         "Publish the AOT shim first:\n"
-        "  dotnet publish src/MsData.NativeAot/MsData.NativeAot.csproj -c Release -r <rid>")
+        "  dotnet publish pwiz/pwiz/src/MsData.NativeAot/MsData.NativeAot.csproj -c Release -r <rid>")
 endif()
 
 add_executable(cpp_aot_reader main.cpp)

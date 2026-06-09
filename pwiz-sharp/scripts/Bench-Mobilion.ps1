@@ -12,7 +12,7 @@
 [CmdletBinding()]
 param(
     [string]$CppMsConvert      = 'C:\dev\pwiz\build-nt-x86\msvc-release-x86_64\msconvert.exe',
-    [string]$SharpMsConvert    = 'C:\dev\pwiz-msconvert-pr\pwiz-sharp\src\MsConvert\bin\Release\net8.0\msconvert-sharp.exe',
+    [string]$SharpMsConvert    = 'C:\dev\pwiz-msconvert-pr\pwiz-sharp\Tools\MsConvert\Tools\MsConvert\Tools\MsConvert\Tools\Commandline\MsConvert\Tools\Commandline\MsConvert\src\bin\Release\net8.0\msconvert-sharp.exe',
     [string]$MsDiff            = 'C:\dev\pwiz\build-nt-x86\msvc-release-x86_64\msdiff.exe',
     [string]$DataDir           = 'C:\dev\pwiz-msconvert-pr\pwiz\data\vendor_readers\Mobilion\Reader_Mobilion_Test.data',
     [string]$OutDir            = (Join-Path $env:TEMP "mobilion-bench-$([DateTime]::Now.ToString('yyyyMMdd-HHmmss'))")
