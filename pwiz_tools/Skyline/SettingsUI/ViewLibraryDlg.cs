@@ -232,7 +232,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void AddRulerMenuItems(ContextMenuStrip menuStrip)
         {
-            // Rulers don't apply to small molecules / crosslinks — offer no Pin/Unpin items.
+            // Rulers don't apply to small molecules / crosslinks — offer no ruler items.
             if (GraphItem == null || !GraphItem.RulersApplicable)
                 return;
 
@@ -241,9 +241,6 @@ namespace pwiz.Skyline.SettingsUI
             // user can click "Pin Ruler".
             var hoveredKey = GraphItem?.HoveredSeriesKey;
             bool hasPinned = _pinnedSeriesKeys.Count > 0;
-
-            if (!hoveredKey.HasValue && !hasPinned)
-                return;
 
             // Suppress MouseLeave while the menu is open so the ruler stays visible.
             _contextMenuOpen = true;
@@ -259,28 +256,38 @@ namespace pwiz.Skyline.SettingsUI
             // ion-type/charge items that BuildSpectrumMenu placed above it.
             int insertAt = FindIndexAfterFirstSeparator(menuStrip);
 
-            if (hoveredKey.HasValue)
-            {
-                var key = hoveredKey.Value;
-                if (_pinnedSeriesKeys.Contains(key))
-                {
-                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinRuler);
-                    item.Click += (s, e) => UnpinRuler(key);
-                    menuStrip.Items.Insert(insertAt++, item);
-                }
-                else
-                {
-                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_PinRuler);
-                    item.Click += (s, e) => PinRuler(key);
-                    menuStrip.Items.Insert(insertAt++, item);
-                }
-            }
+            // Master on/off toggle — always offered for applicable spectra so the feature
+            // can be turned back on after it has been disabled.
+            var toggleItem = new ToolStripMenuItem(SpectrumGraphItem.RulerToggleMenuText);
+            toggleItem.Click += (s, e) => ToggleRulersEnabled();
+            menuStrip.Items.Insert(insertAt++, toggleItem);
 
-            if (hasPinned)
+            // Per-series Pin / Unpin items only while the feature is enabled.
+            if (SpectrumGraphItem.RulersEnabled)
             {
-                var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinAllRulers);
-                item.Click += (s, e) => UnpinAllRulers();
-                menuStrip.Items.Insert(insertAt++, item);
+                if (hoveredKey.HasValue)
+                {
+                    var key = hoveredKey.Value;
+                    if (_pinnedSeriesKeys.Contains(key))
+                    {
+                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinRuler);
+                        item.Click += (s, e) => UnpinRuler(key);
+                        menuStrip.Items.Insert(insertAt++, item);
+                    }
+                    else
+                    {
+                        var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_PinRuler);
+                        item.Click += (s, e) => PinRuler(key);
+                        menuStrip.Items.Insert(insertAt++, item);
+                    }
+                }
+
+                if (hasPinned)
+                {
+                    var item = new ToolStripMenuItem(GraphsResources.SequenceRulerMenu_UnpinAllRulers);
+                    item.Click += (s, e) => UnpinAllRulers();
+                    menuStrip.Items.Insert(insertAt++, item);
+                }
             }
 
             // Trailing separator to visually group ruler items, unless the next item is
@@ -341,8 +348,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private void UpdateHoveredPeak(LibraryRankedSpectrumInfo.RankedMI peakRmi)
         {
-            // Rulers don't apply to small molecules / crosslinks — never hover a series there.
-            if (GraphItem != null && !GraphItem.RulersApplicable)
+            // No hover ruler when the feature is disabled, or for small molecules / crosslinks.
+            if (!SpectrumGraphItem.RulersEnabled || (GraphItem != null && !GraphItem.RulersApplicable))
                 peakRmi = null;
 
             var newKey = SpectrumGraphItem.GetBestSeriesKey(peakRmi);
@@ -377,6 +384,19 @@ namespace pwiz.Skyline.SettingsUI
         {
             _pinnedSeriesKeys.Clear();
             SyncPinnedSeriesToGraphItem();
+            GraphControl.Invalidate();
+        }
+
+        // Flips the global ruler on/off preference (the Enable/Disable menu command).
+        // Turning the feature off clears this host's pinned rulers so they don't reappear
+        // when it is turned back on. Public so the functional test can drive the same path
+        // the context-menu item invokes.
+        public void ToggleRulersEnabled()
+        {
+            SpectrumGraphItem.RulersEnabled = !SpectrumGraphItem.RulersEnabled;
+            if (!SpectrumGraphItem.RulersEnabled)
+                UnpinAllRulers();
+            UpdateHoveredPeak(null);
             GraphControl.Invalidate();
         }
 

@@ -2033,6 +2033,24 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Disable Rulers.
+        /// </summary>
+        public static string SequenceRulerMenu_DisableRulers {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_DisableRulers", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Enable Rulers.
+        /// </summary>
+        public static string SequenceRulerMenu_EnableRulers {
+            get {
+                return ResourceManager.GetString("SequenceRulerMenu_EnableRulers", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Pin Ruler.
         /// </summary>
         public static string SequenceRulerMenu_PinRuler {

@@ -86,7 +86,8 @@ namespace pwiz.SkylineTestFunctional
                 peak => graph.HoverRulerPeak(peak),
                 () => graph.PinHoveredRuler(),
                 key => graph.UnpinRuler(key),
-                () => graph.UnpinAllRulers()));
+                () => graph.UnpinAllRulers(),
+                () => graph.ToggleRulersEnabled()));
         }
 
         // Import results and open a measured full scan so the GraphFullScan host has a
@@ -108,7 +109,8 @@ namespace pwiz.SkylineTestFunctional
                 peak => graph.HoverRulerPeak(peak),
                 () => graph.PinHoveredRuler(),
                 key => graph.UnpinRuler(key),
-                () => graph.UnpinAllRulers()));
+                () => graph.UnpinAllRulers(),
+                () => graph.ToggleRulersEnabled()));
         }
 
         private void TestViewLibraryRuler()
@@ -119,7 +121,8 @@ namespace pwiz.SkylineTestFunctional
                 peak => dlg.HoverRulerPeak(peak),
                 () => dlg.PinHoveredRuler(),
                 key => dlg.UnpinRuler(key),
-                () => dlg.UnpinAllRulers()));
+                () => dlg.UnpinAllRulers(),
+                () => dlg.ToggleRulersEnabled()));
             OkDialog(dlg, dlg.CancelDialog);
         }
 
@@ -138,7 +141,8 @@ namespace pwiz.SkylineTestFunctional
             Action<LibraryRankedSpectrumInfo.RankedMI> hover,
             Action pinHovered,
             Action<IonSeriesKey> unpin,
-            Action unpinAll)
+            Action unpinAll,
+            Action toggleRulers)
         {
             Assert.IsNotNull(item);
             Assert.IsTrue(item.RulersApplicable);
@@ -196,6 +200,29 @@ namespace pwiz.SkylineTestFunctional
 
             // 5. Unpin All removes every remaining ruler.
             unpinAll();
+            Assert.AreEqual(0, item.PinnedSeriesKeys.Count);
+            Assert.AreEqual(0, LadderCount(item));
+
+            // 6. Master Enable/Disable toggle. Pin one ruler, then disabling the feature
+            //    clears the pinned state and renders nothing, and hovering is inert.
+            //    Re-enabling does NOT bring the pinned ruler back (disable clears pins).
+            hover(peak1);
+            pinHovered();
+            hover(null);
+            Assert.AreEqual(1, item.PinnedSeriesKeys.Count);
+            Assert.AreEqual(1, LadderCount(item));
+
+            Assert.IsTrue(SpectrumGraphItem.RulersEnabled);
+            toggleRulers();
+            Assert.IsFalse(SpectrumGraphItem.RulersEnabled);
+            Assert.AreEqual(0, item.PinnedSeriesKeys.Count);
+            Assert.AreEqual(0, LadderCount(item));
+            hover(peak1);
+            Assert.IsFalse(item.HoveredSeriesKey.HasValue);
+            Assert.AreEqual(0, LadderCount(item));
+
+            toggleRulers();
+            Assert.IsTrue(SpectrumGraphItem.RulersEnabled);
             Assert.AreEqual(0, item.PinnedSeriesKeys.Count);
             Assert.AreEqual(0, LadderCount(item));
         }

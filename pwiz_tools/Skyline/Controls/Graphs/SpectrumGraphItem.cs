@@ -208,6 +208,29 @@ namespace pwiz.Skyline.Controls.Graphs
             return Math.Abs(a.Charge.AdductCharge).CompareTo(Math.Abs(b.Charge.AdductCharge));
         }
 
+        /// <summary>
+        /// Whether the spectrum sequence-ruler feature is turned on. Persisted as a global
+        /// user preference so the Enable/Disable context-menu toggle applies across all
+        /// spectrum hosts and sessions. When false, no ruler is rendered, hovered, or offered
+        /// for pinning (only the Enable Rulers menu item remains). Independent of
+        /// <see cref="RulersApplicable"/>, which gates on whether the spectrum type supports
+        /// rulers at all.
+        /// </summary>
+        public static bool RulersEnabled
+        {
+            get { return Settings.Default.SpectrumSequenceRulersEnabled; }
+            set { Settings.Default.SpectrumSequenceRulersEnabled = value; }
+        }
+
+        /// <summary>
+        /// Label for the master ruler on/off context-menu item, reflecting the current state:
+        /// "Disable Rulers" when enabled, "Enable Rulers" when disabled.
+        /// </summary>
+        public static string RulerToggleMenuText =>
+            RulersEnabled
+                ? GraphsResources.SequenceRulerMenu_DisableRulers
+                : GraphsResources.SequenceRulerMenu_EnableRulers;
+
         public SpectrumGraphItem(PeptideDocNode peptideDocNode,
             TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
             LibraryRankedSpectrumInfo spectrumInfo, string libName) : base(spectrumInfo)
@@ -289,7 +312,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void AddPreCurveAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
         {
-            if (!RulersApplicable)
+            if (!RulersApplicable || !RulersEnabled)
                 return;
 
             // Build groups from pinned series, preserving order of first appearance.
