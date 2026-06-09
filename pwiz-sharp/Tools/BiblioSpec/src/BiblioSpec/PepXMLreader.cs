@@ -862,11 +862,19 @@ public class PepXMLreader : BuildParser
         // cpp parity: PepXMLreader.cpp:479 — InterProphet byte-based progress.
         // (getCurrentByteIndex not available with XmlReader; we leave this as a no-op stub.)
 
-        // cpp parity: PepXMLreader.cpp:487-501 — MzXMLParser substitution for SpectrumMill mzXML.
-        // The MzXMLParser hasn't been ported to C# yet; SpectrumMill PSMs are still parsed but
-        // the spec lookup will go through the default reader. The cpp wraps this in
-        // an `if (specFile ends with .mzxml)` guard, so it's a no-op for non-mzXML files.
-        // Leaving the substitution out matches "SpectrumMill not yet supported end-to-end".
+        // cpp parity: PepXMLreader.cpp:487-501 — when the spectrum file is .mzXML AND the
+        // PSM lookup key is scan-number or index, cpp sorts psms_ by that key before
+        // BuildTables. The MzXMLParser substitution that follows in cpp is a SpectrumMill-
+        // specific path we haven't ported yet (still no-op'd below), but the SORT is needed
+        // for any .mzXML input — BiblioSpec's bad-index test exercises exactly this case.
+        if (GetSpecFileName().EndsWith(".mzXML", StringComparison.OrdinalIgnoreCase))
+        {
+            if (LookUpBy == SpecIdType.ScanNumberId)
+                Psms.Sort(static (a, b) => (a?.SpecKey ?? int.MaxValue).CompareTo(b?.SpecKey ?? int.MaxValue));
+            else if (LookUpBy == SpecIdType.IndexId)
+                Psms.Sort(static (a, b) => (a?.SpecIndex ?? int.MaxValue).CompareTo(b?.SpecIndex ?? int.MaxValue));
+        }
+        // (SpectrumMill's MzXMLParser substitution not yet ported.)
 
         if (!_isScoreLookup)
         {

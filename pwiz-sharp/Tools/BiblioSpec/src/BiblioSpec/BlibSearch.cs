@@ -514,6 +514,9 @@ public sealed class BlibSearch : IDisposable
             CultureInfo.InvariantCulture,
             "# Date: {0:ddd} {0:MMM} {1,2} {0:HH:mm:ss yyyy}",
             now, now.Day));
+        // cpp Reportfile.cpp:133 emits an empty line after the date — the comparator's skip-lines
+        // covers the date itself but not this blank separator. Preserve byte parity.
+        sb.AppendLine();
         sb.AppendLine($"# query file: {SpectrumFile}");
         sb.AppendLine("# Library file list:");
         for (var i = 0; i < LibraryNames.Count; i++)
@@ -554,10 +557,18 @@ public sealed class BlibSearch : IDisposable
         };
         spec.SetIonMobility(data.IonMobility, data.IonMobilityType);
 
-        // cpp parity: Spectrum carries a list of possible charges; PwizReader sets exactly one
-        // if charge is known (BlibSearch.cpp:138 calls getPossibleCharges()).
-        if (data.Charge != 0)
+        // cpp parity: Spectrum carries a list of possible charges (BlibSearch.cpp:138 calls
+        // getPossibleCharges()). MS2 queries can carry multiple Z lines → multiple possible
+        // charges; PwizSharpSpecFileReader now collects them all.
+        if (data.Charges.Count > 0)
+        {
+            foreach (var c in data.Charges)
+                spec.AddCharge(c);
+        }
+        else if (data.Charge != 0)
+        {
             spec.AddCharge(data.Charge);
+        }
 
         // Hydrate raw peaks.
         if (data.NumPeaks > 0 && data.Mzs is not null && data.Intensities is not null)

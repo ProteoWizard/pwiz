@@ -2,64 +2,37 @@ namespace Pwiz.Tools.BiblioSpec.Tests;
 
 /// <summary>
 /// Vertical-slice port of cpp <c>pwiz_tools/BiblioSpec/tests/Jamfile.jam</c>
-/// <c>blib-test-build</c> rows. Each method is one Jamfile row; the rest will be
-/// transcribed once the slice surfaces and fixes the integration issues.
+/// <c>blib-test-build</c> rows. One <c>[TestMethod]</c> per Jamfile row, grouped
+/// by reader family.
 /// </summary>
 /// <remarks>
-/// Cpp Jamfile shape (line 110-120 of Jamfile.jam):
+/// Cpp Jamfile shape (line 109-121 of Jamfile.jam):
 /// <code>
 /// blib-test-build &lt;name&gt; : &lt;args&gt; : output/&lt;output&gt; : &lt;reference&gt;.check : inputs/&lt;input&gt; ;
 /// </code>
 /// → <c>BlibBuild &lt;args&gt; --out=&lt;output_path&gt; &lt;input_path&gt;</c>, then
 /// <c>CompareLibraryContents &lt;output&gt; reference/&lt;reference&gt;.check</c>.
+///
+/// <para>The Jamfile uses <c>@</c> to glue arg-name+arg-value (e.g. <c>-c@0.999</c>);
+/// this port expands those back to separate array entries (<c>"-c", "0.999"</c>).</para>
+///
+/// <para>Reader-family ports complete so far:
+/// <c>SslReader</c>, <c>SQTreader</c>, <c>PepXMLreader</c>, <c>MzIdentMLReader</c>,
+/// plus the <c>.blib</c>-input transfer-library path. Every other Jamfile row is a
+/// placeholder that calls <see cref="Assert.Inconclusive(string)"/> until its reader
+/// lands. This keeps the test count visible (matches cpp) and gives us a wire-up slot.</para>
 /// </remarks>
 [TestClass]
 public class BuildTests
 {
-    /// <summary>
-    /// cpp Jamfile.jam:209 — SSL with extra non-required columns.
-    /// <c>blib-test-build ssl-ex : -o : output/ssl-ex.blib : ssl-ex.check : extra-cols.ssl ;</c>
-    /// (The Jamfile.jam:208 `ssl` test uses `--unicode` which triggers cpp-test-harness-side
-    /// file renaming to Chinese-character paths + a copy of demo.ms2 to demo-copy.cms2; that
-    /// pre-run side effect isn't replicated by our C# harness yet, so the basic SSL coverage
-    /// uses ssl-ex instead — same SslReader code path, no harness side effect.)
-    /// </summary>
-    [TestMethod]
-    public void Ssl_ExtraColumns()
-    {
-        TestRunner.RunBlibTest(
-            testName: nameof(Ssl_ExtraColumns),
-            tool: BlibTool.BlibBuild,
-            args: new[] { "-o" },
-            inputFilenames: new[] { "extra-cols.ssl" },
-            outputBlibName: "ssl-ex.blib",
-            referenceCheckName: "ssl-ex.check");
-    }
+    #region SQT family (Jamfile.jam:199-201)
 
-    /// <summary>
-    /// cpp Jamfile.jam:211 — SSL with retention-time column.
-    /// </summary>
+    /// <summary>Jamfile.jam:199 — <c>sqt-ms2</c>.</summary>
     [TestMethod]
-    public void Ssl_WithRetentionTime()
+    public void Sqt_Ms2()
     {
         TestRunner.RunBlibTest(
-            testName: nameof(Ssl_WithRetentionTime),
-            tool: BlibTool.BlibBuild,
-            args: new[] { "-o" },
-            inputFilenames: new[] { "ssl-with-rt.ssl" },
-            outputBlibName: "ssl-rt.blib",
-            referenceCheckName: "ssl-rt.check");
-    }
-
-    /// <summary>
-    /// cpp Jamfile.jam:199 — basic Sequest SQT input.
-    /// <c>blib-test-build sqt-ms2 : -o : output/sqt-ms2.blib : sqt-ms2.check : demo.sqt ;</c>
-    /// </summary>
-    [TestMethod]
-    public void Sqt_DemoMs2()
-    {
-        TestRunner.RunBlibTest(
-            testName: nameof(Sqt_DemoMs2),
+            testName: nameof(Sqt_Ms2),
             tool: BlibTool.BlibBuild,
             args: new[] { "-o" },
             inputFilenames: new[] { "demo.sqt" },
@@ -67,18 +40,1121 @@ public class BuildTests
             referenceCheckName: "sqt-ms2.check");
     }
 
-    /// <summary>
-    /// cpp Jamfile.jam:236 — PeptideProphet pep.xml with CAexample.mzXML for peak lookup.
-    /// </summary>
+    /// <summary>Jamfile.jam:200 — <c>sqt-cms2</c>.</summary>
     [TestMethod]
-    public void PepXml_PeptideProphet()
+    public void Sqt_Cms2()
     {
         TestRunner.RunBlibTest(
-            testName: nameof(PepXml_PeptideProphet),
+            testName: nameof(Sqt_Cms2),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "demo-copy.sqt" },
+            outputBlibName: "sqt-cms2.blib",
+            referenceCheckName: "sqt-cms2.check");
+    }
+
+    /// <summary>Jamfile.jam:201 — <c>sqt-ez</c>.</summary>
+    [TestMethod]
+    public void Sqt_Ez()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Sqt_Ez),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "wormy4raw-1.select.sqt" },
+            outputBlibName: "sqt-ez.blib",
+            referenceCheckName: "sqt-ez.check");
+    }
+
+    #endregion
+
+    #region SSL family (Jamfile.jam:208-217)
+
+    /// <summary>Jamfile.jam:208 — <c>ssl</c>.</summary>
+    [TestMethod]
+    public void Ssl()
+    {
+        // The cpp Jamfile's `ssl` test uses cpp's `--unicode` harness which Unicode-renames
+        // the input to 试验_demo.ssl. The reference .check encodes that renamed filename in
+        // its SpectrumSourceFiles table, so without replicating the harness rename we can't
+        // match. SslReader coverage is provided by Ssl_ExtraCols (line 209), Ssl_Rt (211),
+        // Ssl_IndexRt (212), Ssl_NameRt (213), Ssl_Ims (214), Duplicates (210) — all of which
+        // exercise the same reader without the harness rename.
+        Assert.Inconclusive(
+            "Skipped — cpp Jamfile's `ssl` test depends on the `--unicode` harness pre-run "
+            + "Unicode rename of the input SSL file. Other SSL tests cover SslReader.");
+    }
+
+    /// <summary>Jamfile.jam:209 — <c>ssl-ex</c>.</summary>
+    [TestMethod]
+    public void Ssl_ExtraCols()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Ssl_ExtraCols),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "extra-cols.ssl" },
+            outputBlibName: "ssl-ex.blib",
+            referenceCheckName: "ssl-ex.check");
+    }
+
+    /// <summary>Jamfile.jam:210 — <c>duplicates</c>.</summary>
+    [TestMethod]
+    public void Duplicates()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Duplicates),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "three-duplicates.ssl" },
+            outputBlibName: "duplicates.blib",
+            referenceCheckName: "duplicates.check");
+    }
+
+    /// <summary>Jamfile.jam:211 — <c>ssl-rt</c>.</summary>
+    [TestMethod]
+    public void Ssl_Rt()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Ssl_Rt),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "ssl-with-rt.ssl" },
+            outputBlibName: "ssl-rt.blib",
+            referenceCheckName: "ssl-rt.check");
+    }
+
+    /// <summary>Jamfile.jam:212 — <c>ssl-index-rt</c>.</summary>
+    [TestMethod]
+    public void Ssl_IndexRt()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Ssl_IndexRt),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "ssl-index-with-rt.ssl" },
+            outputBlibName: "ssl-index-rt.blib",
+            referenceCheckName: "ssl-index-rt.check");
+    }
+
+    /// <summary>Jamfile.jam:213 — <c>ssl-name-rt</c>.</summary>
+    [TestMethod]
+    public void Ssl_NameRt()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Ssl_NameRt),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "ssl-name-with-rt.ssl" },
+            outputBlibName: "ssl-name-rt.blib",
+            referenceCheckName: "ssl-name-rt.check");
+    }
+
+    /// <summary>Jamfile.jam:214 — <c>ssl-ims</c> (basic shortcut → output/ssl-ims.blib + ssl-ims.check).</summary>
+    [TestMethod]
+    public void Ssl_Ims()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Ssl_Ims),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "ssl-with-ims.ssl" },
+            outputBlibName: "ssl-ims.blib",
+            referenceCheckName: "ssl-ims.check");
+    }
+
+    /// <summary>Jamfile.jam:215 — <c>ssl-small-mol</c>.</summary>
+    [TestMethod]
+    public void Ssl_SmallMol()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Ssl_SmallMol),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "ssl-small-mol.ssl" },
+            outputBlibName: "ssl-small-mol.blib",
+            referenceCheckName: "ssl-small-mol.check");
+    }
+
+    /// <summary>Jamfile.jam:216 — <c>ssl-invalid-sequence</c> (expects error "Only uppercase letters").</summary>
+    [TestMethod]
+    public void Ssl_InvalidSequence()
+    {
+        TestRunner.RunNegativeBlibTest(
+            testName: nameof(Ssl_InvalidSequence),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-e", "Only uppercase letters" },
+            inputFilenames: new[] { "ssl-invalid-sequence.ssl" },
+            outputBlibName: "ssl-invalid-sequence.blib");
+    }
+
+    /// <summary>Jamfile.jam:217 — <c>ssl-crosslink</c>.</summary>
+    [TestMethod]
+    public void Ssl_Crosslink()
+    {
+        // Crosslinker mass calculation: cpp uses `pwiz::proteome::Peptide.monoisotopicMass()`
+        // (cpp SslReader.cpp:358); the C# port uses `Pwiz.Util.Proteome.Peptide.MonoisotopicMass()`
+        // (the C# port of the same library). The two implementations diverge at the ~10th
+        // significant digit (~5e-7 Da), so cpp's stored mass (1537.726886) and C#'s
+        // (1537.7268859548) format to byte-different .check rows. Fixing this requires
+        // aligning Pwiz.Util.Proteome.Peptide.MonoisotopicMass with cpp pwiz::proteome —
+        // outside the BiblioSpec port's surface. Re-enable when those libraries agree.
+        Assert.Inconclusive(
+            "Skipped — Pwiz.Util.Proteome.Peptide.MonoisotopicMass diverges from cpp "
+            + "pwiz::proteome::Peptide.monoisotopicMass at the ~5e-7 Da level for crosslinker "
+            + "peptides. Cross-library precision parity fix needed before this test can pass.");
+    }
+
+    #endregion
+
+    #region pep.xml family (Jamfile.jam:235-255)
+
+    /// <summary>Jamfile.jam:235 — <c>omssa</c>.</summary>
+    [TestMethod]
+    public void Omssa()
+    {
+        // Same cpp-harness pre-run Unicode-rename dependency as the Ssl test: the cpp `--unicode`
+        // harness renames OMSSA.pep.xml to 试验_OMSSA.pep.xml before running BlibBuild, so the
+        // reference .check encodes the Chinese-character filename in its SpectrumSourceFiles
+        // table. Without replicating the rename our SourceFiles column won't match.
+        Assert.Inconclusive(
+            "Skipped — cpp Jamfile's `omssa` test runs in `--unicode` harness mode that "
+            + "pre-renames the pep.xml input to a Unicode path. SourceFiles can't match without "
+            + "replicating that rename.");
+    }
+
+    /// <summary>Jamfile.jam:236 — <c>pep-proph</c> (PeptideProphet).</summary>
+    [TestMethod]
+    public void PepProph()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PepProph),
             tool: BlibTool.BlibBuild,
             args: new[] { "-o" },
             inputFilenames: new[] { "CAexample.pep.xml" },
             outputBlibName: "pep-proph.blib",
             referenceCheckName: "pep-proph.check");
     }
+
+    /// <summary>Jamfile.jam:237 — <c>morpheus</c>.</summary>
+    [TestMethod]
+    public void Morpheus()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Morpheus),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "test-morpheus.pep.xml" },
+            outputBlibName: "morpheus.blib",
+            referenceCheckName: "morpheus.check");
+    }
+
+    /// <summary>Jamfile.jam:238 — <c>msgfdb</c>.</summary>
+    [TestMethod]
+    public void MsGfDb()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MsGfDb),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "ms-gfdb.pepXML" },
+            outputBlibName: "msgfdb.blib",
+            referenceCheckName: "msgfdb.check");
+    }
+
+    /// <summary>Jamfile.jam:239 — <c>peaksdb</c>.</summary>
+    [TestMethod]
+    public void PeaksDb()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PeaksDb),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "peaksdb.pep.xml" },
+            outputBlibName: "peaksdb.blib",
+            referenceCheckName: "peaksdb.check");
+    }
+
+    /// <summary>Jamfile.jam:241 — <c>prospector</c>.</summary>
+    [TestMethod]
+    public void Prospector()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Prospector),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "V20120113-01_ITMSms2cid.pep.xml" },
+            outputBlibName: "prospector.blib",
+            referenceCheckName: "prospector.check",
+            skipLinesName: "zbuild.skip-lines");
+    }
+
+    /// <summary>Jamfile.jam:242 — <c>smill</c> (Spectrum Mill).</summary>
+    [TestMethod]
+    public void Smill()
+    {
+        // SpectrumMill pep.xml triggers the SpectrumMill-specific code path in PepXMLreader,
+        // which calls BuildParser.FindScanIndexFromName — itself a NotImplementedException
+        // stub awaiting the mzxmlFinder port (~100 LOC cpp). Code-review finding #3.
+        Assert.Inconclusive(
+            "Skipped — SpectrumMill pep.xml input requires mzxmlFinder (not yet ported). "
+            + "FindScanIndexFromName in BuildParser throws NotImplementedException.");
+    }
+
+    /// <summary>Jamfile.jam:243 — <c>smill_ims</c>.</summary>
+    [TestMethod]
+    public void Smill_Ims()
+    {
+        // Same SpectrumMill / FindScanIndexFromName NotImplementedException as Smill.
+        Assert.Inconclusive(
+            "Skipped — SpectrumMill pep.xml input requires mzxmlFinder (not yet ported).");
+    }
+
+    /// <summary>Jamfile.jam:244 — <c>bad-index</c>.</summary>
+    [TestMethod]
+    public void BadIndex()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(BadIndex),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "interact-prob-three-spec.pep.xml" },
+            outputBlibName: "bad-index.blib",
+            referenceCheckName: "bad-index.check");
+    }
+
+    /// <summary>Jamfile.jam:245 — <c>comet</c>.</summary>
+    [TestMethod]
+    public void Comet()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Comet),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "comet.demo1.target.pep.xml" },
+            outputBlibName: "comet.blib",
+            referenceCheckName: "comet.check",
+            skipLinesName: "zbuild.skip-lines");
+    }
+
+    /// <summary>Jamfile.jam:246 — <c>comet-prg2012-wiff</c> (vendor-API gated).</summary>
+    [TestMethod]
+    public void Comet_Prg2012_Wiff()
+    {
+        Assert.Inconclusive("Vendor-only test; vendor SDK not available in C# port yet.");
+    }
+
+    /// <summary>Jamfile.jam:247 — <c>msfragger-tims</c> (input name contains %20 → literal space).</summary>
+    [TestMethod]
+    public void MsFragger_Tims()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MsFragger_Tims),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "Hela%20QC_PASEF_Slot1-5_01_57_cutout_2min.pepXML" },
+            outputBlibName: "msfragger-tims.blib",
+            referenceCheckName: "msfragger-tims.check");
+    }
+
+    /// <summary>Jamfile.jam:248 — <c>msfragger-thermo</c>.</summary>
+    [TestMethod]
+    public void MsFragger_Thermo()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MsFragger_Thermo),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "BSA_min_21.pepXML" },
+            outputBlibName: "msfragger-thermo.blib",
+            referenceCheckName: "msfragger-thermo.check");
+    }
+
+    /// <summary>Jamfile.jam:249 — <c>peptideprophet-msfragger-thermo-mzml</c>.</summary>
+    [TestMethod]
+    public void PeptideProphet_MsFragger_Thermo_Mzml()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PeptideProphet_MsFragger_Thermo_Mzml),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "peptideprophet-msfragger-thermo-mzml.pep.xml" },
+            outputBlibName: "peptideprophet-msfragger-thermo-mzml.blib",
+            referenceCheckName: "peptideprophet-msfragger-thermo-mzml.check");
+    }
+
+    /// <summary>Jamfile.jam:250 — <c>peptideprophet-msfragger-thermo-mzml-nativeid</c>.</summary>
+    [TestMethod]
+    public void PeptideProphet_MsFragger_Thermo_Mzml_NativeId()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PeptideProphet_MsFragger_Thermo_Mzml_NativeId),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "peptideprophet-msfragger-thermo-mzml-nativeid.pep.xml" },
+            outputBlibName: "peptideprophet-msfragger-thermo-mzml-nativeid.blib",
+            referenceCheckName: "peptideprophet-msfragger-thermo-mzml-nativeid.check");
+    }
+
+    /// <summary>Jamfile.jam:251 — <c>peptideprophet-msfragger-bruker-mgf</c>.</summary>
+    [TestMethod]
+    public void PeptideProphet_MsFragger_Bruker_Mgf()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PeptideProphet_MsFragger_Bruker_Mgf),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "peptideprophet-msfragger-bruker-mgf.pep.xml" },
+            outputBlibName: "peptideprophet-msfragger-bruker-mgf.blib",
+            referenceCheckName: "peptideprophet-msfragger-bruker-mgf.check");
+    }
+
+    /// <summary>Jamfile.jam:252 — <c>peptideprophet-msfragger-bruker-mgf-nativeid</c>.</summary>
+    [TestMethod]
+    public void PeptideProphet_MsFragger_Bruker_Mgf_NativeId()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PeptideProphet_MsFragger_Bruker_Mgf_NativeId),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "peptideprophet-msfragger-bruker-mgf-nativeid.pep.xml" },
+            outputBlibName: "peptideprophet-msfragger-bruker-mgf-nativeid.blib",
+            referenceCheckName: "peptideprophet-msfragger-bruker-mgf-nativeid.check");
+    }
+
+    /// <summary>Jamfile.jam:253 — <c>peptideprophet-msfragger-bruker-mzml-nativeid</c>.</summary>
+    [TestMethod]
+    public void PeptideProphet_MsFragger_Bruker_Mzml_NativeId()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PeptideProphet_MsFragger_Bruker_Mzml_NativeId),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "interact-peptideprophet-msfragger-bruker-mzml-nativeid.pep.xml" },
+            outputBlibName: "peptideprophet-msfragger-bruker-mzml-nativeid.blib",
+            referenceCheckName: "peptideprophet-msfragger-bruker-mzml-nativeid.check");
+    }
+
+    /// <summary>Jamfile.jam:254 — <c>msfragger-check-parent-path-first</c>.</summary>
+    [TestMethod]
+    public void MsFragger_CheckParentPathFirst()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MsFragger_CheckParentPathFirst),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "msfragger-check-parent-path-first.pepXML" },
+            outputBlibName: "msfragger-check-parent-path-first.blib",
+            referenceCheckName: "msfragger-check-parent-path-first.check");
+    }
+
+    /// <summary>Jamfile.jam:255 — <c>msfragger-check-parent-path-first-with-missing-file</c> (expects error).</summary>
+    [TestMethod]
+    public void MsFragger_CheckParentPathFirst_MissingFile()
+    {
+        // Negative test: BlibBuild is expected to bail with the spec-file-not-found error.
+        // No output .blib is produced; no .check comparison.
+        TestRunner.RunNegativeBlibTest(
+            testName: nameof(MsFragger_CheckParentPathFirst_MissingFile),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-e", "inputs/msfragger-check-parent-path-first" },
+            inputFilenames: new[] { "msfragger-check-parent-path-first-with-missing-file.pepXML" },
+            outputBlibName: "msfragger-check-parent-path-first-with-missing-file.blib");
+    }
+
+    #endregion
+
+    #region mzid family (Jamfile.jam:240, 282, 317-331)
+
+    /// <summary>Jamfile.jam:240 — <c>peaksdb-tims-mzid</c>.</summary>
+    [TestMethod]
+    public void PeaksDb_Tims_Mzid()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PeaksDb_Tims_Mzid),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0.999" },
+            inputFilenames: new[] { "peptides_1_1_0.mzid" },
+            outputBlibName: "peaksdb-tims-mzid.blib",
+            referenceCheckName: "peaksdb-tims-mzid.check");
+    }
+
+    /// <summary>Jamfile.jam:282 — <c>pilot-mzid</c> (ProteinPilot mzid export).</summary>
+    [TestMethod]
+    public void Pilot_Mzid()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Pilot_Mzid),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "ProtPilotTest.mzid" },
+            outputBlibName: "pilot-mzid.blib",
+            referenceCheckName: "pilot-mzid.check");
+    }
+
+    /// <summary>Jamfile.jam:317 — <c>scaffold</c>.</summary>
+    [TestMethod]
+    public void Scaffold()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Scaffold),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "scaffold.mzid" },
+            outputBlibName: "scaffold.blib",
+            referenceCheckName: "scaffold.check");
+    }
+
+    /// <summary>Jamfile.jam:320 — <c>byonic</c>.</summary>
+    [TestMethod]
+    public void Byonic()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(Byonic),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "byonic-test.mzid" },
+            outputBlibName: "byonic.blib",
+            referenceCheckName: "byonic.check",
+            skipLinesName: "byonic.skip-lines");
+    }
+
+    /// <summary>Jamfile.jam:323 — <c>msgf-mzid</c>.</summary>
+    [TestMethod]
+    public void MsGf_Mzid()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MsGf_Mzid),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "msgf-test.mzid" },
+            outputBlibName: "msgf-mzid.blib",
+            referenceCheckName: "msgf-mzid.check");
+    }
+
+    /// <summary>Jamfile.jam:324 — <c>msgf-mzid-nativeid</c>.</summary>
+    [TestMethod]
+    public void MsGf_Mzid_NativeId()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MsGf_Mzid_NativeId),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "msgf-test-nativeid.mzid" },
+            outputBlibName: "msgf-mzid-nativeid.blib",
+            referenceCheckName: "msgf-mzid-nativeid.check");
+    }
+
+    /// <summary>Jamfile.jam:325 — <c>msgf-mzid-nativeid-evalue</c>.</summary>
+    [TestMethod]
+    public void MsGf_Mzid_NativeId_Evalue()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MsGf_Mzid_NativeId_Evalue),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "msgf-test-nativeid-evalue.mzid" },
+            outputBlibName: "msgf-mzid-nativeid-evalue.blib",
+            referenceCheckName: "msgf-mzid-nativeid-evalue.check");
+    }
+
+    /// <summary>Jamfile.jam:328 — <c>peptideshaker-mzid</c>.</summary>
+    [TestMethod]
+    public void PeptideShaker_Mzid()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(PeptideShaker_Mzid),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "MoTai_PeptideShaker_subset.mzid" },
+            outputBlibName: "MoTai_PeptideShaker.blib",
+            referenceCheckName: "MoTai_PeptideShaker.check");
+    }
+
+    /// <summary>Jamfile.jam:331 — <c>metamorpheus-mzid</c>.</summary>
+    [TestMethod]
+    public void MetaMorpheus_Mzid()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MetaMorpheus_Mzid),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "metamorpheus.mzid" },
+            outputBlibName: "metamorpheus.blib",
+            referenceCheckName: "metamorpheus.check");
+    }
+
+    #endregion
+
+    #region .blib transfer-library family (Jamfile.jam:356-359, 380)
+
+    /// <summary>Jamfile.jam:356 — <c>mse-mobility-v12</c>.</summary>
+    [TestMethod]
+    public void MseMobility_V12()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MseMobility_V12),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "mse-mobility-v12.blib" },
+            outputBlibName: "mse-mobility-from-v12.blib",
+            referenceCheckName: "mse-mobility-from-v12.check",
+            skipLinesName: "mse-mobility.skip-lines");
+    }
+
+    /// <summary>Jamfile.jam:357 — <c>mse-mobility-v13</c>.</summary>
+    [TestMethod]
+    public void MseMobility_V13()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MseMobility_V13),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "mse-mobility-v13.blib" },
+            outputBlibName: "mse-mobility-from-v13.blib",
+            referenceCheckName: "mse-mobility-from-v13.check",
+            skipLinesName: "mse-mobility.skip-lines");
+    }
+
+    /// <summary>Jamfile.jam:358 — <c>mse-mobility-v14</c>.</summary>
+    [TestMethod]
+    public void MseMobility_V14()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MseMobility_V14),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "mse-mobility-v14.blib" },
+            outputBlibName: "mse-mobility-from-v14.blib",
+            referenceCheckName: "mse-mobility-from-v13.check",
+            skipLinesName: "mse-mobility.skip-lines");
+    }
+
+    /// <summary>Jamfile.jam:359 — <c>mse-mobility-v15</c>.</summary>
+    [TestMethod]
+    public void MseMobility_V15()
+    {
+        TestRunner.RunBlibTest(
+            testName: nameof(MseMobility_V15),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "mse-mobility-v15.blib" },
+            outputBlibName: "mse-mobility-from-v15.blib",
+            referenceCheckName: "mse-mobility-from-v13.check",
+            skipLinesName: "mse-mobility.skip-lines");
+    }
+
+    /// <summary>
+    /// Jamfile.jam:380 — <c>merge</c>. Multi-input build: combines three previously
+    /// built .blibs from the OutputDir into one merged redundant library.
+    /// </summary>
+    [TestMethod]
+    public void Merge()
+    {
+        // Build dependencies in-place so the test is self-contained.
+        new BuildTests().Sqt_Cms2();
+        new BuildTests().Sqt_Ms2();
+        new BuildTests().PepProph();
+
+        TestRunner.RunBlibTest(
+            testName: nameof(Merge),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "sqt-cms2.blib", "sqt-ms2.blib", "pep-proph.blib" },
+            outputBlibName: "xmerged-redundant.blib",
+            referenceCheckName: "xmerged-redundant.check",
+            inputsFromOutputDir: true);
+    }
+
+    #endregion
+
+    #region Unsupported readers (Phase 3 backlog)
+
+    // The following Jamfile rows reference inputs whose readers haven't been ported
+    // to C# yet. They remain here as placeholders so the test count tracks cpp's;
+    // each Inconclusive-skips with a one-line reason naming the missing reader.
+    //
+    // When a reader lands, replace its block with a real RunBlibTest call following
+    // the same shape as the supported families above.
+
+    /// <summary>Jamfile.jam:204 — <c>shimadzu-mlb</c>.</summary>
+    [TestMethod]
+    public void Shimadzu_Mlb()
+    {
+        Assert.Inconclusive("Reader for .mlb not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:220 — <c>hardklor</c>.</summary>
+    [TestMethod]
+    public void Hardklor()
+    {
+        Assert.Inconclusive("Reader for .hk.bs.kro not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:224 — <c>perc-xml</c>.</summary>
+    [TestMethod]
+    public void PercXml()
+    {
+        Assert.Inconclusive("Reader for .perc.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:227 — <c>perc-comet-xml</c>.</summary>
+    [TestMethod]
+    public void PercCometXml()
+    {
+        Assert.Inconclusive("Reader for .perc.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:231 — <c>perc-bracket-xml</c>.</summary>
+    [TestMethod]
+    public void PercBracketXml()
+    {
+        Assert.Inconclusive("Reader for .perc.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:259 — <c>idpicker</c>.</summary>
+    [TestMethod]
+    public void IdPicker()
+    {
+        Assert.Inconclusive("Reader for .idpXML not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:260 — <c>tandem</c>.</summary>
+    [TestMethod]
+    public void Tandem()
+    {
+        Assert.Inconclusive("Reader for .xtan.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:261 — <c>pride-mascot</c>.</summary>
+    [TestMethod]
+    public void Pride_Mascot()
+    {
+        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:262 — <c>pride-xcorr</c>.</summary>
+    [TestMethod]
+    public void Pride_Xcorr()
+    {
+        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:263 — <c>pride-bytes</c>.</summary>
+    [TestMethod]
+    public void Pride_Bytes()
+    {
+        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:264 — <c>pride-xcorr-no-charges</c>.</summary>
+    [TestMethod]
+    public void Pride_Xcorr_NoCharges()
+    {
+        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:265 — <c>pride-mill</c>.</summary>
+    [TestMethod]
+    public void Pride_Mill()
+    {
+        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:266 — <c>tiny-proxl</c>.</summary>
+    [TestMethod]
+    public void Tiny_Proxl()
+    {
+        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:267 — <c>tinyByonic-proxl</c>.</summary>
+    [TestMethod]
+    public void TinyByonic_Proxl()
+    {
+        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:268 — <c>tinyPlink-proxl</c>.</summary>
+    [TestMethod]
+    public void TinyPlink_Proxl()
+    {
+        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:269 — <c>tinyPeptideProphet-proxl</c>.</summary>
+    [TestMethod]
+    public void TinyPeptideProphet_Proxl()
+    {
+        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:270 — <c>tinyMerox-proxl</c>.</summary>
+    [TestMethod]
+    public void TinyMerox_Proxl()
+    {
+        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:271 — <c>tiny-msf</c>.</summary>
+    [TestMethod]
+    public void Tiny_Msf()
+    {
+        Assert.Inconclusive("Reader for .msf not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:272 — <c>tiny-msf-keep</c>.</summary>
+    [TestMethod]
+    public void Tiny_Msf_Keep()
+    {
+        Assert.Inconclusive("Reader for .msf not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:273 — <c>tiny-v2-msf</c>.</summary>
+    [TestMethod]
+    public void Tiny_V2_Msf()
+    {
+        Assert.Inconclusive("Reader for .msf not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:274 — <c>tiny-v2-filtered-pdResult</c>.</summary>
+    [TestMethod]
+    public void Tiny_V2_Filtered_PdResult()
+    {
+        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:275 — <c>md_special_filtered-pdResult</c>.</summary>
+    [TestMethod]
+    public void MdSpecialFiltered_PdResult()
+    {
+        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:276 — <c>example-pdResult-confidence3</c>.</summary>
+    [TestMethod]
+    public void Example_PdResult_Confidence3()
+    {
+        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:277 — <c>example-pdResult-numeric</c>.</summary>
+    [TestMethod]
+    public void Example_PdResult_Numeric()
+    {
+        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:278 — <c>pd-3_1</c>.</summary>
+    [TestMethod]
+    public void Pd_3_1()
+    {
+        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:279 — <c>pdResult-no-spectra</c>.</summary>
+    [TestMethod]
+    public void PdResult_NoSpectra()
+    {
+        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:281 — <c>pilot</c>.</summary>
+    [TestMethod]
+    public void Pilot()
+    {
+        Assert.Inconclusive("Reader for .group.xml not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:285 — <c>maxquant</c>.</summary>
+    [TestMethod]
+    public void MaxQuant()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:288 — <c>maxquant-spectrum-file-not-found</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_SpectrumFileNotFound()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:291 — <c>maxquant-targeted</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_Targeted()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:294 — <c>maxquant2</c>.</summary>
+    [TestMethod]
+    public void MaxQuant2()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:295 — <c>maxquant-phospho</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_Phospho()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:298 — <c>maxquant3</c>.</summary>
+    [TestMethod]
+    public void MaxQuant3()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:301 — <c>maxquant-rpal-raw</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_RpalRaw()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:302 — <c>maxquant-bsa-baf</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_BsaBaf()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:303 — <c>maxquant-bsa-baf-v1_6_7</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_BsaBaf_V1_6_7()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:304 — <c>maxquant-yeast-wiff</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_YeastWiff()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:305 — <c>maxquant-yeast-wiff-i18n</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_YeastWiff_I18n()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:308 — <c>maxquant_ims</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_Ims()
+    {
+        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:311 — <c>maxquant-prg2012-wiff</c>.</summary>
+    [TestMethod]
+    public void MaxQuant_Prg2012_Wiff()
+    {
+        Assert.Inconclusive("Vendor-only test; vendor SDK not available in C# port yet.");
+    }
+
+    /// <summary>Jamfile.jam:334 — <c>diann-speclib</c>.</summary>
+    [TestMethod]
+    public void Diann_SpecLib()
+    {
+        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:335 — <c>diann-speclib-diapasef</c>.</summary>
+    [TestMethod]
+    public void Diann_SpecLib_DiaPasef()
+    {
+        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:336 — <c>diann-mod-test</c>.</summary>
+    [TestMethod]
+    public void Diann_ModTest()
+    {
+        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:337 — <c>diann-mass-mod-test</c>.</summary>
+    [TestMethod]
+    public void Diann_MassModTest()
+    {
+        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:338 — <c>msfragger-diann</c>.</summary>
+    [TestMethod]
+    public void MsFragger_Diann()
+    {
+        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:339 — <c>msfragger-diann-predicted</c>.</summary>
+    [TestMethod]
+    public void MsFragger_Diann_Predicted()
+    {
+        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:340 — <c>diann2-synchro-pasef</c>.</summary>
+    [TestMethod]
+    public void Diann2_Synchro_Pasef()
+    {
+        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:341 — <c>diann2-parquet</c>.</summary>
+    [TestMethod]
+    public void Diann2_Parquet()
+    {
+        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:344 — <c>paser-hela-dia</c>.</summary>
+    [TestMethod]
+    public void Paser_HelaDia()
+    {
+        Assert.Inconclusive("Reader for .tsv (Bruker Paser/Hardklor) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:345 — <c>paser-hela-dia-libonly</c>.</summary>
+    [TestMethod]
+    public void Paser_HelaDia_LibOnly()
+    {
+        Assert.Inconclusive("Reader for .tsv (Bruker Paser/Hardklor) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:346 — <c>paser-hela-dia-resultonly</c>.</summary>
+    [TestMethod]
+    public void Paser_HelaDia_ResultOnly()
+    {
+        Assert.Inconclusive("Reader for .tsv (Bruker Paser/Hardklor) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:347 — <c>paser-hela-dia-multiple-libraries-error</c>.</summary>
+    [TestMethod]
+    public void Paser_HelaDia_MultipleLibrariesError()
+    {
+        Assert.Inconclusive("Reader for .tsv (Bruker Paser/Hardklor) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:350 — <c>mse</c>.</summary>
+    [TestMethod]
+    public void Mse()
+    {
+        Assert.Inconclusive("Reader for final_fragment.csv (Waters MSe) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:353 — <c>mse-mobility</c>.</summary>
+    [TestMethod]
+    public void Mse_Mobility()
+    {
+        Assert.Inconclusive("Reader for final_fragment.csv (Waters MSe) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:363 — <c>mascot</c>.</summary>
+    [TestMethod]
+    public void Mascot()
+    {
+        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:364 — <c>mascot-15N</c>.</summary>
+    [TestMethod]
+    public void Mascot_15N()
+    {
+        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:365 — <c>mascot-distiller-and-title</c>.</summary>
+    [TestMethod]
+    public void Mascot_DistillerAndTitle()
+    {
+        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:366 — <c>mascot-distiller-from-file</c>.</summary>
+    [TestMethod]
+    public void Mascot_DistillerFromFile()
+    {
+        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:367 — <c>mascot_tims</c>.</summary>
+    [TestMethod]
+    public void Mascot_Tims()
+    {
+        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:371 — <c>openswath</c>.</summary>
+    [TestMethod]
+    public void OpenSwath()
+    {
+        Assert.Inconclusive("Reader for .tsv (OpenSWATH) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:372 — <c>openswath-osw</c>.</summary>
+    [TestMethod]
+    public void OpenSwath_Osw()
+    {
+        Assert.Inconclusive("Reader for .osw (OpenSWATH) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:373 — <c>openswath-assay</c>.</summary>
+    [TestMethod]
+    public void OpenSwath_Assay()
+    {
+        Assert.Inconclusive("Reader for .tsv (OpenSWATH) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:374 — <c>openswath-invalid-tsv</c>.</summary>
+    [TestMethod]
+    public void OpenSwath_InvalidTsv()
+    {
+        Assert.Inconclusive("Reader for .tsv (OpenSWATH) not yet ported (Phase 3 backlog).");
+    }
+
+    /// <summary>Jamfile.jam:377 — <c>mascot_tims_bad</c>.</summary>
+    [TestMethod]
+    public void Mascot_Tims_Bad()
+    {
+        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+    }
+
+    #endregion
+
+    #region Tables (Jamfile.jam:399)
+
+    /// <summary>
+    /// Jamfile.jam:399 — <c>tables</c>. Exercises BlibBuild's <c>-d</c> self-describing
+    /// option which dumps the schema/contents as a text table; the comparator is
+    /// CompareTextFiles, not CompareLibraryContents.
+    /// </summary>
+    [TestMethod]
+    public void Tables()
+    {
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        // -d takes the output path as its argument; --out= is also passed by the harness.
+        // We match cpp by using the same path for both.
+        string outputPath = fixture.OutputFile("tables.txt");
+        TestRunner.RunBlibTest(
+            testName: nameof(Tables),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-d", outputPath },
+            inputFilenames: Array.Empty<string>(),
+            outputBlibName: "tables.txt",
+            referenceCheckName: "tables.check",
+            skipLinesName: "tables.skip-lines");
+    }
+
+    #endregion
 }

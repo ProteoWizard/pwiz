@@ -1143,9 +1143,12 @@ public abstract class BuildParser : IDisposable
         foreach (var mod in psm.Mods)
         {
             if (mod.DeltaMass == 0) continue;
+            // cpp parity: BuildParser.cpp:656 uses `%f` (6 decimal places). .NET's default
+            // double format emits up to 17 sig digits, so a cpp golden of "15.994915" would
+            // render here as "15.99491463". `F6` matches cpp byte-for-byte.
             var sql = string.Format(
                 CultureInfo.InvariantCulture,
-                "INSERT INTO Modifications(RefSpectraID, position, mass) VALUES({0},{1},{2})",
+                "INSERT INTO Modifications(RefSpectraID, position, mass) VALUES({0},{1},{2:F6})",
                 libSpecId, mod.Position, mod.DeltaMass);
             BlibMaker.SqlStmt(sql);
         }

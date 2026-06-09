@@ -252,7 +252,7 @@ public sealed class LibReader : IDisposable
                 var comprM = GetBlob(reader, 7);
                 var comprI = GetBlob(reader, 8);
 
-                tmp.RetentionTime = reader.GetDouble(9);
+                tmp.RetentionTime = reader.IsDBNull(9) ? 0 : reader.GetDouble(9);
 
                 tmp.SetRawPeaks(GetUncompressedPeaks(numPeaks, comprM, comprI));
 
@@ -333,7 +333,7 @@ public sealed class LibReader : IDisposable
                 var comprM = GetBlob(reader, 9);
                 var comprI = GetBlob(reader, 10);
 
-                spec.RetentionTime = reader.GetDouble(11);
+                spec.RetentionTime = reader.IsDBNull(11) ? 0 : reader.GetDouble(11);
                 spec.SetRawPeaks(GetUncompressedPeaks(numPeaks, comprM, comprI));
             }
         }
@@ -456,7 +456,7 @@ public sealed class LibReader : IDisposable
                 var comprM = GetBlob(reader, 9);
                 var comprI = GetBlob(reader, 10);
 
-                tmp.RetentionTime = reader.GetDouble(11);
+                tmp.RetentionTime = reader.IsDBNull(11) ? 0 : reader.GetDouble(11);
                 tmp.SetRawPeaks(GetUncompressedPeaks(numPeaks, comprM, comprI));
                 specs.Add(tmp);
             }
@@ -534,7 +534,7 @@ public sealed class LibReader : IDisposable
                 var comprM = GetBlob(reader, 9);
                 var comprI = GetBlob(reader, 10);
 
-                tmp.RetentionTime = reader.GetDouble(11);
+                tmp.RetentionTime = reader.IsDBNull(11) ? 0 : reader.GetDouble(11);
                 tmp.SetRawPeaks(GetUncompressedPeaks(numPeaks, comprM, comprI));
                 specs.Add(tmp);
             }
@@ -594,7 +594,9 @@ public sealed class LibReader : IDisposable
         var comprM = GetBlob(_enumSpectraReader, 9);
         var comprI = GetBlob(_enumSpectraReader, 10);
 
-        spec.RetentionTime = _enumSpectraReader.GetDouble(11);
+        // RetentionTime can be NULL for spectra built from sources that don't carry RT
+        // (e.g. SQT). cpp's sqlite3_column_double returns 0 on NULL; .NET's GetDouble throws.
+        spec.RetentionTime = _enumSpectraReader.IsDBNull(11) ? 0 : _enumSpectraReader.GetDouble(11);
         spec.SetRawPeaks(GetUncompressedPeaks(numPeaks, comprM, comprI));
 
         _curSpecId++;

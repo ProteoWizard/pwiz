@@ -977,7 +977,13 @@ public class BlibMaker : IDisposable
             ? "workflowType"
             : "0";
 
-        var sql = $"SELECT id, fileName, {idFileSelect}, {workflowSelect}, {cutoffSelect} FROM {schemaTmp}.SpectrumSourceFiles";
+        // cpp parity (faithful, including the bug): BlibMaker.cpp:740 SELECTs columns in the
+        // order `id, fileName, idFileName, cutoffScore, workflowType` — but cpp:749-750
+        // reads them BACK as `workflowType = column 3, cutoffScore = column 4`, i.e. with the
+        // last two SWAPPED. This means the output's cutoffScore column gets the
+        // workflowType-select value and vice versa. The .check golden files encode that
+        // behavior. To match cpp byte-for-byte we replicate the same column-read swap.
+        var sql = $"SELECT id, fileName, {idFileSelect}, {cutoffSelect}, {workflowSelect} FROM {schemaTmp}.SpectrumSourceFiles";
         using var cmd = Db.CreateCommand();
         cmd.CommandText = sql;
         using var reader = cmd.ExecuteReader();
@@ -986,8 +992,13 @@ public class BlibMaker : IDisposable
             var oldId = reader.GetInt32(0);
             var fileName = reader.GetString(1);
             var idFileName = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
-            var workflowType = (WorkflowType)reader.GetInt32(3);
-            var cutoff = reader.GetDouble(4);
+            // cpp:749 — workflowType from column 3 (which the SQL fills with cutoffScore).
+            // cpp uses sqlite3_column_int which does loose coercion (REAL→truncated int, TINYINT→signed).
+            // .NET's GetInt32 throws on REAL; replicate cpp's behavior manually.
+            var workflowType = (WorkflowType)SqliteLooseInt(reader, 3);
+            // cpp:750 — cutoff from column 4 (which the SQL fills with workflowType).
+            // sqlite3_column_double also coerces — TINYINT → double, etc.
+            var cutoff = SqliteLooseDouble(reader, 4);
 
             var existingFileId = GetFileId(fileName, cutoff);
             if (existingFileId >= 0)
@@ -1196,7 +1207,7 @@ public class BlibMaker : IDisposable
             var mass = reader.GetDouble(2);
             SqlStmt(string.Format(
                 CultureInfo.InvariantCulture,
-                "INSERT INTO Modifications(RefSpectraID, position,mass) VALUES({0}, {1}, {2})",
+                "INSERT INTO Modifications(RefSpectraID, position,mass) VALUES({0}, {1}, {2:F6})",
                 spectraId, position, mass));
         }
     }
@@ -1561,6 +1572,48 @@ public class BlibMaker : IDisposable
     /// (or have no extension), even though the cpp parseCommandArgs doesn't enforce this.
     /// We add the check defensively so common typos surface as a friendly error.
     /// </summary>
+    /// <summary>cpp parity for <c>sqlite3_column_int</c>: loose coercion across REAL / signed-int /
+    /// unsigned-byte (TINYINT). .NET's <c>GetInt32</c> throws on REAL — sqlite3 truncates.</summary>
+    private static int SqliteLooseInt(SQLiteDataReader reader, int idx)
+    {
+        if (reader.IsDBNull(idx)) return 0;
+        var raw = reader.GetValue(idx);
+        return raw switch
+        {
+            double d => (int)d,
+            float f => (int)f,
+            long l => (int)l,
+            int i => i,
+            short s => s,
+            byte b => (sbyte)b, // System.Data.SQLite maps TINYINT to unsigned byte; sign-recover
+            sbyte sb => sb,
+            // cpp's sqlite3_column_int returns 0 silently on non-numeric text — must use
+            // TryParse with 0 fallback (not int.Parse which throws on 'N/A' etc.).
+            string str => int.TryParse(str, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v) ? v : 0,
+            _ => Convert.ToInt32(raw, CultureInfo.InvariantCulture),
+        };
+    }
+
+    /// <summary>cpp parity for <c>sqlite3_column_double</c>: coerces TINYINT → double, etc.</summary>
+    private static double SqliteLooseDouble(SQLiteDataReader reader, int idx)
+    {
+        if (reader.IsDBNull(idx)) return 0.0;
+        var raw = reader.GetValue(idx);
+        return raw switch
+        {
+            double d => d,
+            float f => f,
+            long l => l,
+            int i => i,
+            short s => s,
+            byte b => (sbyte)b,
+            sbyte sb => sb,
+            // cpp's sqlite3_column_double returns 0.0 silently on non-numeric text — same TryParse pattern as the int variant.
+            string str => double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out var v) ? v : 0.0,
+            _ => Convert.ToDouble(raw, CultureInfo.InvariantCulture),
+        };
+    }
+
     private static void ValidateLibraryName(string libName)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(libName);

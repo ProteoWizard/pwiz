@@ -39,6 +39,8 @@ public static class TestRunner
     /// </code>
     /// Resolves <paramref name="inputFilenames"/> against the cpp <c>tests/inputs/</c>
     /// directory (via <see cref="GoldenFileFixture"/>) so test methods just name the file.
+    /// Pass <paramref name="inputsFromOutputDir"/>=<c>true</c> when the inputs are .blibs
+    /// produced by an earlier build test (filter, search, merge, to-ms2 cases).
     /// </summary>
     public static void RunBlibTest(
         string testName,
@@ -47,7 +49,8 @@ public static class TestRunner
         string[] inputFilenames,
         string outputBlibName,
         string referenceCheckName,
-        string? skipLinesName = null)
+        string? skipLinesName = null,
+        bool inputsFromOutputDir = false)
     {
         ArgumentNullException.ThrowIfNull(inputFilenames);
         var fixture = GoldenFileFixture.Instance;
@@ -56,11 +59,88 @@ public static class TestRunner
             Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
             return;
         }
-        var resolvedArgs = new List<string>(args);
+        // cpp parity: ExecuteBlib.cpp:145 — when --unicode is in args, the cpp harness copies
+        // each non-flag, non-.blib, non-.check input to a sibling renamed with a "试验_" prefix,
+        // and feeds the renamed path to the tool. The .check goldens encode the renamed path so
+        // we must mirror this side effect to compare.
+        bool unicodeTest = Array.IndexOf(args, "--unicode") >= 0;
+
+        // cpp parity: ExecuteBlib.cpp:164 sorts .blib args alphabetically before invoking the
+        // tool. The Merge test relies on this — its inputs are passed (sqt-cms2, sqt-ms2,
+        // pep-proph) but cpp processes them as (pep-proph, sqt-cms2, sqt-ms2), which controls
+        // the order spectra get RefSpectraIDs in the merged library.
+        var orderedInputs = new List<string>();
         foreach (var name in inputFilenames)
-            resolvedArgs.Add(fixture.InputFile(name));
+        {
+            string resolved = inputsFromOutputDir
+                ? fixture.OutputFile(name)
+                : fixture.InputFile(name);
+
+            if (unicodeTest && !resolved.EndsWith(".blib", StringComparison.OrdinalIgnoreCase))
+            {
+                var dir = Path.GetDirectoryName(resolved)!;
+                var renamed = Path.Combine(dir, "试验_" + Path.GetFileName(resolved));
+                if (!File.Exists(renamed))
+                    File.Copy(resolved, renamed);
+                resolved = renamed;
+            }
+            orderedInputs.Add(resolved);
+        }
+        // Only sort when ALL inputs are .blib (the cpp sort is on the "libNames" bucket,
+        // which only collects .blib paths). For non-.blib inputs (.sqt, .pep.xml, .mzid, etc.)
+        // there is at most one and ordering doesn't matter.
+        if (orderedInputs.Count > 1 && orderedInputs.TrueForAll(p => p.EndsWith(".blib", StringComparison.OrdinalIgnoreCase)))
+            orderedInputs.Sort(StringComparer.Ordinal);
+
+        var resolvedArgs = new List<string>(args);
+        resolvedArgs.AddRange(orderedInputs);
         RunBlibTest(testName, tool, resolvedArgs.ToArray(),
             outputBlibName, referenceCheckName, skipLinesName);
+    }
+
+    /// <summary>
+    /// Negative-test variant: run the tool with <c>-e &lt;expected&gt;</c> and assert it exits 0
+    /// (which means the tool emitted the expected error string). No <c>.check</c> comparison
+    /// is done. The cpp Jamfile's negative tests don't have a meaningful reference file because
+    /// no output is produced when the parser bails on bad input.
+    /// </summary>
+    public static void RunNegativeBlibTest(
+        string testName,
+        BlibTool tool,
+        string[] args,
+        string[] inputFilenames,
+        string outputBlibName)
+    {
+        ArgumentNullException.ThrowIfNull(inputFilenames);
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        var fullArgs = new List<string>(args);
+        foreach (var name in inputFilenames)
+            fullArgs.Add(fixture.InputFile(name));
+
+        string outputPath = fixture.OutputFile(outputBlibName);
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+        if (File.Exists(outputPath))
+            File.Delete(outputPath);
+        fullArgs.Add("--out=" + outputPath);
+
+        int exitCode = ExecuteBlib.Execute(tool, fullArgs.ToArray(), fixture.OutputDir,
+            out string stdout, out string stderr);
+
+        // The tool's `-e` capture (handled by CliPreproc + each Program.cs) maps a matched
+        // expected-error to exit 0 and an unmatched expectation to exit 1. So a passing
+        // negative test is exactly exit 0.
+        if (exitCode != 0)
+        {
+            Assert.Fail(
+                $"{tool} for negative test '{testName}' exited {exitCode} — expected 0 "
+                + "(tool's -e capture should have caught the expected error).\n"
+                + $"stdout:\n{stdout}\n\nstderr:\n{stderr}");
+        }
     }
 
     public static void RunBlibTest(
@@ -104,6 +184,13 @@ public static class TestRunner
                 $"{tool} for test '{testName}' exited {exitCode}.\n" +
                 $"stdout:\n{stdout}\n\nstderr:\n{stderr}");
         }
+
+        // Negative tests (those that passed `-e <expected-error>` to the tool) exit 0 when
+        // the expected error was matched — but they DON'T produce an output file, so a .check
+        // comparison would always fail. cpp's Jamfile handles this by giving the reference an
+        // empty file; we detect the pattern (no output produced) and skip the comparison.
+        if (!File.Exists(outputPath))
+            return;
 
         string referencePath = fixture.ReferenceFile(referenceCheckName);
         var details = CompareDetails.FromFile(

@@ -33,7 +33,7 @@ public static class CliPreproc
     /// <c>enable_utf8_path_operations()</c>) that's a no-op in .NET 8.</item>
     /// </list>
     /// </remarks>
-    public static (string[] argv, string expectedError) Strip(string[] args)
+    public static (string[] argv, string expectedError) Strip(string[] args, bool rewriteOut = true)
     {
         ArgumentNullException.ThrowIfNull(args);
         var list = new List<string>(args);
@@ -49,16 +49,20 @@ public static class CliPreproc
             break;
         }
 
-        // Translate --out=PATH into the trailing positional that BlibMaker treats as the
-        // library name. We only handle ONE --out (the cpp tools also only take one).
-        for (var idx = 0; idx < list.Count; idx++)
+        if (rewriteOut)
         {
-            const string outPrefix = "--out=";
-            if (!list[idx].StartsWith(outPrefix, StringComparison.Ordinal)) continue;
-            var outPath = list[idx][outPrefix.Length..];
-            list.RemoveAt(idx);
-            list.Add(outPath);
-            break;
+            // Translate --out=PATH into the trailing positional that BlibMaker treats as the
+            // library name. We only handle ONE --out (the cpp tools also only take one).
+            // BlibToMs2 (which reads --out= as a long option for its FileName field) opts out.
+            for (var idx = 0; idx < list.Count; idx++)
+            {
+                const string outPrefix = "--out=";
+                if (!list[idx].StartsWith(outPrefix, StringComparison.Ordinal)) continue;
+                var outPath = list[idx][outPrefix.Length..];
+                list.RemoveAt(idx);
+                list.Add(outPath);
+                break;
+            }
         }
 
         // --unicode is a no-op for .NET 8 paths.

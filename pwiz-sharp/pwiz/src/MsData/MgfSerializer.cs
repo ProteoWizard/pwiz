@@ -159,7 +159,12 @@ public sealed class MgfSerializer
         msd.FileDescription.FileContent.Set(CVID.MS_MSn_spectrum);
         msd.FileDescription.FileContent.Set(CVID.MS_centroid_spectrum);
 
-        var spectrumList = new SpectrumListSimple();
+        // cpp parity: SpectrumList_MGF holds a private `titleIDToIndexList_` map keyed by the
+        // raw TITLE= string, exposed via the findSpotID() override. Using SpectrumListSimple
+        // with the title stuffed into SpectrumIdentity.SpotId looked equivalent but leaked
+        // through MzmlWriter as a `spotID=` attribute on every spectrum (semantically wrong —
+        // spotID is MALDI-specific). MgfSpectrumList replicates cpp's side-map shape exactly.
+        var spectrumList = new MgfSpectrumList();
         msd.Run.SpectrumList = spectrumList;
 
         string? line;
@@ -199,7 +204,7 @@ public sealed class MgfSerializer
                 if (current is null)
                     throw new InvalidDataException("MGF: END IONS without BEGIN IONS.");
                 FinalizeSpectrum(current, mz, intensity, negativePolarity);
-                spectrumList.Spectra.Add(current);
+                spectrumList.Add(current);
                 current = null;
                 continue;
             }
@@ -225,8 +230,10 @@ public sealed class MgfSerializer
             }
         }
 
-        if (current is not null)
-            throw new InvalidDataException("MGF: EOF inside BEGIN IONS without matching END IONS.");
+        // cpp pwiz silently drops an unterminated trailing BEGIN IONS block (it just won't
+        // appear in the SpectrumList). The cpp BiblioSpec golden tests rely on this — the
+        // MsFragger TIMS .mgf inputs end with a dangling BEGIN IONS that cpp tolerates.
+        // Match the behavior by discarding `current` rather than throwing.
 
         return msd;
     }
@@ -256,6 +263,10 @@ public sealed class MgfSerializer
         {
             case "TITLE":
                 spec.Params.Set(CVID.MS_spectrum_title, value);
+                // The TITLE→index map is built in MgfSpectrumList.Add (cpp parity:
+                // SpectrumList_MGF::parseHeader populates titleIDToIndexList_). Do NOT
+                // assign spec.SpotId here — that field is the MALDI spotID attribute and
+                // would leak into mzML output via MzmlWriter.
                 break;
             case "PEPMASS":
             {
@@ -351,5 +362,60 @@ public sealed class MgfSerializer
         spec.Params.Set(CVID.MS_total_ion_current, tic);
         spec.Params.Set(CVID.MS_base_peak_m_z, basePeakMz);
         spec.Params.Set(CVID.MS_base_peak_intensity, basePeakIntensity);
+    }
+}
+
+/// <summary>
+/// In-memory <see cref="ISpectrumList"/> backing <see cref="MgfSerializer"/>'s output. cpp parity:
+/// SpectrumList_MGF holds a private <c>titleIDToIndexList_</c> map keyed by the MGF TITLE= string,
+/// exposed via the overridden <c>findSpotID()</c>. The C# port mirrors that shape: <see cref="Add"/>
+/// reads <see cref="CVID.MS_spectrum_title"/> off the spectrum's params and updates the title-index
+/// map, then <see cref="FindSpotId"/> consults the map instead of walking <c>SpectrumIdentity.SpotId</c>
+/// (which would conflate with the unrelated MALDI spotID column).
+/// </summary>
+public sealed class MgfSpectrumList : SpectrumListBase
+{
+    private readonly List<Spectrum> _spectra = new();
+    private readonly Dictionary<string, List<int>> _titleIndex = new(StringComparer.Ordinal);
+
+    /// <summary>The spectra, in file order.</summary>
+    public IReadOnlyList<Spectrum> Spectra => _spectra;
+
+    /// <summary>Append a spectrum and register its TITLE in the lookup map.</summary>
+    public void Add(Spectrum spec)
+    {
+        ArgumentNullException.ThrowIfNull(spec);
+        int index = _spectra.Count;
+        _spectra.Add(spec);
+
+        var title = spec.CvParam(CVID.MS_spectrum_title).Value;
+        if (!string.IsNullOrEmpty(title))
+        {
+            if (!_titleIndex.TryGetValue(title, out var list))
+            {
+                list = new List<int>();
+                _titleIndex[title] = list;
+            }
+            list.Add(index);
+        }
+    }
+
+    /// <inheritdoc/>
+    public override int Count => _spectra.Count;
+
+    /// <inheritdoc/>
+    public override bool IsEmpty => _spectra.Count == 0;
+
+    /// <inheritdoc/>
+    public override SpectrumIdentity SpectrumIdentity(int index) => _spectra[index];
+
+    /// <inheritdoc/>
+    public override Spectrum GetSpectrum(int index, bool getBinaryData = false) => _spectra[index];
+
+    /// <inheritdoc/>
+    public override IReadOnlyList<int> FindSpotId(string spotId)
+    {
+        ArgumentNullException.ThrowIfNull(spotId);
+        return _titleIndex.TryGetValue(spotId, out var list) ? list : Array.Empty<int>();
     }
 }

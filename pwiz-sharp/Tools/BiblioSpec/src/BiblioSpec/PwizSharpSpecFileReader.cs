@@ -5,6 +5,7 @@
 // wired in, native vendor formats too).
 
 using System.Globalization;
+using System.Linq;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
 using Pwiz.Data.MsData;
@@ -62,6 +63,7 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
     private SpecIdType _idType = SpecIdType.ScanNumberId;
     private VerbosityLevel _idNotFoundWarnLevel = VerbosityLevel.Warn;
     private int _curPosition;
+    private int[]? _mzSortedOrder;
     private bool _lookUpByNative = true; // cpp PwizReader.cpp:185 static
     private bool _disposed;
 
@@ -129,14 +131,21 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
 
             if (mzSort)
             {
-                // TODO: sort iteration by precursor m/z. cpp PwizReader.cpp:90-122 builds a
-                // (scanIndex, precursorMz) list and sorts by mz; doing the same here would
-                // require iterating every spectrum once (expensive) and isn't load-bearing for
-                // the current pwiz-sharp BiblioSpec call sites (BuildParser does targeted
-                // lookups, not sequential reads).
-                Verbosity.Warn(
-                    "PwizSharpSpecFileReader: mzSort=true is not yet implemented; " +
-                    "spectra will be returned in file order.");
+                // cpp PwizReader.cpp:90-122 builds a (scanIndex, precursorMz) list and sorts
+                // by mz ascending. BlibSearch uses this by default (only --preserve-order opts
+                // out); without it the search-results goldens diverge from cpp's.
+                var pairs = new List<(int Index, double Mz)>(_allSpectra!.Count);
+                for (var i = 0; i < _allSpectra.Count; i++)
+                {
+                    var s = _allSpectra.GetSpectrum(i, false);
+                    double m = 0;
+                    if (s.Precursors.Count > 0 && s.Precursors[0].SelectedIons.Count > 0)
+                        m = s.Precursors[0].SelectedIons[0].CvParam(CVID.MS_selected_ion_m_z).ValueAs<double>();
+                    pairs.Add((i, m));
+                }
+                // cpp uses std::stable_sort which preserves file order for equal-mz rows. .NET
+                // List<T>.Sort is unstable; use LINQ OrderBy (stable) so tied-mz tiebreaks match.
+                _mzSortedOrder = pairs.OrderBy(p => p.Mz).Select(p => p.Index).ToArray();
             }
         }
         catch (BlibException)
@@ -214,18 +223,21 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
 
         // cpp PwizReader.cpp:351 — when no indexMzPairs were built (the common case unless
         // openFile was called in INDEX_ID mode with mzSort), getNextSpecIndex walks
-        // sequentially from 0 → size-1. We replicate the simpler path here directly.
-        if (_curPosition >= _allSpectra!.Count)
+        // sequentially from 0 → size-1. We replicate the simpler path here directly. When
+        // mzSort was requested, the iteration walks the sorted index permutation instead.
+        int total = _mzSortedOrder?.Length ?? _allSpectra!.Count;
+        if (_curPosition >= total)
         {
             return false;
         }
 
-        int index = _curPosition++;
+        int index = _mzSortedOrder is null ? _curPosition : _mzSortedOrder[_curPosition];
+        _curPosition++;
         if (!GetSpectrum(index, returnData, SpecIdType.IndexId, getPeaks))
         {
             Verbosity.Warn(
                 $"Could not fetch spectrum at index {index} even though there should be " +
-                $"{_allSpectra.Count} spec in the file.");
+                $"{_allSpectra!.Count} spec in the file.");
             return false;
         }
         return true;
@@ -404,23 +416,37 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
         returnData.TotalIonCurrent = spec.CvParam(CVID.MS_total_ion_current).ValueAs<double>();
 
         // Precursor m/z + charge — read from the first selected ion of the first precursor when
-        // present. MS1 / precursor-only spectra leave the defaults (0 / 0).
+        // present. MS1 / precursor-only spectra leave the defaults (0 / 0). returnData is reused
+        // across calls (BlibSearch.cs:471 keeps one SpecData for every GetNextSpectrum), so the
+        // precursor-related state — Mz, Charge, Charges — must be reset unconditionally before
+        // any new value is written. Reset BEFORE the guard so MS1 / precursor-less spectra also
+        // discard prior call's data.
+        returnData.Mz = 0;
+        returnData.Charge = 0;
+        returnData.Charges.Clear();
         if (spec.Precursors.Count > 0 && spec.Precursors[0].SelectedIons.Count > 0)
         {
             var selectedIon = spec.Precursors[0].SelectedIons[0];
             returnData.Mz = selectedIon.CvParam(CVID.MS_selected_ion_m_z).ValueAs<double>();
 
-            // Charge: prefer MS_charge_state; if missing, take the first MS_possible_charge_state.
-            // cpp PwizReader.cpp:417 walks all params for charge_state OR possible_charge_state; we
-            // do the simpler "first one wins" because SpecData only carries a single int.
-            int charge = selectedIon.CvParam(CVID.MS_charge_state).ValueAs<int>();
-            if (charge == 0)
-                charge = selectedIon.CvParam(CVID.MS_possible_charge_state).ValueAs<int>();
-
-            // Polarity flips the sign per cpp PwizReader.cpp:408 (negative_scan -> -1).
-            if (charge != 0 && spec.HasCVParam(CVID.MS_negative_scan))
-                charge = -charge;
-            returnData.Charge = charge;
+            // cpp PwizReader.cpp:417 walks ALL CV params and collects MS_charge_state +
+            // MS_possible_charge_state into a Spectrum.possibleCharges vector. MS2-format
+            // queries with multiple Z lines surface as multiple MS_possible_charge_state params;
+            // dropping them silently would cause BlibSearch to miss matches at higher charges
+            // (e.g. the demo-negative golden expects charges "2,3" — only the first survives
+            // a "first-one-wins" read). Iterate via CollectChargeCvParams which mirrors cpp's
+            // recursive cvParam walk through referenceableParamGroupRef indirection — a bare
+            // foreach on selectedIon.CVParams would miss charges stashed in a ParamGroup.
+            bool negative = spec.HasCVParam(CVID.MS_negative_scan);
+            foreach (var cv in CollectChargeCvParams(selectedIon))
+            {
+                int c = cv.ValueAs<int>();
+                if (c == 0) continue;
+                if (negative) c = -c;
+                returnData.Charges.Add(c);
+            }
+            if (returnData.Charges.Count > 0)
+                returnData.Charge = returnData.Charges[0];
         }
 
         // Ion mobility — three possible CV slots, in the same precedence cpp BiblioSpec uses
@@ -452,13 +478,11 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
                 }
             }
 
-            // Scan window range -> DIA startTime/endTime (in minutes to match retentionTime).
-            if (scan.ScanWindows.Count > 0)
-            {
-                var sw = scan.ScanWindows[0];
-                returnData.StartTime = sw.CvParam(CVID.MS_scan_window_lower_limit).ValueAs<double>();
-                returnData.EndTime = sw.CvParam(CVID.MS_scan_window_upper_limit).ValueAs<double>();
-            }
+            // BiblioSpec's RefSpectra.startTime / endTime columns are RETENTION TIME bounds
+            // (DIA precursor sweep window in minutes), not the MS_scan_window_lower/upper_limit
+            // m/z bounds. cpp's PwizReader doesn't populate these from scan windows — leave
+            // them at 0 (rendered as N/A in the .check). A future DIA-specific code path can
+            // wire the correct CV terms when needed.
         }
 
         // CCS — looked up off the spectrum level CV.
@@ -513,6 +537,29 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
     }
 
     /// <inheritdoc/>
+    /// <summary>
+    /// Yield every <see cref="CVParam"/> on <paramref name="container"/> (and its referenced
+    /// ParamGroups, recursively) whose Cvid is either <see cref="CVID.MS_charge_state"/> or
+    /// <see cref="CVID.MS_possible_charge_state"/>. Mirrors cpp's
+    /// <c>cvParams(ParamContainer)</c> iterator which walks <c>referenceableParamGroupRef</c>
+    /// indirection — a bare foreach over <see cref="ParamContainer.CVParams"/> would miss
+    /// charges stashed in a referenced param group, which is legal per the mzML schema.
+    /// </summary>
+    private static IEnumerable<CVParam> CollectChargeCvParams(ParamContainer container)
+    {
+        foreach (var cv in container.CVParams)
+        {
+            if (cv.Cvid == CVID.MS_charge_state || cv.Cvid == CVID.MS_possible_charge_state)
+                yield return cv;
+        }
+        foreach (var pg in container.ParamGroups)
+        {
+            if (pg is null) continue;
+            foreach (var cv in CollectChargeCvParams(pg))
+                yield return cv;
+        }
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (_disposed) return;

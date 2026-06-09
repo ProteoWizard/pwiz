@@ -27,9 +27,21 @@ public static class Program
     {
         ArgumentNullException.ThrowIfNull(args);
 
+        // For BlibSearch, `--out=PATH` is the report-file path, NOT another library positional
+        // (cpp's Jamfile uses `@<path>` here, distinct from build/filter's `=`). Rewrite to
+        // `--report-file=PATH` BEFORE CliPreproc.Strip — otherwise Strip would append PATH as
+        // a trailing positional and BlibSearch would treat it as an extra .blib library.
+        var prepped = new string[args.Length];
+        for (var i = 0; i < args.Length; i++)
+        {
+            prepped[i] = args[i].StartsWith("--out=", StringComparison.Ordinal)
+                ? string.Concat("--report-file=", args[i].AsSpan("--out=".Length))
+                : args[i];
+        }
+
         // Shared argv preprocessing: -e capture, --out=PATH rewrite, --unicode strip.
         // See CliPreproc for cpp-parity refs.
-        var (argv, expectedError) = CliPreproc.Strip(args);
+        var (argv, expectedError) = CliPreproc.Strip(prepped);
 
         // No args (or just help) → print usage + exit 0.
         if (argv.Length == 0)

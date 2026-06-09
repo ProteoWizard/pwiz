@@ -21,9 +21,12 @@ public static class Program
     {
         ArgumentNullException.ThrowIfNull(args);
 
-        // Shared argv preprocessing: -e capture, --out=PATH rewrite, --unicode strip.
-        // See CliPreproc for cpp-parity refs.
-        var (argv, expectedError) = CliPreproc.Strip(args);
+        // CliPreproc.Strip rewrites `--out=PATH` into a trailing positional argument because
+        // BlibBuild treats the last positional as the output library. BlibToMs2 instead expects
+        // ONE positional (the input .blib) and reads --out= as a long option (handled in
+        // ParseCommandArgs at BlibToMs2.cs:324). Leave --out= in place; only do -e capture and
+        // --unicode strip here.
+        var (argv, expectedError) = CliPreproc.Strip(args, rewriteOut: false);
 
         try
         {

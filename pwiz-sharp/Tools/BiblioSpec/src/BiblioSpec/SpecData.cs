@@ -45,8 +45,14 @@ public class SpecData
     /// <summary>Precursor m/z (Th).</summary>
     public double Mz { get; set; }
 
-    /// <summary>Precursor charge state.</summary>
+    /// <summary>Precursor charge state. For multi-charge queries (e.g. MS2 with two Z lines)
+    /// this is the first; use <see cref="Charges"/> for the full set.</summary>
     public int Charge { get; set; }
+
+    /// <summary>All possible charges from the source file (cpp parity: Spectrum::getPossibleCharges).
+    /// Populated by spec readers that surface multiple MS_possible_charge_state CV params;
+    /// empty when only a single charge_state is present (BlibSearch falls back to <see cref="Charge"/>).</summary>
+    public List<int> Charges { get; } = new();
 
     /// <summary>Number of peaks, or <c>-1</c> for "not yet populated" (cpp SpecData.h:46 default).</summary>
     public int NumPeaks { get; set; } = -1;

@@ -136,6 +136,15 @@ public sealed class Mz5SpectrumList : SpectrumListBase
         };
         _refs.FillParamContainerInternal(spec.Params, meta.ParamList);
 
+        // Unpack scanList (params + nested Scans + each Scan's params + scanWindowList).
+        // Required for retentionTime and ion-mobility — cpp parity with Datastructures_mz5.cpp.
+        _refs.FillParamContainerInternal(spec.ScanList, meta.ScanList.ParamList);
+        FillScans(spec, meta.ScanList.ScanList);
+
+        // Unpack precursor list (params + activation + isolationWindow + selectedIons[]).
+        // Required for precursor m/z and charge — cpp PrecursorMZ5::fillPrecursor.
+        FillPrecursors(spec, meta.PrecursorList);
+
         // Slice m/z + intensity from the global arrays.
         ulong start = index == 0 ? 0UL : _spectrumEndOffsets[index - 1];
         ulong end = _spectrumEndOffsets[index];
@@ -193,6 +202,72 @@ public sealed class Mz5SpectrumList : SpectrumListBase
             finally { H5T.close(binT); }
         }
         _conn.Dispose();
+    }
+
+    /// <summary>Walk an Hvl pointing at a typed array of POD structs.
+    /// Marshals each row to a managed struct via <see cref="System.Runtime.InteropServices.Marshal.PtrToStructure{T}(IntPtr)"/>.</summary>
+    private static T[] ReadHvlArray<T>(Hvl hvl) where T : struct
+    {
+        ulong n = (ulong)hvl.Length;
+        if (n == 0 || hvl.Data == IntPtr.Zero) return Array.Empty<T>();
+        var rows = new T[n];
+        int eltSize = System.Runtime.InteropServices.Marshal.SizeOf<T>();
+        unsafe
+        {
+            byte* src = (byte*)hvl.Data;
+            for (ulong i = 0; i < n; i++)
+            {
+                rows[i] = System.Runtime.InteropServices.Marshal.PtrToStructure<T>(
+                    (IntPtr)(src + (long)i * eltSize));
+            }
+        }
+        return rows;
+    }
+
+    /// <summary>Populate <see cref="Spectrum.ScanList"/>'s nested
+    /// <see cref="Pwiz.Data.MsData.Spectra.Scan"/> entries from an mz5 <c>ScansMZ5.scanList</c> Hvl.
+    /// cpp parity: ScansMZ5::fill + ScanMZ5::fillScan.</summary>
+    private void FillScans(Spectrum spec, Hvl scansHvl)
+    {
+        var rows = ReadHvlArray<ScanMZ5>(scansHvl);
+        foreach (var row in rows)
+        {
+            var scan = new Pwiz.Data.MsData.Spectra.Scan();
+            _refs.FillParamContainerInternal(scan, row.ParamList);
+
+            // Each ScanWindowList entry is itself a ParamListMZ5 inside a ParamListsMZ5 vlen.
+            var windowRows = ReadHvlArray<ParamListMZ5>(row.ScanWindowList);
+            foreach (var w in windowRows)
+            {
+                var sw = new Pwiz.Data.MsData.Spectra.ScanWindow();
+                _refs.FillParamContainerInternal(sw, w);
+                scan.ScanWindows.Add(sw);
+            }
+            spec.ScanList.Scans.Add(scan);
+        }
+    }
+
+    /// <summary>Populate <see cref="Spectrum.Precursors"/> from an mz5
+    /// <c>SpectrumMZ5.precursorList</c> Hvl. cpp parity: PrecursorMZ5::fillPrecursor.</summary>
+    private void FillPrecursors(Spectrum spec, Hvl precursorsHvl)
+    {
+        var rows = ReadHvlArray<PrecursorMZ5>(precursorsHvl);
+        foreach (var row in rows)
+        {
+            var p = new Pwiz.Data.MsData.Spectra.Precursor();
+            _refs.FillParamContainerInternal(p, row.ParamList);
+            _refs.FillParamContainerInternal(p.Activation, row.Activation);
+            _refs.FillParamContainerInternal(p.IsolationWindow, row.IsolationWindow);
+
+            var ionRows = ReadHvlArray<ParamListMZ5>(row.SelectedIonList);
+            foreach (var ion in ionRows)
+            {
+                var si = new Pwiz.Data.MsData.Spectra.SelectedIon();
+                _refs.FillParamContainerInternal(si, ion);
+                p.SelectedIons.Add(si);
+            }
+            spec.Precursors.Add(p);
+        }
     }
 
     private static ulong[] ReadIndex(Mz5Connection conn, Mz5Datasets ds, int expectedCount)

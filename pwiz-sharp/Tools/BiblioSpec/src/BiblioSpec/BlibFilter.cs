@@ -425,21 +425,21 @@ public class BlibFilter : BlibMaker
                 if (ionMobilityValueIndex >= 0)
                 {
                     // Records drift time or ccs but not both.
-                    var ionMobilityValue = ionMobilityValueIndex >= 0 ? reader.GetDouble(ionMobilityValueIndex) : 0;
-                    var imType = ionMobilityTypeIndex >= 0 ? reader.GetInt32(ionMobilityTypeIndex) : 0;
+                    var ionMobilityValue = ionMobilityValueIndex >= 0 && !reader.IsDBNull(ionMobilityValueIndex) ? reader.GetDouble(ionMobilityValueIndex) : 0;
+                    var imType = ionMobilityTypeIndex >= 0 ? SafeGetIntCoerce(reader, ionMobilityTypeIndex) : 0;
                     tmpRef.SetIonMobility(
                         imType == 1 ? ionMobilityValue : 0,
                         imType == 1 ? IonMobilityType.DriftTimeMsec : IonMobilityType.None);
-                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 ? reader.GetDouble(ccsIndex) : 0;
+                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 && !reader.IsDBNull(ccsIndex) ? reader.GetDouble(ccsIndex) : 0;
                 }
                 else if (ionMobilityIndex >= 0)
                 {
-                    var ionMobilityValue = reader.GetDouble(ionMobilityIndex);
+                    var ionMobilityValue = reader.IsDBNull(ionMobilityIndex) ? 0 : reader.GetDouble(ionMobilityIndex);
                     var imType = ionMobilityTypeIndex >= 0
-                        ? (IonMobilityType)reader.GetInt32(ionMobilityTypeIndex)
+                        ? (IonMobilityType)SafeGetIntCoerce(reader, ionMobilityTypeIndex)
                         : IonMobilityType.DriftTimeMsec;
                     tmpRef.SetIonMobility(ionMobilityValue, imType);
-                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 ? reader.GetDouble(ccsIndex) : 0;
+                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 && !reader.IsDBNull(ccsIndex) ? reader.GetDouble(ccsIndex) : 0;
                     if (molNameIndex >= 0)
                     {
                         // moleculeName, chemicalFormula, precursorAdduct, inchiKey, otherKeys
@@ -453,25 +453,29 @@ public class BlibFilter : BlibMaker
                 else
                 {
                     tmpRef.SetIonMobility(0, IonMobilityType.None);
-                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 ? reader.GetDouble(ccsIndex) : 0;
+                    tmpRef.CollisionalCrossSection = ccsIndex >= 0 && !reader.IsDBNull(ccsIndex) ? reader.GetDouble(ccsIndex) : 0;
                 }
 
                 if (startTimeIndex >= 0 && endTimeIndex >= 0)
                 {
-                    tmpRef.StartTime = reader.GetDouble(startTimeIndex);
-                    tmpRef.EndTime = reader.GetDouble(endTimeIndex);
+                    tmpRef.StartTime = reader.IsDBNull(startTimeIndex) ? 0 : reader.GetDouble(startTimeIndex);
+                    tmpRef.EndTime = reader.IsDBNull(endTimeIndex) ? 0 : reader.GetDouble(endTimeIndex);
                 }
 
                 if (ticIndex >= 0)
-                    tmpRef.TotalIonCurrentRaw = reader.GetDouble(ticIndex);
+                    tmpRef.TotalIonCurrentRaw = reader.IsDBNull(ticIndex) ? 0 : reader.GetDouble(ticIndex);
 
-                tmpRef.IonMobilityHighEnergyOffset = highEnergyOffsetIndex >= 0 ? reader.GetDouble(highEnergyOffsetIndex) : 0;
-                tmpRef.RetentionTime = retentionTimeIndex >= 0 ? reader.GetDouble(retentionTimeIndex) : 0;
+                // Older blibs (and some source data paths) leave these as NULL — cpp's
+                // sqlite3_column_double returns 0 on NULL; .NET's GetDouble throws.
+                tmpRef.IonMobilityHighEnergyOffset = highEnergyOffsetIndex >= 0 && !reader.IsDBNull(highEnergyOffsetIndex)
+                    ? reader.GetDouble(highEnergyOffsetIndex) : 0;
+                tmpRef.RetentionTime = retentionTimeIndex >= 0 && !reader.IsDBNull(retentionTimeIndex)
+                    ? reader.GetDouble(retentionTimeIndex) : 0;
                 tmpRef.ModifiedSequence = pepModSeq;
                 tmpRef.PrevAa = "-";
                 tmpRef.NextAa = "-";
-                tmpRef.Score = scoreIndex >= 0 ? reader.GetDouble(scoreIndex) : 0;
-                tmpRef.ScoreType = scoreTypeIndex >= 0 ? reader.GetInt32(scoreTypeIndex) : 0;
+                tmpRef.Score = scoreIndex >= 0 && !reader.IsDBNull(scoreIndex) ? reader.GetDouble(scoreIndex) : 0;
+                tmpRef.ScoreType = scoreTypeIndex >= 0 ? SafeGetIntCoerce(reader, scoreTypeIndex) : 0;
                 // cpp parity: BlibFilter.cpp:564 — SpecIDinFile may be a non-integer string in
                 // the source DB; cpp does sqlite3_column_int which coerces or returns 0.
                 tmpRef.ScanNumber = scanNumberIndex >= 0 ? SafeGetIntCoerce(reader, scanNumberIndex) : 0;
@@ -1019,10 +1023,20 @@ public class BlibFilter : BlibMaker
     private static int SafeGetIntCoerce(SQLiteDataReader reader, int ordinal)
     {
         if (reader.IsDBNull(ordinal)) return 0;
-        var type = reader.GetFieldType(ordinal);
-        if (type == typeof(long) || type == typeof(int))
-            return checked((int)reader.GetInt64(ordinal));
-        var s = reader.GetValue(ordinal)?.ToString() ?? string.Empty;
+        var raw = reader.GetValue(ordinal);
+        switch (raw)
+        {
+            case long l: return checked((int)l);
+            case int i: return i;
+            case short s2: return s2;
+            // System.Data.SQLite maps TINYINT to unsigned byte; recover signedness so
+            // workflowType / scoreType of -1 doesn't read back as 255.
+            case byte b: return (sbyte)b;
+            case sbyte sb: return sb;
+            case double d: return (int)d;
+            case float f: return (int)f;
+        }
+        var s = raw?.ToString() ?? string.Empty;
         if (int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v))
             return v;
         // cpp's sqlite3_column_int silently returns 0 for non-numeric text; behavior preserved

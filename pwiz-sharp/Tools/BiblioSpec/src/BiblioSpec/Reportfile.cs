@@ -108,6 +108,10 @@ public sealed class Reportfile : IDisposable
     /// <para>cpp prints the possible-charge list as comma-separated when more than one;
     /// preserved exactly via the loop at Reportfile.cpp:201-211.</para>
     /// </remarks>
+    /// <summary>Format helper: C#'s <c>G</c> emits uppercase <c>E</c> for exponents; cpp's
+    /// <c>%g</c> uses lowercase. Force lowercase to keep .report goldens byte-identical.</summary>
+    private static string G6(double v) => v.ToString("G6", CultureInfo.InvariantCulture).Replace('E', 'e');
+
     public void WriteMatches(IReadOnlyList<Match> results)
     {
         ArgumentNullException.ThrowIfNull(results);
@@ -140,9 +144,9 @@ public sealed class Reportfile : IDisposable
             _file.Write('\t');
             _file.Write(match.Rank.ToString(inv));
             _file.Write('\t');
-            _file.Write(match.GetScore(MatchScoreType.Dotp).ToString("G6", inv));
+            _file.Write(match.GetScore(MatchScoreType.Dotp).ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
-            _file.Write(querySpec.Mz.ToString("G6", inv));
+            _file.Write(querySpec.Mz.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
 
             // cpp Reportfile.cpp:201-211 — print first charge with no comma, then ",N" repeated.
@@ -161,7 +165,7 @@ public sealed class Reportfile : IDisposable
                 }
             }
             _file.Write('\t');
-            _file.Write(refSpec.Mz.ToString("G6", inv));
+            _file.Write(refSpec.Mz.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
             _file.Write(refSpec.Charge.ToString(inv));
             _file.Write('\t');
@@ -173,22 +177,22 @@ public sealed class Reportfile : IDisposable
             _file.Write('\t');
 
             // tic, base peak, num peaks (cpp Reportfile.cpp:219-223).
-            _file.Write(querySpec.TotalIonCurrentRaw.ToString("G6", inv));
+            _file.Write(querySpec.TotalIonCurrentRaw.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
-            _file.Write(querySpec.BasePeakMzRaw.ToString("G6", inv));
+            _file.Write(querySpec.BasePeakMzRaw.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
-            _file.Write(querySpec.BasePeakIntensityRaw.ToString("G6", inv));
+            _file.Write(querySpec.BasePeakIntensityRaw.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
-            _file.Write(refSpec.BasePeakMzRaw.ToString("G6", inv));
+            _file.Write(refSpec.BasePeakMzRaw.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
             _file.Write(querySpec.NumRawPeaks.ToString(inv));
             _file.Write('\t');
 
             _file.Write(((int)match.GetScore(MatchScoreType.MatchedIons)).ToString(inv));
             _file.Write('\t');
-            _file.Write(querySpec.RetentionTime.ToString("G6", inv));
+            _file.Write(querySpec.RetentionTime.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
-            _file.Write(refSpec.RetentionTime.ToString("G6", inv));
+            _file.Write(refSpec.RetentionTime.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
             _file.Write(refSpec.MoleculeName);
             _file.Write('\t');
@@ -200,7 +204,7 @@ public sealed class Reportfile : IDisposable
             _file.Write('\t');
             _file.Write(refSpec.OtherKeys);
             _file.Write('\t');
-            _file.Write(querySpec.IonMobility.ToString("G6", inv));
+            _file.Write(querySpec.IonMobility.ToString("G6", inv).Replace('E', 'e'));
             _file.Write('\t');
             _file.Write(((int)querySpec.IonMobilityType).ToString(inv));
             _file.WriteLine();

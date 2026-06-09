@@ -61,6 +61,12 @@ internal static class MzxmlIndexFooter
         try
         {
             long streamLen = stream.Length;
+            // Some mzXML files have a corrupt indexOffset pointing past EOF (cpp's
+            // SpectrumList_mzXML handles this by ignoring the index and scanning the file;
+            // BiblioSpec's "bad-index" test case exercises exactly this). Return null so the
+            // caller does the same — without this guard, `streamLen - indexOffset` is
+            // negative and `new byte[len]` throws OverflowException.
+            if (indexOffset >= streamLen) return null;
             // The <index> block runs from indexOffset to the start of <indexOffset>...
             // since we already located the latter, that's a generous upper bound for the
             // slurp. Cap at int.MaxValue so we can use a single byte[] buffer.

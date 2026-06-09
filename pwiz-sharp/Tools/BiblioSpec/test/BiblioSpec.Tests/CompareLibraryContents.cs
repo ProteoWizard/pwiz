@@ -135,8 +135,12 @@ public static class CompareLibraryContents
             "SELECT libLSID, numSpecs, majorVersion, minorVersion FROM LibInfo",
             row => row, swapSlash: false);
 
+        // Modifications table: cpp's reference .check files apply the same number-trim shape
+        // (truncate >8 decimal digits for "small" doubles, >2 for "large"). Applying here too
+        // keeps Modifications.mass byte-exact even when the underlying mass calc has the float
+        // precision tail that .NET's G15 would otherwise expose.
         AppendQuery(conn, output, "select * from Modifications",
-            row => row, swapSlash: false);
+            row => trimNumberRegex.Replace(row, "$1"), swapSlash: false);
 
         AppendQuery(conn, output, "select * from RefSpectra",
             row => trimNumberRegex.Replace(row, "$1"), swapSlash: false);
@@ -213,6 +217,11 @@ public static class CompareLibraryContents
                         // schemas / non-default type mappings may surface float (single) or
                         // decimal. The integral-to-"0.0" formatting quirk must apply uniformly.
                         var raw = reader.GetValue(i);
+                        // System.Data.SQLite maps TINYINT to unsigned `byte`, which turns SQLite's
+                        // signed-int -1 into 255. cpp's sqlite3_column_text would render "-1". The
+                        // only TINYINT column in our schema is SpectrumSourceFiles.workflowType,
+                        // which legitimately stores -1 (unknown). Reinterpret as signed.
+                        if (raw is byte b) raw = (sbyte)b;
                         double? asDouble = raw switch
                         {
                             double d => d,
@@ -222,9 +231,21 @@ public static class CompareLibraryContents
                         };
                         if (asDouble is { } dv)
                         {
-                            val = (dv == Math.Truncate(dv) && !double.IsInfinity(dv) && Math.Abs(dv) < 1e15)
-                                ? dv.ToString("0.0", CultureInfo.InvariantCulture)
-                                : dv.ToString("G15", CultureInfo.InvariantCulture);
+                            if (dv == Math.Truncate(dv) && !double.IsInfinity(dv) && Math.Abs(dv) < 1e15)
+                            {
+                                val = dv.ToString("0.0", CultureInfo.InvariantCulture);
+                            }
+                            else
+                            {
+                                // cpp's %g uses lowercase 'e' for exponent and SQLite's "!.15g"
+                                // emits scientific values like "1.0e-14" (decimal point preserved
+                                // when mantissa rounds to integer); .NET's G15 drops the ".0",
+                                // emitting "1e-14". Normalize both axes.
+                                val = dv.ToString("G15", CultureInfo.InvariantCulture).Replace('E', 'e');
+                                int eIdx = val.IndexOf('e', StringComparison.Ordinal);
+                                if (eIdx > 0 && val.AsSpan(0, eIdx).IndexOf('.') < 0)
+                                    val = val.Insert(eIdx, ".0");
+                            }
                         }
                         else
                         {

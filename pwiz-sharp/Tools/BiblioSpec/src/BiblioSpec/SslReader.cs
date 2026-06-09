@@ -64,7 +64,12 @@ public sealed class SslReader : BuildParser
     private readonly bool _hasHeader;
 
     // cpp parity: SslReader.h:266 — vector of PSMs for each spec file.
-    private readonly Dictionary<string, List<PSM?>> _fileMap = new(StringComparer.Ordinal);
+    // cpp parity: SslReader.cpp uses std::map<string, ...> which iterates in sorted key order.
+    // SortedDictionary matches that so fileID assignment (insertion order into the .blib's
+    // SpectrumSourceFiles) lines up with cpp byte-for-byte when an SSL references multiple
+    // spectrum files (e.g. demo.ssl references both demo-copy.cms2 and demo.ms2; cpp puts
+    // demo-copy.cms2 first because "-" < "." lexicographically).
+    private readonly SortedDictionary<string, List<PSM?>> _fileMap = new(StringComparer.Ordinal);
     // cpp parity: SslReader.h:267 — score type for each file.
     private readonly Dictionary<string, PsmScoreType> _fileScoreTypes = new(StringComparer.Ordinal);
 
@@ -306,7 +311,12 @@ public sealed class SslReader : BuildParser
             var newPsm = new SslPSM();
             foreach (var (idx, setter) in activeColumns)
             {
-                var value = idx < cols.Length ? StripQuotes(cols[idx].Trim()) : string.Empty;
+                // cpp parity: cpp's DelimitedFileReader doesn't trim cells; the per-cell value
+                // is the raw text between tabs. .NET's Trim() was stripping trailing whitespace
+                // from inchikey values like "YAPQBXQYLJRXSA-UHFFFAOYSA-N " (the cpp golden
+                // .check preserves that trailing space). TrimStart preserves the cpp byte shape
+                // for downstream cells while still letting an indented row parse cleanly.
+                var value = idx < cols.Length ? StripQuotes(cols[idx].TrimStart()) : string.Empty;
                 try
                 {
                     setter(newPsm, value, lineNumber);

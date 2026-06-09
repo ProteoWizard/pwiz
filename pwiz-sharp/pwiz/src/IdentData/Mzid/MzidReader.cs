@@ -327,6 +327,7 @@ public sealed class MzidReader
             switch (sub.LocalName)
             {
                 case "PeptideSequence":
+                case "peptideSequence": // Scaffold-quirk: lowercase variant.
                     p.PeptideSequence = ReadElementText(sub);
                     break;
                 case "Modification":
@@ -389,9 +390,10 @@ public sealed class MzidReader
             Id = xr.GetAttribute("id") ?? string.Empty,
             Name = xr.GetAttribute("name") ?? string.Empty,
         };
-        var pepRef = xr.GetAttribute("peptide_ref");
+        // Scaffold-quirk: Peptide_ref / DBSequence_Ref (capital). Standard: peptide_ref / dBSequence_ref.
+        var pepRef = xr.GetAttribute("peptide_ref") ?? xr.GetAttribute("Peptide_ref");
         if (!string.IsNullOrEmpty(pepRef)) pe.PeptidePtr = new Peptide { Id = pepRef };
-        var dbRef = xr.GetAttribute("dBSequence_ref");
+        var dbRef = xr.GetAttribute("dBSequence_ref") ?? xr.GetAttribute("DBSequence_Ref");
         if (!string.IsNullOrEmpty(dbRef)) pe.DBSequencePtr = new DBSequence { Id = dbRef };
         if (int.TryParse(xr.GetAttribute("start"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var s)) pe.Start = s;
         if (int.TryParse(xr.GetAttribute("end"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var e)) pe.End = e;
@@ -517,7 +519,8 @@ public sealed class MzidReader
             Name = xr.GetAttribute("name") ?? string.Empty,
             SpectrumID = xr.GetAttribute("spectrumID") ?? string.Empty,
         };
-        var sdRef = xr.GetAttribute("spectraData_ref");
+        // Scaffold-quirk: SpectraData_ref (capital S/D) on SpectrumIdentificationResult.
+        var sdRef = xr.GetAttribute("spectraData_ref") ?? xr.GetAttribute("SpectraData_ref");
         if (!string.IsNullOrEmpty(sdRef)) sir.SpectraDataPtr = new SpectraData { Id = sdRef };
         if (xr.IsEmptyElement) return sir;
         using var sub = xr.ReadSubtree();
@@ -545,7 +548,8 @@ public sealed class MzidReader
         if (double.TryParse(xr.GetAttribute("calculatedPI"), NumberStyles.Float, CultureInfo.InvariantCulture, out var pi)) sii.CalculatedPI = pi;
         if (int.TryParse(xr.GetAttribute("rank"), NumberStyles.Integer, CultureInfo.InvariantCulture, out var r)) sii.Rank = r;
         if (bool.TryParse(xr.GetAttribute("passThreshold"), out var pt)) sii.PassThreshold = pt;
-        var pepRef = xr.GetAttribute("peptide_ref");
+        // Scaffold-quirk: emits `Peptide_ref` with capital P. Standard is `peptide_ref`.
+        var pepRef = xr.GetAttribute("peptide_ref") ?? xr.GetAttribute("Peptide_ref");
         if (!string.IsNullOrEmpty(pepRef)) sii.PeptidePtr = new Peptide { Id = pepRef };
         if (xr.IsEmptyElement) return sii;
         using var sub = xr.ReadSubtree();
@@ -556,6 +560,15 @@ public sealed class MzidReader
             {
                 var peRef = sub.GetAttribute("peptideEvidence_ref");
                 if (!string.IsNullOrEmpty(peRef)) sii.PeptideEvidencePtr.Add(new PeptideEvidence { Id = peRef });
+            }
+            else if (sub.LocalName == "PeptideEvidence")
+            {
+                // Scaffold-quirk: inline <PeptideEvidence> child instead of <PeptideEvidenceRef>.
+                // Read it as a full PeptideEvidence and attach directly to the SII (skipping the
+                // normal global-list-and-resolve dance — the embedded data is already complete).
+                var pe = ReadPeptideEvidence(sub);
+                if (!string.IsNullOrEmpty(pe.Id))
+                    sii.PeptideEvidencePtr.Add(pe);
             }
             else if (sub.LocalName == "Fragmentation")
             {

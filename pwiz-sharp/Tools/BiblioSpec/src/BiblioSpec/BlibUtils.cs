@@ -344,17 +344,23 @@ public static class BlibUtils
                     Verbosity.Error(
                         $"Unterminated modification bracket at position {i} in {modifiedSeq}.");
                 }
-                // cpp: modifiedSeq.substr(i + 1, end - i) — note that's end-i, not end-(i+1).
-                // This includes the ']' character in the parse range; atof stops at non-numeric
-                // characters so it doesn't actually affect the value. Preserved for parity.
-                var modStr = modifiedSeq.Substring(i + 1, end - i);
+                // cpp: modifiedSeq.substr(i + 1, end - i) — note that's end-i, not end-(i+1),
+                // which includes the trailing ']'. cpp's `atof` stops at the first non-numeric
+                // character so the ']' is harmless there. .NET's double.TryParse with
+                // NumberStyles.Float rejects the whole string if any trailing char is invalid —
+                // so substring WITHOUT the ']' to match cpp's behavior.
+                var modStr = modifiedSeq.Substring(i + 1, end - (i + 1));
                 _ = double.TryParse(
                     modStr,
                     System.Globalization.NumberStyles.Float,
                     System.Globalization.CultureInfo.InvariantCulture,
                     out var modMass);
                 mass += modMass;
-                i = end;
+                // cpp bug: BlibUtils.cpp:299 does `i = end + 1;` and then the for-loop's `i++`
+                // skips one additional character — the residue immediately after `]` is never
+                // counted. The .lms2 goldens encode this, so for byte-exact parity we must
+                // replicate the off-by-one. (cpp's getPeptideMass is otherwise straightforward.)
+                i = end + 1;
             }
             else if (aa >= 'A' && aa <= 'Z')
             {

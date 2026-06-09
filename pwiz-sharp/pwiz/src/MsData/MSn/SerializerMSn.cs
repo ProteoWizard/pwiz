@@ -496,6 +496,9 @@ public sealed class SerializerMSn
             var rest = line[(idx + 5)..].Trim();
             if (double.TryParse(rest, NumberStyles.Float, Inv, out double rt))
             {
+                // The text I-RTime path has the rt as a parsed double (full precision from the
+                // text) — keep that precision; the value was a string of bounded sig digits to
+                // begin with so round-trip via cvparam %.12g doesn't lose meaningful bits.
                 var scan = new Scan();
                 scan.Set(CVID.MS_scan_start_time, rt * 60.0, CVID.UO_second);
                 spec.ScanList.Scans.Add(scan);
@@ -672,9 +675,15 @@ public sealed class SerializerMSn
             }
         }
 
-        // Retention time scan.
+        // Retention time scan. `rt` is read as float (binary file format); cpp pwiz stores it
+        // in the cvparam via boost::lexical_cast<string>((float)x) — that's 6 sig digits,
+        // matching float's actual precision. .NET's Set(CVID, double) overload uses 12 sig
+        // digits which exposes the float-noise tail (e.g. 9.401 becomes 9.40100002288818)
+        // and BlibBuilder round-tripping then stores the noisy value in .blib, breaking the
+        // cpp golden test. Use Set(CVID, float, ...) instead so the float-precision string
+        // matches cpp byte-for-byte.
         var scan = new Scan();
-        scan.Set(CVID.MS_scan_start_time, rt * 60.0, CVID.UO_second);
+        scan.Set(CVID.MS_scan_start_time, rt * 60.0f, CVID.UO_second);
         spec.ScanList.Scans.Add(scan);
 
         // Peaks.
