@@ -261,11 +261,11 @@ namespace pwiz.Skyline.ToolsUI
             // on the pipe thread, NOT inside InvokeOnUiThread: when such a dialog is modal the UI
             // thread is busy in the dialog's own message loop, and querying it from that thread
             // can deadlock.
-            foreach (var dialog in new OpenFileDialogAutomation().GetOpenDialogs())
+            foreach (var dialog in NativeDialogAutomation.GetOpenDialogs())
             {
                 results.Add(new FormInfo
                 {
-                    Type = NATIVE_FILE_DIALOG_TYPE,
+                    Type = dialog.DialogTypeName,
                     Title = dialog.Title,
                     HasGraph = false,
                     DockState = @"Dialog",
@@ -276,16 +276,14 @@ namespace pwiz.Skyline.ToolsUI
             return results.ToArray();
         }
 
-        private const string NATIVE_FILE_DIALOG_TYPE = @"FileDialog";
-
-        private static string GetNativeDialogId(NativeDialogAutomation.NativeDialogInfo dialog)
+        private static string GetNativeDialogId(NativeDialogAutomation dialog)
         {
-            return NATIVE_FILE_DIALOG_TYPE + @":" + dialog.Title;
+            return dialog.DialogTypeName + @":" + dialog.Title;
         }
 
-        private static bool TryGetNativeDialog(string formId, out NativeDialogAutomation.NativeDialogInfo dialog)
+        private static bool TryGetNativeDialog(string formId, out NativeDialogAutomation dialog)
         {
-            foreach (var openDialog in new OpenFileDialogAutomation().GetOpenDialogs())
+            foreach (var openDialog in NativeDialogAutomation.GetOpenDialogs())
             {
                 if (GetNativeDialogId(openDialog) == formId)
                 {
@@ -448,7 +446,7 @@ namespace pwiz.Skyline.ToolsUI
         // WinForms path this runs entirely on the calling (pipe) thread: the capture is a screen
         // copy by window handle and must not marshal to the UI thread, which may be blocked in a
         // modal dialog's message loop.
-        private static string GetNativeDialogImage(NativeDialogAutomation.NativeDialogInfo dialog, string filePath)
+        private static string GetNativeDialogImage(NativeDialogAutomation dialog, string filePath)
         {
             if (Program.MainWindow == null)
                 return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
@@ -464,7 +462,7 @@ namespace pwiz.Skyline.ToolsUI
             return filePath.ToForwardSlashPath();
         }
 
-        private static ImageBytesMetadata GetNativeDialogImageBytes(NativeDialogAutomation.NativeDialogInfo dialog)
+        private static ImageBytesMetadata GetNativeDialogImageBytes(NativeDialogAutomation dialog)
         {
             if (Program.MainWindow == null)
                 return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };

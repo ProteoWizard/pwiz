@@ -26,7 +26,8 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>
     /// Drives the native Windows common Open/Save file dialog (such as the OpenFileDialog shown
     /// by <c>SkylineWindow.ShowOpenFileDialog</c>) using UI Automation. See
-    /// <see cref="NativeDialogAutomation"/> for the threading contract.
+    /// <see cref="NativeDialogAutomation"/> for the threading contract and how to obtain an
+    /// instance.
     /// </summary>
     public class OpenFileDialogAutomation : NativeDialogAutomation
     {
@@ -35,31 +36,41 @@ namespace pwiz.Skyline.ToolsUI
         // and locales, and its presence distinguishes a file dialog from other "#32770" dialogs.
         private const string FILE_NAME_COMBO_ID = @"1148";
 
-        public OpenFileDialogAutomation(int millisTimeout = DEFAULT_TIMEOUT_MILLIS) : base(millisTimeout)
+        public OpenFileDialogAutomation(IntPtr windowHandle) : base(windowHandle)
         {
         }
 
-        protected override bool IsMatch(AutomationElement dialog)
+        public override string DialogTypeName => @"FileDialog";
+
+        /// <summary>
+        /// Returns true if the given native dialog element is a common Open/Save file dialog,
+        /// identified by its "File name" combo box.
+        /// </summary>
+        public static bool IsOpenFileDialog(AutomationElement dialog)
         {
-            // A common file dialog is identified by its "File name" combo box. The search is
-            // bounded to the (small) dialog subtree, not the whole window tree.
-            return dialog.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.AutomationIdProperty, FILE_NAME_COMBO_ID)) != null;
+            try
+            {
+                return dialog.FindFirst(TreeScope.Descendants,
+                    new PropertyCondition(AutomationElement.AutomationIdProperty, FILE_NAME_COMBO_ID)) != null;
+            }
+            catch (ElementNotAvailableException)
+            {
+                return false;
+            }
         }
 
         /// <summary>
-        /// Waits for the file dialog to appear and opens the file at the given path. The full path
-        /// is typed into the file name box and then Enter is pressed, the same way a user can paste
-        /// a full path and press Enter to navigate to the folder and open the file in one action --
-        /// so this does not depend on whatever folder the dialog happened to open in. The path is
-        /// set on the Edit control inside the "File name" combo box (setting it on the combo box
-        /// would trigger auto-complete that discards the directory portion).
+        /// Opens the file at the given path. The full path is typed into the file name box and
+        /// then Enter is pressed, the same way a user can paste a full path and press Enter to
+        /// navigate to the folder and open the file in one action -- so this does not depend on
+        /// whatever folder the dialog happened to open in. The path is set on the Edit control
+        /// inside the "File name" combo box (setting it on the combo box would trigger
+        /// auto-complete that discards the directory portion).
         /// </summary>
         public void EnterPathAndAccept(string path)
         {
-            var dialog = WaitForDialog();
-            BringToForeground(dialog);
-            var fileNameComboBox = WaitForElement(dialog, FILE_NAME_COMBO_ID);
+            BringToForeground();
+            var fileNameComboBox = WaitForElement(FILE_NAME_COMBO_ID);
             var edit = fileNameComboBox.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit));
             if (edit == null)

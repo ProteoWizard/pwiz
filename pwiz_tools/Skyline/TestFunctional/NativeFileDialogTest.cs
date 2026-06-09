@@ -47,12 +47,11 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => Settings.Default.AllowMcpScreenCapture = true);
 
-            var fileDialog = new OpenFileDialogAutomation();
             var documentBefore = SkylineWindow.Document;
-            // Show the native Open dialog without blocking the test thread.
+            // Show the native Open dialog without blocking the test thread, then wait for it to
+            // appear and obtain its automation wrapper.
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            // Wait until the native dialog is discoverable via UI Automation.
-            WaitForCondition(() => fileDialog.GetOpenDialogs().Count > 0);
+            var fileDialog = NativeDialogAutomation.WaitForDialog<OpenFileDialogAutomation>();
 
             // GetOpenForms includes the native dialog, flagged as native.
             var nativeForms = JsonUiService.GetOpenForms().Where(form => form.IsNative).ToArray();
@@ -73,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Dismiss the dialog and confirm it leaves the document unchanged.
             fileDialog.Cancel();
-            WaitForCondition(() => fileDialog.GetOpenDialogs().Count == 0);
+            WaitForCondition(() => !NativeDialogAutomation.GetOpenDialogs().Any());
             Assert.AreSame(documentBefore, SkylineWindow.Document);
 
             // Exercise the open flow used by OpenDocument: save the current document, start a new
@@ -89,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var documentBeforeOpen = SkylineWindow.Document;
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            fileDialog.EnterPathAndAccept(savePath);
+            NativeDialogAutomation.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAccept(savePath);
             WaitForDocumentChangeLoaded(documentBeforeOpen);
             Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath);
         }

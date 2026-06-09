@@ -29,10 +29,11 @@ using pwiz.Common.SystemUtil.PInvoke;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// Base class for driving a native Windows dialog (window class "#32770", such as the common
-    /// Open/Save file dialog) using UI Automation. A native dialog is not a WinForms form, so it
-    /// does not appear in FormUtil.OpenForms and cannot be introspected or driven the way the
-    /// rest of Skyline's UI is; UI Automation reaches it the same way a user would.
+    /// Base class for driving a single native Windows dialog (window class "#32770", such as the
+    /// common Open/Save file dialog) using UI Automation. An instance wraps one open dialog,
+    /// identified by its window handle. A native dialog is not a WinForms form, so it does not
+    /// appear in FormUtil.OpenForms and cannot be introspected or driven the way the rest of
+    /// Skyline's UI is; UI Automation reaches it the same way a user would.
     ///
     /// This is shared product code with two consumers: the functional test framework
     /// (AbstractFunctionalTest.OpenDocument) and the Skyline MCP server's UI interaction layer.
@@ -42,92 +43,106 @@ namespace pwiz.Skyline.ToolsUI
     /// methods must be called from a different thread (the test thread or the MCP pipe thread),
     /// never the UI thread itself.
     ///
-    /// A subclass identifies the specific dialog it automates by overriding <see cref="IsMatch"/>.
+    /// Use <see cref="WaitForDialog{T}"/> or <see cref="GetOpenDialogs"/> to obtain an instance;
+    /// <see cref="Create"/> chooses the subclass that matches a given dialog element.
     /// </summary>
     public abstract class NativeDialogAutomation
     {
         protected const string DIALOG_CLASS_NAME = @"#32770"; // Win32 dialog window class
-        protected const int DEFAULT_TIMEOUT_MILLIS = 30 * 1000;
+        private const int DEFAULT_TIMEOUT_MILLIS = 30 * 1000;
         private const int POLL_INTERVAL_MILLIS = 100;
         private const int VK_RETURN = 0x0D;
 
-        private readonly int _millisTimeout;
+        private AutomationElement _dialogElement;
 
-        protected NativeDialogAutomation(int millisTimeout = DEFAULT_TIMEOUT_MILLIS)
+        protected NativeDialogAutomation(IntPtr windowHandle)
         {
-            _millisTimeout = millisTimeout;
+            WindowHandle = windowHandle;
         }
 
-        /// <summary>
-        /// Returns true if the given native dialog element is the kind of dialog this class
-        /// automates. Called only for elements of window class "#32770".
-        /// </summary>
-        protected abstract bool IsMatch(AutomationElement dialog);
+        /// <summary>Handle of the dialog window this instance drives.</summary>
+        public IntPtr WindowHandle { get; }
+
+        /// <summary>How long the wait helpers poll for a control before throwing.</summary>
+        public int MillisTimeout { get; set; } = DEFAULT_TIMEOUT_MILLIS;
 
         /// <summary>
-        /// Identifies an open native dialog: its window caption and window handle.
+        /// Short identifier for the kind of dialog (e.g. "FileDialog"), for callers that classify
+        /// dialogs without knowing the concrete subclass.
         /// </summary>
-        public sealed class NativeDialogInfo
+        public abstract string DialogTypeName { get; }
+
+        /// <summary>The dialog window's caption.</summary>
+        public string Title => DialogElement.Current.Name;
+
+        protected AutomationElement DialogElement =>
+            _dialogElement ?? (_dialogElement = AutomationElement.FromHandle(WindowHandle));
+
+        /// <summary>
+        /// Returns the automation wrapper for the given native dialog element, choosing the
+        /// subclass that matches the dialog, or null if no subclass handles it.
+        /// </summary>
+        public static NativeDialogAutomation Create(AutomationElement dialog)
         {
-            public NativeDialogInfo(string title, IntPtr windowHandle)
+            IntPtr handle;
+            try
             {
-                Title = title;
-                WindowHandle = windowHandle;
+                if (dialog.Current.ClassName != DIALOG_CLASS_NAME)
+                    return null;
+                handle = new IntPtr(dialog.Current.NativeWindowHandle);
             }
-
-            public string Title { get; }
-            public IntPtr WindowHandle { get; }
+            catch (ElementNotAvailableException)
+            {
+                return null;
+            }
+            if (handle == IntPtr.Zero)
+                return null;
+            if (OpenFileDialogAutomation.IsOpenFileDialog(dialog))
+                return new OpenFileDialogAutomation(handle);
+            return null;
         }
 
         /// <summary>
-        /// Returns the matching native dialogs currently open in this process, found via UI
-        /// Automation. Must be called from a thread other than the UI thread.
+        /// Returns automation wrappers for the native dialogs currently open in this process,
+        /// found via UI Automation. Must be called from a thread other than the UI thread.
         /// </summary>
-        public IList<NativeDialogInfo> GetOpenDialogs()
+        public static IList<NativeDialogAutomation> GetOpenDialogs()
         {
-            var result = new List<NativeDialogInfo>();
+            var result = new List<NativeDialogAutomation>();
             var seen = new HashSet<IntPtr>();
-            foreach (var dialog in FindDialogElements())
+            foreach (var element in FindDialogElements())
             {
-                try
-                {
-                    var handle = new IntPtr(dialog.Current.NativeWindowHandle);
-                    if (handle == IntPtr.Zero || !seen.Add(handle))
-                        continue;
-                    result.Add(new NativeDialogInfo(dialog.Current.Name, handle));
-                }
-                catch (ElementNotAvailableException)
-                {
-                    // Dialog closed mid-enumeration; skip it.
-                }
+                var automation = Create(element);
+                if (automation != null && automation.WindowHandle != IntPtr.Zero && seen.Add(automation.WindowHandle))
+                    result.Add(automation);
             }
             return result;
         }
 
         /// <summary>
-        /// Waits for a matching native dialog to appear and dismisses it by posting WM_CLOSE,
-        /// which cancels it the way the title-bar close button or the Cancel button would. This
-        /// is more reliable than invoking the Cancel button through UI Automation, which the
-        /// dialog (a DirectUI surface) does not always honor.
+        /// Waits for a native dialog of the given type to appear in this process and returns its
+        /// automation wrapper.
         /// </summary>
-        public void Cancel()
+        public static T WaitForDialog<T>(int millisTimeout = DEFAULT_TIMEOUT_MILLIS) where T : NativeDialogAutomation
         {
-            var dialog = WaitForDialog();
-            User32.PostMessageA(GetWindowHandle(dialog), User32.WinMessageType.WM_CLOSE, 0, 0);
+            return PollUntil(millisTimeout, typeof(T).Name,
+                () => GetOpenDialogs().OfType<T>().FirstOrDefault());
         }
 
         /// <summary>
-        /// Waits for a matching native dialog to appear and returns its automation element so its
-        /// controls can be driven.
+        /// Dismisses the dialog by posting WM_CLOSE, which cancels it the way the title-bar close
+        /// button or the Cancel button would. This is more reliable than invoking the Cancel
+        /// button through UI Automation, which the dialog (a DirectUI surface) does not always
+        /// honor.
         /// </summary>
-        protected AutomationElement WaitForDialog()
+        public void Cancel()
         {
-            return WaitFor(@"native dialog", () => FindDialogElements().FirstOrDefault());
+            User32.PostMessageA(WindowHandle, User32.WinMessageType.WM_CLOSE, 0, 0);
         }
 
-        protected void BringToForeground(AutomationElement dialog)
+        protected void BringToForeground()
         {
-            User32.SetForegroundWindow(GetWindowHandle(dialog));
+            User32.SetForegroundWindow(WindowHandle);
         }
 
         /// <summary>
@@ -137,32 +152,28 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         protected void PressEnter(AutomationElement element)
         {
-            var handle = GetWindowHandle(element);
+            var handle = new IntPtr(element.Current.NativeWindowHandle);
             User32.PostMessageA(handle, User32.WinMessageType.WM_KEYDOWN, VK_RETURN, 0);
             User32.PostMessageA(handle, User32.WinMessageType.WM_KEYUP, VK_RETURN, 0);
         }
 
-        protected AutomationElement WaitForElement(AutomationElement root, string automationId)
+        /// <summary>Waits for a descendant control of the dialog with the given AutomationId.</summary>
+        protected AutomationElement WaitForElement(string automationId)
         {
             var condition = new PropertyCondition(AutomationElement.AutomationIdProperty, automationId);
-            return WaitFor(@"dialog control with AutomationId " + automationId,
-                () => root.FindFirst(TreeScope.Descendants, condition));
-        }
-
-        protected IntPtr GetWindowHandle(AutomationElement element)
-        {
-            return new IntPtr(element.Current.NativeWindowHandle);
+            return PollUntil(MillisTimeout, @"dialog control with AutomationId " + automationId,
+                () => DialogElement.FindFirst(TreeScope.Descendants, condition));
         }
 
         /// <summary>
-        /// Finds the matching native dialogs of the current process via UI Automation. A native
+        /// Finds the open native dialogs (window class "#32770") of the current process. A native
         /// dialog is an owned window of the Skyline main window, so in the UI Automation tree it
         /// appears either as a direct child of the desktop root or as a direct child of its owner
         /// window. We look only at this process's top-level windows and their direct children --
         /// never a full subtree walk, which is prohibitively slow over Skyline's large control
         /// tree.
         /// </summary>
-        private IList<AutomationElement> FindDialogElements()
+        private static IList<AutomationElement> FindDialogElements()
         {
             var processId = Process.GetCurrentProcess().Id;
             var dialogClassCondition = new PropertyCondition(AutomationElement.ClassNameProperty, DIALOG_CLASS_NAME);
@@ -174,19 +185,17 @@ namespace pwiz.Skyline.ToolsUI
                 foreach (AutomationElement window in processWindows)
                 {
                     // The top-level window itself may be the dialog.
-                    AddIfMatch(window, result);
+                    if (IsDialogClass(window))
+                        result.Add(window);
                     // Owned dialogs appear as direct children of their owner window.
-                    AutomationElementCollection childDialogs;
                     try
                     {
-                        childDialogs = window.FindAll(TreeScope.Children, dialogClassCondition);
+                        result.AddRange(window.FindAll(TreeScope.Children, dialogClassCondition).Cast<AutomationElement>());
                     }
                     catch (ElementNotAvailableException)
                     {
-                        continue;
+                        // Window vanished mid-enumeration; skip its children.
                     }
-                    foreach (AutomationElement childDialog in childDialogs)
-                        AddIfMatch(childDialog, result);
                 }
             }
             catch (ElementNotAvailableException)
@@ -196,38 +205,38 @@ namespace pwiz.Skyline.ToolsUI
             return result;
         }
 
-        private void AddIfMatch(AutomationElement element, IList<AutomationElement> result)
+        private static bool IsDialogClass(AutomationElement element)
         {
             try
             {
-                if (element.Current.ClassName == DIALOG_CLASS_NAME && IsMatch(element))
-                    result.Add(element);
+                return element.Current.ClassName == DIALOG_CLASS_NAME;
             }
             catch (ElementNotAvailableException)
             {
-                // Element vanished mid-inspection; skip it.
+                return false;
             }
         }
 
-        private AutomationElement WaitFor(string description, Func<AutomationElement> find)
+        private static TResult PollUntil<TResult>(int millisTimeout, string description, Func<TResult> find)
+            where TResult : class
         {
             var stopwatch = Stopwatch.StartNew();
             while (true)
             {
                 // UI Automation can briefly throw while a window is being created or torn down.
-                AutomationElement element = null;
+                TResult value = null;
                 try
                 {
-                    element = find();
+                    value = find();
                 }
                 catch (ElementNotAvailableException)
                 {
                     // Retry below.
                 }
-                if (element != null)
-                    return element;
-                if (stopwatch.ElapsedMilliseconds > _millisTimeout)
-                    throw new TimeoutException(string.Format(@"Timed out after {0} ms waiting for {1}.", _millisTimeout, description));
+                if (value != null)
+                    return value;
+                if (stopwatch.ElapsedMilliseconds > millisTimeout)
+                    throw new TimeoutException(string.Format(@"Timed out after {0} ms waiting for {1}.", millisTimeout, description));
                 Thread.Sleep(POLL_INTERVAL_MILLIS);
             }
         }
