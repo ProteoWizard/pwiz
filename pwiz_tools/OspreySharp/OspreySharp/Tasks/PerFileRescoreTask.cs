@@ -1407,7 +1407,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 try
                 {
-                    var result = SpectraCache.LoadSpectraCache(cachePath);
+                    var result = SpectraCache.LoadSpectraCache(cachePath, inputFile);
                     spectra = result.Ms2Spectra;
                     ms1Spectra = result.Ms1Spectra;
                     _ctx.LogInfo(string.Format(

@@ -1496,7 +1496,7 @@ namespace pwiz.OspreySharp.Tasks
                 _ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
                 try
                 {
-                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath);
+                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath, inputFile);
                     ms2Spectra = cacheResult.Ms2Spectra;
                     ms1Spectra = cacheResult.Ms1Spectra;
                     return;
@@ -1530,7 +1530,7 @@ namespace pwiz.OspreySharp.Tasks
             // Save to cache for next run
             try
             {
-                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra);
+                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra, inputFile);
             }
             catch (Exception ex)
             {
