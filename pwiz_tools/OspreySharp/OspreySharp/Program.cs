@@ -803,6 +803,10 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    -i, --input <files>           Input mzML file(s)");
             Console.Error.WriteLine("    -l, --library <file>          Spectral library (.tsv, .blib, .elib)");
             Console.Error.WriteLine("    -o, --output <file>           Output blib file");
+            Console.Error.WriteLine("    --work-dir <dir>              Write derived artifacts AND the spectra cache here");
+            Console.Error.WriteLine("                                 (so input data can be read-only); default: beside input");
+            Console.Error.WriteLine("    --output-dir <dir>           Directory for derived artifacts (overrides --work-dir)");
+            Console.Error.WriteLine("    --cache-dir <dir>            Directory for the .spectra.bin cache (overrides --work-dir)");
             Console.Error.WriteLine("    --resolution <mode>           Resolution mode: unit, hram, auto (default: auto)");
             Console.Error.WriteLine("    --fragment-tolerance <value>  Fragment m/z tolerance (default: 10)");
             Console.Error.WriteLine("    --fragment-unit <unit>        Fragment tolerance unit: ppm, mz (default: ppm)");
