@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     /// the MCP UI-introspection layer (enumerated by <see cref="JsonUiService.GetOpenForms"/> as a
     /// native form, and captured by <see cref="JsonUiService.GetFormImage"/> by its reported id
     /// even though it is not a WinForms form), it can be dismissed, and a file can be opened
-    /// through it with <see cref="NativeFileDialogAutomation.EnterPathAndAccept"/>.
+    /// through it with <see cref="OpenFileDialogAutomation.EnterPathAndAccept"/>.
     /// </summary>
     [TestClass]
     public class NativeFileDialogTest : AbstractFunctionalTest
@@ -47,11 +47,12 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => Settings.Default.AllowMcpScreenCapture = true);
 
+            var fileDialog = new OpenFileDialogAutomation();
             var documentBefore = SkylineWindow.Document;
             // Show the native Open dialog without blocking the test thread.
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
             // Wait until the native dialog is discoverable via UI Automation.
-            WaitForCondition(() => NativeFileDialogAutomation.GetOpenDialogs().Count > 0);
+            WaitForCondition(() => fileDialog.GetOpenDialogs().Count > 0);
 
             // GetOpenForms includes the native dialog, flagged as native.
             var nativeForms = JsonUiService.GetOpenForms().Where(form => form.IsNative).ToArray();
@@ -71,8 +72,8 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(image.Message);
 
             // Dismiss the dialog and confirm it leaves the document unchanged.
-            NativeFileDialogAutomation.Cancel();
-            WaitForCondition(() => NativeFileDialogAutomation.GetOpenDialogs().Count == 0);
+            fileDialog.Cancel();
+            WaitForCondition(() => fileDialog.GetOpenDialogs().Count == 0);
             Assert.AreSame(documentBefore, SkylineWindow.Document);
 
             // Exercise the open flow used by OpenDocument: save the current document, start a new
@@ -88,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var documentBeforeOpen = SkylineWindow.Document;
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            NativeFileDialogAutomation.EnterPathAndAccept(savePath);
+            fileDialog.EnterPathAndAccept(savePath);
             WaitForDocumentChangeLoaded(documentBeforeOpen);
             Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath);
         }
