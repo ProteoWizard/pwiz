@@ -1485,12 +1485,10 @@ namespace pwiz.OspreySharp.Tasks
         private void LoadSpectra(string inputFile, bool serializeMzmlRead,
             out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra)
         {
-            // Check for binary spectra cache. Filename form preserved
-            // ("{inputFile-leaf}.spectra.bin"); only the directory is redirected
-            // by ArtifactPaths (beside the data file by default).
-            string cachePath = Path.Combine(
-                ArtifactPaths.ResolveCacheDir(inputFile),
-                Path.GetFileName(inputFile) + ".spectra.bin");
+            // Check for binary spectra cache. Use the shared GetCachePath so the
+            // write and the rescore read (PerFileRescoreTask) derive an identical
+            // filename + directory (ArtifactPaths redirects the dir).
+            string cachePath = SpectraCache.GetCachePath(inputFile);
             if (File.Exists(cachePath))
             {
                 _ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));

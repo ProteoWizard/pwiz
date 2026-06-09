@@ -128,6 +128,12 @@ namespace pwiz.OspreySharp
                 // (each artifact in its input file's own directory).
                 ArtifactPaths.OutputDir = config.OutputDir;
                 ArtifactPaths.CacheDir = config.CacheDir;
+                // Create the configured directories up front so the first
+                // artifact write doesn't throw on a not-yet-existing --work-dir.
+                if (!string.IsNullOrEmpty(config.OutputDir))
+                    Directory.CreateDirectory(config.OutputDir);
+                if (!string.IsNullOrEmpty(config.CacheDir))
+                    Directory.CreateDirectory(config.CacheDir);
 
                 string err = ValidateArgs(config);
                 if (err != null)

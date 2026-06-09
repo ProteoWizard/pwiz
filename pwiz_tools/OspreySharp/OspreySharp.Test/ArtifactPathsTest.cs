@@ -84,6 +84,13 @@ namespace pwiz.OspreySharp.Test
                         ParquetScoreCache.GetReconciledScoresPath(input));
                     Assert.AreEqual(Path.Combine(inputDir, "sample.spectra.bin"),
                         SpectraCache.GetCachePath(input));
+                    // FDR / reconciliation sidecars route through the same dir.
+                    Assert.AreEqual(Path.Combine(inputDir, "sample.1st-pass.fdr_scores.bin"),
+                        FdrScoresSidecar.Pass1Path(input));
+                    Assert.AreEqual(Path.Combine(inputDir, "sample.2nd-pass.fdr_scores.bin"),
+                        FdrScoresSidecar.Pass2Path(input));
+                    Assert.AreEqual(Path.Combine(inputDir, "sample.reconciliation.json"),
+                        ReconciliationFile.PathForInput(input));
                 });
 
                 // OutputDir set redirects the non-cache artifacts; CacheDir explicit
@@ -98,6 +105,10 @@ namespace pwiz.OspreySharp.Test
                         ParquetScoreCache.GetScoresPath(input));
                     Assert.AreEqual(Path.Combine(cacheDir, "sample.spectra.bin"),
                         SpectraCache.GetCachePath(input));
+                    Assert.AreEqual(Path.Combine(outDir, "sample.1st-pass.fdr_scores.bin"),
+                        FdrScoresSidecar.Pass1Path(input));
+                    Assert.AreEqual(Path.Combine(outDir, "sample.reconciliation.json"),
+                        ReconciliationFile.PathForInput(input));
                 });
 
                 // CacheDir unset + OutputDir set: prefer beside-data when writable

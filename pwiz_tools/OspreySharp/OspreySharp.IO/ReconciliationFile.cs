@@ -188,7 +188,10 @@ namespace pwiz.OspreySharp.IO
         public static string PathForInput(string inputPath)
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
-            string parent = Path.GetDirectoryName(inputPath);
+            // Route through ArtifactPaths so the reconciliation JSON follows the
+            // scores parquet into --output-dir (default = the input's own dir),
+            // shared by the straight-through writer and the resume reader.
+            string parent = ArtifactPaths.ResolveOutputDir(inputPath);
             string filename = stem + ".reconciliation.json";
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
