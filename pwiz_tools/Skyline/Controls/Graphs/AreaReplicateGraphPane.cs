@@ -1322,12 +1322,23 @@ namespace pwiz.Skyline.Controls.Graphs
                         var precursorNodePath = DocNodePath.GetNodePath(nodeGroup.Id, _document);
                         if (precursorNodePath.Peptide != null && !NormalizationMethod.RatioToLabel.Matches(ratioToLabel, nodeGroup.LabelType))
                         {
-                            var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
-                                ratioToLabel,
-                                precursorNodePath.Peptide, nodeGroup,
-                                nodeGroup.GetChromInfoEntry(indexResult));
-                            if (ratio?.HasDotProduct ?? false)
-                                return ratio.DotProduct;
+                            // Average the rdotp across the replicate(s) this display position
+                            // represents, so the line follows replicate ordering and grouping
+                            // (skyline.ms support thread 75064) instead of indexing chrom info
+                            // by the display position directly.
+                            var ratioDotProducts = ReplicateGroups[indexResult].ReplicateIndexes
+                                .Select(replicateIndex =>
+                                {
+                                    var ratio = NormalizedValueCalculator.GetTransitionGroupRatioValue(
+                                        ratioToLabel, precursorNodePath.Peptide, nodeGroup,
+                                        nodeGroup.GetChromInfoEntry(replicateIndex));
+                                    return (ratio?.HasDotProduct ?? false) ? (double?) ratio.DotProduct : null;
+                                })
+                                .Where(value => value.HasValue)
+                                .Cast<double>()
+                                .ToList();
+                            if (ratioDotProducts.Any())
+                                return (float) new Statistics(ratioDotProducts).Mean();
                         }
                     }
                 }
