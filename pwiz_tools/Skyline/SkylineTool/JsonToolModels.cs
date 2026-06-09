@@ -304,6 +304,11 @@ namespace SkylineTool
         public bool HasGraph { get; set; }
         public string DockState { get; set; }
         public string Id { get; set; }
+        /// <summary>
+        /// True for native operating-system windows (e.g. the common Open/Save file dialog)
+        /// that are driven through UI Automation rather than as WinForms forms.
+        /// </summary>
+        public bool IsNative { get; set; }
     }
 
     /// <summary>

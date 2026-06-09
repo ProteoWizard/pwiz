@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -214,10 +215,10 @@ namespace pwiz.Skyline.ToolsUI
 
         public static FormInfo[] GetOpenForms()
         {
-            return InvokeOnUiThread(() =>
+            var results = InvokeOnUiThread(() =>
             {
                 var skylineWindow = Program.MainWindow;
-                var results = new List<FormInfo>();
+                var formInfos = new List<FormInfo>();
                 var dockedForms = new HashSet<Form>();
                 foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                 {
@@ -226,7 +227,7 @@ namespace pwiz.Skyline.ToolsUI
                     if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                         continue;
                     var zedGraph = TryGetZedGraphControl(form);
-                    results.Add(new FormInfo
+                    formInfos.Add(new FormInfo
                     {
                         Type = form.GetType().Name,
                         Title = GetFormTitle(form),
@@ -243,7 +244,7 @@ namespace pwiz.Skyline.ToolsUI
                         continue;
                     if (!form.Visible)
                         continue;
-                    results.Add(new FormInfo
+                    formInfos.Add(new FormInfo
                     {
                         Type = form.GetType().Name,
                         Title = GetFormTitle(form),
@@ -252,8 +253,48 @@ namespace pwiz.Skyline.ToolsUI
                         Id = GetFormId(form),
                     });
                 }
-                return results.ToArray();
+                return formInfos;
             });
+
+            // Native common dialogs (e.g. the Open/Save file dialog) are not WinForms forms and
+            // so never appear in FormUtil.OpenForms. Enumerate them via UI Automation. This runs
+            // on the pipe thread, NOT inside InvokeOnUiThread: when such a dialog is modal the UI
+            // thread is busy in the dialog's own message loop, and querying it from that thread
+            // can deadlock.
+            foreach (var dialog in NativeFileDialogAutomation.GetOpenDialogs())
+            {
+                results.Add(new FormInfo
+                {
+                    Type = NATIVE_FILE_DIALOG_TYPE,
+                    Title = dialog.Title,
+                    HasGraph = false,
+                    DockState = @"Dialog",
+                    Id = GetNativeDialogId(dialog),
+                    IsNative = true,
+                });
+            }
+            return results.ToArray();
+        }
+
+        private const string NATIVE_FILE_DIALOG_TYPE = @"FileDialog";
+
+        private static string GetNativeDialogId(NativeFileDialogAutomation.NativeDialogInfo dialog)
+        {
+            return NATIVE_FILE_DIALOG_TYPE + @":" + dialog.Title;
+        }
+
+        private static bool TryGetNativeDialog(string formId, out NativeFileDialogAutomation.NativeDialogInfo dialog)
+        {
+            foreach (var openDialog in NativeFileDialogAutomation.GetOpenDialogs())
+            {
+                if (GetNativeDialogId(openDialog) == formId)
+                {
+                    dialog = openDialog;
+                    return true;
+                }
+            }
+            dialog = null;
+            return false;
         }
 
         public static string GetGraphData(string graphId, string filePath)
@@ -345,6 +386,9 @@ namespace pwiz.Skyline.ToolsUI
 
         public static string GetFormImage(string formId, string filePath)
         {
+            ValidateFormIdFormat(formId);
+            if (TryGetNativeDialog(formId, out var nativeDialog))
+                return GetNativeDialogImage(nativeDialog, filePath);
             string denial = CheckImageToolPreflight(formId,
                 () => FindFormById(formId),
                 requiresScreenCapture: true);
@@ -370,6 +414,9 @@ namespace pwiz.Skyline.ToolsUI
 
         public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
+            ValidateFormIdFormat(formId);
+            if (TryGetNativeDialog(formId, out var nativeDialog))
+                return GetNativeDialogImageBytes(nativeDialog);
             string denial = CheckImageToolPreflight(formId,
                 () => FindFormById(formId),
                 requiresScreenCapture: true);
@@ -395,6 +442,57 @@ namespace pwiz.Skyline.ToolsUI
                     };
                 }
             });
+        }
+
+        // Captures a native dialog (e.g. the Open/Save file dialog) to a PNG file. Unlike the
+        // WinForms path this runs entirely on the calling (pipe) thread: the capture is a screen
+        // copy by window handle and must not marshal to the UI thread, which may be blocked in a
+        // modal dialog's message loop.
+        private static string GetNativeDialogImage(NativeFileDialogAutomation.NativeDialogInfo dialog, string filePath)
+        {
+            if (Program.MainWindow == null)
+                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
+            string denial = CheckScreenCaptureAvailability();
+            if (denial != null)
+                return denial;
+            using (var bitmap = CaptureNativeWindow(dialog.WindowHandle))
+            {
+                filePath = filePath ?? GetMcpTmpFilePath(FORM_FILE_PREFIX, dialog.Title, EXT_PNG);
+                DirectoryEx.CreateForFilePath(filePath);
+                bitmap.Save(filePath, ImageFormat.Png);
+            }
+            return filePath.ToForwardSlashPath();
+        }
+
+        private static ImageBytesMetadata GetNativeDialogImageBytes(NativeFileDialogAutomation.NativeDialogInfo dialog)
+        {
+            if (Program.MainWindow == null)
+                return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
+            string denial = CheckScreenCaptureAvailability();
+            if (denial != null)
+                return new ImageBytesMetadata { Message = denial };
+            using (var bitmap = CaptureNativeWindow(dialog.WindowHandle))
+            {
+                return new ImageBytesMetadata
+                {
+                    Data = BitmapToPngBytes(bitmap),
+                    FilePath = GetMcpTmpFilePath(FORM_FILE_PREFIX, dialog.Title, EXT_PNG)
+                        .ToForwardSlashPath(),
+                    MimeType = MIME_TYPE_PNG
+                };
+            }
+        }
+
+        // Captures a screenshot of a native window by its handle. GetWindowRect returns logical
+        // coordinates, scaled to physical pixels to match the screen copy (the same convention as
+        // ScreenCapture.GetForeignWindowRects).
+        private static System.Drawing.Bitmap CaptureNativeWindow(IntPtr windowHandle)
+        {
+            User32.SetForegroundWindow(windowHandle);
+            var rect = new User32.RECT();
+            User32.GetWindowRect(windowHandle, ref rect);
+            var screenRect = rect.Rectangle * ScreenCapture.GetScalingFactor();
+            return ScreenCapture.CaptureScreen(screenRect);
         }
 
         // Validates that the given id identifies a form bearing a ZedGraph

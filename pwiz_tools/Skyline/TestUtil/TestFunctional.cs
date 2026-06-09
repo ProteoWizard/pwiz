@@ -62,6 +62,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using TestRunnerLib;
@@ -476,6 +477,24 @@ namespace pwiz.SkylineTestUtil
         protected static void ShowAndCancelDlg<TDlg>(Action showAction) where TDlg : Form
         {
             ShowAndDismissDlg<TDlg>(showAction, dlg=>dlg.CancelButton.PerformClick());
+        }
+
+        /// <summary>
+        /// Opens a document the way a user would: by bringing up the native Open dialog via
+        /// the same code path as the File &gt; Open menu command, then driving that dialog with
+        /// UI Automation to type the path and click Open. Use this in place of calling
+        /// <see cref="SkylineWindow"/>.OpenFile directly when a test should exercise the real
+        /// open-file UI. Waits for the document to finish loading before returning.
+        /// </summary>
+        public static void OpenDocument(string path)
+        {
+            var documentBefore = SkylineWindow.Document;
+            // Post the modal dialog to the UI thread so the test thread is free to drive it.
+            SkylineBeginInvoke(() => SkylineWindow.ShowOpenFileDialog());
+            NativeFileDialogAutomation.EnterPathAndAccept(path);
+            // Clicking Open starts the load on the UI thread after EnterPathAndAccept returns,
+            // so wait for the new document (not the one that was current before) to finish loading.
+            WaitForDocumentChangeLoaded(documentBefore);
         }
 
         protected static void FocusDocument()
