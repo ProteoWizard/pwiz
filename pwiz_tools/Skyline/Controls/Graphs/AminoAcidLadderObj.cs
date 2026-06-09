@@ -170,6 +170,22 @@ namespace pwiz.Skyline.Controls.Graphs
             float lineY  = chartRect.Top + _yLine  * chartRect.Height;
             float labelY = chartRect.Top + _yLabel * chartRect.Height;
 
+            // Residue labels are drawn upward from labelY (StringAlignment.Far), so the
+            // topmost ruler's labels would clip above the chart when the pane is short
+            // (the fixed top fraction maps to fewer pixels than the label height). Reserve
+            // at least one label-height of space above the line by shifting the whole ruler
+            // (line, ticks, labels, drop lines) down by any shortfall.
+            using (var measureFont = new Font(FONT_FACE, _fontSize * scaleFactor))
+            {
+                float minLabelY = chartRect.Top + measureFont.GetHeight(g);
+                if (labelY < minLabelY)
+                {
+                    float shift = minLabelY - labelY;
+                    labelY += shift;
+                    lineY  += shift;
+                }
+            }
+
             // Reference boundaries → screen X for label midpoints
             var refScreenX = _referenceBoundaries
                 .Select(b => graphPane.XAxis.Scale.Transform(b))
