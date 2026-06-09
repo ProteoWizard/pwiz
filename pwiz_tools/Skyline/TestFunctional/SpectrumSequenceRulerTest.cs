@@ -212,9 +212,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, item.PinnedSeriesKeys.Count);
             Assert.AreEqual(1, LadderCount(item));
 
+            // The toggle's menu label reflects the current state.
             Assert.IsTrue(SpectrumGraphItem.RulersEnabled);
+            Assert.AreEqual(GraphsResources.SequenceRulerMenu_DisableRulers, SpectrumGraphItem.RulerToggleMenuText);
             toggleRulers();
             Assert.IsFalse(SpectrumGraphItem.RulersEnabled);
+            Assert.AreEqual(GraphsResources.SequenceRulerMenu_EnableRulers, SpectrumGraphItem.RulerToggleMenuText);
             Assert.AreEqual(0, item.PinnedSeriesKeys.Count);
             Assert.AreEqual(0, LadderCount(item));
             hover(peak1);
@@ -223,6 +226,7 @@ namespace pwiz.SkylineTestFunctional
 
             toggleRulers();
             Assert.IsTrue(SpectrumGraphItem.RulersEnabled);
+            Assert.AreEqual(GraphsResources.SequenceRulerMenu_DisableRulers, SpectrumGraphItem.RulerToggleMenuText);
             Assert.AreEqual(0, item.PinnedSeriesKeys.Count);
             Assert.AreEqual(0, LadderCount(item));
         }
