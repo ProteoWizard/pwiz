@@ -1494,10 +1494,16 @@ namespace pwiz.OspreySharp.Tasks
                 _ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
                 try
                 {
+                    // null = stale (source changed) or invalid (bad magic/version)
+                    // cache: a normal miss, not an error. Re-parse the mzML below.
                     var cacheResult = SpectraCache.LoadSpectraCache(cachePath, inputFile);
-                    ms2Spectra = cacheResult.Ms2Spectra;
-                    ms1Spectra = cacheResult.Ms1Spectra;
-                    return;
+                    if (cacheResult != null)
+                    {
+                        ms2Spectra = cacheResult.Ms2Spectra;
+                        ms1Spectra = cacheResult.Ms1Spectra;
+                        return;
+                    }
+                    _ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
                 }
                 catch (Exception ex)
                 {

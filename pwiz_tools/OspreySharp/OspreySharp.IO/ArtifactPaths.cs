@@ -62,8 +62,12 @@ namespace pwiz.OspreySharp.IO
         // Writability is probed (an ACL check is unreliable cross-platform) and
         // memoized per directory so resolution stays cheap when called for every
         // input file.
+        // Ordinal (case-sensitive) keys: on a case-sensitive file system
+        // (Linux/net8.0) two directories differing only by case are distinct, so
+        // a case-insensitive key could reuse the wrong writability result. The
+        // worst case on Windows is a couple of extra probes.
         private static readonly ConcurrentDictionary<string, bool> _writable =
-            new ConcurrentDictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            new ConcurrentDictionary<string, bool>(StringComparer.Ordinal);
 
         /// <summary>
         /// Directory for a non-cache derived artifact of
@@ -118,10 +122,12 @@ namespace pwiz.OspreySharp.IO
                 if (!Directory.Exists(dir))
                     return false;
                 string probe = Path.Combine(dir, "." + Guid.NewGuid().ToString("N") + ".osprey-wtest");
-                using (File.Create(probe))
+                // DeleteOnClose keeps the probe self-cleaning even if disposal
+                // races with AV / permission edge cases -- no littered temp file.
+                using (new FileStream(probe, FileMode.CreateNew, FileAccess.Write,
+                           FileShare.None, 1, FileOptions.DeleteOnClose))
                 {
                 }
-                File.Delete(probe);
                 return true;
             }
             catch (Exception)

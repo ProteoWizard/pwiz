@@ -128,12 +128,6 @@ namespace pwiz.OspreySharp
                 // (each artifact in its input file's own directory).
                 ArtifactPaths.OutputDir = config.OutputDir;
                 ArtifactPaths.CacheDir = config.CacheDir;
-                // Create the configured directories up front so the first
-                // artifact write doesn't throw on a not-yet-existing --work-dir.
-                if (!string.IsNullOrEmpty(config.OutputDir))
-                    Directory.CreateDirectory(config.OutputDir);
-                if (!string.IsNullOrEmpty(config.CacheDir))
-                    Directory.CreateDirectory(config.CacheDir);
 
                 string err = ValidateArgs(config);
                 if (err != null)
@@ -141,6 +135,14 @@ namespace pwiz.OspreySharp
                     LogError(err);
                     return 1;
                 }
+
+                // Create the configured directories only after args validate, so
+                // an invalid command line surfaces the validation message instead
+                // of a Directory.CreateDirectory side effect / generic error.
+                if (!string.IsNullOrEmpty(config.OutputDir))
+                    Directory.CreateDirectory(config.OutputDir);
+                if (!string.IsNullOrEmpty(config.CacheDir))
+                    Directory.CreateDirectory(config.CacheDir);
                 // Runs that consume --input-scores (FirstJoin, PerFileRescore,
                 // MergeNode, or the default full pipeline started from scores)
                 // have no mzML inputs to validate and ignore --output handling
@@ -812,7 +814,7 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    --work-dir <dir>              Write derived artifacts AND the spectra cache here");
             Console.Error.WriteLine("                                 (so input data can be read-only); default: beside input");
             Console.Error.WriteLine("    --output-dir <dir>           Directory for derived artifacts (overrides --work-dir)");
-            Console.Error.WriteLine("    --cache-dir <dir>            Directory for the .spectra.bin cache (overrides --work-dir)");
+            Console.Error.WriteLine("    --cache-dir <dir>             Directory for the .spectra.bin cache (overrides --work-dir)");
             Console.Error.WriteLine("    --resolution <mode>           Resolution mode: unit, hram, auto (default: auto)");
             Console.Error.WriteLine("    --fragment-tolerance <value>  Fragment m/z tolerance (default: 10)");
             Console.Error.WriteLine("    --fragment-unit <unit>        Fragment tolerance unit: ppm, mz (default: ppm)");
