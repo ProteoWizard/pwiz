@@ -177,7 +177,12 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         public static string GetCachePath(string inputFile)
         {
-            return Path.ChangeExtension(inputFile, "spectra.bin");
+            // Preserve the historical filename ("{stem}.spectra.bin", the same
+            // result Path.ChangeExtension produced); only the directory is
+            // redirected by ArtifactPaths (beside the data file by default, else
+            // the configured cache/output dir).
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + ".spectra.bin";
+            return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 
         #region Private helpers

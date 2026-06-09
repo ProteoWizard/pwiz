@@ -120,6 +120,15 @@ namespace pwiz.OspreySharp
                 config.NoJoin = selectedTask == HpcTask.PerFileScoring || selectedTask == HpcTask.PerFileRescore;
                 config.StopAfterStage5 = selectedTask == HpcTask.FirstJoin;
                 config.ExpectReconciledInput = selectedTask == HpcTask.MergeNode;
+
+                // Apply the output / cache directory overrides process-wide so
+                // every per-file artifact path helper (scores parquet, spectra
+                // cache, calibration JSON, FDR / reconciliation sidecars) writes
+                // to the configured location. Null leaves the historical behavior
+                // (each artifact in its input file's own directory).
+                ArtifactPaths.OutputDir = config.OutputDir;
+                ArtifactPaths.CacheDir = config.CacheDir;
+
                 string err = ValidateArgs(config);
                 if (err != null)
                 {
@@ -207,6 +216,9 @@ namespace pwiz.OspreySharp
             var inputFiles = new List<string>();
             string libraryPath = null;
             string outputPath = null;
+            string workDir = null;
+            string outputDir = null;
+            string cacheDir = null;
             string resolution = "auto";
             double? fragmentTolerance = null;
             string fragmentUnit = null;
@@ -247,6 +259,21 @@ namespace pwiz.OspreySharp
                     case "-o":
                     case "--output":
                         outputPath = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--work-dir":
+                        workDir = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--output-dir":
+                        outputDir = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--cache-dir":
+                        cacheDir = RequireValue(args, ref i, arg);
                         i++;
                         break;
 
@@ -466,6 +493,12 @@ namespace pwiz.OspreySharp
 
             // Apply parsed values to config
             config.InputFiles = inputFiles;
+
+            // --work-dir is a convenience that sets both the derived-artifact
+            // output directory and the spectra-cache directory; an explicit
+            // --output-dir / --cache-dir overrides the matching component.
+            config.OutputDir = outputDir ?? workDir;
+            config.CacheDir = cacheDir ?? workDir;
 
             if (!string.IsNullOrEmpty(libraryPath))
                 config.LibrarySource = LibrarySource.FromPath(libraryPath);

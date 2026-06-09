@@ -148,8 +148,7 @@ namespace pwiz.OspreySharp.Tasks
             foreach (var input in ctx.Config.InputFiles)
             {
                 yield return ParquetScoreCache.GetScoresPath(input);
-                string calDir = Path.GetDirectoryName(Path.GetFullPath(input)) ?? @".";
-                yield return CalibrationIO.CalibrationPathForInput(input, calDir);
+                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
             }
         }
 
@@ -1304,10 +1303,10 @@ namespace pwiz.OspreySharp.Tasks
                     RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration),
                     SecondPassRt = null
                 };
-                // Path.GetDirectoryName can return null for a root path; default
-                // to the current dir so the calibration JSON still has a home.
-                string calDir = Path.GetDirectoryName(Path.GetFullPath(inputFile)) ?? ".";
-                string calPath = CalibrationIO.CalibrationPathForInput(inputFile, calDir);
+                // ArtifactPaths.ResolveOutputDir routes the calibration JSON to
+                // the configured output dir (or the input's own directory by
+                // default), matching where the resume-existence check looks.
+                string calPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
                 CalibrationIO.SaveCalibration(calParams, calPath);
                 _ctx.LogInfo(string.Format("Saved calibration to {0}", calPath));
             }
@@ -1486,8 +1485,12 @@ namespace pwiz.OspreySharp.Tasks
         private void LoadSpectra(string inputFile, bool serializeMzmlRead,
             out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra)
         {
-            // Check for binary spectra cache
-            string cachePath = inputFile + ".spectra.bin";
+            // Check for binary spectra cache. Filename form preserved
+            // ("{inputFile-leaf}.spectra.bin"); only the directory is redirected
+            // by ArtifactPaths (beside the data file by default).
+            string cachePath = Path.Combine(
+                ArtifactPaths.ResolveCacheDir(inputFile),
+                Path.GetFileName(inputFile) + ".spectra.bin");
             if (File.Exists(cachePath))
             {
                 _ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
