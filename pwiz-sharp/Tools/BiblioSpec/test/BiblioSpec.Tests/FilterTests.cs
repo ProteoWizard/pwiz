@@ -33,10 +33,16 @@ public class FilterTests
     [TestMethod]
     public void Filter_Mobility()
     {
-        // mse-mobility build is Inconclusive (Waters final_fragment.csv reader unported).
-        Assert.Inconclusive(
-            "Depends on the 'mse-mobility' build test, whose Waters final_fragment.csv " +
-            "reader is not yet ported (Phase 3 backlog).");
+        new BuildTests().Mse_Mobility();
+
+        TestRunner.RunBlibTest(
+            testName: nameof(Filter_Mobility),
+            tool: BlibTool.BlibFilter,
+            args: new[] { "--unicode" },
+            inputFilenames: new[] { "mse-mobility.blib" },
+            outputBlibName: "mse-mobility-filtered.blib",
+            referenceCheckName: "mse-mobility-filtered.check",
+            inputsFromOutputDir: true);
     }
 
     /// <summary>Jamfile.jam:389 — <c>filter-ssl-small-mol</c>. Depends on <c>ssl-small-mol</c>.</summary>

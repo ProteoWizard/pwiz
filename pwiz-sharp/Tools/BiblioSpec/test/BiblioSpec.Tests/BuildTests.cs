@@ -1045,14 +1045,26 @@ public class BuildTests
     [TestMethod]
     public void Mse()
     {
-        Assert.Inconclusive("Reader for final_fragment.csv (Waters MSe) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Mse),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "tiny_final_fragment.csv" },
+            outputBlibName: "mse.blib",
+            referenceCheckName: "mse.check");
     }
 
     /// <summary>Jamfile.jam:353 — <c>mse-mobility</c>.</summary>
     [TestMethod]
     public void Mse_Mobility()
     {
-        Assert.Inconclusive("Reader for final_fragment.csv (Waters MSe) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Mse_Mobility),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-P", "0.068999" },
+            inputFilenames: new[] { "waters-mobility.final_fragment.csv" },
+            outputBlibName: "mse-mobility.blib",
+            referenceCheckName: "mse-mobility.check");
     }
 
     /// <summary>Jamfile.jam:363 — <c>mascot</c>.</summary>

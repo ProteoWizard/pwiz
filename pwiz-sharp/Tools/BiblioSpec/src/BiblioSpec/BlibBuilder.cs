@@ -696,6 +696,7 @@ public class BlibBuilder : BlibMaker
         (PepXMLreader.AcceptsExtension,     (b, f) => new PepXMLreader(b, f, parentProgress: null)),
         (SQTreader.AcceptsExtension,        (b, f) => new SQTreader(b, f, parentProgress: null)),
         (MzIdentMLReader.AcceptsExtension,  (b, f) => new MzIdentMLReader(b, f, parentProgress: null)),
+        (WatersMseReader.AcceptsExtension,  (b, f) => new WatersMseReader(b, f, parentProgress: null)),
     };
 
     /// <summary>
