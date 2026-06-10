@@ -10414,6 +10414,16 @@ namespace pwiz.Skyline.Properties {
                         "e_description", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The same fragment (product m/z {0}) is declared more than once on a single line of the transition list..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_ReportDuplicateFragment_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list_ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_ReportDuplicateFragment_The_same_fragment__produ" +
+                        "ct_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list_", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Precursor m/z {0} does not agree with value {1} as calculated from ion formula and charge state (delta = {2}, Transition Settings | Instrument | Method match tolerance m/z = {3}).  Correct the m/z value in the table, or leave it blank and Skyline will calculate it for you..

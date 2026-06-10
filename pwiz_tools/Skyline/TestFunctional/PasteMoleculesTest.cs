@@ -150,6 +150,7 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
             TestMultipleFragmentsPerLinePaste();
             TestMultipleFragmentsPerLine();
+            TestDuplicateFragmentOnLine();
             TestSimilarMzIsotopes();
             TestIsotopeLabelsInInChi();
             TestNotes();
@@ -1506,6 +1507,51 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(-2, t.Transition.Charge,
                     string.Format("Fragment at m/z {0} should have charge -2", t.Mz));
             }
+
+            NewDocument();
+        }
+
+        private void TestDuplicateFragmentOnLine()
+        {
+            // The multiple-fragments-per-line import permits repeated product columns, but a single line
+            // must not declare the same fragment twice: one precursor cannot hold two identical
+            // transitions. Here one Product m/z column with two (same-value) Product Charge columns makes
+            // fill-forward clone the product into an identical transition. Previously this slipped through
+            // import and crashed the post-import small-molecule automanage refinement (skyline.ms rowId
+            // 74731); it must instead be reported as an ordinary row error via "Check For Errors".
+            var text =
+                "Molecule Name,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Product Charge\n" +
+                "M1,351.2177,-1,333.2066,-1,-1\n";
+            SetClipboardText(text);
+
+            var columnDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            RunUI(() =>
+            {
+                columnDlg.radioMolecule.PerformClick();
+                SetComboBoxes(columnDlg,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
+
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(() => columnDlg.buttonCheckForErrors.PerformClick());
+            var duplicateFragmentMessageTail = Resources
+                .SmallMoleculeTransitionListReader_ReportDuplicateFragment_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list_
+                .Split(new[] { "{0}" }, StringSplitOptions.None).Last();
+            RunUI(() =>
+            {
+                var dupError = errDlg.ErrorList.FirstOrDefault(e => e.ErrorMessage.Contains(duplicateFragmentMessageTail));
+                AssertEx.IsNotNull(dupError);
+                // The error should point at the offending (second "Product Charge") column, not the
+                // fill-forwarded Product m/z column. Input columns (1-based): 1=Molecule Name,
+                // 2=Precursor m/z, 3=Precursor Charge, 4=Product m/z, 5=Product Charge, 6=Product Charge.
+                AssertEx.AreEqual(6, dupError.Column);
+            });
+            OkDialog(errDlg, errDlg.OkDialog);
+            OkDialog(columnDlg, columnDlg.CancelDialog);
 
             NewDocument();
         }
