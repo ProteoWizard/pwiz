@@ -507,8 +507,11 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
             // wire the correct CV terms when needed.
         }
 
-        // CCS — looked up off the spectrum level CV.
+        // CCS — looked up off the spectrum level CV, falling back to the first precursor's
+        // first selected ion (cpp pwiz's mzXML reader stores CCS there — SpectrumList_mzXML.cpp:206).
         var ccsParam = spec.CvParam(CVID.MS_collisional_cross_sectional_area);
+        if (ccsParam.IsEmpty && spec.Precursors.Count > 0 && spec.Precursors[0].SelectedIons.Count > 0)
+            ccsParam = spec.Precursors[0].SelectedIons[0].CvParam(CVID.MS_collisional_cross_sectional_area);
         if (!ccsParam.IsEmpty)
             returnData.Ccs = (float)ccsParam.ValueAs<double>();
 

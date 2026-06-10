@@ -1294,22 +1294,48 @@ public abstract class BuildParser : IDisposable
     /// parity: BuildParser.cpp:920.
     /// </summary>
     /// <remarks>
-    /// The cpp implementation uses the <c>mzxmlFinder</c> helper. That helper hasn't been
-    /// ported to C# yet because only the Spectrum-Mill reader uses it. When a reader that
-    /// needs this method lands, port <c>mzxmlFinder</c> alongside it. Today this throws
-    /// <see cref="NotImplementedException"/> so callers fail loudly rather than silently.
+    /// Spectrum Mill records each PSM's source as the basename of a .pkl file in the
+    /// pep.xml's <c>spectrum</c> attribute, but the spec file is an mzXML where each
+    /// scan carries the .pkl name on its <c>&lt;scanOrigin&gt;</c> child. We build a
+    /// {SpecName -&gt; SpecInfo chain by precursor} table, walk the mzXML, and fill in
+    /// each PSM's <see cref="PSM.SpecIndex"/> from the matched scan.
     /// </remarks>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Mark members as static",
-        Justification = "Instance method on cpp; future implementation will use Psms and SpecReader.")]
     protected internal void FindScanIndexFromName(IDictionary<PSM, double> precursorMap)
     {
         ArgumentNullException.ThrowIfNull(precursorMap);
-        // touch an instance member so the analyzer is satisfied today; future port will
-        // use Psms + _curSpecFileName + SpecReader to map names → indices.
-        _ = Psms;
-        throw new NotImplementedException(
-            "FindScanIndexFromName requires the mzxmlFinder helper, which is only used by the " +
-            "Spectrum Mill pepXML reader. Port it alongside that reader.");
+
+        // cpp parity: BuildParser.cpp:922-936 — chain SpecInfo nodes per spec name; the
+        // chain head is the most recently inserted node and Next walks to older entries.
+        var nameNumTable = new Dictionary<string, MzxmlFinder.SpecInfo>(StringComparer.Ordinal);
+        foreach (var psm in Psms)
+        {
+            if (psm is null) continue;
+            if (!precursorMap.TryGetValue(psm, out var precursor))
+            {
+                Verbosity.Warn($"Couldn't find precursor for spectrum '{psm.SpecName}'");
+                continue;
+            }
+            nameNumTable.TryGetValue(psm.SpecName, out var old);
+            nameNumTable[psm.SpecName] = new MzxmlFinder.SpecInfo(precursor, old);
+        }
+
+        // cpp parity: BuildParser.cpp:940-941. The finder walks each <scan> in the mzXML
+        // and stores the 0-based document index against the matching (name, precursor)
+        // entry.
+        var finder = new MzxmlFinder(_curSpecFileName);
+        finder.FindScanIndexFromName(nameNumTable);
+
+        // cpp parity: BuildParser.cpp:943-959. For each PSM, look its name back up and
+        // copy the resolved index into PSM.SpecIndex. PSMs with no matching scan keep
+        // their default SpecIndex=-1 — BuildTables logs them as "spectrum not found".
+        foreach (var psm in Psms)
+        {
+            if (psm is null) continue;
+            if (!precursorMap.TryGetValue(psm, out var precursor)) continue;
+            if (!nameNumTable.TryGetValue(psm.SpecName, out var head)) continue;
+            var match = head.GetMatch(precursor);
+            if (match is not null) psm.SpecIndex = match.Scan;
+        }
     }
 
     // --- static helpers --------------------------------------------------------------

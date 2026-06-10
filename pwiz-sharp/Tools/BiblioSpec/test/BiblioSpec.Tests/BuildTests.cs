@@ -293,21 +293,27 @@ public class BuildTests
     [TestMethod]
     public void Smill()
     {
-        // SpectrumMill pep.xml triggers the SpectrumMill-specific code path in PepXMLreader,
-        // which calls BuildParser.FindScanIndexFromName — itself a NotImplementedException
-        // stub awaiting the mzxmlFinder port (~100 LOC cpp). Code-review finding #3.
-        Assert.Inconclusive(
-            "Skipped — SpectrumMill pep.xml input requires mzxmlFinder (not yet ported). "
-            + "FindScanIndexFromName in BuildParser throws NotImplementedException.");
+        TestRunner.RunBlibTest(
+            testName: nameof(Smill),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "CPTAC_Set4_725_091509.pep.XML" },
+            outputBlibName: "smill.blib",
+            referenceCheckName: "smill.check");
     }
 
     /// <summary>Jamfile.jam:243 — <c>smill_ims</c>.</summary>
     [TestMethod]
     public void Smill_Ims()
     {
-        // Same SpectrumMill / FindScanIndexFromName NotImplementedException as Smill.
-        Assert.Inconclusive(
-            "Skipped — SpectrumMill pep.xml input requires mzxmlFinder (not yet ported).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Smill_Ims),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "40minG_WBP_wide_z2-3_mid_BSA_5pmol_01.pep.xml" },
+            outputBlibName: "smill_ims.blib",
+            referenceCheckName: "smill_ims.check",
+            skipLinesName: "smill_ims.skip-lines");
     }
 
     /// <summary>Jamfile.jam:244 — <c>bad-index</c>.</summary>
@@ -1101,9 +1107,44 @@ public class BuildTests
         // — reads target-sequence lists from a file that stands in for stdin. The C# test
         // harness has no stdin-pipe support yet, so this test is deferred until either
         // ExecuteBlib gains stdin redirection or the BlibBuild CLI supports an equivalent flag.
-        Assert.Inconclusive(
-            "Skipped — cpp test pipes target sequences via stdin (`-s -u -U -S@<file>`); the C# "
-            + "test harness does not yet support stdin redirection to the child BlibBuild process.");
+        // BlibBuild's `-S <file>` already opens a file as a stdin replacement (cpp + C# both
+        // support this — BlibBuilder.cs:863-870 / BlibBuilder.cpp:511-513), so we don't need
+        // pipe redirection at the harness layer; just point `-S` at a file whose contents are
+        // the same as the cpp test pipe.
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+
+        // The cpp stdin file embeds a relative path (`pwiz_tools/BiblioSpec/tests/inputs/
+        // test.msms.txt`) that resolves from the cpp repo root. Rewrite it with the absolute
+        // path under the fixture's inputs/ so cwd doesn't matter when BlibBuild reads it.
+        var srcStdin = fixture.InputFile("maxquant-targeted-stdin.txt");
+        var resolvedLines = File.ReadAllLines(srcStdin);
+        for (int i = 0; i < resolvedLines.Length; i++)
+        {
+            if (resolvedLines[i].Contains("test.msms.txt", StringComparison.Ordinal))
+                resolvedLines[i] = fixture.InputFile("test.msms.txt");
+        }
+        var stdinPath = fixture.OutputFile("maxquant-targeted-stdin.resolved.txt");
+        File.WriteAllLines(stdinPath, resolvedLines);
+
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_Targeted),
+            tool: BlibTool.BlibBuild,
+            args: new[]
+            {
+                "-o", "-s", "-u", "-U",
+                "-S", stdinPath,
+                "-E",
+                "-p", fixture.InputFile("mqpar1.xml"),
+            },
+            inputFilenames: Array.Empty<string>(),
+            outputBlibName: "maxquant-targeted.blib",
+            referenceCheckName: "maxquant-targeted.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:294 — <c>maxquant2</c>.</summary>
