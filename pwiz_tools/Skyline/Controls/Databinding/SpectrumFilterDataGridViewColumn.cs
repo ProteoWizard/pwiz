@@ -69,7 +69,10 @@ namespace pwiz.Skyline.Controls.Databinding
 
         public override bool ShouldDisplay(object cellValue, int imageIndex)
         {
-            return true;
+            // Don't display the button when pivoting on this column
+            // TODO: There are some cases where the column is editable, but it has a WrappedPropertyDescriptor instead of a ColumnPropertyDescriptor
+            // so we should be able to launch the editor if we could figure out how to get the Precursor
+            return null != GetColumnPropertyDescriptor();
         }
 
         public string GetValidationError(string proposedText)
@@ -94,33 +97,25 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
-            // A view that shows the precursor's Spectrum Filter can be rooted below the Precursor
-            // level (e.g. a transition list), so the row entity may be a Transition or a results row
-            // rather than the Precursor itself. Resolve the owning Precursor from whichever entity
-            // backs the clicked row.
-            var precursorEntity = GetPrecursor(rowItem.Value);
+
+            var columnPropertyDescriptor = GetColumnPropertyDescriptor();
+            if (columnPropertyDescriptor == null)
+            {
+                return;
+            }
+            var precursorEntity = columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.Parent
+                .GetPropertyValue(rowItem, columnPropertyDescriptor.PivotKey) as Precursor;
             if (precursorEntity == null)
             {
                 return;
             }
+            
             LaunchEditor(grid, precursorEntity);
         }
 
-        private static Precursor GetPrecursor(object rowValue)
+        private ColumnPropertyDescriptor GetColumnPropertyDescriptor()
         {
-            switch (rowValue)
-            {
-                case Precursor precursor:
-                    return precursor;
-                case Transition transition:
-                    return transition.Precursor;
-                case PrecursorResult precursorResult:
-                    return precursorResult.Precursor;
-                case TransitionResult transitionResult:
-                    return transitionResult.Transition?.Precursor;
-                default:
-                    return null;
-            }
+            return (DataGridView?.DataSource as BindingListSource)?.ItemProperties.FindByName(DataPropertyName) as ColumnPropertyDescriptor;
         }
 
         private static void LaunchEditor(DataGridView grid, Precursor precursor)
