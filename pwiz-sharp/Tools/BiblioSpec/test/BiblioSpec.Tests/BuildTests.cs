@@ -341,16 +341,17 @@ public class BuildTests
     [TestMethod]
     public void Comet_Prg2012_Wiff()
     {
-        // Sciex .wiff reading works (vendor reader is registered, peak picker wrap is in
-        // place), but the C# Sciex SDK returns ~3155 peaks for the PRG2012 MS2 spectra
-        // where cpp gets 218 — the centroider in the bundled Clearcore2 stack doesn't
-        // produce identical output to the cpp pwiz SDK version that generated the .check
-        // goldens. Re-enable once the C# Sciex SDK's centroid output matches cpp byte-for-
-        // byte for this fixture.
+        // Sciex .wiff reading is wired in (vendor reader registered, BlibBuild opens the
+        // wiff end-to-end), but the C# Sciex SDK returns ~3155 peaks for these PRG2012
+        // MS2 spectra where cpp gets 218. Neither cpp nor C# enables BiblioSpec-side
+        // peak picking — cpp PwizReader sets only combineIonMobilitySpectra=true
+        // (cpp/PwizReader.cpp:64) — so the divergence is a Sciex SDK output difference
+        // between the version cpp links against and the C# wrapper's bundled Clearcore2.
+        // Tracked as a Sciex vendor-reader issue, not a BiblioSpec port issue.
         Assert.Inconclusive(
-            "Skipped — Sciex .wiff reading works end-to-end, but the C# Sciex SDK's "
-            + "centroider returns ~14× the peak count cpp does on these MS2 spectra "
-            + "(3155 vs 218), so RefSpectra.numPeaks / TIC diverge from the .check goldens.");
+            "Skipped — Sciex .wiff reading works end-to-end. The C# Sciex SDK returns "
+            + "~14× the peak count cpp does on these MS2 spectra (3155 vs 218), so "
+            + ".check goldens diverge. Belongs in the Sciex vendor reader, not BiblioSpec.");
     }
 
     /// <summary>Jamfile.jam:247 — <c>msfragger-tims</c> (input name contains %20 → literal space).</summary>
