@@ -226,6 +226,9 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="Accessibility">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+    </Reference>
     <Reference Include="UIAutomationClient">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>

@@ -315,6 +315,37 @@ namespace SkylineTool
         FormInfo[] GetOpenForms();
 
         /// <summary>
+        /// Invokes a main-menu item by its visible path, e.g. "File > Import > Peptide Search".
+        /// Each segment is matched against a menu item's text (mnemonic '&amp;' and trailing
+        /// ellipsis ignored) or its control name, case-insensitively. The click is posted
+        /// asynchronously, so an item that opens a modal dialog returns immediately; poll
+        /// <see cref="GetOpenForms"/> for the resulting form.
+        /// </summary>
+        /// <param name="menuPath">Menu path; segments separated by '>' (also '|' or '/').</param>
+        void InvokeMenuItem(string menuPath);
+
+        /// <summary>
+        /// Clicks a button on an open form, matching <paramref name="button"/> against the button's
+        /// control name or visible text. For a native dialog this accepts the dialog, or cancels it
+        /// when <paramref name="button"/> names the cancel/close action. The click is posted
+        /// asynchronously when it may open a modal dialog.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="button">Button control name or visible label.</param>
+        void ClickFormButton(string formId, string button);
+
+        /// <summary>
+        /// Sets the value of a control on an open form. For a native file dialog the value is the
+        /// file name(s) to open -- use <c>"a" "b"</c> quoting to select several -- and
+        /// <paramref name="controlId"/> is ignored. For a WinForms form it sets the text, checked
+        /// state, or selected item of the control named <paramref name="controlId"/>.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">Control name (WinForms); ignored for a native file dialog.</param>
+        /// <param name="value">Text, "true"/"false", or item text, per control kind.</param>
+        void SetFormValue(string formId, string controlId, string value);
+
+        /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
         /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>

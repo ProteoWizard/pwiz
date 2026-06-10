@@ -23,8 +23,10 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
@@ -88,6 +90,78 @@ namespace pwiz.Skyline.ToolsUI
                 result = func();
             }));
             return result;
+        }
+
+        private const int DIALOG_POLL_INTERVAL_MILLIS = 100;
+
+        /// <summary>
+        /// Runs <paramref name="work"/> on a background thread and waits for it, but returns
+        /// immediately if a dialog appears, so the call never blocks on a modal:
+        ///   - a new <see cref="CommonAlertDlg"/> (error / confirmation) -> reads its text and
+        ///     throws, surfacing that text to the caller;
+        ///   - a new native dialog (Open/Save common dialog, window class #32770) -> returns, leaving
+        ///     it open for the caller to drive with the form verbs (GetOpenForms / SetFormValue /
+        ///     ClickFormButton).
+        /// The dialog is left open in both cases. Progress dialogs (LongWaitDlg) are not
+        /// CommonAlertDlg, so normal command progress does not trip this. Used by verbs that can pop
+        /// a dialog (RunCommand, SetFormValue, ClickFormButton, ...). Must be called off the UI thread.
+        /// </summary>
+        public static T RunWithDialogWatch<T>(Func<T> work)
+        {
+            var preexistingAlerts = InvokeOnUiThread(() =>
+                new HashSet<Form>(FormUtil.OpenForms.OfType<CommonAlertDlg>()));
+            var preexistingNative = new HashSet<IntPtr>(
+                NativeDialogAutomation.GetOpenDialogs().Select(dialog => dialog.WindowHandle));
+
+            T result = default(T);
+            Exception workError = null;
+            // Capture the worker's exception here rather than letting it escape, so the RunAsync
+            // reporter does not surface its own error dialog.
+            var worker = ActionUtil.RunAsync(() =>
+            {
+                try { result = work(); }
+                catch (Exception ex) { workError = ex; }
+            }, @"JsonTool command");
+
+            while (!worker.Join(DIALOG_POLL_INTERVAL_MILLIS))
+            {
+                string alertText = FindNewAlertText(preexistingAlerts);
+                if (alertText != null)
+                    throw new InvalidOperationException(alertText);
+                if (NativeDialogAutomation.GetOpenDialogs().Any(d => !preexistingNative.Contains(d.WindowHandle)))
+                    return result; // a native modal (e.g. Save/Open) is up; return rather than block on it
+            }
+
+            if (workError != null)
+            {
+                // Preserve ArgumentException (maps to an invalid-params error) like InvokeOnUiThread.
+                if (workError is ArgumentException argEx)
+                    throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
+                ExceptionUtil.WrapAndThrowException(workError);
+            }
+            return result;
+        }
+
+        public static void RunWithDialogWatch(Action work)
+        {
+            RunWithDialogWatch(() => { work(); return true; });
+        }
+
+        // Returns the message of a CommonAlertDlg that has appeared since the watch started, or null.
+        // Enumerated on the UI thread; while an alert is up the UI thread runs its modal message loop,
+        // which pumps this marshaled call.
+        private static string FindNewAlertText(HashSet<Form> preexistingAlerts)
+        {
+            return InvokeOnUiThread(() =>
+            {
+                var alert = FormUtil.OpenForms.OfType<CommonAlertDlg>()
+                    .FirstOrDefault(form => form.Visible && !preexistingAlerts.Contains(form));
+                if (alert == null)
+                    return null;
+                return string.IsNullOrEmpty(alert.DetailMessage)
+                    ? alert.Message
+                    : alert.Message + Environment.NewLine + alert.DetailMessage;
+            });
         }
 
         // Level 2: UI patterns
@@ -208,6 +282,76 @@ namespace pwiz.Skyline.ToolsUI
                 if (index < 0)
                     throw new ArgumentException(@"Replicate not found: " + replicateName);
                 Program.MainWindow.SelectedResultsIndex = index;
+            });
+        }
+
+        // Level 3: Complete UI operations - Generic form interaction
+
+        /// <summary>
+        /// Invokes a main-menu item by its visible path (see <see cref="IJsonToolService"/>). The
+        /// item is located on the UI thread (throwing if absent), then its click is posted with
+        /// BeginInvoke so a menu item that opens a modal dialog does not block the caller.
+        /// </summary>
+        public static void InvokeMenuItem(string menuPath)
+        {
+            var item = InvokeOnUiThread(() => FindMenuItem(menuPath));
+            Program.MainWindow.BeginInvoke((Action)item.PerformClick);
+        }
+
+        /// <summary>
+        /// Clicks a button on an open form, or accepts/cancels a native dialog
+        /// (see <see cref="IJsonToolService"/>).
+        /// </summary>
+        public static void ClickFormButton(string formId, string button)
+        {
+            ValidateFormIdFormat(formId);
+            if (TryGetNativeDialog(formId, out var dialog))
+            {
+                if (IsCancelAction(button))
+                    dialog.Cancel();
+                else
+                    dialog.Accept();
+                return;
+            }
+            var handle = InvokeOnUiThread(() => FindButton(formId, button).Handle);
+            // Click synchronously (BM_CLICK) inside the dialog-watch so a dialog the click pops is
+            // observed: a resulting alert is surfaced (throws its text) and a native dialog (e.g.
+            // Save/Open) returns immediately rather than blocking on its modal. BM_CLICK clicks like a
+            // mouse, bypassing PerformClick's CanSelect / validation gates (which can silently no-op).
+            RunWithDialogWatch(() =>
+            {
+                User32.SendMessage(handle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+                return true;
+            });
+        }
+
+        /// <summary>
+        /// Sets a control's value on an open form, or the file name(s) on a native file dialog
+        /// (see <see cref="IJsonToolService"/>).
+        /// </summary>
+        public static void SetFormValue(string formId, string controlId, string value)
+        {
+            // Watch for a dialog so a setter that triggers a validation/confirmation alert fails fast
+            // with its text, or that opens a native dialog returns immediately, instead of blocking.
+            RunWithDialogWatch(() =>
+            {
+                ValidateFormIdFormat(formId);
+                if (TryGetNativeDialog(formId, out var dialog))
+                {
+                    if (!(dialog is OpenFileDialogAutomation fileDialog))
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"Setting values is not supported for native dialog {0}.", formId));
+                    fileDialog.EnterPath(value);
+                    return;
+                }
+                InvokeOnUiThread(() =>
+                {
+                    var control = FindControl<Control>(FindFormById(formId), controlId);
+                    if (control == null)
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"Control not found on form {0}: {1}.", formId, controlId));
+                    SetControlValue(control, value);
+                });
             });
         }
 
@@ -675,6 +819,110 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.Format(
                 @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
                 formId));
+        }
+
+        // --- Generic form interaction helpers ---
+
+        // Walks the main menu by path (segments split on '>', '|', '/'), matching each segment by
+        // normalized text or by control name. Must run on the UI thread. Throws if no item matches.
+        private static ToolStripMenuItem FindMenuItem(string menuPath)
+        {
+            var segments = (menuPath ?? string.Empty)
+                .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+            if (segments.Length == 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Empty menu path: {0}. Expected e.g. 'File > Import > Peptide Search'.",
+                    menuPath ?? string.Empty));
+            var items = Program.MainWindow.MainMenuStrip.Items;
+            ToolStripMenuItem current = null;
+            foreach (var segment in segments)
+            {
+                current = items.OfType<ToolStripMenuItem>().FirstOrDefault(i => MenuItemMatches(i, segment));
+                if (current == null)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Menu item not found: {0} (no match for '{1}').", menuPath, segment));
+                items = current.DropDownItems;
+            }
+            return current;
+        }
+
+        private static bool MenuItemMatches(ToolStripMenuItem item, string label)
+        {
+            return string.Equals(NormalizeLabel(item.Text), NormalizeLabel(label), StringComparison.CurrentCultureIgnoreCase)
+                || string.Equals(item.Name, label, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Finds a button by control name or visible text anywhere in the form. Must run on the UI
+        // thread. Throws if none matches.
+        private static Button FindButton(string formId, string button)
+        {
+            var found = FindControl<Button>(FindFormById(formId), button);
+            if (found == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Button not found on form {0}: {1}.", formId, button));
+            return found;
+        }
+
+        // Depth-first search for a control of type T matching by control name or visible text.
+        private static T FindControl<T>(Control parent, string key) where T : Control
+        {
+            foreach (Control child in parent.Controls)
+            {
+                if (child is T typed && ControlMatches(child, key))
+                    return typed;
+                var nested = FindControl<T>(child, key);
+                if (nested != null)
+                    return nested;
+            }
+            return null;
+        }
+
+        private static bool ControlMatches(Control control, string key)
+        {
+            return string.Equals(control.Name, key, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(NormalizeLabel(control.Text), NormalizeLabel(key), StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        private static void SetControlValue(Control control, string value)
+        {
+            switch (control)
+            {
+                case CheckBox checkBox:
+                    checkBox.Checked = bool.TryParse(value, out var parsed) ? parsed : value == @"1";
+                    break;
+                case ComboBox comboBox:
+                    int index = comboBox.FindStringExact(value);
+                    if (index < 0)
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"No item '{0}' in combo box {1}.", value, control.Name));
+                    comboBox.SelectedIndex = index;
+                    break;
+                case TextBoxBase textBox:
+                    textBox.Text = value;
+                    break;
+                default:
+                    control.Text = value;
+                    break;
+            }
+        }
+
+        // True when the requested button names the cancel/close action of a native dialog. Locale
+        // sensitive by nature; callers that key on the visible label inherit that.
+        private static bool IsCancelAction(string button)
+        {
+            var normalized = NormalizeLabel(button);
+            return string.Equals(normalized, @"Cancel", StringComparison.CurrentCultureIgnoreCase)
+                || string.Equals(normalized, @"Close", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Strips the mnemonic '&' and a trailing ellipsis/period so menu and button captions compare
+        // equal to the plain label a tutorial uses ("Peptide Search" == "&Peptide Search...").
+        private static string NormalizeLabel(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return string.Empty;
+            return text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', ' ').Trim();
         }
 
         /// <summary>

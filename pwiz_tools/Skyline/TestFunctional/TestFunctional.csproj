@@ -161,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
+    <Compile Include="AlertWatchTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddIrtStandardsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
@@ -323,6 +324,7 @@
     <Compile Include="ModificationPermuterTest.cs" />
     <Compile Include="ModifyMoleculeTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
+    <Compile Include="NativeFileDialogLegacyAcceptTest.cs" />
     <Compile Include="NativeFileDialogTest.cs" />
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
@@ -454,6 +456,7 @@
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
+    <Compile Include="PrmConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerLegacyDlgTest.cs" />

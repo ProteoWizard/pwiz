@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Windows.Automation;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -140,6 +141,12 @@ namespace pwiz.Skyline.ToolsUI
             User32.PostMessageA(WindowHandle, User32.WinMessageType.WM_CLOSE, 0, 0);
         }
 
+        /// <summary>
+        /// Accepts the dialog -- the equivalent of clicking its default/OK button. Implemented per
+        /// dialog type because the accept gesture differs by surface.
+        /// </summary>
+        public abstract void Accept();
+
         protected void BringToForeground()
         {
             User32.SetForegroundWindow(WindowHandle);
@@ -166,55 +173,52 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Finds the open native dialogs (window class "#32770") of the current process. A native
-        /// dialog is an owned window of the Skyline main window, so in the UI Automation tree it
-        /// appears either as a direct child of the desktop root or as a direct child of its owner
-        /// window. We look only at this process's top-level windows and their direct children --
-        /// never a full subtree walk, which is prohibitively slow over Skyline's large control
-        /// tree.
+        /// Finds the open native dialogs (window class "#32770") of the current process by
+        /// enumerating top-level windows with Win32 EnumWindows. A common file dialog is an *owned*
+        /// top-level window (not a child window), and EnumWindows enumerates owned windows -- so this
+        /// finds a dialog owned by a nested modal form (e.g. the "Add Input Files" dialog owned by
+        /// the Import Peptide Search wizard), which a UI Automation child walk from the desktop root
+        /// misses because such a dialog is nested below its owner in the automation tree. EnumWindows
+        /// visits only top-level windows, never the control subtree, so it stays cheap.
         /// </summary>
         private static IList<AutomationElement> FindDialogElements()
         {
-            var processId = Process.GetCurrentProcess().Id;
-            var dialogClassCondition = new PropertyCondition(AutomationElement.ClassNameProperty, DIALOG_CLASS_NAME);
+            var processId = (uint)Process.GetCurrentProcess().Id;
+            var dialogHandles = new List<IntPtr>();
+            User32.EnumWindows((hwnd, lparam) =>
+            {
+                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
+                if (windowProcessId == processId && GetWindowClassName(hwnd) == DIALOG_CLASS_NAME)
+                    dialogHandles.Add(hwnd);
+                return true; // keep enumerating
+            }, IntPtr.Zero);
+
             var result = new List<AutomationElement>();
-            try
+            foreach (var hwnd in dialogHandles)
             {
-                var processWindows = AutomationElement.RootElement.FindAll(TreeScope.Children,
-                    new PropertyCondition(AutomationElement.ProcessIdProperty, processId));
-                foreach (AutomationElement window in processWindows)
+                try
                 {
-                    // The top-level window itself may be the dialog.
-                    if (IsDialogClass(window))
-                        result.Add(window);
-                    // Owned dialogs appear as direct children of their owner window.
-                    try
-                    {
-                        result.AddRange(window.FindAll(TreeScope.Children, dialogClassCondition).Cast<AutomationElement>());
-                    }
-                    catch (ElementNotAvailableException)
-                    {
-                        // Window vanished mid-enumeration; skip its children.
-                    }
+                    var element = AutomationElement.FromHandle(hwnd);
+                    if (element != null)
+                        result.Add(element);
                 }
-            }
-            catch (ElementNotAvailableException)
-            {
-                // The UI Automation tree changed during enumeration; return what was found.
+                catch (ElementNotAvailableException)
+                {
+                    // Window closed between enumeration and binding; skip it.
+                }
+                catch (ArgumentException)
+                {
+                    // Handle no longer valid; skip it.
+                }
             }
             return result;
         }
 
-        private static bool IsDialogClass(AutomationElement element)
+        private static string GetWindowClassName(IntPtr hwnd)
         {
-            try
-            {
-                return element.Current.ClassName == DIALOG_CLASS_NAME;
-            }
-            catch (ElementNotAvailableException)
-            {
-                return false;
-            }
+            var buffer = new StringBuilder(256);
+            int length = User32.GetClassName(hwnd, buffer, buffer.Capacity);
+            return length > 0 ? buffer.ToString() : string.Empty;
         }
 
         private static TResult PollUntil<TResult>(int millisTimeout, string description, Func<TResult> find)

@@ -106,6 +106,11 @@ namespace SkylineTool
                 : CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), dataSource);
         }
 
+        // UI interaction
+        public void InvokeMenuItem(string menuPath) { Call(nameof(InvokeMenuItem), menuPath); }
+        public void ClickFormButton(string formId, string button) { Call(nameof(ClickFormButton), formId, button); }
+        public void SetFormValue(string formId, string controlId, string value) { Call(nameof(SetFormValue), formId, controlId, value); }
+
         // 1-arg methods
         public string GetSelectedElementLocator(string elementType)
         {

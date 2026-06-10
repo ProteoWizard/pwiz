@@ -822,6 +822,21 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.GetOpenForms();
         }
 
+        public void InvokeMenuItem(string menuPath)
+        {
+            JsonUiService.InvokeMenuItem(menuPath);
+        }
+
+        public void ClickFormButton(string formId, string button)
+        {
+            JsonUiService.ClickFormButton(formId, button);
+        }
+
+        public void SetFormValue(string formId, string controlId, string value)
+        {
+            JsonUiService.SetFormValue(formId, controlId, value);
+        }
+
         public string GetGraphData(string graphId, string filePath = null)
         {
             return JsonUiService.GetGraphData(graphId, filePath);
@@ -1760,6 +1775,14 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         private string RunCommandImpl(string[] args, bool silent)
+        {
+            // Run on a background thread and return immediately if the command pops a dialog (alert
+            // -> throws its text; native dialog -> returns), instead of blocking on a modal.
+            // See JsonUiService.RunWithDialogWatch.
+            return JsonUiService.RunWithDialogWatch(() => RunCommandCore(args, silent));
+        }
+
+        private string RunCommandCore(string[] args, bool silent)
         {
             var capture = new StringWriter();
             string argsDisplay = string.Join(@" ", args);

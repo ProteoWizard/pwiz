@@ -102,6 +102,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void SetUndoRedoPosition(int index) { CallClientVoid(c => c.SetUndoRedoPosition(index)); }
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
+    public void InvokeMenuItem(string menuPath) { CallClientVoid(c => c.InvokeMenuItem(menuPath)); }
 
     // 2-arg methods
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
@@ -114,6 +115,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
     public void SelectSettingsListItems(string listType, string[] itemNames) { CallClientVoid(c => c.SelectSettingsListItems(listType, itemNames)); }
     public void ImportFasta(string textFasta, string keepEmptyProteins = null) { CallClientVoid(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
+    public void ClickFormButton(string formId, string button) { CallClientVoid(c => c.ClickFormButton(formId, button)); }
 
     // 3-arg methods
     public ReportMetadata ExportReport(string reportName, string filePath, string culture) { return CallClient(c => c.ExportReport(reportName, filePath, culture)); }
@@ -121,6 +123,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorial(name, language, filePath)); }
     public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { CallClientVoid(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
     public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en") { return CallClient(c => c.GetTutorialImageBytes(name, imageFilename, language)); }
+    public void SetFormValue(string formId, string controlId, string value) { CallClientVoid(c => c.SetFormValue(formId, controlId, value)); }
 
     // 4-arg methods
     public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }

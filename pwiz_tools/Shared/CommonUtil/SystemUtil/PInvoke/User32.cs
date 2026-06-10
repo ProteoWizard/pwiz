@@ -84,7 +84,8 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_MOUSEMOVE = 0x0200,
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
-            WM_MOUSELEAVE = 0x02A3
+            WM_MOUSELEAVE = 0x02A3,
+            BM_CLICK = 0x00F5
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
 

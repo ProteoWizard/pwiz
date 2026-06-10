@@ -531,6 +531,58 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_invoke_menu_item"),
+     Description("Invoke a Skyline main-menu item by its visible path, e.g. " +
+        "'File > Import > Peptide Search'. Segments are separated by '>' and matched against each " +
+        "menu item's visible text (the mnemonic '&' and a trailing ellipsis are ignored) or its " +
+        "control name, case-insensitively. The click is posted asynchronously, so a menu item that " +
+        "opens a dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
+    public static string InvokeMenuItem(
+        [Description("Menu path with '>'-separated segments, e.g. 'File > Import > Peptide Search'")] string menuPath)
+    {
+        return Invoke(connection =>
+        {
+            connection.InvokeMenuItem(menuPath);
+            return $"Invoked menu item: {menuPath}";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_click_form_button"),
+     Description("Click a button on an open form, matching the button by its control name or its " +
+        "visible text. For a native dialog (IsNative=True from skyline_get_open_forms) this accepts " +
+        "the dialog, or cancels it when the button names the Cancel/Close action. The click is posted " +
+        "asynchronously, so a button that opens another dialog returns immediately; call " +
+        "skyline_get_open_forms to find the resulting form.")]
+    public static string ClickFormButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Button control name or visible label, e.g. 'Add Files' or 'OK'")] string button)
+    {
+        return Invoke(connection =>
+        {
+            connection.ClickFormButton(formId, button);
+            return $"Clicked '{button}' on {formId}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_form_value"),
+     Description("Set the value of a control on an open form. For a native file dialog " +
+        "(Type 'FileDialog') the value is the file name(s) to open and controlId is ignored; select " +
+        "several files by quoting each path and separating with spaces, e.g. \"C:\\a.raw\" \"C:\\b.raw\". " +
+        "For a WinForms form it sets the text, the checked state ('true'/'false'), or the selected " +
+        "item of the control named by controlId.")]
+    public static string SetFormValue(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control name on the form; ignored for a native file dialog")] string controlId,
+        [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
+            "or space-separated quoted file paths for a native file dialog")] string value)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetFormValue(formId, controlId, value);
+            return $"Set value on {formId}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_get_graph_data"),
      Description("Extract tab-separated data from a Skyline graph. Returns the same data as " +
         "Skyline's Copy Data clipboard format, including pane titles, axis labels, and all " +
