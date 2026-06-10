@@ -76,6 +76,33 @@ public class ReaderSciexTests
     }
 
     [TestMethod]
+    public void Reader_Sciex_201208_378803_peakPicking()
+    {
+        // Legacy-WIFF + vendor peak-picking parity. The other Sciex peakPicking test
+        // (swath.api) is wiff2-only, which goes through Wiff2File and silently bypasses
+        // the legacy WiffFile.GetSpectrum centroid path; without this case, a regression
+        // in the legacy peak-array branch (cpp WiffFile.cpp:852-864 — GetPeakArray with
+        // xValue / area * PEAK_AREA_SCALE_FACTOR) goes undetected at the vendor-reader
+        // layer and only shows up in downstream BiblioSpec PRG2012 fixtures.
+        //
+        // The other legacy-WIFF fixtures in this file (PressureTrace1, Enolase,
+        // 50uMpyrone) are SRM/SIM only — vendor peak picking is a no-op on stick
+        // spectra. 201208-378803.wiff (the BiblioSpec PRG2012 fixture, copied into
+        // this project's Reference/ override) is the only legacy `.wiff` with profile
+        // MS2 data that actually exercises the peak-array branch.
+        var ctx = SetUp("201208-378803.wiff");
+        if (ctx is null) return;
+        ctx.Run(new ReaderTestConfig
+        {
+            PeakPicking = true,
+            IndexRange = (0, 50),
+            // Same TZ caveat as the simSpectra sibling above.
+            IgnoreStartTimeStamp = true,
+        });
+        ctx.Check();
+    }
+
+    [TestMethod]
     public void Reader_Sciex_Enolase_repeats_AQv1_4_2_srmAsSpectra()
     {
         // cpp Reader_ABI_Test.cpp:103-108: re-run Enolase with srmAsSpectra=true and

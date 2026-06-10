@@ -1,6 +1,7 @@
 using Clearcore2.Data;
 using Clearcore2.Data.AnalystDataProvider;
 using Clearcore2.Data.DataAccess.SampleData;
+using Clearcore2.RawXYProcessing;
 using Pwiz.Data.Common.Params;
 
 #pragma warning disable CA1707
@@ -234,6 +235,34 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         try
         {
             var ms = _exp.GetMassSpectrum(cycle1Based - 1);
+            // cpp WiffFile.cpp:738: pointsAreContinuous = !CentroidMode && expType != MRM && expType != SIM.
+            // Only the continuous case has a meaningful peak-array; MRM/SIM are already sticks.
+            bool pointsAreContinuous = !ms.Info.CentroidMode
+                && ExperimentType != WiffExperimentType.MRM
+                && ExperimentType != WiffExperimentType.SIM;
+
+            // cpp WiffFile.cpp:852-864: when doCentroid && pointsAreContinuous, getData uses
+            // GetPeakArray(cycle-1) — peak->xValue and peak->area * PEAK_AREA_SCALE_FACTOR (100).
+            // Without this branch the C# centroid path silently returns the raw profile data,
+            // which is what made vendor peak picking produce no peak-count reduction.
+            if (centroid && pointsAreContinuous)
+            {
+                try
+                {
+                    var peaks = _exp.GetPeakArray(cycle1Based - 1);
+                    int n = peaks?.Length ?? 0;
+                    var xs = new double[n];
+                    var ys = new double[n];
+                    for (int i = 0; i < n; i++)
+                    {
+                        xs[i] = peaks![i].xValue;
+                        ys[i] = peaks[i].area * PEAK_AREA_SCALE_FACTOR;
+                    }
+                    return new WiffSpectrum(ms, _exp, this, ExperimentType, xs, ys);
+                }
+                catch { /* fall through to profile path */ }
+            }
+
             // cpp WiffFile.cpp:872-873 calls AddZeros(spectrum, 1) for profile (continuous)
             // data; flanking zero-intensity points give consumers explicit baselines.
             if (addZeros && !ms.Info.CentroidMode)
@@ -245,6 +274,9 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
         }
         catch { return null; }
     }
+
+    // cpp WiffFile.cpp:60: const int PEAK_AREA_SCALE_FACTOR = 100;
+    private const int PEAK_AREA_SCALE_FACTOR = 100;
 
     public override (double[] Times, double[] Intensities) GetBpc()
     {
@@ -430,17 +462,25 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
     private readonly MSExperiment _exp;
     private readonly WiffExperiment _wiffExperiment;
     private readonly WiffExperimentType _experimentType;
+    // When set, the caller already centroided this spectrum via GetPeakArray; expose those
+    // peaks as XValues/YValues and report CentroidMode=true so downstream code does not
+    // re-pick or re-pad.
+    private readonly double[]? _centroidXs;
+    private readonly double[]? _centroidYs;
 
-    public WiffSpectrum(MassSpectrum ms, MSExperiment exp, WiffExperiment wiffExperiment, WiffExperimentType experimentType)
+    public WiffSpectrum(MassSpectrum ms, MSExperiment exp, WiffExperiment wiffExperiment, WiffExperimentType experimentType,
+        double[]? centroidXs = null, double[]? centroidYs = null)
     {
         _ms = ms;
         _info = ms.Info;
         _exp = exp;
         _wiffExperiment = wiffExperiment;
         _experimentType = experimentType;
+        _centroidXs = centroidXs;
+        _centroidYs = centroidYs;
     }
 
-    public override bool CentroidMode => _info.CentroidMode;
+    public override bool CentroidMode => _centroidXs is not null || _info.CentroidMode;
 
     public override double[] XValues
     {
@@ -450,6 +490,7 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
         // than the SDK's reported NumDataPoints, matching cpp's runtime guard.
         get
         {
+            if (_centroidXs is not null) return _centroidXs;
             if (_experimentType is WiffExperimentType.MRM or WiffExperimentType.SIM)
             {
                 var ranges = _exp.Details?.MassRangeInfo;
@@ -469,7 +510,7 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
         }
     }
 
-    public override double[] YValues => _ms.GetActualYValues() ?? Array.Empty<double>();
+    public override double[] YValues => _centroidYs ?? (_ms.GetActualYValues() ?? Array.Empty<double>());
     public override bool HasPrecursorInfo => _info.ParentMZ > 0;
     public override double PrecursorMz => _info.ParentMZ;
     public override int PrecursorCharge => _info.ParentChargeState;
