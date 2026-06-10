@@ -20,6 +20,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
@@ -174,7 +175,29 @@ namespace pwiz.Skyline.Model.DdaSearch
                 var settingName = node.Attributes?[@"name"]?.Value;
                 var settingValue = node.Attributes?[@"value"]?.Value;
                 if (settingName != null && engine.AdditionalSettings.TryGetValue(settingName, out var setting))
-                    setting.Value = settingValue;
+                    setting.Value = ParseSettingValue(settingValue, setting.DefaultValue);
+            }
+        }
+
+        /// <summary>
+        /// Parse a stored XML attribute string into the type implied by <paramref name="defaultValue"/>,
+        /// always using <see cref="CultureInfo.InvariantCulture"/>. Presets travel between machines, so
+        /// numeric values must round-trip independent of the current UI locale (de-DE comma vs en-US dot).
+        /// </summary>
+        private static object ParseSettingValue(string serialized, object defaultValue)
+        {
+            if (serialized == null)
+                return null;
+            switch (defaultValue)
+            {
+                case int _:
+                    return int.TryParse(serialized, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i) ? (object)i : serialized;
+                case double _:
+                    return double.TryParse(serialized, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) ? (object)d : serialized;
+                case bool _:
+                    return bool.TryParse(serialized, out var b) ? (object)b : serialized;
+                default:
+                    return serialized;
             }
         }
 
@@ -219,7 +242,9 @@ namespace pwiz.Skyline.Model.DdaSearch
                         continue;
                     writer.WriteStartElement(@"Setting");
                     writer.WriteAttributeString(@"name", kvp.Key);
-                    writer.WriteAttributeString(@"value", kvp.Value.Value?.ToString() ?? string.Empty);
+                    // Serialize with InvariantCulture so doubles like 0.02 don't become "0,02"
+                    // in non-en locales and fail to parse elsewhere.
+                    writer.WriteAttributeString(@"value", Convert.ToString(kvp.Value.Value, CultureInfo.InvariantCulture) ?? string.Empty);
                     writer.WriteEndElement();
                 }
                 writer.WriteEndElement();
@@ -348,7 +373,10 @@ namespace pwiz.Skyline.Model.DdaSearch
             writer.WriteAttributeIfString(ATTR.fragment_ions, FragmentIons);
             writer.WriteAttributeIfString(ATTR.ms2_analyzer, Ms2Analyzer);
             writer.WriteAttribute(ATTR.cutoff_score, CutoffScore);
-            writer.WriteAttributeIfString(ATTR.fasta_file_path, FastaFilePath);
+            // Always write the FASTA attribute so applying the preset can distinguish
+            // "user explicitly cleared FASTA" (empty string) from "preset doesn't touch
+            // FASTA" (attribute absent — legacy presets only).
+            writer.WriteAttributeString(ATTR.fasta_file_path, FastaFilePath ?? string.Empty);
             writer.WriteAttributeIfString(ATTR.enzyme_name, EnzymeName);
             writer.WriteAttribute(ATTR.max_missed_cleavages, MaxMissedCleavages);
             writer.WriteAttributeIfString(ATTR.decoy_generation_method, DecoyGenerationMethod);

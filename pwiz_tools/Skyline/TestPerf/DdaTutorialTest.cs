@@ -457,72 +457,85 @@ namespace TestPerf
             var preset = Settings.Default.SearchSettingsPresets.FirstOrDefault(p => p.Name == presetName);
             Assert.IsNotNull(preset, $"Preset '{presetName}' should exist in settings");
 
+            // Snapshot the preset list so the cleanup at end of this helper restores it
+            // exactly. Calling Clear() unconditionally would wipe the defaults too and
+            // create order-dependent failures for any test that runs after this one.
+            var savedPresets = Settings.Default.SearchSettingsPresets.ToList();
+
             var dlg = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
-            RunUI(() =>
+            try
             {
-                Assert.IsTrue(dlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
-                dlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).Take(1).ToArray();
-                Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, dlg.BuildPepSearchLibControl.WorkflowType);
+                RunUI(() =>
+                {
+                    Assert.IsTrue(dlg.CurrentPage == ImportPeptideSearchDlg.Pages.spectra_page);
+                    dlg.BuildPepSearchLibControl.DdaSearchDataSources = SearchFiles.Select(o => new MsDataFilePath(o)).Take(1).ToArray();
+                    Assert.AreEqual(ImportPeptideSearchDlg.Workflow.dda, dlg.BuildPepSearchLibControl.WorkflowType);
 
-                // Apply the saved preset
-                dlg.SelectedPresetName = presetName;
-                Assert.IsTrue(dlg.ClickNextButton());
-            });
+                    // Apply the saved preset
+                    dlg.SelectedPresetName = presetName;
+                    Assert.IsTrue(dlg.ClickNextButton());
+                });
 
-            // Match modifications page
-            WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
+                // Match modifications page
+                WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.match_modifications_page);
 
-            // Verify preset mods are checked
-            RunUI(() =>
+                // Verify preset mods are checked
+                RunUI(() =>
+                {
+                    var checkedMods = dlg.MatchModificationsControl.CheckedModificationNames.ToList();
+                    foreach (var mod in preset.StructuralModifications)
+                        Assert.IsTrue(checkedMods.Contains(mod.Name), $"Structural mod '{mod.Name}' should be checked from preset");
+                    foreach (var mod in preset.HeavyModifications)
+                        Assert.IsTrue(checkedMods.Contains(mod.Name), $"Heavy mod '{mod.Name}' should be checked from preset");
+                    Assert.IsTrue(dlg.ClickNextButton());
+                });
+
+                // Full scan settings page
+                RunUI(() => Assert.IsTrue(dlg.ClickNextButton()));
+
+                // FASTA page - verify settings
+                WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
+                RunUI(() =>
+                {
+                    if (!string.IsNullOrEmpty(preset.EnzymeName))
+                        Assert.AreEqual(preset.EnzymeName, dlg.ImportFastaControl.Enzyme.Name,
+                            "Enzyme should be restored from preset");
+                    Assert.AreEqual(preset.MaxMissedCleavages, dlg.ImportFastaControl.MaxMissedCleavages,
+                        "Missed cleavages should be restored from preset");
+                    if (!string.IsNullOrEmpty(preset.FastaFilePath))
+                        Assert.AreEqual(preset.FastaFilePath, dlg.ImportFastaControl.FastaFile,
+                            "FASTA file should be restored from preset");
+                    Assert.IsTrue(dlg.ClickNextButton());
+                });
+
+                // Search settings page - verify settings
+                WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
+                RunUI(() =>
+                {
+                    var searchSettings = dlg.SearchSettingsControl;
+                    Assert.AreEqual(expectedEngine, searchSettings.SelectedSearchEngine,
+                        "Search engine should be restored from preset");
+                    Assert.AreEqual(preset.PrecursorToleranceValue, searchSettings.PrecursorTolerance.Value, 0.001,
+                        "Precursor tolerance should be restored from preset");
+                    Assert.AreEqual(preset.PrecursorToleranceUnit, searchSettings.PrecursorTolerance.Unit,
+                        "Precursor tolerance unit should be restored from preset");
+                    Assert.AreEqual(preset.FragmentToleranceValue, searchSettings.FragmentTolerance.Value, 0.001,
+                        "Fragment tolerance should be restored from preset");
+                    Assert.AreEqual(preset.FragmentToleranceUnit, searchSettings.FragmentTolerance.Unit,
+                        "Fragment tolerance unit should be restored from preset");
+                    Assert.AreEqual(preset.CutoffScore, searchSettings.CutoffScore, 0.001,
+                        "Cutoff score should be restored from preset");
+                });
+
+                OkDialog(dlg, dlg.ClickCancelButton);
+            }
+            finally
             {
-                var checkedMods = dlg.MatchModificationsControl.CheckedModificationNames.ToList();
-                foreach (var mod in preset.StructuralModifications)
-                    Assert.IsTrue(checkedMods.Contains(mod.Name), $"Structural mod '{mod.Name}' should be checked from preset");
-                foreach (var mod in preset.HeavyModifications)
-                    Assert.IsTrue(checkedMods.Contains(mod.Name), $"Heavy mod '{mod.Name}' should be checked from preset");
-                Assert.IsTrue(dlg.ClickNextButton());
-            });
-
-            // Full scan settings page
-            RunUI(() => Assert.IsTrue(dlg.ClickNextButton()));
-
-            // FASTA page - verify settings
-            WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.import_fasta_page);
-            RunUI(() =>
-            {
-                if (!string.IsNullOrEmpty(preset.EnzymeName))
-                    Assert.AreEqual(preset.EnzymeName, dlg.ImportFastaControl.Enzyme.Name,
-                        "Enzyme should be restored from preset");
-                Assert.AreEqual(preset.MaxMissedCleavages, dlg.ImportFastaControl.MaxMissedCleavages,
-                    "Missed cleavages should be restored from preset");
-                if (!string.IsNullOrEmpty(preset.FastaFilePath))
-                    Assert.AreEqual(preset.FastaFilePath, dlg.ImportFastaControl.FastaFile,
-                        "FASTA file should be restored from preset");
-                Assert.IsTrue(dlg.ClickNextButton());
-            });
-
-            // Search settings page - verify settings
-            WaitForConditionUI(() => dlg.CurrentPage == ImportPeptideSearchDlg.Pages.dda_search_settings_page);
-            RunUI(() =>
-            {
-                var searchSettings = dlg.SearchSettingsControl;
-                Assert.AreEqual(expectedEngine, searchSettings.SelectedSearchEngine,
-                    "Search engine should be restored from preset");
-                Assert.AreEqual(preset.PrecursorToleranceValue, searchSettings.PrecursorTolerance.Value, 0.001,
-                    "Precursor tolerance should be restored from preset");
-                Assert.AreEqual(preset.PrecursorToleranceUnit, searchSettings.PrecursorTolerance.Unit,
-                    "Precursor tolerance unit should be restored from preset");
-                Assert.AreEqual(preset.FragmentToleranceValue, searchSettings.FragmentTolerance.Value, 0.001,
-                    "Fragment tolerance should be restored from preset");
-                Assert.AreEqual(preset.FragmentToleranceUnit, searchSettings.FragmentTolerance.Unit,
-                    "Fragment tolerance unit should be restored from preset");
-                Assert.AreEqual(preset.CutoffScore, searchSettings.CutoffScore, 0.001,
-                    "Cutoff score should be restored from preset");
-            });
-
-            OkDialog(dlg, dlg.ClickCancelButton);
-            Settings.Default.SearchSettingsPresets.Clear();
+                Settings.Default.SearchSettingsPresets.Clear();
+                foreach (var p in savedPresets)
+                    Settings.Default.SearchSettingsPresets.Add(p);
+            }
         }
 
         protected override void CleanupPersistentDir()
