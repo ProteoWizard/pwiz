@@ -227,6 +227,15 @@ foreach ($name in $selected) {
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
     $goldenDir   = Join-Path $goldenRoot $cfg.Folder
 
+    # Start each dataset leg from a PRISTINE work dir. The run dir is date-only,
+    # so a second run on the same day (developer re-run, or a CI agent that
+    # reuses its checkout) would otherwise find the prior run's state -- including
+    # the mode-2 Invoke-ResumeInvalidation deletions and a leftover
+    # output_cold.blib. The straight-through leg would then RESUME instead of
+    # running clean, and mode 1 would compare a resume blib to the golden while
+    # labeling it straight-through. Wipe it so every straight-through is cold.
+    if (Test-Path $straightDir) { Remove-Item $straightDir -Recurse -Force }
+
     # ---- Straight-through ----
     Write-Progress-Tc "${name}: straight-through run ($($inputs.Mzmls.Count) files, $($cfg.Resolution))"
     $rStraight = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `

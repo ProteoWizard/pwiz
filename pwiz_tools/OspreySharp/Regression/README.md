@@ -56,6 +56,14 @@ order- and machine-independent, spread across the data, ~500 of ~60K. The
 full-set summary catches drift on precursors **outside** the subset (coarsely);
 the subset catches it precisely at 1e-9.
 
+By design this means mode 1 has one blind spot: a small value change confined to
+out-of-subset precursors — below the summary's relative-1e-6 floor, or a
+sign-cancelling pair of changes — is invisible to it. That is the accepted cost
+of a ~3.5 MB committed golden vs. a 50–135 MB one; **mode 2** (full resume
+self-consistency at 1e-9) and the subset are the tight gates, the summary is the
+coarse out-of-subset backstop. A change that shifts results broadly (the common
+regression) hits the subset and the summary regardless.
+
 ### Refreshing the golden
 
 Only on an **intentional, reviewed behavior change**. Re-capture with:

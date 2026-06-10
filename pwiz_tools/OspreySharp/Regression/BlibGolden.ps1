@@ -46,6 +46,12 @@ $ErrorActionPreference = 'Stop'
 # Unit-separator joiner for composite keys (won't occur in any data field).
 $script:KeySep = [char]0x1F
 
+# Precursor-subset modulus (single source of truth). Capture and compare MUST
+# use the same value or the compared subset desyncs from the captured one, so
+# every -Modulus parameter defaults to this rather than a duplicated literal.
+# ~120 selects ~500 of ~60K precursors.
+$script:DefaultModulus = 120
+
 # ----------------------------------------------------------------------
 # Projection schema -- the regression-significant .blib tables.
 # ----------------------------------------------------------------------
@@ -261,7 +267,7 @@ function Test-PrecursorInSubset {
     ~500 of ~60K precursors. Crypto hash -> identical selection on every
     machine/runtime, independent of row order.
     #>
-    param([string]$PeptideModSeq, [string]$PrecursorCharge, [int]$Modulus = 120)
+    param([string]$PeptideModSeq, [string]$PrecursorCharge, [int]$Modulus = $script:DefaultModulus)
 
     $key = "$PeptideModSeq$($script:KeySep)$PrecursorCharge"
     $bytes = [System.Text.Encoding]::UTF8.GetBytes($key)
@@ -432,7 +438,7 @@ function Compare-RowSets {
 # sorted by key for stable diffs. Assumes peptideModSeq/precursorCharge are the
 # first two projected columns for Subset tables.
 function Get-TableProjection {
-    param([string]$Blib, [hashtable]$Table, [switch]$SubsetFilter, [switch]$NoSort, [int]$Modulus = 120)
+    param([string]$Blib, [hashtable]$Table, [switch]$SubsetFilter, [switch]$NoSort, [int]$Modulus = $script:DefaultModulus)
 
     $res = Invoke-BlibQuery -Blib $Blib -Sql $Table.Sql
     $header = $res.Cols
@@ -456,7 +462,7 @@ function Get-TableProjection {
 
 # Per-spectrum peak SHA-256 digest projection (optionally subset-filtered).
 function Get-PeakDigestProjection {
-    param([string]$Blib, [switch]$SubsetFilter, [int]$Modulus = 120)
+    param([string]$Blib, [switch]$SubsetFilter, [int]$Modulus = $script:DefaultModulus)
 
     $res = Invoke-BlibQuery -Blib $Blib -Sql $script:PeakDigestSql
     $sha = [System.Security.Cryptography.SHA256]::Create()
@@ -523,7 +529,7 @@ function Save-BlibGolden {
         [Parameter(Mandatory = $true)][string]$Blib,
         [Parameter(Mandatory = $true)][string]$GoldenDir,
         [string]$ProteinFdrTsv,
-        [int]$Modulus = 120
+        [int]$Modulus = $script:DefaultModulus
     )
     $tablesDir = Join-Path $GoldenDir 'tables'
     New-Item -ItemType Directory -Path $tablesDir -Force | Out-Null
@@ -559,7 +565,7 @@ function Compare-BlibGolden {
         [Parameter(Mandatory = $true)][string]$Blib,
         [Parameter(Mandatory = $true)][string]$GoldenDir,
         [string]$ProteinFdrTsv,
-        [int]$Modulus = 120,
+        [int]$Modulus = $script:DefaultModulus,
         [double]$Tolerance = 1e-9,
         [double]$SummaryRelTolerance = 1e-6
     )
@@ -619,7 +625,13 @@ function Compare-BlibGolden {
 
 # Compare two blib_summary projections: row counts must match exactly; numeric
 # aggregates (sum/min/max) at relative tolerance to absorb float-format noise
-# while still flagging out-of-subset drift.
+# while still flagging out-of-subset drift. NOTE: the SUM aggregate is computed
+# by SQLite in scan order, so its low bits depend on row ordering between runs --
+# that order dependence (not just decimal rendering) is why this tolerance is
+# relative-1e-6 and cannot be tightened to the 1e-9 used for the per-row subset.
+# Consequently a sub-1e-6-relative value change on an out-of-subset precursor (or
+# a sign-cancelling pair) can pass the summary; mode 2 + the per-row subset are
+# the tight gates, the summary is a coarse out-of-subset backstop.
 function Compare-Summary {
     param([pscustomobject]$Golden, [pscustomobject]$Fresh, [double]$RelTolerance = 1e-6)
 
