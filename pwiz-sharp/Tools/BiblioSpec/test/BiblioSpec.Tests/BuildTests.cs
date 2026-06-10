@@ -337,11 +337,20 @@ public class BuildTests
             skipLinesName: "zbuild.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:246 — <c>comet-prg2012-wiff</c> (vendor-API gated).</summary>
+    /// <summary>Jamfile.jam:246 — <c>comet-prg2012-wiff</c>.</summary>
     [TestMethod]
     public void Comet_Prg2012_Wiff()
     {
-        Assert.Inconclusive("Vendor-only test; vendor SDK not available in C# port yet.");
+        // Sciex .wiff reading works (vendor reader is registered, peak picker wrap is in
+        // place), but the C# Sciex SDK returns ~3155 peaks for the PRG2012 MS2 spectra
+        // where cpp gets 218 — the centroider in the bundled Clearcore2 stack doesn't
+        // produce identical output to the cpp pwiz SDK version that generated the .check
+        // goldens. Re-enable once the C# Sciex SDK's centroid output matches cpp byte-for-
+        // byte for this fixture.
+        Assert.Inconclusive(
+            "Skipped — Sciex .wiff reading works end-to-end, but the C# Sciex SDK's "
+            + "centroider returns ~14× the peak count cpp does on these MS2 spectra "
+            + "(3155 vs 218), so RefSpectra.numPeaks / TIC diverge from the .check goldens.");
     }
 
     /// <summary>Jamfile.jam:247 — <c>msfragger-tims</c> (input name contains %20 → literal space).</summary>
@@ -1246,7 +1255,10 @@ public class BuildTests
     [TestMethod]
     public void MaxQuant_Prg2012_Wiff()
     {
-        Assert.Inconclusive("Vendor-only test; vendor SDK not available in C# port yet.");
+        // Same Sciex SDK centroid-mismatch as Comet_Prg2012_Wiff.
+        Assert.Inconclusive(
+            "Skipped — see Comet_Prg2012_Wiff. The MaxQuant msms.txt path opens the same "
+            + ".wiff and the same SDK centroid-vs-cpp peak count diff applies.");
     }
 
     /// <summary>Jamfile.jam:334 — <c>diann-speclib</c>.</summary>

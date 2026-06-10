@@ -9,6 +9,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BiblioSpec\BiblioSpec.csproj" />
+
+    <!-- Vendor SDK-backed readers. BlibBuild needs to open .baf / .raw / .wiff / .lcd / etc.
+         when a search-results file (pep.xml, msms.txt, …) references a vendor-format spectrum
+         file. The vendor projects can't live in the core Pwiz.Data.MsData assembly without
+         dragging the native SDKs into every consumer, so they're registered at startup
+         (see Program.cs RegisterVendorReaders). -->
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Thermo\Thermo.csproj" />
   </ItemGroup>
 
   <!-- cpp parity: MaxQuantReader.cpp:177 — when no modifications.xml lives next to the

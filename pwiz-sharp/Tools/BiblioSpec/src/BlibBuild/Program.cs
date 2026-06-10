@@ -5,6 +5,7 @@
 // then constructs a BlibBuilder, runs parseCommandArgs / init / BuildLibrary / commit,
 // and translates exceptions to exit codes.
 
+using Pwiz.Data.MsData.Readers;
 using Pwiz.Tools.BiblioSpec;
 
 namespace Pwiz.Tools.BiblioSpec.BlibBuild;
@@ -25,6 +26,13 @@ public static class Program
     public static int Main(string[] args)
     {
         ArgumentNullException.ThrowIfNull(args);
+
+        // Vendor SDK-backed readers register themselves with the shared format-detection
+        // dispatcher so PwizSharpSpecFileReader can open .raw / .wiff / .baf / .lcd / etc.
+        // when a pep.xml or msms.txt references one. The vendor projects can't live in
+        // Pwiz.Data.MsData without dragging the native SDKs into every consumer, so each
+        // exposes a static `AddTo(ReaderList)` helper that we wire up at startup.
+        RegisterVendorReaders();
 
         // Shared argv preprocessing: -e capture, --out=PATH rewrite, --unicode strip.
         // See CliPreproc for cpp-parity refs.
@@ -132,6 +140,21 @@ public static class Program
             Console.Error.WriteLine($"FAILED: This negative test expected an error containing \"{expectedError}\"");
         }
         return 1;
+    }
+
+    /// <summary>
+    /// Register every vendor reader project we're linked against with the shared
+    /// <see cref="ReaderList.AdditionalReaders"/> list, so the default
+    /// format-detection dispatcher can open vendor file formats. Idempotent — calling
+    /// twice (e.g. across test runs in the same process) won't double-register.
+    /// </summary>
+    private static void RegisterVendorReaders()
+    {
+        if (ReaderList.AdditionalReaders.Count > 0) return;
+        ReaderList.AdditionalReaders.Add(new Pwiz.Vendor.Bruker.Reader_Bruker());
+        ReaderList.AdditionalReaders.Add(new Pwiz.Vendor.Sciex.Reader_Sciex());
+        ReaderList.AdditionalReaders.Add(new Pwiz.Vendor.Shimadzu.Reader_Shimadzu());
+        ReaderList.AdditionalReaders.Add(new Pwiz.Vendor.Thermo.Reader_Thermo());
     }
 
     /// <summary>

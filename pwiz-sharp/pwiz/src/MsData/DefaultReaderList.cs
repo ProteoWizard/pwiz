@@ -104,6 +104,16 @@ public sealed class ReaderList : IReader
     /// matters for ambiguous inputs — and the two formats can't be confused with
     /// each other.
     /// </remarks>
+    /// <summary>
+    /// Additional readers registered at startup (typically vendor-SDK-backed readers from
+    /// <c>Pwiz.Vendor.*</c>). The vendor projects can't be referenced from
+    /// <c>Pwiz.Data.MsData</c> directly without dragging the native SDKs into every consumer,
+    /// so each vendor exposes a <c>ReaderRegistration.AddTo</c> helper that the host
+    /// application calls at startup. Appended after the built-in readers so the built-in
+    /// format detection still has priority where formats can be ambiguous.
+    /// </summary>
+    public static List<IReader> AdditionalReaders { get; } = new();
+
     public static ReaderList Default
     {
         get
@@ -116,6 +126,8 @@ public sealed class ReaderList : IReader
             list.Add(new MSnReaderAdapter());
             list.Add(new BtdxReaderAdapter());
             list.Add(new MgfReaderAdapter());
+            foreach (var r in AdditionalReaders)
+                list.Add(r);
             return list;
         }
     }
