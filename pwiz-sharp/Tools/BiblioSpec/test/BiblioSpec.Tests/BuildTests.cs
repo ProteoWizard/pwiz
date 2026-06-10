@@ -681,182 +681,351 @@ public class BuildTests
     [TestMethod]
     public void Shimadzu_Mlb()
     {
-        Assert.Inconclusive("Reader for .mlb not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Shimadzu_Mlb),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "Small_Library-Positive-ions_CE-Merged.mlb" },
+            outputBlibName: "Small_Library-Positive-ions_CE-Merged.blib",
+            referenceCheckName: "Small_Library-Positive-ions_CE-Merged.check");
     }
 
     /// <summary>Jamfile.jam:220 — <c>hardklor</c>.</summary>
     [TestMethod]
     public void Hardklor()
     {
-        Assert.Inconclusive("Reader for .hk.bs.kro not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Hardklor),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "hardklor.hk.bs.kro" },
+            outputBlibName: "hardklor.blib",
+            referenceCheckName: "hardklor.check");
     }
 
     /// <summary>Jamfile.jam:224 — <c>perc-xml</c>.</summary>
     [TestMethod]
     public void PercXml()
     {
-        Assert.Inconclusive("Reader for .perc.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(PercXml),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "smaller.perc.xml" },
+            outputBlibName: "perc-xml.blib",
+            referenceCheckName: "perc-xml.check");
     }
 
     /// <summary>Jamfile.jam:227 — <c>perc-comet-xml</c>.</summary>
     [TestMethod]
     public void PercCometXml()
     {
-        Assert.Inconclusive("Reader for .perc.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(PercCometXml),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "small.comet.perc.xml" },
+            outputBlibName: "perc-comet-xml.blib",
+            referenceCheckName: "perc-comet-xml.check");
     }
 
     /// <summary>Jamfile.jam:231 — <c>perc-bracket-xml</c>.</summary>
     [TestMethod]
     public void PercBracketXml()
     {
-        Assert.Inconclusive("Reader for .perc.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(PercBracketXml),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "bracket.perc.xml" },
+            outputBlibName: "perc-bracket-xml.blib",
+            referenceCheckName: "perc-bracket-xml.check");
     }
 
     /// <summary>Jamfile.jam:259 — <c>idpicker</c>.</summary>
     [TestMethod]
     public void IdPicker()
     {
-        Assert.Inconclusive("Reader for .idpXML not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(IdPicker),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "orbi-small-eg.idpXML" },
+            outputBlibName: "idpicker.blib",
+            referenceCheckName: "idpicker.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:260 — <c>tandem</c>.</summary>
     [TestMethod]
     public void Tandem()
     {
-        Assert.Inconclusive("Reader for .xtan.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Tandem),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "out_260_1_step01.2009_09_02_10_55_23.xtan.xml" },
+            outputBlibName: "tandem.blib",
+            referenceCheckName: "tandem.check",
+            skipLinesName: "zbuild-rt.skip-lines");
     }
 
     /// <summary>Jamfile.jam:261 — <c>pride-mascot</c>.</summary>
     [TestMethod]
     public void Pride_Mascot()
     {
-        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Pride_Mascot),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "test.mascot.pride.xml" },
+            outputBlibName: "pride-mascot.blib",
+            referenceCheckName: "pride-mascot.check");
     }
 
     /// <summary>Jamfile.jam:262 — <c>pride-xcorr</c>.</summary>
     [TestMethod]
     public void Pride_Xcorr()
     {
-        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Pride_Xcorr),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "test.xcorr.pride.xml" },
+            outputBlibName: "pride-xcorr.blib",
+            referenceCheckName: "pride-xcorr.check");
     }
 
     /// <summary>Jamfile.jam:263 — <c>pride-bytes</c>.</summary>
     [TestMethod]
     public void Pride_Bytes()
     {
-        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Pride_Bytes),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "test.bytes.pride.xml" },
+            outputBlibName: "pride-xcorr-bytes.blib",
+            referenceCheckName: "pride-xcorr-bytes.check");
     }
 
     /// <summary>Jamfile.jam:264 — <c>pride-xcorr-no-charges</c>.</summary>
     [TestMethod]
     public void Pride_Xcorr_NoCharges()
     {
-        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Pride_Xcorr_NoCharges),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "test.xcorr.nocharges.pride.xml" },
+            outputBlibName: "pride-xcorr-nocharges.blib",
+            referenceCheckName: "pride-xcorr-nocharges.check");
     }
 
     /// <summary>Jamfile.jam:265 — <c>pride-mill</c>.</summary>
     [TestMethod]
     public void Pride_Mill()
     {
-        Assert.Inconclusive("Reader for .pride.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Pride_Mill),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "test.mill.pride.xml" },
+            outputBlibName: "pride-mill.blib",
+            referenceCheckName: "pride-mill.check");
     }
 
     /// <summary>Jamfile.jam:266 — <c>tiny-proxl</c>.</summary>
     [TestMethod]
     public void Tiny_Proxl()
     {
-        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Tiny_Proxl),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "tiny.proxl.xml" },
+            outputBlibName: "tiny-proxl.blib",
+            referenceCheckName: "tiny-proxl.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:267 — <c>tinyByonic-proxl</c>.</summary>
     [TestMethod]
     public void TinyByonic_Proxl()
     {
-        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(TinyByonic_Proxl),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "tinyByonic.proxl.xml" },
+            outputBlibName: "tinyByonic-proxl.blib",
+            referenceCheckName: "tinyByonic-proxl.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:268 — <c>tinyPlink-proxl</c>.</summary>
     [TestMethod]
     public void TinyPlink_Proxl()
     {
-        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(TinyPlink_Proxl),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "tinyPlink.proxl.xml" },
+            outputBlibName: "tinyPlink-proxl.blib",
+            referenceCheckName: "tinyPlink-proxl.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:269 — <c>tinyPeptideProphet-proxl</c>.</summary>
     [TestMethod]
     public void TinyPeptideProphet_Proxl()
     {
-        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(TinyPeptideProphet_Proxl),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "tinyPeptideProphet.proxl.xml" },
+            outputBlibName: "tinyPeptideProphet-proxl.blib",
+            referenceCheckName: "tinyPeptideProphet-proxl.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:270 — <c>tinyMerox-proxl</c>.</summary>
     [TestMethod]
     public void TinyMerox_Proxl()
     {
-        Assert.Inconclusive("Reader for .proxl.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(TinyMerox_Proxl),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "tinyMerox.proxl.xml" },
+            outputBlibName: "tinyMerox-proxl.blib",
+            referenceCheckName: "tinyMerox-proxl.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:271 — <c>tiny-msf</c>.</summary>
     [TestMethod]
     public void Tiny_Msf()
     {
-        Assert.Inconclusive("Reader for .msf not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Tiny_Msf),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "tiny.msf" },
+            outputBlibName: "tiny-msf.blib",
+            referenceCheckName: "tiny-msf.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:272 — <c>tiny-msf-keep</c>.</summary>
     [TestMethod]
     public void Tiny_Msf_Keep()
     {
-        Assert.Inconclusive("Reader for .msf not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Tiny_Msf_Keep),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o", "-K" },
+            inputFilenames: new[] { "tiny.msf" },
+            outputBlibName: "tiny-msf-keep.blib",
+            referenceCheckName: "tiny-msf-keep.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:273 — <c>tiny-v2-msf</c>.</summary>
     [TestMethod]
     public void Tiny_V2_Msf()
     {
-        Assert.Inconclusive("Reader for .msf not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Tiny_V2_Msf),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "tiny-v2.msf" },
+            outputBlibName: "tiny-v2-msf.blib",
+            referenceCheckName: "tiny-v2-msf.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:274 — <c>tiny-v2-filtered-pdResult</c>.</summary>
     [TestMethod]
     public void Tiny_V2_Filtered_PdResult()
     {
-        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Tiny_V2_Filtered_PdResult),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "tiny-v2-filtered.pdResult" },
+            outputBlibName: "tiny-v2-filtered-pdResult.blib",
+            referenceCheckName: "tiny-v2-filtered-pdResult.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:275 — <c>md_special_filtered-pdResult</c>.</summary>
     [TestMethod]
     public void MdSpecialFiltered_PdResult()
     {
-        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(MdSpecialFiltered_PdResult),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "md_special_filtered.pdResult" },
+            outputBlibName: "md_special_filtered-pdResult.blib",
+            referenceCheckName: "md_special_filtered-pdResult.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:276 — <c>example-pdResult-confidence3</c>.</summary>
     [TestMethod]
     public void Example_PdResult_Confidence3()
     {
-        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Example_PdResult_Confidence3),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0.99" },
+            inputFilenames: new[] { "example.pdResult" },
+            outputBlibName: "example-pdResult-confidence3.blib",
+            referenceCheckName: "example-pdResult-confidence3.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:277 — <c>example-pdResult-numeric</c>.</summary>
     [TestMethod]
     public void Example_PdResult_Numeric()
     {
-        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Example_PdResult_Numeric),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0.96" },
+            inputFilenames: new[] { "example.pdResult" },
+            outputBlibName: "example-pdResult-numeric.blib",
+            referenceCheckName: "example-pdResult-numeric.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:278 — <c>pd-3_1</c>.</summary>
     [TestMethod]
     public void Pd_3_1()
     {
-        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Pd_3_1),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0.5" },
+            inputFilenames: new[] { "230807_P1_Neo_ES904_TMTProPrecision_1ug_DIA1Th_HCD30_Survey.pdResult" },
+            outputBlibName: "pd-3_1.blib",
+            referenceCheckName: "pd-3_1.check");
     }
 
-    /// <summary>Jamfile.jam:279 — <c>pdResult-no-spectra</c>.</summary>
+    /// <summary>Jamfile.jam:279 — <c>pdResult-no-spectra</c> (negative test).</summary>
     [TestMethod]
     public void PdResult_NoSpectra()
     {
-        Assert.Inconclusive("Reader for .pdResult not yet ported (Phase 3 backlog).");
+        TestRunner.RunNegativeBlibTest(
+            testName: nameof(PdResult_NoSpectra),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-e", "exported without the appropriate" },
+            inputFilenames: new[] { "pdResult-no-spectra.pdResult" },
+            outputBlibName: "pdResult-no-spectra.blib");
     }
 
     /// <summary>Jamfile.jam:281 — <c>pilot</c>.</summary>
@@ -1084,84 +1253,151 @@ public class BuildTests
     [TestMethod]
     public void Diann_SpecLib()
     {
-        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Diann_SpecLib),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "diann-swath.speclib" },
+            outputBlibName: "diann-speclib.blib",
+            referenceCheckName: "diann-speclib.check");
     }
 
     /// <summary>Jamfile.jam:335 — <c>diann-speclib-diapasef</c>.</summary>
     [TestMethod]
     public void Diann_SpecLib_DiaPasef()
     {
-        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Diann_SpecLib_DiaPasef),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0.97" },
+            inputFilenames: new[] { "diann-hela-diapasef-lib.speclib" },
+            outputBlibName: "diann-hela-diapasef.blib",
+            referenceCheckName: "diann-hela-diapasef.check");
     }
 
     /// <summary>Jamfile.jam:336 — <c>diann-mod-test</c>.</summary>
     [TestMethod]
     public void Diann_ModTest()
     {
-        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Diann_ModTest),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "diann-mod-test.tsv.speclib" },
+            outputBlibName: "diann-mod-test.blib",
+            referenceCheckName: "diann-mod-test.check");
     }
 
     /// <summary>Jamfile.jam:337 — <c>diann-mass-mod-test</c>.</summary>
     [TestMethod]
     public void Diann_MassModTest()
     {
-        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Diann_MassModTest),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "diann-mass-mods.tsv.speclib" },
+            outputBlibName: "diann-mass-mod-test.blib",
+            referenceCheckName: "diann-mass-mod-test.check");
     }
 
     /// <summary>Jamfile.jam:338 — <c>msfragger-diann</c>.</summary>
     [TestMethod]
     public void MsFragger_Diann()
     {
-        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(MsFragger_Diann),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "library.tsv.speclib" },
+            outputBlibName: "msfragger-diann.blib",
+            referenceCheckName: "msfragger-diann.check");
     }
 
     /// <summary>Jamfile.jam:339 — <c>msfragger-diann-predicted</c>.</summary>
     [TestMethod]
     public void MsFragger_Diann_Predicted()
     {
-        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(MsFragger_Diann_Predicted),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "diann-predicted/lib.predicted.speclib" },
+            outputBlibName: "msfragger-diann-predicted.blib",
+            referenceCheckName: "msfragger-diann-predicted.check");
     }
 
-    /// <summary>Jamfile.jam:340 — <c>diann2-synchro-pasef</c>.</summary>
+    /// <summary>Jamfile.jam:340 — <c>diann2-synchro-pasef</c>. Parquet report — not supported in C# port.</summary>
     [TestMethod]
     public void Diann2_Synchro_Pasef()
     {
-        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+        Assert.Inconclusive(
+            "Skipped — DIA-NN 2 parquet reports are not supported by the C# port (no Apache Arrow dependency). "
+            + "TSV speclibs are covered by Diann_SpecLib / Diann_SpecLib_DiaPasef / Diann_ModTest / etc.");
     }
 
-    /// <summary>Jamfile.jam:341 — <c>diann2-parquet</c>.</summary>
+    /// <summary>Jamfile.jam:341 — <c>diann2-parquet</c>. Parquet report — not supported in C# port.</summary>
     [TestMethod]
     public void Diann2_Parquet()
     {
-        Assert.Inconclusive("Reader for .speclib (DiaNN) not yet ported (Phase 3 backlog).");
+        Assert.Inconclusive(
+            "Skipped — DIA-NN 2 parquet reports are not supported by the C# port (no Apache Arrow dependency).");
     }
 
     /// <summary>Jamfile.jam:344 — <c>paser-hela-dia</c>.</summary>
     [TestMethod]
     public void Paser_HelaDia()
     {
-        Assert.Inconclusive("Reader for .tsv (Bruker Paser/Hardklor) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Paser_HelaDia),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { Path.Combine("paser", "hela_dia_normalizationOFF_results.tsv") },
+            outputBlibName: "paser-hela-dia.blib",
+            referenceCheckName: "paser-hela-dia.check");
     }
 
     /// <summary>Jamfile.jam:345 — <c>paser-hela-dia-libonly</c>.</summary>
     [TestMethod]
     public void Paser_HelaDia_LibOnly()
     {
-        Assert.Inconclusive("Reader for .tsv (Bruker Paser/Hardklor) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Paser_HelaDia_LibOnly),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { Path.Combine("paser", "_ip2_ip2_data_paser_spectral_library_BrukerHuman.tsv") },
+            outputBlibName: "paser-hela-dia-libonly.blib",
+            referenceCheckName: "paser-hela-dia-libonly.check");
     }
 
-    /// <summary>Jamfile.jam:346 — <c>paser-hela-dia-resultonly</c>.</summary>
+    /// <summary>Jamfile.jam:346 — <c>paser-hela-dia-resultonly</c> (negative: missing library TSV).</summary>
     [TestMethod]
     public void Paser_HelaDia_ResultOnly()
     {
-        Assert.Inconclusive("Reader for .tsv (Bruker Paser/Hardklor) not yet ported (Phase 3 backlog).");
+        TestRunner.RunNegativeBlibTest(
+            testName: nameof(Paser_HelaDia_ResultOnly),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-e", "missing required" },
+            inputFilenames: new[]
+            {
+                Path.Combine("paser", "no-library-error", "hela_dia_normalizationOFF_results.tsv"),
+            },
+            outputBlibName: "paser-hela-dia-resultonly.blib");
     }
 
-    /// <summary>Jamfile.jam:347 — <c>paser-hela-dia-multiple-libraries-error</c>.</summary>
+    /// <summary>Jamfile.jam:347 — <c>paser-hela-dia-multiple-libraries-error</c> (negative: &gt;1 ip2 lib).</summary>
     [TestMethod]
     public void Paser_HelaDia_MultipleLibrariesError()
     {
-        Assert.Inconclusive("Reader for .tsv (Bruker Paser/Hardklor) not yet ported (Phase 3 backlog).");
+        TestRunner.RunNegativeBlibTest(
+            testName: nameof(Paser_HelaDia_MultipleLibrariesError),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-e", "found more than one" },
+            inputFilenames: new[]
+            {
+                Path.Combine("paser", "multiple-libraries-error", "hela_dia_normalizationOFF_results.tsv"),
+            },
+            outputBlibName: "paser-hela-dia-multiple-libraries-error.blib");
     }
 
     /// <summary>Jamfile.jam:350 — <c>mse</c>.</summary>
@@ -1229,28 +1465,54 @@ public class BuildTests
     [TestMethod]
     public void OpenSwath()
     {
-        Assert.Inconclusive("Reader for .tsv (OpenSWATH) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(OpenSwath),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "openswath_test.tsv" },
+            outputBlibName: "openswath.blib",
+            referenceCheckName: "openswath.check",
+            skipLinesName: "openswath.skip-lines");
     }
 
     /// <summary>Jamfile.jam:372 — <c>openswath-osw</c>.</summary>
     [TestMethod]
     public void OpenSwath_Osw()
     {
-        Assert.Inconclusive("Reader for .osw (OpenSWATH) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(OpenSwath_Osw),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "test.osw" },
+            outputBlibName: "openswath-osw.blib",
+            referenceCheckName: "openswath-osw.check",
+            skipLinesName: "openswath.skip-lines");
     }
 
     /// <summary>Jamfile.jam:373 — <c>openswath-assay</c>.</summary>
     [TestMethod]
     public void OpenSwath_Assay()
     {
-        Assert.Inconclusive("Reader for .tsv (OpenSWATH) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(OpenSwath_Assay),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "openswath-oldos-assay.tsv" },
+            outputBlibName: "openswath-oldos-assay.blib",
+            referenceCheckName: "openswath-oldos-assay.check",
+            skipLinesName: "openswath.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:374 — <c>openswath-invalid-tsv</c>.</summary>
+    /// <summary>Jamfile.jam:374 — <c>openswath-invalid-tsv</c> (negative).</summary>
     [TestMethod]
     public void OpenSwath_InvalidTsv()
     {
-        Assert.Inconclusive("Reader for .tsv (OpenSWATH) not yet ported (Phase 3 backlog).");
+        TestRunner.RunNegativeBlibTest(
+            testName: nameof(OpenSwath_InvalidTsv),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-e", "Only OpenSWATH" },
+            inputFilenames: new[] { "ssl-small-mol.tsv" },
+            outputBlibName: "openswath-invalid-tsv.blib");
     }
 
     /// <summary>Jamfile.jam:377 — <c>mascot_tims_bad</c>.</summary>

@@ -219,7 +219,10 @@ public class SQTreader : BuildParser
                         $"Could not extract the staticMod from this line in the header: {buffer}");
                 }
                 var modLetter = cometMatch.Groups["aa"].Value[0];
-                var modValue = double.Parse(cometMatch.Groups["modMass"].Value,
+                // cpp parity: SQTreader.cpp:164 — `float modValue = atof(...)`. atof returns
+                // double but cpp stores it as float, which rounds e.g. 57.021464 -> 57.021465.
+                // Mirror by parsing as float so the .check goldens match byte-for-byte.
+                var modValue = (double)float.Parse(cometMatch.Groups["modMass"].Value,
                     NumberStyles.Float, CultureInfo.InvariantCulture);
                 if (modLetter < MaxMods)
                     _staticMods[modLetter] = modValue;

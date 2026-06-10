@@ -669,7 +669,6 @@ public class BlibBuilder : BlibMaker
     /// subclasses still to port (each will append a row here):
     /// <list type="bullet">
     /// <item>PercolatorXmlReader — for <c>.perc.xml</c></item>
-    /// <item>IdpXmlReader — for <c>.idpXML</c></item>
     /// <item>MascotResultsReader — for <c>.dat</c></item>
     /// <item>TandemNativeParser — for <c>.xtan.xml</c></item>
     /// <item>ProteinPilotReader — for <c>.group.xml</c> (also handles <c>.group</c> in score-lookup mode)</item>
@@ -698,7 +697,19 @@ public class BlibBuilder : BlibMaker
         (MzIdentMLReader.AcceptsExtension,   (b, f) => new MzIdentMLReader(b, f, parentProgress: null)),
         (WatersMseReader.AcceptsExtension,   (b, f) => new WatersMseReader(b, f, parentProgress: null)),
         (ProteinPilotReader.AcceptsExtension, (b, f) => new ProteinPilotReader(b, f, parentProgress: null)),
+        (PrideXmlReader.AcceptsExtension,    (b, f) => new PrideXmlReader(b, f, parentProgress: null)),
+        (IdpXMLreader.AcceptsExtension,      (b, f) => new IdpXMLreader(b, f, parentProgress: null)),
+        (TandemNativeParser.AcceptsExtension, (b, f) => new TandemNativeParser(b, f, parentProgress: null)),
         (MaxQuantReader.AcceptsExtension,    (b, f) => new MaxQuantReader(b, f, parentProgress: null)),
+        (HardklorReader.AcceptsExtension,    (b, f) => new HardklorReader(b, f, parentProgress: null)),
+        (ShimadzuMLBReader.AcceptsExtension, (b, f) => new ShimadzuMLBReader(b, f, parentProgress: null)),
+        (ProxlXmlReader.AcceptsExtension,    (b, f) => new ProxlXmlReader(b, f, parentProgress: null)),
+        (PercolatorXmlReader.AcceptsExtension, (b, f) => new PercolatorXmlReader(b, f, parentProgress: null)),
+        (MSFReader.AcceptsExtension,         (b, f) => new MSFReader(b, f, parentProgress: null)),
+        (MzTabReader.AcceptsExtension,       (b, f) => new MzTabReader(b, f, parentProgress: null)),
+        (DiaNNSpecLibReader.AcceptsExtension, (b, f) => new DiaNNSpecLibReader(b, f, parentProgress: null)),
+        (OSWReader.AcceptsExtension,         (b, f) => new OSWReader(b, f, parentProgress: null)),
+        (TSVReader.AcceptsExtension,         (b, f) => new TSVReader(b, f, parentProgress: null)),
     };
 
     /// <summary>

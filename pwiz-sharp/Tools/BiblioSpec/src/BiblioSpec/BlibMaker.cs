@@ -84,6 +84,13 @@ public class BlibMaker : IDisposable
     /// <summary>Open <see cref="SQLiteConnection"/> for the library being built. cpp <c>getDb</c>.</summary>
     public SQLiteConnection Db => _db ?? throw new InvalidOperationException("Db not open. Call OpenDb first.");
 
+    /// <summary>True if the underlying SQLite connection has been opened.</summary>
+    /// <remarks>cpp parity: cpp's <c>sqlite3_prepare</c> on a NULL db returns an error code
+    /// and silently no-ops; the cpp BuildParser ctor relies on that to construct a temporary
+    /// builder (e.g. for SQT-mod-table parsing in PercolatorXmlReader). The C# port throws on
+    /// access, so subclasses use this property to short-circuit before touching the DB.</remarks>
+    public bool IsDbOpen => _db != null;
+
     /// <summary>The library file name / path. cpp <c>getLibName</c>.</summary>
     public string? LibName => _libName;
 

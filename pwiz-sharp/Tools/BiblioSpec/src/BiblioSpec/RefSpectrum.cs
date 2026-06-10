@@ -32,7 +32,7 @@ public class RefSpectrum : Spectrum
     private double _circShift;
     private double _score;
     private int _scoreType;
-    private SmallMolMetadata _smallMolMetadata = new();
+    private readonly SmallMolMetadata _smallMolMetadata = new();
 
     /// <summary>Constructs an empty reference spectrum (cpp sentinels: <c>libID=-1, libSpecID=-1, scoreType=-1</c>).</summary>
     public RefSpectrum()

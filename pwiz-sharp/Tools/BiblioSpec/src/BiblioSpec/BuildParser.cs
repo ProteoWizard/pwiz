@@ -221,6 +221,12 @@ public abstract class BuildParser : IDisposable
     /// <summary>cpp parity: BuildParser.cpp:73 — prepare the cached <c>INSERT INTO RefSpectra</c> statement.</summary>
     protected internal void PrepareInsertSpectrumStatement()
     {
+        // cpp parity: BuildParser.cpp:73 — cpp's sqlite3_prepare on a NULL db silently no-ops,
+        // which the PercolatorXmlReader relies on when it constructs a throwaway BlibBuilder
+        // just to drive an SQTreader for mod-table parsing. Mirror that here: skip when no DB.
+        if (!BlibMaker.IsDbOpen)
+            return;
+
         // cpp parity: BuildParser.cpp:69-76. Column list matches the cpp string verbatim;
         // the trailing 25 placeholders cover the 20 explicit cols + 5 SmallMolMetadata cols.
         var stmt = "INSERT INTO RefSpectra(peptideSeq, precursorMZ, precursorCharge, "

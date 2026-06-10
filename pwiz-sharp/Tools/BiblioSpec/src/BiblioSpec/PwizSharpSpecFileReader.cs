@@ -385,7 +385,10 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
         // mzML PSI scan format: "scan=N"
         if (id.StartsWith("scan=", StringComparison.Ordinal))
             return CVID.MS_scan_number_only_nativeID_format;
-        // mzXML / MGF / simple integer id.
+        // MGF: "index=N"
+        if (id.StartsWith("index=", StringComparison.Ordinal))
+            return CVID.MS_multiple_peak_list_nativeID_format;
+        // mzXML / simple integer id.
         for (int i = 0; i < id.Length; i++)
             if (!char.IsDigit(id[i])) return CVID.CVID_Unknown;
         return CVID.MS_scan_number_only_nativeID_format;

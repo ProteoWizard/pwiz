@@ -156,7 +156,7 @@ public sealed class WatersMseReader : BuildParser
 
     // cpp parity: WatersMseReader.h:242 — pusher interval (msec/bin) used to translate
     // raw drift-bin counts to millisec. -1 means unset.
-    private double _pusherInterval = -1;
+    private readonly double _pusherInterval = -1;
 
     /// <summary>Returns true if <paramref name="path"/> ends with <c>final_fragment.csv</c>.</summary>
     public static bool AcceptsExtension(string path) =>

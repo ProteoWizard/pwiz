@@ -65,10 +65,16 @@ public class FilterTests
     [TestMethod]
     public void Filter_BestScoring_One()
     {
-        // maxquant3 build is Inconclusive (msms.txt reader unported).
-        Assert.Inconclusive(
-            "Depends on the 'maxquant3' build test, whose MaxQuant msms.txt reader " +
-            "is not yet ported (Phase 3 backlog).");
+        new BuildTests().MaxQuant3();
+
+        TestRunner.RunBlibTest(
+            testName: nameof(Filter_BestScoring_One),
+            tool: BlibTool.BlibFilter,
+            args: new[] { "-b", "1", "--unicode" },
+            inputFilenames: new[] { "maxquant3.blib" },
+            outputBlibName: "filter-best-scoring-one.blib",
+            referenceCheckName: "filter-best-scoring-one.check",
+            inputsFromOutputDir: true);
     }
 
     /// <summary>Jamfile.jam:395 — <c>filter-best-scoring-multi</c>. Depends on <c>merge</c>.</summary>
