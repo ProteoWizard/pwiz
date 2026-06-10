@@ -148,8 +148,7 @@ namespace pwiz.OspreySharp.Tasks
             foreach (var input in ctx.Config.InputFiles)
             {
                 yield return ParquetScoreCache.GetScoresPath(input);
-                string calDir = Path.GetDirectoryName(Path.GetFullPath(input)) ?? @".";
-                yield return CalibrationIO.CalibrationPathForInput(input, calDir);
+                yield return CalibrationIO.CalibrationPathForInput(input, ArtifactPaths.ResolveOutputDir(input));
             }
         }
 
@@ -1304,10 +1303,10 @@ namespace pwiz.OspreySharp.Tasks
                     RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration),
                     SecondPassRt = null
                 };
-                // Path.GetDirectoryName can return null for a root path; default
-                // to the current dir so the calibration JSON still has a home.
-                string calDir = Path.GetDirectoryName(Path.GetFullPath(inputFile)) ?? ".";
-                string calPath = CalibrationIO.CalibrationPathForInput(inputFile, calDir);
+                // ArtifactPaths.ResolveOutputDir routes the calibration JSON to
+                // the configured output dir (or the input's own directory by
+                // default), matching where the resume-existence check looks.
+                string calPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
                 CalibrationIO.SaveCalibration(calParams, calPath);
                 _ctx.LogInfo(string.Format("Saved calibration to {0}", calPath));
             }
@@ -1486,17 +1485,25 @@ namespace pwiz.OspreySharp.Tasks
         private void LoadSpectra(string inputFile, bool serializeMzmlRead,
             out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra)
         {
-            // Check for binary spectra cache
-            string cachePath = inputFile + ".spectra.bin";
+            // Check for binary spectra cache. Use the shared GetCachePath so the
+            // write and the rescore read (PerFileRescoreTask) derive an identical
+            // filename + directory (ArtifactPaths redirects the dir).
+            string cachePath = SpectraCache.GetCachePath(inputFile);
             if (File.Exists(cachePath))
             {
                 _ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
                 try
                 {
-                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath);
-                    ms2Spectra = cacheResult.Ms2Spectra;
-                    ms1Spectra = cacheResult.Ms1Spectra;
-                    return;
+                    // null = stale (source changed) or invalid (bad magic/version)
+                    // cache: a normal miss, not an error. Re-parse the mzML below.
+                    var cacheResult = SpectraCache.LoadSpectraCache(cachePath, inputFile);
+                    if (cacheResult != null)
+                    {
+                        ms2Spectra = cacheResult.Ms2Spectra;
+                        ms1Spectra = cacheResult.Ms1Spectra;
+                        return;
+                    }
+                    _ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
                 }
                 catch (Exception ex)
                 {
@@ -1527,7 +1534,7 @@ namespace pwiz.OspreySharp.Tasks
             // Save to cache for next run
             try
             {
-                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra);
+                SpectraCache.SaveSpectraCache(cachePath, ms2Spectra, ms1Spectra, inputFile);
             }
             catch (Exception ex)
             {

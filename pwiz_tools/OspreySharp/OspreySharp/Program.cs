@@ -120,12 +120,29 @@ namespace pwiz.OspreySharp
                 config.NoJoin = selectedTask == HpcTask.PerFileScoring || selectedTask == HpcTask.PerFileRescore;
                 config.StopAfterStage5 = selectedTask == HpcTask.FirstJoin;
                 config.ExpectReconciledInput = selectedTask == HpcTask.MergeNode;
+
+                // Apply the output / cache directory overrides process-wide so
+                // every per-file artifact path helper (scores parquet, spectra
+                // cache, calibration JSON, FDR / reconciliation sidecars) writes
+                // to the configured location. Null leaves the historical behavior
+                // (each artifact in its input file's own directory).
+                ArtifactPaths.OutputDir = config.OutputDir;
+                ArtifactPaths.CacheDir = config.CacheDir;
+
                 string err = ValidateArgs(config);
                 if (err != null)
                 {
                     LogError(err);
                     return 1;
                 }
+
+                // Create the configured directories only after args validate, so
+                // an invalid command line surfaces the validation message instead
+                // of a Directory.CreateDirectory side effect / generic error.
+                if (!string.IsNullOrEmpty(config.OutputDir))
+                    Directory.CreateDirectory(config.OutputDir);
+                if (!string.IsNullOrEmpty(config.CacheDir))
+                    Directory.CreateDirectory(config.CacheDir);
                 // Runs that consume --input-scores (FirstJoin, PerFileRescore,
                 // MergeNode, or the default full pipeline started from scores)
                 // have no mzML inputs to validate and ignore --output handling
@@ -207,6 +224,9 @@ namespace pwiz.OspreySharp
             var inputFiles = new List<string>();
             string libraryPath = null;
             string outputPath = null;
+            string workDir = null;
+            string outputDir = null;
+            string cacheDir = null;
             string resolution = "auto";
             double? fragmentTolerance = null;
             string fragmentUnit = null;
@@ -247,6 +267,21 @@ namespace pwiz.OspreySharp
                     case "-o":
                     case "--output":
                         outputPath = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--work-dir":
+                        workDir = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--output-dir":
+                        outputDir = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--cache-dir":
+                        cacheDir = RequireValue(args, ref i, arg);
                         i++;
                         break;
 
@@ -466,6 +501,12 @@ namespace pwiz.OspreySharp
 
             // Apply parsed values to config
             config.InputFiles = inputFiles;
+
+            // --work-dir is a convenience that sets both the derived-artifact
+            // output directory and the spectra-cache directory; an explicit
+            // --output-dir / --cache-dir overrides the matching component.
+            config.OutputDir = outputDir ?? workDir;
+            config.CacheDir = cacheDir ?? workDir;
 
             if (!string.IsNullOrEmpty(libraryPath))
                 config.LibrarySource = LibrarySource.FromPath(libraryPath);
@@ -770,6 +811,10 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    -i, --input <files>           Input mzML file(s)");
             Console.Error.WriteLine("    -l, --library <file>          Spectral library (.tsv, .blib, .elib)");
             Console.Error.WriteLine("    -o, --output <file>           Output blib file");
+            Console.Error.WriteLine("    --work-dir <dir>              Write derived artifacts AND the spectra cache here");
+            Console.Error.WriteLine("                                 (so input data can be read-only); default: beside input");
+            Console.Error.WriteLine("    --output-dir <dir>           Directory for derived artifacts (overrides --work-dir)");
+            Console.Error.WriteLine("    --cache-dir <dir>             Directory for the .spectra.bin cache (overrides --work-dir)");
             Console.Error.WriteLine("    --resolution <mode>           Resolution mode: unit, hram, auto (default: auto)");
             Console.Error.WriteLine("    --fragment-tolerance <value>  Fragment m/z tolerance (default: 10)");
             Console.Error.WriteLine("    --fragment-unit <unit>        Fragment tolerance unit: ppm, mz (default: ppm)");

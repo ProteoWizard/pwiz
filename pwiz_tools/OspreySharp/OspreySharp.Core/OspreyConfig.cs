@@ -44,6 +44,30 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Optional: TSV report output path.</summary>
         public string OutputReport { get; set; }
 
+        /// <summary>
+        /// Optional base directory for all per-file <em>derived</em> artifacts
+        /// (<c>.scores.parquet</c>, <c>.calibration.json</c>,
+        /// <c>.scores-reconciled.parquet</c>, the FDR sidecars, and
+        /// <c>.reconciliation.json</c>). Null = write each artifact in its input
+        /// file's own directory (the historical behavior). Set by
+        /// <c>--output-dir</c> (or <c>--work-dir</c>), it lets an analysis read
+        /// read-only input data while writing only derived output elsewhere.
+        /// Maps to Rust <c>OspreyConfig::output_dir</c> (Track B).
+        /// </summary>
+        public string OutputDir { get; set; }
+
+        /// <summary>
+        /// Optional directory for the <c>.spectra.bin</c> cache only. Null =
+        /// resolve at write time: beside the data file if that directory is
+        /// writable, else <see cref="OutputDir"/> (or the input file's own
+        /// directory when <see cref="OutputDir"/> is also null). Set by
+        /// <c>--cache-dir</c> (or <c>--work-dir</c>). The cache is
+        /// settings-independent, so a shared CacheDir lets many analyses reuse
+        /// a single parse of the spectra.
+        /// Maps to Rust <c>OspreyConfig::cache_dir</c> (Track B).
+        /// </summary>
+        public string CacheDir { get; set; }
+
         /// <summary>Resolution mode for binning.</summary>
         public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.Auto;
 

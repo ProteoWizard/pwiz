@@ -150,7 +150,11 @@ namespace pwiz.OspreySharp.IO
         private static string ScoresPath(string inputPath, string passLabel)
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
-            string parent = Path.GetDirectoryName(inputPath);
+            // Route through ArtifactPaths so the sidecar follows the scores
+            // parquet into --output-dir (default = the input's own directory).
+            // Every caller -- straight-through writes, resume reads, and the
+            // resume-check iterators -- shares this, so they stay consistent.
+            string parent = ArtifactPaths.ResolveOutputDir(inputPath);
             string filename = string.Format("{0}.{1}.fdr_scores.bin", stem, passLabel);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }

@@ -927,7 +927,7 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         public static string GetScoresPath(string mzmlPath)
         {
-            string dir = Path.GetDirectoryName(mzmlPath) ?? string.Empty;
+            string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
             string stem = Path.GetFileNameWithoutExtension(mzmlPath);
             return Path.Combine(dir, stem + ".scores.parquet");
         }
@@ -953,7 +953,7 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         public static string GetReconciledScoresPath(string mzmlPath)
         {
-            string dir = Path.GetDirectoryName(mzmlPath) ?? string.Empty;
+            string dir = ArtifactPaths.ResolveOutputDir(mzmlPath);
             string stem = Path.GetFileNameWithoutExtension(mzmlPath);
             return Path.Combine(dir, stem + ReconciledScoresParquetSuffix);
         }
