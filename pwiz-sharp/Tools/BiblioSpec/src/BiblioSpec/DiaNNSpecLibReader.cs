@@ -254,45 +254,19 @@ public sealed class DiaNNSpecLibReader : BuildParser
         string firstRun = string.Empty;
         double scoreThreshold = GetScoreThreshold(BuildInput.GenericQValueInput);
 
-        using (var sr = new StreamReader(diannReportFilepath))
+        foreach (var row in ReadDiannReport(diannReportFilepath))
         {
-            var header = sr.ReadLine()
-                ?? throw new BlibException(false, $"DIA-NN report '{diannReportFilepath}' is empty");
-            var hdrCols = header.Split('\t');
+            string fileName = row.FileName;
+            string proteinGrp = row.ProteinGroup;
+            string precursorIdStr = row.PrecursorId;
+            float globalQValue = row.GlobalQValue;
+            float qValue = row.QValue;
+            float rt = row.Rt;
+            float rtStart = row.RtStart;
+            float rtEnd = row.RtEnd;
+            float im = row.Im;
 
-            // cpp parity: DiaNNSpecLibReader.cpp:1143 — DIANN v2 parquet doesn't provide
-            // File.Name; falls back to Run. The TSV always has File.Name; we mirror by
-            // probing for File.Name first.
-            int colRun = MustFindColumn(hdrCols, "Run", diannReportFilepath);
-            int colFileName = Array.IndexOf(hdrCols, "File.Name");
-            if (colFileName < 0) colFileName = colRun;
-            int colProteinGroup = MustFindColumn(hdrCols, "Protein.Group", diannReportFilepath);
-            int colPrecursorId = MustFindColumn(hdrCols, "Precursor.Id", diannReportFilepath);
-            int colGlobalQValue = MustFindColumn(hdrCols, "Global.Q.Value", diannReportFilepath);
-            int colQValue = MustFindColumn(hdrCols, "Q.Value", diannReportFilepath);
-            int colRt = MustFindColumn(hdrCols, "RT", diannReportFilepath);
-            int colRtStart = MustFindColumn(hdrCols, "RT.Start", diannReportFilepath);
-            int colRtStop = MustFindColumn(hdrCols, "RT.Stop", diannReportFilepath);
-            int colIm = MustFindColumn(hdrCols, "IM", diannReportFilepath);
-
-            string? line;
-            while ((line = sr.ReadLine()) != null)
             {
-                if (line.Length == 0) continue;
-                var cols = line.Split('\t');
-                if (cols.Length <= Math.Max(colIm, Math.Max(colRtStop, colGlobalQValue)))
-                    continue;
-
-                string fileName = cols[colFileName];
-                string proteinGrp = cols[colProteinGroup];
-                string precursorIdStr = cols[colPrecursorId];
-                float globalQValue = ParseFloat(cols[colGlobalQValue]);
-                float qValue = ParseFloat(cols[colQValue]);
-                float rt = ParseFloat(cols[colRt]);
-                float rtStart = ParseFloat(cols[colRtStart]);
-                float rtEnd = ParseFloat(cols[colRtStop]);
-                float im = ParseFloat(cols[colIm]);
-
                 if (!psmByPrecursorId.TryGetValue(precursorIdStr, out var psm))
                 {
                     // cpp parity: DiaNNSpecLibReader.cpp:1181 — silently skip contaminants.
@@ -409,6 +383,183 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// Locate the DIA-NN report TSV that accompanies the speclib. cpp parity:
     /// DiaNNSpecLibReader.cpp:1014.
     /// </summary>
+    /// <summary>One row of the DIA-NN report — the subset of columns the speclib builder needs.</summary>
+    private readonly record struct DiannReportRow(
+        string FileName,
+        string ProteinGroup,
+        string PrecursorId,
+        float GlobalQValue,
+        float QValue,
+        float Rt,
+        float RtStart,
+        float RtEnd,
+        float Im);
+
+    /// <summary>
+    /// Dispatch to <see cref="ReadDiannReportTsv"/> or <see cref="ReadDiannReportParquet"/>
+    /// based on the report file's extension. Both code paths yield the same shape of
+    /// <see cref="DiannReportRow"/> so the BuildLibrary loop is reader-agnostic.
+    /// </summary>
+    private static IEnumerable<DiannReportRow> ReadDiannReport(string reportPath)
+    {
+        return reportPath.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase)
+            ? ReadDiannReportParquet(reportPath)
+            : ReadDiannReportTsv(reportPath);
+    }
+
+    private static IEnumerable<DiannReportRow> ReadDiannReportTsv(string reportPath)
+    {
+        using var sr = new StreamReader(reportPath);
+        var header = sr.ReadLine()
+            ?? throw new BlibException(false, $"DIA-NN report '{reportPath}' is empty");
+        var hdrCols = header.Split('\t');
+
+        // cpp parity: DiaNNSpecLibReader.cpp:1143 — DIANN v2 parquet doesn't provide
+        // File.Name; falls back to Run. The TSV always has File.Name; we mirror by
+        // probing for File.Name first.
+        int colRun = MustFindColumn(hdrCols, "Run", reportPath);
+        int colFileName = Array.IndexOf(hdrCols, "File.Name");
+        if (colFileName < 0) colFileName = colRun;
+        int colProteinGroup = MustFindColumn(hdrCols, "Protein.Group", reportPath);
+        int colPrecursorId = MustFindColumn(hdrCols, "Precursor.Id", reportPath);
+        int colGlobalQValue = MustFindColumn(hdrCols, "Global.Q.Value", reportPath);
+        int colQValue = MustFindColumn(hdrCols, "Q.Value", reportPath);
+        int colRt = MustFindColumn(hdrCols, "RT", reportPath);
+        int colRtStart = MustFindColumn(hdrCols, "RT.Start", reportPath);
+        int colRtStop = MustFindColumn(hdrCols, "RT.Stop", reportPath);
+        int colIm = MustFindColumn(hdrCols, "IM", reportPath);
+        int minCols = Math.Max(colIm, Math.Max(colRtStop, colGlobalQValue));
+
+        string? line;
+        while ((line = sr.ReadLine()) != null)
+        {
+            if (line.Length == 0) continue;
+            var cols = line.Split('\t');
+            if (cols.Length <= minCols) continue;
+
+            yield return new DiannReportRow(
+                FileName: cols[colFileName],
+                ProteinGroup: cols[colProteinGroup],
+                PrecursorId: cols[colPrecursorId],
+                GlobalQValue: ParseFloat(cols[colGlobalQValue]),
+                QValue: ParseFloat(cols[colQValue]),
+                Rt: ParseFloat(cols[colRt]),
+                RtStart: ParseFloat(cols[colRtStart]),
+                RtEnd: ParseFloat(cols[colRtStop]),
+                Im: ParseFloat(cols[colIm]));
+        }
+    }
+
+    /// <summary>
+    /// Read a DIA-NN v2 Parquet report into <see cref="DiannReportRow"/>s. Uses Parquet.Net
+    /// (4.x, NuGet) and pulls only the columns the speclib builder needs row-group by row-group
+    /// to keep memory bounded.
+    /// </summary>
+    /// <remarks>
+    /// cpp parity: DiaNNSpecLibReader.cpp:1141 — the cpp port reads parquet via Apache Arrow;
+    /// Parquet.Net is a pure-managed alternative we take as a NuGet dependency.
+    /// </remarks>
+    private static IEnumerable<DiannReportRow> ReadDiannReportParquet(string reportPath)
+    {
+        return ReadDiannReportParquetAsync(reportPath).ToBlockingEnumerable();
+    }
+
+    private static async IAsyncEnumerable<DiannReportRow> ReadDiannReportParquetAsync(string reportPath)
+    {
+        using var stream = File.OpenRead(reportPath);
+        using var reader = await Parquet.ParquetReader.CreateAsync(stream).ConfigureAwait(false);
+
+        var schema = reader.Schema;
+        // cpp parity: DIANN v2 parquet uses Run (not File.Name).
+        var runField = FindDataField(schema, "File.Name") ?? FindDataField(schema, "Run")
+            ?? throw new BlibException(false,
+                $"DIA-NN report '{reportPath}' has neither File.Name nor Run column.");
+        var proteinGroupField = MustFindParquetField(schema, "Protein.Group", reportPath);
+        var precursorIdField = MustFindParquetField(schema, "Precursor.Id", reportPath);
+        var globalQValueField = MustFindParquetField(schema, "Global.Q.Value", reportPath);
+        var qValueField = MustFindParquetField(schema, "Q.Value", reportPath);
+        var rtField = MustFindParquetField(schema, "RT", reportPath);
+        var rtStartField = MustFindParquetField(schema, "RT.Start", reportPath);
+        var rtStopField = MustFindParquetField(schema, "RT.Stop", reportPath);
+        var imField = MustFindParquetField(schema, "IM", reportPath);
+
+        for (int rg = 0; rg < reader.RowGroupCount; rg++)
+        {
+            using var rgReader = reader.OpenRowGroupReader(rg);
+
+            string[] fileName = await ReadStringColumn(rgReader, runField).ConfigureAwait(false);
+            string[] proteinGroup = await ReadStringColumn(rgReader, proteinGroupField).ConfigureAwait(false);
+            string[] precursorId = await ReadStringColumn(rgReader, precursorIdField).ConfigureAwait(false);
+            float[] globalQValue = await ReadFloatColumn(rgReader, globalQValueField).ConfigureAwait(false);
+            float[] qValue = await ReadFloatColumn(rgReader, qValueField).ConfigureAwait(false);
+            float[] rt = await ReadFloatColumn(rgReader, rtField).ConfigureAwait(false);
+            float[] rtStart = await ReadFloatColumn(rgReader, rtStartField).ConfigureAwait(false);
+            float[] rtStop = await ReadFloatColumn(rgReader, rtStopField).ConfigureAwait(false);
+            float[] im = await ReadFloatColumn(rgReader, imField).ConfigureAwait(false);
+
+            int n = fileName.Length;
+            for (int i = 0; i < n; i++)
+            {
+                yield return new DiannReportRow(
+                    FileName: fileName[i] ?? string.Empty,
+                    ProteinGroup: proteinGroup[i] ?? string.Empty,
+                    PrecursorId: precursorId[i] ?? string.Empty,
+                    GlobalQValue: globalQValue[i],
+                    QValue: qValue[i],
+                    Rt: rt[i],
+                    RtStart: rtStart[i],
+                    RtEnd: rtStop[i],
+                    Im: im[i]);
+            }
+        }
+    }
+
+    private static Parquet.Schema.DataField? FindDataField(Parquet.Schema.ParquetSchema schema, string name)
+    {
+        foreach (var df in schema.GetDataFields())
+            if (df.Name == name) return df;
+        return null;
+    }
+
+    private static Parquet.Schema.DataField MustFindParquetField(
+        Parquet.Schema.ParquetSchema schema, string name, string reportPath)
+    {
+        return FindDataField(schema, name)
+            ?? throw new BlibException(false,
+                $"DIA-NN report '{reportPath}' is missing required column '{name}'.");
+    }
+
+    private static async Task<string[]> ReadStringColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
+    {
+        var col = await rgReader.ReadColumnAsync(field).ConfigureAwait(false);
+        var arr = col.Data;
+        var result = new string[arr.Length];
+        for (int i = 0; i < arr.Length; i++)
+            result[i] = arr.GetValue(i)?.ToString() ?? string.Empty;
+        return result;
+    }
+
+    private static async Task<float[]> ReadFloatColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
+    {
+        var col = await rgReader.ReadColumnAsync(field).ConfigureAwait(false);
+        var arr = col.Data;
+        var result = new float[arr.Length];
+        for (int i = 0; i < arr.Length; i++)
+        {
+            var v = arr.GetValue(i);
+            result[i] = v switch
+            {
+                float f => f,
+                double d => (float)d,
+                int n => n,
+                long n => n,
+                null => 0f,
+                _ => Convert.ToSingle(v, CultureInfo.InvariantCulture),
+            };
+        }
+        return result;
+    }
+
     private string FindDiannReport(out string statsFilepath)
     {
         statsFilepath = string.Empty;
@@ -530,23 +681,24 @@ public sealed class DiaNNSpecLibReader : BuildParser
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
         }
 
-        // cpp parity: parquet reports require Apache Arrow; we don't have that in the C# port.
-        if (diannReportFilepath.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase))
-        {
-            throw new BlibException(true,
-                $"DIA-NN parquet reports are not supported in the C# port (file '{diannReportFilepath}'); " +
-                "convert the report to TSV before running BlibBuild.");
-        }
-
         Verbosity.Debug($"Opened report file {diannReportFilepath}.");
         return diannReportFilepath;
     }
 
-    private static bool HasRequiredHeaders(string tsvFilepath)
+    private static bool HasRequiredHeaders(string reportFilepath)
     {
         try
         {
-            using var sr = new StreamReader(tsvFilepath);
+            if (reportFilepath.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase))
+            {
+                using var stream = File.OpenRead(reportFilepath);
+                using var reader = Parquet.ParquetReader.CreateAsync(stream).GetAwaiter().GetResult();
+                return FindDataField(reader.Schema, "Precursor.Id") is not null
+                    && FindDataField(reader.Schema, "Global.Q.Value") is not null
+                    && FindDataField(reader.Schema, "RT") is not null;
+            }
+
+            using var sr = new StreamReader(reportFilepath);
             var header = sr.ReadLine();
             if (header is null) return false;
             var cols = header.Split('\t');

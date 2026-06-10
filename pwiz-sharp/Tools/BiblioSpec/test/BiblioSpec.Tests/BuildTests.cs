@@ -1327,21 +1327,30 @@ public class BuildTests
             referenceCheckName: "msfragger-diann-predicted.check");
     }
 
-    /// <summary>Jamfile.jam:340 — <c>diann2-synchro-pasef</c>. Parquet report — not supported in C# port.</summary>
+    /// <summary>Jamfile.jam:340 — <c>diann2-synchro-pasef</c>.</summary>
     [TestMethod]
     public void Diann2_Synchro_Pasef()
     {
-        Assert.Inconclusive(
-            "Skipped — DIA-NN 2 parquet reports are not supported by the C# port (no Apache Arrow dependency). "
-            + "TSV speclibs are covered by Diann_SpecLib / Diann_SpecLib_DiaPasef / Diann_ModTest / etc.");
+        TestRunner.RunBlibTest(
+            testName: nameof(Diann2_Synchro_Pasef),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "diann2-synchro-pasef/report-lib.parquet.skyline.speclib" },
+            outputBlibName: "diann2-synchro-pasef.blib",
+            referenceCheckName: "diann2-synchro-pasef.check");
     }
 
-    /// <summary>Jamfile.jam:341 — <c>diann2-parquet</c>. Parquet report — not supported in C# port.</summary>
+    /// <summary>Jamfile.jam:341 — <c>diann2-parquet</c>.</summary>
     [TestMethod]
     public void Diann2_Parquet()
     {
-        Assert.Inconclusive(
-            "Skipped — DIA-NN 2 parquet reports are not supported by the C# port (no Apache Arrow dependency).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Diann2_Parquet),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "diann2-parquet/report-lib.parquet.skyline.speclib" },
+            outputBlibName: "diann2-parquet.blib",
+            referenceCheckName: "diann2-parquet.check");
     }
 
     /// <summary>Jamfile.jam:344 — <c>paser-hela-dia</c>.</summary>

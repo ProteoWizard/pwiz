@@ -23,6 +23,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Parquet.Net for DIA-NN v2 .parquet report support. The local
+         pwiz_tools/Shared/Lib/Parquet DLL is too old (3.x) and rejects column
+         names containing dots (e.g. "Protein.Group"). Use the modern NuGet
+         release instead. Pure-managed, MIT, no native deps. -->
+    <PackageReference Include="Parquet.Net" Version="4.25.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="BiblioSpec.Tests" />
   </ItemGroup>
 
