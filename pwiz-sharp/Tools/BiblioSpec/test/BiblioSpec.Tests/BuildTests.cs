@@ -863,91 +863,196 @@ public class BuildTests
     [TestMethod]
     public void Pilot()
     {
-        Assert.Inconclusive("Reader for .group.xml not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Pilot),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "MB1_98_03.group.xml" },
+            outputBlibName: "pilot.blib",
+            referenceCheckName: "pilot.check");
     }
 
     /// <summary>Jamfile.jam:285 — <c>maxquant</c>.</summary>
     [TestMethod]
     public void MaxQuant()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o", "-E", "-p", fixture.InputFile("mqpar1.xml") },
+            inputFilenames: new[] { "test.msms.txt" },
+            outputBlibName: "maxquant.blib",
+            referenceCheckName: "maxquant.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:288 — <c>maxquant-spectrum-file-not-found</c>.</summary>
+    /// <summary>Jamfile.jam:288 — <c>maxquant-spectrum-file-not-found</c> (negative test).</summary>
     [TestMethod]
     public void MaxQuant_SpectrumFileNotFound()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        // cpp Jamfile passes `-e@~Run_with_the_-E_flag~`; the `~` is cpp's space-escape.
+        // The C# test harness uses `-e "Run with the -E flag"`.
+        TestRunner.RunNegativeBlibTest(
+            testName: nameof(MaxQuant_SpectrumFileNotFound),
+            tool: BlibTool.BlibBuild,
+            args: new[]
+            {
+                "-o",
+                "-p", fixture.InputFile("mqpar1.xml"),
+                "-e", "Run with the -E flag",
+            },
+            inputFilenames: new[] { "test.msms.txt" },
+            outputBlibName: "maxquant-spectrum-file-not-found.blib");
     }
 
     /// <summary>Jamfile.jam:291 — <c>maxquant-targeted</c>.</summary>
     [TestMethod]
     public void MaxQuant_Targeted()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        // cpp Jamfile drives this via `-s -u -U -S@$(TEST_DATA_PATH)/maxquant-targeted-stdin.txt`
+        // — reads target-sequence lists from a file that stands in for stdin. The C# test
+        // harness has no stdin-pipe support yet, so this test is deferred until either
+        // ExecuteBlib gains stdin redirection or the BlibBuild CLI supports an equivalent flag.
+        Assert.Inconclusive(
+            "Skipped — cpp test pipes target sequences via stdin (`-s -u -U -S@<file>`); the C# "
+            + "test harness does not yet support stdin redirection to the child BlibBuild process.");
     }
 
     /// <summary>Jamfile.jam:294 — <c>maxquant2</c>.</summary>
     [TestMethod]
     public void MaxQuant2()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant2),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-E" },
+            inputFilenames: new[] { "test2.msms.txt" },
+            outputBlibName: "maxquant2.blib",
+            referenceCheckName: "maxquant2.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:295 — <c>maxquant-phospho</c>.</summary>
     [TestMethod]
     public void MaxQuant_Phospho()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_Phospho),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-E" },
+            inputFilenames: new[] { "test-phospho.msms.txt" },
+            outputBlibName: "maxquant-phospho.blib",
+            referenceCheckName: "maxquant-phospho.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:298 — <c>maxquant3</c>.</summary>
     [TestMethod]
     public void MaxQuant3()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant3),
+            tool: BlibTool.BlibBuild,
+            args: new[]
+            {
+                "-o", "-E",
+                "-p", fixture.InputFile("test-mq3-mqpar.xml"),
+                "-x", fixture.InputFile("test-mq3-modifications.local.xml"),
+            },
+            inputFilenames: new[] { "test-mq3-msms.txt" },
+            outputBlibName: "maxquant3.blib",
+            referenceCheckName: "maxquant3.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:301 — <c>maxquant-rpal-raw</c>.</summary>
     [TestMethod]
     public void MaxQuant_RpalRaw()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_RpalRaw),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-p", fixture.InputFile("rpal-raw-mqpar.xml") },
+            inputFilenames: new[] { "rpal-raw-msms.txt" },
+            outputBlibName: "maxquant-rpal-raw.blib",
+            referenceCheckName: "maxquant-rpal-raw.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:302 — <c>maxquant-bsa-baf</c>.</summary>
+    /// <summary>Jamfile.jam:302 — <c>maxquant-bsa-baf</c>. Requires Bruker .baf vendor SDK.</summary>
     [TestMethod]
     public void MaxQuant_BsaBaf()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        // The msms.txt for this test references a Bruker .baf file as its spectrum source.
+        // The pwiz-CLI-backed spectrum reader has no .baf support in the C# port yet.
+        Assert.Inconclusive(
+            "Skipped — Bruker .baf spectrum source; pwiz-sharp vendor SDK plumbing for Bruker "
+            + "is not yet ported. Re-enable when .baf reads land.");
     }
 
-    /// <summary>Jamfile.jam:303 — <c>maxquant-bsa-baf-v1_6_7</c>.</summary>
+    /// <summary>Jamfile.jam:303 — <c>maxquant-bsa-baf-v1_6_7</c>. Requires Bruker .baf vendor SDK.</summary>
     [TestMethod]
     public void MaxQuant_BsaBaf_V1_6_7()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        Assert.Inconclusive(
+            "Skipped — Bruker .baf spectrum source; pwiz-sharp vendor SDK plumbing for Bruker "
+            + "is not yet ported. Re-enable when .baf reads land.");
     }
 
-    /// <summary>Jamfile.jam:304 — <c>maxquant-yeast-wiff</c>.</summary>
+    /// <summary>Jamfile.jam:304 — <c>maxquant-yeast-wiff</c>. Requires Sciex .wiff vendor SDK.</summary>
     [TestMethod]
     public void MaxQuant_YeastWiff()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        Assert.Inconclusive(
+            "Skipped — Sciex .wiff spectrum source; pwiz-sharp vendor SDK plumbing for Sciex "
+            + "is not yet ported. Re-enable when .wiff reads land.");
     }
 
-    /// <summary>Jamfile.jam:305 — <c>maxquant-yeast-wiff-i18n</c>.</summary>
+    /// <summary>Jamfile.jam:305 — <c>maxquant-yeast-wiff-i18n</c>. Requires Sciex .wiff vendor SDK.</summary>
     [TestMethod]
     public void MaxQuant_YeastWiff_I18n()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        Assert.Inconclusive(
+            "Skipped — Sciex .wiff spectrum source; pwiz-sharp vendor SDK plumbing for Sciex "
+            + "is not yet ported. Re-enable when .wiff reads land.");
     }
 
     /// <summary>Jamfile.jam:308 — <c>maxquant_ims</c>.</summary>
     [TestMethod]
     public void MaxQuant_Ims()
     {
-        Assert.Inconclusive("Reader for msms.txt (MaxQuant) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_Ims),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-E" },
+            inputFilenames: new[] { "k0ccs-msms.txt" },
+            outputBlibName: "maxquant_ims.blib",
+            referenceCheckName: "maxquant_ims.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:311 — <c>maxquant-prg2012-wiff</c>.</summary>

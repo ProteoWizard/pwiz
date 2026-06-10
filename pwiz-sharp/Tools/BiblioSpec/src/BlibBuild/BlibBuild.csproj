@@ -11,4 +11,16 @@
     <ProjectReference Include="..\BiblioSpec\BiblioSpec.csproj" />
   </ItemGroup>
 
+  <!-- cpp parity: MaxQuantReader.cpp:177 — when no modifications.xml lives next to the
+       msms.txt input, fall back to the one shipped next to the BlibBuild exe. Copy the
+       cpp tree's shipping file into the BlibBuild output directory so the C# port has
+       the same fallback. -->
+  <ItemGroup>
+    <None Include="..\..\..\..\..\pwiz_tools\BiblioSpec\src\modifications.xml"
+          Link="modifications.xml"
+          Condition="Exists('..\..\..\..\..\pwiz_tools\BiblioSpec\src\modifications.xml')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

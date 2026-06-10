@@ -692,11 +692,13 @@ public class BlibBuilder : BlibMaker
     private static readonly (Func<string, bool> Accepts, Func<BlibBuilder, string, BuildParser> Create)[]
         _readerFactories =
     {
-        (SslReader.AcceptsExtension,        (b, f) => new SslReader(b, f, parentProgress: null)),
-        (PepXMLreader.AcceptsExtension,     (b, f) => new PepXMLreader(b, f, parentProgress: null)),
-        (SQTreader.AcceptsExtension,        (b, f) => new SQTreader(b, f, parentProgress: null)),
-        (MzIdentMLReader.AcceptsExtension,  (b, f) => new MzIdentMLReader(b, f, parentProgress: null)),
-        (WatersMseReader.AcceptsExtension,  (b, f) => new WatersMseReader(b, f, parentProgress: null)),
+        (SslReader.AcceptsExtension,         (b, f) => new SslReader(b, f, parentProgress: null)),
+        (PepXMLreader.AcceptsExtension,      (b, f) => new PepXMLreader(b, f, parentProgress: null)),
+        (SQTreader.AcceptsExtension,         (b, f) => new SQTreader(b, f, parentProgress: null)),
+        (MzIdentMLReader.AcceptsExtension,   (b, f) => new MzIdentMLReader(b, f, parentProgress: null)),
+        (WatersMseReader.AcceptsExtension,   (b, f) => new WatersMseReader(b, f, parentProgress: null)),
+        (ProteinPilotReader.AcceptsExtension, (b, f) => new ProteinPilotReader(b, f, parentProgress: null)),
+        (MaxQuantReader.AcceptsExtension,    (b, f) => new MaxQuantReader(b, f, parentProgress: null)),
     };
 
     /// <summary>
@@ -784,9 +786,11 @@ public class BlibBuilder : BlibMaker
 
     /// <summary>
     /// Case-insensitive ends-with test. cpp parity: <c>has_extension</c> uses
-    /// <c>bal::iends_with</c> (BlibBuilder.cpp:722).
+    /// <c>bal::iends_with</c> (BlibBuilder.cpp:722). Exposed as <c>internal</c> so
+    /// reader classes can share the same predicate when implementing
+    /// <c>AcceptsExtension</c>.
     /// </summary>
-    private static bool HasExtensionCi(string filename, string ext) =>
+    internal static bool HasExtensionCi(string filename, string ext) =>
         filename.EndsWith(ext, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
