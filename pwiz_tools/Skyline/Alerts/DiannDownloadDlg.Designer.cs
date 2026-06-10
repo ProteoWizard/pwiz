@@ -19,7 +19,9 @@ namespace pwiz.Skyline.Alerts
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DiannDownloadDlg));
             this.lblSummary = new System.Windows.Forms.Label();
-            this.linkLicense = new System.Windows.Forms.LinkLabel();
+            this.rb2x = new System.Windows.Forms.RadioButton();
+            this.linkLabel2x = new System.Windows.Forms.LinkLabel();
+            this.rb191 = new System.Windows.Forms.RadioButton();
             this.cbAgreeToLicense = new System.Windows.Forms.CheckBox();
             this.btnAccept = new System.Windows.Forms.Button();
             this.btnSpecifyManually = new System.Windows.Forms.Button();
@@ -31,12 +33,28 @@ namespace pwiz.Skyline.Alerts
             resources.ApplyResources(this.lblSummary, "lblSummary");
             this.lblSummary.Name = "lblSummary";
             //
-            // linkLicense
+            // rb2x
             //
-            resources.ApplyResources(this.linkLicense, "linkLicense");
-            this.linkLicense.Name = "linkLicense";
-            this.linkLicense.TabStop = true;
-            this.linkLicense.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLicense_LinkClicked);
+            resources.ApplyResources(this.rb2x, "rb2x");
+            this.rb2x.Name = "rb2x";
+            this.rb2x.TabStop = true;
+            this.rb2x.UseVisualStyleBackColor = true;
+            this.rb2x.CheckedChanged += new System.EventHandler(this.versionRadio_CheckedChanged);
+            //
+            // linkLabel2x
+            //
+            resources.ApplyResources(this.linkLabel2x, "linkLabel2x");
+            this.linkLabel2x.Name = "linkLabel2x";
+            this.linkLabel2x.TabStop = true;
+            this.linkLabel2x.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2x_LinkClicked);
+            //
+            // rb191
+            //
+            resources.ApplyResources(this.rb191, "rb191");
+            this.rb191.Name = "rb191";
+            this.rb191.TabStop = true;
+            this.rb191.UseVisualStyleBackColor = true;
+            this.rb191.CheckedChanged += new System.EventHandler(this.versionRadio_CheckedChanged);
             //
             // cbAgreeToLicense
             //
@@ -76,7 +94,9 @@ namespace pwiz.Skyline.Alerts
             this.Controls.Add(this.btnSpecifyManually);
             this.Controls.Add(this.btnAccept);
             this.Controls.Add(this.cbAgreeToLicense);
-            this.Controls.Add(this.linkLicense);
+            this.Controls.Add(this.rb191);
+            this.Controls.Add(this.linkLabel2x);
+            this.Controls.Add(this.rb2x);
             this.Controls.Add(this.lblSummary);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -92,7 +112,9 @@ namespace pwiz.Skyline.Alerts
         #endregion
 
         private System.Windows.Forms.Label lblSummary;
-        private System.Windows.Forms.LinkLabel linkLicense;
+        private System.Windows.Forms.RadioButton rb2x;
+        private System.Windows.Forms.LinkLabel linkLabel2x;
+        private System.Windows.Forms.RadioButton rb191;
         private System.Windows.Forms.CheckBox cbAgreeToLicense;
         private System.Windows.Forms.Button btnAccept;
         private System.Windows.Forms.Button btnSpecifyManually;

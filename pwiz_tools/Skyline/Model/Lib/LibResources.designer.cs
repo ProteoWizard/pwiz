@@ -169,7 +169,16 @@ namespace pwiz.Skyline.Model.Lib {
                 return ResourceManager.GetString("BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The search produced no spectra that passed the library-build score cutoff....
+        /// </summary>
+        public static string BiblioSpecLiteBuilder_BuildLibrary_No_spectra_passed_filter_ {
+            get {
+                return ResourceManager.GetString("BiblioSpecLiteBuilder_BuildLibrary_No_spectra_passed_filter_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Aligning library retention times.
         /// </summary>

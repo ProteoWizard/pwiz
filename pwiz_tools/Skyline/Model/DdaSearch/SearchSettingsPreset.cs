@@ -37,7 +37,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         MSFragger,
         Comet,
         Tide,
-        Hardklor
+        Hardklor,
+        DIANN
     }
 
     public enum SearchWorkflowType

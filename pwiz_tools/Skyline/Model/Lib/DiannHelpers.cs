@@ -26,8 +26,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using Microsoft.Win32;
+using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
@@ -38,6 +40,8 @@ namespace pwiz.Skyline.Model.Lib
 {
     public static class DiannHelpers
     {
+        // Default install: latest academic version. Non-academic users can opt for 1.9.1
+        // (last fully-open-source release) via DiannDownloadDlg.
         public const string DIANN_VERSION = @"2.5.0";
         public static readonly string DIANN_FILENAME = $@"DIANN-{DIANN_VERSION}";
         public static string DiannDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), DIANN_FILENAME);
@@ -46,13 +50,26 @@ namespace pwiz.Skyline.Model.Lib
         public static string DiannArgs =>
             Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.DIANN, string.Empty);
 
+        // DIA-NN 1.9.1 — last release under a non-restrictive license. Supports the same
+        // command-line flags we emit (--cut, --use-quant, --reanalyse, --smart-profiling,
+        // --rt-profiling, --gen-spec-lib, --predictor, etc.) so BuildSearchCommandLine /
+        // BuildLibraryGenerationCommandLine are unchanged for either version.
+        public const string DIANN_191_VERSION = @"1.9.1";
+        public static readonly string DIANN_191_FILENAME = $@"DIANN-{DIANN_191_VERSION}";
+        public static string Diann191Directory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), DIANN_191_FILENAME);
+        public static readonly Uri DIANN_191_ZIP_URL =
+            new Uri($@"https://github.com/vdemichev/DiaNN/releases/download/{DIANN_191_VERSION}/DIA-NN.{DIANN_191_VERSION}.binaries.zip");
+
         public static readonly Uri DIANN_DOWNLOAD_URL = new Uri(@"https://github.com/vdemichev/DiaNN/releases");
 
         public static readonly Uri DIANN_MSI_URL =
             new Uri($@"https://github.com/vdemichev/DiaNN/releases/download/2.0/DIA-NN-{DIANN_VERSION}-Academia.msi");
 
+        // GitHub blob view (renders markdown in browser) rather than the releases-download
+        // .txt — the latter served a Content-Disposition that triggered a file download
+        // instead of letting the user read the license.
         public static readonly Uri DIANN_LICENSE_URL =
-            new Uri(@"https://github.com/vdemichev/DiaNN/releases/download/2.0/LICENSE.txt");
+            new Uri(@"https://github.com/vdemichev/DiaNN/blob/master/LICENSE.md");
 
         /// <summary>
         /// Pre-extracted DIA-NN 2.5.0 install zip on the Skyline tool testing S3 mirror.
@@ -77,6 +94,28 @@ namespace pwiz.Skyline.Model.Lib
             ToolPath = DiannBinary,
             ToolExtraArgs = DiannArgs
         };
+
+        /// <summary>
+        /// Same download/cache plumbing as <see cref="DiannDownloadInfo"/> but for the
+        /// open-license 1.9.1 zip from GitHub. Used by tests that exercise both versions.
+        /// The zip's top-level folder is <c>1.9.1/</c> and contains TWO executables:
+        /// <c>DIA-NN.exe</c> (594 KB, the GUI loader) and <c>DiaNN.exe</c> (15 MB, the
+        /// CLI binary we actually want to drive from Skyline).
+        /// </summary>
+        public static string Diann191Binary => Path.Combine(Diann191Directory, DIANN_191_VERSION, @"DiaNN.exe");
+        public static FileDownloadInfo Diann191DownloadInfo => new FileDownloadInfo
+        {
+            Filename = DIANN_191_FILENAME,
+            InstallPath = Diann191Directory,
+            CheckInstalledPath = Diann191Binary,
+            DownloadUrl = DIANN_191_ZIP_URL,
+            OverwriteExisting = true,
+            Unzip = true,
+            ToolType = SearchToolType.DIANN,
+            ToolPath = Diann191Binary,
+            ToolExtraArgs = DiannArgs
+        };
+
         public static FileDownloadInfo[] FilesToDownload => new[] { DiannDownloadInfo };
 
         /// <summary>
@@ -154,6 +193,96 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
+        /// Extract a DIA-NN binaries .zip (used for the non-academic 1.9.1 distribution)
+        /// into <paramref name="targetDir"/> and return the path to the extracted diann.exe.
+        /// Returns null if no diann.exe is found in the archive.
+        /// </summary>
+        public static string ExtractDiannZip(string zipPath, string targetDir)
+        {
+            Directory.CreateDirectory(targetDir);
+            using (var zip = new Ionic.Zip.ZipFile(zipPath))
+            {
+                zip.ExtractAll(targetDir, Ionic.Zip.ExtractExistingFileAction.OverwriteSilently);
+            }
+            // 2.x ships as diann.exe; 1.9.1 ships TWO binaries — DiaNN.exe (CLI, what we
+            // want) and DIA-NN.exe (GUI loader, will pop a window — skip it). Match the
+            // CLI names only. Note: 1.9.1 doesn't support UTF-8 paths properly, so users
+            // who need non-ASCII paths should install DIA-NN 2.x.
+            return Directory.EnumerateFiles(targetDir, @"*.exe", SearchOption.AllDirectories)
+                .FirstOrDefault(p =>
+                {
+                    var name = Path.GetFileName(p);
+                    return string.Equals(name, @"diann.exe", StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(name, @"DiaNN.exe", StringComparison.OrdinalIgnoreCase);
+                });
+        }
+
+        // Built-in preset names exposed in the SearchSettingsPresets dropdown.
+        public const string PRESET_DEFAULT = @"DIA-NN default";
+        public const string PRESET_ORBITRAP = @"DIA-NN Orbitrap (10/20 ppm)";
+        public const string PRESET_LIBRARY_FREE_WIDE = @"DIA-NN library-free wide-window";
+
+        /// <summary>
+        /// Default DIA-NN presets surfaced by SearchSettingsPresetList alongside the
+        /// Comet/MSFragger presets. Engine-specific values go into AdditionalSettings,
+        /// the rest (tolerances, q-value, enzyme, etc.) are first-class preset fields.
+        /// </summary>
+        public static IEnumerable<SearchSettingsPreset> GetDefaultPresets()
+        {
+            var defaultAdditional = new Dictionary<string, string>
+            {
+                { @"MinPepLen", @"7" },
+                { @"MaxPepLen", @"30" },
+                { @"MinPrecursorCharge", @"1" },
+                { @"MaxPrecursorCharge", @"4" },
+            };
+            yield return new SearchSettingsPreset(
+                PRESET_DEFAULT,
+                SearchEngine.DIANN,
+                new MzTolerance(0, MzTolerance.Units.ppm),
+                new MzTolerance(0, MzTolerance.Units.ppm),
+                maxVariableMods: 2,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: defaultAdditional,
+                enzymeName: @"Trypsin",
+                maxMissedCleavages: 1,
+                workflowType: SearchWorkflowType.dia);
+
+            var orbitrapAdditional = new Dictionary<string, string>(defaultAdditional);
+            orbitrapAdditional[@"MinPrecursorCharge"] = @"2";
+            orbitrapAdditional[@"MaxPrecursorCharge"] = @"3";
+            yield return new SearchSettingsPreset(
+                PRESET_ORBITRAP,
+                SearchEngine.DIANN,
+                new MzTolerance(10, MzTolerance.Units.ppm),
+                new MzTolerance(20, MzTolerance.Units.ppm),
+                maxVariableMods: 2,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: orbitrapAdditional,
+                enzymeName: @"Trypsin",
+                maxMissedCleavages: 1,
+                workflowType: SearchWorkflowType.dia);
+
+            yield return new SearchSettingsPreset(
+                PRESET_LIBRARY_FREE_WIDE,
+                SearchEngine.DIANN,
+                new MzTolerance(0, MzTolerance.Units.ppm), // auto MS1
+                new MzTolerance(0, MzTolerance.Units.ppm), // auto MS2
+                maxVariableMods: 2,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettings: defaultAdditional,
+                enzymeName: @"Trypsin",
+                maxMissedCleavages: 2,
+                workflowType: SearchWorkflowType.dia);
+        }
+
+        /// <summary>
         /// Maps Skyline enzyme names to DIA-NN --cut patterns.
         /// </summary>
         private static readonly Dictionary<string, string> ENZYME_MAP = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -217,11 +346,12 @@ namespace pwiz.Skyline.Model.Lib
             if (!string.IsNullOrEmpty(DiannArgs))
                 sb.Append(DiannArgs).Append(' ');
 
-            // Tolerances (0 = auto-detect)
+            // Mass tolerances (0 = auto-detect). DIA-NN 2.x uses --mass-acc-ms1 / --mass-acc;
+            // the older 1.x --ms1-accuracy / --ms2-accuracy names are silently ignored.
             if (config.Ms1Accuracy > 0)
-                sb.AppendFormat(CultureInfo.InvariantCulture, @"--ms1-accuracy {0} ", config.Ms1Accuracy);
+                sb.AppendFormat(CultureInfo.InvariantCulture, @"--mass-acc-ms1 {0} ", config.Ms1Accuracy);
             if (config.Ms2Accuracy > 0)
-                sb.AppendFormat(CultureInfo.InvariantCulture, @"--ms2-accuracy {0} ", config.Ms2Accuracy);
+                sb.AppendFormat(CultureInfo.InvariantCulture, @"--mass-acc {0} ", config.Ms2Accuracy);
 
             // FDR
             sb.AppendFormat(CultureInfo.InvariantCulture, @"--qvalue {0} ", config.QValue);
@@ -263,6 +393,14 @@ namespace pwiz.Skyline.Model.Lib
                 foreach (var mod in variableMods)
                     sb.AppendFormat(@"--var-mod {0} ", FormatModification(mod));
             }
+            sb.AppendFormat(@"--var-mods {0} ", config.MaxVarMods);
+
+            // DIA-NN recommends these for library-free / library-generation runs:
+            //   --smart-profiling improves the empirical spectral library quality
+            //   --rt-profiling improves retention-time modeling
+            // (https://github.com/vdemichev/DiaNN README; matches GUI defaults.)
+            sb.Append(@"--smart-profiling ");
+            sb.Append(@"--rt-profiling ");
 
             // Skyline builds its own library from the speclib, so skip DIA-NN's protein inference.
             sb.Append(@"--no-prot-inf ");
@@ -312,8 +450,12 @@ namespace pwiz.Skyline.Model.Lib
             var sb = new StringBuilder();
 
             // Input files
+            int fileCount = 0;
             foreach (var file in dataFiles)
+            {
                 sb.AppendFormat(@"--f {0} ", file.Quote());
+                fileCount++;
+            }
 
             // FASTA (for protein inference) and predicted library
             sb.AppendFormat(@"--fasta {0} ", fastaFilepath.Quote());
@@ -321,10 +463,31 @@ namespace pwiz.Skyline.Model.Lib
 
             // Output. With BiblioSpec's parquet reader (DiaNNSpecLibReader USE_PARQUET_READER),
             // the report-lib.parquet that --gen-spec-lib emits is consumed directly, so MBR
-            // (--reanalyse) is no longer required and the search runs with a single DIA file.
+            // (--reanalyse) is no longer strictly required to extract the library.
             sb.AppendFormat(@"--out {0} ", outputReportPath.Quote());
             sb.AppendFormat(@"--out-lib {0} ", outputLibPath.Quote());
             sb.Append(@"--gen-spec-lib ");
+
+            if (config.ReuseQuantFiles)
+            {
+                // --use-quant tells DIA-NN to load each `<raw>.quant` file alongside the
+                // input and skip the per-file search step. (Note: DIA-NN 2.5.0 silently
+                // ignores the similarly-named `--reuse-quant`.) Per DIA-NN docs:
+                //   "the second step of MBR is done by running with --use-quant and
+                //    --reanalyse, which is much quicker than the search with a predicted
+                //    library."
+                // i.e. --use-quant alone does NOT trigger MBR — it just skips the first
+                // pass. MBR's second pass (empirical-library reanalysis) only runs when
+                // --reanalyse is also supplied.
+                sb.Append(@"--use-quant ");
+            }
+            if (fileCount >= 2)
+            {
+                // --reanalyse activates match-between-runs. Needs 2+ files. Compatible
+                // with --use-quant: the cached .quant files satisfy the first pass and
+                // --reanalyse does the empirical-library second pass on top.
+                sb.Append(@"--reanalyse ");
+            }
 
             AppendCommonArgs(sb, config, fixedMods, variableMods, enzyme);
 
@@ -339,19 +502,139 @@ namespace pwiz.Skyline.Model.Lib
         private static void RunDiannProcess(string args, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             var pr = new ProcessRunner();
-            var psi = new ProcessStartInfo(DiannBinary, args)
+            // DIA-NN's bundled RawWrapper.dll is a .NET assembly; its apphost reads
+            // RawWrapper.runtimeconfig.json from diann.exe's directory and fails — calling
+            // abort() (surfaces as STATUS_STACK_BUFFER_OVERRUN / FAST_FAIL_FATAL_APP_EXIT
+            // before stage-2 .raw load) — if that directory contains non-ASCII characters.
+            // TestRunner stages tools under `Tööls_<id>_<lang>`, which trips this. Hand DIA-NN
+            // the 8.3 short-name form of its install path. Same fix below for %TMP%, which
+            // TestRunner redirects to a path with `~& ^` characters that DIA-NN's intermediate
+            // .quant writer can't parse.
+            string diannExe = PathEx.GetNonUnicodePath(DiannBinary) ?? DiannBinary;
+            var psi = new ProcessStartInfo(diannExe, args)
             {
                 CreateNoWindow = true,
                 UseShellExecute = false
             };
+            pr.ChangeTmpDirEnvironmentVariableToNonUnicodePath(psi);
 
             status = status.ChangeMessage(string.Format(
                 Resources.EncyclopeDiaHelpers_GenerateLibrary_Running_command___0___1_,
                 psi.FileName, psi.Arguments));
             progressMonitor.UpdateProgress(status);
 
-            pr.Run(psi, null, progressMonitor, ref status, null,
-                ProcessPriorityClass.BelowNormal, true, IsGoodDiannOutput, false);
+            // Tee DIA-NN's stdout to a flushed file beside the --out artifact so callers
+            // (and humans following along) can `tail -f` while DIA-NN runs. DIA-NN's own
+            // diann-output.log.txt is only finalised on clean exit, so it's useless for
+            // live monitoring. Also wrap the progress monitor so DIA-NN stage markers
+            // drive the percent-complete on the IProgressStatus.
+            using (var liveLog = TryOpenLiveLogWriter(args))
+            {
+                var wrappedMonitor = new DiannProgressMonitor(progressMonitor);
+                pr.Run(psi, null, wrappedMonitor, ref status, liveLog,
+                    ProcessPriorityClass.BelowNormal, true, IsGoodDiannOutput, false);
+            }
+        }
+
+        /// <summary>
+        /// Create an append-mode, auto-flushed log file at `<--out dir>/diann-skyline-stdout.log`
+        /// so each DIA-NN stdout line lands on disk immediately. Returns null when no
+        /// `--out` argument is present (e.g. the predictor invocation uses `--out-lib`
+        /// instead — that case falls back to writing next to that file).
+        /// </summary>
+        private static TextWriter TryOpenLiveLogWriter(string args)
+        {
+            try
+            {
+                // Pull the path argument right after `--out` or `--out-lib` (predictor stage).
+                string outPath = ExtractOutputPath(args, @"--out") ?? ExtractOutputPath(args, @"--out-lib");
+                if (string.IsNullOrEmpty(outPath))
+                    return null;
+                string dir = Path.GetDirectoryName(outPath);
+                if (string.IsNullOrEmpty(dir))
+                    return null;
+                Directory.CreateDirectory(dir);
+                var stream = new FileStream(Path.Combine(dir, @"diann-skyline-stdout.log"),
+                    FileMode.Append, FileAccess.Write, FileShare.Read);
+                return new StreamWriter(stream) { AutoFlush = true };
+            }
+            catch
+            {
+                return null; // logging is best-effort; never fail the search because of it
+            }
+        }
+
+        private static string ExtractOutputPath(string args, string flag)
+        {
+            int idx = args.IndexOf(flag + @" ", StringComparison.Ordinal);
+            if (idx < 0) return null;
+            int start = idx + flag.Length + 1;
+            // Path is quoted by ArgumentExtensions.Quote() in BuildSearchCommandLine.
+            if (start >= args.Length || args[start] != '"') return null;
+            int end = args.IndexOf('"', start + 1);
+            if (end < 0) return null;
+            return args.Substring(start + 1, end - start - 1);
+        }
+
+        /// <summary>
+        /// Maps DIA-NN's free-text stage markers ("First pass", "File N/M",
+        /// "Cross-run analysis", "Quantifying proteins", "report saved", ...) onto a
+        /// monotonic 0..100 percent-complete. Wraps an inner <see cref="IProgressMonitor"/>
+        /// so progress dialogs that bind to <see cref="IProgressStatus.PercentComplete"/>
+        /// actually advance during a long DIA-NN run instead of sitting at 0.
+        /// </summary>
+        private sealed class DiannProgressMonitor : IProgressMonitor
+        {
+            private readonly IProgressMonitor _inner;
+            private int _maxPctSeen;
+
+            public DiannProgressMonitor(IProgressMonitor inner) { _inner = inner; }
+
+            public bool IsCanceled => _inner.IsCanceled;
+            public bool HasUI => _inner.HasUI;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                int? parsed = ParseDiannPercent(status.Message);
+                if (parsed.HasValue)
+                {
+                    int pct = Math.Max(_maxPctSeen, parsed.Value);
+                    if (pct != _maxPctSeen)
+                    {
+                        _maxPctSeen = pct;
+                        status = status.ChangePercentComplete(pct);
+                    }
+                }
+                return _inner.UpdateProgress(status);
+            }
+
+            // Stages in chronological order — `null` means the message didn't match.
+            private static int? ParseDiannPercent(string message)
+            {
+                if (string.IsNullOrEmpty(message)) return null;
+                // Strip the "[mm:ss] " timestamp prefix DIA-NN writes on each line.
+                int closeBracket = message.IndexOf(']');
+                if (message.Length > 0 && message[0] == '[' && closeBracket > 0 && closeBracket < message.Length - 1)
+                    message = message.Substring(closeBracket + 1).TrimStart();
+
+                // File N/M during stage-2 first/second pass: linear 10..80%.
+                var fileMatch = System.Text.RegularExpressions.Regex.Match(message, @"^File (\d+)/(\d+)\b");
+                if (fileMatch.Success
+                    && int.TryParse(fileMatch.Groups[1].Value, out var n)
+                    && int.TryParse(fileMatch.Groups[2].Value, out var m) && m > 0)
+                    return 10 + 70 * (n - 1) / m;
+
+                if (message.StartsWith(@"Loading spectral library", StringComparison.Ordinal)) return 2;
+                if (message.StartsWith(@"Initialising library", StringComparison.Ordinal))     return 5;
+                if (message.StartsWith(@"First pass:", StringComparison.Ordinal))               return 10;
+                if (message.StartsWith(@"Second pass:", StringComparison.Ordinal))              return 10; // resets within pass
+                if (message.StartsWith(@"Cross-run analysis", StringComparison.Ordinal))        return 85;
+                if (message.StartsWith(@"Quantifying peptides", StringComparison.Ordinal))      return 90;
+                if (message.StartsWith(@"Quantifying proteins", StringComparison.Ordinal))      return 95;
+                if (message.StartsWith(@"Generating spectral library", StringComparison.Ordinal)) return 97;
+                if (message.IndexOf(@"report saved", StringComparison.OrdinalIgnoreCase) >= 0)  return 99;
+                return null;
+            }
         }
 
         /// <summary>
@@ -373,6 +656,16 @@ namespace pwiz.Skyline.Model.Lib
             // DIA-NN 2.5 outputs .predicted.speclib in the output directory
             string predictedLibPath = Path.Combine(outputDir, @"diann-predicted.speclib");
 
+            // If the caller has opted into library caching and a previous library is
+            // already on disk, skip --predictor — DIA-NN's prediction is deterministic
+            // given FASTA + mods + enzyme + length/charge bounds, so reusing is safe.
+            if (config.ReuseCachedLibrary)
+            {
+                var cached = ResolvePredictedLibraryOutput(outputDir, predictedLibPath);
+                if (cached != null)
+                    return cached;
+            }
+
             if (cancelToken.IsCancellationRequested)
                 return null;
 
@@ -380,19 +673,25 @@ namespace pwiz.Skyline.Model.Lib
                 fixedMods, variableMods, enzyme);
             RunDiannProcess(args, progressMonitor, ref status);
 
-            // DIA-NN may output with a different extension (.parquet) — check both
+            return ResolvePredictedLibraryOutput(outputDir, predictedLibPath);
+        }
+
+        /// <summary>
+        /// DIA-NN's --predictor produces the spectral library at one of three filename
+        /// shapes depending on version / settings (`diann-predicted.speclib`,
+        /// `diann-predicted.parquet`, or `diann-predicted.predicted.speclib`). Return
+        /// whichever exists, or null if none do.
+        /// </summary>
+        private static string ResolvePredictedLibraryOutput(string outputDir, string predictedLibPath)
+        {
             if (File.Exists(predictedLibPath))
                 return predictedLibPath;
-
             string parquetPath = Path.ChangeExtension(predictedLibPath, @".parquet");
             if (File.Exists(parquetPath))
                 return parquetPath;
-
-            // Check for .predicted.speclib pattern that DIA-NN may generate
             string altPath = Path.Combine(outputDir, @"diann-predicted.predicted.speclib");
             if (File.Exists(altPath))
                 return altPath;
-
             return null;
         }
 
@@ -427,6 +726,7 @@ namespace pwiz.Skyline.Model.Lib
 
             return File.Exists(outputLibPath) ? outputLibPath : null;
         }
+
 
         /// <summary>
         /// Run the full two-step DIA-NN workflow:
@@ -495,6 +795,25 @@ namespace pwiz.Skyline.Model.Lib
         public int MaxPrCharge { get; set; } = 4;
         public int MaxMissedCleavages { get; set; } = 1;
         public bool MetExcision { get; set; } = true;
+        // DIA-NN's CLI default for --var-mods is 1; the GUI default is 2. Match the GUI
+        // so we're not silently more restrictive than what most DIA-NN users get.
+        public int MaxVarMods { get; set; } = 2;
+
+        /// <summary>
+        /// When true, <see cref="GeneratePredictedLibrary"/> short-circuits and returns
+        /// the cached library path if a previously-generated library already exists in
+        /// the output directory. Used by perf tests to avoid the ~20-min library-prediction
+        /// step on every iteration; off by default so production runs always regenerate.
+        /// </summary>
+        public bool ReuseCachedLibrary { get; set; } = false;
+
+        /// <summary>
+        /// When true, the search command line includes DIA-NN's `--reuse-quant` flag, so
+        /// per-file `.quant` files alongside the inputs are reused instead of re-searched.
+        /// Used by perf tests for incremental rebuilds; off by default because production
+        /// runs should always pick up new search-parameter or library changes.
+        /// </summary>
+        public bool ReuseQuantFiles { get; set; } = false;
 
         public IDictionary<string, AbstractDdaSearchEngine.Setting> AdditionalSettings { get; }
 

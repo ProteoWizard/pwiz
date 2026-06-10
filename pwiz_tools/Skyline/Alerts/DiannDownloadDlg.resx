@@ -77,7 +77,7 @@
     <value>0</value>
   </data>
   <data name="lblSummary.Text" xml:space="preserve">
-    <value>DIA-NN is available free of charge for academic research and educational use only. By proceeding, Skyline will download the DIA-NN {0} installer from GitHub (~360 MB) and extract it into the Skyline Tools directory.</value>
+    <value>DIA-NN {0} is available free of charge for academic research and educational use only. By proceeding, Skyline will download the DIA-NN {0} installer from GitHub (~360 MB) and extract it into the Skyline Tools directory. Non-academic users can instead install DIA-NN {1} (open license, no agreement required).</value>
   </data>
   <data name="&gt;&gt;lblSummary.Name" xml:space="preserve">
     <value>lblSummary</value>
@@ -89,43 +89,98 @@
     <value>$this</value>
   </data>
   <data name="&gt;&gt;lblSummary.ZOrder" xml:space="preserve">
-    <value>5</value>
+    <value>7</value>
   </data>
-  <data name="linkLicense.AutoSize" type="System.Boolean, mscorlib">
+  <data name="rb2x.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
-  <data name="linkLicense.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 90</value>
+  <data name="rb2x.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 85</value>
   </data>
-  <data name="linkLicense.Size" type="System.Drawing.Size, System.Drawing">
-    <value>210, 13</value>
+  <data name="rb2x.Size" type="System.Drawing.Size, System.Drawing">
+    <value>14, 14</value>
   </data>
-  <data name="linkLicense.TabIndex" type="System.Int32, mscorlib">
+  <data name="rb2x.TabIndex" type="System.Int32, mscorlib">
     <value>1</value>
   </data>
-  <data name="linkLicense.Text" xml:space="preserve">
-    <value>Read the full DIA-NN academic license</value>
+  <data name="rb2x.Text" xml:space="preserve">
+    <value />
   </data>
-  <data name="&gt;&gt;linkLicense.Name" xml:space="preserve">
-    <value>linkLicense</value>
+  <data name="&gt;&gt;rb2x.Name" xml:space="preserve">
+    <value>rb2x</value>
   </data>
-  <data name="&gt;&gt;linkLicense.Type" xml:space="preserve">
-    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="&gt;&gt;rb2x.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="&gt;&gt;linkLicense.Parent" xml:space="preserve">
+  <data name="&gt;&gt;rb2x.Parent" xml:space="preserve">
     <value>$this</value>
   </data>
-  <data name="&gt;&gt;linkLicense.ZOrder" xml:space="preserve">
+  <data name="&gt;&gt;rb2x.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="linkLabel2x.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="linkLabel2x.Location" type="System.Drawing.Point, System.Drawing">
+    <value>29, 86</value>
+  </data>
+  <data name="linkLabel2x.Size" type="System.Drawing.Size, System.Drawing">
+    <value>220, 13</value>
+  </data>
+  <data name="linkLabel2x.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="linkLabel2x.Text" xml:space="preserve">
+    <value>DIA-NN {0} ({1})</value>
+    <comment>{0} = version number, {1} = link phrase from DiannDownloadDlg_academic_license</comment>
+  </data>
+  <data name="&gt;&gt;linkLabel2x.Name" xml:space="preserve">
+    <value>linkLabel2x</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2x.Type" xml:space="preserve">
+    <value>System.Windows.Forms.LinkLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2x.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;linkLabel2x.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="rb191.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="rb191.Location" type="System.Drawing.Point, System.Drawing">
+    <value>12, 108</value>
+  </data>
+  <data name="rb191.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 17</value>
+  </data>
+  <data name="rb191.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="rb191.Text" xml:space="preserve">
+    <value>DIA-NN {0}</value>
+  </data>
+  <data name="&gt;&gt;rb191.Name" xml:space="preserve">
+    <value>rb191</value>
+  </data>
+  <data name="&gt;&gt;rb191.Type" xml:space="preserve">
+    <value>System.Windows.Forms.RadioButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rb191.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;rb191.ZOrder" xml:space="preserve">
     <value>4</value>
   </data>
   <data name="cbAgreeToLicense.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 120</value>
+    <value>12, 135</value>
   </data>
   <data name="cbAgreeToLicense.Size" type="System.Drawing.Size, System.Drawing">
     <value>470, 40</value>
   </data>
   <data name="cbAgreeToLicense.TabIndex" type="System.Int32, mscorlib">
-    <value>2</value>
+    <value>4</value>
   </data>
   <data name="cbAgreeToLicense.Text" xml:space="preserve">
     <value>I have read and agree to the DIA-NN academic license, and confirm that my use is for academic research or educational purposes only.</value>
@@ -149,13 +204,13 @@
     <value>False</value>
   </data>
   <data name="btnAccept.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 184</value>
+    <value>12, 200</value>
   </data>
   <data name="btnAccept.Size" type="System.Drawing.Size, System.Drawing">
     <value>130, 23</value>
   </data>
   <data name="btnAccept.TabIndex" type="System.Int32, mscorlib">
-    <value>3</value>
+    <value>5</value>
   </data>
   <data name="btnAccept.Text" xml:space="preserve">
     <value>&amp;Accept and Download</value>
@@ -176,13 +231,13 @@
     <value>Bottom, Left</value>
   </data>
   <data name="btnSpecifyManually.Location" type="System.Drawing.Point, System.Drawing">
-    <value>148, 184</value>
+    <value>148, 200</value>
   </data>
   <data name="btnSpecifyManually.Size" type="System.Drawing.Size, System.Drawing">
     <value>160, 23</value>
   </data>
   <data name="btnSpecifyManually.TabIndex" type="System.Int32, mscorlib">
-    <value>4</value>
+    <value>6</value>
   </data>
   <data name="btnSpecifyManually.Text" xml:space="preserve">
     <value>&amp;Specify Path Manually...</value>
@@ -203,13 +258,13 @@
     <value>Bottom, Left</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>314, 184</value>
+    <value>314, 200</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
   </data>
   <data name="btnCancel.TabIndex" type="System.Int32, mscorlib">
-    <value>5</value>
+    <value>7</value>
   </data>
   <data name="btnCancel.Text" xml:space="preserve">
     <value>Cancel</value>
@@ -233,7 +288,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>494, 220</value>
+    <value>494, 240</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
