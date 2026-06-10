@@ -61,7 +61,7 @@ namespace pwiz.OspreySharp.IO
         /// Resolves <paramref name="fileName"/> against the current
         /// working directory so a bare-filename argument (no directory
         /// component) lands the temp file alongside its destination
-        /// rather than failing inside <see cref="Path.GetDirectoryName(System.ReadOnlySpan{char})"/>
+        /// rather than failing inside <c>Path.GetDirectoryName</c>
         /// downstream. Diverges from the SharedBatch original which
         /// happens to never see relative paths.
         /// </summary>

@@ -305,6 +305,65 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual(0.0, score, 1e-10);
         }
 
+        /// <summary>
+        /// Exercises the SIMD path in <see cref="LinearSvmClassifier.Train(Matrix, bool[], double, ulong)"/>
+        /// at the feature dimension Osprey actually uses (21 PIN features).
+        /// On AVX2 (Vector&lt;double&gt;.Count = 4) the inner dot product is
+        /// 5 vector iters + 1 scalar tail; on AVX-512 (Count = 8) it is
+        /// 2 vector iters + 5 scalar tail.  The Stellar/Astral end-to-end
+        /// cross-impl gate exercises the same shape but is too slow for
+        /// the unit test suite; this test locks in a fast regression
+        /// signal that the vec/scalar split itself is wired correctly.
+        /// </summary>
+        [TestMethod]
+        public void TestSvmHighDimensional()
+        {
+            const int p = 21;
+            const int nPos = 16;
+            const int nNeg = 16;
+            const int n = nPos + nNeg;
+            // Targets centered at +1 on feature 0, decoys at -1 on
+            // feature 0; remaining 20 features are deterministic noise
+            // from XorShift64 so the dot product mixes every lane on
+            // both AVX2 and AVX-512.
+            var data = new double[n * p];
+            var rng = new XorShift64(7u);
+            for (int row = 0; row < n; row++)
+            {
+                double center = row < nPos ? 1.0 : -1.0;
+                data[row * p] = center;
+                for (int col = 1; col < p; col++)
+                {
+                    // Map uint64 to [-0.5, 0.5] via the high 53 bits.
+                    ulong r = rng.Next();
+                    data[row * p + col] = ((double)(r >> 11) / (1UL << 53)) - 0.5;
+                }
+            }
+            var features = new Matrix(data, n, p);
+            var labels = new bool[n];
+            for (int i = 0; i < nPos; i++)
+                labels[i] = false; // targets
+            for (int i = nPos; i < n; i++)
+                labels[i] = true; // decoys
+
+            var model = LinearSvmClassifier.Train(features, labels, 1.0, 42);
+            Assert.AreEqual(p, model.Weights.Length);
+            // Discriminating feature 0 should dominate the weight magnitude
+            // by a wide margin; noise features should be small.
+            double w0Abs = Math.Abs(model.Weights[0]);
+            for (int col = 1; col < p; col++)
+            {
+                Assert.IsTrue(w0Abs > Math.Abs(model.Weights[col]),
+                    string.Format("feature 0 weight {0} should dominate noise feature {1} weight {2}",
+                        model.Weights[0], col, model.Weights[col]));
+            }
+
+            // Determinism: same seed, same weights bit-for-bit.
+            var model2 = LinearSvmClassifier.Train(features, labels, 1.0, 42);
+            CollectionAssert.AreEqual(model.Weights, model2.Weights);
+            Assert.AreEqual(model.Bias, model2.Bias);
+        }
+
         #endregion
 
         #region FeatureStandardizer Tests

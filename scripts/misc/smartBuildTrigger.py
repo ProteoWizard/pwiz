@@ -133,11 +133,17 @@ else:
         triggered = False # only trigger once per path
         for tuple in matchPaths:
             if re.match(tuple[0], path):
+                # First match wins: stop here even if tuple[1] is the empty-dict
+                # sentinel (e.g. the ai/ or smartBuildTrigger.py rules).  Setting
+                # `triggered` inside the inner `for target` loop misses that case
+                # because the inner loop has zero iterations on an empty dict,
+                # so paths fell through to the catch-all `pwiz_tools/.*` rule
+                # and fired everything (see PR #4277 smart-trigger run).
+                triggered = True
                 for target in tuple[1]:
                     isBaseBranchDict = isinstance(tuple[1][target], dict) # these targets were promoted into top-level above
                     if not isBaseBranchDict and target not in triggers:
                         triggers[target] = path
-                    triggered = True
             if triggered:
                 break
     

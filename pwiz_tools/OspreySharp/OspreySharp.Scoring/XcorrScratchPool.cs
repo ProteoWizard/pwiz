@@ -31,10 +31,12 @@ namespace pwiz.OspreySharp.Scoring
     /// A single set of scratch buffers reused across XCorr calls to avoid
     /// per-call LOH allocation on HRAM (NBins ~100K, ~800 KB per array).
     ///
-    /// Each field is a plain Large Object once pooled; the pool hands out
-    /// and takes back sets of four arrays, never the arrays individually,
-    /// so the binned/windowed/prefix/preprocessed buffers stay co-located
-    /// across the full preprocess -> score pipeline.
+    /// All preprocessing math runs in f64 on these buffers; the per-
+    /// spectrum cache that feeds the dot product is f32 and is owned by
+    /// the caller (see <c>SpectralScorer.PreprocessSpectrumForXcorrInto</c>).
+    /// The f64 scratch is shared between the calibration path
+    /// (XcorrAtScan) and the HRAM main-search cache build path, so a
+    /// single rented scratch services both.
     /// </summary>
     public sealed class XcorrScratch
     {
@@ -108,6 +110,8 @@ namespace pwiz.OspreySharp.Scoring
                 return;
             Array.Clear(s.Binned, 0, s.Binned.Length);
             Array.Clear(s.VisitedBins, 0, s.VisitedBins.Length);
+            // BinnedF is zeroed by callers on each preprocess call so it does
+            // not need post-window zeroing here (would just duplicate work).
             _scratchBag.Add(s);
         }
 

@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Tasks
@@ -32,13 +33,13 @@ namespace pwiz.OspreySharp.Tasks
     ///
     /// Carries the <see cref="OspreyConfig"/>, logging callbacks, and
     /// the registry of <see cref="OspreyTask"/> instances participating
-    /// in the current pipeline. Downstream tasks query upstream tasks
-    /// through <see cref="GetTask{T}"/> and read their typed accessor
-    /// methods rather than receiving constructor parameters. Each
-    /// producer task owns the state it computes; consumers reach it
-    /// through the producer, which lets producers transparently
-    /// rehydrate their outputs from sibling artifacts (e.g. the worker
-    /// entry path) when their <see cref="OspreyTask.Run"/> never ran.
+    /// in the current pipeline. Downstream tasks read upstream state as
+    /// typed byproducts through <see cref="Get{TInfo}"/> rather than
+    /// receiving constructor parameters; a <see cref="Get{TInfo}"/> miss
+    /// lazily materializes the producing task (via <see cref="Demand{T}"/>),
+    /// which lets producers transparently rehydrate their outputs from
+    /// sibling artifacts (e.g. the worker entry path) when their
+    /// <see cref="OspreyTask.Run"/> never ran.
     ///
     /// The context is constructed once at the top of
     /// <c>AnalysisPipeline.Run</c> (or <c>RescoreWorker.Run</c>) and
@@ -52,25 +53,75 @@ namespace pwiz.OspreySharp.Tasks
         private readonly Dictionary<Type, OspreyTask> _tasksByType;
 
         /// <summary>
+        /// Task types whose state is already in memory this run -- either the
+        /// driver ran them (it calls <see cref="MarkMaterialized"/> after
+        /// <see cref="OspreyTask.Run"/>) or a <see cref="Demand{T}"/> /
+        /// <see cref="Get{TInfo}"/> first-touch drove their
+        /// <see cref="OspreyTask.Rehydrate"/>. A task is materialized at most
+        /// once, no matter how many consumers reach it; this single guard
+        /// replaces the per-task <c>_runOrHydrated</c> field.
+        /// </summary>
+        private readonly HashSet<Type> _materialized = new HashSet<Type>();
+
+        /// <summary>
+        /// Typed byproduct cache: state that one task computes and one or more
+        /// downstream tasks read, keyed by the byproduct's purpose type. Modeled
+        /// directly on Skyline's
+        /// <c>pwiz_tools/Skyline/Model/Results/Scoring/IPeakScoringModel.cs</c>
+        /// <c>PeakScoringContext</c> (its <c>AddInfo&lt;TInfo&gt;</c> /
+        /// <c>TryGetInfo&lt;TInfo&gt;</c> pair): a producer publishes a value once
+        /// and consumers retrieve it by type without naming the producer. Publish
+        /// is once-only (a second publish of the same type is a programming
+        /// defect). A consumer reaching for a byproduct whose producer has not yet
+        /// run materializes it lazily through <see cref="Get{TInfo}"/>, which
+        /// demands the registered producer (see <see cref="_producerByByproduct"/>).
+        /// </summary>
+        private readonly Dictionary<Type, object> _byproducts = new Dictionary<Type, object>();
+
+        /// <summary>
+        /// Maps each byproduct purpose type to the concrete task that publishes
+        /// it, built once at construction from each task's
+        /// <see cref="OspreyTask.Publishes"/>. This is the single registration
+        /// point that lets <see cref="Get{TInfo}"/> lazily materialize a skipped
+        /// producer on a cache miss, replacing the former pattern of every
+        /// consumer naming the producer task at its call site. Every registered
+        /// byproduct has exactly one producer (the constructor throws on a
+        /// duplicate). The one shared mutable buffer is registered like the rest:
+        /// it is modeled as three single-producer milestone types over the same
+        /// backing list (ScoredEntries -> PerFileScoring, CompactedEntries ->
+        /// FirstJoin, RescoredEntries -> PerFileRescore), so a consumer demanding
+        /// a given milestone resolves through this registry to the task that
+        /// brings the buffer to that state. See PipelineByproducts.cs.
+        /// </summary>
+        private readonly Dictionary<Type, Type> _producerByByproduct = new Dictionary<Type, Type>();
+
+        /// <summary>
         /// The configuration parsed from CLI args and the input library.
         ///
         /// Mutation contract: fields that feed
-        /// <see cref="OspreyConfig.SearchParameterHash"/> /
-        /// <see cref="OspreyConfig.LibraryIdentityHash"/> /
-        /// <see cref="OspreyConfig.ReconciliationParameterHash"/> must
+        /// <see cref="SearchIdentity.SearchParameterHash"/> /
+        /// <see cref="SearchIdentity.LibraryIdentityHash"/> /
+        /// <see cref="SearchIdentity.ReconciliationParameterHash"/> must
         /// remain stable for the life of the run, so a worker can
         /// reproduce the same hash a straight-through invocation would
         /// stamp into its parquet footers. Pipeline-populated fields
         /// that do NOT feed those hashes (e.g. the worker-mode
-        /// synthesis of <c>InputFiles</c> from <c>InputScores</c>, the
-        /// pipeline's choice of <c>EffectiveFileParallelism</c>) may be
-        /// written once at pipeline entry. For per-file scratch that
+        /// synthesis of <c>InputFiles</c> from <c>InputScores</c>) may be
+        /// written once at pipeline entry. Run-time state that is not parsed
+        /// config (e.g. file parallelism) lives on <see cref="RunPlan"/>
+        /// instead. For per-file scratch that
         /// mutates hash-affecting fields (e.g. the MS2-calibrated
         /// FragmentTolerance), tasks must use
         /// <c>OspreyConfig.ShallowClone</c> so the mutation stays
         /// scoped to one file.
         /// </summary>
         public OspreyConfig Config { get; }
+
+        /// <summary>
+        /// Per-run, driver-owned pipeline state (not parsed config, not part
+        /// of any cache / identity hash). See <see cref="RunPlan"/>.
+        /// </summary>
+        public RunPlan RunPlan { get; } = new RunPlan();
 
         /// <summary>
         /// Process exit code requested by a task that has returned
@@ -84,47 +135,18 @@ namespace pwiz.OspreySharp.Tasks
 
         /// <summary>
         /// The tasks participating in this pipeline, in execution order.
-        /// The driver walks this list; tasks that need state from an
-        /// upstream sibling look it up by type via <see cref="GetTask{T}"/>.
+        /// The driver walks this list (running each that is
+        /// <see cref="OspreyTask.IsIncluded"/> and not already valid on disk);
+        /// tasks that need state from an upstream sibling reach it through
+        /// <see cref="Demand{T}"/>.
         /// </summary>
         public IReadOnlyList<OspreyTask> Tasks { get; }
-
-        /// <summary>
-        /// First task in <see cref="Tasks"/> whose <see cref="OspreyTask.Run"/>
-        /// will be invoked. Tasks before this one are present in the registry
-        /// (so consumers can still <see cref="GetTask{T}"/> them and pull
-        /// state through their lazy-rehydrate accessors) but their
-        /// <c>Run</c> is never called. Defaults to the first entry in
-        /// <see cref="Tasks"/>. Set once by the pipeline entry point from
-        /// CLI-derived <see cref="OspreyConfig"/> flags; immutable thereafter.
-        /// </summary>
-        public Type StartAtTask { get; }
-
-        /// <summary>
-        /// Last task in <see cref="Tasks"/> whose <see cref="OspreyTask.Run"/>
-        /// will be invoked. Tasks after this one are not reached. Defaults
-        /// to the last entry in <see cref="Tasks"/>. Set once by the
-        /// pipeline entry point from CLI-derived <see cref="OspreyConfig"/>
-        /// flags; immutable thereafter.
-        /// </summary>
-        public Type StopAfterTask { get; }
 
         public PipelineContext(OspreyConfig config,
             IEnumerable<OspreyTask> tasks,
             Action<string> logInfo,
             Action<string> logWarning,
             Action<string> logError)
-            : this(config, tasks, logInfo, logWarning, logError, null, null)
-        {
-        }
-
-        public PipelineContext(OspreyConfig config,
-            IEnumerable<OspreyTask> tasks,
-            Action<string> logInfo,
-            Action<string> logWarning,
-            Action<string> logError,
-            Type startAtTask,
-            Type stopAfterTask)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
             if (tasks == null) throw new ArgumentNullException(nameof(tasks));
@@ -140,26 +162,24 @@ namespace pwiz.OspreySharp.Tasks
                     throw new ArgumentException(@"Pipeline task list contains a null entry.", nameof(tasks));
                 _tasksByType.Add(task.GetType(), task);
             }
-            Tasks = list;
 
-            if (list.Count == 0)
+            // Invert each producer's declared byproducts into the
+            // byproduct -> producer registry that Get{TInfo} resolves a cache
+            // miss through. A byproduct with two producers is a definition
+            // defect (the registry could not pick which task to materialize),
+            // so fail fast at construction rather than silently lose one.
+            foreach (var task in list)
             {
-                StartAtTask = startAtTask;
-                StopAfterTask = stopAfterTask;
+                foreach (var byproductType in task.Publishes)
+                {
+                    if (_producerByByproduct.ContainsKey(byproductType))
+                        throw new ArgumentException(string.Format(
+                            @"Byproduct type '{0}' is published by more than one task; each registered byproduct must have a single producer.",
+                            byproductType.FullName), nameof(tasks));
+                    _producerByByproduct.Add(byproductType, task.GetType());
+                }
             }
-            else
-            {
-                StartAtTask = startAtTask ?? list[0].GetType();
-                StopAfterTask = stopAfterTask ?? list[list.Count - 1].GetType();
-                if (!_tasksByType.ContainsKey(StartAtTask))
-                    throw new ArgumentException(
-                        string.Format(@"StartAtTask '{0}' is not in the pipeline task list.",
-                            StartAtTask.FullName), nameof(startAtTask));
-                if (!_tasksByType.ContainsKey(StopAfterTask))
-                    throw new ArgumentException(
-                        string.Format(@"StopAfterTask '{0}' is not in the pipeline task list.",
-                            StopAfterTask.FullName), nameof(stopAfterTask));
-            }
+            Tasks = list;
         }
 
         public void LogInfo(string message) { _logInfo(message); }
@@ -167,29 +187,170 @@ namespace pwiz.OspreySharp.Tasks
         public void LogError(string message) { _logError(message); }
 
         /// <summary>
-        /// Look up a task by its concrete type. Used by a task's
-        /// <see cref="OspreyTask.Run"/> implementation to reach the
-        /// typed accessor methods on an upstream producer
-        /// (e.g. <c>ctx.GetTask&lt;FirstJoinTask&gt;().GetReconciliationActions()</c>).
-        /// Throws <see cref="UnknownTaskException"/> if the requested
-        /// type is not in the pipeline; treat that as a programming
-        /// defect at pipeline-construction time rather than a runtime
-        /// condition to handle.
+        /// Resolve a registered task by its runtime <see cref="Type"/>, optionally
+        /// materializing it. Shared core behind the generic <see cref="Demand{T}"/>
+        /// and the registry-driven lazy materialization in
+        /// <see cref="Get{TInfo}"/> (which knows the producer only as a
+        /// <see cref="Type"/> from <see cref="_producerByByproduct"/>, so it cannot
+        /// use the generic overload). When <paramref name="materialize"/> is true,
+        /// the producer's <see cref="OspreyTask.Rehydrate"/> is driven at most once
+        /// via the <see cref="_materialized"/> one-shot guard.
         /// </summary>
-        public T GetTask<T>() where T : OspreyTask
+        private OspreyTask DemandByType(Type taskType, bool materialize)
         {
-            if (_tasksByType.TryGetValue(typeof(T), out var task))
-                return (T)task;
-            throw new UnknownTaskException(typeof(T));
+            if (!_tasksByType.TryGetValue(taskType, out var task))
+                throw new UnknownTaskException(taskType);
+            if (materialize && _materialized.Add(taskType))
+            {
+                // Lazily drive the producer. Unlike the driver loop -- which
+                // inspects Run's bool and stops the pipeline on false -- a
+                // consumer's lazy Demand/Get has no return channel, so a failed
+                // Rehydrate would otherwise be swallowed and the consumer would
+                // proceed with default (empty) state. Surface a genuine failure
+                // (one that set a non-zero ExitCode -- e.g. a library load or
+                // empty-scores error) as a throw so the run fails loudly. A
+                // success-stop that returns false with ExitCode == 0 (e.g. the
+                // --task PerFileScoring boundary, whose byproducts were already published
+                // before the stop) is intentionally left benign.
+                if (!task.Rehydrate(this) && ExitCode != 0)
+                    throw new RehydrateFailedException(taskType, ExitCode);
+            }
+            return task;
+        }
+
+        /// <summary>
+        /// Record that the driver has run <paramref name="task"/>, so a later
+        /// <see cref="Demand{T}"/> / <see cref="Get{TInfo}"/> for it returns the
+        /// already-computed state instead of driving <see cref="OspreyTask.Rehydrate"/>.
+        /// Called by <c>AnalysisPipeline.RunTask</c> after each
+        /// <see cref="OspreyTask.Run"/>. This is what lets tasks drop their former
+        /// per-instance <c>_runOrHydrated</c> guard: the context's
+        /// <see cref="_materialized"/> set now coordinates the driver-Run path and
+        /// the lazy-Rehydrate path with a single source of truth.
+        /// </summary>
+        public void MarkMaterialized(OspreyTask task)
+        {
+            if (task == null) throw new ArgumentNullException(nameof(task));
+            _materialized.Add(task.GetType());
+        }
+
+        /// <summary>
+        /// Resolve an upstream producer and ensure its state is materialized
+        /// before returning it. The first consumer to demand a given producer
+        /// triggers its <see cref="OspreyTask.Rehydrate"/>; subsequent demands
+        /// return the same instance without re-materializing, via the
+        /// <see cref="_materialized"/> one-shot guard. This is the
+        /// lazy-rehydrate replacement for the <c>EnsureHydrated</c>-inside-getter
+        /// pattern: callers ask the context for what they need and the context
+        /// owns when the producer's state comes into being, rather than each
+        /// accessor side-effecting a hydrate/run on read.
+        ///
+        /// A producer whose <see cref="OspreyTask.Run"/> already executed
+        /// (driver ran it this pass) no-ops via its own one-shot guard. Each
+        /// producer's <see cref="OspreyTask.Rehydrate"/> dispatches on its mode:
+        /// it disk-loads worker-supplied state when present, else defers to
+        /// <see cref="OspreyTask.Run"/> (whose per-file load picks up already-valid
+        /// outputs on a straight-through resume).
+        /// </summary>
+        public T Demand<T>() where T : OspreyTask
+        {
+            return (T)DemandByType(typeof(T), materialize: true);
+        }
+
+        /// <summary>
+        /// Publish a byproduct value for downstream tasks, keyed by its purpose
+        /// type <typeparamref name="TInfo"/>. Once-only: publishing the same type
+        /// twice in a run is a programming defect (two producers, or a producer
+        /// running twice) and throws. The <c>AddInfo&lt;TInfo&gt;</c> counterpart
+        /// of Skyline's <c>PeakScoringContext</c>.
+        /// </summary>
+        public void Publish<TInfo>(TInfo info)
+        {
+            _byproducts.Add(typeof(TInfo), info);
+        }
+
+        /// <summary>
+        /// Read a byproduct value if it has been published, without triggering
+        /// any producer. Pure cache lookup -- the <c>TryGetInfo&lt;TInfo&gt;</c>
+        /// counterpart of Skyline's <c>PeakScoringContext</c>. Use
+        /// <see cref="Get{TInfo}"/> when a miss should lazily materialize the
+        /// registered producer instead of returning <c>false</c>.
+        /// </summary>
+        public bool TryGet<TInfo>(out TInfo info)
+        {
+            if (_byproducts.TryGetValue(typeof(TInfo), out var obj))
+            {
+                info = (TInfo)obj;
+                return true;
+            }
+            info = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Retrieve a published byproduct, lazily materializing its producer on a
+        /// miss. If <typeparamref name="TInfo"/> is not yet in the cache, the
+        /// registered producer (<see cref="_producerByByproduct"/>) is demanded --
+        /// its <see cref="OspreyTask.Rehydrate"/> runs and publishes the value --
+        /// and the cache is read again. This is the public dataflow surface that
+        /// replaces consumers reaching through a named producer task's getter:
+        /// the consumer asks the context for the value by type and the context
+        /// owns when (and by which task) it comes into being.
+        ///
+        /// Throws <see cref="UnknownByproductException"/> if the type has no
+        /// registered producer, or if the producer ran but did not publish it --
+        /// both programming defects (a missing <see cref="OspreyTask.Publishes"/>
+        /// registration, or a producer path that forgot to publish), surfaced
+        /// loudly rather than returning a silent default.
+        /// </summary>
+        public TInfo Get<TInfo>()
+        {
+            if (TryGet(out TInfo info))
+                return info;
+            if (_producerByByproduct.TryGetValue(typeof(TInfo), out var producerType))
+            {
+                DemandByType(producerType, materialize: true);
+                if (TryGet(out info))
+                    return info;
+            }
+            throw new UnknownByproductException(typeof(TInfo));
+        }
+
+        /// <summary>
+        /// Driver-owned skip predicate: <c>true</c> when every file
+        /// <paramref name="task"/> declares in <see cref="OspreyTask.Outputs"/>
+        /// already exists on disk with a matching
+        /// <see cref="OspreyTask.ValidityKey"/> sidecar — i.e. the task's work
+        /// is durably present and need not be recomputed. A task that declares
+        /// no outputs can never be skipped (returns <c>false</c>), matching the
+        /// "purely-in-memory transformation" posture documented on
+        /// <see cref="OspreyTask.Outputs"/>.
+        ///
+        /// Lifted verbatim from <c>AnalysisPipeline.IsTaskAlreadyDone</c> so the
+        /// driver loop can ask the context "can this rehydrate instead of run?"
+        /// rather than re-running the same outputs-valid check itself.
+        /// </summary>
+        public bool CanRehydrate(OspreyTask task)
+        {
+            var outputs = new List<string>(task.Outputs(this));
+            if (outputs.Count == 0) return false;
+            string key = task.ValidityKey(this);
+            foreach (var output in outputs)
+            {
+                if (!File.Exists(output)) return false;
+                if (!TaskValiditySidecar.IsValid(output, task.Name, key)) return false;
+            }
+            return true;
         }
     }
 
     /// <summary>
-    /// Thrown by <see cref="PipelineContext.GetTask{T}"/> when a task
-    /// asks for an upstream producer that was not added to the pipeline
-    /// at construction time. This is always a programming defect (the
-    /// pipeline definition is missing the producer); fail fast and hard
-    /// so it surfaces in testing rather than at runtime.
+    /// Thrown by <see cref="PipelineContext.Demand{T}"/> (and the
+    /// registry-driven materialization in <see cref="PipelineContext.Get{TInfo}"/>)
+    /// when a task asks for an upstream producer that was not added to the
+    /// pipeline at construction time. This is always a programming defect (the
+    /// pipeline definition is missing the producer); fail fast and hard so it
+    /// surfaces in testing rather than at runtime.
     /// </summary>
     public sealed class UnknownTaskException : Exception
     {
@@ -200,6 +361,50 @@ namespace pwiz.OspreySharp.Tasks
                 requestedType?.FullName))
         {
             RequestedType = requestedType;
+        }
+    }
+
+    /// <summary>
+    /// Thrown by <see cref="PipelineContext.Get{TInfo}"/> when a byproduct type
+    /// has no registered producer, or when its producer ran but did not publish
+    /// the value. Both are programming defects -- a missing
+    /// <see cref="OspreyTask.Publishes"/> registration, or a producer code path
+    /// that neglected to <see cref="PipelineContext.Publish{TInfo}"/> -- and are
+    /// surfaced loudly rather than degrading to a silent default value.
+    /// </summary>
+    public sealed class UnknownByproductException : Exception
+    {
+        public Type RequestedType { get; }
+
+        public UnknownByproductException(Type requestedType)
+            : base(string.Format(@"Byproduct type '{0}' has no registered producer, or its producer did not publish it.",
+                requestedType?.FullName))
+        {
+            RequestedType = requestedType;
+        }
+    }
+
+    /// <summary>
+    /// Thrown by <see cref="PipelineContext.Get{TInfo}"/> /
+    /// <see cref="PipelineContext.Demand{T}"/> when a lazily-driven
+    /// <see cref="OspreyTask.Rehydrate"/> reports failure (returns <c>false</c>)
+    /// and has set a non-zero <see cref="PipelineContext.ExitCode"/>. The driver
+    /// loop stops the pipeline on a false Run return, but a consumer's lazy
+    /// materialization has no such return channel, so this surfaces the failure
+    /// rather than letting the consumer proceed with default state. Carries the
+    /// task type and the exit code the failing task requested.
+    /// </summary>
+    public sealed class RehydrateFailedException : Exception
+    {
+        public Type TaskType { get; }
+        public int ExitCode { get; }
+
+        public RehydrateFailedException(Type taskType, int exitCode)
+            : base(string.Format(@"Task '{0}' failed to rehydrate its state (exit code {1}).",
+                taskType?.FullName, exitCode))
+        {
+            TaskType = taskType;
+            ExitCode = exitCode;
         }
     }
 }
