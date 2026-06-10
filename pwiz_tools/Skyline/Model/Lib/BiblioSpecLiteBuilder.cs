@@ -269,8 +269,15 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public static bool IsLibraryEmptyError(Exception errorException)
         {
-            // TODO: this test will break if BiblioSpec output is translated to other languages
-            return errorException.Message.Contains(@"No spectra were found for the new library");
+            // Require BOTH the score-filter warning AND the empty-library error.
+            // BlibBuild also says "No spectra were found" for upstream parse failures
+            // (native-id mismatch, missing source spectra, etc.). Those should keep
+            // their raw WARNINGs visible — the score-filter case is the only one this
+            // friendlier message is correct for.
+            // TODO: these tests will break if BiblioSpec output is translated to other languages
+            var msg = errorException.Message;
+            return msg.Contains(@"No spectra were found for the new library") &&
+                   msg.Contains(@"No matches passed score filter");
         }
 
         public static bool IsLibraryMissingExternalSpectraError(Exception errorException, out IList<string> spectrumFilenames, out IList<string> directoriesSearched, out string resultsFilepath)
