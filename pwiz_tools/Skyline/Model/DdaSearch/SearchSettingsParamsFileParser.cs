@@ -37,12 +37,12 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 { @"stricttrypsin", @"Trypsin" },
                 { @"trypsin", @"Trypsin/P" },
-                { @"lys-c", @"Lys_C" },
-                { @"lysc", @"Lys_C" },
-                { @"argc", @"Arg_C" },
-                { @"aspn", @"Asp_N" },
+                { @"lys-c", @"Lys-C" },
+                { @"lysc", @"Lys-C" },
+                { @"argc", @"Arg-C" },
+                { @"aspn", @"Asp-N" },
                 { @"chymotrypsin", @"Chymotrypsin" },
-                { @"gluc", @"Glu_C" },
+                { @"gluc", @"Glu-C" },
                 { @"cnbr", @"CNBr" },
             };
 
