@@ -389,7 +389,7 @@ public sealed class MzxmlReader
             switch (sub.LocalName)
             {
                 case "precursorMz":
-                    ReadPrecursor(sub, spec, collisionEnergyStr);
+                    ReadPrecursor(sub, spec, scanEl, collisionEnergyStr);
                     break;
                 case "peaks":
                     ReadPeaks(sub, spec, peaksCount, getBinaryData);
@@ -404,20 +404,30 @@ public sealed class MzxmlReader
                     }
                 case "scan":
                     // Nested scan (older mzXML uses nesting for precursor relationships) — skip.
-                    sub.Skip();
+                    // sub.Skip() on a NON-EMPTY element correctly advances past the end tag;
+                    // for an empty element it advances to the NEXT sibling, which combined
+                    // with the outer loop's next Read() would silently swallow a sibling's
+                    // Element node — guard against that.
+                    if (!sub.IsEmptyElement) sub.Skip();
                     break;
                 case "scanOrigin":
                 case "nativeScanRef":
                 case "coordinate":
                 case "comment":
-                    sub.Skip();
+                    // SpectrumMill mzXMLs put a self-closing <scanOrigin/> right before
+                    // <precursorMz>; calling Skip() on the empty <scanOrigin> would advance
+                    // past <precursorMz>'s start-tag and the outer Read() would land on its
+                    // text content — the precursor element would never get processed and
+                    // MS_selected_ion_m_z would stay unset. For empty elements there's
+                    // nothing to skip; the outer loop's Read() advances to the next sibling.
+                    if (!sub.IsEmptyElement) sub.Skip();
                     break;
             }
         }
         return spec;
     }
 
-    private static void ReadPrecursor(XmlReader reader, Spectrum spec, string scanCollisionEnergy)
+    private static void ReadPrecursor(XmlReader reader, Spectrum spec, Scan scanEl, string scanCollisionEnergy)
     {
         var pre = new Precursor();
         spec.Precursors.Add(pre);
@@ -428,6 +438,16 @@ public sealed class MzxmlReader
         string activationMethod = reader.GetAttribute("activationMethod") ?? "";
         string windowWideness = reader.GetAttribute("windowWideness") ?? "";
         string ccs = reader.GetAttribute("CCS") ?? "";
+        // cpp SpectrumList_mzXML.cpp:148, 200-203 — Spectrum Mill IMS exports stash drift time
+        // on <precursorMz DT="..."> (alongside CCS / activationMethod). DT belongs on the scan,
+        // not the precursor (cpp parity); SpectrumMill exports use ms; PASEF-style invK0 goes
+        // through the standard MS_inverse_reduced_ion_mobility CV term instead.
+        string driftTime = reader.GetAttribute("DT") ?? "";
+        string invK0 = reader.GetAttribute("invK0") ?? "";
+        if (!string.IsNullOrEmpty(driftTime))
+            scanEl.Set(CVID.MS_ion_mobility_drift_time, driftTime, CVID.UO_millisecond);
+        else if (!string.IsNullOrEmpty(invK0))
+            scanEl.Set(CVID.MS_inverse_reduced_ion_mobility, invK0, CVID.MS_Vs_cm_2);
 
         if (!string.IsNullOrEmpty(precursorScanNum))
             pre.SpectrumId = "scan=" + precursorScanNum;
