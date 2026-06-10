@@ -75,6 +75,7 @@ targets['Container'] = \
 }
 
 targets['OspreyWindowsNet'] = {'master': {"ProteoWizard_OspreyWindowsNet": "OspreySharp Windows .NET"}}
+targets['OspreyWindowsNetPerfRegressionTests'] = {'master': {"ProteoWizard_OspreyWindowsNetPerfRegressionTests": "OspreySharp Windows .NET Perf Regression Tests"}}
 
 targets['BumbershootRelease'] = \
 {
@@ -112,7 +113,7 @@ matchPaths = [
     ("pwiz_tools/Skyline/.*DataSource.*", merge(targets['SkylineWithTestConnected'], targets['Container'])),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['BumbershootRelease'], targets['Container'])),
-    ("pwiz_tools/OspreySharp/.*", targets['OspreyWindowsNet']),
+    ("pwiz_tools/OspreySharp/.*", merge(targets['OspreyWindowsNet'], targets['OspreyWindowsNetPerfRegressionTests'])),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All']),
     (".*\\.bat", targets['Windows']),
