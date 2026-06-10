@@ -1538,17 +1538,20 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(() => columnDlg.buttonCheckForErrors.PerformClick());
-            var duplicateFragmentMessageTail = Resources
-                .SmallMoleculeTransitionListReader_ReportDuplicateFragment_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list_
-                .Split(new[] { "{0}" }, StringSplitOptions.None).Last();
+            // Stable portion of the message, between the {0} (m/z) and {1} (column) placeholders.
+            var duplicateFragmentMessageFragment = Resources
+                .SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__
+                .Split(new[] { "{0}" }, StringSplitOptions.None).Last()
+                .Split(new[] { "{1}" }, StringSplitOptions.None).First().Trim();
             RunUI(() =>
             {
-                var dupError = errDlg.ErrorList.FirstOrDefault(e => e.ErrorMessage.Contains(duplicateFragmentMessageTail));
+                var dupError = errDlg.ErrorList.FirstOrDefault(e => e.ErrorMessage.Contains(duplicateFragmentMessageFragment));
                 AssertEx.IsNotNull(dupError);
-                // The error should point at the offending (second "Product Charge") column, not the
+                // The error points at, and names, the offending (second "Product Charge") column - not the
                 // fill-forwarded Product m/z column. Input columns (1-based): 1=Molecule Name,
                 // 2=Precursor m/z, 3=Precursor Charge, 4=Product m/z, 5=Product Charge, 6=Product Charge.
                 AssertEx.AreEqual(6, dupError.Column);
+                AssertEx.Contains(dupError.ErrorMessage, "6 \"Product Charge\"");
             });
             OkDialog(errDlg, errDlg.OkDialog);
             OkDialog(columnDlg, columnDlg.CancelDialog);

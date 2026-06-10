@@ -1628,8 +1628,8 @@ Supported values include:
   <data name="SmallMoleculeTransitionListReader_GetMoleculeTransitionGroup_Inconsistent_molecule_description" xml:space="preserve">
     <value>Inconsistent molecule description</value>
   </data>
-  <data name="SmallMoleculeTransitionListReader_ReportDuplicateFragment_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list_" xml:space="preserve">
-    <value>The same fragment (product m/z {0}) is declared more than once on a single line of the transition list.</value>
+  <data name="SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__" xml:space="preserve">
+    <value>The same fragment (product m/z {0}) is declared more than once on a single line of the transition list. See column {1}.</value>
   </data>
   <data name="RInstaller_InstallPackages_Download_Canceled" xml:space="preserve">
     <value>Download Canceled</value>

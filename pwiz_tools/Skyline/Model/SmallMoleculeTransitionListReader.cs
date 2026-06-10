@@ -64,6 +64,13 @@ namespace pwiz.Skyline.Model
             return single >= 0 ? new List<int> { single } : new List<int>();
         }
 
+        // The original header text for a column, or null when unavailable (e.g. no header row).
+        // Used to name a column in error messages.
+        public virtual string GetColumnName(int columnIndex)
+        {
+            return null;
+        }
+
         private double MzMatchTolerance { get; set; }
 
         public List<PasteError> ErrorList { get; set; }
@@ -2499,15 +2506,29 @@ namespace pwiz.Skyline.Model
             // that are always null here.
             if (!lineTransitions.Any(t => Equals(t.Transition, tran.Transition)))
                 return false;
+            var column = GetProductColumnForDuplicateFragment(fragmentIndex);
             ShowTransitionError(new PasteError
             {
-                Column = GetProductColumnForDuplicateFragment(fragmentIndex),
+                Column = column,
                 Line = row.Index,
                 Message = string.Format(
-                    Resources.SmallMoleculeTransitionListReader_ReportDuplicateFragment_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list_,
-                    tran.Mz)
+                    Resources.SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__,
+                    tran.Mz, GetColumnDescription(column))
             });
             return true;
+        }
+
+        /// <summary>
+        /// Describes a column for an error message as its 1-based number plus header name when known,
+        /// e.g. 13 "Product Charge"; falls back to just the number when there is no header row.
+        /// </summary>
+        private string GetColumnDescription(int columnIndex)
+        {
+            var columnNumber = (columnIndex + 1).ToString(CultureInfo.CurrentCulture);
+            var name = GetColumnName(columnIndex);
+            return string.IsNullOrEmpty(name)
+                ? columnNumber
+                : string.Format("{0} \"{1}\"", columnNumber, name);
         }
 
         /// <summary>
@@ -2539,8 +2560,8 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Add transitions for all fragments in a multi-fragment-per-line row to an existing
         /// transition group, skipping any that already exist or have empty/NA product columns.
-        /// Returns true if the first fragment fails (caller should treat as error).
-        /// Sets errmsg on parser exceptions.
+        /// Returns true (caller should treat as error) if the first fragment fails or the line declares
+        /// the same fragment twice. Sets errmsg on parser exceptions.
         /// </summary>
         private bool AddFragmentTransitions(ref SrmDocument document, Row row,
             PeptideDocNode pep, TransitionGroupDocNode tranGroup, IdentityPath pathGroup, out string errmsg)
@@ -2561,6 +2582,9 @@ namespace pwiz.Skyline.Model
                         continue; // Skip empty/NA fragments
                     }
 
+                    // If a later fragment on this line is a duplicate, earlier ones may already have been
+                    // added above. That is intentional: a normal import rejects the whole row on any error,
+                    // and the leftover transitions are individually valid in the import-anyway case.
                     if (IsDuplicateFragmentOnLine(lineTransitions, tranNode, row, fragmentIndex))
                         return true; // Reported as a row error, surfaced via "Check For Errors"
                     lineTransitions.Add(tranNode);
@@ -2759,6 +2783,13 @@ namespace pwiz.Skyline.Model
         public override List<int> ColumnIndicesMulti(string columnName)
         {
             return _csvReader.GetFieldIndices(columnName);
+        }
+
+        public override string GetColumnName(int columnIndex)
+        {
+            return HasHeaders && columnIndex >= 0
+                ? _csvReader.FieldNames.ElementAtOrDefault(columnIndex)
+                : null;
         }
     }
 
