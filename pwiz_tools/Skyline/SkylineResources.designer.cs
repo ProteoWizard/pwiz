@@ -19,7 +19,7 @@ namespace pwiz.Skyline {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SkylineResources {
@@ -396,7 +396,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The following settings names already exist. Use --settings-conflict-resolution to specify overwrite or skip..
+        ///   Looks up a localized string similar to Error: The following settings names already exist. Use --doc-settings-conflict-resolution to specify overwrite or skip..
         /// </summary>
         public static string CommandLine_AddSettings_Error__The_following_settings_names_already_exist__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_ {
             get {
@@ -415,7 +415,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The settings name &apos;{0}&apos; already exists. Use --settings-conflict-resolution to specify overwrite or skip..
+        ///   Looks up a localized string similar to Error: The settings name &apos;{0}&apos; already exists. Use --doc-settings-conflict-resolution to specify overwrite or skip..
         /// </summary>
         public static string CommandLine_AddSettings_Error__The_settings_name___0___already_exists__Use___settings_conflict_resolution_to_specify_overwrite_or_skip_ {
             get {
@@ -463,7 +463,7 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error: The settings &apos;{0}&apos; could not be found. Use --settings-name with a name from the Settings menu..
+        ///   Looks up a localized string similar to Error: The settings &apos;{0}&apos; could not be found. Use --doc-settings-name with a name from the Settings menu..
         /// </summary>
         public static string CommandLine_ApplySettings_Error__The_settings___0___could_not_be_found__Use___settings_name_with_a_name_from_the_Settings_menu_ {
             get {
@@ -1288,6 +1288,26 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find the injection &apos;{0}&apos; under the waters_connect path &apos;{1}&apos;..
+        /// </summary>
+        public static string CommandLine_ResolveWatersConnectImportUri_Could_not_find_the_injection___0___under_the_waters_connect_path___1__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ResolveWatersConnectImportUri_Could_not_find_the_injection___0___unde" +
+                        "r_the_waters_connect_path___1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No waters_connect account was found with the alias or server &apos;{0}&apos;..
+        /// </summary>
+        public static string CommandLine_ResolveWatersConnectImportUri_No_waters_connect_account_was_found_with_the_alias_or_server___0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_ResolveWatersConnectImportUri_No_waters_connect_account_was_found_wit" +
+                        "h_the_alias_or_server___0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error: Failed to get optimization function {0}. {1}.
         /// </summary>
         public static string CommandLine_Run_Error__Failed_to_get_optimization_function__0____1_ {
@@ -1672,14 +1692,18 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline failed to load a required native library....
+        ///   Looks up a localized string similar to Skyline failed to load a required native library. This may be caused by a Windows security policy (Application Control) blocking the file, or by a broken installation.
+        ///
+        ///{0}
+        ///
+        ///Try uninstalling and reinstalling Skyline, or contact your IT department if the problem persists..
         /// </summary>
         public static string Program_CheckNativeLibraries_Failed_to_load_required_native_libraries {
             get {
                 return ResourceManager.GetString("Program_CheckNativeLibraries_Failed_to_load_required_native_libraries", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Recovering From a Broken Installation.
         /// </summary>
@@ -1688,7 +1712,7 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("Program_CheckNativeLibraries_Troubleshooting", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Error copying external tools from previous installation.
         /// </summary>
@@ -1697,7 +1721,7 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("Program_CopyOldTools_Error_copying_external_tools_from_previous_installation", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Copying external tools from a previous installation.
         /// </summary>
@@ -1725,7 +1749,7 @@ namespace pwiz.Skyline {
                         "ase_install_the_32_bit_version", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Invalid argument &apos;{0}&apos;. Use --start-page=true or --start-page=false..
         /// </summary>
@@ -1735,7 +1759,7 @@ namespace pwiz.Skyline {
                         "ge_false", resourceCulture);
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to Do you want to save your current settings before switching?.
         /// </summary>

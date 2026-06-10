@@ -32,6 +32,8 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
+using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
@@ -594,8 +596,8 @@ namespace pwiz.Skyline
             {
                 IList<KeyValuePair<string, MsDataFileUri[]>> listNamedPaths = new List<KeyValuePair<string, MsDataFileUri[]>>();
 
-                MsDataFileUri[] files= HandleExceptions(commandArgs, 
-                    () => commandArgs.ReplicateFile.SelectMany(DataSourceUtil.ListSubPaths).ToArray(), 
+                MsDataFileUri[] files= HandleExceptions(commandArgs,
+                    () => commandArgs.ReplicateFile.Select(ResolveWatersConnectImportUri).SelectMany(DataSourceUtil.ListSubPaths).ToArray(),
                     x => _out.WriteException(Resources.Error___0_, x));
                 if (files == null)
                 {
@@ -3502,6 +3504,102 @@ namespace pwiz.Skyline
             ModifyDocument(d => d.ChangeSettings(newSettings));
 
             return true;
+        }
+
+        /// <summary>
+        /// Resolves a waters_connect data source specified on the command line to a concrete injection.
+        /// A friendly path "waters_connect:&lt;account alias&gt;/Path/To/Injection" (carried as a path-form
+        /// URL whose first part is the alias) is matched to a saved account and navigated on the server to
+        /// fill in the injection ids that the import requires. Non-waters_connect and already-resolved URLs
+        /// (those that already have an injection id) are returned unchanged.
+        /// </summary>
+        private MsDataFileUri ResolveWatersConnectImportUri(MsDataFileUri uri)
+        {
+            if (!(uri is WatersConnectUrl watersConnectUrl) || watersConnectUrl.InjectionId != null)
+                return uri;
+
+            var pathParts = watersConnectUrl.GetPathParts().ToList();
+            WatersConnectAccount account;
+            IList<string> dataPathParts;
+            if (watersConnectUrl.ServerUrl == null)
+            {
+                // Friendly form: the first path part is the account alias
+                var alias = pathParts.FirstOrDefault();
+                account = FindWatersConnectAccountByAlias(alias);
+                if (account == null)
+                    throw new RemoteServerException(string.Format(
+                        SkylineResources.CommandLine_ResolveWatersConnectImportUri_No_waters_connect_account_was_found_with_the_alias_or_server___0__, alias));
+                dataPathParts = pathParts.Skip(1).ToList();
+            }
+            else
+            {
+                account = watersConnectUrl.FindMatchingAccount() as WatersConnectAccount;
+                if (account == null)
+                    throw new RemoteServerException(string.Format(
+                        WatersConnectResources.WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__,
+                        watersConnectUrl.Username, watersConnectUrl.ServerUrl));
+                dataPathParts = pathParts;
+            }
+
+            var injectionName = dataPathParts.LastOrDefault();
+            var sampleSetUrl = (WatersConnectUrl) account.GetRootUrl()
+                .ChangePathParts(dataPathParts.Take(Math.Max(0, dataPathParts.Count - 1)));
+            using (var session = RemoteSession.CreateSession(account))
+            {
+                var injection = injectionName == null
+                    ? null
+                    : FetchRemoteContents(session, sampleSetUrl).FirstOrDefault(item => Equals(item.Label, injectionName));
+                if (injection == null)
+                    throw new RemoteServerException(string.Format(
+                        SkylineResources.CommandLine_ResolveWatersConnectImportUri_Could_not_find_the_injection___0___under_the_waters_connect_path___1__,
+                        injectionName ?? string.Empty, string.Join(@"/", dataPathParts)));
+                return injection.MsDataFileUri;
+            }
+        }
+
+        private static WatersConnectAccount FindWatersConnectAccountByAlias(string alias)
+        {
+            var accounts = (RemoteUrl.RemoteAccountStorage?.GetRemoteAccounts() ?? Array.Empty<RemoteAccount>())
+                .OfType<WatersConnectAccount>().ToArray();
+            return accounts.FirstOrDefault(account => Equals(account.AccountAlias, alias))
+                   ?? accounts.FirstOrDefault(account => Equals(account.ServerUrl, alias));
+        }
+
+        /// <summary>
+        /// Synchronously drives the asynchronous fetch for a remote URL until its contents are
+        /// available, then returns the listed child items.
+        /// </summary>
+        private static IList<RemoteItem> FetchRemoteContents(RemoteSession session, RemoteUrl remoteUrl)
+        {
+            var signal = new object();
+            void OnContentsAvailable()
+            {
+                lock (signal) Monitor.Pulse(signal);
+            }
+
+            session.ContentsAvailable += OnContentsAvailable;
+            try
+            {
+                RemoteServerException exception = null;
+                lock (signal)
+                {
+                    for (int i = 0; i < 60 && !session.AsyncFetchContents(remoteUrl, out exception); i++)
+                    {
+                        if (exception != null)
+                            break;
+                        Monitor.Wait(signal, 1000);
+                    }
+                }
+
+                if (exception != null)
+                    throw exception;
+
+                return session.ListContents(remoteUrl).ToList();
+            }
+            finally
+            {
+                session.ContentsAvailable -= OnContentsAvailable;
+            }
         }
 
         public bool SaveFile(string saveFile, CommandArgs commandArgs)

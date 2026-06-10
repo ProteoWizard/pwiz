@@ -1247,4 +1247,10 @@ Do you want to save the document now?</value>
   <data name="CommandLine_ApplySettings_Settings___0___applied_to_document_" xml:space="preserve">
     <value>Settings '{0}' applied to document.</value>
   </data>
+  <data name="CommandLine_ResolveWatersConnectImportUri_Could_not_find_the_injection___0___under_the_waters_connect_path___1__" xml:space="preserve">
+    <value>Could not find the injection '{0}' under the waters_connect path '{1}'.</value>
+  </data>
+  <data name="CommandLine_ResolveWatersConnectImportUri_No_waters_connect_account_was_found_with_the_alias_or_server___0__" xml:space="preserve">
+    <value>No waters_connect account was found with the alias or server '{0}'.</value>
+  </data>
 </root>

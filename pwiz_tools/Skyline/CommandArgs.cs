@@ -490,7 +490,26 @@ namespace pwiz.Skyline
 
         private void ParseImportFile(NameValuePair pair)
         {
-            ReplicateFile.Add(MsDataFileUri.Parse(pair.ValueFullPath));
+            ReplicateFile.Add(ParseImportFileValue(pair.ValueFullPath));
+        }
+
+        /// <summary>
+        /// Parses an --import-file value. A friendly waters_connect path of the form
+        /// "waters_connect:&lt;account alias&gt;/Path/To/Injection" is carried as a path-form URL
+        /// (the alias followed by the path parts) and resolved against the server at import time.
+        /// The serialized query-string form ("waters_connect:path=...&amp;server=...&amp;id=...") is
+        /// parsed normally, as are all other (local and remote) data source paths.
+        /// </summary>
+        private static MsDataFileUri ParseImportFileValue(string value)
+        {
+            if (value.StartsWith(WatersConnectUrl.UrlPrefix) &&
+                value.IndexOf('=', WatersConnectUrl.UrlPrefix.Length) < 0)
+            {
+                var pathParts = value.Substring(WatersConnectUrl.UrlPrefix.Length)
+                    .Split('/').Where(part => !string.IsNullOrEmpty(part));
+                return WatersConnectUrl.Empty.ChangePathParts(pathParts);
+            }
+            return MsDataFileUri.Parse(value);
         }
 
         private bool ParseImportNamingPattern(NameValuePair pair)
