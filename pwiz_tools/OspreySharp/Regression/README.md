@@ -39,9 +39,10 @@ Any mismatch emits a TeamCity `buildProblem` and a non-zero exit.
 ## The golden (`osprey-regression.data/<dataset>/`)
 
 The real datasets are ~60K precursors, so a full-fidelity blib is 50–135 MB —
-too big to commit. Instead the golden is a **small (~0.6 MB) committed text**
-capture, versioned with the code (so building an older tagged commit runs
-against its own matching baseline), and diff-reviewable:
+too big to commit. Instead the golden is a **small committed text** capture
+(measured: Stellar ~1.1 MB, Astral ~2.4 MB; ~3.5 MB total — most of it the
+full Stage 7 `protein_fdr.tsv`), versioned with the code (so building an older
+tagged commit runs against its own matching baseline), and diff-reviewable:
 
 | Artifact | Contents | Compared at |
 |----------|----------|-------------|

@@ -100,10 +100,20 @@ function Expand-ZipNoOverwrite {
     param([string]$ZipPath, [string]$DestFolder)
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
+    # Canonical destination root for the zip-slip guard below.
+    $destRoot = [System.IO.Path]::GetFullPath($DestFolder).TrimEnd('\', '/')
     $zip = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
     try {
         foreach ($entry in $zip.Entries) {
             $destPath = Join-Path $DestFolder $entry.FullName
+            # Zip-slip guard: reject any entry whose resolved path escapes the
+            # destination root (e.g. a "../" or absolute-path entry), even though
+            # the zip comes from a trusted host -- defense in depth.
+            $full = [System.IO.Path]::GetFullPath($destPath)
+            if ($full -ne $destRoot -and
+                -not $full.StartsWith($destRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
+                throw "Zip entry escapes destination (path traversal): $($entry.FullName)"
+            }
             if ($entry.FullName.EndsWith('/')) {
                 if (-not (Test-Path $destPath)) { New-Item -ItemType Directory -Path $destPath -Force | Out-Null }
                 continue

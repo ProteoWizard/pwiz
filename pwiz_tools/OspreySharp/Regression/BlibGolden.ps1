@@ -26,7 +26,7 @@
       Exact    columns compared by string equality
 
     Two golden artifacts per dataset capture the full-fidelity output compactly:
-      precursor_subset\<Table>.tsv  full projection rows, filtered (Subset) or
+      tables\<Name>.tsv             full projection rows, filtered (Subset) or
                                     whole (Full), at 1e-9 fidelity
       blib_summary.tsv              full-set per-table row count + per-numeric-
                                     column aggregates (count / sum / min / max),
