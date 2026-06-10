@@ -78,7 +78,7 @@ namespace pwiz.OspreySharp.Tasks
     /// Single entry point: <see cref="Run"/> is invoked by
     /// <see cref="AnalysisPipeline"/>'s task driver during both
     /// straight-through pipeline runs and the stage6 worker mode
-    /// (<c>--join-at-pass=1 --no-join --input-scores</c>). The worker
+    /// (<c>--task PerFileRescore</c>). The worker
     /// mode previously had a separate <c>RunWorker</c> entry that
     /// hand-assembled the upstream hydration; Phase C collapsed that
     /// path so the canonical pipeline's IsIncluded membership + the
@@ -107,9 +107,9 @@ namespace pwiz.OspreySharp.Tasks
 
         /// <summary>
         /// Computes the Stage 6 rescore in straight-through, the rescore worker
-        /// (--join-at-pass=1 --no-join --input-scores), and the --input-scores
-        /// full-pipeline. Excluded in --no-join, --join-only (stops at Stage 5),
-        /// and the --join-at-pass=2 merge (where it rehydrates rather than
+        /// (--task PerFileRescore), and the --input-scores
+        /// full-pipeline. Excluded in --task PerFileScoring, --task FirstJoin (stops at Stage 5),
+        /// and the --task MergeNode merge (where it rehydrates rather than
         /// re-scoring, the merge node having no mzMLs).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
@@ -122,7 +122,7 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         // The final milestone of the shared mutable entry buffer: this task
-        // overlays the Stage 6 rescore (or, in the --join-at-pass=2 merge path,
+        // overlays the Stage 6 rescore (or, in the --task MergeNode merge path,
         // applies its own compaction) onto the same backing list. MergeNode
         // pulls RescoredEntries, so a cache miss lazily materializes this task --
         // which is exactly what triggers the rescore/compaction in merge mode
@@ -179,7 +179,7 @@ namespace pwiz.OspreySharp.Tasks
             // Compute path (Stage 6 rescore): re-score each file's entries
             // against the consensus + reconciliation boundaries and write the
             // reconciled parquets. Used by the straight-through pipeline and
-            // the stage6 rescore worker. The --join-at-pass=2 merge node,
+            // the stage6 rescore worker. The --task MergeNode merge node,
             // which has only reconciled parquets + sidecars (no mzMLs to
             // rescore from), takes Rehydrate instead: the driver reaches this
             // task here only in the rescore-capable modes, and a merge-node
@@ -214,7 +214,7 @@ namespace pwiz.OspreySharp.Tasks
             // ExpectReconciledInput gate (Phase C: mechanism-driven, not
             // flag-driven) for the worker self-gate cases below;
             // ExpectReconciledInput keeps the hard short-circuit above for
-            // the strict --join-at-pass=2 merge path. Downstream MergeNodeTask
+            // the strict --task MergeNode merge path. Downstream MergeNodeTask
             // reads the RescoredEntries milestone of this same backing list.
             var firstJoin = ctx.Demand<FirstJoinTask>();
             bool didPlan = firstJoin.DidPlan(ctx);
@@ -241,7 +241,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // Join file stems for the reconciled parquet metadata hash.
             // In the in-process pipeline _perFileEntries has every file in
-            // the run; in worker mode (--join-at-pass=1 --no-join) it has
+            // the run; in worker mode (--task PerFileRescore) it has
             // a single file and the planner's full set comes from
             // RescoreInputs.JoinFileStems (read from reconciliation.json
             // v2+). Pass _perFileEntries keys when there's more than one;
@@ -294,14 +294,16 @@ namespace pwiz.OspreySharp.Tasks
             // these, the in-process pipeline path can leave the writers
             // unflushed and produce truncated bisection dumps.
             OspreyDiagnostics.CloseMpInputsDump();
-            OspreyDiagnostics.ClosePredictRtDump();
+            // ClosePredictRtDump disabled with the rest of the predict-rt
+            // diagnostic (perf hotspot); restore alongside WritePredictRtCall.
+            // OspreyDiagnostics.ClosePredictRtDump();
             OspreyDiagnostics.CloseCwtPathDump();
             return true;
         }
 
         public override bool Rehydrate(PipelineContext ctx)
         {
-            // Disk-load path for --join-at-pass=2: every input parquet already
+            // Disk-load path for --task MergeNode: every input parquet already
             // has osprey.reconciled = "true" (asserted by
             // ParquetScoreCache.CheckParquetMetadata when ExpectReconciledInput
             // is set), so Stage 5 first-pass Percolator AND Stage 6 planning /
@@ -343,12 +345,48 @@ namespace pwiz.OspreySharp.Tasks
             // Reproduce exactly that end state by loading the CompactedEntries
             // milestone (which materializes FirstJoin's own pure rehydrate) and
             // publishing it as RescoredEntries -- never calling Run, so Rehydrate
-            // stays pure. The --join-at-pass=2 merge path (ExpectReconciledInput)
+            // stays pure. The --task MergeNode merge path (ExpectReconciledInput)
             // below is a different rehydrate that must NOT materialize FirstJoin.
             if (!ctx.Config.ExpectReconciledInput)
             {
                 _ctx = ctx;
                 _perFileEntries = ctx.Get<CompactedEntries>().Value;
+
+                // PR-E: a fresh ExecuteRescore would overlay each file's reconciled
+                // boundaries/area/features onto its CompactedEntries rows + append
+                // gap-fill. On resume the driver skipped Run because the reconciled
+                // parquets are already valid, so do the equivalent in-place overlay
+                // from each file's OWN .scores-reconciled.parquet -- otherwise the
+                // buffer stays at 1st-pass RTs and MergeNode (which reads ApexRt/
+                // StartRt/EndRt/BoundsArea straight off these entries) writes 1st-pass
+                // RTs into the final blib instead of the Stage 6 reconciled values.
+                // Files with no reconciled sibling on disk are no-work files; a fresh
+                // run leaves their entries at 1st-pass too, so they are left unchanged.
+                var gapFill = ctx.Get<PerFileGapFillForRescore>().Value;
+                var parquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+                foreach (var kv in _perFileEntries)
+                {
+                    // Overlay each file's reconciled boundaries when its
+                    // .scores-reconciled.parquet is present; no-work files (none on
+                    // disk) keep their 1st-pass boundaries, matching a fresh run.
+                    if (parquetPaths != null &&
+                        parquetPaths.TryGetValue(kv.Key, out string scoresPath))
+                    {
+                        string reconciledPath = ParquetScoreCache.ReconciledPathFromScoresPath(scoresPath);
+                        if (File.Exists(reconciledPath))
+                        {
+                            IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                            if (gapFill != null && gapFill.TryGetValue(kv.Key, out var gfList))
+                                gapFillForFile = gfList;
+                            OverlayReconciledIntoBuffer(kv.Value, reconciledPath, gapFillForFile);
+                        }
+                    }
+                    // Canonical sort for EVERY file (incl. no-work files) so the WARM
+                    // buffer order matches the order COLD establishes in
+                    // RunPercolatorFdr, independent of whether the file was rescored.
+                    SortFileEntriesCanonical(kv.Value);
+                }
+
                 ctx.Publish(new RescoredEntries(_perFileEntries));
                 return true;
             }
@@ -372,7 +410,7 @@ namespace pwiz.OspreySharp.Tasks
                 // sidecar v3 already carries RunProteinQvalue from the original
                 // straight-through pipeline, but Rust pipeline.rs:4292 (gated by
                 // `!can_skip_fdr || config.expect_reconciled_input`) recomputes
-                // it inline in the --join-at-pass=2 path. The recompute uses the
+                // it inline in the --task MergeNode path. The recompute uses the
                 // post-rehydration detected_peptides set + best_peptide_scores
                 // (which differ from the original write-time inputs whenever any
                 // upstream rebuild has nudged peptide q-values or score values
@@ -390,7 +428,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 var stats = RescoreCompaction.Apply(bundle, ctx.Config);
                 ctx.LogInfo(string.Format(
-                    @"--join-at-pass=2 compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
+                    @"--task MergeNode compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
                     stats.EntriesBefore, stats.EntriesAfter,
                     stats.FirstPassBaseIds, stats.DroppedActions));
             }
@@ -399,7 +437,7 @@ namespace pwiz.OspreySharp.Tasks
 
         // RunWorker + its helpers (AddIfNotNull, LoadOriginalRtCalibration)
         // were removed in Phase C. The stage6 worker mode
-        // (--join-at-pass=1 --no-join --input-scores) now routes through
+        // (--task PerFileRescore) now routes through
         // AnalysisPipeline.Run with StartAt = StopAfter =
         // PerFileRescoreTask. Upstream state previously assembled in
         // RunWorker (library load, hydration, compaction, consensus,
@@ -482,7 +520,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // 3. Append gap-fill rows at the end. Reassign each gap-fill
             //    stub's ParquetIndex to its new row position so a
-            //    downstream --join-at-pass=2 worker can locate its
+            //    downstream --task MergeNode worker can locate its
             //    features.
             int nAppended = 0;
             foreach (var entry in fdrEntries)
@@ -507,7 +545,7 @@ namespace pwiz.OspreySharp.Tasks
             //    (over every file in the planner step), not the worker's
             //    single-file InputFiles hash; without that, a worker
             //    rescoring a single parquet stamps a single-file hash
-            //    that the downstream --join-at-pass=2 merge node rejects
+            //    that the downstream --task MergeNode merge node rejects
             //    on hash mismatch. The join file stems come from the
             //    planner's reconciliation.json (v2+) via
             //    RescoreInputs.JoinFileStems; fall back to config-derived
@@ -625,6 +663,20 @@ namespace pwiz.OspreySharp.Tasks
                     _ctx.LogInfo(string.Format(
                         @"[file] {0}/{1} {2}: skipping (outputs valid)",
                         fileNum + 1, nTotalFiles, fileName));
+
+                    // PR-E: a partial resume skips this already-rescored file, but
+                    // a downstream consumer (MergeNode, in the full pipeline) reads
+                    // ApexRt/StartRt/EndRt/BoundsArea straight off these in-memory
+                    // entries. Without overlaying the reconciled values they stay at
+                    // the 1st-pass state and the final blib carries 1st-pass RTs.
+                    // Reproduce the fresh end state in place from the valid reconciled
+                    // parquet we just confirmed on disk + this file's gap-fill targets.
+                    IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                    if (perFileGapFill != null &&
+                        perFileGapFill.TryGetValue(fileName, out var gfList))
+                        gapFillForFile = gfList;
+                    OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile);
+                    SortFileEntriesCanonical(fdrEntries);
                     continue;
                 }
                 // About to (re-)rescore this file: clear any stale sidecar
@@ -679,7 +731,7 @@ namespace pwiz.OspreySharp.Tasks
                 // config, leaks into subsequent files, AND poisons the
                 // WriteReconciledParquet hash stamp (config.Identity.SearchParameterHash()
                 // would then reflect the calibrated tolerance, not the value
-                // a fresh --join-at-pass=2 invocation recomputes from CLI
+                // a fresh --task MergeNode invocation recomputes from CLI
                 // defaults -- causing search_hash mismatch errors). Mirrors
                 // the per-file clone pattern in ProcessFile.
                 var fileConfig = config.ShallowClone();
@@ -720,14 +772,18 @@ namespace pwiz.OspreySharp.Tasks
                 if (!refinedCalibrations.TryGetValue(fileName, out RTCalibration rtCal))
                     perFileCalibrations.TryGetValue(fileName, out rtCal);
 
-                // Bisection seam: dump the cal's library_rts +
-                // fitted_values once per file. Mirrors Rust's
-                // dump_predict_rt_arrays at pipeline.rs ~2886.
-                if (rtCal != null)
-                {
-                    OspreyDiagnostics.WritePredictRtArrays(
-                        fileName, rtCal.LibraryRts, rtCal.FittedValues);
-                }
+                // Bisection seam DISABLED (paired with the per-candidate
+                // WritePredictRtCall, which was removed from the scoring
+                // hotspot). Dumped the cal's library_rts + fitted_values once
+                // per file. Mirrors Rust's dump_predict_rt_arrays at
+                // pipeline.rs ~2886. To restore, re-enable this and the
+                // WritePredictRtCall in AbstractScoringTask. See
+                // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
+                // if (rtCal != null)
+                // {
+                //     OspreyDiagnostics.WritePredictRtArrays(
+                //         fileName, rtCal.LibraryRts, rtCal.FittedValues);
+                // }
 
                 // Build the scoring context with the boundary overrides.
                 // RunCoelutionScoring inspects context.BoundaryOverrides
@@ -1034,6 +1090,149 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         /// <summary>
+        /// Resume overlay: reproduce a fresh Stage 6 ExecuteRescore's in-memory
+        /// end state for a single file by loading that file's OWN
+        /// <c>.scores-reconciled.parquet</c> and overlaying its reconciled
+        /// boundary / area / feature / blob columns onto the post-compaction
+        /// buffer entries (matched by <see cref="FdrEntry.EntryId"/>), then
+        /// appending the file's gap-fill rows.
+        ///
+        /// This is the parity-safe counterpart to <see cref="OverlayRescoredEntries"/>
+        /// + <see cref="RunGapFillTwoPass"/> for the resume paths, where the
+        /// reconciled parquet is already valid on disk and re-running the scoring
+        /// engine would be both wasteful and (on a merge node) impossible. Both
+        /// resume paths -- the straight-through <see cref="Rehydrate"/> no-op and
+        /// the per-file skip inside <see cref="ExecuteRescore"/> -- previously
+        /// left the buffer at its 1st-pass <see cref="CompactedEntries"/> state,
+        /// so MergeNode (which reads ApexRt/StartRt/EndRt/BoundsArea DIRECTLY off
+        /// these entries) wrote 1st-pass RTs into the final blib instead of the
+        /// Stage 6 reconciled RTs.
+        ///
+        /// Mirrors the fresh end state exactly: the reconciled parquet row's
+        /// reconciled boundary fields are copied in place, the original
+        /// ParquetIndex + 1st-pass Score / q-values are PRESERVED (matching what
+        /// CompactedEntries + the PR-D worker-strict gate established), and
+        /// gap-fill rows are appended with <c>ParquetIndex = uint.MaxValue</c>.
+        /// Non-passing reconciled rows (compacted out of the buffer) are skipped,
+        /// matching the buffer a fresh run produces.
+        /// </summary>
+        private void OverlayReconciledIntoBuffer(List<FdrEntry> fileEntries,
+            string reconciledPath, IReadOnlyList<GapFillTarget> gapFillForFile)
+        {
+            List<FdrEntry> loaded;
+            try
+            {
+                loaded = ParquetScoreCache.LoadFullFdrEntries(reconciledPath);
+            }
+            catch (Exception ex)
+            {
+                // CanRehydrate already certified this reconciled parquet valid on
+                // disk, so a load failure here is a genuine fault -- and neither
+                // resume path has a compute fallback (straight-through resume does
+                // not re-score; the per-file skip explicitly trusts on-disk
+                // outputs). Leaving the buffer at its 1st-pass state would silently
+                // write wrong RTs to the blib, so fail loudly: the throw propagates
+                // to Program's top-level handler (exit code 1).
+                throw new InvalidDataException(string.Format(
+                    @"Stage 6 resume overlay: failed to reload valid-on-disk reconciled parquet {0}: {1}",
+                    reconciledPath, ex.Message), ex);
+            }
+
+            // Index reconciled rows by EntryId. The reconciled parquet carries the
+            // full original entry set (incl. non-passing rows) re-sorted by
+            // (entry_id, charge, scan) plus appended gap-fill; a given EntryId can
+            // appear more than once (multiple charges / scans). Keep the FIRST row
+            // for a given EntryId -- the existing OverlayRescoredEntries path also
+            // matches a single rescored entry per EntryId, and the buffer carries
+            // at most one row per EntryId after compaction.
+            var byId = new Dictionary<uint, FdrEntry>(loaded.Count);
+            foreach (var r in loaded)
+            {
+                if (!byId.ContainsKey(r.EntryId))
+                    byId[r.EntryId] = r;
+            }
+
+            // Overlay reconciled boundary / area / feature / blob columns onto the
+            // existing buffer rows IN PLACE, preserving each row's ParquetIndex and
+            // 1st-pass Score / q-values (FdrEntry is a reference type, so mutating
+            // fields updates the shared list element directly).
+            var existingIds = new HashSet<uint>();
+            foreach (var entry in fileEntries)
+            {
+                existingIds.Add(entry.EntryId);
+                if (!byId.TryGetValue(entry.EntryId, out FdrEntry r))
+                    continue;
+                entry.ApexRt = r.ApexRt;
+                entry.StartRt = r.StartRt;
+                entry.EndRt = r.EndRt;
+                entry.BoundsArea = r.BoundsArea;
+                entry.BoundsSnr = r.BoundsSnr;
+                entry.Features = r.Features;
+                entry.CwtCandidates = r.CwtCandidates;
+                entry.FragmentMzs = r.FragmentMzs;
+                entry.FragmentIntensities = r.FragmentIntensities;
+                entry.ReferenceXicRts = r.ReferenceXicRts;
+                entry.ReferenceXicIntensities = r.ReferenceXicIntensities;
+            }
+
+            // Append gap-fill rows. A fresh run appends one stub per gap-fill
+            // target (decoys already excluded by the planner) with ParquetIndex =
+            // uint.MaxValue. Pull the reconciled row for each target EntryId that
+            // is not already in the buffer; append in ascending TargetEntryId order
+            // for determinism. Targets whose reconciled row is missing (no peak)
+            // are skipped -- a fresh run would not have appended a stub either.
+            if (gapFillForFile != null && gapFillForFile.Count > 0)
+            {
+                var gapFillIds = new SortedSet<uint>();
+                foreach (var t in gapFillForFile)
+                    gapFillIds.Add(t.TargetEntryId);
+                foreach (var gid in gapFillIds)
+                {
+                    if (existingIds.Contains(gid))
+                        continue;
+                    if (!byId.TryGetValue(gid, out FdrEntry g))
+                        continue;
+                    g.ParquetIndex = uint.MaxValue;
+                    fileEntries.Add(g);
+                    existingIds.Add(gid);
+                }
+            }
+
+            // The canonical (EntryId, Charge, ScanNumber, ParquetIndex) re-sort is
+            // applied by the CALLER via SortFileEntriesCanonical -- it runs for every
+            // file in the resume path, not only files with a reconciled parquet.
+        }
+
+        /// <summary>
+        /// Sort one file's entry list by (EntryId, Charge, ScanNumber, ParquetIndex) --
+        /// the exact order a COLD run establishes via
+        /// <see cref="FirstJoinTask.RunPercolatorFdr"/> (run by MergeNode's 2nd-pass,
+        /// which a WARM straight-through resume skips when the <c>.2nd-pass</c> sidecars
+        /// are already valid on disk). Both resume paths apply this to EVERY file's
+        /// list, including no-work files with no reconciled parquet, so the WARM buffer
+        /// order matches COLD regardless of whether the file was rescored -- otherwise
+        /// MergeNode's <c>BuildSharedBoundaries</c> could iterate a different order and,
+        /// on a q-value tie between charge states of a peptide, pick a different shared
+        /// (modseq, file) boundary. A no-work file already lands in this order today via
+        /// the single-key compaction sort (compacted EntryIds are unique per file), but
+        /// sorting unconditionally future-proofs the tie-break against any later change
+        /// that retains multiple rows per EntryId.
+        /// </summary>
+        private static void SortFileEntriesCanonical(List<FdrEntry> fileEntries)
+        {
+            fileEntries.Sort((a, b) =>
+            {
+                int c = a.EntryId.CompareTo(b.EntryId);
+                if (c != 0) return c;
+                c = a.Charge.CompareTo(b.Charge);
+                if (c != 0) return c;
+                c = a.ScanNumber.CompareTo(b.ScanNumber);
+                if (c != 0) return c;
+                return a.ParquetIndex.CompareTo(b.ParquetIndex);
+            });
+        }
+
+        /// <summary>
         /// PHASE 2 gap-fill two-pass for a single file: a CWT pass (prefilter
         /// disabled, peaks picked freely) followed by a forced-integration
         /// pass for the targets CWT missed. CWT + forced results are appended
@@ -1208,7 +1407,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 try
                 {
-                    var result = SpectraCache.LoadSpectraCache(cachePath);
+                    var result = SpectraCache.LoadSpectraCache(cachePath, inputFile);
                     spectra = result.Ms2Spectra;
                     ms1Spectra = result.Ms1Spectra;
                     _ctx.LogInfo(string.Format(
@@ -1254,7 +1453,15 @@ namespace pwiz.OspreySharp.Tasks
             ms1Cal = MzCalibrationResult.Uncalibrated();
             rtMadFromCalJson = null;
 
-            string parent = Path.GetDirectoryName(Path.GetFullPath(inputFile));
+            // Stage 1-4 wrote the calibration sidecar to the configured output
+            // directory (ArtifactPaths), which for a straight-through --output-dir
+            // run is NOT the (possibly read-only) input mzML's directory. Resolve
+            // it the same way the writer did; fall back to the input's own dir
+            // (via GetFullPath so a bare-filename input still yields an absolute
+            // dir) when no output dir is configured.
+            string parent = !string.IsNullOrEmpty(ArtifactPaths.OutputDir)
+                ? ArtifactPaths.OutputDir
+                : Path.GetDirectoryName(Path.GetFullPath(inputFile));
             if (string.IsNullOrEmpty(parent))
             {
                 throw new InvalidDataException(string.Format(

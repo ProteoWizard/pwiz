@@ -44,6 +44,30 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Optional: TSV report output path.</summary>
         public string OutputReport { get; set; }
 
+        /// <summary>
+        /// Optional base directory for all per-file <em>derived</em> artifacts
+        /// (<c>.scores.parquet</c>, <c>.calibration.json</c>,
+        /// <c>.scores-reconciled.parquet</c>, the FDR sidecars, and
+        /// <c>.reconciliation.json</c>). Null = write each artifact in its input
+        /// file's own directory (the historical behavior). Set by
+        /// <c>--output-dir</c> (or <c>--work-dir</c>), it lets an analysis read
+        /// read-only input data while writing only derived output elsewhere.
+        /// Maps to Rust <c>OspreyConfig::output_dir</c> (Track B).
+        /// </summary>
+        public string OutputDir { get; set; }
+
+        /// <summary>
+        /// Optional directory for the <c>.spectra.bin</c> cache only. Null =
+        /// resolve at write time: beside the data file if that directory is
+        /// writable, else <see cref="OutputDir"/> (or the input file's own
+        /// directory when <see cref="OutputDir"/> is also null). Set by
+        /// <c>--cache-dir</c> (or <c>--work-dir</c>). The cache is
+        /// settings-independent, so a shared CacheDir lets many analyses reuse
+        /// a single parse of the spectra.
+        /// Maps to Rust <c>OspreyConfig::cache_dir</c> (Track B).
+        /// </summary>
+        public string CacheDir { get; set; }
+
         /// <summary>Resolution mode for binning.</summary>
         public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.Auto;
 
@@ -118,6 +142,13 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Write PIN files for external tools.</summary>
         public bool WritePin { get; set; }
 
+        /// <summary>
+        /// -d / --diagnostics: master switch that turns on the cross-impl
+        /// bisection dump bundle (see <c>OspreyDiagnostics.Initialize</c>).
+        /// Runtime toggle only -- intentionally NOT part of any identity hash.
+        /// </summary>
+        public bool Diagnostics { get; set; }
+
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 
@@ -144,17 +175,21 @@ namespace pwiz.OspreySharp.Core
         public int NThreads { get; set; } = Environment.ProcessorCount;
 
         /// <summary>
-        /// HPC scoring split: when true, run Stages 1-4 only and exit. Each
-        /// input mzML produces a {stem}.scores.parquet next to it; no FDR
-        /// is run and no blib is written. Set by the --no-join CLI flag.
-        /// Mutually exclusive with <see cref="InputScores"/>.
+        /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
+        /// include only the per-file fan-out, not the join. Set by both
+        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescore</c>; the
+        /// concrete behavior depends on the input type. With <c>-i</c> mzML it
+        /// is the Stage 1-4 worker — each input produces a
+        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
+        /// <see cref="InputScores"/> it is the Stage 6 rescore worker. The two
+        /// are told apart by input type (see <see cref="SelectedTask"/>).
         /// </summary>
         public bool NoJoin { get; set; }
 
         /// <summary>
         /// HPC scoring split: when set (non-null, non-empty), skip Stages 1-4
         /// entirely and load these per-file scoring caches as the starting
-        /// point for Stage 5+. Set by --join-only + --input-scores. When set,
+        /// point for Stage 5+. Set by <c>--input-scores</c>. When set,
         /// <see cref="InputFiles"/> is ignored.
         /// </summary>
         public List<string> InputScores { get; set; }
@@ -164,23 +199,34 @@ namespace pwiz.OspreySharp.Core
         /// having written the boundary files
         /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
         /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
-        /// Skips Stage 6 + 7 + 8. Set by the
-        /// <c>--join-at-pass=1 --join-only</c> flag combination.
+        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstJoin</c>.
         /// </summary>
         public bool StopAfterStage5 { get; set; }
 
         /// <summary>
         /// HPC: when true, every <c>--input-scores</c> parquet must carry
         /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
-        /// by <c>--join-at-pass=2</c>; the post-Stage-6 (reconciled)
+        /// by <c>--task MergeNode</c>; the post-Stage-6 (reconciled)
         /// entry point. Stages 1-6 are skipped: the pipeline loads
         /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
         /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,
         /// protein parsimony + picked-protein FDR, blib output). Mirrors
-        /// Rust's <c>config.expect_reconciled_input</c> wired from
-        /// <c>main.rs</c> at the same flag.
+        /// Rust's <c>config.expect_reconciled_input</c>.
         /// </summary>
         public bool ExpectReconciledInput { get; set; }
+
+        /// <summary>
+        /// The single pipeline task selected by <c>--task &lt;Name&gt;</c> on the
+        /// CLI, or null for the full pipeline (no <c>--task</c>). The three
+        /// membership flags above (<see cref="NoJoin"/>,
+        /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>)
+        /// are derived from this and drive each task's <c>IsIncluded</c>; this
+        /// property additionally lets argument validation enforce the
+        /// task&#8596;input-type contract (e.g. PerFileScoring takes mzML,
+        /// PerFileRescore takes <see cref="InputScores"/>) and name the task the
+        /// user actually typed in error messages.
+        /// </summary>
+        public HpcTask? SelectedTask { get; set; }
 
         /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
@@ -206,6 +252,19 @@ namespace pwiz.OspreySharp.Core
         /// and MUST stay byte-identical with Rust.
         /// </summary>
         public SearchIdentity Identity => new SearchIdentity(this);
+    }
+
+    /// <summary>
+    /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
+    /// (one HPC node = one task). The names are the stable CLI contract and
+    /// match each task's <c>OspreyTask.Name</c>.
+    /// </summary>
+    public enum HpcTask
+    {
+        PerFileScoring,
+        FirstJoin,
+        PerFileRescore,
+        MergeNode
     }
 
     /// <summary>

@@ -54,6 +54,13 @@ namespace pwiz.OspreySharp
 
             try
             {
+                // Select the diagnostics sink before any task runs -- the single
+                // chokepoint every entry point reaches the pipeline through
+                // (Program.Main and the rescore worker). -d forces the dump
+                // bundle on; otherwise the sink self-enables only if an
+                // OSPREY_DUMP_* / OSPREY_DIAG_* env var is set.
+                OspreyDiagnostics.Initialize(config.Diagnostics);
+
                 // Worker-mode entry normalization: in --input-scores modes
                 // without explicit -i, synthesize InputFiles from the parquet
                 // stems ONCE here, at pipeline entry, so the driver's
@@ -65,7 +72,7 @@ namespace pwiz.OspreySharp
                 // PipelineContext.Config. Previously this lived inside
                 // PerFileScoringTask's join-only load, which the driver never
                 // reached when PerFileScoring was the StartAt task, e.g.
-                // `--join-at-pass=1 --input-scores`.)
+                // `--task PerFileScoring --input-scores`.)
                 if (config.InputScores != null && config.InputScores.Count > 0
                     && (config.InputFiles == null || config.InputFiles.Count == 0))
                 {
@@ -198,8 +205,8 @@ namespace pwiz.OspreySharp
             // Write sidecars whenever the task ran without setting a
             // non-zero exit code. Several tasks intentionally return
             // false on success to stop the pipeline at a configured
-            // boundary (PerFileScoringTask under --no-join, FirstJoinTask
-            // under --join-only-with-StopAfterStage5); gating on
+            // boundary (PerFileScoringTask under --task PerFileScoring, FirstJoinTask
+            // under --task FirstJoin with StopAfterStage5); gating on
             // keepGoing alone would skip sidecar writes for those
             // successful early-exit modes and break resume.
             if (ctx.ExitCode == 0)
