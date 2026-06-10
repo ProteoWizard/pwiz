@@ -1003,42 +1003,60 @@ public class BuildTests
             skipLinesName: "zbuild.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:302 — <c>maxquant-bsa-baf</c>. Requires Bruker .baf vendor SDK.</summary>
+    /// <summary>Jamfile.jam:302 — <c>maxquant-bsa-baf</c>.</summary>
     [TestMethod]
     public void MaxQuant_BsaBaf()
     {
-        // The msms.txt for this test references a Bruker .baf file as its spectrum source.
-        // The pwiz-CLI-backed spectrum reader has no .baf support in the C# port yet.
-        Assert.Inconclusive(
-            "Skipped — Bruker .baf spectrum source; pwiz-sharp vendor SDK plumbing for Bruker "
-            + "is not yet ported. Re-enable when .baf reads land.");
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_BsaBaf),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-p", GoldenFileFixture.Instance!.InputFile("bsa-baf-mqpar.xml") },
+            inputFilenames: new[] { "bsa-baf-msms.txt" },
+            outputBlibName: "maxquant-bsa-baf.blib",
+            referenceCheckName: "maxquant-bsa-baf.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:303 — <c>maxquant-bsa-baf-v1_6_7</c>. Requires Bruker .baf vendor SDK.</summary>
+    /// <summary>Jamfile.jam:303 — <c>maxquant-bsa-baf-v1_6_7</c>.</summary>
     [TestMethod]
     public void MaxQuant_BsaBaf_V1_6_7()
     {
-        Assert.Inconclusive(
-            "Skipped — Bruker .baf spectrum source; pwiz-sharp vendor SDK plumbing for Bruker "
-            + "is not yet ported. Re-enable when .baf reads land.");
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_BsaBaf_V1_6_7),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-p", GoldenFileFixture.Instance!.InputFile("bsa-baf-mqpar.xml") },
+            inputFilenames: new[] { "bsa-baf-v1_6_7-msms.txt" },
+            outputBlibName: "maxquant-bsa-baf-v1_6_7.blib",
+            referenceCheckName: "maxquant-bsa-baf-v1_6_7.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:304 — <c>maxquant-yeast-wiff</c>. Requires Sciex .wiff vendor SDK.</summary>
+    /// <summary>Jamfile.jam:304 — <c>maxquant-yeast-wiff</c>.</summary>
     [TestMethod]
     public void MaxQuant_YeastWiff()
     {
-        Assert.Inconclusive(
-            "Skipped — Sciex .wiff spectrum source; pwiz-sharp vendor SDK plumbing for Sciex "
-            + "is not yet ported. Re-enable when .wiff reads land.");
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_YeastWiff),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-p", GoldenFileFixture.Instance!.InputFile("yeast-wiff-mqpar.xml") },
+            inputFilenames: new[] { "yeast-wiff-msms.txt" },
+            outputBlibName: "maxquant-yeast-wiff.blib",
+            referenceCheckName: "maxquant-yeast-wiff.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:305 — <c>maxquant-yeast-wiff-i18n</c>. Requires Sciex .wiff vendor SDK.</summary>
+    /// <summary>Jamfile.jam:305 — <c>maxquant-yeast-wiff-i18n</c>.</summary>
     [TestMethod]
     public void MaxQuant_YeastWiff_I18n()
     {
-        Assert.Inconclusive(
-            "Skipped — Sciex .wiff spectrum source; pwiz-sharp vendor SDK plumbing for Sciex "
-            + "is not yet ported. Re-enable when .wiff reads land.");
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_YeastWiff_I18n),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-p", GoldenFileFixture.Instance!.InputFile("yeast-wiff-试验-mqpar.xml") },
+            inputFilenames: new[] { "yeast-wiff-试验-msms.txt" },
+            outputBlibName: "maxquant-yeast-wiff-i18n.blib",
+            referenceCheckName: "maxquant-yeast-wiff-i18n.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:308 — <c>maxquant_ims</c>.</summary>
