@@ -1453,7 +1453,15 @@ namespace pwiz.OspreySharp.Tasks
             ms1Cal = MzCalibrationResult.Uncalibrated();
             rtMadFromCalJson = null;
 
-            string parent = Path.GetDirectoryName(Path.GetFullPath(inputFile));
+            // Stage 1-4 wrote the calibration sidecar to the configured output
+            // directory (ArtifactPaths), which for a straight-through --output-dir
+            // run is NOT the (possibly read-only) input mzML's directory. Resolve
+            // it the same way the writer did; fall back to the input's own dir
+            // (via GetFullPath so a bare-filename input still yields an absolute
+            // dir) when no output dir is configured.
+            string parent = !string.IsNullOrEmpty(ArtifactPaths.OutputDir)
+                ? ArtifactPaths.OutputDir
+                : Path.GetDirectoryName(Path.GetFullPath(inputFile));
             if (string.IsNullOrEmpty(parent))
             {
                 throw new InvalidDataException(string.Format(
