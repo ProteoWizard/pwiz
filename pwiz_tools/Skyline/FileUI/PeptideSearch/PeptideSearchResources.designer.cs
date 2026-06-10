@@ -415,6 +415,15 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Preset "{0}" specifies non-ppm mass tolerances. DIA-NN only accepts ppm tolerances; the preset was not applied..
+        /// </summary>
+        public static string DiannSearchDlg_ApplyPreset_DiaNN_requires_ppm_tolerances_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ApplyPreset_DiaNN_requires_ppm_tolerances_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Append.
         /// </summary>
         public static string DiannSearchDlg_ImportDiannLibrary_Append {
@@ -429,6 +438,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_ {
             get {
                 return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_DIA_NN_output_spectral_library_not_found_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to DIA-NN found no precursors at q-value {0}...
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_DiaNN_zero_precursors_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_DiaNN_zero_precursors_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The DIA-NN spectral library file could not be read:...
+        /// </summary>
+        public static string DiannSearchDlg_ImportDiannLibrary_DiaNN_lib_unreadable_ {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_ImportDiannLibrary_DiaNN_lib_unreadable_", resourceCulture);
             }
         }
 
@@ -460,6 +487,24 @@ namespace pwiz.Skyline.FileUI.PeptideSearch {
         public static string DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_ {
             get {
                 return ResourceManager.GetString("DiannSearchDlg_NextPage_Please_add_at_least_one_DIA_data_file_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Settings preset:.
+        /// </summary>
+        public static string DiannSearchDlg_SettingsPreset_Label {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_SettingsPreset_Label", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Save....
+        /// </summary>
+        public static string DiannSearchDlg_SettingsPreset_Save {
+            get {
+                return ResourceManager.GetString("DiannSearchDlg_SettingsPreset_Save", resourceCulture);
             }
         }
 

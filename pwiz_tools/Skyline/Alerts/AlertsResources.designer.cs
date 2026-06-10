@@ -530,6 +530,24 @@ namespace pwiz.Skyline.Alerts {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to A different DIA-NN installation is already registered with Skyline:...
+        /// </summary>
+        public static string DiannDownloadDlg_Replace_existing_registration__0__with__1__ {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_Replace_existing_registration__0__with__1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to academic license.
+        /// </summary>
+        public static string DiannDownloadDlg_academic_license {
+            get {
+                return ResourceManager.GetString("DiannDownloadDlg_academic_license", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Download.
         /// </summary>
         public static string EnsureDiannInstalled_Download {

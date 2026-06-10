@@ -24,13 +24,17 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using Parquet;
+using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -91,6 +95,98 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             // Populate modifications page with common defaults
             InitializeModifications();
+
+            // Add a preset dropdown to the dialog footer next to the wizard buttons.
+            InitSettingsPresetControls();
+        }
+
+        private System.Windows.Forms.ComboBox _cbSettingsPreset;
+        private System.Windows.Forms.Button _btnSavePreset;
+        private SettingsListComboDriver<SearchSettingsPreset> _settingsPresetDriver;
+        private bool _suppressPresetEvent;
+
+        private void InitSettingsPresetControls()
+        {
+            // Anchor the controls bottom-left of the dialog, in the same horizontal band
+            // as the Back/Next/Cancel buttons.
+            var lbl = new System.Windows.Forms.Label
+            {
+                AutoSize = true,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                Location = new Point(12, btnBack.Top + 4),
+                Text = PeptideSearchResources.DiannSearchDlg_SettingsPreset_Label
+            };
+            _cbSettingsPreset = new System.Windows.Forms.ComboBox
+            {
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                Width = 220,
+                Location = new Point(lbl.Right + 6, btnBack.Top)
+            };
+            _btnSavePreset = new System.Windows.Forms.Button
+            {
+                Text = PeptideSearchResources.DiannSearchDlg_SettingsPreset_Save,
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                AutoSize = true,
+                Location = new Point(_cbSettingsPreset.Right + 6, btnBack.Top - 1)
+            };
+            Controls.Add(lbl);
+            Controls.Add(_cbSettingsPreset);
+            Controls.Add(_btnSavePreset);
+
+            _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
+                _cbSettingsPreset, Settings.Default.DiannSearchSettingsPresets, true);
+            _suppressPresetEvent = true;
+            try { _settingsPresetDriver.LoadList(null); }
+            finally { _suppressPresetEvent = false; }
+
+            _cbSettingsPreset.SelectedIndexChanged += (s, e) =>
+            {
+                if (_settingsPresetDriver.SelectedIndexChangedEvent(s, e))
+                    return;
+                var preset = _settingsPresetDriver.SelectedItem;
+                if (preset != null && !_suppressPresetEvent && preset.SearchEngine == SearchEngine.DIANN)
+                    ApplyPreset(preset);
+            };
+            _btnSavePreset.Click += (s, e) => SaveCurrentSettingsAsPreset();
+        }
+
+        private void SaveCurrentSettingsAsPreset()
+        {
+            var current = _settingsPresetDriver.SelectedItem;
+            var suggested = current != null && current.SearchEngine == SearchEngine.DIANN
+                ? current.Name
+                : @"DIA-NN - ";
+            string name;
+            using (var dlg = new PresetNameDlg(suggested))
+            {
+                if (dlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+                name = dlg.PresetName;
+            }
+            if (string.IsNullOrWhiteSpace(name))
+                return;
+
+            var existing = Settings.Default.DiannSearchSettingsPresets.FirstOrDefault(p => p.Name == name);
+            if (existing != null)
+            {
+                var result = MessageDlg.Show(this,
+                    string.Format(PeptideSearchResources.SearchSettingsControl_OverwriteSettingsPreset_A_settings_preset_named__0__already_exists__Do_you_want_to_replace_it_, name),
+                    false, MessageBoxButtons.YesNo);
+                if (result != DialogResult.Yes)
+                    return;
+                Settings.Default.DiannSearchSettingsPresets.Remove(existing);
+            }
+            Settings.Default.DiannSearchSettingsPresets.Add(BuildPresetFromCurrentSettings(name));
+            // Persist immediately so the preset survives even if Skyline isn't closed
+            // cleanly. Settings.Default.Save() at SkylineWindow.OnClosing should pick it
+            // up too, but the user-reported intermittent reset suggests we shouldn't rely
+            // on that alone.
+            try { Settings.Default.Save(); }
+            catch { /* swallow — the in-memory list still has the preset for this session */ }
+            _suppressPresetEvent = true;
+            try { _settingsPresetDriver.LoadList(name); }
+            finally { _suppressPresetEvent = false; }
         }
 
         private void InitializeModifications()
@@ -199,6 +295,145 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 (value, setting) => setting.Value = value,
                 (value, setting) => setting.Validate(value),
                 setting => setting.ValidValues);
+        }
+
+        /// <summary>
+        /// Apply a preset's settings to this dialog's controls. Engine-specific values
+        /// (peptide length, charge range) are pulled from the preset's AdditionalSettings
+        /// XML and applied to <see cref="DiannConfig.AdditionalSettings"/>; tolerances,
+        /// q-value, enzyme, FASTA, missed cleavages, and modifications map directly.
+        /// Fields without a value in the preset are left at the user's current setting.
+        /// </summary>
+        public void ApplyPreset(SearchSettingsPreset preset)
+        {
+            if (preset == null)
+                return;
+
+            // Tolerances (preset value == 0 means "auto" in DIA-NN, which is what we want).
+            // DIA-NN only accepts ppm tolerances; reject anything else rather than
+            // silently feeding a Dalton magnitude through as ppm.
+            if (preset.PrecursorToleranceUnit != MzTolerance.Units.ppm ||
+                preset.FragmentToleranceUnit != MzTolerance.Units.ppm)
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.DiannSearchDlg_ApplyPreset_DiaNN_requires_ppm_tolerances_,
+                    preset.Name));
+                return;
+            }
+            Ms1Tolerance = preset.PrecursorToleranceValue;
+            Ms2Tolerance = preset.FragmentToleranceValue;
+
+            QValueThreshold = preset.CutoffScore > 0 ? preset.CutoffScore : 0.01;
+
+            // FASTA / enzyme / missed cleavages — ImportFastaControl owns these.
+            // Guard against a preset that references a FASTA the local filesystem doesn't
+            // have (shared user.config, moved file): SetFastaContent throws from inside
+            // SelectedIndexChanged, producing a modal popup in a re-entrant message loop.
+            // Leave the field empty; the wizard's own validation flags it non-modally.
+            if (!string.IsNullOrEmpty(preset.FastaFilePath) && File.Exists(preset.FastaFilePath))
+                ImportFastaControl.SetFastaContent(preset.FastaFilePath, true);
+            if (!string.IsNullOrEmpty(preset.EnzymeName))
+            {
+                // EnzymeList is keyed by Enzyme.GetKey() (e.g. "Trypsin KR | P"), NOT by
+                // Name, and Settings.Default.GetEnzymeByName silently falls back to
+                // EnzymeList[0] on a key miss. So match by Name explicitly to avoid
+                // picking up whichever enzyme happens to be at the top of the list.
+                var enzyme = Settings.Default.EnzymeList.FirstOrDefault(e => e.Name == preset.EnzymeName)
+                             ?? new EnzymeList().GetDefaults(0).FirstOrDefault(e => e.Name == preset.EnzymeName);
+                if (enzyme != null)
+                {
+                    if (Settings.Default.EnzymeList.All(e => e.Name != enzyme.Name))
+                        Settings.Default.EnzymeList.Add(enzyme);
+                    ImportFastaControl.Enzyme = enzyme;
+                }
+            }
+            numMissedCleavages.Value = Math.Min(numMissedCleavages.Maximum,
+                Math.Max(numMissedCleavages.Minimum, preset.MaxMissedCleavages));
+            ImportFastaControl.MaxMissedCleavages = preset.MaxMissedCleavages;
+
+            // Modifications — preset stores full StaticMod definitions, so we can rebuild
+            // the lists directly. Anything in the preset's structural list with IsVariable
+            // becomes a variable mod; the rest are fixed.
+            if (preset.HasExplicitModifications)
+            {
+                listFixedMods.Items.Clear();
+                listVariableMods.Items.Clear();
+                foreach (var mod in preset.StructuralModifications ?? Enumerable.Empty<StaticMod>())
+                {
+                    if (mod.IsVariable)
+                        listVariableMods.Items.Add(mod);
+                    else
+                        listFixedMods.Items.Add(mod);
+                }
+            }
+
+            // First-class preset fields that don't have a UI control yet.
+            _diannConfig.MaxVarMods = preset.MaxVariableMods;
+
+            // Engine-specific settings (MinPepLen, charge range, etc.) — replay the XML bag
+            // into the in-memory DiannConfig.
+            ApplyAdditionalSettingsFromXml(preset.AdditionalSettingsXml);
+        }
+
+        private void ApplyAdditionalSettingsFromXml(string additionalSettingsXml)
+        {
+            if (string.IsNullOrEmpty(additionalSettingsXml))
+                return;
+            var doc = new System.Xml.XmlDocument();
+            doc.LoadXml(additionalSettingsXml);
+            var nodes = doc.SelectNodes(@"//Setting");
+            if (nodes == null)
+                return;
+            foreach (System.Xml.XmlNode node in nodes)
+            {
+                var settingName = node.Attributes?[@"name"]?.Value;
+                var settingValue = node.Attributes?[@"value"]?.Value;
+                if (settingName != null &&
+                    _diannConfig.AdditionalSettings.TryGetValue(settingName, out var setting))
+                {
+                    try { setting.Value = settingValue; }
+                    catch { /* leave at default if the preset's value doesn't validate */ }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Snapshot the dialog's current state into a new preset so the user can save it.
+        /// </summary>
+        public SearchSettingsPreset BuildPresetFromCurrentSettings(string name)
+        {
+            var additional = new Dictionary<string, string>();
+            foreach (var kvp in _diannConfig.AdditionalSettings)
+            {
+                if (!kvp.Value.IsDefault)
+                    additional[kvp.Key] = kvp.Value.Value?.ToString() ?? string.Empty;
+            }
+
+            // Stamp IsVariable on each mod so ApplyPreset's `mod.IsVariable`-based
+            // bucketing re-creates the right list. The dialog's FixedMods / VariableMods
+            // lists are sourced from UniMod.GetModification(...), which leaves
+            // StaticMod.IsVariable=false regardless of which list the user dropped
+            // it in. Without ChangeVariable here, every variable mod silently round-trips
+            // into the fixed-mod list.
+            var stampedMods = FixedMods.Select(m => m.IsVariable ? m.ChangeVariable(false) : m)
+                .Concat(VariableMods.Select(m => m.IsVariable ? m : m.ChangeVariable(true)));
+
+            return new SearchSettingsPreset(
+                name,
+                SearchEngine.DIANN,
+                new MzTolerance(Ms1Tolerance, MzTolerance.Units.ppm),
+                new MzTolerance(Ms2Tolerance, MzTolerance.Units.ppm),
+                maxVariableMods: _diannConfig.MaxVarMods,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: QValueThreshold,
+                additionalSettings: additional,
+                fastaFilePath: ImportFastaControl?.FastaFile,
+                enzymeName: ImportFastaControl?.Enzyme?.Name,
+                maxMissedCleavages: (int)numMissedCleavages.Value,
+                structuralModifications: stampedMods,
+                workflowType: SearchWorkflowType.dia,
+                hasExplicitModifications: true);
         }
 
         #region IMultipleViewProvider
@@ -330,6 +565,30 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 return;
             }
 
+            // Gate on lib.parquet row count BEFORE handing off to BlibBuild. With zero
+            // precursors, BlibBuild's abort_current_library path can't reliably delete
+            // the empty .blib (unfinalized SQLite statements keep the handle open), and
+            // the user sees a confusing "file in use" / STATUS_BREAKPOINT instead of the
+            // real cause. Catch it here with a friendly message and leave the wizard on
+            // run_page so the user can go back to settings and widen the q-value or
+            // change parameters. A read failure (truncated/corrupt parquet) gets its
+            // own message so the user isn't told to "widen the threshold" when the real
+            // issue is that DIA-NN's output is unreadable.
+            if (!TryCountDiannLibParquetRows(specLibPath, out long precursorRowCount))
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_DiaNN_lib_unreadable_,
+                    specLibPath));
+                return;
+            }
+            if (precursorRowCount == 0)
+            {
+                MessageDlg.Show(this, string.Format(
+                    PeptideSearchResources.DiannSearchDlg_ImportDiannLibrary_DiaNN_zero_precursors_,
+                    _diannConfig.QValue));
+                return;
+            }
+
             // If the document already has a sibling .blib from a previous search, the wizard
             // would silently append to it. Ask the user instead so a re-run replaces the
             // stale library cleanly.
@@ -345,10 +604,17 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return;
                 if (choice == DialogResult.Yes)
                 {
-                    // The doc library has open read streams on the .blib; release them
-                    // before deleting, otherwise SafeDelete fails silently and BlibBuild
-                    // appends to the stale library instead of replacing it.
+                    // Close the doc's open read-streams and evict the cached Library
+                    // object from the LibraryManager so SafeDelete can actually unlink
+                    // the .blib. (LibraryManager.ReleaseLibraries now closes streams
+                    // as part of eviction.) Without both, BlibBuild silently falls
+                    // back to Append mode and the previous run's spectrum sources
+                    // stick around as "missing" on the chromatograms page.
                     ImportPeptideSearch.ClosePeptideSearchLibraryStreams(SkylineWindow.Document);
+                    var docLibSpecs = SkylineWindow.Document.Settings.PeptideSettings.Libraries.LibrarySpecs
+                        .Where(s => s != null && s.IsDocumentLibrary).ToArray();
+                    if (docLibSpecs.Length > 0)
+                        _libraryManager.ReleaseLibraries(docLibSpecs);
                     FileEx.SafeDelete(docBlibPath, true);
                     FileEx.SafeDelete(BiblioSpecLiteSpec.GetRedundantName(docBlibPath), true);
                 }
@@ -373,6 +639,43 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
             if (importPeptideSearchDlg.ShowDialog(this) == DialogResult.OK)
                 DialogResult = DialogResult.OK;
+        }
+
+        /// <summary>
+        /// Try to sum row counts across all row groups in the given parquet file.
+        /// Returns true on a successful read (rows = 0 means the parquet exists but
+        /// holds no precursors); returns false on any read failure (truncated file,
+        /// I/O error, malformed parquet). The caller surfaces a distinct message for
+        /// each case so the user can tell "no IDs" from "broken file" apart.
+        /// </summary>
+        /// <remarks>
+        /// Runs on a worker thread via <see cref="ActionUtil.RunAsync"/> because
+        /// ParquetReader.CreateAsync's continuation posts back to the calling
+        /// SynchronizationContext — invoking it directly on the UI thread deadlocks,
+        /// since the UI thread is the very thing the continuation is waiting for.
+        /// </remarks>
+        private static bool TryCountDiannLibParquetRows(string parquetPath, out long rowCount)
+        {
+            long result = 0;
+            bool ok = false;
+            var worker = ActionUtil.RunAsync(() =>
+            {
+                try
+                {
+                    using var stream = File.OpenRead(parquetPath);
+                    using var reader = ParquetReader.CreateAsync(stream)
+                        .ConfigureAwait(false).GetAwaiter().GetResult();
+                    result = reader.RowGroups.Sum(rg => rg.RowCount);
+                    ok = true;
+                }
+                catch
+                {
+                    // Leave ok=false so the caller shows the "unreadable" message.
+                }
+            }, @"DiannParquetRowCount");
+            worker.Join();
+            rowCount = result;
+            return ok;
         }
 
         public void PreviousPage()

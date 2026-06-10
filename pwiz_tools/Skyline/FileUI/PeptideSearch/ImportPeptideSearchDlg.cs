@@ -259,6 +259,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void InitSettingsPresetControls()
         {
+            // DIA-NN presets are owned by Settings.Default.DiannSearchSettingsPresets and
+            // surface only in DiannSearchDlg's dropdown; this list is DDA/DIA engines only.
             _settingsPresetDriver = new SettingsListComboDriver<SearchSettingsPreset>(
                 cbSettingsPreset,
                 Settings.Default.SearchSettingsPresets,

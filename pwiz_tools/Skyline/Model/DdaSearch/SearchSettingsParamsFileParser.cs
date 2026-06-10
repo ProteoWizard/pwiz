@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DdaSearch
 {
@@ -47,11 +48,18 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         public static bool SupportsImport(SearchEngine engine)
         {
-            return engine == SearchEngine.Comet || engine == SearchEngine.MSFragger;
+            return engine == SearchEngine.Comet
+                   || engine == SearchEngine.MSFragger
+                   || engine == SearchEngine.DIANN;
         }
 
         public static SearchSettingsPreset ImportFromFile(string filePath, string presetName)
         {
+            // DIA-NN configs are command-line argument lists (lines starting with "--"),
+            // not key=value pairs, so they need a dedicated parse path.
+            if (LooksLikeDiannCfg(filePath))
+                return ParseDiannCfg(presetName, ParseDiannCfgArgs(filePath));
+
             var parseResult = ParseParamsFile(filePath);
             var engine = DetectEngine(parseResult.Settings, parseResult.EnzymeInfoLines);
 
@@ -65,6 +73,29 @@ namespace pwiz.Skyline.Model.DdaSearch
                     throw new InvalidDataException(
                         string.Format(DdaSearchResources.SearchSettingsParamsFileParser_ImportFromFile_Unable_to_detect_search_engine_from_params_file__0_, filePath));
             }
+        }
+
+        private static bool LooksLikeDiannCfg(string filePath)
+        {
+            try
+            {
+                using (var reader = new StreamReader(filePath))
+                {
+                    string line;
+                    int linesRead = 0;
+                    while ((line = reader.ReadLine()) != null && linesRead < 50)
+                    {
+                        var trimmed = line.Trim();
+                        if (trimmed.Length == 0 || trimmed.StartsWith(@"#"))
+                            continue;
+                        // DIA-NN cfg lines are either bare "--flag" or "--flag value", whereas
+                        // Comet/MSFragger .params files are "key = value".
+                        return trimmed.StartsWith(@"--");
+                    }
+                }
+            }
+            catch (IOException) { /* fall through to default parser */ }
+            return false;
         }
 
         private static SearchEngine DetectEngine(Dictionary<string, string> settings, List<string> enzymeInfoLines)
@@ -626,6 +657,152 @@ namespace pwiz.Skyline.Model.DdaSearch
             return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double result)
                 ? result
                 : defaultValue;
+        }
+
+        #endregion
+
+        #region DIA-NN cfg parsing
+
+        // DIA-NN --cut pattern -> Skyline enzyme name. Inverse of DiannHelpers.ENZYME_MAP.
+        // Listed here (rather than reusing the helper map) so the parser stays in
+        // SearchSettingsParamsFileParser without taking a dependency on Model.Lib.
+        private static readonly Dictionary<string, string> DIANN_CUT_TO_ENZYME =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { @"K*,R*,!*P",   @"Trypsin" },
+                { @"K*,R*",       @"Trypsin/P" },
+                { @"K*",          @"Lys-C" },
+                { @"*K",          @"Lys-N" },
+                { @"R*",          @"Arg-C" },
+                { @"*D",          @"Asp-N" },
+                { @"F*,W*,Y*,L*", @"Chymotrypsin" },
+                { @"E*,D*",       @"Glu-C" },
+            };
+
+        /// <summary>
+        /// Parse a DIA-NN command-line config file into a flag -> value map.
+        /// Repeated flags (e.g. --f, --fixed-mod, --var-mod) are merged into the
+        /// value separated by ASCII unit separator so callers can split them back out.
+        /// </summary>
+        private static Dictionary<string, string> ParseDiannCfgArgs(string filePath)
+        {
+            var args = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var rawLine in File.ReadAllLines(filePath))
+            {
+                var line = rawLine.Trim();
+                if (line.Length == 0 || line.StartsWith(@"#"))
+                    continue;
+                if (!line.StartsWith(@"--"))
+                    continue;
+                // Split flag and rest on first whitespace; rest may be a quoted path or
+                // a space-separated value list. Trim balanced quotes.
+                int sp = line.IndexOfAny(new[] { ' ', '\t' });
+                string flag = sp < 0 ? line : line.Substring(0, sp);
+                string value = sp < 0 ? string.Empty : line.Substring(sp + 1).Trim();
+                if (value.Length >= 2 && value[0] == '"' && value[value.Length - 1] == '"')
+                    value = value.Substring(1, value.Length - 2);
+                if (args.TryGetValue(flag, out var existing))
+                    args[flag] = existing + TextUtil.SEPARATOR_UNIT + value;
+                else
+                    args[flag] = value;
+            }
+            return args;
+        }
+
+        private static SearchSettingsPreset ParseDiannCfg(string presetName, Dictionary<string, string> args)
+        {
+            // DIA-NN 2.x emits --mass-acc-ms1 / --mass-acc; older releases used
+            // --ms1-accuracy / --ms2-accuracy. Try the newer names first, fall back to
+            // the legacy ones so cfg files from either generation round-trip cleanly.
+            double ms1 = GetDouble(args, @"--mass-acc-ms1", GetDouble(args, @"--ms1-accuracy", 0));
+            double ms2 = GetDouble(args, @"--mass-acc",     GetDouble(args, @"--ms2-accuracy", 0));
+            double qvalue = GetDouble(args, @"--qvalue", 0.01);
+
+            string enzymeName = @"Trypsin";
+            if (args.TryGetValue(@"--cut", out var cutPattern) &&
+                DIANN_CUT_TO_ENZYME.TryGetValue(cutPattern.Trim(), out var mapped))
+                enzymeName = mapped;
+
+            int missedCleavages = GetInt(args, @"--missed-cleavages", 1);
+
+            // Modifications: --fixed-mod / --var-mod values are "UniMod:N,mass,aas" tokens,
+            // possibly multiple per file.
+            var fixedMods = ParseDiannMods(args, @"--fixed-mod", isVariable: false);
+            var varMods = ParseDiannMods(args, @"--var-mod", isVariable: true);
+            var allMods = fixedMods.Concat(varMods).ToList();
+
+            // DIA-NN supports repeated --fasta entries for multi-database searches;
+            // ParseDiannCfgArgs joined them with U+001F. We currently model only one FASTA
+            // per preset, so take the first non-empty path. End-to-end multi-FASTA support
+            // is a separate feature; for now any extras silently drop.
+            string fastaPath = null;
+            if (args.TryGetValue(@"--fasta", out var fasta))
+            {
+                fastaPath = fasta.Split(TextUtil.SEPARATOR_UNIT).FirstOrDefault(s => !string.IsNullOrEmpty(s));
+            }
+
+            // Engine-specific bag mirrors DiannConfig.AdditionalSettings keys.
+            var additional = new Dictionary<string, string>();
+            if (args.TryGetValue(@"--min-pep-len", out var minPepLen))   additional[@"MinPepLen"] = minPepLen;
+            if (args.TryGetValue(@"--max-pep-len", out var maxPepLen))   additional[@"MaxPepLen"] = maxPepLen;
+            if (args.TryGetValue(@"--min-pr-charge", out var minCharge)) additional[@"MinPrecursorCharge"] = minCharge;
+            if (args.TryGetValue(@"--max-pr-charge", out var maxCharge)) additional[@"MaxPrecursorCharge"] = maxCharge;
+
+            return new SearchSettingsPreset(
+                presetName,
+                SearchEngine.DIANN,
+                new MzTolerance(ms1, MzTolerance.Units.ppm),
+                new MzTolerance(ms2, MzTolerance.Units.ppm),
+                maxVariableMods: 2,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: qvalue,
+                additionalSettings: additional,
+                fastaFilePath: fastaPath,
+                enzymeName: enzymeName,
+                maxMissedCleavages: missedCleavages,
+                structuralModifications: allMods,
+                workflowType: SearchWorkflowType.dia,
+                hasExplicitModifications: allMods.Count > 0);
+        }
+
+        private static IEnumerable<StaticMod> ParseDiannMods(Dictionary<string, string> args, string flag, bool isVariable)
+        {
+            if (!args.TryGetValue(flag, out var raw) || string.IsNullOrWhiteSpace(raw))
+                yield break;
+            foreach (var token in raw.Split(TextUtil.SEPARATOR_UNIT))
+            {
+                var mod = ParseDiannModToken(token, isVariable);
+                if (mod != null)
+                    yield return mod;
+            }
+        }
+
+        private static StaticMod ParseDiannModToken(string token, bool isVariable)
+        {
+            // Format: "UniMod:N,mass,aas" e.g. "UniMod:4,57.021464,C"
+            var parts = token.Split(',');
+            if (parts.Length < 3)
+                return null;
+            int colon = parts[0].IndexOf(':');
+            if (colon < 0 || !int.TryParse(parts[0].Substring(colon + 1), out int unimodId))
+                return null;
+            string aas = parts[2].Trim();
+
+            // Find the canonical Skyline mod with this UniMod id whose AAs match the
+            // residues DIA-NN listed. Prefer an exact AAs match, fall back to any mod
+            // with the right id.
+            StaticMod fallback = null;
+            foreach (var mod in UniMod.DictStructuralModNames.Values
+                         .Concat(UniMod.DictHiddenStructuralModNames.Values))
+            {
+                if (mod.UnimodId != unimodId)
+                    continue;
+                if (string.Equals(mod.AAs ?? string.Empty, aas, StringComparison.Ordinal))
+                    return mod.ChangeVariable(isVariable);
+                fallback = fallback ?? mod;
+            }
+            return fallback?.ChangeVariable(isVariable);
         }
 
         #endregion

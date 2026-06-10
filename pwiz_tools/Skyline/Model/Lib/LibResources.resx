@@ -154,6 +154,11 @@
   <data name="BiblioSpecLiteBuilder_BuildLibrary_Preparing_to_build_library" xml:space="preserve">
     <value>Preparing to build library</value>
   </data>
+  <data name="BiblioSpecLiteBuilder_BuildLibrary_No_spectra_passed_filter_" xml:space="preserve">
+    <value>The search produced no spectra that passed the library-build score cutoff.
+
+This usually means the search returned no identifications, or the cutoff is set too strictly for the data. Try widening the q-value / score threshold in the search settings, or verify that the FASTA database matches the spectra files.</value>
+  </data>
   <data name="BiblioSpecLiteLibrary_CalculateFileRetentionTimeAlignments_Aligning_library_retention_times" xml:space="preserve">
     <value>Aligning library retention times</value>
   </data>

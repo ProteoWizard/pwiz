@@ -199,6 +199,17 @@
   <data name="DiannDownloadDlg_Installation_failed" xml:space="preserve">
     <value>DIA-NN installation failed. The extractor did not produce a diann.exe file.</value>
   </data>
+  <data name="DiannDownloadDlg_Replace_existing_registration__0__with__1__" xml:space="preserve">
+    <value>A different DIA-NN installation is already registered with Skyline:
+
+{0}
+
+Installing DIA-NN {1} will replace this registration. The other installation's files will not be deleted, but Skyline will use the new install going forward. Continue?</value>
+  </data>
+  <data name="DiannDownloadDlg_academic_license" xml:space="preserve">
+    <value>academic license</value>
+    <comment>Link phrase inside linkLabel2x.Text — gets substituted in as {1} and is the clickable link area. Localize freely; the code looks it up after substitution.</comment>
+  </data>
   <data name="EnsureDiannInstalled_Use_existing_or_download__0____1__" xml:space="preserve">
     <value>DIA-NN is already installed at:
 
