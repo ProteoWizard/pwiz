@@ -350,8 +350,13 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             // Apply search engine settings
             SearchSettingsControl?.ApplySearchSettingsPreset(preset);
 
-            // Apply FASTA settings (only clear if preset explicitly specifies empty path)
-            if (!string.IsNullOrEmpty(preset.FastaFilePath))
+            // Apply FASTA settings.
+            //   null  -> preset doesn't touch FASTA (legacy preset without the attribute)
+            //   ""    -> preset explicitly cleared FASTA
+            //   path  -> preset specifies a FASTA to load
+            if (preset.FastaFilePath == string.Empty)
+                ImportFastaControl.ClearFastaContent();
+            else if (!string.IsNullOrEmpty(preset.FastaFilePath))
                 ImportFastaControl.SetFastaContent(preset.FastaFilePath, true);
             if (!string.IsNullOrEmpty(preset.EnzymeName))
             {
