@@ -29,6 +29,8 @@ using System.Xml.Serialization;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
+using pwiz.CommonMsData.RemoteApi;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 
@@ -378,6 +380,11 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             if (logLevel == LogLevel.all_info && !AuditLogEntry.ConvertPathsToFileNames)
                 return s;
+
+            // Remote URLs (e.g. waters_connect:, unifi:, ardia:) are not filesystem paths and can
+            // exceed the Windows MAX_PATH limit, so DirectoryInfo would throw. Use the remote file name.
+            if (MsDataFileUri.Parse(s) is RemoteUrl remoteUrl)
+                return remoteUrl.GetFileName();
 
             return new DirectoryInfo(s).Name;
         }
