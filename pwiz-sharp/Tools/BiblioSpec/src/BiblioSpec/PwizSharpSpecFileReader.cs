@@ -8,9 +8,11 @@ using System.Globalization;
 using System.Linq;
 using Pwiz.Data.Common.Cv;
 using Pwiz.Data.Common.Params;
+using Pwiz.Analysis;
 using Pwiz.Data.MsData;
 using Pwiz.Data.MsData.Readers;
 using Pwiz.Data.MsData.Spectra;
+using Pwiz.Util.Misc;
 
 // Disambiguate: BiblioSpec also has a type called Spectrum (PEAK_T-based) in this
 // namespace, so we alias the pwiz-sharp MsData one rather than the BiblioSpec one.
@@ -97,6 +99,23 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
                 // cpp PwizReader.cpp:73 calls Verbosity::error which throws via BlibException.
                 Verbosity.Error($"No spectra found in {path}.");
                 return;
+            }
+
+            // cpp PwizReader.cpp:67-68 (gated on #ifdef VENDOR_READERS): when the vendor
+            // spectrum list exposes its own centroid feed, wrap with peakPicking so
+            // BiblioSpec reads vendor-centroided peaks instead of raw profile+AddZeros
+            // arrays. Without this wrap, Sciex .wiff MS2 spectra surface with the SDK's
+            // zero-padded profile (thousands of points per spectrum) instead of the cpp
+            // baseline (~hundreds of peaks). Mirror cpp's "peakPicking true 1-": prefer
+            // vendor, MS levels 1+, no algorithmic fallback (null algorithm).
+            if (_allSpectra is IVendorCentroidingSpectrumList)
+            {
+                _allSpectra = new SpectrumList_PeakPicker(
+                    _allSpectra,
+                    algorithm: null,
+                    preferVendorPeakPicking: true,
+                    msLevelsToPeakPick: new IntegerSet(1, int.MaxValue));
+                _fileReader.Run.SpectrumList = _allSpectra;
             }
 
             Verbosity.Debug($"Found {_allSpectra.Count} spectra in {path}.");

@@ -341,17 +341,14 @@ public class BuildTests
     [TestMethod]
     public void Comet_Prg2012_Wiff()
     {
-        // Sciex .wiff reading is wired in (vendor reader registered, BlibBuild opens the
-        // wiff end-to-end), but the C# Sciex SDK returns ~3155 peaks for these PRG2012
-        // MS2 spectra where cpp gets 218. Neither cpp nor C# enables BiblioSpec-side
-        // peak picking — cpp PwizReader sets only combineIonMobilitySpectra=true
-        // (cpp/PwizReader.cpp:64) — so the divergence is a Sciex SDK output difference
-        // between the version cpp links against and the C# wrapper's bundled Clearcore2.
-        // Tracked as a Sciex vendor-reader issue, not a BiblioSpec port issue.
-        Assert.Inconclusive(
-            "Skipped — Sciex .wiff reading works end-to-end. The C# Sciex SDK returns "
-            + "~14× the peak count cpp does on these MS2 spectra (3155 vs 218), so "
-            + ".check goldens diverge. Belongs in the Sciex vendor reader, not BiblioSpec.");
+        TestRunner.RunBlibTest(
+            testName: nameof(Comet_Prg2012_Wiff),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-c", "0" },
+            inputFilenames: new[] { "201208-378803-cm.pep.xml" },
+            outputBlibName: "comet-prg2012-wiff.blib",
+            referenceCheckName: "comet-prg2012-wiff.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:247 — <c>msfragger-tims</c> (input name contains %20 → literal space).</summary>
@@ -1256,10 +1253,20 @@ public class BuildTests
     [TestMethod]
     public void MaxQuant_Prg2012_Wiff()
     {
-        // Same Sciex SDK centroid-mismatch as Comet_Prg2012_Wiff.
-        Assert.Inconclusive(
-            "Skipped — see Comet_Prg2012_Wiff. The MaxQuant msms.txt path opens the same "
-            + ".wiff and the same SDK centroid-vs-cpp peak count diff applies.");
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        TestRunner.RunBlibTest(
+            testName: nameof(MaxQuant_Prg2012_Wiff),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-p", fixture.InputFile("prg2012-wiff-mqpar.xml") },
+            inputFilenames: new[] { "prg2012-wiff-msms.txt" },
+            outputBlibName: "maxquant-prg2012-wiff.blib",
+            referenceCheckName: "maxquant-prg2012-wiff.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:334 — <c>diann-speclib</c>.</summary>

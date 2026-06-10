@@ -13,6 +13,10 @@
     <!-- IdentData supplies CV-mapped PSM types (mzIdentML, pepXML) that several
          BiblioSpec readers translate from. -->
     <ProjectReference Include="..\..\..\..\pwiz\src\IdentData\IdentData.csproj" />
+    <!-- Analysis supplies SpectrumList_PeakPicker; PwizSharpSpecFileReader wraps the
+         vendor spectrum list with it so vendor-side centroiding kicks in for .wiff /
+         .raw / .baf / .lcd inputs (cpp parity: PwizReader.cpp:67-68 "peakPicking true 1-"). -->
+    <ProjectReference Include="..\..\..\..\pwiz\src\Analysis\Analysis.csproj" />
   </ItemGroup>
 
   <ItemGroup>
