@@ -74,7 +74,7 @@ namespace pwiz.OspreySharp.Core
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
 
         // Note: the OSPREY_EXIT_AFTER_SCORING env var that used to live here
-        // was retired in favor of the --no-join CLI flag. See the HPC
+        // was retired in favor of the --task PerFileScoring CLI flag. See the HPC
         // scoring split work in AnalysisPipeline.Run. ExitAfterCalibration
         // (Stage 3) stays because it has no production CLI analog.
 

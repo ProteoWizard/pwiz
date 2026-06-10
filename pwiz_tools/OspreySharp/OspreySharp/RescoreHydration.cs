@@ -92,7 +92,7 @@ namespace pwiz.OspreySharp
         /// they can compute the join-wide reconciliation parameter hash —
         /// the worker's <c>OspreyConfig.InputFiles</c> only has its single
         /// parquet, but the hash that the downstream
-        /// <c>--join-at-pass=2</c> merge node validates is computed over
+        /// <c>--task MergeNode</c> merge node validates is computed over
         /// all files. Empty list when reading a v1 envelope (the worker
         /// falls back to its <c>InputFiles</c> stems in that case).
         /// </summary>
@@ -412,8 +412,9 @@ namespace pwiz.OspreySharp
 
         /// <summary>
         /// Inverse of <c>scores_path_for_input</c>: given
-        /// <c>/data/sample1.scores.parquet</c>, produce a synthetic input
-        /// path <c>/data/sample1.mzML</c> whose stem matches what the
+        /// <c>/data/sample1.scores.parquet</c> (or its reconciled sibling
+        /// <c>/data/sample1.scores-reconciled.parquet</c>), produce a synthetic
+        /// input path <c>/data/sample1.mzML</c> whose stem matches what the
         /// worker used. This lets the worker reuse the existing
         /// path-derivation helpers (FDR sidecars, calibration JSON,
         /// reconciliation JSON) without duplicating them. The synthetic
@@ -426,9 +427,17 @@ namespace pwiz.OspreySharp
             // GetFileNameWithoutExtension returns "" not null for valid paths
             // and throws on invalid input, so the result is never null here.
             string stem = Path.GetFileNameWithoutExtension(parquetPath);
-            // Strip a trailing ".scores" if present.
+            // Strip the trailing ".scores-reconciled" (Stage 6 reconciled output)
+            // or ".scores" (Stage 4 output). These two tokens never collide with
+            // an input stem because Stage 4 always appends exactly ".scores"
+            // (so the only way a name ends in ".scores-reconciled" is Stage 6).
+            // GetFileNameWithoutExtension of "x.scores-reconciled.parquet" is
+            // "x.scores-reconciled"; check the longer token first.
+            const string ReconciledScoresSuffix = ".scores-reconciled";
             const string ScoresSuffix = ".scores";
-            if (stem.EndsWith(ScoresSuffix, StringComparison.Ordinal))
+            if (stem.EndsWith(ReconciledScoresSuffix, StringComparison.Ordinal))
+                stem = stem.Substring(0, stem.Length - ReconciledScoresSuffix.Length);
+            else if (stem.EndsWith(ScoresSuffix, StringComparison.Ordinal))
                 stem = stem.Substring(0, stem.Length - ScoresSuffix.Length);
             string parent = Path.GetDirectoryName(parquetPath);
             string filename = stem + ".mzML";

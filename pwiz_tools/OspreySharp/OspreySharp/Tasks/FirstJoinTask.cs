@@ -68,12 +68,50 @@ namespace pwiz.OspreySharp.Tasks
     {
         public override string Name => @"FirstJoin";
 
-        // Outputs reached by downstream tasks through ctx.GetTask<FirstJoinTask>().
-        // DidPlan is the gate downstream consumers (PerFileRescoreTask)
-        // check to decide whether the Stage 6 planning state below is
-        // meaningful or whether planning was skipped. Defaults are
-        // non-null empty collections so an accessor on a not-yet-run
-        // (or no-op) task never NPEs.
+        /// <summary>
+        /// Computes the Stage 5 first-join (Percolator first-pass FDR + Stage 6
+        /// planning) in straight-through, --task FirstJoin (StopAfterStage5), and
+        /// the --input-scores full-pipeline. Excluded in --task PerFileScoring
+        /// (stops at Stage 1-4), --task PerFileRescore, and the --task MergeNode
+        /// stage (where it rehydrates the bundle rather than recomputing).
+        /// </summary>
+        public override bool IsIncluded(PipelineContext ctx)
+        {
+            var c = ctx.Config;
+            bool inputs = c.InputScores != null && c.InputScores.Count > 0;
+            // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
+            // invariant: StopAfterStage5 is set by --task FirstJoin, which
+            // requires --input-scores, so StopAfterStage5 implies inputs at
+            // parse time -- a --task FirstJoin run can never reach here without
+            // InputScores.
+            // ProgramTests.TestValidateFirstJoinRequiresInputScores pins that
+            // rejection, since the membership truth table (PipelineMembershipTest)
+            // does not encode the cross-flag dependency on its own.
+            return (!inputs && !c.NoJoin)
+                || (inputs && c.StopAfterStage5)
+                || (inputs && !c.NoJoin && !c.ExpectReconciledInput);
+        }
+
+        // Stage 5/6 planning byproducts this task publishes. The same four types
+        // are published from Run (Stage-5 computed values) and from the
+        // bundle-adopt Rehydrate path -- publishing into one typed slot from
+        // both producers is what dissolves the former dual-source getters
+        // (_didPlan ? computed : bundle.X), since a consumer reads the slot
+        // without caring which path filled it.
+        public override IEnumerable<Type> Publishes => new[]
+        {
+            typeof(PerFileConsensusTargets), typeof(ReconciliationActions),
+            typeof(RefinedCalibrations), typeof(PerFileGapFillForRescore),
+            typeof(CompactedEntries)
+        };
+
+        // Stage 6 planning state. Set by PlanStage6 (Run) and published into the
+        // typed byproduct slots that downstream consumers pull via ctx.Get<T>();
+        // the bundle-adopt Rehydrate path publishes the same slots from the
+        // worker bundle instead. DidPlan remains the gate PerFileRescore's
+        // self-gate checks to tell "planning ran" from "planning was skipped."
+        // Defaults are non-null empty collections so a published slot from a
+        // no-op / stopped-after-Stage-5 run is never null.
         private bool _didPlan;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
@@ -84,53 +122,19 @@ namespace pwiz.OspreySharp.Tasks
         private IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFillForRescore
             = new Dictionary<string, List<GapFillTarget>>();
 
-        // Phase B lazy-rehydrate gate. See PerFileScoringTask for the
-        // mechanism; FirstJoinTask uses the same idempotent Run pattern.
-        private bool _runOrHydrated;
-
-        public bool DidPlan(PipelineContext ctx) { EnsureHydrated(ctx); return _didPlan; }
-
-        public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> GetPerFileConsensusTargets(PipelineContext ctx)
-        {
-            EnsureHydrated(ctx);
-            if (_didPlan) return _perFileConsensusTargets;
-            return ConsensusTargetsFromBundleOrEmpty(ctx);
-        }
-
-        public IReadOnlyDictionary<(string FileName, int Index), ReconcileAction> GetReconciliationActions(PipelineContext ctx)
-        {
-            EnsureHydrated(ctx);
-            if (_didPlan) return _reconciliationActions;
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
-            return bundle != null ? bundle.ReconciliationActions : _reconciliationActions;
-        }
-
-        public IReadOnlyDictionary<string, RTCalibration> GetRefinedCalibrations(PipelineContext ctx)
-        {
-            EnsureHydrated(ctx);
-            if (_didPlan) return _refinedCalibrations;
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
-            return bundle != null ? bundle.RefinedCalibrations : _refinedCalibrations;
-        }
-
-        public IReadOnlyDictionary<string, List<GapFillTarget>> GetPerFileGapFillForRescore(PipelineContext ctx)
-        {
-            EnsureHydrated(ctx);
-            if (_didPlan) return _perFileGapFillForRescore;
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
-            return bundle != null ? bundle.PerFileGapFill : _perFileGapFillForRescore;
-        }
+        public bool DidPlan(PipelineContext ctx) { return _didPlan; }
 
         // Bundle.PerFileConsensusTargets is null at hydration time (consensus
         // is meaningful only post-compaction); compute on demand from the
         // post-compaction stub list. Matches the worker's RunWorker-side
         // multi-charge selection so the worker entry-path collapse keeps
         // identical consensus output regardless of which producer task
-        // owned the hydration.
+        // owned the hydration. Takes the already-resolved bundle so it serves
+        // both the worker-published bundle and the straight-through-resume
+        // bundle this task builds from its own sidecars.
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>>
-            ConsensusTargetsFromBundleOrEmpty(PipelineContext ctx)
+            ConsensusTargetsFromBundle(PipelineContext ctx, RescoreInputs bundle)
         {
-            var bundle = ctx.GetTask<PerFileScoringTask>().GetRescoreInputs(ctx);
             if (bundle == null) return _perFileConsensusTargets;
             if (bundle.PerFileConsensusTargets != null) return bundle.PerFileConsensusTargets;
             var computed = new Dictionary<string,
@@ -142,12 +146,6 @@ namespace pwiz.OspreySharp.Tasks
             }
             bundle.PerFileConsensusTargets = computed;
             return computed;
-        }
-
-        private void EnsureHydrated(PipelineContext ctx)
-        {
-            if (_runOrHydrated) return;
-            Run(ctx);
         }
 
         // Phase B resume surface. Reads each file's .scores.parquet,
@@ -178,73 +176,279 @@ namespace pwiz.OspreySharp.Tasks
         public override string ValidityKey(PipelineContext ctx)
         {
             return base.ValidityKey(ctx)
-                + @";reconciliation=" + ctx.Config.ReconciliationParameterHash();
+                + @";reconciliation=" + ctx.Config.Identity.ReconciliationParameterHash();
         }
 
         public override bool Run(PipelineContext ctx)
         {
-            if (_runOrHydrated) return true;
-            _runOrHydrated = true;
+            // Compute path (Stage 5 first-pass FDR + Stage 6 planning): the
+            // upstream PerFileScoring task did NOT hydrate a rescore bundle, so
+            // this run owns the full first-join work. The bundle-present
+            // disk-load counterpart lives in Rehydrate. The driver reaches this
+            // task here only in the bundle-absent modes (straight-through,
+            // --task FirstJoin); a worker-mode consumer materializes it via
+            // ctx.Demand which routes to Rehydrate.
             _ctx = ctx;
             var config = ctx.Config;
-            var perFileScoring = ctx.GetTask<PerFileScoringTask>();
-            // Probe-the-disk dispatch: when the upstream PerFileScoring
-            // task hydrated a rescore bundle from sibling sidecars on
-            // disk, Stage 5 work (Percolator first-pass FDR, first-pass
-            // protein FDR, 1st-pass sidecar write) and Stage 6 planning
-            // are already encoded in that bundle's q-values and
-            // reconciliation state. Run the bundle path in those cases;
-            // run the original full Stage 5+6 path otherwise. Single
-            // dispatch covers both stage7 (--join-at-pass=2) and the
-            // collapsed stage6 worker path, replacing the prior
-            // ExpectReconciledInput-only gate.
-            var bundle = perFileScoring.GetRescoreInputs(ctx);
+
             // Mid-Run crash safety: clear stale sidecars for the outputs
             // this task is about to produce. A crash before the matching
             // post-Run sidecar write leaves no false-positive sidecar
-            // claiming the partially-written output is valid. Skipped on
-            // the bundle path because that path only overlays existing
-            // 1st/2nd-pass sidecars onto in-memory stubs; it doesn't write
-            // Pass1Path or reconciliation.json, so the sidecar delete
-            // would invalidate valid outputs from an upstream
-            // straight-through run -- and crucially, breaks resume on a
-            // lazy-hydrate path from a downstream task.
-            if (bundle == null)
-            {
-                foreach (var output in Outputs(ctx))
-                    TaskValiditySidecar.Delete(output, Name);
-            }
-            var perFileEntries = perFileScoring.GetPerFileEntries(ctx);
-            var perFileCalibrations = perFileScoring.GetPerFileCalibrations(ctx);
-            var perFileParquetPaths = perFileScoring.GetPerFileParquetPaths(ctx);
-            var fullLibrary = perFileScoring.GetFullLibrary(ctx);
+            // claiming the partially-written output is valid.
+            foreach (var output in Outputs(ctx))
+                TaskValiditySidecar.Delete(output, Name);
 
-            // Stage 5: First-pass FDR
-            // Skipped under the bundle path: the 1st-pass sidecar
-            // hydrated by PerFileScoringTask already carries the SVM
-            // scores + q-values from the straight-through pipeline run
-            // that produced the per-file boundary files. Re-running
-            // Percolator here would re-train SVMs on the same data and
-            // drift vs the sidecar. Mirrors Rust's compute_fdr_from_stubs
-            // skip (pipeline.rs:3916).
-            if (bundle == null)
+            // ScoredEntries (pre-compaction) -- this task is the one that
+            // compacts the shared buffer below, so it reads it before that.
+            var perFileEntries = ctx.Get<ScoredEntries>().Value;
+            var perFileCalibrations = ctx.Get<PerFileCalibrations>().Value;
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            var fullLibrary = ctx.Get<FullLibrary>().Value;
+
+            // Stage 5: First-pass FDR.
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(string.Format(@"Running {0} FDR control on coelution results...",
+                config.FdrMethod));
+
+            var swFdr = Stopwatch.StartNew();
+            RunFdr(perFileEntries, fullLibrary, config);
+            swFdr.Stop();
+            ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
+                swFdr.Elapsed.TotalSeconds));
+
+            LogFirstPassResultsAndDump(perFileEntries, config);
+
+            // First-pass protein FDR: runs on the full pre-compaction
+            // peptide pool so target and decoy proteins compete on a
+            // symmetric set. Sets RunProteinQvalue on every FdrEntry,
+            // which Stage 6 reconciliation reads via the protein-rescue
+            // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
+            // ("First-pass protein FDR").
+            if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
             {
                 ctx.LogInfo(string.Empty);
-                ctx.LogInfo(string.Format(@"Running {0} FDR control on coelution results...",
-                    config.FdrMethod));
-
-                var swFdr = Stopwatch.StartNew();
-                RunFdr(perFileEntries, fullLibrary, config);
-                swFdr.Stop();
-                ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
-                    swFdr.Elapsed.TotalSeconds));
+                ctx.LogInfo(@"First-pass protein FDR");
+                var swFirstPassProtein = Stopwatch.StartNew();
+                RunFirstPassProteinFdr(perFileEntries, fullLibrary, config);
+                swFirstPassProtein.Stop();
+                ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
+                    swFirstPassProtein.Elapsed.TotalSeconds));
             }
-            else
+
+            // Persist the per-file `.1st-pass.fdr_scores.bin` sidecars
+            // BEFORE compaction so every stub (passing or not) carries
+            // its q-values into the file. Mirrors osprey/src/pipeline.rs
+            // around persist_fdr_scores at line ~3180. Stage 6 workers
+            // re-derive the post-compaction set by applying the q-value
+            // threshold themselves, so they need every entry's q-values
+            // -- not just the survivors.
+            int fdrSidecarFailures = WriteFdrScoresSidecars(
+                perFileEntries, perFileParquetPaths, config);
+            if (fdrSidecarFailures > 0 && config.StopAfterStage5)
             {
-                ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
+                ctx.LogError(string.Format(
+                    @"--task FirstJoin: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
+                    @"writes failed; boundary file pair is incomplete. See warnings above.",
+                    fdrSidecarFailures, perFileEntries.Count));
+                ctx.ExitCode = 1;
+                return false;
             }
 
-            // Log first-pass results
+            // Compaction: drop entries whose base_id (entry_id with the
+            // decoy bit masked off) does not pass either the peptide-q
+            // or protein-q gate. Target and paired decoy share base_id
+            // and are kept or dropped together. Mirrors Rust
+            // pipeline.rs:3094-3132. Without this, Stage 6 multi-charge
+            // consensus selection groups by modified_sequence and
+            // includes non-passing charge states that Rust has already
+            // dropped, producing different rescore-target sets and
+            // different per-file Vec positions.
+            CompactFirstPass(perFileEntries, null, config);
+
+            // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
+            // (MergeNodeTask) owns its own 2nd-pass rehydrate -- it reloads (or
+            // recomputes) the 2nd-pass scores onto the shared entry buffer
+            // before protein FDR and the blib write. A former overlay at this
+            // point was redundant (its result was overwritten by MergeNode's,
+            // and nothing between here and Stage 7 consumes it -- Stage 6 is a
+            // no-op once a 2nd-pass sidecar exists) and forced Stage 5 to reach
+            // forward into MergeNodeTask for its validity key. Removed so Stage 5
+            // holds no knowledge of what runs after it.
+
+            // Stage 6: planning checkpoint -- multi-charge consensus +
+            // consensus RTs + per-file calibration refit + reconciliation
+            // planning. Produces the inputs PerFileRescoreTask consumes.
+            // Runs even single-file -- multi-charge consensus + the planning
+            // checkpoint must still execute to match Rust; cross-run
+            // reconciliation degenerates to zero actions there.
+            if (perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
+            {
+                if (!PlanStage6(perFileEntries, perFileCalibrations,
+                        perFileParquetPaths, fullLibrary, config))
+                    return false;
+            }
+
+            // Publish the Stage 6 planning byproducts (computed values, or the
+            // empty defaults when PlanStage6 was skipped / stopped after Stage
+            // 5), plus the CompactedEntries milestone of the shared buffer that
+            // CompactFirstPass produced above. Getters still serve existing
+            // consumers in this commit.
+            ctx.Publish(new PerFileConsensusTargets(_perFileConsensusTargets));
+            ctx.Publish(new ReconciliationActions(_reconciliationActions));
+            ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
+            ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
+            ctx.Publish(new CompactedEntries(perFileEntries));
+            return true;
+        }
+
+        public override bool Rehydrate(PipelineContext ctx)
+        {
+            // Disk-load path: the Stage 5 SVM scores + q-values, first-pass
+            // protein FDR, and Stage 6 planning state already exist on disk in
+            // the boundary sidecars (.1st-pass.fdr_scores.bin +
+            // .reconciliation.json) a prior straight-through run wrote.
+            // Re-running any of them here would re-train SVMs / re-plan on
+            // identical inputs and drift vs the sidecars (mirrors Rust's
+            // compute_fdr_from_stubs skip, pipeline.rs:3916). All that remains
+            // is to adopt a post-Stage-5 bundle and compact. The compute
+            // counterpart is Run.
+            _ctx = ctx;
+            var config = ctx.Config;
+            var perFileEntries = ctx.Get<ScoredEntries>().Value;
+
+            // The bundle to adopt. In worker mode the upstream PerFileScoring
+            // task hydrated it from sibling sidecars and published it. On a
+            // straight-through resume it published null (no bundle): the driver
+            // skipped THIS task's Run because its own 1st-pass + reconciliation
+            // sidecars were already valid on disk (CanRehydrate) and a
+            // downstream task is the first to touch its state. Build the
+            // equivalent bundle here from those own outputs rather than
+            // deferring to Run -- so a lazy Demand loads, never computes, and
+            // Run stays outer-loop-only.
+            var bundle = ctx.Get<RescoreBundle>().Value;
+            if (bundle == null)
+            {
+                bundle = LoadOwnReconciliationBundle(ctx, perFileEntries);
+                if (bundle == null)
+                    return false;  // load failure; ExitCode already set
+            }
+
+            ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
+
+            LogFirstPassResultsAndDump(perFileEntries, config);
+
+            // Compaction delegates to RescoreCompaction.Apply on the bundle
+            // path so the pre-compaction (file, vec_idx) keys in
+            // bundle.ReconciliationActions get rebuilt to post-compaction
+            // indices for PerFileRescoreTask.
+            CompactFirstPass(perFileEntries, bundle, config);
+
+            // Publish the SAME four planning byproducts as Run, but sourced from
+            // the adopted bundle (post-compaction). A consumer pulls
+            // ctx.Get<ReconciliationActions>() etc. without knowing whether this
+            // task computed them (Run), adopted them from the worker bundle, or
+            // rebuilt them from its own sidecars (straight-through resume) --
+            // the dual-source getter fallback collapses into one slot.
+            ctx.Publish(new ReconciliationActions(bundle.ReconciliationActions));
+            ctx.Publish(new RefinedCalibrations(bundle.RefinedCalibrations));
+            ctx.Publish(new PerFileGapFillForRescore(bundle.PerFileGapFill));
+            ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
+            ctx.Publish(new CompactedEntries(perFileEntries));
+            return true;
+        }
+
+        /// <summary>
+        /// Build the post-Stage-5 rescore bundle from THIS task's own
+        /// <c>.1st-pass.fdr_scores.bin</c> + <c>.reconciliation.json</c> sidecars
+        /// for a straight-through resume, where the driver skipped
+        /// <see cref="Run"/> because those outputs were already valid on disk
+        /// (<see cref="PipelineContext.CanRehydrate"/>) and a downstream task is
+        /// the first to touch this task's state. Overlays the first-pass q-values
+        /// onto the shared stubs and parses the reconciliation envelopes -- the
+        /// same bundle PerFileScoring's worker-mode hydration produces, but owned
+        /// here against this task's own outputs. Returns <c>null</c> (with
+        /// <see cref="PipelineContext.ExitCode"/> set) on a load failure; because
+        /// CanRehydrate gated the sidecars as valid, that is a genuine fault, not
+        /// a "recompute instead" case. Clears PIN features on the overlaid stubs,
+        /// exactly as the worker hydration does, so PerFileRescore's "Features !=
+        /// null means rescored" parquet criterion and MergeNode's feature reload
+        /// stay correct.
+        /// </summary>
+        private RescoreInputs LoadOwnReconciliationBundle(
+            PipelineContext ctx,
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            // Resolve each loaded file's own .scores.parquet path in
+            // perFileEntries order so HydrateReconciliationOverlay's
+            // index-correspondence contract (entries[i] <-> parquetPaths[i])
+            // holds; PerFileScoring published these paths as PerFileParquetPaths.
+            var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
+            var parquetPaths = new List<string>(perFileEntries.Count);
+            foreach (var kvp in perFileEntries)
+            {
+                if (!perFileParquetPaths.TryGetValue(kvp.Key, out var path))
+                {
+                    ctx.LogError(string.Format(
+                        @"Resume rehydrate: no scores parquet path published for {0}", kvp.Key));
+                    ctx.ExitCode = 1;
+                    return null;
+                }
+                parquetPaths.Add(path);
+            }
+
+            RescoreInputs bundle;
+            try
+            {
+                bundle = RescoreHydration.HydrateReconciliationOverlay(perFileEntries, parquetPaths);
+            }
+            catch (InvalidDataException ex)
+            {
+                ctx.LogError(string.Format(
+                    @"Resume rehydrate: failed to hydrate reconciliation bundle from own sidecars: {0}",
+                    ex.Message));
+                ctx.ExitCode = 1;
+                return null;
+            }
+
+            // Clear PIN features on the overlaid stubs so PerFileRescore's
+            // "Features != null means this entry was rescored" parquet criterion
+            // stays correct and MergeNode reloads features from the reconciled
+            // parquet -- mirrors PerFileScoringTask.HydrateRescoreBundleIfPresent.
+            foreach (var kvp in perFileEntries)
+                foreach (var entry in kvp.Value)
+                    entry.Features = null;
+
+            return bundle;
+        }
+
+        /// <summary>
+        /// Shared Stage 5 reporting for <see cref="Run"/> and
+        /// <see cref="Rehydrate"/>: log per-file first-pass passing counts,
+        /// then the diagnostic Percolator dump (gated by
+        /// OSPREY_DUMP_PERCOLATOR; written before compaction drops rows so the
+        /// cross-impl diff sees both targets and decoys) and the
+        /// OSPREY_PERCOLATOR_ONLY measurement exit.
+        /// </summary>
+        private void LogFirstPassResultsAndDump(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            OspreyConfig config)
+        {
+            LogFirstPassResults(perFileEntries, config);
+
+            if (OspreyDiagnostics.DumpPercolator)
+                OspreyDiagnostics.WriteStage5PercolatorDump(perFileEntries);
+            if (OspreyDiagnostics.PercolatorOnly)
+                OspreyDiagnostics.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
+        }
+
+        /// <summary>
+        /// Log per-file and total first-pass passing-target counts at the
+        /// configured run-level FDR.
+        /// </summary>
+        private void LogFirstPassResults(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            OspreyConfig config)
+        {
             int passingTargets = 0;
             foreach (var kvp in perFileEntries)
             {
@@ -257,86 +461,28 @@ namespace pwiz.OspreySharp.Tasks
                         fileTargets++;
                     }
                 }
-                ctx.LogInfo(string.Format(@"  {0}: {1} precursors at {2:P1} run-level FDR",
+                _ctx.LogInfo(string.Format(@"  {0}: {1} precursors at {2:P1} run-level FDR",
                     kvp.Key, fileTargets, config.RunFdr));
                 passingTargets += fileTargets;
             }
-            ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
+            _ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
                 passingTargets));
+        }
 
-            // Stage 5 diagnostic dump. Gated by OSPREY_DUMP_PERCOLATOR=1;
-            // exits when OSPREY_PERCOLATOR_ONLY=1 is also set. Writes all
-            // four q-values plus SVM score and PEP for every FdrEntry,
-            // before compaction drops any rows, so the cross-impl diff
-            // sees both targets and decoys.
-            if (OspreyDiagnostics.DumpPercolator)
-                OspreyDiagnostics.WriteStage5PercolatorDump(perFileEntries);
-            // OSPREY_PERCOLATOR_ONLY exits after Stage 5 work completes,
-            // independently of whether the dump ran. Lets us measure
-            // production stage5 wall without paying the dump cost.
-            if (OspreyDiagnostics.PercolatorOnly)
-                OspreyDiagnostics.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
-
-            // First-pass protein FDR: runs on the full pre-compaction
-            // peptide pool so target and decoy proteins compete on a
-            // symmetric set. Sets RunProteinQvalue on every FdrEntry,
-            // which Stage 6 reconciliation reads via the protein-rescue
-            // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
-            // ("First-pass protein FDR"). Skipped on the bundle path:
-            // the 1st-pass FDR sidecar already carries RunProteinQvalue
-            // from the original straight-through pipeline. Re-running
-            // the deterministic protein-FDR computation on identical
-            // inputs would just overwrite the loaded values with the
-            // same numbers (~17s on Astral 1-file; saves duplicate work
-            // on every post-Stage-6 rehydration entry).
-            if (config.ProteinFdr.HasValue && perFileEntries.Count > 0
-                && bundle == null)
-            {
-                ctx.LogInfo(string.Empty);
-                ctx.LogInfo(@"First-pass protein FDR");
-                var swFirstPassProtein = Stopwatch.StartNew();
-                RunFirstPassProteinFdr(perFileEntries, fullLibrary, config);
-                swFirstPassProtein.Stop();
-                ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
-                    swFirstPassProtein.Elapsed.TotalSeconds));
-            }
-
-            // Compaction: drop entries whose base_id (entry_id with the
-            // decoy bit masked off) does not pass either the peptide-q
-            // or protein-q gate. Target and paired decoy share base_id
-            // and are kept or dropped together. Mirrors Rust
-            // pipeline.rs:3094-3132. Without this, Stage 6 multi-charge
-            // consensus selection groups by modified_sequence and
-            // includes non-passing charge states that Rust has already
-            // dropped, producing different rescore-target sets and
-            // different per-file Vec positions.
-            // Persist the per-file `.1st-pass.fdr_scores.bin` sidecars
-            // BEFORE compaction so every stub (passing or not) carries
-            // its q-values into the file. Mirrors osprey/src/pipeline.rs
-            // around persist_fdr_scores at line ~3180. Stage 6 workers
-            // re-derive the post-compaction set by applying the q-value
-            // threshold themselves, so they need every entry's q-values
-            // -- not just the survivors. Skipped on the bundle path:
-            // the 1st-pass sidecar is what we just LOADED from to seed
-            // entries, so re-writing produces the same bytes (any
-            // divergence would be a sidecar-load bug, not a write
-            // requirement). Saves ~6s I/O per bundle-hydrated invocation.
-            int fdrSidecarFailures = 0;
-            if (bundle == null)
-            {
-                fdrSidecarFailures = WriteFdrScoresSidecars(
-                    perFileEntries, perFileParquetPaths, config);
-                if (fdrSidecarFailures > 0 && config.StopAfterStage5)
-                {
-                    ctx.LogError(string.Format(
-                        @"--join-at-pass=1 --join-only: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
-                        @"writes failed; boundary file pair is incomplete. See warnings above.",
-                        fdrSidecarFailures, perFileEntries.Count));
-                    ctx.ExitCode = 1;
-                    return false;
-                }
-            }
-
+        /// <summary>
+        /// First-pass compaction: drop entries whose base_id (entry_id with
+        /// the decoy bit masked off) does not pass either the peptide-q or
+        /// protein-q gate. Target and paired decoy share base_id and are
+        /// kept or dropped together. On the bundle path, delegates to
+        /// RescoreCompaction.Apply so the pre-compaction (file, vec_idx)
+        /// keys in bundle.ReconciliationActions get rebuilt to
+        /// post-compaction indices. Mirrors Rust pipeline.rs:3094-3132.
+        /// </summary>
+        private void CompactFirstPass(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            RescoreInputs bundle,
+            OspreyConfig config)
+        {
             if (perFileEntries.Count > 0)
             {
                 if (bundle != null)
@@ -351,7 +497,7 @@ namespace pwiz.OspreySharp.Tasks
                     // failure the worker's hand-rolled compaction at
                     // RescoreCompaction.Apply was written to avoid.
                     var stats = RescoreCompaction.Apply(bundle, config);
-                    ctx.LogInfo(string.Format(
+                    _ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
                         stats.EntriesBefore, stats.EntriesAfter,
                         stats.FirstPassBaseIds, stats.DroppedActions));
@@ -382,461 +528,325 @@ namespace pwiz.OspreySharp.Tasks
                         kvp.Value.TrimExcess();
                         afterCount += kvp.Value.Count;
                     }
-                    ctx.LogInfo(string.Format(
+                    _ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
                         beforeCount, afterCount, firstPassBaseIds.Count));
                 }
             }
+        }
 
-            // Re-load the 2nd-pass FDR sidecar onto the post-compaction
-            // stub list when every file has a 2nd-pass sidecar that
-            // matches the current MergeNode validity key. The 2nd-pass
-            // scores + q-values are what Stage 7 (protein FDR) and the
-            // blib writer consume. Loading happens AFTER compaction
-            // because the 2nd-pass sidecar was written from the
-            // post-compaction state -- overlaying it before compaction
-            // would either silently miss records (if the pre-compaction
-            // entries dict happens to also contain compaction-dropped
-            // entry_ids that the 2nd-pass never saw) or scramble
-            // q-values on entries the 2nd-pass had already discarded.
-            // TryReadOverlay tolerates count mismatch (records whose
-            // entry_id is unknown to the caller's dict are skipped),
-            // so the constraint here is correctness-of-state, not
-            // size-equality. Mirrors Rust's load-order inversion at
-            // pipeline.rs:4030-4076.
-            //
-            // Gate is "binary present + sidecar (when one exists) is
-            // valid". A stale 2nd-pass sidecar left over from a prior
-            // run with different config is rejected; bare binaries with
-            // no sidecar at all are treated as trusted boundary inputs.
-            // The "absent sidecar = trusted" leg is what lets Test-
-            // Regression freeze Rust outputs (which don't carry
-            // OspreySharp's .osprey.task sidecars) as C# inputs without
-            // having to mint sidecars at freeze time. Test-Snapshot
-            // separately propagates the sidecars MergeNodeTask writes
-            // inline, so on a same-impl boundary the validity-key check
-            // is exercised.
-            bool allPass2Valid = config.InputFiles != null && perFileEntries.Count > 0;
-            if (allPass2Valid)
+        /// <summary>
+        /// Stage 6 planning checkpoint: multi-charge consensus per file,
+        /// cross-run consensus RTs, per-file calibration refit, and
+        /// reconciliation planning, then write the per-file
+        /// .reconciliation.json envelopes. On success sets the
+        /// <see cref="_didPlan"/> output fields the next task
+        /// (PerFileRescoreTask) consumes and returns true. Returns false
+        /// (with <see cref="PipelineContext.ExitCode"/> set) on the
+        /// --task FirstJoin StopAfterStage5 exit paths.
+        /// Mirrors pipeline.rs Stage 6 entry
+        /// block at lines 3208-3273. The caller gates this on
+        /// bundle == null (Stage 6 state already exists upstream on the
+        /// bundle path) + Reconciliation.Enabled.
+        /// </summary>
+        private bool PlanStage6(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            _ctx.LogInfo(string.Empty);
+            _ctx.LogInfo(@"Stage 6: planning");
+
+            // 1. Multi-charge consensus per file (independent — runs
+            //    first per Rust pipeline.rs:3217, before consensus
+            //    RT computation).
+            var perFileConsensusTargets = new Dictionary<string,
+                IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
+            foreach (var kvp in perFileEntries)
             {
-                var mergeNode = ctx.GetTask<MergeNodeTask>();
-                string mergeNodeValidityKey = mergeNode.ValidityKey(ctx);
-                string mergeNodeTaskName = mergeNode.Name;
-                foreach (var inputFile in config.InputFiles)
-                {
-                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile);
-                    if (!File.Exists(pass2Path))
-                    {
-                        allPass2Valid = false;
-                        break;
-                    }
-                    string sidecarPath = TaskValiditySidecar.PathFor(
-                        pass2Path, mergeNodeTaskName);
-                    if (File.Exists(sidecarPath)
-                        && !TaskValiditySidecar.IsValid(
-                            pass2Path, mergeNodeTaskName, mergeNodeValidityKey))
-                    {
-                        allPass2Valid = false;
-                        break;
-                    }
-                }
+                perFileConsensusTargets[kvp.Key] =
+                    MultiChargeConsensus.SelectRescoreTargets(kvp.Value, config.RunFdr);
             }
-            if (allPass2Valid)
+            int totalMulticharge = 0;
+            foreach (var kvp in perFileConsensusTargets)
+                totalMulticharge += kvp.Value.Count;
+            _ctx.LogInfo(string.Format(
+                @"Stage 6 multi-charge consensus: {0} entries need re-scoring across {1} files",
+                totalMulticharge, perFileEntries.Count));
+
+            if (OspreyDiagnostics.DumpMulticharge)
             {
-                // Same input-by-fileName map shape as the 1st-pass
-                // load above (sidecar paths derive from input file
-                // stem, not parquet stem).
-                var inputByFileName2 = new Dictionary<string, string>();
-                foreach (var inputFile in config.InputFiles)
-                    inputByFileName2[Path.GetFileNameWithoutExtension(inputFile)] = inputFile;
-
-                foreach (var kvp in perFileEntries)
-                {
-                    string fileName = kvp.Key;
-                    var entries = kvp.Value;
-                    // Sidecar overlay onto the compacted entry list.
-                    // The sidecar carries entry_ids per record, so we
-                    // skip the parquet re-read that earlier versions
-                    // used purely to size-check the load.
-                    if (!inputByFileName2.TryGetValue(fileName, out string inputFile2))
-                    {
-                        ctx.LogError(string.Format(
-                            @"2nd-pass overlay: no synthetic input path for {0}", fileName));
-                        ctx.ExitCode = 1;
-                        return false;
-                    }
-                    // Prefer 2nd-pass sidecar; fall back to 1st-pass.
-                    // Rust skips 2nd-pass sidecar write on single-file
-                    // runs (pipeline.rs:4489 gates on input_files > 1)
-                    // and reuses 1st-pass SVM scores in that case. The
-                    // 2nd-pass sidecar's distinct contents arise only
-                    // when reconciliation actually rescores entries
-                    // (multi-file Stellar+Astral). Without this
-                    // fallback, single-file --join-at-pass=2 errors
-                    // even though the 1st-pass scores are equivalent.
-                    string sidecarPath = FdrScoresSidecar.Pass2Path(inputFile2);
-                    FdrScoresSidecar.Pass expectedPass = FdrScoresSidecar.Pass.SecondPass;
-                    if (!File.Exists(sidecarPath))
-                    {
-                        string pass1Path = FdrScoresSidecar.Pass1Path(inputFile2);
-                        if (!File.Exists(pass1Path))
-                        {
-                            ctx.LogError(string.Format(
-                                @"2nd-pass overlay: neither 2nd-pass nor 1st-pass FDR " +
-                                @"sidecar found for {0} (looked at {1} and {2}). Re-run a " +
-                                @"straight-through pipeline to produce them.",
-                                fileName, sidecarPath, pass1Path));
-                            ctx.ExitCode = 1;
-                            return false;
-                        }
-                        sidecarPath = pass1Path;
-                        expectedPass = FdrScoresSidecar.Pass.FirstPass;
-                        ctx.LogInfo(string.Format(
-                            @"2nd-pass overlay: 2nd-pass sidecar missing for {0}; " +
-                            @"falling back to 1st-pass (matches Rust single-file behavior)",
-                            fileName));
-                    }
-                    // Overlay sidecar scores directly onto the
-                    // compacted list by entry_id. The sidecar's binary
-                    // format carries entry_ids per record, so we don't
-                    // need to re-read the parquet to size-match — that
-                    // re-read used to dominate Stage 7 cs walls (~7s
-                    // on Stellar 3-file). TryReadOverlay tolerates
-                    // sidecar entries that aren't in the compacted
-                    // dict (failing precursors dropped by compaction).
-                    var entriesByEntryId = new Dictionary<uint, FdrEntry>(entries.Count);
-                    for (int i = 0; i < entries.Count; i++)
-                        entriesByEntryId[entries[i].EntryId] = entries[i];
-                    if (!FdrScoresSidecar.TryReadOverlay(sidecarPath, entriesByEntryId, expectedPass))
-                    {
-                        ctx.LogError(string.Format(
-                            @"2nd-pass overlay: sidecar at {0} failed to load (expected {1}).",
-                            sidecarPath, expectedPass));
-                        ctx.ExitCode = 1;
-                        return false;
-                    }
-                }
-                ctx.LogInfo(string.Format(
-                    @"2nd-pass overlay: loaded sidecars for {0} file(s)",
-                    perFileEntries.Count));
-            }
-
-            // Stage 6: planning checkpoint — multi-charge consensus +
-            // cross-run consensus RTs + per-file calibration refit. The
-            // execution side (per-file rescore at locked boundaries +
-            // gap-fill + second-pass FDR) lives in PerFileRescoreTask;
-            // this pass produces the inputs that task consumes.
-            // Mirrors pipeline.rs Stage 6 entry block at lines 3208-3273.
-            // Stage 6 runs even with a single file: multi-charge
-            // consensus needs multiple charge states of the same
-            // peptide (which can exist within a single run), and the
-            // rescore loop applies the consensus targets it produces.
-            // Cross-run reconciliation degenerates to zero actions on
-            // a single file, but the planning checkpoint and the
-            // multi-charge rescore must still execute to match Rust's
-            // single-file behavior.
-            //
-            // Stage 6 planning is SKIPPED on the bundle path: the bundle's
-            // ReconciliationActions / RefinedCalibrations / PerFileGapFill
-            // already carry the Stage 6 planner output from the
-            // straight-through pipeline run that produced the boundary
-            // files on disk. Re-planning would re-apply multi-charge
-            // consensus + reconciliation on top of the already-reconciled
-            // state and drift vs the straight-through pipeline. Mirrors
-            // Rust's pipeline.rs:3823 expect_reconciled_input gate,
-            // generalized to "Stage 6 state already exists upstream".
-            if (bundle == null
-                && perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
-            {
-                ctx.LogInfo(string.Empty);
-                ctx.LogInfo(@"Stage 6: planning");
-
-                // 1. Multi-charge consensus per file (independent — runs
-                //    first per Rust pipeline.rs:3217, before consensus
-                //    RT computation).
-                var perFileConsensusTargets = new Dictionary<string,
-                    IReadOnlyList<(int Index, double Apex, double Start, double End)>>();
-                foreach (var kvp in perFileEntries)
-                {
-                    perFileConsensusTargets[kvp.Key] =
-                        MultiChargeConsensus.SelectRescoreTargets(kvp.Value, config.RunFdr);
-                }
-                int totalMulticharge = 0;
-                foreach (var kvp in perFileConsensusTargets)
-                    totalMulticharge += kvp.Value.Count;
-                ctx.LogInfo(string.Format(
-                    @"Stage 6 multi-charge consensus: {0} entries need re-scoring across {1} files",
-                    totalMulticharge, perFileEntries.Count));
-
-                if (OspreyDiagnostics.DumpMulticharge)
-                {
-                    var perFileForDump = new List<KeyValuePair<string,
-                        IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
-                    foreach (var kvp in perFileEntries)
-                    {
-                        perFileForDump.Add(new KeyValuePair<string,
-                            IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
-                    }
-                    OspreyDiagnostics.WriteStage6MultichargeDump(
-                        perFileForDump, perFileConsensusTargets);
-                    if (OspreyDiagnostics.MultichargeOnly)
-                        OspreyDiagnostics.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
-                }
-
-                // 2. Cross-run consensus RTs (target peptides + paired
-                //    decoys, sigmoid(score)-weighted median, hard
-                //    run_precursor_qvalue gate).
-                var perFileForRecon = new List<KeyValuePair<string,
+                var perFileForDump = new List<KeyValuePair<string,
                     IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
                 foreach (var kvp in perFileEntries)
                 {
-                    perFileForRecon.Add(new KeyValuePair<string,
+                    perFileForDump.Add(new KeyValuePair<string,
                         IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
                 }
-                // Cross-impl bisection trace for InversePredict: if the
-                // OSPREY_DUMP_INV_PREDICT env var is set, ConsensusRts
-                // populates this list with one row per detection. The
-                // caller drives the dump via OspreyDiagnostics so the
-                // FDR project doesn't have to know about the diagnostic
-                // file format.
-                List<InvPredictRecord> invPredictTrace = null;
-                if (OspreyDiagnostics.DumpInvPredict)
-                    invPredictTrace = new List<InvPredictRecord>();
+                OspreyDiagnostics.WriteStage6MultichargeDump(
+                    perFileForDump, perFileConsensusTargets);
+                if (OspreyDiagnostics.MultichargeOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
+            }
 
-                // Cross-file consensus is only meaningful with > 1 file.
-                // Mirrors Rust pipeline.rs:4146 where reconciliation_enabled
-                // requires per_file_entries.len() > 1 — single-file runs
-                // skip consensus computation, refit, and reconciliation
-                // entirely, leaving multi-charge consensus rescore as the
-                // only Stage 6 work performed.
-                IReadOnlyList<PeptideConsensusRT> consensus =
-                    perFileEntries.Count > 1
-                        ? ConsensusRts.Compute(
-                            perFileForRecon, perFileCalibrations,
-                            config.Reconciliation.ConsensusFdr,
-                            config.ProteinFdr ?? 0.0,
-                            invPredictTrace)
-                        : Array.Empty<PeptideConsensusRT>();
+            // 2. Cross-run consensus RTs (target peptides + paired
+            //    decoys, sigmoid(score)-weighted median, hard
+            //    run_precursor_qvalue gate).
+            var perFileForRecon = new List<KeyValuePair<string,
+                IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+            foreach (var kvp in perFileEntries)
+            {
+                perFileForRecon.Add(new KeyValuePair<string,
+                    IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+            }
+            // Cross-impl bisection trace for InversePredict: if the
+            // OSPREY_DUMP_INV_PREDICT env var is set, ConsensusRts
+            // populates this list with one row per detection. The
+            // caller drives the dump via OspreyDiagnostics so the
+            // FDR project doesn't have to know about the diagnostic
+            // file format.
+            List<InvPredictRecord> invPredictTrace = null;
+            if (OspreyDiagnostics.DumpInvPredict)
+                invPredictTrace = new List<InvPredictRecord>();
 
-                if (invPredictTrace != null)
-                {
-                    OspreyDiagnostics.WriteStage6InvPredictDump(invPredictTrace);
-                    if (OspreyDiagnostics.InvPredictOnly)
-                        OspreyDiagnostics.ExitAfterDump(@"OSPREY_INV_PREDICT_ONLY");
-                }
-                int nTargets = 0, nDecoys = 0;
-                foreach (var c in consensus)
-                {
-                    if (c.IsDecoy) nDecoys++;
-                    else nTargets++;
-                }
-                ctx.LogInfo(string.Format(
-                    @"Stage 6 consensus: {0} target peptides, {1} decoy peptides",
-                    nTargets, nDecoys));
+            // Cross-file consensus is only meaningful with > 1 file.
+            // Mirrors Rust pipeline.rs:4146 where reconciliation_enabled
+            // requires per_file_entries.len() > 1 — single-file runs
+            // skip consensus computation, refit, and reconciliation
+            // entirely, leaving multi-charge consensus rescore as the
+            // only Stage 6 work performed.
+            IReadOnlyList<PeptideConsensusRT> consensus =
+                perFileEntries.Count > 1
+                    ? ConsensusRts.Compute(
+                        perFileForRecon, perFileCalibrations,
+                        config.Reconciliation.ConsensusFdr,
+                        config.ProteinFdr ?? 0.0,
+                        invPredictTrace)
+                    : Array.Empty<PeptideConsensusRT>();
 
-                // Skip the dump on empty consensus to match Rust's
-                // dump_stage6_consensus, which silently elides the
-                // file when there is nothing to write (the dump is
-                // gated on Some(file) in Rust, derived from
-                // !consensus.is_empty()). Without this gate, C#
-                // emits a header-only cs_stage6_consensus.tsv and
-                // Test-Regression sees an asymmetric-absence FAIL
-                // even though both sides agree on the empty result.
-                if (OspreyDiagnostics.DumpConsensus && consensus.Count > 0)
-                {
-                    OspreyDiagnostics.WriteStage6ConsensusDump(consensus);
-                    if (OspreyDiagnostics.ConsensusOnly)
-                        OspreyDiagnostics.ExitAfterDump(@"OSPREY_CONSENSUS_ONLY");
-                }
+            if (invPredictTrace != null)
+            {
+                OspreyDiagnostics.WriteStage6InvPredictDump(invPredictTrace);
+                if (OspreyDiagnostics.InvPredictOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_INV_PREDICT_ONLY");
+            }
+            int nTargets = 0, nDecoys = 0;
+            foreach (var c in consensus)
+            {
+                if (c.IsDecoy) nDecoys++;
+                else nTargets++;
+            }
+            _ctx.LogInfo(string.Format(
+                @"Stage 6 consensus: {0} target peptides, {1} decoy peptides",
+                nTargets, nDecoys));
 
-                // 3. Per-file calibration refit on consensus peptides.
-                var refinedCalibrations = new Dictionary<string, RTCalibration>();
-                foreach (var kvp in perFileEntries)
-                {
-                    var refined = CalibrationRefit.Refit(consensus, kvp.Value,
-                        config.Reconciliation.ConsensusFdr);
-                    if (refined != null)
-                        refinedCalibrations[kvp.Key] = refined;
-                }
-                ctx.LogInfo(string.Format(
-                    @"Stage 6 refit: {0}/{1} files produced refined calibrations",
-                    refinedCalibrations.Count, perFileEntries.Count));
+            // Skip the dump on empty consensus to match Rust's
+            // dump_stage6_consensus, which silently elides the
+            // file when there is nothing to write (the dump is
+            // gated on Some(file) in Rust, derived from
+            // !consensus.is_empty()). Without this gate, C#
+            // emits a header-only cs_stage6_consensus.tsv and
+            // Test-Regression sees an asymmetric-absence FAIL
+            // even though both sides agree on the empty result.
+            if (OspreyDiagnostics.DumpConsensus && consensus.Count > 0)
+            {
+                OspreyDiagnostics.WriteStage6ConsensusDump(consensus);
+                if (OspreyDiagnostics.ConsensusOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_CONSENSUS_ONLY");
+            }
 
-                if (OspreyDiagnostics.DumpLoessFit)
-                {
-                    OspreyDiagnostics.WriteStage6LoessFitDump(refinedCalibrations);
-                    if (OspreyDiagnostics.LoessFitOnly)
-                        OspreyDiagnostics.ExitAfterDump(@"OSPREY_LOESS_FIT_ONLY");
-                }
+            // 3. Per-file calibration refit on consensus peptides.
+            var refinedCalibrations = new Dictionary<string, RTCalibration>();
+            foreach (var kvp in perFileEntries)
+            {
+                var refined = CalibrationRefit.Refit(consensus, kvp.Value,
+                    config.Reconciliation.ConsensusFdr);
+                if (refined != null)
+                    refinedCalibrations[kvp.Key] = refined;
+            }
+            _ctx.LogInfo(string.Format(
+                @"Stage 6 refit: {0}/{1} files produced refined calibrations",
+                refinedCalibrations.Count, perFileEntries.Count));
 
-                if (OspreyDiagnostics.DumpRefit)
-                {
-                    OspreyDiagnostics.WriteStage6RefitDump(refinedCalibrations);
-                    if (OspreyDiagnostics.RefitOnly)
-                        OspreyDiagnostics.ExitAfterDump(@"OSPREY_REFIT_ONLY");
-                }
+            if (OspreyDiagnostics.DumpLoessFit)
+            {
+                OspreyDiagnostics.WriteStage6LoessFitDump(refinedCalibrations);
+                if (OspreyDiagnostics.LoessFitOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_LOESS_FIT_ONLY");
+            }
 
-                // 4. Reconciliation planning. Reads each file's CWT
-                //    candidates from the parquet cache and asks the
-                //    planner to choose, per (file, entry), whether to
-                //    keep the existing peak, switch to a stored CWT
-                //    candidate at the consensus RT, or force an
-                //    integration window. Mirrors Rust pipeline.rs
-                //    reconciliation block at ~3260-3380.
-                IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
-                var perFileCwtCandidates = new Dictionary<string,
-                    IReadOnlyList<IReadOnlyList<CwtCandidate>>>();
-                foreach (var kvp in perFileEntries)
+            if (OspreyDiagnostics.DumpRefit)
+            {
+                OspreyDiagnostics.WriteStage6RefitDump(refinedCalibrations);
+                if (OspreyDiagnostics.RefitOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_REFIT_ONLY");
+            }
+
+            // 4. Reconciliation planning. Reads each file's CWT
+            //    candidates from the parquet cache and asks the
+            //    planner to choose, per (file, entry), whether to
+            //    keep the existing peak, switch to a stored CWT
+            //    candidate at the consensus RT, or force an
+            //    integration window. Mirrors Rust pipeline.rs
+            //    reconciliation block at ~3260-3380.
+            IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
+            var perFileCwtCandidates = new Dictionary<string,
+                IReadOnlyList<IReadOnlyList<CwtCandidate>>>();
+            foreach (var kvp in perFileEntries)
+            {
+                if (perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) &&
+                    File.Exists(parquetPath))
                 {
-                    if (perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) &&
-                        File.Exists(parquetPath))
+                    try
                     {
-                        try
+                        var cwtRows = ParquetScoreCache
+                            .LoadCwtCandidatesFromParquet(parquetPath);
+                        // The planner indexes CWT lists by
+                        // entry.ParquetIndex (mirrors Rust at
+                        // reconciliation.rs:672). cwtRows.Count is
+                        // the parquet's raw Stage-4 row count;
+                        // kvp.Value.Count is the post-first-pass-
+                        // compaction stub count. They are not
+                        // equal by design — what we actually need
+                        // to validate is that every stub's
+                        // ParquetIndex falls within cwtRows.
+                        uint maxIdx = 0;
+                        foreach (var entry in kvp.Value)
                         {
-                            var cwtRows = ParquetScoreCache
-                                .LoadCwtCandidatesFromParquet(parquetPath);
-                            // The planner indexes CWT lists by
-                            // entry.ParquetIndex (mirrors Rust at
-                            // reconciliation.rs:672). cwtRows.Count is
-                            // the parquet's raw Stage-4 row count;
-                            // kvp.Value.Count is the post-first-pass-
-                            // compaction stub count. They are not
-                            // equal by design — what we actually need
-                            // to validate is that every stub's
-                            // ParquetIndex falls within cwtRows.
-                            uint maxIdx = 0;
-                            foreach (var entry in kvp.Value)
-                            {
-                                if (entry.ParquetIndex > maxIdx)
-                                    maxIdx = entry.ParquetIndex;
-                            }
-                            if (kvp.Value.Count > 0 && maxIdx >= cwtRows.Count)
-                            {
-                                ctx.LogWarning(string.Format(
-                                    @"CWT candidate row count out of range for {0}: " +
-                                    @"max stub ParquetIndex={1}, parquet has {2} rows -- " +
-                                    @"skipping reconciliation planning for this file",
-                                    kvp.Key, maxIdx, cwtRows.Count));
-                                continue;
-                            }
-                            var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
-                            foreach (var row in cwtRows)
-                                converted.Add(row);
-                            perFileCwtCandidates[kvp.Key] = converted;
+                            if (entry.ParquetIndex > maxIdx)
+                                maxIdx = entry.ParquetIndex;
                         }
-                        catch (Exception ex)
+                        if (kvp.Value.Count > 0 && maxIdx >= cwtRows.Count)
                         {
-                            ctx.LogWarning(string.Format(
-                                @"Failed to load CWT candidates for {0}: {1}",
-                                kvp.Key, ex.Message));
+                            _ctx.LogWarning(string.Format(
+                                @"CWT candidate row count out of range for {0}: " +
+                                @"max stub ParquetIndex={1}, parquet has {2} rows -- " +
+                                @"skipping reconciliation planning for this file",
+                                kvp.Key, maxIdx, cwtRows.Count));
+                            continue;
                         }
+                        var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
+                        foreach (var row in cwtRows)
+                            converted.Add(row);
+                        perFileCwtCandidates[kvp.Key] = converted;
+                    }
+                    catch (Exception ex)
+                    {
+                        _ctx.LogWarning(string.Format(
+                            @"Failed to load CWT candidates for {0}: {1}",
+                            kvp.Key, ex.Message));
                     }
                 }
-                var perFileForPlan = new List<KeyValuePair<string,
-                    IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
-                foreach (var kvp in perFileEntries)
-                {
-                    perFileForPlan.Add(new KeyValuePair<string,
-                        IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
-                }
-                // Match Rust pipeline.rs:4223: only run the reconciliation
-                // planner when the cross-file consensus is non-empty.
-                // Single-file runs (or any case where no peptide had
-                // enough cross-replicate evidence to form a consensus
-                // RT) degenerate to zero reconciliation actions in
-                // Rust; C# previously planned regardless and produced
-                // ~22k spurious use_cwt actions on Stellar single-file.
-                if (perFileCwtCandidates.Count == perFileEntries.Count
-                    && consensus.Count > 0)
-                {
-                    reconciliationActions = ReconciliationPlanner.Plan(
-                        consensus,
-                        perFileForPlan,
-                        perFileCwtCandidates,
-                        refinedCalibrations,
-                        perFileCalibrations,
-                        config.Reconciliation.ConsensusFdr);
-                    ctx.LogInfo(string.Format(
-                        @"Stage 6 reconciliation: {0} per-(file, entry) actions planned",
-                        reconciliationActions.Count));
-                }
-                else if (consensus.Count == 0)
-                {
-                    ctx.LogInfo(@"Stage 6 reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
-                }
-                else
-                {
-                    ctx.LogInfo(string.Format(
-                        @"Stage 6 reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
-                        perFileCwtCandidates.Count, perFileEntries.Count));
-                }
-
-                // Stage 6 cross-impl bisection dump for the planner output.
-                // Fires unconditionally when OSPREY_DUMP_RECONCILIATION=1
-                // is set so the skipped / empty paths still produce a
-                // header-only TSV and still honor OSPREY_RECONCILIATION_ONLY
-                // for early exit. Mirrors the Rust side at
-                // crates/osprey/src/pipeline.rs after the reconciliation
-                // block closes.
-                if (OspreyDiagnostics.DumpReconciliation)
-                {
-                    var dumpActions = reconciliationActions
-                        ?? new Dictionary<(string File, int Index), ReconcileAction>();
-                    OspreyDiagnostics.WriteStage6ReconciliationDump(
-                        dumpActions, perFileForPlan);
-                    if (OspreyDiagnostics.ReconciliationOnly)
-                        OspreyDiagnostics.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
-                }
-
-                // Stage 5 → Stage 6 boundary: write the per-file
-                // .reconciliation.json envelope (the .fdr_scores.bin
-                // companion was already written above pre-compaction).
-                // Pairs with the --join-at-pass=1 --no-join Stage 6
-                // worker mode (next sprint).
-                //
-                // Surfaces gap-fill targets via out param so the in-
-                // process Stage 6 rescore call below can execute them.
-                int reconWriteFailures = WriteReconciliationFiles(
-                    perFileEntries,
-                    reconciliationActions,
+            }
+            var perFileForPlan = new List<KeyValuePair<string,
+                IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
+            foreach (var kvp in perFileEntries)
+            {
+                perFileForPlan.Add(new KeyValuePair<string,
+                    IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
+            }
+            // Match Rust pipeline.rs:4223: only run the reconciliation
+            // planner when the cross-file consensus is non-empty.
+            // Single-file runs (or any case where no peptide had
+            // enough cross-replicate evidence to form a consensus
+            // RT) degenerate to zero reconciliation actions in
+            // Rust; C# previously planned regardless and produced
+            // ~22k spurious use_cwt actions on Stellar single-file.
+            if (perFileCwtCandidates.Count == perFileEntries.Count
+                && consensus.Count > 0)
+            {
+                reconciliationActions = ReconciliationPlanner.Plan(
                     consensus,
+                    perFileForPlan,
+                    perFileCwtCandidates,
                     refinedCalibrations,
                     perFileCalibrations,
-                    fullLibrary,
-                    perFileParquetPaths,
-                    config,
-                    out var perFileGapFillForRescore);
-
-                if (config.StopAfterStage5)
-                {
-                    if (reconWriteFailures > 0)
-                    {
-                        ctx.LogError(string.Format(
-                            @"--join-at-pass=1 --join-only: {0}/{1} reconciliation.json " +
-                            @"writes failed; boundary file pair is incomplete. See warnings above.",
-                            reconWriteFailures, perFileEntries.Count));
-                        ctx.ExitCode = 1;
-                        return false;
-                    }
-                    ctx.LogInfo(string.Format(
-                        @"--join-at-pass=1 --join-only: Stage 5 + reconciliation planning " +
-                        @"complete; wrote {0} reconciliation.json + matching fdr_scores.bin " +
-                        @"sidecar pair(s). Exiting before Stage 6 rescore.",
-                        perFileEntries.Count));
-                    ctx.ExitCode = 0;
-                    return false;
-                }
-
-                // Surface outputs for the next task.
-                _didPlan = true;
-                _perFileConsensusTargets = perFileConsensusTargets;
-                _reconciliationActions = reconciliationActions
-                    ?? new Dictionary<(string, int), ReconcileAction>();
-                _refinedCalibrations = refinedCalibrations;
-                _perFileGapFillForRescore = perFileGapFillForRescore
-                    ?? new Dictionary<string, List<GapFillTarget>>();
+                    config.Reconciliation.ConsensusFdr);
+                _ctx.LogInfo(string.Format(
+                    @"Stage 6 reconciliation: {0} per-(file, entry) actions planned",
+                    reconciliationActions.Count));
+            }
+            else if (consensus.Count == 0)
+            {
+                _ctx.LogInfo(@"Stage 6 reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
+            }
+            else
+            {
+                _ctx.LogInfo(string.Format(
+                    @"Stage 6 reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
+                    perFileCwtCandidates.Count, perFileEntries.Count));
             }
 
+            // Stage 6 cross-impl bisection dump for the planner output.
+            // Fires unconditionally when OSPREY_DUMP_RECONCILIATION=1
+            // is set so the skipped / empty paths still produce a
+            // header-only TSV and still honor OSPREY_RECONCILIATION_ONLY
+            // for early exit. Mirrors the Rust side at
+            // crates/osprey/src/pipeline.rs after the reconciliation
+            // block closes.
+            if (OspreyDiagnostics.DumpReconciliation)
+            {
+                var dumpActions = reconciliationActions
+                    ?? new Dictionary<(string File, int Index), ReconcileAction>();
+                OspreyDiagnostics.WriteStage6ReconciliationDump(
+                    dumpActions, perFileForPlan);
+                if (OspreyDiagnostics.ReconciliationOnly)
+                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
+            }
+
+            // Stage 5 → Stage 6 boundary: write the per-file
+            // .reconciliation.json envelope (the .fdr_scores.bin
+            // companion was already written above pre-compaction).
+            // Pairs with the --task PerFileRescore Stage 6
+            // worker mode (next sprint).
+            //
+            // Surfaces gap-fill targets via out param so the in-
+            // process Stage 6 rescore call below can execute them.
+            int reconWriteFailures = WriteReconciliationFiles(
+                perFileEntries,
+                reconciliationActions,
+                consensus,
+                refinedCalibrations,
+                perFileCalibrations,
+                fullLibrary,
+                perFileParquetPaths,
+                config,
+                out var perFileGapFillForRescore);
+
+            if (config.StopAfterStage5)
+            {
+                if (reconWriteFailures > 0)
+                {
+                    _ctx.LogError(string.Format(
+                        @"--task FirstJoin: {0}/{1} reconciliation.json " +
+                        @"writes failed; boundary file pair is incomplete. See warnings above.",
+                        reconWriteFailures, perFileEntries.Count));
+                    _ctx.ExitCode = 1;
+                    return false;
+                }
+                _ctx.LogInfo(string.Format(
+                    @"--task FirstJoin: Stage 5 + reconciliation planning " +
+                    @"complete; wrote {0} reconciliation.json + matching fdr_scores.bin " +
+                    @"sidecar pair(s). Exiting before Stage 6 rescore.",
+                    perFileEntries.Count));
+                // Success: return true (not false). The stop after Stage 5 is now
+                // a membership fact -- PerFileRescore and MergeNode are excluded
+                // by IsIncluded under --task FirstJoin, so the driver loop iterates no
+                // further. The failure path above keeps ExitCode=1; return false.
+                _ctx.ExitCode = 0;
+                return true;
+            }
+
+            // Surface outputs for the next task.
+            _didPlan = true;
+            _perFileConsensusTargets = perFileConsensusTargets;
+            _reconciliationActions = reconciliationActions
+                ?? new Dictionary<(string, int), ReconcileAction>();
+            _refinedCalibrations = refinedCalibrations;
+            _perFileGapFillForRescore = perFileGapFillForRescore
+                ?? new Dictionary<string, List<GapFillTarget>>();
             return true;
         }
 
@@ -859,7 +869,7 @@ namespace pwiz.OspreySharp.Tasks
         /// </returns>
         private int WriteFdrScoresSidecars(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            Dictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
             int failures = 0;
@@ -896,7 +906,7 @@ namespace pwiz.OspreySharp.Tasks
         /// pre-compaction). Mirrors the matching block in
         /// osprey/src/pipeline.rs immediately after
         /// dump_stage6_reconciliation. The file is written sibling to
-        /// the input mzML (or, in --join-only mode, the synthetic input
+        /// the input mzML (or, in --task FirstJoin mode, the synthetic input
         /// path derived from the parquet stem).
         /// </summary>
         /// <returns>
@@ -914,12 +924,12 @@ namespace pwiz.OspreySharp.Tasks
             Dictionary<string, RTCalibration> refinedCalibrations,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             List<LibraryEntry> fullLibrary,
-            Dictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             out Dictionary<string, List<GapFillTarget>> gapFillByFileOut)
         {
-            string searchHash = config.SearchParameterHash();
-            string libraryHash = config.LibraryIdentityHash();
+            string searchHash = config.Identity.SearchParameterHash();
+            string libraryHash = config.Identity.LibraryIdentityHash();
             var actions = reconciliationActions
                 ?? new Dictionary<(string File, int Index), ReconcileAction>();
 
@@ -996,7 +1006,7 @@ namespace pwiz.OspreySharp.Tasks
             // The multi-file stems set goes into every per-file
             // reconciliation.json so a worker rescoring its single
             // parquet can compute the join-wide reconciliation hash that
-            // --join-at-pass=2 will validate against. Sort + dedup once;
+            // --task MergeNode will validate against. Sort + dedup once;
             // BuildReconciliationFile copies the list into the wire form.
             var joinFileStems = new List<string>(perFileEntries.Count);
             foreach (var fEntry in perFileEntries)
@@ -1058,14 +1068,14 @@ namespace pwiz.OspreySharp.Tasks
         /// Resolve a path whose stem matches <paramref name="fileName"/>, used
         /// only as the base for sidecar file naming (the path itself need
         /// not exist). In normal mode this is the input mzML; in
-        /// --join-only mode where InputFiles is empty we synthesize the
+        /// --task FirstJoin mode where InputFiles is empty we synthesize the
         /// path from the matching .scores.parquet by replacing the
         /// `.scores.parquet` suffix with `.mzML`. Mirrors the Rust
         /// `synthetic_input_from_parquet` helper.
         /// </summary>
         private static string ResolveSidecarBasePath(
             string fileName,
-            Dictionary<string, string> perFileParquetPaths,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config)
         {
             // Normal mode: prefer the actual input mzML path so sidecars
@@ -1083,7 +1093,7 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
             }
-            // --join-only fallback: derive a synthetic mzML path from the
+            // --task FirstJoin fallback: derive a synthetic mzML path from the
             // matching parquet stem so all the existing sidecar path
             // helpers keep working without conditional branches.
             if (perFileParquetPaths != null
@@ -1685,7 +1695,7 @@ namespace pwiz.OspreySharp.Tasks
         {
             // Detected-peptide count for logging only; the core computation +
             // propagation lives in ProteinFdr.RunFirstPassProteinFdr so the
-            // join-at-pass=2 rehydration path (PerFileRescoreTask) can run the
+            // --task MergeNode rehydration path (PerFileRescoreTask) can run the
             // same logic without duplicating it.
             int detectedCount = 0;
             var detectedTracker = new HashSet<string>(StringComparer.Ordinal);

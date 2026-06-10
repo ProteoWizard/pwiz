@@ -1292,6 +1292,98 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
+        /// Verifies GetReconciledScoresPath returns the reconciled sibling path
+        /// (Stage 6's separate output, not an overwrite of Stage 4's).
+        /// </summary>
+        [TestMethod]
+        public void TestGetReconciledScoresPath()
+        {
+            Assert.AreEqual(@"C:\data\sample1.scores-reconciled.parquet",
+                ParquetScoreCache.GetReconciledScoresPath(@"C:\data\sample1.mzML"));
+            Assert.AreEqual(@"D:\runs\experiment.raw.scores-reconciled.parquet",
+                ParquetScoreCache.GetReconciledScoresPath(@"D:\runs\experiment.raw.mzML"));
+        }
+
+        /// <summary>
+        /// Verifies ReconciledPathFromScoresPath swaps the ".scores.parquet"
+        /// suffix for ".scores-reconciled.parquet" and is idempotent on an
+        /// already-reconciled path (the --task MergeNode case where the input IS
+        /// the reconciled file).
+        /// </summary>
+        [TestMethod]
+        public void TestReconciledPathFromScoresPath()
+        {
+            Assert.AreEqual(@"C:\data\sample1.scores-reconciled.parquet",
+                ParquetScoreCache.ReconciledPathFromScoresPath(@"C:\data\sample1.scores.parquet"));
+            // Idempotent: an already-reconciled path is returned unchanged.
+            Assert.AreEqual(@"C:\data\sample1.scores-reconciled.parquet",
+                ParquetScoreCache.ReconciledPathFromScoresPath(@"C:\data\sample1.scores-reconciled.parquet"));
+            // Composes with GetScoresPath to equal GetReconciledScoresPath.
+            const string mzml = @"D:\runs\experiment.raw.mzML";
+            Assert.AreEqual(ParquetScoreCache.GetReconciledScoresPath(mzml),
+                ParquetScoreCache.ReconciledPathFromScoresPath(ParquetScoreCache.GetScoresPath(mzml)));
+        }
+
+        /// <summary>
+        /// Regression for the suffix-ambiguity Copilot flagged on PR #4261: an
+        /// input stem that itself ends in ".reconciled" must NOT be mistaken for
+        /// a Stage 6 reconciled output. Because the marker sits AFTER ".scores"
+        /// (".scores-reconciled.parquet"), the Stage 4 file is unambiguously an
+        /// original and maps to a distinct reconciled sibling (no overwrite).
+        /// </summary>
+        [TestMethod]
+        public void TestReconciledNamingUnambiguousForReconciledStem()
+        {
+            // Input "sample.reconciled.mzML" -> Stage 4 "sample.reconciled.scores.parquet".
+            string stage4 = ParquetScoreCache.GetScoresPath(@"C:\data\sample.reconciled.mzML");
+            Assert.AreEqual(@"C:\data\sample.reconciled.scores.parquet", stage4);
+            // It must be classified as an original, not a reconciled output...
+            Assert.IsFalse(ParquetScoreCache.IsReconciledScoresPath(stage4));
+            // ...and map to a DISTINCT reconciled sibling (not back onto itself).
+            string reconciled = ParquetScoreCache.ReconciledPathFromScoresPath(stage4);
+            Assert.AreEqual(@"C:\data\sample.reconciled.scores-reconciled.parquet", reconciled);
+            Assert.AreNotEqual(stage4, reconciled);
+            Assert.IsTrue(ParquetScoreCache.IsReconciledScoresPath(reconciled));
+        }
+
+        /// <summary>
+        /// Verifies EffectiveScoresPathFromScoresPath returns the reconciled
+        /// sibling when it exists on disk, else the original -- the per-file
+        /// read contract that makes the separate-reconciled-file design
+        /// byte-equivalent to the former in-place overwrite.
+        /// </summary>
+        [TestMethod]
+        public void TestEffectiveScoresPathFromScoresPath()
+        {
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_eff_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                string original = Path.Combine(dir, "sample1.scores.parquet");
+                string reconciled = Path.Combine(dir, "sample1.scores-reconciled.parquet");
+                File.WriteAllText(original, "x");
+
+                // No reconciled sibling -> original (no-work file).
+                Assert.AreEqual(original,
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(original));
+
+                // Reconciled sibling present -> reconciled (rescored file).
+                File.WriteAllText(reconciled, "y");
+                Assert.AreEqual(reconciled,
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(original));
+
+                // An already-reconciled input that exists is returned as-is.
+                Assert.AreEqual(reconciled,
+                    ParquetScoreCache.EffectiveScoresPathFromScoresPath(reconciled));
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch { /* best-effort */ }
+            }
+        }
+
+        /// <summary>
         /// Verifies that writing an empty list does not create a file.
         /// </summary>
         [TestMethod]
@@ -1699,7 +1791,7 @@ namespace pwiz.OspreySharp.Test
 
         /// <summary>
         /// Caller may pass a SUPERSET of the sidecar's entries — a real
-        /// case for --join-at-pass=2 stage 7 entry where the reconciled
+        /// case for --task MergeNode stage 7 entry where the reconciled
         /// parquet has gap-fill stubs the 1st-pass sidecar (written
         /// pre-gap-fill) does not. Sidecar records overlay onto matching
         /// entry_ids; entries with no matching record keep their default

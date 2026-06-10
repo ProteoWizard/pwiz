@@ -21,6 +21,9 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
+
 namespace pwiz.OspreySharp.Core
 {
     /// <summary>
@@ -35,6 +38,43 @@ namespace pwiz.OspreySharp.Core
 
         public int Count { get { return Mzs.Length; } }
         public bool IsEmpty { get { return Count == 0; } }
+
+        /// <summary>
+        /// Find the MS1 spectrum with retention time closest to the given RT.
+        /// Assumes the spectra are sorted by RT. Returns null when the list is
+        /// null or empty. The single implementation shared by the scoring harness
+        /// (<c>AbstractScoringTask.FindNearestMs1</c>, <c>Calibrator</c>) and the
+        /// MS1 feature calculators, so the binary search (<c>RetentionTime &lt; rt</c>)
+        /// and the equal-distance tie-break (<c>&lt;=</c> = previous spectrum wins)
+        /// stay byte-identical across both callers.
+        /// </summary>
+        public static MS1Spectrum FindNearest(IReadOnlyList<MS1Spectrum> spectra, double rt)
+        {
+            if (spectra == null || spectra.Count == 0)
+                return null;
+
+            int lo = 0;
+            int hi = spectra.Count;
+            while (lo < hi)
+            {
+                int mid = lo + (hi - lo) / 2;
+                if (spectra[mid].RetentionTime < rt)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+
+            if (lo >= spectra.Count)
+                return spectra[spectra.Count - 1];
+            if (lo == 0)
+                return spectra[0];
+
+            var prev = spectra[lo - 1];
+            var next = spectra[lo];
+            return Math.Abs(prev.RetentionTime - rt) <= Math.Abs(next.RetentionTime - rt)
+                ? prev
+                : next;
+        }
 
         /// <summary>
         /// Finds the most intense peak within a ppm tolerance of the target m/z using binary search.
