@@ -133,6 +133,10 @@ namespace pwiz.Skyline.Model.Results
                 _peakIntegrators = EnsureOptStepChromatograms().Zip(TransitionGroupDocNode.Transitions,
                     (optStepChromatograms, transition) => optStepChromatograms?.GetChromatogramForStep(0)
                         ?.MakePeakIntegrator(peakGroupIntegrator, _interpolatedTimes)).ToArray();
+                foreach (var peakIntegrator in _peakIntegrators)
+                {
+                    peakGroupIntegrator.AddPeakIntegrator(peakIntegrator);
+                }
                 _peakGroupIntegrator = peakGroupIntegrator;
             }
             return _peakGroupIntegrator;
