@@ -1519,8 +1519,9 @@ namespace pwiz.SkylineTestFunctional
             // fill-forward clone the product into an identical transition. Previously this slipped through
             // import and crashed the post-import small-molecule automanage refinement (skyline.ms rowId
             // 74731); it must instead be reported as an ordinary row error via "Check For Errors".
+            const string duplicatedHeader = "Product Charge"; // assigned to two columns; the second is the offender
             var text =
-                "Molecule Name,Precursor m/z,Precursor Charge,Product m/z,Product Charge,Product Charge\n" +
+                "Molecule Name,Precursor m/z,Precursor Charge,Product m/z," + duplicatedHeader + "," + duplicatedHeader + "\n" +
                 "M1,351.2177,-1,333.2066,-1,-1\n";
             SetClipboardText(text);
 
@@ -1538,20 +1539,18 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var errDlg = ShowDialog<ImportTransitionListErrorDlg>(() => columnDlg.buttonCheckForErrors.PerformClick());
-            // Stable portion of the message, between the {0} (m/z) and {1} (column) placeholders.
-            var duplicateFragmentMessageFragment = Resources
-                .SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__
-                .Split(new[] { "{0}" }, StringSplitOptions.None).Last()
-                .Split(new[] { "{1}" }, StringSplitOptions.None).First().Trim();
             RunUI(() =>
             {
-                var dupError = errDlg.ErrorList.FirstOrDefault(e => e.ErrorMessage.Contains(duplicateFragmentMessageFragment));
-                AssertEx.IsNotNull(dupError);
-                // The error points at, and names, the offending (second "Product Charge") column - not the
-                // fill-forwarded Product m/z column. Input columns (1-based): 1=Molecule Name,
-                // 2=Precursor m/z, 3=Precursor Charge, 4=Product m/z, 5=Product Charge, 6=Product Charge.
+                // Exactly one error: the line declares the same fragment twice. It points at, and names,
+                // the offending (second "Product Charge") column - not the fill-forwarded Product m/z
+                // column. Input columns (1-based): 1=Molecule Name, 2=Precursor m/z, 3=Precursor Charge,
+                // 4=Product m/z, 5=Product Charge, 6=Product Charge.
+                AssertEx.AreEqual(1, errDlg.ErrorList.Count);
+                var dupError = errDlg.ErrorList[0];
                 AssertEx.AreEqual(6, dupError.Column);
-                AssertEx.Contains(dupError.ErrorMessage, "6 \"Product Charge\"");
+                // The reader normalizes the recognized header to its localized column name, so assert
+                // against that resource (translation-proof) rather than the raw input header text.
+                AssertEx.Contains(dupError.ErrorMessage, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
             });
             OkDialog(errDlg, errDlg.OkDialog);
             OkDialog(columnDlg, columnDlg.CancelDialog);
