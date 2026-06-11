@@ -64,12 +64,10 @@ namespace pwiz.Skyline.Model
             return single >= 0 ? new List<int> { single } : new List<int>();
         }
 
-        // The original header text for a column, or null when unavailable (e.g. no header row).
-        // Used to name a column in error messages.
-        public virtual string GetColumnName(int columnIndex)
-        {
-            return null;
-        }
+        // A label for the column, for use in error messages - the column type assigned in the column
+        // select dialog, or the file's header text. Implemented by the concrete reader, which holds the
+        // column information (like ColumnIndex above).
+        public abstract string GetColumnName(int columnIndex);
 
         private double MzMatchTolerance { get; set; }
 
@@ -2787,9 +2785,10 @@ namespace pwiz.Skyline.Model
 
         public override string GetColumnName(int columnIndex)
         {
-            return HasHeaders && columnIndex >= 0
-                ? _csvReader.FieldNames.ElementAtOrDefault(columnIndex)
-                : null;
+            // FieldNames are the column labels: the types assigned in the column select dialog when
+            // provided (these override any header row), otherwise the file's header text - so a name is
+            // available even for a headerless list. ElementAtOrDefault returns null if out of range.
+            return _csvReader.FieldNames.ElementAtOrDefault(columnIndex);
         }
     }
 
