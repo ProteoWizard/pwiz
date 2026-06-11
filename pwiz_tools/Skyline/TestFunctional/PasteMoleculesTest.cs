@@ -1555,6 +1555,46 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(errDlg, errDlg.OkDialog);
             OkDialog(columnDlg, columnDlg.CancelDialog);
 
+            // Same check via the existing-molecule path (AddFragmentTransitions): the first row creates
+            // the molecule with two distinct fragments; a later row for the same precursor declares the
+            // same fragment twice (two Product m/z columns with the same value), which must also be
+            // reported, naming the offending second Product m/z column.
+            const string productMzHeader = "Product m/z";
+            var text2 =
+                "Molecule Name,Precursor m/z,Precursor Charge," + productMzHeader + ",Product Charge," + productMzHeader + ",Product Charge\n" +
+                "M2,351.2177,-1,333.2066,-1,235.1316,-1\n" +
+                "M2,351.2177,-1,175.1119,-1,175.1119,-1\n";
+            SetClipboardText(text2);
+
+            var columnDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            RunUI(() =>
+            {
+                columnDlg2.radioMolecule.PerformClick();
+                SetComboBoxes(columnDlg2,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
+
+            var errDlg2 = ShowDialog<ImportTransitionListErrorDlg>(() => columnDlg2.buttonCheckForErrors.PerformClick());
+            RunUI(() =>
+            {
+                // The duplicate is on the second row (an existing molecule), reported via
+                // AddFragmentTransitions, naming the offending second Product m/z column (1-based column 6:
+                // 1=Molecule Name, 2=Precursor m/z, 3=Precursor Charge, 4=Product m/z, 5=Product Charge,
+                // 6=Product m/z, 7=Product Charge).
+                AssertEx.AreEqual(1, errDlg2.ErrorList.Count);
+                var dupError2 = errDlg2.ErrorList[0];
+                AssertEx.AreEqual(6, dupError2.Column);
+                AssertEx.Contains(dupError2.ErrorMessage, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            });
+            OkDialog(errDlg2, errDlg2.OkDialog);
+            OkDialog(columnDlg2, columnDlg2.CancelDialog);
+
             NewDocument();
         }
 
