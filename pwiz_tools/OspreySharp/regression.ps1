@@ -9,8 +9,9 @@
     panorama zip into the shared <Downloads>\Perftests folder, extract,
     skip-if-present), then runs the full OspreySharp pipeline on each dataset
     with ZERO input copies -- inputs are referenced in place (read-only) and all
-    derived artifacts + caches go to a dated run dir under TestResults via
-    --work-dir. Two complementary correctness legs:
+    derived artifacts + caches go to a per-run timestamped run dir under
+    TestResults via --work-dir (gitignored scratch; nothing is published as a
+    TeamCity artifact). Two complementary correctness legs:
 
       mode 1  straight-through vs a committed text golden (osprey-regression.data)
               -- the user-facing correctness gate. Compares the Stage 7 protein
@@ -48,7 +49,8 @@
     --threads for each run (default 16).
 
 .PARAMETER TeamCity
-    Emit TeamCity service messages (progress, buildProblem, artifact publish).
+    Emit TeamCity service messages (progressMessage, buildProblem). No artifacts
+    are published.
 
 .PARAMETER NoBuild
     Skip the OspreySharp build step (use the existing Release binary).
@@ -134,9 +136,14 @@ Write-Progress-Tc 'Acquiring regression data'
 $extractedRoot = Get-RegressionData -Url $dataUrl -DownloadsPath $DownloadsPath `
     -Log { param($m) Write-Progress-Tc $m }
 
-# Dated run root under TestResults (date-only stamp; runs of the same day reuse
-# it, parallel dataset legs use distinct subdirs).
-$runStamp = (Get-Date).ToString('yyyyMMdd')
+# Per-run timestamped run root under TestResults (gitignored scratch; nothing
+# here is published as a TeamCity artifact). The full timestamp makes every
+# invocation its own dir, so a re-run never inherits a prior run's
+# resumed/invalidated state (the mode-2 invalidation + leftover output_cold.blib)
+# -- which would otherwise make the next straight-through leg resume instead of
+# run clean. These dirs hold the multi-GB .spectra.bin caches (via --work-dir),
+# so the agent should treat TestResults as ephemeral and clean it periodically.
+$runStamp = (Get-Date).ToString('yyyyMMdd_HHmmss')
 $runRoot  = Join-Path $scriptRoot ("TestResults\regression-$runStamp")
 New-Item -ItemType Directory -Path $runRoot -Force | Out-Null
 
@@ -227,16 +234,9 @@ foreach ($name in $selected) {
     $proteinDump = Join-Path $straightDir 'cs_stage7_protein_fdr.tsv'
     $goldenDir   = Join-Path $goldenRoot $cfg.Folder
 
-    # Start each dataset leg from a PRISTINE work dir. The run dir is date-only,
-    # so a second run on the same day (developer re-run, or a CI agent that
-    # reuses its checkout) would otherwise find the prior run's state -- including
-    # the mode-2 Invoke-ResumeInvalidation deletions and a leftover
-    # output_cold.blib. The straight-through leg would then RESUME instead of
-    # running clean, and mode 1 would compare a resume blib to the golden while
-    # labeling it straight-through. Wipe it so every straight-through is cold.
-    if (Test-Path $straightDir) { Remove-Item $straightDir -Recurse -Force }
-
     # ---- Straight-through ----
+    # (The per-run timestamped $runRoot guarantees $straightDir is fresh, so the
+    # straight-through leg always runs clean -- no prior-run state to inherit.)
     Write-Progress-Tc "${name}: straight-through run ($($inputs.Mzmls.Count) files, $($cfg.Resolution))"
     $rStraight = Invoke-OspreyRun -Mzmls $inputs.Mzmls -Library $inputs.Library -Resolution $cfg.Resolution `
         -WorkDir $straightDir -LogName 'straight.log' -DumpProteinFdr
@@ -295,10 +295,10 @@ foreach ($name in $selected) {
 Write-Host ""
 Write-Host "=== OspreySharp regression summary ===" -ForegroundColor Cyan
 $summaryLines | ForEach-Object { Write-Host "  $_" }
-if ($TeamCity) {
-    $relRun = "pwiz_tools/OspreySharp/TestResults/regression-$runStamp"
-    Write-Host ("##teamcity[publishArtifacts '{0} => regression-results']" -f (Format-TcMessage $relRun))
-}
+# No artifacts are published. The diagnosis on a red gate lives in the build log
+# (every per-file log is Tee'd to the console TeamCity captures) and the
+# buildProblem line (which names the failing dataset + leg + first divergent
+# columns); the run outputs stay on the agent under the gitignored TestResults.
 if ($overallFail) {
     Write-Problem-Tc 'OspreySharp regression FAILED'
     exit 1

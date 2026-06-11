@@ -23,7 +23,9 @@ not the drill-down.
 
 For each dataset (Stellar = unit, Astral = hram), with **zero input copies**
 (inputs referenced read-only from `<Downloads>\Perftests\osprey-testfiles-mzML`,
-all output + caches under `TestResults/regression-<date>` via `--work-dir`):
+all output + caches under a per-run timestamped `TestResults/regression-<stamp>`
+via `--work-dir` — gitignored scratch, **nothing is published as a TeamCity
+artifact**, so the multi-GB spectra caches there are harmless):
 
 1. **mode 1 — straight-through vs committed golden** (the user-facing
    correctness gate). Compares the Stage 7 protein-FDR dump + a deterministic

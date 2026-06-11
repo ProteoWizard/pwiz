@@ -15,9 +15,8 @@ pwiz_tools\OspreySharp\tctest.bat
 ```
 
 `tctest.bat` calls `regression.ps1 -TeamCity -Dataset All`, which emits
-`##teamcity[progressMessage]`, `##teamcity[buildProblem]` on any mismatch, and
-`##teamcity[publishArtifacts]` for the run outputs. A non-zero exit fails the
-build.
+`##teamcity[progressMessage]` and a `##teamcity[buildProblem]` on any mismatch.
+A non-zero exit fails the build. It publishes **no artifacts** (see Outputs).
 
 ## VCS root
 
@@ -82,11 +81,19 @@ future work (reads `.raw` directly once `pwiz_data_cli` is wired in).
 
 ## Outputs / artifacts
 
-- `pwiz_tools/OspreySharp/TestResults/regression-<date>/` — per-dataset run dirs
-  (logs, blibs, Stage 7 dumps), published via service message. Useful for
-  diagnosing a red mode-1/mode-2.
-- A `buildProblem` line names the failing dataset + leg (mode 1 vs golden, or
-  mode 2 resume self-consistency) with the first divergent columns.
+- **No artifacts are published** (there is no OspreySharp install story yet, and
+  the run scratch is huge). Diagnosis on a red gate comes from:
+  - the **build log** — every per-file run log is Tee'd to the console TeamCity
+    captures, so the full pipeline output is in the build log; and
+  - the **`buildProblem`** line, which names the failing dataset + leg (mode 1 vs
+    golden, or mode 2 resume self-consistency) and the first divergent columns.
+- Do **not** add a config-level "Artifact paths" rule for `TestResults` — that
+  would re-introduce the 4 GB-per-artifact publish failure on the multi-GB
+  `.spectra.bin` scratch files. The script emits no `publishArtifacts`.
+- Run scratch lands under `pwiz_tools/OspreySharp/TestResults/regression-<stamp>/`
+  (per-run timestamped, gitignored). It holds the multi-GB spectra caches, so the
+  agent should treat `TestResults` as ephemeral and clean it (e.g. a swabra /
+  clean-checkout rule) to bound disk.
 
 ## Expected duration
 
