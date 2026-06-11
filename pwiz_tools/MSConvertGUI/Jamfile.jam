@@ -31,18 +31,27 @@ if [ modules.peek : NT ]
         : "MSConvertGUI" "A tool for converting mass spectrometry data formats." "Vanderbilt University" "MSConvertGUI" ;
 
 
-    rule do_msconvert_build ( targets + : sources * : properties * )
+    # Single source of truth for the MSConvertGUI MSBuild configuration. The
+    # build OutDir (build-location), the staged native-dependencies location
+    # (install-native-dependencies-location), and the MSBuild Configuration
+    # (do_msconvert_build) must all agree, or native deps get staged to a
+    # different folder than the exe. Keep that choice here so they can't drift.
+    rule msconvert-config ( properties * )
     {
-        local config ;
         if <variant>debug in $(properties) ||
            <debug-symbols>on in $(properties)
         {
-            config = "Debug" ;
+            return "Debug" ;
         }
         else
         {
-            config = "Release" ;
+            return "Release" ;
         }
+    }
+
+    rule do_msconvert_build ( targets + : sources * : properties * )
+    {
+        local config = [ msconvert-config $(properties) ] ;
         CONFIGURATION on $(<[1]) = $(config) ;
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
@@ -67,25 +76,30 @@ if [ modules.peek : NT ]
 
     rule build-location ( properties * )
     {
-        local result ;
         # don't override the location when it's already set
         if ! <location> in $(properties:G)
         {
-            if <variant>debug in $(properties) ||
-               <debug-symbols>on in $(properties)
-            {
-                result = <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Debug ;
-            }
-            else
-            {
-                result = <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Release ;
-            }
-            return $(result) ;
+            local config = [ msconvert-config $(properties) ] ;
+            return <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/$(config) ;
         }
         else
         {
             return $(properties) ;
         }
+    }
+
+
+    # Single <location> for install-native-dependencies, matching the
+    # Debug/Release choice used by do_msconvert_build and build-location.
+    # Always returns exactly one <location> (never the incoming property list)
+    # so the stage target's <translate-path> is not re-injected into translate.
+    # Unlike build-location this intentionally ignores any externally-supplied
+    # <location>: this internal install target is never given one, and forcing
+    # the value keeps it locked to the exe's OutDir.
+    rule install-native-dependencies-location ( properties * )
+    {
+        local config = [ msconvert-config $(properties) ] ;
+        return <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/$(config) ;
     }
 
 
@@ -101,8 +115,15 @@ if [ modules.peek : NT ]
             ../../pwiz_tools/commandline//msdiff
             ../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
         : # requirements
-            <location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Release
-            <variant>debug:<location>$(PWIZ_BUILD_PATH)/MSConvertGUI/bin/$(PLATFORM)/Debug
+            # <location> is a free feature, so an unconditional value plus a
+            # conditional one accumulate (both appear) rather than override,
+            # which feeds a 2-element list to path.relative and breaks debug
+            # builds. Use a conditional rule that always returns a single
+            # <location> matching build-location's Debug/Release choice.
+            # (build-location itself can't be reused here: its else branch
+            # echoes back all properties, which re-injects the stage target's
+            # <translate-path> and crashes property.translate.)
+            <conditional>@install-native-dependencies-location
             <install-type>EXE
             <install-type>CONFIG
             <install-type>SHARED_LIB
