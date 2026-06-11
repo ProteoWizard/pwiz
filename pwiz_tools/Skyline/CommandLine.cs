@@ -3565,9 +3565,13 @@ namespace pwiz.Skyline
                    ?? accounts.FirstOrDefault(account => Equals(account.ServerUrl, alias));
         }
 
+        private const int REMOTE_FETCH_MAX_ATTEMPTS = 60;
+        private const int REMOTE_FETCH_WAIT_MS = 1000;
+
         /// <summary>
         /// Synchronously drives the asynchronous fetch for a remote URL until its contents are
-        /// available, then returns the listed child items.
+        /// available, then returns the listed child items. Throws if the server reports an error
+        /// or does not finish responding within the timeout.
         /// </summary>
         private static IList<RemoteItem> FetchRemoteContents(RemoteSession session, RemoteUrl remoteUrl)
         {
@@ -3581,18 +3585,30 @@ namespace pwiz.Skyline
             try
             {
                 RemoteServerException exception = null;
+                bool completed = false;
                 lock (signal)
                 {
-                    for (int i = 0; i < 60 && !session.AsyncFetchContents(remoteUrl, out exception); i++)
+                    // AsyncFetchContents returns true once the contents are available, or false while a
+                    // background fetch is still in progress; each completed stage pulses ContentsAvailable.
+                    for (int i = 0; i < REMOTE_FETCH_MAX_ATTEMPTS; i++)
                     {
+                        if (session.AsyncFetchContents(remoteUrl, out exception))
+                        {
+                            completed = true;
+                            break;
+                        }
                         if (exception != null)
                             break;
-                        Monitor.Wait(signal, 1000);
+                        Monitor.Wait(signal, REMOTE_FETCH_WAIT_MS);
                     }
                 }
 
                 if (exception != null)
                     throw exception;
+                if (!completed)
+                    throw new RemoteServerException(string.Format(
+                        SkylineResources.CommandLine_FetchRemoteContents_Timed_out_waiting_for_the_remote_server_to_list___0__,
+                        remoteUrl.GetFilePath()));
 
                 return session.ListContents(remoteUrl).ToList();
             }

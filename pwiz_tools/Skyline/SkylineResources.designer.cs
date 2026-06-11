@@ -1288,6 +1288,16 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Timed out waiting for the remote server to list &apos;{0}&apos;..
+        /// </summary>
+        public static string CommandLine_FetchRemoteContents_Timed_out_waiting_for_the_remote_server_to_list___0__ {
+            get {
+                return ResourceManager.GetString("CommandLine_FetchRemoteContents_Timed_out_waiting_for_the_remote_server_to_list" +
+                        "___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the injection &apos;{0}&apos; under the waters_connect path &apos;{1}&apos;..
         /// </summary>
         public static string CommandLine_ResolveWatersConnectImportUri_Could_not_find_the_injection___0___under_the_waters_connect_path___1__ {
