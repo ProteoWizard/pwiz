@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class ModelResources {
@@ -1212,15 +1212,6 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No peptide modified sequence column specified.
-        /// </summary>
-        public static string MassListRowReader_NextRow_No_peptide_sequence_column_specified {
-            get {
-                return ResourceManager.GetString("MassListRowReader_NextRow_No_peptide_sequence_column_specified", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Line has {0} fields but {1} are expected.
         /// </summary>
         public static string MassListRowReader_NextRow_Line_has__0__fields_but__1__are_expected {
@@ -1228,7 +1219,16 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("MassListRowReader_NextRow_Line_has__0__fields_but__1__are_expected", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No peptide modified sequence column specified.
+        /// </summary>
+        public static string MassListRowReader_NextRow_No_peptide_sequence_column_specified {
+            get {
+                return ResourceManager.GetString("MassListRowReader_NextRow_No_peptide_sequence_column_specified", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Exporting method {0}....
         /// </summary>
@@ -1973,6 +1973,26 @@ namespace pwiz.Skyline.Model {
             get {
                 return ResourceManager.GetString("SmallMoleculeTransitionListColumnHeaders_SmallMoleculeTransitionListColumnHeaders" +
                         "_RT__min_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} &quot;{1}&quot;.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The same fragment (product m/z {0}) is declared more than once on a single line of the transition list. See column {1}..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__pr" +
+                        "oduct_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_lis" +
+                        "t__See_column__1__", resourceCulture);
             }
         }
         

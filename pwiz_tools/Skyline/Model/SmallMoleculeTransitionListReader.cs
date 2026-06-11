@@ -2512,7 +2512,7 @@ namespace pwiz.Skyline.Model
                 Column = column,
                 Line = row.Index,
                 Message = string.Format(
-                    Resources.SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__,
+                    ModelResources.SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__,
                     tran.Mz, GetColumnDescription(column))
             });
             return true;
@@ -2528,7 +2528,7 @@ namespace pwiz.Skyline.Model
             var name = GetColumnName(columnIndex);
             return string.IsNullOrEmpty(name)
                 ? columnNumber
-                : string.Format("{0} \"{1}\"", columnNumber, name);
+                : string.Format(ModelResources.SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__, columnNumber, name);
         }
 
         /// <summary>
