@@ -31,7 +31,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.IO;
 using pwiz.OspreySharp.Scoring;
 
 namespace pwiz.OspreySharp.Tasks
@@ -84,14 +83,6 @@ namespace pwiz.OspreySharp.Tasks
                 if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
                 return la.CompareTo(lb);
             });
-        /// <summary>
-        /// Get cached top-6 fragment m/z values for an entry. Computed once,
-        /// reused across all prefilter calls for the same entry. Thread-safe
-        /// via ConcurrentDictionary.
-        /// </summary>
-        internal static readonly ConcurrentDictionary<uint, double[]> _top6MzCache =
-            new ConcurrentDictionary<uint, double[]>();
-
         // Internal so FirstJoinTask (which now owns RunPercolatorFdr +
         // RunPercolatorStreaming + BuildBasicFeatures) can reuse the
         // same 21-feature width without redeclaring it.
@@ -117,18 +108,6 @@ namespace pwiz.OspreySharp.Tasks
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
 
-        // Savitzky-Golay quadratic filter weights for length 5, center offset.
-        // Matches Rust pipeline.rs sg_weights: [-3/35, 12/35, 17/35, 12/35, -3/35].
-        private static readonly double[] SG_WEIGHTS =
-        {
-            -3.0 / 35.0,
-            12.0 / 35.0,
-            17.0 / 35.0,
-            12.0 / 35.0,
-            -3.0 / 35.0,
-        };
-
-
         // Calibration XCorr always uses unit-resolution bins (~2K) regardless of
         // instrument resolution mode. Matches the spec in Rust osprey
         // docs/02-calibration.md ("Comet-style XCorr (unit resolution, BLAS
@@ -147,85 +126,6 @@ namespace pwiz.OspreySharp.Tasks
         private static string F10(double v)
         {
             return OspreyDiagnostics.F10(v);
-        }
-
-
-        /// <summary>
-        /// Load spectral library from the configured source, using binary cache
-        /// when available. Matches Rust's .libcache mechanism for fast reload.
-        /// </summary>
-        protected List<LibraryEntry> LoadLibrary(OspreyConfig config)
-        {
-            string path = config.LibrarySource.Path;
-            string cachePath = path + ".libcache";
-
-            // Try loading from binary cache first
-            if (File.Exists(cachePath))
-            {
-                try
-                {
-                    var cached = LibraryCache.LoadCache(cachePath);
-                    if (cached != null && cached.Count > 0)
-                    {
-                        _ctx.LogInfo(string.Format(
-                            "Loaded {0} library entries from cache '{1}'",
-                            cached.Count, cachePath));
-                        return cached;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _ctx.LogWarning(string.Format(
-                        "Failed to load library cache: {0}. Falling back to source.", ex.Message));
-                }
-            }
-
-            // Parse from source
-            _ctx.LogInfo(string.Format("Loading spectral library from {0}...", path));
-
-            List<LibraryEntry> entries;
-
-            switch (config.LibrarySource.Format)
-            {
-                case LibraryFormat.DiannTsv:
-                    var tsvLoader = new DiannTsvLoader();
-                    entries = tsvLoader.Load(path);
-                    break;
-
-                case LibraryFormat.Blib:
-                    var blibLoader = new BlibLoader();
-                    entries = blibLoader.Load(path);
-                    break;
-
-                case LibraryFormat.Elib:
-                    var elibLoader = new ElibLoader();
-                    entries = elibLoader.Load(path);
-                    break;
-
-                default:
-                    throw new NotSupportedException(string.Format(
-                        "Unsupported library format: {0}", config.LibrarySource.Format));
-            }
-
-            // Deduplicate library entries
-            entries = LibraryDeduplicator.DeduplicateLibrary(entries);
-
-            _ctx.LogInfo(string.Format("Loaded {0} library entries", entries.Count));
-
-            // Save binary cache for next run
-            try
-            {
-                LibraryCache.SaveCache(cachePath, entries);
-                _ctx.LogInfo(string.Format(
-                    "Saved library cache ({0} entries) to '{1}'",
-                    entries.Count, cachePath));
-            }
-            catch (Exception ex)
-            {
-                _ctx.LogWarning(string.Format("Failed to save library cache: {0}", ex.Message));
-            }
-
-            return entries;
         }
 
 
@@ -374,16 +274,14 @@ namespace pwiz.OspreySharp.Tasks
         }
 
 
-        // The shared scoring infrastructure (ExtractTopNFragmentXics
-        // etc.) reads CAL_TOP_N_FRAGMENTS from PerFileScoringTask;
-        // see that class for the canonical declaration.
-
         /// <summary>
         /// Extract XICs for the top N most intense library fragments across the
         /// supplied (pre-filtered) spectra list. Returns only fragments that have
         /// at least one non-zero intensity point.
+        /// Calibration-only today; <c>internal static</c> so the extracted
+        /// <see cref="Calibrator"/> can call it without inheriting this class.
         /// </summary>
-        protected List<XicData> ExtractTopNFragmentXics(
+        internal static List<XicData> ExtractTopNFragmentXics(
             LibraryEntry entry,
             List<Spectrum> candidateSpectra,
             double[] rts,
@@ -431,7 +329,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
                         continue;
 
-                    int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
                     if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
                         continue;
 
@@ -457,37 +355,6 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return xics;
-        }
-
-
-        /// <summary>
-        /// Pearson correlation over an inclusive index range. Returns NaN if either
-        /// subrange has no variance or the range is too short.
-        /// </summary>
-        protected static double PearsonOverRange(double[] x, double[] y, int start, int end)
-        {
-            int n = end - start + 1;
-            if (n < 3)
-                return double.NaN;
-
-            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-            for (int i = start; i <= end; i++)
-            {
-                double xi = x[i];
-                double yi = y[i];
-                sumX += xi;
-                sumY += yi;
-                sumXY += xi * yi;
-                sumX2 += xi * xi;
-                sumY2 += yi * yi;
-            }
-
-            double dn = n;
-            double denom = (dn * sumX2 - sumX * sumX) * (dn * sumY2 - sumY * sumY);
-            if (denom < 1e-30)
-                return 0.0;
-
-            return (dn * sumXY - sumX * sumY) / Math.Sqrt(denom);
         }
 
 
@@ -848,6 +715,18 @@ namespace pwiz.OspreySharp.Tasks
             var preprocessedXcorr = context.Resolution.PreprocessWindowSpectra(
                 windowSpectra, scorer, context.XcorrScratchPool);
 
+            // Reused per-window scoring context + peak-data adapter for the
+            // modular feature calculators. The per-candidate loop mutates them in
+            // place (ClearByproducts + Set) so scoring allocates no context /
+            // peak-data per candidate. Windows are scored on separate threads
+            // (Parallel.For above), so these are window-local, never shared task
+            // state.
+            var ospreyContext = new OspreyScoringContext(config);
+            ospreyContext.SetWindow(context.Resolution, preprocessedXcorr, scorer,
+                context.XcorrScratchPool);
+            ospreyContext.SetMs1Machinery(context.Resolution.HasMs1Features, ms1Spectra, ms1Calibration);
+            var ospreyPeakData = new OspreyPeakData();
+
             try
             {
                 // Score each candidate
@@ -855,10 +734,10 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     var fdrEntry = ScoreCandidate(
                         candidate, windowSpectra, windowRts,
-                        preprocessedXcorr,
-                        ms1Spectra, rtCalibration, ms1Calibration,
+                        rtCalibration,
                         globalRtTolerance, rtSigma,
-                        scorer, context);
+                        scorer, context,
+                        ospreyContext, ospreyPeakData);
 
                     if (fdrEntry != null)
                         entries.Add(fdrEntry);
@@ -937,14 +816,14 @@ namespace pwiz.OspreySharp.Tasks
 
             // Map override RTs to indices via Rust partition_point semantics:
             // first index where rt >= target. start_index then saturating_sub(1).
-            int startIdx = BinarySearchLowerBound(rtArr, ob.Start);
+            int startIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.Start);
             if (startIdx > 0) startIdx--;
             if (startIdx > last) startIdx = last;
 
-            int endIdx = BinarySearchLowerBound(rtArr, ob.End);
+            int endIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.End);
             if (endIdx > last) endIdx = last;
 
-            int apexIdx = BinarySearchLowerBound(rtArr, ob.Apex);
+            int apexIdx = ScoringMath.BinarySearchLowerBound(rtArr, ob.Apex);
             if (apexIdx > last) apexIdx = last;
             if (apexIdx > 0 &&
                 Math.Abs(rtArr[apexIdx - 1] - ob.Apex) < Math.Abs(rtArr[apexIdx] - ob.Apex))
@@ -977,14 +856,13 @@ namespace pwiz.OspreySharp.Tasks
             LibraryEntry candidate,
             List<Spectrum> windowSpectra,
             double[] windowRts,
-            WindowXcorrCache preprocessedXcorr,
-            List<MS1Spectrum> ms1Spectra,
             RTCalibration rtCalibration,
-            MzCalibrationResult ms1Calibration,
             double globalRtTolerance,
             double rtSigma,
             SpectralScorer scorer,
-            ScoringContext context)
+            ScoringContext context,
+            OspreyScoringContext ospreyContext,
+            OspreyPeakData ospreyPeakData)
         {
             var config = context.Config;
             var resolution = context.Resolution;
@@ -1012,15 +890,19 @@ namespace pwiz.OspreySharp.Tasks
             double expectedRt = rtCalibration != null
                 ? rtCalibration.Predict(candidate.RetentionTime)
                 : candidate.RetentionTime;
-            // Bisection seam: dump (entry_id, library_rt -> expected_rt)
-            // for every per-window candidate scoring. Mirrors Rust's
-            // dump_predict_rt_call at pipeline.rs ~7014. Pair with
-            // WritePredictRtArrays at the top of the rescore loop to
-            // narrow whether RT divergences come from cal arrays
-            // diverging or from Predict() output differing on identical
-            // arrays.
-            OspreyDiagnostics.WritePredictRtCall(
-                candidate.Id, candidate.RetentionTime, expectedRt);
+            // Bisection seam DISABLED (perf hotspot): this dumped
+            // (entry_id, library_rt -> expected_rt) for every per-window
+            // candidate. In the per-candidate inner loop even the gated-off
+            // call cost a call + branch each candidate, so it is commented
+            // out rather than routed through the diagnostics sink. To
+            // restore, re-enable this and the paired WritePredictRtArrays /
+            // ClosePredictRtDump in PerFileRescoreTask, and remove the
+            // OSPREY_DUMP_PREDICT_RT guard (NotImplementedException) in
+            // OspreyFileDiagnostics's constructor. Mirrors Rust's
+            // dump_predict_rt_call at pipeline.rs ~7014. See
+            // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
+            // OspreyDiagnostics.WritePredictRtCall(
+            //     candidate.Id, candidate.RetentionTime, expectedRt);
             double rtTolerance = globalRtTolerance;
 
             if (diag)
@@ -1136,7 +1018,7 @@ namespace pwiz.OspreySharp.Tasks
 
                 for (int i = startScan; i <= endScan; i++)
                 {
-                    bool passes = HasTopNFragmentMatch(
+                    bool passes = FragmentMath.HasTopNFragmentMatch(
                         candidate, windowSpectra[i].Mzs, config.FragmentTolerance);
                     int slot = (i - startScan) % WIN;
                     if (window[slot])
@@ -1360,7 +1242,7 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     for (int jj = ii + 1; jj < xics.Count; jj++)
                     {
-                        double corr = PearsonCorrelation(
+                        double corr = ScoringMath.PearsonCorrelationInRange(
                             xics[ii].Intensities, xics[jj].Intensities,
                             p.StartIndex, p.EndIndex);
                         if (!double.IsNaN(corr))
@@ -1438,7 +1320,7 @@ namespace pwiz.OspreySharp.Tasks
                             for (int ii = 0; ii < xics.Count; ii++)
                                 for (int jj = ii + 1; jj < xics.Count; jj++)
                                 {
-                                    double c = PearsonCorrelation(xics[ii].Intensities, xics[jj].Intensities,
+                                    double c = ScoringMath.PearsonCorrelationInRange(xics[ii].Intensities, xics[jj].Intensities,
                                         p.StartIndex, p.EndIndex);
                                     if (!double.IsNaN(c)) { psum += c; pcnt++; }
                                 }
@@ -1548,92 +1430,38 @@ namespace pwiz.OspreySharp.Tasks
             // LibCosine at apex
             double libCosine = scorer.LibCosine(apexSpectrum, candidate, config.FragmentTolerance);
 
-            // XCorr at apex via the resolution strategy. Pool avoids per-
-            // call 100K-bin LOH allocation on HRAM (no-op on Unit-res).
-            double xcorr = resolution.ScoreXcorr(
-                preprocessedXcorr, apexGlobalIdx, apexSpectrum, candidate, scorer,
-                context.XcorrScratchPool);
-
-
-
-            // Compute pairwise coelution features (sum, max, n_positive).
-            double coelutionSum, coelutionMax;
-            int nCoelutingFragments;
-            ComputeCoelutionStats(xics, bestPeak,
-                out coelutionSum, out coelutionMax, out nCoelutingFragments);
-
-            // Peak shape features: apex, area, sharpness
-            double peakApex, peakArea, peakSharpness;
-            ComputePeakShapeFeatures(xics, bestPeak,
-                out peakApex, out peakArea, out peakSharpness);
-
-            // RT deviation (absolute even if calibration disabled - measured vs library RT)
-            double rtDeviation = apexSpectrum.RetentionTime - expectedRt;
-            double absRtDeviation = Math.Abs(rtDeviation);
-
-            // Count consecutive ions
-            byte consecutiveIons = CountConsecutiveIons(candidate, apexSpectrum, config);
-
-            // Count fragment matches
+            // Count fragment matches (top-6 dedup byproduct, NOT a PIN feature;
+            // stays inline). consecutive_ions / explained_intensity / mass-accuracy
+            // (features 7-10) moved to the apex-match calculators below.
             byte top6Matches = CountTop6Matches(candidate, apexSpectrum, config);
 
-            // Explained intensity, mass accuracy at apex
-            double explainedIntensity, massAccuracyMean, absMassAccuracyMean;
-            ComputeApexMatchFeatures(candidate, apexSpectrum, config,
-                out explainedIntensity, out massAccuracyMean, out absMassAccuracyMean);
+            // MS1 features (precursor coelution, isotope cosine) are computed by the
+            // MS1 calculators (features 13, 14) below from the published per-window
+            // MS1 machinery (ospreyContext.SetMs1Machinery) and the window RT axis
+            // (windowRts) passed to ospreyPeakData.Set. The HRAM gate (Rust
+            // pipeline.rs:5362 is_hram) lives in the calculators.
 
-            // MS1 features: precursor coelution, isotope cosine.
-            // Rust pipeline.rs:5362 gates on is_hram - unit resolution skips MS1.
-            double ms1PrecursorCoelution = 0.0;
-            double ms1IsotopeCosine = 0.0;
-            if (resolution.HasMs1Features && ms1Spectra != null && ms1Spectra.Count > 0)
-            {
-                // Find reference XIC (highest total intensity) for MS1 coelution.
-                // Same selection as ComputePeakShapeFeatures and Rust pipeline.rs.
-                int ms1RefIdx = 0;
-                double ms1BestTotal = 0.0;
-                for (int f = 0; f < xics.Count; f++)
-                {
-                    double total = 0.0;
-                    double[] inten = xics[f].Intensities;
-                    for (int k = 0; k < inten.Length; k++)
-                        total += inten[k];
-                    if (total >= ms1BestTotal) { ms1BestTotal = total; ms1RefIdx = f; }
-                }
-                ComputeMs1Features(
-                    candidate, xics, ms1RefIdx, bestPeak,
-                    windowRts, startScan,
-                    ms1Spectra, ms1Calibration, config,
-                    out ms1PrecursorCoelution, out ms1IsotopeCosine);
-            }
+            // Per-candidate state for the modular feature calculators. Reused
+            // window-local instances (see RunCoelutionScoring); ClearByproducts
+            // resets the per-candidate byproduct cache. Done BEFORE the
+            // median-polish publish below so that byproduct survives to the
+            // calculators. Calculator-backed features mirror Skyline's
+            // IPeakFeatureCalculator; the rest stay inline until extracted.
+            // windowRts is passed by reference (no per-candidate copy); the MS1
+            // family maps an XIC index i to an absolute RT via windowRts[startScan + i]
+            // (= WindowRetentionTimes[WindowStartIndex + i]).
+            ospreyContext.ClearByproducts();
+            ospreyPeakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt, apexSpectrum,
+                apexGlobalIdx, bestPeak.ApexIndex, startScan, rangeLen, windowSpectra, windowRts);
 
-            // Savitzky-Golay weighted spectral scores at apex +/- 2 scans.
-            // Matches Rust pipeline.rs sg_xcorr / sg_cosine. Uses candidate-local
-            // indices (within startScan..endScan) not global window indices, matching
-            // Rust's cand_spectra bounds. Cosine uses mass-range-filtered matching
-            // (compute_cosine_at_scan) not LibCosine.
-            double sgXcorr = 0.0;
-            double sgCosine = 0.0;
-            for (int offset = -2; offset <= 2; offset++)
-            {
-                double weight = SG_WEIGHTS[offset + 2];
-                int candIdx = bestPeak.ApexIndex + offset;
-                if (candIdx < 0 || candIdx >= rangeLen)
-                    continue;
-                int globalIdx = startScan + candIdx;
-                var s = windowSpectra[globalIdx];
-                sgXcorr += resolution.ScoreXcorr(preprocessedXcorr, globalIdx, s, candidate, scorer,
-                    context.XcorrScratchPool) * weight;
-                sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;
-            }
-
-            // Tukey median polish features (15, 16, 19, 20).
+            // Tukey median-polish inputs + fit (features 15, 16, 19, 20). The crop,
+            // WriteMpInputsRow, and Compute stay here because the bisection
+            // diagnostics live in the exe layer that OspreySharp.Scoring cannot
+            // reference; the four feature values are computed by the calculators
+            // from the published MedianPolishByproduct, and the optional
+            // WriteMpDump fires after the feature vector below.
             // Crop XICs to the peak range so the polish operates only on signal,
             // not the wider RT search window. Matches Rust pipeline.rs:5198-5212.
-            double mpCosine = 0.0;
-            double mpResidualRatio = 1.0;
-            double mpMinFragmentR2 = 0.0;
-            double mpResidualCorr = 0.0;
             int peakLen = bestPeak.EndIndex - bestPeak.StartIndex + 1;
             if (peakLen >= 3)
             {
@@ -1659,48 +1487,54 @@ namespace pwiz.OspreySharp.Tasks
                     candidate.Id, apexSpectrum.ScanNumber, peakXics, peakRts);
 
                 var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+                // Only publish when the fit converged. Every consumer (the four
+                // calculators and the WriteMpDump guard) treats a missing byproduct
+                // and a byproduct with null Polish identically (family default / no
+                // dump), so skipping the publish on a null fit is value-identical and
+                // avoids the allocation.
                 if (polish != null)
-                {
-                    mpCosine = TukeyMedianPolish.LibCosine(polish, candidate.Fragments);
-                    mpResidualRatio = TukeyMedianPolish.ResidualRatio(polish);
-                    mpMinFragmentR2 = TukeyMedianPolish.MinFragmentR2(polish);
-                    mpResidualCorr = TukeyMedianPolish.ResidualCorrelation(polish);
-
-                    // Median polish diagnostic for bisection
-                    if (OspreyDiagnostics.ShouldDumpMpFor(apexSpectrum.ScanNumber, candidate.ModifiedSequence))
-                    {
-                        OspreyDiagnostics.WriteMpDump(
-                            candidate, apexSpectrum.ScanNumber,
-                            bestPeak, peakLen,
-                            mpCosine, mpResidualRatio, mpMinFragmentR2, mpResidualCorr,
-                            polish, peakXics);
-                    }
-                }
+                    ospreyContext.AddInfo(new MedianPolishByproduct(polish, peakXics));
             }
 
             // Build full 21-element PIN feature vector
             double[] features = new double[NUM_PIN_FEATURES];
-            features[0] = coelutionSum;
-            features[1] = coelutionMax;
-            features[2] = nCoelutingFragments;
-            features[3] = peakApex;
-            features[4] = peakArea;
-            features[5] = peakSharpness;
-            features[6] = xcorr;
-            features[7] = consecutiveIons;
-            features[8] = explainedIntensity;
-            features[9] = massAccuracyMean;
-            features[10] = absMassAccuracyMean;
-            features[11] = rtDeviation;
-            features[12] = absRtDeviation;
-            features[13] = ms1PrecursorCoelution;
-            features[14] = ms1IsotopeCosine;
-            features[15] = mpCosine;
-            features[16] = mpResidualRatio;
-            features[17] = sgXcorr;
-            features[18] = sgCosine;
-            features[19] = mpMinFragmentR2;
-            features[20] = mpResidualCorr;
+            features[0] = OspreyFeatureCalculators.Get(0).Calculate(ospreyContext, ospreyPeakData);
+            features[1] = OspreyFeatureCalculators.Get(1).Calculate(ospreyContext, ospreyPeakData);
+            features[2] = OspreyFeatureCalculators.Get(2).Calculate(ospreyContext, ospreyPeakData);
+            features[3] = OspreyFeatureCalculators.Get(3).Calculate(ospreyContext, ospreyPeakData);
+            features[4] = OspreyFeatureCalculators.Get(4).Calculate(ospreyContext, ospreyPeakData);
+            features[5] = OspreyFeatureCalculators.Get(5).Calculate(ospreyContext, ospreyPeakData);
+            features[6] = OspreyFeatureCalculators.Get(6).Calculate(ospreyContext, ospreyPeakData);
+            features[7] = OspreyFeatureCalculators.Get(7).Calculate(ospreyContext, ospreyPeakData);
+            features[8] = OspreyFeatureCalculators.Get(8).Calculate(ospreyContext, ospreyPeakData);
+            features[9] = OspreyFeatureCalculators.Get(9).Calculate(ospreyContext, ospreyPeakData);
+            features[10] = OspreyFeatureCalculators.Get(10).Calculate(ospreyContext, ospreyPeakData);
+            features[11] = OspreyFeatureCalculators.Get(11).Calculate(ospreyContext, ospreyPeakData);
+            features[12] = OspreyFeatureCalculators.Get(12).Calculate(ospreyContext, ospreyPeakData);
+            features[13] = OspreyFeatureCalculators.Get(13).Calculate(ospreyContext, ospreyPeakData);
+            features[14] = OspreyFeatureCalculators.Get(14).Calculate(ospreyContext, ospreyPeakData);
+            features[15] = OspreyFeatureCalculators.Get(15).Calculate(ospreyContext, ospreyPeakData);
+            features[16] = OspreyFeatureCalculators.Get(16).Calculate(ospreyContext, ospreyPeakData);
+            features[17] = OspreyFeatureCalculators.Get(17).Calculate(ospreyContext, ospreyPeakData);
+            features[18] = OspreyFeatureCalculators.Get(18).Calculate(ospreyContext, ospreyPeakData);
+            features[19] = OspreyFeatureCalculators.Get(19).Calculate(ospreyContext, ospreyPeakData);
+            features[20] = OspreyFeatureCalculators.Get(20).Calculate(ospreyContext, ospreyPeakData);
+
+            // Median-polish bisection dump (after the feature vector so the four
+            // values are available). Reads the polish + cropped inputs from the
+            // byproduct published above; gated by ShouldDumpMpFor as before. The
+            // standard parity gate compares Stage 7 + blib, not the -d dumps.
+            if (peakLen >= 3
+                && ospreyContext.TryGetInfo(out MedianPolishByproduct mpByproduct)
+                && mpByproduct.Polish != null
+                && OspreyDiagnostics.ShouldDumpMpFor(apexSpectrum.ScanNumber, candidate.ModifiedSequence))
+            {
+                OspreyDiagnostics.WriteMpDump(
+                    candidate, apexSpectrum.ScanNumber,
+                    bestPeak, peakLen,
+                    features[15], features[16], features[19], features[20],
+                    mpByproduct.Polish, mpByproduct.PeakXics);
+            }
 
             // Stage 6 reconciliation input: capture the top-N CWT peak
             // candidates ranked by penalized rank score, with each kept
@@ -1824,8 +1658,8 @@ namespace pwiz.OspreySharp.Tasks
                 ApexRt = apexSpectrum.RetentionTime,
                 StartRt = windowRts[startScan + bestPeak.StartIndex],
                 EndRt = windowRts[startScan + bestPeak.EndIndex],
-                CoelutionSum = coelutionSum,
-                Score = coelutionSum,
+                CoelutionSum = features[0],
+                Score = features[0],
                 ModifiedSequence = candidate.ModifiedSequence,
                 Features = features,
                 CwtCandidates = cwtCandidatesOut,
@@ -1844,74 +1678,6 @@ namespace pwiz.OspreySharp.Tasks
                     diagNCwtPeaks, peaks.Count, diagNScored, true, xics);
             }
             return entry;
-        }
-
-
-        private static double[] GetTop6FragmentMzs(LibraryEntry entry)
-        {
-            return _top6MzCache.GetOrAdd(entry.Id, _ =>
-            {
-                var frags = entry.Fragments;
-                if (frags == null || frags.Count == 0)
-                    return new double[0];
-
-                int nTop = Math.Min(frags.Count, 6);
-                if (frags.Count <= 6)
-                {
-                    var mzs = new double[frags.Count];
-                    for (int i = 0; i < frags.Count; i++)
-                        mzs[i] = frags[i].Mz;
-                    return mzs;
-                }
-
-                // Find top 6 by intensity, stable on ties to match
-                // Rust slice::sort_by. Array.Sort with Comparison<T>
-                // is introsort and unstable.
-                var result = Enumerable.Range(0, frags.Count)
-                    .OrderByDescending(i => frags[i].RelativeIntensity)
-                    .Take(nTop)
-                    .Select(i => frags[i].Mz)
-                    .ToArray();
-                return result;
-            });
-        }
-
-
-        /// <summary>
-        /// Check if at least 2 of the top 6 library fragments have matching peaks
-        /// in the spectrum. Uses cached top-6 m/z values (no allocation per call).
-        /// Port of has_topn_fragment_match in osprey-scoring/src/lib.rs:112.
-        /// </summary>
-        protected static bool HasTopNFragmentMatch(
-            LibraryEntry entry, double[] spectrumMzs, FragmentToleranceConfig fragTol)
-        {
-            var frags = entry.Fragments;
-            if (frags == null || frags.Count == 0 || spectrumMzs == null || spectrumMzs.Length == 0)
-                return true;
-
-            double[] top6Mzs = GetTop6FragmentMzs(entry);
-            int nTop = top6Mzs.Length;
-            int requiredMatches = nTop <= 1 ? 1 : 2;
-            int matchCount = 0;
-
-            // Per-fragment tolerance: in ppm mode, each fragment's Da window
-            // depends on its own m/z. Matches Rust has_topn_fragment_match.
-            for (int t = 0; t < nTop; t++)
-            {
-                double mz = top6Mzs[t];
-                double tolDa = fragTol.ToleranceDa(mz);
-                double lower = mz - tolDa;
-                double upper = mz + tolDa;
-                int lo = 0, hi = spectrumMzs.Length;
-                while (lo < hi) { int mid = (lo + hi) / 2; if (spectrumMzs[mid] < lower) lo = mid + 1; else hi = mid; }
-                if (lo < spectrumMzs.Length && spectrumMzs[lo] <= upper)
-                {
-                    matchCount++;
-                    if (matchCount >= requiredMatches)
-                        return true;
-                }
-            }
-            return false;
         }
 
 
@@ -1983,7 +1749,7 @@ namespace pwiz.OspreySharp.Tasks
                     if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
                         continue;
 
-                    int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
+                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
                     if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
                         continue;
 
@@ -2013,462 +1779,15 @@ namespace pwiz.OspreySharp.Tasks
 
 
         /// <summary>
-        /// Compute coelution sum/max and count of positively-correlated fragments
-        /// from pairwise fragment correlations.
-        /// </summary>
-        private void ComputeCoelutionStats(
-            List<XicData> xics, XICPeakBounds peak,
-            out double sum, out double max, out int nCoeluting)
-        {
-            sum = 0.0;
-            max = 0.0;
-            nCoeluting = 0;
-
-            if (xics.Count < 2)
-                return;
-
-            // Per-fragment mean pairwise correlation. A fragment is "coeluting" if
-            // its mean pairwise correlation is > 0. Matches Rust pipeline.rs:5049-5058
-            // which averages per_frag_corr_sum[i]/count and checks > 0.
-            double[] fragCorrSum = new double[xics.Count];
-            int[] fragCorrCount = new int[xics.Count];
-            bool haveAny = false;
-            double maxCorr = double.NegativeInfinity;
-
-            for (int i = 0; i < xics.Count; i++)
-            {
-                for (int j = i + 1; j < xics.Count; j++)
-                {
-                    double corr = PearsonCorrelation(
-                        xics[i].Intensities, xics[j].Intensities,
-                        peak.StartIndex, peak.EndIndex);
-                    if (double.IsNaN(corr))
-                        continue;
-
-                    sum += corr;
-                    if (corr > maxCorr)
-                        maxCorr = corr;
-                    haveAny = true;
-
-                    fragCorrSum[i] += corr;
-                    fragCorrCount[i]++;
-                    fragCorrSum[j] += corr;
-                    fragCorrCount[j]++;
-                }
-            }
-
-            if (haveAny)
-                max = maxCorr;
-
-            for (int i = 0; i < xics.Count; i++)
-            {
-                if (fragCorrCount[i] > 0 && fragCorrSum[i] / fragCorrCount[i] > 0.0)
-                    nCoeluting++;
-            }
-        }
-
-
-        /// <summary>
-        /// Compute peak shape features at the detected peak boundaries: summed XIC
-        /// apex intensity, area under the summed XIC, and sharpness (apex / mean edge).
-        /// </summary>
-        private void ComputePeakShapeFeatures(
-            List<XicData> xics, XICPeakBounds peak,
-            out double peakApex, out double peakArea, out double peakSharpness)
-        {
-            peakApex = 0.0;
-            peakArea = 0.0;
-            peakSharpness = 0.0;
-
-            if (xics.Count == 0)
-                return;
-
-            int len = xics[0].Intensities.Length;
-            if (len == 0)
-                return;
-
-            int start = Math.Max(0, peak.StartIndex);
-            int end = Math.Min(len - 1, peak.EndIndex);
-            int apex = Math.Max(start, Math.Min(end, peak.ApexIndex));
-
-            if (start > end)
-                return;
-
-            // Use reference XIC (highest total intensity), matching Rust
-            // pipeline.rs:7140-7148. Rust's `xics.iter().max_by(...)`
-            // returns the LAST equal element on ties (per Iterator::max_by
-            // doc), so use `>=` here, NOT `>`. Without this, the first
-            // tied fragment wins on the C# side while Rust picks the
-            // last, producing divergent peak_apex / peak_area /
-            // peak_sharpness when fragments tie on total intensity.
-            int refIdx = 0;
-            double bestTotal = -1.0;
-            for (int f = 0; f < xics.Count; f++)
-            {
-                double total = 0.0;
-                double[] inten = xics[f].Intensities;
-                for (int i = 0; i < inten.Length; i++)
-                    total += inten[i];
-                if (total >= bestTotal)
-                {
-                    bestTotal = total;
-                    refIdx = f;
-                }
-            }
-
-            double[] refInten = xics[refIdx].Intensities;
-            double[] refRts = xics[refIdx].RetentionTimes;
-
-            // peak_apex == intensity at peak.ApexIndex in the reference
-            // XIC. This matches Rust pipeline.rs:6547 which sets
-            // `peak_apex: peak.apex_intensity` (the value already
-            // assigned in BuildOverridePeaks / the CWT-path FindPeaks).
-            //
-            // Earlier C# implementations recomputed apex as the local
-            // max in `ref_xic[start..=end]`. That recomputation diverges
-            // from Rust on the OVERRIDE path: there, Rust deliberately
-            // uses the override-supplied apex_index even when a
-            // different scan in [start..=end] has higher intensity (the
-            // override is the authoritative apex for reconciliation /
-            // gap-fill scoring). The local-max approach put C# at
-            // ~32k row peak_apex / peak_sharpness divergence vs Rust on
-            // the reconciled .scores.parquet.
-            //
-            // Use peak.ApexIndex (clipped above) and look up the
-            // intensity directly. Sharpness slopes below also use this
-            // apex position so the left/right edges align with what
-            // Rust computes.
-            int apexIdx = apex;
-            double apexVal = refInten[apexIdx];
-            peakApex = apexVal;
-
-            // Area: trapezoidal integration on the reference XIC.
-            // Matches Rust trapezoidal_area(ref_xic[si..=ei]).
-            double area = 0.0;
-            for (int i = start; i < end; i++)
-            {
-                double dt = refRts[i + 1] - refRts[i];
-                double avgHeight = (refInten[i] + refInten[i + 1]) * 0.5;
-                area += avgHeight * dt;
-            }
-            peakArea = area;
-
-            // Sharpness: mean of left and right slopes on the reference XIC.
-            // Matches Rust pipeline.rs:5212-5234.
-            double leftSlope = 0.0;
-            if (apexIdx > start)
-            {
-                double dt = refRts[apexIdx] - refRts[start];
-                if (dt > 1e-10)
-                    leftSlope = (apexVal - refInten[start]) / dt;
-            }
-            double rightSlope = 0.0;
-            if (end > apexIdx)
-            {
-                double dt = refRts[end] - refRts[apexIdx];
-                if (dt > 1e-10)
-                    rightSlope = (apexVal - refInten[end]) / dt;
-            }
-            peakSharpness = (leftSlope + rightSlope) * 0.5;
-        }
-
-
-        /// <summary>
-        /// Compute cosine similarity at a single scan, filtering fragments to the
-        /// spectrum's observed m/z range. Matches Rust compute_cosine_at_scan in
-        /// osprey-scoring/src/lib.rs:382. Unlike LibCosine, fragments outside the
-        /// spectrum's mass range are excluded (not treated as zero-intensity pairs).
-        /// </summary>
-        private static double ComputeCosineAtScan(
-            LibraryEntry candidate, Spectrum spectrum, OspreyConfig config)
-        {
-            if (candidate.Fragments == null || candidate.Fragments.Count == 0 ||
-                spectrum.Mzs == null || spectrum.Mzs.Length == 0)
-                return 0.0;
-
-            double specMzMin = spectrum.Mzs[0];
-            double specMzMax = spectrum.Mzs[spectrum.Mzs.Length - 1];
-
-            var libPre = new List<double>();
-            var obsPre = new List<double>();
-
-            foreach (var frag in candidate.Fragments)
-            {
-                // Skip fragments outside the spectrum's mass range
-                if (frag.Mz < specMzMin || frag.Mz > specMzMax)
-                    continue;
-
-                double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
-                double lower = frag.Mz - tolDa;
-                double upper = frag.Mz + tolDa;
-
-                int lo = BinarySearchLowerBound(spectrum.Mzs, lower);
-                double bestIntensity = 0.0;
-                double bestDiff = double.MaxValue;
-
-                for (int k = lo; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
-                {
-                    double diff = Math.Abs(spectrum.Mzs[k] - frag.Mz);
-                    if (diff < bestDiff)
-                    {
-                        bestDiff = diff;
-                        bestIntensity = spectrum.Intensities[k];
-                    }
-                }
-
-                libPre.Add(Math.Sqrt(frag.RelativeIntensity));
-                obsPre.Add(Math.Sqrt(bestIntensity));
-            }
-
-            if (libPre.Count == 0)
-                return 0.0;
-
-            // L2 normalize and dot product
-            double libNorm = 0, obsNorm = 0, dot = 0;
-            for (int i = 0; i < libPre.Count; i++)
-            {
-                libNorm += libPre[i] * libPre[i];
-                obsNorm += obsPre[i] * obsPre[i];
-                dot += libPre[i] * obsPre[i];
-            }
-            libNorm = Math.Sqrt(libNorm);
-            obsNorm = Math.Sqrt(obsNorm);
-            if (libNorm < 1e-12 || obsNorm < 1e-12)
-                return 0.0;
-            return dot / (libNorm * obsNorm);
-        }
-
-
-        /// <summary>
-        /// Compute apex-level match features: explained intensity fraction, and mean
-        /// signed / absolute mass error (in the tolerance unit, typically ppm).
-        /// </summary>
-        private void ComputeApexMatchFeatures(
-            LibraryEntry candidate, Spectrum apexSpectrum, OspreyConfig config,
-            out double explainedIntensity,
-            out double massAccuracyMean,
-            out double absMassAccuracyMean)
-        {
-            explainedIntensity = 0.0;
-            massAccuracyMean = 0.0;
-            absMassAccuracyMean = 0.0;
-
-            // Do NOT early-return when apex spectrum or candidate fragments
-            // are empty. Rust's compute_mass_accuracy
-            // (osprey-scoring/src/lib.rs:464) handles empty inputs by
-            // returning (0.0, tolerance, tolerance) — so a candidate that
-            // reaches this function with no matchable fragments still
-            // contributes the calibrated tolerance as its abs mass error.
-            // The early-return form left absMassAccuracyMean at 0 instead,
-            // producing ~65 divergent rows on Astral (file 49: 2 rows,
-            // 55: 27 rows, 60: 36 rows). Let the matching loop run with
-            // zero iterations and fall through to the nMatched==0 fallback
-            // at the bottom of the function for cross-impl symmetry.
-            double totalIntensity = 0.0;
-            if (apexSpectrum.Intensities != null)
-            {
-                for (int i = 0; i < apexSpectrum.Intensities.Length; i++)
-                    totalIntensity += apexSpectrum.Intensities[i];
-            }
-
-            double matchedIntensity = 0.0;
-            double massErrSum = 0.0;
-            double absMassErrSum = 0.0;
-            int nMatched = 0;
-
-            if (apexSpectrum.Mzs != null && apexSpectrum.Intensities != null &&
-                candidate.Fragments != null)
-            {
-                foreach (var frag in candidate.Fragments)
-                {
-                    double tolDa = config.FragmentTolerance.ToleranceDa(frag.Mz);
-                    double lower = frag.Mz - tolDa;
-                    double upper = frag.Mz + tolDa;
-
-                    int lo = BinarySearchLowerBound(apexSpectrum.Mzs, lower);
-                    double bestError = double.MaxValue;
-                    double bestIntensity = 0.0;
-                    double bestMz = 0.0;
-                    bool found = false;
-
-                    // Match closest peak by m/z (not most intense).
-                    // Matches Rust SpectralScorer::match_fragments in lib.rs:2239.
-                    for (int k = lo; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
-                    {
-                        double errorDa = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
-                        if (errorDa < bestError)
-                        {
-                            bestError = errorDa;
-                            bestIntensity = apexSpectrum.Intensities[k];
-                            bestMz = apexSpectrum.Mzs[k];
-                            found = true;
-                        }
-                    }
-
-                    if (found)
-                    {
-                        matchedIntensity += bestIntensity;
-                        double err = config.FragmentTolerance.MassError(frag.Mz, bestMz);
-                        massErrSum += err;
-                        absMassErrSum += Math.Abs(err);
-                        nMatched++;
-                    }
-                }
-            }
-
-            if (totalIntensity > 1e-12)
-                explainedIntensity = matchedIntensity / totalIntensity;
-
-            if (nMatched > 0)
-            {
-                massAccuracyMean = massErrSum / nMatched;
-                absMassAccuracyMean = absMassErrSum / nMatched;
-            }
-            else
-            {
-                // No matched fragments: report worst-case (calibrated) tolerance
-                // as the absolute mass error, matching Rust compute_mass_accuracy
-                // which returns (0.0, tolerance, tolerance) on empty matches
-                // (osprey-scoring/src/lib.rs:462-465). This penalizes unmatched
-                // entries in FDR instead of giving them a spurious 0 error.
-                massAccuracyMean = 0.0;
-                absMassAccuracyMean = config.FragmentTolerance.Tolerance;
-            }
-        }
-
-
-        /// <summary>
-        /// Compute MS1 features: correlation between the summed fragment XIC and the
-        /// precursor MS1 XIC, and cosine similarity between the observed isotope envelope
-        /// at the apex MS1 scan and the theoretical averagine envelope.
-        /// </summary>
-        private void ComputeMs1Features(
-            LibraryEntry candidate,
-            List<XicData> xics,
-            int refXicIdx,
-            XICPeakBounds peak,
-            double[] windowRts, int startScan,
-            List<MS1Spectrum> ms1Spectra,
-            MzCalibrationResult ms1Calibration,
-            OspreyConfig config,
-            out double ms1PrecursorCoelution,
-            out double ms1IsotopeCosine)
-        {
-            ms1PrecursorCoelution = 0.0;
-            ms1IsotopeCosine = 0.0;
-
-            if (xics.Count == 0 || ms1Spectra == null || ms1Spectra.Count == 0)
-                return;
-
-            int len = xics[0].Intensities.Length;
-            if (len == 0)
-                return;
-
-            int start = Math.Max(0, peak.StartIndex);
-            int end = Math.Min(len - 1, peak.EndIndex);
-            if (end - start + 1 < 3)
-                return;
-
-            // MS1 calibration: reverse-calibrate search m/z and use calibrated tolerance.
-            // Matches Rust pipeline.rs:5363-5370 (reverse_calibrate_mz + calibrated_tolerance_ppm).
-            double baseTolPpm = 10.0;
-            double ms1TolPpm = baseTolPpm;
-            double searchMz = candidate.PrecursorMz;
-            if (ms1Calibration != null && ms1Calibration.Calibrated)
-            {
-                // calibrated_tolerance_ppm: max(3*SD, 1.0) ppm
-                ms1TolPpm = Math.Max(3.0 * ms1Calibration.SD, 1.0);
-                // reverse_calibrate_mz: observed ~ theoretical + offset
-                if (ms1Calibration.Unit == "Th")
-                    searchMz = candidate.PrecursorMz + ms1Calibration.Mean;
-                else
-                    searchMz = candidate.PrecursorMz * (1.0 + ms1Calibration.Mean / 1e6);
-            }
-
-            // Correlate MS1 precursor intensity with reference XIC (not summed fragment).
-            // Rust pipeline.rs:5373-5389: uses ref_xic[start..=end], skips missing MS1.
-            double[] refIntensities = xics[refXicIdx].Intensities;
-            var ms1Intensities = new List<double>();
-            var refValues = new List<double>();
-
-            for (int i = start; i <= end; i++)
-            {
-                double rt = windowRts[startScan + i];
-                var ms1 = FindNearestMs1(ms1Spectra, rt);
-                if (ms1 != null)
-                {
-                    var peakInfo = ms1.FindPeakPpm(searchMz, ms1TolPpm);
-                    double intensity = peakInfo.HasValue ? peakInfo.Value.Intensity : 0.0;
-                    ms1Intensities.Add(intensity);
-                    refValues.Add(i < refIntensities.Length ? refIntensities[i] : 0.0);
-                }
-            }
-
-            if (ms1Intensities.Count >= 3)
-            {
-                double[] ms1Arr = ms1Intensities.ToArray();
-                double[] refArr = refValues.ToArray();
-                ms1PrecursorCoelution = PearsonCorrelation(ms1Arr, refArr, 0, ms1Arr.Length - 1);
-                if (double.IsNaN(ms1PrecursorCoelution))
-                    ms1PrecursorCoelution = 0.0;
-            }
-
-            // Isotope cosine at apex MS1 scan.
-            // Rust pipeline.rs:5393-5404: gates on envelope.has_m0().
-            int apex = Math.Max(start, Math.Min(end, peak.ApexIndex));
-            double apexRt = windowRts[startScan + apex];
-            var apexMs1 = FindNearestMs1(ms1Spectra, apexRt);
-            if (apexMs1 != null)
-            {
-                int charge = candidate.Charge > 0 ? candidate.Charge : 1;
-                var envelope = IsotopeEnvelope.Extract(
-                    apexMs1, searchMz, charge, ms1TolPpm);
-
-                // Gate: skip if M0 peak is missing (matches Rust envelope.has_m0())
-                if (envelope.Intensities != null && envelope.Intensities.Length > 1
-                    && envelope.Intensities[1] > 0.0) // index 1 = M0 (M-1 at 0)
-                {
-                    // Sequence-based isotope distribution, matching Rust
-                    // pipeline.rs:5400 peptide_isotope_cosine.
-                    double score = IsotopeDistribution.PeptideIsotopeCosine(
-                        candidate.Sequence, envelope.Intensities);
-                    if (score >= 0.0)
-                        ms1IsotopeCosine = score;
-                }
-            }
-        }
-
-
-        /// <summary>
         /// Find the MS1 spectrum with retention time closest to the given RT.
-        /// Assumes MS1 spectra are sorted by RT.
+        /// Assumes MS1 spectra are sorted by RT. Thin forwarder to the single
+        /// implementation in Core (<see cref="MS1Spectrum.FindNearest"/>) so the
+        /// harness (here + <c>Calibrator</c>) and the MS1 feature calculators share
+        /// one binary search / tie-break and cannot drift.
         /// </summary>
-        protected static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
+        internal static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
         {
-            if (ms1Spectra == null || ms1Spectra.Count == 0)
-                return null;
-
-            int lo = 0;
-            int hi = ms1Spectra.Count;
-            while (lo < hi)
-            {
-                int mid = lo + (hi - lo) / 2;
-                if (ms1Spectra[mid].RetentionTime < rt)
-                    lo = mid + 1;
-                else
-                    hi = mid;
-            }
-
-            if (lo >= ms1Spectra.Count)
-                return ms1Spectra[ms1Spectra.Count - 1];
-            if (lo == 0)
-                return ms1Spectra[0];
-
-            var prev = ms1Spectra[lo - 1];
-            var next = ms1Spectra[lo];
-            return Math.Abs(prev.RetentionTime - rt) <= Math.Abs(next.RetentionTime - rt)
-                ? prev
-                : next;
+            return MS1Spectrum.FindNearest(ms1Spectra, rt);
         }
 
 
@@ -2477,6 +1796,10 @@ namespace pwiz.OspreySharp.Tasks
         /// [M-1, M+0, M+1, M+2, M+3]. Uses a simple mass-dependent decay model -
         /// sufficient for cosine-similarity comparison with the observed envelope.
         /// </summary>
+        // Dead code: no callers tree-wide (found during the domain-helper
+        // relocation). Left in place, not relocated, pending the Tasks-layer
+        // dead-code pass tracked in TODO-ospreysharp_task_layer_decomposition
+        // (PR-C); do not delete without confirming it is still uncalled.
         private static double[] TheoreticalIsotopeEnvelope(double precursorMz, int charge)
         {
             // Approximate neutral mass (ignores proton mass precisely - good enough here).
@@ -2502,6 +1825,10 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Cosine similarity between two equal-length arrays (sqrt-intensity preprocessing).
         /// </summary>
+        // Dead code: no callers tree-wide. Left in place (not relocated with the
+        // other stateless math) pending the Tasks-layer dead-code pass tracked in
+        // TODO-ospreysharp_task_layer_decomposition (PR-C); do not delete without
+        // confirming it is still uncalled.
         private static double CosineSimilarity(double[] a, double[] b)
         {
             if (a == null || b == null || a.Length != b.Length || a.Length == 0)
@@ -2526,93 +1853,6 @@ namespace pwiz.OspreySharp.Tasks
 
 
         /// <summary>
-        /// Compute Pearson correlation between two intensity arrays over a range.
-        /// </summary>
-        private double PearsonCorrelation(double[] x, double[] y, int start, int end)
-        {
-            int n = end - start + 1;
-            if (n < 3)
-                return double.NaN;
-
-            double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-            for (int i = start; i <= end; i++)
-            {
-                sumX += x[i];
-                sumY += y[i];
-                sumXY += x[i] * y[i];
-                sumX2 += x[i] * x[i];
-                sumY2 += y[i] * y[i];
-            }
-
-            double denom = Math.Sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-            if (denom < 1e-10)
-                return 0.0;
-
-            return (n * sumXY - sumX * sumY) / denom;
-        }
-
-
-        /// <summary>
-        /// Count consecutive b/y ion matches at the apex spectrum.
-        /// </summary>
-        private byte CountConsecutiveIons(
-            LibraryEntry entry, Spectrum spectrum, OspreyConfig config)
-        {
-            if (entry.Fragments == null || entry.Fragments.Count == 0)
-                return 0;
-
-            // Group fragments by ion type and check which ordinals match
-            var bMatched = new HashSet<int>();
-            var yMatched = new HashSet<int>();
-
-            foreach (var frag in entry.Fragments)
-            {
-                if (SpectralScorer.HasMatch(frag.Mz, spectrum.Mzs, config.FragmentTolerance))
-                {
-                    if (frag.Annotation.IonType == IonType.B)
-                        bMatched.Add(frag.Annotation.Ordinal);
-                    else if (frag.Annotation.IonType == IonType.Y)
-                        yMatched.Add(frag.Annotation.Ordinal);
-                }
-            }
-
-            // Find longest consecutive run
-            byte maxConsecutive = 0;
-            maxConsecutive = Math.Max(maxConsecutive, LongestConsecutiveRun(bMatched));
-            maxConsecutive = Math.Max(maxConsecutive, LongestConsecutiveRun(yMatched));
-
-            return maxConsecutive;
-        }
-
-
-        private byte LongestConsecutiveRun(HashSet<int> ordinals)
-        {
-            if (ordinals.Count == 0)
-                return 0;
-
-            var sorted = ordinals.OrderBy(x => x).ToList();
-            byte maxRun = 1;
-            byte currentRun = 1;
-
-            for (int i = 1; i < sorted.Count; i++)
-            {
-                if (sorted[i] == sorted[i - 1] + 1)
-                {
-                    currentRun++;
-                    if (currentRun > maxRun)
-                        maxRun = currentRun;
-                }
-                else
-                {
-                    currentRun = 1;
-                }
-            }
-
-            return maxRun;
-        }
-
-
-        /// <summary>
         /// Count top-6 fragment matches at the apex spectrum.
         /// </summary>
         /// <summary>
@@ -2621,7 +1861,7 @@ namespace pwiz.OspreySharp.Tasks
         /// value (called once per scored entry, not in the hot prefilter loop).
         /// The prefilter uses HasTopNFragmentMatch instead for speed.
         /// </summary>
-        protected byte CountTop6Matches(
+        internal static byte CountTop6Matches(
             LibraryEntry entry, Spectrum spectrum, OspreyConfig config)
         {
             if (entry.Fragments == null || entry.Fragments.Count == 0)
@@ -2826,7 +2066,7 @@ namespace pwiz.OspreySharp.Tasks
 
                         var fragsA = library[libIdxA].Fragments;
                         var fragsB = library[libIdxB].Fragments;
-                        int overlap = CountTopNFragmentOverlap(fragsA, fragsB, 6,
+                        int overlap = FragmentOverlap.CountTopNFragmentOverlap(fragsA, fragsB, 6,
                             fragTolValue, fragTolUnit);
                         int minA = Math.Min(fragsA.Count, 6);
                         int minB = Math.Min(fragsB.Count, 6);
@@ -2871,69 +2111,6 @@ namespace pwiz.OspreySharp.Tasks
         }
 
 
-        /// <summary>
-        /// Count how many of the top-N (by intensity) m/z values from
-        /// <paramref name="fragsA"/> have a match within tolerance in
-        /// the top-N of <paramref name="fragsB"/>. Mirrors
-        /// osprey/crates/osprey/src/pipeline.rs::count_topn_fragment_overlap.
-        /// </summary>
-        private static int CountTopNFragmentOverlap(
-            IList<LibraryFragment> fragsA, IList<LibraryFragment> fragsB,
-            int n, double tolerance, ToleranceUnit unit)
-        {
-            double[] topA = TopNFragmentMzs(fragsA, n);
-            double[] topB = TopNFragmentMzs(fragsB, n);
-            Array.Sort(topB); // Array.Sort OK: single primitive array used only for binary-search of m/z; tie-ordering doesn't affect match-or-not
-            int matches = 0;
-            for (int i = 0; i < topA.Length; i++)
-            {
-                double mz = topA[i];
-                double tolDa = unit == ToleranceUnit.Ppm ? mz * tolerance / 1e6 : tolerance;
-                double lo = mz - tolDa;
-                double hi = mz + tolDa;
-                int idx = LowerBoundDouble(topB, lo);
-                if (idx < topB.Length && topB[idx] <= hi) matches++;
-            }
-            return matches;
-        }
-
-
-        /// <summary>Get m/z values of top-N fragments by intensity (stable on ties).</summary>
-        private static double[] TopNFragmentMzs(IList<LibraryFragment> fragments, int n)
-        {
-            if (fragments.Count <= n)
-            {
-                var all = new double[fragments.Count];
-                for (int i = 0; i < fragments.Count; i++) all[i] = fragments[i].Mz;
-                return all;
-            }
-            // Stable sort by descending intensity (matches Rust slice::sort_by).
-            var idx = new int[fragments.Count];
-            for (int i = 0; i < idx.Length; i++) idx[i] = i;
-            Array.Sort(idx, (a, b) => // Array.Sort OK: comparator's secondary key is the unique fragment index, so no ties
-            {
-                int c = fragments[b].RelativeIntensity.CompareTo(fragments[a].RelativeIntensity);
-                return c != 0 ? c : a.CompareTo(b);
-            });
-            var top = new double[n];
-            for (int i = 0; i < n; i++) top[i] = fragments[idx[i]].Mz;
-            return top;
-        }
-
-
-        /// <summary>Smallest index i where arr[i] >= v (sorted ascending).</summary>
-        private static int LowerBoundDouble(double[] arr, double v)
-        {
-            int lo = 0, hi = arr.Length;
-            while (lo < hi)
-            {
-                int m = (lo + hi) >> 1;
-                if (arr[m] < v) lo = m + 1; else hi = m;
-            }
-            return lo;
-        }
-
-
         protected List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
         {
             // Group by base_id (mask off high bit)
@@ -2975,6 +2152,18 @@ namespace pwiz.OspreySharp.Tasks
                     deduped.Add(pair.Value);
             }
 
+            // Sort by EntryId for deterministic order regardless of Dictionary
+            // iteration. Mirrors Rust deduplicate_pairs's final sort_by_key
+            // (pipeline.rs:6123) and its comment: "Without this, the random
+            // HashMap order propagates to SVM feature matrix row ordering,
+            // causing non-deterministic gradient updates and model weights."
+            // Cross-impl: the straight-through path feeds these entries
+            // directly to Percolator (no parquet round-trip to mask the
+            // un-sorted order), so an unsorted dedup output cascades into
+            // SVM working-set divergence and ~190-precursor / ~270-peptide
+            // first-pass FDR drift on Stellar Single.
+            deduped.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
+
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
@@ -2983,22 +2172,6 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return deduped;
-        }
-
-
-        protected static int BinarySearchLowerBound(double[] sortedArray, double value)
-        {
-            int lo = 0;
-            int hi = sortedArray.Length;
-            while (lo < hi)
-            {
-                int mid = lo + (hi - lo) / 2;
-                if (sortedArray[mid] < value)
-                    lo = mid + 1;
-                else
-                    hi = mid;
-            }
-            return lo;
         }
     }
 }

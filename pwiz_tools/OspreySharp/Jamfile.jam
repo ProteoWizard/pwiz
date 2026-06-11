@@ -22,47 +22,17 @@
 #
 
 
-import modules generate-version ;
+import modules ;
 if [ modules.peek : NT ]
 {
-    import path feature ;
     path-constant OSPREY_SHARP_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/OspreySharp ;
 
-    # Generate per-project AssemblyInfo.cs with current pwiz version metadata,
-    # replacing the hand-written AssemblyInfo.cs files. Same machinery that
-    # stamps SkylineBatch, AutoQC, SeeMS, etc.
-    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp/Properties/AssemblyInfo.cs
-        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-        : "OspreySharp" "Osprey DIA analysis -- C# port of maccoss/osprey"
-          "University of Washington" "OspreySharp" ;
-    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.Core/Properties/AssemblyInfo.cs
-        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-        : "OspreySharp.Core" "Core data types for OspreySharp"
-          "University of Washington" "OspreySharp" ;
-    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.Scoring/Properties/AssemblyInfo.cs
-        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-        : "OspreySharp.Scoring" "Spectral scoring for OspreySharp"
-          "University of Washington" "OspreySharp" ;
-    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.Chromatography/Properties/AssemblyInfo.cs
-        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-        : "OspreySharp.Chromatography" "RT calibration + peak detection for OspreySharp"
-          "University of Washington" "OspreySharp" ;
-    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.IO/Properties/AssemblyInfo.cs
-        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-        : "OspreySharp.IO" "mzML + library loaders for OspreySharp"
-          "University of Washington" "OspreySharp" ;
-    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.ML/Properties/AssemblyInfo.cs
-        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-        : "OspreySharp.ML" "Machine learning primitives for OspreySharp"
-          "University of Washington" "OspreySharp" ;
-    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.FDR/Properties/AssemblyInfo.cs
-        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-        : "OspreySharp.FDR" "Percolator + protein FDR for OspreySharp"
-          "University of Washington" "OspreySharp" ;
-    generate-version.AssemblyInfo.cs $(OSPREY_SHARP_PATH)/OspreySharp.Test/Properties/AssemblyInfo.cs
-        : $(PWIZ_MAJOR) : $(PWIZ_MINOR) : $(PWIZ_BUILD_TIMESTAMP) : $(PWIZ_GIT_REV)
-        : "OspreySharp.Test" "Unit tests for OspreySharp"
-          "University of Washington" "OspreySharp" ;
+    # OspreySharp uses SDK-style csproj that auto-generates AssemblyInfo from
+    # the MSBuild properties in pwiz_tools/OspreySharp/Directory.Build.props
+    # (Company, Copyright, Version, etc.).  Unlike SkylineBatch/AutoQC/SeeMS,
+    # we do NOT generate Properties/AssemblyInfo.cs here -- doing so would
+    # conflict with the SDK auto-gen and break the standalone build.ps1 flow
+    # with CS0579 duplicate-attribute errors.
 
     rule do_osprey_sharp ( targets + : sources * : properties * )
     {

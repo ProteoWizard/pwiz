@@ -46,6 +46,8 @@
 #include "boost/locale/encoding_utf.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include <thread>
+#include <chrono>
 
 
 using namespace pwiz::util;
@@ -1004,18 +1006,85 @@ TestResult testReader(const Reader& reader, const vector<string>& args, bool tes
                 if (bfs::exists(rawpath))
                 {
                     // test that the reader releases any locks on the data so it can be moved/deleted
-                    try
+                    // retry briefly to absorb transient holds from AV scanners / indexers / OS
+                    // file-handle release lag on CI agents -- a real reader-side handle leak
+                    // remains pinned no matter how long we wait, so the final failure path
+                    // still surfaces those.
+                    //
+                    // Track which side of the rename round-trip we are on so that if the
+                    // forward rename succeeds but the rename-back fails, the retry only
+                    // repeats the rename-back step (rather than failing with "path not
+                    // found" because the source has already moved) and the final
+                    // diagnostic queries the path that is actually still on disk.
+                    std::string renamedPath = rawpath + ".renamed";
+                    bool isRenamed = false;
+                    bool renameOk = false;
+                    std::string lastError = "(no exception captured)";
+                    for (int attempt = 0; attempt < 5; ++attempt)
                     {
-                        bfs::rename(rawpath, rawpath + ".renamed");
-                        bfs::rename(rawpath + ".renamed", rawpath);
+                        if (attempt > 0)
+                            std::this_thread::sleep_for(std::chrono::milliseconds(250 * attempt));
+                        try
+                        {
+                            if (!isRenamed)
+                            {
+                                bfs::rename(rawpath, renamedPath);
+                                isRenamed = true;
+                            }
+                            bfs::rename(renamedPath, rawpath);
+                            isRenamed = false;
+                            renameOk = true;
+                            break;
+                        }
+                        catch (const std::exception& e) { lastError = e.what(); }
+                        catch (...) { lastError = "(unknown rename failure)"; }
                     }
-                    catch (...)
+                    if (!renameOk)
                     {
-                        // HACK: bug in CompassXtract, used only for YEP/FID formats now, keeps directory locked after opening it but has no problem with re-opening the file
-                        if (bfs::exists(bfs::path(rawpath) / "Analysis.yep"))
+                        const std::string& currentPath = isRenamed ? renamedPath : rawpath;
+                        // HACK: bug in CompassXtract, used only for YEP/FID formats now,
+                        // keeps directory locked after opening it but has no problem with
+                        // re-opening the file. Only suppress when the fixture is still intact
+                        // (forward rename never happened); a failed rename-back leaves the
+                        // fixture at <rawpath>.renamed and must surface as an error so the
+                        // test run does not continue against a broken fixture.
+                        if (!isRenamed && bfs::exists(bfs::path(rawpath) / "Analysis.yep"))
                             cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
                         else
-                            throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
+                        {
+                            // Report the source -> target of the actual failing rename:
+                            // if isRenamed is true the forward rename succeeded and the
+                            // rename-back is the failing operation (renamedPath -> rawpath);
+                            // otherwise the forward rename itself failed (rawpath -> renamedPath).
+                            const std::string& sourcePath = isRenamed ? renamedPath : rawpath;
+                            const std::string& targetPath = isRenamed ? rawpath : renamedPath;
+                            // Distinguish "path no longer exists" (e.g. AV quarantined it)
+                            // from "RestartManager found no holders" -- the former is a
+                            // useful diagnostic; the latter is the default sentinel.
+                            std::string holders = bfs::exists(currentPath)
+                                ? find_locking_processes(currentPath)
+                                : "(path no longer exists: " + currentPath + ")";
+                            // Best-effort restoration: if the forward rename succeeded but
+                            // the rename-back is what's failing, try one last non-throwing
+                            // rename-back so subsequent tests at least see the fixture at
+                            // its expected location (locked, but locatable) rather than
+                            // missing entirely.
+                            if (isRenamed)
+                            {
+                                boost::system::error_code ec;
+                                bfs::rename(renamedPath, rawpath, ec);
+                                // result intentionally ignored; we're about to throw
+                            }
+                            // Also log to cerr before throwing -- test harnesses sometimes
+                            // truncate or reformat exception what() strings, and the
+                            // lock-holder list is exactly the information we want preserved
+                            // verbatim in CI logs.
+                            std::string msg = "Cannot rename " + sourcePath + " -> " + targetPath +
+                                              ": there are unreleased file locks! "
+                                              "Last error: " + lastError + ". Lock holders: " + holders;
+                            cerr << msg << endl;
+                            throw runtime_error(msg);
+                        }
                     }
                 }
             }

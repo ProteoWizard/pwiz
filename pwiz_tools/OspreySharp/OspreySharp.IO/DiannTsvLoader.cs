@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using System.Xml;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.IO
@@ -508,18 +509,43 @@ namespace pwiz.OspreySharp.IO
 
         private static double ParseDouble(string s, string name, int rowNum)
         {
-            double value;
-            if (!double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            // XmlConvert.ToDouble is IEEE-754 correct (XML schema spec requires
+            // correct rounding) whereas .NET Framework 4.7.2's double.TryParse
+            // can be off by a few ULPs on 16-digit scientific values. For TSV
+            // library values like "400.1277954005887", .NET Framework parses
+            // to a different f64 than the IEEE-correct round-to-nearest-even,
+            // producing cross-impl drift in mz_min/mz_max and downstream bin
+            // widths. Rust's `str::parse::<f64>` is IEEE-correct, so using
+            // XmlConvert brings the two parsers into bit-for-bit agreement.
+            try
+            {
+                return XmlConvert.ToDouble(s);
+            }
+            catch (FormatException)
+            {
                 throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
-            return value;
+            }
+            catch (OverflowException)
+            {
+                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
+            }
         }
 
         private static float ParseFloat(string s, string name, int rowNum)
         {
-            float value;
-            if (!float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
+            // XmlConvert for IEEE-754 correct parsing - see ParseDouble note.
+            try
+            {
+                return XmlConvert.ToSingle(s);
+            }
+            catch (FormatException)
+            {
                 throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
-            return value;
+            }
+            catch (OverflowException)
+            {
+                throw new InvalidDataException(string.Format("Invalid {0} '{1}' at row {2}", name, s, rowNum));
+            }
         }
 
         private static byte ParseByte(string s, string name, int rowNum)
@@ -534,10 +560,19 @@ namespace pwiz.OspreySharp.IO
         {
             if (string.IsNullOrEmpty(s))
                 return defaultValue;
-            double value;
-            if (double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out value))
-                return value;
-            return defaultValue;
+            // XmlConvert for IEEE-754 correct parsing - see ParseDouble note.
+            try
+            {
+                return XmlConvert.ToDouble(s);
+            }
+            catch (FormatException)
+            {
+                return defaultValue;
+            }
+            catch (OverflowException)
+            {
+                return defaultValue;
+            }
         }
 
         #endregion

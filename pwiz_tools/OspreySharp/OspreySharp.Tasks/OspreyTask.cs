@@ -49,7 +49,7 @@ namespace pwiz.OspreySharp.Tasks
     /// skips Run when every output exists with a matching key. The
     /// same skip-if-valid check applies to every CLI mode — cross-impl
     /// / worker-mode invocations (<c>--input-scores</c> /
-    /// <c>--join-at-pass=*</c>) flow through the same driver, so
+    /// <c>--task &lt;Name&gt;</c>) flow through the same driver, so
     /// validity-key match drives the decision rather than any CLI
     /// flag gate. (Cross-impl correctness on <c>--input-scores</c>
     /// parquets is enforced separately by the parquet
@@ -82,6 +82,51 @@ namespace pwiz.OspreySharp.Tasks
         public abstract bool Run(PipelineContext ctx);
 
         /// <summary>
+        /// Lazily bring this task's outputs into memory from its on-disk
+        /// artifacts, without recomputing them — the disk-load counterpart to
+        /// the compute-only <see cref="Run"/>. Invoked at most once per run by
+        /// <see cref="PipelineContext.Demand{T}"/> when a consumer first
+        /// reaches for this producer's state and the producer's own
+        /// <see cref="Run"/> was never called (e.g. a worker-mode invocation
+        /// that starts mid-pipeline). A producer whose <see cref="Run"/> did
+        /// already execute returns early via its own one-shot guard, so this is
+        /// a no-op there. Returns the same <c>bool</c> contract as
+        /// <see cref="Run"/>. A purely-aggregating terminal task that nothing
+        /// consumes implements this as a no-op returning <c>true</c>.
+        /// </summary>
+        public abstract bool Rehydrate(PipelineContext ctx);
+
+        /// <summary>
+        /// Whether this task participates in the pipeline for the current
+        /// configuration. Driver-owned membership predicate: the orchestrator
+        /// iterates only the included tasks and runs those whose outputs are
+        /// not already on disk, while excluded tasks lazy-rehydrate their state
+        /// through <see cref="PipelineContext.Demand{T}"/> when an included task
+        /// reaches for it. Replaces the <c>DeriveStartAtTask</c> /
+        /// <c>DeriveStopAfterTask</c> range gating (the membership becomes a
+        /// per-task fact rather than a contiguous [start..stop] window).
+        /// Default <c>true</c>; tasks that run only in some HPC modes override
+        /// to gate on the relevant <see cref="OspreyConfig"/> flags.
+        /// </summary>
+        public virtual bool IsIncluded(PipelineContext ctx) => true;
+
+        /// <summary>
+        /// The byproduct purpose types this task publishes for downstream tasks
+        /// to consume by type through <see cref="PipelineContext.Get{TInfo}"/>.
+        /// The pipeline context inverts these at construction into the
+        /// byproduct -> producer registry, so a consumer's cache miss can
+        /// lazily materialize this task. Each declared type must be published
+        /// (via <see cref="PipelineContext.Publish{TInfo}"/>) on every path this
+        /// task can run -- both <see cref="Run"/> and <see cref="Rehydrate"/> --
+        /// so a consumer sees the same value regardless of how the producer was
+        /// materialized. Default empty: a task that produces no by-type
+        /// consumable state (a terminal aggregator, or one whose only shared
+        /// output is an in-place-mutated buffer demanded directly) overrides
+        /// nothing.
+        /// </summary>
+        public virtual IEnumerable<Type> Publishes => Array.Empty<Type>();
+
+        /// <summary>
         /// File paths this task reads as inputs. Reported in the
         /// <c>.osprey.task</c> sidecar so a human inspecting a
         /// completed-output sidecar can see what the task consumed.
@@ -97,10 +142,12 @@ namespace pwiz.OspreySharp.Tasks
         /// <see cref="Run"/> is skipped. After a successful Run, the
         /// driver writes a <c>&lt;output&gt;.&lt;TaskName&gt;.osprey.task</c>
         /// sidecar next to each output file. The per-task naming lets
-        /// two tasks that produce the same output path (e.g. PerFileScoring
-        /// writes the initial <c>.scores.parquet</c>, PerFileRescore later
-        /// overwrites it in place with reconciled content) keep distinct
-        /// validity records.
+        /// two tasks that produce the same output path keep distinct
+        /// validity records. (Historically PerFileScoring wrote the initial
+        /// <c>.scores.parquet</c> and PerFileRescore overwrote it in place;
+        /// Stage 6 now writes a separate <c>.scores-reconciled.parquet</c>, so
+        /// they no longer share an output -- the per-task naming remains for any
+        /// future same-path producers.)
         ///
         /// A task that returns no Outputs cannot be skipped; the driver
         /// always invokes <see cref="Run"/> for it. Use that posture
@@ -116,16 +163,16 @@ namespace pwiz.OspreySharp.Tasks
         /// output's <c>.osprey.task</c> sidecar after Run; checked on
         /// the next invocation before deciding whether to skip Run.
         ///
-        /// Default includes <see cref="OspreyConfig.SearchParameterHash"/>
-        /// and <see cref="OspreyConfig.LibraryIdentityHash"/> — the
+        /// Default includes <see cref="SearchIdentity.SearchParameterHash"/>
+        /// and <see cref="SearchIdentity.LibraryIdentityHash"/> — the
         /// two hashes that already participate in the parquet-metadata
         /// integrity check downstream. Tasks with extra per-task state
-        /// that affects their output (e.g. <see cref="OspreyConfig.ReconciliationParameterHash"/>
+        /// that affects their output (e.g. <see cref="SearchIdentity.ReconciliationParameterHash"/>
         /// for the rescore task) override and append.
         /// </summary>
         public virtual string ValidityKey(PipelineContext ctx) => string.Format(
             @"search={0};library={1}",
-            ctx.Config.SearchParameterHash(),
-            ctx.Config.LibraryIdentityHash());
+            ctx.Config.Identity.SearchParameterHash(),
+            ctx.Config.Identity.LibraryIdentityHash());
     }
 }
