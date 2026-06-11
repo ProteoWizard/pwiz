@@ -119,6 +119,25 @@ namespace pwiz.Skyline.Model.Results
         public int? MassErrorsCount { get { return MassErrors == null ? (int?)null : MassErrors.Count; } }
 
         /// <summary>
+        /// The chromatogram index whose spill file the shared times list was written to, or -1 if
+        /// the times will not be read back from disk. ChromGroups uses this to refuse reading a
+        /// shared list from the wrong spill file (the spill-file mismatch bug).
+        /// </summary>
+        public int TimesSpillChromatogramIndex
+        {
+            get { return Times != null && Times.WouldReadFromDisk ? Times.SpillChromatogramIndex : -1; }
+        }
+
+        /// <summary>
+        /// The chromatogram index whose spill file the shared scans list was written to, or -1 if
+        /// the scans will not be read back from disk.
+        /// </summary>
+        public int ScansSpillChromatogramIndex
+        {
+            get { return Scans != null && Scans.WouldReadFromDisk ? Scans.SpillChromatogramIndex : -1; }
+        }
+
+        /// <summary>
         /// Get a chromatogram with properly sorted time values.
         /// </summary>
         public void ReleaseChromatogram(byte[] bytesFromDisk, out TimeIntensities timeIntensities)
@@ -196,6 +215,15 @@ namespace pwiz.Skyline.Model.Results
     public interface IBlockedList
     {
         void WriteBlock(Stream fileStream);
+
+        // The chromatogram index whose spill file this list's blocks were written to, or -1 if it
+        // never spilled. A shared/grouped times or scans list spills under the precursor's first
+        // product-ion index, which can map to a different spill file than the product ion being
+        // released -- reading it back against that other file's bytes is the spill-file bug.
+        int SpillChromatogramIndex { get; }
+
+        // True if a ToArray call would still read spilled blocks back from disk.
+        bool WouldReadFromDisk { get; }
     }
 
     /// <summary>
@@ -214,6 +242,12 @@ namespace pwiz.Skyline.Model.Results
         private int _blocksInMemory;
         private int _blocksOnDisk;
         private int _filePosition;
+        // The chromatogram index whose spill file this list's blocks were written to, or -1 if it
+        // never spilled. Used to detect (and refuse) reading a shared list back from the wrong
+        // spill file. See IBlockedList.SpillChromatogramIndex.
+        private int _spillChromatogramIndex = -1;
+        public int SpillChromatogramIndex { get { return _spillChromatogramIndex; } }
+        public bool WouldReadFromDisk { get { return _blocksOnDisk > 0; } }
 
         public BlockedList()
         {
@@ -253,7 +287,10 @@ namespace pwiz.Skyline.Model.Results
                 if (_blocksInMemory == 0 || writer == null)
                     NewBlock();
                 else
+                {
+                    _spillChromatogramIndex = chromatogramIndex;
                     writer.WriteBlock(chromatogramIndex, this);
+                }
             }
 
             // Store data.
@@ -320,6 +357,7 @@ namespace pwiz.Skyline.Model.Results
                 // Write zeroed blocks to disk.
                 while (count >= _blockSize)
                 {
+                    _spillChromatogramIndex = chromatogramIndex;
                     writer.WriteBlock(chromatogramIndex, this);
                     count -= _blockSize;
                 }
@@ -684,9 +722,41 @@ namespace pwiz.Skyline.Model.Results
                     // spillFile.CloseStream();
                 }
             }
+            // Refuse to read a shared times/scans list against the wrong spill file's bytes.
+            AssertSharedListsMatchSpillFile(chromatogramIndex, spillFile, collector);
             collector.ReleaseChromatogram(_bytesFromSpillFile, out timeIntensities);
-                
+
             return collector.StatusId;
+        }
+
+        /// <summary>
+        /// A precursor's product ions share one grouped times/scans list, which is spilled to disk
+        /// under the first product ion's chromatogram index. When those product ions are matched
+        /// into more than one peptide grouping they land in different request-order groups -- and so
+        /// different spill files -- but the shared list lives in only one of them. Reading it back
+        /// against another product ion's spill file indexes into the wrong bytes and produces an
+        /// out-of-range crash or silently corrupt data. Throw before that happens.
+        /// See https://github.com/ProteoWizard/pwiz/issues/4287.
+        /// </summary>
+        private void AssertSharedListsMatchSpillFile(int chromatogramIndex, SpillFile readSpillFile, ChromCollector collector)
+        {
+            if (_spillFiles == null)
+                return;
+            AssertSpilledListMatchesSpillFile(chromatogramIndex, collector.TimesSpillChromatogramIndex, readSpillFile);
+            AssertSpilledListMatchesSpillFile(chromatogramIndex, collector.ScansSpillChromatogramIndex, readSpillFile);
+        }
+
+        private void AssertSpilledListMatchesSpillFile(int chromatogramIndex, int spilledChromatogramIndex, SpillFile readSpillFile)
+        {
+            if (spilledChromatogramIndex < 0)
+                return; // list never spilled, or will not be read back from disk
+            var writeSpillFile = _spillFiles[GetGroupIndex(spilledChromatogramIndex)];
+            if (!ReferenceEquals(writeSpillFile, readSpillFile))
+            {
+                throw new InvalidDataException(string.Format(
+                    @"Spill-file mismatch releasing chromatogram {0}: a shared times/scans list spilled under chromatogram index {1} (group {2}) is about to be read from a different group's spill file (group {3}). Reading it against the wrong spill file's bytes corrupts the chromatogram. See https://github.com/ProteoWizard/pwiz/issues/4287.",
+                    chromatogramIndex, spilledChromatogramIndex, GetGroupIndex(spilledChromatogramIndex), GetGroupIndex(chromatogramIndex)));
+            }
         }
 
         /// <summary>
