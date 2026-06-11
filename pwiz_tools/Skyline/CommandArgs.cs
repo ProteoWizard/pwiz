@@ -502,13 +502,8 @@ namespace pwiz.Skyline
         /// </summary>
         private static MsDataFileUri ParseImportFileValue(string value)
         {
-            if (value.StartsWith(WatersConnectUrl.UrlPrefix) &&
-                value.IndexOf('=', WatersConnectUrl.UrlPrefix.Length) < 0)
-            {
-                var pathParts = value.Substring(WatersConnectUrl.UrlPrefix.Length)
-                    .Split('/').Where(part => !string.IsNullOrEmpty(part));
-                return WatersConnectUrl.Empty.ChangePathParts(pathParts);
-            }
+            if (WatersConnectUrl.IsFriendlyUrl(value))
+                return WatersConnectUrl.ParseFriendly(value);
             return MsDataFileUri.Parse(value);
         }
 

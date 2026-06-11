@@ -32,7 +32,6 @@ using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
-using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
@@ -3508,114 +3507,15 @@ namespace pwiz.Skyline
 
         /// <summary>
         /// Resolves a waters_connect data source specified on the command line to a concrete injection.
-        /// A friendly path "waters_connect:&lt;account alias&gt;/Path/To/Injection" (carried as a path-form
-        /// URL whose first part is the alias) is matched to a saved account and navigated on the server to
-        /// fill in the injection ids that the import requires. Non-waters_connect and already-resolved URLs
-        /// (those that already have an injection id) are returned unchanged.
+        /// A friendly path "waters_connect:&lt;account alias&gt;/Path/To/Injection" or a path-form URL without
+        /// an injection id is navigated on the server (via the saved account) to fill in the ids the import
+        /// requires. Non-waters_connect and already-resolved URLs are returned unchanged.
         /// </summary>
-        private MsDataFileUri ResolveWatersConnectImportUri(MsDataFileUri uri)
+        private static MsDataFileUri ResolveWatersConnectImportUri(MsDataFileUri uri)
         {
-            if (!(uri is WatersConnectUrl watersConnectUrl) || watersConnectUrl.InjectionId != null)
-                return uri;
-
-            var pathParts = watersConnectUrl.GetPathParts().ToList();
-            WatersConnectAccount account;
-            IList<string> dataPathParts;
-            if (watersConnectUrl.ServerUrl == null)
-            {
-                // Friendly form: the first path part is the account alias
-                var alias = pathParts.FirstOrDefault();
-                account = FindWatersConnectAccountByAlias(alias);
-                if (account == null)
-                    throw new RemoteServerException(string.Format(
-                        SkylineResources.CommandLine_ResolveWatersConnectImportUri_No_waters_connect_account_was_found_with_the_alias_or_server___0__, alias));
-                dataPathParts = pathParts.Skip(1).ToList();
-            }
-            else
-            {
-                account = watersConnectUrl.FindMatchingAccount() as WatersConnectAccount;
-                if (account == null)
-                    throw new RemoteServerException(string.Format(
-                        WatersConnectResources.WatersConnectUrl_OpenMsDataFile_Cannot_find_account_for_username__0__and_server__1__,
-                        watersConnectUrl.Username, watersConnectUrl.ServerUrl));
-                dataPathParts = pathParts;
-            }
-
-            var injectionName = dataPathParts.LastOrDefault();
-            var sampleSetUrl = (WatersConnectUrl) account.GetRootUrl()
-                .ChangePathParts(dataPathParts.Take(Math.Max(0, dataPathParts.Count - 1)));
-            using (var session = RemoteSession.CreateSession(account))
-            {
-                var injection = injectionName == null
-                    ? null
-                    : FetchRemoteContents(session, sampleSetUrl).FirstOrDefault(item => Equals(item.Label, injectionName));
-                if (injection == null)
-                    throw new RemoteServerException(string.Format(
-                        SkylineResources.CommandLine_ResolveWatersConnectImportUri_Could_not_find_the_injection___0___under_the_waters_connect_path___1__,
-                        injectionName ?? string.Empty, string.Join(@"/", dataPathParts)));
-                return injection.MsDataFileUri;
-            }
-        }
-
-        private static WatersConnectAccount FindWatersConnectAccountByAlias(string alias)
-        {
-            var accounts = (RemoteUrl.RemoteAccountStorage?.GetRemoteAccounts() ?? Array.Empty<RemoteAccount>())
-                .OfType<WatersConnectAccount>().ToArray();
-            return accounts.FirstOrDefault(account => Equals(account.AccountAlias, alias))
-                   ?? accounts.FirstOrDefault(account => Equals(account.ServerUrl, alias));
-        }
-
-        private const int REMOTE_FETCH_MAX_ATTEMPTS = 60;
-        private const int REMOTE_FETCH_WAIT_MS = 1000;
-
-        /// <summary>
-        /// Synchronously drives the asynchronous fetch for a remote URL until its contents are
-        /// available, then returns the listed child items. Throws if the server reports an error
-        /// or does not finish responding within the timeout.
-        /// </summary>
-        private static IList<RemoteItem> FetchRemoteContents(RemoteSession session, RemoteUrl remoteUrl)
-        {
-            var signal = new object();
-            void OnContentsAvailable()
-            {
-                lock (signal) Monitor.Pulse(signal);
-            }
-
-            session.ContentsAvailable += OnContentsAvailable;
-            try
-            {
-                RemoteServerException exception = null;
-                bool completed = false;
-                lock (signal)
-                {
-                    // AsyncFetchContents returns true once the contents are available, or false while a
-                    // background fetch is still in progress; each completed stage pulses ContentsAvailable.
-                    for (int i = 0; i < REMOTE_FETCH_MAX_ATTEMPTS; i++)
-                    {
-                        if (session.AsyncFetchContents(remoteUrl, out exception))
-                        {
-                            completed = true;
-                            break;
-                        }
-                        if (exception != null)
-                            break;
-                        Monitor.Wait(signal, REMOTE_FETCH_WAIT_MS);
-                    }
-                }
-
-                if (exception != null)
-                    throw exception;
-                if (!completed)
-                    throw new RemoteServerException(string.Format(
-                        SkylineResources.CommandLine_FetchRemoteContents_Timed_out_waiting_for_the_remote_server_to_list___0__,
-                        remoteUrl.GetFilePath()));
-
-                return session.ListContents(remoteUrl).ToList();
-            }
-            finally
-            {
-                session.ContentsAvailable -= OnContentsAvailable;
-            }
+            if (uri is WatersConnectUrl watersConnectUrl && watersConnectUrl.InjectionId == null)
+                return watersConnectUrl.ResolveInjection();
+            return uri;
         }
 
         public bool SaveFile(string saveFile, CommandArgs commandArgs)

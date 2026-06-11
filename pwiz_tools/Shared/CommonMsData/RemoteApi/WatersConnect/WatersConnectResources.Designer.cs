@@ -189,5 +189,32 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
                 return ResourceManager.GetString("WatersConnectUrl_OpenMsDataFile_waters_connect_server_returns_an_error_code__0__", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Timed out waiting for the remote server to list &apos;{0}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_FetchContents_Timed_out_waiting_for_the_remote_server_to_list___0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_FetchContents_Timed_out_waiting_for_the_remote_server_to_list___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find the injection &apos;{0}&apos; under the waters_connect path &apos;{1}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveInjection_Could_not_find_the_injection___0___under_the_waters_connect_path___1__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveInjection_Could_not_find_the_injection___0___under_the_waters_connect_path___1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to No waters_connect account was found with the alias or server &apos;{0}&apos;..
+        /// </summary>
+        public static string WatersConnectUrl_ResolveInjection_No_waters_connect_account_was_found_with_the_alias_or_server___0__ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_ResolveInjection_No_waters_connect_account_was_found_with_the_alias_or_server___0__", resourceCulture);
+            }
+        }
     }
 }
