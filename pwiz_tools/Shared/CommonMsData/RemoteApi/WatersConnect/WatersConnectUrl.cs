@@ -234,8 +234,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         {
             var accounts = (RemoteAccountStorage?.GetRemoteAccounts() ?? Array.Empty<RemoteAccount>())
                 .OfType<WatersConnectAccount>().ToArray();
-            return accounts.FirstOrDefault(account => Equals(account.AccountAlias, alias))
-                   ?? accounts.FirstOrDefault(account => Equals(account.ServerUrl, alias));
+            var matches = accounts.Where(account => Equals(account.AccountAlias, alias)).ToArray();
+            if (matches.Length == 0)
+                matches = accounts.Where(account => Equals(account.ServerUrl, alias)).ToArray();
+            if (matches.Length > 1)
+                throw new RemoteServerException(string.Format(
+                    WatersConnectResources.WatersConnectUrl_FindAccountByAlias_Multiple_waters_connect_accounts_match_the_alias_or_server___0___Use_a_unique_account_alias_, alias));
+            return matches.FirstOrDefault();
         }
 
         private const int REMOTE_FETCH_MAX_ATTEMPTS = 60;

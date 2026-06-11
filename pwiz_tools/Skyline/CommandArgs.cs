@@ -42,8 +42,6 @@ using pwiz.Skyline.Model.IonMobility;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
-using pwiz.CommonMsData.RemoteApi.Ardia;
-using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Tools;
@@ -66,8 +64,7 @@ namespace pwiz.Skyline
 
         public static bool IsRemoteUrl(string pathOrUrl)
         {
-            return pathOrUrl.StartsWith(ArdiaUrl.UrlPrefix) || pathOrUrl.StartsWith(UnifiUrl.UrlPrefix) ||
-                   pathOrUrl.StartsWith(WatersConnectUrl.UrlPrefix);
+            return MsDataFileUri.IsRemoteUrl(pathOrUrl);
         }
 
         public static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);

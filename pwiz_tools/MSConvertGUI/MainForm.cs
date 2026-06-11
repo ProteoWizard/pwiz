@@ -877,25 +877,6 @@ namespace MSConvertGUI
                 filesToProcess.Add(String.Format("--filelist|\"{0}\"", FileBox.Text));
             }
 
-            // Resolve any friendly waters_connect paths (waters_connect:<alias>/Path/To/Injection) to
-            // concrete injections before converting; this contacts the server, so show a wait cursor.
-            UseWaitCursor = true;
-            try
-            {
-                for (int i = 0; i < filesToProcess.Count; i++)
-                {
-                    if (filesToProcess[i] is string source && WatersConnectUrl.IsFriendlyUrl(source))
-                        filesToProcess[i] = WatersConnectUrl.ParseFriendly(source).ResolveInjection();
-                }
-            }
-            catch (Exception ex)
-            {
-                UseWaitCursor = false;
-                MessageBox.Show(this, ex.Message, "waters_connect", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            UseWaitCursor = false;
-
             string outputFolder = String.IsNullOrEmpty(OutputBox.Text) ? Application.StartupPath
                                                                        : OutputBox.Text;
             if (!Directory.Exists(outputFolder))

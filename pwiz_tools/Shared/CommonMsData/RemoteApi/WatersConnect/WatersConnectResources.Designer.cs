@@ -200,6 +200,15 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Multiple waters_connect accounts match the alias or server &apos;{0}&apos;. Use a unique account alias..
+        /// </summary>
+        public static string WatersConnectUrl_FindAccountByAlias_Multiple_waters_connect_accounts_match_the_alias_or_server___0___Use_a_unique_account_alias_ {
+            get {
+                return ResourceManager.GetString("WatersConnectUrl_FindAccountByAlias_Multiple_waters_connect_accounts_match_the_alias_or_server___0___Use_a_unique_account_alias_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Could not find the injection &apos;{0}&apos; under the waters_connect path &apos;{1}&apos;..
         /// </summary>
         public static string WatersConnectUrl_ResolveInjection_Could_not_find_the_injection___0___under_the_waters_connect_path___1__ {

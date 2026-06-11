@@ -383,8 +383,8 @@ namespace pwiz.Skyline.Model.AuditLog
 
             // Remote URLs (e.g. waters_connect:, unifi:, ardia:) are not filesystem paths and can
             // exceed the Windows MAX_PATH limit, so DirectoryInfo would throw. Use the remote file name.
-            if (MsDataFileUri.Parse(s) is RemoteUrl remoteUrl)
-                return remoteUrl.GetFileName();
+            if (MsDataFileUri.IsRemoteUrl(s))
+                return ((RemoteUrl) MsDataFileUri.Parse(s)).GetFileName();
 
             return new DirectoryInfo(s).Name;
         }
