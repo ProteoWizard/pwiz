@@ -31,7 +31,7 @@ goto :eof
 :Guess
 REM Let vswhere tell us where msvc is at, if available.
 call :Clear_Error
-call vswhere_usability_wrapper.cmd
+call .\vswhere_usability_wrapper.cmd
 call :Clear_Error
 if NOT "_%VS180COMNTOOLS%_" == "__" (
     set "B2_TOOLSET=vc145"

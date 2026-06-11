@@ -5,6 +5,10 @@
     <AssemblyName>OspreySharp.Core</AssemblyName>
   </PropertyGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="OspreySharp.Test" />
+  </ItemGroup>
+
   <!-- net472 needs System.Memory for BinaryPrimitives (used by
        CwtCandidateCodec to write/read the Rust-compatible binary
        layout without per-field allocations). net8.0 has it built in. -->

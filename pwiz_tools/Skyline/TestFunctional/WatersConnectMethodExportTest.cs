@@ -29,6 +29,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Schema;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
+using pwiz.CommonFileDialogs;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;

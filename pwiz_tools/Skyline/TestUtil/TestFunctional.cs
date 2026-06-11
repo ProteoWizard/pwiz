@@ -379,6 +379,14 @@ namespace pwiz.SkylineTestUtil
         protected virtual bool ShowStartPage {get { return false; }}
         protected virtual List<string> SetMru { get { return new List<string>(); } }
 
+        /// <summary>
+        /// Command-line arguments passed to <see cref="Program.Main"/> for this test
+        /// run. Default null -- behave like an unargumented Skyline.exe launch.
+        /// Override to exercise the Program.Main argument-parsing path (e.g. --opendoc,
+        /// --start-page=true|false).
+        /// </summary>
+        protected virtual string[] LaunchArgs => null;
+
         private static void SkylineInvoke(Action act)
         {
             var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
@@ -2316,7 +2324,7 @@ namespace pwiz.SkylineTestUtil
             var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
             LocalizationHelper.InitThread(threadTest);
             threadTest.Start();
-            Program.Main();
+            Program.Main(LaunchArgs);
             threadTest.Join();
 
             // Were all windows disposed?

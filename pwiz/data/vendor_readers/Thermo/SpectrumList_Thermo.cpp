@@ -131,7 +131,7 @@ InstrumentConfigurationPtr SpectrumList_Thermo::findInstrumentConfiguration(cons
 
         try
         {
-            if (icPtr->componentList.analyzer(analyzerCount - 1).hasCVParam(massAnalyzerType))
+            if (analyzerCount > 0 && icPtr->componentList.analyzer(analyzerCount - 1).hasCVParam(massAnalyzerType))
                 return icPtr;
         }
         catch (out_of_range&)

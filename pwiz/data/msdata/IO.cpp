@@ -26,6 +26,7 @@
 #include "IO.hpp"
 #include "References.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "SpectrumWorkerThreads.hpp"
@@ -3013,7 +3014,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
                 continue;
             }
             else
-                throw;
+                throw pwiz::util::enumeration_error(e.what());
         }
 
         // save write position
@@ -3145,7 +3146,7 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
                     chromatogramPositions->push_back(-1);
                 continue;
             }
-            throw;
+            throw pwiz::util::enumeration_error(e.what());
         }
 
         // save write position

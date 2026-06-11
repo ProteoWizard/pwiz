@@ -23,9 +23,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace pwiz.OspreySharp.Core
 {
@@ -46,6 +43,30 @@ namespace pwiz.OspreySharp.Core
 
         /// <summary>Optional: TSV report output path.</summary>
         public string OutputReport { get; set; }
+
+        /// <summary>
+        /// Optional base directory for all per-file <em>derived</em> artifacts
+        /// (<c>.scores.parquet</c>, <c>.calibration.json</c>,
+        /// <c>.scores-reconciled.parquet</c>, the FDR sidecars, and
+        /// <c>.reconciliation.json</c>). Null = write each artifact in its input
+        /// file's own directory (the historical behavior). Set by
+        /// <c>--output-dir</c> (or <c>--work-dir</c>), it lets an analysis read
+        /// read-only input data while writing only derived output elsewhere.
+        /// Maps to Rust <c>OspreyConfig::output_dir</c> (Track B).
+        /// </summary>
+        public string OutputDir { get; set; }
+
+        /// <summary>
+        /// Optional directory for the <c>.spectra.bin</c> cache only. Null =
+        /// resolve at write time: beside the data file if that directory is
+        /// writable, else <see cref="OutputDir"/> (or the input file's own
+        /// directory when <see cref="OutputDir"/> is also null). Set by
+        /// <c>--cache-dir</c> (or <c>--work-dir</c>). The cache is
+        /// settings-independent, so a shared CacheDir lets many analyses reuse
+        /// a single parse of the spectra.
+        /// Maps to Rust <c>OspreyConfig::cache_dir</c> (Track B).
+        /// </summary>
+        public string CacheDir { get; set; }
 
         /// <summary>Resolution mode for binning.</summary>
         public ResolutionMode ResolutionMode { get; set; } = ResolutionMode.Auto;
@@ -68,14 +89,65 @@ namespace pwiz.OspreySharp.Core
         /// <summary>Decoy generation method.</summary>
         public DecoyMethod DecoyMethod { get; set; } = DecoyMethod.Reverse;
 
-        /// <summary>Whether library already contains decoys.</summary>
+        /// <summary>
+        /// Whether library already contains decoys. When true (or when
+        /// <see cref="DecoyMethod"/> = <see cref="DecoyMethod.FromLibrary"/>),
+        /// <c>DecoyGenerator</c> is skipped and existing entries are
+        /// scanned for <see cref="DecoyPrefixes"/> matches on their
+        /// protein accessions; matching entries get
+        /// <see cref="LibraryEntry.IsDecoy"/> = true and the high bit of
+        /// their <see cref="LibraryEntry.Id"/> set.
+        /// </summary>
         public bool DecoysInLibrary { get; set; }
+
+        /// <summary>
+        /// Protein-accession prefixes that identify decoys when the
+        /// library already contains them (case-insensitive). Default
+        /// covers the three common conventions: Osprey's own
+        /// <c>DECOY_</c>, plus <c>rev_</c> / <c>decoy_</c> used by tools
+        /// like DIA-NN, EncyclopeDIA, and Carafe.
+        /// Maps to Rust <c>OspreyConfig::decoy_prefixes</c>.
+        /// </summary>
+        public List<string> DecoyPrefixes { get; set; } = new List<string>
+        {
+            @"DECOY_",
+            @"rev_",
+            @"decoy_",
+        };
+
+        /// <summary>
+        /// Minimum fraction of decoys that must pair successfully with a
+        /// target when <see cref="DecoysInLibrary"/> is set. Below this,
+        /// OspreySharp bails with a clear error rather than running with
+        /// broken target-decoy competition (FDR would be optimistic).
+        /// Maps to Rust <c>OspreyConfig::decoy_pair_min_fraction</c>.
+        /// </summary>
+        public double DecoyPairMinFraction { get; set; } = 0.80;
+
+        /// <summary>
+        /// Optional path to a FDRBench-style pairing manifest (5-column
+        /// TSV: <c>sequence, decoy, proteins, peptide_type,
+        /// peptide_pair_index</c>). When set together with
+        /// <see cref="DecoysInLibrary"/>, the pipeline runs manifest-based
+        /// pairing first and then falls back to composition-based pairing
+        /// for decoys the manifest didn't cover. Recommended for
+        /// FDRBench-generated entrapment libraries.
+        /// Maps to Rust <c>OspreyConfig::decoy_pairing_manifest</c>.
+        /// </summary>
+        public string DecoyPairingManifestPath { get; set; }
 
         /// <summary>FDR method: native Percolator (default), external mokapot, or simple target-decoy.</summary>
         public FdrMethod FdrMethod { get; set; } = FdrMethod.Percolator;
 
         /// <summary>Write PIN files for external tools.</summary>
         public bool WritePin { get; set; }
+
+        /// <summary>
+        /// -d / --diagnostics: master switch that turns on the cross-impl
+        /// bisection dump bundle (see <c>OspreyDiagnostics.Initialize</c>).
+        /// Runtime toggle only -- intentionally NOT part of any identity hash.
+        /// </summary>
+        public bool Diagnostics { get; set; }
 
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
@@ -103,17 +175,21 @@ namespace pwiz.OspreySharp.Core
         public int NThreads { get; set; } = Environment.ProcessorCount;
 
         /// <summary>
-        /// HPC scoring split: when true, run Stages 1-4 only and exit. Each
-        /// input mzML produces a {stem}.scores.parquet next to it; no FDR
-        /// is run and no blib is written. Set by the --no-join CLI flag.
-        /// Mutually exclusive with <see cref="InputScores"/>.
+        /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
+        /// include only the per-file fan-out, not the join. Set by both
+        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescore</c>; the
+        /// concrete behavior depends on the input type. With <c>-i</c> mzML it
+        /// is the Stage 1-4 worker — each input produces a
+        /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
+        /// <see cref="InputScores"/> it is the Stage 6 rescore worker. The two
+        /// are told apart by input type (see <see cref="SelectedTask"/>).
         /// </summary>
         public bool NoJoin { get; set; }
 
         /// <summary>
         /// HPC scoring split: when set (non-null, non-empty), skip Stages 1-4
         /// entirely and load these per-file scoring caches as the starting
-        /// point for Stage 5+. Set by --join-only + --input-scores. When set,
+        /// point for Stage 5+. Set by <c>--input-scores</c>. When set,
         /// <see cref="InputFiles"/> is ignored.
         /// </summary>
         public List<string> InputScores { get; set; }
@@ -123,19 +199,34 @@ namespace pwiz.OspreySharp.Core
         /// having written the boundary files
         /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
         /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
-        /// Skips Stage 6 + 7 + 8. Set by the
-        /// <c>--join-at-pass=1 --join-only</c> flag combination.
+        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstJoin</c>.
         /// </summary>
         public bool StopAfterStage5 { get; set; }
 
         /// <summary>
-        /// How many files will actually run concurrently in the current
-        /// invocation. Set by the pipeline before per-file ProcessFile()
-        /// calls; used to divide the inner main-search thread budget so
-        /// total thread demand stays near core count. Defaults to 1
-        /// (no scaling).
+        /// HPC: when true, every <c>--input-scores</c> parquet must carry
+        /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
+        /// by <c>--task MergeNode</c>; the post-Stage-6 (reconciled)
+        /// entry point. Stages 1-6 are skipped: the pipeline loads
+        /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
+        /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,
+        /// protein parsimony + picked-protein FDR, blib output). Mirrors
+        /// Rust's <c>config.expect_reconciled_input</c>.
         /// </summary>
-        public int EffectiveFileParallelism { get; set; } = 1;
+        public bool ExpectReconciledInput { get; set; }
+
+        /// <summary>
+        /// The single pipeline task selected by <c>--task &lt;Name&gt;</c> on the
+        /// CLI, or null for the full pipeline (no <c>--task</c>). The three
+        /// membership flags above (<see cref="NoJoin"/>,
+        /// <see cref="StopAfterStage5"/>, <see cref="ExpectReconciledInput"/>)
+        /// are derived from this and drive each task's <c>IsIncluded</c>; this
+        /// property additionally lets argument validation enforce the
+        /// task&#8596;input-type contract (e.g. PerFileScoring takes mzML,
+        /// PerFileRescore takes <see cref="InputScores"/>) and name the task the
+        /// user actually typed in error messages.
+        /// </summary>
+        public HpcTask? SelectedTask { get; set; }
 
         /// <summary>
         /// Shallow clone for per-file ProcessFile() calls. The pipeline
@@ -151,141 +242,29 @@ namespace pwiz.OspreySharp.Core
         }
 
         /// <summary>
-        /// Compute SHA-256 hash of parameters that affect first-pass scoring.
-        /// If this hash changes, cached .scores.parquet files are invalid.
+        /// The bit-parity-critical identity hashing for this run. Split out
+        /// of <see cref="OspreyConfig"/> into <see cref="SearchIdentity"/>
+        /// so this type is only the configuration bag and the SHA hashing is
+        /// its own single-responsibility unit. A fresh instance is returned
+        /// per access; it reads this config's hash-affecting fields at call
+        /// time, preserving the historical behavior of the former instance
+        /// methods. The hash recipes live on <see cref="SearchIdentity"/>
+        /// and MUST stay byte-identical with Rust.
         /// </summary>
-        public string SearchParameterHash()
-        {
-            // Cross-impl bit-equivalence with Rust requires:
-            //  - Booleans: Rust prints "true"/"false" (lowercase). C# default
-            //    bool.ToString() is "True"/"False". Use lowercase explicitly.
-            //  - Numbers: invariant culture (no locale-dependent separators).
-            using (var sha256 = SHA256.Create())
-            {
-                var ic = System.Globalization.CultureInfo.InvariantCulture;
-                Func<bool, string> b = v => v ? "true" : "false";
-                var sb = new StringBuilder();
-                sb.AppendFormat(ic, "resolution_mode:{0}\n", ResolutionMode);
-                sb.AppendFormat(ic, "fragment_tolerance:{0},{1}\n", FragmentTolerance.Tolerance, FragmentTolerance.Unit);
-                sb.AppendFormat(ic, "precursor_tolerance:{0},{1}\n", PrecursorTolerance.Tolerance, PrecursorTolerance.Unit);
-                sb.AppendFormat(ic, "prefilter_enabled:{0}\n", b(PrefilterEnabled));
-                sb.AppendFormat(ic, "decoy_method:{0}\n", DecoyMethod);
-                sb.AppendFormat(ic, "decoys_in_library:{0}\n", b(DecoysInLibrary));
-                sb.AppendFormat(ic, "rt_cal.enabled:{0}\n", b(RtCalibration.Enabled));
-                sb.AppendFormat(ic, "rt_cal.fallback_rt_tolerance:{0}\n", RtCalibration.FallbackRtTolerance);
-                sb.AppendFormat(ic, "rt_cal.rt_tolerance_factor:{0}\n", RtCalibration.RtToleranceFactor);
-                sb.AppendFormat(ic, "rt_cal.min_rt_tolerance:{0}\n", RtCalibration.MinRtTolerance);
-                sb.AppendFormat(ic, "rt_cal.max_rt_tolerance:{0}\n", RtCalibration.MaxRtTolerance);
-                sb.AppendFormat(ic, "rt_cal.loess_bandwidth:{0}\n", RtCalibration.LoessBandwidth);
-                sb.AppendFormat(ic, "rt_cal.min_calibration_points:{0}\n", RtCalibration.MinCalibrationPoints);
-                sb.AppendFormat(ic, "rt_cal.calibration_sample_size:{0}\n", RtCalibration.CalibrationSampleSize);
-                sb.AppendFormat(ic, "rt_cal.calibration_retry_factor:{0}\n", RtCalibration.CalibrationRetryFactor);
-                sb.AppendFormat(ic, "reconciliation.top_n_peaks:{0}\n", Reconciliation.TopNPeaks);
+        public SearchIdentity Identity => new SearchIdentity(this);
+    }
 
-                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
-                var result = new StringBuilder(64);
-                for (int i = 0; i < hashBytes.Length; i++)
-                {
-                    result.Append(hashBytes[i].ToString("x2"));
-                }
-                return result.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Compute a fast identity hash for the library file (file name + size
-        /// + mtime). Filesystem metadata only -- no content hashing. The
-        /// directory portion is deliberately NOT in the hash so the same
-        /// library identifies identically across Rust / .NET / OS variations
-        /// (drive letter case, forward vs back slash, relative vs absolute,
-        /// HPC node-local vs shared paths). Mirrors the
-        /// <c>reconciliation_parameter_hash</c> precedent that hashes only
-        /// sorted file stems for the input set. Same recipe as Rust's
-        /// <c>library_identity_hash</c>.
-        /// </summary>
-        public string LibraryIdentityHash()
-        {
-            string libPath = LibrarySource != null ? LibrarySource.Path : string.Empty;
-            using (var sha256 = SHA256.Create())
-            {
-                var sb = new StringBuilder();
-                string fileName = string.IsNullOrEmpty(libPath)
-                    ? string.Empty
-                    : Path.GetFileName(libPath);
-                sb.AppendFormat("file_name:{0}\n", fileName);
-                if (!string.IsNullOrEmpty(libPath) && File.Exists(libPath))
-                {
-                    var info = new FileInfo(libPath);
-                    sb.AppendFormat(System.Globalization.CultureInfo.InvariantCulture,
-                        "size:{0}\n", info.Length);
-                    // Unix seconds matching Rust's library_identity_hash
-                    // (SystemTime::duration_since(UNIX_EPOCH).as_secs()).
-                    long mtimeSecs = (long)(info.LastWriteTimeUtc
-                        - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
-                    sb.AppendFormat(System.Globalization.CultureInfo.InvariantCulture,
-                        "mtime:{0}\n", mtimeSecs);
-                }
-                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
-                var result = new StringBuilder(64);
-                for (int i = 0; i < hashBytes.Length; i++)
-                    result.Append(hashBytes[i].ToString("x2"));
-                return result.ToString();
-            }
-        }
-
-        /// <summary>
-        /// SHA-256 of (search hash + reconciliation parameters + run FDR
-        /// + sorted file stems). Mirrors Rust
-        /// <c>OspreyConfig::reconciliation_parameter_hash</c> in
-        /// <c>crates/osprey-core/src/config.rs</c> and is written into
-        /// reconciled <c>.scores.parquet</c> footer metadata under
-        /// <c>osprey.reconciliation_hash</c>. The hash invalidates the
-        /// cache on any reconciliation parameter change OR on any change
-        /// to the multi-file set (file_stems are sorted to make the
-        /// hash invariant to invocation order).
-        /// </summary>
-        public string ReconciliationParameterHash()
-        {
-            using (var sha256 = SHA256.Create())
-            {
-                var ic = System.Globalization.CultureInfo.InvariantCulture;
-                var sb = new StringBuilder();
-                sb.Append(SearchParameterHash());
-                sb.AppendFormat(ic, "reconciliation.enabled:{0}\n",
-                    Reconciliation.Enabled ? "true" : "false");
-                sb.AppendFormat(ic, "reconciliation.consensus_fdr:{0}\n",
-                    Reconciliation.ConsensusFdr);
-                sb.AppendFormat(ic, "run_fdr:{0}\n", RunFdr);
-                // Mirror Rust's `format!("file_stems:{:?}\n", stems)` output
-                // exactly. {:?} on Vec<String> yields ["a", "b"] with the
-                // brackets and double-quoted, comma-space-separated values.
-                var stems = new List<string>(InputFiles?.Count ?? 0);
-                if (InputFiles != null)
-                {
-                    foreach (var path in InputFiles)
-                    {
-                        string stem = Path.GetFileNameWithoutExtension(path);
-                        if (!string.IsNullOrEmpty(stem))
-                            stems.Add(stem);
-                    }
-                }
-                stems.Sort(StringComparer.Ordinal);
-                var stemsList = new StringBuilder("[");
-                for (int i = 0; i < stems.Count; i++)
-                {
-                    if (i > 0) stemsList.Append(", ");
-                    stemsList.Append('"').Append(stems[i]).Append('"');
-                }
-                stemsList.Append(']');
-                sb.AppendFormat(ic, "file_stems:{0}\n", stemsList.ToString());
-
-                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
-                var result = new StringBuilder(64);
-                for (int i = 0; i < hashBytes.Length; i++)
-                    result.Append(hashBytes[i].ToString("x2"));
-                return result.ToString();
-            }
-        }
+    /// <summary>
+    /// A single HPC pipeline task selectable via <c>--task &lt;Name&gt;</c>
+    /// (one HPC node = one task). The names are the stable CLI contract and
+    /// match each task's <c>OspreyTask.Name</c>.
+    /// </summary>
+    public enum HpcTask
+    {
+        PerFileScoring,
+        FirstJoin,
+        PerFileRescore,
+        MergeNode
     }
 
     /// <summary>

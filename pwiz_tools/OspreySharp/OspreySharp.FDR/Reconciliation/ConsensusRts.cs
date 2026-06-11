@@ -36,8 +36,6 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
     /// </summary>
     public static class ConsensusRts
     {
-        private const string DECOY_PREFIX = @"DECOY_";
-
         /// <summary>
         /// For each target peptide passing <paramref name="consensusFdr"/> at the
         /// run-precursor level (hard gate), and its paired decoy, computes a
@@ -83,30 +81,38 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
 
             // 1. Collect target peptides passing the run-level hard gate
             //    (or rescued by protein FDR for peptide-level borderline cases).
+            //    We also record the set of qualifying target *base_ids* so that
+            //    paired decoys can be identified by base_id linkage
+            //    (entry_id & 0x7FFFFFFF) rather than by stripping a "DECOY_"
+            //    prefix from modified_sequence. The prefix-strip approach only
+            //    works for Osprey-generated decoys; it silently misses library-
+            //    supplied decoys (Carafe etc.) whose modified sequence carries
+            //    no prefix. Pairing was already established by the FDRBench
+            //    manifest or composition fallback during library load. Mirrors
+            //    Rust reconciliation.rs::compute_consensus_rts.
             var targetPeptides = new HashSet<string>(StringComparer.Ordinal);
+            var targetBaseIds = new HashSet<uint>();
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
                 {
                     if (Qualifies(entry, consensusFdr, proteinFdrThreshold))
+                    {
                         targetPeptides.Add(entry.ModifiedSequence);
+                        targetBaseIds.Add(entry.EntryId & 0x7FFFFFFFu);
+                    }
                 }
             }
             if (targetPeptides.Count == 0)
                 return Array.Empty<PeptideConsensusRT>();
 
-            // 2. Collect paired decoy peptides (DECOY_<target_seq>).
+            // 2. Collect paired decoy peptides via base_id linkage.
             var decoyPeptides = new HashSet<string>(StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
                 {
-                    if (!entry.IsDecoy)
-                        continue;
-                    var targetSeq = entry.ModifiedSequence.StartsWith(DECOY_PREFIX, StringComparison.Ordinal)
-                        ? entry.ModifiedSequence.Substring(DECOY_PREFIX.Length)
-                        : entry.ModifiedSequence;
-                    if (targetPeptides.Contains(targetSeq))
+                    if (entry.IsDecoy && targetBaseIds.Contains(entry.EntryId & 0x7FFFFFFFu))
                         decoyPeptides.Add(entry.ModifiedSequence);
                 }
             }
@@ -200,7 +206,7 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
                     var absDevs = new double[nRunsDetected];
                     for (int i = 0; i < nRunsDetected; i++)
                         absDevs[i] = Math.Abs(libraryRtWeights[i].Value - consensusLibraryRt);
-                    Array.Sort(absDevs);
+                    Array.Sort(absDevs); // Array.Sort OK: median of single primitive array, no parallel data
                     int mid = absDevs.Length / 2;
                     apexLibraryRtMad = absDevs.Length % 2 == 0
                         ? 0.5 * (absDevs[mid - 1] + absDevs[mid])
@@ -261,7 +267,7 @@ namespace pwiz.OspreySharp.FDR.Reconciliation
                 return pairs[0].Value;
 
             var sorted = pairs.ToArray();
-            Array.Sort(sorted, (a, b) => a.Value.CompareTo(b.Value));
+            Array.Sort(sorted, (a, b) => a.Value.CompareTo(b.Value)); // Array.Sort OK: weighted median; tied Values are by definition equal so output is invariant under tie-permutation
 
             double totalWeight = 0.0;
             for (int i = 0; i < sorted.Length; i++)
