@@ -27,25 +27,23 @@ checked out with the code.
 
 ## Trigger
 
-This is meant to run **overnight on PRs that touch OspreySharp** — the same
-model as the Skyline Tutorial and Perf overnight tests (run long, against
-pending changes, not on every push). Two pieces:
+Runs **overnight on PRs that touch OspreySharp** — the same model as the Skyline
+Tutorial and Perf overnight tests (run long, against pending changes, not on
+every push). Wired in #4283:
 
-1. **Smart-trigger entry (repo, one line).** Add this config to the OspreySharp
-   path target in `scripts/misc/vcs_trigger_and_paths_config.py` so a PR
-   changing `pwiz_tools/OspreySharp/.*` enqueues it alongside the per-commit
-   build — e.g. extend `targets['OspreyWindowsNet']` (or add a parallel
-   `OspreyWindowsNetRegression` target keyed to the new config id and merge it
-   into the `("pwiz_tools/OspreySharp/.*", ...)` rule). This entry must name a
-   config that already exists TeamCity-side, so create the config (below) first.
-2. **TeamCity config (UI).** Create the build config that runs the step below.
-   Its "overnight" behaviour is a property of the config (dedicated overnight
-   agent pool / time-windowed trigger), exactly as the perf/tutorial configs are
-   set up — not something the repo controls.
-
-(A pure schedule trigger against `master` is the simpler alternative if PR-level
-coverage isn't wanted, but the per-PR-overnight model above matches the stated
-intent and how OspreySharp's per-commit config is already wired.)
+1. **Nightly trigger (repo).** `scripts/misc/nightly_trigger_and_paths_config.py`
+   defines `targets['OspreyWindowsNetPerfRegressionTests']` →
+   `ProteoWizard_OspreyWindowsNetPerfRegressionTests`, mapped from
+   `pwiz_tools/OspreySharp/.*` in `matchPaths`. So an OspreySharp change enqueues
+   the regression in the **nightly** pipeline (NOT the per-commit
+   `vcs_trigger_and_paths_config.py`, which keeps routing to the fast per-commit
+   build + test).
+2. **GitHub Actions opt-out.** `.github/workflows/build_and_test.yml` adds
+   `pwiz_tools/OspreySharp/**` to its `paths-ignore`, so the GH Actions build
+   does not redundantly run on OspreySharp-only changes (TeamCity owns them).
+3. **TeamCity config (UI).** The `ProteoWizard_OspreyWindowsNetPerfRegressionTests`
+   build config runs the step below; its overnight behaviour (agent pool /
+   schedule window) is a config property, like the perf/tutorial configs.
 
 ## Agent requirements
 
