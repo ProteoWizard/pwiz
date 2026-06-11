@@ -117,7 +117,16 @@ namespace pwiz.OspreySharp.Chromatography
             // for each duplicate and the subsequent LOESS fit diverges from
             // Rust. LINQ OrderBy is stable and matches Rust.
             int n = libraryRts.Length;
-            int[] order = Enumerable.Range(0, n).OrderBy(i => libraryRts[i]).ToArray();
+            // Sort by (libraryRt, measuredRt) so the outer x/y arrays match
+            // the inner sort inside LoessRegression.Fit (which also uses
+            // (x, y) for duplicate-x determinism). Without the secondary
+            // key, outer y[i] and inner fitted[i] can end up corresponding
+            // to different data points at duplicate-x positions, producing
+            // swapped abs_residuals[i] in the calibration model.
+            int[] order = Enumerable.Range(0, n)
+                .OrderBy(i => libraryRts[i])
+                .ThenBy(i => measuredRts[i])
+                .ToArray();
 
             double[] x = new double[n];
             double[] y = new double[n];

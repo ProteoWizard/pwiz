@@ -150,7 +150,11 @@ namespace pwiz.OspreySharp.IO
         private static string ScoresPath(string inputPath, string passLabel)
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
-            string parent = Path.GetDirectoryName(inputPath);
+            // Route through ArtifactPaths so the sidecar follows the scores
+            // parquet into --output-dir (default = the input's own directory).
+            // Every caller -- straight-through writes, resume reads, and the
+            // resume-check iterators -- shares this, so they stay consistent.
+            string parent = ArtifactPaths.ResolveOutputDir(inputPath);
             string filename = string.Format("{0}.{1}.fdr_scores.bin", stem, passLabel);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
@@ -335,7 +339,7 @@ namespace pwiz.OspreySharp.IO
         /// <see cref="TryRead(string,IList{FdrEntry},Pass)"/>, but the
         /// caller supplies an entry_id-keyed dictionary directly so we
         /// skip rereading the source parquet just to size-check the
-        /// sidecar. Used by --join-at-pass=2 Stage 7 where the compacted
+        /// sidecar. Used by --task MergeNode Stage 7 where the compacted
         /// entry list already covers every sidecar record we care about.
         /// </summary>
         public static bool TryReadOverlay(string path,
@@ -381,7 +385,7 @@ namespace pwiz.OspreySharp.IO
                 {
                     // Sidecar can carry entries not in the (possibly
                     // compacted) caller dict — that's expected for
-                    // --join-at-pass=2 where compaction has already
+                    // --task MergeNode where compaction has already
                     // dropped failing precursors. Skip silently.
                     continue;
                 }
