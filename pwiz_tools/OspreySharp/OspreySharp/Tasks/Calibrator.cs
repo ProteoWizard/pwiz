@@ -1027,8 +1027,8 @@ namespace pwiz.OspreySharp.Tasks
             int currentPass = calibrationModel != null ? 2 : 1;
 
             // Extract XICs for the top-N most intense library fragments.
-            var xics = AbstractScoringTask.ExtractTopNFragmentXics(
-                entry, candidateSpectra, rts, AbstractScoringTask.CAL_TOP_N_FRAGMENTS, config);
+            var xics = TopFragmentExtractor.ExtractTopNFragmentXics(
+                entry, candidateSpectra, rts, TopFragmentExtractor.CAL_TOP_N_FRAGMENTS, config);
 
             if (OspreyDiagnostics.ShouldDumpCalXicFor(entry.Id, currentPass))
             {
@@ -1162,7 +1162,7 @@ namespace pwiz.OspreySharp.Tasks
             double xcorrApex = (windowPreprocessed != null && apexWindowIdx < windowPreprocessed.Length)
                 ? AbstractScoringTask.s_calXcorrScorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
                 : AbstractScoringTask.s_calXcorrScorer.XcorrAtScan(apexSpectrum, entry);
-            byte top6Matched = AbstractScoringTask.CountTop6Matches(entry, apexSpectrum, config);
+            byte top6Matched = TopFragmentExtractor.CountTop6Matches(entry, apexSpectrum, config);
 
             // Collect MS2 fragment mass errors at apex for m/z calibration.
             var ms2Errors = CollectMs2FragmentErrors(entry, apexSpectrum, config);
@@ -1244,9 +1244,9 @@ namespace pwiz.OspreySharp.Tasks
             var ms2Errors = new List<double>();
             // Select top-6 fragment indices by descending intensity
             int nFragsForErrors = entry.Fragments.Count;
-            int nTopForErrors = Math.Min(nFragsForErrors, AbstractScoringTask.CAL_TOP_N_FRAGMENTS);
+            int nTopForErrors = Math.Min(nFragsForErrors, TopFragmentExtractor.CAL_TOP_N_FRAGMENTS);
             int[] topErrorIndices;
-            if (nFragsForErrors <= AbstractScoringTask.CAL_TOP_N_FRAGMENTS)
+            if (nFragsForErrors <= TopFragmentExtractor.CAL_TOP_N_FRAGMENTS)
             {
                 topErrorIndices = new int[nFragsForErrors];
                 for (int ti = 0; ti < nFragsForErrors; ti++)
