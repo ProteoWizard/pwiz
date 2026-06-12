@@ -896,8 +896,9 @@ namespace pwiz.OspreySharp.Test
 
             // Target 1's decoy (FEDCBAK) collides with target 2.
             // The generator should detect this and fall back to cycling.
-            // Note: the collision detection happens in AnalysisPipeline.GenerateDecoys,
-            // not in DecoyGenerator.Generate directly. DecoyGenerator.Generate simply
+            // Note: the collision detection happens in
+            // DecoyGenerator.GenerateAllWithCollisionDetection, not in
+            // DecoyGenerator.Generate directly. DecoyGenerator.Generate simply
             // reverses. We test the reversal produces the collision, then verify
             // that cycling produces something different.
             var decoy1 = generator.Generate(target1);
