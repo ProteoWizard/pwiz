@@ -54,35 +54,6 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     public abstract class AbstractScoringTask : OspreyTask
     {
-        // PipelineContext is set on Run entry by the concrete subclass
-        // before any of the moved methods log; the base class never
-        // calls Run itself.
-        internal PipelineContext _ctx;
-
-
-        // Number of top-intensity library fragments used for
-        // calibration scoring + dedup top-6 overlap. Read both
-        // from PerFileScoringTask (calibration) and from the
-        // shared scoring engine here.
-        internal const int CAL_TOP_N_FRAGMENTS = 6;
-        /// <summary>
-        /// IComparer&lt;double&gt; implementing IEEE 754-2008 total order
-        /// (matches Rust's f64::total_cmp). Key property versus the
-        /// default Comparer&lt;double&gt;: distinguishes -0.0 &lt; +0.0,
-        /// orders NaNs consistently. Required wherever a stable sort
-        /// needs to mirror Rust's slice::sort_by(... .total_cmp(...))
-        /// — pair with LINQ OrderBy/OrderByDescending (stable per
-        /// .NET contract) to match Rust byte-for-byte.
-        /// </summary>
-        internal static readonly IComparer<double> TotalOrderComparer =
-            Comparer<double>.Create((a, b) =>
-            {
-                long la = BitConverter.DoubleToInt64Bits(a);
-                long lb = BitConverter.DoubleToInt64Bits(b);
-                if (la < 0) la ^= 0x7FFFFFFFFFFFFFFFL;
-                if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
-                return la.CompareTo(lb);
-            });
         // Internal so FirstJoinTask (which now owns RunPercolatorFdr +
         // RunPercolatorStreaming + BuildBasicFeatures) can reuse the
         // same 21-feature width without redeclaring it.
@@ -130,128 +101,6 @@ namespace pwiz.OspreySharp.Tasks
 
 
         /// <summary>
-        /// Generate decoy entries from the target library with collision detection.
-        /// Matches Rust DecoyGenerator.generate_all_with_collision_detection:
-        ///   1. Build set of target sequences (stripped) for collision detection
-        ///   2. For each target, try reversing
-        ///   3. If reversed collides or is palindromic, try cycling with lengths 1..10
-        ///   4. If all methods fail, exclude the target-decoy pair
-        /// Modifies <paramref name="validTargets"/> to contain only targets that
-        /// produced valid decoys (Rust: library = valid_targets; library.extend(decoys)).
-        /// </summary>
-        protected List<LibraryEntry> GenerateDecoys(
-            List<LibraryEntry> targets, OspreyConfig config,
-            out List<LibraryEntry> validTargets)
-        {
-            _ctx.LogInfo(string.Format("Generating decoys using {0} method...", config.DecoyMethod));
-
-            // Build set of all target (stripped) sequences for collision detection.
-            var targetSequences = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var t in targets)
-            {
-                if (!t.IsDecoy)
-                    targetSequences.Add(t.Sequence);
-            }
-
-            // Generate decoys in parallel (matches Rust's par_iter approach).
-            // Each target produces a (target, decoy) pair or is excluded.
-            int nReversed = 0, nCycled = 0, nExcluded = 0, nSkipped = 0;
-            var results = new (LibraryEntry target, LibraryEntry decoy, int kind)[targets.Count];
-            // kind: 0=skip, 1=reversed, 2=cycled, 3=excluded
-
-            Parallel.For(0, targets.Count, i =>
-            {
-                var target = targets[i];
-                if (target.IsDecoy || target.Fragments == null || target.Fragments.Count == 0)
-                {
-                    results[i] = (null, null, 0);
-                    return;
-                }
-
-                // Each thread gets its own generator (DecoyGenerator is lightweight)
-                var gen = new DecoyGenerator();
-                int[] mapping;
-                string reversedSeq = gen.ReverseSequence(target.Sequence, out mapping);
-
-                if (reversedSeq != target.Sequence && !targetSequences.Contains(reversedSeq))
-                {
-                    var decoy = BuildDecoyFromSequence(target, reversedSeq, mapping);
-                    if (decoy != null)
-                    {
-                        results[i] = (target, decoy, 1);
-                        return;
-                    }
-                }
-
-                // Fallback: cycling with lengths 1..min(len, 10)
-                int maxRetries = Math.Min(target.Sequence.Length, 10);
-                for (int cycleLength = 1; cycleLength <= maxRetries; cycleLength++)
-                {
-                    string cycledSeq = gen.CycleSequence(target.Sequence, cycleLength, out mapping);
-                    if (cycledSeq != target.Sequence && !targetSequences.Contains(cycledSeq))
-                    {
-                        var decoy = BuildDecoyFromSequence(target, cycledSeq, mapping);
-                        if (decoy != null)
-                        {
-                            results[i] = (target, decoy, 2);
-                            return;
-                        }
-                    }
-                }
-
-                results[i] = (null, null, 3);
-            });
-
-            // Collect results (sequential, preserves order)
-            validTargets = new List<LibraryEntry>(targets.Count);
-            var decoys = new List<LibraryEntry>(targets.Count);
-            foreach (var r in results)
-            {
-                switch (r.kind)
-                {
-                    case 0: nSkipped++; break;
-                    case 1: nReversed++; validTargets.Add(r.target); decoys.Add(r.decoy); break;
-                    case 2: nCycled++; validTargets.Add(r.target); decoys.Add(r.decoy); break;
-                    case 3: nExcluded++; break;
-                }
-            }
-
-            _ctx.LogInfo(string.Format(
-                "Generated {0} decoys from {1} targets ({2} excluded due to collisions)",
-                decoys.Count, targets.Count, nExcluded));
-            return decoys;
-        }
-
-
-        /// <summary>
-        /// Build a decoy LibraryEntry from a decoy sequence and position mapping.
-        /// Mirrors DecoyGenerator.Generate's construction but takes an already-chosen sequence.
-        /// </summary>
-        private static LibraryEntry BuildDecoyFromSequence(
-            LibraryEntry target, string decoySequence, int[] positionMapping)
-        {
-            var decoy = new LibraryEntry(
-                target.Id | 0x80000000u,
-                decoySequence,
-                "DECOY_" + target.ModifiedSequence,
-                target.Charge,
-                target.PrecursorMz,
-                target.RetentionTime);
-            decoy.RtCalibrated = target.RtCalibrated;
-            decoy.IsDecoy = true;
-            decoy.Modifications = DecoyGenerator.RemapModificationsStatic(
-                target.Modifications, positionMapping);
-            decoy.Fragments = DecoyGenerator.RecalculateFragmentsStatic(
-                target, positionMapping, decoySequence);
-            decoy.ProteinIds = new List<string>();
-            foreach (string p in target.ProteinIds)
-                decoy.ProteinIds.Add("DECOY_" + p);
-            decoy.GeneNames = new List<string>(target.GeneNames);
-            return decoy;
-        }
-
-
-        /// <summary>
         /// Extract unique isolation windows from the first cycle of MS2 spectra.
         /// </summary>
         protected List<IsolationWindow> ExtractIsolationWindows(List<Spectrum> spectra)
@@ -275,90 +124,6 @@ namespace pwiz.OspreySharp.Tasks
 
 
         /// <summary>
-        /// Extract XICs for the top N most intense library fragments across the
-        /// supplied (pre-filtered) spectra list. Returns only fragments that have
-        /// at least one non-zero intensity point.
-        /// Calibration-only today; <c>internal static</c> so the extracted
-        /// <see cref="Calibrator"/> can call it without inheriting this class.
-        /// </summary>
-        internal static List<XicData> ExtractTopNFragmentXics(
-            LibraryEntry entry,
-            List<Spectrum> candidateSpectra,
-            double[] rts,
-            int maxFragments,
-            OspreyConfig config)
-        {
-            var xics = new List<XicData>();
-            if (entry.Fragments == null || entry.Fragments.Count == 0)
-                return xics;
-
-            // Select top N fragment indices by descending relative intensity.
-            int nFrags = entry.Fragments.Count;
-            int nTop = Math.Min(nFrags, maxFragments);
-            int[] topIndices;
-            if (nFrags <= maxFragments)
-            {
-                topIndices = new int[nFrags];
-                for (int i = 0; i < nFrags; i++)
-                    topIndices[i] = i;
-            }
-            else
-            {
-                // Stable sort matching Rust slice::sort_by on
-                // RelativeIntensity ties; List<T>.Sort with
-                // Comparison<T> is introsort and unstable.
-                topIndices = Enumerable.Range(0, nFrags)
-                    .OrderByDescending(i => entry.Fragments[i].RelativeIntensity)
-                    .Take(nTop)
-                    .ToArray();
-            }
-
-            int nScans = candidateSpectra.Count;
-            foreach (int fragIdx in topIndices)
-            {
-                var fragment = entry.Fragments[fragIdx];
-                double tolDa = config.FragmentTolerance.ToleranceDa(fragment.Mz);
-                double lower = fragment.Mz - tolDa;
-                double upper = fragment.Mz + tolDa;
-
-                double[] intensities = new double[nScans];
-
-                for (int scanIdx = 0; scanIdx < nScans; scanIdx++)
-                {
-                    var spectrum = candidateSpectra[scanIdx];
-                    if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
-                        continue;
-
-                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
-                    if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
-                        continue;
-
-                    // Pick CLOSEST peak by m/z (not most intense). Matches
-                    // Rust extract_fragment_xics in osprey-scoring/src/batch.rs.
-                    double bestDiff = Math.Abs(spectrum.Mzs[lo] - fragment.Mz);
-                    double bestIntensity = spectrum.Intensities[lo];
-                    for (int k = lo + 1; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
-                    {
-                        double diff = Math.Abs(spectrum.Mzs[k] - fragment.Mz);
-                        if (diff < bestDiff)
-                        {
-                            bestDiff = diff;
-                            bestIntensity = spectrum.Intensities[k];
-                        }
-                    }
-                    intensities[scanIdx] = bestIntensity;
-                }
-
-                // Always include the fragment XIC, even all-zero. Rust:
-                // "Dropping all-zero fragments biases decoys to higher R^2".
-                xics.Add(new XicData(fragIdx, rts, intensities));
-            }
-
-            return xics;
-        }
-
-
-        /// <summary>
         /// Run coelution scoring for all library entries across all isolation windows.
         /// For each window, finds candidate entries whose precursor falls in the window,
         /// extracts fragment XICs, detects CWT peaks, and scores at each peak.
@@ -371,7 +136,8 @@ namespace pwiz.OspreySharp.Tasks
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
-            ScoringContext context)
+            ScoringContext context,
+            PipelineContext ctx)
         {
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
@@ -474,7 +240,7 @@ namespace pwiz.OspreySharp.Tasks
                     config.RtCalibration.MinRtTolerance,
                     Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
                     rtToleranceGlobal, mad,
                     context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
@@ -502,7 +268,7 @@ namespace pwiz.OspreySharp.Tasks
                     Unit = calUnit
                 };
                 string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
                     calTol, unitStr));
 
@@ -512,7 +278,7 @@ namespace pwiz.OspreySharp.Tasks
                 // built, so no rebuild is needed here.)
                 config.FragmentTolerance = searchFragTol;
 
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
                     ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
             }
@@ -522,7 +288,7 @@ namespace pwiz.OspreySharp.Tasks
             // OspreyDiagnostics.ShouldDumpSearchXicFor(entry.Id).
             if (OspreyDiagnostics.DiagSearchEntryIds != null)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
                     OspreyDiagnostics.DiagSearchEntryIds.Count));
             }
@@ -539,7 +305,7 @@ namespace pwiz.OspreySharp.Tasks
             if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[BENCH] OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
                     maxWindows, isolationWindows.Count));
             }
@@ -547,7 +313,7 @@ namespace pwiz.OspreySharp.Tasks
             // Bracket the main-search parallel loop with the dotTrace Measure
             // API and peak-memory logging. When no profiler is attached the
             // ProfilerHooks calls are inexpensive no-ops.
-            ProfilerHooks.LogMemoryStats(_ctx.LogInfo, "pre-main-search");
+            ProfilerHooks.LogMemoryStats(ctx.LogInfo, "pre-main-search");
             ProfilerHooks.StartMeasure();
 
             // Process each isolation window (parallelizable). Per-window
@@ -572,7 +338,7 @@ namespace pwiz.OspreySharp.Tasks
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
                     rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
-                    scorer, context);
+                    scorer, context, ctx);
                 swWindow.Stop();
 
                 windowTimings.Add(new WindowTiming
@@ -589,7 +355,7 @@ namespace pwiz.OspreySharp.Tasks
                     windowsProcessed++;
                     if (windowsProcessed % 10 == 0 || windowsProcessed == windowsToScore.Count)
                     {
-                        _ctx.LogInfo(string.Format("  Scored {0}/{1} isolation windows",
+                        ctx.LogInfo(string.Format("  Scored {0}/{1} isolation windows",
                             windowsProcessed, windowsToScore.Count));
                     }
                 }
@@ -603,18 +369,18 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             ProfilerHooks.SaveAndStopMeasure();
-            ProfilerHooks.LogMemoryStats(_ctx.LogInfo, "post-main-search");
+            ProfilerHooks.LogMemoryStats(ctx.LogInfo, "post-main-search");
 
             if (context.XcorrScratchPool != null)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[POOL] scratch_allocs={0}, bins_allocs={1}",
                     context.XcorrScratchPool.ScratchAllocCount,
                     context.XcorrScratchPool.BinsAllocCount));
             }
 
             // Summarize per-window timings.
-            LogWindowTimingSummary(windowTimings);
+            LogWindowTimingSummary(windowTimings, ctx);
 
             return allEntries;
         }
@@ -634,7 +400,7 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Log min/median/max per-window scoring times and the slowest window's candidate count.
         /// </summary>
-        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings)
+        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings, PipelineContext ctx)
         {
             if (timings == null || timings.Count == 0)
                 return;
@@ -645,7 +411,7 @@ namespace pwiz.OspreySharp.Tasks
             double maxS = sorted[n - 1].Seconds;
             double medS = sorted[n / 2].Seconds;
             var slowest = sorted[n - 1];
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[TIMING] Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
                 minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
         }
@@ -669,7 +435,8 @@ namespace pwiz.OspreySharp.Tasks
             double globalRtTolerance,
             double rtSigma,
             SpectralScorer scorer,
-            ScoringContext context)
+            ScoringContext context,
+            PipelineContext ctx)
         {
             var config = context.Config;
             var entries = new List<FdrEntry>();
@@ -737,7 +504,7 @@ namespace pwiz.OspreySharp.Tasks
                         rtCalibration,
                         globalRtTolerance, rtSigma,
                         scorer, context,
-                        ospreyContext, ospreyPeakData);
+                        ospreyContext, ospreyPeakData, ctx);
 
                     if (fdrEntry != null)
                         entries.Add(fdrEntry);
@@ -756,23 +523,6 @@ namespace pwiz.OspreySharp.Tasks
         // peptide modified sequence to dump its RT window, XICs, CWT peaks, and
         // winning peak selection. Used for bisecting divergences with Rust.
         private const string DIAG_PEPTIDE = "AAAAAAAAAAAAAAAGAGAGAK";
-
-
-        /// <summary>
-        /// Score a single library entry candidate against spectra in its isolation window.
-        /// Extracts fragment XICs, detects CWT peaks, and scores at the best apex.
-        /// </summary>
-        // IEEE 754-2008 §5.10 total order on doubles: matches Rust
-        // f64::total_cmp so -0.0 < +0.0 and NaNs sort consistently.
-        // Used by the main-search peak-ranking tie-break.
-        private static bool TotalOrderGreater(double a, double b)
-        {
-            long la = BitConverter.DoubleToInt64Bits(a);
-            long lb = BitConverter.DoubleToInt64Bits(b);
-            if (la < 0) la ^= 0x7FFFFFFFFFFFFFFFL;
-            if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
-            return la > lb;
-        }
 
 
         /// <summary>
@@ -862,7 +612,8 @@ namespace pwiz.OspreySharp.Tasks
             SpectralScorer scorer,
             ScoringContext context,
             OspreyScoringContext ospreyContext,
-            OspreyPeakData ospreyPeakData)
+            OspreyPeakData ospreyPeakData,
+            PipelineContext ctx)
         {
             var config = context.Config;
             var resolution = context.Resolution;
@@ -907,11 +658,11 @@ namespace pwiz.OspreySharp.Tasks
 
             if (diag)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[DIAG] {0} charge {1}: library_rt={2:F3}, expected_rt={3:F3}, tolerance={4:F3}",
                     candidate.ModifiedSequence, candidate.Charge,
                     candidate.RetentionTime, expectedRt, rtTolerance));
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[DIAG] {0}: window m/z={1:F3}, fragments={2}, window_spectra={3}",
                     candidate.ModifiedSequence, candidate.PrecursorMz,
                     candidate.Fragments.Count, nScans));
@@ -979,12 +730,12 @@ namespace pwiz.OspreySharp.Tasks
             {
                 if (startScan >= 0 && endScan >= 0)
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: scan range [{1}..{2}] RT [{3:F3}..{4:F3}] ({5} scans)",
                         candidate.ModifiedSequence, startScan, endScan,
                         windowRts[startScan], windowRts[endScan],
                         endScan - startScan + 1));
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: spectrum scan_numbers in range: first={1}, last={2}",
                         candidate.ModifiedSequence,
                         windowSpectra[startScan].ScanNumber,
@@ -992,7 +743,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 else
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: no scans in RT window around expected_rt={1:F3}",
                         candidate.ModifiedSequence, expectedRt));
                 }
@@ -1037,7 +788,7 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             // Extract fragment XICs within the RT range
-            var xics = ExtractFragmentXics(
+            var xics = TopFragmentExtractor.ExtractFragmentXics(
                 candidate, windowSpectra, windowRts, startScan, endScan, config);
 
             // Per-entry search XIC diagnostic. Fires for every scoring
@@ -1133,7 +884,7 @@ namespace pwiz.OspreySharp.Tasks
 
             if (diag)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[DIAG] {0}: xics extracted={1}, peaks={2}",
                     candidate.ModifiedSequence, xics.Count, peaks.Count));
                 for (int i = 0; i < peaks.Count; i++)
@@ -1142,7 +893,7 @@ namespace pwiz.OspreySharp.Tasks
                     int apexAbsIdx = startScan + p.ApexIndex;
                     double apexRt = windowRts[apexAbsIdx];
                     uint apexScanNum = windowSpectra[apexAbsIdx].ScanNumber;
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: peak[{1}] apex_local={2} apex_rt={3:F3} scan#={4} range=[{5}..{6}]",
                         candidate.ModifiedSequence, i, p.ApexIndex,
                         apexRt, apexScanNum, p.StartIndex, p.EndIndex));
@@ -1267,7 +1018,7 @@ namespace pwiz.OspreySharp.Tasks
 
                 if (diag)
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: peak[{1}] pairwise_corr_mean={2:F4} rt_penalty={3:F4} int_weight={4:F2} rank={5:F4}",
                         candidate.ModifiedSequence, pi, coelutionScore, rtPenalty, intensityWeight, rankScore));
                 }
@@ -1280,7 +1031,7 @@ namespace pwiz.OspreySharp.Tasks
                 // iteration order, producing divergent peak picks vs Rust
                 // for the handful of entries where all in-tolerance peaks
                 // have zero reference intensity.
-                if (TotalOrderGreater(rankScore, bestRankScore))
+                if (TotalOrder.Greater(rankScore, bestRankScore))
                 {
                     bestRankScore = rankScore;
                     bestPeak = p;
@@ -1294,7 +1045,7 @@ namespace pwiz.OspreySharp.Tasks
             if (diag && bestPeak != null)
             {
                 int apexAbsIdx = startScan + bestPeak.ApexIndex;
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[DIAG] {0}: WINNER peak[{1}] apex_rt={2:F3} scan#={3}",
                     candidate.ModifiedSequence, bestPeakIdx,
                     windowRts[apexAbsIdx], windowSpectra[apexAbsIdx].ScanNumber));
@@ -1433,7 +1184,7 @@ namespace pwiz.OspreySharp.Tasks
             // Count fragment matches (top-6 dedup byproduct, NOT a PIN feature;
             // stays inline). consecutive_ions / explained_intensity / mass-accuracy
             // (features 7-10) moved to the apex-match calculators below.
-            byte top6Matches = CountTop6Matches(candidate, apexSpectrum, config);
+            byte top6Matches = TopFragmentExtractor.CountTop6Matches(candidate, apexSpectrum, config);
 
             // MS1 features (precursor coelution, isotope cosine) are computed by the
             // MS1 calculators (features 13, 14) below from the published per-window
@@ -1559,9 +1310,9 @@ namespace pwiz.OspreySharp.Tasks
                 // coelution) compare as tied under standard <, while
                 // Rust orders them positive-then-negative. Pair LINQ
                 // OrderByDescending (stable per .NET contract) with
-                // TotalOrderComparer to match Rust byte-for-byte.
+                // TotalOrder.Comparer to match Rust byte-for-byte.
                 capturedPeaks = capturedPeaks
-                    .OrderByDescending(p => p.rankScore, TotalOrderComparer)
+                    .OrderByDescending(p => p.rankScore, TotalOrder.Comparer)
                     .ToList();
                 int kept = Math.Min(topN, capturedPeaks.Count);
                 cwtCandidatesOut = new List<CwtCandidate>(kept);
@@ -1682,103 +1433,6 @@ namespace pwiz.OspreySharp.Tasks
 
 
         /// <summary>
-        /// Extract fragment XICs for a candidate across the scan range.
-        /// </summary>
-        private List<XicData> ExtractFragmentXics(
-            LibraryEntry candidate,
-            List<Spectrum> windowSpectra,
-            double[] windowRts,
-            int startScan, int endScan,
-            OspreyConfig config)
-        {
-            // Port of Rust extract_fragment_xics (osprey-scoring/src/lib.rs:505).
-            // Differences from the previous C# implementation:
-            //   1. Use top-6 fragments by relative intensity (not all fragments)
-            //   2. Pick the closest peak by m/z within tolerance (not most intense)
-            //   3. Always include all selected fragments, even all-zero XICs
-            //      (dropping all-zero fragments biases decoys to higher R^2)
-            int rangeLen = endScan - startScan + 1;
-            var xics = new List<XicData>();
-            if (candidate.Fragments == null || candidate.Fragments.Count == 0)
-                return xics;
-
-            int nFrags = candidate.Fragments.Count;
-            int nTop = Math.Min(nFrags, CAL_TOP_N_FRAGMENTS);
-            int[] topIndices;
-            if (nFrags <= CAL_TOP_N_FRAGMENTS)
-            {
-                topIndices = new int[nFrags];
-                for (int i = 0; i < nFrags; i++)
-                    topIndices[i] = i;
-            }
-            else
-            {
-                // Rust's `indexed.sort_by(|a, b| b.1.total_cmp(&a.1))` at
-                // osprey-scoring/src/lib.rs:528 is STABLE (slice::sort_by
-                // is stable). Switch from `List<T>.Sort` (introsort,
-                // unstable) to LINQ `OrderByDescending` (stable per .NET
-                // contract) so that ties on RelativeIntensity preserve
-                // the library's fragment order, matching Rust. Without
-                // this, a peptide with two fragments at equal relative
-                // intensity can land different fragments in its top-N on
-                // the C# side, which cascades through XIC extraction →
-                // peak detection → rankScore → bestPeak selection.
-                topIndices = Enumerable.Range(0, nFrags)
-                    .OrderByDescending(i => candidate.Fragments[i].RelativeIntensity)
-                    .Take(nTop)
-                    .ToArray();
-            }
-
-            // Build shared RT array for this range
-            double[] rangeRts = new double[rangeLen];
-            for (int i = 0; i < rangeLen; i++)
-                rangeRts[i] = windowRts[startScan + i];
-
-            foreach (int fragIdx in topIndices)
-            {
-                var fragment = candidate.Fragments[fragIdx];
-                double tolDa = config.FragmentTolerance.ToleranceDa(fragment.Mz);
-                double lower = fragment.Mz - tolDa;
-                double upper = fragment.Mz + tolDa;
-
-                double[] intensities = new double[rangeLen];
-
-                for (int scanIdx = 0; scanIdx < rangeLen; scanIdx++)
-                {
-                    var spectrum = windowSpectra[startScan + scanIdx];
-                    if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
-                        continue;
-
-                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
-                    if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
-                        continue;
-
-                    // Find closest peak by m/z within tolerance (matches Rust).
-                    double bestDiff = Math.Abs(spectrum.Mzs[lo] - fragment.Mz);
-                    double bestIntensity = spectrum.Intensities[lo];
-                    for (int k = lo + 1; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
-                    {
-                        double diff = Math.Abs(spectrum.Mzs[k] - fragment.Mz);
-                        if (diff < bestDiff)
-                        {
-                            bestDiff = diff;
-                            bestIntensity = spectrum.Intensities[k];
-                        }
-                    }
-                    intensities[scanIdx] = bestIntensity;
-                }
-
-                // Always include the fragment XIC, even if all zero. Zero intensities
-                // are valid data (no centroided peak found) and dropping all-zero
-                // fragments biases decoys to higher R^2. Matches Rust behavior.
-                xics.Add(new XicData(fragIdx, rangeRts, intensities));
-            }
-
-            return xics;
-        }
-
-
-        /// <summary>
         /// Find the MS1 spectrum with retention time closest to the given RT.
         /// Assumes MS1 spectra are sorted by RT. Thin forwarder to the single
         /// implementation in Core (<see cref="MS1Spectrum.FindNearest"/>) so the
@@ -1788,115 +1442,6 @@ namespace pwiz.OspreySharp.Tasks
         internal static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
         {
             return MS1Spectrum.FindNearest(ms1Spectra, rt);
-        }
-
-
-        /// <summary>
-        /// Build an approximate averagine theoretical isotope envelope at 5 positions
-        /// [M-1, M+0, M+1, M+2, M+3]. Uses a simple mass-dependent decay model -
-        /// sufficient for cosine-similarity comparison with the observed envelope.
-        /// </summary>
-        // Dead code: no callers tree-wide (found during the domain-helper
-        // relocation). Left in place, not relocated, pending the Tasks-layer
-        // dead-code pass tracked in TODO-ospreysharp_task_layer_decomposition
-        // (PR-C); do not delete without confirming it is still uncalled.
-        private static double[] TheoreticalIsotopeEnvelope(double precursorMz, int charge)
-        {
-            // Approximate neutral mass (ignores proton mass precisely - good enough here).
-            double mass = precursorMz * charge;
-
-            // Rough averagine ratios anchored to M+0 = 1.0.
-            // For a 1500 Da peptide M+1/M+0 ~ 0.7, M+2/M+0 ~ 0.25, M+3/M+0 ~ 0.06.
-            // Scale linearly with mass to capture heavier peptides having taller isotopes.
-            double r1 = Math.Min(2.0, 0.00045 * mass);           // M+1/M+0
-            double r2 = Math.Min(2.0, 0.00015 * mass * mass / 1000.0); // M+2/M+0
-            double r3 = Math.Min(1.0, 0.00003 * mass * mass / 1000.0); // M+3/M+0
-
-            double[] env = new double[5];
-            env[0] = 0.0;    // M-1
-            env[1] = 1.0;    // M+0
-            env[2] = r1;
-            env[3] = r2;
-            env[4] = r3;
-            return env;
-        }
-
-
-        /// <summary>
-        /// Cosine similarity between two equal-length arrays (sqrt-intensity preprocessing).
-        /// </summary>
-        // Dead code: no callers tree-wide. Left in place (not relocated with the
-        // other stateless math) pending the Tasks-layer dead-code pass tracked in
-        // TODO-ospreysharp_task_layer_decomposition (PR-C); do not delete without
-        // confirming it is still uncalled.
-        private static double CosineSimilarity(double[] a, double[] b)
-        {
-            if (a == null || b == null || a.Length != b.Length || a.Length == 0)
-                return 0.0;
-
-            double dot = 0.0, normA = 0.0, normB = 0.0;
-            for (int i = 0; i < a.Length; i++)
-            {
-                double av = Math.Sqrt(Math.Max(0.0, a[i]));
-                double bv = Math.Sqrt(Math.Max(0.0, b[i]));
-                dot += av * bv;
-                normA += av * av;
-                normB += bv * bv;
-            }
-
-            double denom = Math.Sqrt(normA) * Math.Sqrt(normB);
-            if (denom < 1e-12)
-                return 0.0;
-
-            return Math.Max(0.0, Math.Min(1.0, dot / denom));
-        }
-
-
-        /// <summary>
-        /// Count top-6 fragment matches at the apex spectrum.
-        /// </summary>
-        /// <summary>
-        /// Count how many of the top 6 library fragments (by intensity) have
-        /// matching peaks in the spectrum. Used for the top6_matched feature
-        /// value (called once per scored entry, not in the hot prefilter loop).
-        /// The prefilter uses HasTopNFragmentMatch instead for speed.
-        /// </summary>
-        internal static byte CountTop6Matches(
-            LibraryEntry entry, Spectrum spectrum, OspreyConfig config)
-        {
-            if (entry.Fragments == null || entry.Fragments.Count == 0)
-                return 0;
-
-            int nTop = Math.Min(entry.Fragments.Count, 6);
-            byte matched = 0;
-
-            if (entry.Fragments.Count <= 6)
-            {
-                for (int i = 0; i < entry.Fragments.Count; i++)
-                {
-                    if (SpectralScorer.HasMatch(entry.Fragments[i].Mz,
-                        spectrum.Mzs, config.FragmentTolerance))
-                        matched++;
-                }
-            }
-            else
-            {
-                // Stable top-6 by RelativeIntensity, matching Rust
-                // slice::sort_by ties (Array.Sort with Comparison<T>
-                // is introsort and unstable).
-                var indices = Enumerable.Range(0, entry.Fragments.Count)
-                    .OrderByDescending(i => entry.Fragments[i].RelativeIntensity)
-                    .Take(nTop)
-                    .ToArray();
-
-                for (int t = 0; t < indices.Length; t++)
-                {
-                    if (SpectralScorer.HasMatch(entry.Fragments[indices[t]].Mz,
-                        spectrum.Mzs, config.FragmentTolerance))
-                        matched++;
-                }
-            }
-            return matched;
         }
 
 
@@ -1915,7 +1460,8 @@ namespace pwiz.OspreySharp.Tasks
             IList<Spectrum> spectra,
             MzCalibrationResult ms2Cal,
             List<IsolationWindow> isolationWindows,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             int originalCount = entries.Count;
             if (originalCount == 0 || isolationWindows == null || isolationWindows.Count == 0)
@@ -2097,7 +1643,7 @@ namespace pwiz.OspreySharp.Tasks
             int removedDecoys = removedCount - removedTargets;
             if (removedCount > 0)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Double-counting deduplication: removed {0} entries " +
                     "({1} targets, {2} decoys; {3} remaining)",
                     removedCount, removedTargets, removedDecoys,
@@ -2111,7 +1657,7 @@ namespace pwiz.OspreySharp.Tasks
         }
 
 
-        protected List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
+        protected List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries, PipelineContext ctx)
         {
             // Group by base_id (mask off high bit)
             var groups = new Dictionary<uint, KeyValuePair<FdrEntry, FdrEntry>>();
@@ -2167,7 +1713,7 @@ namespace pwiz.OspreySharp.Tasks
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
-                _ctx.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                ctx.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
                     entries.Count, deduped.Count, removed));
             }
 

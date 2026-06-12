@@ -277,21 +277,15 @@ foreach ($fw in $testFrameworks) {
     }
 }
 
-# --- TeamCity artifact publication ------------------------------------------
-# Emit publishArtifacts service messages from pwsh (not cmd.exe echo) so they
-# reach the agent reliably.  Paths use the repo-root-relative form so this
-# script works from either C:\pwiz (TC) or any other working directory.
-if ($TeamCity) {
-    $repoRoot = (Resolve-Path (Join-Path $scriptRoot '..\..')).Path
-    function Publish-Tc([string]$relSrc, [string]$dest) {
-        $abs = Join-Path $repoRoot $relSrc
-        if (Test-Path $abs) {
-            Write-Host ("##teamcity[publishArtifacts '{0} => {1}']" -f (Format-TcMessage $relSrc), (Format-TcMessage $dest))
-        }
-    }
-    Publish-Tc 'pwiz_tools/OspreySharp/OspreySharp/bin/x64/Release/net8.0' 'OspreySharp-net8.0.zip'
-    Publish-Tc 'pwiz_tools/OspreySharp/OspreySharp/bin/x64/Release/net472' 'OspreySharp-net472.zip'
-    Publish-Tc 'pwiz_tools/OspreySharp/TestResults' 'test-results'
-}
+# --- TeamCity artifacts: intentionally none ---------------------------------
+# This config publishes NO downloadable artifacts. The test + coverage results
+# are already surfaced via the importData service messages above (Test /
+# Coverage tabs); there is no OspreySharp install story yet, so the built
+# binaries are not worth publishing. Critically, publishing
+# pwiz_tools/OspreySharp/TestResults here was fragile: agents reuse one C:\pwiz
+# checkout across the OspreySharp configs, so a sibling config's run (e.g. the
+# overnight regression) can leave a multi-GB .spectra.bin in that shared
+# TestResults, and the publish would then fail the 4 GB per-artifact limit. With
+# nothing published, large scratch files under TestResults are a non-issue.
 
 exit $overallTestExit

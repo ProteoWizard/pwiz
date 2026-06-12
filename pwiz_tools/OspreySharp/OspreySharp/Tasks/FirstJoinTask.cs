@@ -188,7 +188,6 @@ namespace pwiz.OspreySharp.Tasks
             // task here only in the bundle-absent modes (straight-through,
             // --task FirstJoin); a worker-mode consumer materializes it via
             // ctx.Demand which routes to Rehydrate.
-            _ctx = ctx;
             var config = ctx.Config;
 
             // Mid-Run crash safety: clear stale sidecars for the outputs
@@ -211,12 +210,12 @@ namespace pwiz.OspreySharp.Tasks
                 config.FdrMethod));
 
             var swFdr = Stopwatch.StartNew();
-            RunFdr(perFileEntries, fullLibrary, config);
+            RunFdr(perFileEntries, fullLibrary, config, ctx);
             swFdr.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
 
-            LogFirstPassResultsAndDump(perFileEntries, config);
+            LogFirstPassResultsAndDump(perFileEntries, config, ctx);
 
             // First-pass protein FDR: runs on the full pre-compaction
             // peptide pool so target and decoy proteins compete on a
@@ -229,7 +228,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.LogInfo(string.Empty);
                 ctx.LogInfo(@"First-pass protein FDR");
                 var swFirstPassProtein = Stopwatch.StartNew();
-                RunFirstPassProteinFdr(perFileEntries, fullLibrary, config);
+                RunFirstPassProteinFdr(perFileEntries, fullLibrary, config, ctx);
                 swFirstPassProtein.Stop();
                 ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
                     swFirstPassProtein.Elapsed.TotalSeconds));
@@ -243,7 +242,7 @@ namespace pwiz.OspreySharp.Tasks
             // threshold themselves, so they need every entry's q-values
             // -- not just the survivors.
             int fdrSidecarFailures = WriteFdrScoresSidecars(
-                perFileEntries, perFileParquetPaths, config);
+                perFileEntries, perFileParquetPaths, config, ctx);
             if (fdrSidecarFailures > 0 && config.StopAfterStage5)
             {
                 ctx.LogError(string.Format(
@@ -263,7 +262,7 @@ namespace pwiz.OspreySharp.Tasks
             // includes non-passing charge states that Rust has already
             // dropped, producing different rescore-target sets and
             // different per-file Vec positions.
-            CompactFirstPass(perFileEntries, null, config);
+            CompactFirstPass(perFileEntries, null, config, ctx);
 
             // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
             // (MergeNodeTask) owns its own 2nd-pass rehydrate -- it reloads (or
@@ -284,7 +283,7 @@ namespace pwiz.OspreySharp.Tasks
             if (perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
             {
                 if (!PlanStage6(perFileEntries, perFileCalibrations,
-                        perFileParquetPaths, fullLibrary, config))
+                        perFileParquetPaths, fullLibrary, config, ctx))
                     return false;
             }
 
@@ -312,7 +311,6 @@ namespace pwiz.OspreySharp.Tasks
             // compute_fdr_from_stubs skip, pipeline.rs:3916). All that remains
             // is to adopt a post-Stage-5 bundle and compact. The compute
             // counterpart is Run.
-            _ctx = ctx;
             var config = ctx.Config;
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
 
@@ -335,13 +333,13 @@ namespace pwiz.OspreySharp.Tasks
 
             ctx.LogInfo(@"Bundle hydration: skipping first-pass Percolator (sidecar provides q-values).");
 
-            LogFirstPassResultsAndDump(perFileEntries, config);
+            LogFirstPassResultsAndDump(perFileEntries, config, ctx);
 
             // Compaction delegates to RescoreCompaction.Apply on the bundle
             // path so the pre-compaction (file, vec_idx) keys in
             // bundle.ReconciliationActions get rebuilt to post-compaction
             // indices for PerFileRescoreTask.
-            CompactFirstPass(perFileEntries, bundle, config);
+            CompactFirstPass(perFileEntries, bundle, config, ctx);
 
             // Publish the SAME four planning byproducts as Run, but sourced from
             // the adopted bundle (post-compaction). A consumer pulls
@@ -431,9 +429,10 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private void LogFirstPassResultsAndDump(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
-            LogFirstPassResults(perFileEntries, config);
+            LogFirstPassResults(perFileEntries, config, ctx);
 
             if (OspreyDiagnostics.DumpPercolator)
                 OspreyDiagnostics.WriteStage5PercolatorDump(perFileEntries);
@@ -447,7 +446,8 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private void LogFirstPassResults(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             int passingTargets = 0;
             foreach (var kvp in perFileEntries)
@@ -461,11 +461,11 @@ namespace pwiz.OspreySharp.Tasks
                         fileTargets++;
                     }
                 }
-                _ctx.LogInfo(string.Format(@"  {0}: {1} precursors at {2:P1} run-level FDR",
+                ctx.LogInfo(string.Format(@"  {0}: {1} precursors at {2:P1} run-level FDR",
                     kvp.Key, fileTargets, config.RunFdr));
                 passingTargets += fileTargets;
             }
-            _ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
+            ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
                 passingTargets));
         }
 
@@ -481,7 +481,8 @@ namespace pwiz.OspreySharp.Tasks
         private void CompactFirstPass(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             RescoreInputs bundle,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             if (perFileEntries.Count > 0)
             {
@@ -497,7 +498,7 @@ namespace pwiz.OspreySharp.Tasks
                     // failure the worker's hand-rolled compaction at
                     // RescoreCompaction.Apply was written to avoid.
                     var stats = RescoreCompaction.Apply(bundle, config);
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
                         stats.EntriesBefore, stats.EntriesAfter,
                         stats.FirstPassBaseIds, stats.DroppedActions));
@@ -528,7 +529,7 @@ namespace pwiz.OspreySharp.Tasks
                         kvp.Value.TrimExcess();
                         afterCount += kvp.Value.Count;
                     }
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
                         beforeCount, afterCount, firstPassBaseIds.Count));
                 }
@@ -554,10 +555,11 @@ namespace pwiz.OspreySharp.Tasks
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
-            _ctx.LogInfo(string.Empty);
-            _ctx.LogInfo(@"Stage 6: planning");
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(@"Stage 6: planning");
 
             // 1. Multi-charge consensus per file (independent — runs
             //    first per Rust pipeline.rs:3217, before consensus
@@ -572,7 +574,7 @@ namespace pwiz.OspreySharp.Tasks
             int totalMulticharge = 0;
             foreach (var kvp in perFileConsensusTargets)
                 totalMulticharge += kvp.Value.Count;
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 @"Stage 6 multi-charge consensus: {0} entries need re-scoring across {1} files",
                 totalMulticharge, perFileEntries.Count));
 
@@ -638,7 +640,7 @@ namespace pwiz.OspreySharp.Tasks
                 if (c.IsDecoy) nDecoys++;
                 else nTargets++;
             }
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 @"Stage 6 consensus: {0} target peptides, {1} decoy peptides",
                 nTargets, nDecoys));
 
@@ -666,7 +668,7 @@ namespace pwiz.OspreySharp.Tasks
                 if (refined != null)
                     refinedCalibrations[kvp.Key] = refined;
             }
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 @"Stage 6 refit: {0}/{1} files produced refined calibrations",
                 refinedCalibrations.Count, perFileEntries.Count));
 
@@ -720,7 +722,7 @@ namespace pwiz.OspreySharp.Tasks
                         }
                         if (kvp.Value.Count > 0 && maxIdx >= cwtRows.Count)
                         {
-                            _ctx.LogWarning(string.Format(
+                            ctx.LogWarning(string.Format(
                                 @"CWT candidate row count out of range for {0}: " +
                                 @"max stub ParquetIndex={1}, parquet has {2} rows -- " +
                                 @"skipping reconciliation planning for this file",
@@ -734,7 +736,7 @@ namespace pwiz.OspreySharp.Tasks
                     }
                     catch (Exception ex)
                     {
-                        _ctx.LogWarning(string.Format(
+                        ctx.LogWarning(string.Format(
                             @"Failed to load CWT candidates for {0}: {1}",
                             kvp.Key, ex.Message));
                     }
@@ -764,17 +766,17 @@ namespace pwiz.OspreySharp.Tasks
                     refinedCalibrations,
                     perFileCalibrations,
                     config.Reconciliation.ConsensusFdr);
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     @"Stage 6 reconciliation: {0} per-(file, entry) actions planned",
                     reconciliationActions.Count));
             }
             else if (consensus.Count == 0)
             {
-                _ctx.LogInfo(@"Stage 6 reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
+                ctx.LogInfo(@"Stage 6 reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
             }
             else
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     @"Stage 6 reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
                     perFileCwtCandidates.Count, perFileEntries.Count));
             }
@@ -813,20 +815,21 @@ namespace pwiz.OspreySharp.Tasks
                 fullLibrary,
                 perFileParquetPaths,
                 config,
-                out var perFileGapFillForRescore);
+                out var perFileGapFillForRescore,
+                ctx);
 
             if (config.StopAfterStage5)
             {
                 if (reconWriteFailures > 0)
                 {
-                    _ctx.LogError(string.Format(
+                    ctx.LogError(string.Format(
                         @"--task FirstJoin: {0}/{1} reconciliation.json " +
                         @"writes failed; boundary file pair is incomplete. See warnings above.",
                         reconWriteFailures, perFileEntries.Count));
-                    _ctx.ExitCode = 1;
+                    ctx.ExitCode = 1;
                     return false;
                 }
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     @"--task FirstJoin: Stage 5 + reconciliation planning " +
                     @"complete; wrote {0} reconciliation.json + matching fdr_scores.bin " +
                     @"sidecar pair(s). Exiting before Stage 6 rescore.",
@@ -835,7 +838,7 @@ namespace pwiz.OspreySharp.Tasks
                 // a membership fact -- PerFileRescore and MergeNode are excluded
                 // by IsIncluded under --task FirstJoin, so the driver loop iterates no
                 // further. The failure path above keeps ExitCode=1; return false.
-                _ctx.ExitCode = 0;
+                ctx.ExitCode = 0;
                 return true;
             }
 
@@ -870,7 +873,8 @@ namespace pwiz.OspreySharp.Tasks
         private int WriteFdrScoresSidecars(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             int failures = 0;
             foreach (var kvp in perFileEntries)
@@ -879,7 +883,7 @@ namespace pwiz.OspreySharp.Tasks
                 string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "No sidecar base path for `{0}` — skipping fdr_scores.bin write", fileName));
                     failures++;
                     continue;
@@ -891,7 +895,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 catch (Exception ex)
                 {
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "Failed to write 1st-pass fdr_scores.bin for {0}: {1}", fileName, ex.Message));
                     failures++;
                 }
@@ -926,7 +930,8 @@ namespace pwiz.OspreySharp.Tasks
             List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
-            out Dictionary<string, List<GapFillTarget>> gapFillByFileOut)
+            out Dictionary<string, List<GapFillTarget>> gapFillByFileOut,
+            PipelineContext ctx)
         {
             string searchHash = config.Identity.SearchParameterHash();
             string libraryHash = config.Identity.LibraryIdentityHash();
@@ -1030,7 +1035,7 @@ namespace pwiz.OspreySharp.Tasks
                 string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
                 {
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "No sidecar base path for `{0}` — skipping reconciliation.json write", fileName));
                     failures++;
                     continue;
@@ -1047,7 +1052,7 @@ namespace pwiz.OspreySharp.Tasks
                 try
                 {
                     ReconciliationFile.Save(reconPath, reconFile);
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "Wrote reconciliation.json for {0} ({1} use_cwt + {2} forced + {3} gap-fill)",
                         fileName,
                         reconFile.UseCwtPeakActions.Count,
@@ -1056,7 +1061,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 catch (Exception ex)
                 {
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "Failed to write reconciliation.json for {0}: {1}", fileName, ex.Message));
                     failures++;
                 }
@@ -1219,23 +1224,24 @@ namespace pwiz.OspreySharp.Tasks
         private void RunFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
-                    RunPercolatorFdr(perFileEntries, fullLibrary, config, _ctx);
+                    RunPercolatorFdr(perFileEntries, fullLibrary, config, ctx);
                     break;
 
                 case FdrMethod.Simple:
-                    RunSimpleFdr(perFileEntries, config);
+                    RunSimpleFdr(perFileEntries, config, ctx);
                     break;
 
                 default:
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "FDR method {0} not yet supported, falling back to simple",
                         config.FdrMethod));
-                    RunSimpleFdr(perFileEntries, config);
+                    RunSimpleFdr(perFileEntries, config, ctx);
                     break;
             }
         }
@@ -1642,7 +1648,8 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private void RunSimpleFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             var fdrController = new FdrController(config.RunFdr);
 
@@ -1654,7 +1661,7 @@ namespace pwiz.OspreySharp.Tasks
                     e => e.IsDecoy,
                     e => e.EntryId);
 
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "  {0}: {1} targets pass (FDR={2:F4}, {3} target wins, {4} decoy wins)",
                     kvp.Key, result.PassingTargets.Count, result.FdrAtThreshold,
                     result.NTargetWins, result.NDecoyWins));
@@ -1691,7 +1698,8 @@ namespace pwiz.OspreySharp.Tasks
         private void RunFirstPassProteinFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             // Detected-peptide count for logging only; the core computation +
             // propagation lives in ProteinFdr.RunFirstPassProteinFdr so the
@@ -1708,7 +1716,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
             detectedCount = detectedTracker.Count;
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
                 detectedCount));
 
@@ -1728,7 +1736,7 @@ namespace pwiz.OspreySharp.Tasks
                 if (qv <= config.RunFdr)
                     nAtRunFdr++;
             }
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "First-pass protein FDR: {0} target groups at {1:P1} FDR",
                 nAtRunFdr, config.RunFdr));
 
