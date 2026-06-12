@@ -65,24 +65,6 @@ namespace pwiz.OspreySharp.Tasks
         // from PerFileScoringTask (calibration) and from the
         // shared scoring engine here.
         internal const int CAL_TOP_N_FRAGMENTS = 6;
-        /// <summary>
-        /// IComparer&lt;double&gt; implementing IEEE 754-2008 total order
-        /// (matches Rust's f64::total_cmp). Key property versus the
-        /// default Comparer&lt;double&gt;: distinguishes -0.0 &lt; +0.0,
-        /// orders NaNs consistently. Required wherever a stable sort
-        /// needs to mirror Rust's slice::sort_by(... .total_cmp(...))
-        /// — pair with LINQ OrderBy/OrderByDescending (stable per
-        /// .NET contract) to match Rust byte-for-byte.
-        /// </summary>
-        internal static readonly IComparer<double> TotalOrderComparer =
-            Comparer<double>.Create((a, b) =>
-            {
-                long la = BitConverter.DoubleToInt64Bits(a);
-                long lb = BitConverter.DoubleToInt64Bits(b);
-                if (la < 0) la ^= 0x7FFFFFFFFFFFFFFFL;
-                if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
-                return la.CompareTo(lb);
-            });
         // Internal so FirstJoinTask (which now owns RunPercolatorFdr +
         // RunPercolatorStreaming + BuildBasicFeatures) can reuse the
         // same 21-feature width without redeclaring it.
@@ -759,23 +741,6 @@ namespace pwiz.OspreySharp.Tasks
 
 
         /// <summary>
-        /// Score a single library entry candidate against spectra in its isolation window.
-        /// Extracts fragment XICs, detects CWT peaks, and scores at the best apex.
-        /// </summary>
-        // IEEE 754-2008 §5.10 total order on doubles: matches Rust
-        // f64::total_cmp so -0.0 < +0.0 and NaNs sort consistently.
-        // Used by the main-search peak-ranking tie-break.
-        private static bool TotalOrderGreater(double a, double b)
-        {
-            long la = BitConverter.DoubleToInt64Bits(a);
-            long lb = BitConverter.DoubleToInt64Bits(b);
-            if (la < 0) la ^= 0x7FFFFFFFFFFFFFFFL;
-            if (lb < 0) lb ^= 0x7FFFFFFFFFFFFFFFL;
-            return la > lb;
-        }
-
-
-        /// <summary>
         /// Build a one-element peak list at the supplied (apex, start, end)
         /// RT triple, mapped onto the reference XIC's RT axis. Returns null
         /// when the resulting index range is degenerate. Mirrors the
@@ -1280,7 +1245,7 @@ namespace pwiz.OspreySharp.Tasks
                 // iteration order, producing divergent peak picks vs Rust
                 // for the handful of entries where all in-tolerance peaks
                 // have zero reference intensity.
-                if (TotalOrderGreater(rankScore, bestRankScore))
+                if (TotalOrder.Greater(rankScore, bestRankScore))
                 {
                     bestRankScore = rankScore;
                     bestPeak = p;
@@ -1559,9 +1524,9 @@ namespace pwiz.OspreySharp.Tasks
                 // coelution) compare as tied under standard <, while
                 // Rust orders them positive-then-negative. Pair LINQ
                 // OrderByDescending (stable per .NET contract) with
-                // TotalOrderComparer to match Rust byte-for-byte.
+                // TotalOrder.Comparer to match Rust byte-for-byte.
                 capturedPeaks = capturedPeaks
-                    .OrderByDescending(p => p.rankScore, TotalOrderComparer)
+                    .OrderByDescending(p => p.rankScore, TotalOrder.Comparer)
                     .ToList();
                 int kept = Math.Min(topN, capturedPeaks.Count);
                 cwtCandidatesOut = new List<CwtCandidate>(kept);
@@ -1788,67 +1753,6 @@ namespace pwiz.OspreySharp.Tasks
         internal static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
         {
             return MS1Spectrum.FindNearest(ms1Spectra, rt);
-        }
-
-
-        /// <summary>
-        /// Build an approximate averagine theoretical isotope envelope at 5 positions
-        /// [M-1, M+0, M+1, M+2, M+3]. Uses a simple mass-dependent decay model -
-        /// sufficient for cosine-similarity comparison with the observed envelope.
-        /// </summary>
-        // Dead code: no callers tree-wide (found during the domain-helper
-        // relocation). Left in place, not relocated, pending the Tasks-layer
-        // dead-code pass tracked in TODO-ospreysharp_task_layer_decomposition
-        // (PR-C); do not delete without confirming it is still uncalled.
-        private static double[] TheoreticalIsotopeEnvelope(double precursorMz, int charge)
-        {
-            // Approximate neutral mass (ignores proton mass precisely - good enough here).
-            double mass = precursorMz * charge;
-
-            // Rough averagine ratios anchored to M+0 = 1.0.
-            // For a 1500 Da peptide M+1/M+0 ~ 0.7, M+2/M+0 ~ 0.25, M+3/M+0 ~ 0.06.
-            // Scale linearly with mass to capture heavier peptides having taller isotopes.
-            double r1 = Math.Min(2.0, 0.00045 * mass);           // M+1/M+0
-            double r2 = Math.Min(2.0, 0.00015 * mass * mass / 1000.0); // M+2/M+0
-            double r3 = Math.Min(1.0, 0.00003 * mass * mass / 1000.0); // M+3/M+0
-
-            double[] env = new double[5];
-            env[0] = 0.0;    // M-1
-            env[1] = 1.0;    // M+0
-            env[2] = r1;
-            env[3] = r2;
-            env[4] = r3;
-            return env;
-        }
-
-
-        /// <summary>
-        /// Cosine similarity between two equal-length arrays (sqrt-intensity preprocessing).
-        /// </summary>
-        // Dead code: no callers tree-wide. Left in place (not relocated with the
-        // other stateless math) pending the Tasks-layer dead-code pass tracked in
-        // TODO-ospreysharp_task_layer_decomposition (PR-C); do not delete without
-        // confirming it is still uncalled.
-        private static double CosineSimilarity(double[] a, double[] b)
-        {
-            if (a == null || b == null || a.Length != b.Length || a.Length == 0)
-                return 0.0;
-
-            double dot = 0.0, normA = 0.0, normB = 0.0;
-            for (int i = 0; i < a.Length; i++)
-            {
-                double av = Math.Sqrt(Math.Max(0.0, a[i]));
-                double bv = Math.Sqrt(Math.Max(0.0, b[i]));
-                dot += av * bv;
-                normA += av * av;
-                normB += bv * bv;
-            }
-
-            double denom = Math.Sqrt(normA) * Math.Sqrt(normB);
-            if (denom < 1e-12)
-                return 0.0;
-
-            return Math.Max(0.0, Math.Min(1.0, dot / denom));
         }
 
 
