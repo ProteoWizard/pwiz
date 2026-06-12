@@ -54,12 +54,6 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     public abstract class AbstractScoringTask : OspreyTask
     {
-        // PipelineContext is set on Run entry by the concrete subclass
-        // before any of the moved methods log; the base class never
-        // calls Run itself.
-        internal PipelineContext _ctx;
-
-
         // Internal so FirstJoinTask (which now owns RunPercolatorFdr +
         // RunPercolatorStreaming + BuildBasicFeatures) can reuse the
         // same 21-feature width without redeclaring it.
@@ -142,7 +136,8 @@ namespace pwiz.OspreySharp.Tasks
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
-            ScoringContext context)
+            ScoringContext context,
+            PipelineContext ctx)
         {
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
@@ -245,7 +240,7 @@ namespace pwiz.OspreySharp.Tasks
                     config.RtCalibration.MinRtTolerance,
                     Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
                     rtToleranceGlobal, mad,
                     context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
@@ -273,7 +268,7 @@ namespace pwiz.OspreySharp.Tasks
                     Unit = calUnit
                 };
                 string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
                     calTol, unitStr));
 
@@ -283,7 +278,7 @@ namespace pwiz.OspreySharp.Tasks
                 // built, so no rebuild is needed here.)
                 config.FragmentTolerance = searchFragTol;
 
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
                     ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
             }
@@ -293,7 +288,7 @@ namespace pwiz.OspreySharp.Tasks
             // OspreyDiagnostics.ShouldDumpSearchXicFor(entry.Id).
             if (OspreyDiagnostics.DiagSearchEntryIds != null)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
                     OspreyDiagnostics.DiagSearchEntryIds.Count));
             }
@@ -310,7 +305,7 @@ namespace pwiz.OspreySharp.Tasks
             if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[BENCH] OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
                     maxWindows, isolationWindows.Count));
             }
@@ -318,7 +313,7 @@ namespace pwiz.OspreySharp.Tasks
             // Bracket the main-search parallel loop with the dotTrace Measure
             // API and peak-memory logging. When no profiler is attached the
             // ProfilerHooks calls are inexpensive no-ops.
-            ProfilerHooks.LogMemoryStats(_ctx.LogInfo, "pre-main-search");
+            ProfilerHooks.LogMemoryStats(ctx.LogInfo, "pre-main-search");
             ProfilerHooks.StartMeasure();
 
             // Process each isolation window (parallelizable). Per-window
@@ -343,7 +338,7 @@ namespace pwiz.OspreySharp.Tasks
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
                     rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
-                    scorer, context);
+                    scorer, context, ctx);
                 swWindow.Stop();
 
                 windowTimings.Add(new WindowTiming
@@ -360,7 +355,7 @@ namespace pwiz.OspreySharp.Tasks
                     windowsProcessed++;
                     if (windowsProcessed % 10 == 0 || windowsProcessed == windowsToScore.Count)
                     {
-                        _ctx.LogInfo(string.Format("  Scored {0}/{1} isolation windows",
+                        ctx.LogInfo(string.Format("  Scored {0}/{1} isolation windows",
                             windowsProcessed, windowsToScore.Count));
                     }
                 }
@@ -374,18 +369,18 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             ProfilerHooks.SaveAndStopMeasure();
-            ProfilerHooks.LogMemoryStats(_ctx.LogInfo, "post-main-search");
+            ProfilerHooks.LogMemoryStats(ctx.LogInfo, "post-main-search");
 
             if (context.XcorrScratchPool != null)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[POOL] scratch_allocs={0}, bins_allocs={1}",
                     context.XcorrScratchPool.ScratchAllocCount,
                     context.XcorrScratchPool.BinsAllocCount));
             }
 
             // Summarize per-window timings.
-            LogWindowTimingSummary(windowTimings);
+            LogWindowTimingSummary(windowTimings, ctx);
 
             return allEntries;
         }
@@ -405,7 +400,7 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Log min/median/max per-window scoring times and the slowest window's candidate count.
         /// </summary>
-        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings)
+        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings, PipelineContext ctx)
         {
             if (timings == null || timings.Count == 0)
                 return;
@@ -416,7 +411,7 @@ namespace pwiz.OspreySharp.Tasks
             double maxS = sorted[n - 1].Seconds;
             double medS = sorted[n / 2].Seconds;
             var slowest = sorted[n - 1];
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[TIMING] Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
                 minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
         }
@@ -440,7 +435,8 @@ namespace pwiz.OspreySharp.Tasks
             double globalRtTolerance,
             double rtSigma,
             SpectralScorer scorer,
-            ScoringContext context)
+            ScoringContext context,
+            PipelineContext ctx)
         {
             var config = context.Config;
             var entries = new List<FdrEntry>();
@@ -508,7 +504,7 @@ namespace pwiz.OspreySharp.Tasks
                         rtCalibration,
                         globalRtTolerance, rtSigma,
                         scorer, context,
-                        ospreyContext, ospreyPeakData);
+                        ospreyContext, ospreyPeakData, ctx);
 
                     if (fdrEntry != null)
                         entries.Add(fdrEntry);
@@ -616,7 +612,8 @@ namespace pwiz.OspreySharp.Tasks
             SpectralScorer scorer,
             ScoringContext context,
             OspreyScoringContext ospreyContext,
-            OspreyPeakData ospreyPeakData)
+            OspreyPeakData ospreyPeakData,
+            PipelineContext ctx)
         {
             var config = context.Config;
             var resolution = context.Resolution;
@@ -661,11 +658,11 @@ namespace pwiz.OspreySharp.Tasks
 
             if (diag)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[DIAG] {0} charge {1}: library_rt={2:F3}, expected_rt={3:F3}, tolerance={4:F3}",
                     candidate.ModifiedSequence, candidate.Charge,
                     candidate.RetentionTime, expectedRt, rtTolerance));
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[DIAG] {0}: window m/z={1:F3}, fragments={2}, window_spectra={3}",
                     candidate.ModifiedSequence, candidate.PrecursorMz,
                     candidate.Fragments.Count, nScans));
@@ -733,12 +730,12 @@ namespace pwiz.OspreySharp.Tasks
             {
                 if (startScan >= 0 && endScan >= 0)
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: scan range [{1}..{2}] RT [{3:F3}..{4:F3}] ({5} scans)",
                         candidate.ModifiedSequence, startScan, endScan,
                         windowRts[startScan], windowRts[endScan],
                         endScan - startScan + 1));
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: spectrum scan_numbers in range: first={1}, last={2}",
                         candidate.ModifiedSequence,
                         windowSpectra[startScan].ScanNumber,
@@ -746,7 +743,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 else
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: no scans in RT window around expected_rt={1:F3}",
                         candidate.ModifiedSequence, expectedRt));
                 }
@@ -887,7 +884,7 @@ namespace pwiz.OspreySharp.Tasks
 
             if (diag)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[DIAG] {0}: xics extracted={1}, peaks={2}",
                     candidate.ModifiedSequence, xics.Count, peaks.Count));
                 for (int i = 0; i < peaks.Count; i++)
@@ -896,7 +893,7 @@ namespace pwiz.OspreySharp.Tasks
                     int apexAbsIdx = startScan + p.ApexIndex;
                     double apexRt = windowRts[apexAbsIdx];
                     uint apexScanNum = windowSpectra[apexAbsIdx].ScanNumber;
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: peak[{1}] apex_local={2} apex_rt={3:F3} scan#={4} range=[{5}..{6}]",
                         candidate.ModifiedSequence, i, p.ApexIndex,
                         apexRt, apexScanNum, p.StartIndex, p.EndIndex));
@@ -1021,7 +1018,7 @@ namespace pwiz.OspreySharp.Tasks
 
                 if (diag)
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "[DIAG] {0}: peak[{1}] pairwise_corr_mean={2:F4} rt_penalty={3:F4} int_weight={4:F2} rank={5:F4}",
                         candidate.ModifiedSequence, pi, coelutionScore, rtPenalty, intensityWeight, rankScore));
                 }
@@ -1048,7 +1045,7 @@ namespace pwiz.OspreySharp.Tasks
             if (diag && bestPeak != null)
             {
                 int apexAbsIdx = startScan + bestPeak.ApexIndex;
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[DIAG] {0}: WINNER peak[{1}] apex_rt={2:F3} scan#={3}",
                     candidate.ModifiedSequence, bestPeakIdx,
                     windowRts[apexAbsIdx], windowSpectra[apexAbsIdx].ScanNumber));
@@ -1463,7 +1460,8 @@ namespace pwiz.OspreySharp.Tasks
             IList<Spectrum> spectra,
             MzCalibrationResult ms2Cal,
             List<IsolationWindow> isolationWindows,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             int originalCount = entries.Count;
             if (originalCount == 0 || isolationWindows == null || isolationWindows.Count == 0)
@@ -1645,7 +1643,7 @@ namespace pwiz.OspreySharp.Tasks
             int removedDecoys = removedCount - removedTargets;
             if (removedCount > 0)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Double-counting deduplication: removed {0} entries " +
                     "({1} targets, {2} decoys; {3} remaining)",
                     removedCount, removedTargets, removedDecoys,
@@ -1659,7 +1657,7 @@ namespace pwiz.OspreySharp.Tasks
         }
 
 
-        protected List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
+        protected List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries, PipelineContext ctx)
         {
             // Group by base_id (mask off high bit)
             var groups = new Dictionary<uint, KeyValuePair<FdrEntry, FdrEntry>>();
@@ -1715,7 +1713,7 @@ namespace pwiz.OspreySharp.Tasks
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
-                _ctx.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                ctx.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
                     entries.Count, deduped.Count, removed));
             }
 
