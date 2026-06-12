@@ -135,7 +135,10 @@ namespace pwiz.Skyline.Model.Results
                         ?.MakePeakIntegrator(peakGroupIntegrator, _interpolatedTimes)).ToArray();
                 foreach (var peakIntegrator in _peakIntegrators)
                 {
-                    peakGroupIntegrator.AddPeakIntegrator(peakIntegrator);
+                    if (peakIntegrator != null)
+                    {
+                        peakGroupIntegrator.AddPeakIntegrator(peakIntegrator);
+                    }
                 }
                 _peakGroupIntegrator = peakGroupIntegrator;
             }

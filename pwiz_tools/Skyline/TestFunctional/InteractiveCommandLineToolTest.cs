@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -70,7 +72,19 @@ namespace pwiz.SkylineTestFunctional
             var originalPeakWidth = GetPeakWidth(idPath);
             Assert.AreNotEqual(0, originalPeakWidth);
             RunUI(()=>SkylineWindow.RunTool(3));
-            WaitForCondition(() => originalPeakWidth != GetPeakWidth(idPath));
+            try
+            {
+                WaitForCondition(() => originalPeakWidth != GetPeakWidth(idPath));
+            }
+            catch (Exception exception)
+            {
+                // The tool runs as a separate process whose output goes to the Immediate Window.
+                // Include that text in the failure so we can see what the tool reported (or whether
+                // it ran at all) when it times out.
+                string immediateWindowText = CallUI(() => SkylineWindow.ImmediateWindow?.TextContent);
+                throw new AssertFailedException(TextUtil.LineSeparate("Immediate Window text:", immediateWindowText),
+                    exception);
+            }
             var newPeakWidth = GetPeakWidth(idPath);
             Assert.AreEqual(originalPeakWidth / 2, newPeakWidth, .001);
         }
