@@ -70,7 +70,10 @@ namespace pwiz.Skyline.Model.Serialization
             }
             foreach (var value in ALL_VALUES)
             {
-                if (string.Equals(value.Name, name))
+                // Case-insensitive so a command-line value like "Always" resolves correctly:
+                // CommandArgs validates arg values case-insensitively, so a case variant passes
+                // validation and must not silently fall through to DEFAULT here.
+                if (string.Equals(value.Name, name, StringComparison.OrdinalIgnoreCase))
                 {
                     return value;
                 }

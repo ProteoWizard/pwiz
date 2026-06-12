@@ -2255,10 +2255,14 @@ namespace pwiz.Skyline.Model
         }
 
         public void SerializeToXmlWriter(XmlWriter writer, SkylineVersion skylineVersion, IProgressMonitor progressMonitor,
-            IProgressStatus progressStatus)
+            IProgressStatus progressStatus, CompactFormatOption compactFormatOption = null)
         {
             var document = DocumentAnnotationUpdater.UpdateAnnotations(this, progressMonitor, progressStatus);
             var documentWriter = new DocumentWriter(document, skylineVersion);
+            // A non-null override (e.g. SkylineCmd --save-compact-format) takes precedence over
+            // the persisted CompactFormatOption setting, for deterministic headless/automation output.
+            if (compactFormatOption != null)
+                documentWriter.CompactFormatOption = compactFormatOption;
             if (progressMonitor != null)
             {
                 int transitionsWritten = 0;
@@ -2286,13 +2290,14 @@ namespace pwiz.Skyline.Model
             return Path.Combine(directory, fileName);
         }
 
-        public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
+        public void SerializeToFile(string tempName, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor,
+            CompactFormatOption compactFormatOption = null)
         {
             string hash;
             using (var writer = new XmlTextWriter(HashingStream.CreateWriteStream(tempName), new UTF8Encoding(false))) // UTF-8 without BOM
             {
                 writer.Formatting = Formatting.Indented;
-                hash = Serialize(writer, displayName, skylineVersion, progressMonitor);
+                hash = Serialize(writer, displayName, skylineVersion, progressMonitor, compactFormatOption);
             }
 
             var auditLogPath = GetAuditLogPath(displayName);
@@ -2307,11 +2312,12 @@ namespace pwiz.Skyline.Model
                 TryHelper.TryTwice(() => File.Delete(auditLogPath));
         }
 
-        public string Serialize(XmlTextWriter writer, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor)
+        public string Serialize(XmlTextWriter writer, string displayName, SkylineVersion skylineVersion, IProgressMonitor progressMonitor,
+            CompactFormatOption compactFormatOption = null)
         {
             writer.WriteStartDocument();
             writer.WriteStartElement(@"srm_settings");
-            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)));
+            SerializeToXmlWriter(writer, skylineVersion, progressMonitor, new ProgressStatus(Path.GetFileName(displayName)), compactFormatOption);
             writer.WriteEndElement();
             writer.WriteEndDocument();
             writer.Flush();

@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -237,6 +238,70 @@ namespace pwiz.SkylineTestData
                 }),
                 TextUtil.LineSeparate(SmallMoleculeTransitionListColumnHeaders.KnownHeaderSynonyms.Keys));
             AssertEx.Contains(output, smallMoleculeErrorMessage);
+        }
+
+        [TestMethod]
+        public void ConsoleSaveCompactFormatTest()
+        {
+            // --save-compact-format lets automation pick the on-disk transition format
+            // (individual <transition> elements vs. a compact base64 transition_data blob)
+            // per-invocation, independent of the persisted CompactFormatOption user setting,
+            // for deterministic headless/container output. See issue #4285.
+            TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var docPath = TestFilesDir.GetTestPath("blank.sky");
+            var smallmolPath = TestFilesDir.GetTestPath("smallmolecules.txt");
+
+            var compactFormatOptionOld = Settings.Default.CompactFormatOption;
+            try
+            {
+                // Seed the OPPOSITE persisted setting in each case to prove the command-line
+                // flag overrides the user setting rather than merely agreeing with it.
+
+                // never => individual transition elements, no compact transition_data blob
+                Settings.Default.CompactFormatOption = CompactFormatOption.ALWAYS.Name;
+                var neverPath = TestFilesDir.GetTestPath("compact-never.sky");
+                RunCommand("--in=" + docPath,
+                    "--import-transition-list=" + smallmolPath,
+                    "--save-compact-format=" + CompactFormatOption.NEVER.Name,
+                    "--out=" + neverPath);
+                AssertEx.DoesNotContain(File.ReadAllText(neverPath), DocumentSerializer.EL.transition_data);
+
+                // always => compact base64 transition_data blob
+                Settings.Default.CompactFormatOption = CompactFormatOption.NEVER.Name;
+                var alwaysPath = TestFilesDir.GetTestPath("compact-always.sky");
+                RunCommand("--in=" + docPath,
+                    "--import-transition-list=" + smallmolPath,
+                    "--save-compact-format=" + CompactFormatOption.ALWAYS.Name,
+                    "--out=" + alwaysPath);
+                AssertEx.Contains(File.ReadAllText(alwaysPath), DocumentSerializer.EL.transition_data);
+
+                // largefilesonly => compact blob only above the molecule-transition threshold;
+                // this is a tiny document, so no transition_data even though the setting says always
+                Settings.Default.CompactFormatOption = CompactFormatOption.ALWAYS.Name;
+                var largeOnlyPath = TestFilesDir.GetTestPath("compact-largeonly.sky");
+                RunCommand("--in=" + docPath,
+                    "--import-transition-list=" + smallmolPath,
+                    "--save-compact-format=" + CompactFormatOption.ONLY_FOR_LARGE_FILES.Name,
+                    "--out=" + largeOnlyPath);
+                AssertEx.DoesNotContain(File.ReadAllText(largeOnlyPath), DocumentSerializer.EL.transition_data);
+
+                // Arg values are matched case-insensitively (a case variant must resolve, not
+                // silently fall back to the default format); derive the variant from the name
+                Settings.Default.CompactFormatOption = CompactFormatOption.NEVER.Name;
+                var mixedCasePath = TestFilesDir.GetTestPath("compact-mixedcase.sky");
+                RunCommand("--in=" + docPath,
+                    "--import-transition-list=" + smallmolPath,
+                    "--save-compact-format=" + CompactFormatOption.ALWAYS.Name.ToUpperInvariant(),
+                    "--out=" + mixedCasePath);
+                AssertEx.Contains(File.ReadAllText(mixedCasePath), DocumentSerializer.EL.transition_data);
+
+                // The per-invocation flag must NOT persist back to the user setting
+                AssertEx.AreEqual(CompactFormatOption.NEVER.Name, Settings.Default.CompactFormatOption);
+            }
+            finally
+            {
+                Settings.Default.CompactFormatOption = compactFormatOptionOld;
+            }
         }
 
         [TestMethod]

@@ -43,6 +43,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -1892,8 +1893,10 @@ namespace pwiz.Skyline.ToolsUI
                 return Program.MainWindow.Document;
             }
 
-            public bool SaveDocument(SrmDocument doc, string saveFile)
+            public bool SaveDocument(SrmDocument doc, string saveFile, CompactFormatOption compactFormatOption = null)
             {
+                // compactFormatOption is a SkylineCmd-only override; the in-process GUI save
+                // path uses the persisted CompactFormatOption setting, so it is ignored here.
                 bool success = false;
                 Program.MainWindow.Invoke(new Action(() =>
                 {

@@ -384,6 +384,9 @@
   <data name="_save_as" xml:space="preserve">
     <value>Synonym for --out. Save to the specified file.</value>
   </data>
+  <data name="_save_compact_format" xml:space="preserve">
+    <value>Sets how transitions are written when the document is saved in this run: 'never' writes individual transition elements, 'always' writes a compact base64 blob, and 'largefilesonly' (the default) uses the compact blob only for large documents. Overrides the persisted setting for this invocation only, for deterministic headless/automation output.</value>
+  </data>
   <data name="_share_type" xml:space="preserve">
     <value>Specifies the type, 'minimal' or 'complete', of archive to share when --share-zip is specified. Minimal is the default attempting to reduce the size of the archive to the minimum necessary to represent the targets in the document while 'complete' maintains full fidelity of all project files.</value>
   </data>
