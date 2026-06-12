@@ -620,7 +620,8 @@ namespace pwiz.OspreySharp.Tasks
             }
             else if (!librarySuppliesDecoys)
             {
-                decoys = GenerateDecoys(library, config, out List<LibraryEntry> validTargets);
+                decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                    library, config, _ctx.LogInfo, out List<LibraryEntry> validTargets);
                 library = validTargets;
             }
             else
