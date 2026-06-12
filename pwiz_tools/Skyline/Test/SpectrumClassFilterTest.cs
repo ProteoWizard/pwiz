@@ -56,46 +56,51 @@ namespace pwiz.SkylineTest
         }
 
         [TestMethod]
-        public void TestCollisionEnergyMagnitudeMatch()
+        public void TestCollisionEnergyFilter()
         {
-            // Vendors report collision energy as a positive magnitude, but users (and Sciex-style
-            // transition lists) use negative CE for negative-polarity data. The spectrum filter
-            // matches on magnitude so a "CollisionEnergy = -17" filter still selects spectra
-            // acquired at CE 17. Polarity is already pinned by precursor m/z, so this cannot match
-            // across polarities.
-            var spectrum = new SpectrumMetadata(@"scan1", 1.0)
-                .ChangePrecursors(new[] { new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(17.0) } });
+            // Collision energy is read straight from the spectrum file as a positive magnitude (the
+            // mzML/PSI convention), regardless of scan polarity, and the filter compares it as a plain
+            // signed number with no magnitude folding: the value the user filters against is the value
+            // shown in the grid. Scan polarity is pinned by the precursor charge, so it is never part of
+            // a collision energy criterion.
+            Predicate<SpectrumMetadata> Predicate(string criterion) =>
+                SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + criterion).MakePredicate();
 
-            var negativeFilter = SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17");
-            Assert.IsTrue(negativeFilter.MakePredicate()(spectrum));
+            SpectrumMetadata CeSpectrum(string id, double ce) => new SpectrumMetadata(id, 1.0)
+                .ChangePrecursors(new[] { new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(ce) } });
 
-            var positiveFilter = SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = 17");
-            Assert.IsTrue(positiveFilter.MakePredicate()(spectrum));
+            var spectrum = CeSpectrum(@"ce17", 17.0);
+            Assert.IsTrue(Predicate(@" = 17")(spectrum));
+            Assert.IsFalse(Predicate(@" = 25")(spectrum));
 
-            var wrongMagnitudeFilter = SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -25");
-            Assert.IsFalse(wrongMagnitudeFilter.MakePredicate()(spectrum));
+            // The entered precision controls the match tolerance (number of decimal places): CE 17.4 is
+            // within integer tolerance of 17 but well outside the tolerance of 17.00.
+            Assert.IsTrue(Predicate(@" = 17.00")(spectrum));
+            Assert.IsFalse(Predicate(@" = 17.00")(CeSpectrum(@"ce17_4", 17.4)));
 
-            // Magnitude normalization must preserve the entered precision (number of decimal places
-            // controls the match tolerance); it must not reformat the value to integer width.
-            // CE 17.4 is within integer tolerance of 17 but well outside the tolerance of 17.00.
-            var spectrumNear = new SpectrumMetadata(@"scan2", 1.0)
-                .ChangePrecursors(new[] { new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(17.4) } });
-            var precisePredicate = SpectrumClassFilter
-                .ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17.00").MakePredicate();
-            Assert.IsTrue(precisePredicate(spectrum));       // CE 17.0 is within the 17.00 tolerance
-            Assert.IsFalse(precisePredicate(spectrumNear));  // CE 17.4 is not
+            // A negative collision energy is rejected at parse time with the specific "must be positive"
+            // message (not the generic "invalid format" one). Equality is a valid operator for the
+            // list-valued CollisionEnergy property, so only the negative sign is at fault here.
+            AssertEx.ThrowsException<FormatException>(
+                () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17"),
+                SpectraResources.SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value);
 
-            // Range operators are sign-stripped too (magnitude throughout), so "> -20" behaves
-            // identically to "> 20" for any spectrum, consistent with the equality case.
-            var greaterNegative = SpectrumClassFilter
-                .ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" > -20").MakePredicate();
-            var greaterPositive = SpectrumClassFilter
-                .ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" > 20").MakePredicate();
-            foreach (var ce in new[] { 17.0, 25.0 })
+            // CollisionEnergy is list-valued (a spectrum can report a CE per MS level), so ordered
+            // comparison operators do not apply. The dialog never offers them, but a hand-typed or
+            // imported filter could; such a filter is rejected at parse time rather than silently
+            // matching nothing. The operator problem takes precedence over the value sign for "> -20".
+            foreach (var (op, criterion) in new[]
+                     {
+                         (FilterOperations.OP_IS_GREATER_THAN, @" > 20"),
+                         (FilterOperations.OP_IS_LESS_THAN, @" < 5"),
+                         (FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL, @" >= 10"),
+                         (FilterOperations.OP_IS_GREATER_THAN, @" > -20")
+                     })
             {
-                var rangeSpectrum = new SpectrumMetadata(@"range" + ce, 1.0)
-                    .ChangePrecursors(new[] { new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(ce) } });
-                Assert.AreEqual(greaterPositive(rangeSpectrum), greaterNegative(rangeSpectrum));
+                AssertEx.ThrowsException<FormatException>(
+                    () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + criterion),
+                    string.Format(SpectraResources.SpectrumClassFilter_ValidateOperations_Operator_cannot_filter_property,
+                        op.DisplayName, SpectrumClassColumn.CollisionEnergy.GetLocalizedColumnName(CultureInfo.CurrentCulture)));
             }
         }
 

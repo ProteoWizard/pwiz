@@ -103,8 +103,10 @@ namespace pwiz.Skyline.Controls.Databinding
             {
                 return;
             }
+            // The SpectrumFilter property is always a child of a Precursor today, but guard the parent
+            // lookup so an unexpected root (null Parent) is ignored rather than throwing.
             var precursorEntity = columnPropertyDescriptor.DisplayColumn.ColumnDescriptor.Parent
-                .GetPropertyValue(rowItem, columnPropertyDescriptor.PivotKey) as Precursor;
+                ?.GetPropertyValue(rowItem, columnPropertyDescriptor.PivotKey) as Precursor;
             if (precursorEntity == null)
             {
                 return;

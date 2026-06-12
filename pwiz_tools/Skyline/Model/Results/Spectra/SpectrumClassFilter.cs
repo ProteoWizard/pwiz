@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
             var dataSchema = new DataSchema();
             var predicates = Clauses
-                .Select(clause => AbsoluteCollisionEnergy(clause).MakePredicate<SpectrumClass>(dataSchema)).ToList();
+                .Select(clause => clause.MakePredicate<SpectrumClass>(dataSchema)).ToList();
             return x =>
             {
                 var spectrumClass = new SpectrumClass(new SpectrumClassKey(SpectrumClassColumn.ALL, x));
@@ -142,55 +142,78 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
-        /// Returns a copy of <paramref name="clause"/> with any CollisionEnergy criterion's operand
-        /// replaced by its absolute value, so the filter matches on CE magnitude. Vendors report
-        /// collision energy as a positive magnitude, but users (and Sciex-style transition lists) use
-        /// negative CE for negative-polarity data; matching on magnitude lets a "CollisionEnergy = -17"
-        /// filter select spectra acquired at CE 17.
-        ///
-        /// Comparing magnitudes cannot mix polarities here: a spectrum only reaches this filter for a
-        /// target whose precursor m/z it matches, and that match already requires the spectrum's scan
-        /// polarity and the target precursor's charge to agree. So the two CE values necessarily share a
-        /// polarity and can differ only in sign convention (vendor magnitude vs. the user's signed value).
-        ///
-        /// Only the predicate built here uses the magnitude; the stored filter (and what the user sees)
-        /// is left unchanged, and the spectrum side is already a magnitude.
+        /// Throws a <see cref="FormatException"/> if any CollisionEnergy criterion uses a negative
+        /// operand. Collision energy is read from the spectrum file as a positive magnitude (the
+        /// mzML/PSI convention, <c>MS:1000045</c>), and a spectrum's scan polarity is already pinned by
+        /// the precursor charge, so a negative collision energy in a spectrum filter is meaningless.
+        /// Rejecting it with a helpful message (rather than silently never matching) tells the user to
+        /// enter the magnitude as a positive value.
         /// </summary>
-        private static FilterClause AbsoluteCollisionEnergy(FilterClause clause)
+        /// <summary>
+        /// Throws a <see cref="FormatException"/> if any criterion pairs an operator with a property
+        /// whose type does not support it. The Edit Spectrum Filter dialog only offers operators that
+        /// apply, but a filter typed by hand or imported from a transition list can pair, for example, a
+        /// comparison operator (&gt;, &lt;, ...) with a list-valued property such as CollisionEnergy or
+        /// the precursor m/z lists. That combination has no meaning and would otherwise silently match
+        /// nothing; rejecting it here turns the silent no-op into a clear error.
+        /// </summary>
+        private static readonly ImmutableList<IFilterOperation> COMPARISON_OPERATIONS = ImmutableList.ValueOf(new[]
         {
-            var collisionEnergyPath = SpectrumClassColumn.CollisionEnergy.PropertyPath;
-            if (!clause.FilterSpecs.Any(spec => Equals(spec.ColumnId, collisionEnergyPath)))
+            FilterOperations.OP_IS_GREATER_THAN, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL,
+            FilterOperations.OP_IS_LESS_THAN, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL
+        });
+
+        private static void ValidateOperations(SpectrumClassFilter filter)
+        {
+            var dataSchema = new DataSchema();
+            foreach (var spec in filter.Clauses.SelectMany(clause => clause.FilterSpecs))
             {
-                return clause;
+                // Only the ordered comparison operators are checked here. Other operators (equals,
+                // contains, is-blank, ...) have legitimate uses across property types that IsValidFor
+                // would over-reject (e.g. is-blank on a non-nullable property), so leave them alone.
+                if (!COMPARISON_OPERATIONS.Contains(spec.Operation))
+                {
+                    continue;
+                }
+                var column = SpectrumClassColumn.FindColumn(spec.ColumnId);
+                if (column == null)
+                {
+                    continue; // Unknown properties are reported separately by ValidateFilterString.
+                }
+                var filterHandler = dataSchema.GetFilterHandler(column.ValueType);
+                if (filterHandler != null && !spec.Operation.IsValidFor(filterHandler))
+                {
+                    throw new FormatException(string.Format(
+                        SpectraResources.SpectrumClassFilter_ValidateOperations_Operator_cannot_filter_property,
+                        spec.Operation.DisplayName, column.GetLocalizedColumnName(CultureInfo.CurrentCulture)));
+                }
             }
-            return new FilterClause(clause.FilterSpecs.Select(spec =>
-                Equals(spec.ColumnId, collisionEnergyPath) ? AbsoluteOperand(spec) : spec));
         }
 
-        private static FilterSpec AbsoluteOperand(FilterSpec spec)
+        private static void ValidateCollisionEnergyOperands(SpectrumClassFilter filter)
         {
-            var operandText = spec.Predicate.InvariantOperandText;
-            if (string.IsNullOrEmpty(operandText))
+            var collisionEnergyPath = SpectrumClassColumn.CollisionEnergy.PropertyPath;
+            foreach (var spec in filter.Clauses.SelectMany(clause => clause.FilterSpecs))
             {
-                return spec;
-            }
-            // InvariantOperandText is a single value or a comma-separated list of doubles (invariant
-            // formatting uses '.' for the decimal point and ',' to separate list items). Strip a
-            // leading minus sign from each numeric token but otherwise leave the text exactly as
-            // entered: the number of decimal places controls the match tolerance (PrecisionNumber),
-            // so reformatting (e.g. Math.Abs(value).ToString()) would silently change the tolerance.
-            var absoluteText = string.Join(@",", operandText.Split(',').Select(token =>
-            {
-                var trimmed = token.Trim();
-                if (trimmed.StartsWith(@"-") &&
-                    double.TryParse(trimmed, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+                if (!Equals(spec.ColumnId, collisionEnergyPath))
                 {
-                    return trimmed.Substring(1);
+                    continue;
                 }
-                return token;
-            }));
-            return new FilterSpec(spec.ColumnId,
-                FilterPredicate.FromInvariantOperandText(spec.Operation, absoluteText));
+                // InvariantOperandText is a single value or a comma-separated list of doubles (invariant
+                // formatting uses '.' for the decimal point and ',' to separate list items).
+                var operandText = spec.Predicate.InvariantOperandText;
+                if (string.IsNullOrEmpty(operandText))
+                {
+                    continue;
+                }
+                if (operandText.Split(',').Any(token =>
+                        double.TryParse(token.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var value) &&
+                        value < 0))
+                {
+                    throw new FormatException(SpectraResources
+                        .SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value);
+                }
+            }
         }
 
         public override string ToString()
@@ -430,14 +453,25 @@ namespace pwiz.Skyline.Model.Results.Spectra
             FormatException firstError = null;
             foreach (var localizer in GetParseLocalizers())
             {
+                SpectrumClassFilter filter;
                 try
                 {
-                    return new SpectrumClassFilter(CreateSerializer(localizer).ParseFilterString(filterString));
+                    filter = new SpectrumClassFilter(CreateSerializer(localizer).ParseFilterString(filterString));
                 }
                 catch (FormatException ex)
                 {
                     firstError = firstError ?? ex;
+                    continue;
                 }
+                // Parsed successfully in this culture. Apply semantic validation outside the catch so
+                // its specific message surfaces rather than being mistaken for a parse failure and
+                // replaced by the generic "invalid format" message below. Check operator/property
+                // compatibility first: for "CollisionEnergy > -20" the unusable operator is the real
+                // problem (making it positive would still leave an invalid filter), so it should win
+                // over the negative-value message.
+                ValidateOperations(filter);
+                ValidateCollisionEnergyOperands(filter);
+                return filter;
             }
             // Replace the serializer's terse "invalid filter string" with a message that shows the
             // expected form (e.g. column/operator/value with spaces, combined with "and"/"or").

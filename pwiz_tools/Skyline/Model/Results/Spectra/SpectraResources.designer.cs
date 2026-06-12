@@ -160,5 +160,23 @@ namespace pwiz.Skyline.Model.Results.Spectra {
                 return ResourceManager.GetString("SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Collision Energy is measured in eV, which is a positive magnitude, so a spectrum filter cannot use a negative Collision Energy. Enter the value as a positive number, for example &apos;CollisionEnergy = 17&apos;. The scan polarity does not need to be specified; it is already determined by the precursor..
+        /// </summary>
+        public static string SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;{0}&apos; operator cannot be used to filter the spectrum property &apos;{1}&apos;..
+        /// </summary>
+        public static string SpectrumClassFilter_ValidateOperations_Operator_cannot_filter_property {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_ValidateOperations_Operator_cannot_filter_property", resourceCulture);
+            }
+        }
     }
 }
