@@ -5,8 +5,9 @@ obj/
 *.suo
 TestResults/
 
-# CMake build trees under examples/.
+# CMake build trees under examples/ and native shim subprojects (MascotShim, …).
 examples/**/build/
+Tools/BiblioSpec/native/**/build/
 
 # Per-user MSBuild overrides written by i-agree-to-the-vendor-licenses.bat.
 Directory.Build.user.props

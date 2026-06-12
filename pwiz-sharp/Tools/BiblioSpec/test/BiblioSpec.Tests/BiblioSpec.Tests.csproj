@@ -23,4 +23,15 @@
        test project runs. The TC build pipeline guarantees they exist; for
        local runs the tests Inconclusive-skip when missing. -->
 
+  <!-- The MascotShim smoke tests reference internal types from BiblioSpec
+       (MascotShimInterop, MascotResult) that are themselves gated on
+       <MascotSupport>. Mirror the gate here so the test file doesn't fail
+       to compile when MascotSupport=false. -->
+  <PropertyGroup>
+    <MascotSupport Condition="'$(MascotSupport)' == ''">true</MascotSupport>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(MascotSupport)' != 'true'">
+    <Compile Remove="MascotShimSmokeTests.cs" />
+  </ItemGroup>
+
 </Project>

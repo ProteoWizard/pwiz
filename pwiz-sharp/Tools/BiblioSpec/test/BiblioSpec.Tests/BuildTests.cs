@@ -1497,35 +1497,65 @@ public class BuildTests
     [TestMethod]
     public void Mascot()
     {
-        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Mascot),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "F027319-trim.dat" },
+            outputBlibName: "mascot.blib",
+            referenceCheckName: "mascot.check");
     }
 
     /// <summary>Jamfile.jam:364 — <c>mascot-15N</c>.</summary>
     [TestMethod]
     public void Mascot_15N()
     {
-        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Mascot_15N),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "F027752.dat" },
+            outputBlibName: "mascot-15N.blib",
+            referenceCheckName: "mascot-15N.check");
     }
 
     /// <summary>Jamfile.jam:365 — <c>mascot-distiller-and-title</c>.</summary>
     [TestMethod]
     public void Mascot_DistillerAndTitle()
     {
-        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Mascot_DistillerAndTitle),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "F007401.dat" },
+            outputBlibName: "mascot-distiller-1.blib",
+            referenceCheckName: "mascot-distiller-1.check");
     }
 
     /// <summary>Jamfile.jam:366 — <c>mascot-distiller-from-file</c>.</summary>
     [TestMethod]
     public void Mascot_DistillerFromFile()
     {
-        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Mascot_DistillerFromFile),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "F007401b.dat" },
+            outputBlibName: "mascot-distiller-2.blib",
+            referenceCheckName: "mascot-distiller-2.check");
     }
 
     /// <summary>Jamfile.jam:367 — <c>mascot_tims</c>.</summary>
     [TestMethod]
     public void Mascot_Tims()
     {
-        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+        TestRunner.RunBlibTest(
+            testName: nameof(Mascot_Tims),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o" },
+            inputFilenames: new[] { "mascot_tims.dat" },
+            outputBlibName: "mascot_tims.blib",
+            referenceCheckName: "mascot_tims.check");
     }
 
     /// <summary>Jamfile.jam:371 — <c>openswath</c>.</summary>
@@ -1588,7 +1618,16 @@ public class BuildTests
     [TestMethod]
     public void Mascot_Tims_Bad()
     {
-        Assert.Inconclusive("Reader for .dat (Mascot) not yet ported (Phase 3 backlog).");
+        TestRunner.RunNegativeBlibTest(
+            testName: nameof(Mascot_Tims_Bad),
+            tool: BlibTool.BlibBuild,
+            args: new[]
+            {
+                "-o",
+                "-e", "0.78079097398941",
+            },
+            inputFilenames: new[] { "mascot_tims_bad.dat" },
+            outputBlibName: "mascot_tims_bad.blib");
     }
 
     #endregion
