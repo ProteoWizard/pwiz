@@ -189,7 +189,17 @@ namespace pwiz.Skyline
         // automation saves are deterministic without depending on the persisted user setting.
         public static readonly Argument ARG_SAVE_COMPACT_FORMAT = new DocArgument(@"save-compact-format",
             CompactFormatOption.ALL_VALUES.Select(o => o.Name).ToArray(),
-            (c, p) => c.SaveCompactFormat = CompactFormatOption.Parse(p.Value));
+            (c, p) =>
+            {
+                // Match case-insensitively but culture-invariantly. HasValueChecking bypasses the
+                // default value check (CurrentCultureIgnoreCase), which would mishandle a value like
+                // "LARGEFILESONLY" in Turkish locale; validate explicitly with OrdinalIgnoreCase here.
+                var option = CompactFormatOption.ALL_VALUES.FirstOrDefault(
+                    o => string.Equals(o.Name, p.Value, StringComparison.OrdinalIgnoreCase));
+                if (option == null)
+                    throw new ValueInvalidException(ARG_SAVE_COMPACT_FORMAT, p.Value, ARG_SAVE_COMPACT_FORMAT.Values);
+                c.SaveCompactFormat = option;
+            }) { HasValueChecking = true };
         public static readonly Argument ARG_NEW = new DocArgument(@"new", PATH_TO_DOCUMENT, (c, p) =>
         {
             c.CreateNewFile = true;
