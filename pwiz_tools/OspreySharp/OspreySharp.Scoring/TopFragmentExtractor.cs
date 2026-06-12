@@ -46,8 +46,9 @@ namespace pwiz.OspreySharp.Scoring
 
         /// <summary>
         /// Extract XICs for the top N most intense library fragments across the
-        /// supplied (pre-filtered) spectra list. Returns only fragments that have
-        /// at least one non-zero intensity point.
+        /// supplied (pre-filtered) spectra list. Includes an XIC for every selected
+        /// fragment, even all-zero ones -- dropping all-zero fragments biases decoys
+        /// to higher R^2 (matches Rust).
         /// </summary>
         public static List<XicData> ExtractTopNFragmentXics(
             LibraryEntry entry,
