@@ -1475,7 +1475,7 @@ namespace pwiz.OspreySharp.Tasks
         /// Used as a fallback ONLY when <see cref="FdrEntry.Features"/> has not been
         /// populated (e.g. stubs loaded from a Parquet cache). In normal operation the
         /// 21-feature vector is computed during coelution scoring in
-        /// <see cref="AbstractScoringTask.ScoreCandidate"/> and stored on the entry.
+        /// <see cref="pwiz.OspreySharp.Scoring.CoelutionScorer"/> and stored on the entry.
         /// </summary>
         private static double[] BuildBasicFeatures(
             FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)
