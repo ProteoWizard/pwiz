@@ -24,9 +24,8 @@
 using System.Collections.Generic;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.Scoring;
 
-namespace pwiz.OspreySharp.Tasks
+namespace pwiz.OspreySharp.Scoring
 {
     /// <summary>
     /// Reusable <see cref="IOspreyDetailedPeakData"/> adapter over the harness's
@@ -35,8 +34,12 @@ namespace pwiz.OspreySharp.Tasks
     /// scoring loop allocates no peak-data objects. Windows are scored on separate
     /// threads, so each window owns its own instance -- this is never shared task
     /// state.
+    ///
+    /// Lives in Scoring (alongside the <see cref="IOspreyDetailedPeakData"/> seam it
+    /// implements and the feature calculators that consume it); relocated out of the
+    /// Tasks layer so the coelution scorer can move down here too.
     /// </summary>
-    internal sealed class OspreyPeakData : IOspreyDetailedPeakData
+    public sealed class OspreyPeakData : IOspreyDetailedPeakData
     {
         private LibraryEntry _candidate;
         private XICPeakBounds _peakBounds;
