@@ -432,13 +432,11 @@ public static class BlibUtils
     /// </remarks>
     public static string GetExeDirectory()
     {
-        string? path = null;
-        var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
-        var asmLoc = asm.Location;
-        if (!string.IsNullOrEmpty(asmLoc))
-        {
-            path = Path.GetDirectoryName(asmLoc);
-        }
+        // Prefer AppContext.BaseDirectory — it's the canonical "where the app lives" answer
+        // and survives single-file publish (Assembly.Location is empty for embedded assemblies,
+        // analyzer IL3000). Falls back through Process.MainModule and Assembly.Location for the
+        // rare host that leaves BaseDirectory empty.
+        string? path = AppContext.BaseDirectory;
         if (string.IsNullOrEmpty(path))
         {
             using var proc = Process.GetCurrentProcess();
@@ -446,6 +444,17 @@ public static class BlibUtils
             if (!string.IsNullOrEmpty(module))
             {
                 path = Path.GetDirectoryName(module);
+            }
+        }
+        if (string.IsNullOrEmpty(path))
+        {
+            var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+            #pragma warning disable IL3000 // single-file fallback only
+            var asmLoc = asm.Location;
+            #pragma warning restore IL3000
+            if (!string.IsNullOrEmpty(asmLoc))
+            {
+                path = Path.GetDirectoryName(asmLoc);
             }
         }
         if (string.IsNullOrEmpty(path))

@@ -80,9 +80,85 @@ internal static class MzxmlIndexFooter
                 if (got <= 0) break;
                 total += got;
             }
-            return ParseIndexBytes(bytes.AsSpan(0, total));
+            var parsed = ParseIndexBytes(bytes.AsSpan(0, total));
+            if (parsed is null) return null;
+            // Old mzXML 1.x indexes (ReAdW / TPP era) often list scan offsets that don't
+            // actually point at <scan> tags — they're off by anywhere from a few bytes to
+            // hundreds of KiB, sometimes mid-base64-peak-data. cpp's SpectrumList_mzXML
+            // detects this in its HandlerIndex ("<index> not found.") and rebuilds the
+            // index via a forward sweep of the file; the C# lazy reader has no equivalent
+            // fallback, so a lying index silently returns the WRONG scan (the next <scan>
+            // after the bogus offset) and downstream tools (e.g. BiblioSpec building a
+            // spectral library) decide "this PSM's scan is MS1 not MS2" and drop it. Verify
+            // a single offset to detect the lie; on mismatch return null so the caller
+            // falls back to the eager (forward-scan-everything) reader.
+            if (!ValidateOffset(stream, parsed.Value.ScanIds, parsed.Value.ScanOffsets))
+                return null;
+            return parsed;
         }
         catch (IOException) { return null; }
+    }
+
+    /// <summary>
+    /// Validate the index by probing offsets at the start, middle, and end of the file —
+    /// not just the first one. Old mzXML 1.x indexes (ReAdW / TPP era) often have a CORRECT
+    /// first entry but lying later entries (the bug we're guarding against is precisely the
+    /// silent drift that bigger files accumulate), so validating only [0] would let a mostly-
+    /// wrong index through. Returns true iff every probed offset's recorded id matches the
+    /// scan number we land on after a short forward search.
+    /// </summary>
+    private static bool ValidateOffset(Stream stream, string[] ids, long[] offsets)
+    {
+        if (ids.Length == 0 || offsets.Length == 0) return false;
+        // Single-scan files only have one entry to probe; multi-scan files get start/mid/end.
+        int last = ids.Length - 1;
+        int mid = ids.Length / 2;
+        var probeIndices = ids.Length >= 3
+            ? new[] { 0, mid, last }
+            : new[] { 0, last };
+        foreach (var i in probeIndices)
+        {
+            if (!ValidateSingleOffset(stream, ids[i], offsets[i]))
+                return false;
+        }
+        return true;
+    }
+
+    private static bool ValidateSingleOffset(Stream stream, string id, long offset)
+    {
+        // The recorded id is "scan=N"; strip the prefix to recover the scan number.
+        const string prefix = "scan=";
+        if (!id.StartsWith(prefix, System.StringComparison.Ordinal)) return false;
+        var expectedScan = id[prefix.Length..];
+        long streamLen = stream.Length;
+        if (offset < 0 || offset >= streamLen) return false;
+
+        const int probeBytes = 8192;
+        int readLen = (int)System.Math.Min(probeBytes, streamLen - offset);
+        var probe = new byte[readLen];
+        stream.Position = offset;
+        int n = 0;
+        while (n < readLen)
+        {
+            int got = stream.Read(probe, n, readLen - n);
+            if (got <= 0) break;
+            n += got;
+        }
+        // ASCII-search for <scan num="N" in the window; if found, verify N matches expected.
+        // Match patterns: '<scan num="N"' and '<scan num='N'' (both quoting styles seen in
+        // mzXML 1.x dialects).
+        string text = SystemEncoding.ASCII.GetString(probe, 0, n);
+        int scanAt = text.IndexOf("<scan num=", System.StringComparison.Ordinal);
+        if (scanAt < 0) return false;
+        int quoteAt = scanAt + "<scan num=".Length;
+        if (quoteAt >= text.Length) return false;
+        char quote = text[quoteAt];
+        if (quote != '"' && quote != '\'') return false;
+        int numStart = quoteAt + 1;
+        int numEnd = text.IndexOf(quote, numStart);
+        if (numEnd < 0) return false;
+        var foundScan = text.AsSpan(numStart, numEnd - numStart);
+        return foundScan.SequenceEqual(expectedScan.AsSpan());
     }
 
     private static long FindIndexOffset(Stream stream)

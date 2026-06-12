@@ -13,20 +13,16 @@ public class FilterTests
     [TestMethod]
     public void Filter()
     {
-        // BlibFilter's representative-selection produces near-identical but not byte-exact
-        // pairwise-dot-product sums for groups of redundant spectra in the merged library.
-        // For one peptide group (TASEFDSAIAQDK at charge 2, 12 redundants), the .NET-side sum
-        // picks a different "most central" spectrum than cpp does, so the source-id selected
-        // for that row in the filtered library differs (id=116 vs id=50). All other
-        // representatives match cpp; the divergence appears to be in the dot-product pairwise
-        // walk under PeakProcessor's bin/normMz path. Filter_BestScoring_Multi and
-        // Filter_Ssl_SmallMol — which exercise BlibFilter through different code paths —
-        // both pass.
-        Assert.Inconclusive(
-            "BlibFilter picks a different representative spectrum from cpp for one redundant " +
-            "peptide group (TASEFDSAIAQDK) — likely a cumulative floating-point divergence in " +
-            "the pairwise dot-product. Filter_BestScoring_Multi and Filter_Ssl_SmallMol both " +
-            "pass, so the rest of BlibFilter is solid.");
+        new BuildTests().Merge();
+
+        TestRunner.RunBlibTest(
+            testName: nameof(Filter),
+            tool: BlibTool.BlibFilter,
+            args: new[] { "--unicode" },
+            inputFilenames: new[] { "xmerged-redundant.blib" },
+            outputBlibName: "zmerged-filtered.blib",
+            referenceCheckName: "zmerged-filtered.check",
+            inputsFromOutputDir: true);
     }
 
     /// <summary>Jamfile.jam:386 — <c>filter-mobility</c>. Depends on <c>mse-mobility</c>.</summary>

@@ -29,8 +29,12 @@ public static class DotProduct
     /// // angle = expRefIntSum / sqrt(expIntSqSum * refIntSqSum)
     /// // if angle is NaN (both sums zero), angle = 0.
     /// </code></para>
-    /// <para>cpp uses <c>double</c> for the multiplication explicitly (cpp DotProduct.cpp:93)
-    /// to avoid float-overflow when intensities are large.</para>
+    /// <para>cpp uses <c>double</c> for the final <c>expIntSqSum*refIntSqSum</c> multiplication
+    /// explicitly (cpp DotProduct.cpp:95) to avoid float-overflow when intensities are large.
+    /// Inside the loop, however, the matched-MZ branch (cpp:68-70) multiplies <c>float*float</c>
+    /// and the unmatched branches use <c>pow</c> (which returns <c>double</c>) — we mirror that
+    /// asymmetry exactly to keep dot-product sums identical when used for tie-breaking the
+    /// representative-spectrum pick in <c>BlibFilter</c>.</para>
     /// </remarks>
     public static void Compare(Match match)
     {
@@ -56,9 +60,15 @@ public static class DotProduct
             var r = refp[j];
             if (e.Mz == r.Mz)
             {
-                expIntSqSum += (double)e.Intensity * e.Intensity;
-                refIntSqSum += (double)r.Intensity * r.Intensity;
-                expRefIntSum += (double)e.Intensity * r.Intensity;
+                // cpp DotProduct.cpp:68-70 — matched-MZ branch multiplies float*float (NOT
+                // pow's double), so the squared/product terms are truncated to float before
+                // accumulating into the double sum. Forcing this to double here was the
+                // source of a Filter-test tie-break divergence: TASEFDSAIAQDK picked id=116
+                // instead of cpp's id=50 because the average dot-product sums diverged in the
+                // 15th digit. Match cpp by computing float*float then promoting on add.
+                expIntSqSum += e.Intensity * e.Intensity;
+                refIntSqSum += r.Intensity * r.Intensity;
+                expRefIntSum += e.Intensity * r.Intensity;
                 matchedIons++;
                 i++;
                 j++;

@@ -117,6 +117,28 @@ public static class Verbosity
     public static void Debug(string message) => Comment(VerbosityLevel.Debug, message);
 
     /// <summary>
+    /// Split a (possibly multi-line) message and write each line to stderr prefixed with
+    /// <c>"ERROR: "</c>. Does NOT route through <see cref="Comment"/> / <see cref="Log"/> —
+    /// the per-line-prefix shape only makes sense for the per-file build-errors collected
+    /// in <see cref="BlibBuilder.BuildLibrary"/>, and routing through Verbosity would
+    /// either throw (Error level) or prefix only the first physical line (Warn level —
+    /// the original bug that broke Skyline's regex parser in
+    /// BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError because the captured
+    /// stderr lost the "Run with the -E flag" anchor on the unprefixed continuation lines).
+    /// </summary>
+    /// <remarks>cpp parity: BlibBuild.cpp:78 <c>WriteErrorLines</c>.</remarks>
+    public static void WriteErrorLines(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        using var reader = new System.IO.StringReader(message);
+        string? line;
+        while ((line = reader.ReadLine()) != null)
+        {
+            Console.Error.WriteLine("ERROR: " + line);
+        }
+    }
+
+    /// <summary>
     /// Emit a message at the given level. Suppressed when <see cref="GlobalLevel"/> &lt; level.
     /// </summary>
     public static void Comment(VerbosityLevel level, string message)

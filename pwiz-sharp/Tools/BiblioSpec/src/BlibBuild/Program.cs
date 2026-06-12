@@ -104,7 +104,7 @@ public static class Program
             // double-print since cpp's Verbosity::log calls exit() directly).
             if (!ex.AlreadyLogged)
             {
-                WriteErrorLines(ex.Message);
+                Verbosity.WriteErrorLines(ex.Message);
             }
             if (!string.IsNullOrEmpty(expectedError) && ex.Message.Contains(expectedError, StringComparison.Ordinal))
             {
@@ -114,7 +114,7 @@ public static class Program
         catch (Exception ex)
         {
             // cpp parity: BlibBuild.cpp:284 — std::exception fall-through, exit 1.
-            WriteErrorLines(ex.Message);
+            Verbosity.WriteErrorLines(ex.Message);
             if (!string.IsNullOrEmpty(expectedError) && ex.Message.Contains(expectedError, StringComparison.Ordinal))
             {
                 foundExpectedError = true;
@@ -157,18 +157,4 @@ public static class Program
         ReaderList.AdditionalReaders.Add(new Pwiz.Vendor.Thermo.Reader_Thermo());
     }
 
-    /// <summary>
-    /// cpp <c>WriteErrorLines</c> at BlibBuild.cpp:78. Splits a (possibly multi-line)
-    /// message and writes each line prefixed with <c>ERROR:</c>.
-    /// </summary>
-    private static void WriteErrorLines(string s)
-    {
-        if (string.IsNullOrEmpty(s)) return;
-        using var reader = new StringReader(s);
-        string? line;
-        while ((line = reader.ReadLine()) != null)
-        {
-            Console.Error.WriteLine("ERROR: " + line);
-        }
-    }
 }

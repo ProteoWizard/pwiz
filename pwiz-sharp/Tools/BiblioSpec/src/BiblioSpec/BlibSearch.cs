@@ -35,11 +35,18 @@ namespace Pwiz.Tools.BiblioSpec;
 ///         sets <c>mz-sort</c> in its option table (so cpp <c>querySorted_</c> is always
 ///         false, SearchLibrary.cpp:44, and updateSpectrumCache clears the cache every
 ///         call, SearchLibrary.cpp:142-145).</item>
-///   <item>Weibull p-values, decoy generation, and the <c>--psm-result-file</c> output are
-///         NOT ported here — cpp leaves <c>compute-p-values</c> default-off and
-///         <c>decoys-per-target</c> default-zero, so those code paths never fire in the
-///         golden-output tests. If a future test enables them, port WeibullPvalue.cpp +
-///         PsmFile.cpp at that point.</item>
+///   <item>Decoy generation (<c>--decoys-per-target</c>, <c>--circ-shift</c>,
+///         <c>--shift-raw-spectrum</c>) IS ported — drives the <c>search-decoy</c> golden
+///         test. When enabled, each target spectrum gets <c>DecoysPerTarget</c> circular-
+///         shifted decoys; targets and decoys are scored and reported separately. The decoy
+///         report file path is derived by replacing the target report's extension with
+///         <c>decoy.report</c> (cpp BlibSearch.cpp:111-112).</item>
+///   <item>Weibull p-values and the <c>--psm-result-file</c> output are NOT ported. cpp
+///         defaults <c>compute-p-values</c> to false, and even when enabled the computed
+///         Weibull params / p-values are not written to the <c>.report</c> file — the
+///         report's column set is fixed (Reportfile.cpp:74-101) and contains no p-value
+///         column. So the decoy-report test passes without WeibullPvalue. If a future test
+///         consumes p-values, port WeibullPvalue.cpp + PsmFile.cpp then.</item>
 /// </list>
 /// </remarks>
 public sealed class BlibSearch : IDisposable
@@ -86,6 +93,16 @@ public sealed class BlibSearch : IDisposable
     /// <summary>cpp <c>remove-noise-first</c>. Default true.</summary>
     public bool RemoveNoiseFirst { get; set; } = true;
 
+    /// <summary>cpp <c>decoys-per-target</c>. Default 0 (decoy generation disabled).</summary>
+    public int DecoysPerTarget { get; set; }
+
+    /// <summary>cpp <c>circ-shift</c>. Default 3 m/z. Increment between successive decoys.</summary>
+    public double CircShift { get; set; } = 3;
+
+    /// <summary>cpp <c>shift-raw-spectrum</c>. Default true. When true, shift raw peaks (the
+    /// processed peak list is rebuilt afterwards); when false, shift the already-processed peaks.</summary>
+    public bool ShiftRawSpectrum { get; set; } = true;
+
     /// <summary>The query spectrum file path (mzML/mzXML/ms2/etc.).</summary>
     public string SpectrumFile { get; set; } = string.Empty;
 
@@ -96,11 +113,16 @@ public sealed class BlibSearch : IDisposable
 
     private readonly List<LibReader> _libraries = new();
     private readonly List<Match> _targetMatches = new();
+    private readonly List<Match> _decoyMatches = new();
     private readonly List<RefSpectrum> _cachedSpectra = new();
+    private readonly List<RefSpectrum> _cachedDecoySpectra = new();
     private bool _disposed;
 
     /// <summary>Read-only view of the currently-cached target matches (last <see cref="SearchSpectrum"/> call).</summary>
     public IReadOnlyList<Match> TargetMatches => _targetMatches;
+
+    /// <summary>Read-only view of the currently-cached decoy matches (last <see cref="SearchSpectrum"/> call).</summary>
+    public IReadOnlyList<Match> DecoyMatches => _decoyMatches;
 
     /// <summary>
     /// cpp BlibSearch.cpp:362-387 — verify the spec file has a recognised extension and
@@ -313,6 +335,33 @@ public sealed class BlibSearch : IDisposable
             case "remove-noise-first":
                 RemoveNoiseFirst = ParseBoolLong(name, inlineValue, ref i, argv);
                 break;
+            case "decoys-per-target":
+                DecoysPerTarget = ParseIntLong(name, inlineValue, ref i, argv);
+                break;
+            case "circ-shift":
+                CircShift = ParseDoubleLong(name, inlineValue, ref i, argv);
+                break;
+            case "shift-raw-spectrum":
+                ShiftRawSpectrum = ParseBoolLong(name, inlineValue, ref i, argv);
+                break;
+            // cpp BlibSearch.cpp:284-329 dev options. Accept and ignore — the report file
+            // doesn't carry their effects (no p-value column), and the test harness never
+            // sets a non-default that would change the decoy-report contents. Only consume
+            // a value when it's inline (--name=VALUE) — otherwise the parser would greedily
+            // eat the NEXT real flag as the value (`--compute-p-values --decoys-per-target=1`
+            // → DecoysPerTarget stays 0, decoy report comes out empty).
+            case "compute-p-values":
+            case "fraction-to-fit":
+            case "weibull-param-file":
+            case "correlation-tolerance":
+            case "print-all-params":
+            case "min-weibull-scores":
+            case "psm-result-file":
+                // Consume the inline value if present; otherwise leave argv[i+1] alone — cpp's
+                // boost::program_options would have errored on a missing value, but for
+                // accept-and-ignore the safe semantics are "absorb when we can, never steal".
+                _ = inlineValue;
+                break;
             default:
                 // cpp parity: BlibSearch.cpp:345 — boost would exit with an error here.
                 Verbosity.Error($"Unknown switch '--{name}'.");
@@ -433,12 +482,21 @@ public sealed class BlibSearch : IDisposable
         var reportFileName = GetTargetReportName();
         var finalReport = reportFileName;
         var tmpReport = reportFileName + ".tmp";
+        // cpp parity: BlibSearch.cpp:111-112 — decoy report path is the target report path
+        // with its extension replaced by "decoy.report". The replacement only fires when
+        // DecoysPerTarget > 0, mirroring the cpp conditional Open call.
+        var finalDecoyReport = DecoysPerTarget > 0
+            ? BlibUtils.ReplaceExtension(finalReport, "decoy.report")
+            : null;
 
         // cpp parity: BlibSearch.cpp:106 — Reportfile constructed from the options table.
         var reportOptionsHeader = BuildReportHeader();
         using (var targetReport = new Reportfile(ReportMatches, reportOptionsHeader))
+        using (var decoyReport = new Reportfile(ReportMatches, reportOptionsHeader))
         {
             targetReport.Open(tmpReport);
+            if (finalDecoyReport is not null)
+                decoyReport.Open(finalDecoyReport);
 
             // cpp parity: BlibSearch.cpp:124 — open library readers. If one throws partway
             // through (corrupt .blib, locked file), already-opened LibReaders would leak their
@@ -480,10 +538,16 @@ public sealed class BlibSearch : IDisposable
                     continue;
 
                 targetReport.WriteMatches(_targetMatches);
+                // cpp parity: BlibSearch.cpp:152 — decoy report writes happen alongside the
+                // target report, regardless of whether the decoy list is empty for this query.
+                if (finalDecoyReport is not null)
+                    decoyReport.WriteMatches(_decoyMatches);
             }
         }
 
-        // cpp parity: BlibSearch.cpp:172 — rename tmp -> final.
+        // cpp parity: BlibSearch.cpp:172 — rename tmp -> final. Only the TARGET report goes
+        // through the .tmp/rename path; the decoy report is written directly to its final
+        // path (cpp BlibSearch.cpp:113 calls decoyReport.open with the final name).
         if (File.Exists(finalReport))
             File.Delete(finalReport);
         File.Move(tmpReport, finalReport);
@@ -592,6 +656,7 @@ public sealed class BlibSearch : IDisposable
         ArgumentNullException.ThrowIfNull(querySpec);
 
         _targetMatches.Clear();
+        _decoyMatches.Clear();
 
         // cpp parity: SearchLibrary.cpp:103 — process peaks via PeakProcessor.
         var processor = new PeakProcessor
@@ -635,6 +700,7 @@ public sealed class BlibSearch : IDisposable
     private void UpdateSpectrumCache(double queryMz, PeakProcessor processor)
     {
         _cachedSpectra.Clear();
+        _cachedDecoySpectra.Clear();
 
         var minMz = queryMz - MzWindow;
         var maxMz = queryMz + MzWindow;
@@ -671,6 +737,44 @@ public sealed class BlibSearch : IDisposable
                 curSpec.LibId = libIndex;
                 processor.ProcessPeaks(curSpec);
             }
+
+            // cpp parity: SearchLibrary.cpp:251-261 — generate decoys after the target
+            // spectra are added; process their peaks if we shifted the raw peak list.
+            if (DecoysPerTarget > 0)
+            {
+                Verbosity.Debug("Generating decoy spectra.");
+                // Capture the decoy-list count BEFORE generation so the peak-processing loop
+                // iterates exactly the decoys this library produced. Using `startIdx` (the
+                // target-list count) is wrong as soon as NewDecoy returns null on any target
+                // (too few raw peaks) or the wrapper is called for a second library, because
+                // target-index and decoy-index then diverge.
+                var startDecoyIdx = _cachedDecoySpectra.Count;
+                GenerateDecoySpectra(startIdx);
+                if (ShiftRawSpectrum)
+                {
+                    for (var s = startDecoyIdx; s < _cachedDecoySpectra.Count; s++)
+                        processor.ProcessPeaks(_cachedDecoySpectra[s]);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// cpp <c>generateDecoySpectra</c> at SearchLibrary.cpp:270. Walk all targets added by the
+    /// current library and push <see cref="DecoysPerTarget"/> circular-shifted copies of each.
+    /// </summary>
+    private void GenerateDecoySpectra(int startIndex)
+    {
+        var shiftMz = CircShift;
+        for (var i = 0; i < DecoysPerTarget; i++)
+        {
+            for (var specI = startIndex; specI < _cachedSpectra.Count; specI++)
+            {
+                var decoy = _cachedSpectra[specI].NewDecoy(shiftMz, ShiftRawSpectrum);
+                if (decoy is not null)
+                    _cachedDecoySpectra.Add(decoy);
+            }
+            shiftMz += CircShift;
         }
     }
 
@@ -680,8 +784,9 @@ public sealed class BlibSearch : IDisposable
     /// </summary>
     private void RunSearch(Spectrum querySpec)
     {
-        // cpp parity: SearchLibrary.cpp:326 — scoreMatches.
+        // cpp parity: SearchLibrary.cpp:326-327 — score targets and decoys against the query.
         ScoreMatches(querySpec, _cachedSpectra, _targetMatches);
+        ScoreMatches(querySpec, _cachedDecoySpectra, _decoyMatches);
 
         if (_targetMatches.Count == 0)
         {
@@ -691,11 +796,13 @@ public sealed class BlibSearch : IDisposable
             return;
         }
 
-        // cpp parity: SearchLibrary.cpp:350 — sort descending.
+        // cpp parity: SearchLibrary.cpp:350-351 — sort targets and decoys descending.
         _targetMatches.Sort(CompareByDotScoreDesc);
+        _decoyMatches.Sort(CompareByDotScoreDesc);
 
         // cpp parity: SearchLibrary.cpp:353 — setRank assigns 1-based ranks with ties.
         AssignRanks(_targetMatches);
+        AssignRanks(_decoyMatches);
     }
 
     /// <summary>

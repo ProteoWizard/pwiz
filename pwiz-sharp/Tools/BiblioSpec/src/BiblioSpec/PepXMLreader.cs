@@ -212,10 +212,25 @@ public class PepXMLreader : BuildParser
             CloseInput = true,
         };
 
+        // Declared outside the try so the catch block can read the wrap state and translate
+        // XmlException coordinates back to on-disk file coordinates.
+        Stream? parseStream = null;
+        FileStream? fs = null;
+        XmlReader? reader = null;
         try
         {
-            using var fs = new FileStream(GetFileName(), FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var reader = XmlReader.Create(fs, settings);
+            fs = new FileStream(GetFileName(), FileMode.Open, FileAccess.Read, FileShare.Read);
+            // Old TPP / interact-* pep.xml files use the xsi: prefix (xsi:schemaLocation,
+            // xsi:type) on attributes WITHOUT declaring xmlns:xsi anywhere — cpp's expat-based
+            // SAX parser silently accepts the undeclared prefix; .NET XmlReader rejects it with
+            // 'xsi' is an undeclared prefix. Without this fix, BlibBuild's -t score-lookup mode
+            // returns UNKNOWN for those files and Skyline's Import Peptide Search wizard's
+            // ScoreTypesLoaded check (driven from
+            // pwiz_tools/Skyline/FileUI/PeptideSearch/BuildLibraryGridView.cs:185) never goes
+            // true, so the wizard's WaitForConditionUI times out (observed in
+            // TestSrmTutorialLegacy with interact_hDP_P0-9.pep.xml).
+            parseStream = WrapStreamWithMissingXsiDecl(fs);
+            reader = XmlReader.Create(parseStream, settings);
             _reader = reader;
 
             while (reader.Read())
@@ -248,12 +263,23 @@ public class PepXMLreader : BuildParser
         catch (XmlException ex)
         {
             // cpp parity: SAXHandler wraps Expat errors with filename + line; do the same for XmlException.
+            // When WrapStreamWithMissingXsiDecl injected a namespace declaration, XmlException's
+            // LineNumber / LinePosition is measured against the wrapped stream, not the on-disk
+            // file — translate so the user opening the file at the reported position lands at
+            // the actual problem instead of 51 columns to its right.
+            var (line, column) = MapToFileCoordinates(parseStream, ex.LineNumber, ex.LinePosition);
             throw new BlibException(true,
-                $"XML parse error in {GetFileName()} (line {ex.LineNumber}, position {ex.LinePosition}): {ex.Message}");
+                $"XML parse error in {GetFileName()} (line {line}, position {column}): {ex.Message}");
         }
         finally
         {
             _reader = null;
+            reader?.Dispose();
+            // CompositeReadStream doesn't own its tail (the FileStream), so explicitly dispose
+            // both. When the wrap didn't trigger, parseStream IS fs and the second Dispose is
+            // a no-op — Stream.Dispose is idempotent.
+            parseStream?.Dispose();
+            fs?.Dispose();
         }
     }
 
@@ -988,6 +1014,207 @@ public class PepXMLreader : BuildParser
 
     // cpp parity: PepXMLreader.cpp:38 — find_nearest helper. Returns the value whose key
     // is closest to the query within tolerance, or null if none.
+    /// <summary>
+    /// Peek the first ~8 KiB of the pep.xml; if any <c>xsi:</c> attribute prefix appears
+    /// before an <c>xmlns:xsi=</c> declaration, inject the standard XMLSchema-instance
+    /// namespace into the root element so .NET's XmlReader doesn't reject it as
+    /// "undeclared prefix". Returns the original stream when no fix is needed.
+    /// </summary>
+    /// <remarks>
+    /// Old TPP-era interact-*.pep.xml files (and a few SEQUEST .pepXML emitters) use
+    /// <c>xsi:schemaLocation</c> / <c>xsi:type</c> attributes without ever declaring
+    /// <c>xmlns:xsi</c>. cpp BlibBuild uses expat which silently accepts this; .NET's
+    /// XmlReader is strict and aborts. The fix is purely additive — adding a namespace
+    /// declaration to a root element that already uses the prefix can't change semantics
+    /// for any well-formed file.
+    /// </remarks>
+    private static Stream WrapStreamWithMissingXsiDecl(FileStream fs)
+    {
+        const int peekBytes = 8192;
+        var peek = new byte[peekBytes];
+        // Loop until the buffer is full or EOF. Stream.Read is allowed to return short — on a
+        // freshly-opened FileStream Windows may satisfy only the first sector (≈4 KiB), which
+        // would short-circuit the xmlns:xsi probe and silently bypass the namespace fix.
+        int read = 0;
+        while (read < peekBytes)
+        {
+            int got = fs.Read(peek, read, peekBytes - read);
+            if (got <= 0) break;
+            read += got;
+        }
+        fs.Position = 0;
+
+        var head = System.Text.Encoding.ASCII.GetString(peek, 0, read);
+        // Skim for any xsi: prefix used as an element / attribute prefix in the peeked head.
+        // If no xsi: appears at all, no fix is needed.
+        if (!head.Contains("xsi:", StringComparison.Ordinal))
+            return fs;
+        // If the namespace IS declared somewhere in the head, the file is well-formed already.
+        // Use the trailing '=' to anchor — a bare "xmlns:xsi" substring would also match the
+        // (legal but distinct) prefix declarations xmlns:xsibad / xmlns:xsiAlt / xmlns:xsiext,
+        // which leave the actual xsi: prefix still undeclared and force the same XmlReader
+        // failure the rest of this function is meant to avoid. Also accept whitespace before
+        // '=' since "xmlns:xsi =" is XML-legal even though emitters rarely produce it.
+        if (head.Contains("xmlns:xsi=", StringComparison.Ordinal)
+            || System.Text.RegularExpressions.Regex.IsMatch(head, @"xmlns:xsi\s*="))
+        {
+            return fs;
+        }
+
+        // Find the first '<' that starts an element (skip <? processing instructions and <!-- comments).
+        int p = 0;
+        while (p < head.Length)
+        {
+            int lt = head.IndexOf('<', p);
+            if (lt < 0) return fs;
+            if (lt + 1 < head.Length && (head[lt + 1] == '?' || head[lt + 1] == '!'))
+            {
+                int gt = head.IndexOf('>', lt);
+                if (gt < 0) return fs;
+                p = gt + 1;
+                continue;
+            }
+            // First real element tag found. Inject the namespace right after the tag name.
+            int nameStart = lt + 1;
+            int afterName = nameStart;
+            while (afterName < head.Length
+                   && head[afterName] != ' '
+                   && head[afterName] != '\t'
+                   && head[afterName] != '\r'
+                   && head[afterName] != '\n'
+                   && head[afterName] != '>'
+                   && head[afterName] != '/')
+            {
+                afterName++;
+            }
+            if (afterName >= head.Length) return fs;
+
+            const string injection = " xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"";
+            // Build a composite stream: bytes [0, afterName) + injection + bytes [afterName, EOF).
+            var prefixBytes = new byte[afterName];
+            Array.Copy(peek, 0, prefixBytes, 0, afterName);
+            var injectionBytes = System.Text.Encoding.ASCII.GetBytes(injection);
+            // Position the original file stream to just after the bytes we consumed for the
+            // prefix; CompositeStream will hand out [prefix][injection][rest-of-fs].
+            fs.Position = afterName;
+            // Compute the 1-based (line, column) at which the injection starts, measured
+            // against the ORIGINAL file. Used by Parse's XmlException handler so the
+            // user-facing "line N, position M" we surface matches what an editor opening the
+            // on-disk file would show (without this, M is off by injection.Length whenever
+            // the error lands on the same line as — and to the right of — the injection
+            // point). Counts \n only; CR-only line endings don't exist in pep.xml from any
+            // emitter we've seen, so don't bother with the LF/CR/CRLF branching gymnastics.
+            int line = 1, col = 1;
+            for (int i = 0; i < afterName; i++)
+            {
+                if (peek[i] == (byte)'\n') { line++; col = 1; }
+                else col++;
+            }
+            return new CompositeReadStream(prefixBytes, injectionBytes, fs)
+            {
+                InjectionLine = line,
+                InjectionColumn = col,
+                InjectionLength = injectionBytes.Length,
+            };
+        }
+        return fs;
+    }
+
+    /// <summary>
+    /// Translate an <see cref="XmlException"/>'s <c>LineNumber</c> / <c>LinePosition</c> (which
+    /// the parser computes against whatever stream it actually read) back to the on-disk file's
+    /// coordinates. When the stream wasn't wrapped, returns the values as-is. When it WAS wrapped
+    /// with <see cref="CompositeReadStream"/>, subtracts the injection length from the column on
+    /// the injection line, but only for positions to the right of where the injection started —
+    /// columns to the left and lines that don't contain the injection are unaffected (the
+    /// injection contains no newlines, so line numbers never shift).
+    /// </summary>
+    private static (int Line, int Column) MapToFileCoordinates(Stream? parseStream, int xmlLine, int xmlColumn)
+    {
+        if (parseStream is not CompositeReadStream crs) return (xmlLine, xmlColumn);
+        if (xmlLine != crs.InjectionLine) return (xmlLine, xmlColumn);
+        // On the injection line: columns <= InjectionColumn are unaffected (they precede the
+        // injection point); columns > InjectionColumn shift back by InjectionLength.
+        return xmlColumn > crs.InjectionColumn
+            ? (xmlLine, xmlColumn - crs.InjectionLength)
+            : (xmlLine, xmlColumn);
+    }
+
+    /// <summary>
+    /// Read-only stream that concatenates two in-memory byte buffers and a base <see cref="Stream"/>.
+    /// Used by <see cref="WrapStreamWithMissingXsiDecl"/> to splice a namespace declaration
+    /// into the head of a pep.xml without copying the entire file.
+    /// </summary>
+    private sealed class CompositeReadStream : Stream
+    {
+        private readonly byte[] _prefix;
+        private readonly byte[] _injection;
+        private readonly Stream _tail;
+        private int _prefixPos;
+        private int _injectionPos;
+
+        public CompositeReadStream(byte[] prefix, byte[] injection, Stream tail)
+        {
+            _prefix = prefix;
+            _injection = injection;
+            _tail = tail;
+        }
+
+        /// <summary>1-based line number in the ORIGINAL file where the injection starts.
+        /// Used by <see cref="MapToFileCoordinates"/> to translate XmlException coordinates.</summary>
+        public int InjectionLine { get; init; }
+
+        /// <summary>1-based column position in the ORIGINAL file where the injection starts.</summary>
+        public int InjectionColumn { get; init; }
+
+        /// <summary>Number of bytes inserted at (<see cref="InjectionLine"/>, <see cref="InjectionColumn"/>).
+        /// Always equals <c>injection.Length</c> the caller passed in.</summary>
+        public int InjectionLength { get; init; }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position
+        {
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int written = 0;
+            if (_prefixPos < _prefix.Length)
+            {
+                int avail = Math.Min(count, _prefix.Length - _prefixPos);
+                Array.Copy(_prefix, _prefixPos, buffer, offset, avail);
+                _prefixPos += avail;
+                offset += avail;
+                count -= avail;
+                written += avail;
+            }
+            if (count > 0 && _injectionPos < _injection.Length)
+            {
+                int avail = Math.Min(count, _injection.Length - _injectionPos);
+                Array.Copy(_injection, _injectionPos, buffer, offset, avail);
+                _injectionPos += avail;
+                offset += avail;
+                count -= avail;
+                written += avail;
+            }
+            if (count > 0)
+            {
+                written += _tail.Read(buffer, offset, count);
+            }
+            return written;
+        }
+
+        public override void Flush() { }
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
     private static double? FindNearest(Dictionary<double, double> map, double query, double tolerance)
     {
         // cpp uses std::map (sorted). C# Dictionary is unordered; we just linear-scan, which

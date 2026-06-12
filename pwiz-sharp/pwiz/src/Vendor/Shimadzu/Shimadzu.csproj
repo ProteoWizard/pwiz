@@ -98,6 +98,11 @@
                         Exclude="$(ShimadzuAssembliesDir)\Shimadzu.LabSolutions.IO.IoModule.dll" />
       <Content Include="@(_ShimadzuRuntime)">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <!-- See Sciex.csproj for the rationale: keep the dll out of downstream publish bundles
+             to avoid NETSDK1152 / single-file BundleRelativePath collisions. The dll still
+             lands in Shimadzu/bin/ via this Content entry, and ProjectReference propagation
+             pulls it from there into consumers' bin and (correctly) into their publish output. -->
+        <CopyToPublishDirectory>Never</CopyToPublishDirectory>
         <Link>%(Filename)%(Extension)</Link>
         <Visible>false</Visible>
       </Content>

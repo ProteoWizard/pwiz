@@ -712,7 +712,10 @@ public class BlibFilter : BlibMaker
                 }
 
                 // cpp parity: BlibFilter.cpp:761 — find the index of the maximum element. cpp
-                // getMaxElementIndex returns the FIRST max in tie cases.
+                // getMaxElementIndex returns the FIRST max in tie cases. Ties show up routinely
+                // when redundant spectra come from the same source replicate; relying on the
+                // float-precision asymmetry inside DotProduct.Compare (see comment there) is
+                // what makes cpp and C# pick the same id when several spectra are equally good.
                 bestIndex = GetMaxElementIndex(scores);
                 var bestScore = scores[bestIndex];
                 var bestAverageScore = bestScore / oneIon.Count;

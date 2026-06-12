@@ -152,14 +152,34 @@
          and SQLite.Interop go to wiff2/ via the StageWiff2NativeAssemblies build target in
          MsConvert.csproj). -->
     <_SciexRuntime Include="$(SciexWiff2DepsDir)\System.ServiceModel.dll" />
-    <!-- Unity DI configuration files used by the wiff2 SDK during component wire-up. The
-         SCIEX SDK reads them from the working / app directory at startup; without them the
-         request handlers throw NullReferenceException when the container resolves them. -->
-    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceComponent.config" />
-    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceClientComponent.config" />
-    <_SciexRuntime Include="$(SciexWiff2DepsDir)\DataServiceInternalComponent.config" />
     <Content Include="@(_SciexRuntime)">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <!-- Copy to the local bin (so Sciex.dll's tests + downstream builds find the dlls
+           via standard probing) but do NOT re-add the original vendor-assemblies/ source
+           path to downstream PublishItemsOutputGroup. Without this, a downstream csproj
+           (e.g. BlibBuild) trying to `dotnet publish -p:PublishSingleFile=true` hits
+           NETSDK1152 / Bundler "duplicate BundleRelativePath" because the SAME dll
+           appears with two source paths: this Content entry's vendor-assemblies/Sciex/
+           AND the dll in Sciex/bin/Release/net8.0/ that the local build copied. Both
+           target the same publish-relative filename. -->
+      <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      <Link>%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+
+    <!-- Unity DI configuration files used by the wiff2 SDK during component wire-up. The
+         SCIEX SDK reads them from the working / app directory at startup; without them the
+         request handlers throw NullReferenceException when the container resolves them.
+         These MUST propagate into downstream publish (BlibBuild's single-file bundle on
+         x64 Skyline), unlike the dll list above where the bin/ build output IS the publish
+         source. .config files have only ONE source path (this Content entry) so they're
+         immune to the NETSDK1152 duplicate-bundle issue and need CopyToPublishDirectory
+         left as PreserveNewest. -->
+    <Content Include="$(SciexWiff2DepsDir)\DataServiceComponent.config;
+                      $(SciexWiff2DepsDir)\DataServiceClientComponent.config;
+                      $(SciexWiff2DepsDir)\DataServiceInternalComponent.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Link>%(Filename)%(Extension)</Link>
       <Visible>false</Visible>
     </Content>

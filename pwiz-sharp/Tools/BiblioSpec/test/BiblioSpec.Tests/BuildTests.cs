@@ -74,15 +74,16 @@ public class BuildTests
     [TestMethod]
     public void Ssl()
     {
-        // The cpp Jamfile's `ssl` test uses cpp's `--unicode` harness which Unicode-renames
-        // the input to 试验_demo.ssl. The reference .check encodes that renamed filename in
-        // its SpectrumSourceFiles table, so without replicating the harness rename we can't
-        // match. SslReader coverage is provided by Ssl_ExtraCols (line 209), Ssl_Rt (211),
-        // Ssl_IndexRt (212), Ssl_NameRt (213), Ssl_Ims (214), Duplicates (210) — all of which
-        // exercise the same reader without the harness rename.
-        Assert.Inconclusive(
-            "Skipped — cpp Jamfile's `ssl` test depends on the `--unicode` harness pre-run "
-            + "Unicode rename of the input SSL file. Other SSL tests cover SslReader.");
+        // cpp passes --unicode here so the .check golden encodes a 试验_demo.ssl
+        // path. The C# TestRunner mirrors that rename — same shape as the
+        // Mascot test (BuildTests.cs:1502).
+        TestRunner.RunBlibTest(
+            testName: nameof(Ssl),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "demo.ssl" },
+            outputBlibName: "ssl.blib",
+            referenceCheckName: "ssl.check");
     }
 
     /// <summary>Jamfile.jam:209 — <c>ssl-ex</c>.</summary>
@@ -192,17 +193,13 @@ public class BuildTests
     [TestMethod]
     public void Ssl_Crosslink()
     {
-        // Crosslinker mass calculation: cpp uses `pwiz::proteome::Peptide.monoisotopicMass()`
-        // (cpp SslReader.cpp:358); the C# port uses `Pwiz.Util.Proteome.Peptide.MonoisotopicMass()`
-        // (the C# port of the same library). The two implementations diverge at the ~10th
-        // significant digit (~5e-7 Da), so cpp's stored mass (1537.726886) and C#'s
-        // (1537.7268859548) format to byte-different .check rows. Fixing this requires
-        // aligning Pwiz.Util.Proteome.Peptide.MonoisotopicMass with cpp pwiz::proteome —
-        // outside the BiblioSpec port's surface. Re-enable when those libraries agree.
-        Assert.Inconclusive(
-            "Skipped — Pwiz.Util.Proteome.Peptide.MonoisotopicMass diverges from cpp "
-            + "pwiz::proteome::Peptide.monoisotopicMass at the ~5e-7 Da level for crosslinker "
-            + "peptides. Cross-library precision parity fix needed before this test can pass.");
+        TestRunner.RunBlibTest(
+            testName: nameof(Ssl_Crosslink),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "-o", "-K" },
+            inputFilenames: new[] { "ssl-crosslink.ssl" },
+            outputBlibName: "ssl-crosslink.blib",
+            referenceCheckName: "ssl-crosslink.check");
     }
 
     #endregion
@@ -213,14 +210,14 @@ public class BuildTests
     [TestMethod]
     public void Omssa()
     {
-        // Same cpp-harness pre-run Unicode-rename dependency as the Ssl test: the cpp `--unicode`
-        // harness renames OMSSA.pep.xml to 试验_OMSSA.pep.xml before running BlibBuild, so the
-        // reference .check encodes the Chinese-character filename in its SpectrumSourceFiles
-        // table. Without replicating the rename our SourceFiles column won't match.
-        Assert.Inconclusive(
-            "Skipped — cpp Jamfile's `omssa` test runs in `--unicode` harness mode that "
-            + "pre-renames the pep.xml input to a Unicode path. SourceFiles can't match without "
-            + "replicating that rename.");
+        TestRunner.RunBlibTest(
+            testName: nameof(Omssa),
+            tool: BlibTool.BlibBuild,
+            args: new[] { "--unicode", "-o" },
+            inputFilenames: new[] { "OMSSA.pep.xml" },
+            outputBlibName: "omssa.blib",
+            referenceCheckName: "omssa.check",
+            skipLinesName: "zbuild.skip-lines");
     }
 
     /// <summary>Jamfile.jam:236 — <c>pep-proph</c> (PeptideProphet).</summary>
@@ -1585,7 +1582,9 @@ public class BuildTests
             outputBlibName: "openswath-invalid-tsv.blib");
     }
 
-    /// <summary>Jamfile.jam:377 — <c>mascot_tims_bad</c>.</summary>
+    /// <summary>Jamfile.jam:377 — <c>mascot_tims_bad</c>. Negative test:
+    /// expects an error message containing the malformed IM substring
+    /// "0.78079097398941". cpp uses <c>-e@&lt;substring&gt;</c>.</summary>
     [TestMethod]
     public void Mascot_Tims_Bad()
     {

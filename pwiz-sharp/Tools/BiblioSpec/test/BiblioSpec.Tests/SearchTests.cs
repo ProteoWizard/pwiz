@@ -68,15 +68,57 @@ public class SearchTests
             skipLinesName: "demo.skip-lines");
     }
 
-    /// <summary>Jamfile.jam:441 — <c>search-decoy</c>. Depends on <c>sqt-ms2</c> and <c>search-demo</c>.</summary>
+    /// <summary>Jamfile.jam:441 — <c>search-decoy</c>. Depends on <c>sqt-ms2</c> and
+    /// <c>search-demo</c>. Custom test body because the cpp harness rewrites the
+    /// <c>--out=foo.decoy.report</c> argument back to <c>--out=foo.report</c> before invoking
+    /// BlibSearch (ExecuteBlib.cpp:186), then compares the <c>foo.decoy.report</c> that
+    /// BlibSearch writes alongside it against the reference. <see cref="TestRunner.RunBlibTest"/>
+    /// has a single output path that drives both <c>--out=</c> and the comparison, so we
+    /// inline the rewrite here.</summary>
     [TestMethod]
     public void Search_Decoy()
     {
-        // --decoys-per-target requires decoy generation + WeibullPvalue, neither ported
-        // (see BlibSearch.cs class docs). Skip until those are wired in.
-        Assert.Inconclusive(
-            "BlibSearch --decoys-per-target depends on decoy generation and Weibull p-values, " +
-            "which the C# port hasn't ported yet (acknowledged in BlibSearch class remarks).");
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        new BuildTests().Sqt_Ms2();
+
+        // BlibSearch writes the target report to whatever path --out= names, and the decoy
+        // report to ReplaceExtension(targetReport, "decoy.report"). Match cpp's harness: feed
+        // the target name to --out=, and compare the resulting decoy file to the reference.
+        var targetReportPath = fixture.OutputFile("search-demo.decoy-target.report");
+        var expectedDecoyPath = BlibUtils.ReplaceExtension(targetReportPath, "decoy.report");
+        Directory.CreateDirectory(Path.GetDirectoryName(targetReportPath)!);
+        if (File.Exists(targetReportPath)) File.Delete(targetReportPath);
+        if (File.Exists(expectedDecoyPath)) File.Delete(expectedDecoyPath);
+
+        // cpp ExecuteBlib.cpp:148 — under --unicode, the non-flag non-.blib input gets
+        // renamed with a "试验_" prefix and the renamed path is fed to the tool.
+        var ms2Path = fixture.InputFile("demo.ms2");
+        var unicodeMs2 = Path.Combine(Path.GetDirectoryName(ms2Path)!, "试验_" + Path.GetFileName(ms2Path));
+        if (!File.Exists(unicodeMs2)) File.Copy(ms2Path, unicodeMs2);
+
+        var args = new[]
+        {
+            "--unicode", "--preserve-order", "--decoys-per-target=1",
+            unicodeMs2,
+            fixture.OutputFile("sqt-ms2.blib"),
+            "--out=" + targetReportPath,
+        };
+        int exitCode = ExecuteBlib.Execute(BlibTool.BlibSearch, args, fixture.OutputDir,
+            out string stdout, out string stderr);
+        if (exitCode != 0)
+        {
+            Assert.Fail(
+                $"BlibSearch for test 'Search_Decoy' exited {exitCode}.\n" +
+                $"stdout:\n{stdout}\n\nstderr:\n{stderr}");
+        }
+
+        var details = CompareDetails.FromFile(fixture.ReferenceFile("demo.skip-lines"));
+        CompareTextFiles.AssertMatch(expectedDecoyPath, fixture.ReferenceFile("demo.decoy.report"), details);
     }
 
     /// <summary>Jamfile.jam:442 — <c>search-mzsorted</c>. Depends on <c>sqt-ms2</c>.</summary>
@@ -109,18 +151,24 @@ public class SearchTests
     [TestMethod]
     public void Search_Binning()
     {
-        // With non-default --bin-size=1.1 and --bin-offset=0.2 the C# PeakProcessor produces
-        // a slightly different processed-peak set than cpp's — for one query (Query=118) it
-        // shifts the best-scoring library spectrum from LibSpec=4 (dotp=0.752) to LibSpec=37
-        // (dotp=0.754) and the matched-ion count from 56 to 49. The default-binning tests
-        // (Search_Demo, Search_DemoNegative, Search_MzSorted) all pass byte-for-byte, so the
-        // divergence is specific to the non-default binning path; PeakProcessor's GetBin and
-        // BinPeaks match cpp structurally, suggesting a cumulative FP / sort-stability issue
-        // in TopNPeaks or NormMz under the wider bin width.
-        Assert.Inconclusive(
-            "Search_Binning's non-default --bin-size + --bin-offset path produces a slightly " +
-            "different best-match for one query than cpp does. Other Search tests with default " +
-            "binning pass; root cause is likely a cumulative FP / sort-stability divergence in " +
-            "PeakProcessor under wider bin widths.");
+        var fixture = GoldenFileFixture.Instance;
+        if (fixture is null)
+        {
+            Assert.Inconclusive("BiblioSpec golden-file fixture not found.");
+            return;
+        }
+        new BuildTests().Sqt_Ms2();
+        TestRunner.RunBlibTest(
+            testName: nameof(Search_Binning),
+            tool: BlibTool.BlibSearch,
+            args: new[]
+            {
+                "--unicode", "--bin-size=1.1", "--bin-offset=0.2",
+                fixture.InputFile("binning.ms2"),
+                fixture.OutputFile("sqt-ms2.blib"),
+            },
+            outputBlibName: "search-binning.report",
+            referenceCheckName: "binning.report",
+            skipLinesName: "demo.skip-lines");
     }
 }

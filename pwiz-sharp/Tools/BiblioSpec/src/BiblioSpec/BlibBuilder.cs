@@ -624,7 +624,25 @@ public class BlibBuilder : BlibMaker
         {
             var resultFile = _inputFiles[i];
             CurFile = i;
-            Verbosity.Status($"Reading results from {resultFile}.");
+            // cpp parity: BlibBuild.cpp:147-155 — in score-lookup mode, emit the filename to
+            // stdout (with a blank separator before the second+ file); the parent process
+            // (Skyline's BlibBuild.cs wrapper at pwiz_tools/Shared/BiblioSpec/BlibBuild.cs:613)
+            // parses these blocks "<filename>\n<scoreType>\t<probType>\n...\n<blank>" to
+            // populate the Import Peptide Search wizard's grid. The wizard's Next button only
+            // becomes enabled once every input row has a non-null ScoreType — without this
+            // emission the wizard hangs at IsNextButtonEnabled until the test's WaitForConditionUI
+            // times out. Status messages are suppressed in lookup mode because cpp doesn't emit
+            // them either (cpp falls through the `if (!isScoreLookupMode)` guard).
+            if (IsScoreLookupMode)
+            {
+                if (i > 0)
+                    Console.Out.WriteLine();
+                Console.Out.WriteLine(resultFile);
+            }
+            else
+            {
+                Verbosity.Status($"Reading results from {resultFile}.");
+            }
 
             try
             {
@@ -632,27 +650,79 @@ public class BlibBuilder : BlibMaker
             }
             catch (BlibException ex)
             {
-                success = false;
+                // cpp parity: BlibBuild.cpp:226-243 + :246 — record the multi-line message
+                // and emit it via WriteErrorLines (per-line "ERROR: " prefix). Verbosity.Warn
+                // would only prefix the first physical line of a multi-line message; Skyline's
+                // CommandLine output capture drops the unprefixed continuation lines, which
+                // strips the "Run with the -E flag" anchor that
+                // BiblioSpecLiteBuilder.IsLibraryMissingExternalSpectraError's regex requires.
+                // cpp BlibBuild.cpp:218-220 — emit UNKNOWN to keep the stdout shape valid for
+                // every filename header we already wrote, even when DispatchReader threw
+                // before its inner UNKNOWN-on-failure handler ran.
+                EmitScoreLookupFailureRow();
+                // cpp BlibBuild.cpp:253 — success stays untouched in score-lookup mode so the
+                // process always exits 0 (per-file errors are surfaced as UNKNOWN rows + stderr
+                // ERROR lines; Skyline's wizard would otherwise discard the whole batch on a
+                // single bad file because its wrapper treats !status.IsComplete as fatal).
+                if (!IsScoreLookupMode)
+                    success = false;
                 _errors.Add(ex.Message);
-                Verbosity.Warn(ex.Message);
+                Verbosity.WriteErrorLines(ex.Message);
                 if (!ex.HasFilename)
                 {
                     _errors.Add("reading file " + resultFile);
-                    Verbosity.Warn("reading file " + resultFile);
+                    Verbosity.WriteErrorLines("reading file " + resultFile);
                 }
             }
             catch (Exception ex) when (ex is not NotImplementedException)
             {
-                // cpp parity: BlibBuild.cpp:231 — catch std::exception, record + continue.
-                success = false;
+                // cpp parity: BlibBuild.cpp:231 — catch std::exception, record + continue
+                // (same WriteErrorLines + score-lookup-mode rationale as the BlibException
+                // branch above).
+                EmitScoreLookupFailureRow();
+                if (!IsScoreLookupMode)
+                    success = false;
                 _errors.Add(ex.Message);
                 _errors.Add("reading file " + resultFile);
-                Verbosity.Warn(ex.Message);
-                Verbosity.Warn("reading file " + resultFile);
+                Verbosity.WriteErrorLines(ex.Message);
+                Verbosity.WriteErrorLines("reading file " + resultFile);
             }
         }
 
         return success;
+    }
+
+    /// <summary>
+    /// cpp <c>WriteScoreTypes</c> at BlibBuild.cpp:86. Emit one <c>&lt;scoreType&gt;\t&lt;probType&gt;</c>
+    /// line per type, exactly as the Skyline wrapper at
+    /// pwiz_tools/Shared/BiblioSpec/BlibBuild.cs:613 parses. Writes to stdout (cpp uses
+    /// <c>cout</c>); the per-file filename header and blank separator are emitted by the
+    /// caller in <see cref="BuildLibrary"/>.
+    /// </summary>
+    private static void WriteScoreTypes(IList<PsmScoreType> types)
+    {
+        ArgumentNullException.ThrowIfNull(types);
+        foreach (var t in types)
+        {
+            Console.Out.WriteLine(
+                BlibUtils.ScoreTypeToString(t) + "\t" + BlibUtils.ScoreTypeToProbabilityTypeString(t));
+        }
+    }
+
+    /// <summary>
+    /// Score-lookup-mode-only: emit a single <c>UNKNOWN\tNOT_A_PROBABILITY_VALUE</c> row to
+    /// stdout. Called from <see cref="BuildLibrary"/>'s per-file catch arms so every filename
+    /// header we already wrote is followed by at least one score-types row, even when the
+    /// reader couldn't be constructed (corrupt header) or no factory accepted the extension.
+    /// Without this row, Skyline's wrapper parser at
+    /// pwiz_tools/Shared/BiblioSpec/BlibBuild.cs:613 would misclassify the NEXT file's
+    /// filename as a score-type line.
+    /// </summary>
+    /// <remarks>cpp parity: BlibBuild.cpp:218-220 <c>WriteScoreTypes(vector(1, UNKNOWN_SCORE_TYPE))</c>.</remarks>
+    private void EmitScoreLookupFailureRow()
+    {
+        if (!IsScoreLookupMode) return;
+        WriteScoreTypes(new[] { PsmScoreType.UnknownScoreType });
     }
 
     /// <summary>
@@ -701,6 +771,9 @@ public class BlibBuilder : BlibMaker
         (IdpXMLreader.AcceptsExtension,      (b, f) => new IdpXMLreader(b, f, parentProgress: null)),
         (TandemNativeParser.AcceptsExtension, (b, f) => new TandemNativeParser(b, f, parentProgress: null)),
         (MaxQuantReader.AcceptsExtension,    (b, f) => new MaxQuantReader(b, f, parentProgress: null)),
+#if MASCOT_SUPPORT
+        (MascotResultsReader.AcceptsExtension, (b, f) => new MascotResultsReader(b, f, parentProgress: null)),
+#endif
         (HardklorReader.AcceptsExtension,    (b, f) => new HardklorReader(b, f, parentProgress: null)),
         (ShimadzuMLBReader.AcceptsExtension, (b, f) => new ShimadzuMLBReader(b, f, parentProgress: null)),
         (ProxlXmlReader.AcceptsExtension,    (b, f) => new ProxlXmlReader(b, f, parentProgress: null)),
@@ -729,6 +802,25 @@ public class BlibBuilder : BlibMaker
             return;
         }
 
+        // cpp parity: BlibBuild.cpp:176-184 — bare .group files (ABI ProteinPilot legacy
+        // format, not .group.xml) cannot be parsed directly. In normal mode, point the user
+        // at group2xml; in score-lookup mode, emit ProteinPilot's score types without
+        // instantiating a reader (cpp uses ProteinPilotReader::getScoreTypesHelper()).
+        // Without this guard the C# port routes .group through the foreach below to
+        // ProteinPilotReader, which then opens the binary file with XmlReader and throws
+        // an opaque XmlException that Skyline's error parser doesn't recognize.
+        if (HasExtensionCi(resultFile, ".group") && !HasExtensionCi(resultFile, ".group.xml"))
+        {
+            if (IsScoreLookupMode)
+            {
+                WriteScoreTypes(ProteinPilotReader.GetScoreTypesHelper());
+                return;
+            }
+            throw new BlibException(false,
+                ".group files must be converted to .group.xml files " +
+                "(e.g. with group2xml or GroupFileExtractor) before building a library.");
+        }
+
         // Ask each reader if it accepts the extension; first hit wins.
         foreach (var (accepts, create) in _readerFactories)
         {
@@ -737,7 +829,19 @@ public class BlibBuilder : BlibMaker
             var reader = create(this, resultFile);
             try
             {
-                reader.ParseFile();
+                if (IsScoreLookupMode)
+                {
+                    // cpp parity: BlibBuild.cpp:215-221 — call getScoreTypes() in lookup mode
+                    // and emit one "<scoreType>\t<probType>\n" line per discovered type. The
+                    // UNKNOWN fallback for the EXCEPTION case lives in BuildLibrary's outer
+                    // catch (not here) so it also covers exceptions thrown by `create(...)`
+                    // above and by the no-factory-matches throw at the end of DispatchReader.
+                    WriteScoreTypes(reader.GetScoreTypes());
+                }
+                else
+                {
+                    reader.ParseFile();
+                }
             }
             finally
             {

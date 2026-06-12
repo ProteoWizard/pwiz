@@ -152,7 +152,15 @@ public sealed class ProteinPilotReader : BuildParser
 
     /// <inheritdoc/>
     /// <remarks>cpp parity: ProteinPilotReader.cpp:119.</remarks>
-    public override IList<PsmScoreType> GetScoreTypes() =>
+    public override IList<PsmScoreType> GetScoreTypes() => GetScoreTypesHelper();
+
+    /// <summary>
+    /// Constructor-free score-types lookup. Mirrors cpp's static
+    /// <c>ProteinPilotReader::getScoreTypesHelper()</c> (ProteinPilotReader.h),
+    /// called from <see cref="BlibBuilder.DispatchReader"/>'s bare-.group short-circuit
+    /// where we can't instantiate a reader because the binary .group file isn't parseable.
+    /// </summary>
+    public static IList<PsmScoreType> GetScoreTypesHelper() =>
         new[] { PsmScoreType.ProteinPilotConfidence };
 
     // ----------------------------------------------------------------------------------

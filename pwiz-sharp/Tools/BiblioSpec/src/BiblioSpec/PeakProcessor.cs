@@ -119,12 +119,22 @@ public sealed class PeakProcessor
 
     private static int UpperBoundByMz(List<PeakT> peaks, double mz)
     {
-        // First index i such that peaks[i].Mz > mz.
+        // cpp parity: PeakProcess.cpp:325 compPeakMz treats (a.mz, 0) as LESS THAN
+        // (a.mz, positive_intensity), so std::upper_bound stops on the FIRST peak whose mz
+        // equals the search key as long as that peak has positive intensity. A naive
+        // `mz > search_mz` check would walk one position further and, combined with the
+        // outer `last++` expansion in RemovePrecursorPeaks, delete one extra binned peak
+        // immediately above the precursor window (e.g. the wide-bin case where bin 1038's
+        // raw mz lands just past the +5 boundary). Mirror the cpp predicate exactly.
         int lo = 0, hi = peaks.Count;
         while (lo < hi)
         {
             int mid = (lo + hi) >>> 1;
-            if (peaks[mid].Mz <= mz) lo = mid + 1;
+            var p = peaks[mid];
+            // Predicate: peaks[mid] <= (mz, 0) → keep walking right. i.e. peaks[mid].Mz < mz,
+            // OR (peaks[mid].Mz == mz AND peaks[mid].Intensity <= 0).
+            bool peakLessThanOrEqual = p.Mz < mz || (p.Mz == mz && p.Intensity <= 0);
+            if (peakLessThanOrEqual) lo = mid + 1;
             else hi = mid;
         }
         return lo;
