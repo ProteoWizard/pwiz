@@ -65,7 +65,7 @@ namespace pwiz.OspreySharp
     /// production carries no diagnostic state. Internal: callers go through the
     /// <see cref="OspreyDiagnostics"/> facade, never this type directly.
     /// </summary>
-    internal sealed class OspreyFileDiagnostics
+    internal sealed class OspreyFileDiagnostics : IScoringDiagnostics
     {
         /// <summary>
         /// Newline used by every Stage 6 cross-impl bisection dump writer.

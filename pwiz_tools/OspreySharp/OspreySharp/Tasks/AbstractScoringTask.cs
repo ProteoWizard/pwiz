@@ -327,6 +327,10 @@ namespace pwiz.OspreySharp.Tasks
             var windowResults = new List<FdrEntry>[windowsToScore.Count];
             object lockObj = new object();
 
+            // Resolve the scoring-diagnostics sink once (null when -d is off); the
+            // per-window scorer invokes it null-conditionally, so this is a no-op then.
+            IScoringDiagnostics scoringDiagnostics = OspreyDiagnostics.ScoringDiagnostics;
+
             Parallel.For(0, windowsToScore.Count, new ParallelOptions
             {
                 MaxDegreeOfParallelism = config.NThreads
@@ -338,7 +342,7 @@ namespace pwiz.OspreySharp.Tasks
                 var windowEntries = ScoreWindow(
                     window, fullLibrary, spectraByWindowKey, ms1Spectra,
                     rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
-                    scorer, context, ctx);
+                    scorer, context, ctx, scoringDiagnostics);
                 swWindow.Stop();
 
                 windowTimings.Add(new WindowTiming
@@ -436,7 +440,8 @@ namespace pwiz.OspreySharp.Tasks
             double rtSigma,
             SpectralScorer scorer,
             ScoringContext context,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            IScoringDiagnostics diagnostics)
         {
             var config = context.Config;
             var entries = new List<FdrEntry>();
@@ -504,7 +509,7 @@ namespace pwiz.OspreySharp.Tasks
                         rtCalibration,
                         globalRtTolerance, rtSigma,
                         scorer, context,
-                        ospreyContext, ospreyPeakData, ctx);
+                        ospreyContext, ospreyPeakData, ctx, diagnostics);
 
                     if (fdrEntry != null)
                         entries.Add(fdrEntry);
@@ -613,7 +618,8 @@ namespace pwiz.OspreySharp.Tasks
             ScoringContext context,
             OspreyScoringContext ospreyContext,
             OspreyPeakData ospreyPeakData,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            IScoringDiagnostics diagnostics)
         {
             var config = context.Config;
             var resolution = context.Resolution;
@@ -796,9 +802,9 @@ namespace pwiz.OspreySharp.Tasks
             // the LAST call wins on disk. Caller can isolate by
             // limiting OSPREY_DIAG_SEARCH_ENTRY_IDS to the right
             // entries, or by tagging the dump filename with the path.
-            if (OspreyDiagnostics.ShouldDumpSearchXicFor(candidate.Id))
+            if (diagnostics?.ShouldDumpSearchXicFor(candidate.Id) ?? false)
             {
-                OspreyDiagnostics.WriteSearchXicDump(
+                diagnostics?.WriteSearchXicDump(
                     candidate, expectedRt, rtTolerance,
                     startScan, endScan, rangeLen,
                     windowSpectra, xics);
@@ -903,7 +909,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 if (!overrideBounds.HasValue)
                 {
-                    OspreyDiagnostics.WriteCwtPathRow(
+                    diagnostics?.WriteCwtPathRow(
                         context.FileName, candidate.Id,
                         diagNCwtPeaks, 0, 0, false, xics);
                 }
@@ -1052,7 +1058,7 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             // Append peak boundaries to search XIC diagnostic dump
-            if (OspreyDiagnostics.ShouldDumpSearchXicFor(candidate.Id))
+            if (diagnostics?.ShouldDumpSearchXicFor(candidate.Id) ?? false)
             {
                 string peakDumpPath = "cs_search_xic_entry_" + candidate.Id + ".txt";
                 using (var dw = new StreamWriter(peakDumpPath, true))
@@ -1094,7 +1100,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 if (!overrideBounds.HasValue)
                 {
-                    OspreyDiagnostics.WriteCwtPathRow(
+                    diagnostics?.WriteCwtPathRow(
                         context.FileName, candidate.Id,
                         diagNCwtPeaks, peaks.Count, diagNScored, false, xics);
                 }
@@ -1169,7 +1175,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 if (!overrideBounds.HasValue)
                 {
-                    OspreyDiagnostics.WriteCwtPathRow(
+                    diagnostics?.WriteCwtPathRow(
                         context.FileName, candidate.Id,
                         diagNCwtPeaks, peaks.Count, diagNScored, false, xics);
                 }
@@ -1234,7 +1240,7 @@ namespace pwiz.OspreySharp.Tasks
                 // Rust diagnostics::dump_mp_inputs at pipeline.rs:6494.
                 // Use the same input buffers passed to the median polish
                 // so we capture the exact data the algorithm sees.
-                OspreyDiagnostics.WriteMpInputsRow(
+                diagnostics?.WriteMpInputsRow(
                     candidate.Id, apexSpectrum.ScanNumber, peakXics, peakRts);
 
                 var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
@@ -1278,9 +1284,9 @@ namespace pwiz.OspreySharp.Tasks
             if (peakLen >= 3
                 && ospreyContext.TryGetInfo(out MedianPolishByproduct mpByproduct)
                 && mpByproduct.Polish != null
-                && OspreyDiagnostics.ShouldDumpMpFor(apexSpectrum.ScanNumber, candidate.ModifiedSequence))
+                && (diagnostics?.ShouldDumpMpFor(apexSpectrum.ScanNumber, candidate.ModifiedSequence) ?? false))
             {
-                OspreyDiagnostics.WriteMpDump(
+                diagnostics?.WriteMpDump(
                     candidate, apexSpectrum.ScanNumber,
                     bestPeak, peakLen,
                     features[15], features[16], features[19], features[20],
@@ -1424,7 +1430,7 @@ namespace pwiz.OspreySharp.Tasks
 
             if (!overrideBounds.HasValue)
             {
-                OspreyDiagnostics.WriteCwtPathRow(
+                diagnostics?.WriteCwtPathRow(
                     context.FileName, candidate.Id,
                     diagNCwtPeaks, peaks.Count, diagNScored, true, xics);
             }
