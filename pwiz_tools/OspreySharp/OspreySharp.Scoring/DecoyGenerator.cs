@@ -177,6 +177,8 @@ namespace pwiz.OspreySharp.Scoring
             Action<string> logInfo,
             out List<LibraryEntry> validTargets)
         {
+            // Public API: tolerate a missing logger as a no-op rather than throwing.
+            logInfo = logInfo ?? (_ => { });
             logInfo(string.Format("Generating decoys using {0} method...", config.DecoyMethod));
 
             // Build set of all target (stripped) sequences for collision detection.
