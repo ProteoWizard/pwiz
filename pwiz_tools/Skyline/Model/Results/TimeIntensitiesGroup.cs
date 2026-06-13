@@ -462,7 +462,9 @@ namespace pwiz.Skyline.Model.Results
                     massErrors = chromatogram.MassErrorsDeprecated;
                 }
                 IEnumerable<float> observedIonMobilities = null;
-                if (chromatogram.ObservedIonMobilitiesScaled.Count > 0)
+                // A zero scale means observed IM was never meaningfully encoded (dividing by it
+                // would yield NaN/Infinity); treat it as "no observed IM" rather than corrupt data.
+                if (chromatogram.ObservedIonMobilitiesScaled.Count > 0 && observedIonMobilityScale != 0)
                 {
                     observedIonMobilities = chromatogram.ObservedIonMobilitiesScaled.Select(v => v / (float)observedIonMobilityScale);
                 }

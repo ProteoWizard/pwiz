@@ -65,6 +65,14 @@ namespace pwiz.Skyline.Model.Results
         // observed IM centroid stored on each ChromPeak.
         private IIonMobilityFunctionsProvider _ionMobilityConverter;
 
+        // The data reader's native ion mobility units, captured from the provider.
+        // Always available when IM data is present, independent of whether a CCS
+        // converter rode in on the file. Drives the scale used to encode per-time-point
+        // observed IM (see WriteChromDataSet) - sourcing it from _ionMobilityConverter
+        // instead would yield a zero scale (and destroy the data) for IM files with no
+        // vendor CCS calibration, e.g. drift time or 1/K0 imported as mzML/mz5.
+        private eIonMobilityUnits _ionMobilityUnits;
+
         private readonly int SCORING_THREADS = ParallelEx.SINGLE_THREADED ? 1 : 4;
 
         //private static readonly Log LOG = new Log<ChromCacheBuilder>();
@@ -262,6 +270,7 @@ namespace pwiz.Skyline.Model.Results
                     _currentFileInfo.HasMidasSpectra = provider.HasMidasSpectra;
                     _currentFileInfo.IsSrm = provider.IsSrm;
                     _ionMobilityConverter = provider.IonMobilityFunctionsProvider;
+                    _ionMobilityUnits = provider.IonMobilityUnits;
 
                     // Start multiple threads to perform peak scoring.
                     _chromDataSets = new QueueWorker<PeptideChromDataSets>(null, ScoreWriteChromDataSets);
@@ -1324,8 +1333,7 @@ namespace pwiz.Skyline.Model.Results
         private void WriteChromDataSet(int indexInFile, ChromDataSet chromDataSet, Dictionary<IList<float>, int> dictScoresToIndex, bool saveRawTimes, bool isProcessedScans)
         {
             long location = _fs.Stream.Position;
-            int observedIonMobilityScale = RawTimeIntensities.GetObservedIonMobilityScaleOrZero(
-                _ionMobilityConverter?.IonMobilityUnits ?? eIonMobilityUnits.none);
+            int observedIonMobilityScale = RawTimeIntensities.GetObservedIonMobilityScaleOrZero(_ionMobilityUnits);
             var groupOfTimeIntensities = chromDataSet.ToGroupOfTimeIntensities(saveRawTimes, observedIonMobilityScale);
             // Write the raw chromatogram points
             MemoryStream pointsMemoryStream = new MemoryStream();
