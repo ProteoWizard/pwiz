@@ -25,7 +25,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
@@ -1242,28 +1241,8 @@ namespace pwiz.OspreySharp.Tasks
             LibraryEntry entry, Spectrum apexSpectrum, OspreyConfig config)
         {
             var ms2Errors = new List<double>();
-            // Select top-6 fragment indices by descending intensity
-            int nFragsForErrors = entry.Fragments.Count;
-            int nTopForErrors = Math.Min(nFragsForErrors, TopFragmentExtractor.CAL_TOP_N_FRAGMENTS);
-            int[] topErrorIndices;
-            if (nFragsForErrors <= TopFragmentExtractor.CAL_TOP_N_FRAGMENTS)
-            {
-                topErrorIndices = new int[nFragsForErrors];
-                for (int ti = 0; ti < nFragsForErrors; ti++)
-                    topErrorIndices[ti] = ti;
-            }
-            else
-            {
-                // LINQ OrderByDescending is stable per .NET contract;
-                // List<T>.Sort with Comparison<T> is unstable
-                // (introsort) and produces different top-N picks
-                // than Rust's stable slice::sort_by on RelativeIntensity
-                // ties. Match Rust by using the stable sort.
-                topErrorIndices = Enumerable.Range(0, nFragsForErrors)
-                    .OrderByDescending(ti => entry.Fragments[ti].RelativeIntensity)
-                    .Take(nTopForErrors)
-                    .ToArray();
-            }
+            int[] topErrorIndices = TopFragmentExtractor.SelectTopFragmentIndices(
+                entry.Fragments, TopFragmentExtractor.CAL_TOP_N_FRAGMENTS);
 
             foreach (int fragIdx in topErrorIndices)
             {
@@ -1272,22 +1251,10 @@ namespace pwiz.OspreySharp.Tasks
                 double lower = frag.Mz - tolDa;
                 double upper = frag.Mz + tolDa;
 
-                int lo = ScoringMath.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
-                if (lo < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[lo] <= upper)
-                {
-                    double bestMz = apexSpectrum.Mzs[lo];
-                    double bestDiff = Math.Abs(bestMz - frag.Mz);
-                    for (int k = lo + 1; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
-                    {
-                        double diff = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
-                        if (diff < bestDiff)
-                        {
-                            bestDiff = diff;
-                            bestMz = apexSpectrum.Mzs[k];
-                        }
-                    }
-                    ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, bestMz));
-                }
+                int best = TopFragmentExtractor.FindClosestPeakInWindow(
+                    apexSpectrum.Mzs, frag.Mz, lower, upper);
+                if (best >= 0)
+                    ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, apexSpectrum.Mzs[best]));
             }
             return ms2Errors;
         }
