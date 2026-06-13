@@ -72,6 +72,14 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
+        /// The active scoring-diagnostics sink as an <see cref="IScoringDiagnostics"/>,
+        /// or null when diagnostics are off. The coelution scorer takes this so it can
+        /// emit its per-candidate dumps without referencing this exe-only facade; a null
+        /// reference means "no diagnostics" and is invoked via the null-conditional operator.
+        /// </summary>
+        public static IScoringDiagnostics ScoringDiagnostics => Sink;
+
+        /// <summary>
         /// OSPREY_DUMP_* env vars turned on by the <c>-d</c> master switch.
         /// Excludes the per-call firehose (OSPREY_DUMP_MP_INPUTS), the disabled
         /// predict-rt dump, the *_ONLY early-exit gates, and the OSPREY_DIAG_*
