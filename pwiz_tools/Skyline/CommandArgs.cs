@@ -288,6 +288,14 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            // --save-compact-format only affects a document that is saved in this run. Warn (rather
+            // than silently ignore) if it is given without a save target, so automation isn't misled.
+            // This is a non-fatal warning: it must not change the exit status.
+            if (SaveCompactFormat != null && !Saving)
+            {
+                WarnArgRequirement(ARG_SAVE_COMPACT_FORMAT, ARG_SAVE, ARG_OUT);
+            }
+
             // Use the original file as the output file, if not told otherwise.
             if (Saving && string.IsNullOrEmpty(SaveFile))
             {

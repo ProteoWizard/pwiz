@@ -251,6 +251,13 @@ namespace pwiz.SkylineTestData
             var docPath = TestFilesDir.GetTestPath("blank.sky");
             var smallmolPath = TestFilesDir.GetTestPath("smallmolecules.txt");
 
+            // --save-compact-format without a save target (--save/--out/--save-as) is a misconfiguration:
+            // warn rather than silently ignoring it (the flag would otherwise have no effect).
+            var noSaveOutput = RunCommand("--in=" + docPath,
+                "--save-compact-format=" + CompactFormatOption.ALWAYS.Name);
+            AssertEx.Contains(noSaveOutput, CommandArgs.WarnArgRequirementText(
+                CommandArgs.ARG_SAVE_COMPACT_FORMAT, CommandArgs.ARG_SAVE, CommandArgs.ARG_OUT));
+
             var compactFormatOptionOld = Settings.Default.CompactFormatOption;
             try
             {
@@ -295,8 +302,20 @@ namespace pwiz.SkylineTestData
                     "--out=" + mixedCasePath);
                 AssertEx.Contains(File.ReadAllText(mixedCasePath), DocumentSerializer.EL.transition_data);
 
-                // The per-invocation flag must NOT persist back to the user setting
-                AssertEx.AreEqual(CompactFormatOption.NEVER.Name, Settings.Default.CompactFormatOption);
+                // Case-insensitive matching must be culture-invariant: 'largefilesonly' is the only
+                // value containing an 'i', so an upper-case variant exercises the locale-sensitive
+                // comparison (e.g. Turkish dotted-i) that nightly all-language runs cover. It must
+                // resolve (not throw); largefilesonly on this tiny document yields no compact blob.
+                Settings.Default.CompactFormatOption = CompactFormatOption.ALWAYS.Name;
+                var largeOnlyUpperPath = TestFilesDir.GetTestPath("compact-largeonly-upper.sky");
+                RunCommand("--in=" + docPath,
+                    "--import-transition-list=" + smallmolPath,
+                    "--save-compact-format=" + CompactFormatOption.ONLY_FOR_LARGE_FILES.Name.ToUpperInvariant(),
+                    "--out=" + largeOnlyUpperPath);
+                AssertEx.DoesNotContain(File.ReadAllText(largeOnlyUpperPath), DocumentSerializer.EL.transition_data);
+
+                // The per-invocation flag must NOT persist back to the user setting (last seed = always)
+                AssertEx.AreEqual(CompactFormatOption.ALWAYS.Name, Settings.Default.CompactFormatOption);
             }
             finally
             {
