@@ -359,6 +359,60 @@ namespace pwiz.SkylineTest
             Assert.IsNull(decoded.TransitionTimeIntensities[0].ObservedIonMobilities);
         }
 
+        [TestMethod]
+        public void TestObservedIonMobilityZeroScaleDecodesToNull()
+        {
+            // Defensive guard: a cache that carries an encoded observed-IM array but a zero
+            // group scale (e.g. a malformed write where the scale was sourced from a missing
+            // CCS converter rather than the data reader's IM units) must decode to "no observed
+            // IM", not divide by a zero scale into NaN/Infinity.
+            var times = new[] { 0f, 1f, 2f };
+            var intensities = new[] { 100f, 100f, 100f };
+            var observedIms = new[] { 4.23f, 4.50f, 4.80f };
+            var ti = new TimeIntensities(times, intensities, null, null, observedIms);
+            var scale = RawTimeIntensities.GetObservedIonMobilityScale(eIonMobilityUnits.drift_time_msec);
+            var raw = new RawTimeIntensities(new[] { ti }, null, scale);
+
+            var encoded = raw.ToChromatogramGroupData();
+            Assert.AreNotEqual(0, encoded.Chromatograms[0].ObservedIonMobilitiesScaled.Count);
+            // Corrupt the group scale to zero, leaving the encoded scaled array in place.
+            encoded.ObservedIonMobilityScale = 0;
+
+            var decoded = RawTimeIntensities.FromChromatogramGroupData(encoded);
+            Assert.IsNull(decoded.TransitionTimeIntensities[0].ObservedIonMobilities,
+                @"Zero observed-IM scale must decode to null, not NaN/Infinity");
+        }
+
+        [TestMethod]
+        public void TestApexObservedIonMobilityOfValid()
+        {
+            // Observed IM for a peak is read at the apex - but at the highest-intensity scan
+            // that carries a VALID observed IM, so a gap (0/NaN) at the literal max-intensity
+            // scan can't suppress an otherwise-measurable value.
+            var intensities = new[] { 10f, 30f, 100f, 90f, 5f }; // apex at index 2, runner-up index 3
+
+            // Apex scan (index 2) has a valid IM -> read it directly.
+            var imAllValid = new[] { 4.1f, 4.2f, 4.3f, 4.4f, 4.5f };
+            Assert.AreEqual(4.3f, ChromPeak.ApexObservedIonMobility(intensities, imAllValid, 0, 4));
+
+            // Apex scan is a gap (0): fall back to the next-highest-intensity valid scan
+            // (index 3), not to null and not to a weaker valid scan.
+            var imGapAtMax = new[] { 4.1f, 4.2f, 0f, 4.4f, 4.5f };
+            Assert.AreEqual(4.4f, ChromPeak.ApexObservedIonMobility(intensities, imGapAtMax, 0, 4));
+
+            // Apex scan is NaN: same fallback to the strongest valid scan.
+            var imNanAtMax = new[] { 4.1f, 4.2f, float.NaN, 4.4f, 4.5f };
+            Assert.AreEqual(4.4f, ChromPeak.ApexObservedIonMobility(intensities, imNanAtMax, 0, 4));
+
+            // No valid IM anywhere in the window -> null (don't fabricate a value).
+            var imNone = new[] { 0f, 0f, float.NaN, 0f, 0f };
+            Assert.IsNull(ChromPeak.ApexObservedIonMobility(intensities, imNone, 0, 4));
+
+            // Windowing: a stronger valid scan outside [startIndex, endIndex] is ignored.
+            // Restricted to indices 0..1, the apex-of-valid is index 1 (30), not index 2 (100).
+            Assert.AreEqual(4.2f, ChromPeak.ApexObservedIonMobility(intensities, imAllValid, 0, 1));
+        }
+
         private static void AssertObservedIonMobilityRoundTrip(eIonMobilityUnits units, float[] observedIms)
         {
             var times = Enumerable.Range(0, observedIms.Length).Select(i => (float)i).ToArray();

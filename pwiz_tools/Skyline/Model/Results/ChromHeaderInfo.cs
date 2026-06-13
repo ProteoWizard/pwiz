@@ -1155,18 +1155,11 @@ namespace pwiz.Skyline.Model.Results
             _massError = 0;
             _observedIonMobility = 0;
             _observedCcs = 0;
-            var observedIonMobilities = timeIntensities.ObservedIonMobilities;
-            if (massErrors != null || observedIonMobilities != null)
+            if (massErrors != null)
             {
-                // Mass error is an intensity-weighted mean across the peak (m/z is
-                // a linearly-averageable coordinate). Observed IM is the IM at the
-                // peak's intensity center-of-gravity scan in RT-index space (RT is
-                // linear); each observedIonMobilities[i] is itself a per-scan
-                // representative IM produced by IntensityAccumulator without
-                // averaging IM values, so reading the IM at the COG-RT scan keeps
-                // the whole pipeline free of IM-value averaging.
+                // Mass error is an intensity-weighted mean across the peak (m/z is a
+                // linearly-averageable coordinate).
                 double massError = 0;
-                double weightedRtIndexSum = 0;
                 double totalIntensity = 0;
                 double backgroundIntensity = Math.Min(intensities[peak.StartIndex], intensities[peak.EndIndex]);
                 for (int i = peak.StartIndex; i <= peak.EndIndex; i++)
@@ -1176,31 +1169,26 @@ namespace pwiz.Skyline.Model.Results
                         continue;
 
                     totalIntensity += intensity;
-                    if (massErrors != null)
-                    {
-                        massError += (massErrors[i] - massError) * intensity / totalIntensity;
-                    }
-                    if (observedIonMobilities != null)
-                    {
-                        weightedRtIndexSum += i * intensity;
-                    }
+                    massError += (massErrors[i] - massError) * intensity / totalIntensity;
                 }
                 if (totalIntensity > 0)
                 {
-                    if (massErrors != null)
-                    {
-                        _flagValues |= FlagValues.mass_error_known;
-                        _massError = To10x(massError);
-                    }
-                    if (observedIonMobilities != null)
-                    {
-                        int cogRt = (int)Math.Round(weightedRtIndexSum / totalIntensity);
-                        if (cogRt >= 0 && cogRt < observedIonMobilities.Count)
-                        {
-                            _flagValues |= FlagValues.observed_ion_mobility_known;
-                            _observedIonMobility = observedIonMobilities[cogRt];
-                        }
-                    }
+                    _flagValues |= FlagValues.mass_error_known;
+                    _massError = To10x(massError);
+                }
+            }
+            var observedIonMobilities = timeIntensities.ObservedIonMobilities;
+            if (observedIonMobilities != null)
+            {
+                // Observed IM, unlike mass error, is read at the peak apex (see
+                // ApexObservedIonMobility) - IM is only meaningfully observable where the peak
+                // has signal, and IM units (e.g. 1/K0) are not linearly averageable.
+                var apexIonMobility = ApexObservedIonMobility(intensities, observedIonMobilities,
+                    peak.StartIndex, peak.EndIndex);
+                if (apexIonMobility.HasValue)
+                {
+                    _flagValues |= FlagValues.observed_ion_mobility_known;
+                    _observedIonMobility = apexIonMobility.Value;
                 }
             }
             if (rawTimes != null)
@@ -1238,6 +1226,35 @@ namespace pwiz.Skyline.Model.Results
             {
                 _flagValues &= ~FlagValues.has_peak_shape;
             }
+        }
+
+        /// <summary>
+        /// Observed ion mobility for a peak is read at its apex - the maximum-intensity scan
+        /// in [mz, RT] space - because ion mobility is only meaningfully observable where the
+        /// peak actually has signal. To stay robust against gap/interpolated scans, the apex
+        /// is chosen among scans that carry a valid observed IM (a positive value; 0 and NaN
+        /// mark "no measurement"), so a gap at the literal maximum-intensity scan can't
+        /// suppress an otherwise-measurable IM. Returns null when the peak carries no
+        /// measurable IM anywhere (e.g. the source isn't really IM data), so the caller reports
+        /// "unknown" rather than fabricating a value. A single scan's IM is returned without
+        /// averaging, since IM units (e.g. 1/K0) are not linearly averageable.
+        /// </summary>
+        internal static float? ApexObservedIonMobility(IReadOnlyList<float> intensities,
+            IReadOnlyList<float> observedIonMobilities, int startIndex, int endIndex)
+        {
+            int apexIndex = -1;
+            float apexIntensity = float.NegativeInfinity;
+            int count = Math.Min(intensities.Count, observedIonMobilities.Count);
+            for (int i = Math.Max(0, startIndex); i <= endIndex && i < count; i++)
+            {
+                var im = observedIonMobilities[i];
+                if (im > 0 && intensities[i] > apexIntensity) // im > 0 excludes 0/NaN "no measurement" scans
+                {
+                    apexIntensity = intensities[i];
+                    apexIndex = i;
+                }
+            }
+            return apexIndex >= 0 ? observedIonMobilities[apexIndex] : (float?)null;
         }
 
         public float RetentionTime { get { return _retentionTime; } }

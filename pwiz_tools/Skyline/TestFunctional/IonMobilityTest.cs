@@ -940,7 +940,17 @@ namespace pwiz.SkylineTestFunctional
                         if (chromInfo.IonMobility != null && chromInfo.IonMobility.HasIonMobilityValue)
                             withImInfo++;
                         if (chromInfo.ObservedIonMobility.HasValue)
+                        {
                             withObservedIm++;
+                            // A scale-0 encode (e.g. when the per-time-point IM scale is sourced
+                            // from a missing CCS converter rather than the data reader's IM units)
+                            // silently decodes to NaN. Assert a finite, physically plausible
+                            // (positive) value, not just HasValue — NaN.HasValue is true and would
+                            // otherwise slip through this check.
+                            var observedIm = chromInfo.ObservedIonMobility.Value;
+                            AssertEx.IsTrue(!double.IsNaN(observedIm) && observedIm > 0,
+                                string.Format(@"Observed ion mobility should be finite and positive, got {0}", observedIm));
+                        }
                         if (chromInfo.ObservedCcs.HasValue)
                             withObservedCcs++;
                     }
