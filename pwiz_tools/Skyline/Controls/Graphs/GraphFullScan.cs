@@ -3520,10 +3520,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddDetailRow(unitsLabel,
                     FormatValueWithError(observedIm.Value, targetIm, Formats.IonMobility), rt);
 
-                // CCS row when the active reader supports IM->CCS conversion and we
-                // have the precursor's charge. Target CCS used for the % error is
-                // computed via the same converter on the target IM (not stored
-                // CollisionalCrossSectionSqA), matching the calibration source.
+                // CCS row when the active reader supports IM->CCS conversion and we have the
+                // precursor's charge. The % error is observed CCS vs the CCS we were told to
+                // filter on (library/explicit - ground truth, and the same value shown in the
+                // CCS row above and used by the Document Grid's CcsErrorPercent), not a
+                // converter re-derivation of the target IM. A zero target (we were given only
+                // IM, no CCS) renders the value without an error.
                 int? charge = TryGetCurrentPrecursorCharge();
                 var sp = _msDataFileScanHelper.ScanProvider;
                 if (charge.HasValue && sp != null && sp.ProvidesCollisionalCrossSectionConverter)
@@ -3532,10 +3534,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var observedCcs = sp.CCSFromIonMobility(observedIm.Value, mz, charge.Value);
                     if (observedCcs.HasValue && observedCcs.Value > 0)
                     {
-                        var targetCcs = sp.CCSFromIonMobility(targetIm, mz, charge.Value);
-                        double targetCcsForError = targetCcs.HasValue && targetCcs.Value > 0
-                            ? targetCcs.Value
-                            : 0;
+                        double targetCcsForError = imFilter.CollisionalCrossSectionSqA.GetValueOrDefault();
                         table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Ccs,
                             FormatValueWithError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
                     }
@@ -3585,9 +3584,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     targetIm.GetValueOrDefault(), Formats.IonMobility);
                 props.ObservedIonMobility = TextUtil.SpaceSeparate(valueText, unitsLabel);
 
-                // Observed CCS via the active reader's IM->CCS converter (target CCS
-                // computed from the SAME converter on the target IM for matching
-                // calibration). Skipped when there's no converter or no charge.
+                // Observed CCS via the active reader's IM->CCS converter. The % error is
+                // against the CCS we were told to filter on (library/explicit - ground truth),
+                // mirroring the Document Grid's CcsErrorPercent, not a converter re-derivation
+                // of the target IM. Skipped when there's no converter or no charge.
                 int? charge = TryGetCurrentPrecursorCharge();
                 var sp = _msDataFileScanHelper.ScanProvider;
                 if (charge.HasValue && sp != null && sp.ProvidesCollisionalCrossSectionConverter && targetIm.HasValue)
@@ -3596,9 +3596,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var observedCcs = sp.CCSFromIonMobility(observedIm, mz, charge.Value);
                     if (observedCcs.HasValue && observedCcs.Value > 0)
                     {
-                        var targetCcs = sp.CCSFromIonMobility(targetIm.Value, mz, charge.Value);
-                        double targetCcsForError = targetCcs.HasValue && targetCcs.Value > 0
-                            ? targetCcs.Value : 0;
+                        double targetCcsForError = chromInfo.IonMobility?.CollisionalCrossSectionSqA ?? 0;
                         props.ObservedCCS = FormatValueWithError(observedCcs.Value, targetCcsForError, Formats.CCS);
                     }
                 }
