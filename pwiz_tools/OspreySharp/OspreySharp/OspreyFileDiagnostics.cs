@@ -393,14 +393,14 @@ namespace pwiz.OspreySharp
         public OspreyFileDiagnostics()
         {
             // TO RESTORE OSPREY_DUMP_PREDICT_RT: uncomment WritePredictRtCall in
-            // OspreySharp/Tasks/AbstractScoringTask.cs (ScoreCandidate) and the
+            // OspreySharp.Scoring/CoelutionScorer.cs (ScoreCandidate) and the
             // paired WritePredictRtArrays / ClosePredictRtDump in
             // OspreySharp/Tasks/PerFileRescoreTask.cs, then comment out this throw.
             if (DumpPredictRt)
                 throw new NotImplementedException(
                     @"OSPREY_DUMP_PREDICT_RT is temporarily disabled: its per-candidate " +
                     @"producer was removed from the scoring hotspot. To restore, uncomment " +
-                    @"WritePredictRtCall in OspreySharp/Tasks/AbstractScoringTask.cs and the " +
+                    @"WritePredictRtCall in OspreySharp.Scoring/CoelutionScorer.cs and the " +
                     @"paired WritePredictRtArrays / ClosePredictRtDump in " +
                     @"OspreySharp/Tasks/PerFileRescoreTask.cs, then comment out this throw. " +
                     @"See ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.");

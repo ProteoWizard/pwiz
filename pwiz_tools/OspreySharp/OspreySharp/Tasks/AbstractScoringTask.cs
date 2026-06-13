@@ -55,8 +55,9 @@ namespace pwiz.OspreySharp.Tasks
     {
         // Internal so FirstJoinTask (which now owns RunPercolatorFdr +
         // RunPercolatorStreaming + BuildBasicFeatures) can reuse the
-        // same 21-feature width without redeclaring it.
-        internal const int NUM_PIN_FEATURES = 21;
+        // same feature width without redeclaring it. Derives from the
+        // single source of truth in OspreySharp.Scoring so the two cannot drift.
+        internal const int NUM_PIN_FEATURES = OspreyFeatureCalculators.FeatureCount;
 
 
         // EntryId encodes target/decoy in the high bit; base_id is the
