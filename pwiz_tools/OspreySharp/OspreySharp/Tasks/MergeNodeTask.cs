@@ -47,11 +47,6 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     internal sealed class MergeNodeTask : OspreyTask
     {
-        // PipelineContext is set on Run entry so the moved
-        // RunProteinFdr / WriteBlibOutput methods can log
-        // through the same callbacks the pipeline driver uses.
-        private PipelineContext _ctx;
-
         public override string Name => @"MergeNode";
 
         /// <summary>
@@ -117,7 +112,6 @@ namespace pwiz.OspreySharp.Tasks
 
         public override bool Run(PipelineContext ctx)
         {
-            _ctx = ctx;
             // Mid-Run crash safety: see FirstJoinTask.Run for rationale.
             foreach (var output in Outputs(ctx))
                 TaskValiditySidecar.Delete(output, Name);
@@ -474,7 +468,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.LogInfo(string.Format(@"Running protein-level FDR at {0:P1}...",
                     config.ProteinFdr.Value));
                 var swProtein = Stopwatch.StartNew();
-                RunProteinFdr(perFileEntries, fullLibrary, config);
+                RunProteinFdr(perFileEntries, fullLibrary, config, ctx);
                 swProtein.Stop();
                 ctx.LogInfo(string.Format(@"[STAGE-WALL] stage7: {0:F1}s",
                     swProtein.Elapsed.TotalSeconds));
@@ -484,7 +478,7 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Empty);
             ctx.LogInfo(string.Format(@"Writing output to {0}...", config.OutputBlib));
             var swBlib = Stopwatch.StartNew();
-            WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config);
+            WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
             swBlib.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));
@@ -499,11 +493,12 @@ namespace pwiz.OspreySharp.Tasks
         private void RunProteinFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             // Collect best peptide scores
             var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
-            _ctx.LogInfo(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
+            ctx.LogInfo(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
 
             // Get detected peptide set: targets passing experiment-level
             // q-value at the configured fdr_level (matches Rust pipeline.rs
@@ -535,9 +530,9 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
 
-            _ctx.LogInfo(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR ({2})",
+            ctx.LogInfo(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR ({2})",
                 detectedPeptides.Count, config.ExperimentFdr, peptideGateLevel));
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] Detected peptides for protein FDR: {0} unique",
                 detectedPeptides.Count));
 
@@ -549,8 +544,8 @@ namespace pwiz.OspreySharp.Tasks
             var parsimony = ProteinFdr.BuildProteinParsimony(
                 fullLibrary, config.SharedPeptides, detectedPeptides);
 
-            _ctx.LogInfo(string.Format("Protein parsimony: {0} groups", parsimony.Groups.Count));
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format("Protein parsimony: {0} groups", parsimony.Groups.Count));
+            ctx.LogInfo(string.Format(
                 "[COUNT] Protein parsimony groups: {0}", parsimony.Groups.Count));
 
             // Compute protein FDR. Gate is config.RunFdr (1x) per Savitski's
@@ -567,9 +562,9 @@ namespace pwiz.OspreySharp.Tasks
                     passingProteins++;
             }
 
-            _ctx.LogInfo(string.Format("{0} protein groups pass {1:P1} protein FDR",
+            ctx.LogInfo(string.Format("{0} protein groups pass {1:P1} protein FDR",
                 passingProteins, config.ProteinFdr.Value));
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
                 passingProteins, config.ProteinFdr.Value));
 
@@ -595,7 +590,8 @@ namespace pwiz.OspreySharp.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            OspreyConfig config)
+            OspreyConfig config,
+            PipelineContext ctx)
         {
             // Two-stage blib output gate, mirroring Rust pipeline.rs:4596-4668.
             //
@@ -619,22 +615,22 @@ namespace pwiz.OspreySharp.Tasks
                 perFileEntries, config, passingPeptides, out int nFallback);
             if (nFallback > 0)
             {
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "{0} peptides had no charge state passing precursor-level FDR; best charge state kept as fallback",
                     nFallback));
             }
 
             var passingEntries = CollectPassingEntries(perFileEntries, passingPrecursors);
 
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] Stage 1 passing peptides: {0}", passingPeptides.Count));
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] Stage 2 passing precursors: {0}", passingPrecursors.Count));
-            _ctx.LogInfo(string.Format("Writing {0} passing entries to blib", passingEntries.Count));
+            ctx.LogInfo(string.Format("Writing {0} passing entries to blib", passingEntries.Count));
 
             if (passingEntries.Count == 0)
             {
-                _ctx.LogWarning("No entries pass FDR threshold. Creating empty blib.");
+                ctx.LogWarning("No entries pass FDR threshold. Creating empty blib.");
             }
 
             // Ensure output directory exists
@@ -644,7 +640,7 @@ namespace pwiz.OspreySharp.Tasks
 
             var bestByPrecursor = BuildBestByPrecursor(passingEntries);
 
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] Best-per-precursor for blib: {0}", bestByPrecursor.Count));
 
             var bestExpPrecursorQ = BuildBestExpPrecursorQ(perFileEntries, passingPrecursors);
@@ -654,13 +650,13 @@ namespace pwiz.OspreySharp.Tasks
             var entriesByPrecursor = BuildCrossFileObservations(
                 perFileEntries, out int nCrossFileObservations);
 
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] Cross-file observations to write: {0}", nCrossFileObservations));
 
             WriteBlibFile(config, perFileEntries, libraryById, bestByPrecursor,
                 bestExpPrecursorQ, sharedBounds, entriesByPrecursor);
 
-            _ctx.LogInfo(string.Format("Wrote {0} spectra to {1}",
+            ctx.LogInfo(string.Format("Wrote {0} spectra to {1}",
                 bestByPrecursor.Count, config.OutputBlib));
         }
 
