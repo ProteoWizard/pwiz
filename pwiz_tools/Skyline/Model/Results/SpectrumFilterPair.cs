@@ -243,7 +243,13 @@ namespace pwiz.Skyline.Model.Results
             // per target and resolve to a single observed IM via COG-bin-index at
             // end-of-call (see IntensityAccumulator.CogIonMobility). For base-peak
             // extraction we just carry the IM at the strongest peak per target.
-            bool trackIonMobility = MinIonMobilityValue.HasValue && !HasIonMobilityFAIMS();
+            // Only track true ion mobility units (drift time, 1/K0). FAIMS (compensation_V) and
+            // Waters SONAR (waters_sonar - m/z filtering on IMS hardware, not ion mobility) carry
+            // a populated IM window but no meaningful per-scan ion mobility to centroid, and have
+            // no storage scale - so excluding them here keeps the per-peak observed IM (computed
+            // in-memory) from surfacing a meaningless value in the Document Grid.
+            bool trackIonMobility = MinIonMobilityValue.HasValue &&
+                RawTimeIntensities.IsTrackedObservedIonMobilityUnit(IonMobilityInfo.IonMobility.Units);
             float[] observedIonMobilities = trackIonMobility ? new float[targetCount] : null;
             Dictionary<double, double>[] perTargetIonMobilityIntensityBins = null;
             double[] basePeakIonMobilities = null;
