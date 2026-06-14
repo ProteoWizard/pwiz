@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
+    <ProjectReference Include="..\OspreySharp.Diagnostics\OspreySharp.Diagnostics.csproj" />
     <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />
     <ProjectReference Include="..\OspreySharp.IO\OspreySharp.IO.csproj" />
     <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj" />

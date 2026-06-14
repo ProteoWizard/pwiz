@@ -80,6 +80,18 @@ namespace pwiz.OspreySharp
         public static IScoringDiagnostics ScoringDiagnostics => Sink;
 
         /// <summary>
+        /// The active diagnostics sink as the full <see cref="IOspreyDiagnostics"/>,
+        /// or <c>null</c> when diagnostics are off. The pipeline driver injects
+        /// this into <c>PipelineContext</c> so tasks emit dumps through the context
+        /// (via the <c>?.</c> null-conditional operator) rather than this exe-only
+        /// static facade. It returns the same single sink the static members below
+        /// delegate to, so the injected path and the (transitional) static path
+        /// share one stateful sink instance. Unlike <see cref="Sink"/> it does not
+        /// require <see cref="Initialize"/> first: before init it is simply null.
+        /// </summary>
+        public static IOspreyDiagnostics Active => s_sink;
+
+        /// <summary>
         /// OSPREY_DUMP_* env vars turned on by the <c>-d</c> master switch.
         /// Excludes the per-call firehose (OSPREY_DUMP_MP_INPUTS), the disabled
         /// predict-rt dump, the *_ONLY early-exit gates, and the OSPREY_DIAG_*
