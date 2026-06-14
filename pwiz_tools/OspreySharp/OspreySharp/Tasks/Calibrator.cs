@@ -183,16 +183,16 @@ namespace pwiz.OspreySharp.Tasks
             // first calibration attempt.
             var swSample = Stopwatch.StartNew();
             var sampledEntries = SampleLibraryForCalibration(
-                library, config.RtCalibration.CalibrationSampleSize, 43UL);
+                library, config.RtCalibration.CalibrationSampleSize, 43UL, _ctx.Diagnostics);
             swSample.Stop();
 
             // Diagnostic: dump sorted sampled entry IDs + (modseq, charge) for
             // direct comparison with Rust. Abort after dump if CAL_SAMPLE_ONLY
             // env var is set (bisection mode - stop once we agree here).
-            if (config.WritePin || OspreyDiagnostics.DumpCalSample)
+            if (config.WritePin || (_ctx.Diagnostics?.DumpCalSample ?? false))
             {
-                OspreyDiagnostics.WriteCalSampleDump(context.FileName, sampledEntries);
-                if (OspreyDiagnostics.CalSampleOnly)
+                _ctx.Diagnostics?.WriteCalSampleDump(context.FileName, sampledEntries);
+                if (_ctx.Diagnostics?.CalSampleOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_SAMPLE_ONLY");
             }
             int nSampledTargets = 0;
@@ -255,10 +255,10 @@ namespace pwiz.OspreySharp.Tasks
             // it will overwrite this with the pass-2 pairs; if pass 2 is
             // rejected (or never runs) the pass-1 dump stays, matching the
             // calibration actually used. Mirrors Rust pipeline.rs.
-            if (OspreyDiagnostics.DumpLoessInput)
+            if (_ctx.Diagnostics?.DumpLoessInput ?? false)
             {
-                OspreyDiagnostics.WriteLoessInputDump(1, pass1.LibRts, pass1.MeasuredRts);
-                if (OspreyDiagnostics.LoessInputOnly)
+                _ctx.Diagnostics?.WriteLoessInputDump(1, pass1.LibRts, pass1.MeasuredRts);
+                if (_ctx.Diagnostics?.LoessInputOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
             }
 
@@ -324,9 +324,9 @@ namespace pwiz.OspreySharp.Tasks
                         // pass 2's points so the diagnostic reflects the
                         // calibration actually being used. Mirrors Rust
                         // pipeline.rs; only fires on acceptance.
-                        if (OspreyDiagnostics.DumpLoessInput)
+                        if (_ctx.Diagnostics?.DumpLoessInput ?? false)
                         {
-                            OspreyDiagnostics.WriteLoessInputDump(
+                            _ctx.Diagnostics?.WriteLoessInputDump(
                                 2, pass2.LibRts, pass2.MeasuredRts);
                         }
                         ms1Calibration = pass2.Ms1Calibration;
@@ -371,7 +371,7 @@ namespace pwiz.OspreySharp.Tasks
             var fileName = context.FileName;
             // Activate per-entry window dump if requested. Cleared after the
             // matching loop completes (file written below).
-            OspreyDiagnostics.StartCalWindowCollection();
+            _ctx.Diagnostics?.StartCalWindowCollection();
 
             // Pre-preprocess all window spectra for XCorr (f32 unit-bin scorer).
             var preprocessedByWindowKey = PreprocessWindowsForXcorr(spectraByWindowKey);
@@ -384,20 +384,20 @@ namespace pwiz.OspreySharp.Tasks
             // Write per-entry window dump if requested. When two passes run, the
             // pass 2 dump overwrites pass 1 - same behaviour as Rust's
             // run_coelution_calibration_scoring dumping on every invocation.
-            if (OspreyDiagnostics.CalWindowsCollecting)
+            if (_ctx.Diagnostics?.CalWindowsCollecting ?? false)
             {
-                OspreyDiagnostics.WriteCalWindowsDump(passNumber);
-                if (OspreyDiagnostics.CalWindowsOnly)
+                _ctx.Diagnostics?.WriteCalWindowsDump(passNumber);
+                if (_ctx.Diagnostics?.CalWindowsOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_WINDOWS_ONLY");
             }
 
             // Cross-implementation diagnostic: dump per-entry calibration match info
             // for direct diff with Rust. Writes a row for EVERY sampled entry
             // (matched or not), sorted by entry_id for stable diff.
-            if (OspreyDiagnostics.DumpCalMatch)
+            if (_ctx.Diagnostics?.DumpCalMatch ?? false)
             {
-                OspreyDiagnostics.WriteCalMatchDump(passNumber, matches, sampledEntries, matchRts, snrByEntryId);
-                if (OspreyDiagnostics.CalMatchOnly)
+                _ctx.Diagnostics?.WriteCalMatchDump(passNumber, matches, sampledEntries, matchRts, snrByEntryId);
+                if (_ctx.Diagnostics?.CalMatchOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_MATCH_ONLY");
             }
 
@@ -448,10 +448,10 @@ namespace pwiz.OspreySharp.Tasks
             // Cross-implementation diagnostic: dump per-entry LDA discriminant + q-value
             // sorted by entry_id for stable diff with rust_lda_scores.txt. Gated by
             // OSPREY_DUMP_LDA_SCORES; exits after write when OSPREY_LDA_SCORES_ONLY is set.
-            if (OspreyDiagnostics.DumpLdaScores)
+            if (_ctx.Diagnostics?.DumpLdaScores ?? false)
             {
-                OspreyDiagnostics.WriteLdaScoresDump(passNumber, matchArray);
-                if (OspreyDiagnostics.LdaScoresOnly)
+                _ctx.Diagnostics?.WriteLdaScoresDump(passNumber, matchArray);
+                if (_ctx.Diagnostics?.LdaScoresOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump("OSPREY_LDA_SCORES_ONLY");
             }
 
@@ -714,10 +714,10 @@ namespace pwiz.OspreySharp.Tasks
                 allMs2Errors.AddRange(m.Ms2MassErrors);
                 contributingMatches.Add(m);
             }
-            if (OspreyDiagnostics.DumpMs2CalErrors)
+            if (_ctx.Diagnostics?.DumpMs2CalErrors ?? false)
             {
-                OspreyDiagnostics.WriteMs2CalErrorsDump(contributingMatches);
-                if (OspreyDiagnostics.Ms2CalErrorsOnly)
+                _ctx.Diagnostics?.WriteMs2CalErrorsDump(contributingMatches);
+                if (_ctx.Diagnostics?.Ms2CalErrorsOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
             }
             string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
@@ -740,7 +740,7 @@ namespace pwiz.OspreySharp.Tasks
         /// Rust exactly for the two tools to process the same calibration peptides.
         /// </summary>
         private static List<LibraryEntry> SampleLibraryForCalibration(
-            List<LibraryEntry> library, int sampleSize, ulong seed)
+            List<LibraryEntry> library, int sampleSize, ulong seed, IOspreyDiagnostics diag)
         {
             if (sampleSize == 0)
                 return new List<LibraryEntry>(library);
@@ -816,9 +816,9 @@ namespace pwiz.OspreySharp.Tasks
 
             // Diagnostic dump: scalar parameters + full grid contents,
             // matching Rust's dump format for direct diff.
-            if (OspreyDiagnostics.DumpCalSample)
+            if (diag?.DumpCalSample ?? false)
             {
-                OspreyDiagnostics.WriteCalScalarsAndGridDump(
+                diag.WriteCalScalarsAndGridDump(
                     targets, decoys, binsPerAxis,
                     rtMin, rtMax, mzMin, mzMax,
                     rtRange, mzRange, rtBinWidth, mzBinWidth,
@@ -974,9 +974,9 @@ namespace pwiz.OspreySharp.Tasks
             // C# selects ONE window per entry (the first match in dictionary order),
             // unlike Rust which scores in ALL matching windows. Capturing this here
             // before the RT/2-of-6 filter so it matches Rust's pre-filter dump.
-            if (OspreyDiagnostics.CalWindowsCollecting)
+            if (_ctx.Diagnostics?.CalWindowsCollecting ?? false)
             {
-                OspreyDiagnostics.AddCalWindowRow(
+                _ctx.Diagnostics?.AddCalWindowRow(
                     entry, windowSpectra[0].IsolationWindow,
                     expectedRt,
                     expectedRt - initialTolerance,
@@ -1043,9 +1043,9 @@ namespace pwiz.OspreySharp.Tasks
             var xics = TopFragmentExtractor.ExtractTopNFragmentXics(
                 entry, candidateSpectra, rts, TopFragmentExtractor.CAL_TOP_N_FRAGMENTS, config);
 
-            if (OspreyDiagnostics.ShouldDumpCalXicFor(entry.Id, currentPass))
+            if (_ctx.Diagnostics?.ShouldDumpCalXicFor(entry.Id, currentPass) ?? false)
             {
-                OspreyDiagnostics.WriteCalXicEntryDumpAndExit(
+                _ctx.Diagnostics?.WriteCalXicEntryDumpAndExit(
                     entry, currentPass, calibrationModel,
                     expectedRt, initialTolerance, rtSlope, rtIntercept,
                     candidateSpectra, xics);
