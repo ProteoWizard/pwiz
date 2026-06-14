@@ -874,9 +874,9 @@ namespace pwiz.OspreySharp.Tasks
                             if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
                             {
                                 var mp = calParams.RtCalibration.ModelParams;
-                                if (OspreyDiagnostics.DumpCalibration)
+                                if (ctx.Diagnostics?.DumpCalibration ?? false)
                                 {
-                                    OspreyDiagnostics.WriteStage6CalibrationDump(
+                                    ctx.Diagnostics.WriteStage6CalibrationDump(
                                         fileName, mp.LibraryRts, mp.FittedRts);
                                 }
                                 var rtCal = RTCalibration.FromModelParams(
@@ -892,7 +892,7 @@ namespace pwiz.OspreySharp.Tasks
                     ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
                 }
             }
-            if (OspreyDiagnostics.CalibrationOnly)
+            if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnostics.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
         }
 
@@ -1273,7 +1273,7 @@ namespace pwiz.OspreySharp.Tasks
             // Dump 11 calibration summary scalars (MS1/MS2 mean/sd/count/
             // tolerance + RT n_points/r_squared/residual_sd) so the final
             // calibration state can be diff'd against Rust's cal JSON.
-            OspreyDiagnostics.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
+            ctx.Diagnostics?.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
 
             // Save the full calibration state to {inputStem}.calibration.json
             // in the same directory as the mzML input. Same schema as Rust

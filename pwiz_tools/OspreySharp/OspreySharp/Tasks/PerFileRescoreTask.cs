@@ -286,10 +286,10 @@ namespace pwiz.OspreySharp.Tasks
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
             // dump_stage6_rescored call from pipeline.rs.
-            if (OspreyDiagnostics.DumpRescored)
+            if (ctx.Diagnostics?.DumpRescored ?? false)
             {
-                OspreyDiagnostics.WriteStage6RescoredDump(_perFileEntries);
-                if (OspreyDiagnostics.RescoredOnly)
+                ctx.Diagnostics.WriteStage6RescoredDump(_perFileEntries);
+                if (ctx.Diagnostics.RescoredOnly)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
             }
 
@@ -298,11 +298,11 @@ namespace pwiz.OspreySharp.Tasks
             // Mirrors the worker-mode close calls in RunWorker; without
             // these, the in-process pipeline path can leave the writers
             // unflushed and produce truncated bisection dumps.
-            OspreyDiagnostics.CloseMpInputsDump();
+            ctx.Diagnostics?.CloseMpInputsDump();
             // ClosePredictRtDump disabled with the rest of the predict-rt
             // diagnostic (perf hotspot); restore alongside WritePredictRtCall.
-            // OspreyDiagnostics.ClosePredictRtDump();
-            OspreyDiagnostics.CloseCwtPathDump();
+            // ctx.Diagnostics?.ClosePredictRtDump();
+            ctx.Diagnostics?.CloseCwtPathDump();
             return true;
         }
 

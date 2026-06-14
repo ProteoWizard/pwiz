@@ -273,11 +273,12 @@ namespace pwiz.OspreySharp.Tasks
             // Per-entry search XIC diagnostic: log the intent once at start.
             // The per-entry dump check happens inline in ScoreCandidate via
             // OspreyDiagnostics.ShouldDumpSearchXicFor(entry.Id).
-            if (OspreyDiagnostics.DiagSearchEntryIds != null)
+            var diagSearchIds = ctx.Diagnostics?.DiagSearchEntryIds;
+            if (diagSearchIds != null)
             {
                 ctx.LogInfo(string.Format(
                     "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
-                    OspreyDiagnostics.DiagSearchEntryIds.Count));
+                    diagSearchIds.Count));
             }
 
             // Per-window timings collected thread-safely for post-summary.
