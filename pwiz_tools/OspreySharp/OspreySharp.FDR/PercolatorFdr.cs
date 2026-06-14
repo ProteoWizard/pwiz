@@ -1984,7 +1984,7 @@ namespace pwiz.OspreySharp.FDR
         /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
         /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
         /// the direct (<see cref="RunPercolator"/>) and streaming
-        /// (FirstJoin.RunPercolatorStreaming) paths select identical subsets for
+        /// (FirstJoinTask.RunPercolatorStreaming) paths select identical subsets for
         /// identical input instead of hand-mirroring the dedup + index map-back.
         /// </summary>
         public static int[] BuildTrainingSubset(
