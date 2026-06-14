@@ -1581,8 +1581,14 @@ namespace pwiz.OspreySharp.Tasks
                 peptides[i] = percEntries[i].Peptide;
             }
 
-            // 1. Best-per-precursor dedup.
-            int[] bestIdx = PercolatorFdr.SelectBestPerPrecursor(labels, entryIds, percEntries);
+            // 1. Best-per-precursor dedup, then 2. peptide-grouped subsample when
+            //    the dedup count still exceeds MaxTrainSize. Both steps are owned
+            //    by PercolatorFdr.BuildTrainingSubset so this streaming path and
+            //    the direct path select identical subsets for identical input.
+            int[] bestIdx;
+            int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
+                labels, entryIds, peptides, percEntries, maxTrain, percConfig.Seed,
+                out bestIdx);
             int dedupTargets = 0, dedupDecoys = 0;
             for (int i = 0; i < bestIdx.Length; i++)
             {
@@ -1592,31 +1598,6 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Format(
                 "[COUNT] {0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
                 passLabel, bestIdx.Length, dedupTargets, dedupDecoys, n));
-
-            // 2. Peptide-grouped subsample if dedup count still exceeds MaxTrainSize.
-            int[] trainSubsetGlobalIdx;
-            if (maxTrain > 0 && bestIdx.Length > maxTrain)
-            {
-                var dedupLabels = new bool[bestIdx.Length];
-                var dedupEntryIds = new uint[bestIdx.Length];
-                var dedupPeptides = new string[bestIdx.Length];
-                for (int i = 0; i < bestIdx.Length; i++)
-                {
-                    int gi = bestIdx[i];
-                    dedupLabels[i] = labels[gi];
-                    dedupEntryIds[i] = entryIds[gi];
-                    dedupPeptides[i] = peptides[gi];
-                }
-                int[] localSelected = PercolatorFdr.SubsampleByPeptideGroup(
-                    dedupLabels, dedupEntryIds, dedupPeptides, maxTrain, percConfig.Seed);
-                trainSubsetGlobalIdx = new int[localSelected.Length];
-                for (int i = 0; i < localSelected.Length; i++)
-                    trainSubsetGlobalIdx[i] = bestIdx[localSelected[i]];
-            }
-            else
-            {
-                trainSubsetGlobalIdx = bestIdx;
-            }
 
             int subTargets = 0, subDecoys = 0;
             for (int i = 0; i < trainSubsetGlobalIdx.Length; i++)

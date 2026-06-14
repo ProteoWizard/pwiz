@@ -276,7 +276,14 @@ namespace pwiz.OspreySharp.FDR
             //     that treated multi-file repeats of the same precursor as
             //     independent samples. Rust was patched to match this dedup
             //     (osprey-fdr/src/percolator.rs::run_percolator direct path).
-            int[] bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries);
+            // 3b. ...then, if still > MaxTrainSize, subsample by peptide groups
+            //     (so target/decoy pairs and same-peptide multi-charge stay
+            //     together). Both selection steps live in BuildTrainingSubset so
+            //     this direct path and the streaming path cannot drift.
+            int[] bestPerPrecursor;
+            int[] trainSubset = BuildTrainingSubset(
+                labels, entryIds, peptides, entries, config.MaxTrainSize, config.Seed,
+                out bestPerPrecursor);
 
             int dedupTargets = 0, dedupDecoys = 0;
             for (int i = 0; i < bestPerPrecursor.Length; i++)
@@ -287,31 +294,6 @@ namespace pwiz.OspreySharp.FDR
             }
             Console.Error.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
                 bestPerPrecursor.Length, dedupTargets, dedupDecoys, n);
-
-            // 3b. If still > MaxTrainSize, subsample by peptide groups
-            //     (so target/decoy pairs and same-peptide multi-charge stay together).
-            int[] trainSubset = bestPerPrecursor;
-            if (config.MaxTrainSize > 0 && bestPerPrecursor.Length > config.MaxTrainSize)
-            {
-                var dedupLabels = new bool[bestPerPrecursor.Length];
-                var dedupEntryIds = new uint[bestPerPrecursor.Length];
-                var dedupPeptides = new string[bestPerPrecursor.Length];
-                for (int i = 0; i < bestPerPrecursor.Length; i++)
-                {
-                    int gi = bestPerPrecursor[i];
-                    dedupLabels[i] = labels[gi];
-                    dedupEntryIds[i] = entryIds[gi];
-                    dedupPeptides[i] = peptides[gi];
-                }
-
-                int[] localSelected = SubsampleByPeptideGroup(
-                    dedupLabels, dedupEntryIds, dedupPeptides,
-                    config.MaxTrainSize, config.Seed);
-
-                trainSubset = new int[localSelected.Length];
-                for (int i = 0; i < localSelected.Length; i++)
-                    trainSubset[i] = bestPerPrecursor[localSelected[i]];
-            }
 
             int subN = trainSubset.Length;
             int subTargets = 0, subDecoys = 0;
@@ -1993,6 +1975,48 @@ namespace pwiz.OspreySharp.FDR
         // ============================================================
         // Subsampling
         // ============================================================
+
+        /// <summary>
+        /// Build the SVM training subset for one Percolator pass: best-per-precursor
+        /// dedup, then -- only when the deduped count still exceeds
+        /// <paramref name="maxTrainSize"/> -- a peptide-grouped subsample. Returns
+        /// indices into the original <paramref name="entries"/> list;
+        /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
+        /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
+        /// the direct (<see cref="RunPercolator"/>) and streaming
+        /// (FirstJoin.RunPercolatorStreaming) paths select identical subsets for
+        /// identical input instead of hand-mirroring the dedup + index map-back.
+        /// </summary>
+        public static int[] BuildTrainingSubset(
+            bool[] labels, uint[] entryIds, string[] peptides,
+            IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
+            out int[] bestPerPrecursor)
+        {
+            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries);
+            if (maxTrainSize <= 0 || bestPerPrecursor.Length <= maxTrainSize)
+                return bestPerPrecursor;
+
+            // Project the deduped rows into local arrays, subsample by peptide
+            // group, then map the local selection back to entries indices.
+            int m = bestPerPrecursor.Length;
+            var dedupLabels = new bool[m];
+            var dedupEntryIds = new uint[m];
+            var dedupPeptides = new string[m];
+            for (int i = 0; i < m; i++)
+            {
+                int gi = bestPerPrecursor[i];
+                dedupLabels[i] = labels[gi];
+                dedupEntryIds[i] = entryIds[gi];
+                dedupPeptides[i] = peptides[gi];
+            }
+
+            int[] localSelected = SubsampleByPeptideGroup(
+                dedupLabels, dedupEntryIds, dedupPeptides, maxTrainSize, seed);
+            var trainSubset = new int[localSelected.Length];
+            for (int i = 0; i < localSelected.Length; i++)
+                trainSubset[i] = bestPerPrecursor[localSelected[i]];
+            return trainSubset;
+        }
 
         /// <summary>
         /// Pick the best-scoring observation per (base_id, isDecoy) tuple across all
