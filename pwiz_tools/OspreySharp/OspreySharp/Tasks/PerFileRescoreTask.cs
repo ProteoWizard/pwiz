@@ -215,8 +215,13 @@ namespace pwiz.OspreySharp.Tasks
             // ExpectReconciledInput keeps the hard short-circuit above for
             // the strict --task MergeNode merge path. Downstream MergeNodeTask
             // reads the RescoredEntries milestone of this same backing list.
-            var firstJoin = ctx.Demand<FirstJoinTask>();
-            bool didPlan = firstJoin.DidPlan(ctx);
+            // Read the planning gate from the typed byproduct registry rather
+            // than reaching for the concrete FirstJoinTask. ctx.Get lazily
+            // materializes the slot's producer (FirstJoinTask) if it has not run
+            // yet, so the value is always populated; FirstJoin publishes
+            // PlanningPerformed alongside CompactedEntries (already read above)
+            // from every materialization path.
+            bool didPlan = ctx.Get<PlanningPerformed>().Value;
             var rescoreBundle = ctx.Get<RescoreBundle>().Value;
             bool anyPass2Present = false;
             if (ctx.Config.InputFiles != null)
