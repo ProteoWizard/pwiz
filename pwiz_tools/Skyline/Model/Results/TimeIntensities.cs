@@ -46,8 +46,10 @@ namespace pwiz.Skyline.Model.Results
         public ImmutableList<float> Times { get; private set; }
         public ImmutableList<float> Intensities { get; private set; }
         public ImmutableList<float> MassErrors { get; private set; }
-        // Per-time-point intensity-weighted observed IM (raw IM units). Null when no
-        // IM filter window is in use or the source uses non-convertible IM units (FAIMS).
+        // Per-time-point intensity-weighted observed IM (raw IM units). Null when no IM
+        // filter window is in use, or the source uses a non-tracked IM unit - FAIMS
+        // (compensation_V), Waters SONAR (waters_sonar), or none/unknown (see
+        // RawTimeIntensities.IsTrackedObservedIonMobilityUnit).
         public ImmutableList<float> ObservedIonMobilities { get; private set; }
         public ImmutableList<int> ScanIds { get; private set; }
         public int NumPoints { get { return Times.Count; } }

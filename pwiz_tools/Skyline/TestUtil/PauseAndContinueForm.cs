@@ -230,6 +230,14 @@ namespace pwiz.SkylineTestUtil
                 if (string.IsNullOrEmpty(_description))
                     _description = "Show screenshot";
             }
+            else
+            {
+                // Restore the default (no-link) visibility, in case this form instance was
+                // previously shown with a link - otherwise the description would be assigned
+                // to the still-hidden lblDescription.
+                lblDescription.Visible = true;
+                lblDescriptionLink.Visible = false;
+            }
             if (!string.IsNullOrEmpty(_description))
             {
                 // Wrap and grow to fit. PauseTest messages can be multi-paragraph
