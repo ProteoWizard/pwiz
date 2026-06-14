@@ -1284,7 +1284,7 @@ namespace pwiz.OspreySharp
         /// </summary>
         public void WriteCwtPathRow(string fileName, uint entryId,
             int nCwtPeaks, int nFinalPeaks, int nScored, bool scored,
-            List<XicData> xics)
+            IReadOnlyList<XicData> xics)
         {
             if (!DumpCwtPath)
                 return;
@@ -1301,7 +1301,8 @@ namespace pwiz.OspreySharp
             int consensusArgmax = -1;
             if (xics != null)
             {
-                double[] consensus = CwtPeakDetector.GetConsensusSignal(xics, out sigma);
+                var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
+                double[] consensus = CwtPeakDetector.GetConsensusSignal(xicList, out sigma);
                 if (consensus != null)
                 {
                     double sum = 0.0;

@@ -25,7 +25,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
@@ -41,11 +40,12 @@ namespace pwiz.OspreySharp.Tasks
     /// calibrations for one file. Ports osprey/src/pipeline.rs
     /// run_calibration_discovery_windowed.
     ///
-    /// Standalone collaborator (does not inherit AbstractScoringTask): it
-    /// reaches the shared calibration scorer and top-N constant via
-    /// AbstractScoringTask's internal statics and takes the pipeline context
-    /// for logging. Diagnostic dumps still route through the OspreyDiagnostics
-    /// facade, preserving the Stage-cal dump call order bisection relies on.
+    /// Standalone collaborator (does not inherit AbstractScoringTask): it owns
+    /// the calibration unit-resolution XCorr scorer (<see cref="s_calXcorrScorer"/>),
+    /// reaches the shared top-N constant via <see cref="TopFragmentExtractor"/>,
+    /// and takes the pipeline context for logging. Diagnostic dumps still route
+    /// through the OspreyDiagnostics facade, preserving the Stage-cal dump call
+    /// order bisection relies on.
     /// </summary>
     internal sealed class Calibrator
     {
@@ -57,6 +57,19 @@ namespace pwiz.OspreySharp.Tasks
         // refinement. Matches Rust's ABSOLUTE_MIN_CALIBRATION_POINTS
         // in pipeline.rs:652.
         private const int ABSOLUTE_MIN_CALIBRATION_POINTS = 50;
+
+        // Calibration XCorr always uses unit-resolution bins (~2K) regardless of
+        // instrument resolution mode. Matches the spec in Rust osprey
+        // docs/02-calibration.md ("Comet-style XCorr (unit resolution, BLAS
+        // sdot)") and the calibration_xcorr_scorer helper in
+        // osprey/crates/osprey/src/pipeline.rs, and avoids the LOH allocation
+        // pressure that 100K-bin arrays cause on .NET Framework's large-object
+        // heap. Main search XCorr still uses the resolution-mode bins via the
+        // IResolutionStrategy abstraction. Owned by the calibration subsystem
+        // (its sole consumer); exposed as internal so OspreySharp.Test can
+        // assert the bin-config invariant.
+        internal static readonly SpectralScorer s_calXcorrScorer =
+            new SpectralScorer(BinConfig.UnitResolution());
 
         /// <summary>
         /// Result of one calibration scoring pass (scoring + LDA +
@@ -540,7 +553,7 @@ namespace pwiz.OspreySharp.Tasks
                 var pp = new double[kvp.Value.Count][];
                 for (int i = 0; i < kvp.Value.Count; i++)
                 {
-                    float[] f32pp = AbstractScoringTask.s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
+                    float[] f32pp = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
                     var widened = new double[f32pp.Length];
                     for (int k = 0; k < f32pp.Length; k++)
                         widened[k] = f32pp[k];
@@ -1157,11 +1170,11 @@ namespace pwiz.OspreySharp.Tasks
             double libCosineApex = scorer.LibCosine(
                 apexSpectrum, entry, config.FragmentTolerance);
             // XCorr at apex always uses the calibration unit-bin scorer
-            // (matches the pre-preprocessed arrays built with AbstractScoringTask.s_calXcorrScorer).
+            // (matches the pre-preprocessed arrays built with s_calXcorrScorer).
             int apexWindowIdx = candidateWindowIndices[apexSpecLocalIdx];
             double xcorrApex = (windowPreprocessed != null && apexWindowIdx < windowPreprocessed.Length)
-                ? AbstractScoringTask.s_calXcorrScorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
-                : AbstractScoringTask.s_calXcorrScorer.XcorrAtScan(apexSpectrum, entry);
+                ? s_calXcorrScorer.XcorrFromPreprocessed(windowPreprocessed[apexWindowIdx], entry)
+                : s_calXcorrScorer.XcorrAtScan(apexSpectrum, entry);
             byte top6Matched = TopFragmentExtractor.CountTop6Matches(entry, apexSpectrum, config);
 
             // Collect MS2 fragment mass errors at apex for m/z calibration.
@@ -1242,28 +1255,8 @@ namespace pwiz.OspreySharp.Tasks
             LibraryEntry entry, Spectrum apexSpectrum, OspreyConfig config)
         {
             var ms2Errors = new List<double>();
-            // Select top-6 fragment indices by descending intensity
-            int nFragsForErrors = entry.Fragments.Count;
-            int nTopForErrors = Math.Min(nFragsForErrors, TopFragmentExtractor.CAL_TOP_N_FRAGMENTS);
-            int[] topErrorIndices;
-            if (nFragsForErrors <= TopFragmentExtractor.CAL_TOP_N_FRAGMENTS)
-            {
-                topErrorIndices = new int[nFragsForErrors];
-                for (int ti = 0; ti < nFragsForErrors; ti++)
-                    topErrorIndices[ti] = ti;
-            }
-            else
-            {
-                // LINQ OrderByDescending is stable per .NET contract;
-                // List<T>.Sort with Comparison<T> is unstable
-                // (introsort) and produces different top-N picks
-                // than Rust's stable slice::sort_by on RelativeIntensity
-                // ties. Match Rust by using the stable sort.
-                topErrorIndices = Enumerable.Range(0, nFragsForErrors)
-                    .OrderByDescending(ti => entry.Fragments[ti].RelativeIntensity)
-                    .Take(nTopForErrors)
-                    .ToArray();
-            }
+            int[] topErrorIndices = TopFragmentExtractor.SelectTopFragmentIndices(
+                entry.Fragments, TopFragmentExtractor.CAL_TOP_N_FRAGMENTS);
 
             foreach (int fragIdx in topErrorIndices)
             {
@@ -1272,22 +1265,10 @@ namespace pwiz.OspreySharp.Tasks
                 double lower = frag.Mz - tolDa;
                 double upper = frag.Mz + tolDa;
 
-                int lo = ScoringMath.BinarySearchLowerBound(apexSpectrum.Mzs, lower);
-                if (lo < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[lo] <= upper)
-                {
-                    double bestMz = apexSpectrum.Mzs[lo];
-                    double bestDiff = Math.Abs(bestMz - frag.Mz);
-                    for (int k = lo + 1; k < apexSpectrum.Mzs.Length && apexSpectrum.Mzs[k] <= upper; k++)
-                    {
-                        double diff = Math.Abs(apexSpectrum.Mzs[k] - frag.Mz);
-                        if (diff < bestDiff)
-                        {
-                            bestDiff = diff;
-                            bestMz = apexSpectrum.Mzs[k];
-                        }
-                    }
-                    ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, bestMz));
-                }
+                int best = TopFragmentExtractor.FindClosestPeakInWindow(
+                    apexSpectrum.Mzs, frag.Mz, lower, upper);
+                if (best >= 0)
+                    ms2Errors.Add(config.FragmentTolerance.MassError(frag.Mz, apexSpectrum.Mzs[best]));
             }
             return ms2Errors;
         }
