@@ -776,7 +776,7 @@ namespace pwiz.OspreySharp.Tasks
                 // hotspot). Dumped the cal's library_rts + fitted_values once
                 // per file. Mirrors Rust's dump_predict_rt_arrays at
                 // pipeline.rs ~2886. To restore, re-enable this and the
-                // WritePredictRtCall in AbstractScoringTask. See
+                // WritePredictRtCall in CoelutionScorer. See
                 // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
                 // if (rtCal != null)
                 // {

@@ -61,26 +61,7 @@ namespace pwiz.OspreySharp.Scoring
             if (entry.Fragments == null || entry.Fragments.Count == 0)
                 return xics;
 
-            // Select top N fragment indices by descending relative intensity.
-            int nFrags = entry.Fragments.Count;
-            int nTop = Math.Min(nFrags, maxFragments);
-            int[] topIndices;
-            if (nFrags <= maxFragments)
-            {
-                topIndices = new int[nFrags];
-                for (int i = 0; i < nFrags; i++)
-                    topIndices[i] = i;
-            }
-            else
-            {
-                // Stable sort matching Rust slice::sort_by on
-                // RelativeIntensity ties; List<T>.Sort with
-                // Comparison<T> is introsort and unstable.
-                topIndices = Enumerable.Range(0, nFrags)
-                    .OrderByDescending(i => entry.Fragments[i].RelativeIntensity)
-                    .Take(nTop)
-                    .ToArray();
-            }
+            int[] topIndices = SelectTopFragmentIndices(entry.Fragments, maxFragments);
 
             int nScans = candidateSpectra.Count;
             foreach (int fragIdx in topIndices)
@@ -95,27 +76,9 @@ namespace pwiz.OspreySharp.Scoring
                 for (int scanIdx = 0; scanIdx < nScans; scanIdx++)
                 {
                     var spectrum = candidateSpectra[scanIdx];
-                    if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
-                        continue;
-
-                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
-                    if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
-                        continue;
-
-                    // Pick CLOSEST peak by m/z (not most intense). Matches
-                    // Rust extract_fragment_xics in osprey-scoring/src/batch.rs.
-                    double bestDiff = Math.Abs(spectrum.Mzs[lo] - fragment.Mz);
-                    double bestIntensity = spectrum.Intensities[lo];
-                    for (int k = lo + 1; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
-                    {
-                        double diff = Math.Abs(spectrum.Mzs[k] - fragment.Mz);
-                        if (diff < bestDiff)
-                        {
-                            bestDiff = diff;
-                            bestIntensity = spectrum.Intensities[k];
-                        }
-                    }
-                    intensities[scanIdx] = bestIntensity;
+                    int best = FindClosestPeakInWindow(spectrum.Mzs, fragment.Mz, lower, upper);
+                    if (best >= 0)
+                        intensities[scanIdx] = spectrum.Intensities[best];
                 }
 
                 // Always include the fragment XIC, even all-zero. Rust:
@@ -147,32 +110,7 @@ namespace pwiz.OspreySharp.Scoring
             if (candidate.Fragments == null || candidate.Fragments.Count == 0)
                 return xics;
 
-            int nFrags = candidate.Fragments.Count;
-            int nTop = Math.Min(nFrags, CAL_TOP_N_FRAGMENTS);
-            int[] topIndices;
-            if (nFrags <= CAL_TOP_N_FRAGMENTS)
-            {
-                topIndices = new int[nFrags];
-                for (int i = 0; i < nFrags; i++)
-                    topIndices[i] = i;
-            }
-            else
-            {
-                // Rust's `indexed.sort_by(|a, b| b.1.total_cmp(&a.1))` at
-                // osprey-scoring/src/lib.rs:528 is STABLE (slice::sort_by
-                // is stable). Switch from `List<T>.Sort` (introsort,
-                // unstable) to LINQ `OrderByDescending` (stable per .NET
-                // contract) so that ties on RelativeIntensity preserve
-                // the library's fragment order, matching Rust. Without
-                // this, a peptide with two fragments at equal relative
-                // intensity can land different fragments in its top-N on
-                // the C# side, which cascades through XIC extraction →
-                // peak detection → rankScore → bestPeak selection.
-                topIndices = Enumerable.Range(0, nFrags)
-                    .OrderByDescending(i => candidate.Fragments[i].RelativeIntensity)
-                    .Take(nTop)
-                    .ToArray();
-            }
+            int[] topIndices = SelectTopFragmentIndices(candidate.Fragments, CAL_TOP_N_FRAGMENTS);
 
             // Build shared RT array for this range
             double[] rangeRts = new double[rangeLen];
@@ -191,26 +129,9 @@ namespace pwiz.OspreySharp.Scoring
                 for (int scanIdx = 0; scanIdx < rangeLen; scanIdx++)
                 {
                     var spectrum = windowSpectra[startScan + scanIdx];
-                    if (spectrum.Mzs == null || spectrum.Mzs.Length == 0)
-                        continue;
-
-                    int lo = ScoringMath.BinarySearchLowerBound(spectrum.Mzs, lower);
-                    if (lo >= spectrum.Mzs.Length || spectrum.Mzs[lo] > upper)
-                        continue;
-
-                    // Find closest peak by m/z within tolerance (matches Rust).
-                    double bestDiff = Math.Abs(spectrum.Mzs[lo] - fragment.Mz);
-                    double bestIntensity = spectrum.Intensities[lo];
-                    for (int k = lo + 1; k < spectrum.Mzs.Length && spectrum.Mzs[k] <= upper; k++)
-                    {
-                        double diff = Math.Abs(spectrum.Mzs[k] - fragment.Mz);
-                        if (diff < bestDiff)
-                        {
-                            bestDiff = diff;
-                            bestIntensity = spectrum.Intensities[k];
-                        }
-                    }
-                    intensities[scanIdx] = bestIntensity;
+                    int best = FindClosestPeakInWindow(spectrum.Mzs, fragment.Mz, lower, upper);
+                    if (best >= 0)
+                        intensities[scanIdx] = spectrum.Intensities[best];
                 }
 
                 // Always include the fragment XIC, even if all zero. Zero intensities
@@ -234,36 +155,81 @@ namespace pwiz.OspreySharp.Scoring
             if (entry.Fragments == null || entry.Fragments.Count == 0)
                 return 0;
 
-            int nTop = Math.Min(entry.Fragments.Count, 6);
+            int[] topIndices = SelectTopFragmentIndices(entry.Fragments, 6);
             byte matched = 0;
-
-            if (entry.Fragments.Count <= 6)
+            foreach (int fragIdx in topIndices)
             {
-                for (int i = 0; i < entry.Fragments.Count; i++)
-                {
-                    if (SpectralScorer.HasMatch(entry.Fragments[i].Mz,
-                        spectrum.Mzs, config.FragmentTolerance))
-                        matched++;
-                }
-            }
-            else
-            {
-                // Stable top-6 by RelativeIntensity, matching Rust
-                // slice::sort_by ties (Array.Sort with Comparison<T>
-                // is introsort and unstable).
-                var indices = Enumerable.Range(0, entry.Fragments.Count)
-                    .OrderByDescending(i => entry.Fragments[i].RelativeIntensity)
-                    .Take(nTop)
-                    .ToArray();
-
-                for (int t = 0; t < indices.Length; t++)
-                {
-                    if (SpectralScorer.HasMatch(entry.Fragments[indices[t]].Mz,
-                        spectrum.Mzs, config.FragmentTolerance))
-                        matched++;
-                }
+                if (SpectralScorer.HasMatch(entry.Fragments[fragIdx].Mz,
+                    spectrum.Mzs, config.FragmentTolerance))
+                    matched++;
             }
             return matched;
+        }
+
+        /// <summary>
+        /// Select the indices of the top <paramref name="maxFragments"/> library
+        /// fragments by descending <see cref="LibraryFragment.RelativeIntensity"/>.
+        /// When there are at most <paramref name="maxFragments"/> fragments, every
+        /// index is returned in library order.
+        /// </summary>
+        /// <remarks>
+        /// The sort is a STABLE <c>OrderByDescending</c> (stable per the .NET
+        /// contract) so ties on RelativeIntensity preserve the library's fragment
+        /// order, matching Rust's stable <c>slice::sort_by</c>
+        /// (osprey-scoring/src/lib.rs:528). <c>List&lt;T&gt;.Sort</c> /
+        /// <c>Array.Sort</c> with a <c>Comparison&lt;T&gt;</c> is introsort and
+        /// unstable, which would pick different fragments on ties and cascade
+        /// through XIC extraction -> peak detection -> rankScore -> bestPeak.
+        /// </remarks>
+        public static int[] SelectTopFragmentIndices(
+            IReadOnlyList<LibraryFragment> fragments, int maxFragments)
+        {
+            int nFrags = fragments.Count;
+            if (nFrags <= maxFragments)
+            {
+                var allIndices = new int[nFrags];
+                for (int i = 0; i < nFrags; i++)
+                    allIndices[i] = i;
+                return allIndices;
+            }
+            return Enumerable.Range(0, nFrags)
+                .OrderByDescending(i => fragments[i].RelativeIntensity)
+                .Take(maxFragments)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Index of the peak whose m/z is closest to <paramref name="targetMz"/>
+        /// within the inclusive window [<paramref name="lower"/>,
+        /// <paramref name="upper"/>], or -1 when no peak falls in the window.
+        /// </summary>
+        /// <remarks>
+        /// Picks CLOSEST by m/z (not most intense). The ascending scan with a
+        /// strict-less-than replacement keeps the first (lowest-index) peak on
+        /// exact ties. Matches Rust extract_fragment_xics in
+        /// osprey-scoring/src/batch.rs. Callers read the intensity or the m/z at
+        /// the returned index as needed.
+        /// </remarks>
+        public static int FindClosestPeakInWindow(
+            double[] mzs, double targetMz, double lower, double upper)
+        {
+            if (mzs == null || mzs.Length == 0)
+                return -1;
+            int lo = ScoringMath.BinarySearchLowerBound(mzs, lower);
+            if (lo >= mzs.Length || mzs[lo] > upper)
+                return -1;
+            int best = lo;
+            double bestDiff = Math.Abs(mzs[lo] - targetMz);
+            for (int k = lo + 1; k < mzs.Length && mzs[k] <= upper; k++)
+            {
+                double diff = Math.Abs(mzs[k] - targetMz);
+                if (diff < bestDiff)
+                {
+                    bestDiff = diff;
+                    best = k;
+                }
+            }
+            return best;
         }
     }
 }
