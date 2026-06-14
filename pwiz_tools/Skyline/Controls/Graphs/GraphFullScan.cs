@@ -3572,7 +3572,10 @@ namespace pwiz.Skyline.Controls.Graphs
             var chromInfo = TryGetCurrentTargetChromInfo();
             if (chromInfo == null)
                 return;
-            props.PeakRetentionTime = chromInfo.RetentionTime.ToString(Formats.RETENTION_TIME);
+            // Only show a peak RT when a peak was actually picked - an empty chrom info has RT 0,
+            // which would render a misleading "0" in the properties pane.
+            if (!chromInfo.IsEmpty)
+                props.PeakRetentionTime = chromInfo.RetentionTime.ToString(Formats.RETENTION_TIME);
 
             var imFilter = transition.IonMobilityInfo;
             double? targetIm = imFilter?.IonMobility?.Mobility;
@@ -3584,21 +3587,15 @@ namespace pwiz.Skyline.Controls.Graphs
                     targetIm.GetValueOrDefault(), Formats.IonMobility);
                 props.ObservedIonMobility = TextUtil.SpaceSeparate(valueText, unitsLabel);
 
-                // Observed CCS via the active reader's IM->CCS converter. The % error is
-                // against the CCS we were told to filter on (library/explicit - ground truth),
-                // mirroring the Document Grid's CcsErrorPercent, not a converter re-derivation
-                // of the target IM. Skipped when there's no converter or no charge.
-                int? charge = TryGetCurrentPrecursorCharge();
-                var sp = _msDataFileScanHelper.ScanProvider;
-                if (charge.HasValue && sp != null && sp.ProvidesCollisionalCrossSectionConverter && targetIm.HasValue)
+                // Observed CCS is the per-peak value already stored on the chrom info (the same
+                // value the Document Grid shows - computed at cache build when the source had an
+                // IM->CCS converter, null otherwise), so no need to re-run the vendor conversion
+                // here. The % error is against the CCS we filtered on (library/explicit - ground
+                // truth).
+                if (chromInfo.ObservedCcs.HasValue && chromInfo.ObservedCcs.Value > 0)
                 {
-                    double mz = transition.PrecursorMz.Value;
-                    var observedCcs = sp.CCSFromIonMobility(observedIm, mz, charge.Value);
-                    if (observedCcs.HasValue && observedCcs.Value > 0)
-                    {
-                        double targetCcsForError = chromInfo.IonMobility?.CollisionalCrossSectionSqA ?? 0;
-                        props.ObservedCCS = FormatValueWithError(observedCcs.Value, targetCcsForError, Formats.CCS);
-                    }
+                    double targetCcsForError = chromInfo.IonMobility?.CollisionalCrossSectionSqA ?? 0;
+                    props.ObservedCCS = FormatValueWithError(chromInfo.ObservedCcs.Value, targetCcsForError, Formats.CCS);
                 }
             }
         }
