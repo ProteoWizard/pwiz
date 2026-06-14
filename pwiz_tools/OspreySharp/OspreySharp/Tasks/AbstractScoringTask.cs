@@ -79,19 +79,6 @@ namespace pwiz.OspreySharp.Tasks
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
 
-        // Calibration XCorr always uses unit-resolution bins (~2K) regardless of
-        // instrument resolution mode. Matches the spec in Rust osprey
-        // docs/02-calibration.md ("Comet-style XCorr (unit resolution, BLAS
-        // sdot)") and the calibration_xcorr_scorer helper in
-        // osprey/crates/osprey/src/pipeline.rs, and avoids the LOH allocation
-        // pressure that 100K-bin arrays cause on .NET Framework's large-object
-        // heap. Main search XCorr still uses the resolution-mode bins via the
-        // IResolutionStrategy abstraction. Exposed as internal so
-        // OspreySharp.Test can assert the bin-config invariant.
-        internal static readonly SpectralScorer s_calXcorrScorer =
-            new SpectralScorer(BinConfig.UnitResolution());
-
-
         // Local alias so existing dump code using F10 continues to read cleanly.
         // The actual formatter lives in OspreyDiagnostics now.
         private static string F10(double v)

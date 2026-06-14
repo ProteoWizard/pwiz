@@ -35,7 +35,7 @@ namespace pwiz.OspreySharp.Scoring
     /// the top-level exe project (OOP-review rec #3, "diagnostics-bleed").
     ///
     /// The exe's file-backed sink implements this. When diagnostics are off (no
-    /// <c>--d</c> flag) the injected reference is <c>null</c>, and the scorer
+    /// <c>-d</c> flag) the injected reference is <c>null</c>, and the scorer
     /// invokes it with the null-conditional operator (<c>diag?.ShouldDump...() ??
     /// false</c>, <c>diag?.Write...(...)</c>). That mirrors the existing
     /// <c>Sink?.X()</c> idiom exactly -- zero hot-path overhead, argument
@@ -64,6 +64,6 @@ namespace pwiz.OspreySharp.Scoring
 
         void WriteCwtPathRow(string fileName, uint entryId,
             int nCwtPeaks, int nFinalPeaks, int nScored, bool scored,
-            List<XicData> xics);
+            IReadOnlyList<XicData> xics);
     }
 }
