@@ -363,6 +363,20 @@ namespace pwiz.Skyline.Model.Results
                     return 0;
             }
         }
+
+        /// <summary>
+        /// True for the ion mobility units we track an observed value for (drift time, 1/K0) -
+        /// equivalently, those with a non-zero storage scale. False for FAIMS (compensation_V),
+        /// Waters SONAR (waters_sonar, which uses IMS hardware to filter precursor m/z and is
+        /// not ion mobility), and none/unknown. Gating extraction on this (rather than only
+        /// excluding FAIMS) keeps the extraction gate and the cache scale from disagreeing, so
+        /// a tracked-but-unscalable unit can't slip through. Units come from the data file, so
+        /// this holds even when no IM&lt;-&gt;CCS converter is available (e.g. mzML).
+        /// </summary>
+        public static bool IsTrackedObservedIonMobilityUnit(eIonMobilityUnits units)
+        {
+            return GetObservedIonMobilityScaleOrZero(units) != 0;
+        }
         public InterpolatedTimeIntensities Interpolate(IEnumerable<ChromSource> chromSources)
         {
             var interpolatedTimes = GetInterpolatedTimes();

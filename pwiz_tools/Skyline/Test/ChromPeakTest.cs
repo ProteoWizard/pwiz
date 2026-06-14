@@ -326,6 +326,15 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(0, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.waters_sonar));
             Assert.AreEqual(0, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.none));
             Assert.AreEqual(0, RawTimeIntensities.GetObservedIonMobilityScaleOrZero(eIonMobilityUnits.unknown));
+
+            // Tracked-unit predicate gates extraction; it must agree with the scale (true iff
+            // there is a non-zero scale). FAIMS and Waters SONAR are not ion mobility, so false.
+            Assert.IsTrue(RawTimeIntensities.IsTrackedObservedIonMobilityUnit(eIonMobilityUnits.inverse_K0_Vsec_per_cm2));
+            Assert.IsTrue(RawTimeIntensities.IsTrackedObservedIonMobilityUnit(eIonMobilityUnits.drift_time_msec));
+            Assert.IsFalse(RawTimeIntensities.IsTrackedObservedIonMobilityUnit(eIonMobilityUnits.compensation_V));
+            Assert.IsFalse(RawTimeIntensities.IsTrackedObservedIonMobilityUnit(eIonMobilityUnits.waters_sonar));
+            Assert.IsFalse(RawTimeIntensities.IsTrackedObservedIonMobilityUnit(eIonMobilityUnits.none));
+            Assert.IsFalse(RawTimeIntensities.IsTrackedObservedIonMobilityUnit(eIonMobilityUnits.unknown));
         }
 
         [TestMethod]
