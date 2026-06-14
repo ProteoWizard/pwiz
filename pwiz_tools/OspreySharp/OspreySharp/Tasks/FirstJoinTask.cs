@@ -60,9 +60,9 @@ namespace pwiz.OspreySharp.Tasks
     /// Outputs (PerFileConsensusTargets, ReconciliationActions,
     /// RefinedCalibrations, PerFileGapFillForRescore) are exposed as
     /// instance properties for the next task (PerFileRescoreTask) to
-    /// consume after this one completes successfully. <c>DidPlan</c>
-    /// is the gate for that next task — it flips to <c>true</c> only
-    /// when the Stage 6 planning block actually ran.
+    /// consume after this one completes successfully. The
+    /// <c>PlanningPerformed</c> byproduct is the gate for that next task —
+    /// it is <c>true</c> only when the Stage 6 planning block actually ran.
     /// </summary>
     internal sealed class FirstJoinTask : AbstractScoringTask
     {
@@ -102,16 +102,17 @@ namespace pwiz.OspreySharp.Tasks
         {
             typeof(PerFileConsensusTargets), typeof(ReconciliationActions),
             typeof(RefinedCalibrations), typeof(PerFileGapFillForRescore),
-            typeof(CompactedEntries)
+            typeof(CompactedEntries), typeof(PlanningPerformed)
         };
 
         // Stage 6 planning state. Set by PlanStage6 (Run) and published into the
         // typed byproduct slots that downstream consumers pull via ctx.Get<T>();
         // the bundle-adopt Rehydrate path publishes the same slots from the
-        // worker bundle instead. DidPlan remains the gate PerFileRescore's
-        // self-gate checks to tell "planning ran" from "planning was skipped."
-        // Defaults are non-null empty collections so a published slot from a
-        // no-op / stopped-after-Stage-5 run is never null.
+        // worker bundle instead. _didPlan feeds the published PlanningPerformed
+        // slot -- the gate PerFileRescore's self-gate reads to tell "planning
+        // ran" from "planning was skipped." Defaults are non-null empty
+        // collections so a published slot from a no-op / stopped-after-Stage-5
+        // run is never null.
         private bool _didPlan;
         private IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> _perFileConsensusTargets
             = new Dictionary<string, IReadOnlyList<(int, double, double, double)>>();
@@ -121,8 +122,6 @@ namespace pwiz.OspreySharp.Tasks
             = new Dictionary<string, RTCalibration>();
         private IReadOnlyDictionary<string, List<GapFillTarget>> _perFileGapFillForRescore
             = new Dictionary<string, List<GapFillTarget>>();
-
-        public bool DidPlan(PipelineContext ctx) { return _didPlan; }
 
         // Bundle.PerFileConsensusTargets is null at hydration time (consensus
         // is meaningful only post-compaction); compute on demand from the
@@ -297,6 +296,10 @@ namespace pwiz.OspreySharp.Tasks
             ctx.Publish(new RefinedCalibrations(_refinedCalibrations));
             ctx.Publish(new PerFileGapFillForRescore(_perFileGapFillForRescore));
             ctx.Publish(new CompactedEntries(perFileEntries));
+            // PlanStage6 (above) sets _didPlan only when the planning block ran;
+            // publish it so PerFileRescore reads the gate from the registry
+            // instead of reaching for this concrete task.
+            ctx.Publish(new PlanningPerformed(_didPlan));
             return true;
         }
 
@@ -352,6 +355,11 @@ namespace pwiz.OspreySharp.Tasks
             ctx.Publish(new PerFileGapFillForRescore(bundle.PerFileGapFill));
             ctx.Publish(new PerFileConsensusTargets(ConsensusTargetsFromBundle(ctx, bundle)));
             ctx.Publish(new CompactedEntries(perFileEntries));
+            // The bundle-adopt / resume path never plans, so the rescore gate is
+            // false (PerFileRescore falls back to the no-op unless a worker
+            // RescoreBundle is present). Mirrors the old "FirstJoin rehydrates ->
+            // DidPlan is false" semantics, now as a published slot.
+            ctx.Publish(new PlanningPerformed(false));
             return true;
         }
 
