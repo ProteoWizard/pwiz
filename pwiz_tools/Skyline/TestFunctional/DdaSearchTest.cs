@@ -226,6 +226,28 @@ namespace pwiz.SkylineTestFunctional
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
+        public void TestDdaSearchSage()
+        {
+            TestFilesZip = @"TestFunctional\DdaSearchTest.zip";
+
+            CleanupDownloadedFiles(SageSearchEngine.FilesToDownload);
+
+            TestSettings = new DdaTestSettings
+            {
+                SearchEngine = SearchSettingsControl.SearchEngine.Sage,
+                FragmentIons = "b,y",
+                Ms2Analyzer = "Default",
+                PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
+                FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
+                AdditionalSettings = new Dictionary<string, string>(),
+                ExpectedResultsFinal = new ExpectedResults(134, 316, 394, 1182, 155)
+            };
+
+            RunFunctionalTest();
+            Assert.IsFalse(IsRecordMode);
+        }
+
+        [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestDdaSearchMsFragger()
         {
             TestFilesZip = @"TestFunctional\DdaSearchTest.zip";

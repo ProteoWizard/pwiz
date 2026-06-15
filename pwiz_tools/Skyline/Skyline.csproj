@@ -664,6 +664,7 @@
       <DependentUpon>ColumnToolTips.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\CometSearchEngine.cs" />
+    <Compile Include="Model\DdaSearch\SageSearchEngine.cs" />
     <Compile Include="Model\DocSettings\IFile.cs" />
     <Compile Include="Model\DocSettings\ImputationSettings.cs" />
     <Compile Include="Model\DocSettings\RelativeAbundanceFormatting.cs" />

@@ -36,7 +36,8 @@ namespace pwiz.Skyline.Model
         Java,
         Java8,
         MSFragger,
-        MSGFPlus
+        MSGFPlus,
+        Sage
     }
     
     [XmlRoot("search_tool")]
