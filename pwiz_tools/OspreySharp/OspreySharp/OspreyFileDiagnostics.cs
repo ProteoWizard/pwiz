@@ -439,7 +439,7 @@ namespace pwiz.OspreySharp
         // The pipeline-wired logger lives on the OspreyDiagnostics facade; the
         // sink's own dump methods log through it via this alias so [COUNT] /
         // [BISECT] lines flow through the same channel as before.
-        private static Action<string> LogAction => OspreyDiagnostics.LogAction;
+        private static Action<string> LogAction => OspreyDiagnosticsLog.LogAction;
 
         // ----- Cal sample dump -----
 

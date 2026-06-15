@@ -83,7 +83,7 @@ namespace pwiz.OspreySharp.Tasks
         // The actual formatter lives in OspreyDiagnostics now.
         private static string F10(double v)
         {
-            return OspreyDiagnostics.F10(v);
+            return OspreyDiagnosticsLog.F10(v);
         }
 
 
@@ -272,7 +272,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // Per-entry search XIC diagnostic: log the intent once at start.
             // The per-entry dump check happens inline in ScoreCandidate via
-            // OspreyDiagnostics.ShouldDumpSearchXicFor(entry.Id).
+            // the injected IScoringDiagnostics.ShouldDumpSearchXicFor(entry.Id).
             var diagSearchIds = ctx.Diagnostics?.DiagSearchEntryIds;
             if (diagSearchIds != null)
             {
@@ -318,7 +318,7 @@ namespace pwiz.OspreySharp.Tasks
             // Construct the per-window coelution scorer once. It captures the
             // log sink + the scoring-diagnostics sink (null when -d is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
-            var coelutionScorer = new CoelutionScorer(ctx.LogInfo, OspreyDiagnostics.ScoringDiagnostics);
+            var coelutionScorer = new CoelutionScorer(ctx.LogInfo, ctx.Diagnostics as IScoringDiagnostics);
 
             Parallel.For(0, windowsToScore.Count, new ParallelOptions
             {

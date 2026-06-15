@@ -290,7 +290,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 ctx.Diagnostics.WriteStage6RescoredDump(_perFileEntries);
                 if (ctx.Diagnostics.RescoredOnly)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
             }
 
             // Flush + close the persistent per-process diagnostic

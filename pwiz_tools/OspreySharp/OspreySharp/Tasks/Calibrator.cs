@@ -43,9 +43,10 @@ namespace pwiz.OspreySharp.Tasks
     /// Standalone collaborator (does not inherit AbstractScoringTask): it owns
     /// the calibration unit-resolution XCorr scorer (<see cref="s_calXcorrScorer"/>),
     /// reaches the shared top-N constant via <see cref="TopFragmentExtractor"/>,
-    /// and takes the pipeline context for logging. Diagnostic dumps still route
-    /// through the OspreyDiagnostics facade, preserving the Stage-cal dump call
-    /// order bisection relies on.
+    /// and takes the pipeline context for logging. Diagnostic dumps route
+    /// through the injected <c>_ctx.Diagnostics</c> sink (the *_ONLY abort uses
+    /// <c>OspreyDiagnosticsLog.ExitAfterDump</c>), preserving the Stage-cal dump
+    /// call order bisection relies on.
     /// </summary>
     internal sealed class Calibrator
     {
@@ -193,7 +194,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 _ctx.Diagnostics?.WriteCalSampleDump(context.FileName, sampledEntries);
                 if (_ctx.Diagnostics?.CalSampleOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_SAMPLE_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_CAL_SAMPLE_ONLY");
             }
             int nSampledTargets = 0;
             int nSampledDecoys = 0;
@@ -259,7 +260,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 _ctx.Diagnostics?.WriteLoessInputDump(1, pass1.LibRts, pass1.MeasuredRts);
                 if (_ctx.Diagnostics?.LoessInputOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_LOESS_INPUT_ONLY");
             }
 
             // Match Rust accumulated_matches.len() semantics: report pass 1's
@@ -388,7 +389,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 _ctx.Diagnostics?.WriteCalWindowsDump(passNumber);
                 if (_ctx.Diagnostics?.CalWindowsOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_WINDOWS_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_CAL_WINDOWS_ONLY");
             }
 
             // Cross-implementation diagnostic: dump per-entry calibration match info
@@ -398,7 +399,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 _ctx.Diagnostics?.WriteCalMatchDump(passNumber, matches, sampledEntries, matchRts, snrByEntryId);
                 if (_ctx.Diagnostics?.CalMatchOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump("OSPREY_CAL_MATCH_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_CAL_MATCH_ONLY");
             }
 
             if (matches.Count == 0)
@@ -452,7 +453,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 _ctx.Diagnostics?.WriteLdaScoresDump(passNumber, matchArray);
                 if (_ctx.Diagnostics?.LdaScoresOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump("OSPREY_LDA_SCORES_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_LDA_SCORES_ONLY");
             }
 
             // Collect high-confidence target matches that also meet the S/N
@@ -718,7 +719,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 _ctx.Diagnostics?.WriteMs2CalErrorsDump(contributingMatches);
                 if (_ctx.Diagnostics?.Ms2CalErrorsOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump("OSPREY_MS2_CAL_ERRORS_ONLY");
             }
             string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
             ms1Calibration = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);

@@ -445,7 +445,7 @@ namespace pwiz.OspreySharp.Tasks
             if (ctx.Diagnostics?.DumpPercolator ?? false)
                 ctx.Diagnostics?.WriteStage5PercolatorDump(perFileEntries);
             if (ctx.Diagnostics?.PercolatorOnly ?? false)
-                OspreyDiagnostics.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
+                OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
         }
 
         /// <summary>
@@ -598,7 +598,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.Diagnostics?.WriteStage6MultichargeDump(
                     perFileForDump, perFileConsensusTargets);
                 if (ctx.Diagnostics?.MultichargeOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
             }
 
             // 2. Cross-run consensus RTs (target peptides + paired
@@ -640,7 +640,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 ctx.Diagnostics?.WriteStage6InvPredictDump(invPredictTrace);
                 if (ctx.Diagnostics?.InvPredictOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_INV_PREDICT_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_INV_PREDICT_ONLY");
             }
             int nTargets = 0, nDecoys = 0;
             foreach (var c in consensus)
@@ -664,7 +664,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 ctx.Diagnostics?.WriteStage6ConsensusDump(consensus);
                 if (ctx.Diagnostics?.ConsensusOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_CONSENSUS_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CONSENSUS_ONLY");
             }
 
             // 3. Per-file calibration refit on consensus peptides.
@@ -684,14 +684,14 @@ namespace pwiz.OspreySharp.Tasks
             {
                 ctx.Diagnostics?.WriteStage6LoessFitDump(refinedCalibrations);
                 if (ctx.Diagnostics?.LoessFitOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_LOESS_FIT_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_LOESS_FIT_ONLY");
             }
 
             if (ctx.Diagnostics?.DumpRefit ?? false)
             {
                 ctx.Diagnostics?.WriteStage6RefitDump(refinedCalibrations);
                 if (ctx.Diagnostics?.RefitOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_REFIT_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_REFIT_ONLY");
             }
 
             // 4. Reconciliation planning. Reads each file's CWT
@@ -803,7 +803,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.Diagnostics?.WriteStage6ReconciliationDump(
                     dumpActions, perFileForPlan);
                 if (ctx.Diagnostics?.ReconciliationOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
             }
 
             // Stage 5 → Stage 6 boundary: write the per-file
@@ -1734,7 +1734,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.Diagnostics?.WriteStage6ProteinFdrDump(
                     bestScores, proteinFdr.PeptideQvalues);
                 if (ctx.Diagnostics?.ProteinFdrOnly ?? false)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
             }
         }
     }

@@ -342,7 +342,7 @@ namespace pwiz.OspreySharp.Tasks
                     // .MergeNode.osprey.task sidecar carries an identical
                     // key. AnalysisPipeline.WriteTaskSidecars also writes
                     // these at end-of-Run, but that step is bypassed when
-                    // OspreyDiagnostics.ExitAfterDump calls Environment.Exit
+                    // OspreyDiagnosticsLog.ExitAfterDump calls Environment.Exit
                     // (the test-snapshot stage7 / OSPREY_STAGE7_PROTEIN_FDR_ONLY
                     // path). Writing inline next to each 2nd-pass binary
                     // makes the per-file resume contract survive that
@@ -576,7 +576,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 ctx.Diagnostics.WriteStage7ProteinFdrDump(parsimony, proteinFdr);
                 if (ctx.Diagnostics.Stage7ProteinFdrOnly)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
 
             // Propagate protein q-values to FdrEntry stubs

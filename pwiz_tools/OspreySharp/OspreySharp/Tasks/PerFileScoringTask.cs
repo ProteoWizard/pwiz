@@ -893,7 +893,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
-                OspreyDiagnostics.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+                OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
         }
 
         /// <summary>
