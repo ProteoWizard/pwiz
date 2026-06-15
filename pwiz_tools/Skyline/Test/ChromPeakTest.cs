@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -420,6 +421,65 @@ namespace pwiz.SkylineTest
             // Windowing: a stronger valid scan outside [startIndex, endIndex] is ignored.
             // Restricted to indices 0..1, the apex-of-valid is index 1 (30), not index 2 (100).
             Assert.AreEqual(4.2f, ChromPeak.ApexObservedIonMobility(intensities, imAllValid, 0, 1));
+        }
+
+        [TestMethod]
+        public void TestInterpolatedTimeIntensitiesMixedGroupStreamRoundTrip()
+        {
+            // A chromatogram group can carry the has_mass_errors / has_observed_ion_mobilities flag
+            // at the group level while some transitions lack the array (e.g. after merging a cache
+            // that has the data with one that doesn't). WriteToStream skips those transitions, so
+            // ReadFromStream must honor the per-transition MissingMassErrors / MissingObservedIonMobility
+            // flags - otherwise it over-reads and corrupts every transition after the gap.
+            var times = new[] { 0f, 1f, 2f, 3f };
+            int numPoints = times.Length;
+            // Transitions 0 and 2 carry mass errors and observed IM; transition 1 carries neither.
+            var ti0 = new TimeIntensities(times, new[] { 1f, 2f, 3f, 4f },
+                new[] { 0.1f, 0.2f, 0.3f, 0.4f }, null, new[] { 1.1f, 1.2f, 1.3f, 1.4f });
+            var ti1 = new TimeIntensities(times, new[] { 5f, 6f, 7f, 8f }, null, null, null);
+            var ti2 = new TimeIntensities(times, new[] { 9f, 10f, 11f, 12f },
+                new[] { 0.5f, 0.6f, 0.7f, 0.8f }, null, new[] { 2.1f, 2.2f, 2.3f, 2.4f });
+            var group = new InterpolatedTimeIntensities(new[] { ti0, ti1, ti2 },
+                new[] { ChromSource.fragment, ChromSource.fragment, ChromSource.fragment });
+
+            var stream = new MemoryStream();
+            group.WriteToStream(stream);
+            stream.Position = 0;
+
+            var header = new ChromGroupHeaderInfo(new SignedMz(500.0), 3, 0, 0, null, 0, 0, numPoints,
+                ChromGroupHeaderInfo.FlagValues.has_mass_errors | ChromGroupHeaderInfo.FlagValues.has_observed_ion_mobilities,
+                null, null, null, eIonMobilityUnits.none);
+            var t1Missing = new ChromTransition(0, 0, 0, 0, ChromSource.fragment, 0)
+            {
+                MissingMassErrors = true,
+                MissingObservedIonMobility = true
+            };
+            var chromTransitions = new[]
+            {
+                new ChromTransition(0, 0, 0, 0, ChromSource.fragment, 0),
+                t1Missing,
+                new ChromTransition(0, 0, 0, 0, ChromSource.fragment, 0)
+            };
+
+            var result = InterpolatedTimeIntensities.ReadFromStream(stream, header, chromTransitions)
+                .TransitionTimeIntensities;
+            Assert.AreEqual(3, result.Count);
+            // Transition 1's missing arrays come back null...
+            Assert.IsNull(result[1].MassErrors);
+            Assert.IsNull(result[1].ObservedIonMobilities);
+            // ...and transitions 0 and 2 round-trip intact (2 would be corrupt if 1 had consumed bytes).
+            AssertFloatsEqual(ti0.MassErrors, result[0].MassErrors);
+            AssertFloatsEqual(ti0.ObservedIonMobilities, result[0].ObservedIonMobilities);
+            AssertFloatsEqual(ti2.MassErrors, result[2].MassErrors);
+            AssertFloatsEqual(ti2.ObservedIonMobilities, result[2].ObservedIonMobilities);
+        }
+
+        private static void AssertFloatsEqual(IReadOnlyList<float> expected, IReadOnlyList<float> actual)
+        {
+            Assert.IsNotNull(actual);
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int i = 0; i < expected.Count; i++)
+                Assert.AreEqual(expected[i], actual[i], 1e-4f);
         }
 
         private static void AssertObservedIonMobilityRoundTrip(eIonMobilityUnits units, float[] observedIms)

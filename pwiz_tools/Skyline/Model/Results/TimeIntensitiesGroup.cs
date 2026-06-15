@@ -243,6 +243,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 for (int i = 0; i < numTrans; i++)
                 {
+                    // Symmetric with WriteToStream, which skips transitions whose array is null.
+                    // The per-transition MissingMassErrors flag records exactly those skips, so a
+                    // mixed group (group flag set, but missing on some transitions - e.g. from a
+                    // cache merge) round-trips without desyncing the stream.
+                    if (chromTransitions[i].MissingMassErrors)
+                        continue;
                     transitionMassErrors[i] = ReadScaledShortErrors(stream, numPoints);
                 }
             }
@@ -251,6 +257,8 @@ namespace pwiz.Skyline.Model.Results
             {
                 for (int i = 0; i < numTrans; i++)
                 {
+                    if (chromTransitions[i].MissingObservedIonMobility)
+                        continue;
                     transitionObservedIonMobilities[i] = PrimitiveArrays.Read<float>(stream, numPoints);
                 }
             }
