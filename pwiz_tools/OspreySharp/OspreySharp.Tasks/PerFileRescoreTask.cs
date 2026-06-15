@@ -76,7 +76,7 @@ namespace pwiz.OspreySharp.Tasks
     /// independent of the others.
     ///
     /// Single entry point: <see cref="Run"/> is invoked by
-    /// <see cref="AnalysisPipeline"/>'s task driver during both
+    /// <c>AnalysisPipeline</c>'s task driver during both
     /// straight-through pipeline runs and the stage6 worker mode
     /// (<c>--task PerFileRescore</c>). The worker
     /// mode previously had a separate <c>RunWorker</c> entry that
@@ -785,7 +785,7 @@ namespace pwiz.OspreySharp.Tasks
                 // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
                 // if (rtCal != null)
                 // {
-                //     OspreyDiagnostics.WritePredictRtArrays(
+                //     ctx.Diagnostics.WritePredictRtArrays(
                 //         fileName, rtCal.LibraryRts, rtCal.FittedValues);
                 // }
 

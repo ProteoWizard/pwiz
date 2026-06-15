@@ -1452,7 +1452,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 // LF newlines so the dump is byte-stable across Windows and
                 // Linux for cross-impl diffing against Rust's PIN output;
-                // matches the convention used by OspreyDiagnostics.
+                // matches the convention used by OspreyDiagnosticsLog.
                 writer.NewLine = "\n";
                 writer.WriteLine(string.Join("\t", header));
                 foreach (var e in sorted)
