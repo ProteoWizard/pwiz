@@ -1061,22 +1061,22 @@ namespace pwiz.OspreySharp.IO
         }
 
         /// <summary>
-        /// Parse a "MAJOR.MINOR.PATCH" version string. Returns true on success
-        /// with the three components in <paramref name="major"/>, <paramref name="minor"/>,
-        /// <paramref name="patch"/>. Returns false if any component is missing
+        /// Parse a Skyline-scheme "YEAR.ORDINAL.BRANCH.DOY" version string into
+        /// its four integer components. Returns false if any component is missing
         /// or non-numeric. Used by <see cref="CheckParquetMetadata"/>.
         /// </summary>
-        public static bool TryParseVersion(string s, out int major, out int minor, out int patch)
+        public static bool TryParseVersion(string s, out int year, out int ordinal, out int branch, out int doy)
         {
-            major = minor = patch = 0;
+            year = ordinal = branch = doy = 0;
             if (string.IsNullOrEmpty(s))
                 return false;
             string[] parts = s.Split('.');
-            if (parts.Length != 3)
+            if (parts.Length != 4)
                 return false;
-            return int.TryParse(parts[0], out major)
-                && int.TryParse(parts[1], out minor)
-                && int.TryParse(parts[2], out patch);
+            return int.TryParse(parts[0], out year)
+                && int.TryParse(parts[1], out ordinal)
+                && int.TryParse(parts[2], out branch)
+                && int.TryParse(parts[3], out doy);
         }
 
         /// <summary>
@@ -1101,21 +1101,26 @@ namespace pwiz.OspreySharp.IO
 
             if (cachedVersion == null)
                 return string.Format("{0}: parquet has no `osprey.version` metadata", fileLabel);
-            int cM, cmn, cp, rM, rmn, rp;
-            bool cachedOk = TryParseVersion(cachedVersion, out cM, out cmn, out cp);
-            bool currentOk = TryParseVersion(currentVersion, out rM, out rmn, out rp);
+            int cY, cO, cB, cD, rY, rO, rB, rD;
+            bool cachedOk = TryParseVersion(cachedVersion, out cY, out cO, out cB, out cD);
+            bool currentOk = TryParseVersion(currentVersion, out rY, out rO, out rB, out rD);
             if (cachedOk && currentOk)
             {
-                if (cM != rM || cmn != rmn)
+                // YEAR.ORDINAL.BRANCH is the release identity: a difference means
+                // the cache was produced by a different release line and is not
+                // safe to reuse.
+                if (cY != rY || cO != rO || cB != rB)
                 {
                     return string.Format(
-                        "{0}: osprey version mismatch: parquet was scored with {1} but current binary is {2} (incompatible major/minor)",
+                        "{0}: osprey version mismatch: parquet was scored with {1} but current binary is {2} (incompatible release identity)",
                         fileLabel, cachedVersion, currentVersion);
                 }
-                if (cp != rp)
+                // The day-of-year is daily-build drift within one release line:
+                // warn but proceed.
+                if (cD != rD)
                 {
                     warning = string.Format(
-                        "{0}: osprey patch-version drift (parquet={1}, current={2}); proceeding",
+                        "{0}: osprey daily-version drift (parquet={1}, current={2}); proceeding",
                         fileLabel, cachedVersion, currentVersion);
                 }
             }

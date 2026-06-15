@@ -560,7 +560,7 @@ namespace pwiz.OspreySharp.Tasks
                 : config.Identity.ReconciliationParameterHash();
             var metadata = new Dictionary<string, string>
             {
-                { @"osprey.version", Program.VERSION },
+                { @"osprey.version", OspreyVersion.Current },
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                 { @"osprey.reconciled", @"true" },
@@ -874,7 +874,7 @@ namespace pwiz.OspreySharp.Tasks
                             perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
                         try
                         {
-                            TaskValiditySidecar.Write(reconciledOutPath, Name, Program.VERSION,
+                            TaskValiditySidecar.Write(reconciledOutPath, Name, OspreyVersion.Current,
                                 taskValidityKey, perFileInputs);
                         }
                         catch (Exception ex)
