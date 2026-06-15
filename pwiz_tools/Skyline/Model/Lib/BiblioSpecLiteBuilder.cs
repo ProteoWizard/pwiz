@@ -69,6 +69,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_MZTAB_TXT = "mztab.txt";
         public const string EXT_OPEN_SWATH = ".osw";
         public const string EXT_SPECLIB = ".speclib";
+        public const string EXT_PARQUET = ".parquet";
         // ReSharper restore LocalizableElement
 
         private ReadOnlyCollection<string> _inputFiles;

@@ -65,7 +65,7 @@ namespace pwiz.OspreySharp
     /// production carries no diagnostic state. Internal: callers go through the
     /// <see cref="OspreyDiagnostics"/> facade, never this type directly.
     /// </summary>
-    internal sealed class OspreyFileDiagnostics
+    internal sealed class OspreyFileDiagnostics : IScoringDiagnostics, IOspreyDiagnostics
     {
         /// <summary>
         /// Newline used by every Stage 6 cross-impl bisection dump writer.
@@ -88,28 +88,28 @@ namespace pwiz.OspreySharp
         /// (cs_cal_sample.txt) AND the calibration scalars+grid
         /// (cs_cal_scalars.txt / cs_cal_grid.txt).
         /// </summary>
-        public readonly bool DumpCalSample = IsOne(@"OSPREY_DUMP_CAL_SAMPLE");
+        public bool DumpCalSample { get; } = IsOne(@"OSPREY_DUMP_CAL_SAMPLE");
 
         /// <summary>OSPREY_CAL_SAMPLE_ONLY: exit after cs_cal_sample.txt dump.</summary>
-        public readonly bool CalSampleOnly = IsOne(@"OSPREY_CAL_SAMPLE_ONLY");
+        public bool CalSampleOnly { get; } = IsOne(@"OSPREY_CAL_SAMPLE_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_CAL_WINDOWS: dump per-entry calibration window
         /// selection (cs_cal_windows.txt).
         /// </summary>
-        public readonly bool DumpCalWindows = IsOne(@"OSPREY_DUMP_CAL_WINDOWS");
+        public bool DumpCalWindows { get; } = IsOne(@"OSPREY_DUMP_CAL_WINDOWS");
 
         /// <summary>OSPREY_CAL_WINDOWS_ONLY: exit after cs_cal_windows.txt dump.</summary>
-        public readonly bool CalWindowsOnly = IsOne(@"OSPREY_CAL_WINDOWS_ONLY");
+        public bool CalWindowsOnly { get; } = IsOne(@"OSPREY_CAL_WINDOWS_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_CAL_MATCH: dump per-entry calibration match info
         /// (cs_cal_match.txt).
         /// </summary>
-        public readonly bool DumpCalMatch = IsOne(@"OSPREY_DUMP_CAL_MATCH");
+        public bool DumpCalMatch { get; } = IsOne(@"OSPREY_DUMP_CAL_MATCH");
 
         /// <summary>OSPREY_CAL_MATCH_ONLY: exit after cs_cal_match.txt dump.</summary>
-        public readonly bool CalMatchOnly = IsOne(@"OSPREY_CAL_MATCH_ONLY");
+        public bool CalMatchOnly { get; } = IsOne(@"OSPREY_CAL_MATCH_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_MS2_CAL_ERRORS: dump the per-fragment MS2 mass errors
@@ -118,28 +118,28 @@ namespace pwiz.OspreySharp
         /// mean divergence cross-impl by checking whether the input
         /// fragment errors are identical in value AND order across impls.
         /// </summary>
-        public readonly bool DumpMs2CalErrors = IsOne(@"OSPREY_DUMP_MS2_CAL_ERRORS");
+        public bool DumpMs2CalErrors { get; } = IsOne(@"OSPREY_DUMP_MS2_CAL_ERRORS");
 
         /// <summary>OSPREY_MS2_CAL_ERRORS_ONLY: exit after cs_ms2_cal_errors.txt dump.</summary>
-        public readonly bool Ms2CalErrorsOnly = IsOne(@"OSPREY_MS2_CAL_ERRORS_ONLY");
+        public bool Ms2CalErrorsOnly { get; } = IsOne(@"OSPREY_MS2_CAL_ERRORS_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_LDA_SCORES: dump per-entry LDA discriminant + q-value
         /// after LDA scoring (cs_lda_scores.txt).
         /// </summary>
-        public readonly bool DumpLdaScores = IsOne(@"OSPREY_DUMP_LDA_SCORES");
+        public bool DumpLdaScores { get; } = IsOne(@"OSPREY_DUMP_LDA_SCORES");
 
         /// <summary>OSPREY_LDA_SCORES_ONLY: exit after cs_lda_scores.txt dump.</summary>
-        public readonly bool LdaScoresOnly = IsOne(@"OSPREY_LDA_SCORES_ONLY");
+        public bool LdaScoresOnly { get; } = IsOne(@"OSPREY_LDA_SCORES_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_LOESS_INPUT: dump the (lib_rt, measured_rt) pairs
         /// fed to LOESS (cs_loess_input.txt).
         /// </summary>
-        public readonly bool DumpLoessInput = IsOne(@"OSPREY_DUMP_LOESS_INPUT");
+        public bool DumpLoessInput { get; } = IsOne(@"OSPREY_DUMP_LOESS_INPUT");
 
         /// <summary>OSPREY_LOESS_INPUT_ONLY: exit after cs_loess_input.txt dump.</summary>
-        public readonly bool LoessInputOnly = IsOne(@"OSPREY_LOESS_INPUT_ONLY");
+        public bool LoessInputOnly { get; } = IsOne(@"OSPREY_LOESS_INPUT_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_PERCOLATOR: dump per-precursor Stage 5 state
@@ -147,10 +147,10 @@ namespace pwiz.OspreySharp
         /// completes and before first-pass protein FDR / compaction.
         /// Cross-impl parity gate (cs_stage5_percolator.tsv).
         /// </summary>
-        public readonly bool DumpPercolator = IsOne(@"OSPREY_DUMP_PERCOLATOR");
+        public bool DumpPercolator { get; } = IsOne(@"OSPREY_DUMP_PERCOLATOR");
 
         /// <summary>OSPREY_PERCOLATOR_ONLY: exit after cs_stage5_percolator.tsv dump.</summary>
-        public readonly bool PercolatorOnly = IsOne(@"OSPREY_PERCOLATOR_ONLY");
+        public bool PercolatorOnly { get; } = IsOne(@"OSPREY_PERCOLATOR_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_RESCORED: dump per-precursor state AFTER the
@@ -161,10 +161,10 @@ namespace pwiz.OspreySharp
         /// cs_stage6_rescored.tsv. Mirrors Rust's
         /// dump_stage6_rescored / OSPREY_DUMP_RESCORED gate.
         /// </summary>
-        public readonly bool DumpRescored = IsOne(@"OSPREY_DUMP_RESCORED");
+        public bool DumpRescored { get; } = IsOne(@"OSPREY_DUMP_RESCORED");
 
         /// <summary>OSPREY_RESCORED_ONLY: exit after cs_stage6_rescored.tsv dump.</summary>
-        public readonly bool RescoredOnly = IsOne(@"OSPREY_RESCORED_ONLY");
+        public bool RescoredOnly { get; } = IsOne(@"OSPREY_RESCORED_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_MP_INPUTS: bisection-grade diagnostic that dumps
@@ -180,7 +180,7 @@ namespace pwiz.OspreySharp
         /// upstream (XIC extraction / peak picking) or downstream
         /// (median polish / peak shape feature compute).
         /// </summary>
-        public readonly bool DumpMpInputs = IsOne(@"OSPREY_DUMP_MP_INPUTS");
+        public bool DumpMpInputs { get; } = IsOne(@"OSPREY_DUMP_MP_INPUTS");
 
         /// <summary>
         /// OSPREY_DUMP_PREDICT_RT: bisection-grade diagnostic that
@@ -197,7 +197,7 @@ namespace pwiz.OspreySharp
         /// hidden RTCalibration state is leaking; if both match, the
         /// divergence is downstream of RT calibration.
         /// </summary>
-        public readonly bool DumpPredictRt = IsOne(@"OSPREY_DUMP_PREDICT_RT");
+        public bool DumpPredictRt { get; } = IsOne(@"OSPREY_DUMP_PREDICT_RT");
 
         /// <summary>
         /// OSPREY_DUMP_CWT_PATH: per-(file, entry) dump of CWT path
@@ -209,36 +209,36 @@ namespace pwiz.OspreySharp
         /// and at which seam: CWT detection, fallback path, or
         /// apex-acceptance filter. Output: cs_stage6_cwt_path.tsv.
         /// </summary>
-        public readonly bool DumpCwtPath = IsOne(@"OSPREY_DUMP_CWT_PATH");
+        public bool DumpCwtPath { get; } = IsOne(@"OSPREY_DUMP_CWT_PATH");
 
         /// <summary>
         /// OSPREY_DUMP_CONSENSUS: dump the per-peptide consensus RT planning
         /// state at the start of Stage 6 (cs_stage6_consensus.tsv) for
         /// cross-impl parity at the planning checkpoint.
         /// </summary>
-        public readonly bool DumpConsensus = IsOne(@"OSPREY_DUMP_CONSENSUS");
+        public bool DumpConsensus { get; } = IsOne(@"OSPREY_DUMP_CONSENSUS");
 
         /// <summary>OSPREY_CONSENSUS_ONLY: exit after cs_stage6_consensus.tsv dump.</summary>
-        public readonly bool ConsensusOnly = IsOne(@"OSPREY_CONSENSUS_ONLY");
+        public bool ConsensusOnly { get; } = IsOne(@"OSPREY_CONSENSUS_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_MULTICHARGE: dump the per-file multi-charge consensus
         /// rescore targets (cs_stage6_multicharge.tsv) for cross-impl parity.
         /// </summary>
-        public readonly bool DumpMulticharge = IsOne(@"OSPREY_DUMP_MULTICHARGE");
+        public bool DumpMulticharge { get; } = IsOne(@"OSPREY_DUMP_MULTICHARGE");
 
         /// <summary>OSPREY_MULTICHARGE_ONLY: exit after cs_stage6_multicharge.tsv dump.</summary>
-        public readonly bool MultichargeOnly = IsOne(@"OSPREY_MULTICHARGE_ONLY");
+        public bool MultichargeOnly { get; } = IsOne(@"OSPREY_MULTICHARGE_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_REFIT: dump per-file refined-calibration statistics
         /// produced by CalibrationRefit (cs_stage6_refit.tsv) for cross-impl
         /// parity.
         /// </summary>
-        public readonly bool DumpRefit = IsOne(@"OSPREY_DUMP_REFIT");
+        public bool DumpRefit { get; } = IsOne(@"OSPREY_DUMP_REFIT");
 
         /// <summary>OSPREY_REFIT_ONLY: exit after cs_stage6_refit.tsv dump.</summary>
-        public readonly bool RefitOnly = IsOne(@"OSPREY_REFIT_ONLY");
+        public bool RefitOnly { get; } = IsOne(@"OSPREY_REFIT_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_RECONCILIATION: dump the per-(file, entry)
@@ -248,10 +248,10 @@ namespace pwiz.OspreySharp
         /// cross-impl parity at the planning step can be checked
         /// independently of the per-file rescoring that follows.
         /// </summary>
-        public readonly bool DumpReconciliation = IsOne(@"OSPREY_DUMP_RECONCILIATION");
+        public bool DumpReconciliation { get; } = IsOne(@"OSPREY_DUMP_RECONCILIATION");
 
         /// <summary>OSPREY_RECONCILIATION_ONLY: exit after cs_stage6_reconciliation.tsv dump.</summary>
-        public readonly bool ReconciliationOnly = IsOne(@"OSPREY_RECONCILIATION_ONLY");
+        public bool ReconciliationOnly { get; } = IsOne(@"OSPREY_RECONCILIATION_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_CALIBRATION: dump the loaded calibration JSON
@@ -264,10 +264,10 @@ namespace pwiz.OspreySharp
         /// later dump's _ONLY (e.g. OSPREY_INV_PREDICT_ONLY) to
         /// short-circuit after all files have written their rows.
         /// </summary>
-        public readonly bool DumpCalibration = IsOne(@"OSPREY_DUMP_CALIBRATION");
+        public bool DumpCalibration { get; } = IsOne(@"OSPREY_DUMP_CALIBRATION");
 
         /// <summary>OSPREY_CALIBRATION_ONLY: exit after cs_stage6_calibration.tsv dump.</summary>
-        public readonly bool CalibrationOnly = IsOne(@"OSPREY_CALIBRATION_ONLY");
+        public bool CalibrationOnly { get; } = IsOne(@"OSPREY_CALIBRATION_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_INV_PREDICT: capture per-detection
@@ -279,10 +279,10 @@ namespace pwiz.OspreySharp
         /// (apex_rt diverges) or inside LOESS InversePredict (only
         /// library_rt diverges).
         /// </summary>
-        public readonly bool DumpInvPredict = IsOne(@"OSPREY_DUMP_INV_PREDICT");
+        public bool DumpInvPredict { get; } = IsOne(@"OSPREY_DUMP_INV_PREDICT");
 
         /// <summary>OSPREY_INV_PREDICT_ONLY: exit after cs_stage6_inv_predict.tsv dump.</summary>
-        public readonly bool InvPredictOnly = IsOne(@"OSPREY_INV_PREDICT_ONLY");
+        public bool InvPredictOnly { get; } = IsOne(@"OSPREY_INV_PREDICT_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_PROTEIN_FDR: dump the per-peptide first-pass protein
@@ -294,10 +294,10 @@ namespace pwiz.OspreySharp
         /// (best_qvalue), the ranking input (score), or the algorithm output
         /// (protein_qvalue) is responsible.
         /// </summary>
-        public readonly bool DumpProteinFdr = IsOne(@"OSPREY_DUMP_PROTEIN_FDR");
+        public bool DumpProteinFdr { get; } = IsOne(@"OSPREY_DUMP_PROTEIN_FDR");
 
         /// <summary>OSPREY_PROTEIN_FDR_ONLY: exit after cs_stage6_protein_fdr.tsv dump.</summary>
-        public readonly bool ProteinFdrOnly = IsOne(@"OSPREY_PROTEIN_FDR_ONLY");
+        public bool ProteinFdrOnly { get; } = IsOne(@"OSPREY_PROTEIN_FDR_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_STAGE7_PROTEIN_FDR: dump per-protein-group state at the
@@ -309,10 +309,10 @@ namespace pwiz.OspreySharp
         /// (is_target_winner DESC, group_qvalue ASC, accessions ASC) keeps the
         /// target-winner rows that drive FDR calibration at the top.
         /// </summary>
-        public readonly bool DumpStage7ProteinFdr = IsOne(@"OSPREY_DUMP_STAGE7_PROTEIN_FDR");
+        public bool DumpStage7ProteinFdr { get; } = IsOne(@"OSPREY_DUMP_STAGE7_PROTEIN_FDR");
 
         /// <summary>OSPREY_STAGE7_PROTEIN_FDR_ONLY: exit after cs_stage7_protein_fdr.tsv dump.</summary>
-        public readonly bool Stage7ProteinFdrOnly = IsOne(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
+        public bool Stage7ProteinFdrOnly { get; } = IsOne(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
 
         /// <summary>
         /// OSPREY_DUMP_DETECTED_PEPTIDES: dump the sorted set of detected
@@ -321,7 +321,7 @@ namespace pwiz.OspreySharp
         /// dump_stage7_detected_peptides; lets the protein-FDR input set
         /// be diffed cross-impl before debugging downstream divergence.
         /// </summary>
-        public readonly bool DumpDetectedPeptides = IsOne(@"OSPREY_DUMP_DETECTED_PEPTIDES");
+        public bool DumpDetectedPeptides { get; } = IsOne(@"OSPREY_DUMP_DETECTED_PEPTIDES");
 
         /// <summary>
         /// OSPREY_DUMP_LOESS_FIT: dump the per-point LOESS fit state of the
@@ -331,37 +331,37 @@ namespace pwiz.OspreySharp
         /// stats computation (R²/SD/MAD). If fitted_value diverges, the
         /// LOESS smoother arithmetic itself differs.
         /// </summary>
-        public readonly bool DumpLoessFit = IsOne(@"OSPREY_DUMP_LOESS_FIT");
+        public bool DumpLoessFit { get; } = IsOne(@"OSPREY_DUMP_LOESS_FIT");
 
         /// <summary>OSPREY_LOESS_FIT_ONLY: exit after cs_stage6_loess_fit.tsv dump.</summary>
-        public readonly bool LoessFitOnly = IsOne(@"OSPREY_LOESS_FIT_ONLY");
+        public bool LoessFitOnly { get; } = IsOne(@"OSPREY_LOESS_FIT_ONLY");
 
         /// <summary>
         /// OSPREY_DIAG_XIC_ENTRY_ID: the entry ID to dump chromatogram for
         /// during calibration scoring. null = no dump.
         /// </summary>
-        public readonly uint? DiagXicEntryId = ParseNullableUint(@"OSPREY_DIAG_XIC_ENTRY_ID");
+        public uint? DiagXicEntryId { get; } = ParseNullableUint(@"OSPREY_DIAG_XIC_ENTRY_ID");
 
         /// <summary>
         /// OSPREY_DIAG_XIC_PASS: the calibration pass (1 or 2) at which to
         /// dump the XIC. Defaults to 1 because bisection walks downstream:
         /// until pass 1 chromatograms match, comparing pass 2 is premature.
         /// </summary>
-        public readonly int DiagXicPass = ParseIntOrDefault(@"OSPREY_DIAG_XIC_PASS", 1);
+        public int DiagXicPass { get; } = ParseIntOrDefault(@"OSPREY_DIAG_XIC_PASS", 1);
 
         /// <summary>
         /// OSPREY_DIAG_SEARCH_ENTRY_IDS: comma-separated entry IDs whose
         /// main-search XIC extraction should dump a
         /// cs_search_xic_entry_&lt;ID&gt;.txt. Does NOT exit.
         /// </summary>
-        public readonly HashSet<uint> DiagSearchEntryIds = ParseIdSet(@"OSPREY_DIAG_SEARCH_ENTRY_IDS");
+        public HashSet<uint> DiagSearchEntryIds { get; } = ParseIdSet(@"OSPREY_DIAG_SEARCH_ENTRY_IDS");
 
         /// <summary>
         /// OSPREY_DIAG_MP_SCAN: the MS2 scan number whose median polish
         /// should dump cs_mp_diag.txt (filtered additionally to a specific
         /// DECOY_ALQFAQWWK target by historical convention). null = no dump.
         /// </summary>
-        public readonly int? DiagMpScan = ParseNullableInt(@"OSPREY_DIAG_MP_SCAN");
+        public int? DiagMpScan { get; } = ParseNullableInt(@"OSPREY_DIAG_MP_SCAN");
 
         /// <summary>
         /// True if any dump / diagnostic gate is active. The
@@ -393,14 +393,14 @@ namespace pwiz.OspreySharp
         public OspreyFileDiagnostics()
         {
             // TO RESTORE OSPREY_DUMP_PREDICT_RT: uncomment WritePredictRtCall in
-            // OspreySharp/Tasks/AbstractScoringTask.cs (ScoreCandidate) and the
+            // OspreySharp.Scoring/CoelutionScorer.cs (ScoreCandidate) and the
             // paired WritePredictRtArrays / ClosePredictRtDump in
             // OspreySharp/Tasks/PerFileRescoreTask.cs, then comment out this throw.
             if (DumpPredictRt)
                 throw new NotImplementedException(
                     @"OSPREY_DUMP_PREDICT_RT is temporarily disabled: its per-candidate " +
                     @"producer was removed from the scoring hotspot. To restore, uncomment " +
-                    @"WritePredictRtCall in OspreySharp/Tasks/AbstractScoringTask.cs and the " +
+                    @"WritePredictRtCall in OspreySharp.Scoring/CoelutionScorer.cs and the " +
                     @"paired WritePredictRtArrays / ClosePredictRtDump in " +
                     @"OspreySharp/Tasks/PerFileRescoreTask.cs, then comment out this throw. " +
                     @"See ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.");
@@ -439,7 +439,7 @@ namespace pwiz.OspreySharp
         // The pipeline-wired logger lives on the OspreyDiagnostics facade; the
         // sink's own dump methods log through it via this alias so [COUNT] /
         // [BISECT] lines flow through the same channel as before.
-        private static Action<string> LogAction => OspreyDiagnostics.LogAction;
+        private static Action<string> LogAction => OspreyDiagnosticsLog.LogAction;
 
         // ----- Cal sample dump -----
 
@@ -1284,7 +1284,7 @@ namespace pwiz.OspreySharp
         /// </summary>
         public void WriteCwtPathRow(string fileName, uint entryId,
             int nCwtPeaks, int nFinalPeaks, int nScored, bool scored,
-            List<XicData> xics)
+            IReadOnlyList<XicData> xics)
         {
             if (!DumpCwtPath)
                 return;
@@ -1301,7 +1301,8 @@ namespace pwiz.OspreySharp
             int consensusArgmax = -1;
             if (xics != null)
             {
-                double[] consensus = CwtPeakDetector.GetConsensusSignal(xics, out sigma);
+                var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
+                double[] consensus = CwtPeakDetector.GetConsensusSignal(xicList, out sigma);
                 if (consensus != null)
                 {
                     double sum = 0.0;

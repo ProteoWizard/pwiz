@@ -64,6 +64,11 @@ namespace pwiz.Skyline.Model
             return single >= 0 ? new List<int> { single } : new List<int>();
         }
 
+        // A label for the column, for use in error messages - the column type assigned in the column
+        // select dialog, or the file's header text. Implemented by the concrete reader, which holds the
+        // column information (like ColumnIndex above).
+        public abstract string GetColumnName(int columnIndex);
+
         private double MzMatchTolerance { get; set; }
 
         public List<PasteError> ErrorList { get; set; }
@@ -447,7 +452,7 @@ namespace pwiz.Skyline.Model
                             tranGroupFound = true;
                             string errmsg;
                             if (AddFragmentTransitions(ref document, row, pep, tranGroup, pathGroup, out errmsg))
-                                return true; // First fragment must succeed
+                                return true; // Returns true when a fragment was not added (absent first fragment, or a duplicate reported as a row error)
 
                             if (errmsg != null)
                             {
@@ -2355,7 +2360,11 @@ namespace pwiz.Skyline.Model
                     if (tran == null && fragmentIndex == 0)
                         return null; // First fragment must succeed
                     if (tran != null)
+                    {
+                        if (IsDuplicateFragmentOnLine(transitions, tran, row, fragmentIndex))
+                            return null; // Reported as a row error, surfaced via "Check For Errors"
                         transitions.Add(tran);
+                    }
                 }
                 if (transitions.Count == 0)
                     return null;
@@ -2479,10 +2488,78 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Detects the case where a single line of the transition list declares the same fragment more
+        /// than once and reports it as a row import error (surfaced by "Check For Errors" and on import).
+        /// The multiple-fragments-per-line feature deliberately allows a product column type to be
+        /// assigned to several columns, but a line must not resolve two of its fragments to an identical
+        /// transition: one precursor cannot hold two identical transitions (see
+        /// TransitionGroupDocNode.CreateTransitionLossToChildMap). Distinct precursors may of course share
+        /// identical fragments - this only checks within a single line. Returns true (and reports the
+        /// error) when <paramref name="tran"/> duplicates a fragment already produced for this line.
+        /// </summary>
+        private bool IsDuplicateFragmentOnLine(IEnumerable<TransitionDocNode> lineTransitions, TransitionDocNode tran, Row row, int fragmentIndex)
+        {
+            // For a small-molecule custom-ion fragment the Transition is the complete identity (product
+            // ion, adduct/charge, ion type); losses and complex-fragment-ion names are peptide concepts
+            // that are always null here.
+            if (!lineTransitions.Any(t => Equals(t.Transition, tran.Transition)))
+                return false;
+            var column = GetProductColumnForDuplicateFragment(fragmentIndex);
+            ShowTransitionError(new PasteError
+            {
+                Column = column,
+                Line = row.Index,
+                Message = string.Format(
+                    ModelResources.SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__,
+                    tran.Mz, GetColumnDescription(column))
+            });
+            return true;
+        }
+
+        /// <summary>
+        /// Describes a column for an error message as its 1-based number plus header name when known,
+        /// e.g. 13 "Product Charge"; falls back to just the number when there is no header row.
+        /// </summary>
+        private string GetColumnDescription(int columnIndex)
+        {
+            var columnNumber = (columnIndex + 1).ToString(CultureInfo.CurrentCulture);
+            var name = GetColumnName(columnIndex);
+            return string.IsNullOrEmpty(name)
+                ? columnNumber
+                : string.Format(ModelResources.SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__, columnNumber, name);
+        }
+
+        /// <summary>
+        /// Identifies the product column that actually has a distinct assignment at
+        /// <paramref name="fragmentIndex"/> - i.e. the repeated column that created this fragment, rather
+        /// than a value reused via fill-forward. This is the column that turned a single declared fragment
+        /// into a duplicate (e.g. a second "Product Charge" column when there is only one "Product m/z"),
+        /// so the error points the user at the column to remove. Falls back to the Product m/z column.
+        /// </summary>
+        private int GetProductColumnForDuplicateFragment(int fragmentIndex)
+        {
+            foreach (var columnName in new[]
+            {
+                SmallMoleculeTransitionListColumnHeaders.mzProduct,
+                SmallMoleculeTransitionListColumnHeaders.formulaProduct,
+                SmallMoleculeTransitionListColumnHeaders.nameProduct,
+                SmallMoleculeTransitionListColumnHeaders.neutralLossProduct,
+                SmallMoleculeTransitionListColumnHeaders.chargeProduct,
+                SmallMoleculeTransitionListColumnHeaders.adductProduct
+            })
+            {
+                var indices = ColumnIndicesMulti(columnName);
+                if (indices.Count > fragmentIndex)
+                    return indices[fragmentIndex];
+            }
+            return INDEX_PRODUCT_MZ;
+        }
+
+        /// <summary>
         /// Add transitions for all fragments in a multi-fragment-per-line row to an existing
         /// transition group, skipping any that already exist or have empty/NA product columns.
-        /// Returns true if the first fragment fails (caller should treat as error).
-        /// Sets errmsg on parser exceptions.
+        /// Returns true (caller should treat as error) if the first fragment fails or the line declares
+        /// the same fragment twice. Sets errmsg on parser exceptions.
         /// </summary>
         private bool AddFragmentTransitions(ref SrmDocument document, Row row,
             PeptideDocNode pep, TransitionGroupDocNode tranGroup, IdentityPath pathGroup, out string errmsg)
@@ -2491,6 +2568,7 @@ namespace pwiz.Skyline.Model
             try
             {
                 var fragmentCount = FragmentCount;
+                var lineTransitions = new List<TransitionDocNode>();
                 for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
                 {
                     var tranNode = GetMoleculeTransitionForFragment(document, row, pep.Peptide,
@@ -2501,6 +2579,13 @@ namespace pwiz.Skyline.Model
                             return true; // First fragment must succeed
                         continue; // Skip empty/NA fragments
                     }
+
+                    // If a later fragment on this line is a duplicate, earlier ones may already have been
+                    // added above. That is intentional: a normal import rejects the whole row on any error,
+                    // and the leftover transitions are individually valid in the import-anyway case.
+                    if (IsDuplicateFragmentOnLine(lineTransitions, tranNode, row, fragmentIndex))
+                        return true; // Reported as a row error, surfaced via "Check For Errors"
+                    lineTransitions.Add(tranNode);
 
                     if (!tranGroup.Transitions.Any(t => Equals(tranNode.Transition.CustomIon, t.Transition.CustomIon)))
                     {
@@ -2696,6 +2781,14 @@ namespace pwiz.Skyline.Model
         public override List<int> ColumnIndicesMulti(string columnName)
         {
             return _csvReader.GetFieldIndices(columnName);
+        }
+
+        public override string GetColumnName(int columnIndex)
+        {
+            // FieldNames are the column labels: the types assigned in the column select dialog when
+            // provided (these override any header row), otherwise the file's header text - so a name is
+            // available even for a headerless list. ElementAtOrDefault returns null if out of range.
+            return _csvReader.FieldNames.ElementAtOrDefault(columnIndex);
         }
     }
 

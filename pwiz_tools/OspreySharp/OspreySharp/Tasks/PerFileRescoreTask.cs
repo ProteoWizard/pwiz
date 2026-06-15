@@ -215,8 +215,13 @@ namespace pwiz.OspreySharp.Tasks
             // ExpectReconciledInput keeps the hard short-circuit above for
             // the strict --task MergeNode merge path. Downstream MergeNodeTask
             // reads the RescoredEntries milestone of this same backing list.
-            var firstJoin = ctx.Demand<FirstJoinTask>();
-            bool didPlan = firstJoin.DidPlan(ctx);
+            // Read the planning gate from the typed byproduct registry rather
+            // than reaching for the concrete FirstJoinTask. ctx.Get lazily
+            // materializes the slot's producer (FirstJoinTask) if it has not run
+            // yet, so the value is always populated; FirstJoin publishes
+            // PlanningPerformed alongside CompactedEntries (already read above)
+            // from every materialization path.
+            bool didPlan = ctx.Get<PlanningPerformed>().Value;
             var rescoreBundle = ctx.Get<RescoreBundle>().Value;
             bool anyPass2Present = false;
             if (ctx.Config.InputFiles != null)
@@ -281,11 +286,11 @@ namespace pwiz.OspreySharp.Tasks
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
             // dump_stage6_rescored call from pipeline.rs.
-            if (OspreyDiagnostics.DumpRescored)
+            if (ctx.Diagnostics?.DumpRescored ?? false)
             {
-                OspreyDiagnostics.WriteStage6RescoredDump(_perFileEntries);
-                if (OspreyDiagnostics.RescoredOnly)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
+                ctx.Diagnostics?.WriteStage6RescoredDump(_perFileEntries);
+                if (ctx.Diagnostics?.RescoredOnly ?? false)
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
             }
 
             // Flush + close the persistent per-process diagnostic
@@ -293,11 +298,11 @@ namespace pwiz.OspreySharp.Tasks
             // Mirrors the worker-mode close calls in RunWorker; without
             // these, the in-process pipeline path can leave the writers
             // unflushed and produce truncated bisection dumps.
-            OspreyDiagnostics.CloseMpInputsDump();
+            ctx.Diagnostics?.CloseMpInputsDump();
             // ClosePredictRtDump disabled with the rest of the predict-rt
             // diagnostic (perf hotspot); restore alongside WritePredictRtCall.
-            // OspreyDiagnostics.ClosePredictRtDump();
-            OspreyDiagnostics.CloseCwtPathDump();
+            // ctx.Diagnostics?.ClosePredictRtDump();
+            ctx.Diagnostics?.CloseCwtPathDump();
             return true;
         }
 
@@ -776,7 +781,7 @@ namespace pwiz.OspreySharp.Tasks
                 // hotspot). Dumped the cal's library_rts + fitted_values once
                 // per file. Mirrors Rust's dump_predict_rt_arrays at
                 // pipeline.rs ~2886. To restore, re-enable this and the
-                // WritePredictRtCall in AbstractScoringTask. See
+                // WritePredictRtCall in CoelutionScorer. See
                 // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
                 // if (rtCal != null)
                 // {
