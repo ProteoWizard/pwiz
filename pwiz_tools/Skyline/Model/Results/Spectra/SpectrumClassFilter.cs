@@ -141,14 +141,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
             };
         }
 
-        /// <summary>
-        /// Throws a <see cref="FormatException"/> if any CollisionEnergy criterion uses a negative
-        /// operand. Collision energy is read from the spectrum file as a positive magnitude (the
-        /// mzML/PSI convention, <c>MS:1000045</c>), and a spectrum's scan polarity is already pinned by
-        /// the precursor charge, so a negative collision energy in a spectrum filter is meaningless.
-        /// Rejecting it with a helpful message (rather than silently never matching) tells the user to
-        /// enter the magnitude as a positive value.
-        /// </summary>
+        private static readonly ImmutableList<IFilterOperation> COMPARISON_OPERATIONS = ImmutableList.ValueOf(new[]
+        {
+            FilterOperations.OP_IS_GREATER_THAN, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL,
+            FilterOperations.OP_IS_LESS_THAN, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL
+        });
+
         /// <summary>
         /// Throws a <see cref="FormatException"/> if any criterion pairs an operator with a property
         /// whose type does not support it. The Edit Spectrum Filter dialog only offers operators that
@@ -157,12 +155,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// the precursor m/z lists. That combination has no meaning and would otherwise silently match
         /// nothing; rejecting it here turns the silent no-op into a clear error.
         /// </summary>
-        private static readonly ImmutableList<IFilterOperation> COMPARISON_OPERATIONS = ImmutableList.ValueOf(new[]
-        {
-            FilterOperations.OP_IS_GREATER_THAN, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL,
-            FilterOperations.OP_IS_LESS_THAN, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL
-        });
-
         private static void ValidateOperations(SpectrumClassFilter filter)
         {
             var dataSchema = new DataSchema();
@@ -190,6 +182,14 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
         }
 
+        /// <summary>
+        /// Throws a <see cref="FormatException"/> if any CollisionEnergy criterion uses a negative
+        /// operand. Collision energy is read from the spectrum file as a positive magnitude (the
+        /// mzML/PSI convention, <c>MS:1000045</c>), and a spectrum's scan polarity is already pinned by
+        /// the precursor charge, so a negative collision energy in a spectrum filter is meaningless.
+        /// Rejecting it with a helpful message (rather than silently never matching) tells the user to
+        /// enter the magnitude as a positive value.
+        /// </summary>
         private static void ValidateCollisionEnergyOperands(SpectrumClassFilter filter)
         {
             var collisionEnergyPath = SpectrumClassColumn.CollisionEnergy.PropertyPath;
