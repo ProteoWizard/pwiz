@@ -244,7 +244,7 @@ namespace pwiz.SkylineTestUtil
                 // manual-inspection instructions; AutoEllipsis at the designer's
                 // fixed 205-wide ClientSize otherwise truncates them.
                 Label activeLabel = string.IsNullOrEmpty(_linkUrl)
-                    ? (Label) lblDescription
+                    ? lblDescription
                     : lblDescriptionLink;
                 const int maxWidth = 600;
                 int prevBottom = activeLabel.Bottom;
