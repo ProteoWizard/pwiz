@@ -1083,8 +1083,7 @@ namespace pwiz.OspreySharp.IO
         /// Pure helper that checks one parquet's footer metadata against the
         /// expected hashes. Separated from the IO so it's unit-testable
         /// without constructing real parquet files. Mirror of the Rust
-        /// `check_parquet_metadata` helper. Returns null on success (with
-        /// optional warning string in <paramref name="warning"/>) or an error
+        /// `check_parquet_metadata` helper. Returns null on success or an error
         /// message naming the file + offending field.
         /// </summary>
         public static string CheckParquetMetadata(
@@ -1094,40 +1093,35 @@ namespace pwiz.OspreySharp.IO
             string cachedLibrary,
             string expectedSearch,
             string expectedLibrary,
-            string currentVersion,
-            out string warning)
+            string currentVersion)
         {
-            warning = null;
-
             if (cachedVersion == null)
                 return string.Format("{0}: parquet has no `osprey.version` metadata", fileLabel);
             int cY, cO, cB, cD, rY, rO, rB, rD;
             bool cachedOk = TryParseVersion(cachedVersion, out cY, out cO, out cB, out cD);
             bool currentOk = TryParseVersion(currentVersion, out rY, out rO, out rB, out rD);
-            if (cachedOk && currentOk)
+            // Hard-fail on ANY osprey.version mismatch rather than warn-and-
+            // proceed: a cache produced by a different build may carry
+            // incompatible scoring, and a logged warning is easily missed while
+            // the run still completes and looks fully valid. Reuse requires an
+            // exact version match. The component breakdown is only for a clearer
+            // error message (release line vs daily build vs unrecognized).
+            if (!cachedOk || !currentOk)
             {
-                // YEAR.ORDINAL.BRANCH is the release identity: a difference means
-                // the cache was produced by a different release line and is not
-                // safe to reuse.
-                if (cY != rY || cO != rO || cB != rB)
-                {
-                    return string.Format(
-                        "{0}: osprey version mismatch: parquet was scored with {1} but current binary is {2} (incompatible release identity)",
-                        fileLabel, cachedVersion, currentVersion);
-                }
-                // The day-of-year is daily-build drift within one release line:
-                // warn but proceed.
-                if (cD != rD)
-                {
-                    warning = string.Format(
-                        "{0}: osprey daily-version drift (parquet={1}, current={2}); proceeding",
-                        fileLabel, cachedVersion, currentVersion);
-                }
+                return string.Format(
+                    "{0}: unrecognized osprey version (parquet=\"{1}\", current=\"{2}\"); refusing to reuse a cache whose compatibility cannot be verified",
+                    fileLabel, cachedVersion, currentVersion);
             }
-            else
+            if (cY != rY || cO != rO || cB != rB)
             {
-                warning = string.Format(
-                    "{0}: could not parse osprey version (parquet=\"{1}\", current=\"{2}\"); proceeding",
+                return string.Format(
+                    "{0}: osprey version mismatch: parquet was scored with {1} but current binary is {2} (incompatible release identity)",
+                    fileLabel, cachedVersion, currentVersion);
+            }
+            if (cD != rD)
+            {
+                return string.Format(
+                    "{0}: osprey version mismatch: parquet was scored with {1} but current binary is {2} (different daily build)",
                     fileLabel, cachedVersion, currentVersion);
             }
 
@@ -1155,16 +1149,13 @@ namespace pwiz.OspreySharp.IO
         /// <summary>
         /// Open each `.scores.parquet` in <paramref name="paths"/> and assert
         /// its footer metadata matches <paramref name="config"/>'s search and
-        /// library hashes. Returns null on success (logging a warning to
-        /// <paramref name="logWarning"/> for any patch-version drift) or an
-        /// error message naming the offending file. Used at the start of
-        /// --task FirstJoin mode.
+        /// library hashes. Returns null on success or an error message naming
+        /// the offending file. Used at the start of --task FirstJoin mode.
         /// </summary>
         public static string ValidateScoresParquetGroup(
             IEnumerable<string> paths,
             OspreyConfig config,
-            string currentVersion,
-            Action<string> logWarning)
+            string currentVersion)
         {
             string expectedSearch = config.Identity.SearchParameterHash();
             string expectedLibrary = config.Identity.LibraryIdentityHash();
@@ -1184,15 +1175,11 @@ namespace pwiz.OspreySharp.IO
                 string cachedS; kv.TryGetValue("osprey.search_hash", out cachedS);
                 string cachedL; kv.TryGetValue("osprey.library_hash", out cachedL);
 
-                string warning;
                 string err = CheckParquetMetadata(
                     path, cachedV, cachedS, cachedL,
-                    expectedSearch, expectedLibrary, currentVersion,
-                    out warning);
+                    expectedSearch, expectedLibrary, currentVersion);
                 if (err != null)
                     return err;
-                if (warning != null && logWarning != null)
-                    logWarning(warning);
 
                 // --task MergeNode strict reconciled-input gate. Mirrors
                 // Rust pipeline.rs:3313-3344: every input parquet must

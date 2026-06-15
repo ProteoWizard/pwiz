@@ -710,14 +710,12 @@ namespace pwiz.OspreySharp.Test
                 year + yearDelta, ordinal + ordinalDelta, branch + branchDelta, doy + doyDelta);
         }
 
-        private static string CheckMd(
-            string cachedV, string cachedS, string cachedL, out string warning)
+        private static string CheckMd(string cachedV, string cachedS, string cachedL)
         {
             return ParquetScoreCache.CheckParquetMetadata(
                 "test.scores.parquet",
                 cachedV, cachedS, cachedL,
-                VALID_SEARCH, VALID_LIB, CURRENT_VERSION,
-                out warning);
+                VALID_SEARCH, VALID_LIB, CURRENT_VERSION);
         }
 
         [TestMethod]
@@ -740,28 +738,26 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
-        public void TestMetadataHappyPathNoWarning()
+        public void TestMetadataExactVersionMatchOk()
         {
-            string warn;
-            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, VALID_LIB, out warn);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNull(err);
-            Assert.IsNull(warn);
         }
 
         [TestMethod]
-        public void TestMetadataDailyDriftWarnsButSucceeds()
+        public void TestMetadataDailyDriftAborts()
         {
-            string warn;
-            string err = CheckMd(DAILY_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out warn);
-            Assert.IsNull(err);
-            Assert.IsNotNull(warn);
-            StringAssert.Contains(warn, "daily-version drift");
+            // A different daily build may have changed scoring: hard-fail rather
+            // than silently reuse a stale cache behind an easily-missed warning.
+            string err = CheckMd(DAILY_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "different daily build");
         }
 
         [TestMethod]
         public void TestMetadataBranchVersionDriftAborts()
         {
-            string err = CheckMd(BRANCH_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out _);
+            string err = CheckMd(BRANCH_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "incompatible release identity");
         }
@@ -769,7 +765,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataOrdinalVersionDriftAborts()
         {
-            string err = CheckMd(ORDINAL_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out _);
+            string err = CheckMd(ORDINAL_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "incompatible release identity");
         }
@@ -777,7 +773,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataYearVersionDriftAborts()
         {
-            string err = CheckMd(YEAR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out _);
+            string err = CheckMd(YEAR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "incompatible release identity");
         }
@@ -785,7 +781,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingVersionAborts()
         {
-            string err = CheckMd(null, VALID_SEARCH, VALID_LIB, out _);
+            string err = CheckMd(null, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.version");
         }
@@ -793,7 +789,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingSearchHashAborts()
         {
-            string err = CheckMd(CURRENT_VERSION, null, VALID_LIB, out _);
+            string err = CheckMd(CURRENT_VERSION, null, VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.search_hash");
         }
@@ -801,7 +797,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingLibraryHashAborts()
         {
-            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, null, out _);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, null);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.library_hash");
         }
@@ -809,7 +805,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataSearchHashMismatchNamesFieldAndFile()
         {
-            string err = CheckMd(CURRENT_VERSION, "wrong-hash", VALID_LIB, out _);
+            string err = CheckMd(CURRENT_VERSION, "wrong-hash", VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "search_hash mismatch");
             StringAssert.Contains(err, "test.scores.parquet");
@@ -819,7 +815,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataLibraryHashMismatchNamesFieldAndFile()
         {
-            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, "wrong-lib", out _);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, "wrong-lib");
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "library_hash mismatch");
             StringAssert.Contains(err, "test.scores.parquet");
@@ -827,13 +823,13 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
-        public void TestMetadataUnparseableVersionWarnsButProceeds()
+        public void TestMetadataUnparseableVersionAborts()
         {
-            string warn;
-            string err = CheckMd("garbage", VALID_SEARCH, VALID_LIB, out warn);
-            Assert.IsNull(err);
-            Assert.IsNotNull(warn);
-            StringAssert.Contains(warn, "could not parse");
+            // An unrecognized cached version can't be validated for
+            // compatibility, so refuse to reuse the cache (hard fail).
+            string err = CheckMd("garbage", VALID_SEARCH, VALID_LIB);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "unrecognized osprey version");
         }
 
         // --- Library-decoy CLI flags ---------------------------------------

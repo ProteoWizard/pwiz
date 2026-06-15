@@ -819,7 +819,7 @@ namespace pwiz.OspreySharp.Tasks
             // Aborts with a clear, file-named error if the operator points
             // the merge node at parquets from a different scoring run.
             string validationError = ParquetScoreCache.ValidateScoresParquetGroup(
-                config.InputScores, config, OspreyVersion.Current, ctx.LogWarning);
+                config.InputScores, config, OspreyVersion.Current);
             if (validationError != null)
                 throw new InvalidDataException(validationError);
 
