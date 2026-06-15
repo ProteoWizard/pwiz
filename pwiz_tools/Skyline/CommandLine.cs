@@ -49,6 +49,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Model.Results.Spectra;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -276,6 +277,9 @@ namespace pwiz.Skyline
             {
                 Trace.Listeners.Add(traceWarningListener);
                 using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile))
+                // Apply --save-compact-format (if given) for the duration of this invocation, so every
+                // save in this run is deterministic regardless of the persisted setting. Null is a no-op.
+                using (CompactFormatOption.SetOverride(commandArgs.SaveCompactFormat))
                 {
                     DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(),
                         commandArgs.ImportWarnOnFailure);

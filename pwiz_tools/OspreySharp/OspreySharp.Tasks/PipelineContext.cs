@@ -142,13 +142,31 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         public IReadOnlyList<OspreyTask> Tasks { get; }
 
+        /// <summary>
+        /// The cross-implementation bisection diagnostics sink for this run, or
+        /// <c>null</c> when diagnostics are off (no <c>-d</c> / no OSPREY_DUMP_*
+        /// env var) -- the common case. Tasks read the gate flags and emit their
+        /// byte-stable dumps through the null-conditional operator (e.g.
+        /// <c>ctx.Diagnostics?.DumpPercolator ?? false</c>,
+        /// <c>ctx.Diagnostics?.WriteStage5PercolatorDump(...)</c>) instead of the
+        /// exe-only <c>OspreyDiagnostics</c> static facade, so the task layer does
+        /// not depend on the top-level exe project. Null-by-default is deliberate:
+        /// the <c>?.</c> short-circuit is a single null check -- no virtual call,
+        /// arguments not evaluated -- matching the existing <c>IScoringDiagnostics</c>
+        /// idiom. The driver injects the live sink at construction (see
+        /// <c>OspreyDiagnostics.Active</c>).
+        /// </summary>
+        public IOspreyDiagnostics Diagnostics { get; }
+
         public PipelineContext(OspreyConfig config,
             IEnumerable<OspreyTask> tasks,
             Action<string> logInfo,
             Action<string> logWarning,
-            Action<string> logError)
+            Action<string> logError,
+            IOspreyDiagnostics diagnostics = null)
         {
             Config = config ?? throw new ArgumentNullException(nameof(config));
+            Diagnostics = diagnostics;
             if (tasks == null) throw new ArgumentNullException(nameof(tasks));
             _logInfo = logInfo ?? (_ => { });
             _logWarning = logWarning ?? (_ => { });
