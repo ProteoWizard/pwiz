@@ -58,7 +58,7 @@ namespace pwiz.OspreySharp
             // Route OspreyDiagnostics dump messages through the same logging
             // channel as the rest of the pipeline so bisection logs appear
             // alongside normal output.
-            OspreyDiagnostics.LogAction = LogInfo;
+            OspreyDiagnosticsLog.LogAction = LogInfo;
 
             if (args.Length == 0)
             {
