@@ -442,9 +442,9 @@ namespace pwiz.OspreySharp.Tasks
         {
             LogFirstPassResults(perFileEntries, config, ctx);
 
-            if (OspreyDiagnostics.DumpPercolator)
-                OspreyDiagnostics.WriteStage5PercolatorDump(perFileEntries);
-            if (OspreyDiagnostics.PercolatorOnly)
+            if (ctx.Diagnostics?.DumpPercolator ?? false)
+                ctx.Diagnostics?.WriteStage5PercolatorDump(perFileEntries);
+            if (ctx.Diagnostics?.PercolatorOnly ?? false)
                 OspreyDiagnostics.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
         }
 
@@ -586,7 +586,7 @@ namespace pwiz.OspreySharp.Tasks
                 @"Stage 6 multi-charge consensus: {0} entries need re-scoring across {1} files",
                 totalMulticharge, perFileEntries.Count));
 
-            if (OspreyDiagnostics.DumpMulticharge)
+            if (ctx.Diagnostics?.DumpMulticharge ?? false)
             {
                 var perFileForDump = new List<KeyValuePair<string,
                     IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
@@ -595,9 +595,9 @@ namespace pwiz.OspreySharp.Tasks
                     perFileForDump.Add(new KeyValuePair<string,
                         IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
                 }
-                OspreyDiagnostics.WriteStage6MultichargeDump(
+                ctx.Diagnostics?.WriteStage6MultichargeDump(
                     perFileForDump, perFileConsensusTargets);
-                if (OspreyDiagnostics.MultichargeOnly)
+                if (ctx.Diagnostics?.MultichargeOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_MULTICHARGE_ONLY");
             }
 
@@ -618,7 +618,7 @@ namespace pwiz.OspreySharp.Tasks
             // FDR project doesn't have to know about the diagnostic
             // file format.
             List<InvPredictRecord> invPredictTrace = null;
-            if (OspreyDiagnostics.DumpInvPredict)
+            if (ctx.Diagnostics?.DumpInvPredict ?? false)
                 invPredictTrace = new List<InvPredictRecord>();
 
             // Cross-file consensus is only meaningful with > 1 file.
@@ -638,8 +638,8 @@ namespace pwiz.OspreySharp.Tasks
 
             if (invPredictTrace != null)
             {
-                OspreyDiagnostics.WriteStage6InvPredictDump(invPredictTrace);
-                if (OspreyDiagnostics.InvPredictOnly)
+                ctx.Diagnostics?.WriteStage6InvPredictDump(invPredictTrace);
+                if (ctx.Diagnostics?.InvPredictOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_INV_PREDICT_ONLY");
             }
             int nTargets = 0, nDecoys = 0;
@@ -660,10 +660,10 @@ namespace pwiz.OspreySharp.Tasks
             // emits a header-only cs_stage6_consensus.tsv and
             // Test-Regression sees an asymmetric-absence FAIL
             // even though both sides agree on the empty result.
-            if (OspreyDiagnostics.DumpConsensus && consensus.Count > 0)
+            if ((ctx.Diagnostics?.DumpConsensus ?? false) && consensus.Count > 0)
             {
-                OspreyDiagnostics.WriteStage6ConsensusDump(consensus);
-                if (OspreyDiagnostics.ConsensusOnly)
+                ctx.Diagnostics?.WriteStage6ConsensusDump(consensus);
+                if (ctx.Diagnostics?.ConsensusOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_CONSENSUS_ONLY");
             }
 
@@ -680,17 +680,17 @@ namespace pwiz.OspreySharp.Tasks
                 @"Stage 6 refit: {0}/{1} files produced refined calibrations",
                 refinedCalibrations.Count, perFileEntries.Count));
 
-            if (OspreyDiagnostics.DumpLoessFit)
+            if (ctx.Diagnostics?.DumpLoessFit ?? false)
             {
-                OspreyDiagnostics.WriteStage6LoessFitDump(refinedCalibrations);
-                if (OspreyDiagnostics.LoessFitOnly)
+                ctx.Diagnostics?.WriteStage6LoessFitDump(refinedCalibrations);
+                if (ctx.Diagnostics?.LoessFitOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_LOESS_FIT_ONLY");
             }
 
-            if (OspreyDiagnostics.DumpRefit)
+            if (ctx.Diagnostics?.DumpRefit ?? false)
             {
-                OspreyDiagnostics.WriteStage6RefitDump(refinedCalibrations);
-                if (OspreyDiagnostics.RefitOnly)
+                ctx.Diagnostics?.WriteStage6RefitDump(refinedCalibrations);
+                if (ctx.Diagnostics?.RefitOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_REFIT_ONLY");
             }
 
@@ -796,13 +796,13 @@ namespace pwiz.OspreySharp.Tasks
             // for early exit. Mirrors the Rust side at
             // crates/osprey/src/pipeline.rs after the reconciliation
             // block closes.
-            if (OspreyDiagnostics.DumpReconciliation)
+            if (ctx.Diagnostics?.DumpReconciliation ?? false)
             {
                 var dumpActions = reconciliationActions
                     ?? new Dictionary<(string File, int Index), ReconcileAction>();
-                OspreyDiagnostics.WriteStage6ReconciliationDump(
+                ctx.Diagnostics?.WriteStage6ReconciliationDump(
                     dumpActions, perFileForPlan);
-                if (OspreyDiagnostics.ReconciliationOnly)
+                if (ctx.Diagnostics?.ReconciliationOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_RECONCILIATION_ONLY");
             }
 
@@ -1729,11 +1729,11 @@ namespace pwiz.OspreySharp.Tasks
                 "First-pass protein FDR: {0} target groups at {1:P1} FDR",
                 nAtRunFdr, config.RunFdr));
 
-            if (OspreyDiagnostics.DumpProteinFdr)
+            if (ctx.Diagnostics?.DumpProteinFdr ?? false)
             {
-                OspreyDiagnostics.WriteStage6ProteinFdrDump(
+                ctx.Diagnostics?.WriteStage6ProteinFdrDump(
                     bestScores, proteinFdr.PeptideQvalues);
-                if (OspreyDiagnostics.ProteinFdrOnly)
+                if (ctx.Diagnostics?.ProteinFdrOnly ?? false)
                     OspreyDiagnostics.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
             }
         }
