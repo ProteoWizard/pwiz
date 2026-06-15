@@ -256,7 +256,7 @@ namespace pwiz.SkylineTestData
             var noSaveOutput = RunCommand("--in=" + docPath,
                 "--save-compact-format=" + CompactFormatOption.ALWAYS.Name);
             AssertEx.Contains(noSaveOutput, CommandArgs.WarnArgRequirementText(
-                CommandArgs.ARG_SAVE_COMPACT_FORMAT, CommandArgs.ARG_SAVE, CommandArgs.ARG_OUT));
+                CommandArgs.ARG_SAVE_COMPACT_FORMAT, CommandArgs.ARG_SAVE, CommandArgs.ARG_OUT, CommandArgs.ARG_SAVE_AS));
 
             var compactFormatOptionOld = Settings.Default.CompactFormatOption;
             using (new ScopedAction(() => Settings.Default.CompactFormatOption = compactFormatOptionOld))

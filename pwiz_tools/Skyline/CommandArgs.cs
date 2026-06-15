@@ -293,7 +293,7 @@ namespace pwiz.Skyline
             // This is a non-fatal warning: it must not change the exit status.
             if (SaveCompactFormat != null && !Saving)
             {
-                WarnArgRequirement(ARG_SAVE_COMPACT_FORMAT, ARG_SAVE, ARG_OUT);
+                WarnArgRequirement(ARG_SAVE_COMPACT_FORMAT, ARG_SAVE, ARG_OUT, ARG_SAVE_AS);
             }
 
             // Use the original file as the output file, if not told otherwise.
