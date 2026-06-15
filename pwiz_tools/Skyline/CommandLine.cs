@@ -78,7 +78,7 @@ namespace pwiz.Skyline
         /// Returns false if operation is canceled by the user. Otherwise, it throws
         /// an exception if there is a true failure, like an IOException.
         /// </summary>
-        bool SaveDocument(SrmDocument doc, string saveFile, CompactFormatOption compactFormatOption = null);
+        bool SaveDocument(SrmDocument doc, string saveFile);
     }
 
     public class CommandLine : IDisposable, IDocumentOperations/*, IRemoteAccountUserInteraction*/
@@ -277,6 +277,9 @@ namespace pwiz.Skyline
             {
                 Trace.Listeners.Add(traceWarningListener);
                 using (DocContainer = new ResultsMemoryDocumentContainer(null, _skylineFile))
+                // Apply --save-compact-format (if given) for the duration of this invocation, so every
+                // save in this run is deterministic regardless of the persisted setting. Null is a no-op.
+                using (CompactFormatOption.SetOverride(commandArgs.SaveCompactFormat))
                 {
                     DocContainer.ProgressMonitor = new CommandProgressMonitor(_out, new ProgressStatus(),
                         commandArgs.ImportWarnOnFailure);
@@ -3510,7 +3513,7 @@ namespace pwiz.Skyline
             _out.WriteLine(SkylineResources.CommandLine_SaveFile_Saving_file___);
             return HandleExceptions(commandArgs, () =>
                 {
-                    if (DocumentOperations.SaveDocument(_doc, saveFile, commandArgs.SaveCompactFormat))
+                    if (DocumentOperations.SaveDocument(_doc, saveFile))
                         _out.WriteLine(Resources.CommandLine_SaveFile_File__0__saved_, Path.GetFileName(saveFile));
                     else
                         _out.WriteLine(SkylineResources.CommandLine_SaveFile_File__0__save_canceled, Path.GetFileName(saveFile));
@@ -4472,7 +4475,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public void SaveDocument(SrmDocument doc, string outFile, TextWriter outText, CompactFormatOption compactFormatOption = null)
+        public void SaveDocument(SrmDocument doc, string outFile, TextWriter outText)
         {
             // Make sure the containing directory is created
             string dirPath = Path.GetDirectoryName(outFile);
@@ -4483,7 +4486,7 @@ namespace pwiz.Skyline
             using (var saver = new FileSaver(outFile))
             {
                 saver.CheckException();
-                doc.SerializeToFile(saver.SafeName, outFile, SkylineVersion.CURRENT, progressMonitor, compactFormatOption);
+                doc.SerializeToFile(saver.SafeName, outFile, SkylineVersion.CURRENT, progressMonitor);
                 // If the user has chosen "Save As", and the document has a
                 // document specific spectral library, copy this library to 
                 // the new name.
@@ -4827,9 +4830,9 @@ namespace pwiz.Skyline
             return NewSkyFile(skylineFile, overwrite) ? _doc : null;
         }
 
-        bool IDocumentOperations.SaveDocument(SrmDocument doc, string saveFile, CompactFormatOption compactFormatOption)
+        bool IDocumentOperations.SaveDocument(SrmDocument doc, string saveFile)
         {
-            SaveDocument(doc, saveFile, _out, compactFormatOption);
+            SaveDocument(doc, saveFile, _out);
             return true;    // It didn't throw an exception and there is no user cancellation with the command-line.
         }
 

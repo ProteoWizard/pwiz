@@ -1938,7 +1938,7 @@ namespace pwiz.Skyline {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Sets how transitions are written when the document is saved in this run: &apos;never&apos; writes individual transition elements, &apos;always&apos; writes a compact base64 blob, and &apos;largefilesonly&apos; uses the compact blob only for large documents. Applies only to this invocation and overrides the persisted CompactFormatOption setting; when this argument is omitted, that persisted setting (whose own default is &apos;largefilesonly&apos;) is used..
+        ///   Looks up a localized string similar to Sets how transitions are written when the document is saved in this run: &apos;never&apos; writes individual transition elements, &apos;always&apos; writes a compact base64 blob, and &apos;largefilesonly&apos; uses the compact blob only for large documents. Applies only to this invocation and overrides the CompactFormatOption setting persisted in user.config; when this argument is omitted, that persisted setting (which defaults to &apos;largefilesonly&apos;) is used..
         /// </summary>
         public static string _save_compact_format {
             get {
