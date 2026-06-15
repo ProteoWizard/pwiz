@@ -24,7 +24,7 @@ namespace Pwiz.Vendor.UNIFI.Tests;
 /// on every fixture URL; with credentials it adds the read + diff cycle.</para>
 /// <para><b>Reference layering.</b> The harness consults two locations and prefers the first:
 /// <list type="number">
-///   <item><c>pwiz-sharp/test/UNIFI.Tests/Reference/&lt;run-id&gt;.mzML</c> — pwiz-sharp-only
+///   <item><c>pwiz-sharp/pwiz/test/UNIFI.Tests/Reference/&lt;run-id&gt;.mzML</c> — pwiz-sharp-only
 ///   override that the generate mode writes to. Edits here only re-trigger the pwiz-sharp
 ///   TC config, not every cpp vendor build.</item>
 ///   <item><c>pwiz/data/vendor_readers/UNIFI/Reader_UNIFI_Test.data/&lt;run-id&gt;.mzML</c> —
@@ -68,7 +68,7 @@ public class ReaderUnifiHarnessTests
         string overrideRoot = FindOverrideReferenceRoot()
             ?? throw new InvalidOperationException(
                 "pwiz-sharp UNIFI override-reference root not found "
-                + "(expected pwiz-sharp/test/UNIFI.Tests/Reference under the source tree).");
+                + "(expected pwiz-sharp/pwiz/test/UNIFI.Tests/Reference under the source tree).");
 
         string urlsFile = Path.Combine(root, "urls.txt");
         Assert.IsTrue(File.Exists(urlsFile), $"urls.txt missing under {root}");
@@ -284,14 +284,14 @@ public class ReaderUnifiHarnessTests
 
     private static string? FindOverrideReferenceRoot()
     {
-        // Walk parents of the build output until we hit the pwiz-sharp/test/UNIFI.Tests
+        // Walk parents of the build output until we hit the pwiz-sharp/pwiz/test/UNIFI.Tests
         // source directory, then return the Reference subdirectory underneath it. We don't
         // copy these to the build output (CopyToOutputDirectory) because generate mode needs
         // to write back to the source-tree path so the changes show up in git.
         string? dir = AppContext.BaseDirectory;
         while (!string.IsNullOrEmpty(dir))
         {
-            string candidate = Path.Combine(dir, "pwiz-sharp", "test", "UNIFI.Tests", "Reference");
+            string candidate = Path.Combine(dir, "pwiz-sharp", "pwiz", "test", "UNIFI.Tests", "Reference");
             if (Directory.Exists(Path.GetDirectoryName(candidate)!))
                 return candidate;
             dir = Path.GetDirectoryName(dir);
