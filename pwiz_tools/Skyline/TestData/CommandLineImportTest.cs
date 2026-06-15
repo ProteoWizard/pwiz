@@ -259,7 +259,7 @@ namespace pwiz.SkylineTestData
                 CommandArgs.ARG_SAVE_COMPACT_FORMAT, CommandArgs.ARG_SAVE, CommandArgs.ARG_OUT));
 
             var compactFormatOptionOld = Settings.Default.CompactFormatOption;
-            try
+            using (new ScopedAction(() => Settings.Default.CompactFormatOption = compactFormatOptionOld))
             {
                 // Seed the OPPOSITE persisted setting in each case to prove the command-line
                 // flag overrides the user setting rather than merely agreeing with it.
@@ -316,10 +316,6 @@ namespace pwiz.SkylineTestData
 
                 // The per-invocation flag must NOT persist back to the user setting (last seed = always)
                 AssertEx.AreEqual(CompactFormatOption.ALWAYS.Name, Settings.Default.CompactFormatOption);
-            }
-            finally
-            {
-                Settings.Default.CompactFormatOption = compactFormatOptionOld;
             }
         }
 
