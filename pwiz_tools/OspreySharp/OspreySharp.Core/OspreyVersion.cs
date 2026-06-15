@@ -28,9 +28,9 @@ namespace pwiz.OspreySharp.Core
     /// caches (<c>osprey.version</c>), and read back by
     /// <c>ParquetScoreCache.CheckParquetMetadata</c> to decide whether a cache is
     /// still compatible with the current binary. It follows the Skyline scheme
-    /// (<c>YEAR.ORDINAL.BRANCH.DOY</c>): the first three components are the
-    /// "release identity" (a mismatch aborts cache reuse) and the day-of-year is
-    /// daily drift (a difference warns but proceeds).
+    /// (<c>YEAR.ORDINAL.BRANCH.DOY</c>); a cached score file is reused only when
+    /// this version matches the current binary exactly. Any difference
+    /// (release line or daily build) aborts cache reuse.
     ///
     /// By default this reflects the assembly version, which the Boost build (and
     /// the standalone build.ps1) stamp from the OspreySharp Jamfile constants.

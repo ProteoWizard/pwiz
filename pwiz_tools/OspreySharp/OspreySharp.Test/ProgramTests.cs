@@ -690,9 +690,8 @@ namespace pwiz.OspreySharp.Test
 
         // Track OspreyVersion.Current so happy-path and drift tests stay
         // meaningful as the build version advances. The version follows the
-        // Skyline scheme YEAR.ORDINAL.BRANCH.DOY: the first three components are
-        // the release identity (a difference aborts cache reuse) and the
-        // day-of-year is daily drift (warn but proceed).
+        // Skyline scheme YEAR.ORDINAL.BRANCH.DOY; cache reuse requires an exact
+        // version match. Any difference (release line or daily build) aborts.
         private static readonly string CURRENT_VERSION = OspreyVersion.Current;
         private static readonly string DAILY_DRIFT_VERSION = DriftVersion(0, 0, 0, 5);
         private static readonly string BRANCH_DRIFT_VERSION = DriftVersion(0, 0, 1, 0);
