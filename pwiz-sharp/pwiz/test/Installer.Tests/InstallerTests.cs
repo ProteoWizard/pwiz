@@ -464,11 +464,12 @@ public class InstallerTests
             return false;
         }
 
-        // From test bin (bin/Release/net8.0-windows): hop up to pwiz-sharp,
-        // then sideways to pwiz/.
+        // From test bin (bin/Release/net8.0-windows): hop up to pwiz-sharp's
+        // parent (7 ups; bin is at depth 6 below pwiz-sharp post-restructure),
+        // then sideways into the sibling pwiz/ cpp checkout.
         string candidate = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
-            "..", "..", "..", "..", "..", "..",
+            "..", "..", "..", "..", "..", "..", "..",
             "pwiz", "data", "vendor_readers", "Thermo",
             "Reader_Thermo_Test.data", fixtureName));
         if (File.Exists(candidate))
