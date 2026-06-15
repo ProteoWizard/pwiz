@@ -89,7 +89,7 @@ namespace pwiz.OspreySharp.Tasks
     /// <see cref="ExecuteRescore"/>, then runs the per-process
     /// diagnostic-writer close + cross-impl bisection dump. Inherits
     /// the scoring engine (RunCoelutionScoring, LoadLibrary,
-    /// GenerateDecoys, ExtractIsolationWindows, ...) from
+    /// ExtractIsolationWindows, ...) from
     /// <see cref="AbstractScoringTask"/>.
     /// </summary>
     internal sealed class PerFileRescoreTask : AbstractScoringTask
@@ -184,7 +184,6 @@ namespace pwiz.OspreySharp.Tasks
             // rescore from), takes Rehydrate instead: the driver reaches this
             // task here only in the rescore-capable modes, and a merge-node
             // consumer materializes it via ctx.Demand, which routes to Rehydrate.
-            _ctx = ctx;
             // CompactedEntries: the post-first-join buffer. Demanding it
             // materializes FirstJoin (running its compaction + Stage 6 planning
             // when the driver skipped it in worker-rescore mode), which is also
@@ -216,8 +215,13 @@ namespace pwiz.OspreySharp.Tasks
             // ExpectReconciledInput keeps the hard short-circuit above for
             // the strict --task MergeNode merge path. Downstream MergeNodeTask
             // reads the RescoredEntries milestone of this same backing list.
-            var firstJoin = ctx.Demand<FirstJoinTask>();
-            bool didPlan = firstJoin.DidPlan(ctx);
+            // Read the planning gate from the typed byproduct registry rather
+            // than reaching for the concrete FirstJoinTask. ctx.Get lazily
+            // materializes the slot's producer (FirstJoinTask) if it has not run
+            // yet, so the value is always populated; FirstJoin publishes
+            // PlanningPerformed alongside CompactedEntries (already read above)
+            // from every materialization path.
+            bool didPlan = ctx.Get<PlanningPerformed>().Value;
             var rescoreBundle = ctx.Get<RescoreBundle>().Value;
             bool anyPass2Present = false;
             if (ctx.Config.InputFiles != null)
@@ -273,6 +277,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.Get<PerFileParquetPaths>().Value,
                 ctx.Get<FullLibrary>().Value,
                 ctx.Config,
+                ctx,
                 joinFileStems);
             ctx.LogInfo(string.Format(
                 @"Stage 6 rescore: {0} entries re-scored ({1} reconciliation actions executed)",
@@ -281,11 +286,11 @@ namespace pwiz.OspreySharp.Tasks
             // Cross-impl bisection seam: dump per-precursor state
             // immediately after the rescore loop. Mirrors Rust's
             // dump_stage6_rescored call from pipeline.rs.
-            if (OspreyDiagnostics.DumpRescored)
+            if (ctx.Diagnostics?.DumpRescored ?? false)
             {
-                OspreyDiagnostics.WriteStage6RescoredDump(_perFileEntries);
-                if (OspreyDiagnostics.RescoredOnly)
-                    OspreyDiagnostics.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
+                ctx.Diagnostics?.WriteStage6RescoredDump(_perFileEntries);
+                if (ctx.Diagnostics?.RescoredOnly ?? false)
+                    OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
             }
 
             // Flush + close the persistent per-process diagnostic
@@ -293,11 +298,11 @@ namespace pwiz.OspreySharp.Tasks
             // Mirrors the worker-mode close calls in RunWorker; without
             // these, the in-process pipeline path can leave the writers
             // unflushed and produce truncated bisection dumps.
-            OspreyDiagnostics.CloseMpInputsDump();
+            ctx.Diagnostics?.CloseMpInputsDump();
             // ClosePredictRtDump disabled with the rest of the predict-rt
             // diagnostic (perf hotspot); restore alongside WritePredictRtCall.
-            // OspreyDiagnostics.ClosePredictRtDump();
-            OspreyDiagnostics.CloseCwtPathDump();
+            // ctx.Diagnostics?.ClosePredictRtDump();
+            ctx.Diagnostics?.CloseCwtPathDump();
             return true;
         }
 
@@ -349,7 +354,6 @@ namespace pwiz.OspreySharp.Tasks
             // below is a different rehydrate that must NOT materialize FirstJoin.
             if (!ctx.Config.ExpectReconciledInput)
             {
-                _ctx = ctx;
                 _perFileEntries = ctx.Get<CompactedEntries>().Value;
 
                 // PR-E: a fresh ExecuteRescore would overlay each file's reconciled
@@ -391,7 +395,6 @@ namespace pwiz.OspreySharp.Tasks
                 return true;
             }
 
-            _ctx = ctx;
             // ScoredEntries, NOT CompactedEntries: the merge path must NOT
             // materialize FirstJoin (that would re-run Stage 5 Percolator on the
             // reconciled parquets); it applies its own compaction below. Reading
@@ -472,7 +475,7 @@ namespace pwiz.OspreySharp.Tasks
         private bool WriteReconciledParquet(string originalPath, string reconciledPath,
             List<FdrEntry> fdrEntries,
             string fileName, List<LibraryEntry> fullLibrary, OspreyConfig config,
-            IReadOnlyList<string> joinFileStems)
+            IReadOnlyList<string> joinFileStems, PipelineContext ctx)
         {
             // 1. Reload the original parquet's per-row state (read-only).
             List<FdrEntry> fullEntries;
@@ -482,7 +485,7 @@ namespace pwiz.OspreySharp.Tasks
             }
             catch (Exception ex)
             {
-                _ctx.LogWarning(string.Format(
+                ctx.LogWarning(string.Format(
                     "Stage 6 write-back: failed to reload {0}: {1} (skipping)",
                     originalPath, ex.Message));
                 return false;
@@ -509,7 +512,7 @@ namespace pwiz.OspreySharp.Tasks
                 int pqIdx = (int)entry.ParquetIndex;
                 if (pqIdx < 0 || pqIdx >= fullEntries.Count)
                 {
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "Stage 6 write-back: ParquetIndex {0} out of range for {1} ({2} rows)",
                         pqIdx, fileName, fullEntries.Count));
                     continue;
@@ -571,13 +574,13 @@ namespace pwiz.OspreySharp.Tasks
             }
             catch (Exception ex)
             {
-                _ctx.LogWarning(string.Format(
+                ctx.LogWarning(string.Format(
                     "Stage 6 write-back: failed to write reconciled scores for {0}: {1}",
                     fileName, ex.Message));
                 return false;
             }
 
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
                 fileName, fullEntries.Count, nReplaced, nAppended, origRowCount));
             return true;
@@ -616,6 +619,7 @@ namespace pwiz.OspreySharp.Tasks
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
+            PipelineContext ctx,
             IReadOnlyList<string> joinFileStems = null)
         {
             // Pre-group reconciliation actions by file so the per-file loop
@@ -631,7 +635,7 @@ namespace pwiz.OspreySharp.Tasks
             int totalGapCwt = 0;
             int totalGapForced = 0;
             int nTotalFiles = perFileEntries.Count;
-            string taskValidityKey = ValidityKey(_ctx);
+            string taskValidityKey = ValidityKey(ctx);
 
             for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
             {
@@ -660,7 +664,7 @@ namespace pwiz.OspreySharp.Tasks
                     && File.Exists(reconciledPath)
                     && TaskValiditySidecar.IsValid(reconciledPath, Name, taskValidityKey))
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         @"[file] {0}/{1} {2}: skipping (outputs valid)",
                         fileNum + 1, nTotalFiles, fileName));
 
@@ -718,7 +722,7 @@ namespace pwiz.OspreySharp.Tasks
 
                 if (!fileNameToIdx.TryGetValue(fileName, out int inputIdx))
                 {
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "Stage 6 rescore: no input_files entry for {0} (skipping)", fileName));
                     continue;
                 }
@@ -736,9 +740,9 @@ namespace pwiz.OspreySharp.Tasks
                 // the per-file clone pattern in ProcessFile.
                 var fileConfig = config.ShallowClone();
 
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Re-scoring file {0}/{1}: {2}", fileNum + 1, nTotalFiles, fileName));
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "  {0} entries ({1} consensus, {2} reconciliation, {3} gap-fill, {4} unique after dedup)",
                     combinedTargets.Count + gapFillTargets.Count * 2,
                     consensusTargets.Count,
@@ -756,7 +760,7 @@ namespace pwiz.OspreySharp.Tasks
                 // or unreadable.
                 List<Spectrum> spectra;
                 List<MS1Spectrum> ms1Spectra;
-                LoadSpectraForRescore(inputFile, fileName, out spectra, out ms1Spectra);
+                LoadSpectraForRescore(inputFile, fileName, out spectra, out ms1Spectra, ctx);
 
                 // Load the sibling .calibration.json so the search uses the
                 // same MS2/MS1 mass calibrations the original Stage 1-4 run
@@ -777,7 +781,7 @@ namespace pwiz.OspreySharp.Tasks
                 // hotspot). Dumped the cal's library_rts + fitted_values once
                 // per file. Mirrors Rust's dump_predict_rt_arrays at
                 // pipeline.rs ~2886. To restore, re-enable this and the
-                // WritePredictRtCall in AbstractScoringTask. See
+                // WritePredictRtCall in CoelutionScorer. See
                 // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
                 // if (rtCal != null)
                 // {
@@ -806,7 +810,7 @@ namespace pwiz.OspreySharp.Tasks
                         subsetLibrary, spectra, ms1Spectra,
                         isolationWindows, rtCal,
                         ms2Cal, ms1Cal,
-                        context);
+                        context, ctx);
                 }
                 else
                 {
@@ -821,12 +825,12 @@ namespace pwiz.OspreySharp.Tasks
                 totalRescored += nOverlay;
                 if (nNoPeak > 0)
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "  {0} targets had no peak at override boundary (reset to defaults)",
                         nNoPeak));
                 }
 
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "  {0} of {1} existing entries re-scored ({2:F1}s)",
                     nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
 
@@ -836,7 +840,7 @@ namespace pwiz.OspreySharp.Tasks
                     var (nGapCwt, nGapForced) = RunGapFillTwoPass(
                         gapFillTargets, fullLibrary, spectra, ms1Spectra,
                         isolationWindows, rtCal, ms2Cal, ms1Cal,
-                        fileConfig, fileName, rtMadFromCalJson, fdrEntries);
+                        fileConfig, fileName, rtMadFromCalJson, fdrEntries, ctx);
                     totalGapCwt += nGapCwt;
                     totalGapForced += nGapForced;
                     totalRescored += nGapCwt + nGapForced;
@@ -851,7 +855,7 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
                     bool wrote = WriteReconciledParquet(parquetPath, reconciledOutPath, fdrEntries, fileName,
-                        fullLibrary, config, joinFileStems);
+                        fullLibrary, config, joinFileStems, ctx);
 
                     // Only stamp the per-file resume sidecar when the reconciled
                     // parquet was actually written. Stamping it after a failed
@@ -875,7 +879,7 @@ namespace pwiz.OspreySharp.Tasks
                         }
                         catch (Exception ex)
                         {
-                            _ctx.LogWarning(string.Format(
+                            ctx.LogWarning(string.Format(
                                 @"  Failed to write {0} sidecar for {1}: {2}",
                                 Name, reconciledOutPath, ex.Message));
                         }
@@ -889,7 +893,7 @@ namespace pwiz.OspreySharp.Tasks
                         }
                         catch (Exception ex)
                         {
-                            _ctx.LogWarning(string.Format(
+                            ctx.LogWarning(string.Format(
                                 @"  Failed to remove stale reconciled parquet {0} after a failed write: {1}",
                                 reconciledOutPath, ex.Message));
                         }
@@ -1263,7 +1267,7 @@ namespace pwiz.OspreySharp.Tasks
             OspreyConfig fileConfig,
             string fileName,
             double? rtMadFromCalJson,
-            List<FdrEntry> fdrEntries)
+            List<FdrEntry> fdrEntries, PipelineContext ctx)
         {
             int nGapCwt = 0;
             int nGapForced = 0;
@@ -1299,7 +1303,7 @@ namespace pwiz.OspreySharp.Tasks
                     gapFillLibrary, spectra, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    cwtContext);
+                    cwtContext, ctx);
                 swCwt.Stop();
 
                 cwtHitIds = new HashSet<uint>();
@@ -1324,7 +1328,7 @@ namespace pwiz.OspreySharp.Tasks
                     fdrEntries.Add(entry);
                 }
 
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "  Gap-fill CWT: {0} hits ({1:F1}s)",
                     nGapCwt, swCwt.Elapsed.TotalSeconds));
             }
@@ -1367,7 +1371,7 @@ namespace pwiz.OspreySharp.Tasks
                     forcedLibrary, spectra, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    forcedContext);
+                    forcedContext, ctx);
                 swForced.Stop();
                 nGapForced = forcedResults.Count;
 
@@ -1385,7 +1389,7 @@ namespace pwiz.OspreySharp.Tasks
                     fdrEntries.Add(entry);
                 }
 
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "  Gap-fill forced: {0} integrated ({1:F1}s)",
                     nGapForced, swForced.Elapsed.TotalSeconds));
             }
@@ -1400,7 +1404,7 @@ namespace pwiz.OspreySharp.Tasks
         /// Rust spectra-load block at pipeline.rs:2851-2872.
         /// </summary>
         private void LoadSpectraForRescore(string inputFile, string fileName,
-            out List<Spectrum> spectra, out List<MS1Spectrum> ms1Spectra)
+            out List<Spectrum> spectra, out List<MS1Spectrum> ms1Spectra, PipelineContext ctx)
         {
             string cachePath = SpectraCache.GetCachePath(inputFile);
             if (File.Exists(cachePath))
@@ -1410,14 +1414,14 @@ namespace pwiz.OspreySharp.Tasks
                     var result = SpectraCache.LoadSpectraCache(cachePath, inputFile);
                     spectra = result.Ms2Spectra;
                     ms1Spectra = result.Ms1Spectra;
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         "  Loaded {0} MS2 + {1} MS1 spectra from cache for {2}",
                         spectra.Count, ms1Spectra.Count, fileName));
                     return;
                 }
                 catch (Exception ex)
                 {
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "Failed to load spectra cache {0}: {1}; falling back to mzML",
                         cachePath, ex.Message));
                 }
@@ -1425,7 +1429,7 @@ namespace pwiz.OspreySharp.Tasks
             var fresh = MzmlReader.LoadAllSpectra(inputFile);
             spectra = fresh.Ms2Spectra;
             ms1Spectra = fresh.Ms1Spectra;
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "  Loaded {0} MS2 + {1} MS1 spectra from mzML for {2}",
                 spectra.Count, ms1Spectra.Count, fileName));
         }

@@ -48,7 +48,7 @@ namespace pwiz.OspreySharp.Tasks
     ///
     /// Phase A scope: this task is a thin orchestration wrapper that
     /// delegates to AnalysisPipeline's existing private (now
-    /// <c>internal</c>) methods (LoadLibrary, GenerateDecoys,
+    /// <c>internal</c>) methods (LoadLibrary,
     /// ProcessFile) plus the --task FirstJoin / --task MergeNode input
     /// loading paths that share the same per-file collection layout.
     /// The inline Stage 1-4 block from <c>AnalysisPipeline.Run</c>
@@ -160,12 +160,11 @@ namespace pwiz.OspreySharp.Tasks
             // here only in the non---input-scores modes (where computing from
             // spectra is right), and a worker-mode consumer materializes it via
             // ctx.Demand, which routes to Rehydrate.
-            _ctx = ctx;
             var config = ctx.Config;
 
             // Stage 1: Load library + generate/pair decoys, then build the
             // full target+decoy library and its by-id lookup.
-            if (!LoadLibraryAndDecoys(config, out var fullLibrary))
+            if (!LoadLibraryAndDecoys(config, out var fullLibrary, ctx))
                 return false;
 
             // Stage 2-4: Per-file calibration + coelution scoring
@@ -331,12 +330,11 @@ namespace pwiz.OspreySharp.Tasks
             // recomputing them from spectra, then adopt any reconciliation
             // bundle that the merge node will read. The compute-from-spectra
             // counterpart is Run.
-            _ctx = ctx;
             var config = ctx.Config;
 
             // Stage 1: library + decoys (needed by Stage 5+ even though the
             // per-file scores are loaded rather than computed).
-            if (!LoadLibraryAndDecoys(config, out _))
+            if (!LoadLibraryAndDecoys(config, out _, ctx))
                 return false;
 
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
@@ -364,7 +362,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
 
             var swAllFiles = Stopwatch.StartNew();
-            LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths, perFileCalibrations);
+            LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths, perFileCalibrations, ctx);
             swAllFiles.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
@@ -392,7 +390,7 @@ namespace pwiz.OspreySharp.Tasks
             //
             // The disk state determines the hydration shape, not the CLI
             // flag (Phase C principle: mechanism-driven, not flag-driven).
-            if (!HydrateRescoreBundleIfPresent(config, perFileEntries))
+            if (!HydrateRescoreBundleIfPresent(config, perFileEntries, ctx))
                 return false;
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
@@ -418,12 +416,11 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private bool RehydrateFromOwnOutputs(PipelineContext ctx)
         {
-            _ctx = ctx;
             var config = ctx.Config;
 
             // Stage 1: library + decoys (needed by Stage 5+ even though the
             // per-file scores are loaded rather than computed).
-            if (!LoadLibraryAndDecoys(config, out _))
+            if (!LoadLibraryAndDecoys(config, out _, ctx))
                 return false;
 
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
@@ -556,16 +553,16 @@ namespace pwiz.OspreySharp.Tasks
         /// missing library decoys, an unreadable pairing manifest, or a
         /// pairing fraction below the configured threshold.
         /// </summary>
-        private bool LoadLibraryAndDecoys(OspreyConfig config, out List<LibraryEntry> fullLibrary)
+        private bool LoadLibraryAndDecoys(OspreyConfig config, out List<LibraryEntry> fullLibrary, PipelineContext ctx)
         {
             fullLibrary = null;
 
             var swLibrary = Stopwatch.StartNew();
-            var library = LibraryLoader.Load(config, _ctx.LogInfo, _ctx.LogWarning);
+            var library = LibraryLoader.Load(config, ctx.LogInfo, ctx.LogWarning);
             if (library == null || library.Count == 0)
             {
-                _ctx.LogError(@"Library is empty after loading");
-                _ctx.ExitCode = 1;
+                ctx.LogError(@"Library is empty after loading");
+                ctx.ExitCode = 1;
                 return false;
             }
 
@@ -583,10 +580,10 @@ namespace pwiz.OspreySharp.Tasks
             {
                 LibraryDecoyMarker.ApplyLibraryDecoyMarking(
                     library, config.DecoyPrefixes, out var markingStats);
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     @"Library-decoy mode: matched prefixes {0}",
                     FormatPrefixList(config.DecoyPrefixes)));
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
                     markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
             }
@@ -598,7 +595,7 @@ namespace pwiz.OspreySharp.Tasks
                     nLibraryTargets++;
             }
             double libLoadSec = swLibrary.Elapsed.TotalSeconds;
-            _ctx.LogInfo(string.Format(@"[COUNT] Library targets loaded: {0}", nLibraryTargets));
+            ctx.LogInfo(string.Format(@"[COUNT] Library targets loaded: {0}", nLibraryTargets));
 
             List<LibraryEntry> decoys;
             if (config.ExpectReconciledInput)
@@ -620,7 +617,8 @@ namespace pwiz.OspreySharp.Tasks
             }
             else if (!librarySuppliesDecoys)
             {
-                decoys = GenerateDecoys(library, config, out List<LibraryEntry> validTargets);
+                decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
+                    library, config, ctx.LogInfo, out List<LibraryEntry> validTargets);
                 library = validTargets;
             }
             else
@@ -641,12 +639,12 @@ namespace pwiz.OspreySharp.Tasks
                 int nLibraryDecoys = library.Count - nLibraryTargets;
                 if (nLibraryDecoys == 0)
                 {
-                    _ctx.LogError(string.Format(
+                    ctx.LogError(string.Format(
                         @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
                         @"Check that the library actually contains decoys with one of these prefixes on " +
                         @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
                         FormatPrefixList(config.DecoyPrefixes)));
-                    _ctx.ExitCode = 1;
+                    ctx.ExitCode = 1;
                     return false;
                 }
 
@@ -668,7 +666,7 @@ namespace pwiz.OspreySharp.Tasks
                 };
                 if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
                 {
-                    _ctx.LogInfo(string.Format(
+                    ctx.LogInfo(string.Format(
                         @"Loading decoy pairing manifest from {0}",
                         config.DecoyPairingManifestPath));
                     DecoyPairingManifest manifest;
@@ -679,17 +677,17 @@ namespace pwiz.OspreySharp.Tasks
                     }
                     catch (Exception ex)
                     {
-                        _ctx.LogError(string.Format(
+                        ctx.LogError(string.Format(
                             @"Failed to read decoy pairing manifest {0}: {1}",
                             config.DecoyPairingManifestPath, ex.Message));
-                        _ctx.ExitCode = 1;
+                        ctx.ExitCode = 1;
                         return false;
                     }
                     var manifestStats = manifest.ApplyToLibrary(library, pairingState);
                     pairingStats.NPairedViaManifest = manifestStats.NPaired;
                     if (manifestStats.NProteinsReplaced > 0)
                     {
-                        _ctx.LogInfo(string.Format(
+                        ctx.LogInfo(string.Format(
                             @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
                             @"entries (clean source-protein accessions from the manifest's " +
                             @"`proteins` column)",
@@ -701,7 +699,7 @@ namespace pwiz.OspreySharp.Tasks
                         // loaded as targets (the predictor stripped the
                         // decoy prefix). Update the decoy count so the
                         // pairing fraction is honest.
-                        _ctx.LogInfo(string.Format(
+                        ctx.LogInfo(string.Format(
                             @"Library-decoy mode: manifest classified {0} additional library " +
                             @"entries as decoys (their protein accessions lacked a decoy prefix)",
                             manifestStats.NNewlyMarkedDecoy));
@@ -713,7 +711,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 else
                 {
-                    _ctx.LogInfo(
+                    ctx.LogInfo(
                         @"Pairing library decoys to targets by amino-acid composition " +
                         @"(no manifest provided).");
                 }
@@ -728,7 +726,7 @@ namespace pwiz.OspreySharp.Tasks
                     pairingStats.NDecoys - pairingStats.NPaired);
                 pairingStats.NUnpairedTargets = Math.Max(0,
                     pairingStats.NTargets - pairingState.ClaimedTargets.Count);
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
                     @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
                     pairingStats.NPaired, pairingStats.NDecoys,
@@ -737,7 +735,7 @@ namespace pwiz.OspreySharp.Tasks
                     pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
                 if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
                 {
-                    _ctx.LogError(string.Format(
+                    ctx.LogError(string.Format(
                         @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
                         @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
                         @"target-decoy competition. Either supply a pairing manifest, ensure the " +
@@ -746,24 +744,24 @@ namespace pwiz.OspreySharp.Tasks
                         pairingStats.PairedFraction * 100.0,
                         config.DecoyPairMinFraction * 100.0,
                         FormatPrefixList(config.DecoyPrefixes)));
-                    _ctx.ExitCode = 1;
+                    ctx.ExitCode = 1;
                     return false;
                 }
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;
-            _ctx.LogInfo(string.Format(@"[TIMING] Library loading + decoys: {0:F1}s (load: {1:F1}s, decoys: {2:F1}s)",
+            ctx.LogInfo(string.Format(@"[TIMING] Library loading + decoys: {0:F1}s (load: {1:F1}s, decoys: {2:F1}s)",
                 totalSec, libLoadSec, totalSec - libLoadSec));
 
-            _ctx.LogInfo(string.Format(@"[COUNT] Library decoys generated: {0}", decoys.Count));
+            ctx.LogInfo(string.Format(@"[COUNT] Library decoys generated: {0}", decoys.Count));
 
             fullLibrary = new List<LibraryEntry>(library.Count + decoys.Count);
             fullLibrary.AddRange(library);
             fullLibrary.AddRange(decoys);
 
-            _ctx.LogInfo(string.Format(@"Full library: {0} entries ({1} targets + {2} decoys)",
+            ctx.LogInfo(string.Format(@"Full library: {0} entries ({1} targets + {2} decoys)",
                 fullLibrary.Count, library.Count, decoys.Count));
-            _ctx.LogInfo(string.Format(@"[COUNT] Full library: {0} ({1} targets + {2} decoys)",
+            ctx.LogInfo(string.Format(@"[COUNT] Full library: {0} ({1} targets + {2} decoys)",
                 fullLibrary.Count, library.Count, decoys.Count));
 
             // Count entries with few fragments (diagnostic for entry count parity)
@@ -779,7 +777,7 @@ namespace pwiz.OspreySharp.Tasks
                     nTwoFrag++;
             }
             if (nZeroFrag + nOneFrag + nTwoFrag > 0)
-                _ctx.LogInfo(string.Format(@"[COUNT] Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
+                ctx.LogInfo(string.Format(@"[COUNT] Entries with <3 fragments: {0} (0={1}, 1={2}, 2={3})",
                     nZeroFrag + nOneFrag + nTwoFrag, nZeroFrag, nOneFrag, nTwoFrag));
 
             // Build library lookup by ID for fast access
@@ -808,7 +806,8 @@ namespace pwiz.OspreySharp.Tasks
             OspreyConfig config,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             Dictionary<string, string> perFileParquetPaths,
-            ConcurrentDictionary<string, RTCalibration> perFileCalibrations)
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            PipelineContext ctx)
         {
             // --task FirstJoin: load per-file FdrEntry stubs directly from
             // each .scores.parquet listed via --input-scores. Skips the
@@ -820,11 +819,11 @@ namespace pwiz.OspreySharp.Tasks
             // Aborts with a clear, file-named error if the operator points
             // the merge node at parquets from a different scoring run.
             string validationError = ParquetScoreCache.ValidateScoresParquetGroup(
-                config.InputScores, config, Program.VERSION, _ctx.LogWarning);
+                config.InputScores, config, Program.VERSION, ctx.LogWarning);
             if (validationError != null)
                 throw new InvalidDataException(validationError);
 
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 @"--input-scores: loading {0} per-file score parquet(s)",
                 config.InputScores.Count));
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
@@ -836,7 +835,7 @@ namespace pwiz.OspreySharp.Tasks
                 // ".scores" strip would leave the bogus key "<stem>.reconciled").
                 string fileName = Path.GetFileNameWithoutExtension(
                     RescoreHydration.SyntheticInputFromParquet(parquetPath)) ?? string.Empty;
-                _ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
+                ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
                     fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
                 var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
                 // Stage 5+ (Percolator SVM) requires the 21 PIN features
@@ -851,7 +850,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 for (int j = 0; j < stubs.Count; j++)
                     stubs[j].Features = features[j];
-                _ctx.LogInfo(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
+                ctx.LogInfo(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
                 perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
                 perFileParquetPaths[fileName] = parquetPath;
 
@@ -875,9 +874,9 @@ namespace pwiz.OspreySharp.Tasks
                             if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
                             {
                                 var mp = calParams.RtCalibration.ModelParams;
-                                if (OspreyDiagnostics.DumpCalibration)
+                                if (ctx.Diagnostics?.DumpCalibration ?? false)
                                 {
-                                    OspreyDiagnostics.WriteStage6CalibrationDump(
+                                    ctx.Diagnostics?.WriteStage6CalibrationDump(
                                         fileName, mp.LibraryRts, mp.FittedRts);
                                 }
                                 var rtCal = RTCalibration.FromModelParams(
@@ -890,11 +889,11 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 catch (Exception ex)
                 {
-                    _ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+                    ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
                 }
             }
-            if (OspreyDiagnostics.CalibrationOnly)
-                OspreyDiagnostics.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+            if (ctx.Diagnostics?.CalibrationOnly ?? false)
+                OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
         }
 
         /// <summary>
@@ -913,7 +912,8 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private bool HydrateRescoreBundleIfPresent(
             OspreyConfig config,
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            PipelineContext ctx)
         {
             bool allHave1stPassAndRecon = true;
             foreach (var parquetPath in config.InputScores)
@@ -935,9 +935,9 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 catch (InvalidDataException ex)
                 {
-                    _ctx.LogError(string.Format(
+                    ctx.LogError(string.Format(
                         @"--input-scores hydration failed: {0}", ex.Message));
-                    _ctx.ExitCode = 1;
+                    ctx.ExitCode = 1;
                     return false;
                 }
                 // Clear PIN features on bundle-hydrated stubs so
@@ -953,7 +953,7 @@ namespace pwiz.OspreySharp.Tasks
                 foreach (var kvp in perFileEntries)
                     foreach (var entry in kvp.Value)
                         entry.Features = null;
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     @"Hydrated rescore bundle for {0} file(s) ({1} reconciliation actions, " +
                     @"{2} refined RT calibration(s), {3} gap-fill target(s))",
                     perFileEntries.Count,
@@ -1013,7 +1013,7 @@ namespace pwiz.OspreySharp.Tasks
             // Clear stale sidecar so a mid-ProcessFile crash leaves no
             // false-positive sidecar on the next invocation.
             TaskValiditySidecar.Delete(scoresPath, Name);
-            var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations);
+            var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, ctx);
             if (fileResult != null)
             {
                 try
@@ -1120,7 +1120,8 @@ namespace pwiz.OspreySharp.Tasks
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, OspreyConfig config,
             Dictionary<string, string> parquetFooterMetadata,
-            ConcurrentDictionary<string, RTCalibration> perFileCalibrationsOut)
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrationsOut,
+            PipelineContext ctx)
         {
             if (inputFile == null)
                 throw new ArgumentNullException(nameof(inputFile));
@@ -1139,12 +1140,12 @@ namespace pwiz.OspreySharp.Tasks
             // 32 threads on a 32-core box, the prior 96-way oversubscription
             // produced 45-95s wall-time variance on Stellar; a fair share
             // (10 threads each) holds the run near steady-state.
-            if (_ctx.RunPlan.EffectiveFileParallelism > 1)
+            if (ctx.RunPlan.EffectiveFileParallelism > 1)
             {
-                int perFileThreads = Math.Max(1, config.NThreads / _ctx.RunPlan.EffectiveFileParallelism);
-                _ctx.LogInfo(string.Format(
+                int perFileThreads = Math.Max(1, config.NThreads / ctx.RunPlan.EffectiveFileParallelism);
+                ctx.LogInfo(string.Format(
                     "[BENCH] Per-file thread cap: {0} ({1} total / {2} files in parallel)",
-                    perFileThreads, config.NThreads, _ctx.RunPlan.EffectiveFileParallelism));
+                    perFileThreads, config.NThreads, ctx.RunPlan.EffectiveFileParallelism));
                 config.NThreads = perFileThreads;
             }
 
@@ -1154,8 +1155,8 @@ namespace pwiz.OspreySharp.Tasks
             List<Spectrum> spectra;
             List<MS1Spectrum> ms1Spectra;
             var swParse = Stopwatch.StartNew();
-            LoadSpectra(inputFile, _ctx.RunPlan.EffectiveFileParallelism > 1,
-                out spectra, out ms1Spectra);
+            LoadSpectra(inputFile, ctx.RunPlan.EffectiveFileParallelism > 1,
+                out spectra, out ms1Spectra, ctx);
             swParse.Stop();
 
             long inputBytes = 0;
@@ -1173,29 +1174,29 @@ namespace pwiz.OspreySharp.Tasks
             if (inputBytes > 0 && parseSeconds > 0.001)
             {
                 double mbPerSec = (inputBytes / 1024.0 / 1024.0) / parseSeconds;
-                _ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s ({1:F1} MB/s)",
+                ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s ({1:F1} MB/s)",
                     parseSeconds, mbPerSec));
             }
             else
             {
-                _ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s", parseSeconds));
+                ctx.LogInfo(string.Format("[TIMING] mzML parsing: {0:F1}s", parseSeconds));
             }
 
             if (spectra == null || spectra.Count == 0)
             {
-                _ctx.LogWarning(string.Format("No spectra found in {0}", inputFile));
+                ctx.LogWarning(string.Format("No spectra found in {0}", inputFile));
                 return null;
             }
 
-            _ctx.LogInfo(string.Format("Loaded {0} MS2 spectra and {1} MS1 spectra",
+            ctx.LogInfo(string.Format("Loaded {0} MS2 spectra and {1} MS1 spectra",
                 spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
-            _ctx.LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
+            ctx.LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
                 fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
 
             // Extract isolation windows from spectra
             var isolationWindows = ExtractIsolationWindows(spectra);
-            _ctx.LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
-            _ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
+            ctx.LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
+            ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
 
             // RT calibration
@@ -1214,7 +1215,7 @@ namespace pwiz.OspreySharp.Tasks
             string loadCalPath = OspreyEnvironment.LoadCalibrationPath;
             if (!string.IsNullOrEmpty(loadCalPath) && File.Exists(loadCalPath))
             {
-                _ctx.LogInfo(string.Format("[BISECT] Loading calibration from: {0}", loadCalPath));
+                ctx.LogInfo(string.Format("[BISECT] Loading calibration from: {0}", loadCalPath));
                 var calParams = CalibrationIO.LoadCalibration(loadCalPath);
                 if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
                 {
@@ -1222,7 +1223,7 @@ namespace pwiz.OspreySharp.Tasks
                     rtCalibration = RTCalibration.FromModelParams(
                         mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
                         calParams.RtCalibration.ResidualSD);
-                    _ctx.LogInfo(string.Format("Loaded RT calibration: {0} points, R2={1:F4}",
+                    ctx.LogInfo(string.Format("Loaded RT calibration: {0} points, R2={1:F4}",
                         calParams.RtCalibration.NPoints, calParams.RtCalibration.RSquared));
                 }
                 if (calParams.Ms2Calibration != null && calParams.Ms2Calibration.Calibrated)
@@ -1237,7 +1238,7 @@ namespace pwiz.OspreySharp.Tasks
                         AdjustedTolerance = calParams.Ms2Calibration.AdjustedTolerance,
                         Calibrated = true
                     };
-                    _ctx.LogInfo(string.Format("Loaded MS2 calibration: mean={0:F4} {1}, SD={2:F4}",
+                    ctx.LogInfo(string.Format("Loaded MS2 calibration: mean={0:F4} {1}, SD={2:F4}",
                         ms2Cal.Mean, ms2Cal.Unit, ms2Cal.SD));
                 }
                 if (calParams.Ms1Calibration != null && calParams.Ms1Calibration.Calibrated)
@@ -1252,19 +1253,19 @@ namespace pwiz.OspreySharp.Tasks
                         AdjustedTolerance = calParams.Ms1Calibration.AdjustedTolerance,
                         Calibrated = true
                     };
-                    _ctx.LogInfo(string.Format("Loaded MS1 calibration: mean={0:F4} {1}, SD={2:F4}",
+                    ctx.LogInfo(string.Format("Loaded MS1 calibration: mean={0:F4} {1}, SD={2:F4}",
                         ms1Cal.Mean, ms1Cal.Unit, ms1Cal.SD));
                 }
             }
             else if (config.RtCalibration.Enabled)
             {
                 var swCal = Stopwatch.StartNew();
-                rtCalibration = new Calibrator(_ctx).RunCalibration(
+                rtCalibration = new Calibrator(ctx).RunCalibration(
                     fullLibrary, spectra, ms1Spectra, context,
                     out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "[TIMING] RT calibration: {0:F1}s ({1} calibration points)",
                     swCal.Elapsed.TotalSeconds, nPoints));
             }
@@ -1272,7 +1273,7 @@ namespace pwiz.OspreySharp.Tasks
             // Dump 11 calibration summary scalars (MS1/MS2 mean/sd/count/
             // tolerance + RT n_points/r_squared/residual_sd) so the final
             // calibration state can be diff'd against Rust's cal JSON.
-            OspreyDiagnostics.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
+            ctx.Diagnostics?.WriteCalibrationSummary(rtCalibration, ms1Cal, ms2Cal);
 
             // Save the full calibration state to {inputStem}.calibration.json
             // in the same directory as the mzML input. Same schema as Rust
@@ -1308,11 +1309,11 @@ namespace pwiz.OspreySharp.Tasks
                 // default), matching where the resume-existence check looks.
                 string calPath = CalibrationIO.CalibrationPathForInput(inputFile, ArtifactPaths.ResolveOutputDir(inputFile));
                 CalibrationIO.SaveCalibration(calParams, calPath);
-                _ctx.LogInfo(string.Format("Saved calibration to {0}", calPath));
+                ctx.LogInfo(string.Format("Saved calibration to {0}", calPath));
             }
             catch (Exception ex)
             {
-                _ctx.LogInfo("Warning: failed to save calibration JSON: " + ex.Message);
+                ctx.LogInfo("Warning: failed to save calibration JSON: " + ex.Message);
             }
 
             // Optional early exit after Stage 3 (calibration only, no main search).
@@ -1320,7 +1321,7 @@ namespace pwiz.OspreySharp.Tasks
             // search incrementally without paying the Stage 4 cost.
             if (OspreyEnvironment.ExitAfterCalibration)
             {
-                _ctx.LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
+                ctx.LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
                 return new List<FdrEntry>();
             }
 
@@ -1337,19 +1338,19 @@ namespace pwiz.OspreySharp.Tasks
                 fullLibrary, spectra, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
-                context);
+                context, ctx);
             swScoring.Stop();
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001
                 ? scoredEntries.Count / scoringSeconds
                 : 0.0;
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
                 scoringSeconds, scoredEntries.Count, ratePerSec));
 
             int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            _ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
+            ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
                 scoredEntries.Count,
                 nScoredTargets,
                 nScoredDecoys,
@@ -1361,25 +1362,25 @@ namespace pwiz.OspreySharp.Tasks
             // same call site, between scoring and pair-deduplication.
             scoredEntries = DeduplicateDoubleCounting(
                 scoredEntries, fullLibrary, spectra, ms2Cal,
-                isolationWindows, config);
+                isolationWindows, config, ctx);
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
                 fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
 
             // Deduplicate: keep best target and best decoy per base_id
             int nBeforeDedup = scoredEntries.Count;
-            scoredEntries = DeduplicatePairs(scoredEntries);
+            scoredEntries = DeduplicatePairs(scoredEntries, ctx);
             int nAfterDedup = scoredEntries.Count;
-            _ctx.LogInfo(string.Format(
+            ctx.LogInfo(string.Format(
                 "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
                 fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
 
             // Optional: write per-entry feature TSV for comparison against Rust's PIN output
             if (config.WritePin)
             {
-                WriteFeatureDump(inputFile, fileName, scoredEntries);
+                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
             }
 
             // Persist the full FdrEntry results (with features) to
@@ -1403,7 +1404,7 @@ namespace pwiz.OspreySharp.Tasks
                 ParquetScoreCache.WriteScoresParquet(
                     parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
                 swParquet.Stop();
-                _ctx.LogInfo(string.Format(
+                ctx.LogInfo(string.Format(
                     "Wrote {0} scored entries to {1} ({2:F1}s)",
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
             }
@@ -1419,7 +1420,7 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private void WriteFeatureDump(
             string inputFile, string fileName,
-            List<FdrEntry> scoredEntries)
+            List<FdrEntry> scoredEntries, PipelineContext ctx)
         {
             string dumpPath = Path.Combine(
                 Path.GetDirectoryName(inputFile) ?? ".",
@@ -1473,7 +1474,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
 
-            _ctx.LogInfo(string.Format("[COUNT] Wrote feature dump: {0} ({1} entries)",
+            ctx.LogInfo(string.Format("[COUNT] Wrote feature dump: {0} ({1} entries)",
                 dumpPath, sorted.Count));
         }
 
@@ -1483,7 +1484,7 @@ namespace pwiz.OspreySharp.Tasks
         /// only one disk scan runs at a time (see s_mzmlReadGate).
         /// </summary>
         private void LoadSpectra(string inputFile, bool serializeMzmlRead,
-            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra)
+            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra, PipelineContext ctx)
         {
             // Check for binary spectra cache. Use the shared GetCachePath so the
             // write and the rescore read (PerFileRescoreTask) derive an identical
@@ -1491,7 +1492,7 @@ namespace pwiz.OspreySharp.Tasks
             string cachePath = SpectraCache.GetCachePath(inputFile);
             if (File.Exists(cachePath))
             {
-                _ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
+                ctx.LogInfo(string.Format("Loading spectra from cache: {0}", cachePath));
                 try
                 {
                     // null = stale (source changed) or invalid (bad magic/version)
@@ -1503,17 +1504,17 @@ namespace pwiz.OspreySharp.Tasks
                         ms1Spectra = cacheResult.Ms1Spectra;
                         return;
                     }
-                    _ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
+                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
                 }
                 catch (Exception ex)
                 {
-                    _ctx.LogWarning(string.Format(
+                    ctx.LogWarning(string.Format(
                         "Failed to load spectra cache: {0}. Falling back to mzML.", ex.Message));
                 }
             }
 
             // Parse mzML directly, optionally serialized across files.
-            _ctx.LogInfo(string.Format("Parsing mzML: {0}", inputFile));
+            ctx.LogInfo(string.Format("Parsing mzML: {0}", inputFile));
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
                 s_mzmlReadGate.Wait();
@@ -1528,7 +1529,7 @@ namespace pwiz.OspreySharp.Tasks
             }
             ms2Spectra = mzmlResult.Ms2Spectra;
             ms1Spectra = mzmlResult.Ms1Spectra;
-            _ctx.LogInfo(string.Format("Loaded {0} MS2 + {1} MS1 spectra",
+            ctx.LogInfo(string.Format("Loaded {0} MS2 + {1} MS1 spectra",
                 ms2Spectra.Count, ms1Spectra.Count));
 
             // Save to cache for next run
@@ -1538,7 +1539,7 @@ namespace pwiz.OspreySharp.Tasks
             }
             catch (Exception ex)
             {
-                _ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
+                ctx.LogWarning(string.Format("Failed to save spectra cache: {0}", ex.Message));
             }
         }
 
