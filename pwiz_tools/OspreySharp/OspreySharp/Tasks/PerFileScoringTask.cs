@@ -876,7 +876,7 @@ namespace pwiz.OspreySharp.Tasks
                                 var mp = calParams.RtCalibration.ModelParams;
                                 if (ctx.Diagnostics?.DumpCalibration ?? false)
                                 {
-                                    ctx.Diagnostics.WriteStage6CalibrationDump(
+                                    ctx.Diagnostics?.WriteStage6CalibrationDump(
                                         fileName, mp.LibraryRts, mp.FittedRts);
                                 }
                                 var rtCal = RTCalibration.FromModelParams(

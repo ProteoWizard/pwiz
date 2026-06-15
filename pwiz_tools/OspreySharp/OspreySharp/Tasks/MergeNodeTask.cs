@@ -538,7 +538,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
             if (ctx.Diagnostics?.DumpDetectedPeptides ?? false)
-                ctx.Diagnostics.WriteStage7DetectedPeptidesDump(detectedPeptides);
+                ctx.Diagnostics?.WriteStage7DetectedPeptidesDump(detectedPeptides);
 
             // Build protein parsimony
             var parsimony = ProteinFdr.BuildProteinParsimony(
@@ -574,8 +574,8 @@ namespace pwiz.OspreySharp.Tasks
             // isolation, matching Rust diagnostics.dump_stage7_protein_fdr.
             if (ctx.Diagnostics?.DumpStage7ProteinFdr ?? false)
             {
-                ctx.Diagnostics.WriteStage7ProteinFdrDump(parsimony, proteinFdr);
-                if (ctx.Diagnostics.Stage7ProteinFdrOnly)
+                ctx.Diagnostics?.WriteStage7ProteinFdrDump(parsimony, proteinFdr);
+                if (ctx.Diagnostics?.Stage7ProteinFdrOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
 

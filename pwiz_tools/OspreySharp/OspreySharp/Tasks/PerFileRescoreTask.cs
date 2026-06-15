@@ -288,8 +288,8 @@ namespace pwiz.OspreySharp.Tasks
             // dump_stage6_rescored call from pipeline.rs.
             if (ctx.Diagnostics?.DumpRescored ?? false)
             {
-                ctx.Diagnostics.WriteStage6RescoredDump(_perFileEntries);
-                if (ctx.Diagnostics.RescoredOnly)
+                ctx.Diagnostics?.WriteStage6RescoredDump(_perFileEntries);
+                if (ctx.Diagnostics?.RescoredOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_RESCORED_ONLY");
             }
 
