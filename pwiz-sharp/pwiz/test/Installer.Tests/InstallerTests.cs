@@ -157,11 +157,12 @@ public class InstallerTests
 
         // bin/Release/net8.0-windows -> ../../../  =  Installer.Tests dir
         // Installer.Tests -> ../  =  test dir
-        // test -> ../  =  pwiz-sharp
+        // test -> ../  =  pwiz
+        // pwiz -> ../  =  pwiz-sharp
         // pwiz-sharp/installer/build/...
         string buildDir = Path.GetFullPath(Path.Combine(
             AppContext.BaseDirectory,
-            "..", "..", "..", "..", "..",
+            "..", "..", "..", "..", "..", "..",
             "installer", "build"));
         if (Directory.Exists(buildDir))
         {
