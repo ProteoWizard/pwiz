@@ -63,6 +63,8 @@ namespace pwiz.Skyline.Model.DdaSearch
         private const string SAGE_RESULTS_PIN = "results.sage.pin";
         private const string SAGE_RESULTS_JSON = "results.json";
 
+        private const string STANDARD_AMINO_ACIDS = "ACDEFGHIKLMNPQRSTVWY";
+
         public SageSearchEngine(double percolatorQvalueCutoff)
         {
             AdditionalSettings = new Dictionary<string, Setting>
@@ -352,7 +354,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             {
                 string headerLine = pinFile.ReadLine();
                 if (headerLine == null)
-                    throw new InvalidDataException(string.Format(DdaSearchResources.DdaSearch_Search_failed__0, SAGE_RESULTS_PIN));
+                    throw new InvalidDataException(string.Format(DdaSearchResources.DdaSearch_SageSearchEngine_Sage_did_not_produce_a_valid_Percolator_input_file___0__, SAGE_RESULTS_PIN));
 
                 var headers = headerLine.Split(TextUtil.SEPARATOR_TSV);
                 int fileNameColumn = Array.FindIndex(headers, h => string.Equals(h, @"FileName", StringComparison.OrdinalIgnoreCase));
@@ -433,7 +435,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             // empty - fail loudly instead, since it likely means the Sage output format changed.
             if (qvalueByPsmId.Count > 0 && totalRows == 0)
                 throw new InvalidDataException(
-                    @"Sage produced Percolator scores but none could be matched to result rows by psm_id; the spectral library would be empty. This may indicate an unsupported Sage version.");
+                    DdaSearchResources.DdaSearch_SageSearchEngine_Sage_produced_Percolator_scores__but_no_search_results_could_be_matched_to_them__This_may_indicate_an_unsupported_Sage_version_);
 
             foreach (var spectrumFilename in SpectrumFileNames)
             {
@@ -506,13 +508,22 @@ namespace pwiz.Skyline.Model.DdaSearch
         private IEnumerable<string> GetSageModKeys(StaticMod mod)
         {
             string terminusKey = GetSageTerminusKey(mod);
-            if (mod.AAs.IsNullOrEmpty())
+            if (!mod.AAs.IsNullOrEmpty())
             {
-                yield return terminusKey.IsNullOrEmpty() ? @"^" : terminusKey; // bare terminus
-                yield break;
+                foreach (char aa in mod.AAs)
+                    yield return terminusKey + aa;
             }
-            foreach (char aa in mod.AAs)
-                yield return terminusKey + aa;
+            else if (!terminusKey.IsNullOrEmpty())
+            {
+                yield return terminusKey; // a bare peptide terminus (any residue)
+            }
+            else
+            {
+                // No AAs and no terminus means the mod applies to every amino acid; Sage has no
+                // wildcard key, so expand it to all standard residues.
+                foreach (char aa in STANDARD_AMINO_ACIDS)
+                    yield return aa.ToString();
+            }
         }
 
         private static string GetSageTerminusKey(StaticMod mod)
