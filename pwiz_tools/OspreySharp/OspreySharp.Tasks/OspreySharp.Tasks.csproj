@@ -10,6 +10,12 @@
     <InternalsVisibleTo Include="OspreySharp.Test" />
   </ItemGroup>
 
+  <!-- ProfilerHooks (the main-search MeasureProfiler bracket) lives here now
+       that AbstractScoringTask, its only caller, is part of the Tasks layer. -->
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
+  </ItemGroup>
+
   <!-- Diagnostics carries IOspreyDiagnostics, which PipelineContext exposes so
        tasks emit dumps through the context instead of the exe-only static
        facade. This pulls the Diagnostics seam (and, transitively, its
