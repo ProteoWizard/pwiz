@@ -117,7 +117,11 @@ namespace pwiz.Skyline.Model
             }
             res.Instrument.InstrumentSerialNumber = spectrum.InstrumentSerialNumber;
 
-            res.IsCentroided = spectrum.Centroided.ToString(CultureInfo.CurrentCulture);
+            res.IsCentroided = spectrum.Centroided ? FullScanPropertiesRes.True : FullScanPropertiesRes.False;
+
+            res.Polarity = spectrum.NegativeCharge
+                ? FullScanPropertiesRes.Polarity_Negative
+                : FullScanPropertiesRes.Polarity_Positive;
 
             if (spectrum.Metadata.ConstantNeutralLoss.HasValue)
             {
@@ -161,6 +165,7 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string TotalIonCurrent { get; set; }
         [Category("AcquisitionInfo")] public string InjectionTime { get; set; }
         [Category("AcquisitionInfo")] public string IsCentroided { get; set; }
+        [Category("AcquisitionInfo")] public string Polarity { get; set; }
         [Category("AcquisitionInfo")] public string WindowGroup { get; set; } // For Bruker PASEF
         [Category("AcquisitionInfo")] public string SourceOffsetVoltage { get; set; }
         [Category("MatchInfo")] public string dotp { get; set; }

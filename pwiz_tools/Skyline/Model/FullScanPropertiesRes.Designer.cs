@@ -412,6 +412,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Ion polarity of the scan (positive or negative)..
+        /// </summary>
+        internal static string Description_Polarity {
+            get {
+                return ResourceManager.GetString("Description_Polarity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Precursor m/z of the selected MS/MS spectrum..
         /// </summary>
         internal static string Description_PrecursorMz {
@@ -644,6 +653,24 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("IsCentroided", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to True.
+        /// </summary>
+        internal static string True {
+            get {
+                return ResourceManager.GetString("True", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to False.
+        /// </summary>
+        internal static string False {
+            get {
+                return ResourceManager.GetString("False", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Isolation Window.
@@ -678,6 +705,33 @@ namespace pwiz.Skyline.Model {
         internal static string MzCount {
             get {
                 return ResourceManager.GetString("MzCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polarity.
+        /// </summary>
+        internal static string Polarity {
+            get {
+                return ResourceManager.GetString("Polarity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Negative.
+        /// </summary>
+        internal static string Polarity_Negative {
+            get {
+                return ResourceManager.GetString("Polarity_Negative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Positive.
+        /// </summary>
+        internal static string Polarity_Positive {
+            get {
+                return ResourceManager.GetString("Polarity_Positive", resourceCulture);
             }
         }
         
