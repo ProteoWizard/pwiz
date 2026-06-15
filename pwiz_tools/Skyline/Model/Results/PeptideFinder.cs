@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var transitionGroupDocNode in peptideDocNode.TransitionGroups)
                 {
                     var precursorMz = transitionGroupDocNode.PrecursorMz;
-                    _precursorMzPeptideList.Add(new PeptidePrecursorMz(peptideDocNode, precursorMz));
+                    _precursorMzPeptideList.Add(new PeptidePrecursorMz(peptideDocNode, transitionGroupDocNode, precursorMz));
                 }
             }
 
@@ -46,6 +46,104 @@ namespace pwiz.Skyline.Model.Results
             _precursorMzPeptideList.Sort((p1, p2) => p1.PrecursorMz.CompareTo(p2.PrecursorMz));
 
             _mzMatchTolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+        }
+
+        /// <summary>
+        /// Return the peptide doc node(s) this SRM spectrum's data should be assigned to: peptides
+        /// whose precursor Mz matches within tolerance and ALL of whose product ions are present among
+        /// the spectrum's measured products -- i.e. the spectrum actually targets the compound, rather
+        /// than merely sharing some of its product m/z values. This lets genuinely co-targeted same-Q1
+        /// compounds each get their own chromatogram (including a real compound whose product set is a
+        /// subset of a larger co-Q1 compound), while an incidental Q1 neighbor that shares only some of
+        /// its transitions -- e.g. a compound targeted by a different acquisition method, where only
+        /// part of its product set happens to appear in this method's scan -- is not handed this
+        /// compound's signal. Returns nothing when no candidate is fully present (the caller then emits
+        /// the spectrum unmatched so the data still surfaces).
+        /// </summary>
+        public IEnumerable<PeptideDocNode> FindMatchingPeptides(SignedMz precursorMz, IList<SignedMz> productMzs)
+        {
+            var candidates = GetPrecursorMatches(precursorMz);
+            if (candidates.Count == 0)
+                yield break;
+
+            // Dedupe by peptide GlobalIndex -- a peptide may have more than one transition group
+            // landing on this Q1, and keying by PeptideDocNode would invoke its structural Equals,
+            // the wrong primitive here.
+            var seen = new HashSet<int>();
+            foreach (var candidate in candidates)
+            {
+                if (!MatchesMajorityOfTransitions(candidate.NodeGroup, productMzs))
+                    continue;
+                if (seen.Add(candidate.NodePeptide.Id.GlobalIndex))
+                    yield return candidate.NodePeptide;
+            }
+        }
+
+        /// <summary>
+        /// All candidate precursors (transition groups) whose precursor Mz matches within tolerance,
+        /// found by binary search then walking outward in both directions until tolerance or polarity
+        /// is exceeded (SignedMz orders negatives before positives).
+        /// </summary>
+        private List<PeptidePrecursorMz> GetPrecursorMatches(SignedMz precursorMz)
+        {
+            var matches = new List<PeptidePrecursorMz>();
+            if (_precursorMzPeptideList.Count == 0)
+                return matches;
+
+            var lookup = new PeptidePrecursorMz(null, null, precursorMz);
+            int i = _precursorMzPeptideList.BinarySearch(lookup, PeptidePrecursorMz.COMPARER);
+            if (i < 0)
+                i = ~i;
+
+            for (int j = i - 1; j >= 0; j--)
+            {
+                var cand = _precursorMzPeptideList[j];
+                if (cand.PrecursorMz.IsNegative != precursorMz.IsNegative ||
+                    Math.Abs(cand.PrecursorMz - precursorMz) > _mzMatchTolerance)
+                    break;
+                matches.Add(cand);
+            }
+            for (int j = i; j < _precursorMzPeptideList.Count; j++)
+            {
+                var cand = _precursorMzPeptideList[j];
+                if (cand.PrecursorMz.IsNegative != precursorMz.IsNegative ||
+                    Math.Abs(cand.PrecursorMz - precursorMz) > _mzMatchTolerance)
+                    break;
+                matches.Add(cand);
+            }
+            return matches;
+        }
+
+        /// <summary>
+        /// True if the transition group matches more than half of its own product ions among the
+        /// spectrum's measured products (within tolerance, same polarity). A strict majority keeps a
+        /// genuinely targeted compound -- even one whose product set is a subset of a larger co-Q1
+        /// compound, or that has an occasional transition the file did not measure -- while rejecting
+        /// an incidental Q1 neighbor that shares only a minority of its transitions. Where two kept
+        /// precursors share transitions, those shared products are split between them downstream (each
+        /// emitted peptide binds the channels that match its own transitions).
+        /// </summary>
+        private bool MatchesMajorityOfTransitions(TransitionGroupDocNode nodeGroup, IList<SignedMz> productMzs)
+        {
+            if (nodeGroup == null)
+                return false;
+            int total = 0, matched = 0;
+            foreach (var nodeTran in nodeGroup.Transitions)
+            {
+                total++;
+                var tranMz = nodeTran.Mz;
+                for (int j = 0; j < productMzs.Count; j++)
+                {
+                    var productMz = productMzs[j];
+                    if (productMz.IsNegative == tranMz.IsNegative &&
+                        Math.Abs(productMz - tranMz) <= _mzMatchTolerance)
+                    {
+                        matched++;
+                        break;
+                    }
+                }
+            }
+            return total > 0 && matched * 2 > total;
         }
 
         /// <summary>
@@ -58,7 +156,7 @@ namespace pwiz.Skyline.Model.Results
                 return null;
 
             // Find closest precursor Mz match.
-            var lookup = new PeptidePrecursorMz(null, precursorMz);
+            var lookup = new PeptidePrecursorMz(null, null, precursorMz);
             int i = _precursorMzPeptideList.BinarySearch(lookup, PeptidePrecursorMz.COMPARER);
             if (i >= 0)
             {
@@ -98,13 +196,15 @@ namespace pwiz.Skyline.Model.Results
 
         private sealed class PeptidePrecursorMz
         {
-            public PeptidePrecursorMz(PeptideDocNode nodePeptide, SignedMz precursorMz)
+            public PeptidePrecursorMz(PeptideDocNode nodePeptide, TransitionGroupDocNode nodeGroup, SignedMz precursorMz)
             {
                 NodePeptide = nodePeptide;
+                NodeGroup = nodeGroup;
                 PrecursorMz = precursorMz;
             }
 
             public PeptideDocNode NodePeptide { get; private set; }
+            public TransitionGroupDocNode NodeGroup { get; private set; }
             public SignedMz PrecursorMz { get; private set; }
 
             public static readonly MzComparer COMPARER = new MzComparer();
