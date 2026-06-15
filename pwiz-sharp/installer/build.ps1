@@ -6,7 +6,7 @@ Build the pwiz-sharp installer (Inno Setup).
 End-to-end packaging pipeline:
   1. Refresh-VendorPins.ps1 — bake the current vendor SDK commit pins into
      VendorSdkPins.generated.cs (no-op if pins haven't changed).
-  2. dotnet build Tools/MsConvertGUI/Tools/MsConvert/src/MsConvertGUI/MsConvertGUI.csproj -c Release
+  2. dotnet build Tools/MsConvertGUI/src/MsConvertGUI.csproj -c Release
      (transitively builds MsConvert, vendor projects, etc.)
   3. Stage a filtered copy of the build output (strips vendor SDK DLLs +
      debug symbols + cross-platform runtimes + BCL localization satellites)
@@ -39,10 +39,10 @@ $dotnetRuntimeUrl = "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.ex
 
 $installerDir   = $PSScriptRoot
 $pwizSharp      = (Resolve-Path "$installerDir/..").Path
-$msconvertGui   = Join-Path $pwizSharp "Tools/MsConvertGUI/Tools/MsConvert/src/MsConvertGUI/MsConvertGUI.csproj"
-$seems          = Join-Path $pwizSharp "Tools/SeeMS/src/SeeMS/SeeMS.csproj"
-$msconvertGuiOut = Join-Path $pwizSharp "Tools/MsConvertGUI/Tools/MsConvert/src/MsConvertGUI/bin/Release/net8.0-windows"
-$seemsOut       = Join-Path $pwizSharp "Tools/SeeMS/src/SeeMS/bin/Release/net8.0-windows"
+$msconvertGui   = Join-Path $pwizSharp "Tools/MsConvertGUI/src/MsConvertGUI.csproj"
+$seems          = Join-Path $pwizSharp "Tools/SeeMS/src/SeeMS.csproj"
+$msconvertGuiOut = Join-Path $pwizSharp "Tools/MsConvertGUI/src/bin/Release/net8.0-windows"
+$seemsOut       = Join-Path $pwizSharp "Tools/SeeMS/src/bin/Release/net8.0-windows"
 $outDir         = Join-Path $installerDir "build"
 $stagingDir     = Join-Path $outDir "stage"
 $cacheDir       = Join-Path $installerDir "cache"
