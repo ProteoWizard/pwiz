@@ -247,17 +247,22 @@ namespace pwiz.Skyline.Model.Results
             if (unionIms.Count == 0)
                 return null;
 
-            // For windowed aggregation, pre-sort each channel's (im, intensity)
-            // pairs. Candidates (unionIms) and each channel are both iterated in
-            // ascending IM order, so the window sum is maintained with a
-            // forward-only two-pointer sweep - O(channelEntries) per channel
-            // total, rather than a binary search per (candidate, channel) cell.
-            KeyValuePair<double, double>[][] sortedChannels = null;
-            int[] loIdx = null, hiIdx = null;
-            double[] winSum = null;
+            var expectedVector = new double[channelCount];
+            for (int c = 0; c < channelCount; c++)
+                expectedVector[c] = expectedProportions[c];
+            var statExpected = new Statistics(expectedVector);
+
+            var survivors = new List<SurvivingBin>();
+            var observed = new double[channelCount];
             if (halfWindow > 0)
             {
-                sortedChannels = new KeyValuePair<double, double>[channelCount][];
+                // Windowed aggregation: pre-sort each channel's (im, intensity) pairs.
+                // Candidates (unionIms) and each channel are both iterated in ascending IM
+                // order, so the window sum is maintained with a forward-only two-pointer sweep
+                // - O(channelEntries) per channel total, rather than a binary search per
+                // (candidate, channel) cell. The sweep state persists across candidates, so it
+                // lives outside the candidate loop but entirely within this branch.
+                var sortedChannels = new KeyValuePair<double, double>[channelCount][];
                 for (int c = 0; c < channelCount; c++)
                 {
                     if (perChannelBins[c] == null)
@@ -269,26 +274,14 @@ namespace pwiz.Skyline.Model.Results
                     pairs.Sort((a, b) => a.Key.CompareTo(b.Key));
                     sortedChannels[c] = pairs.ToArray();
                 }
-                loIdx = new int[channelCount];
-                hiIdx = new int[channelCount];
-                winSum = new double[channelCount];
-            }
-
-            var expectedVector = new double[channelCount];
-            for (int c = 0; c < channelCount; c++)
-                expectedVector[c] = expectedProportions[c];
-            var statExpected = new Statistics(expectedVector);
-
-            var survivors = new List<SurvivingBin>();
-            var observed = new double[channelCount];
-            foreach (var im in unionIms)
-            {
-                Array.Clear(observed, 0, observed.Length);
-                double total = 0;
-                for (int c = 0; c < channelCount; c++)
+                var loIdx = new int[channelCount];
+                var hiIdx = new int[channelCount];
+                var winSum = new double[channelCount];
+                foreach (var im in unionIms)
                 {
-                    double v;
-                    if (halfWindow > 0)
+                    Array.Clear(observed, 0, observed.Length);
+                    double total = 0;
+                    for (int c = 0; c < channelCount; c++)
                     {
                         var arr = sortedChannels[c];
                         double hi = im + halfWindow;
@@ -303,29 +296,47 @@ namespace pwiz.Skyline.Model.Results
                             winSum[c] -= arr[loIdx[c]].Value;
                             loIdx[c]++;
                         }
-                        v = winSum[c];
+                        observed[c] = winSum[c];
+                        total += winSum[c];
                     }
-                    else if (perChannelBins[c] != null && perChannelBins[c].TryGetValue(im, out var intensity))
-                    {
-                        v = intensity;
-                    }
-                    else
-                    {
-                        v = 0;
-                    }
-                    observed[c] = v;
-                    total += v;
+                    AddSurvivingBinIfPasses(survivors, observed, expectedVector, statExpected, im, total);
                 }
-                if (total <= 0)
-                    continue;
-                if (HasMissingExpectedSignal(observed, expectedVector))
-                    continue;
-                var idotp = statExpected.Angle(new Statistics(observed));
-                if (double.IsNaN(idotp) || idotp < IDOTP_THRESHOLD_FOR_ION_MOBILITY_GUARD)
-                    continue;
-                survivors.Add(new SurvivingBin { Im = im, Total = total });
+            }
+            else
+            {
+                // Exact-bin aggregation: read each channel's intensity from the exact IM bin.
+                foreach (var im in unionIms)
+                {
+                    Array.Clear(observed, 0, observed.Length);
+                    double total = 0;
+                    for (int c = 0; c < channelCount; c++)
+                    {
+                        double v = perChannelBins[c] != null && perChannelBins[c].TryGetValue(im, out var intensity)
+                            ? intensity
+                            : 0;
+                        observed[c] = v;
+                        total += v;
+                    }
+                    AddSurvivingBinIfPasses(survivors, observed, expectedVector, statExpected, im, total);
+                }
             }
             return survivors;
+        }
+
+        // Evaluates one candidate IM bin's summed-channel vector against the expected isotope
+        // proportions (missing-where-expected check, then idotp guard) and adds it to survivors
+        // if it passes. Shared by the windowed and exact-bin aggregation paths above.
+        private static void AddSurvivingBinIfPasses(List<SurvivingBin> survivors, double[] observed,
+            double[] expectedVector, Statistics statExpected, double im, double total)
+        {
+            if (total <= 0)
+                return;
+            if (HasMissingExpectedSignal(observed, expectedVector))
+                return;
+            var idotp = statExpected.Angle(new Statistics(observed));
+            if (double.IsNaN(idotp) || idotp < IDOTP_THRESHOLD_FOR_ION_MOBILITY_GUARD)
+                return;
+            survivors.Add(new SurvivingBin { Im = im, Total = total });
         }
 
         // Half-window for the windowed guard variant, derived from the
