@@ -65,7 +65,7 @@ namespace pwiz.OspreySharp
     /// production carries no diagnostic state. Internal: callers go through the
     /// <see cref="OspreyDiagnostics"/> facade, never this type directly.
     /// </summary>
-    internal sealed class OspreyFileDiagnostics
+    internal sealed class OspreyFileDiagnostics : IScoringDiagnostics
     {
         /// <summary>
         /// Newline used by every Stage 6 cross-impl bisection dump writer.
@@ -393,14 +393,14 @@ namespace pwiz.OspreySharp
         public OspreyFileDiagnostics()
         {
             // TO RESTORE OSPREY_DUMP_PREDICT_RT: uncomment WritePredictRtCall in
-            // OspreySharp/Tasks/AbstractScoringTask.cs (ScoreCandidate) and the
+            // OspreySharp.Scoring/CoelutionScorer.cs (ScoreCandidate) and the
             // paired WritePredictRtArrays / ClosePredictRtDump in
             // OspreySharp/Tasks/PerFileRescoreTask.cs, then comment out this throw.
             if (DumpPredictRt)
                 throw new NotImplementedException(
                     @"OSPREY_DUMP_PREDICT_RT is temporarily disabled: its per-candidate " +
                     @"producer was removed from the scoring hotspot. To restore, uncomment " +
-                    @"WritePredictRtCall in OspreySharp/Tasks/AbstractScoringTask.cs and the " +
+                    @"WritePredictRtCall in OspreySharp.Scoring/CoelutionScorer.cs and the " +
                     @"paired WritePredictRtArrays / ClosePredictRtDump in " +
                     @"OspreySharp/Tasks/PerFileRescoreTask.cs, then comment out this throw. " +
                     @"See ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.");
@@ -1284,7 +1284,7 @@ namespace pwiz.OspreySharp
         /// </summary>
         public void WriteCwtPathRow(string fileName, uint entryId,
             int nCwtPeaks, int nFinalPeaks, int nScored, bool scored,
-            List<XicData> xics)
+            IReadOnlyList<XicData> xics)
         {
             if (!DumpCwtPath)
                 return;
@@ -1301,7 +1301,8 @@ namespace pwiz.OspreySharp
             int consensusArgmax = -1;
             if (xics != null)
             {
-                double[] consensus = CwtPeakDetector.GetConsensusSignal(xics, out sigma);
+                var xicList = xics is List<XicData> xicL ? xicL : new List<XicData>(xics);
+                double[] consensus = CwtPeakDetector.GetConsensusSignal(xicList, out sigma);
                 if (consensus != null)
                 {
                     double sum = 0.0;

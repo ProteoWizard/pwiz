@@ -97,6 +97,22 @@ namespace pwiz.OspreySharp.Tasks
         }
     }
 
+    /// <summary>
+    /// Whether FirstJoin's Stage 6 planning block actually ran (<c>true</c>) vs
+    /// was skipped (single-file / reconciliation off) or rehydrated from disk
+    /// (<c>false</c>). This is the gate PerFileRescore's self-gate checks to tell
+    /// "planning ran" from "planning was skipped." Routing it through the typed
+    /// byproduct registry replaces PerFileRescore's former concrete-type reach
+    /// (<c>ctx.Demand&lt;FirstJoinTask&gt;().DidPlan(ctx)</c>) -- the last
+    /// compile-time edge to a sibling task in the otherwise uniform
+    /// <c>ctx.Get&lt;T&gt;()</c> spine.
+    /// </summary>
+    internal sealed class PlanningPerformed
+    {
+        public bool Value { get; }
+        public PlanningPerformed(bool value) { Value = value; }
+    }
+
     /// <summary>Stage 6 reconciliation actions keyed by (file, post-compaction index).</summary>
     internal sealed class ReconciliationActions
     {
