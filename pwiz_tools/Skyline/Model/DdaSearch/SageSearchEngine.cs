@@ -117,16 +117,26 @@ namespace pwiz.Skyline.Model.DdaSearch
         public static string SageBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.Sage, Path.Combine(SageDirectory, SAGE_FILENAME, @"sage.exe"));
         public static string SageArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.Sage, "");
 
-        private static FileDownloadInfo SageDownloadInfo => new FileDownloadInfo
-        {
-            Filename = SAGE_FILENAME, DownloadUrl = SAGE_URL, InstallPath = SageDirectory, OverwriteExisting = true, Unzip = true,
-            ToolType = SearchToolType.Sage, ToolPath = SageBinary, ToolExtraArgs = SageArgs
-        };
+        // Crux Percolator, used to compute q-values from the Sage pin (same tool/version as Comet/Tide;
+        // shared download since the InstallPath and SearchToolType match).
+        static string CRUX_FILENAME = @"crux-4.3";
+        static Uri CRUX_URL = new Uri($@"https://noble.gs.washington.edu/crux-downloads/{CRUX_FILENAME}/{CRUX_FILENAME}.Windows.AMD64.zip");
+        public static string CruxDirectory => Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(), CRUX_FILENAME);
+        public static string CruxBinary => Settings.Default.SearchToolList.GetToolPathOrDefault(SearchToolType.CruxPercolator, Path.Combine(CruxDirectory, $@"{CRUX_FILENAME}.Windows.AMD64", @"bin", @"crux.exe"));
+        public static string PercolatorArgs => Settings.Default.SearchToolList.GetToolArgsOrDefault(SearchToolType.CruxPercolator, "");
 
-        // Sage needs its own binary plus the Crux Percolator that Comet/Tide already bundle (shared download).
-        public static FileDownloadInfo[] FilesToDownload => new[] { SageDownloadInfo }
-            .Concat(CometSearchEngine.FilesToDownload.Where(f => f.ToolType == SearchToolType.CruxPercolator))
-            .ToArray();
+        public static FileDownloadInfo[] FilesToDownload => new[] {
+            new FileDownloadInfo
+            {
+                Filename = SAGE_FILENAME, DownloadUrl = SAGE_URL, InstallPath = SageDirectory, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.Sage, ToolPath = SageBinary, ToolExtraArgs = SageArgs
+            },
+            new FileDownloadInfo
+            {
+                Filename = CRUX_FILENAME, DownloadUrl = CRUX_URL, InstallPath = CruxDirectory, OverwriteExisting = true, Unzip = true,
+                ToolType = SearchToolType.CruxPercolator, ToolPath = CruxBinary, ToolExtraArgs = PercolatorArgs
+            }
+        };
 
         private MzTolerance _precursorMzTolerance;
         private MzTolerance _fragmentMzTolerance;
@@ -189,7 +199,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 string configFile = KeepIntermediateFiles ? Path.Combine(outputDirectory, @"sage.json") : Path.GetTempFileName();
                 configFile = PathEx.GetNonUnicodePath(configFile);
                 _intermediateFiles.Add(configFile);
-                File.WriteAllText(configFile, GetConfigJson(outputDirectory));
+                File.WriteAllText(configFile, GetConfigJson());
 
                 // Run Sage
                 var pr = new ProcessRunner();
@@ -216,8 +226,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 FixSagePin(sagePinFilepath, fixedPinFilepath);
 
                 // Run Crux Percolator on the cleaned pin
-                psi = new ProcessStartInfo(CometSearchEngine.CruxBinary,
-                    $@"percolator {CometSearchEngine.PercolatorArgs} --only-psms T --output-dir ""{outputDirectory}"" --overwrite T --decoy-prefix ""{_decoyTag}""")
+                psi = new ProcessStartInfo(CruxBinary,
+                    $@"percolator {PercolatorArgs} --only-psms T --output-dir ""{outputDirectory}"" --overwrite T --decoy-prefix ""{_decoyTag}""")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false
@@ -267,7 +277,7 @@ namespace pwiz.Skyline.Model.DdaSearch
             return _success;
         }
 
-        private string GetConfigJson(string outputDirectory)
+        private string GetConfigJson()
         {
             bool cTerminal = _enzyme.IsCTerm;
             string cleaveAt = (cTerminal ? _enzyme.CleavageC : _enzyme.CleavageN) ?? string.Empty;
@@ -282,8 +292,10 @@ namespace pwiz.Skyline.Model.DdaSearch
                 [@"c_terminal"] = cTerminal,
                 [@"semi_enzymatic"] = _enzyme.IsSemiCleaving
             };
-            // Sage's "restrict" is an optional single character; omit it when there is no restriction
-            if (!restrict.IsNullOrEmpty())
+            // Sage's "restrict" is an optional SINGLE character. Omit it when there is no restriction;
+            // also omit (rather than emit an unparseable multi-char value) for the rare custom enzyme
+            // whose restriction list has more than one residue, which Sage cannot represent.
+            if (restrict.Length == 1)
                 enzyme[@"restrict"] = restrict;
 
             var database = new JObject
@@ -316,9 +328,8 @@ namespace pwiz.Skyline.Model.DdaSearch
                 [@"deisotope"] = GetBoolSetting(@"deisotope"),
                 [@"chimera"] = GetBoolSetting(@"chimera"),
                 [@"wide_window"] = GetBoolSetting(@"wide_window"),
-                [@"predict_rt"] = GetBoolSetting(@"predict_rt"),
-                [@"output_directory"] = outputDirectory,
-                [@"write_pin"] = true
+                [@"predict_rt"] = GetBoolSetting(@"predict_rt")
+                // output_directory and write_pin come from the --output_directory / --write-pin CLI flags
             };
 
             return config.ToString();
@@ -396,7 +407,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             // column, and therefore the Percolator "PSMId" - all the same global PSM counter in Sage's
             // output format (verified against Sage v0.14.7). Unlike Comet, Sage's SpecId carries no path
             // prefix, so the q-values join directly without any trimming.
-            var rowsByFile = new Dictionary<string, List<string[]>>();
+            // Keyed by the basename of the path AS PASSED TO SAGE (i.e. after GetNonUnicodePath, which may
+            // yield an 8.3 short name); the per-file lookup below applies the same transform so they match.
+            var rowsByFile = new Dictionary<string, List<string[]>>(StringComparer.OrdinalIgnoreCase);
             int totalRows = 0;
             using (var reader = new DsvFileReader(sageTsvFilepath, TextUtil.SEPARATOR_TSV))
             {
@@ -440,16 +453,19 @@ namespace pwiz.Skyline.Model.DdaSearch
             foreach (var spectrumFilename in SpectrumFileNames)
             {
                 string sslFilepath = GetSearchResultFilepath(spectrumFilename);
-                string fileKey = Path.GetFileName(spectrumFilename.GetFilePath());
+                // The SSL "file" column must be the real on-disk name (BiblioSpec opens it next to the SSL),
+                // but the lookup key must match Sage's echoed filename (the GetNonUnicodePath form).
+                string sslFileValue = Path.GetFileName(spectrumFilename.GetFilePath());
+                string lookupKey = Path.GetFileName(PathEx.GetNonUnicodePath(spectrumFilename.GetFilePath()));
 
                 using var sslWriter = new StreamWriter(sslFilepath);
                 sslWriter.WriteLine(string.Join(TextUtil.SEPARATOR_TSV.ToString(),
                     @"file", @"scan", @"charge", @"sequence", @"score-type", @"score"));
-                if (!rowsByFile.TryGetValue(fileKey, out var rows))
+                if (!rowsByFile.TryGetValue(lookupKey, out var rows))
                     continue;
                 foreach (var row in rows)
                     sslWriter.WriteLine(string.Join(TextUtil.SEPARATOR_TSV.ToString(),
-                        fileKey, row[0], row[1], row[2], @"PERCOLATOR QVALUE", row[3]));
+                        sslFileValue, row[0], row[1], row[2], @"PERCOLATOR QVALUE", row[3]));
             }
         }
 
