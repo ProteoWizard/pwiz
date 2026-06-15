@@ -24,4 +24,4 @@ installer/staging/
 # spurious dirty-tree failures on TC because cross-machine differences in line
 # endings / archive timestamps would cause the regeneration to write a
 # byte-different file even when the logical content matched.
-src/Vendor/Common/VendorSdkPins.generated.cs
+pwiz/src/Vendor/Common/VendorSdkPins.generated.cs
