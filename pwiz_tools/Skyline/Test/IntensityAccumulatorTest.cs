@@ -115,7 +115,7 @@ namespace pwiz.SkylineTest
         {
             var acc = new IntensityAccumulator(false, ChromExtractor.summed, TARGET_MZ, true);
             acc.AddPoint(TARGET_MZ, 10, 1.4);  // contributes
-            acc.AddPoint(TARGET_MZ, 30, null); // no IM, must not perturb the histogram
+            acc.AddPoint(TARGET_MZ, 30); // no IM, must not perturb the histogram
             Assert.AreEqual(1, acc.IonMobilityIntensityBins.Count);
             Assert.AreEqual(1.4, acc.ObservedIonMobility, EPSILON);
         }
