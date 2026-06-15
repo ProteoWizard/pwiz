@@ -7,16 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\pwiz\src\Util\Util.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\MsData\MsData.csproj" />
     <!-- IdentData supplies CV-mapped PSM types (mzIdentML, pepXML) that several
          BiblioSpec readers translate from. -->
-    <ProjectReference Include="..\..\..\..\pwiz\src\IdentData\IdentData.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\IdentData\IdentData.csproj" />
     <!-- Analysis supplies SpectrumList_PeakPicker; PwizSharpSpecFileReader wraps the
          vendor spectrum list with it so vendor-side centroiding kicks in for .wiff /
          .raw / .baf / .lcd inputs (cpp parity: PwizReader.cpp:67-68 "peakPicking true 1-"). -->
-    <ProjectReference Include="..\..\..\..\pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Analysis\Analysis.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -54,8 +54,8 @@
          -p:MascotParserPath=PATH on the dotnet command line. -->
     <MascotShimDir>$(MSBuildThisFileDirectory)..\..\native\MascotShim</MascotShimDir>
     <MascotShimBuildDir>$(MascotShimDir)\build</MascotShimBuildDir>
-    <MascotParserPath Condition="'$(MascotParserPath)' == '' AND '$(OS)' == 'Windows_NT'">$(MSBuildThisFileDirectory)..\..\..\..\..\libraries\msparser_3_1_0_x86_win64\vs2015</MascotParserPath>
-    <MascotParserPath Condition="'$(MascotParserPath)' == '' AND '$(OS)' != 'Windows_NT'">$(MSBuildThisFileDirectory)../../../../../libraries/msparser_3_1_0_x86_linux64/gnu</MascotParserPath>
+    <MascotParserPath Condition="'$(MascotParserPath)' == '' AND '$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\msparser_3_1_0_x86_win64\vs2015</MascotParserPath>
+    <MascotParserPath Condition="'$(MascotParserPath)' == '' AND '$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/msparser_3_1_0_x86_linux64/gnu</MascotParserPath>
 
     <!-- Vendor archive -> $(MascotParserPath) extraction, mirrors cpp
          Jamroot.jam:626/674 and the Mobilion.csproj ExtractMobilionAssemblies
@@ -63,12 +63,10 @@
          vs2015/ (Windows) or gnu/ (Linux) when the archive is extracted into
          the libraries dir. Idempotent — incremental check on Inputs/Outputs
          skips when the header already exists. -->
-    <MascotArchive Condition="'$(OS)' == 'Windows_NT'">$(MSBuildThisFileDirectory)..\..\..\..\..\libraries\msparser_3_1_0_x86_win64.7z</MascotArchive>
-    <MascotArchive Condition="'$(OS)' != 'Windows_NT'">$(MSBuildThisFileDirectory)../../../../../libraries/msparser_3_1_0_x86_linux64.7z</MascotArchive>
-    <MascotLibrariesDir Condition="'$(OS)' == 'Windows_NT'">$(MSBuildThisFileDirectory)..\..\..\..\..\libraries</MascotLibrariesDir>
-    <MascotLibrariesDir Condition="'$(OS)' != 'Windows_NT'">$(MSBuildThisFileDirectory)../../../../../libraries</MascotLibrariesDir>
-    <SevenZaExe Condition="'$(OS)' == 'Windows_NT'">$(MascotLibrariesDir)\7za.exe</SevenZaExe>
-    <SevenZaExe Condition="'$(OS)' != 'Windows_NT'">$(MascotLibrariesDir)/7zz</SevenZaExe>
+    <MascotArchive Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\msparser_3_1_0_x86_win64.7z</MascotArchive>
+    <MascotArchive Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/msparser_3_1_0_x86_linux64.7z</MascotArchive>
+    <SevenZaExe Condition="'$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\7za.exe</SevenZaExe>
+    <SevenZaExe Condition="'$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/7zz</SevenZaExe>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(MascotSupport)' == 'true'">
@@ -116,7 +114,7 @@
           BeforeTargets="BuildMascotShim"
           Inputs="$(MascotArchive)"
           Outputs="$(MascotParserPath)\include\ms_mascotresfile_dat.hpp">
-    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(MascotLibrariesDir)&quot; &quot;$(MascotArchive)&quot;"
+    <Exec Command="&quot;$(SevenZaExe)&quot; x -y -pi-agree-to-the-vendor-licenses -o&quot;$(PwizLibrariesPath)&quot; &quot;$(MascotArchive)&quot;"
           StandardOutputImportance="low" />
   </Target>
 

@@ -23,7 +23,7 @@
        here so the test compilation can use Pwiz.Vendor.UNIFI.Protobuf types directly. -->
   <ItemGroup>
     <Reference Include="Google.Protobuf">
-      <HintPath>$(MSBuildThisFileDirectory)..\..\..\..\pwiz_tools\Shared\Lib\Google.Protobuf.dll</HintPath>
+      <HintPath>$(PwizCppToolsRoot)\Shared\Lib\Google.Protobuf.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

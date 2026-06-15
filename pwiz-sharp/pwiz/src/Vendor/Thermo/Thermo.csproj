@@ -22,9 +22,9 @@
       $(ThermoAssembliesDir) on every build (idempotent — skipped if the files are already
       current).
       -->
-    <ThermoArchive>$(MSBuildThisFileDirectory)..\..\..\..\vendor-archives\vendor_api_Thermo.7z</ThermoArchive>
-    <ThermoAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Thermo</ThermoAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\..\libraries\7za.exe</SevenZaExe>
+    <ThermoArchive>$(PwizVendorArchivesPath)\vendor_api_Thermo.7z</ThermoArchive>
+    <ThermoAssembliesDir>$(PwizVendorAssembliesPath)\Thermo</ThermoAssembliesDir>
+    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>

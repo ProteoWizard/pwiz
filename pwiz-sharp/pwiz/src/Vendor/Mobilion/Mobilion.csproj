@@ -12,10 +12,10 @@
          pattern: extract on every build (idempotent), gated behind
          IAgreeToVendorLicenses. The shim and Reader_Mobilion compile without the
          SDK, but Read() throws VendorSupportNotEnabledException in NO_VENDOR mode. -->
-    <MobilionArchive>$(MSBuildThisFileDirectory)..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Mobilion.7z</MobilionArchive>
-    <MobilionAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Mobilion</MobilionAssembliesDir>
+    <MobilionArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Mobilion.7z</MobilionArchive>
+    <MobilionAssembliesDir>$(PwizVendorAssembliesPath)\Mobilion</MobilionAssembliesDir>
     <MobilionShimDir>$(MSBuildThisFileDirectory)MobilionShim</MobilionShimDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\..\libraries\7za.exe</SevenZaExe>
+    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>

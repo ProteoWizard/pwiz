@@ -25,8 +25,8 @@
        harness can find the .UIMF file. Without this, every test goes Inconclusive
        ("UIMF test data tree not found") on a fresh agent. -->
   <PropertyGroup>
-    <VendorTestArchive>$(MSBuildThisFileDirectory)..\..\..\..\pwiz\data\vendor_readers\UIMF\Reader_UIMF_Test.data.tar.bz2</VendorTestArchive>
-    <VendorTestDataParent>$(MSBuildThisFileDirectory)..\..\..\..\pwiz\data\vendor_readers\UIMF</VendorTestDataParent>
+    <VendorTestArchive>$(PwizCppRoot)\data\vendor_readers\UIMF\Reader_UIMF_Test.data.tar.bz2</VendorTestArchive>
+    <VendorTestDataParent>$(PwizCppRoot)\data\vendor_readers\UIMF</VendorTestDataParent>
   </PropertyGroup>
   <Import Project="..\..\..\build\ExtractTestData.targets" />
 

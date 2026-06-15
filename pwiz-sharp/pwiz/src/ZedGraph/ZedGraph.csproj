@@ -36,13 +36,13 @@
        same manifest name (ZedGraph.ZedGraph.ZedGraphLocale.resources) the legacy build produces —
        ZedGraphControl looks resources up by that exact name at runtime. -->
   <ItemGroup>
-    <Compile Include="..\..\..\..\pwiz_tools\Shared\zedgraph\ZedGraph\*.cs">
+    <Compile Include="$(PwizCppToolsRoot)\Shared\zedgraph\ZedGraph\*.cs">
       <Link>ZedGraph\%(Filename)%(Extension)</Link>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\..\..\pwiz_tools\Shared\zedgraph\ZedGraph\*.resx">
+    <EmbeddedResource Include="$(PwizCppToolsRoot)\Shared\zedgraph\ZedGraph\*.resx">
       <Link>ZedGraph\%(Filename)%(Extension)</Link>
     </EmbeddedResource>
   </ItemGroup>

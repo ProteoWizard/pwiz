@@ -21,14 +21,14 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <SciexArchive>$(MSBuildThisFileDirectory)..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api_ABI.7z</SciexArchive>
-    <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
+    <SciexArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_ABI.7z</SciexArchive>
+    <SciexAssembliesDir>$(PwizVendorAssembliesPath)\Sciex</SciexAssembliesDir>
     <!-- Manually-curated wiff2-on-net8 deps: assemblies/configs that don't ship in
          vendor_api_ABI.7z (the .NET-Standard System.ServiceModel and three Unity DI configs
          are committed under pwiz-sharp/vendor-archives/Sciex/). See
          src/Vendor/Sciex/wiff2-on-net8-investigation.md for provenance. -->
-    <SciexWiff2DepsDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-archives\Sciex</SciexWiff2DepsDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\..\libraries\7za.exe</SevenZaExe>
+    <SciexWiff2DepsDir>$(PwizVendorArchivesPath)\Sciex</SciexWiff2DepsDir>
+    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>

@@ -15,10 +15,10 @@
          file. The vendor projects can't live in the core Pwiz.Data.MsData assembly without
          dragging the native SDKs into every consumer, so they're registered at startup
          (see Program.cs RegisterVendorReaders). -->
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Bruker\Bruker.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Sciex\Sciex.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Thermo\Thermo.csproj" />
   </ItemGroup>
 
   <!-- cpp parity: MaxQuantReader.cpp:177 — when no modifications.xml lives next to the
@@ -26,18 +26,18 @@
        cpp tree's shipping file into the BlibBuild output directory so the C# port has
        the same fallback. -->
   <ItemGroup>
-    <None Include="..\..\..\..\..\pwiz_tools\BiblioSpec\src\modifications.xml"
+    <None Include="$(PwizCppToolsRoot)\BiblioSpec\src\modifications.xml"
           Link="modifications.xml"
-          Condition="Exists('..\..\..\..\..\pwiz_tools\BiblioSpec\src\modifications.xml')">
+          Condition="Exists('$(PwizCppToolsRoot)\BiblioSpec\src\modifications.xml')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <!-- cpp parity: mzTabReader.cpp:66 — MzTabReader loads Unimod records from <exeDir>/unimod.xml
          at parse time. cpp's BlibBuild ships this file from pwiz/data/common/unimod.xml next to
          BlibBuild.exe; mirror the same for the C# port so .mzTab / mztab.txt inputs work without
          throwing FileNotFoundException inside MzTabReader.LoadUnimod. -->
-    <None Include="..\..\..\..\..\pwiz\data\common\unimod.xml"
+    <None Include="$(PwizCppRoot)\data\common\unimod.xml"
           Link="unimod.xml"
-          Condition="Exists('..\..\..\..\..\pwiz\data\common\unimod.xml')">
+          Condition="Exists('$(PwizCppRoot)\data\common\unimod.xml')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

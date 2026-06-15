@@ -6,6 +6,7 @@ using System.Security.Principal;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
+using Pwiz.TestHarness;
 
 namespace Pwiz.Installer.Tests;
 
@@ -155,15 +156,7 @@ public class InstallerTests
             return false;
         }
 
-        // bin/Release/net8.0-windows -> ../../../  =  Installer.Tests dir
-        // Installer.Tests -> ../  =  test dir
-        // test -> ../  =  pwiz
-        // pwiz -> ../  =  pwiz-sharp
-        // pwiz-sharp/installer/build/...
-        string buildDir = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..", "..", "..", "..", "..", "..",
-            "installer", "build"));
+        string buildDir = PwizSharpPaths.InstallerBuildDir;
         if (Directory.Exists(buildDir))
         {
             // Versioned bundled-variant filename: ProteoWizard-Sharp-Setup-<ver>.exe
@@ -464,14 +457,7 @@ public class InstallerTests
             return false;
         }
 
-        // From test bin (bin/Release/net8.0-windows): hop up to pwiz-sharp's
-        // parent (7 ups; bin is at depth 6 below pwiz-sharp post-restructure),
-        // then sideways into the sibling pwiz/ cpp checkout.
-        string candidate = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory,
-            "..", "..", "..", "..", "..", "..", "..",
-            "pwiz", "data", "vendor_readers", "Thermo",
-            "Reader_Thermo_Test.data", fixtureName));
+        string candidate = PwizSharpPaths.CppVendorTestData("Thermo", fixtureName);
         if (File.Exists(candidate))
         {
             fixturePath = candidate;

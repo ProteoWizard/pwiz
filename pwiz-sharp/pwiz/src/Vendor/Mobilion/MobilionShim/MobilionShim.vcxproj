@@ -51,7 +51,7 @@
        ExtractMobilionAssemblies target unpacks vendor_api_Mobilion.7z. The
        .csproj sequences extraction before this build (MSBuild Exec). -->
   <PropertyGroup>
-    <MobilionSdkDir>$(MSBuildThisFileDirectory)..\..\..\..\..\vendor-assemblies\Mobilion</MobilionSdkDir>
+    <MobilionSdkDir>$(PwizVendorAssembliesPath)\Mobilion</MobilionSdkDir>
     <OutDir>$(MSBuildThisFileDirectory)bin\$(Configuration)\</OutDir>
     <IntDir>$(MSBuildThisFileDirectory)obj\$(Configuration)\</IntDir>
     <TargetName>MobilionShim</TargetName>

@@ -26,7 +26,7 @@
        The source files live under pwiz-sharp/example_data/, mirroring the existing
        sibling cpp example_data/ directory at the repo root. -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\..\..\example_data\tiny.pwiz.1.1.*">
+    <None Include="$(PwizExampleDataPath)\tiny.pwiz.1.1.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>example_data\%(Filename)%(Extension)</Link>
     </None>

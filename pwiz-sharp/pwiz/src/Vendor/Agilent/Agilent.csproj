@@ -11,9 +11,9 @@
     unpacks the x64 .NET assemblies on every build (idempotent). Sharp targets x64 only.
     -->
   <PropertyGroup>
-    <AgilentArchive>$(MSBuildThisFileDirectory)..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Agilent.7z</AgilentArchive>
-    <AgilentAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Agilent</AgilentAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\..\libraries\7za.exe</SevenZaExe>
+    <AgilentArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Agilent.7z</AgilentArchive>
+    <AgilentAssembliesDir>$(PwizVendorAssembliesPath)\Agilent</AgilentAssembliesDir>
+    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>
@@ -79,8 +79,7 @@
        pick whatever SDK is installed (10.x on the build agent — broken for the patcher's
        net8.0 target). Anchoring the cwd inside pwiz-sharp/ so global.json applies. -->
   <PropertyGroup>
-    <AgilentPatcherProj>$(MSBuildThisFileDirectory)..\..\..\..\build\AgilentPatcher\AgilentPatcher.csproj</AgilentPatcherProj>
-    <PwizSharpRoot>$(MSBuildThisFileDirectory)..\..\..</PwizSharpRoot>
+    <AgilentPatcherProj>$(PwizSharpRoot)build\AgilentPatcher\AgilentPatcher.csproj</AgilentPatcherProj>
   </PropertyGroup>
   <Target Name="PatchAgilentBeginInvoke"
           Condition="'$(IAgreeToVendorLicenses)' == 'true'"

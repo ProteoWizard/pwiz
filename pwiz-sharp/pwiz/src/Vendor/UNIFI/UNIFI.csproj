@@ -32,7 +32,7 @@
        serializer alongside Skyline. -->
   <ItemGroup>
     <Reference Include="Google.Protobuf">
-      <HintPath>$(MSBuildThisFileDirectory)..\..\..\..\..\pwiz_tools\Shared\Lib\Google.Protobuf.dll</HintPath>
+      <HintPath>$(PwizCppToolsRoot)\Shared\Lib\Google.Protobuf.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

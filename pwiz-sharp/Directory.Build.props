@@ -5,6 +5,61 @@
   <Import Project="$(MSBuildThisFileDirectory)Directory.Build.user.props"
           Condition="Exists('$(MSBuildThisFileDirectory)Directory.Build.user.props')" />
 
+  <!-- ============================================================
+       Path anchors. MSBuild auto-discovers Directory.Build.props by
+       walking up the directory tree from every project file, so the
+       properties below are inherited by every csproj/vcxproj under
+       pwiz-sharp/ with no opt-in needed.
+
+       The anchor for everything is $(MSBuildThisFileDirectory) — by
+       definition the directory holding THIS file, which IS the
+       pwiz-sharp/ root. Every other path is derived from that. The
+       resolved paths are absolute (System.IO.Path::GetFullPath) so
+       downstream consumers (Exec, Content paths, MSBuild Inputs/
+       Outputs) don't have to re-canonicalize.
+
+       Replaces the per-csproj "..\..\..\..\<thing>" chains we
+       accumulated through the tree restructure. Adding a new csproj
+       at any depth needs only `$(PwizSharpRoot)<thing>`; restructure
+       moves never invalidate them.
+       ============================================================ -->
+  <PropertyGroup>
+    <!-- pwiz-sharp/ — root for every C# project, vendor csproj content paths,
+         installer outputs, MascotShim CMake tree, example_data fixtures, etc. -->
+    <PwizSharpRoot>$(MSBuildThisFileDirectory)</PwizSharpRoot>
+
+    <!-- ../pwiz — the cpp pwiz source tree (sibling of pwiz-sharp/ inside the
+         outer pwiz repo). Holds vendor test fixtures (data/vendor_readers/...),
+         the cpp BiblioSpec sources we port from, the cpp Skyline tools, etc. -->
+    <PwizCppRoot>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\pwiz'))</PwizCppRoot>
+
+    <!-- ../pwiz_tools — cpp Skyline + BiblioSpec tools tree (sibling). -->
+    <PwizCppToolsRoot>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\pwiz_tools'))</PwizCppToolsRoot>
+
+    <!-- ../pwiz_aux — auxiliary vendor SDK archives (Mobilion .7z, etc.). -->
+    <PwizCppAuxRoot>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\pwiz_aux'))</PwizCppAuxRoot>
+
+    <!-- ../libraries — vendor 7z archives (msparser, 7za.exe, bsdtar.exe, etc.). -->
+    <PwizLibrariesPath>$([System.IO.Path]::GetFullPath('$(PwizSharpRoot)..\libraries'))</PwizLibrariesPath>
+
+    <!-- pwiz-sharp/vendor-assemblies — destination of vendor SDK 7z extraction
+         (Bruker.csproj / Sciex.csproj / etc. ExtractVendorAssemblies targets
+         unpack into here, MobilionShim.vcxproj's MBI SDK lives here, etc.). -->
+    <PwizVendorAssembliesPath>$(PwizSharpRoot)vendor-assemblies</PwizVendorAssembliesPath>
+
+    <!-- pwiz-sharp/vendor-archives — staged vendor archives (Sciex Wiff2 deps,
+         Thermo's pre-packaged .7z, etc.). Distinct from pwiz_aux upstream
+         archives. -->
+    <PwizVendorArchivesPath>$(PwizSharpRoot)vendor-archives</PwizVendorArchivesPath>
+
+    <!-- pwiz-sharp/installer/build — Inno Setup output dir. -->
+    <PwizInstallerBuildDir>$(PwizSharpRoot)installer\build</PwizInstallerBuildDir>
+
+    <!-- pwiz-sharp/example_data — tiny round-trip fixtures (tiny.pwiz.1.1.mz5/
+         .mzMLb/.mzML) used by MsData.Tests' CppWritten identify/read tests. -->
+    <PwizExampleDataPath>$(PwizSharpRoot)example_data</PwizExampleDataPath>
+  </PropertyGroup>
+
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>

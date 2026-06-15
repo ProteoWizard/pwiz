@@ -56,8 +56,8 @@
   <Target Name="StageWiff2NativeAssembliesForTests" AfterTargets="Build"
           Condition="'$(IAgreeToVendorLicenses)' == 'true'">
     <PropertyGroup>
-      <_SciexWiff2DepsDir>$(MSBuildThisFileDirectory)..\..\..\vendor-archives\Sciex</_SciexWiff2DepsDir>
-      <_SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\vendor-assemblies\Sciex</_SciexAssembliesDir>
+      <_SciexWiff2DepsDir>$(PwizVendorArchivesPath)\Sciex</_SciexWiff2DepsDir>
+      <_SciexAssembliesDir>$(PwizVendorAssembliesPath)\Sciex</_SciexAssembliesDir>
     </PropertyGroup>
     <MakeDir Directories="$(OutputPath)wiff2" />
     <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />

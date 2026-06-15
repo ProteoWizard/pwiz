@@ -115,26 +115,12 @@ public class CodeInspectionTests
             : path;
     }
 
-    /// <summary>Walks parents of the test bin dir until it finds a directory named
-    /// <c>pwiz-sharp</c> containing both <c>src</c> and <c>test</c> subdirs.</summary>
+    /// <summary>Locate the pwiz-sharp/ root via the shared anchor in TestHarness.
+    /// Returns null on failure rather than throwing — keeps the caller's existing
+    /// Inconclusive-skip path intact when the test runs from an unexpected location.</summary>
     private static string? FindPwizSharpRoot()
     {
-        string? dir = AppContext.BaseDirectory;
-        while (!string.IsNullOrEmpty(dir))
-        {
-            // Either we're inside pwiz-sharp (typical: bin lives under pwiz-sharp/test/...)
-            // or we're alongside it. Check both.
-            if (LooksLikeRoot(dir)) return dir;
-            string sibling = Path.Combine(dir, "pwiz-sharp");
-            if (LooksLikeRoot(sibling)) return sibling;
-            dir = Path.GetDirectoryName(dir);
-        }
-        return null;
+        try { return Pwiz.TestHarness.PwizSharpPaths.Root; }
+        catch { return null; }
     }
-
-    private static bool LooksLikeRoot(string candidate)
-        => Directory.Exists(Path.Combine(candidate, "pwiz"))
-           && Directory.Exists(Path.Combine(candidate, "Tools"))
-           && string.Equals(Path.GetFileName(candidate.TrimEnd(Path.DirectorySeparatorChar)),
-                            "pwiz-sharp", StringComparison.OrdinalIgnoreCase);
 }

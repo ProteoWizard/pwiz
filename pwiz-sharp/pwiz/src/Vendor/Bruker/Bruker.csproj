@@ -10,9 +10,9 @@
       target below unpacks it into $(BrukerAssembliesDir) on every build (idempotent). Only the x64
       DLL is extracted; msconvert-sharp targets x64 exclusively.
       -->
-    <BrukerArchive>$(MSBuildThisFileDirectory)..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
-    <BrukerAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Bruker</BrukerAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\..\libraries\7za.exe</SevenZaExe>
+    <BrukerArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Bruker.7z</BrukerArchive>
+    <BrukerAssembliesDir>$(PwizVendorAssembliesPath)\Bruker</BrukerAssembliesDir>
+    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>

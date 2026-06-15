@@ -4,6 +4,20 @@ project(cpp_aot_reader CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Anchor every derived path on PWIZ_SHARP_ROOT — the pwiz-sharp/ checkout directory.
+# tcbuild.bat passes -DPWIZ_SHARP_ROOT=%~dp0 (its own pwiz-sharp/ location); we fall
+# back to walking up from CMAKE_CURRENT_SOURCE_DIR when invoked standalone (this
+# file sits at pwiz-sharp/examples/cpp-aot-reader/CMakeLists.txt, two parents up).
+if(NOT DEFINED PWIZ_SHARP_ROOT)
+    get_filename_component(PWIZ_SHARP_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE
+        CACHE PATH "pwiz-sharp/ checkout root")
+endif()
+if(NOT EXISTS "${PWIZ_SHARP_ROOT}/Pwiz.sln")
+    message(FATAL_ERROR
+        "PWIZ_SHARP_ROOT='${PWIZ_SHARP_ROOT}' doesn't look like a pwiz-sharp checkout "
+        "(no Pwiz.sln inside). Pass -DPWIZ_SHARP_ROOT=<path> when invoking cmake.")
+endif()
+
 # Where the AOT-published pwiz_msdata native artifacts live. Override via cmake -D
 # when invoking from a different layout.
 if(NOT DEFINED PWIZ_MSDATA_NATIVE_DIR)
@@ -15,7 +29,7 @@ if(NOT DEFINED PWIZ_MSDATA_NATIVE_DIR)
         set(PWIZ_MSDATA_RID "linux-x64")
     endif()
     set(PWIZ_MSDATA_NATIVE_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}/../../pwiz/src/MsData.NativeAot/bin/Release/net8.0/${PWIZ_MSDATA_RID}/native"
+        "${PWIZ_SHARP_ROOT}/pwiz/src/MsData.NativeAot/bin/Release/net8.0/${PWIZ_MSDATA_RID}/native"
         CACHE PATH "AOT-published pwiz_msdata native artifacts (.dll + .lib on Windows, .so on POSIX)")
 endif()
 

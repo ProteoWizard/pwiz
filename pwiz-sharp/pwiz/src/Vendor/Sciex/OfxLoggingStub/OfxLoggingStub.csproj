@@ -47,7 +47,7 @@
          already-extracted DLL from vendor-assemblies; this stub only needs the
          interface definitions, not any of OFX.Core's runtime code. -->
     <Reference Include="OFX.Core.Contracts">
-      <HintPath>..\..\..\..\..\vendor-assemblies\Sciex\OFX.Core.Contracts.dll</HintPath>
+      <HintPath>$(PwizVendorAssembliesPath)\Sciex\OFX.Core.Contracts.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

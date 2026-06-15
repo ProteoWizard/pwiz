@@ -35,31 +35,31 @@
          unrecompiled .NET Framework WinForms libraries on .NET 8 if they don't hit the
          API blocklist. -->
     <Reference Include="DigitalRune.Windows.Docking">
-      <HintPath>..\..\..\..\pwiz_tools\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+      <HintPath>$(PwizCppToolsRoot)\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\pwiz\src\Util\Util.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\MsData\MsData.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\Analysis\Analysis.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\ZedGraph\ZedGraph.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\MSGraph\MSGraph.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\StlContainers\StlContainers.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\Vendor\Common\Vendor.Common.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\ZedGraph\ZedGraph.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\MSGraph\MSGraph.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\StlContainers\StlContainers.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Common\Vendor.Common.csproj" />
   </ItemGroup>
 
   <!-- Vendor support is opt-in (mirrors MsConvert.csproj). Without -p:IAgreeToVendorLicenses=true,
        vendor projects compile in NO_VENDOR_SUPPORT mode and Reader.Read throws clearly. -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\pwiz\src\Vendor\Thermo\Thermo.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\Vendor\Bruker\Bruker.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\Vendor\Waters\Waters.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\Vendor\Agilent\Agilent.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\Vendor\Sciex\Sciex.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Content</OutputItemType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

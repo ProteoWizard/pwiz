@@ -17,7 +17,7 @@
        needing to install Bruker's SDK separately. The cpp side does the same — see
        pwiz/utility/bindings/CLI/timstof_prm_scheduler/Jamfile.jam. -->
   <ItemGroup>
-    <Content Include="..\..\..\..\..\pwiz\utility\bindings\CLI\timstof_prm_scheduler\x64\prmscheduler.dll">
+    <Content Include="$(PwizCppRoot)\utility\bindings\CLI\timstof_prm_scheduler\x64\prmscheduler.dll">
       <Link>prmscheduler.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Visible>false</Visible>

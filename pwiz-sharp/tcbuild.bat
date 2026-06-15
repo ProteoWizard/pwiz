@@ -168,7 +168,7 @@ set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=Native AOT publish failed" & goto error)
 
 echo ##teamcity[progressMessage 'cmake configure ^(examples\cpp-aot-reader^)']
-cmake -S "%SCRIPT_DIR%\examples\cpp-aot-reader" -B "%SCRIPT_DIR%\examples\cpp-aot-reader\build"
+cmake -S "%SCRIPT_DIR%\examples\cpp-aot-reader" -B "%SCRIPT_DIR%\examples\cpp-aot-reader\build" -DPWIZ_SHARP_ROOT="%SCRIPT_DIR%"
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set "ERROR_TEXT=cmake configure failed" & goto error)
 

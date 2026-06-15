@@ -15,7 +15,7 @@
     <!-- Bundled 7za.exe for decrypting the password-protected vendor archives. Same
          binary the build-time ExtractXxxAssemblies targets use. ~750 KB; small price
          for not depending on a managed 7z library that handles AES encryption. -->
-    <None Include="..\..\..\..\..\libraries\7za.exe">
+    <None Include="$(PwizLibrariesPath)\7za.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>7za.exe</Link>
     </None>
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <Target Name="RegenerateVendorSdkPins" BeforeTargets="CoreCompile">
-    <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\..\..\installer\Refresh-VendorPins.ps1&quot;"
+    <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(PwizSharpRoot)installer\Refresh-VendorPins.ps1&quot;"
           StandardOutputImportance="low" />
   </Target>
 

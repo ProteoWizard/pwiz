@@ -12,9 +12,9 @@
     (CompressedTLMRawDataReader.dll etc.) on every build (idempotent). Sharp targets x64 only.
     -->
   <PropertyGroup>
-    <ShimadzuArchive>$(MSBuildThisFileDirectory)..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api_Shimadzu.7z</ShimadzuArchive>
-    <ShimadzuAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Shimadzu</ShimadzuAssembliesDir>
-    <SevenZaExe>$(MSBuildThisFileDirectory)..\..\..\..\..\libraries\7za.exe</SevenZaExe>
+    <ShimadzuArchive>$(PwizCppAuxRoot)\msrc\utility\vendor_api_Shimadzu.7z</ShimadzuArchive>
+    <ShimadzuAssembliesDir>$(PwizVendorAssembliesPath)\Shimadzu</ShimadzuAssembliesDir>
+    <SevenZaExe>$(PwizLibrariesPath)\7za.exe</SevenZaExe>
   </PropertyGroup>
 
   <ItemGroup>

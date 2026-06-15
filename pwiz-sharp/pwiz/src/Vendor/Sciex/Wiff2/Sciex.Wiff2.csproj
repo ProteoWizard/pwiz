@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\..\vendor-assemblies\Sciex</SciexAssembliesDir>
+    <SciexAssembliesDir>$(PwizVendorAssembliesPath)\Sciex</SciexAssembliesDir>
   </PropertyGroup>
 
   <!-- Without -p:IAgreeToVendorLicenses=true, the encrypted vendor archive is not extracted

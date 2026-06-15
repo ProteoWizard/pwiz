@@ -26,13 +26,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\..\..\pwiz_tools\Shared\MSGraph\*.cs">
+    <Compile Include="$(PwizCppToolsRoot)\Shared\MSGraph\*.cs">
       <Link>%(Filename)%(Extension)</Link>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="..\..\..\..\pwiz_tools\Shared\MSGraph\*.resx">
+    <EmbeddedResource Include="$(PwizCppToolsRoot)\Shared\MSGraph\*.resx">
       <Link>%(Filename)%(Extension)</Link>
     </EmbeddedResource>
   </ItemGroup>

@@ -20,7 +20,7 @@
        the rest is plain BCL. -->
   <ItemGroup>
     <Reference Include="UIMFLibrary">
-      <HintPath>$(MSBuildThisFileDirectory)..\..\..\..\..\pwiz_aux\msrc\utility\vendor_api\UIMF\UIMFLibrary.dll</HintPath>
+      <HintPath>$(PwizCppAuxRoot)\msrc\utility\vendor_api\UIMF\UIMFLibrary.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>

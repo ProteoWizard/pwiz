@@ -30,11 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\pwiz\src\Util\Util.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Common\Common.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\MsData\MsData.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Analysis\Analysis.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Common\Vendor.Common.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Util\Util.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Common\Common.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Analysis\Analysis.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Common\Vendor.Common.csproj" />
   </ItemGroup>
 
   <!-- Vendor projects always build so Reader.Identify() works. Without
@@ -43,27 +43,27 @@
        which makes Reader.Read() throw a clear "vendor support not enabled" error. Identify
        remains functional in both modes. -->
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Thermo\Thermo.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Bruker\Bruker.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Waters\Waters.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Agilent\Agilent.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Sciex\Sciex.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\UIMF\UIMF.csproj" />
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Mobilion\Mobilion.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\UNIFI\UNIFI.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\UIMF\UIMF.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Mobilion\Mobilion.csproj" />
     <!-- Sciex.Wiff2 is a runtime-only plugin: built as a build dependency, but its assembly is
          deliberately NOT referenced (would land in deps.json / TPA). Wiff2LoadContext loads
          Pwiz.Vendor.Sciex.Wiff2.dll on demand into a side-by-side ALC so its bundled
          SCIEX.Apis.Data.v1 deps don't conflict with the legacy .wiff path's signed Clearcore2
          dlls in the default ALC. -->
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\Wiff2\Sciex.Wiff2.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Content</OutputItemType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </ProjectReference>
     <!-- OFX.Logging stub: see comment in Sciex.csproj. -->
-    <ProjectReference Include="..\..\..\..\pwiz\src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\Vendor\Sciex\OfxLoggingStub\OfxLoggingStub.csproj"
                       Condition="'$(IAgreeToVendorLicenses)' == 'true'">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>Content</OutputItemType>
@@ -92,11 +92,11 @@
            is hard-bound to those exact assembly identities and a build-time extraction step
            (with Cecil patching for Unity) is more machinery than this PR warrants. See
            src/Vendor/Sciex/wiff2-on-net8-investigation.md for provenance. -->
-      <_SciexWiff2DepsDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-archives\Sciex</_SciexWiff2DepsDir>
+      <_SciexWiff2DepsDir>$(PwizVendorArchivesPath)\Sciex</_SciexWiff2DepsDir>
       <!-- SQLite.Interop.dll: extracted by Sciex.csproj's ExtractSciexAssemblies from
            vendor_api_ABI.7z's vendor_api\ABI\x64\ subfolder and flattened into
            vendor-assemblies/Sciex/. -->
-      <_SciexAssembliesDir>$(MSBuildThisFileDirectory)..\..\..\..\vendor-assemblies\Sciex</_SciexAssembliesDir>
+      <_SciexAssembliesDir>$(PwizVendorAssembliesPath)\Sciex</_SciexAssembliesDir>
     </PropertyGroup>
     <MakeDir Directories="$(OutputPath)wiff2" />
     <Copy SourceFiles="$(_SciexWiff2DepsDir)\System.Data.SQLite.dll" DestinationFiles="$(OutputPath)wiff2\System.Data.SQLite.dll" OverwriteReadOnlyFiles="true" />

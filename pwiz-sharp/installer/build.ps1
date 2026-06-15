@@ -37,12 +37,16 @@ $ErrorActionPreference = 'Stop'
 # downloads our installer, not the runtime separately).
 $dotnetRuntimeUrl = "https://aka.ms/dotnet/8.0/windowsdesktop-runtime-win-x64.exe"
 
-$installerDir   = $PSScriptRoot
-$pwizSharp      = (Resolve-Path "$installerDir/..").Path
-$msconvertGui   = Join-Path $pwizSharp "Tools/MsConvertGUI/src/MsConvertGUI.csproj"
-$seems          = Join-Path $pwizSharp "Tools/SeeMS/src/SeeMS.csproj"
+$installerDir = $PSScriptRoot
+# Anchor every path off the pwiz-sharp/ root. Get-PwizSharpRoot uses sentinel
+# discovery (pwiz/+Tools/+Pwiz.sln), so future tree restructures don't
+# invalidate the paths below — only the discovery helper itself.
+. (Join-Path $installerDir "../scripts/Get-PwizSharpRoot.ps1")
+$pwizSharp       = $PwizSharpRoot
+$msconvertGui    = Join-Path $pwizSharp "Tools/MsConvertGUI/src/MsConvertGUI.csproj"
+$seems           = Join-Path $pwizSharp "Tools/SeeMS/src/SeeMS.csproj"
 $msconvertGuiOut = Join-Path $pwizSharp "Tools/MsConvertGUI/src/bin/Release/net8.0-windows"
-$seemsOut       = Join-Path $pwizSharp "Tools/SeeMS/src/bin/Release/net8.0-windows"
+$seemsOut        = Join-Path $pwizSharp "Tools/SeeMS/src/bin/Release/net8.0-windows"
 $outDir         = Join-Path $installerDir "build"
 $stagingDir     = Join-Path $outDir "stage"
 $cacheDir       = Join-Path $installerDir "cache"

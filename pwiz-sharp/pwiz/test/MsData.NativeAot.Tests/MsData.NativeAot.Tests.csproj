@@ -22,7 +22,7 @@
   <!-- Stage the tiny mzML fixture into the test output so the tests can walk up
        from AppContext.BaseDirectory and find it. Same convention as MsData.Tests. -->
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\..\..\..\example_data\tiny.pwiz.1.1.*">
+    <None Include="$(PwizExampleDataPath)\tiny.pwiz.1.1.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>example_data\%(Filename)%(Extension)</Link>
     </None>

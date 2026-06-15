@@ -284,18 +284,10 @@ public class ReaderUnifiHarnessTests
 
     private static string? FindOverrideReferenceRoot()
     {
-        // Walk parents of the build output until we hit the pwiz-sharp/pwiz/test/UNIFI.Tests
-        // source directory, then return the Reference subdirectory underneath it. We don't
-        // copy these to the build output (CopyToOutputDirectory) because generate mode needs
-        // to write back to the source-tree path so the changes show up in git.
-        string? dir = AppContext.BaseDirectory;
-        while (!string.IsNullOrEmpty(dir))
-        {
-            string candidate = Path.Combine(dir, "pwiz-sharp", "pwiz", "test", "UNIFI.Tests", "Reference");
-            if (Directory.Exists(Path.GetDirectoryName(candidate)!))
-                return candidate;
-            dir = Path.GetDirectoryName(dir);
-        }
-        return null;
+        // Resolve via PwizSharpPaths so restructures don't invalidate this. Generate
+        // mode writes back to the source-tree path so changes show up in git; bin-copy
+        // (CopyToOutputDirectory) is intentionally not used here.
+        try { return Pwiz.TestHarness.PwizSharpPaths.TestReferenceDir("UNIFI.Tests"); }
+        catch { return null; }
     }
 }

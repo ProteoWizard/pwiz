@@ -25,7 +25,7 @@
   <ItemGroup>
     <ProjectReference Include="..\src\MsConvertGUI.csproj" />
     <ProjectReference Include="..\..\Commandline\MsConvert\src\MsConvert.csproj" />
-    <ProjectReference Include="..\..\..\pwiz\src\MsData\MsData.csproj" />
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\MsData\MsData.csproj" />
   </ItemGroup>
 
 </Project>

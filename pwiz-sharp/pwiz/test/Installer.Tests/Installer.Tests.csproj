@@ -19,8 +19,12 @@
     <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
   </ItemGroup>
 
-  <!-- No project references: this test exercises the built Setup.exe directly.
-       The installer is produced by pwiz-sharp/installer/build.ps1; tests skip
-       with Inconclusive if it isn't present. -->
+  <!-- TestHarness brings PwizSharpPaths (anchored fixture/installer/Reference
+       path resolution). The installer Setup.exe itself isn't referenced — it's
+       exercised at runtime via PwizSharpPaths.InstallerBuildDir, skipping
+       Inconclusive when build.ps1 hasn't run yet. -->
+  <ItemGroup>
+    <ProjectReference Include="$(PwizSharpRoot)pwiz\src\TestHarness\TestHarness.csproj" />
+  </ItemGroup>
 
 </Project>
