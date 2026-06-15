@@ -452,7 +452,7 @@ namespace pwiz.Skyline.Model
                             tranGroupFound = true;
                             string errmsg;
                             if (AddFragmentTransitions(ref document, row, pep, tranGroup, pathGroup, out errmsg))
-                                return true; // First fragment must succeed
+                                return true; // Returns true when a fragment was not added (absent first fragment, or a duplicate reported as a row error)
 
                             if (errmsg != null)
                             {
