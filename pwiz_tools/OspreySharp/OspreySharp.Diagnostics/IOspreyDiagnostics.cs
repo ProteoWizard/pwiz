@@ -93,6 +93,9 @@ namespace pwiz.OspreySharp
         bool CalWindowsCollecting { get; }
 
         uint? DiagXicEntryId { get; }
+        // Defaults to 1 (not 0) when unset; the default lives in the sink's
+        // parser (OspreyFileDiagnostics), so a consumer reading this through a
+        // null ctx.Diagnostics must use "?? 1" to preserve historical behavior.
         int DiagXicPass { get; }
         HashSet<uint> DiagSearchEntryIds { get; }
         int? DiagMpScan { get; }
