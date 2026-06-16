@@ -288,10 +288,12 @@ namespace pwiz.SkylineTestData.Results
                 // The 2-of-3 majority phantom counts on 81.05 being a measured channel here; assert
                 // that explicitly via the real co-target (DOC) that owns it, so a future data-file
                 // regeneration that dropped 81.05 fails loudly rather than as a puzzling Majority miss.
+                // Use the document's own product-match tolerance, the same one PeptideFinder applies.
+                double mzMatchTol = importedDoc.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                 var sharedQ3 = new SignedMz(81.05);
                 bool q3Measured = realPairs
                     .SelectMany(p => p.NodeGroup.Transitions)
-                    .Any(t => Math.Abs(t.Mz - sharedQ3) < 0.055 && TranHasData(t));
+                    .Any(t => Math.Abs(t.Mz - sharedQ3) <= mzMatchTol && TranHasData(t));
                 Assert.IsTrue(q3Measured,
                     "Test setup: expected the shared 81.05 product channel to be measured in this file");
 
