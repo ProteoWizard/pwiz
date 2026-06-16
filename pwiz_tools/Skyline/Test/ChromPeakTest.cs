@@ -436,7 +436,7 @@ namespace pwiz.SkylineTest
             // Transitions 0 and 2 carry mass errors and observed IM; transition 1 carries neither.
             var ti0 = new TimeIntensities(times, new[] { 1f, 2f, 3f, 4f },
                 new[] { 0.1f, 0.2f, 0.3f, 0.4f }, null, new[] { 1.1f, 1.2f, 1.3f, 1.4f });
-            var ti1 = new TimeIntensities(times, new[] { 5f, 6f, 7f, 8f }, null, null, null);
+            var ti1 = new TimeIntensities(times, new[] { 5f, 6f, 7f, 8f }, null, null);
             var ti2 = new TimeIntensities(times, new[] { 9f, 10f, 11f, 12f },
                 new[] { 0.5f, 0.6f, 0.7f, 0.8f }, null, new[] { 2.1f, 2.2f, 2.3f, 2.4f });
             var group = new InterpolatedTimeIntensities(new[] { ti0, ti1, ti2 },
