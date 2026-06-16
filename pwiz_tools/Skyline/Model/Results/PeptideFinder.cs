@@ -49,16 +49,18 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Return the peptide doc node(s) this SRM spectrum's data should be assigned to: peptides
-        /// whose precursor Mz matches within tolerance and ALL of whose product ions are present among
-        /// the spectrum's measured products -- i.e. the spectrum actually targets the compound, rather
-        /// than merely sharing some of its product m/z values. This lets genuinely co-targeted same-Q1
-        /// compounds each get their own chromatogram (including a real compound whose product set is a
-        /// subset of a larger co-Q1 compound), while an incidental Q1 neighbor that shares only some of
-        /// its transitions -- e.g. a compound targeted by a different acquisition method, where only
-        /// part of its product set happens to appear in this method's scan -- is not handed this
-        /// compound's signal. Returns nothing when no candidate is fully present (the caller then emits
-        /// the spectrum unmatched so the data still surfaces).
+        /// Return the peptide doc node(s) the SRM data at this precursor m/z should be assigned to:
+        /// peptides whose precursor Mz matches within tolerance and that match a strict majority of
+        /// their own product ions against <paramref name="productMzs"/>. <paramref name="productMzs"/>
+        /// is the union of product channels measured at this Q1 across the file (assembled by the
+        /// caller), not a single spectrum -- a compound's transitions can arrive in separate scans, so
+        /// the match is made against that aggregate. The majority test lets genuinely co-targeted
+        /// same-Q1 compounds each get their own chromatogram (including a real compound whose product
+        /// set is a subset of a larger co-Q1 compound, or one with an occasional unmeasured transition),
+        /// while an incidental Q1 neighbor that shares only a minority of its transitions -- e.g. a
+        /// compound targeted by a different acquisition method -- is not handed this compound's signal.
+        /// Returns nothing when no candidate matches a majority (the caller then emits the data
+        /// unmatched so it still surfaces).
         /// </summary>
         public IEnumerable<PeptideDocNode> FindMatchingPeptides(SignedMz precursorMz, IList<SignedMz> productMzs)
         {

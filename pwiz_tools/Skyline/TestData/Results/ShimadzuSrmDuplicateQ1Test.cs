@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestData.Results
                     // The behavior reproduces on master without any collision,
                     // so it is a pre-existing peak-picker issue independent of
                     // the binding fix tested here. Tracked in
-                    // ai/todos/backlog/TODO-peak_picker_honor_explicit_rt.md.
+                    // https://github.com/ProteoWizard/pwiz/issues/4306.
                 }
                 Assert.AreEqual(0, failures.Count,
                     "Same-Q1 compounds dropped during import:\n  " +
