@@ -166,62 +166,73 @@ namespace pwiz.SkylineTestData.Results
             }
         }
 
-        // Name of the synthetic "incidental neighbor" injected by the test below.
-        private const string INCIDENTAL_NEIGHBOR = "IncidentalQ1Neighbor_PHANTOM";
+        // Synthetic compounds injected at DOC / 17α-OH-P's shared Q1 (331.227) to pin the
+        // transition-aware matching rule. The file measures these product channels at that Q1:
+        // {81.05, 97.1, 109.05, 121}. A peptide is assigned only when a strict majority of its own
+        // transitions match those channels (matched*2 > total). The names encode "matched of total":
+        private const string PHANTOM_MINORITY = "PhantomMinority1of3"; // excluded
+        private const string PHANTOM_HALF = "PhantomHalf2of4";         // excluded (exact boundary)
+        private const string PHANTOM_MAJORITY = "PhantomMajority2of3"; // included
+        private const string PHANTOM_MARKER = "Phantom";
 
         /// <summary>
-        /// A &lt;molecule&gt; sharing DOC / 17α-OH-P's Q1 (331.226771) but whose product ions are
-        /// {97.1, 200, 250}: only 97.1 is among the channels this file actually measures at that Q1
-        /// (the union {121, 109.05, 97.1, 81.05}), so it matches just 1 of its 3 transitions — a
-        /// minority. It stands in for a compound targeted by a *different* acquisition method that
-        /// merely collides on Q1. Mirrors the DOC block (same neutral/ion formula, so the same Q1)
-        /// with a distinct name (distinct identity) and a deliberately mismatched product set.
+        /// A &lt;molecule&gt; at the shared Q1 (331.226771) with the given product ions. Mirrors the
+        /// DOC block (same neutral/ion formula, so the same Q1) with a distinct name (distinct
+        /// identity); each product is a custom [M+] ion specified directly by (m/z, neutral mass).
         /// </summary>
-        private const string INCIDENTAL_NEIGHBOR_MOLECULE_XML =
-            "    <molecule explicit_retention_time=\"5.4\" auto_manage_children=\"false\" neutral_formula=\"C21H30O3\" neutral_mass_average=\"330.46425\" neutral_mass_monoisotopic=\"330.219495\" custom_ion_name=\"" + INCIDENTAL_NEIGHBOR + "\">\r\n" +
-            "      <precursor charge=\"1\" precursor_mz=\"331.226771\" explicit_collision_energy=\"45\" auto_manage_children=\"false\" collision_energy=\"0\" ion_formula=\"C21H30O3[M+H]\" neutral_mass_average=\"330.46425\" neutral_mass_monoisotopic=\"330.219495\" custom_ion_name=\"" + INCIDENTAL_NEIGHBOR + "\">\r\n" +
-            "        <transition fragment_type=\"custom\" ion_formula=\"[M+]\" neutral_mass_average=\"97.100548579909457\" neutral_mass_monoisotopic=\"97.100548579909457\" product_charge=\"1\">\r\n" +
-            "          <precursor_mz>331.226771</precursor_mz>\r\n" +
-            "          <product_mz>97.1</product_mz>\r\n" +
-            "          <collision_energy>0</collision_energy>\r\n" +
-            "        </transition>\r\n" +
-            "        <transition fragment_type=\"custom\" ion_formula=\"[M+]\" neutral_mass_average=\"200.00054857990946\" neutral_mass_monoisotopic=\"200.00054857990946\" product_charge=\"1\">\r\n" +
-            "          <precursor_mz>331.226771</precursor_mz>\r\n" +
-            "          <product_mz>200</product_mz>\r\n" +
-            "          <collision_energy>0</collision_energy>\r\n" +
-            "        </transition>\r\n" +
-            "        <transition fragment_type=\"custom\" ion_formula=\"[M+]\" neutral_mass_average=\"250.00054857990946\" neutral_mass_monoisotopic=\"250.00054857990946\" product_charge=\"1\">\r\n" +
-            "          <precursor_mz>331.226771</precursor_mz>\r\n" +
-            "          <product_mz>250</product_mz>\r\n" +
-            "          <collision_energy>0</collision_energy>\r\n" +
-            "        </transition>\r\n" +
-            "      </precursor>\r\n" +
-            "    </molecule>\r\n";
+        private static string PhantomMolecule(string name, params (string mz, string neutral)[] products)
+        {
+            string xml =
+                "    <molecule explicit_retention_time=\"5.4\" auto_manage_children=\"false\" neutral_formula=\"C21H30O3\" neutral_mass_average=\"330.46425\" neutral_mass_monoisotopic=\"330.219495\" custom_ion_name=\"" + name + "\">\r\n" +
+                "      <precursor charge=\"1\" precursor_mz=\"331.226771\" explicit_collision_energy=\"45\" auto_manage_children=\"false\" collision_energy=\"0\" ion_formula=\"C21H30O3[M+H]\" neutral_mass_average=\"330.46425\" neutral_mass_monoisotopic=\"330.219495\" custom_ion_name=\"" + name + "\">\r\n";
+            foreach (var p in products)
+                xml +=
+                    "        <transition fragment_type=\"custom\" ion_formula=\"[M+]\" neutral_mass_average=\"" + p.neutral + "\" neutral_mass_monoisotopic=\"" + p.neutral + "\" product_charge=\"1\">\r\n" +
+                    "          <precursor_mz>331.226771</precursor_mz>\r\n" +
+                    "          <product_mz>" + p.mz + "</product_mz>\r\n" +
+                    "          <collision_energy>0</collision_energy>\r\n" +
+                    "        </transition>\r\n";
+            return xml +
+                   "      </precursor>\r\n" +
+                   "    </molecule>\r\n";
+        }
 
         /// <summary>
         /// Deciding which compound(s) a shared-Q1 SRM spectrum belongs to must use the product ions,
-        /// not the precursor m/z alone. A compound that shares a Q1 with a real target but matches
-        /// only a minority of its own transitions against the channels the file actually measured at
-        /// that Q1 is an incidental collision — e.g. a compound targeted by a different acquisition
-        /// method — and must not be handed that Q1's chromatogram.
+        /// not the precursor m/z alone. A peptide is assigned the data at a shared Q1 only when a
+        /// strict majority of its own transitions match the channels the file actually measured there
+        /// (matched*2 &gt; total); a compound matching only a minority is an incidental collision —
+        /// e.g. a compound targeted by a different acquisition method — and must not be handed that
+        /// Q1's chromatogram.
         ///
-        /// This injects such an incidental neighbor at DOC / 17α-OH-P's Q1 (331.227): it matches only
-        /// 1 of its 3 transitions against the measured channels, so it must import with no data, while
-        /// the genuinely co-targeted compounds at that Q1 still get theirs. Same support thread as
-        /// <see cref="ShimadzuSrmDuplicateQ1ImportTest"/>.
+        /// Injects three synthetic compounds at DOC / 17α-OH-P's Q1 (331.227) that bracket the rule:
+        /// 1 of 3 (minority → no data), 2 of 4 (exactly half → no data, since the majority is strict),
+        /// and 2 of 3 (bare majority → data). Together they pin the threshold from both sides and at
+        /// the off-by-one boundary, while the genuinely co-targeted compounds still get their data.
+        /// Same support thread as <see cref="ShimadzuSrmDuplicateQ1ImportTest"/>.
         /// </summary>
         [TestMethod]
         public void ShimadzuSrmIncidentalQ1NeighborTest()
         {
             TestFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
-            // Build a variant document that adds the incidental neighbor at the shared Q1.
+            // Product channels measured at this Q1; 200/250 are deliberately absent from the file.
+            var p97 = ("97.1", "97.100548579909457");   // shared, measured
+            var p81 = ("81.05", "81.05054857990946");   // shared, measured
+            var pAbsentA = ("200", "200.00054857990946"); // not measured
+            var pAbsentB = ("250", "250.00054857990946"); // not measured
+
+            // Build a variant document adding the three boundary compounds at the shared Q1.
             string srcDocPath = TestFilesDir.GetTestPath("Wesley.sky");
             string docText = File.ReadAllText(srcDocPath);
             int insertAt = docText.IndexOf("</peptide_list>");
             Assert.AreNotEqual(-1, insertAt,
-                "Test setup: could not find a peptide_list to inject the incidental neighbor into");
-            docText = docText.Substring(0, insertAt) + INCIDENTAL_NEIGHBOR_MOLECULE_XML + docText.Substring(insertAt);
+                "Test setup: could not find a peptide_list to inject the boundary compounds into");
+            string phantoms =
+                PhantomMolecule(PHANTOM_MINORITY, p97, pAbsentA, pAbsentB) +        // 1 of 3
+                PhantomMolecule(PHANTOM_HALF, p97, p81, pAbsentA, pAbsentB) +       // 2 of 4
+                PhantomMolecule(PHANTOM_MAJORITY, p97, p81, pAbsentA);             // 2 of 3
+            docText = docText.Substring(0, insertAt) + phantoms + docText.Substring(insertAt);
             string docPath = TestFilesDir.GetTestPath("WesleyIncidental.sky");
             File.WriteAllText(docPath, docText);
 
@@ -248,16 +259,23 @@ namespace pwiz.SkylineTestData.Results
                     t.HasResults && t.Results.Count > 0 && !t.Results[0].IsEmpty;
                 bool GroupHasData(TransitionGroupDocNode g) => g.Transitions.Any(TranHasData);
 
-                var phantomPair = importedDoc.MoleculePrecursorPairs
-                    .FirstOrDefault(p => p.NodePep.ModifiedTarget.ToString().Contains(INCIDENTAL_NEIGHBOR));
-                Assert.IsNotNull(phantomPair,
-                    "Test setup: the injected incidental neighbor is missing from the imported document");
+                void AssertPhantom(string name, bool expectData)
+                {
+                    var pair = importedDoc.MoleculePrecursorPairs
+                        .FirstOrDefault(p => p.NodePep.ModifiedTarget.ToString().Contains(name));
+                    Assert.IsNotNull(pair,
+                        "Test setup: injected compound '" + name + "' is missing from the imported document");
+                    Assert.AreEqual(expectData, GroupHasData(pair.NodeGroup),
+                        "Compound '" + name + "' should " + (expectData ? "have" : "not have") +
+                        " chromatogram data under strict-majority (matched*2 > total) transition matching.");
+                }
 
-                // Sanity: the two real co-targets at this Q1 still import (confirms the 97.1 channel
-                // the neighbor would steal is genuinely present in the file).
+                // Sanity: the real co-targets at this Q1 still import (confirms the shared 97.1 / 81.05
+                // channels are genuinely present, so a no-data result is from the majority rule, not an
+                // empty Q1).
                 var realPairs = importedDoc.MoleculePrecursorPairs
                     .Where(p => Math.Abs(p.NodeGroup.PrecursorMz - sharedQ1) < 0.001 &&
-                                !p.NodePep.ModifiedTarget.ToString().Contains(INCIDENTAL_NEIGHBOR))
+                                !p.NodePep.ModifiedTarget.ToString().Contains(PHANTOM_MARKER))
                     .ToList();
                 Assert.AreNotEqual(0, realPairs.Count,
                     "Test setup: expected the real DOC / 17α-OH-P co-targets at the shared Q1");
@@ -265,12 +283,12 @@ namespace pwiz.SkylineTestData.Results
                     Assert.IsTrue(GroupHasData(real.NodeGroup),
                         real.NodePep.ModifiedTarget + " (a real co-target) unexpectedly lost its data");
 
-                // An incidental Q1 neighbor matching only a minority of its transitions must not be
-                // assigned this Q1's signal — otherwise it steals the shared 97.1 chromatogram from
-                // the real co-targets.
-                Assert.IsFalse(GroupHasData(phantomPair.NodeGroup),
-                    "An incidental Q1 neighbor (sharing only 1 of its 3 transitions with the measured " +
-                    "channels) must not be assigned this Q1's chromatogram, but it received data.");
+                // Minority and exactly-half compounds must be denied this Q1's signal; a bare majority
+                // must receive it. The half case pins the strict ">" (a loosening to ">=" would hand it
+                // data and trip this).
+                AssertPhantom(PHANTOM_MINORITY, false);
+                AssertPhantom(PHANTOM_HALF, false);
+                AssertPhantom(PHANTOM_MAJORITY, true);
             }
         }
     }
