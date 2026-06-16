@@ -826,7 +826,8 @@ namespace pwiz.OspreySharp.Tasks
                     PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
                     try
                     {
-                        if (File.Exists(reconciledOutPath)) File.Delete(reconciledOutPath);
+                        if (File.Exists(reconciledOutPath))
+                            File.Delete(reconciledOutPath);
                     }
                     catch (Exception ex)
                     {

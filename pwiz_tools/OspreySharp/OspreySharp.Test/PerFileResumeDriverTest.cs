@@ -74,8 +74,10 @@ namespace pwiz.OspreySharp.Test
             }
             finally
             {
-                if (File.Exists(outputPath)) File.Delete(outputPath);
-                if (File.Exists(sidecarPath)) File.Delete(sidecarPath);
+                if (File.Exists(outputPath))
+                    File.Delete(outputPath);
+                if (File.Exists(sidecarPath))
+                    File.Delete(sidecarPath);
             }
         }
 
