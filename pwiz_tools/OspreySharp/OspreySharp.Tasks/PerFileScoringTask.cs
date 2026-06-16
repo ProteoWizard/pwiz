@@ -192,7 +192,7 @@ namespace pwiz.OspreySharp.Tasks
             // of --task PerFileScoring.
             var parquetFooterMetadata = new Dictionary<string, string>
             {
-                { @"osprey.version", Program.VERSION },
+                { @"osprey.version", OspreyVersion.Current },
                 { @"osprey.search_hash", config.Identity.SearchParameterHash() },
                 { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
                 { @"osprey.reconciled", @"false" },
@@ -819,7 +819,7 @@ namespace pwiz.OspreySharp.Tasks
             // Aborts with a clear, file-named error if the operator points
             // the merge node at parquets from a different scoring run.
             string validationError = ParquetScoreCache.ValidateScoresParquetGroup(
-                config.InputScores, config, Program.VERSION, ctx.LogWarning);
+                config.InputScores, config, OspreyVersion.Current);
             if (validationError != null)
                 throw new InvalidDataException(validationError);
 
@@ -1018,7 +1018,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 try
                 {
-                    TaskValiditySidecar.Write(scoresPath, Name, Program.VERSION,
+                    TaskValiditySidecar.Write(scoresPath, Name, OspreyVersion.Current,
                         validityKey, new[] { inputFile });
                 }
                 catch (Exception ex)
@@ -1452,7 +1452,7 @@ namespace pwiz.OspreySharp.Tasks
             {
                 // LF newlines so the dump is byte-stable across Windows and
                 // Linux for cross-impl diffing against Rust's PIN output;
-                // matches the convention used by OspreyDiagnostics.
+                // matches the convention used by OspreyDiagnosticsLog.
                 writer.NewLine = "\n";
                 writer.WriteLine(string.Join("\t", header));
                 foreach (var e in sorted)

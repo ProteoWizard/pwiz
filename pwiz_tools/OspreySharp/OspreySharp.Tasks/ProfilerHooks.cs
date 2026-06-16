@@ -26,7 +26,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 
-namespace pwiz.OspreySharp
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// Thin wrapper around JetBrains.Profiler.Api so the OspreySharp main-
