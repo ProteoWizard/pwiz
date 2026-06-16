@@ -40,9 +40,9 @@ namespace pwiz.Common.DataBinding
         }
 
         public static FilterPredicate Create(IFilterOperation filterOperation,
-            string invariantOperantText)
+            string invariantOperandText)
         {
-            return new FilterPredicate(filterOperation, invariantOperantText);
+            return new FilterPredicate(filterOperation, invariantOperandText);
         }
 
         public static FilterPredicate Parse(DataSchema dataSchema, Type columnType, IFilterOperation filterOperation,

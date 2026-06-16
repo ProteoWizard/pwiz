@@ -739,6 +739,6 @@ Reason: </value>
     <value>There is no valid account for this template that would support method development.</value>
   </data>
   <data name="ImportTransitionListColumnSelectDlg_GetKnownHeaderTypes_Spectrum_Filter" xml:space="preserve">
-	  <value>Spectrum Filter</value>
+    <value>Spectrum Filter</value>
   </data>
 </root>
