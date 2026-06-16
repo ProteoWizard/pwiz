@@ -386,7 +386,7 @@ namespace pwiz.OspreySharp.Tasks
                         // does not strand the binary without its metadata.
                         try
                         {
-                            TaskValiditySidecar.Write(pass2Path, Name, Program.VERSION,
+                            TaskValiditySidecar.Write(pass2Path, Name, OspreyVersion.Current,
                                 taskValidityKey,
                                 new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
                                     ParquetScoreCache.GetScoresPath(inputFile3)) });
@@ -1076,7 +1076,7 @@ namespace pwiz.OspreySharp.Tasks
 
                 // Add metadata. OspreyMetadata key set must match Rust's
                 // write_blib_from_plan (pipeline.rs:6078-6081) byte-for-byte.
-                writer.AddMetadata(@"osprey_version", Program.VERSION_STRING);
+                writer.AddMetadata(@"osprey_version", OspreyVersion.Current);
                 writer.AddMetadata(@"search_mode", @"coelution");
                 writer.AddMetadata(@"run_fdr",
                     config.RunFdr.ToString(System.Globalization.CultureInfo.InvariantCulture));
