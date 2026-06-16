@@ -222,30 +222,27 @@ namespace pwiz.Common.SystemUtil
             
             if (!decimal.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, cultureInfo, out var value))
             {
-                if (!double.TryParse(text, NumberStyles.Float, cultureInfo, out var doubleValue))
+                if (double.TryParse(text, NumberStyles.Float, cultureInfo, out var doubleValue))
                 {
-                    return false;
-                }
-                if (double.IsNaN(doubleValue))
-                {
-                    result = NAN;
-                    return true;
-                }
-                if (doubleValue > (double) decimal.MaxValue)
-                {
-                    result = POSITIVE_INFINITY;
-                    return true;
-                }
-                if (doubleValue < (double) decimal.MinValue)
-                {
-                    result = NEGATIVE_INFINITY;
-                    return true;
-                }
+                    if (double.IsNaN(doubleValue))
+                    {
+                        result = NAN;
+                        return true;
+                    }
 
-                // decimal.TryParse rejects exponent notation, but PrecisionNumber serializes sub-MAX
-                // precision values in scientific form (e.g. "1.5E+0"); fall back to the finite
-                // double-parsed value so a serialized operand can always be read back.
-                value = (decimal) doubleValue;
+                    if (doubleValue > (double) decimal.MaxValue)
+                    {
+                        result = POSITIVE_INFINITY;
+                        return true;
+                    }
+
+                    if (doubleValue < (double) decimal.MinValue)
+                    {
+                        result = NEGATIVE_INFINITY;
+                        return true;
+                    }
+                }
+                return false;
             }
 
             if (defaultToFullPrecision && text.IndexOfAny(new[] { 'e', 'E' }) < 0)
