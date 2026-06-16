@@ -174,16 +174,7 @@ namespace pwiz.OspreySharp.Tasks
                                 effectiveParquetPath, ex.Message));
                             continue;
                         }
-                        int nMapped = 0;
-                        foreach (var entry in kvp.Value)
-                        {
-                            int idx = (int)entry.ParquetIndex;
-                            if (idx >= 0 && idx < featRows.Count)
-                            {
-                                entry.Features = featRows[idx];
-                                nMapped++;
-                            }
-                        }
+                        int nMapped = MapFeaturesByParquetIndex(kvp.Value, featRows);
                         // An entry whose ParquetIndex lies past the loaded row count
                         // is a stub/parquet mismatch (e.g., the first-join parquet
                         // was regenerated with fewer rows than the in-memory FDR
@@ -399,6 +390,32 @@ namespace pwiz.OspreySharp.Tasks
                         filesReloaded, filesReloaded + filesMissing));
                 }
             }
+        }
+
+        /// <summary>
+        /// Overlay re-scored PIN features onto <paramref name="entries"/> by
+        /// each entry's <see cref="FdrEntry.ParquetIndex"/>, skipping any entry
+        /// whose index is out of range for <paramref name="featRows"/> (a
+        /// stub/parquet mismatch -- e.g. the first-join parquet was regenerated
+        /// with fewer rows than the in-memory FDR stubs reference). Returns the
+        /// number of entries whose <see cref="FdrEntry.Features"/> were assigned;
+        /// the caller compares it against the entry count to detect and report a
+        /// mismatch. Pure: no I/O, no logging.
+        /// </summary>
+        internal static int MapFeaturesByParquetIndex(
+            IReadOnlyList<FdrEntry> entries, IReadOnlyList<double[]> featRows)
+        {
+            int nMapped = 0;
+            foreach (var entry in entries)
+            {
+                int idx = (int)entry.ParquetIndex;
+                if (idx >= 0 && idx < featRows.Count)
+                {
+                    entry.Features = featRows[idx];
+                    nMapped++;
+                }
+            }
+            return nMapped;
         }
     }
 }
