@@ -87,6 +87,15 @@ $goldenRoot   = Join-Path $scriptRoot 'osprey-regression.data'
 $ospreyBinDir = Join-Path $scriptRoot 'OspreySharp\bin\x64\Release\net8.0'
 $ospreyExe    = Join-Path $ospreyBinDir 'OspreySharp.exe'
 
+# Bit-parity version pin. The build stamps a daily Skyline-scheme version
+# (YEAR.ORDINAL.BRANCH.DOY) that changes every day, but the committed blib golden
+# compares the osprey_version metadata cell exactly. Pin OspreyVersion.Current to
+# a canonical constant for every OspreySharp invocation in this run (the env var
+# is inherited by the child processes), so the stamp is deterministic and the
+# golden stays green without the comparator skipping the field. Must match the
+# osprey_version value committed in osprey-regression.data/*/tables/OspreyMetadata.tsv.
+$env:OSPREY_VERSION_OVERRIDE = '26.1.1.0'
+
 # The mzML data zip on panorama (raw-data zip is future work). The URL's
 # second-to-last segment ("perftests") maps to <Downloads>\Perftests.
 $dataUrl = 'https://panoramaweb.org/_webdav/MacCoss/software/%40files/perftests/osprey-testfiles-mzML.zip'

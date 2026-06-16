@@ -10,14 +10,25 @@
     <InternalsVisibleTo Include="OspreySharp.Test" />
   </ItemGroup>
 
-  <!-- Diagnostics carries IOspreyDiagnostics, which PipelineContext exposes so
+  <!-- ProfilerHooks (the main-search MeasureProfiler bracket) lives here now
+       that AbstractScoringTask, its only caller, is part of the Tasks layer. -->
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
+  </ItemGroup>
+
+  <!-- Tasks is the pipeline layer: the task bodies (scoring, calibration,
+       first-join, merge, per-file rescore) call into every domain library.
+       Diagnostics carries IOspreyDiagnostics, which PipelineContext exposes so
        tasks emit dumps through the context instead of the exe-only static
-       facade. This pulls the Diagnostics seam (and, transitively, its
-       Chromatography/Scoring/FDR refs) into the formerly Core-only Tasks DLL,
-       a deliberate cost of hanging diagnostics off the pipeline context. -->
+       facade. Nothing below Tasks references Tasks, so this stays acyclic. -->
   <ItemGroup>
     <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
     <ProjectReference Include="..\OspreySharp.Diagnostics\OspreySharp.Diagnostics.csproj" />
+    <ProjectReference Include="..\OspreySharp.IO\OspreySharp.IO.csproj" />
+    <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />
+    <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj" />
+    <ProjectReference Include="..\OspreySharp.Scoring\OspreySharp.Scoring.csproj" />
+    <ProjectReference Include="..\OspreySharp.FDR\OspreySharp.FDR.csproj" />
   </ItemGroup>
 
 </Project>
