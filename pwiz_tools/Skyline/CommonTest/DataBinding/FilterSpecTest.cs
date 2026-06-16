@@ -43,11 +43,15 @@ namespace CommonTest.DataBinding
                 foreach (var testOperand in ListTestOperands())
                 {
                     var columnType = testOperand.GetType();
-                    var filterPredicate =  LocalizationHelper.CallWithCulture(cultureInfo, ()=>FilterPredicate.Parse(dataSchema, columnType,
-                        FilterOperations.OP_EQUALS, ValueToString(testOperand, cultureInfo)));
-                    var invariantFilterPredicate = LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, ()=>
-                        FilterPredicate.Parse(dataSchema, columnType, FilterOperations.OP_EQUALS,
-                            filterPredicate.InvariantOperandText));
+                    var filterPredicate = FilterPredicate.Parse(dataSchema, columnType,
+                        FilterOperations.OP_EQUALS, ValueToString(testOperand, cultureInfo));
+                    // FilterPredicate.Parse takes its locale from the schema's DataSchemaLocalizer, not the
+                    // thread culture, so re-parse the invariant operand text with an invariant-localized
+                    // schema. (Wrapping the call in CallWithCulture has no effect on the parse locale.)
+                    var invariantDataSchema = new DataSchema(
+                        new DataSchemaLocalizer(CultureInfo.InvariantCulture, CultureInfo.InvariantCulture));
+                    var invariantFilterPredicate = FilterPredicate.Parse(invariantDataSchema, columnType,
+                        FilterOperations.OP_EQUALS, filterPredicate.InvariantOperandText);
                     Assert.AreEqual(filterPredicate, invariantFilterPredicate);
                     var filterSpec = new FilterSpec(propertyPath, filterPredicate);
                     var predicateOperandValue = filterSpec.Predicate.GetOperandValue(dataSchema, columnType);
@@ -58,8 +62,14 @@ namespace CommonTest.DataBinding
                     Assert.AreEqual(filterSpec, filterSpecRoundTrip);
                     if (!(predicateOperandValue is PrecisionNumber))
                     {
-                        Assert.AreEqual(testOperand, predicateOperandValue);
-                        Assert.AreEqual(testOperand, filterSpecRoundTrip.Predicate.GetOperandValue(dataSchema, columnType));
+                        // IntegerFilterHandler normalizes integer-column operands to double, so the
+                        // operand value must round-trip but its CLR type need not. Compare against the
+                        // original converted to double in that case.
+                        var expectedOperandValue = predicateOperandValue is double
+                            ? Convert.ChangeType(testOperand, typeof(double))
+                            : testOperand;
+                        Assert.AreEqual(expectedOperandValue, predicateOperandValue);
+                        Assert.AreEqual(expectedOperandValue, filterSpecRoundTrip.Predicate.GetOperandValue(dataSchema, columnType));
                         Assert.AreEqual(ValueToString(testOperand, cultureInfo), filterSpecRoundTrip.Predicate.GetOperandDisplayText(dataSchema, columnType));
                     }
                 }
@@ -105,7 +115,7 @@ namespace CommonTest.DataBinding
             var nullableType = typeof (Nullable<>).MakeGenericType(value.GetType());
             var constructor = nullableType.GetConstructor(new[] {value.GetType()});
             Assert.IsNotNull(constructor);
-            return constructor.Invoke(new[] {value});
+            return constructor?.Invoke(new[] {value});
         }
 
         private string ValueToString(object value, CultureInfo cultureInfo)

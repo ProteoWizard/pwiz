@@ -222,35 +222,47 @@ namespace pwiz.Common.SystemUtil
             
             if (!decimal.TryParse(text, NumberStyles.Float | NumberStyles.AllowLeadingSign, cultureInfo, out var value))
             {
-                if (double.TryParse(text, NumberStyles.Float, cultureInfo, out var doubleValue))
+                if (!double.TryParse(text, NumberStyles.Float, cultureInfo, out var doubleValue))
                 {
-                    if (double.IsNaN(doubleValue))
-                    {
-                        result = NAN;
-                        return true;
-                    }
-
-                    if (doubleValue > (double) decimal.MaxValue)
-                    {
-                        result = POSITIVE_INFINITY;
-                        return true;
-                    }
-
-                    if (doubleValue < (double) decimal.MinValue)
-                    {
-                        result = NEGATIVE_INFINITY;
-                        return true;
-                    }
+                    return false;
                 }
-                return false;
+                if (double.IsNaN(doubleValue))
+                {
+                    result = NAN;
+                    return true;
+                }
+                if (doubleValue > (double) decimal.MaxValue)
+                {
+                    result = POSITIVE_INFINITY;
+                    return true;
+                }
+                if (doubleValue < (double) decimal.MinValue)
+                {
+                    result = NEGATIVE_INFINITY;
+                    return true;
+                }
+
+                // decimal.TryParse rejects exponent notation, but PrecisionNumber serializes sub-MAX
+                // precision values in scientific form (e.g. "1.5E+0"); fall back to the finite
+                // double-parsed value so a serialized operand can always be read back.
+                value = (decimal) doubleValue;
             }
 
-            int decimalPlaces = CountDecimalPlaces(text, cultureInfo, defaultToFullPrecision);
+            if (defaultToFullPrecision && text.IndexOfAny(new[] { 'e', 'E' }) < 0)
+            {
+                // Full precision with no explicit exponent means "keep every significant digit", so set
+                // the significant-digit count directly. Routing it through decimal places (below) would
+                // distort it by the value's magnitude and drop a digit for sub-1 magnitudes.
+                result = WithSignificantDigits(value, MAX_SIGNIFICANT_DIGITS);
+                return true;
+            }
+
+            int decimalPlaces = CountDecimalPlaces(text, cultureInfo);
             result = WithDecimalPlaces(value, decimalPlaces);
             return true;
         }
 
-        private static int CountDecimalPlaces(string text, CultureInfo culture, bool defaultToFullPrecision)
+        private static int CountDecimalPlaces(string text, CultureInfo culture)
         {
             string decimalSep = culture.NumberFormat.NumberDecimalSeparator;
 
@@ -266,10 +278,6 @@ namespace pwiz.Common.SystemUtil
                 {
                     exponent = exp;
                 }
-            }
-            else if (defaultToFullPrecision)
-            {
-                return MAX_SIGNIFICANT_DIGITS;
             }
 
             // Find decimal separator in the mantissa
