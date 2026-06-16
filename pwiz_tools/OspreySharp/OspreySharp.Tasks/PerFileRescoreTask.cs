@@ -449,144 +449,6 @@ namespace pwiz.OspreySharp.Tasks
         // accessors. Run() above is the only entry point.
 
         /// <summary>
-        /// Phase 3 -- write the reconciled per-file
-        /// <c>.scores-reconciled.parquet</c>.
-        ///
-        /// Reload the original Stage 4 parquet's full per-row data
-        /// (identity, boundaries, 21 PIN features, CWT candidate lists) from
-        /// <paramref name="originalPath"/>, replace re-scored rows in place by
-        /// <see cref="FdrEntry.ParquetIndex"/> (NOT by post-compaction Vec
-        /// position; the two diverge after first-pass FDR drops non-passing
-        /// entries), append gap-fill rows at the end, reassign each gap-fill
-        /// stub's <see cref="FdrEntry.ParquetIndex"/> to the actual row it now
-        /// occupies, then write to the SEPARATE
-        /// <paramref name="reconciledPath"/> via
-        /// <see cref="ParquetScoreCache.WriteScoresParquet(string, List{FdrEntry}, Dictionary{string, string}, Dictionary{uint, LibraryEntry}, string)"/>
-        /// with reconciliation metadata
-        /// (<c>osprey.reconciled = "true"</c> +
-        /// <c>osprey.reconciliation_hash = config.Identity.ReconciliationParameterHash()</c>).
-        /// The original parquet is read-only here -- it is never overwritten,
-        /// so it survives intact for files whose reconciliation is a no-op and
-        /// as a crash-safe Stage 4 record. Mirrors Rust pipeline.rs:3050-3110.
-        /// Returns true when the reconciled parquet was written; false on a
-        /// reload/write failure (so the caller does not stamp a validity sidecar
-        /// over a stale or absent output).
-        /// </summary>
-        private bool WriteReconciledParquet(string originalPath, string reconciledPath,
-            List<FdrEntry> fdrEntries,
-            string fileName, List<LibraryEntry> fullLibrary, OspreyConfig config,
-            IReadOnlyList<string> joinFileStems, PipelineContext ctx)
-        {
-            // 1. Reload the original parquet's per-row state (read-only).
-            List<FdrEntry> fullEntries;
-            try
-            {
-                fullEntries = ParquetScoreCache.LoadFullFdrEntries(originalPath);
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format(
-                    "Stage 6 write-back: failed to reload {0}: {1} (skipping)",
-                    originalPath, ex.Message));
-                return false;
-            }
-            int origRowCount = fullEntries.Count;
-
-            // 2. Replace re-scored rows (Phase 1 + Phase 2 existing-entry
-            //    overlay) by ParquetIndex. Detect rescored entries by
-            //    Features != null -- hydration's LoadFdrStubsFromParquet
-            //    does NOT populate Features, so unchanged post-compaction
-            //    stubs have Features=null and we leave their corresponding
-            //    fullEntries row alone (preserving Features + CwtCandidates
-            //    + the binary blob columns loaded from the original
-            //    parquet). Rescored entries have Features populated by
-            //    RunCoelutionScoring. Gap-fill stubs have ParquetIndex =
-            //    uint.MaxValue and are appended next.
-            int nReplaced = 0;
-            foreach (var entry in fdrEntries)
-            {
-                if (entry.ParquetIndex == uint.MaxValue)
-                    continue;
-                if (entry.Features == null)
-                    continue;  // hydrated stub, never re-scored
-                int pqIdx = (int)entry.ParquetIndex;
-                if (pqIdx < 0 || pqIdx >= fullEntries.Count)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Stage 6 write-back: ParquetIndex {0} out of range for {1} ({2} rows)",
-                        pqIdx, fileName, fullEntries.Count));
-                    continue;
-                }
-                fullEntries[pqIdx] = entry;
-                nReplaced++;
-            }
-
-            // 3. Append gap-fill rows at the end. Reassign each gap-fill
-            //    stub's ParquetIndex to its new row position so a
-            //    downstream --task MergeNode worker can locate its
-            //    features.
-            int nAppended = 0;
-            foreach (var entry in fdrEntries)
-            {
-                if (entry.ParquetIndex != uint.MaxValue)
-                    continue;
-                entry.ParquetIndex = (uint)fullEntries.Count;
-                fullEntries.Add(entry);
-                nAppended++;
-            }
-
-            // 4. Build libraryById for the WriteScoresParquet sequence /
-            //    precursor_mz / protein_ids columns.
-            var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
-            foreach (var libEntry in fullLibrary)
-                libraryById[libEntry.Id] = libEntry;
-
-            // 5. Reconciliation metadata (mirrors Rust
-            //    build_reconciled_metadata). osprey.version is what the
-            //    next reload's CacheValidity check compares against.
-            //    The reconciliation_hash must be the JOIN-wide hash
-            //    (over every file in the planner step), not the worker's
-            //    single-file InputFiles hash; without that, a worker
-            //    rescoring a single parquet stamps a single-file hash
-            //    that the downstream --task MergeNode merge node rejects
-            //    on hash mismatch. The join file stems come from the
-            //    planner's reconciliation.json (v2+) via
-            //    RescoreInputs.JoinFileStems; fall back to config-derived
-            //    stems when the caller didn't pass any (in-process
-            //    pipeline where config.InputFiles already has all files,
-            //    or v1 backward compat).
-            string reconciliationHash = (joinFileStems != null && joinFileStems.Count > 0)
-                ? config.Identity.ReconciliationParameterHashForStems(joinFileStems)
-                : config.Identity.ReconciliationParameterHash();
-            var metadata = new Dictionary<string, string>
-            {
-                { @"osprey.version", OspreyVersion.Current },
-                { @"osprey.search_hash", config.Identity.SearchParameterHash() },
-                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
-                { @"osprey.reconciled", @"true" },
-                { @"osprey.reconciliation_hash", reconciliationHash },
-            };
-
-            try
-            {
-                ParquetScoreCache.WriteScoresParquet(reconciledPath, fullEntries,
-                    metadata, libraryById, fileName);
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format(
-                    "Stage 6 write-back: failed to write reconciled scores for {0}: {1}",
-                    fileName, ex.Message));
-                return false;
-            }
-
-            ctx.LogInfo(string.Format(
-                "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
-                fileName, fullEntries.Count, nReplaced, nAppended, origRowCount));
-            return true;
-        }
-
-        /// <summary>
         /// Execute the per-file Stage 6 rescore loop. Mirrors
         /// <c>rescore_per_file_loop</c> in
         /// <c>osprey/crates/osprey/src/pipeline.rs</c>.
@@ -854,8 +716,8 @@ namespace pwiz.OspreySharp.Tasks
                     File.Exists(parquetPath))
                 {
                     string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
-                    bool wrote = WriteReconciledParquet(parquetPath, reconciledOutPath, fdrEntries, fileName,
-                        fullLibrary, config, joinFileStems, ctx);
+                    bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
+                        fullLibrary, config, joinFileStems, ctx.LogInfo, ctx.LogWarning);
 
                     // Only stamp the per-file resume sidecar when the reconciled
                     // parquet was actually written. Stamping it after a failed
