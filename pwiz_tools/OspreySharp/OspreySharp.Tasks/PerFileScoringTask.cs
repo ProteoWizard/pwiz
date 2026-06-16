@@ -993,8 +993,7 @@ namespace pwiz.OspreySharp.Tasks
             PipelineContext ctx)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            if (File.Exists(scoresPath)
-                && TaskValiditySidecar.IsValid(scoresPath, Name, validityKey))
+            if (PerFileResumeDriver.IsCurrent(scoresPath, Name, validityKey))
             {
                 var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx);
                 if (loaded != null)
@@ -1012,21 +1011,12 @@ namespace pwiz.OspreySharp.Tasks
                 fileIdx + 1, totalFiles, inputFile));
             // Clear stale sidecar so a mid-ProcessFile crash leaves no
             // false-positive sidecar on the next invocation.
-            TaskValiditySidecar.Delete(scoresPath, Name);
+            PerFileResumeDriver.ClearStale(scoresPath, Name);
             var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, ctx);
             if (fileResult != null)
             {
-                try
-                {
-                    TaskValiditySidecar.Write(scoresPath, Name, OspreyVersion.Current,
-                        validityKey, new[] { inputFile });
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        @"  Failed to write {0} sidecar for {1}: {2}",
-                        Name, scoresPath, ex.Message));
-                }
+                PerFileResumeDriver.Stamp(scoresPath, Name, OspreyVersion.Current,
+                    validityKey, new[] { inputFile }, ctx.LogWarning);
             }
             return fileResult;
         }
@@ -1199,10 +1189,127 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
 
-            // RT calibration
+            // Resolve the per-file calibration (load a cached/Rust JSON or
+            // compute via Calibrator) and persist the calibration JSON.
+            RTCalibration rtCalibration = ResolveCalibration(
+                inputFile, fileName, fullLibrary, spectra, ms1Spectra,
+                context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal, ctx);
+
+            // Optional early exit after Stage 3 (calibration only, no main search).
+            // Used for Stage 1-3 perf benchmarking and walking up to the main
+            // search incrementally without paying the Stage 4 cost.
+            if (OspreyEnvironment.ExitAfterCalibration)
+            {
+                ctx.LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
+                return new List<FdrEntry>();
+            }
+
+            // Surface the per-file calibration to Stage 6 reconciliation
+            // (multi-file runs only). Threaded calls share a
+            // ConcurrentDictionary; null on single-file paths that don't
+            // need cross-file consensus.
+            if (perFileCalibrationsOut != null && rtCalibration != null)
+                perFileCalibrationsOut[fileName] = rtCalibration;
+
+            // Run coelution scoring across all isolation windows
+            var swScoring = Stopwatch.StartNew();
+            var scoredEntries = RunCoelutionScoring(
+                fullLibrary, spectra, ms1Spectra,
+                isolationWindows, rtCalibration,
+                ms2Cal, ms1Cal,
+                context, ctx);
+            swScoring.Stop();
+            double scoringSeconds = swScoring.Elapsed.TotalSeconds;
+            double ratePerSec = scoringSeconds > 0.001
+                ? scoredEntries.Count / scoringSeconds
+                : 0.0;
+            ctx.LogInfo(string.Format(
+                "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
+                scoringSeconds, scoredEntries.Count, ratePerSec));
+
+            int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
+            ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
+                scoredEntries.Count,
+                nScoredTargets,
+                nScoredDecoys,
+                fileName));
+
+            // Drop double-counted entries (different precursors that latch
+            // onto the same chromatographic feature within an isolation
+            // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
+            // same call site, between scoring and pair-deduplication.
+            scoredEntries = DeduplicateDoubleCounting(
+                scoredEntries, fullLibrary, spectra, ms2Cal,
+                isolationWindows, config, ctx);
+            nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
+            ctx.LogInfo(string.Format(
+                "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
+                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
+
+            // Deduplicate: keep best target and best decoy per base_id
+            int nBeforeDedup = scoredEntries.Count;
+            scoredEntries = DeduplicatePairs(scoredEntries, ctx);
+            int nAfterDedup = scoredEntries.Count;
+            ctx.LogInfo(string.Format(
+                "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
+                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
+
+            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
+            if (config.WritePin)
+            {
+                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
+            }
+
+            // Persist the full FdrEntry results (with features) to
+            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
+            // CWT candidates per file, and (b) a subsequent --task FirstJoin
+            // invocation can pick them up without re-running Stages 1-4.
+            // Same path convention as Rust (`scores_path_for_input`).
+            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
+            // as a Phase 4 follow-up. The metadata dictionary is precomputed
+            // in Run() against the original (un-mutated) outer config — see
+            // Run() for why. Skipped only in --task FirstJoin mode (no Stages 1-4
+            // ran here, so there is nothing fresh to persist).
+            if (parquetFooterMetadata != null)
+            {
+                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
+                // Reuse the entry-id -> LibraryEntry map Run() built once
+                // before the per-file fan-out (WriteScoresParquet needs
+                // it to pull sequence / precursor_mz / protein_ids from
+                // the library since FdrEntry doesn't carry these).
+                var swParquet = Stopwatch.StartNew();
+                ParquetScoreCache.WriteScoresParquet(
+                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
+                swParquet.Stop();
+                ctx.LogInfo(string.Format(
+                    "Wrote {0} scored entries to {1} ({2:F1}s)",
+                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+            }
+
+            return scoredEntries;
+        }
+
+        /// <summary>
+        /// Resolve the per-file RT/MS1/MS2 calibration: load a cached/Rust
+        /// calibration JSON when OSPREY_LOAD_CALIBRATION points at one, else
+        /// compute it via <see cref="Calibrator"/>; then persist the full
+        /// calibration JSON next to the input. Returns the RT calibration (null
+        /// when disabled / not computed); <paramref name="ms2Cal"/> and
+        /// <paramref name="ms1Cal"/> receive the mass calibrations (Uncalibrated
+        /// when none). Extracted from ProcessFile (pure code motion).
+        /// </summary>
+        private RTCalibration ResolveCalibration(
+            string inputFile, string fileName,
+            List<LibraryEntry> fullLibrary, List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            ScoringContext context, OspreyConfig config,
+            out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+            PipelineContext ctx)
+        {
             RTCalibration rtCalibration = null;
-            MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
-            MzCalibrationResult ms1Cal = MzCalibrationResult.Uncalibrated();
+            ms2Cal = MzCalibrationResult.Uncalibrated();
+            ms1Cal = MzCalibrationResult.Uncalibrated();
             // Total matches scored during pass 1 of calibration; threaded
             // into CalibrationMetadata.NumSampledPrecursors to match Rust's
             // accumulated_matches.len() (Stellar Single: 192289). Stays 0
@@ -1316,100 +1423,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.LogInfo("Warning: failed to save calibration JSON: " + ex.Message);
             }
 
-            // Optional early exit after Stage 3 (calibration only, no main search).
-            // Used for Stage 1-3 perf benchmarking and walking up to the main
-            // search incrementally without paying the Stage 4 cost.
-            if (OspreyEnvironment.ExitAfterCalibration)
-            {
-                ctx.LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
-                return new List<FdrEntry>();
-            }
-
-            // Surface the per-file calibration to Stage 6 reconciliation
-            // (multi-file runs only). Threaded calls share a
-            // ConcurrentDictionary; null on single-file paths that don't
-            // need cross-file consensus.
-            if (perFileCalibrationsOut != null && rtCalibration != null)
-                perFileCalibrationsOut[fileName] = rtCalibration;
-
-            // Run coelution scoring across all isolation windows
-            var swScoring = Stopwatch.StartNew();
-            var scoredEntries = RunCoelutionScoring(
-                fullLibrary, spectra, ms1Spectra,
-                isolationWindows, rtCalibration,
-                ms2Cal, ms1Cal,
-                context, ctx);
-            swScoring.Stop();
-            double scoringSeconds = swScoring.Elapsed.TotalSeconds;
-            double ratePerSec = scoringSeconds > 0.001
-                ? scoredEntries.Count / scoringSeconds
-                : 0.0;
-            ctx.LogInfo(string.Format(
-                "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
-                scoringSeconds, scoredEntries.Count, ratePerSec));
-
-            int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
-            int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
-                scoredEntries.Count,
-                nScoredTargets,
-                nScoredDecoys,
-                fileName));
-
-            // Drop double-counted entries (different precursors that latch
-            // onto the same chromatographic feature within an isolation
-            // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
-            // same call site, between scoring and pair-deduplication.
-            scoredEntries = DeduplicateDoubleCounting(
-                scoredEntries, fullLibrary, spectra, ms2Cal,
-                isolationWindows, config, ctx);
-            nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
-            nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(string.Format(
-                "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
-                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
-
-            // Deduplicate: keep best target and best decoy per base_id
-            int nBeforeDedup = scoredEntries.Count;
-            scoredEntries = DeduplicatePairs(scoredEntries, ctx);
-            int nAfterDedup = scoredEntries.Count;
-            ctx.LogInfo(string.Format(
-                "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
-                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
-
-            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
-            if (config.WritePin)
-            {
-                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
-            }
-
-            // Persist the full FdrEntry results (with features) to
-            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
-            // CWT candidates per file, and (b) a subsequent --task FirstJoin
-            // invocation can pick them up without re-running Stages 1-4.
-            // Same path convention as Rust (`scores_path_for_input`).
-            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
-            // as a Phase 4 follow-up. The metadata dictionary is precomputed
-            // in Run() against the original (un-mutated) outer config — see
-            // Run() for why. Skipped only in --task FirstJoin mode (no Stages 1-4
-            // ran here, so there is nothing fresh to persist).
-            if (parquetFooterMetadata != null)
-            {
-                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
-                // Reuse the entry-id -> LibraryEntry map Run() built once
-                // before the per-file fan-out (WriteScoresParquet needs
-                // it to pull sequence / precursor_mz / protein_ids from
-                // the library since FdrEntry doesn't carry these).
-                var swParquet = Stopwatch.StartNew();
-                ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
-                swParquet.Stop();
-                ctx.LogInfo(string.Format(
-                    "Wrote {0} scored entries to {1} ({2:F1}s)",
-                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
-            }
-
-            return scoredEntries;
+            return rtCalibration;
         }
 
         /// <summary>
