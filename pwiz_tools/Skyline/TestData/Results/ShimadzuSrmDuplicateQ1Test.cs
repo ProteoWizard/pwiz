@@ -167,9 +167,11 @@ namespace pwiz.SkylineTestData.Results
         }
 
         // Synthetic compounds injected at DOC / 17α-OH-P's shared Q1 (331.227) to pin the
-        // transition-aware matching rule. The file measures these product channels at that Q1:
-        // {81.05, 97.1, 109.05, 121}. A peptide is assigned only when a strict majority of its own
-        // transitions match those channels (matched*2 > total). The names encode "matched of total":
+        // transition-aware matching rule. Those two real co-targets together define the channels
+        // measured at this Q1 — the union of their products {81.05, 97.1, 109.05, 121} (the values
+        // in the file's binary m/z arrays; the isolation-window labels are integer-rounded). A
+        // peptide is assigned only when a strict majority of its own transitions match those
+        // channels (matched*2 > total). The names encode "matched of total":
         private const string PHANTOM_MINORITY = "PhantomMinority1of3"; // excluded
         private const string PHANTOM_HALF = "PhantomHalf2of4";         // excluded (exact boundary)
         private const string PHANTOM_MAJORITY = "PhantomMajority2of3"; // included
@@ -282,6 +284,16 @@ namespace pwiz.SkylineTestData.Results
                 foreach (var real in realPairs)
                     Assert.IsTrue(GroupHasData(real.NodeGroup),
                         real.NodePep.ModifiedTarget + " (a real co-target) unexpectedly lost its data");
+
+                // The 2-of-3 majority phantom counts on 81.05 being a measured channel here; assert
+                // that explicitly via the real co-target (DOC) that owns it, so a future data-file
+                // regeneration that dropped 81.05 fails loudly rather than as a puzzling Majority miss.
+                var sharedQ3 = new SignedMz(81.05);
+                bool q3Measured = realPairs
+                    .SelectMany(p => p.NodeGroup.Transitions)
+                    .Any(t => Math.Abs(t.Mz - sharedQ3) < 0.055 && TranHasData(t));
+                Assert.IsTrue(q3Measured,
+                    "Test setup: expected the shared 81.05 product channel to be measured in this file");
 
                 // Minority and exactly-half compounds must be denied this Q1's signal; a bare majority
                 // must receive it. The half case pins the strict ">" (a loosening to ">=" would hand it
