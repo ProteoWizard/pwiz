@@ -32,20 +32,43 @@ if [ modules.peek : NT ]
     # (Company, Copyright, Version, etc.).  Unlike SkylineBatch/AutoQC/SeeMS,
     # we do NOT generate Properties/AssemblyInfo.cs here -- doing so would
     # conflict with the SDK auto-gen and break the standalone build.ps1 flow
-    # with CS0579 duplicate-attribute errors.
+    # with CS0579 duplicate-attribute errors.  Instead we override the
+    # Directory.Build.props placeholder version via /p:Version at build time.
+
+    # OspreySharp follows the Skyline version scheme YEAR.ORDINAL.BRANCH.DOY.
+    # Compute it here (mirroring pwiz_tools/Skyline/Jamfile.jam) so official
+    # builds stamp a dated version; the standalone build.ps1 computes the same
+    # independently. The DOY is the day-of-year of the git commit date,
+    # offset by 365 per year past OSPREY_YEAR. (For now these constants are
+    # duplicated from Skyline; a future change may lift them to a shared Jamfile.)
+    import generate-version ;
+    constant OSPREY_YEAR : 26 ;
+    constant OSPREY_ORDINAL : 1 ;
+    constant OSPREY_BRANCH : 1 ;
+    local osprey_git_date = [ SHELL "git log -1 --format=%cs HEAD" ] ;
+    local osprey_ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : $(osprey_git_date) ] ;
+    if ! $(osprey_ymd)
+    {
+        local osprey_utc = [ modules.peek : JAMDATE ] ;
+        osprey_ymd = [ MATCH "([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])" : $(osprey_utc) ] ;
+    }
+    local osprey_year2 = [ MATCH "[0-9][0-9]([0-9][0-9])" : $(osprey_ymd) ] ;
+    local osprey_doy = [ CALC [ CALC [ CALC $(osprey_year2) - $(OSPREY_YEAR) ] * 365 ] + [ day_of_year $(osprey_ymd) ] ] ;
+    constant OSPREY_VERSION : "$(OSPREY_YEAR).$(OSPREY_ORDINAL).$(OSPREY_BRANCH).$(osprey_doy)" ;
 
     rule do_osprey_sharp ( targets + : sources * : properties * )
     {
         MSVC_CURRENT_SETUP_SCRIPT on $(targets) = [ get-current-msvc-setup-script $(properties) ] ;
         CONFIGURATION on $(targets) = [ MATCH <variant>(.*) : $(properties) ] ;
         PLATFORM on $(targets) = [ MATCH <address-model>(.*) : $(properties) ] ;
+        OSPREY_VERSION on $(targets) = $(OSPREY_VERSION) ;
     }
 
     actions do_osprey_sharp
     {
         $(MSVC_CURRENT_SETUP_SCRIPT)
-        echo Building OspreySharp in $(CONFIGURATION:L) configuration...
-        msbuild $(OSPREY_SHARP_PATH)/OspreySharp.sln /p:Configuration=$(CONFIGURATION);Platform=x64 /nologo /verbosity:minimal
+        echo Building OspreySharp $(OSPREY_VERSION) in $(CONFIGURATION:L) configuration...
+        msbuild $(OSPREY_SHARP_PATH)/OspreySharp.sln /p:Configuration=$(CONFIGURATION);Platform=x64;Version=$(OSPREY_VERSION) /nologo /verbosity:minimal
         IF ERRORLEVEL 1 exit %ERRORLEVEL%
     }
 

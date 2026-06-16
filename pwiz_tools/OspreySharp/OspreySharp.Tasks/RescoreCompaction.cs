@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR.Reconciliation;
 
-namespace pwiz.OspreySharp
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// Worker-side compaction for the Stage 6 per-file rescore worker.

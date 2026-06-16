@@ -11,10 +11,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
     <ProjectReference Include="..\OspreySharp.Diagnostics\OspreySharp.Diagnostics.csproj" />
     <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />

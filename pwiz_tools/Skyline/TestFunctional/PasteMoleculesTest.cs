@@ -150,6 +150,7 @@ namespace pwiz.SkylineTestFunctional
             NewDocument();
             TestMultipleFragmentsPerLinePaste();
             TestMultipleFragmentsPerLine();
+            TestDuplicateFragmentOnLine();
             TestSimilarMzIsotopes();
             TestIsotopeLabelsInInChi();
             TestNotes();
@@ -1506,6 +1507,93 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(-2, t.Transition.Charge,
                     string.Format("Fragment at m/z {0} should have charge -2", t.Mz));
             }
+
+            NewDocument();
+        }
+
+        private void TestDuplicateFragmentOnLine()
+        {
+            // The multiple-fragments-per-line import permits repeated product columns, but a single line
+            // must not declare the same fragment twice: one precursor cannot hold two identical
+            // transitions. Here one Product m/z column with two (same-value) Product Charge columns makes
+            // fill-forward clone the product into an identical transition. Previously this slipped through
+            // import and crashed the post-import small-molecule automanage refinement (skyline.ms rowId
+            // 74731); it must instead be reported as an ordinary row error via "Check For Errors".
+            const string duplicatedHeader = "Product Charge"; // assigned to two columns; the second is the offender
+            var text =
+                "Molecule Name,Precursor m/z,Precursor Charge,Product m/z," + duplicatedHeader + "," + duplicatedHeader + "\n" +
+                "M1,351.2177,-1,333.2066,-1,-1\n";
+            SetClipboardText(text);
+
+            var columnDlg = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            RunUI(() =>
+            {
+                columnDlg.radioMolecule.PerformClick();
+                SetComboBoxes(columnDlg,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
+
+            var errDlg = ShowDialog<ImportTransitionListErrorDlg>(() => columnDlg.buttonCheckForErrors.PerformClick());
+            RunUI(() =>
+            {
+                // Exactly one error: the line declares the same fragment twice. It points at, and names,
+                // the offending (second "Product Charge") column - not the fill-forwarded Product m/z
+                // column. Input columns (1-based): 1=Molecule Name, 2=Precursor m/z, 3=Precursor Charge,
+                // 4=Product m/z, 5=Product Charge, 6=Product Charge.
+                AssertEx.AreEqual(1, errDlg.ErrorList.Count);
+                var dupError = errDlg.ErrorList[0];
+                AssertEx.AreEqual(6, dupError.Column);
+                // The reader normalizes the recognized header to its localized column name, so assert
+                // against that resource (translation-proof) rather than the raw input header text.
+                AssertEx.Contains(dupError.ErrorMessage, Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
+            OkDialog(errDlg, errDlg.OkDialog);
+            OkDialog(columnDlg, columnDlg.CancelDialog);
+
+            // Same check via the existing-molecule path (AddFragmentTransitions): the first row creates
+            // the molecule with two distinct fragments; a later row for the same precursor declares the
+            // same fragment twice (two Product m/z columns with the same value), which must also be
+            // reported, naming the offending second Product m/z column.
+            const string productMzHeader = "Product m/z";
+            var text2 =
+                "Molecule Name,Precursor m/z,Precursor Charge," + productMzHeader + ",Product Charge," + productMzHeader + ",Product Charge\n" +
+                "M2,351.2177,-1,333.2066,-1,235.1316,-1\n" +
+                "M2,351.2177,-1,175.1119,-1,175.1119,-1\n";
+            SetClipboardText(text2);
+
+            var columnDlg2 = ShowDialog<ImportTransitionListColumnSelectDlg>(() => SkylineWindow.Paste());
+            RunUI(() =>
+            {
+                columnDlg2.radioMolecule.PerformClick();
+                SetComboBoxes(columnDlg2,
+                    Resources.ImportTransitionListColumnSelectDlg_ComboChanged_Molecule_Name,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_m_z,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Precursor_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge,
+                    Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z,
+                    Resources.PasteDlg_UpdateMoleculeType_Product_Charge);
+            });
+
+            var errDlg2 = ShowDialog<ImportTransitionListErrorDlg>(() => columnDlg2.buttonCheckForErrors.PerformClick());
+            RunUI(() =>
+            {
+                // The duplicate is on the second row (an existing molecule), reported via
+                // AddFragmentTransitions, naming the offending second Product m/z column (1-based column 6:
+                // 1=Molecule Name, 2=Precursor m/z, 3=Precursor Charge, 4=Product m/z, 5=Product Charge,
+                // 6=Product m/z, 7=Product Charge).
+                AssertEx.AreEqual(1, errDlg2.ErrorList.Count);
+                var dupError2 = errDlg2.ErrorList[0];
+                AssertEx.AreEqual(6, dupError2.Column);
+                AssertEx.Contains(dupError2.ErrorMessage, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Product_m_z);
+            });
+            OkDialog(errDlg2, errDlg2.OkDialog);
+            OkDialog(columnDlg2, columnDlg2.CancelDialog);
 
             NewDocument();
         }
