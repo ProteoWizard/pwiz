@@ -90,6 +90,10 @@ namespace pwiz.Common.DataBinding
 
         public object GetOperandValue(DataSchema dataSchema, Type columnType)
         {
+            if (!FilterOperation.HasOperand())
+            {
+                return null;
+            }
             return dataSchema.GetFilterHandler(columnType).DeserializeOperand(FilterOperation, InvariantOperandText);
         }
 
