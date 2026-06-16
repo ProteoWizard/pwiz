@@ -242,6 +242,7 @@
     <Compile Include="MinimizeIrtTest.cs" />
     <Compile Include="EADZIonsTest.cs" />
     <Compile Include="MissingOptStepsTest.cs" />
+    <Compile Include="MixedPolarityFullScanTest.cs" />
     <Compile Include="MixedSrmPrmTest.cs" />
     <Compile Include="Ms1SpectrumFilterTest.cs" />
     <Compile Include="MultiInjectCandidatePeakTest.cs" />
@@ -694,6 +695,7 @@
     <None Include="MidasModificationTest.zip" />
     <None Include="MidasTest.zip" />
     <None Include="MinimizeIrtTest.zip" />
+    <None Include="MixedPolarityFullScanTest.zip" />
     <None Include="ModifiedAreaProportionTest.zip" />
     <None Include="ModifyMoleculeTest.zip" />
     <None Include="MultiInjectionReplicatesTest.zip" />

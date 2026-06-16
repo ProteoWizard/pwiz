@@ -29,7 +29,7 @@ using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
 
-namespace pwiz.OspreySharp
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// In-memory state needed to drive a per-file Stage 6 rescore from
