@@ -523,8 +523,7 @@ namespace pwiz.OspreySharp.Tasks
                     ? ParquetScoreCache.ReconciledPathFromScoresPath(perFileParquetPath)
                     : null;
                 if (hasParquetPath
-                    && File.Exists(reconciledPath)
-                    && TaskValiditySidecar.IsValid(reconciledPath, Name, taskValidityKey))
+                    && PerFileResumeDriver.IsCurrent(reconciledPath, Name, taskValidityKey))
                 {
                     ctx.LogInfo(string.Format(
                         @"[file] {0}/{1} {2}: skipping (outputs valid)",
@@ -549,7 +548,7 @@ namespace pwiz.OspreySharp.Tasks
                 // so a mid-Run crash leaves no false-positive pointing at
                 // the partially-written reconciled parquet.
                 if (hasParquetPath)
-                    TaskValiditySidecar.Delete(reconciledPath, Name);
+                    PerFileResumeDriver.ClearStale(reconciledPath, Name);
 
                 IReadOnlyList<(int Index, double Apex, double Start, double End)> consensusTargets;
                 if (!perFileConsensusTargets.TryGetValue(fileName, out consensusTargets))
@@ -734,21 +733,15 @@ namespace pwiz.OspreySharp.Tasks
                         };
                         if (config.Reconciliation != null && config.Reconciliation.Enabled)
                             perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
-                        try
-                        {
-                            TaskValiditySidecar.Write(reconciledOutPath, Name, OspreyVersion.Current,
-                                taskValidityKey, perFileInputs);
-                        }
-                        catch (Exception ex)
-                        {
-                            ctx.LogWarning(string.Format(
-                                @"  Failed to write {0} sidecar for {1}: {2}",
-                                Name, reconciledOutPath, ex.Message));
-                        }
+                        PerFileResumeDriver.Stamp(reconciledOutPath, Name, OspreyVersion.Current,
+                            taskValidityKey, perFileInputs, ctx.LogWarning);
                     }
                     else
                     {
-                        TaskValiditySidecar.Delete(reconciledOutPath, Name);
+                        // Clear the stale sidecar AND remove the partially-written
+                        // reconciled parquet (output mechanics, the task's own
+                        // concern) so the next run re-rescores from scratch.
+                        PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
                         try
                         {
                             if (File.Exists(reconciledOutPath)) File.Delete(reconciledOutPath);

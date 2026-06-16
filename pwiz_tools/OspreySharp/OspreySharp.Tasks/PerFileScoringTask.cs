@@ -993,8 +993,7 @@ namespace pwiz.OspreySharp.Tasks
             PipelineContext ctx)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            if (File.Exists(scoresPath)
-                && TaskValiditySidecar.IsValid(scoresPath, Name, validityKey))
+            if (PerFileResumeDriver.IsCurrent(scoresPath, Name, validityKey))
             {
                 var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx);
                 if (loaded != null)
@@ -1012,21 +1011,12 @@ namespace pwiz.OspreySharp.Tasks
                 fileIdx + 1, totalFiles, inputFile));
             // Clear stale sidecar so a mid-ProcessFile crash leaves no
             // false-positive sidecar on the next invocation.
-            TaskValiditySidecar.Delete(scoresPath, Name);
+            PerFileResumeDriver.ClearStale(scoresPath, Name);
             var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, ctx);
             if (fileResult != null)
             {
-                try
-                {
-                    TaskValiditySidecar.Write(scoresPath, Name, OspreyVersion.Current,
-                        validityKey, new[] { inputFile });
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        @"  Failed to write {0} sidecar for {1}: {2}",
-                        Name, scoresPath, ex.Message));
-                }
+                PerFileResumeDriver.Stamp(scoresPath, Name, OspreyVersion.Current,
+                    validityKey, new[] { inputFile }, ctx.LogWarning);
             }
             return fileResult;
         }
