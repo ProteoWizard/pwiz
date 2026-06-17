@@ -991,47 +991,43 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Searches the form for the IButtonControl (other than a plain Button, which the caller
-        // handles via BM_CLICK) that best matches by control name or visible text -- e.g. the
-        // StartPage's ActionBoxControl tiles. Prefers an exact match; falls back to a symbol-stripped
-        // one. Returns null if nothing matches.
+        // handles via BM_CLICK) that best matches key -- e.g. the StartPage's ActionBoxControl tiles.
         private static IButtonControl FindButtonControl(Control parent, string key)
         {
-            IButtonControl best = null;
-            var bestQuality = ControlMatchQuality.None;
-            foreach (var control in EnumerateControls(parent))
-            {
-                if (!(control is IButtonControl buttonControl) || control is Button)
-                    continue;
-                var quality = ControlMatches(control, key);
-                if (quality > bestQuality)
-                {
-                    best = buttonControl;
-                    bestQuality = quality;
-                    if (quality == ControlMatchQuality.Exact)
-                        break; // cannot do better
-                }
-            }
-            return best;
+            return (IButtonControl)FindBestMatch(parent, key, c => c is IButtonControl && !(c is Button));
         }
 
-        // Searches the form for the control of type T that best matches by control name or visible
-        // text. Prefers an exact match anywhere in the form over a weaker symbol-stripped match found
-        // earlier, so a tutorial's "Next" matches a "Next >" button only when no exact match exists.
+        // Searches the form for the control of type T that best matches key.
         private static T FindControl<T>(Control parent, string key) where T : Control
         {
-            T best = null;
+            return (T)FindBestMatch(parent, key, c => c is T);
+        }
+
+        // Finds the control under parent that best matches key among controls passing the filter.
+        // Ranking: highest text-match quality first (exact over symbol-stripped), then a
+        // visible+enabled control over a hidden/disabled one of the same quality. The latter matters
+        // when two controls share a caption but only one is live -- e.g. a wizard's last page has both
+        // the visible "Finish" nav button and a hidden early-"Finish" button. Returns null if none.
+        private static Control FindBestMatch(Control parent, string key, Func<Control, bool> filter)
+        {
+            Control best = null;
             var bestQuality = ControlMatchQuality.None;
+            var bestInteractable = false;
             foreach (var control in EnumerateControls(parent))
             {
-                if (!(control is T typed))
+                if (!filter(control))
                     continue;
                 var quality = ControlMatches(control, key);
-                if (quality > bestQuality)
+                if (quality == ControlMatchQuality.None)
+                    continue;
+                var interactable = control.Visible && control.Enabled;
+                if (quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
                 {
-                    best = typed;
+                    best = control;
                     bestQuality = quality;
-                    if (quality == ControlMatchQuality.Exact)
-                        break; // cannot do better
+                    bestInteractable = interactable;
+                    if (quality == ControlMatchQuality.Exact && interactable)
+                        break; // best possible -- exact text on a live control
                 }
             }
             return best;
