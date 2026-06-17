@@ -990,40 +990,96 @@ namespace pwiz.Skyline.ToolsUI
                 @"Button not found on form {0}: {1}.", formId, button));
         }
 
-        // Depth-first search for a control implementing IButtonControl other than a plain Button (which
-        // the caller handles via BM_CLICK) matching by control name or visible text. Lets custom
-        // clickable controls -- e.g. the StartPage's ActionBoxControl tiles -- be driven like buttons.
+        // Searches the form for the IButtonControl (other than a plain Button, which the caller
+        // handles via BM_CLICK) that best matches by control name or visible text -- e.g. the
+        // StartPage's ActionBoxControl tiles. Prefers an exact match; falls back to a symbol-stripped
+        // one. Returns null if nothing matches.
         private static IButtonControl FindButtonControl(Control parent, string key)
         {
-            foreach (Control child in parent.Controls)
+            IButtonControl best = null;
+            var bestQuality = ControlMatchQuality.None;
+            foreach (var control in EnumerateControls(parent))
             {
-                if (child is IButtonControl buttonControl && !(child is Button) && ControlMatches(child, key))
-                    return buttonControl;
-                var nested = FindButtonControl(child, key);
-                if (nested != null)
-                    return nested;
+                if (!(control is IButtonControl buttonControl) || control is Button)
+                    continue;
+                var quality = ControlMatches(control, key);
+                if (quality > bestQuality)
+                {
+                    best = buttonControl;
+                    bestQuality = quality;
+                    if (quality == ControlMatchQuality.Exact)
+                        break; // cannot do better
+                }
             }
-            return null;
+            return best;
         }
 
-        // Depth-first search for a control of type T matching by control name or visible text.
+        // Searches the form for the control of type T that best matches by control name or visible
+        // text. Prefers an exact match anywhere in the form over a weaker symbol-stripped match found
+        // earlier, so a tutorial's "Next" matches a "Next >" button only when no exact match exists.
         private static T FindControl<T>(Control parent, string key) where T : Control
         {
-            foreach (Control child in parent.Controls)
+            T best = null;
+            var bestQuality = ControlMatchQuality.None;
+            foreach (var control in EnumerateControls(parent))
             {
-                if (child is T typed && ControlMatches(child, key))
-                    return typed;
-                var nested = FindControl<T>(child, key);
-                if (nested != null)
-                    return nested;
+                if (!(control is T typed))
+                    continue;
+                var quality = ControlMatches(control, key);
+                if (quality > bestQuality)
+                {
+                    best = typed;
+                    bestQuality = quality;
+                    if (quality == ControlMatchQuality.Exact)
+                        break; // cannot do better
+                }
             }
-            return null;
+            return best;
         }
 
-        private static bool ControlMatches(Control control, string key)
+        // Depth-first (pre-order) enumeration of all controls under the given parent.
+        private static IEnumerable<Control> EnumerateControls(Control parent)
         {
-            return string.Equals(control.Name, key, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(NormalizeLabel(control.Text), NormalizeLabel(key), StringComparison.CurrentCultureIgnoreCase);
+            foreach (Control child in parent.Controls)
+            {
+                yield return child;
+                foreach (var descendant in EnumerateControls(child))
+                    yield return descendant;
+            }
+        }
+
+        // How well a control matches a requested name/label. Higher is better; callers prefer the
+        // best match in the form and accept a weaker one only when nothing matches better.
+        private enum ControlMatchQuality
+        {
+            None = 0,     // no match
+            Stripped = 1, // matched only after ignoring non-alphanumeric symbols ("Next" == "Next >")
+            Exact = 2,    // matched on control name, or on visible text after light normalization
+        }
+
+        private static ControlMatchQuality ControlMatches(Control control, string key)
+        {
+            // Best: the stable control name, or the visible text after light normalization (mnemonic
+            // '&' and a trailing ellipsis/period removed -- see NormalizeLabel).
+            if (string.Equals(control.Name, key, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(NormalizeLabel(control.Text), NormalizeLabel(key), StringComparison.CurrentCultureIgnoreCase))
+                return ControlMatchQuality.Exact;
+            // Fallback: ignore every non-alphanumeric character, so a tutorial's "Next" matches a
+            // button captioned "Next >" (and "Back" a "< Back"). Used only when nothing matches exactly.
+            var keyStripped = StripToAlphanumeric(key);
+            if (keyStripped.Length > 0
+                && string.Equals(StripToAlphanumeric(control.Text), keyStripped, StringComparison.CurrentCultureIgnoreCase))
+                return ControlMatchQuality.Stripped;
+            return ControlMatchQuality.None;
+        }
+
+        // Removes every character that is not a letter or digit (spaces and punctuation included), for
+        // the loose, symbol-insensitive comparison tier.
+        private static string StripToAlphanumeric(string text)
+        {
+            return string.IsNullOrEmpty(text)
+                ? string.Empty
+                : new string(text.Where(char.IsLetterOrDigit).ToArray());
         }
 
         private static void SetControlValue(Control control, string value)
