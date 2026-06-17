@@ -227,7 +227,7 @@ namespace pwiz.SkylineTestData.Results
             // Build a variant document adding the three boundary compounds at the shared Q1.
             string srcDocPath = TestFilesDir.GetTestPath("Wesley.sky");
             string docText = File.ReadAllText(srcDocPath);
-            int insertAt = docText.IndexOf("</peptide_list>");
+            int insertAt = docText.IndexOf("</peptide_list>", StringComparison.InvariantCulture);
             Assert.AreNotEqual(-1, insertAt,
                 "Test setup: could not find a peptide_list to inject the boundary compounds into");
             string phantoms =
