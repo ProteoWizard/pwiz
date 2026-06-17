@@ -688,94 +688,99 @@ namespace pwiz.OspreySharp.Test
         private const string VALID_SEARCH = "search-hash-aaa";
         private const string VALID_LIB = "lib-hash-bbb";
 
-        // Track Program.VERSION so happy-path and drift tests stay
-        // meaningful after upstream version bumps.
-        private const string CURRENT_VERSION = Program.VERSION;
-        private static readonly string PATCH_DRIFT_VERSION = DriftVersion(0, 0, 5);
-        private static readonly string MINOR_DRIFT_VERSION = DriftVersion(0, 1, 0);
-        private static readonly string MAJOR_DRIFT_VERSION = DriftVersion(1, 0, 0);
+        // Track OspreyVersion.Current so happy-path and drift tests stay
+        // meaningful as the build version advances. The version follows the
+        // Skyline scheme YEAR.ORDINAL.BRANCH.DOY; cache reuse requires an exact
+        // version match. Any difference (release line or daily build) aborts.
+        private static readonly string CURRENT_VERSION = OspreyVersion.Current;
+        private static readonly string DAILY_DRIFT_VERSION = DriftVersion(0, 0, 0, 5);
+        private static readonly string BRANCH_DRIFT_VERSION = DriftVersion(0, 0, 1, 0);
+        private static readonly string ORDINAL_DRIFT_VERSION = DriftVersion(0, 1, 0, 0);
+        private static readonly string YEAR_DRIFT_VERSION = DriftVersion(1, 0, 0, 0);
 
-        private static string DriftVersion(int majorDelta, int minorDelta, int patchDelta)
+        private static string DriftVersion(int yearDelta, int ordinalDelta, int branchDelta, int doyDelta)
         {
             var parts = CURRENT_VERSION.Split('.');
-            int major = int.Parse(parts[0], CultureInfo.InvariantCulture);
-            int minor = int.Parse(parts[1], CultureInfo.InvariantCulture);
-            int patch = int.Parse(parts[2], CultureInfo.InvariantCulture);
-            // Reset lower-level components when a higher-level one drifts.
-            int driftMinor = majorDelta != 0 ? 0 : minor + minorDelta;
-            int driftPatch = (majorDelta != 0 || minorDelta != 0) ? 0 : patch + patchDelta;
-            return string.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}",
-                major + majorDelta, driftMinor, driftPatch);
+            int year = int.Parse(parts[0], CultureInfo.InvariantCulture);
+            int ordinal = int.Parse(parts[1], CultureInfo.InvariantCulture);
+            int branch = int.Parse(parts[2], CultureInfo.InvariantCulture);
+            int doy = int.Parse(parts[3], CultureInfo.InvariantCulture);
+            return string.Format(CultureInfo.InvariantCulture, "{0}.{1}.{2}.{3}",
+                year + yearDelta, ordinal + ordinalDelta, branch + branchDelta, doy + doyDelta);
         }
 
-        private static string CheckMd(
-            string cachedV, string cachedS, string cachedL, out string warning)
+        private static string CheckMd(string cachedV, string cachedS, string cachedL)
         {
             return ParquetScoreCache.CheckParquetMetadata(
                 "test.scores.parquet",
                 cachedV, cachedS, cachedL,
-                VALID_SEARCH, VALID_LIB, CURRENT_VERSION,
-                out warning);
+                VALID_SEARCH, VALID_LIB, CURRENT_VERSION);
         }
 
         [TestMethod]
         public void TestParseVersionRoundTrip()
         {
-            int M, m, p;
-            Assert.IsTrue(ParquetScoreCache.TryParseVersion("26.3.0", out M, out m, out p));
-            Assert.AreEqual(26, M); Assert.AreEqual(3, m); Assert.AreEqual(0, p);
-            Assert.IsTrue(ParquetScoreCache.TryParseVersion("0.0.1", out M, out m, out p));
-            Assert.AreEqual(0, M); Assert.AreEqual(0, m); Assert.AreEqual(1, p);
+            int y, o, b, d;
+            Assert.IsTrue(ParquetScoreCache.TryParseVersion("26.1.1.166", out y, out o, out b, out d));
+            Assert.AreEqual(26, y); Assert.AreEqual(1, o); Assert.AreEqual(1, b); Assert.AreEqual(166, d);
+            Assert.IsTrue(ParquetScoreCache.TryParseVersion("0.0.0.1", out y, out o, out b, out d));
+            Assert.AreEqual(0, y); Assert.AreEqual(0, o); Assert.AreEqual(0, b); Assert.AreEqual(1, d);
         }
 
         [TestMethod]
         public void TestParseVersionRejectsBadInput()
         {
-            Assert.IsFalse(ParquetScoreCache.TryParseVersion("", out _, out _, out _));
-            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.3", out _, out _, out _));
-            Assert.IsFalse(ParquetScoreCache.TryParseVersion("v26.3.0", out _, out _, out _));
-            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.3.x", out _, out _, out _));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("", out _, out _, out _, out _));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.1.1", out _, out _, out _, out _));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("v26.1.1.0", out _, out _, out _, out _));
+            Assert.IsFalse(ParquetScoreCache.TryParseVersion("26.1.1.x", out _, out _, out _, out _));
         }
 
         [TestMethod]
-        public void TestMetadataHappyPathNoWarning()
+        public void TestMetadataExactVersionMatchOk()
         {
-            string warn;
-            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, VALID_LIB, out warn);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNull(err);
-            Assert.IsNull(warn);
         }
 
         [TestMethod]
-        public void TestMetadataPatchDriftWarnsButSucceeds()
+        public void TestMetadataDailyDriftAborts()
         {
-            string warn;
-            string err = CheckMd(PATCH_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out warn);
-            Assert.IsNull(err);
-            Assert.IsNotNull(warn);
-            StringAssert.Contains(warn, "patch-version drift");
-        }
-
-        [TestMethod]
-        public void TestMetadataMinorVersionDriftAborts()
-        {
-            string err = CheckMd(MINOR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out _);
+            // A different daily build may have changed scoring: hard-fail rather
+            // than silently reuse a stale cache behind an easily-missed warning.
+            string err = CheckMd(DAILY_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "major/minor");
+            StringAssert.Contains(err, "different daily build");
         }
 
         [TestMethod]
-        public void TestMetadataMajorVersionDriftAborts()
+        public void TestMetadataBranchVersionDriftAborts()
         {
-            string err = CheckMd(MAJOR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB, out _);
+            string err = CheckMd(BRANCH_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "major/minor");
+            StringAssert.Contains(err, "incompatible release identity");
+        }
+
+        [TestMethod]
+        public void TestMetadataOrdinalVersionDriftAborts()
+        {
+            string err = CheckMd(ORDINAL_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "incompatible release identity");
+        }
+
+        [TestMethod]
+        public void TestMetadataYearVersionDriftAborts()
+        {
+            string err = CheckMd(YEAR_DRIFT_VERSION, VALID_SEARCH, VALID_LIB);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "incompatible release identity");
         }
 
         [TestMethod]
         public void TestMetadataMissingVersionAborts()
         {
-            string err = CheckMd(null, VALID_SEARCH, VALID_LIB, out _);
+            string err = CheckMd(null, VALID_SEARCH, VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.version");
         }
@@ -783,7 +788,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingSearchHashAborts()
         {
-            string err = CheckMd(CURRENT_VERSION, null, VALID_LIB, out _);
+            string err = CheckMd(CURRENT_VERSION, null, VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.search_hash");
         }
@@ -791,7 +796,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataMissingLibraryHashAborts()
         {
-            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, null, out _);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, null);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "osprey.library_hash");
         }
@@ -799,7 +804,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataSearchHashMismatchNamesFieldAndFile()
         {
-            string err = CheckMd(CURRENT_VERSION, "wrong-hash", VALID_LIB, out _);
+            string err = CheckMd(CURRENT_VERSION, "wrong-hash", VALID_LIB);
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "search_hash mismatch");
             StringAssert.Contains(err, "test.scores.parquet");
@@ -809,7 +814,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestMetadataLibraryHashMismatchNamesFieldAndFile()
         {
-            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, "wrong-lib", out _);
+            string err = CheckMd(CURRENT_VERSION, VALID_SEARCH, "wrong-lib");
             Assert.IsNotNull(err);
             StringAssert.Contains(err, "library_hash mismatch");
             StringAssert.Contains(err, "test.scores.parquet");
@@ -817,13 +822,13 @@ namespace pwiz.OspreySharp.Test
         }
 
         [TestMethod]
-        public void TestMetadataUnparseableVersionWarnsButProceeds()
+        public void TestMetadataUnparseableVersionAborts()
         {
-            string warn;
-            string err = CheckMd("garbage", VALID_SEARCH, VALID_LIB, out warn);
-            Assert.IsNull(err);
-            Assert.IsNotNull(warn);
-            StringAssert.Contains(warn, "could not parse");
+            // An unrecognized cached version can't be validated for
+            // compatibility, so refuse to reuse the cache (hard fail).
+            string err = CheckMd("garbage", VALID_SEARCH, VALID_LIB);
+            Assert.IsNotNull(err);
+            StringAssert.Contains(err, "unrecognized osprey version");
         }
 
         // --- Library-decoy CLI flags ---------------------------------------

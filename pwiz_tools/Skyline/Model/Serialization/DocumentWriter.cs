@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Serialization
             Document = document;
             SkylineVersion = skylineVersion;
             DocumentFormat = skylineVersion.SrmDocumentVersion;
-            CompactFormatOption = CompactFormatOption.FromSettings();
+            CompactFormatOption = CompactFormatOption.Effective;
         }
 
         public SkylineVersion SkylineVersion { get; private set; }

@@ -150,14 +150,34 @@ foreach ($f in $staleAsmInfo) {
     Remove-Item $f.FullName -Force
 }
 
+# --- Version (Skyline scheme YEAR.ORDINAL.BRANCH.DOY) -------------------
+# Mirrors pwiz_tools/Skyline/Jamfile.jam so a standalone dev/CI build stamps
+# the same versioning the Boost build does (rather than the Directory.Build.props
+# placeholder). YEAR/ORDINAL/BRANCH are the release-line constants; DOY is the
+# day-of-year of the git commit date (reproducible), offset by 365 per year past
+# YEAR. The stamped version becomes OspreyVersion.Current at runtime. The
+# regression harness pins OSPREY_VERSION_OVERRIDE on top of this for bit parity.
+$OSPREY_YEAR = 26
+$OSPREY_ORDINAL = 1
+$OSPREY_BRANCH = 1
+$gitDate = & git -C $scriptRoot log -1 --format=%cs HEAD 2>$null
+if ($LASTEXITCODE -eq 0 -and $gitDate -match '^\d{4}-\d{2}-\d{2}$') {
+    $verDate = [datetime]::ParseExact($gitDate.Trim(), 'yyyy-MM-dd', [cultureinfo]::InvariantCulture)
+} else {
+    $verDate = Get-Date
+}
+$doy = (([int]$verDate.ToString('yy')) - $OSPREY_YEAR) * 365 + $verDate.DayOfYear
+$ospreyVersion = "$OSPREY_YEAR.$OSPREY_ORDINAL.$OSPREY_BRANCH.$doy"
+
 # --- Build --------------------------------------------------------------
-Write-Progress-Tc "Building OspreySharp.sln ($Configuration|$platform)"
+Write-Progress-Tc "Building OspreySharp.sln ($Configuration|$platform) v$ospreyVersion"
 $buildStart = Get-Date
 $buildArgs = @(
     $sln,
     '/restore',
     "/p:Configuration=$Configuration",
     "/p:Platform=$platform",
+    "/p:Version=$ospreyVersion",
     '/nologo',
     "/verbosity:$Verbosity"
 )
@@ -277,21 +297,15 @@ foreach ($fw in $testFrameworks) {
     }
 }
 
-# --- TeamCity artifact publication ------------------------------------------
-# Emit publishArtifacts service messages from pwsh (not cmd.exe echo) so they
-# reach the agent reliably.  Paths use the repo-root-relative form so this
-# script works from either C:\pwiz (TC) or any other working directory.
-if ($TeamCity) {
-    $repoRoot = (Resolve-Path (Join-Path $scriptRoot '..\..')).Path
-    function Publish-Tc([string]$relSrc, [string]$dest) {
-        $abs = Join-Path $repoRoot $relSrc
-        if (Test-Path $abs) {
-            Write-Host ("##teamcity[publishArtifacts '{0} => {1}']" -f (Format-TcMessage $relSrc), (Format-TcMessage $dest))
-        }
-    }
-    Publish-Tc 'pwiz_tools/OspreySharp/OspreySharp/bin/x64/Release/net8.0' 'OspreySharp-net8.0.zip'
-    Publish-Tc 'pwiz_tools/OspreySharp/OspreySharp/bin/x64/Release/net472' 'OspreySharp-net472.zip'
-    Publish-Tc 'pwiz_tools/OspreySharp/TestResults' 'test-results'
-}
+# --- TeamCity artifacts: intentionally none ---------------------------------
+# This config publishes NO downloadable artifacts. The test + coverage results
+# are already surfaced via the importData service messages above (Test /
+# Coverage tabs); there is no OspreySharp install story yet, so the built
+# binaries are not worth publishing. Critically, publishing
+# pwiz_tools/OspreySharp/TestResults here was fragile: agents reuse one C:\pwiz
+# checkout across the OspreySharp configs, so a sibling config's run (e.g. the
+# overnight regression) can leave a multi-GB .spectra.bin in that shared
+# TestResults, and the publish would then fail the 4 GB per-artifact limit. With
+# nothing published, large scratch files under TestResults are a non-issue.
 
 exit $overallTestExit

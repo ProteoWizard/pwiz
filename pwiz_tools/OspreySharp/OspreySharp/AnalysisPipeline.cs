@@ -84,7 +84,7 @@ namespace pwiz.OspreySharp
 
                 var pipelineTasks = CanonicalPipeline();
                 var ctx = new PipelineContext(config, pipelineTasks,
-                    LogInfo, LogWarning, LogError);
+                    LogInfo, LogWarning, LogError, OspreyDiagnostics.Active);
 
                 // Phase B5 driver-owned dataflow: walk the canonical pipeline
                 // and run each INCLUDED task whose outputs are not already
@@ -227,7 +227,7 @@ namespace pwiz.OspreySharp
                 if (!File.Exists(output)) continue;
                 try
                 {
-                    TaskValiditySidecar.Write(output, task.Name, Program.VERSION, key, inputs);
+                    TaskValiditySidecar.Write(output, task.Name, OspreyVersion.Current, key, inputs);
                 }
                 catch (Exception ex)
                 {

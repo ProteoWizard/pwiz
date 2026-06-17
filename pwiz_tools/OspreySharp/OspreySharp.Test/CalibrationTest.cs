@@ -532,7 +532,7 @@ namespace pwiz.OspreySharp.Test
         /// LOH and trigger gen-2 GC pressure during the all-windows-at-once
         /// pre-preprocessing step.
         ///
-        /// If a future change makes AbstractScoringTask.s_calXcorrScorer
+        /// If a future change makes Calibrator.s_calXcorrScorer
         /// construct with BinConfig.HRAM() (or any other non-unit bin config),
         /// these asserts fail loudly and cite the Rust design doc. Mirrors
         /// the calibration_scorer_uses_unit_bins_for_* tests in Rust osprey
@@ -541,7 +541,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestCalibrationXcorrScorerUsesUnitBins()
         {
-            int calBins = AbstractScoringTask.s_calXcorrScorer.BinConfig.NBins;
+            int calBins = Calibrator.s_calXcorrScorer.BinConfig.NBins;
             int unitBins = new SpectralScorer(BinConfig.UnitResolution()).BinConfig.NBins;
             int hramBins = new SpectralScorer(BinConfig.HRAM()).BinConfig.NBins;
 

@@ -36,29 +36,22 @@ namespace pwiz.OspreySharp
     /// </summary>
     static class Program
     {
-        // Tracks the Rust Osprey upstream version this OspreySharp port
-        // is aligned with. Used in parquet footer metadata; the Phase 3
-        // validator requires same major.minor across cross-impl handoff.
-        // TODO: 26.6.1 bumped the version string but the algorithmic
-        // payload of v26.6.1 (reconciliation pairing library-supplied
-        // decoys by base_id instead of stripping a DECOY_ prefix in
-        // compute_consensus_rts + plan_reconciliation) is NOT yet
-        // ported to this side. It does not affect reverse-decoy mode
-        // (Stellar, DecoysInLibrary=false), but it WILL affect any
-        // dataset run with --decoys-in-library. See osprey
-        // release-notes/RELEASE_NOTES_v26.6.1.md and the
-        // test_consensus_rts_pairs_library_decoy_by_base_id +
-        // test_plan_reconciliation_includes_library_decoy_via_base_id
-        // regression tests on the Rust side.
-        internal const string VERSION = "26.6.1";
-        internal const string VERSION_STRING = VERSION;
+        // The logical osprey version (stamped into the blib + score caches and
+        // used for cache-compat) is OspreyVersion.Current in OspreySharp.Core,
+        // derived from the build version (Skyline YEAR.ORDINAL.BRANCH.DOY scheme).
+        //
+        // Known limitation: the --decoys-in-library reconciliation path (pairing
+        // library-supplied decoys by base_id rather than stripping a DECOY_ prefix
+        // in consensus-RT + reconciliation planning) is not yet ported. Reverse-
+        // decoy mode (Stellar, DecoysInLibrary=false) is unaffected; datasets run
+        // with --decoys-in-library are.
 
         static int Main(string[] args)
         {
             // Route OspreyDiagnostics dump messages through the same logging
             // channel as the rest of the pipeline so bisection logs appear
             // alongside normal output.
-            OspreyDiagnostics.LogAction = LogInfo;
+            OspreyDiagnosticsLog.LogAction = LogInfo;
 
             if (args.Length == 0)
             {
@@ -120,12 +113,29 @@ namespace pwiz.OspreySharp
                 config.NoJoin = selectedTask == HpcTask.PerFileScoring || selectedTask == HpcTask.PerFileRescore;
                 config.StopAfterStage5 = selectedTask == HpcTask.FirstJoin;
                 config.ExpectReconciledInput = selectedTask == HpcTask.MergeNode;
+
+                // Apply the output / cache directory overrides process-wide so
+                // every per-file artifact path helper (scores parquet, spectra
+                // cache, calibration JSON, FDR / reconciliation sidecars) writes
+                // to the configured location. Null leaves the historical behavior
+                // (each artifact in its input file's own directory).
+                ArtifactPaths.OutputDir = config.OutputDir;
+                ArtifactPaths.CacheDir = config.CacheDir;
+
                 string err = ValidateArgs(config);
                 if (err != null)
                 {
                     LogError(err);
                     return 1;
                 }
+
+                // Create the configured directories only after args validate, so
+                // an invalid command line surfaces the validation message instead
+                // of a Directory.CreateDirectory side effect / generic error.
+                if (!string.IsNullOrEmpty(config.OutputDir))
+                    Directory.CreateDirectory(config.OutputDir);
+                if (!string.IsNullOrEmpty(config.CacheDir))
+                    Directory.CreateDirectory(config.CacheDir);
                 // Runs that consume --input-scores (FirstJoin, PerFileRescore,
                 // MergeNode, or the default full pipeline started from scores)
                 // have no mzML inputs to validate and ignore --output handling
@@ -164,7 +174,7 @@ namespace pwiz.OspreySharp
                 }
 
                 // Log startup info
-                LogInfo(string.Format("OspreySharp v{0}", VERSION));
+                LogInfo(string.Format("OspreySharp v{0}", OspreyVersion.Current));
                 LogInfo(string.Format("Command: {0}", string.Join(" ", args)));
                 LogInfo(string.Format("Input files: {0}", config.InputFiles.Count));
                 LogInfo(string.Format("Library: {0} ({1})",
@@ -207,6 +217,9 @@ namespace pwiz.OspreySharp
             var inputFiles = new List<string>();
             string libraryPath = null;
             string outputPath = null;
+            string workDir = null;
+            string outputDir = null;
+            string cacheDir = null;
             string resolution = "auto";
             double? fragmentTolerance = null;
             string fragmentUnit = null;
@@ -247,6 +260,21 @@ namespace pwiz.OspreySharp
                     case "-o":
                     case "--output":
                         outputPath = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--work-dir":
+                        workDir = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--output-dir":
+                        outputDir = RequireValue(args, ref i, arg);
+                        i++;
+                        break;
+
+                    case "--cache-dir":
+                        cacheDir = RequireValue(args, ref i, arg);
                         i++;
                         break;
 
@@ -436,7 +464,7 @@ namespace pwiz.OspreySharp
 
                     case "-v":
                     case "--version":
-                        Console.WriteLine("OspreySharp v{0}", VERSION);
+                        Console.WriteLine("OspreySharp v{0}", OspreyVersion.Current);
                         Environment.Exit(0);
                         break;
 
@@ -466,6 +494,12 @@ namespace pwiz.OspreySharp
 
             // Apply parsed values to config
             config.InputFiles = inputFiles;
+
+            // --work-dir is a convenience that sets both the derived-artifact
+            // output directory and the spectra-cache directory; an explicit
+            // --output-dir / --cache-dir overrides the matching component.
+            config.OutputDir = outputDir ?? workDir;
+            config.CacheDir = cacheDir ?? workDir;
 
             if (!string.IsNullOrEmpty(libraryPath))
                 config.LibrarySource = LibrarySource.FromPath(libraryPath);
@@ -770,6 +804,10 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("    -i, --input <files>           Input mzML file(s)");
             Console.Error.WriteLine("    -l, --library <file>          Spectral library (.tsv, .blib, .elib)");
             Console.Error.WriteLine("    -o, --output <file>           Output blib file");
+            Console.Error.WriteLine("    --work-dir <dir>              Write derived artifacts AND the spectra cache here");
+            Console.Error.WriteLine("                                 (so input data can be read-only); default: beside input");
+            Console.Error.WriteLine("    --output-dir <dir>           Directory for derived artifacts (overrides --work-dir)");
+            Console.Error.WriteLine("    --cache-dir <dir>             Directory for the .spectra.bin cache (overrides --work-dir)");
             Console.Error.WriteLine("    --resolution <mode>           Resolution mode: unit, hram, auto (default: auto)");
             Console.Error.WriteLine("    --fragment-tolerance <value>  Fragment m/z tolerance (default: 10)");
             Console.Error.WriteLine("    --fragment-unit <unit>        Fragment tolerance unit: ppm, mz (default: ppm)");

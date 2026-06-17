@@ -54,7 +54,13 @@ namespace pwiz.OspreySharp.IO
             logWarning = logWarning ?? (_ => { });
 
             string path = config.LibrarySource.Path;
-            string cachePath = path + ".libcache";
+            // Route the library cache through ArtifactPaths (like the spectra
+            // cache) so it follows --cache-dir / --work-dir and need not be
+            // written beside a read-only library. Filename form preserved
+            // ("<library-leaf>.libcache"); only the directory is redirected.
+            string cachePath = Path.Combine(
+                ArtifactPaths.ResolveCacheDir(path),
+                Path.GetFileName(path) + ".libcache");
 
             // Try loading from binary cache first
             if (File.Exists(cachePath))
