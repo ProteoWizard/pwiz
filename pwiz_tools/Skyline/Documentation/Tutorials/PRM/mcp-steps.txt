@@ -15,9 +15,10 @@
 #   SetFormValue    "<formId>" "<controlId>" <value>  -> skyline_set_form_value
 #
 # Control matching (ClickFormButton / SetFormValue controlId):
-#   - A control is matched by its control Name OR its visible Text. Use the control Name
-#     when the visible text does not match the tutorial word -- e.g. the wizard's "Next >"
-#     button is the control "btnNext", and "Finish" on the last page is the SAME btnNext.
+#   - A control is matched by its control Name OR its visible Text. Matching prefers an exact
+#     match, then a match after stripping non-alphanumeric symbols, and among equal matches a
+#     visible+enabled control -- so the tutorial's "Next" matches the "Next >" button and
+#     "Finish" the (visible) Finish button, even though a hidden early-Finish shares the caption.
 #   - SetFormValue sets: a TextBox's text; a CheckBox/RadioButton checked state
 #     ("true"/"false"); or a ComboBox selection (by visible item text).
 #   - A text field labelled only by an adjacent Label (e.g. "Ion match tolerance") cannot
@@ -31,7 +32,7 @@
 # makes them return as soon as a dialog appears), so the resulting form is usually not
 # open yet on the next line. Page-to-page moves WITHIN the wizard reuse the same formId
 # ("ImportPeptideSearchDlg:Import Peptide Search"), so there is no new form to wait for
-# between consecutive btnNext clicks; the dialog-watch makes each click return only after
+# between consecutive Next clicks; the dialog-watch makes each click return only after
 # its synchronous work (including the library build and the final import) completes.
 #
 # formIds are the stable "TypeName:Title" identifiers from GetOpenForms; they are
@@ -92,18 +93,18 @@ WaitForNoForm   "FileDialog:Add Input Files"
 # and the Score Threshold defaults to 0.01 -- the tutorial's value -- so no SetFormValue is
 # needed for the threshold.
 
-# --- Build the spectral library (btnNext) ---
+# --- Build the spectral library (Next) ---
 # This runs BiblioSpec, then advances the wizard. With "Filter for document peptides" on, a
 # "Skyline" information dialog (MessageDlg) lists peptides excluded for ambiguous matches and
 # must be dismissed. (Data-dependent: on data with no ambiguous matches this dialog does not
 # appear -- skip the next three lines if so.)
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
 WaitForForm     "MessageDlg:Skyline"
 ClickFormButton "MessageDlg:Skyline" "OK"
 WaitForNoForm   "MessageDlg:Skyline"
 
 # --- Extract Chromatograms page: Skyline found the two mzML/raw files. Advance. ---
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
 
 # Skyline detects a common prefix/suffix on the long file names and offers to shorten them.
 WaitForForm     "ImportResultsNameDlg:Import Results"
@@ -111,36 +112,39 @@ ClickFormButton "ImportResultsNameDlg:Import Results" "OK"
 WaitForNoForm   "ImportResultsNameDlg:Import Results"
 
 # --- Add Modifications page (no modifications to add for these peptides). Advance. ---
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
 
 # --- Configure Transition Settings page (defaults are fine). Advance. ---
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
 
 # --- Configure Full-Scan Settings page (PRM defaults from the workflow choice). Finish. ---
-# btnNext reads "Finish" on the last page; clicking it closes the wizard and starts the
-# chromatogram import. The dialog-watch waits through the "Loading chromatograms" progress,
-# so this click returns only once the wizard has closed and import has begun.
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
+# On the last page the Next button reads "Finish"; clicking it closes the wizard and starts the
+# chromatogram import. The dialog-watch waits through the "Loading chromatograms" progress, so
+# this click returns only once the wizard has closed and import has begun.
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Finish"
 WaitForNoForm   "ImportPeptideSearchDlg:Import Peptide Search"
 
 # The document now has 2 replicates (20fmol, 80fmol) with extracted chromatograms.
 
 # --- Reviewing the Data (PARTIAL -- main-menu steps only) -------------------------------
-# These map to InvokeMenuItem. The tutorial interleaves them with right-click graph context
-# menus that are not yet driveable, so this section is intentionally incomplete.
-# InvokeMenuItem  "View > Arrange Graphs > Tiled"
-# InvokeMenuItem  "Edit > Collapse All > Precursors"
-# InvokeMenuItem  "View > Auto-Zoom > Best Peak"
-# InvokeMenuItem  "View > Peak Areas > Replicate Comparison"
+# Validated live. The tutorial interleaves these with right-click GRAPH CONTEXT MENUS (Show
+# Dot Product > Labels, Normalize To > None, Show Library, Transitions > Split Graph, ...),
+# which are NOT yet driveable (InvokeMenuItem is main-menu only) -- so this section stops where
+# the tutorial's first context-menu step would come.
+InvokeMenuItem  "View > Arrange Graphs > Tiled"
+InvokeMenuItem  "Edit > Collapse All > Precursors"
+InvokeMenuItem  "View > Auto-Zoom > Best Peak"
+InvokeMenuItem  "View > Peak Areas > Replicate Comparison"
+InvokeMenuItem  "View > Transitions > Products"
 
 # --- Notes / known limitations found while validating against a live Skyline ---
-# 1. Save dialogs are modern (IFileDialog) and opaque to UI Automation (file-name field
-#    'FileNameControlHost' has no settable element; buttons are DirectUI panes). They are
-#    neither listed by GetOpenForms nor driveable yet. This tutorial avoids them by
-#    opening an already-saved document; saving would need RunCommand --out instead.
-# 2. Selecting a tabbed settings dialog's tab (SelectTab), checking a precursor in a tree
-#    pop-up pick-list, and invoking a graph right-click context-menu item are NOT yet
-#    supported. The streamlined path above avoids all three by configuring full-scan inside
-#    the Import Peptide Search wizard (no tabs) instead of via Settings > Transition Settings.
+# 1. The native Save As / Save dialog IS now driveable (it is the modern IFileDialog: file name
+#    set via WM_SETTEXT on its Edit, accepted via the Save button). It lists as
+#    "FileDialog:Save As". This tutorial opens an already-saved document, so it is not exercised
+#    here; saving would be SetFormValue "FileDialog:Save As" "FileName" <path> + ClickFormButton.
+# 2. Still NOT supported: a graph right-click context-menu item (the main remaining gap for the
+#    review section), selecting a tabbed settings dialog's tab (SelectTab), and checking a
+#    precursor in a tree pop-up pick-list. The streamlined path above avoids the latter two by
+#    configuring full-scan inside the wizard (no tabs) instead of via Settings > Transition Settings.
 # 3. RadioButton selection (e.g. the "PRM" workflow, the "Retention time filtering" options)
 #    is done with SetFormValue "<formId>" "<radio label>" true.
