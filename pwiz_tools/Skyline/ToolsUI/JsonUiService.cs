@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -389,6 +390,45 @@ namespace pwiz.Skyline.ToolsUI
                     @"Cannot invoke a menu item: a modal dialog is blocking the main Skyline window. Handle the open dialog first (see skyline_get_open_forms).");
             var item = InvokeOnUiThread(() => FindMenuItem(menuPath));
             Program.MainWindow.BeginInvoke((Action)item.PerformClick);
+        }
+
+        /// <summary>
+        /// Invokes an item on a graph's right-click context menu by its visible path (e.g.
+        /// "Normalize To > None"). The menu is built the way a right-click would build it -- the
+        /// graph's ContextMenuBuilder handlers populate a fresh ContextMenuStrip -- then the item is
+        /// located by path and clicked. Runs on the UI thread. Use for forms with HasGraph=True.
+        /// </summary>
+        public static void InvokeContextMenuItem(string formId, string menuPath)
+        {
+            InvokeOnUiThread(() =>
+            {
+                var graph = FindFormById(formId) as DockableFormEx;
+                var zedGraph = graph != null ? TryGetZedGraphControl(graph) : null;
+                if (zedGraph == null)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Not a graph form: {0}. Context menus are available on forms with HasGraph=True (see skyline_get_open_forms).",
+                        formId));
+                using (var menuStrip = new ContextMenuStrip())
+                {
+                    PopulateGraphContextMenu(zedGraph, menuStrip);
+                    FindMenuItemIn(menuStrip.Items, menuPath).PerformClick();
+                }
+            });
+        }
+
+        // Populates a ContextMenuStrip the way right-clicking the graph would: it invokes the graph's
+        // ContextMenuBuilder handlers (which add the Skyline-specific items) with a point at the
+        // control's center, so the correct graph pane is chosen for a multi-pane graph. The event can
+        // only be raised from inside ZedGraphControl, so its backing delegate is fetched by reflection.
+        private static void PopulateGraphContextMenu(ZedGraphControl zedGraph, ContextMenuStrip menuStrip)
+        {
+            var field = typeof(ZedGraphControl).GetField(@"ContextMenuBuilder",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            var builder = field?.GetValue(zedGraph) as ZedGraphControl.ContextMenuBuilderEventHandler;
+            if (builder == null)
+                throw new ArgumentException(new LlmInstruction(@"This graph has no context menu."));
+            var centerPoint = new System.Drawing.Point(zedGraph.Width / 2, zedGraph.Height / 2);
+            builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
         }
 
         /// <summary>
@@ -940,6 +980,14 @@ namespace pwiz.Skyline.ToolsUI
         // normalized text or by control name. Must run on the UI thread. Throws if no item matches.
         private static ToolStripMenuItem FindMenuItem(string menuPath)
         {
+            return FindMenuItemIn(Program.MainWindow.MainMenuStrip.Items, menuPath);
+        }
+
+        // Walks a menu by path (segments split on '>', '|', '/') starting from the given items,
+        // matching each segment by normalized text or control name. Must run on the UI thread (and,
+        // for a context menu, after the menu has been populated). Throws if no item matches.
+        private static ToolStripMenuItem FindMenuItemIn(ToolStripItemCollection rootItems, string menuPath)
+        {
             var segments = (menuPath ?? string.Empty)
                 .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
@@ -947,7 +995,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Empty menu path: {0}. Expected e.g. 'File > Import > Peptide Search'.",
                     menuPath ?? string.Empty));
-            var items = Program.MainWindow.MainMenuStrip.Items;
+            var items = rootItems;
             ToolStripMenuItem current = null;
             foreach (var segment in segments)
             {
