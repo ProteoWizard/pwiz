@@ -148,6 +148,19 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             // Append gap-fill rows at the end, reassigning ParquetIndex.
+            //
+            // GUARD (single-invocation invariant): this loop CONSUMES the gap-fill
+            // sentinel by overwriting entry.ParquetIndex (uint.MaxValue) with the
+            // appended row position in place. Callers MUST therefore pass a FRESH
+            // per-file fdrEntries list per invocation -- re-running this method on
+            // the same list would find no sentinels to append (so nothing re-appends)
+            // while the already-reassigned gap-fill rows would present to the replace
+            // loop above as in-range / out-of-range re-scores and corrupt the overlay.
+            // Not reachable today: WriteReconciledParquet builds the fdrEntries list
+            // fresh from the per-file stubs on every call. No Debug.Assert here -- the
+            // double-Write footprint (Features != null, ParquetIndex past the original
+            // rows) is indistinguishable from a legitimate out-of-range stub, which
+            // the replace loop already handles with a warning.
             nAppended = 0;
             foreach (var entry in fdrEntries)
             {
