@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.MSGraph;
 using pwiz.Skyline.Controls;
 using pwiz.SkylineTestUtil;
 using pwiz.Skyline.Controls.Graphs;
@@ -33,7 +34,6 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using pwiz.MSGraph;
 using ZedGraph;
 
 namespace pwiz.SkylineTestFunctional
@@ -130,7 +130,6 @@ namespace pwiz.SkylineTestFunctional
             TestFilesZip = "TestFunctional/AreaCVHistogramTest.zip";
             RunFunctionalTest();
         }
-
 
         protected override void DoTest()
         {
@@ -626,7 +625,11 @@ namespace pwiz.SkylineTestFunctional
             var heatMapData = new HeatMapData(points, "Frequency");
             var graphPane = new GraphPane();
 
-            // Initialize axis scales so GetPoints returns data
+            // Initialize axis scales so GetPoints returns data. Setting Min/Max explicitly also
+            // disables auto-scaling (Scale.Min/Max setters clear _minAuto/_maxAuto), so the
+            // AxisChange below will NOT reset this window back to a default empty-pane range.
+            // That is what keeps the test point (x=2, y=20) inside [0,10]/[0,50] and ensures the
+            // crash-prone render path actually executes -- do not reorder these before AxisChange.
             graphPane.XAxis.Scale.Min = 0;
             graphPane.XAxis.Scale.Max = 10;
             graphPane.YAxis.Scale.Min = 0;

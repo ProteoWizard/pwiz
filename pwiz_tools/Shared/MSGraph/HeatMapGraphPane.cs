@@ -62,6 +62,11 @@ namespace pwiz.MSGraph
             if (cellWidth <= 0 || double.IsNaN(cellWidth) || cellHeight <= 0 || double.IsNaN(cellHeight))
                 return;
 
+            // MaxPoint is null when no point has Z > 0 (HeatMapData.Cell only tracks Z > 0 points).
+            // Bail out before dereferencing it below; the empty CurveList lets callers fall back to base scaling.
+            if (heatMapData.MaxPoint == null)
+                return;
+
             // Use log scale for heat intensity.
             // In discrete mode (few distinct Z values and variable dot sizes),
             // compress the scale so sizes stay in the smaller portion of the available range,
