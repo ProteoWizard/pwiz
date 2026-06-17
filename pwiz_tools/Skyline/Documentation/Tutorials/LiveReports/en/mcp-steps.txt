@@ -1,0 +1,76 @@
+# Live Reports tutorial (en) -- SkylineMCP / AI Connector steps  [SCAFFOLD -- WORK IN PROGRESS]
+#
+# English (en) step list (see PRM/en/mcp-steps.txt for the verb/format reference -- same verbs:
+# InvokeMenuItem, InvokeContextMenuItem, ClickFormButton, SetFormValue, and the WaitForForm /
+# WaitForNoForm sync primitives). Each localized tutorial needs its own; {DATA} is not localized.
+#
+# {DATA} is the LiveReports folder that contains Rat_plasma.sky and SampleInfo.txt
+# (https://skyline.ms/tutorials/LiveReports.zip).
+#
+# STATUS: this tutorial is much more dialog- and grid-heavy than PRM, and exercises several verbs
+# the connector does NOT have yet. Only the opening steps below are validated; the rest of the
+# tutorial is blocked on the verb gaps listed at the bottom. This file is a scaffold so the work
+# can continue incrementally as those verbs land.
+
+# --- Open the starting document ---
+# (If a prior document has unsaved changes, File > Open first shows a "Save changes?" prompt
+# (MultiButtonMsgDlg) -- answer No to discard. Validated.)
+InvokeMenuItem  "File > Open"
+WaitForForm     "FileDialog:Open"
+SetFormValue    "FileDialog:Open" "FileName" {DATA}\Rat_plasma.sky
+ClickFormButton "FileDialog:Open" "Open"
+WaitForNoForm   "FileDialog:Open"
+# Document: 48 proteins, 125 peptides, 721 transitions, 42 replicates.
+
+# --- Enable Audit Logging ---
+# View > Live Reports > Audit Log opens the Audit Log form. Validated.
+InvokeMenuItem  "View > Live Reports > Audit Log"
+WaitForForm     "AuditLogForm:Audit Log: All Info"
+# Check the "Enable audit logging" checkbox. This CheckBox has AutoCheck=false and acts on its
+# Click handler, so it must be CLICKED (ClickFormButton), not value-set (SetFormValue would only set
+# Checked and not run the handler). ClickFormButton now clicks checkboxes -- validated.
+ClickFormButton "AuditLogForm:Audit Log: All Info" "Enable audit logging"
+# NEXT STEP NOT YET DRIVEABLE: "Close the Audit Log window" -- no close-form verb. See gap (2).
+
+# --- Showing the Document Grid ---
+InvokeMenuItem  "View > Live Reports > Document Grid"
+WaitForForm     "DocumentGridForm:Document Grid: Proteins"
+# The "Reports" dropdown BUTTON (a ToolStripDropDownButton) is now clickable -- validated:
+ClickFormButton "DocumentGridForm:Document Grid: Proteins" "Reports"
+# ... but its ITEMS (Proteins / Peptides / Replicates / Customize Report / ...) are built
+# dynamically when the dropdown opens and are not in the static DropDownItems, so clicking an item
+# by name does not work yet. See gap (1b).
+
+# ========================================================================================
+# VERB GAPS BLOCKING THE REST OF THIS TUTORIAL (in roughly the order the tutorial hits them)
+# ========================================================================================
+# (1) [DONE] Click a CheckBox / ToolStrip item. ClickFormButton now clicks any control (the whole
+#     control tree, like SetFormValue) AND the form's ToolStrip items -- validated on the audit-log
+#     "Enable audit logging" checkbox (AutoCheck=false) and the Document Grid "Reports" dropdown button.
+# (1b) [REMAINING] Dynamically-built dropdown ITEMS. The "Reports" dropdown's items (Proteins /
+#     Peptides / Replicates / Customize Report / ...), the Pivot Editor dropdown, and the Group
+#     Comparison Bar Graph / Heat Map dropdowns are built on DropDownOpening and are NOT in the static
+#     DropDownItems, so they cannot be matched by name yet. Needs open-populate-find handling, the way
+#     InvokeContextMenuItem builds a graph's menu before walking it.
+# (2) Close a docked/floating form. "Close the Audit Log window", "Close the Bar Graph", etc. There
+#     is no close-form verb. (ClickFormButton can hit a native dialog's Cancel/Close, not a docked
+#     tool window's title-bar X.)
+# (3) SelectTab on a tabbed dialog. The Document Settings dialog (Annotations / Result Files / Lists
+#     / Reports tabs) and Peptide Settings (Quantification tab) are used repeatedly. (Already on the
+#     native-file-dialog TODO as not-yet-done.)
+# (4) DataGridView cell editing by column/row. Entering annotation values; the Rules grid; the List
+#     Designer property grid; pasting list data. SetFormValue's grid path only sets one "current"
+#     cell, not a chosen row/column.
+# (5) TreeView expand + check a node. The Customize Report column tree (expand Peptides > Precursors
+#     > Precursor Results, check Total Area / Normalized Area / SubjectID, etc.).
+# (6) ListBox (multi-)selection + the column-list reorder/remove buttons in Customize Report.
+# (7) Right-click a GRID COLUMN HEADER context menu (Number Format, Filter, Sort Ascending/
+#     Descending). This is a DataGridView header context menu -- different surface from the graph
+#     ContextMenuBuilder that InvokeContextMenuItem drives; it would need its own handling.
+# (8) The Pivot Editor, Find Column, Choose Format, Rule Editor, Edit Group Comparison dialogs --
+#     mostly fillable once (3)-(6) exist, but each needs its specific controls addressed.
+# (9) Out of scope (desktop, not Skyline): the Notepad copy/paste of SampleInfo.txt; the document
+#     grid clipboard paste. A connector run would set list values another way (CSV import / typing).
+#
+# Suggested order to unblock the most of the tutorial: (1) ToolStrip/CheckBox click, then (3)
+# SelectTab, then (5) TreeView check + (4) grid cells, then (7) grid-header context menus.
