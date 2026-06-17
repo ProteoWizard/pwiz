@@ -209,7 +209,7 @@ namespace pwiz.OspreySharp.Tasks
                 config.FdrMethod));
 
             var swFdr = Stopwatch.StartNew();
-            RunFdr(perFileEntries, fullLibrary, config, ctx);
+            RunFdr(perFileEntries, config, ctx);
             swFdr.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
@@ -702,54 +702,8 @@ namespace pwiz.OspreySharp.Tasks
             //    integration window. Mirrors Rust pipeline.rs
             //    reconciliation block at ~3260-3380.
             IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
-            var perFileCwtCandidates = new Dictionary<string,
-                IReadOnlyList<IReadOnlyList<CwtCandidate>>>();
-            foreach (var kvp in perFileEntries)
-            {
-                if (perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) &&
-                    File.Exists(parquetPath))
-                {
-                    try
-                    {
-                        var cwtRows = ParquetScoreCache
-                            .LoadCwtCandidatesFromParquet(parquetPath);
-                        // The planner indexes CWT lists by
-                        // entry.ParquetIndex (mirrors Rust at
-                        // reconciliation.rs:672). cwtRows.Count is
-                        // the parquet's raw Stage-4 row count;
-                        // kvp.Value.Count is the post-first-pass-
-                        // compaction stub count. They are not
-                        // equal by design — what we actually need
-                        // to validate is that every stub's
-                        // ParquetIndex falls within cwtRows.
-                        uint maxIdx = 0;
-                        foreach (var entry in kvp.Value)
-                        {
-                            if (entry.ParquetIndex > maxIdx)
-                                maxIdx = entry.ParquetIndex;
-                        }
-                        if (kvp.Value.Count > 0 && maxIdx >= cwtRows.Count)
-                        {
-                            ctx.LogWarning(string.Format(
-                                @"CWT candidate row count out of range for {0}: " +
-                                @"max stub ParquetIndex={1}, parquet has {2} rows -- " +
-                                @"skipping reconciliation planning for this file",
-                                kvp.Key, maxIdx, cwtRows.Count));
-                            continue;
-                        }
-                        var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
-                        foreach (var row in cwtRows)
-                            converted.Add(row);
-                        perFileCwtCandidates[kvp.Key] = converted;
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogWarning(string.Format(
-                            @"Failed to load CWT candidates for {0}: {1}",
-                            kvp.Key, ex.Message));
-                    }
-                }
-            }
+            var perFileCwtCandidates = CwtCandidateLoader.Load(
+                perFileEntries, perFileParquetPaths, ctx.LogWarning);
             var perFileForPlan = new List<KeyValuePair<string,
                 IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
             foreach (var kvp in perFileEntries)
@@ -1231,14 +1185,13 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private void RunFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx)
         {
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
-                    RunPercolatorFdr(perFileEntries, fullLibrary, config, ctx);
+                    RunPercolatorFdr(perFileEntries, config, ctx);
                     break;
 
                 case FdrMethod.Simple:
@@ -1264,7 +1217,6 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         internal static void RunPercolatorFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx,
             string passLabel = "First-pass")
@@ -1293,70 +1245,13 @@ namespace pwiz.OspreySharp.Tasks
                 });
             }
 
-            // Build PercolatorEntry list from all files
-            var percEntries = new List<PercolatorEntry>();
-
-            // Build library lookup for feature extraction
-            var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
-            foreach (var entry in fullLibrary)
-                libraryById[entry.Id] = entry;
-
-            int nWithFeatures = 0;
-            int nWithoutFeatures = 0;
-            int nInputTargets = 0;
-            int nInputDecoys = 0;
-            foreach (var kvp in perFileEntries)
-            {
-                string fileName = kvp.Key;
-                foreach (var fdrEntry in kvp.Value)
-                {
-                    // Prefer the 21-feature vector computed during coelution scoring.
-                    // Fall back to an all-zeros vector only for stub entries (e.g. loaded
-                    // from a Parquet cache without features) so the PercolatorEntry is
-                    // well-formed.
-                    double[] features;
-                    if (fdrEntry.Features != null &&
-                        fdrEntry.Features.Length == NUM_PIN_FEATURES)
-                    {
-                        features = fdrEntry.Features;
-                        nWithFeatures++;
-                    }
-                    else
-                    {
-                        features = BuildBasicFeatures(fdrEntry, libraryById);
-                        nWithoutFeatures++;
-                    }
-
-                    if (fdrEntry.IsDecoy)
-                        nInputDecoys++;
-                    else nInputTargets++;
-
-                    // PSM Id must uniquely identify each observation so the
-                    // result -> FdrEntry write-back can score every row
-                    // independently. EntryId alone is NOT unique within a
-                    // file: a single base_id with multiple scan-time
-                    // observations (different scan numbers, same charge,
-                    // same modified_sequence) shares one EntryId. Using
-                    // "{fileName}_{EntryId}" collided those rows in
-                    // resultMap, leaving the last-inserted score
-                    // overwriting every same-EntryId observation's
-                    // FdrEntry.Score and producing 176-185 score
-                    // divergences per file vs. Rust's 4-component psm_id.
-                    // Mirrors osprey-fdr/src/percolator.rs:5978-5980.
-                    percEntries.Add(new PercolatorEntry
-                    {
-                        Id = string.Format("{0}_{1}_{2}_{3}",
-                            fileName, fdrEntry.ModifiedSequence,
-                            fdrEntry.Charge, fdrEntry.ScanNumber),
-                        FileName = fileName,
-                        Peptide = fdrEntry.ModifiedSequence,
-                        Charge = fdrEntry.Charge,
-                        IsDecoy = fdrEntry.IsDecoy,
-                        EntryId = fdrEntry.EntryId,
-                        Features = features
-                    });
-                }
-            }
+            // Build the flat PercolatorEntry list (one per observation), preferring
+            // each entry's stored 21-feature vector and falling back to a basic
+            // vector for stubs. Extracted to PercolatorEntryBuilder.
+            var percEntries = PercolatorEntryBuilder.Build(
+                perFileEntries,
+                out int nWithFeatures, out int nWithoutFeatures,
+                out int nInputTargets, out int nInputDecoys);
 
             ctx.LogInfo(string.Format(
                 "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
@@ -1476,64 +1371,6 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Format(
                 "[COUNT] {0} unique precursors (best q across files): {1}",
                 passLabel, bestQByPrecursor.Count));
-        }
-
-        /// <summary>
-        /// Build a minimal PIN feature vector from an FdrEntry.
-        /// Used as a fallback ONLY when <see cref="FdrEntry.Features"/> has not been
-        /// populated (e.g. stubs loaded from a Parquet cache). In normal operation the
-        /// 21-feature vector is computed during coelution scoring in
-        /// <see cref="pwiz.OspreySharp.Scoring.CoelutionScorer"/> and stored on the entry.
-        /// </summary>
-        private static double[] BuildBasicFeatures(
-            FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)
-        {
-            double[] features = new double[NUM_PIN_FEATURES];
-
-            // 0: coelution_sum
-            features[0] = entry.CoelutionSum;
-            // 1: coelution_max (approximate as coelution_sum for basic version)
-            features[1] = entry.CoelutionSum * 0.5;
-            // 2: n_coeluting_fragments
-            features[2] = 3.0;
-            // 3: peak_apex
-            features[3] = 0.0;
-            // 4: peak_area
-            features[4] = 0.0;
-            // 5: peak_sharpness
-            features[5] = 0.0;
-            // 6: xcorr
-            features[6] = 0.0;
-            // 7: consecutive_ions
-            features[7] = 0.0;
-            // 8: explained_intensity
-            features[8] = 0.0;
-            // 9: mass_accuracy_mean
-            features[9] = 0.0;
-            // 10: abs_mass_accuracy_mean
-            features[10] = 0.0;
-            // 11: rt_deviation
-            features[11] = 0.0;
-            // 12: abs_rt_deviation
-            features[12] = 0.0;
-            // 13: ms1_precursor_coelution
-            features[13] = 0.0;
-            // 14: ms1_isotope_cosine
-            features[14] = 0.0;
-            // 15: median_polish_cosine
-            features[15] = 0.0;
-            // 16: median_polish_residual_ratio
-            features[16] = 0.0;
-            // 17: sg_weighted_xcorr
-            features[17] = 0.0;
-            // 18: sg_weighted_cosine
-            features[18] = 0.0;
-            // 19: median_polish_min_fragment_r2
-            features[19] = 0.0;
-            // 20: median_polish_residual_correlation
-            features[20] = 0.0;
-
-            return features;
         }
 
         /// <summary>

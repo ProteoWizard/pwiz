@@ -449,144 +449,6 @@ namespace pwiz.OspreySharp.Tasks
         // accessors. Run() above is the only entry point.
 
         /// <summary>
-        /// Phase 3 -- write the reconciled per-file
-        /// <c>.scores-reconciled.parquet</c>.
-        ///
-        /// Reload the original Stage 4 parquet's full per-row data
-        /// (identity, boundaries, 21 PIN features, CWT candidate lists) from
-        /// <paramref name="originalPath"/>, replace re-scored rows in place by
-        /// <see cref="FdrEntry.ParquetIndex"/> (NOT by post-compaction Vec
-        /// position; the two diverge after first-pass FDR drops non-passing
-        /// entries), append gap-fill rows at the end, reassign each gap-fill
-        /// stub's <see cref="FdrEntry.ParquetIndex"/> to the actual row it now
-        /// occupies, then write to the SEPARATE
-        /// <paramref name="reconciledPath"/> via
-        /// <see cref="ParquetScoreCache.WriteScoresParquet(string, List{FdrEntry}, Dictionary{string, string}, Dictionary{uint, LibraryEntry}, string)"/>
-        /// with reconciliation metadata
-        /// (<c>osprey.reconciled = "true"</c> +
-        /// <c>osprey.reconciliation_hash = config.Identity.ReconciliationParameterHash()</c>).
-        /// The original parquet is read-only here -- it is never overwritten,
-        /// so it survives intact for files whose reconciliation is a no-op and
-        /// as a crash-safe Stage 4 record. Mirrors Rust pipeline.rs:3050-3110.
-        /// Returns true when the reconciled parquet was written; false on a
-        /// reload/write failure (so the caller does not stamp a validity sidecar
-        /// over a stale or absent output).
-        /// </summary>
-        private bool WriteReconciledParquet(string originalPath, string reconciledPath,
-            List<FdrEntry> fdrEntries,
-            string fileName, List<LibraryEntry> fullLibrary, OspreyConfig config,
-            IReadOnlyList<string> joinFileStems, PipelineContext ctx)
-        {
-            // 1. Reload the original parquet's per-row state (read-only).
-            List<FdrEntry> fullEntries;
-            try
-            {
-                fullEntries = ParquetScoreCache.LoadFullFdrEntries(originalPath);
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format(
-                    "Stage 6 write-back: failed to reload {0}: {1} (skipping)",
-                    originalPath, ex.Message));
-                return false;
-            }
-            int origRowCount = fullEntries.Count;
-
-            // 2. Replace re-scored rows (Phase 1 + Phase 2 existing-entry
-            //    overlay) by ParquetIndex. Detect rescored entries by
-            //    Features != null -- hydration's LoadFdrStubsFromParquet
-            //    does NOT populate Features, so unchanged post-compaction
-            //    stubs have Features=null and we leave their corresponding
-            //    fullEntries row alone (preserving Features + CwtCandidates
-            //    + the binary blob columns loaded from the original
-            //    parquet). Rescored entries have Features populated by
-            //    RunCoelutionScoring. Gap-fill stubs have ParquetIndex =
-            //    uint.MaxValue and are appended next.
-            int nReplaced = 0;
-            foreach (var entry in fdrEntries)
-            {
-                if (entry.ParquetIndex == uint.MaxValue)
-                    continue;
-                if (entry.Features == null)
-                    continue;  // hydrated stub, never re-scored
-                int pqIdx = (int)entry.ParquetIndex;
-                if (pqIdx < 0 || pqIdx >= fullEntries.Count)
-                {
-                    ctx.LogWarning(string.Format(
-                        "Stage 6 write-back: ParquetIndex {0} out of range for {1} ({2} rows)",
-                        pqIdx, fileName, fullEntries.Count));
-                    continue;
-                }
-                fullEntries[pqIdx] = entry;
-                nReplaced++;
-            }
-
-            // 3. Append gap-fill rows at the end. Reassign each gap-fill
-            //    stub's ParquetIndex to its new row position so a
-            //    downstream --task MergeNode worker can locate its
-            //    features.
-            int nAppended = 0;
-            foreach (var entry in fdrEntries)
-            {
-                if (entry.ParquetIndex != uint.MaxValue)
-                    continue;
-                entry.ParquetIndex = (uint)fullEntries.Count;
-                fullEntries.Add(entry);
-                nAppended++;
-            }
-
-            // 4. Build libraryById for the WriteScoresParquet sequence /
-            //    precursor_mz / protein_ids columns.
-            var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
-            foreach (var libEntry in fullLibrary)
-                libraryById[libEntry.Id] = libEntry;
-
-            // 5. Reconciliation metadata (mirrors Rust
-            //    build_reconciled_metadata). osprey.version is what the
-            //    next reload's CacheValidity check compares against.
-            //    The reconciliation_hash must be the JOIN-wide hash
-            //    (over every file in the planner step), not the worker's
-            //    single-file InputFiles hash; without that, a worker
-            //    rescoring a single parquet stamps a single-file hash
-            //    that the downstream --task MergeNode merge node rejects
-            //    on hash mismatch. The join file stems come from the
-            //    planner's reconciliation.json (v2+) via
-            //    RescoreInputs.JoinFileStems; fall back to config-derived
-            //    stems when the caller didn't pass any (in-process
-            //    pipeline where config.InputFiles already has all files,
-            //    or v1 backward compat).
-            string reconciliationHash = (joinFileStems != null && joinFileStems.Count > 0)
-                ? config.Identity.ReconciliationParameterHashForStems(joinFileStems)
-                : config.Identity.ReconciliationParameterHash();
-            var metadata = new Dictionary<string, string>
-            {
-                { @"osprey.version", OspreyVersion.Current },
-                { @"osprey.search_hash", config.Identity.SearchParameterHash() },
-                { @"osprey.library_hash", config.Identity.LibraryIdentityHash() },
-                { @"osprey.reconciled", @"true" },
-                { @"osprey.reconciliation_hash", reconciliationHash },
-            };
-
-            try
-            {
-                ParquetScoreCache.WriteScoresParquet(reconciledPath, fullEntries,
-                    metadata, libraryById, fileName);
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format(
-                    "Stage 6 write-back: failed to write reconciled scores for {0}: {1}",
-                    fileName, ex.Message));
-                return false;
-            }
-
-            ctx.LogInfo(string.Format(
-                "  Wrote reconciled parquet for {0}: {1} rows ({2} replaced + {3} appended; original {4} rows)",
-                fileName, fullEntries.Count, nReplaced, nAppended, origRowCount));
-            return true;
-        }
-
-        /// <summary>
         /// Execute the per-file Stage 6 rescore loop. Mirrors
         /// <c>rescore_per_file_loop</c> in
         /// <c>osprey/crates/osprey/src/pipeline.rs</c>.
@@ -631,274 +493,38 @@ namespace pwiz.OspreySharp.Tasks
             // path for spectra cache load + sibling .calibration.json.
             var fileNameToIdx = BuildFileNameToIndex(config.InputFiles);
 
+            // Cross-file inputs every per-file rescore reads, bundled so
+            // RescoreOneFile takes one collaborator object instead of a dozen
+            // positional parameters.
+            var inputs = new RescorePassInputs
+            {
+                ConsensusTargets = perFileConsensusTargets,
+                ReconTargets = perFileReconTargets,
+                RefinedCalibrations = refinedCalibrations,
+                PerFileCalibrations = perFileCalibrations,
+                GapFill = perFileGapFill,
+                ParquetPaths = perFileParquetPaths,
+                FullLibrary = fullLibrary,
+                Config = config,
+                FileNameToIdx = fileNameToIdx,
+                TaskValidityKey = ValidityKey(ctx),
+                JoinFileStems = joinFileStems,
+            };
+
             int totalRescored = 0;
             int totalGapCwt = 0;
             int totalGapForced = 0;
             int nTotalFiles = perFileEntries.Count;
-            string taskValidityKey = ValidityKey(ctx);
 
             for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
             {
-                var fileName = perFileEntries[fileNum].Key;
-                var fdrEntries = perFileEntries[fileNum].Value;
-
-                // Per-file resume: if the file's reconciled parquet is
-                // already on disk with a matching <output>.PerFileRescore.osprey.task
-                // sidecar, skip the rescore for that file. Pairs with the
-                // worker (stage6) crash-resume contract: re-invoking the
-                // same CLI on the same inputs is a no-op for files whose
-                // rescore completed; only files missing a valid sidecar
-                // get re-rescored. The skipped file's in-memory entries
-                // remain at the pre-rescore state (1st-pass overlay)
-                // because the worker's StopAfter terminates the pipeline
-                // here -- no downstream consumer reads them.
-                // The rescore READS the original Stage 4 parquet and WRITES a
-                // separate <stem>.scores-reconciled.parquet. Resume validity is
-                // keyed on the reconciled output (the task's declared Output),
-                // not on the original read source.
-                bool hasParquetPath = perFileParquetPaths.TryGetValue(fileName, out string perFileParquetPath);
-                string reconciledPath = hasParquetPath
-                    ? ParquetScoreCache.ReconciledPathFromScoresPath(perFileParquetPath)
-                    : null;
-                if (hasParquetPath
-                    && File.Exists(reconciledPath)
-                    && TaskValiditySidecar.IsValid(reconciledPath, Name, taskValidityKey))
-                {
-                    ctx.LogInfo(string.Format(
-                        @"[file] {0}/{1} {2}: skipping (outputs valid)",
-                        fileNum + 1, nTotalFiles, fileName));
-
-                    // PR-E: a partial resume skips this already-rescored file, but
-                    // a downstream consumer (MergeNode, in the full pipeline) reads
-                    // ApexRt/StartRt/EndRt/BoundsArea straight off these in-memory
-                    // entries. Without overlaying the reconciled values they stay at
-                    // the 1st-pass state and the final blib carries 1st-pass RTs.
-                    // Reproduce the fresh end state in place from the valid reconciled
-                    // parquet we just confirmed on disk + this file's gap-fill targets.
-                    IReadOnlyList<GapFillTarget> gapFillForFile = null;
-                    if (perFileGapFill != null &&
-                        perFileGapFill.TryGetValue(fileName, out var gfList))
-                        gapFillForFile = gfList;
-                    OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile);
-                    SortFileEntriesCanonical(fdrEntries);
-                    continue;
-                }
-                // About to (re-)rescore this file: clear any stale sidecar
-                // so a mid-Run crash leaves no false-positive pointing at
-                // the partially-written reconciled parquet.
-                if (hasParquetPath)
-                    TaskValiditySidecar.Delete(reconciledPath, Name);
-
-                IReadOnlyList<(int Index, double Apex, double Start, double End)> consensusTargets;
-                if (!perFileConsensusTargets.TryGetValue(fileName, out consensusTargets))
-                    consensusTargets = new List<(int, double, double, double)>();
-
-                List<(int Index, double Apex, double Start, double End)> reconTargets;
-                if (!perFileReconTargets.TryGetValue(fileName, out reconTargets))
-                    reconTargets = new List<(int, double, double, double)>();
-
-                // PHASE 2 (gap-fill): per-file gap-fill targets land here.
-                List<GapFillTarget> gapFillTargets;
-                if (perFileGapFill == null ||
-                    !perFileGapFill.TryGetValue(fileName, out gapFillTargets))
-                {
-                    gapFillTargets = new List<GapFillTarget>();
-                }
-
-                // Merge consensus + reconciliation into a per-(idx, override)
-                // map. Reconciliation wins on conflict -- the inter-replicate
-                // peak boundary is more authoritative than the multi-charge
-                // consensus boundary.
-                var combinedTargets =
-                    new Dictionary<int, (double Apex, double Start, double End)>();
-                foreach (var t in consensusTargets)
-                    combinedTargets[t.Index] = (t.Apex, t.Start, t.End);
-                foreach (var t in reconTargets)
-                    combinedTargets[t.Index] = (t.Apex, t.Start, t.End);
-
-                // Skip files with no work to do.
-                if (combinedTargets.Count == 0 && gapFillTargets.Count == 0)
-                    continue;
-
-                if (!fileNameToIdx.TryGetValue(fileName, out int inputIdx))
-                {
-                    ctx.LogWarning(string.Format(
-                        "Stage 6 rescore: no input_files entry for {0} (skipping)", fileName));
-                    continue;
-                }
-                string inputFile = config.InputFiles[inputIdx];
-
-                // Clone the outer config for this file's ScoringContexts.
-                // RunCoelutionScoring reassigns config.FragmentTolerance to
-                // the MS2-calibrated tolerance (AnalysisPipeline.cs ~line 3552);
-                // without a per-file clone the mutation persists on the outer
-                // config, leaks into subsequent files, AND poisons the
-                // WriteReconciledParquet hash stamp (config.Identity.SearchParameterHash()
-                // would then reflect the calibrated tolerance, not the value
-                // a fresh --task MergeNode invocation recomputes from CLI
-                // defaults -- causing search_hash mismatch errors). Mirrors
-                // the per-file clone pattern in ProcessFile.
-                var fileConfig = config.ShallowClone();
-
-                ctx.LogInfo(string.Format(
-                    "Re-scoring file {0}/{1}: {2}", fileNum + 1, nTotalFiles, fileName));
-                ctx.LogInfo(string.Format(
-                    "  {0} entries ({1} consensus, {2} reconciliation, {3} gap-fill, {4} unique after dedup)",
-                    combinedTargets.Count + gapFillTargets.Count * 2,
-                    consensusTargets.Count,
-                    reconTargets.Count,
-                    gapFillTargets.Count,
-                    combinedTargets.Count));
-
-                // Build the per-file scoring subset: boundary_overrides keyed
-                // by entry_id + the subset library RunCoelutionScoring scores.
-                var (boundaryOverrides, subsetLibrary) =
-                    BuildScoringSubset(combinedTargets, fdrEntries, fullLibrary);
-
-                // Load spectra: prefer the .spectra.bin cache the original
-                // Stage 1 wrote; fall back to mzML if the cache is missing
-                // or unreadable.
-                List<Spectrum> spectra;
-                List<MS1Spectrum> ms1Spectra;
-                LoadSpectraForRescore(inputFile, fileName, out spectra, out ms1Spectra, ctx);
-
-                // Load the sibling .calibration.json so the search uses the
-                // same MS2/MS1 mass calibrations the original Stage 1-4 run
-                // used. The file is written by the original ProcessFile call
-                // and read here -- same disk-roundtrip path the worker uses.
-                LoadMassCalibrations(inputFile,
-                    out MzCalibrationResult ms2Cal,
-                    out MzCalibrationResult ms1Cal,
-                    out double? rtMadFromCalJson);
-
-                // Pick the RT calibration: refined (from Stage 6 planning's
-                // calibration refit) wins; original first-pass falls back.
-                if (!refinedCalibrations.TryGetValue(fileName, out RTCalibration rtCal))
-                    perFileCalibrations.TryGetValue(fileName, out rtCal);
-
-                // Bisection seam DISABLED (paired with the per-candidate
-                // WritePredictRtCall, which was removed from the scoring
-                // hotspot). Dumped the cal's library_rts + fitted_values once
-                // per file. Mirrors Rust's dump_predict_rt_arrays at
-                // pipeline.rs ~2886. To restore, re-enable this and the
-                // WritePredictRtCall in CoelutionScorer. See
-                // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
-                // if (rtCal != null)
-                // {
-                //     ctx.Diagnostics.WritePredictRtArrays(
-                //         fileName, rtCal.LibraryRts, rtCal.FittedValues);
-                // }
-
-                // Build the scoring context with the boundary overrides.
-                // RunCoelutionScoring inspects context.BoundaryOverrides
-                // inside ScoreCandidate and routes through the override
-                // peak-construction path.
-                var context = new ScoringContext(fileConfig, fileName);
-                context.BoundaryOverrides = boundaryOverrides;
-                context.OriginalRtMad = rtMadFromCalJson;
-
-                // Build isolation windows from the loaded spectra (same as
-                // the first-pass ProcessFile path).
-                var isolationWindows = ExtractIsolationWindows(spectra);
-
-                // Re-score the subset.
-                var swRescore = Stopwatch.StartNew();
-                List<FdrEntry> rescored;
-                if (subsetLibrary.Count > 0)
-                {
-                    rescored = RunCoelutionScoring(
-                        subsetLibrary, spectra, ms1Spectra,
-                        isolationWindows, rtCal,
-                        ms2Cal, ms1Cal,
-                        context, ctx);
-                }
-                else
-                {
-                    rescored = new List<FdrEntry>();
-                }
-                swRescore.Stop();
-
-                // Overlay the re-scored subset back onto the per-file stubs,
-                // resetting discriminant fields to Rust to_fdr_entry defaults.
-                var (nOverlay, nNoPeak) =
-                    OverlayRescoredEntries(fdrEntries, combinedTargets, rescored);
-                totalRescored += nOverlay;
-                if (nNoPeak > 0)
-                {
-                    ctx.LogInfo(string.Format(
-                        "  {0} targets had no peak at override boundary (reset to defaults)",
-                        nNoPeak));
-                }
-
-                ctx.LogInfo(string.Format(
-                    "  {0} of {1} existing entries re-scored ({2:F1}s)",
-                    nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
-
-                // PHASE 2 -- gap-fill two-pass.
-                if (gapFillTargets.Count > 0)
-                {
-                    var (nGapCwt, nGapForced) = RunGapFillTwoPass(
-                        gapFillTargets, fullLibrary, spectra, ms1Spectra,
-                        isolationWindows, rtCal, ms2Cal, ms1Cal,
-                        fileConfig, fileName, rtMadFromCalJson, fdrEntries, ctx);
-                    totalGapCwt += nGapCwt;
-                    totalGapForced += nGapForced;
-                    totalRescored += nGapCwt + nGapForced;
-                }
-
-                // PHASE 3 -- reconciled parquet write-back. Read the original
-                // Stage 4 parquet, write a separate .scores-reconciled.parquet
-                // sibling (leaving the original intact).
-                if (perFileParquetPaths != null &&
-                    perFileParquetPaths.TryGetValue(fileName, out string parquetPath) &&
-                    File.Exists(parquetPath))
-                {
-                    string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
-                    bool wrote = WriteReconciledParquet(parquetPath, reconciledOutPath, fdrEntries, fileName,
-                        fullLibrary, config, joinFileStems, ctx);
-
-                    // Only stamp the per-file resume sidecar when the reconciled
-                    // parquet was actually written. Stamping it after a failed
-                    // write could mark a STALE reconciled parquet (left from a
-                    // prior run with a different validity key) as valid, letting
-                    // Stage 7 / a future resume consume old rescored content. On
-                    // failure, clear any such stale output + sidecar so the next
-                    // run re-rescores this file from scratch.
-                    if (wrote)
-                    {
-                        var perFileInputs = new List<string>
-                        {
-                            FdrScoresSidecar.Pass1Path(inputFile),
-                        };
-                        if (config.Reconciliation != null && config.Reconciliation.Enabled)
-                            perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
-                        try
-                        {
-                            TaskValiditySidecar.Write(reconciledOutPath, Name, OspreyVersion.Current,
-                                taskValidityKey, perFileInputs);
-                        }
-                        catch (Exception ex)
-                        {
-                            ctx.LogWarning(string.Format(
-                                @"  Failed to write {0} sidecar for {1}: {2}",
-                                Name, reconciledOutPath, ex.Message));
-                        }
-                    }
-                    else
-                    {
-                        TaskValiditySidecar.Delete(reconciledOutPath, Name);
-                        try
-                        {
-                            if (File.Exists(reconciledOutPath)) File.Delete(reconciledOutPath);
-                        }
-                        catch (Exception ex)
-                        {
-                            ctx.LogWarning(string.Format(
-                                @"  Failed to remove stale reconciled parquet {0} after a failed write: {1}",
-                                reconciledOutPath, ex.Message));
-                        }
-                    }
-                }
+                var counts = RescoreOneFile(
+                    fileNum, nTotalFiles,
+                    perFileEntries[fileNum].Key, perFileEntries[fileNum].Value,
+                    inputs, ctx);
+                totalRescored += counts.Rescored;
+                totalGapCwt += counts.GapCwt;
+                totalGapForced += counts.GapForced;
             }
 
             return new RescoreStats
@@ -908,6 +534,311 @@ namespace pwiz.OspreySharp.Tasks
                 TotalGapCwt = totalGapCwt,
                 TotalGapForced = totalGapForced,
             };
+        }
+
+        /// <summary>
+        /// Cross-file inputs shared by every <see cref="RescoreOneFile"/> call:
+        /// the planner's per-file byproducts, the library/config, and the
+        /// resume/identity keys. Bundled so the per-file worker takes one
+        /// collaborator object rather than a dozen positional parameters.
+        /// </summary>
+        private sealed class RescorePassInputs
+        {
+            public IReadOnlyDictionary<string, IReadOnlyList<(int Index, double Apex, double Start, double End)>> ConsensusTargets;
+            public IReadOnlyDictionary<string, List<(int Index, double Apex, double Start, double End)>> ReconTargets;
+            public IReadOnlyDictionary<string, RTCalibration> RefinedCalibrations;
+            public IReadOnlyDictionary<string, RTCalibration> PerFileCalibrations;
+            public IReadOnlyDictionary<string, List<GapFillTarget>> GapFill;
+            public IReadOnlyDictionary<string, string> ParquetPaths;
+            public List<LibraryEntry> FullLibrary;
+            public OspreyConfig Config;
+            public Dictionary<string, int> FileNameToIdx;
+            public string TaskValidityKey;
+            public IReadOnlyList<string> JoinFileStems;
+        }
+
+        /// <summary>
+        /// Run the Stage 6 rescore for a single file: resume-skip check, target
+        /// assembly, subset scoring + overlay, gap-fill, and the reconciled
+        /// parquet write-back. The per-file <paramref name="fdrEntries"/> buffer
+        /// is updated in place. Returns the per-file (rescored, gap-CWT,
+        /// gap-forced) counts the caller accumulates. The scoring orchestration
+        /// is kept whole here (parity-locked); only the cross-file plumbing was
+        /// lifted up into <see cref="ExecuteRescore"/>.
+        /// </summary>
+        private (int Rescored, int GapCwt, int GapForced) RescoreOneFile(
+            int fileNum, int nTotalFiles, string fileName, List<FdrEntry> fdrEntries,
+            RescorePassInputs inputs, PipelineContext ctx)
+        {
+            var perFileConsensusTargets = inputs.ConsensusTargets;
+            var perFileReconTargets = inputs.ReconTargets;
+            var refinedCalibrations = inputs.RefinedCalibrations;
+            var perFileCalibrations = inputs.PerFileCalibrations;
+            var perFileGapFill = inputs.GapFill;
+            var perFileParquetPaths = inputs.ParquetPaths;
+            var fullLibrary = inputs.FullLibrary;
+            var config = inputs.Config;
+            var fileNameToIdx = inputs.FileNameToIdx;
+            string taskValidityKey = inputs.TaskValidityKey;
+            var joinFileStems = inputs.JoinFileStems;
+
+            int totalRescored = 0;
+            int totalGapCwt = 0;
+            int totalGapForced = 0;
+
+            // Per-file resume: if the file's reconciled parquet is
+            // already on disk with a matching <output>.PerFileRescore.osprey.task
+            // sidecar, skip the rescore for that file. Pairs with the
+            // worker (stage6) crash-resume contract: re-invoking the
+            // same CLI on the same inputs is a no-op for files whose
+            // rescore completed; only files missing a valid sidecar
+            // get re-rescored. The skipped file's in-memory entries
+            // remain at the pre-rescore state (1st-pass overlay)
+            // because the worker's StopAfter terminates the pipeline
+            // here -- no downstream consumer reads them.
+            // The rescore READS the original Stage 4 parquet and WRITES a
+            // separate <stem>.scores-reconciled.parquet. Resume validity is
+            // keyed on the reconciled output (the task's declared Output),
+            // not on the original read source.
+            bool hasParquetPath = perFileParquetPaths.TryGetValue(fileName, out string perFileParquetPath);
+            string reconciledPath = hasParquetPath
+                ? ParquetScoreCache.ReconciledPathFromScoresPath(perFileParquetPath)
+                : null;
+            if (hasParquetPath
+                && PerFileResumeDriver.IsCurrent(reconciledPath, Name, taskValidityKey))
+            {
+                ctx.LogInfo(string.Format(
+                    @"[file] {0}/{1} {2}: skipping (outputs valid)",
+                    fileNum + 1, nTotalFiles, fileName));
+
+                // PR-E: a partial resume skips this already-rescored file, but
+                // a downstream consumer (MergeNode, in the full pipeline) reads
+                // ApexRt/StartRt/EndRt/BoundsArea straight off these in-memory
+                // entries. Without overlaying the reconciled values they stay at
+                // the 1st-pass state and the final blib carries 1st-pass RTs.
+                // Reproduce the fresh end state in place from the valid reconciled
+                // parquet we just confirmed on disk + this file's gap-fill targets.
+                IReadOnlyList<GapFillTarget> gapFillForFile = null;
+                if (perFileGapFill != null &&
+                    perFileGapFill.TryGetValue(fileName, out var gfList))
+                    gapFillForFile = gfList;
+                OverlayReconciledIntoBuffer(fdrEntries, reconciledPath, gapFillForFile);
+                SortFileEntriesCanonical(fdrEntries);
+                return (totalRescored, totalGapCwt, totalGapForced);
+            }
+            // About to (re-)rescore this file: clear any stale sidecar
+            // so a mid-Run crash leaves no false-positive pointing at
+            // the partially-written reconciled parquet.
+            if (hasParquetPath)
+                PerFileResumeDriver.ClearStale(reconciledPath, Name);
+
+            IReadOnlyList<(int Index, double Apex, double Start, double End)> consensusTargets;
+            if (!perFileConsensusTargets.TryGetValue(fileName, out consensusTargets))
+                consensusTargets = new List<(int, double, double, double)>();
+
+            List<(int Index, double Apex, double Start, double End)> reconTargets;
+            if (!perFileReconTargets.TryGetValue(fileName, out reconTargets))
+                reconTargets = new List<(int, double, double, double)>();
+
+            // PHASE 2 (gap-fill): per-file gap-fill targets land here.
+            List<GapFillTarget> gapFillTargets;
+            if (perFileGapFill == null ||
+                !perFileGapFill.TryGetValue(fileName, out gapFillTargets))
+            {
+                gapFillTargets = new List<GapFillTarget>();
+            }
+
+            // Merge consensus + reconciliation into a per-(idx, override)
+            // map. Reconciliation wins on conflict -- the inter-replicate
+            // peak boundary is more authoritative than the multi-charge
+            // consensus boundary.
+            var combinedTargets =
+                new Dictionary<int, (double Apex, double Start, double End)>();
+            foreach (var t in consensusTargets)
+                combinedTargets[t.Index] = (t.Apex, t.Start, t.End);
+            foreach (var t in reconTargets)
+                combinedTargets[t.Index] = (t.Apex, t.Start, t.End);
+
+            // Skip files with no work to do.
+            if (combinedTargets.Count == 0 && gapFillTargets.Count == 0)
+                return (totalRescored, totalGapCwt, totalGapForced);
+
+            if (!fileNameToIdx.TryGetValue(fileName, out int inputIdx))
+            {
+                ctx.LogWarning(string.Format(
+                    "Stage 6 rescore: no input_files entry for {0} (skipping)", fileName));
+                return (totalRescored, totalGapCwt, totalGapForced);
+            }
+            string inputFile = config.InputFiles[inputIdx];
+
+            // Clone the outer config for this file's ScoringContexts.
+            // RunCoelutionScoring reassigns config.FragmentTolerance to
+            // the MS2-calibrated tolerance (AnalysisPipeline.cs ~line 3552);
+            // without a per-file clone the mutation persists on the outer
+            // config, leaks into subsequent files, AND poisons the
+            // WriteReconciledParquet hash stamp (config.Identity.SearchParameterHash()
+            // would then reflect the calibrated tolerance, not the value
+            // a fresh --task MergeNode invocation recomputes from CLI
+            // defaults -- causing search_hash mismatch errors). Mirrors
+            // the per-file clone pattern in ProcessFile.
+            var fileConfig = config.ShallowClone();
+
+            ctx.LogInfo(string.Format(
+                "Re-scoring file {0}/{1}: {2}", fileNum + 1, nTotalFiles, fileName));
+            ctx.LogInfo(string.Format(
+                "  {0} entries ({1} consensus, {2} reconciliation, {3} gap-fill, {4} unique after dedup)",
+                combinedTargets.Count + gapFillTargets.Count * 2,
+                consensusTargets.Count,
+                reconTargets.Count,
+                gapFillTargets.Count,
+                combinedTargets.Count));
+
+            // Build the per-file scoring subset: boundary_overrides keyed
+            // by entry_id + the subset library RunCoelutionScoring scores.
+            var (boundaryOverrides, subsetLibrary) =
+                BuildScoringSubset(combinedTargets, fdrEntries, fullLibrary);
+
+            // Load spectra: prefer the .spectra.bin cache the original
+            // Stage 1 wrote; fall back to mzML if the cache is missing
+            // or unreadable.
+            List<Spectrum> spectra;
+            List<MS1Spectrum> ms1Spectra;
+            LoadSpectraForRescore(inputFile, fileName, out spectra, out ms1Spectra, ctx);
+
+            // Load the sibling .calibration.json so the search uses the
+            // same MS2/MS1 mass calibrations the original Stage 1-4 run
+            // used. The file is written by the original ProcessFile call
+            // and read here -- same disk-roundtrip path the worker uses.
+            LoadMassCalibrations(inputFile,
+                out MzCalibrationResult ms2Cal,
+                out MzCalibrationResult ms1Cal,
+                out double? rtMadFromCalJson);
+
+            // Pick the RT calibration: refined (from Stage 6 planning's
+            // calibration refit) wins; original first-pass falls back.
+            if (!refinedCalibrations.TryGetValue(fileName, out RTCalibration rtCal))
+                perFileCalibrations.TryGetValue(fileName, out rtCal);
+
+            // Bisection seam DISABLED (paired with the per-candidate
+            // WritePredictRtCall, which was removed from the scoring
+            // hotspot). Dumped the cal's library_rts + fitted_values once
+            // per file. Mirrors Rust's dump_predict_rt_arrays at
+            // pipeline.rs ~2886. To restore, re-enable this and the
+            // WritePredictRtCall in CoelutionScorer. See
+            // ai/todos/active/TODO-20260606_ospreysharp_diagnostics_di.md.
+            // if (rtCal != null)
+            // {
+            //     ctx.Diagnostics.WritePredictRtArrays(
+            //         fileName, rtCal.LibraryRts, rtCal.FittedValues);
+            // }
+
+            // Build the scoring context with the boundary overrides.
+            // RunCoelutionScoring inspects context.BoundaryOverrides
+            // inside ScoreCandidate and routes through the override
+            // peak-construction path.
+            var context = new ScoringContext(fileConfig, fileName);
+            context.BoundaryOverrides = boundaryOverrides;
+            context.OriginalRtMad = rtMadFromCalJson;
+
+            // Build isolation windows from the loaded spectra (same as
+            // the first-pass ProcessFile path).
+            var isolationWindows = ExtractIsolationWindows(spectra);
+
+            // Re-score the subset.
+            var swRescore = Stopwatch.StartNew();
+            List<FdrEntry> rescored;
+            if (subsetLibrary.Count > 0)
+            {
+                rescored = RunCoelutionScoring(
+                    subsetLibrary, spectra, ms1Spectra,
+                    isolationWindows, rtCal,
+                    ms2Cal, ms1Cal,
+                    context, ctx);
+            }
+            else
+            {
+                rescored = new List<FdrEntry>();
+            }
+            swRescore.Stop();
+
+            // Overlay the re-scored subset back onto the per-file stubs,
+            // resetting discriminant fields to Rust to_fdr_entry defaults.
+            var (nOverlay, nNoPeak) =
+                OverlayRescoredEntries(fdrEntries, combinedTargets, rescored);
+            totalRescored += nOverlay;
+            if (nNoPeak > 0)
+            {
+                ctx.LogInfo(string.Format(
+                    "  {0} targets had no peak at override boundary (reset to defaults)",
+                    nNoPeak));
+            }
+
+            ctx.LogInfo(string.Format(
+                "  {0} of {1} existing entries re-scored ({2:F1}s)",
+                nOverlay, combinedTargets.Count, swRescore.Elapsed.TotalSeconds));
+
+            // PHASE 2 -- gap-fill two-pass.
+            if (gapFillTargets.Count > 0)
+            {
+                var (nGapCwt, nGapForced) = RunGapFillTwoPass(
+                    gapFillTargets, fullLibrary, spectra, ms1Spectra,
+                    isolationWindows, rtCal, ms2Cal, ms1Cal,
+                    fileConfig, fileName, rtMadFromCalJson, fdrEntries, ctx);
+                totalGapCwt += nGapCwt;
+                totalGapForced += nGapForced;
+                totalRescored += nGapCwt + nGapForced;
+            }
+
+            // PHASE 3 -- reconciled parquet write-back. Read the original
+            // Stage 4 parquet, write a separate .scores-reconciled.parquet
+            // sibling (leaving the original intact). perFileParquetPaths is
+            // non-null here (dereferenced at the resume probe above).
+            if (perFileParquetPaths.TryGetValue(fileName, out string parquetPath) &&
+                File.Exists(parquetPath))
+            {
+                string reconciledOutPath = ParquetScoreCache.ReconciledPathFromScoresPath(parquetPath);
+                bool wrote = ReconciledParquetWriter.Write(parquetPath, reconciledOutPath, fdrEntries, fileName,
+                    fullLibrary, config, joinFileStems, ctx.LogInfo, ctx.LogWarning);
+
+                // Only stamp the per-file resume sidecar when the reconciled
+                // parquet was actually written. Stamping it after a failed
+                // write could mark a STALE reconciled parquet (left from a
+                // prior run with a different validity key) as valid, letting
+                // Stage 7 / a future resume consume old rescored content. On
+                // failure, clear any such stale output + sidecar so the next
+                // run re-rescores this file from scratch.
+                if (wrote)
+                {
+                    var perFileInputs = new List<string>
+                    {
+                        FdrScoresSidecar.Pass1Path(inputFile),
+                    };
+                    if (config.Reconciliation != null && config.Reconciliation.Enabled)
+                        perFileInputs.Add(ReconciliationFile.PathForInput(inputFile));
+                    PerFileResumeDriver.Stamp(reconciledOutPath, Name, OspreyVersion.Current,
+                        taskValidityKey, perFileInputs, ctx.LogWarning);
+                }
+                else
+                {
+                    // Clear the stale sidecar AND remove the partially-written
+                    // reconciled parquet (output mechanics, the task's own
+                    // concern) so the next run re-rescores from scratch.
+                    PerFileResumeDriver.ClearStale(reconciledOutPath, Name);
+                    try
+                    {
+                        if (File.Exists(reconciledOutPath))
+                            File.Delete(reconciledOutPath);
+                    }
+                    catch (Exception ex)
+                    {
+                        ctx.LogWarning(string.Format(
+                            @"  Failed to remove stale reconciled parquet {0} after a failed write: {1}",
+                            reconciledOutPath, ex.Message));
+                    }
+                }
+            }
+
+            return (totalRescored, totalGapCwt, totalGapForced);
         }
 
         /// <summary>
