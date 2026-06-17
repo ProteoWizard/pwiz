@@ -10,16 +10,29 @@
 #     multi-file selection, see below).
 #
 # Verbs that map directly to IJsonToolService methods:
-#   InvokeMenuItem  "<menu path>"                  -> skyline_invoke_menu_item
-#   ClickFormButton "<formId>" "<button>"          -> skyline_click_form_button
+#   InvokeMenuItem  "<menu path>"                     -> skyline_invoke_menu_item
+#   ClickFormButton "<formId>" "<button>"             -> skyline_click_form_button
 #   SetFormValue    "<formId>" "<controlId>" <value>  -> skyline_set_form_value
+#
+# Control matching (ClickFormButton / SetFormValue controlId):
+#   - A control is matched by its control Name OR its visible Text. Use the control Name
+#     when the visible text does not match the tutorial word -- e.g. the wizard's "Next >"
+#     button is the control "btnNext", and "Finish" on the last page is the SAME btnNext.
+#   - SetFormValue sets: a TextBox's text; a CheckBox/RadioButton checked state
+#     ("true"/"false"); or a ComboBox selection (by visible item text).
+#   - A text field labelled only by an adjacent Label (e.g. "Ion match tolerance") cannot
+#     yet be addressed by that label -- only by its own control Name. The steps below avoid
+#     this (the tutorial does not need to change those fields on the streamlined path).
 #
 # Harness synchronization primitives (poll skyline_get_open_forms; NOT MCP methods):
 #   WaitForForm     "<formId>"   -- wait until that form/dialog is listed by GetOpenForms
 #   WaitForNoForm   "<formId>"   -- wait until it is gone
 # Required because InvokeMenuItem / ClickFormButton return immediately (the dialog-watch
 # makes them return as soon as a dialog appears), so the resulting form is usually not
-# open yet on the next line.
+# open yet on the next line. Page-to-page moves WITHIN the wizard reuse the same formId
+# ("ImportPeptideSearchDlg:Import Peptide Search"), so there is no new form to wait for
+# between consecutive btnNext clicks; the dialog-watch makes each click return only after
+# its synchronous work (including the library build and the final import) completes.
 #
 # formIds are the stable "TypeName:Title" identifiers from GetOpenForms; they are
 # deterministic for this tutorial, so no run-time inspection/branching is needed --
@@ -27,11 +40,24 @@
 # strings; a localized run needs the localized titles.)
 #
 # {DATA} is replaced by the test with the PRM tutorial data directory (the folder that
-# contains BSA_Protea_label_free_meth3.sky and the 'search' subfolder).
+# contains BSA_Protea_label_free_meth3.sky and the 'search' subfolder). This was validated
+# against the mzML download (TargetedMSMSMzml_2.zip); the .raw download works the same.
 #
-# Validation: every step below was executed against Skyline-daily over the pipe, through
-# adding both search files. The tutorial continues past this point (Next -> build spectral
-# library -> match modifications -> ... -> Finish -> import raw data); not captured yet.
+# Validation: every step below was executed end to end against Skyline-daily over the pipe,
+# from File > Open through the completed chromatogram import (document ends with 2
+# replicates, 20fmol and 80fmol). The later "Reviewing the Data" section of the tutorial is
+# NOT captured here: its View-menu steps are InvokeMenuItem-able, but most of its remaining
+# steps use right-click GRAPH CONTEXT MENUS (Normalize To, Show Library, Transitions > Split
+# Graph, ...), which the connector cannot drive yet (InvokeMenuItem is main-menu only).
+
+# --- (Optional) Get past the Start Page -------------------------------------------------
+# Only needed when Skyline launches to the Start Page (Settings.Default.ShowStartupForm).
+# A test that disables the start page can skip these two lines and start at File > Open.
+# ClickFormButton works on the Start Page's tiles because ActionBoxControl is an
+# IButtonControl whose Caption is its visible label.
+# WaitForForm     "StartPage:Start Page"
+# ClickFormButton "StartPage:Start Page" "Blank Document"
+# WaitForNoForm   "StartPage:Start Page"
 
 # --- Open the starting document ---
 InvokeMenuItem  "File > Open"
@@ -43,6 +69,11 @@ WaitForNoForm   "FileDialog:Open"
 # --- File > Import > Peptide Search (document is saved, so no save prompt) ---
 InvokeMenuItem  "File > Import > Peptide Search"
 WaitForForm     "ImportPeptideSearchDlg:Import Peptide Search"
+
+# Spectral Library page: keep only spectra that identify document peptides, and pick the PRM
+# workflow (selecting the radio gives the PRM full-scan defaults on the later page).
+SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "Filter for document peptides" true
+SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "PRM" true
 
 # --- Add both search-result files at once ---
 # Multi-select on the common (classic) Open dialog: navigate INTO the folder first, then
@@ -57,40 +88,59 @@ SetFormValue    "FileDialog:Add Input Files" "FileName" "klc_20100329v_Protea_Pe
 ClickFormButton "FileDialog:Add Input Files" "Open"
 WaitForNoForm   "FileDialog:Add Input Files"
 
-# Both .perc.xml files are now in the wizard's spectral-library build grid.
-SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "cbFilterForDocumentPeptides" true
-SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "gridSearchFiles" 0.01
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+# Both .perc.xml files are now in the wizard's grid. Their Score Type is "Percolator q-value"
+# and the Score Threshold defaults to 0.01 -- the tutorial's value -- so no SetFormValue is
+# needed for the threshold.
 
-# Wait for library build progress (it's a modal dialog but we can wait for its disappearance)
-# WaitForForm     "LongWaitDlg:Building Library" # Optional, WaitForNoForm usually enough if we know it was there
-# WaitForNoForm   "LongWaitDlg:Building Library"
+# --- Build the spectral library (btnNext) ---
+# This runs BiblioSpec, then advances the wizard. With "Filter for document peptides" on, a
+# "Skyline" information dialog (MessageDlg) lists peptides excluded for ambiguous matches and
+# must be dismissed. (Data-dependent: on data with no ambiguous matches this dialog does not
+# appear -- skip the next three lines if so.)
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
+WaitForForm     "MessageDlg:Skyline"
+ClickFormButton "MessageDlg:Skyline" "OK"
+WaitForNoForm   "MessageDlg:Skyline"
 
-# Second page: Extract Chromatograms (form title usually doesn't change, but content does)
-# Skyline should have automatically found the raw files in {DATA}
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+# --- Extract Chromatograms page: Skyline found the two mzML/raw files. Advance. ---
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
 
-# Remove Prefix/Suffix dialog
+# Skyline detects a common prefix/suffix on the long file names and offers to shorten them.
 WaitForForm     "ImportResultsNameDlg:Import Results"
 ClickFormButton "ImportResultsNameDlg:Import Results" "OK"
 WaitForNoForm   "ImportResultsNameDlg:Import Results"
 
-# Transition Settings page
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+# --- Add Modifications page (no modifications to add for these peptides). Advance. ---
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
 
-# Full-Scan Settings page
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Finish"
+# --- Configure Transition Settings page (defaults are fine). Advance. ---
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
 
-# File import starts. We can wait for the "Loading chromatograms" form to appear and then disappear.
-WaitForForm     "AllChromatogramsGraph:Loading chromatograms"
-WaitForNoForm   "AllChromatogramsGraph:Loading chromatograms"
+# --- Configure Full-Scan Settings page (PRM defaults from the workflow choice). Finish. ---
+# btnNext reads "Finish" on the last page; clicking it closes the wizard and starts the
+# chromatogram import. The dialog-watch waits through the "Loading chromatograms" progress,
+# so this click returns only once the wizard has closed and import has begun.
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "btnNext"
+WaitForNoForm   "ImportPeptideSearchDlg:Import Peptide Search"
 
-# --- Reviewing the Data ---
-# Select the first peptide to view its chromatograms
-SetSelection    /MoleculeGroup[1]/Molecule[1]
+# The document now has 2 replicates (20fmol, 80fmol) with extracted chromatograms.
+
+# --- Reviewing the Data (PARTIAL -- main-menu steps only) -------------------------------
+# These map to InvokeMenuItem. The tutorial interleaves them with right-click graph context
+# menus that are not yet driveable, so this section is intentionally incomplete.
+# InvokeMenuItem  "View > Arrange Graphs > Tiled"
+# InvokeMenuItem  "Edit > Collapse All > Precursors"
+# InvokeMenuItem  "View > Auto-Zoom > Best Peak"
+# InvokeMenuItem  "View > Peak Areas > Replicate Comparison"
 
 # --- Notes / known limitations found while validating against a live Skyline ---
 # 1. Save dialogs are modern (IFileDialog) and opaque to UI Automation (file-name field
 #    'FileNameControlHost' has no settable element; buttons are DirectUI panes). They are
 #    neither listed by GetOpenForms nor driveable yet. This tutorial avoids them by
 #    opening an already-saved document; saving would need RunCommand --out instead.
+# 2. Selecting a tabbed settings dialog's tab (SelectTab), checking a precursor in a tree
+#    pop-up pick-list, and invoking a graph right-click context-menu item are NOT yet
+#    supported. The streamlined path above avoids all three by configuring full-scan inside
+#    the Import Peptide Search wizard (no tabs) instead of via Settings > Transition Settings.
+# 3. RadioButton selection (e.g. the "PRM" workflow, the "Retention time filtering" options)
+#    is done with SetFormValue "<formId>" "<radio label>" true.

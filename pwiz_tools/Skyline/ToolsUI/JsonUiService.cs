@@ -1033,6 +1033,11 @@ namespace pwiz.Skyline.ToolsUI
                 case CheckBox checkBox:
                     checkBox.Checked = bool.TryParse(value, out var parsed) ? parsed : value == @"1";
                     break;
+                case RadioButton radioButton:
+                    // Selecting a radio button checks it; WinForms auto-unchecks its siblings and
+                    // raises CheckedChanged so any UI logic keyed on the selection stays in sync.
+                    radioButton.Checked = bool.TryParse(value, out var radioParsed) ? radioParsed : value == @"1";
+                    break;
                 case ComboBox comboBox:
                     int index = comboBox.FindStringExact(value);
                     if (index < 0)
