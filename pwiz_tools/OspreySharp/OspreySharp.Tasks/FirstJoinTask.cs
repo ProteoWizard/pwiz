@@ -702,54 +702,8 @@ namespace pwiz.OspreySharp.Tasks
             //    integration window. Mirrors Rust pipeline.rs
             //    reconciliation block at ~3260-3380.
             IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
-            var perFileCwtCandidates = new Dictionary<string,
-                IReadOnlyList<IReadOnlyList<CwtCandidate>>>();
-            foreach (var kvp in perFileEntries)
-            {
-                if (perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) &&
-                    File.Exists(parquetPath))
-                {
-                    try
-                    {
-                        var cwtRows = ParquetScoreCache
-                            .LoadCwtCandidatesFromParquet(parquetPath);
-                        // The planner indexes CWT lists by
-                        // entry.ParquetIndex (mirrors Rust at
-                        // reconciliation.rs:672). cwtRows.Count is
-                        // the parquet's raw Stage-4 row count;
-                        // kvp.Value.Count is the post-first-pass-
-                        // compaction stub count. They are not
-                        // equal by design — what we actually need
-                        // to validate is that every stub's
-                        // ParquetIndex falls within cwtRows.
-                        uint maxIdx = 0;
-                        foreach (var entry in kvp.Value)
-                        {
-                            if (entry.ParquetIndex > maxIdx)
-                                maxIdx = entry.ParquetIndex;
-                        }
-                        if (kvp.Value.Count > 0 && maxIdx >= cwtRows.Count)
-                        {
-                            ctx.LogWarning(string.Format(
-                                @"CWT candidate row count out of range for {0}: " +
-                                @"max stub ParquetIndex={1}, parquet has {2} rows -- " +
-                                @"skipping reconciliation planning for this file",
-                                kvp.Key, maxIdx, cwtRows.Count));
-                            continue;
-                        }
-                        var converted = new List<IReadOnlyList<CwtCandidate>>(cwtRows.Count);
-                        foreach (var row in cwtRows)
-                            converted.Add(row);
-                        perFileCwtCandidates[kvp.Key] = converted;
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogWarning(string.Format(
-                            @"Failed to load CWT candidates for {0}: {1}",
-                            kvp.Key, ex.Message));
-                    }
-                }
-            }
+            var perFileCwtCandidates = CwtCandidateLoader.Load(
+                perFileEntries, perFileParquetPaths, ctx.LogWarning);
             var perFileForPlan = new List<KeyValuePair<string,
                 IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
             foreach (var kvp in perFileEntries)
