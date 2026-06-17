@@ -132,7 +132,7 @@ namespace pwiz.OspreySharp.Tasks
                 // protein FDR consumes the 2nd-pass q-values. Extracted to
                 // Pass2FdrSidecar so Run reads as a sequencer; behavior unchanged.
                 Pass2FdrSidecar.ComputeAndPersist(
-                    ctx, perFileEntries, fullLibrary, perFileParquetPaths,
+                    ctx, perFileEntries, perFileParquetPaths,
                     Name, ValidityKey(ctx));
 
                 ctx.LogInfo(string.Empty);

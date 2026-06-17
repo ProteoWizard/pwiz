@@ -49,17 +49,11 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         internal static List<PercolatorEntry> Build(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            List<LibraryEntry> fullLibrary,
             out int nWithFeatures, out int nWithoutFeatures,
             out int nInputTargets, out int nInputDecoys)
         {
             // Build PercolatorEntry list from all files
             var percEntries = new List<PercolatorEntry>();
-
-            // Build library lookup for feature extraction
-            var libraryById = new Dictionary<uint, LibraryEntry>(fullLibrary.Count);
-            foreach (var entry in fullLibrary)
-                libraryById[entry.Id] = entry;
 
             nWithFeatures = 0;
             nWithoutFeatures = 0;
@@ -83,7 +77,7 @@ namespace pwiz.OspreySharp.Tasks
                     }
                     else
                     {
-                        features = BuildBasicFeatures(fdrEntry, libraryById);
+                        features = BuildBasicFeatures(fdrEntry);
                         nWithoutFeatures++;
                     }
 
@@ -127,8 +121,7 @@ namespace pwiz.OspreySharp.Tasks
         /// 21-feature vector is computed during coelution scoring in
         /// <see cref="pwiz.OspreySharp.Scoring.CoelutionScorer"/> and stored on the entry.
         /// </summary>
-        private static double[] BuildBasicFeatures(
-            FdrEntry entry, Dictionary<uint, LibraryEntry> libraryById)
+        private static double[] BuildBasicFeatures(FdrEntry entry)
         {
             double[] features = new double[AbstractScoringTask.NUM_PIN_FEATURES];
 

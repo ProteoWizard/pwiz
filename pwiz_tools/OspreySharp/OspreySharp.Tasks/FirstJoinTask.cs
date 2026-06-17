@@ -209,7 +209,7 @@ namespace pwiz.OspreySharp.Tasks
                 config.FdrMethod));
 
             var swFdr = Stopwatch.StartNew();
-            RunFdr(perFileEntries, fullLibrary, config, ctx);
+            RunFdr(perFileEntries, config, ctx);
             swFdr.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
@@ -1185,14 +1185,13 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private void RunFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx)
         {
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
-                    RunPercolatorFdr(perFileEntries, fullLibrary, config, ctx);
+                    RunPercolatorFdr(perFileEntries, config, ctx);
                     break;
 
                 case FdrMethod.Simple:
@@ -1218,7 +1217,6 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         internal static void RunPercolatorFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx,
             string passLabel = "First-pass")
@@ -1251,7 +1249,7 @@ namespace pwiz.OspreySharp.Tasks
             // each entry's stored 21-feature vector and falling back to a basic
             // vector for stubs. Extracted to PercolatorEntryBuilder.
             var percEntries = PercolatorEntryBuilder.Build(
-                perFileEntries, fullLibrary,
+                perFileEntries,
                 out int nWithFeatures, out int nWithoutFeatures,
                 out int nInputTargets, out int nInputDecoys);
 

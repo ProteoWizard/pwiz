@@ -75,7 +75,7 @@ namespace pwiz.OspreySharp.Test
             };
 
             var result = PercolatorEntryBuilder.Build(
-                perFileEntries, new List<LibraryEntry>(),
+                perFileEntries,
                 out int nWithFeatures, out int nWithoutFeatures,
                 out int nInputTargets, out int nInputDecoys);
 

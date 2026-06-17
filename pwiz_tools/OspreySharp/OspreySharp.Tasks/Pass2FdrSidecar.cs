@@ -58,7 +58,6 @@ namespace pwiz.OspreySharp.Tasks
         internal static void ComputeAndPersist(
             PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             string taskName,
             string taskValidityKey)
@@ -202,7 +201,7 @@ namespace pwiz.OspreySharp.Tasks
                     {
                         case FdrMethod.Percolator:
                             FirstJoinTask.RunPercolatorFdr(
-                                perFileEntries, fullLibrary, config, ctx, "Second-pass");
+                                perFileEntries, config, ctx, "Second-pass");
                             break;
                         // Simple / Mokapot 2nd-pass paths intentionally
                         // not implemented yet -- the in-process pipeline's
