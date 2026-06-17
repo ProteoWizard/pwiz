@@ -565,6 +565,23 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_click_toolstrip_item"),
+     Description("Click an item on a form's toolbar / menu strip by its path, e.g. " +
+        "'Reports > Replicates' (the 'Reports' toolbar button, then 'Replicates' in its dropdown). " +
+        "Each level's dropdown is opened first so items built on demand -- which skyline_click_form_button " +
+        "cannot reach -- are present before matching. Segments are '>'-separated and matched by item " +
+        "name or visible text. Use for the Document Grid 'Reports' dropdown, the Pivot Editor dropdown, etc.")]
+    public static string ClickToolStripItem(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Toolbar/menu path with '>'-separated segments, e.g. 'Reports > Replicates'")] string menuPath)
+    {
+        return Invoke(connection =>
+        {
+            connection.ClickToolStripItem(formId, menuPath);
+            return $"Clicked toolbar item '{menuPath}' on {formId}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_click_form_button"),
      Description("Click a control on an open form, matching it by control name or visible text: a " +
         "button, a checkbox or radio button, a toolbar/menu item, or any other control. For a native " +

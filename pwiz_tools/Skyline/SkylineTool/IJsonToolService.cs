@@ -346,6 +346,16 @@ namespace SkylineTool
         void ClickFormButton(string formId, string button);
 
         /// <summary>
+        /// Clicks an item on a form's ToolStrip (toolbar / menu strip) by its path, e.g.
+        /// "Reports &gt; Replicates". Each level's dropdown is opened first so items built on demand
+        /// (not in the static menu, e.g. the Document Grid's report list) are present before matching.
+        /// Each segment is matched by item name or visible text, like <see cref="InvokeMenuItem"/>.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="menuPath">Toolbar/menu path; segments separated by '>' (also '|' or '/').</param>
+        void ClickToolStripItem(string formId, string menuPath);
+
+        /// <summary>
         /// Sets the value of a control on an open form. For a native file dialog the value is the
         /// file name(s) to open -- use <c>"a" "b"</c> quoting to select several -- and
         /// <paramref name="controlId"/> is ignored. For a WinForms form it sets the text, checked

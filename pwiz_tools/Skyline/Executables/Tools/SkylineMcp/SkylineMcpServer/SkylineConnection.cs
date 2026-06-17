@@ -106,6 +106,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
 
     // 2-arg methods
     public void InvokeContextMenuItem(string formId, string menuPath) { CallClientVoid(c => c.InvokeContextMenuItem(formId, menuPath)); }
+    public void ClickToolStripItem(string formId, string menuPath) { CallClientVoid(c => c.ClickToolStripItem(formId, menuPath)); }
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }

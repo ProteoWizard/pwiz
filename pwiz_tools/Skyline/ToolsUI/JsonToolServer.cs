@@ -870,6 +870,11 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.ClickFormButton(formId, button);
         }
 
+        public void ClickToolStripItem(string formId, string menuPath)
+        {
+            JsonUiService.ClickToolStripItem(formId, menuPath);
+        }
+
         public void SetFormValue(string formId, string controlId, string value)
         {
             JsonUiService.SetFormValue(formId, controlId, value);

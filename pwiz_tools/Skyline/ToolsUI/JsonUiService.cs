@@ -471,6 +471,12 @@ namespace pwiz.Skyline.ToolsUI
                     // A menu / toolbar item (ToolStripButton, dropdown item, ...) -- PerformClick.
                     InvokeOnUiThread(() => target.ToolStripItem.PerformClick());
                 }
+                else if (target.TabPage != null)
+                {
+                    // A tab: select it on its TabControl (a mouse click would hit the page content,
+                    // not the tab header).
+                    InvokeOnUiThread(() => SelectTabPage(target.TabPage));
+                }
                 else
                 {
                     // Any other control -- synthesize a mouse click at its center on the UI thread.
@@ -478,6 +484,99 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 return true;
             });
+        }
+
+        // Selects the tab a TabPage belongs to. Must run on the UI thread.
+        private static void SelectTabPage(TabPage tabPage)
+        {
+            if (!(tabPage.Parent is TabControl tabControl))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Tab '{0}' is not on a tab control.", tabPage.Text));
+            tabControl.SelectedTab = tabPage;
+        }
+
+        /// <summary>
+        /// Clicks an item on a form's ToolStrip (toolbar / menu strip) by its path, e.g.
+        /// "Reports &gt; Replicates" -- the toolbar button "Reports" then the "Replicates" item in its
+        /// dropdown. Each level's dropdown is opened first so that items built on demand (which are not
+        /// in the static DropDownItems, e.g. the Document Grid's Reports list) are present before the
+        /// item is matched. Each segment is matched by item name or visible text, like InvokeMenuItem.
+        /// </summary>
+        public static void ClickToolStripItem(string formId, string menuPath)
+        {
+            ValidateFormIdFormat(formId);
+            // Resolve + click on the UI thread, inside the dialog-watch so a dialog the click opens is
+            // surfaced/returned rather than blocking.
+            RunWithDialogWatch(() =>
+            {
+                InvokeOnUiThread(() => FindAndClickToolStripItem(formId, menuPath));
+                return true;
+            });
+        }
+
+        // Walks a form's ToolStrip items by path, opening each level's dropdown so dynamically-built
+        // items are populated, then clicks the final item. Must run on the UI thread. Throws if a
+        // segment does not match.
+        private static void FindAndClickToolStripItem(string formId, string menuPath)
+        {
+            var form = FindFormById(formId);
+            var segments = ParseMenuSegments(menuPath);
+            var opened = new List<ToolStripDropDownItem>();
+            try
+            {
+                // The first segment is a top-level item on one of the form's ToolStrips.
+                var candidates = EnumerateControls(form).OfType<ToolStrip>()
+                    .SelectMany(strip => strip.Items.Cast<ToolStripItem>());
+                ToolStripItem current = null;
+                for (int i = 0; i < segments.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        if (!(current is ToolStripDropDownItem dropDownItem))
+                            throw new ArgumentException(LlmInstruction.Format(
+                                @"Toolbar item '{0}' on form {1} is not a dropdown.", segments[i - 1], formId));
+                        // Show the dropdown so items built on DropDownOpening are present.
+                        dropDownItem.ShowDropDown();
+                        opened.Add(dropDownItem);
+                        candidates = dropDownItem.DropDownItems.Cast<ToolStripItem>();
+                    }
+                    current = BestToolStripItem(candidates, segments[i]);
+                    if (current == null)
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"Toolbar item not found on form {0}: {1} (no match for '{2}').",
+                            formId, menuPath, segments[i]));
+                }
+                current.PerformClick();
+            }
+            finally
+            {
+                // Close any dropdowns this opened (PerformClick usually closes them; be sure).
+                for (int i = opened.Count - 1; i >= 0; i--)
+                    opened[i].HideDropDown();
+            }
+        }
+
+        // Picks the ToolStripItem that best matches key (same ranking as FindClickTarget: highest
+        // text-match quality, then prefer a visible+enabled item). Returns null if none matches.
+        private static ToolStripItem BestToolStripItem(IEnumerable<ToolStripItem> items, string key)
+        {
+            ToolStripItem best = null;
+            var bestQuality = ControlMatchQuality.None;
+            var bestInteractable = false;
+            foreach (var item in items)
+            {
+                var quality = MatchQuality(item.Name, item.Text, key);
+                if (quality == ControlMatchQuality.None)
+                    continue;
+                var interactable = item.Visible && item.Enabled;
+                if (quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
+                {
+                    best = item;
+                    bestQuality = quality;
+                    bestInteractable = interactable;
+                }
+            }
+            return best;
         }
 
         /// <summary>
@@ -1000,13 +1099,7 @@ namespace pwiz.Skyline.ToolsUI
         // for a context menu, after the menu has been populated). Throws if no item matches.
         private static ToolStripMenuItem FindMenuItemIn(ToolStripItemCollection rootItems, string menuPath)
         {
-            var segments = (menuPath ?? string.Empty)
-                .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
-            if (segments.Length == 0)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Empty menu path: {0}. Expected e.g. 'File > Import > Peptide Search'.",
-                    menuPath ?? string.Empty));
+            var segments = ParseMenuSegments(menuPath);
             var items = rootItems;
             ToolStripMenuItem current = null;
             foreach (var segment in segments)
@@ -1026,6 +1119,19 @@ namespace pwiz.Skyline.ToolsUI
                 || string.Equals(item.Name, label, StringComparison.OrdinalIgnoreCase);
         }
 
+        // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
+        private static string[] ParseMenuSegments(string menuPath)
+        {
+            var segments = (menuPath ?? string.Empty)
+                .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+            if (segments.Length == 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Empty menu path: {0}. Expected e.g. 'File > Import > Peptide Search'.",
+                    menuPath ?? string.Empty));
+            return segments;
+        }
+
         // A resolved click target. Exactly one member is set, classified in FindClickTarget /
         // MakeControlTarget: a Win32 button (Button/CheckBox/RadioButton) clicked via BM_CLICK; a
         // custom IButtonControl (e.g. a StartPage tile) or a ToolStripItem (menu/toolbar item) clicked
@@ -1035,6 +1141,7 @@ namespace pwiz.Skyline.ToolsUI
             public IntPtr ButtonHandle;
             public IButtonControl Clickable;
             public ToolStripItem ToolStripItem;
+            public TabPage TabPage;
             public Control Control;
         }
 
@@ -1084,6 +1191,8 @@ namespace pwiz.Skyline.ToolsUI
                 return new ClickTarget { ButtonHandle = control.Handle };
             if (control is IButtonControl buttonControl)
                 return new ClickTarget { Clickable = buttonControl };
+            if (control is TabPage tabPage)
+                return new ClickTarget { TabPage = tabPage };
             return new ClickTarget { Control = control };
         }
 

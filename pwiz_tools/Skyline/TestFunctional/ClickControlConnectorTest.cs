@@ -19,20 +19,27 @@
  */
 
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.AuditLog;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonUiService.ClickFormButton"/>'s ability to click controls beyond plain
-    /// Buttons -- here a CheckBox. The Audit Log form's "Enable audit logging" checkbox has
-    /// AutoCheck=false and acts on its Click handler, so setting its Checked state (SetFormValue) does
-    /// NOT toggle audit logging, but clicking it (ClickFormButton) does. The checkbox is matched by its
-    /// visible text and the form by its type name, so the test is translation-proof.
+    /// Exercises the AI Connector verbs that drive controls beyond plain Buttons:
+    ///   * <see cref="JsonUiService.ClickFormButton"/> on a CheckBox -- the Audit Log "Enable audit
+    ///     logging" checkbox (AutoCheck=false, acts on its Click handler, so SetFormValue would not
+    ///     toggle it but clicking it does);
+    ///   * <see cref="JsonUiService.ClickToolStripItem"/> -- the Document Grid "Reports" dropdown,
+    ///     whose items are built on demand and so are not reachable by ClickFormButton;
+    ///   * <see cref="JsonUiService.ClickFormButton"/> on a tab -- selecting a Peptide Settings tab.
+    /// Forms are found by type name and controls/items matched by visible text, so the test is
+    /// translation-proof where it uses control names and runs in en otherwise.
     /// </summary>
     [TestClass]
     public class ClickControlConnectorTest : AbstractFunctionalTest
@@ -51,18 +58,72 @@ namespace pwiz.SkylineTestFunctional
             // Start from a fresh document so its audit log has no entries -- toggling the checkbox in
             // either direction then does not raise the "this will clear the audit log" confirmation.
             RunUI(() => SkylineWindow.NewDocument());
-            RunUI(() => SkylineWindow.ShowAuditLog());
-            WaitForOpenForm<AuditLogForm>();
 
+            // Document Grid first: AuditLogForm derives from DocumentGridForm, so opening the audit
+            // log before WaitForOpenForm<DocumentGridForm> would make that wait ambiguous.
+            ClickToolStripDropDownItem();
+            var auditLogForm = ClickCheckBox();
+            ClickTab();
+
+            // Close the forms we opened and return to a fresh document so nothing holds the modified
+            // document (and its undo record) past teardown's leak check.
+            RunUI(() =>
+            {
+                SkylineWindow.ShowDocumentGrid(false);
+                auditLogForm.Close();
+                SkylineWindow.NewDocument();
+            });
+        }
+
+        // ClickFormButton clicks a CheckBox -- the AutoCheck=false "Enable audit logging" one.
+        private AuditLogForm ClickCheckBox()
+        {
+            RunUI(() => SkylineWindow.ShowAuditLog());
+            var auditLogForm = WaitForOpenForm<AuditLogForm>();
             string auditFormId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(AuditLogForm)).Id;
 
             bool before = SkylineWindow.Document.Settings.DataSettings.AuditLogging;
             JsonUiService.ClickFormButton(auditFormId, @"Enable audit logging");
-
             WaitForConditionUI(() => SkylineWindow.Document.Settings.DataSettings.AuditLogging != before);
             RunUI(() => Assert.AreNotEqual(before, SkylineWindow.Document.Settings.DataSettings.AuditLogging,
                 @"ClickFormButton did not toggle the Enable audit logging checkbox."));
+            return auditLogForm;
+        }
+
+        // ClickToolStripItem walks the Document Grid "Reports" dropdown (items built on demand)
+        // to switch the displayed report.
+        private DocumentGridForm ClickToolStripDropDownItem()
+        {
+            RunUI(() => SkylineWindow.ShowDocumentGrid(true));
+            var documentGrid = WaitForOpenForm<DocumentGridForm>();
+            string gridId = JsonUiService.GetOpenForms()
+                .First(form => form.Type == nameof(DocumentGridForm)).Id;
+
+            JsonUiService.ClickToolStripItem(gridId, @"Reports > Proteins");
+            WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Proteins");
+
+            JsonUiService.ClickToolStripItem(gridId, @"Reports > Peptides");
+            WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Peptides");
+            RunUI(() => Assert.AreEqual(@"Peptides", documentGrid.BindingListSource.ViewInfo.Name,
+                @"ClickToolStripItem did not switch the Document Grid report."));
+            return documentGrid;
+        }
+
+        // ClickFormButton selects a tab on a tabbed dialog.
+        private void ClickTab()
+        {
+            var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            string settingsId = JsonUiService.GetOpenForms()
+                .First(form => form.Type == nameof(PeptideSettingsUI)).Id;
+
+            RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Digest);
+            JsonUiService.ClickFormButton(settingsId, @"Quantification");
+            WaitForConditionUI(() => peptideSettings.SelectedTab == PeptideSettingsUI.TABS.Quantification);
+            RunUI(() => Assert.AreEqual(PeptideSettingsUI.TABS.Quantification, peptideSettings.SelectedTab,
+                @"ClickFormButton did not select the Quantification tab."));
+
+            OkDialog(peptideSettings, () => peptideSettings.DialogResult = DialogResult.Cancel);
         }
     }
 }
