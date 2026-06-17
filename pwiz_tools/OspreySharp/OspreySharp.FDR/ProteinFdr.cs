@@ -33,6 +33,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.FDR
@@ -445,36 +446,50 @@ namespace pwiz.OspreySharp.FDR
             }
 
             // Step 2: Pair picking. Iterate parsimony.Groups in deterministic
-            // order. Each group yields one winner: target if t >= d, else decoy.
+            // order. Each group yields one winner: target if t >= d, else
+            // decoy. Carry a sorted-accessions string on each winner so the
+            // Step 3 sort tiebreak can use a cross-impl-deterministic key.
+            // The numeric GroupId is HashMap-iteration-order-derived in
+            // BuildProteinParsimony and so picks different positions on
+            // ties cross-impl once upstream arithmetic is bit-equal.
             var winners = new List<ProteinWinner>();
             foreach (var group in parsimony.Groups)
             {
+                // Build sort_key once per group: accessions sorted then
+                // joined with semicolons (matches the Rust port and the
+                // Stage 7 diagnostic dump).
+                var sortedAccs = new List<string>(group.Accessions);
+                sortedAccs.Sort(StringComparer.Ordinal);
+                string sortKey = string.Join(";", sortedAccs);
+
                 bool hasT = targetScore.TryGetValue(group.Id, out double t);
                 bool hasD = decoyScore.TryGetValue(group.Id, out double d);
                 if (hasT && hasD)
                 {
                     if (t >= d)
-                        winners.Add(new ProteinWinner { GroupId = group.Id, Score = t, IsDecoy = false });
+                        winners.Add(new ProteinWinner { GroupId = group.Id, SortKey = sortKey, Score = t, IsDecoy = false });
                     else
-                        winners.Add(new ProteinWinner { GroupId = group.Id, Score = d, IsDecoy = true });
+                        winners.Add(new ProteinWinner { GroupId = group.Id, SortKey = sortKey, Score = d, IsDecoy = true });
                 }
                 else if (hasT)
                 {
-                    winners.Add(new ProteinWinner { GroupId = group.Id, Score = t, IsDecoy = false });
+                    winners.Add(new ProteinWinner { GroupId = group.Id, SortKey = sortKey, Score = t, IsDecoy = false });
                 }
                 else if (hasD)
                 {
-                    winners.Add(new ProteinWinner { GroupId = group.Id, Score = d, IsDecoy = true });
+                    winners.Add(new ProteinWinner { GroupId = group.Id, SortKey = sortKey, Score = d, IsDecoy = true });
                 }
             }
 
             // Step 3: Cumulative FDR. Sort winners by score descending,
-            // tiebreak by group_id ascending for determinism.
-            winners.Sort((a, b) =>
+            // tiebreak by sorted accessions ASCENDING — cross-impl-
+            // deterministic, unlike GroupId which is HashMap-iteration-
+            // order from BuildProteinParsimony.
+            winners.Sort((a, b) => // Array.Sort OK: SortKey is the sorted-accessions string from BuildProteinParsimony, which assigns a unique accessions list to each ProteinGroup (identical sets are merged), so the comparator never returns 0 and unstable-sort tie reorder cannot fire
             {
                 int cmp = b.Score.CompareTo(a.Score);
                 if (cmp != 0) return cmp;
-                return a.GroupId.CompareTo(b.GroupId);
+                return string.CompareOrdinal(a.SortKey, b.SortKey);
             });
 
             var rawQvalues = new double[winners.Count];
@@ -495,17 +510,31 @@ namespace pwiz.OspreySharp.FDR
             // to GroupQvalues / GroupScores.
             var groupQvalues = new Dictionary<uint, double>();
             var groupScores = new Dictionary<uint, double>();
+            var monotonicQvalues = new double[winners.Count];
             double minQ = 1.0;
             for (int i = winners.Count - 1; i >= 0; i--)
             {
                 if (rawQvalues[i] < minQ)
                     minQ = rawQvalues[i];
+                monotonicQvalues[i] = minQ;
                 var w = winners[i];
                 if (!w.IsDecoy)
                 {
                     groupQvalues[w.GroupId] = minQ;
                     groupScores[w.GroupId] = w.Score;
                 }
+            }
+
+            // Cross-impl bisection dump (env-var-gated, no-op in production).
+            // The flag check short-circuits the LINQ projection below; in
+            // the disabled-dump path this whole block is one field read.
+            // Dump function lives in FdrDiagnostics so the file I/O stays
+            // isolated from the protein-FDR algorithm code.
+            if (FdrDiagnostics.DumpStage7Winners)
+            {
+                FdrDiagnostics.WriteStage7WinnersDump(
+                    winners.Select(w => (w.Score, w.IsDecoy)).ToList(),
+                    rawQvalues, monotonicQvalues);
             }
 
             // Step 5: Propagate to peptides. Each peptide's q-value is the min
@@ -537,6 +566,7 @@ namespace pwiz.OspreySharp.FDR
         private struct ProteinWinner
         {
             public uint GroupId;
+            public string SortKey; // sorted-accessions string for cross-impl tiebreak
             public double Score;
             public bool IsDecoy;
         }
@@ -576,6 +606,12 @@ namespace pwiz.OspreySharp.FDR
                     }
                 }
             }
+
+            // Cross-impl bisection dump (env-var-gated, no-op in production).
+            // See FdrDiagnostics.WriteBestPeptideScoresDump for context.
+            if (FdrDiagnostics.DumpBestPeptideScores)
+                FdrDiagnostics.WriteBestPeptideScoresDump(best);
+
             return best;
         }
 
@@ -601,6 +637,52 @@ namespace pwiz.OspreySharp.FDR
                         entry.ExperimentProteinQvalue = q;
                 }
             }
+        }
+
+        /// <summary>
+        /// First-pass protein FDR: build parsimony from peptides passing peptide-level
+        /// run FDR, run picked-protein FDR at <see cref="OspreyConfig.RunFdr"/> (1x Savitski
+        /// gate), and write the resulting q-values into <see cref="FdrEntry.RunProteinQvalue"/>
+        /// on every stub. Mirrors Rust <c>pipeline.rs::run_analysis</c> first-pass block
+        /// (around line 4292). Caller is responsible for any logging, dump diagnostics,
+        /// and downstream consumption.
+        ///
+        /// Used by FirstJoinTask for the in-process pipeline (runs after first-pass FDR,
+        /// before compaction) and by PerFileRescoreTask for the <c>--task MergeNode</c>
+        /// rehydration path (runs after sidecar load, before compaction) so the protein-
+        /// rescue branch of compaction has fresh <c>RunProteinQvalue</c> values matching
+        /// what Rust computes inline. Without it, the rehydrated C# pipeline used only
+        /// the <c>RunProteinQvalue</c> values stored in the 1st-pass FDR sidecar; for
+        /// single-file <c>--task MergeNode</c> runs that left 19 peptides outside Rust's
+        /// post-compaction detected set on Stellar Single, causing a 1-protein delta in
+        /// Stage 7 picked-protein output.
+        /// </summary>
+        public static void RunFirstPassProteinFdr(
+            IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IList<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            // Detected-peptide gate: targets passing peptide-level run FDR.
+            // Matches Rust pipeline.rs:4301 (e.run_peptide_qvalue <= config.run_fdr).
+            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (!entry.IsDecoy && entry.RunPeptideQvalue <= config.RunFdr)
+                        detectedPeptides.Add(entry.ModifiedSequence);
+                }
+            }
+
+            var parsimony = BuildProteinParsimony(
+                fullLibrary, config.SharedPeptides, detectedPeptides);
+            var bestScores = CollectBestPeptideScores(perFileEntries);
+            var proteinFdr = ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
+
+            // Set RunProteinQvalue ONLY. ExperimentProteinQvalue is set by the
+            // post-output Stage 7 second-pass protein FDR (Rust's second-pass).
+            PropagateProteinQvalues(perFileEntries, proteinFdr,
+                setRun: true, setExperiment: false);
         }
     }
 }

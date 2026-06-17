@@ -49,6 +49,7 @@ using pwiz.Skyline.Util.Extensions;
 [assembly: log4net.Config.XmlConfigurator(ConfigFile = "SkylineLog4Net.config", Watch = true)]
 [assembly: InternalsVisibleTo("Test")]
 [assembly: InternalsVisibleTo("TestFunctional")]
+[assembly: InternalsVisibleTo("TestTutorial")]
 
 namespace pwiz.Skyline
 {

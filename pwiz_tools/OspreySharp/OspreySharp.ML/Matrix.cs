@@ -73,6 +73,24 @@ namespace pwiz.OspreySharp.ML
             return new Matrix(data, rows, cols, takeOwnership: true);
         }
 
+        /// <summary>
+        /// Pool-friendly wrap: accepts a backing array that is at least
+        /// <c>rows * cols</c> elements long. Only the first
+        /// <c>rows * cols</c> cells are read; the trailing suffix
+        /// (from a larger pooled buffer) is ignored. Use this when
+        /// renting an over-sized scratch double[] and only filling a
+        /// prefix this call.
+        /// </summary>
+        internal static Matrix WrapPrefixNoClone(double[] data, int rows, int cols)
+        {
+            int need = rows * cols;
+            if (data.Length < need)
+                throw new ArgumentException(
+                    string.Format("data length {0} < required prefix {1} for shape ({2}, {3})",
+                        data.Length, need, rows, cols));
+            return new Matrix(data, rows, cols, takeOwnership: true);
+        }
+
         private Matrix(double[] data, int rows, int cols, bool takeOwnership)
         {
             _data = data;
@@ -356,7 +374,11 @@ namespace pwiz.OspreySharp.ML
         {
             if (_rows != rhs._rows || _cols != rhs._cols)
                 throw new ArgumentException("Matrices must have equal shape to add");
-            for (int i = 0; i < _data.Length; i++)
+            // Bound the loop by active rows*cols, not _data.Length, so
+            // matrices wrapped via WrapPrefixNoClone (pool-backed,
+            // possibly oversized) don't touch the suffix.
+            int active = _rows * _cols;
+            for (int i = 0; i < active; i++)
                 _data[i] += rhs._data[i];
         }
 
@@ -365,8 +387,11 @@ namespace pwiz.OspreySharp.ML
         /// </summary>
         public Matrix Divide(double divisor)
         {
-            var result = new double[_data.Length];
-            for (int i = 0; i < _data.Length; i++)
+            // Allocate result sized exactly to rows*cols, not _data.Length
+            // (which may be larger if this matrix wraps a pooled buffer).
+            int active = _rows * _cols;
+            var result = new double[active];
+            for (int i = 0; i < active; i++)
                 result[i] = _data[i] / divisor;
             return new Matrix(result, _rows, _cols);
         }

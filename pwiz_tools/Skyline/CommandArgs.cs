@@ -45,6 +45,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.CommonMsData.RemoteApi.Ardia;
 using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -184,6 +185,21 @@ namespace pwiz.Skyline
         // Synonym for --out
         public static readonly Argument ARG_SAVE_AS = new DocArgument(@"save-as", PATH_TO_DOCUMENT,
             (c, p) => { c.SaveFile = p.ValueFullPath; });
+        // Per-invocation override for the on-disk transition compact format, so headless/
+        // automation saves are deterministic without depending on the persisted user setting.
+        public static readonly Argument ARG_SAVE_COMPACT_FORMAT = new DocArgument(@"save-compact-format",
+            CompactFormatOption.ALL_VALUES.Select(o => o.Name).ToArray(),
+            (c, p) =>
+            {
+                // Match case-insensitively but culture-invariantly. HasValueChecking bypasses the
+                // default value check (CurrentCultureIgnoreCase), which would mishandle a value like
+                // "LARGEFILESONLY" in Turkish locale; validate explicitly with OrdinalIgnoreCase here.
+                var option = CompactFormatOption.ALL_VALUES.FirstOrDefault(
+                    o => string.Equals(o.Name, p.Value, StringComparison.OrdinalIgnoreCase));
+                if (option == null)
+                    throw new ValueInvalidException(ARG_SAVE_COMPACT_FORMAT, p.Value, ARG_SAVE_COMPACT_FORMAT.Values);
+                c.SaveCompactFormat = option;
+            }) { HasValueChecking = true };
         public static readonly Argument ARG_NEW = new DocArgument(@"new", PATH_TO_DOCUMENT, (c, p) =>
         {
             c.CreateNewFile = true;
@@ -243,7 +259,7 @@ namespace pwiz.Skyline
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_NEW, ARG_OVERWRITE,
+            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,
             ARG_DISCARD_CHANGES, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
             ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
@@ -272,6 +288,14 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            // --save-compact-format only affects a document that is saved in this run. Warn (rather
+            // than silently ignore) if it is given without a save target, so automation isn't misled.
+            // This is a non-fatal warning: it must not change the exit status.
+            if (SaveCompactFormat != null && !Saving)
+            {
+                WarnArgRequirement(ARG_SAVE_COMPACT_FORMAT, ARG_SAVE, ARG_OUT, ARG_SAVE_AS);
+            }
+
             // Use the original file as the output file, if not told otherwise.
             if (Saving && string.IsNullOrEmpty(SaveFile))
             {
@@ -287,6 +311,8 @@ namespace pwiz.Skyline
         public bool DiscardChanges { get; private set; }
         public bool OverwriteExisting { get; private set; }
         public string SaveFile { get; private set; }
+        // Null means "use the persisted CompactFormatOption setting" (default behavior)
+        public CompactFormatOption SaveCompactFormat { get; private set; }
         private bool _saving;
         public bool Saving
         {

@@ -23,6 +23,7 @@
 
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace pwiz.OspreySharp.Chromatography
 {
@@ -246,13 +247,19 @@ namespace pwiz.OspreySharp.Chromatography
             if (x.Length < 2)
                 throw new ArgumentException("Need at least 2 data points");
 
-            // Sort by x (stable, matching Rust's slice::sort_by). Array.Sort
-            // with Comparison<T> is unstable (introsort) and reorders ties
-            // differently than Rust for duplicate x values, causing LOESS
-            // divergence on data with repeated x (e.g. multi-charge peptides
-            // sharing a library RT).
+            // Sort by x with a secondary key on y, so the order is
+            // deterministic for duplicate x values (e.g. multi-charge
+            // peptides sharing a library RT). LINQ OrderBy / ThenBy are
+            // stable, but the upstream input order can vary across impls
+            // when discriminant-score-sorted ties get filtered at 1 ULP,
+            // so we cannot rely on input-order tiebreaking for cross-impl
+            // bit-equality. Matches Rust osprey-chromatography
+            // calibration/rt.rs which sorts by (x, y) tuple.
             int n = x.Length;
-            int[] order = Enumerable.Range(0, n).OrderBy(i => x[i]).ToArray();
+            int[] order = Enumerable.Range(0, n)
+                .OrderBy(i => x[i])
+                .ThenBy(i => y[i])
+                .ToArray();
 
             double[] sortedX = new double[n];
             double[] sortedY = new double[n];
@@ -401,7 +408,16 @@ namespace pwiz.OspreySharp.Chromatography
 
             double[] fitted = new double[n];
 
-            for (int i = 0; i < n; i++)
+            // Each output index i is independent: it reads x/y/weights only
+            // (read-only across the loop) and writes fitted[i] only. The
+            // outer loop is embarrassingly parallel. At Astral 3-file scale
+            // ~96K x-points per LOESS fit x 9 fits per Fit() call (3 files x
+            // (1 initial + 2 robust)) the serial form burned 130s of CPU on
+            // a single core; parallelizing across 16 cores collapses that
+            // wall to a few seconds. Rust's loess_fit is also serial per
+            // call but auto-vectorized to be ~50x faster per iteration; we
+            // close most of the gap with parallelism alone.
+            Parallel.For(0, n, i =>
             {
                 double xi = x[i];
 
@@ -448,7 +464,7 @@ namespace pwiz.OspreySharp.Chromatography
                         fitted[i] = b0 + b1 * xi;
                     }
                 }
-            }
+            });
 
             return fitted;
         }

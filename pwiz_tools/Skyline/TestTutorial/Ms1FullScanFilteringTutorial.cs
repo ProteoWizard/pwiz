@@ -1056,7 +1056,8 @@ namespace pwiz.SkylineTestTutorial
                 },
                 {"MzCount",37828.ToString(@"N0", CultureInfo.CurrentCulture)},
                 {"TotalIonCurrent", 692070},
-                {"IsCentroided","False"},
+                {"IsCentroided",FullScanPropertiesRes.False},
+                {"Polarity",FullScanPropertiesRes.Polarity_Positive},
                 {"idotp",0.73.ToString(CultureInfo.CurrentCulture)}
             };
             var expectedProperties = new FullScanProperties();
