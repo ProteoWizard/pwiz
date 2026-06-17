@@ -264,7 +264,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <returns>Path to document file.</returns>
         public string GetDocumentPath()
         {
-            return Program.MainWindow.DocumentFilePath;
+            return Program.MainWindow?.DocumentFilePath;
         }
 
         /// <summary>
