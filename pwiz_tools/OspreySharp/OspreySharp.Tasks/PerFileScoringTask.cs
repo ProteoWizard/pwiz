@@ -1211,6 +1211,64 @@ namespace pwiz.OspreySharp.Tasks
             if (perFileCalibrationsOut != null && rtCalibration != null)
                 perFileCalibrationsOut[fileName] = rtCalibration;
 
+            // Run coelution scoring, then drop double-counted features and
+            // deduplicate target/decoy pairs per base_id. Extracted to
+            // ScoreAndDeduplicate so ProcessFile reads as a sequencer.
+            var scoredEntries = ScoreAndDeduplicate(
+                fullLibrary, spectra, ms1Spectra, isolationWindows,
+                rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
+
+            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
+            if (config.WritePin)
+            {
+                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
+            }
+
+            // Persist the full FdrEntry results (with features) to
+            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
+            // CWT candidates per file, and (b) a subsequent --task FirstJoin
+            // invocation can pick them up without re-running Stages 1-4.
+            // Same path convention as Rust (`scores_path_for_input`).
+            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
+            // as a Phase 4 follow-up. The metadata dictionary is precomputed
+            // in Run() against the original (un-mutated) outer config — see
+            // Run() for why. Skipped only in --task FirstJoin mode (no Stages 1-4
+            // ran here, so there is nothing fresh to persist).
+            if (parquetFooterMetadata != null)
+            {
+                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
+                // Reuse the entry-id -> LibraryEntry map Run() built once
+                // before the per-file fan-out (WriteScoresParquet needs
+                // it to pull sequence / precursor_mz / protein_ids from
+                // the library since FdrEntry doesn't carry these).
+                var swParquet = Stopwatch.StartNew();
+                ParquetScoreCache.WriteScoresParquet(
+                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
+                swParquet.Stop();
+                ctx.LogInfo(string.Format(
+                    "Wrote {0} scored entries to {1} ({2:F1}s)",
+                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+            }
+
+            return scoredEntries;
+        }
+
+        /// <summary>
+        /// Run coelution scoring across the isolation windows, then apply the two
+        /// dedup passes -- double-counting removal (different precursors latched
+        /// onto one chromatographic feature) and target/decoy pair-dedup per
+        /// base_id. Extracted from <see cref="ProcessFile"/> as pure code motion;
+        /// the parity-locked scoring + dedup cores are invoked whole.
+        /// </summary>
+        private List<FdrEntry> ScoreAndDeduplicate(
+            List<LibraryEntry> fullLibrary,
+            List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            List<IsolationWindow> isolationWindows,
+            RTCalibration rtCalibration,
+            MzCalibrationResult ms2Cal, MzCalibrationResult ms1Cal,
+            ScoringContext context, OspreyConfig config,
+            string fileName, PipelineContext ctx)
+        {
             // Run coelution scoring across all isolation windows
             var swScoring = Stopwatch.StartNew();
             var scoredEntries = RunCoelutionScoring(
@@ -1255,38 +1313,6 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Format(
                 "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
                 fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
-
-            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
-            if (config.WritePin)
-            {
-                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
-            }
-
-            // Persist the full FdrEntry results (with features) to
-            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
-            // CWT candidates per file, and (b) a subsequent --task FirstJoin
-            // invocation can pick them up without re-running Stages 1-4.
-            // Same path convention as Rust (`scores_path_for_input`).
-            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
-            // as a Phase 4 follow-up. The metadata dictionary is precomputed
-            // in Run() against the original (un-mutated) outer config — see
-            // Run() for why. Skipped only in --task FirstJoin mode (no Stages 1-4
-            // ran here, so there is nothing fresh to persist).
-            if (parquetFooterMetadata != null)
-            {
-                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
-                // Reuse the entry-id -> LibraryEntry map Run() built once
-                // before the per-file fan-out (WriteScoresParquet needs
-                // it to pull sequence / precursor_mz / protein_ids from
-                // the library since FdrEntry doesn't carry these).
-                var swParquet = Stopwatch.StartNew();
-                ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
-                swParquet.Stop();
-                ctx.LogInfo(string.Format(
-                    "Wrote {0} scored entries to {1} ({2:F1}s)",
-                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
-            }
 
             return scoredEntries;
         }
