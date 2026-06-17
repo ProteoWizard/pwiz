@@ -37,6 +37,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -252,7 +253,18 @@ namespace pwiz.Skyline.ToolsUI
                             if (requestBytes.Length == 0)
                                 break;
 
-                            string responseJson = HandleRequest(requestBytes);
+                            // Give long-running verbs a way to notice this client disconnecting, so a
+                            // blocked call abandons and frees this single-instance server.
+                            JsonUiService.SetClientConnectedCheck(() => IsClientConnected(pipe));
+                            string responseJson;
+                            try
+                            {
+                                responseJson = HandleRequest(requestBytes);
+                            }
+                            finally
+                            {
+                                JsonUiService.SetClientConnectedCheck(null);
+                            }
                             var responseBytes = Encoding.UTF8.GetBytes(responseJson);
                             pipe.Write(responseBytes, 0, responseBytes.Length);
                             pipe.Flush();
@@ -269,6 +281,27 @@ namespace pwiz.Skyline.ToolsUI
                     if (!_stopping)
                         Thread.Sleep(100); // Brief pause before retrying
                 }
+            }
+        }
+
+        // Reliable "client still connected" check for a server thread busy in a verb (no read in
+        // progress). NamedPipeServerStream.IsConnected does not detect a disconnect without I/O, so
+        // peek the pipe -- PeekNamedPipe returns false once the client has closed its end.
+        private static bool IsClientConnected(NamedPipeServerStream pipe)
+        {
+            try
+            {
+                if (!pipe.IsConnected)
+                    return false;
+                var handle = pipe.SafePipeHandle;
+                if (handle == null || handle.IsInvalid || handle.IsClosed)
+                    return false;
+                return Kernel32.PeekNamedPipe(handle.DangerousGetHandle(),
+                    IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception)
+            {
+                return false;
             }
         }
 

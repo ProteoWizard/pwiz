@@ -1,36 +1,42 @@
 # PRM tutorial -- SkylineMCP / AI Connector steps
 #
-# Each line is one operation: a verb name followed by double-quoted arguments.
+# Each line is one operation: a verb name, then its arguments.
 # Lines starting with '#' and blank lines are ignored.
 #
+# Argument format:
+#   - formId and controlId arguments are wrapped in double quotes.
+#   - The VALUE argument of SetFormValue is the rest of the line after the controlId
+#     (taken verbatim, so it may itself contain spaces and double quotes -- needed for
+#     multi-file selection, see below).
+#
 # Verbs that map directly to IJsonToolService methods:
-#   InvokeMenuItem  "<menu path>"                       -> skyline_invoke_menu_item
-#   ClickFormButton "<formId>" "<button>"               -> skyline_click_form_button
-#   SetFormValue    "<formId>" "<controlId>" "<value>"  -> skyline_set_form_value
+#   InvokeMenuItem  "<menu path>"                  -> skyline_invoke_menu_item
+#   ClickFormButton "<formId>" "<button>"          -> skyline_click_form_button
+#   SetFormValue    "<formId>" "<controlId>" <value>  -> skyline_set_form_value
 #
 # Harness synchronization primitives (poll skyline_get_open_forms; NOT MCP methods):
 #   WaitForForm     "<formId>"   -- wait until that form/dialog is listed by GetOpenForms
 #   WaitForNoForm   "<formId>"   -- wait until it is gone
-# These are required because InvokeMenuItem / ClickFormButton return immediately (the
-# dialog-watch makes them return as soon as a dialog appears), so the resulting form is
-# usually not open yet on the next line.
+# Required because InvokeMenuItem / ClickFormButton return immediately (the dialog-watch
+# makes them return as soon as a dialog appears), so the resulting form is usually not
+# open yet on the next line.
 #
-# formIds are the stable "TypeName:Title" identifiers from GetOpenForms. They are
+# formIds are the stable "TypeName:Title" identifiers from GetOpenForms; they are
 # deterministic for this tutorial, so no run-time inspection/branching is needed --
-# GetOpenForms is used only for the Wait* steps. (Caveat: the titles below are the
-# English UI strings; a localized run needs the localized titles.)
+# GetOpenForms is used only for the Wait* steps. (The titles below are the English UI
+# strings; a localized run needs the localized titles.)
 #
 # {DATA} is replaced by the test with the PRM tutorial data directory (the folder that
 # contains BSA_Protea_label_free_meth3.sky and the 'search' subfolder).
 #
-# Validation: every step below was executed against Skyline-daily over the pipe. The
-# tutorial continues past this point (Next -> build spectral library -> match
-# modifications -> ... -> Finish -> import raw data); those steps are not captured yet.
+# Validation: every step below was executed against Skyline-daily over the pipe, through
+# adding both search files. The tutorial continues past this point (Next -> build spectral
+# library -> match modifications -> ... -> Finish -> import raw data); not captured yet.
 
 # --- Open the starting document ---
 InvokeMenuItem  "File > Open"
 WaitForForm     "FileDialog:Open"
-SetFormValue    "FileDialog:Open" "FileName" "{DATA}\BSA_Protea_label_free_meth3.sky"
+SetFormValue    "FileDialog:Open" "FileName" {DATA}\BSA_Protea_label_free_meth3.sky
 ClickFormButton "FileDialog:Open" "Open"
 WaitForNoForm   "FileDialog:Open"
 
@@ -38,19 +44,16 @@ WaitForNoForm   "FileDialog:Open"
 InvokeMenuItem  "File > Import > Peptide Search"
 WaitForForm     "ImportPeptideSearchDlg:Import Peptide Search"
 
-# --- Add the first search-result file ---
-# (Files are added one at a time: SetFormValue with several space-quoted paths in one
-#  call is rejected by the live file dialog -- see notes below.)
+# --- Add both search-result files at once ---
+# Multi-select on the common (classic) Open dialog: navigate INTO the folder first, then
+# set the file name to the QUOTED BARE filenames separated by spaces. (Setting quoted
+# FULL paths is rejected with "Operation cannot be performed"; bare names in the current
+# folder work.)
 ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Add Files"
 WaitForForm     "FileDialog:Add Input Files"
-SetFormValue    "FileDialog:Add Input Files" "FileName" "{DATA}\search\klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml"
+SetFormValue    "FileDialog:Add Input Files" "FileName" {DATA}\search
 ClickFormButton "FileDialog:Add Input Files" "Open"
-WaitForNoForm   "FileDialog:Add Input Files"
-
-# --- Add the second search-result file ---
-ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Add Files"
-WaitForForm     "FileDialog:Add Input Files"
-SetFormValue    "FileDialog:Add Input Files" "FileName" "{DATA}\search\klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
+SetFormValue    "FileDialog:Add Input Files" "FileName" "klc_20100329v_Protea_Peptide_Curve_20fmol_uL_tech1.perc.xml" "klc_20100329v_Protea_Peptide_Curve_80fmol_uL_tech1.perc.xml"
 ClickFormButton "FileDialog:Add Input Files" "Open"
 WaitForNoForm   "FileDialog:Add Input Files"
 
@@ -58,10 +61,7 @@ WaitForNoForm   "FileDialog:Add Input Files"
 # Next steps (not yet validated): ClickFormButton "...:Import Peptide Search" "Next", etc.
 
 # --- Notes / known limitations found while validating against a live Skyline ---
-# 1. Multi-file select: SetFormValue with '"a" "b"' (space-quoted paths) throws
-#    "Operation cannot be performed" on the live (classic) Open dialog, though a single
-#    path works. Hence one file per Add Files round above.
-# 2. Save dialogs are modern (IFileDialog) and opaque to UI Automation (file-name field
+# 1. Save dialogs are modern (IFileDialog) and opaque to UI Automation (file-name field
 #    'FileNameControlHost' has no settable element; buttons are DirectUI panes). They are
 #    neither listed by GetOpenForms nor driveable yet. This tutorial avoids them by
 #    opening an already-saved document; saving would need RunCommand --out instead.

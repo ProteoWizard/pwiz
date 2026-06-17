@@ -229,6 +229,15 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern bool IsWindowVisible(IntPtr hwnd);
 
         [DllImport("user32.dll")]
+        public static extern bool IsWindowEnabled(IntPtr hwnd);
+
+        // uCmd values for GetWindow.
+        public const uint GW_OWNER = 4;
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        [DllImport("user32.dll")]
         public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
 
         [DllImport("user32.dll", EntryPoint = "OpenClipboard", SetLastError = true)]

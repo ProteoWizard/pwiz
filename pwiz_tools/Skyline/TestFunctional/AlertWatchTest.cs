@@ -31,7 +31,8 @@ namespace pwiz.SkylineTestFunctional
     /// Verifies <see cref="JsonUiService.RunWithDialogWatch{T}"/>: when connector work (e.g.
     /// RunCommand or SetFormValue) pops a modal alert, the call returns immediately by throwing with
     /// the alert's text, instead of blocking on the dialog. The alert is left open for the caller to
-    /// dismiss.
+    /// dismiss. Also verifies <see cref="JsonUiService.InvokeMenuItem"/> fails fast while a modal
+    /// dialog is blocking the main window.
     /// </summary>
     [TestClass]
     public class AlertWatchTest : AbstractFunctionalTest
@@ -61,9 +62,15 @@ namespace pwiz.SkylineTestFunctional
                 }),
                 thrown => AssertEx.Contains(thrown.Message, alertMessage));
 
-            // The alert is still open (the watch leaves it for the caller); dismiss it the way the
-            // model would over its connection, which also unblocks the orphaned work thread.
+            // The alert is still open and blocking the main window. InvokeMenuItem must fail fast
+            // (InvalidOperationException) rather than silently no-op on the disabled menu. (The
+            // blocked check runs before any menu lookup, so the menu path is immaterial.)
             var alert = WaitForOpenForm<AlertDlg>();
+            AssertEx.ThrowsException<InvalidOperationException>(
+                () => JsonUiService.InvokeMenuItem(@"File > New"));
+
+            // Dismiss the alert the way the model would over its connection, which also unblocks the
+            // orphaned work thread.
             OkDialog(alert, alert.ClickOk);
         }
     }

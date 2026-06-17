@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
@@ -94,24 +95,31 @@ namespace pwiz.Skyline.ToolsUI
 
         private const int DIALOG_POLL_INTERVAL_MILLIS = 100;
 
+        // Ambient "is the calling client still connected?" check, set per request by the pipe server.
+        // ThreadStatic because RunWithDialogWatch's poll loop runs on the request's server thread.
+        // Lets a long-running verb bail when the client disconnects, so the single-instance server
+        // can move on to the next connection instead of staying blocked.
+        [ThreadStatic] private static Func<bool> _clientConnectedCheck;
+
+        public static void SetClientConnectedCheck(Func<bool> check)
+        {
+            _clientConnectedCheck = check;
+        }
+
         /// <summary>
         /// Runs <paramref name="work"/> on a background thread and waits for it, but returns
-        /// immediately if a dialog appears, so the call never blocks on a modal:
-        ///   - a new <see cref="CommonAlertDlg"/> (error / confirmation) -> reads its text and
-        ///     throws, surfacing that text to the caller;
-        ///   - a new native dialog (Open/Save common dialog, window class #32770) -> returns, leaving
-        ///     it open for the caller to drive with the form verbs (GetOpenForms / SetFormValue /
-        ///     ClickFormButton).
-        /// The dialog is left open in both cases. Progress dialogs (LongWaitDlg) are not
-        /// CommonAlertDlg, so normal command progress does not trip this. Used by verbs that can pop
-        /// a dialog (RunCommand, SetFormValue, ClickFormButton, ...). Must be called off the UI thread.
+        /// immediately if a MODAL dialog appears that blocks one of this process's windows -- so the
+        /// call never hangs behind a modal it cannot get past. A <see cref="LongWaitDlg"/> is the
+        /// exception: it is a progress dialog the work itself drives, so the watch keeps waiting for
+        /// it. When a blocking modal appears, a <see cref="CommonAlertDlg"/> throws its text (so the
+        /// caller sees the message); any other modal (native Open/Save dialog, custom dialog) returns,
+        /// leaving it open for the caller to drive (GetOpenForms / SetFormValue / ClickFormButton).
+        /// Used by verbs that can pop a dialog (RunCommand, SetFormValue, ClickFormButton, ...). Must
+        /// be called off the UI thread.
         /// </summary>
         public static T RunWithDialogWatch<T>(Func<T> work)
         {
-            var preexistingAlerts = InvokeOnUiThread(() =>
-                new HashSet<Form>(FormUtil.OpenForms.OfType<CommonAlertDlg>()));
-            var preexistingNative = new HashSet<IntPtr>(
-                NativeDialogAutomation.GetOpenDialogs().Select(dialog => dialog.WindowHandle));
+            var knownModals = new HashSet<IntPtr>(FindModalDialogWindows());
 
             T result = default(T);
             Exception workError = null;
@@ -125,11 +133,21 @@ namespace pwiz.Skyline.ToolsUI
 
             while (!worker.Join(DIALOG_POLL_INTERVAL_MILLIS))
             {
-                string alertText = FindNewAlertText(preexistingAlerts);
-                if (alertText != null)
-                    throw new InvalidOperationException(alertText);
-                if (NativeDialogAutomation.GetOpenDialogs().Any(d => !preexistingNative.Contains(d.WindowHandle)))
-                    return result; // a native modal (e.g. Save/Open) is up; return rather than block on it
+                if (_clientConnectedCheck != null && !_clientConnectedCheck())
+                    return result; // client disconnected -- abandon the (possibly blocked) work so the server can move on
+                var newModals = FindModalDialogWindows().Where(h => !knownModals.Contains(h)).ToList();
+                if (newModals.Count == 0)
+                    continue;
+                var decision = ClassifyNewModals(newModals);
+                if (decision.KeepWaiting)
+                {
+                    // Every new modal is a LongWaitDlg progress dialog; ignore them and keep waiting.
+                    knownModals.UnionWith(newModals);
+                    continue;
+                }
+                if (decision.AlertText != null)
+                    throw new InvalidOperationException(decision.AlertText);
+                return result; // a blocking modal (e.g. a file dialog) is up; return rather than block
             }
 
             if (workError != null)
@@ -147,21 +165,57 @@ namespace pwiz.Skyline.ToolsUI
             RunWithDialogWatch(() => { work(); return true; });
         }
 
-        // Returns the message of a CommonAlertDlg that has appeared since the watch started, or null.
-        // Enumerated on the UI thread; while an alert is up the UI thread runs its modal message loop,
-        // which pumps this marshaled call.
-        private static string FindNewAlertText(HashSet<Form> preexistingAlerts)
+        // Classifies newly-appeared modal dialogs on the UI thread. Returns KeepWaiting when every new
+        // modal is a LongWaitDlg (progress), an alert's text when one is a CommonAlertDlg (the caller
+        // throws it), or neither (the caller returns and lets the model drive the dialog).
+        private static ModalDecision ClassifyNewModals(IList<IntPtr> newModals)
         {
             return InvokeOnUiThread(() =>
             {
-                var alert = FormUtil.OpenForms.OfType<CommonAlertDlg>()
-                    .FirstOrDefault(form => form.Visible && !preexistingAlerts.Contains(form));
-                if (alert == null)
-                    return null;
-                return string.IsNullOrEmpty(alert.DetailMessage)
-                    ? alert.Message
-                    : alert.Message + Environment.NewLine + alert.DetailMessage;
+                foreach (var hwnd in newModals)
+                {
+                    var form = FormUtil.OpenForms.OfType<Form>()
+                        .FirstOrDefault(f => f.IsHandleCreated && f.Handle == hwnd);
+                    if (form is LongWaitDlg)
+                        continue; // progress dialog -- not a blocker
+                    if (form is CommonAlertDlg alert)
+                        return new ModalDecision { AlertText = GetAlertText(alert) };
+                    return new ModalDecision(); // native / other modal -- caller drives it
+                }
+                return new ModalDecision { KeepWaiting = true };
             });
+        }
+
+        private class ModalDecision
+        {
+            public bool KeepWaiting;
+            public string AlertText;
+        }
+
+        private static string GetAlertText(CommonAlertDlg alert)
+        {
+            return string.IsNullOrEmpty(alert.DetailMessage)
+                ? alert.Message
+                : alert.Message + Environment.NewLine + alert.DetailMessage;
+        }
+
+        // Returns the handles of this process's modal dialogs: visible, enabled, top-level windows
+        // whose owner window is disabled -- the signature of a modal dialog blocking its owner.
+        private static IList<IntPtr> FindModalDialogWindows()
+        {
+            var processId = (uint)Process.GetCurrentProcess().Id;
+            var result = new List<IntPtr>();
+            User32.EnumWindows((hwnd, lparam) =>
+            {
+                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
+                if (windowProcessId != processId || !User32.IsWindowVisible(hwnd) || !User32.IsWindowEnabled(hwnd))
+                    return true;
+                var owner = User32.GetWindow(hwnd, User32.GW_OWNER);
+                if (owner != IntPtr.Zero && !User32.IsWindowEnabled(owner))
+                    result.Add(hwnd);
+                return true;
+            }, IntPtr.Zero);
+            return result;
         }
 
         // Level 2: UI patterns
@@ -294,6 +348,12 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void InvokeMenuItem(string menuPath)
         {
+            // A main-menu item cannot be clicked while a modal dialog is blocking the main window
+            // (the window, and so its menu, is disabled). Fail fast rather than silently no-op.
+            var mainHandle = InvokeOnUiThread(() => Program.MainWindow.Handle);
+            if (!User32.IsWindowEnabled(mainHandle))
+                throw new InvalidOperationException(
+                    @"Cannot invoke a menu item: a modal dialog is blocking the main Skyline window. Handle the open dialog first (see skyline_get_open_forms).");
             var item = InvokeOnUiThread(() => FindMenuItem(menuPath));
             Program.MainWindow.BeginInvoke((Action)item.PerformClick);
         }
