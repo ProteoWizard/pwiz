@@ -566,14 +566,15 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_click_form_button"),
-     Description("Click a button on an open form, matching the button by its control name or its " +
-        "visible text. For a native dialog (IsNative=True from skyline_get_open_forms) this accepts " +
-        "the dialog, or cancels it when the button names the Cancel/Close action. The click is posted " +
-        "asynchronously, so a button that opens another dialog returns immediately; call " +
-        "skyline_get_open_forms to find the resulting form.")]
+     Description("Click a control on an open form, matching it by control name or visible text: a " +
+        "button, a checkbox or radio button, a toolbar/menu item, or any other control. For a native " +
+        "dialog (IsNative=True from skyline_get_open_forms) this accepts the dialog, or cancels it " +
+        "when the button names the Cancel/Close action. The click is posted asynchronously, so a " +
+        "button that opens another dialog returns immediately; call skyline_get_open_forms to find " +
+        "the resulting form.")]
     public static string ClickFormButton(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Button control name or visible label, e.g. 'Add Files' or 'OK'")] string button)
+        [Description("Control name or visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
     {
         return Invoke(connection =>
         {

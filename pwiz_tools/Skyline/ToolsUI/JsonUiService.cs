@@ -432,7 +432,9 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Clicks a button on an open form, or accepts/cancels a native dialog
+        /// Clicks a control on an open form -- a Button, a CheckBox or RadioButton, a custom
+        /// IButtonControl (e.g. a StartPage tile), a ToolStrip/menu/toolbar item, or any other control
+        /// (matched by control name or visible text) -- or accepts/cancels a native dialog
         /// (see <see cref="IJsonToolService"/>).
         /// </summary>
         public static void ClickFormButton(string formId, string button)
@@ -454,15 +456,25 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (target.ButtonHandle != IntPtr.Zero)
                 {
-                    // A real WinForms Button is a Win32 button: BM_CLICK clicks like a mouse, bypassing
+                    // A Win32 button (Button / CheckBox / RadioButton): BM_CLICK clicks like a mouse --
+                    // it fires the Click handler (so an AutoCheck=false checkbox toggles) and bypasses
                     // PerformClick's CanSelect / validation gates (which can silently no-op).
                     User32.SendMessage(target.ButtonHandle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
                 }
+                else if (target.Clickable != null)
+                {
+                    // A custom IButtonControl (e.g. a StartPage tile) -- PerformClick on the UI thread.
+                    InvokeOnUiThread(() => target.Clickable.PerformClick());
+                }
+                else if (target.ToolStripItem != null)
+                {
+                    // A menu / toolbar item (ToolStripButton, dropdown item, ...) -- PerformClick.
+                    InvokeOnUiThread(() => target.ToolStripItem.PerformClick());
+                }
                 else
                 {
-                    // Any other IButtonControl (e.g. a StartPage tile) is not a Win32 button, so drive
-                    // it through PerformClick on the UI thread -- the same action a mouse click runs.
-                    InvokeOnUiThread(() => target.Clickable.PerformClick());
+                    // Any other control -- synthesize a mouse click at its center on the UI thread.
+                    InvokeOnUiThread(() => ClickControlWithMouse(target.Control));
                 }
                 return true;
             });
@@ -1014,36 +1026,95 @@ namespace pwiz.Skyline.ToolsUI
                 || string.Equals(item.Name, label, StringComparison.OrdinalIgnoreCase);
         }
 
-        // A resolved click target: either a real WinForms Button (by window handle, for a BM_CLICK)
-        // or some other IButtonControl such as a custom StartPage tile (for a PerformClick).
+        // A resolved click target. Exactly one member is set, classified in FindClickTarget /
+        // MakeControlTarget: a Win32 button (Button/CheckBox/RadioButton) clicked via BM_CLICK; a
+        // custom IButtonControl (e.g. a StartPage tile) or a ToolStripItem (menu/toolbar item) clicked
+        // via PerformClick; or any other control clicked with a synthesized mouse click.
         private class ClickTarget
         {
             public IntPtr ButtonHandle;
             public IButtonControl Clickable;
+            public ToolStripItem ToolStripItem;
+            public Control Control;
         }
 
-        // Resolves a click target on a form, matching by control name or visible text. Prefers a real
-        // WinForms Button (so the proven BM_CLICK path is unchanged), then any other IButtonControl.
-        // Must run on the UI thread. Throws if none matches.
+        // Resolves a click target on a form by control/item name or visible text. Searches the whole
+        // WinForms control tree (any control -- the same breadth as SetFormValue) AND the ToolStrip
+        // items (menus, toolbars, dropdowns), which are not in the control tree. Ranks by match quality
+        // (exact over symbol-stripped), then prefers a visible+enabled target so a hidden duplicate
+        // does not win. Must run on the UI thread. Throws if nothing matches.
         private static ClickTarget FindClickTarget(string formId, string button)
         {
             var form = FindFormById(formId);
-            var realButton = FindControl<Button>(form, button);
-            if (realButton != null)
-                return new ClickTarget { ButtonHandle = realButton.Handle };
-            var clickable = FindButtonControl(form, button);
-            if (clickable != null)
-                return new ClickTarget { Clickable = clickable };
-            throw new ArgumentException(LlmInstruction.Format(
-                @"Button not found on form {0}: {1}.", formId, button));
+            ClickTarget best = null;
+            var bestQuality = ControlMatchQuality.None;
+            var bestInteractable = false;
+
+            void Consider(ControlMatchQuality quality, bool interactable, Func<ClickTarget> make)
+            {
+                if (quality == ControlMatchQuality.None)
+                    return;
+                if (quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
+                {
+                    best = make();
+                    bestQuality = quality;
+                    bestInteractable = interactable;
+                }
+            }
+
+            foreach (var control in EnumerateControls(form))
+                Consider(ControlMatches(control, button), control.Visible && control.Enabled,
+                    () => MakeControlTarget(control));
+            foreach (var item in EnumerateToolStripItems(form))
+                Consider(MatchQuality(item.Name, item.Text, button), item.Visible && item.Enabled,
+                    () => new ClickTarget { ToolStripItem = item });
+
+            if (best == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"No clickable control found on form {0}: {1}.", formId, button));
+            return best;
         }
 
-        // Searches the form for the IButtonControl (other than a plain Button, which the caller
-        // handles via BM_CLICK) that best matches key -- e.g. the StartPage's ActionBoxControl tiles.
-        private static IButtonControl FindButtonControl(Control parent, string key)
+        // Classifies a control into a click target: a Win32 button (Button/CheckBox/RadioButton) is
+        // clicked via BM_CLICK (which fires the Click handler even for an AutoCheck=false checkbox); a
+        // custom IButtonControl (e.g. a StartPage tile) via PerformClick; anything else via a mouse click.
+        private static ClickTarget MakeControlTarget(Control control)
         {
-            return (IButtonControl)FindBestMatch(parent, key, c => c is IButtonControl && !(c is Button));
+            if (control is ButtonBase)
+                return new ClickTarget { ButtonHandle = control.Handle };
+            if (control is IButtonControl buttonControl)
+                return new ClickTarget { Clickable = buttonControl };
+            return new ClickTarget { Control = control };
         }
+
+        // Enumerates every ToolStripItem reachable from the form's ToolStrips (MenuStrip, ToolStrip,
+        // BindingNavigator, ...), descending into dropdown items so submenu/dropdown items are included.
+        private static IEnumerable<ToolStripItem> EnumerateToolStripItems(Control form)
+        {
+            return EnumerateControls(form).OfType<ToolStrip>().SelectMany(s => EnumerateToolStripItems(s.Items));
+        }
+
+        private static IEnumerable<ToolStripItem> EnumerateToolStripItems(ToolStripItemCollection items)
+        {
+            foreach (ToolStripItem item in items)
+            {
+                yield return item;
+                if (item is ToolStripDropDownItem dropDownItem)
+                    foreach (var child in EnumerateToolStripItems(dropDownItem.DropDownItems))
+                        yield return child;
+            }
+        }
+
+        // Synthesizes a left mouse click at the center of a control that is neither a button nor a
+        // ToolStripItem (e.g. a link or a custom control). Must run on the UI thread.
+        private static void ClickControlWithMouse(Control control)
+        {
+            var lParam = (IntPtr)(((control.Height / 2) << 16) | ((control.Width / 2) & 0xFFFF));
+            User32.SendMessage(control.Handle, User32.WinMessageType.WM_LBUTTONDOWN, (IntPtr)MK_LBUTTON, lParam);
+            User32.SendMessage(control.Handle, User32.WinMessageType.WM_LBUTTONUP, IntPtr.Zero, lParam);
+        }
+
+        private const int MK_LBUTTON = 0x0001;
 
         // Searches the form for the control of type T that best matches key.
         private static T FindControl<T>(Control parent, string key) where T : Control
@@ -1103,16 +1174,24 @@ namespace pwiz.Skyline.ToolsUI
 
         private static ControlMatchQuality ControlMatches(Control control, string key)
         {
+            return MatchQuality(control.Name, control.Text, key);
+        }
+
+        // Match quality of a control/item with the given name and visible text against a requested key.
+        // Used for both WinForms controls and ToolStripItems (which are not Controls but have the same
+        // Name/Text pair).
+        private static ControlMatchQuality MatchQuality(string name, string text, string key)
+        {
             // Best: the stable control name, or the visible text after light normalization (mnemonic
             // '&' and a trailing ellipsis/period removed -- see NormalizeLabel).
-            if (string.Equals(control.Name, key, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(NormalizeLabel(control.Text), NormalizeLabel(key), StringComparison.CurrentCultureIgnoreCase))
+            if (string.Equals(name, key, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(NormalizeLabel(text), NormalizeLabel(key), StringComparison.CurrentCultureIgnoreCase))
                 return ControlMatchQuality.Exact;
             // Fallback: ignore every non-alphanumeric character, so a tutorial's "Next" matches a
             // button captioned "Next >" (and "Back" a "< Back"). Used only when nothing matches exactly.
             var keyStripped = StripToAlphanumeric(key);
             if (keyStripped.Length > 0
-                && string.Equals(StripToAlphanumeric(control.Text), keyStripped, StringComparison.CurrentCultureIgnoreCase))
+                && string.Equals(StripToAlphanumeric(text), keyStripped, StringComparison.CurrentCultureIgnoreCase))
                 return ControlMatchQuality.Stripped;
             return ControlMatchQuality.None;
         }

@@ -335,13 +335,14 @@ namespace SkylineTool
         void InvokeContextMenuItem(string formId, string menuPath);
 
         /// <summary>
-        /// Clicks a button on an open form, matching <paramref name="button"/> against the button's
-        /// control name or visible text. For a native dialog this accepts the dialog, or cancels it
-        /// when <paramref name="button"/> names the cancel/close action. The click is posted
-        /// asynchronously when it may open a modal dialog.
+        /// Clicks a control on an open form, matching <paramref name="button"/> against the control's
+        /// name or visible text: a Button, a CheckBox or RadioButton, a custom IButtonControl (e.g. a
+        /// StartPage tile), a ToolStrip / menu / toolbar item, or any other control. For a native
+        /// dialog this accepts the dialog, or cancels it when <paramref name="button"/> names the
+        /// cancel/close action. The click is posted asynchronously when it may open a modal dialog.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        /// <param name="button">Button control name or visible label.</param>
+        /// <param name="button">Control name or visible label.</param>
         void ClickFormButton(string formId, string button);
 
         /// <summary>
