@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Controls.Startup
         }
     }
 
-    public partial class ActionBoxControl : UserControl
+    public partial class ActionBoxControl : UserControl, IButtonControl
     {
         private static readonly Color LIGHT_HOVER_COLOR = Color.FromArgb(217, 228, 243); // Hover color for action box items
         public string Caption { get { return labelCaption.Text; } set { labelCaption.Text = value; } }
@@ -38,6 +38,32 @@ namespace pwiz.Skyline.Controls.Startup
         public Image Icon { get { return iconPictureBox.Image; } set { iconPictureBox.Image = value; } }
         public Action EventAction { get; set; }
         public bool IsProteomicOnly { get; set; } // If true, don't show in small molecule mode
+
+        /// <summary>
+        /// Surfaces the caption as the control's Text so generic UI automation (and accessibility
+        /// tools) can identify these tiles by their visible label, the same way they would a Button.
+        /// </summary>
+        public override string Text
+        {
+            // labelCaption is null only very early in construction (before InitializeComponent);
+            // fall back to the base value then.
+            get { return labelCaption == null ? base.Text : Caption; }
+            set { if (labelCaption == null) base.Text = value; else Caption = value; }
+        }
+
+        // IButtonControl: lets generic UI automation (e.g. the JSON tool service's ClickFormButton)
+        // drive these tiles like a button. PerformClick runs the same action a mouse click would.
+        public DialogResult DialogResult { get; set; }
+
+        public void NotifyDefault(bool value)
+        {
+            // No default-button visual state for these tiles.
+        }
+
+        public void PerformClick()
+        {
+            ControlClick(this, EventArgs.Empty);
+        }
 
         public ActionBoxControl(int? imageWidth = null, int? imageHeight = null)
         {

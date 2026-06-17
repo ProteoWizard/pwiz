@@ -318,14 +318,15 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static PermissionResult EnsurePermission()
         {
-            // Capture MainWindow once. The pipe thread can reach this line
-            // before MainWindow is set (early startup) or after it has been
-            // cleared (shutdown), in which case we cannot show a prompt at all.
-            var mainWindow = Program.MainWindow;
-            if (mainWindow == null)
+            // The prompt needs a UI window to own and marshal it. Normally that is the main window,
+            // but while the StartPage is showing the main window does not exist yet, so fall back to
+            // it. The pipe thread can reach this line before either window exists (early startup) or
+            // after the main window has been cleared (shutdown), in which case we cannot prompt.
+            var ownerWindow = (Form)Program.MainWindow ?? Program.StartWindow;
+            if (ownerWindow == null)
                 return PermissionResult.unavailable;
 
-            Assume.IsTrue(mainWindow.InvokeRequired);
+            Assume.IsTrue(ownerWindow.InvokeRequired);
 
             if (Settings.Default.AllowMcpScreenCapture || _sessionPermissionGranted)
                 return PermissionResult.granted;
@@ -338,11 +339,11 @@ namespace pwiz.Skyline.Util
             if (Interlocked.CompareExchange(ref _promptPending, 1, 0) != 0)
                 return PermissionResult.pending;
 
-            // SafeBeginInvoke returns false if MainWindow has lost its handle
+            // SafeBeginInvoke returns false if the owner window has lost its handle
             // (e.g. Skyline is shutting down). Clear the gate and report
             // unavailable rather than pending so the LLM is not told to wait
             // on a dialog that will never open.
-            if (!CommonActionUtil.SafeBeginInvoke(mainWindow, ShowPermissionDialog))
+            if (!CommonActionUtil.SafeBeginInvoke(ownerWindow, ShowPermissionDialog))
             {
                 Interlocked.Exchange(ref _promptPending, 0);
                 return PermissionResult.unavailable;
@@ -356,7 +357,8 @@ namespace pwiz.Skyline.Util
             {
                 using (var dlg = new ScreenCapturePermissionDlg())
                 {
-                    if (dlg.ShowDialog(Program.MainWindow) == DialogResult.OK)
+                    var owner = (Form)Program.MainWindow ?? Program.StartWindow;
+                    if (dlg.ShowDialog(owner) == DialogResult.OK)
                     {
                         _sessionPermissionGranted = true;
                         if (dlg.DoNotAskAgain)

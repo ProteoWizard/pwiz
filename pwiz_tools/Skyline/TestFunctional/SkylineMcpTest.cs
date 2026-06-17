@@ -136,7 +136,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             Action<Process, JsonToolServer> scenario)
         {
             string testGuid = @"test-" + Guid.NewGuid();
-            var toolService = new ToolService(testGuid, SkylineWindow);
+            var toolService = new ToolService(testGuid);
             var server = new JsonToolServer(toolService, testGuid);
 
             string connectionFilePath = null;

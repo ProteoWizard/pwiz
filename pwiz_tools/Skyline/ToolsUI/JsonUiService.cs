@@ -60,7 +60,7 @@ namespace pwiz.Skyline.ToolsUI
         public static void InvokeOnUiThread(Action action)
         {
             Exception caught = null;
-            Program.MainWindow.Invoke(new Action(() =>
+            DispatchToUiThread(() =>
             {
                 try
                 {
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     caught = ex;
                 }
-            }));
+            });
             if (caught is ArgumentException argEx)
                 throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
             if (caught != null)
@@ -84,13 +84,41 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static T InvokeOnUiThread<T>(Func<T> func)
         {
-            Assume.IsTrue(Program.MainWindow.InvokeRequired);
             T result = default(T);
-            Program.MainWindow.Invoke(new Action(() =>
-            {
-                result = func();
-            }));
+            DispatchToUiThread(() => result = func());
             return result;
+        }
+
+        /// <summary>
+        /// Marshals an action onto the UI thread. Uses the main window when it exists; otherwise the
+        /// UI-thread synchronization context captured at startup (see
+        /// <see cref="Program.UiSynchronizationContext"/>), so the form-introspection verbs work
+        /// while only the StartPage is showing, before the main window has been created. Must be
+        /// called off the UI thread.
+        /// </summary>
+        private static void DispatchToUiThread(Action action)
+        {
+            var mainWindow = Program.MainWindow;
+            if (mainWindow != null && !mainWindow.IsDisposed)
+            {
+                mainWindow.Invoke(action);
+                return;
+            }
+            var syncContext = Program.UiSynchronizationContext;
+            if (syncContext == null)
+                throw new InvalidOperationException(
+                    @"No UI thread is available to handle this request.");
+            syncContext.Send(_ => action(), null);
+        }
+
+        /// <summary>
+        /// Whether there is a UI thread to marshal to -- either a live main window or the captured
+        /// synchronization context (the StartPage case, before the main window exists).
+        /// </summary>
+        private static bool HasUiDispatch()
+        {
+            var mainWindow = Program.MainWindow;
+            return (mainWindow != null && !mainWindow.IsDisposed) || Program.UiSynchronizationContext != null;
         }
 
         private const int DIALOG_POLL_INTERVAL_MILLIS = 100;
@@ -348,6 +376,11 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void InvokeMenuItem(string menuPath)
         {
+            // There is no main menu while the StartPage is showing (the main window does not exist
+            // yet). Fail with a clear message rather than dereferencing a null main window.
+            if (Program.MainWindow == null)
+                throw new InvalidOperationException(
+                    @"Cannot invoke a menu item: the main Skyline window is not open yet (the StartPage may be showing).");
             // A main-menu item cannot be clicked while a modal dialog is blocking the main window
             // (the window, and so its menu, is disabled). Fail fast rather than silently no-op.
             var mainHandle = InvokeOnUiThread(() => Program.MainWindow.Handle);
@@ -373,14 +406,24 @@ namespace pwiz.Skyline.ToolsUI
                     dialog.Accept();
                 return;
             }
-            var handle = InvokeOnUiThread(() => FindButton(formId, button).Handle);
-            // Click synchronously (BM_CLICK) inside the dialog-watch so a dialog the click pops is
-            // observed: a resulting alert is surfaced (throws its text) and a native dialog (e.g.
-            // Save/Open) returns immediately rather than blocking on its modal. BM_CLICK clicks like a
-            // mouse, bypassing PerformClick's CanSelect / validation gates (which can silently no-op).
+            // Resolve the click target on the UI thread, then act inside the dialog-watch so a dialog
+            // the click pops is observed: a resulting alert is surfaced (throws its text) and a native
+            // dialog (e.g. Save/Open) returns immediately rather than blocking on its modal.
+            var target = InvokeOnUiThread(() => FindClickTarget(formId, button));
             RunWithDialogWatch(() =>
             {
-                User32.SendMessage(handle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+                if (target.ButtonHandle != IntPtr.Zero)
+                {
+                    // A real WinForms Button is a Win32 button: BM_CLICK clicks like a mouse, bypassing
+                    // PerformClick's CanSelect / validation gates (which can silently no-op).
+                    User32.SendMessage(target.ButtonHandle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+                }
+                else
+                {
+                    // Any other IButtonControl (e.g. a StartPage tile) is not a Win32 button, so drive
+                    // it through PerformClick on the UI thread -- the same action a mouse click runs.
+                    InvokeOnUiThread(() => target.Clickable.PerformClick());
+                }
                 return true;
             });
         }
@@ -424,21 +467,27 @@ namespace pwiz.Skyline.ToolsUI
                 var skylineWindow = Program.MainWindow;
                 var formInfos = new List<FormInfo>();
                 var dockedForms = new HashSet<Form>();
-                foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
+                // The main window does not exist while the StartPage is showing; skip the docked
+                // forms in that case and just enumerate the open forms below (the StartPage and any
+                // of its dialogs appear there).
+                if (skylineWindow != null)
                 {
-                    dockedForms.Add(form);
-                    var dockState = form.DockState;
-                    if (dockState == DockState.Hidden || dockState == DockState.Unknown)
-                        continue;
-                    var zedGraph = TryGetZedGraphControl(form);
-                    formInfos.Add(new FormInfo
+                    foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                     {
-                        Type = form.GetType().Name,
-                        Title = GetFormTitle(form),
-                        HasGraph = zedGraph != null,
-                        DockState = dockState.ToString(),
-                        Id = GetFormId(form),
-                    });
+                        dockedForms.Add(form);
+                        var dockState = form.DockState;
+                        if (dockState == DockState.Hidden || dockState == DockState.Unknown)
+                            continue;
+                        var zedGraph = TryGetZedGraphControl(form);
+                        formInfos.Add(new FormInfo
+                        {
+                            Type = form.GetType().Name,
+                            Title = GetFormTitle(form),
+                            HasGraph = zedGraph != null,
+                            DockState = dockState.ToString(),
+                            Id = GetFormId(form),
+                        });
+                    }
                 }
 
                 // Enumerate non-docked forms (dialogs, popups)
@@ -652,7 +701,7 @@ namespace pwiz.Skyline.ToolsUI
         // modal dialog's message loop.
         private static string GetNativeDialogImage(NativeDialogAutomation dialog, string filePath)
         {
-            if (Program.MainWindow == null)
+            if (!HasUiDispatch())
                 return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
@@ -668,7 +717,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private static ImageBytesMetadata GetNativeDialogImageBytes(NativeDialogAutomation dialog)
         {
-            if (Program.MainWindow == null)
+            if (!HasUiDispatch())
                 return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
@@ -722,24 +771,24 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Shared pre-flight for the image-capture tools (form and graph variants).
-        // Runs format validation on the pipe thread, guards against a null
-        // MainWindow, and runs the type-specific existence check on the UI thread
-        // -- in that order so that bad input throws ArgumentException regardless
-        // of environment. Optionally runs the screen-capture availability check
-        // (form variants only). Returns null when the caller may proceed, or an
+        // Runs format validation on the pipe thread, guards against there being no
+        // UI thread to marshal to, and runs the type-specific existence check on the
+        // UI thread -- in that order so that bad input throws ArgumentException
+        // regardless of environment. Optionally runs the screen-capture availability
+        // check (form variants only). Returns null when the caller may proceed, or an
         // LLM-facing message the caller must surface. Throws ArgumentException
         // for bad input (id format wrong, referenced form not found, wrong form
         // type) -- those are caller-contract violations and must reach the
         // caller regardless of environment.
         //
-        // Note: when MainWindow is null we use LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE
+        // Note: when there is no UI dispatch yet we use LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE
         // for all variants, including graphs. The wording is slightly off for
         // graphs (which do not capture from the screen), but the user-facing
         // intent ("try again momentarily") is correct.
         private static string CheckImageToolPreflight(string id, Action ensureExistsOnUi, bool requiresScreenCapture)
         {
             ValidateFormIdFormat(id);
-            if (Program.MainWindow == null)
+            if (!HasUiDispatch())
                 return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             // Passing an Action binds InvokeOnUiThread to the void overload,
             // which preserves ArgumentException across the thread boundary.
@@ -853,19 +902,23 @@ namespace pwiz.Skyline.ToolsUI
 
             var skylineWindow = Program.MainWindow;
 
-            // Search docked forms
-            foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
+            // Search docked forms (none while the StartPage is showing -- no main window yet)
+            if (skylineWindow != null)
             {
-                var dockState = form.DockState;
-                if (dockState == DockState.Hidden || dockState == DockState.Unknown)
-                    continue;
-                if (form.GetType().Name == typeName && GetFormTitle(form) == title)
-                    return form;
+                foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
+                {
+                    var dockState = form.DockState;
+                    if (dockState == DockState.Hidden || dockState == DockState.Unknown)
+                        continue;
+                    if (form.GetType().Name == typeName && GetFormTitle(form) == title)
+                        return form;
+                }
             }
 
             // Search non-docked forms (dialogs)
-            var dockedForms = new HashSet<Form>(
-                skylineWindow.DockPanel.Contents.OfType<DockableFormEx>());
+            var dockedForms = skylineWindow != null
+                ? new HashSet<Form>(skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
+                : new HashSet<Form>();
             foreach (var form in FormUtil.OpenForms)
             {
                 if (form == skylineWindow || dockedForms.Contains(form))
@@ -913,15 +966,44 @@ namespace pwiz.Skyline.ToolsUI
                 || string.Equals(item.Name, label, StringComparison.OrdinalIgnoreCase);
         }
 
-        // Finds a button by control name or visible text anywhere in the form. Must run on the UI
-        // thread. Throws if none matches.
-        private static Button FindButton(string formId, string button)
+        // A resolved click target: either a real WinForms Button (by window handle, for a BM_CLICK)
+        // or some other IButtonControl such as a custom StartPage tile (for a PerformClick).
+        private class ClickTarget
         {
-            var found = FindControl<Button>(FindFormById(formId), button);
-            if (found == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Button not found on form {0}: {1}.", formId, button));
-            return found;
+            public IntPtr ButtonHandle;
+            public IButtonControl Clickable;
+        }
+
+        // Resolves a click target on a form, matching by control name or visible text. Prefers a real
+        // WinForms Button (so the proven BM_CLICK path is unchanged), then any other IButtonControl.
+        // Must run on the UI thread. Throws if none matches.
+        private static ClickTarget FindClickTarget(string formId, string button)
+        {
+            var form = FindFormById(formId);
+            var realButton = FindControl<Button>(form, button);
+            if (realButton != null)
+                return new ClickTarget { ButtonHandle = realButton.Handle };
+            var clickable = FindButtonControl(form, button);
+            if (clickable != null)
+                return new ClickTarget { Clickable = clickable };
+            throw new ArgumentException(LlmInstruction.Format(
+                @"Button not found on form {0}: {1}.", formId, button));
+        }
+
+        // Depth-first search for a control implementing IButtonControl other than a plain Button (which
+        // the caller handles via BM_CLICK) matching by control name or visible text. Lets custom
+        // clickable controls -- e.g. the StartPage's ActionBoxControl tiles -- be driven like buttons.
+        private static IButtonControl FindButtonControl(Control parent, string key)
+        {
+            foreach (Control child in parent.Controls)
+            {
+                if (child is IButtonControl buttonControl && !(child is Button) && ControlMatches(child, key))
+                    return buttonControl;
+                var nested = FindButtonControl(child, key);
+                if (nested != null)
+                    return nested;
+            }
+            return null;
         }
 
         // Depth-first search for a control of type T matching by control name or visible text.
@@ -960,6 +1042,28 @@ namespace pwiz.Skyline.ToolsUI
                     break;
                 case TextBoxBase textBox:
                     textBox.Text = value;
+                    break;
+                case DataGridView grid:
+                    if (grid.CurrentCell == null)
+                    {
+                        // Try to find first editable cell if no current cell
+                        foreach (DataGridViewRow row in grid.Rows)
+                        {
+                            foreach (DataGridViewCell cell in row.Cells)
+                            {
+                                if (!cell.ReadOnly && cell.Visible)
+                                {
+                                    grid.CurrentCell = cell;
+                                    break;
+                                }
+                            }
+                            if (grid.CurrentCell != null) break;
+                        }
+                    }
+                    if (grid.CurrentCell == null)
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"No editable cell found in grid {0}.", control.Name));
+                    grid.CurrentCell.Value = value;
                     break;
                 default:
                     control.Text = value;

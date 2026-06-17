@@ -58,7 +58,36 @@ ClickFormButton "FileDialog:Add Input Files" "Open"
 WaitForNoForm   "FileDialog:Add Input Files"
 
 # Both .perc.xml files are now in the wizard's spectral-library build grid.
-# Next steps (not yet validated): ClickFormButton "...:Import Peptide Search" "Next", etc.
+SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "cbFilterForDocumentPeptides" true
+SetFormValue    "ImportPeptideSearchDlg:Import Peptide Search" "gridSearchFiles" 0.01
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+
+# Wait for library build progress (it's a modal dialog but we can wait for its disappearance)
+# WaitForForm     "LongWaitDlg:Building Library" # Optional, WaitForNoForm usually enough if we know it was there
+# WaitForNoForm   "LongWaitDlg:Building Library"
+
+# Second page: Extract Chromatograms (form title usually doesn't change, but content does)
+# Skyline should have automatically found the raw files in {DATA}
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+
+# Remove Prefix/Suffix dialog
+WaitForForm     "ImportResultsNameDlg:Import Results"
+ClickFormButton "ImportResultsNameDlg:Import Results" "OK"
+WaitForNoForm   "ImportResultsNameDlg:Import Results"
+
+# Transition Settings page
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Next"
+
+# Full-Scan Settings page
+ClickFormButton "ImportPeptideSearchDlg:Import Peptide Search" "Finish"
+
+# File import starts. We can wait for the "Loading chromatograms" form to appear and then disappear.
+WaitForForm     "AllChromatogramsGraph:Loading chromatograms"
+WaitForNoForm   "AllChromatogramsGraph:Loading chromatograms"
+
+# --- Reviewing the Data ---
+# Select the first peptide to view its chromatograms
+SetSelection    /MoleculeGroup[1]/Molecule[1]
 
 # --- Notes / known limitations found while validating against a live Skyline ---
 # 1. Save dialogs are modern (IFileDialog) and opaque to UI Automation (file-name field

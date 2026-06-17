@@ -78,7 +78,14 @@ namespace pwiz.Skyline
         public static bool? StartPageOverride { get; private set; }
 
         public static string MainToolServiceName { get; private set; }
-        
+
+        /// <summary>
+        /// The WinForms synchronization context for the UI thread, captured at startup so that
+        /// background services (e.g. the JSON tool server) can marshal work to the UI thread even
+        /// before <see cref="MainWindow"/> exists -- for instance while the StartPage is showing.
+        /// </summary>
+        public static SynchronizationContext UiSynchronizationContext { get; private set; }
+
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
@@ -331,6 +338,18 @@ namespace pwiz.Skyline
                     }
                 }
                 SystemEvents.DisplaySettingsChanged += SystemEventsOnDisplaySettingsChanged;
+
+                // Capture the UI-thread synchronization context and start the tool service before
+                // the main window is created, so the JSON/MCP server can introspect and drive the
+                // StartPage too (the main window does not exist while the StartPage is showing).
+                CaptureUiSynchronizationContext();
+                MainToolServiceName = Guid.NewGuid().ToString();
+                if (Settings.Default.EnableMcpAutoConnect)
+                {
+                    StartToolService();
+                    MainJsonToolServer.WriteConnectionInfo();
+                }
+
                 // Careful, a throw out of the SkylineWindow constructor without this
                 // catch causes Skyline just to appear to silently never start.  Makes for
                 // some difficult debugging.
@@ -374,6 +393,10 @@ namespace pwiz.Skyline
                     ReportExceptionUI(x, new StackTrace(1, true));
                 }
 
+                // Now that the main window exists, let the tool service (which may have been
+                // started earlier, before the StartPage) push document-change notifications.
+                AttachToolServiceToMainWindow();
+
 //                ConcurrencyVisualizer.StartEvents(MainWindow);
 
                 // Position window offscreen for stress testing.
@@ -382,12 +405,6 @@ namespace pwiz.Skyline
                 if (!UnitTest)  // Covers Unit and Functional tests
                     SendAnalyticsHitAsync();
 
-                MainToolServiceName = Guid.NewGuid().ToString();
-                if (Settings.Default.EnableMcpAutoConnect)
-                {
-                    StartToolService();
-                    MainJsonToolServer.WriteConnectionInfo();
-                }
                 // NOTE: Nothing after Application.Run() reliably executes.
                 // SkylineWindow.OnHandleDestroyed calls Process.Kill() to avoid native
                 // vendor DLL errors. All shutdown cleanup must happen before that point.
@@ -570,17 +587,48 @@ namespace pwiz.Skyline
             return SendGa4AnalyticsHit(out _, useDebugUrl);
         }
 
+        // Whether the tool service is currently subscribed to the main window's
+        // DocumentChangedEvent. The service can start before the main window exists (while the
+        // StartPage is showing), so the subscription is deferred until the window is available.
+        private static bool _toolServiceDocumentChangeSubscribed;
+
+        // Ensures a WinForms synchronization context exists on (and is captured for) the UI thread.
+        // Held in our own reference so it stays usable across the nested message loops WinForms runs
+        // (StartPage modal loop, then Application.Run), letting background services marshal to the UI
+        // thread before the main window is created.
+        private static void CaptureUiSynchronizationContext()
+        {
+            UiSynchronizationContext = SynchronizationContext.Current as WindowsFormsSynchronizationContext;
+            if (UiSynchronizationContext == null)
+            {
+                UiSynchronizationContext = new WindowsFormsSynchronizationContext();
+                SynchronizationContext.SetSynchronizationContext(UiSynchronizationContext);
+            }
+        }
+
         public static void StartToolService()
         {
             if (MainToolService == null)
             {
-                MainToolService = new ToolService(MainToolServiceName, MainWindow);
-                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
+                MainToolService = new ToolService(MainToolServiceName);
                 MainToolService.RunAsync();
 
                 MainJsonToolServer = new JsonToolServer(MainToolService, MainToolServiceName);
                 MainJsonToolServer.Start();
             }
+            AttachToolServiceToMainWindow();
+        }
+
+        // Subscribes the tool service to the main window's document-change event once the window
+        // exists. The service may be started before the window (while the StartPage is showing), so
+        // this is also called right after the window is created. No-op if the service has not been
+        // started, the window does not exist yet, or the subscription is already in place.
+        public static void AttachToolServiceToMainWindow()
+        {
+            if (MainToolService == null || _toolServiceDocumentChangeSubscribed || MainWindow == null)
+                return;
+            MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
+            _toolServiceDocumentChangeSubscribed = true;
         }
 
         public static void StopToolService()
@@ -593,7 +641,11 @@ namespace pwiz.Skyline
                     MainJsonToolServer = null;
                 }
 
-                MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                if (_toolServiceDocumentChangeSubscribed && MainWindow != null)
+                {
+                    MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                    _toolServiceDocumentChangeSubscribed = false;
+                }
                 MainToolService.Stop();
                 MainToolService = null;
             }
