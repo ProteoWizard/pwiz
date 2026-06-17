@@ -14,7 +14,7 @@ public class ReaderListTests
     {
         var list = ReaderList.Default;
 
-        // Default registration order: mzML, mzMLb, mz5, mzXML, MSn, BTDX, MGF.
+        // Default registration order: mzML, mzMLb, mz5, mzXML, MSn, BTDX, MGF, mzPeak.
         Assert.AreEqual("mzML", list.Readers[0].TypeName);
         Assert.AreEqual("mzMLb", list.Readers[1].TypeName);
         Assert.AreEqual("mz5", list.Readers[2].TypeName);
@@ -22,6 +22,7 @@ public class ReaderListTests
         Assert.AreEqual("MSn", list.Readers[4].TypeName);
         Assert.AreEqual("Bruker Data Exchange", list.Readers[5].TypeName);
         Assert.AreEqual("MGF", list.Readers[6].TypeName);
+        Assert.AreEqual("mzPeak", list.Readers[7].TypeName);
 
         // Identify: header-sniff wins over filename.
         const string mzmlHead = "<?xml version=\"1.0\"?><indexedmzML><mzML version=\"1.1.0\">";

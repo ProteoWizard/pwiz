@@ -32,4 +32,15 @@
     </None>
   </ItemGroup>
 
+  <!-- mzPeak files written by the mzPeak.NET (Apache-Arrow) stack, used by the cross-stack read
+       tests (MzPeak/CrossStackReadTests). They exercise type/width divergences vs our own writer
+       (uint8 ms_level, float32 scalars, int32 charge_state) and the separate wavelength_spectra_*
+       entries mzPeak.NET uses for UV/DAD spectra. -->
+  <ItemGroup>
+    <None Include="MzPeak\CrossStackData\*.mzpeak">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>mzpeak_crossstack\%(Filename)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+
 </Project>
