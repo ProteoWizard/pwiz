@@ -257,27 +257,51 @@ namespace pwiz.OspreySharp.Chromatography
 
             int n = errors.Length;
 
-            // Calculate mean
-            double sum = 0;
+            // Naive sum/n with consistent left-to-right accumulation.
+            // Mirror of osprey-chromatography/src/calibration/mass.rs.
+            //
+            // For ppm mass-error inputs the running sum stays well below
+            // the f64 precision wall (worst case ~18 k errors × ~0.22 ppm
+            // ≈ 4 000, f64 ULP ~5e-13, ~9 digits headroom for the mean —
+            // well clear of the 1e-9 cross-impl gate).
+            //
+            // The caller sorts the error list by (base_id, entry_id)
+            // before this method runs, matching the Rust caller's
+            // deterministic ordering. With deterministic order and .NET's
+            // default IEEE 754 strict mode (no `-ffast-math`, no
+            // associative re-ordering), the JIT cannot vectorise the
+            // dependent reduction `sum += errors[i]`, so the loop stays
+            // serial-scalar and bit-equal to the Rust mirror which is
+            // similarly constrained by Rust's default IEEE 754 mode.
+            //
+            // The earlier Welford-Knuth recurrence was bit-equal to Rust
+            // but cost ~21 s extra on Stellar Rust stage1to4 (4 ops per
+            // element vs 1) for stability we did not need at ppm scale.
+            double sum = 0.0;
             for (int i = 0; i < n; i++)
+            {
                 sum += errors[i];
+            }
             double mean = sum / n;
 
-            // Calculate median
+            // Sample variance via a second left-to-right walk over
+            // (x - mean)^2 contributions.  Two passes total still beat
+            // Welford's single-pass 4-op recurrence on per-element cost.
+            double sumSqDev = 0.0;
+            for (int i = 0; i < n; i++)
+            {
+                double d = errors[i] - mean;
+                sumSqDev += d * d;
+            }
+            double m2 = sumSqDev;
+
+            // Calculate median (sort-based, unaffected by the Welford change)
             double median = LoessRegression.Median(errors);
 
-            // Calculate standard deviation (sample SD)
+            // Sample standard deviation: sqrt(M2 / (n-1)).
             double variance = 0;
             if (n > 1)
-            {
-                double sumSq = 0;
-                for (int i = 0; i < n; i++)
-                {
-                    double d = errors[i] - mean;
-                    sumSq += d * d;
-                }
-                variance = sumSq / (n - 1);
-            }
+                variance = m2 / (n - 1);
             double sd = Math.Sqrt(variance);
 
             return new MzCalibrationResult

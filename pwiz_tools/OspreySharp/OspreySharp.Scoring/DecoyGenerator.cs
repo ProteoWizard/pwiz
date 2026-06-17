@@ -21,7 +21,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Scoring
@@ -152,6 +154,134 @@ namespace pwiz.OspreySharp.Scoring
 
             decoy.GeneNames = new List<string>(target.GeneNames);
 
+            return decoy;
+        }
+
+        /// <summary>
+        /// Generate decoy entries from the target library with collision detection.
+        /// Matches Rust DecoyGenerator.generate_all_with_collision_detection:
+        ///   1. Build set of target sequences (stripped) for collision detection
+        ///   2. For each target, try reversing
+        ///   3. If reversed collides or is palindromic, try cycling with lengths 1..10
+        ///   4. If all methods fail, exclude the target-decoy pair
+        /// Modifies <paramref name="validTargets"/> to contain only targets that
+        /// produced valid decoys (Rust: library = valid_targets; library.extend(decoys)).
+        ///
+        /// Relocated verbatim out of AbstractScoringTask; the ambient pipeline-context
+        /// logger is now an injected <paramref name="logInfo"/> callback so Scoring stays
+        /// free of a Tasks/PipelineContext dependency. Arithmetic is unchanged, so
+        /// cross-impl parity is unaffected.
+        /// </summary>
+        public static List<LibraryEntry> GenerateAllWithCollisionDetection(
+            List<LibraryEntry> targets, OspreyConfig config,
+            Action<string> logInfo,
+            out List<LibraryEntry> validTargets)
+        {
+            // Public API: tolerate a missing logger as a no-op rather than throwing.
+            logInfo = logInfo ?? (_ => { });
+            logInfo(string.Format("Generating decoys using {0} method...", config.DecoyMethod));
+
+            // Build set of all target (stripped) sequences for collision detection.
+            var targetSequences = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var t in targets)
+            {
+                if (!t.IsDecoy)
+                    targetSequences.Add(t.Sequence);
+            }
+
+            // Generate decoys in parallel (matches Rust's par_iter approach).
+            // Each target produces a (target, decoy) pair or is excluded.
+            int nReversed = 0, nCycled = 0, nExcluded = 0, nSkipped = 0;
+            var results = new (LibraryEntry target, LibraryEntry decoy, int kind)[targets.Count];
+            // kind: 0=skip, 1=reversed, 2=cycled, 3=excluded
+
+            Parallel.For(0, targets.Count, i =>
+            {
+                var target = targets[i];
+                if (target.IsDecoy || target.Fragments == null || target.Fragments.Count == 0)
+                {
+                    results[i] = (null, null, 0);
+                    return;
+                }
+
+                // Each thread gets its own generator (DecoyGenerator is lightweight)
+                var gen = new DecoyGenerator();
+                int[] mapping;
+                string reversedSeq = gen.ReverseSequence(target.Sequence, out mapping);
+
+                if (reversedSeq != target.Sequence && !targetSequences.Contains(reversedSeq))
+                {
+                    var decoy = BuildDecoyFromSequence(target, reversedSeq, mapping);
+                    if (decoy != null)
+                    {
+                        results[i] = (target, decoy, 1);
+                        return;
+                    }
+                }
+
+                // Fallback: cycling with lengths 1..min(len, 10)
+                int maxRetries = Math.Min(target.Sequence.Length, 10);
+                for (int cycleLength = 1; cycleLength <= maxRetries; cycleLength++)
+                {
+                    string cycledSeq = gen.CycleSequence(target.Sequence, cycleLength, out mapping);
+                    if (cycledSeq != target.Sequence && !targetSequences.Contains(cycledSeq))
+                    {
+                        var decoy = BuildDecoyFromSequence(target, cycledSeq, mapping);
+                        if (decoy != null)
+                        {
+                            results[i] = (target, decoy, 2);
+                            return;
+                        }
+                    }
+                }
+
+                results[i] = (null, null, 3);
+            });
+
+            // Collect results (sequential, preserves order)
+            validTargets = new List<LibraryEntry>(targets.Count);
+            var decoys = new List<LibraryEntry>(targets.Count);
+            foreach (var r in results)
+            {
+                switch (r.kind)
+                {
+                    case 0: nSkipped++; break;
+                    case 1: nReversed++; validTargets.Add(r.target); decoys.Add(r.decoy); break;
+                    case 2: nCycled++; validTargets.Add(r.target); decoys.Add(r.decoy); break;
+                    case 3: nExcluded++; break;
+                }
+            }
+
+            logInfo(string.Format(
+                "Generated {0} decoys from {1} targets ({2} excluded due to collisions)",
+                decoys.Count, targets.Count, nExcluded));
+            return decoys;
+        }
+
+        /// <summary>
+        /// Build a decoy LibraryEntry from a decoy sequence and position mapping.
+        /// Mirrors <see cref="Generate"/>'s construction but takes an already-chosen sequence.
+        /// </summary>
+        private static LibraryEntry BuildDecoyFromSequence(
+            LibraryEntry target, string decoySequence, int[] positionMapping)
+        {
+            var decoy = new LibraryEntry(
+                target.Id | 0x80000000u,
+                decoySequence,
+                "DECOY_" + target.ModifiedSequence,
+                target.Charge,
+                target.PrecursorMz,
+                target.RetentionTime);
+            decoy.RtCalibrated = target.RtCalibrated;
+            decoy.IsDecoy = true;
+            decoy.Modifications = RemapModificationsStatic(
+                target.Modifications, positionMapping);
+            decoy.Fragments = RecalculateFragmentsStatic(
+                target, positionMapping, decoySequence);
+            decoy.ProteinIds = new List<string>();
+            foreach (string p in target.ProteinIds)
+                decoy.ProteinIds.Add("DECOY_" + p);
+            decoy.GeneNames = new List<string>(target.GeneNames);
             return decoy;
         }
 

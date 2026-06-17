@@ -26,7 +26,7 @@ using System.Collections.Generic;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR.Reconciliation;
 
-namespace pwiz.OspreySharp
+namespace pwiz.OspreySharp.Tasks
 {
     /// <summary>
     /// Worker-side compaction for the Stage 6 per-file rescore worker.
@@ -147,6 +147,26 @@ namespace pwiz.OspreySharp
             //    vec_idx values. We have to do this BEFORE per_file_entries
             //    shrinks, because the saved (file, vec_idx) keys are about
             //    to become stale.
+            //
+            //    ALSO: union firstPassBaseIds with the base_ids of every
+            //    entry the planner emits a reconciliation action for. The
+            //    planner runs compute_consensus_rts (cross-file consensus
+            //    rescue), so an entry whose own file fails local first-pass
+            //    FDR can still be a reconciliation target when its peptide
+            //    passes FDR in a sibling file. The local-FDR-only predicate
+            //    above drops those entries, then this loop silently drops
+            //    their planner actions (counted as "DroppedActions"), and
+            //    the rescore engine never applies them -- the reconciled
+            //    .scores.parquet ends up with stale Stage 4 apex_rt /
+            //    bounds for ~200 rows per Stellar file (0.04%) and the
+            //    blib output diverges from the in-memory straight-through
+            //    pipeline. Mirrors the Rust Option B fix in
+            //    rescore.rs::run_rescore: first_pass_base_ids = UNION of
+            //    local-FDR predicate AND entry_ids in
+            //    reconciliation_actions_pre. Bisected via the C# in-memory
+            //    vs C# HPC-chain strict-rehydration test (Stage 6 boundary
+            //    revealed apex_rt / bounds drift on cross-file-rescued
+            //    entries that were dropped by worker compaction).
             var actionsById = new Dictionary<(string FileName, uint EntryId), ReconcileAction>(
                 inputs.ReconciliationActions.Count);
             // Build a lookup map so the per-action entry_id resolution is
@@ -163,7 +183,13 @@ namespace pwiz.OspreySharp
                     continue;
                 if (vecIdx < 0 || vecIdx >= entries.Count)
                     continue;
-                actionsById[(fileName, entries[vecIdx].EntryId)] = kvp.Value;
+                uint entryId = entries[vecIdx].EntryId;
+                actionsById[(fileName, entryId)] = kvp.Value;
+                // Extend firstPassBaseIds so the entry survives the local-FDR
+                // compaction predicate above. Adding the masked base_id
+                // (decoy bit stripped) keeps both the target and its paired
+                // decoy alive, preserving the target-decoy invariant.
+                firstPassBaseIds.Add(entryId & BASE_ID_MASK);
             }
 
             // 3. Compact each per-file entry list in place.
