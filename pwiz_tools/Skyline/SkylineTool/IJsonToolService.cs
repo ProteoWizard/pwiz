@@ -325,6 +325,16 @@ namespace SkylineTool
         void InvokeMenuItem(string menuPath);
 
         /// <summary>
+        /// Invokes an item on a graph form's right-click context menu by its visible path, e.g.
+        /// "Normalize To > None". The menu is built the way a right-click would build it, then the
+        /// item is matched by text (mnemonic '&amp;' and trailing ellipsis ignored) or control name,
+        /// the same way <see cref="InvokeMenuItem"/> matches the main menu.
+        /// </summary>
+        /// <param name="formId">Graph form identifier from <see cref="GetOpenForms"/> (HasGraph=true).</param>
+        /// <param name="menuPath">Menu path; segments separated by '>' (also '|' or '/').</param>
+        void InvokeContextMenuItem(string formId, string menuPath);
+
+        /// <summary>
         /// Clicks a button on an open form, matching <paramref name="button"/> against the button's
         /// control name or visible text. For a native dialog this accepts the dialog, or cancels it
         /// when <paramref name="button"/> names the cancel/close action. The click is posted

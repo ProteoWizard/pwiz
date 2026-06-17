@@ -547,6 +547,24 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_invoke_context_menu_item"),
+     Description("Invoke an item on a graph's right-click context menu by its visible path, e.g. " +
+        "'Normalize To > None'. Use for a graph form (HasGraph=True from skyline_get_open_forms); the " +
+        "context menu is built the way a right-click would build it, then the item is matched by its " +
+        "visible text (the mnemonic '&' and a trailing ellipsis are ignored) or its control name, " +
+        "case-insensitively, with '>'-separated segments. This reaches graph options (Normalize To, " +
+        "Show Library, Transitions, Peptide ID Times, ...) that are not on the main menu.")]
+    public static string InvokeContextMenuItem(
+        [Description("Graph form identifier from skyline_get_open_forms (TypeName:Title, HasGraph=True)")] string formId,
+        [Description("Context menu path with '>'-separated segments, e.g. 'Normalize To > None'")] string menuPath)
+    {
+        return Invoke(connection =>
+        {
+            connection.InvokeContextMenuItem(formId, menuPath);
+            return $"Invoked context menu item '{menuPath}' on {formId}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_click_form_button"),
      Description("Click a button on an open form, matching the button by its control name or its " +
         "visible text. For a native dialog (IsNative=True from skyline_get_open_forms) this accepts " +
