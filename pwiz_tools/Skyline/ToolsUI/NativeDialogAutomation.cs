@@ -100,6 +100,11 @@ namespace pwiz.Skyline.ToolsUI
                 return null;
             if (OpenFileDialogAutomation.IsOpenFileDialog(dialog))
                 return new OpenFileDialogAutomation(handle);
+            // Check Save after Open: the modern Open dialog has the classic file-name combo
+            // (AutomationId 1148) that IsOpenFileDialog keys on; the Save dialog does not, so the
+            // two never both match.
+            if (SaveFileDialogAutomation.IsSaveFileDialog(dialog))
+                return new SaveFileDialogAutomation(handle);
             return null;
         }
 
@@ -167,8 +172,15 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Waits for a descendant control of the dialog with the given AutomationId.</summary>
         protected AutomationElement WaitForElement(string automationId)
         {
-            var condition = new PropertyCondition(AutomationElement.AutomationIdProperty, automationId);
-            return PollUntil(MillisTimeout, @"dialog control with AutomationId " + automationId,
+            return WaitForElement(
+                new PropertyCondition(AutomationElement.AutomationIdProperty, automationId),
+                @"dialog control with AutomationId " + automationId);
+        }
+
+        /// <summary>Waits for a descendant control of the dialog matching the given condition.</summary>
+        protected AutomationElement WaitForElement(Condition condition, string description)
+        {
+            return PollUntil(MillisTimeout, description,
                 () => DialogElement.FindFirst(TreeScope.Descendants, condition));
         }
 

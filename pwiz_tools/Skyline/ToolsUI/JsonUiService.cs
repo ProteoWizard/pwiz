@@ -441,7 +441,7 @@ namespace pwiz.Skyline.ToolsUI
                 ValidateFormIdFormat(formId);
                 if (TryGetNativeDialog(formId, out var dialog))
                 {
-                    if (!(dialog is OpenFileDialogAutomation fileDialog))
+                    if (!(dialog is FileDialogAutomation fileDialog))
                         throw new ArgumentException(LlmInstruction.Format(
                             @"Setting values is not supported for native dialog {0}.", formId));
                     fileDialog.EnterPath(value);

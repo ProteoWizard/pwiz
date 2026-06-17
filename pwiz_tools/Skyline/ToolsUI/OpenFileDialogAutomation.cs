@@ -33,7 +33,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <see cref="NativeDialogAutomation"/> for the threading contract and how to obtain an
     /// instance.
     /// </summary>
-    public class OpenFileDialogAutomation : NativeDialogAutomation
+    public class OpenFileDialogAutomation : FileDialogAutomation
     {
         // Identifier assigned by the Windows common file dialog to its "File name" combo box
         // (cmb13). Unlike the localized control captions, it is stable across Windows versions
@@ -43,8 +43,6 @@ namespace pwiz.Skyline.ToolsUI
         public OpenFileDialogAutomation(IntPtr windowHandle) : base(windowHandle)
         {
         }
-
-        public override string DialogTypeName => @"FileDialog";
 
         /// <summary>
         /// Returns true if the given native dialog element is a common Open/Save file dialog,
@@ -83,7 +81,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <see cref="Accept"/> to open. Pass several space-quoted paths (<c>"a" "b"</c>, see
         /// <see cref="QuotePaths"/>) to select multiple files in a multiselect dialog.
         /// </summary>
-        public void EnterPath(string path)
+        public override void EnterPath(string path)
         {
             SetEditValue(GetFileNameEdit(), path);
         }

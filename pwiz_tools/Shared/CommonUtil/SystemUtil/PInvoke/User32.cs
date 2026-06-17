@@ -66,6 +66,7 @@ namespace pwiz.Common.SystemUtil.PInvoke
             // ReSharper disable InconsistentNaming IdentifierTypo
             PBM_SETSTATE = 0x0410,
             WM_SETREDRAW = 0x000B,
+            WM_SETTEXT = 0x000C,
             WM_PAINT = 0x000F,
             WM_CLOSE = 0x0010,
             WM_ERASEBKGND = 0x0014,

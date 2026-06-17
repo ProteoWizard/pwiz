@@ -1401,8 +1401,10 @@
     <Compile Include="ToolsUI\JsonToolServer.cs" />
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
+    <Compile Include="ToolsUI\FileDialogAutomation.cs" />
     <Compile Include="ToolsUI\NativeDialogAutomation.cs" />
     <Compile Include="ToolsUI\OpenFileDialogAutomation.cs" />
+    <Compile Include="ToolsUI\SaveFileDialogAutomation.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
