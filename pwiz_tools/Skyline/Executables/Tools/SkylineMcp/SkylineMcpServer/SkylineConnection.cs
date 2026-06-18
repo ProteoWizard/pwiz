@@ -103,6 +103,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
     public void InvokeMenuItem(string menuPath) { CallClientVoid(c => c.InvokeMenuItem(menuPath)); }
+    public void CloseForm(string formId) { CallClientVoid(c => c.CloseForm(formId)); }
 
     // 2-arg methods
     public void InvokeContextMenuItem(string formId, string menuPath) { CallClientVoid(c => c.InvokeContextMenuItem(formId, menuPath)); }
@@ -118,6 +119,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void SelectSettingsListItems(string listType, string[] itemNames) { CallClientVoid(c => c.SelectSettingsListItems(listType, itemNames)); }
     public void ImportFasta(string textFasta, string keepEmptyProteins = null) { CallClientVoid(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
     public void ClickFormButton(string formId, string button) { CallClientVoid(c => c.ClickFormButton(formId, button)); }
+    public string GetGridText(string formId, string gridId) { return CallClient(c => c.GetGridText(formId, gridId)); }
 
     // 3-arg methods
     public ReportMetadata ExportReport(string reportName, string filePath, string culture) { return CallClient(c => c.ExportReport(reportName, filePath, culture)); }

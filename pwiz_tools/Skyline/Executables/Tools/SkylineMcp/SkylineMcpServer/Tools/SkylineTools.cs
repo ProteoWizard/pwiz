@@ -639,6 +639,32 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_get_grid_text"),
+     Description("Get all the data in a grid on a form as tab-separated text: the column headers " +
+        "followed by every row, columns separated by tabs and rows by newlines -- the same content as " +
+        "the grid's Copy All. Use for the Document Grid and other data grids. Currently supports " +
+        "DataboundGridControl grids.")]
+    public static string GetGridText(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Grid control name on the form, or null when the form has a single grid")] string gridId)
+    {
+        return Invoke(connection => connection.GetGridText(formId, gridId));
+    }
+
+    [McpServerTool(Name = "skyline_close_form"),
+     Description("Close an open form: a dialog, a docked or floating tool window (e.g. the Document " +
+        "Grid or Audit Log), or a native file dialog (which is cancelled). Use skyline_get_open_forms " +
+        "to find the form identifier.")]
+    public static string CloseForm(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            connection.CloseForm(formId);
+            return $"Closed {formId}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_get_graph_data"),
      Description("Extract tab-separated data from a Skyline graph. Returns the same data as " +
         "Skyline's Copy Data clipboard format, including pane titles, axis labels, and all " +

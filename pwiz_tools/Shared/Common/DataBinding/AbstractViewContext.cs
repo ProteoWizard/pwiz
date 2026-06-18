@@ -312,6 +312,51 @@ namespace pwiz.Common.DataBinding
             }
         }
 
+        public string CopyToString(Control owner, BindingListSource bindingListSource, CancellationToken cancellationToken)
+        {
+            var tsvWriter = new StringWriter();
+            bool finished = RunLongJob(owner, (longWaitToken, progressMonitor) =>
+            {
+                // Combine the progress dialog's own cancellation with the caller's token, so the copy
+                // stops when either the user clicks Cancel or the caller cancels (e.g. the AI Connector
+                // client disconnects).
+                var monitor = new ExternalTokenProgressMonitor(progressMonitor, cancellationToken);
+                WriteData(monitor, tsvWriter, bindingListSource, '\t');
+                progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
+            });
+            if (!finished || cancellationToken.IsCancellationRequested)
+            {
+                return null;
+            }
+            return tsvWriter.ToString();
+        }
+
+        /// <summary>
+        /// Wraps an <see cref="IProgressMonitor"/> so it also reports cancellation when an external
+        /// <see cref="CancellationToken"/> fires -- letting code that polls <see cref="IProgressMonitor.IsCanceled"/>
+        /// (like <see cref="WriteData"/>) stop on a caller-supplied token as well as the progress dialog.
+        /// </summary>
+        private class ExternalTokenProgressMonitor : IProgressMonitor
+        {
+            private readonly IProgressMonitor _innerMonitor;
+            private readonly CancellationToken _cancellationToken;
+
+            public ExternalTokenProgressMonitor(IProgressMonitor innerMonitor, CancellationToken cancellationToken)
+            {
+                _innerMonitor = innerMonitor;
+                _cancellationToken = cancellationToken;
+            }
+
+            public bool IsCanceled => _innerMonitor.IsCanceled || _cancellationToken.IsCancellationRequested;
+
+            public UpdateProgressResponse UpdateProgress(IProgressStatus status)
+            {
+                return _innerMonitor.UpdateProgress(status);
+            }
+
+            public bool HasUI => _innerMonitor.HasUI;
+        }
+
         protected virtual void SetClipboardText(Control owner, string text)
         {
             DataObject dataObject = new DataObject();

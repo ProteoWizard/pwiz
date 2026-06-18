@@ -136,6 +136,50 @@ namespace pwiz.Skyline.ToolsUI
             _clientConnectedCheck = check;
         }
 
+        // A CancellationTokenSource that fires when the calling client disconnects, so a long copy/read
+        // abandons instead of pinning the single-instance server. It polls the connected-check the pipe
+        // server installs; the caller passes that check (it is ThreadStatic to the server thread, so it
+        // must be read before any thread hop) and it is null in non-pipe contexts (tests), in which
+        // case the token simply never fires from a disconnect.
+        private sealed class ClientDisconnectCancellation : IDisposable
+        {
+            private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+            private readonly Thread _pollThread;
+
+            public ClientDisconnectCancellation(Func<bool> connectedCheck)
+            {
+                if (connectedCheck == null)
+                    return;
+                _pollThread = new Thread(() =>
+                {
+                    // WaitOne returns true once the token is cancelled (the work finished, in Dispose);
+                    // false on timeout, when we re-check whether the client is still connected.
+                    while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(DIALOG_POLL_INTERVAL_MILLIS))
+                    {
+                        if (!connectedCheck())
+                        {
+                            _cancellationTokenSource.Cancel();
+                            return;
+                        }
+                    }
+                })
+                {
+                    IsBackground = true,
+                    Name = @"AI Connector disconnect poll"
+                };
+                _pollThread.Start();
+            }
+
+            public CancellationToken Token => _cancellationTokenSource.Token;
+
+            public void Dispose()
+            {
+                _cancellationTokenSource.Cancel(); // stop the poll thread, then wait for it to exit
+                _pollThread?.Join();
+                _cancellationTokenSource.Dispose();
+            }
+        }
+
         /// <summary>
         /// Runs <paramref name="work"/> on a background thread and waits for it, but returns
         /// immediately if a MODAL dialog appears that blocks one of this process's windows -- so the
@@ -660,8 +704,7 @@ namespace pwiz.Skyline.ToolsUI
         private static void PasteGridText(DataboundGridControl grid, int column, int row, string text)
         {
             var dataGridView = grid.DataGridView;
-            var visibleColumns = dataGridView.Columns.Cast<DataGridViewColumn>()
-                .Where(c => c.Visible).OrderBy(c => c.DisplayIndex).ToArray();
+            var visibleColumns = VisibleGridColumns(dataGridView);
             if (column < 0 || column >= visibleColumns.Length)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
@@ -670,6 +713,63 @@ namespace pwiz.Skyline.ToolsUI
                     @"Row {0} is out of range; the grid has {1} rows.", row, dataGridView.Rows.Count));
             dataGridView.CurrentCell = dataGridView.Rows[row].Cells[visibleColumns[column].Index];
             grid.PasteText(text);
+        }
+
+        /// <summary>
+        /// Returns all the text in a grid on a form -- the column headers followed by every data row --
+        /// as tab-separated columns and newline-separated rows, the same content as Copy All
+        /// (see <see cref="IJsonToolService"/>). Currently supports DataboundGridControl grids.
+        /// </summary>
+        public static string GetGridText(string formId, string gridId)
+        {
+            ValidateFormIdFormat(formId);
+            // Capture the disconnect check on this (server) thread before any marshaling, so a large
+            // copy is abandoned if the client goes away rather than pinning the single-instance server.
+            using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
+            {
+                var text = InvokeOnUiThread(() =>
+                    FindGrid(FindFormById(formId), gridId).GetCopyText(cancellation.Token));
+                if (text == null)
+                    throw new OperationCanceledException(LlmInstruction.Format(
+                        @"Reading the grid {0} was cancelled.", formId));
+                return text;
+            }
+        }
+
+        // The visible columns of a grid in display order -- the columns that
+        // SetGridText's column index counts.
+        private static DataGridViewColumn[] VisibleGridColumns(DataGridView dataGridView)
+        {
+            return dataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => col.Visible).OrderBy(col => col.DisplayIndex).ToArray();
+        }
+
+        /// <summary>
+        /// Closes an open form: a dialog, a docked or floating tool window (e.g. the Document Grid or
+        /// Audit Log), or a native dialog (which is cancelled) -- see <see cref="IJsonToolService"/>.
+        /// </summary>
+        public static void CloseForm(string formId)
+        {
+            ValidateFormIdFormat(formId);
+            // Closing may itself raise a confirmation (e.g. "save changes?"); watch for it so it is
+            // surfaced rather than left blocking the main window.
+            RunWithDialogWatch(() =>
+            {
+                if (TryGetNativeDialog(formId, out var dialog))
+                {
+                    dialog.Cancel();
+                    return true;
+                }
+                InvokeOnUiThread(() =>
+                {
+                    var form = FindFormById(formId);
+                    if (form == null)
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"Form not found: {0}. Use skyline_get_open_forms to list open forms.", formId));
+                    form.Close();
+                });
+                return true;
+            });
         }
 
         // Level 3: Complete UI operations - Graphs

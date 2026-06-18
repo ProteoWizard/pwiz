@@ -885,6 +885,16 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.SetGridText(formId, controlId, column, row, text);
         }
 
+        public string GetGridText(string formId, string gridId)
+        {
+            return JsonUiService.GetGridText(formId, gridId);
+        }
+
+        public void CloseForm(string formId)
+        {
+            JsonUiService.CloseForm(formId);
+        }
+
         public string GetGraphData(string graphId, string filePath = null)
         {
             return JsonUiService.GetGraphData(graphId, filePath);

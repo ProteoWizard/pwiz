@@ -380,6 +380,22 @@ namespace SkylineTool
         void SetGridText(string formId, string controlId, int column, int row, string text);
 
         /// <summary>
+        /// Returns all the text in a grid on a form -- the column headers followed by every data row --
+        /// as tab-separated columns and newline-separated rows. Currently supports the Document Grid
+        /// and other DataboundGridControl grids.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="gridId">Grid control name, or null when the form has a single grid.</param>
+        string GetGridText(string formId, string gridId);
+
+        /// <summary>
+        /// Closes an open form: a dialog, a docked or floating tool window (e.g. the Document Grid or
+        /// Audit Log), or a native dialog (which is cancelled).
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        void CloseForm(string formId);
+
+        /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
         /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>

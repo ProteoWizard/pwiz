@@ -18,6 +18,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -34,11 +35,14 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the AI Connector <see cref="JsonUiService.SetGridText"/> verb, which pastes
-    /// tab/newline-separated text into a <see cref="DataboundGridControl"/> grid (the Document Grid)
-    /// starting at an anchor cell -- the same effect as a Ctrl-V, but without the system clipboard.
-    /// The grid is found with a null controlId (the Document Grid form has a single grid), and the
-    /// "Note" column is targeted by its visible index, so the test is translation-proof.
+    /// Exercises three AI Connector verbs on the Document Grid:
+    ///   * <see cref="JsonUiService.SetGridText"/> pastes tab/newline-separated text into a
+    ///     <see cref="DataboundGridControl"/> grid at an anchor cell -- like a Ctrl-V, but without the
+    ///     system clipboard;
+    ///   * <see cref="JsonUiService.GetGridText"/> reads the whole grid back as tab-separated text;
+    ///   * <see cref="JsonUiService.CloseForm"/> closes the grid form.
+    /// The grid is found with a null controlId/gridId (the Document Grid form has a single grid), and
+    /// the "Note" column is targeted by its visible index, so the test is translation-proof.
     /// </summary>
     [TestClass]
     public class SetGridTextConnectorTest : AbstractFunctionalTest
@@ -94,7 +98,18 @@ namespace pwiz.SkylineTestFunctional
             CollectionAssert.AreEqual(new[] { @"First note", @"Second note" }, notes,
                 @"SetGridText did not paste the Note values into the grid.");
 
-            RunUI(() => SkylineWindow.ShowDocumentGrid(false));
+            // GetGridText returns the whole grid as tab-separated text: a header row plus the two
+            // peptide rows, including the notes just pasted. gridId is null (single grid on the form).
+            string gridText = JsonUiService.GetGridText(gridId, null);
+            var lines = gridText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+            Assert.AreEqual(3, lines.Length, @"GetGridText should return a header row plus two peptide rows.");
+            StringAssert.Contains(lines[0], @"Note", @"GetGridText header row is missing the Note column.");
+            StringAssert.Contains(gridText, @"First note");
+            StringAssert.Contains(gridText, @"Second note");
+
+            // CloseForm closes the (floating) Document Grid; GetOpenForms then no longer lists it.
+            JsonUiService.CloseForm(gridId);
+            WaitForCondition(() => JsonUiService.GetOpenForms().All(form => form.Type != nameof(DocumentGridForm)));
         }
     }
 }
