@@ -458,6 +458,7 @@
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
+    <Compile Include="ClickCheckedListConnectorTest.cs" />
     <Compile Include="ClickControlConnectorTest.cs" />
     <Compile Include="ContextMenuConnectorTest.cs" />
     <Compile Include="SetGridTextConnectorTest.cs" />

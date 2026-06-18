@@ -478,9 +478,9 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Clicks a control on an open form -- a Button, a CheckBox or RadioButton, a custom
-        /// IButtonControl (e.g. a StartPage tile), a ToolStrip/menu/toolbar item, or any other control
-        /// (matched by control name or visible text) -- or accepts/cancels a native dialog
-        /// (see <see cref="IJsonToolService"/>).
+        /// IButtonControl (e.g. a StartPage tile), a ToolStrip/menu/toolbar item, an item in a
+        /// CheckedListBox (its check is toggled), or any other control (matched by control name or
+        /// visible text) -- or accepts/cancels a native dialog (see <see cref="IJsonToolService"/>).
         /// </summary>
         public static void ClickFormButton(string formId, string button)
         {
@@ -522,6 +522,12 @@ namespace pwiz.Skyline.ToolsUI
                     // not the tab header).
                     InvokeOnUiThread(() => SelectTabPage(target.TabPage));
                 }
+                else if (target.CheckedList != null)
+                {
+                    // An item in a CheckedListBox (e.g. "Applies to > Replicates") -- toggle its check,
+                    // the way a CheckOnClick item toggles when a user clicks it.
+                    InvokeOnUiThread(() => ToggleCheckedListItem(target.CheckedList, target.CheckedListItemIndex));
+                }
                 else
                 {
                     // Any other control -- synthesize a mouse click at its center on the UI thread.
@@ -529,6 +535,14 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 return true;
             });
+        }
+
+        // Toggles the checked state of one item in a CheckedListBox. SetItemChecked raises ItemCheck --
+        // the same event a user's click raises -- so any handler keyed on the selection stays in sync.
+        // Must run on the UI thread.
+        private static void ToggleCheckedListItem(CheckedListBox checkedList, int index)
+        {
+            checkedList.SetItemChecked(index, !checkedList.GetItemChecked(index));
         }
 
         // Selects the tab a TabPage belongs to. Must run on the UI thread.
@@ -1298,13 +1312,16 @@ namespace pwiz.Skyline.ToolsUI
         // A resolved click target. Exactly one member is set, classified in FindClickTarget /
         // MakeControlTarget: a Win32 button (Button/CheckBox/RadioButton) clicked via BM_CLICK; a
         // custom IButtonControl (e.g. a StartPage tile) or a ToolStripItem (menu/toolbar item) clicked
-        // via PerformClick; or any other control clicked with a synthesized mouse click.
+        // via PerformClick; an item in a CheckedListBox (e.g. "Applies to") toggled like a click; or any
+        // other control clicked with a synthesized mouse click.
         private class ClickTarget
         {
             public IntPtr ButtonHandle;
             public IButtonControl Clickable;
             public ToolStripItem ToolStripItem;
             public TabPage TabPage;
+            public CheckedListBox CheckedList;
+            public int CheckedListItemIndex;
             public Control Control;
         }
 
@@ -1338,6 +1355,19 @@ namespace pwiz.Skyline.ToolsUI
             foreach (var item in EnumerateToolStripItems(form))
                 Consider(MatchQuality(item.Name, item.Text, button), item.Visible && item.Enabled,
                     () => new ClickTarget { ToolStripItem = item });
+            // Items inside a CheckedListBox (e.g. the "Applies to" list) are not controls, so match them
+            // by their display text and treat a hit as a click that toggles the item's check.
+            foreach (var checkedList in EnumerateControls(form).OfType<CheckedListBox>())
+            {
+                var interactable = checkedList.Visible && checkedList.Enabled;
+                for (int i = 0; i < checkedList.Items.Count; i++)
+                {
+                    int index = i; // capture a stable value for the closure
+                    Consider(MatchQuality(null, checkedList.GetItemText(checkedList.Items[index]), button),
+                        interactable,
+                        () => new ClickTarget { CheckedList = checkedList, CheckedListItemIndex = index });
+                }
+            }
 
             if (best == null)
                 throw new ArgumentException(LlmInstruction.Format(
