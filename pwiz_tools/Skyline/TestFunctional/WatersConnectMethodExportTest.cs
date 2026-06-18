@@ -88,6 +88,9 @@ namespace pwiz.SkylineTestFunctional
             {
                 // At load time the tooltip is the localized value the designer applied. The refactor
                 // must capture exactly the string the old code fetched via ComponentResourceManager.
+                // This relies on the dialog opening on a non-Waters-Connect instrument (or WC with no
+                // saved template), so the tooltip is the designer value and not a URL override. That
+                // holds because this runs first, before any test persists a WC instrument/template.
                 originalToolTip = exportMethodDlg.TemplateFileToolTip;
                 var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
                 Assert.AreEqual(resources.GetString("textTemplateFile.ToolTip"), originalToolTip,
@@ -104,6 +107,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(1000, () => templateDlg.ListViewItems.Count == 1);
             RunUI(() =>
             {
+                Assert.AreEqual("Company", templateDlg.ListViewItems[0].Text);
                 templateDlg.ListViewItems[0].Selected = true;
                 templateDlg.KeyPressHandler(Keys.Enter);
             });
