@@ -1870,6 +1870,12 @@ namespace pwiz.OspreySharp
         /// not in proteinFdr.PeptideQvalues, matching the
         /// PropagateProteinQvalues default). Rows sorted by
         /// (is_decoy, modified_sequence) for stable diff.
+        ///
+        /// INVARIANT: dump only from the passed-in protein-FDR artifacts
+        /// (bestScores / peptideQvalues), never from the FdrEntry stubs.
+        /// ProteinFdrEngine propagates q-values onto the stubs BEFORE the
+        /// Tasks facade calls this, so reading stub q-values here would break
+        /// the byte-identical output the regression golden depends on.
         /// </summary>
         public void WriteStage6ProteinFdrDump(
             IDictionary<string, PeptideScore> bestScores,
@@ -1929,6 +1935,12 @@ namespace pwiz.OspreySharp
         /// BuildProteinParsimony assigns it in dictionary iteration order, which
         /// is non-deterministic across runs. Joining on accessions instead
         /// keeps the dump diff-stable for cross-impl bisection.
+        ///
+        /// INVARIANT: dump only from the passed-in parsimony / fdrResult,
+        /// never from the FdrEntry stubs. ProteinFdrEngine propagates q-values
+        /// onto the stubs BEFORE the Tasks facade calls this, so reading stub
+        /// q-values here would break the byte-identical output the regression
+        /// golden depends on.
         /// </summary>
         public void WriteStage7ProteinFdrDump(
             ProteinParsimonyResult parsimony,
