@@ -44,22 +44,29 @@ GetGridText     "DocumentGridForm:Document Grid: Proteins" null
 ClickToolStripItem "DocumentGridForm:Document Grid: Proteins" "Reports > Replicates"
 
 # --- Defining some Replicate Annotations ---
+# SubjectID (a plain Text annotation) is now fully driveable end-to-end. Validated.
 InvokeMenuItem  "Settings > Document Settings"
 WaitForForm     "DocumentSettingsDlg:Document Settings"
 ClickFormButton "DocumentSettingsDlg:Document Settings" "Add"
 WaitForForm     "DefineAnnotationDlg:Define Annotation"
-SetFormValue    "DefineAnnotationDlg:Define Annotation" "Name" "Cohort"
-SetFormValue    "DefineAnnotationDlg:Define Annotation" "Type" "Value List"
-# BLOCKED (gap 4): the "Values" list here is a plain DataGridView, NOT a DataboundGridControl, so
-#   SetGridText cannot fill it ("No grid found on form"). Needs SetGridText to support plain grids.
-# BLOCKED (gap 6): "Applies to > Replicates" is a CheckedListBox item; ClickFormButton cannot check
-#   it ("No clickable control found"). Needs a verb to (un)check a CheckedListBox item by name.
-# ClickFormButton "DefineAnnotationDlg:Define Annotation" "OK"   # once the two fields can be set
-#
-# Once the Cohort/SubjectID annotations EXIST, filling their columns in the Replicates report IS
-# driveable now: that grid is a DataboundGridControl, so e.g.
-#   SetGridText "DocumentGridForm:Document Grid: Replicates" null <CohortCol> 0 "Healthy\nDiseased\n..."
-# works (validated mechanism). Only DEFINING the annotation is blocked.
+# NOTE (gap 10): use the textbox control NAME "tbxName", NOT the label "Name". SetFormValue matches
+#   the "Name:" LABEL by its visible text and would set the label instead of the input. See gap (10).
+SetFormValue    "DefineAnnotationDlg:Define Annotation" "tbxName" "SubjectID"
+# Type defaults to "Text". Check "Replicates" in the Applies-to CheckedListBox (ClickFormButton now
+# toggles a checked-list item). Validated.
+ClickFormButton "DefineAnnotationDlg:Define Annotation" "Replicates"
+ClickFormButton "DefineAnnotationDlg:Define Annotation" "OK"
+ClickFormButton "DocumentSettingsDlg:Document Settings" "OK"
+
+# Fill the SubjectID column in the Replicates report. This grid IS a DataboundGridControl, so
+# SetGridText pastes the whole 42-row column at once. Validated (read back with GetGridText).
+InvokeMenuItem  "View > Live Reports > Document Grid"
+ClickToolStripItem "DocumentGridForm:Document Grid: *" "Reports > Replicates"
+SetGridText     "DocumentGridForm:Document Grid: Replicates" "" 3 0 "102\n102\n102\n...(42 rows)"
+
+# The "Cohort" Value-List annotation is still BLOCKED: its "Values" list is a plain DataGridView, not
+# a DataboundGridControl, so SetGridText cannot fill it ("No grid found on form"). See gap (4). The
+# Cohort column itself (once the annotation exists) would fill fine via SetGridText.
 
 # ========================================================================================
 # VERB GAPS
@@ -69,19 +76,24 @@ SetFormValue    "DefineAnnotationDlg:Define Annotation" "Type" "Value List"
 # (2)  [DONE] Close a docked/floating form or dialog -> CloseForm.
 # (3)  [DONE] SelectTab on a tabbed dialog -> ClickFormButton on the tab text.
 # (3b) [DONE] Read a grid -> GetGridText; paste into a DataboundGridControl -> SetGridText.
+# (6)  [DONE] CheckedListBox item (un)check -> ClickFormButton on the item text (toggles it).
 # (4)  [REMAINING] Plain DataGridView cell editing. SetGridText only supports DataboundGridControl;
-#      the Define Annotation "Values" list and similar plain grids are not reached.
+#      the Define Annotation "Values" list (and the Rules grid, List Designer, etc.) are not reached.
 # (5)  [REMAINING] TreeView expand + check a node (the Customize Report column tree).
-# (6)  [REMAINING] CheckedListBox / ListBox item (un)check or (multi-)select ("Applies to" here; the
-#      Customize Report column-list reorder/remove buttons).
+# (6b) [REMAINING] ListBox (multi-)select + the Customize Report column-list reorder/remove buttons.
 # (7)  [REMAINING] Right-click a grid COLUMN HEADER context menu (Number Format, Filter, Sort).
 # (8)  The Pivot Editor, Find Column, Choose Format, Rule Editor, Edit Group Comparison dialogs --
-#      mostly fillable once (4)-(7) exist.
+#      mostly fillable once (4),(5),(6b),(7),(10) exist.
 # (9)  Out of scope (desktop, not Skyline): the Notepad copy/paste of SampleInfo.txt.
+# (10) [REMAINING] SetFormValue resolves a labeled input. A label whose visible text matches (e.g.
+#      "Name:") shadows the TextBox it labels, so SetFormValue sets the LABEL. Workaround: pass the
+#      input's control name (e.g. "tbxName"). Fix: when the best match is a Label, set the control it
+#      labels (next in tab order / nearest following input) instead. HIGH leverage -- every dialog
+#      with labeled fields (Rule Editor, Edit Group Comparison, ...) hits this.
 #
 # USABILITY NOTE: for the "single grid on the form" case, GetGridText/SetGridText need an EMPTY
 # gridId/controlId. The literal string "null" is treated as a control name and fails; the MCP layer
 # should map an omitted/"null" argument to a real null.
 #
-# Suggested next verbs to unblock the most: (4) plain-grid cells, then (6) CheckedListBox/ListBox,
-# then (5) TreeView check, then (7) grid-header context menus.
+# Suggested next, by leverage: (10) labeled-input resolution, then (4) plain-grid cells, then
+# (5) TreeView check, then (6b) ListBox, then (7) grid-header context menus.
