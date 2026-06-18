@@ -2755,6 +2755,11 @@ namespace pwiz.Skyline.FileUI
             get => textTemplateFile;
         }
 
+        public string TemplateFileToolTip
+        {
+            get => helpTip.GetToolTip(textTemplateFile);
+        }
+
         public int CalculationTime
         {
             get { return _exportProperties.MultiplexIsolationListCalculationTime; }
