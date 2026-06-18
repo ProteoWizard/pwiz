@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp.Test
@@ -75,7 +76,7 @@ namespace pwiz.OspreySharp.Test
             };
 
             var result = PercolatorEntryBuilder.Build(
-                perFileEntries,
+                perFileEntries, nFeat,
                 out int nWithFeatures, out int nWithoutFeatures,
                 out int nInputTargets, out int nInputDecoys);
 

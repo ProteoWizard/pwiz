@@ -23,13 +23,12 @@
 
 using System.Collections.Generic;
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.FDR;
 
-namespace pwiz.OspreySharp.Tasks
+namespace pwiz.OspreySharp.FDR
 {
     /// <summary>
     /// Builds the flat <see cref="PercolatorEntry"/> input list (one per
-    /// observation across all files) that <c>FirstJoinTask.RunPercolatorFdr</c>
+    /// observation across all files) that <see cref="PercolatorEngine"/>
     /// feeds to the SVM. Each entry prefers the 21-feature vector computed during
     /// coelution scoring and stored on the <see cref="FdrEntry"/>, falling back to
     /// a basic vector only for stubs that lack features (e.g. loaded from a parquet
@@ -46,9 +45,13 @@ namespace pwiz.OspreySharp.Tasks
         /// Construct the PercolatorEntry list in iteration order over
         /// <paramref name="perFileEntries"/>. The per-category counts are returned
         /// via out params for the caller's logging. Pure: no I/O, no context.
+        /// <paramref name="numFeatures"/> is the expected PIN feature-vector length
+        /// (the caller supplies it from the PIN feature-name list, keeping this
+        /// builder free of the Scoring/IO feature-count constants).
         /// </summary>
         internal static List<PercolatorEntry> Build(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            int numFeatures,
             out int nWithFeatures, out int nWithoutFeatures,
             out int nInputTargets, out int nInputDecoys)
         {
@@ -70,14 +73,14 @@ namespace pwiz.OspreySharp.Tasks
                     // well-formed.
                     double[] features;
                     if (fdrEntry.Features != null &&
-                        fdrEntry.Features.Length == AbstractScoringTask.NUM_PIN_FEATURES)
+                        fdrEntry.Features.Length == numFeatures)
                     {
                         features = fdrEntry.Features;
                         nWithFeatures++;
                     }
                     else
                     {
-                        features = BuildBasicFeatures(fdrEntry);
+                        features = BuildBasicFeatures(fdrEntry, numFeatures);
                         nWithoutFeatures++;
                     }
 
@@ -119,11 +122,11 @@ namespace pwiz.OspreySharp.Tasks
         /// Used as a fallback ONLY when <see cref="FdrEntry.Features"/> has not been
         /// populated (e.g. stubs loaded from a Parquet cache). In normal operation the
         /// 21-feature vector is computed during coelution scoring in
-        /// <see cref="pwiz.OspreySharp.Scoring.CoelutionScorer"/> and stored on the entry.
+        /// <c>CoelutionScorer</c> and stored on the entry.
         /// </summary>
-        private static double[] BuildBasicFeatures(FdrEntry entry)
+        private static double[] BuildBasicFeatures(FdrEntry entry, int numFeatures)
         {
-            double[] features = new double[AbstractScoringTask.NUM_PIN_FEATURES];
+            double[] features = new double[numFeatures];
 
             // 0: coelution_sum
             features[0] = entry.CoelutionSum;
