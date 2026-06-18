@@ -1243,37 +1243,20 @@ namespace pwiz.OspreySharp.Tasks
             OspreyConfig config,
             PipelineContext ctx)
         {
-            // Detected-peptide count for logging only; the core computation +
-            // propagation lives in ProteinFdr.RunFirstPassProteinFdr so the
-            // --task MergeNode rehydration path (PerFileRescoreTask) can run the
-            // same logic without duplicating it.
-            int detectedCount = 0;
-            var detectedTracker = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var kvp in perFileEntries)
-            {
-                foreach (var entry in kvp.Value)
-                {
-                    if (!entry.IsDecoy && entry.RunPeptideQvalue <= config.RunFdr)
-                        detectedTracker.Add(entry.ModifiedSequence);
-                }
-            }
-            detectedCount = detectedTracker.Count;
+            // The core computation + propagation lives in
+            // ProteinFdr.RunFirstPassProteinFdr (also driven by the --task
+            // MergeNode rehydration path in PerFileRescoreTask). It returns the
+            // parsimony / FDR artifacts it computed so we can log summary counts
+            // and emit the diagnostic dump here WITHOUT recomputing them.
+            var result = ProteinFdr.RunFirstPassProteinFdr(
+                perFileEntries, fullLibrary, config);
+
             ctx.LogInfo(string.Format(
                 "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
-                detectedCount));
+                result.DetectedPeptides.Count));
 
-            ProteinFdr.RunFirstPassProteinFdr(perFileEntries, fullLibrary, config);
-
-            // Recompute summary counters for log parity with the prior inline
-            // implementation. The static helper has already mutated entries
-            // via PropagateProteinQvalues; the parsimony / FDR objects below
-            // are rebuilt for logging + the diagnostic dump only.
-            var parsimony = ProteinFdr.BuildProteinParsimony(
-                fullLibrary, config.SharedPeptides, detectedTracker);
-            var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
-            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
             int nAtRunFdr = 0;
-            foreach (var qv in proteinFdr.GroupQvalues.Values)
+            foreach (var qv in result.ProteinFdr.GroupQvalues.Values)
             {
                 if (qv <= config.RunFdr)
                     nAtRunFdr++;
@@ -1285,7 +1268,7 @@ namespace pwiz.OspreySharp.Tasks
             if (ctx.Diagnostics?.DumpProteinFdr ?? false)
             {
                 ctx.Diagnostics?.WriteStage6ProteinFdrDump(
-                    bestScores, proteinFdr.PeptideQvalues);
+                    result.BestScores, result.ProteinFdr.PeptideQvalues);
                 if (ctx.Diagnostics?.ProteinFdrOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
             }

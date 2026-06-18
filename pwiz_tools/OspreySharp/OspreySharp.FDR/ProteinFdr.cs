@@ -130,6 +130,40 @@ namespace pwiz.OspreySharp.FDR
     }
 
     /// <summary>
+    /// The computed artifacts of a first-pass protein-FDR run, returned by
+    /// <see cref="ProteinFdr.RunFirstPassProteinFdr"/> so the caller can log
+    /// summary counts and emit the Stage-6 diagnostic dump WITHOUT recomputing
+    /// parsimony / FDR. The run has already propagated <c>RunProteinQvalue</c>
+    /// onto the stubs; these are the same intermediate objects it used.
+    /// </summary>
+    public class FirstPassProteinFdrResult
+    {
+        /// <summary>Target peptides passing peptide-level run FDR (the detected set).</summary>
+        public HashSet<string> DetectedPeptides { get; }
+
+        /// <summary>Parsimony grouping built from the detected peptides.</summary>
+        public ProteinParsimonyResult Parsimony { get; }
+
+        /// <summary>Best peptide-level scores collected across all files.</summary>
+        public Dictionary<string, PeptideScore> BestScores { get; }
+
+        /// <summary>The picked-protein FDR result (group + peptide q-values).</summary>
+        public ProteinFdrResult ProteinFdr { get; }
+
+        public FirstPassProteinFdrResult(
+            HashSet<string> detectedPeptides,
+            ProteinParsimonyResult parsimony,
+            Dictionary<string, PeptideScore> bestScores,
+            ProteinFdrResult proteinFdr)
+        {
+            DetectedPeptides = detectedPeptides;
+            Parsimony = parsimony;
+            BestScores = bestScores;
+            ProteinFdr = proteinFdr;
+        }
+    }
+
+    /// <summary>
     /// Protein parsimony and FDR computation.
     /// Port of osprey-fdr/src/protein.rs.
     /// </summary>
@@ -657,7 +691,7 @@ namespace pwiz.OspreySharp.FDR
         /// post-compaction detected set on Stellar Single, causing a 1-protein delta in
         /// Stage 7 picked-protein output.
         /// </summary>
-        public static void RunFirstPassProteinFdr(
+        public static FirstPassProteinFdrResult RunFirstPassProteinFdr(
             IList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config)
@@ -683,6 +717,11 @@ namespace pwiz.OspreySharp.FDR
             // post-output Stage 7 second-pass protein FDR (Rust's second-pass).
             PropagateProteinQvalues(perFileEntries, proteinFdr,
                 setRun: true, setExperiment: false);
+
+            // Return the computed artifacts so the caller can log summary counts
+            // and emit the Stage-6 diagnostic dump without recomputing them.
+            return new FirstPassProteinFdrResult(
+                detectedPeptides, parsimony, bestScores, proteinFdr);
         }
     }
 }
