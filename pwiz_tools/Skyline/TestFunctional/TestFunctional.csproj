@@ -460,6 +460,7 @@
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
     <Compile Include="ClickControlConnectorTest.cs" />
     <Compile Include="ContextMenuConnectorTest.cs" />
+    <Compile Include="SetGridTextConnectorTest.cs" />
     <Compile Include="PrmConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />

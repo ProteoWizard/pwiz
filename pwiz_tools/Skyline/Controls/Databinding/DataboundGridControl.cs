@@ -189,6 +189,16 @@ namespace pwiz.Skyline.Controls.Databinding
         public BoundDataGridViewEx DataGridView { get { return boundDataGridView; } }
         public NavBar NavBar { get { return navBar; } }
 
+        /// <summary>
+        /// Pastes tab-delimited <paramref name="text"/> into the grid starting at the current cell,
+        /// exactly as a Ctrl-V of that text would, but without using the system clipboard. Returns
+        /// true if the document changed.
+        /// </summary>
+        public bool PasteText(string text)
+        {
+            return _boundDataGridViewPasteHandler.PasteText(text);
+        }
+
         public DataGridViewColumn FindColumn(PropertyPath propertyPath)
         {
             // Get the list separately for debugging, since this helps in figuring out what

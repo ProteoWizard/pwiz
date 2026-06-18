@@ -112,6 +112,7 @@ namespace SkylineTool
         public void ClickFormButton(string formId, string button) { Call(nameof(ClickFormButton), formId, button); }
         public void ClickToolStripItem(string formId, string menuPath) { Call(nameof(ClickToolStripItem), formId, menuPath); }
         public void SetFormValue(string formId, string controlId, string value) { Call(nameof(SetFormValue), formId, controlId, value); }
+        public void SetGridText(string formId, string controlId, int column, int row, string text) { Call(nameof(SetGridText), formId, controlId, column, row, text); }
 
         // 1-arg methods
         public string GetSelectedElementLocator(string elementType)

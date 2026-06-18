@@ -135,6 +135,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     {
         return CallClient(c => c.GetReportFromDefinitionRows(definition, offset, count, includeMaxLength, culture));
     }
+    public void SetGridText(string formId, string controlId, int column, int row, string text) { CallClientVoid(c => c.SetGridText(formId, controlId, column, row, text)); }
 
     // 7-arg methods
     public ReportRowsResult GetReportRows(string reportName, int offset, int count, string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)

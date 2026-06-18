@@ -117,6 +117,25 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        /// <summary>
+        /// Pastes tab-delimited <paramref name="text"/> starting at the current cell, exactly as a
+        /// Ctrl-V of that text would, but reading from the supplied string instead of the system
+        /// clipboard. Used by automation (the AI Connector). Returns true if the document changed.
+        /// </summary>
+        public bool PasteText(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+            using (var reader = new StringReader(text))
+            {
+                return PerformUndoableOperation(UtilResources.DataGridViewPasteHandler_DataGridViewOnKeyDown_Paste,
+                    monitor => Paste(monitor, reader),
+                    new BatchModifyInfo(BatchModifyAction.Paste, ViewName, RowFilter, text));
+            }
+        }
+
         public bool PerformUndoableOperation(string description, Func<ILongWaitBroker, bool> operation, BatchModifyInfo batchModifyInfo)
         {
             if (SkylineDataSchema == null)

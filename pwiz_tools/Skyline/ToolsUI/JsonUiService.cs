@@ -32,6 +32,7 @@ using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.ElementLocators;
@@ -607,6 +608,68 @@ namespace pwiz.Skyline.ToolsUI
                     SetControlValue(control, value);
                 });
             });
+        }
+
+        /// <summary>
+        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, exactly as a Ctrl-V of
+        /// that text would, starting at the anchor cell (<paramref name="column"/>, <paramref name="row"/>).
+        /// Currently supports <see cref="DataboundGridControl"/> grids (see <see cref="IJsonToolService"/>).
+        /// </summary>
+        public static void SetGridText(string formId, string controlId, int column, int row, string text)
+        {
+            ValidateFormIdFormat(formId);
+            // A type conversion error during the paste raises an alert; watch for it so it is surfaced
+            // rather than left blocking the main window.
+            RunWithDialogWatch(() =>
+            {
+                InvokeOnUiThread(() =>
+                {
+                    var form = FindFormById(formId);
+                    var grid = FindGrid(form, controlId);
+                    PasteGridText(grid, column, row, text ?? string.Empty);
+                });
+                return true;
+            });
+        }
+
+        // Finds the grid to paste into: the DataboundGridControl named controlId, or -- when controlId
+        // is null/empty -- the single grid on the form. Throws if there is no grid, or more than one
+        // and no name was given to disambiguate.
+        private static DataboundGridControl FindGrid(Form form, string controlId)
+        {
+            if (!string.IsNullOrEmpty(controlId))
+            {
+                var named = FindControl<DataboundGridControl>(form, controlId);
+                if (named == null)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Grid not found on form {0}: {1}.", GetFormId(form), controlId));
+                return named;
+            }
+            var grids = EnumerateControls(form).OfType<DataboundGridControl>().ToList();
+            if (grids.Count == 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"No grid found on form {0}.", GetFormId(form)));
+            if (grids.Count > 1)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Form {0} has more than one grid; pass a controlId to choose one.", GetFormId(form)));
+            return grids[0];
+        }
+
+        // Sets the anchor cell (column/row are zero-based indices into the grid's visible columns and
+        // its rows) and pastes the tab-separated text there.
+        private static void PasteGridText(DataboundGridControl grid, int column, int row, string text)
+        {
+            var dataGridView = grid.DataGridView;
+            var visibleColumns = dataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(c => c.Visible).OrderBy(c => c.DisplayIndex).ToArray();
+            if (column < 0 || column >= visibleColumns.Length)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
+            if (row < 0 || row >= dataGridView.Rows.Count)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Row {0} is out of range; the grid has {1} rows.", row, dataGridView.Rows.Count));
+            dataGridView.CurrentCell = dataGridView.Rows[row].Cells[visibleColumns[column].Index];
+            grid.PasteText(text);
         }
 
         // Level 3: Complete UI operations - Graphs

@@ -619,6 +619,26 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_set_grid_text"),
+     Description("Paste tab-separated values into a grid on a form, exactly as a Ctrl-V of that text " +
+        "would, starting at an anchor cell. Use for the Document Grid and other data grids -- e.g. to " +
+        "fill annotation values or paste list data. column and row are zero-based indices into the " +
+        "grid's visible columns and its rows; separate cell values with tabs and rows with newlines. " +
+        "Currently supports DataboundGridControl grids.")]
+    public static string SetGridText(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
+        [Description("Zero-based anchor column (index into the grid's visible columns)")] int column,
+        [Description("Zero-based anchor row")] int row,
+        [Description("Tab-separated (and newline-separated) values to paste")] string text)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetGridText(formId, controlId, column, row, text);
+            return $"Pasted grid text on {formId}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_get_graph_data"),
      Description("Extract tab-separated data from a Skyline graph. Returns the same data as " +
         "Skyline's Copy Data clipboard format, including pane titles, axis labels, and all " +

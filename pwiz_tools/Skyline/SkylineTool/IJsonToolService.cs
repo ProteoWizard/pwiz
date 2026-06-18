@@ -367,6 +367,19 @@ namespace SkylineTool
         void SetFormValue(string formId, string controlId, string value);
 
         /// <summary>
+        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, exactly as a Ctrl-V of
+        /// that text would, starting at the given anchor cell. Currently supports the Document Grid and
+        /// other DataboundGridControl grids. <paramref name="column"/> and <paramref name="row"/> are
+        /// zero-based indices into the grid's visible columns and its rows.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
+        /// <param name="column">Zero-based anchor column (index into visible columns).</param>
+        /// <param name="row">Zero-based anchor row.</param>
+        /// <param name="text">Tab-separated (and newline-separated) values to paste.</param>
+        void SetGridText(string formId, string controlId, int column, int row, string text);
+
+        /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
         /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>
