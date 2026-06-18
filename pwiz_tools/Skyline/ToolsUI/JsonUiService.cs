@@ -659,10 +659,21 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 InvokeOnUiThread(() =>
                 {
-                    var control = FindControl<Control>(FindFormById(formId), controlId);
+                    var form = FindFormById(formId);
+                    var control = FindControl<Control>(form, controlId);
                     if (control == null)
                         throw new ArgumentException(LlmInstruction.Format(
                             @"Control not found on form {0}: {1}.", formId, controlId));
+                    // A user edits a field, not its caption. When the match is a label (e.g. "Name:"),
+                    // set the editable control it labels -- the next one in tab order -- instead, since
+                    // changing a label's text is not something a user could do through the UI.
+                    if (control is System.Windows.Forms.Label)
+                    {
+                        control = NextEditableInTabOrder(form, control)
+                            ?? throw new ArgumentException(LlmInstruction.Format(
+                                @"'{0}' on form {1} is a label with no editable field after it in tab order.",
+                                controlId, formId));
+                    }
                     SetControlValue(control, value);
                 });
             });
@@ -1551,10 +1562,44 @@ namespace pwiz.Skyline.ToolsUI
                             @"No editable cell found in grid {0}.", control.Name));
                     grid.CurrentCell.Value = value;
                     break;
+                case System.Windows.Forms.Label _:
+                    // A user cannot edit a label's caption, so setting it would not mirror the UI.
+                    // SetFormValue resolves a matched label to its field before reaching here; this
+                    // guard keeps the invariant if SetControlValue is ever called with one directly.
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Cannot set a value on the label {0}.", control.Name));
                 default:
                     control.Text = value;
                     break;
             }
+        }
+
+        // Finds the first editable control after the given control in tab order -- the input a "Name:"
+        // label labels, for example. Used to resolve a matched label to the field it names. Returns
+        // null if no editable control follows. Must run on the UI thread.
+        private static Control NextEditableInTabOrder(Control container, Control afterControl)
+        {
+            for (var next = container.GetNextControl(afterControl, true);
+                 next != null;
+                 next = container.GetNextControl(next, true))
+            {
+                if (next.Visible && next.Enabled && IsEditableValueControl(next))
+                    return next;
+            }
+            return null;
+        }
+
+        // True for controls a user can type into or pick a value from -- the kinds a label labels.
+        private static bool IsEditableValueControl(Control control)
+        {
+            return control is TextBoxBase
+                || control is ComboBox
+                || control is NumericUpDown
+                || control is DateTimePicker
+                || control is CheckBox
+                || control is RadioButton
+                || control is ListBox
+                || control is TrackBar;
         }
 
         // True when the requested button names the cancel/close action of a native dialog. Locale

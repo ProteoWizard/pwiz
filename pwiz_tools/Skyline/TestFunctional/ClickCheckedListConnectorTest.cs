@@ -32,10 +32,12 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonUiService.ClickFormButton"/> on an item inside a CheckedListBox -- the
-    /// "Applies to" list in the Define Annotation dialog. The items are not controls, so they are
-    /// matched by their display text and a click toggles the item's check (like a CheckOnClick item).
-    /// Matched by the English item text, so the test runs in en.
+    /// Exercises two AI Connector behaviors on the Define Annotation dialog:
+    ///   * <see cref="JsonUiService.SetFormValue"/> matched against a label ("Name") sets the editable
+    ///     control the label labels (the Name TextBox), not the label itself;
+    ///   * <see cref="JsonUiService.ClickFormButton"/> on an item inside the "Applies to" CheckedListBox
+    ///     toggles that item's check (the items are not controls, so they are matched by display text).
+    /// Matched by the English label/item text, so the test runs in en.
     /// </summary>
     [TestClass]
     public class ClickCheckedListConnectorTest : AbstractFunctionalTest
@@ -54,6 +56,12 @@ namespace pwiz.SkylineTestFunctional
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             string dlgId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
+
+            // SetFormValue against the "Name" LABEL sets the editable field it labels (the Name
+            // TextBox, AnnotationName), not the label itself.
+            JsonUiService.SetFormValue(dlgId, @"Name", @"ConnectorAnnotation");
+            RunUI(() => Assert.AreEqual(@"ConnectorAnnotation", defineAnnotationDlg.AnnotationName,
+                @"SetFormValue did not set the Name field through its label."));
 
             // The "Replicates" target starts unchecked.
             RunUI(() => Assert.IsFalse(
