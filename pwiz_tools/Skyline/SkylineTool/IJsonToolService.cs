@@ -367,10 +367,10 @@ namespace SkylineTool
         void SetFormValue(string formId, string controlId, string value);
 
         /// <summary>
-        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, exactly as a Ctrl-V of
-        /// that text would, starting at the given anchor cell. Currently supports the Document Grid and
-        /// other DataboundGridControl grids. <paramref name="column"/> and <paramref name="row"/> are
-        /// zero-based indices into the grid's visible columns and its rows.
+        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at the given
+        /// anchor cell, the way typing/pasting there would. Works for the Document Grid (and other
+        /// DataboundGridControl grids) and for a plain DataGridView. <paramref name="column"/> and
+        /// <paramref name="row"/> are zero-based indices into the grid's visible columns and its rows.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
@@ -381,8 +381,8 @@ namespace SkylineTool
 
         /// <summary>
         /// Returns all the text in a grid on a form -- the column headers followed by every data row --
-        /// as tab-separated columns and newline-separated rows. Currently supports the Document Grid
-        /// and other DataboundGridControl grids.
+        /// as tab-separated columns and newline-separated rows. Works for the Document Grid (and other
+        /// DataboundGridControl grids) and for a plain DataGridView.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="gridId">Grid control name, or null when the form has a single grid.</param>

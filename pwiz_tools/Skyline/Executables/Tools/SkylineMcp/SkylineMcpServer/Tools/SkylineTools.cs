@@ -620,11 +620,11 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_set_grid_text"),
-     Description("Paste tab-separated values into a grid on a form, exactly as a Ctrl-V of that text " +
-        "would, starting at an anchor cell. Use for the Document Grid and other data grids -- e.g. to " +
-        "fill annotation values or paste list data. column and row are zero-based indices into the " +
+     Description("Paste tab-separated values into a grid on a form, starting at an anchor cell, the " +
+        "way typing/pasting there would. Use for the Document Grid and other data grids -- e.g. to " +
+        "fill annotation columns or a rules grid. column and row are zero-based indices into the " +
         "grid's visible columns and its rows; separate cell values with tabs and rows with newlines. " +
-        "Currently supports DataboundGridControl grids.")]
+        "Works for DataboundGridControl grids and plain DataGridView grids.")]
     public static string SetGridText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
@@ -641,9 +641,8 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_get_grid_text"),
      Description("Get all the data in a grid on a form as tab-separated text: the column headers " +
-        "followed by every row, columns separated by tabs and rows by newlines -- the same content as " +
-        "the grid's Copy All. Use for the Document Grid and other data grids. Currently supports " +
-        "DataboundGridControl grids.")]
+        "followed by every row, columns separated by tabs and rows by newlines. Use for the Document " +
+        "Grid and other data grids. Works for DataboundGridControl grids and plain DataGridView grids.")]
     public static string GetGridText(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Grid control name on the form, or null when the form has a single grid")] string gridId)

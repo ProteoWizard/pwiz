@@ -680,9 +680,10 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, exactly as a Ctrl-V of
-        /// that text would, starting at the anchor cell (<paramref name="column"/>, <paramref name="row"/>).
-        /// Currently supports <see cref="DataboundGridControl"/> grids (see <see cref="IJsonToolService"/>).
+        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at the anchor
+        /// cell (<paramref name="column"/>, <paramref name="row"/>), the way typing/pasting there would.
+        /// Works for a DataboundGridControl (e.g. the Document Grid) and for a plain DataGridView (e.g.
+        /// the Rule Set Editor's rules grid). See <see cref="IJsonToolService"/>.
         /// </summary>
         public static void SetGridText(string formId, string controlId, int column, int row, string text)
         {
@@ -693,35 +694,70 @@ namespace pwiz.Skyline.ToolsUI
             {
                 InvokeOnUiThread(() =>
                 {
-                    var form = FindFormById(formId);
-                    var grid = FindGrid(form, controlId);
-                    PasteGridText(grid, column, row, text ?? string.Empty);
+                    var target = FindGrid(FindFormById(formId), controlId);
+                    if (target.Databound != null)
+                        PasteGridText(target.Databound, column, row, text ?? string.Empty);
+                    else
+                        SetDataGridViewText(target.DataGridView, column, row, text ?? string.Empty);
                 });
                 return true;
             });
         }
 
-        // Finds the grid to paste into: the DataboundGridControl named controlId, or -- when controlId
-        // is null/empty -- the single grid on the form. Throws if there is no grid, or more than one
-        // and no name was given to disambiguate.
-        private static DataboundGridControl FindGrid(Form form, string controlId)
+        // A grid the connector can drive: a DataboundGridControl (driven through its rich paste/copy
+        // path, which keeps the bound document in sync) or a standalone DataGridView (driven by direct
+        // cell access, the way a user types into the cells).
+        private class GridTarget
         {
+            public DataboundGridControl Databound;
+            public DataGridView DataGridView;
+            public string Name;
+        }
+
+        // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the
+        // single grid on the form. Throws if there is no grid, or more than one and no name was given.
+        private static GridTarget FindGrid(Form form, string controlId)
+        {
+            var targets = EnumerateGridTargets(form).ToList();
             if (!string.IsNullOrEmpty(controlId))
             {
-                var named = FindControl<DataboundGridControl>(form, controlId);
+                var named = targets
+                    .Select(target => new { target, quality = MatchQuality(target.Name, null, controlId) })
+                    .Where(match => match.quality != ControlMatchQuality.None)
+                    .OrderByDescending(match => match.quality)
+                    .Select(match => match.target)
+                    .FirstOrDefault();
                 if (named == null)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"Grid not found on form {0}: {1}.", GetFormId(form), controlId));
                 return named;
             }
-            var grids = EnumerateControls(form).OfType<DataboundGridControl>().ToList();
-            if (grids.Count == 0)
+            if (targets.Count == 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"No grid found on form {0}.", GetFormId(form)));
-            if (grids.Count > 1)
+            if (targets.Count > 1)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Form {0} has more than one grid; pass a controlId to choose one.", GetFormId(form)));
-            return grids[0];
+            return targets[0];
+        }
+
+        // The grids on a form: each DataboundGridControl, plus each DataGridView that is not inside a
+        // DataboundGridControl (those inner grids are driven through the DataboundGridControl instead).
+        private static IEnumerable<GridTarget> EnumerateGridTargets(Form form)
+        {
+            foreach (var databound in EnumerateControls(form).OfType<DataboundGridControl>())
+                yield return new GridTarget { Databound = databound, Name = databound.Name };
+            foreach (var dataGridView in EnumerateControls(form).OfType<DataGridView>())
+                if (!HasDataboundAncestor(dataGridView))
+                    yield return new GridTarget { DataGridView = dataGridView, Name = dataGridView.Name };
+        }
+
+        private static bool HasDataboundAncestor(Control control)
+        {
+            for (var parent = control.Parent; parent != null; parent = parent.Parent)
+                if (parent is DataboundGridControl)
+                    return true;
+            return false;
         }
 
         // Sets the anchor cell (column/row are zero-based indices into the grid's visible columns and
@@ -740,10 +776,56 @@ namespace pwiz.Skyline.ToolsUI
             grid.PasteText(text);
         }
 
+        // Pastes tab/newline-separated text into a plain DataGridView by setting cell values from the
+        // anchor cell, the way a user typing cell-by-cell would. Skips read-only cells. Throws if the
+        // anchor (or a row a multi-row paste reaches) is out of range -- pasting cannot add rows beyond
+        // the grid's new row, just as a user cannot type into a row that is not there.
+        private static void SetDataGridViewText(DataGridView dataGridView, int column, int row, string text)
+        {
+            var visibleColumns = VisibleGridColumns(dataGridView);
+            if (column < 0 || column >= visibleColumns.Length)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
+            if (row < 0)
+                throw new ArgumentException(LlmInstruction.Format(@"Row {0} is out of range.", row));
+            var lines = SplitPasteLines(text);
+            for (int iLine = 0; iLine < lines.Length; iLine++)
+            {
+                int rowIndex = row + iLine;
+                if (rowIndex >= dataGridView.Rows.Count)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Row {0} is past the end of the grid ({1} rows).", rowIndex, dataGridView.Rows.Count));
+                var cellValues = lines[iLine].Split('\t');
+                for (int iCol = 0; iCol < cellValues.Length && column + iCol < visibleColumns.Length; iCol++)
+                {
+                    var cell = dataGridView.Rows[rowIndex].Cells[visibleColumns[column + iCol].Index];
+                    if (cell.ReadOnly)
+                        continue;
+                    // Go through the cell's edit lifecycle so the value is committed (and pushed to any
+                    // data source) the way ending a cell edit does. A grid that validates whole rows
+                    // governs whether a partially-filled new row is kept -- the same as for a user.
+                    dataGridView.CurrentCell = cell;
+                    dataGridView.BeginEdit(true);
+                    cell.Value = cellValues[iCol];
+                    dataGridView.EndEdit();
+                }
+            }
+        }
+
+        // Splits pasted text into row lines, normalizing newlines and dropping a single trailing empty
+        // line (from text that ends with a newline).
+        private static string[] SplitPasteLines(string text)
+        {
+            var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            if (lines.Length > 1 && lines[lines.Length - 1].Length == 0)
+                lines = lines.Take(lines.Length - 1).ToArray();
+            return lines;
+        }
+
         /// <summary>
         /// Returns all the text in a grid on a form -- the column headers followed by every data row --
-        /// as tab-separated columns and newline-separated rows, the same content as Copy All
-        /// (see <see cref="IJsonToolService"/>). Currently supports DataboundGridControl grids.
+        /// as tab-separated columns and newline-separated rows. Works for a DataboundGridControl (the
+        /// same content as Copy All) and for a plain DataGridView. See <see cref="IJsonToolService"/>.
         /// </summary>
         public static string GetGridText(string formId, string gridId)
         {
@@ -753,12 +835,41 @@ namespace pwiz.Skyline.ToolsUI
             using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
             {
                 var text = InvokeOnUiThread(() =>
-                    FindGrid(FindFormById(formId), gridId).GetCopyText(cancellation.Token));
+                {
+                    var target = FindGrid(FindFormById(formId), gridId);
+                    return target.Databound != null
+                        ? target.Databound.GetCopyText(cancellation.Token)
+                        : GetDataGridViewText(target.DataGridView);
+                });
                 if (text == null)
                     throw new OperationCanceledException(LlmInstruction.Format(
                         @"Reading the grid {0} was cancelled.", formId));
                 return text;
             }
+        }
+
+        // Reads a plain DataGridView as tab-separated text: the column headers followed by every data
+        // row (each cell shown as the user sees it).
+        private static string GetDataGridViewText(DataGridView dataGridView)
+        {
+            var visibleColumns = VisibleGridColumns(dataGridView);
+            var lines = new List<string>
+            {
+                TextUtil.ToEscapedTSV(visibleColumns.Select(col => col.HeaderText))
+            };
+            foreach (DataGridViewRow gridRow in dataGridView.Rows)
+            {
+                if (gridRow.IsNewRow)
+                    continue;
+                lines.Add(TextUtil.ToEscapedTSV(visibleColumns.Select(col => CellText(gridRow.Cells[col.Index]))));
+            }
+            return TextUtil.LineSeparate(lines);
+        }
+
+        // The display text of a grid cell: the formatted value the user sees, or empty for a null.
+        private static string CellText(DataGridViewCell cell)
+        {
+            return (cell.FormattedValue ?? cell.Value)?.ToString() ?? string.Empty;
         }
 
         // The visible columns of a grid in display order -- the columns that
