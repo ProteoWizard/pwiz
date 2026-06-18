@@ -1195,14 +1195,14 @@ namespace pwiz.OspreySharp.Tasks
                     break;
 
                 case FdrMethod.Simple:
-                    RunSimpleFdr(perFileEntries, config, ctx);
+                    PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
                     break;
 
                 default:
                     ctx.LogWarning(string.Format(
                         "FDR method {0} not yet supported, falling back to simple",
                         config.FdrMethod));
-                    RunSimpleFdr(perFileEntries, config, ctx);
+                    PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
                     break;
             }
         }
@@ -1225,49 +1225,6 @@ namespace pwiz.OspreySharp.Tasks
             PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config, ParquetScoreCache.PIN_FEATURE_NAMES,
                 ctx.LogInfo, passLabel);
-        }
-
-        /// <summary>
-        /// Run simple target-decoy competition FDR (no machine learning).
-        /// Uses coelution_sum as the scoring function.
-        /// </summary>
-        private void RunSimpleFdr(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            OspreyConfig config,
-            PipelineContext ctx)
-        {
-            var fdrController = new FdrController(config.RunFdr);
-
-            foreach (var kvp in perFileEntries)
-            {
-                var result = fdrController.CompeteAndFilter(
-                    kvp.Value,
-                    e => e.CoelutionSum,
-                    e => e.IsDecoy,
-                    e => e.EntryId);
-
-                ctx.LogInfo(string.Format(
-                    "  {0}: {1} targets pass (FDR={2:F4}, {3} target wins, {4} decoy wins)",
-                    kvp.Key, result.PassingTargets.Count, result.FdrAtThreshold,
-                    result.NTargetWins, result.NDecoyWins));
-
-                // Assign q-values based on simple competition
-                // Passing targets get fdr_at_threshold, non-passing get 1.0
-                var passingIds = new HashSet<uint>();
-                foreach (var target in result.PassingTargets)
-                    passingIds.Add(target.EntryId);
-
-                foreach (var entry in kvp.Value)
-                {
-                    if (!entry.IsDecoy && passingIds.Contains(entry.EntryId))
-                    {
-                        entry.RunPrecursorQvalue = result.FdrAtThreshold;
-                        entry.RunPeptideQvalue = result.FdrAtThreshold;
-                        entry.ExperimentPrecursorQvalue = result.FdrAtThreshold;
-                        entry.ExperimentPeptideQvalue = result.FdrAtThreshold;
-                    }
-                }
-            }
         }
 
         /// <summary>

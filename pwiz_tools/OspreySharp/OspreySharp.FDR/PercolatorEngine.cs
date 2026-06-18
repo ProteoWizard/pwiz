@@ -212,6 +212,49 @@ namespace pwiz.OspreySharp.FDR
         }
 
         /// <summary>
+        /// Run simple target-decoy competition FDR (no machine learning).
+        /// Uses coelution_sum as the scoring function.
+        /// </summary>
+        public static void RunSimpleFdr(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            OspreyConfig config,
+            Action<string> logInfo)
+        {
+            var fdrController = new FdrController(config.RunFdr);
+
+            foreach (var kvp in perFileEntries)
+            {
+                var result = fdrController.CompeteAndFilter(
+                    kvp.Value,
+                    e => e.CoelutionSum,
+                    e => e.IsDecoy,
+                    e => e.EntryId);
+
+                logInfo(string.Format(
+                    "  {0}: {1} targets pass (FDR={2:F4}, {3} target wins, {4} decoy wins)",
+                    kvp.Key, result.PassingTargets.Count, result.FdrAtThreshold,
+                    result.NTargetWins, result.NDecoyWins));
+
+                // Assign q-values based on simple competition
+                // Passing targets get fdr_at_threshold, non-passing get 1.0
+                var passingIds = new HashSet<uint>();
+                foreach (var target in result.PassingTargets)
+                    passingIds.Add(target.EntryId);
+
+                foreach (var entry in kvp.Value)
+                {
+                    if (!entry.IsDecoy && passingIds.Contains(entry.EntryId))
+                    {
+                        entry.RunPrecursorQvalue = result.FdrAtThreshold;
+                        entry.RunPeptideQvalue = result.FdrAtThreshold;
+                        entry.ExperimentPrecursorQvalue = result.FdrAtThreshold;
+                        entry.ExperimentPeptideQvalue = result.FdrAtThreshold;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Streaming Percolator dispatch for multi-observation-per-precursor
         /// inputs (total entries above <c>MaxTrainSize * 2</c>). Mirrors
         /// Rust's <c>run_percolator_fdr</c> streaming branch

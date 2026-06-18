@@ -1984,10 +1984,10 @@ namespace pwiz.OspreySharp.FDR
         /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
         /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
         /// the direct (<see cref="RunPercolator"/>) and streaming
-        /// (FirstJoinTask.RunPercolatorStreaming) paths select identical subsets for
-        /// identical input instead of hand-mirroring the dedup + index map-back.
+        /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
+        /// for identical input instead of hand-mirroring the dedup + index map-back.
         /// </summary>
-        public static int[] BuildTrainingSubset(
+        internal static int[] BuildTrainingSubset(
             bool[] labels, uint[] entryIds, string[] peptides,
             IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
             out int[] bestPerPrecursor)
@@ -2065,7 +2065,7 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>
         /// Subsample entries by peptide group, keeping target-decoy pairs and charge states together.
         /// </summary>
-        public static int[] SubsampleByPeptideGroup(
+        internal static int[] SubsampleByPeptideGroup(
             bool[] labels, uint[] entryIds, string[] peptides,
             int maxEntries, ulong seed)
         {
