@@ -1,16 +1,15 @@
-# Live Reports tutorial (en) -- SkylineMCP / AI Connector steps  [SCAFFOLD -- WORK IN PROGRESS]
+# Live Reports tutorial (en) -- SkylineMCP / AI Connector steps  [PARTIAL -- see gaps at bottom]
 #
-# English (en) step list (see PRM/en/mcp-steps.txt for the verb/format reference -- same verbs:
-# InvokeMenuItem, InvokeContextMenuItem, ClickFormButton, SetFormValue, and the WaitForForm /
-# WaitForNoForm sync primitives). Each localized tutorial needs its own; {DATA} is not localized.
+# English (en) step list. Verbs: InvokeMenuItem, InvokeContextMenuItem, ClickFormButton,
+# ClickToolStripItem, SetFormValue, SetGridText, GetGridText, CloseForm, and the WaitForForm /
+# WaitForNoForm sync primitives. Each localized tutorial needs its own; {DATA} is not localized.
 #
 # {DATA} is the LiveReports folder that contains Rat_plasma.sky and SampleInfo.txt
 # (https://skyline.ms/tutorials/LiveReports.zip).
 #
-# STATUS: this tutorial is much more dialog- and grid-heavy than PRM, and exercises several verbs
-# the connector does NOT have yet. Only the opening steps below are validated; the rest of the
-# tutorial is blocked on the verb gaps listed at the bottom. This file is a scaffold so the work
-# can continue incrementally as those verbs land.
+# STATUS: validated live through the Document Grid section. The tutorial then reaches the "Define
+# Annotation" dialog, which is blocked on two remaining verb gaps (plain DataGridView cells and a
+# CheckedListBox item -- see the gap list). Steps below are validated unless marked BLOCKED.
 
 # --- Open the starting document ---
 # (If a prior document has unsaved changes, File > Open first shows a "Save changes?" prompt
@@ -23,54 +22,66 @@ WaitForNoForm   "FileDialog:Open"
 # Document: 48 proteins, 125 peptides, 721 transitions, 42 replicates.
 
 # --- Enable Audit Logging ---
-# View > Live Reports > Audit Log opens the Audit Log form. Validated.
 InvokeMenuItem  "View > Live Reports > Audit Log"
 WaitForForm     "AuditLogForm:Audit Log: All Info"
-# Check the "Enable audit logging" checkbox. This CheckBox has AutoCheck=false and acts on its
-# Click handler, so it must be CLICKED (ClickFormButton), not value-set (SetFormValue would only set
-# Checked and not run the handler). ClickFormButton now clicks checkboxes -- validated.
+# "Enable audit logging" is a CheckBox with AutoCheck=false that acts on its Click handler, so it
+# must be CLICKED (ClickFormButton), not value-set. Validated.
 ClickFormButton "AuditLogForm:Audit Log: All Info" "Enable audit logging"
-# NEXT STEP NOT YET DRIVEABLE: "Close the Audit Log window" -- no close-form verb. See gap (2).
+# Close the Audit Log window. CloseForm now closes a docked/floating tool window. Validated.
+CloseForm       "AuditLogForm:Audit Log: All Info"
 
 # --- Showing the Document Grid ---
+# Note: the Document Grid opens on whichever view the saved document last used (here "Peptides"),
+# so the form title -- and thus the form id -- is "Document Grid: <ViewName>". Read it back from
+# GetOpenForms rather than assuming "Proteins".
 InvokeMenuItem  "View > Live Reports > Document Grid"
-WaitForForm     "DocumentGridForm:Document Grid: Proteins"
-# The "Reports" dropdown BUTTON (a ToolStripDropDownButton) is now clickable -- validated:
-ClickFormButton "DocumentGridForm:Document Grid: Proteins" "Reports"
-# ... but its ITEMS (Proteins / Peptides / Replicates / Customize Report / ...) are built
-# dynamically when the dropdown opens and are not in the static DropDownItems, so clicking an item
-# by name does not work yet. See gap (1b).
+WaitForForm     "DocumentGridForm:Document Grid: *"
+# The "Reports" dropdown items are built on demand; ClickToolStripItem opens the dropdown first.
+# Validated (Proteins, Replicates).
+ClickToolStripItem "DocumentGridForm:Document Grid: Peptides" "Reports > Proteins"
+# GetGridText returns the whole grid (headers + every row) as TSV. Validated (48-protein report).
+GetGridText     "DocumentGridForm:Document Grid: Proteins" null
+ClickToolStripItem "DocumentGridForm:Document Grid: Proteins" "Reports > Replicates"
+
+# --- Defining some Replicate Annotations ---
+InvokeMenuItem  "Settings > Document Settings"
+WaitForForm     "DocumentSettingsDlg:Document Settings"
+ClickFormButton "DocumentSettingsDlg:Document Settings" "Add"
+WaitForForm     "DefineAnnotationDlg:Define Annotation"
+SetFormValue    "DefineAnnotationDlg:Define Annotation" "Name" "Cohort"
+SetFormValue    "DefineAnnotationDlg:Define Annotation" "Type" "Value List"
+# BLOCKED (gap 4): the "Values" list here is a plain DataGridView, NOT a DataboundGridControl, so
+#   SetGridText cannot fill it ("No grid found on form"). Needs SetGridText to support plain grids.
+# BLOCKED (gap 6): "Applies to > Replicates" is a CheckedListBox item; ClickFormButton cannot check
+#   it ("No clickable control found"). Needs a verb to (un)check a CheckedListBox item by name.
+# ClickFormButton "DefineAnnotationDlg:Define Annotation" "OK"   # once the two fields can be set
+#
+# Once the Cohort/SubjectID annotations EXIST, filling their columns in the Replicates report IS
+# driveable now: that grid is a DataboundGridControl, so e.g.
+#   SetGridText "DocumentGridForm:Document Grid: Replicates" null <CohortCol> 0 "Healthy\nDiseased\n..."
+# works (validated mechanism). Only DEFINING the annotation is blocked.
 
 # ========================================================================================
-# VERB GAPS BLOCKING THE REST OF THIS TUTORIAL (in roughly the order the tutorial hits them)
+# VERB GAPS
 # ========================================================================================
-# (1) [DONE] Click a CheckBox / ToolStrip item. ClickFormButton now clicks any control (the whole
-#     control tree, like SetFormValue) AND the form's ToolStrip items -- validated on the audit-log
-#     "Enable audit logging" checkbox (AutoCheck=false) and the Document Grid "Reports" dropdown button.
-# (1b) [REMAINING] Dynamically-built dropdown ITEMS. The "Reports" dropdown's items (Proteins /
-#     Peptides / Replicates / Customize Report / ...), the Pivot Editor dropdown, and the Group
-#     Comparison Bar Graph / Heat Map dropdowns are built on DropDownOpening and are NOT in the static
-#     DropDownItems, so they cannot be matched by name yet. Needs open-populate-find handling, the way
-#     InvokeContextMenuItem builds a graph's menu before walking it.
-# (2) Close a docked/floating form. "Close the Audit Log window", "Close the Bar Graph", etc. There
-#     is no close-form verb. (ClickFormButton can hit a native dialog's Cancel/Close, not a docked
-#     tool window's title-bar X.)
-# (3) SelectTab on a tabbed dialog. The Document Settings dialog (Annotations / Result Files / Lists
-#     / Reports tabs) and Peptide Settings (Quantification tab) are used repeatedly. (Already on the
-#     native-file-dialog TODO as not-yet-done.)
-# (4) DataGridView cell editing by column/row. Entering annotation values; the Rules grid; the List
-#     Designer property grid; pasting list data. SetFormValue's grid path only sets one "current"
-#     cell, not a chosen row/column.
-# (5) TreeView expand + check a node. The Customize Report column tree (expand Peptides > Precursors
-#     > Precursor Results, check Total Area / Normalized Area / SubjectID, etc.).
-# (6) ListBox (multi-)selection + the column-list reorder/remove buttons in Customize Report.
-# (7) Right-click a GRID COLUMN HEADER context menu (Number Format, Filter, Sort Ascending/
-#     Descending). This is a DataGridView header context menu -- different surface from the graph
-#     ContextMenuBuilder that InvokeContextMenuItem drives; it would need its own handling.
-# (8) The Pivot Editor, Find Column, Choose Format, Rule Editor, Edit Group Comparison dialogs --
-#     mostly fillable once (3)-(6) exist, but each needs its specific controls addressed.
-# (9) Out of scope (desktop, not Skyline): the Notepad copy/paste of SampleInfo.txt; the document
-#     grid clipboard paste. A connector run would set list values another way (CSV import / typing).
+# (1)  [DONE] Click a CheckBox / ToolStrip button. ClickFormButton clicks any control + ToolStrip items.
+# (1b) [DONE] Dynamically-built dropdown ITEMS -> ClickToolStripItem (opens the dropdown, then matches).
+# (2)  [DONE] Close a docked/floating form or dialog -> CloseForm.
+# (3)  [DONE] SelectTab on a tabbed dialog -> ClickFormButton on the tab text.
+# (3b) [DONE] Read a grid -> GetGridText; paste into a DataboundGridControl -> SetGridText.
+# (4)  [REMAINING] Plain DataGridView cell editing. SetGridText only supports DataboundGridControl;
+#      the Define Annotation "Values" list and similar plain grids are not reached.
+# (5)  [REMAINING] TreeView expand + check a node (the Customize Report column tree).
+# (6)  [REMAINING] CheckedListBox / ListBox item (un)check or (multi-)select ("Applies to" here; the
+#      Customize Report column-list reorder/remove buttons).
+# (7)  [REMAINING] Right-click a grid COLUMN HEADER context menu (Number Format, Filter, Sort).
+# (8)  The Pivot Editor, Find Column, Choose Format, Rule Editor, Edit Group Comparison dialogs --
+#      mostly fillable once (4)-(7) exist.
+# (9)  Out of scope (desktop, not Skyline): the Notepad copy/paste of SampleInfo.txt.
 #
-# Suggested order to unblock the most of the tutorial: (1) ToolStrip/CheckBox click, then (3)
-# SelectTab, then (5) TreeView check + (4) grid cells, then (7) grid-header context menus.
+# USABILITY NOTE: for the "single grid on the form" case, GetGridText/SetGridText need an EMPTY
+# gridId/controlId. The literal string "null" is treated as a control name and fails; the MCP layer
+# should map an omitted/"null" argument to a real null.
+#
+# Suggested next verbs to unblock the most: (4) plain-grid cells, then (6) CheckedListBox/ListBox,
+# then (5) TreeView check, then (7) grid-header context menus.
