@@ -1243,27 +1243,15 @@ namespace pwiz.OspreySharp.Tasks
             OspreyConfig config,
             PipelineContext ctx)
         {
-            // The core computation + propagation lives in
-            // ProteinFdr.RunFirstPassProteinFdr (also driven by the --task
-            // MergeNode rehydration path in PerFileRescoreTask). It returns the
-            // parsimony / FDR artifacts it computed so we can log summary counts
-            // and emit the diagnostic dump here WITHOUT recomputing them.
-            var result = ProteinFdr.RunFirstPassProteinFdr(
-                perFileEntries, fullLibrary, config);
-
-            ctx.LogInfo(string.Format(
-                "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
-                result.DetectedPeptides.Count));
-
-            int nAtRunFdr = 0;
-            foreach (var qv in result.ProteinFdr.GroupQvalues.Values)
-            {
-                if (qv <= config.RunFdr)
-                    nAtRunFdr++;
-            }
-            ctx.LogInfo(string.Format(
-                "First-pass protein FDR: {0} target groups at {1:P1} FDR",
-                nAtRunFdr, config.RunFdr));
+            // Orchestration (compute + propagation + summary logging) lives in
+            // ProteinFdrEngine.RunFirstPass (shared with the --task MergeNode
+            // rehydration path in PerFileRescoreTask). It returns the parsimony /
+            // FDR artifacts so we can emit the Stage-6 diagnostic dump here WITHOUT
+            // recomputing them. The dump + ProteinFdrOnly early-exit stay in this
+            // Tasks facade because OspreySharp.FDR cannot reference
+            // OspreySharp.Diagnostics (the Diagnostics project references FDR).
+            var result = ProteinFdrEngine.RunFirstPass(
+                perFileEntries, fullLibrary, config, ctx.LogInfo);
 
             if (ctx.Diagnostics?.DumpProteinFdr ?? false)
             {

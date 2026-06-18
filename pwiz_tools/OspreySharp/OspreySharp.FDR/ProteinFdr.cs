@@ -164,6 +164,37 @@ namespace pwiz.OspreySharp.FDR
     }
 
     /// <summary>
+    /// The computed artifacts of a second-pass / run-wide protein-FDR run, returned
+    /// by <see cref="ProteinFdrEngine.RunSecondPass"/> so the Tasks-layer caller can
+    /// emit the Stage-7 detected-peptides and protein-FDR diagnostic dumps (and the
+    /// <c>Stage7ProteinFdrOnly</c> early-exit decision) WITHOUT recomputing parsimony
+    /// / FDR. The run has already propagated <c>RunProteinQvalue</c> and
+    /// <c>ExperimentProteinQvalue</c> onto the stubs; these are the same intermediate
+    /// objects it used.
+    /// </summary>
+    public class SecondPassProteinFdrResult
+    {
+        /// <summary>Target peptides passing experiment-level run FDR (the detected set).</summary>
+        public HashSet<string> DetectedPeptides { get; }
+
+        /// <summary>Parsimony grouping built from the detected peptides.</summary>
+        public ProteinParsimonyResult Parsimony { get; }
+
+        /// <summary>The picked-protein FDR result (group + peptide q-values).</summary>
+        public ProteinFdrResult ProteinFdr { get; }
+
+        public SecondPassProteinFdrResult(
+            HashSet<string> detectedPeptides,
+            ProteinParsimonyResult parsimony,
+            ProteinFdrResult proteinFdr)
+        {
+            DetectedPeptides = detectedPeptides;
+            Parsimony = parsimony;
+            ProteinFdr = proteinFdr;
+        }
+    }
+
+    /// <summary>
     /// Protein parsimony and FDR computation.
     /// Port of osprey-fdr/src/protein.rs.
     /// </summary>
