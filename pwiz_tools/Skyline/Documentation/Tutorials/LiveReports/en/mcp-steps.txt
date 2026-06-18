@@ -64,9 +64,10 @@ InvokeMenuItem  "View > Live Reports > Document Grid"
 ClickToolStripItem "DocumentGridForm:Document Grid: *" "Reports > Replicates"
 SetGridText     "DocumentGridForm:Document Grid: Replicates" "" 3 0 "102\n102\n102\n...(42 rows)"
 
-# The "Cohort" Value-List annotation is still BLOCKED: its "Values" list is a plain DataGridView, not
-# a DataboundGridControl, so SetGridText cannot fill it ("No grid found on form"). See gap (4). The
-# Cohort column itself (once the annotation exists) would fill fine via SetGridText.
+# The "Cohort" Value-List annotation is now driveable: its "Values" control is a multi-line TextBox
+# (not a grid), so after SetFormValue "Type" "Value List", set the values with
+#   SetFormValue "DefineAnnotationDlg:Define Annotation" "Values" "Healthy\nDiseased"
+# (the "Values" label resolves to the textbox via gap (10)).
 
 # ========================================================================================
 # VERB GAPS
@@ -76,24 +77,21 @@ SetGridText     "DocumentGridForm:Document Grid: Replicates" "" 3 0 "102\n102\n1
 # (2)  [DONE] Close a docked/floating form or dialog -> CloseForm.
 # (3)  [DONE] SelectTab on a tabbed dialog -> ClickFormButton on the tab text.
 # (3b) [DONE] Read a grid -> GetGridText; paste into a DataboundGridControl -> SetGridText.
-# (6)  [DONE] CheckedListBox item (un)check -> ClickFormButton on the item text (toggles it).
-# (4)  [REMAINING] Plain DataGridView cell editing. SetGridText only supports DataboundGridControl;
-#      the Define Annotation "Values" list (and the Rules grid, List Designer, etc.) are not reached.
-# (5)  [REMAINING] TreeView expand + check a node (the Customize Report column tree).
-# (6b) [REMAINING] ListBox (multi-)select + the Customize Report column-list reorder/remove buttons.
+# (4)  [DONE] Plain DataGridView read (GetGridText) and cell set (SetGridText). A grid that validates
+#      whole rows still governs whether a partial new row is kept (e.g. the Rule Set Editor).
+# (5)  [DONE] TreeView expand + check a node -> SetItemChecked with a '>'-separated node path (each
+#      level is expanded so lazily-built nodes are present). Validated live on the Customize Report tree.
+# (6)  [DONE] CheckedListBox item (un)check -> ClickFormButton (toggle) or SetItemChecked (explicit).
+# (6b) [DONE] ListBox/Tree (de)select -> SetItemSelected. (The Customize Report reorder/remove buttons
+#      are ordinary buttons -> ClickFormButton.)
+# (10) [DONE] SetFormValue resolves a matched label to the field it labels (next editable in tab order).
 # (7)  [REMAINING] Right-click a grid COLUMN HEADER context menu (Number Format, Filter, Sort).
-# (8)  The Pivot Editor, Find Column, Choose Format, Rule Editor, Edit Group Comparison dialogs --
-#      mostly fillable once (4),(5),(6b),(7),(10) exist.
+# (8)  The Pivot Editor, Find Column, Choose Format, Edit Group Comparison dialogs -- mostly fillable
+#      now with the verbs above; each still needs its specific controls walked.
 # (9)  Out of scope (desktop, not Skyline): the Notepad copy/paste of SampleInfo.txt.
-# (10) [REMAINING] SetFormValue resolves a labeled input. A label whose visible text matches (e.g.
-#      "Name:") shadows the TextBox it labels, so SetFormValue sets the LABEL. Workaround: pass the
-#      input's control name (e.g. "tbxName"). Fix: when the best match is a Label, set the control it
-#      labels (next in tab order / nearest following input) instead. HIGH leverage -- every dialog
-#      with labeled fields (Rule Editor, Edit Group Comparison, ...) hits this.
 #
 # USABILITY NOTE: for the "single grid on the form" case, GetGridText/SetGridText need an EMPTY
 # gridId/controlId. The literal string "null" is treated as a control name and fails; the MCP layer
 # should map an omitted/"null" argument to a real null.
 #
-# Suggested next, by leverage: (10) labeled-input resolution, then (4) plain-grid cells, then
-# (5) TreeView check, then (6b) ListBox, then (7) grid-header context menus.
+# Suggested next, by leverage: (7) grid-header context menus, then walk the remaining (8) dialogs.
