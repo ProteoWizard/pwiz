@@ -83,19 +83,31 @@ namespace pwiz.SkylineTestFunctional
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() =>
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
 
+            const string toolTipKey = "textTemplateFile.ToolTip";
             string originalToolTip = null;
             RunUI(() =>
             {
                 // At load time the tooltip is the localized value the designer applied. The refactor
-                // must capture exactly the string the old code fetched via ComponentResourceManager.
+                // must capture the genuine localized resource, not a hardcoded or fallback string.
                 // This relies on the dialog opening on a non-Waters-Connect instrument (or WC with no
                 // saved template), so the tooltip is the designer value and not a URL override. That
                 // holds because this runs first, before any test persists a WC instrument/template.
                 originalToolTip = exportMethodDlg.TemplateFileToolTip;
-                var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
-                Assert.AreEqual(resources.GetString("textTemplateFile.ToolTip"), originalToolTip,
-                    "Captured initial template-file tooltip does not match the designer/resx value.");
                 Assert.IsFalse(string.IsNullOrEmpty(originalToolTip), "Expected a non-empty designer tooltip.");
+
+                // The tooltip is genuinely localized: Japanese is translated (ExportMethodDlg.ja.resx)
+                // while French has no resx and falls back to invariant English, so the two differ. This
+                // makes the capture assertion below non-vacuous - it proves the captured value tracks
+                // the running culture rather than just echoing a single same-culture resx lookup.
+                var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
+                var frenchToolTip = resources.GetString(toolTipKey, new CultureInfo("fr"));
+                var japaneseToolTip = resources.GetString(toolTipKey, new CultureInfo("ja"));
+                Assert.AreNotEqual(frenchToolTip, japaneseToolTip,
+                    "Expected the template-file tooltip to differ between French and Japanese.");
+
+                // The captured live tooltip must equal the resx value for the culture this test runs in.
+                Assert.AreEqual(resources.GetString(toolTipKey, CultureInfo.CurrentUICulture), originalToolTip,
+                    "Captured tooltip does not match the localized resx value for the current culture.");
 
                 exportMethodDlg.InstrumentType = ExportInstrumentType.WATERS_XEVO_TQ_WATERS_CONNECT;
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
