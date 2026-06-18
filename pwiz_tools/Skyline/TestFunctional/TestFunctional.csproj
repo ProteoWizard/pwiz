@@ -461,6 +461,7 @@
     <Compile Include="ClickCheckedListConnectorTest.cs" />
     <Compile Include="ClickControlConnectorTest.cs" />
     <Compile Include="ContextMenuConnectorTest.cs" />
+    <Compile Include="GridCellConnectorTest.cs" />
     <Compile Include="PlainGridConnectorTest.cs" />
     <Compile Include="SetGridTextConnectorTest.cs" />
     <Compile Include="SetItemConnectorTest.cs" />

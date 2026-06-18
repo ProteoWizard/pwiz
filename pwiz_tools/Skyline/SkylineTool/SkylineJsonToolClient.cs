@@ -108,7 +108,7 @@ namespace SkylineTool
 
         // UI interaction
         public void InvokeMenuItem(string menuPath) { Call(nameof(InvokeMenuItem), menuPath); }
-        public void InvokeContextMenuItem(string formId, string menuPath) { Call(nameof(InvokeContextMenuItem), formId, menuPath); }
+        public void InvokeContextMenuItem(string formId, string controlId, string menuPath) { Call(nameof(InvokeContextMenuItem), formId, controlId, menuPath); }
         public void ClickFormButton(string formId, string button) { Call(nameof(ClickFormButton), formId, button); }
         public void ClickToolStripItem(string formId, string menuPath) { Call(nameof(ClickToolStripItem), formId, menuPath); }
         public void SetFormValue(string formId, string controlId, string value) { Call(nameof(SetFormValue), formId, controlId, value); }

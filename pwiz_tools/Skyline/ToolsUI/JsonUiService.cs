@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
@@ -438,27 +439,113 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Invokes an item on a graph's right-click context menu by its visible path (e.g.
-        /// "Normalize To > None"). The menu is built the way a right-click would build it -- the
-        /// graph's ContextMenuBuilder handlers populate a fresh ContextMenuStrip -- then the item is
-        /// located by path and clicked. Runs on the UI thread. Use for forms with HasGraph=True.
+        /// Invokes an item on a right-click context menu by its visible path (e.g. "Normalize To &gt;
+        /// None"). The target is given by <paramref name="controlId"/>: empty/null for the form's graph,
+        /// or a grid cell locator "<c>grid[column,row]</c>" to right-click that cell (the grid name may
+        /// be empty for the form's single grid; row may be -1 for a column header). The menu is built
+        /// the way a right-click would build it, then the item is located by path and clicked. Runs on
+        /// the UI thread. See <see cref="IJsonToolService"/>.
         /// </summary>
-        public static void InvokeContextMenuItem(string formId, string menuPath)
+        public static void InvokeContextMenuItem(string formId, string controlId, string menuPath)
         {
-            InvokeOnUiThread(() =>
+            ValidateFormIdFormat(formId);
+            RunWithDialogWatch(() =>
             {
-                var graph = FindFormById(formId) as DockableFormEx;
-                var zedGraph = graph != null ? TryGetZedGraphControl(graph) : null;
-                if (zedGraph == null)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Not a graph form: {0}. Context menus are available on forms with HasGraph=True (see skyline_get_open_forms).",
-                        formId));
-                using (var menuStrip = new ContextMenuStrip())
+                InvokeOnUiThread(() =>
                 {
-                    PopulateGraphContextMenu(zedGraph, menuStrip);
-                    FindMenuItemIn(menuStrip.Items, menuPath).PerformClick();
-                }
+                    var form = FindFormById(formId);
+                    if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
+                        InvokeGridCellContextMenuItem(form, gridName, column, row, menuPath);
+                    else
+                        InvokeGraphContextMenuItem(form, menuPath);
+                });
+                return true;
             });
+        }
+
+        // Invokes an item on the graph's context menu, built the way a right-click would (the graph's
+        // ContextMenuBuilder populates a fresh menu). Used when controlId does not name a grid cell.
+        private static void InvokeGraphContextMenuItem(Form form, string menuPath)
+        {
+            var zedGraph = form is DockableFormEx graph ? TryGetZedGraphControl(graph) : null;
+            if (zedGraph == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Not a graph form: {0}. A graph context menu needs HasGraph=True; for a grid cell pass a controlId like ""grid[col,row]"" (see skyline_get_open_forms).",
+                    GetFormId(form)));
+            using (var menuStrip = new ContextMenuStrip())
+            {
+                PopulateGraphContextMenu(zedGraph, menuStrip);
+                FindMenuItemIn(menuStrip.Items, menuPath).PerformClick();
+            }
+        }
+
+        // Invokes an item on a grid cell's right-click context menu. Raises the grid's
+        // CellContextMenuStripNeeded for the target cell (as a right-click does) to obtain the menu,
+        // fires its Opening so on-demand items are built, then clicks the item by path.
+        private static void InvokeGridCellContextMenuItem(Form form, string gridName, int column, int row, string menuPath)
+        {
+            var dataGridView = GetGridView(form, gridName);
+            var visibleColumns = VisibleGridColumns(dataGridView);
+            if (column < 0 || column >= visibleColumns.Length)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
+            int columnIndex = visibleColumns[column].Index;
+            if (row >= 0 && row < dataGridView.Rows.Count)
+                dataGridView.CurrentCell = dataGridView.Rows[row].Cells[columnIndex];
+            var args = new DataGridViewCellContextMenuStripNeededEventArgs(columnIndex, row);
+            RaiseProtectedHandler(dataGridView, @"OnCellContextMenuStripNeeded", args);
+            var menuStrip = args.ContextMenuStrip;
+            if (menuStrip == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The cell at column {0}, row {1} has no context menu.", column, row));
+            RaiseProtectedHandler(menuStrip, @"OnOpening", new CancelEventArgs());
+            FindMenuItemIn(menuStrip.Items, menuPath).PerformClick();
+        }
+
+        // The DataGridView of the grid named gridName on the form (its DataboundGridControl's inner
+        // grid, or a standalone DataGridView), or the form's single grid when gridName is empty.
+        private static DataGridView GetGridView(Form form, string gridName)
+        {
+            var target = FindGrid(form, gridName);
+            return target.Databound != null ? target.Databound.DataGridView : target.DataGridView;
+        }
+
+        // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single
+        // grid). Returns false for a plain control id (no "[col,row]" suffix). column/row are
+        // zero-based indices into the grid's visible columns and its rows; row may be -1 for a header.
+        private static bool TryParseGridCell(string controlId, out string gridName, out int column, out int row)
+        {
+            gridName = controlId ?? string.Empty;
+            column = row = 0;
+            if (string.IsNullOrEmpty(controlId))
+                return false;
+            var match = Regex.Match(controlId, @"^(?<name>.*?)\s*\[\s*(?<col>-?\d+)\s*,\s*(?<row>-?\d+)\s*\]$");
+            if (!match.Success)
+                return false;
+            gridName = match.Groups[@"name"].Value;
+            column = int.Parse(match.Groups[@"col"].Value);
+            row = int.Parse(match.Groups[@"row"].Value);
+            return true;
+        }
+
+        // Raises a protected On&lt;Event&gt; method (e.g. DataGridView.OnCellContextMenuStripNeeded,
+        // ContextMenuStrip.OnOpening) by reflection, walking up to where it is declared, so the wired
+        // handlers run the way the real UI event would.
+        private static void RaiseProtectedHandler(object target, string methodName, object eventArgs)
+        {
+            for (var type = target.GetType(); type != null; type = type.BaseType)
+            {
+                var method = type.GetMethod(methodName,
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly,
+                    null, new[] { eventArgs.GetType() }, null);
+                if (method != null)
+                {
+                    method.Invoke(target, new[] { eventArgs });
+                    return;
+                }
+            }
+            throw new ArgumentException(LlmInstruction.Format(
+                @"Could not raise {0} on {1}.", methodName, target.GetType().Name));
         }
 
         // Populates a ContextMenuStrip the way right-clicking the graph would: it invokes the graph's
@@ -660,6 +747,12 @@ namespace pwiz.Skyline.ToolsUI
                 InvokeOnUiThread(() =>
                 {
                     var form = FindFormById(formId);
+                    // controlId can name a grid cell ("grid[column,row]") -- set that cell's value.
+                    if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
+                    {
+                        SetGridCellValue(form, gridName, column, row, value);
+                        return;
+                    }
                     var control = FindControl<Control>(form, controlId);
                     if (control == null)
                         throw new ArgumentException(LlmInstruction.Format(
@@ -810,6 +903,17 @@ namespace pwiz.Skyline.ToolsUI
                     dataGridView.EndEdit();
                 }
             }
+        }
+
+        // Sets a single grid cell (column/row are zero-based indices into the grid's visible columns
+        // and its rows) to value, reusing the grid paste path so a DataboundGridControl stays in sync.
+        private static void SetGridCellValue(Form form, string gridName, int column, int row, string value)
+        {
+            var target = FindGrid(form, gridName);
+            if (target.Databound != null)
+                PasteGridText(target.Databound, column, row, value);
+            else
+                SetDataGridViewText(target.DataGridView, column, row, value);
         }
 
         // Splits pasted text into row lines, normalizing newlines and dropping a single trailing empty

@@ -860,9 +860,9 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.InvokeMenuItem(menuPath);
         }
 
-        public void InvokeContextMenuItem(string formId, string menuPath)
+        public void InvokeContextMenuItem(string formId, string controlId, string menuPath)
         {
-            JsonUiService.InvokeContextMenuItem(formId, menuPath);
+            JsonUiService.InvokeContextMenuItem(formId, controlId, menuPath);
         }
 
         public void ClickFormButton(string formId, string button)

@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
             // its context menu item by control name (translation-proof).
             string graphId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == @"GraphSummary" && form.HasGraph).Id;
-            JsonUiService.InvokeContextMenuItem(graphId, @"peptideLogScaleContextMenuItem");
+            JsonUiService.InvokeContextMenuItem(graphId, null, @"peptideLogScaleContextMenuItem");
 
             // The menu item has CheckOnClick=true, so the click flipped it from unchecked to checked,
             // turning the log scale on.

@@ -548,19 +548,22 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_invoke_context_menu_item"),
-     Description("Invoke an item on a graph's right-click context menu by its visible path, e.g. " +
-        "'Normalize To > None'. Use for a graph form (HasGraph=True from skyline_get_open_forms); the " +
-        "context menu is built the way a right-click would build it, then the item is matched by its " +
-        "visible text (the mnemonic '&' and a trailing ellipsis are ignored) or its control name, " +
-        "case-insensitively, with '>'-separated segments. This reaches graph options (Normalize To, " +
-        "Show Library, Transitions, Peptide ID Times, ...) that are not on the main menu.")]
+     Description("Invoke an item on a right-click context menu by its visible path, e.g. " +
+        "'Normalize To > None'. The target is given by controlId: leave it empty/null for the form's " +
+        "graph (HasGraph=True), or pass a grid cell locator 'grid[column,row]' to right-click that " +
+        "cell -- e.g. a Document Grid column-header menu (Number Format, Sort, Filter). The grid name " +
+        "may be empty for the form's single grid; column/row are zero-based indices into the grid's " +
+        "visible columns and rows (row may be -1 for a column header). The menu is built the way a " +
+        "right-click would, then the item is matched by its visible text (mnemonic '&' and trailing " +
+        "ellipsis ignored) or control name, case-insensitively, with '>'-separated segments.")]
     public static string InvokeContextMenuItem(
-        [Description("Graph form identifier from skyline_get_open_forms (TypeName:Title, HasGraph=True)")] string formId,
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Empty/null for the form's graph, or a grid cell locator 'grid[column,row]'")] string controlId,
         [Description("Context menu path with '>'-separated segments, e.g. 'Normalize To > None'")] string menuPath)
     {
         return Invoke(connection =>
         {
-            connection.InvokeContextMenuItem(formId, menuPath);
+            connection.InvokeContextMenuItem(formId, controlId, menuPath);
             return $"Invoked context menu item '{menuPath}' on {formId}.";
         });
     }
@@ -605,10 +608,11 @@ public static class SkylineTools
         "(Type 'FileDialog') the value is the file name(s) to open and controlId is ignored; select " +
         "several files by quoting each path and separating with spaces, e.g. \"C:\\a.raw\" \"C:\\b.raw\". " +
         "For a WinForms form it sets the text, the checked state ('true'/'false'), or the selected " +
-        "item of the control named by controlId.")]
+        "item of the control named by controlId; a matched label sets the field it labels. controlId " +
+        "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
     public static string SetFormValue(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Control name on the form; ignored for a native file dialog")] string controlId,
+        [Description("Control name, a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
         [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
             "or space-separated quoted file paths for a native file dialog")] string value)
     {

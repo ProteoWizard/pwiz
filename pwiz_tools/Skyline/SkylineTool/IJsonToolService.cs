@@ -325,14 +325,18 @@ namespace SkylineTool
         void InvokeMenuItem(string menuPath);
 
         /// <summary>
-        /// Invokes an item on a graph form's right-click context menu by its visible path, e.g.
-        /// "Normalize To > None". The menu is built the way a right-click would build it, then the
-        /// item is matched by text (mnemonic '&amp;' and trailing ellipsis ignored) or control name,
-        /// the same way <see cref="InvokeMenuItem"/> matches the main menu.
+        /// Invokes an item on a right-click context menu by its visible path, e.g. "Normalize To >
+        /// None". The target is <paramref name="controlId"/>: null/empty for the form's graph, or a
+        /// grid cell locator "grid[column,row]" to right-click that cell (the grid name may be empty
+        /// for the form's single grid; column/row are zero-based indices into the grid's visible
+        /// columns and rows, and row may be -1 for a column header). The menu is built the way a
+        /// right-click would, then the item is matched by text or control name like
+        /// <see cref="InvokeMenuItem"/>.
         /// </summary>
-        /// <param name="formId">Graph form identifier from <see cref="GetOpenForms"/> (HasGraph=true).</param>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">Null/empty for the graph, or a grid cell locator "grid[column,row]".</param>
         /// <param name="menuPath">Menu path; segments separated by '>' (also '|' or '/').</param>
-        void InvokeContextMenuItem(string formId, string menuPath);
+        void InvokeContextMenuItem(string formId, string controlId, string menuPath);
 
         /// <summary>
         /// Clicks a control on an open form, matching <paramref name="button"/> against the control's
@@ -359,10 +363,12 @@ namespace SkylineTool
         /// Sets the value of a control on an open form. For a native file dialog the value is the
         /// file name(s) to open -- use <c>"a" "b"</c> quoting to select several -- and
         /// <paramref name="controlId"/> is ignored. For a WinForms form it sets the text, checked
-        /// state, or selected item of the control named <paramref name="controlId"/>.
+        /// state, or selected item of the control named <paramref name="controlId"/> (a matched label
+        /// sets the field it labels). <paramref name="controlId"/> may also be a grid cell locator
+        /// "grid[column,row]" (grid name optional) to set that cell.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        /// <param name="controlId">Control name (WinForms); ignored for a native file dialog.</param>
+        /// <param name="controlId">Control name, a grid cell locator "grid[column,row]", or ignored for a native file dialog.</param>
         /// <param name="value">Text, "true"/"false", or item text, per control kind.</param>
         void SetFormValue(string formId, string controlId, string value);
 
