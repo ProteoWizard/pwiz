@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 55;
+        private const int EXPECTED_TOOL_COUNT = 57;
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =

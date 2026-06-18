@@ -664,6 +664,42 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_set_item_checked"),
+     Description("Check or uncheck an item in a checked-list box or a tree view on a form. For a " +
+        "checked-list box the item is matched by its display text; for a tree view the item is a " +
+        "'>'-separated path of node texts, e.g. 'Peptides > Precursors > Precursor Results'. Use to " +
+        "check columns in the Customize Report field tree, the annotation 'Applies to' list, etc.")]
+    public static string SetItemChecked(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("List/tree control name on the form, or null when the form has a single one")] string controlId,
+        [Description("Item display text, or a '>'-separated node path for a tree view")] string item,
+        [Description("True to check the item, false to uncheck it")] bool isChecked)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetItemChecked(formId, controlId, item, isChecked);
+            return $"Set checked={isChecked} on '{item}' in {formId}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_item_selected"),
+     Description("Select or deselect an item in a list box / checked-list box or a tree view on a " +
+        "form. For a list the item is matched by its display text; for a tree view the item is a " +
+        "'>'-separated path of node texts. Selecting highlights the item (a tree view selects that " +
+        "node); this is separate from checking it.")]
+    public static string SetItemSelected(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("List/tree control name on the form, or null when the form has a single one")] string controlId,
+        [Description("Item display text, or a '>'-separated node path for a tree view")] string item,
+        [Description("True to select the item, false to deselect it")] bool selected)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetItemSelected(formId, controlId, item, selected);
+            return $"Set selected={selected} on '{item}' in {formId}.";
+        });
+    }
+
     [McpServerTool(Name = "skyline_get_graph_data"),
      Description("Extract tab-separated data from a Skyline graph. Returns the same data as " +
         "Skyline's Copy Data clipboard format, including pane titles, axis labels, and all " +

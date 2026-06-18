@@ -396,6 +396,28 @@ namespace SkylineTool
         void CloseForm(string formId);
 
         /// <summary>
+        /// Checks or unchecks an item in a CheckedListBox or a TreeView on a form. For a CheckedListBox
+        /// <paramref name="item"/> is matched by its display text; for a TreeView it is a '&gt;'-separated
+        /// path of node texts, e.g. "Peptides &gt; Precursors &gt; Precursor Results".
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">List/tree control name, or null when the form has a single one.</param>
+        /// <param name="item">Item display text, or a '&gt;'-separated node path for a TreeView.</param>
+        /// <param name="isChecked">True to check the item, false to uncheck it.</param>
+        void SetItemChecked(string formId, string controlId, string item, bool isChecked);
+
+        /// <summary>
+        /// Selects or deselects an item in a ListBox/CheckedListBox or a TreeView on a form. For a list
+        /// <paramref name="item"/> is matched by its display text; for a TreeView it is a '&gt;'-separated
+        /// path of node texts.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">List/tree control name, or null when the form has a single one.</param>
+        /// <param name="item">Item display text, or a '&gt;'-separated node path for a TreeView.</param>
+        /// <param name="selected">True to select the item, false to deselect it.</param>
+        void SetItemSelected(string formId, string controlId, string item, bool selected);
+
+        /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
         /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>

@@ -908,6 +908,161 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
+        /// <summary>
+        /// Checks or unchecks an item in a CheckedListBox or a TreeView on a form (see
+        /// <see cref="IJsonToolService"/>). For a CheckedListBox the item is matched by its display
+        /// text; for a TreeView <paramref name="item"/> is a '&gt;'-separated path of node texts.
+        /// </summary>
+        public static void SetItemChecked(string formId, string controlId, string item, bool isChecked)
+        {
+            ValidateFormIdFormat(formId);
+            RunWithDialogWatch(() =>
+            {
+                InvokeOnUiThread(() =>
+                {
+                    var control = FindListOrTreeControl(FindFormById(formId), controlId);
+                    switch (control)
+                    {
+                        case CheckedListBox checkedListBox:
+                            checkedListBox.SetItemChecked(FindListItemIndex(checkedListBox, item), isChecked);
+                            break;
+                        case TreeView treeView:
+                            FindTreeNode(treeView, item).Checked = isChecked;
+                            break;
+                        default:
+                            throw new ArgumentException(LlmInstruction.Format(
+                                @"Checking items is supported for a CheckedListBox or TreeView, not {0}.", control.Name));
+                    }
+                });
+                return true;
+            });
+        }
+
+        /// <summary>
+        /// Selects or deselects an item in a ListBox/CheckedListBox or a TreeView on a form (see
+        /// <see cref="IJsonToolService"/>). For a list the item is matched by its display text; for a
+        /// TreeView <paramref name="item"/> is a '&gt;'-separated path of node texts.
+        /// </summary>
+        public static void SetItemSelected(string formId, string controlId, string item, bool selected)
+        {
+            ValidateFormIdFormat(formId);
+            RunWithDialogWatch(() =>
+            {
+                InvokeOnUiThread(() =>
+                {
+                    var control = FindListOrTreeControl(FindFormById(formId), controlId);
+                    switch (control)
+                    {
+                        case ListBox listBox: // CheckedListBox derives from ListBox
+                            listBox.SetSelected(FindListItemIndex(listBox, item), selected);
+                            break;
+                        case TreeView treeView:
+                            var node = FindTreeNode(treeView, item);
+                            if (selected)
+                                treeView.SelectedNode = node;
+                            else if (treeView.SelectedNode == node)
+                                treeView.SelectedNode = null;
+                            break;
+                        default:
+                            throw new ArgumentException(LlmInstruction.Format(
+                                @"Selecting items is supported for a ListBox or TreeView, not {0}.", control.Name));
+                    }
+                });
+                return true;
+            });
+        }
+
+        // Finds the ListBox/CheckedListBox or TreeView to act on: the one named controlId (resolving a
+        // matched label to the list/tree it labels), or -- when controlId is null/empty -- the single
+        // such control on the form. Throws if there is none, or more than one and no name was given.
+        private static Control FindListOrTreeControl(Form form, string controlId)
+        {
+            bool IsListOrTree(Control control) => control is ListBox || control is TreeView;
+            if (string.IsNullOrEmpty(controlId))
+            {
+                var controls = EnumerateControls(form).Where(IsListOrTree).ToList();
+                if (controls.Count == 0)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"No list or tree control found on form {0}.", GetFormId(form)));
+                if (controls.Count > 1)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Form {0} has more than one list or tree control; pass a controlId.", GetFormId(form)));
+                return controls[0];
+            }
+            var match = FindControl<Control>(form, controlId);
+            if (match == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Control not found on form {0}: {1}.", GetFormId(form), controlId));
+            if (match is System.Windows.Forms.Label)
+                match = NextControlInTabOrder(form, match, IsListOrTree)
+                    ?? throw new ArgumentException(LlmInstruction.Format(
+                        @"'{0}' on form {1} is a label with no list or tree control after it.", controlId, GetFormId(form)));
+            if (!IsListOrTree(match))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Control {0} on form {1} is not a list or tree control.", controlId, GetFormId(form)));
+            return match;
+        }
+
+        // Finds the index of the best-matching item (by display text) in a ListBox. Throws if none.
+        private static int FindListItemIndex(ListBox listBox, string item)
+        {
+            int best = -1;
+            var bestQuality = ControlMatchQuality.None;
+            for (int i = 0; i < listBox.Items.Count; i++)
+            {
+                var quality = MatchQuality(null, listBox.GetItemText(listBox.Items[i]), item);
+                if (quality > bestQuality)
+                {
+                    best = i;
+                    bestQuality = quality;
+                }
+            }
+            if (best < 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Item not found in {0}: {1}.", listBox.Name, item));
+            return best;
+        }
+
+        // Walks a TreeView by a '>'-separated path of node texts, expanding each level so nodes built
+        // on demand (e.g. the Customize Report field tree) are present before the next segment is
+        // matched. Must run on the UI thread. Throws if a segment does not match.
+        private static TreeNode FindTreeNode(TreeView treeView, string path)
+        {
+            var segments = ParseMenuSegments(path);
+            var nodes = treeView.Nodes;
+            TreeNode current = null;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                current = BestTreeNode(nodes, segments[i]);
+                if (current == null)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Tree node not found: {0} (no match for '{1}').", path, segments[i]));
+                if (i < segments.Length - 1)
+                {
+                    current.Expand(); // populate lazily-built children before descending
+                    nodes = current.Nodes;
+                }
+            }
+            return current;
+        }
+
+        // Picks the child node that best matches key by node name or visible text. Returns null if none.
+        private static TreeNode BestTreeNode(TreeNodeCollection nodes, string key)
+        {
+            TreeNode best = null;
+            var bestQuality = ControlMatchQuality.None;
+            foreach (TreeNode node in nodes)
+            {
+                var quality = MatchQuality(node.Name, node.Text, key);
+                if (quality > bestQuality)
+                {
+                    best = node;
+                    bestQuality = quality;
+                }
+            }
+            return best;
+        }
+
         // Level 3: Complete UI operations - Graphs
 
         public static FormInfo[] GetOpenForms()
@@ -1690,11 +1845,19 @@ namespace pwiz.Skyline.ToolsUI
         // null if no editable control follows. Must run on the UI thread.
         private static Control NextEditableInTabOrder(Control container, Control afterControl)
         {
+            return NextControlInTabOrder(container, afterControl, IsEditableValueControl);
+        }
+
+        // Finds the first visible+enabled control after the given control in tab order that satisfies
+        // the predicate -- used to resolve a matched label to the field it labels. Must run on the UI
+        // thread. Returns null if none follows.
+        private static Control NextControlInTabOrder(Control container, Control afterControl, Func<Control, bool> predicate)
+        {
             for (var next = container.GetNextControl(afterControl, true);
                  next != null;
                  next = container.GetNextControl(next, true))
             {
-                if (next.Visible && next.Enabled && IsEditableValueControl(next))
+                if (next.Visible && next.Enabled && predicate(next))
                     return next;
             }
             return null;

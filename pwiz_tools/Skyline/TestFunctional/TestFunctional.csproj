@@ -463,6 +463,7 @@
     <Compile Include="ContextMenuConnectorTest.cs" />
     <Compile Include="PlainGridConnectorTest.cs" />
     <Compile Include="SetGridTextConnectorTest.cs" />
+    <Compile Include="SetItemConnectorTest.cs" />
     <Compile Include="PrmConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />

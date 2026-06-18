@@ -115,6 +115,8 @@ namespace SkylineTool
         public void SetGridText(string formId, string controlId, int column, int row, string text) { Call(nameof(SetGridText), formId, controlId, column, row, text); }
         public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
         public void CloseForm(string formId) { Call(nameof(CloseForm), formId); }
+        public void SetItemChecked(string formId, string controlId, string item, bool isChecked) { Call(nameof(SetItemChecked), formId, controlId, item, isChecked); }
+        public void SetItemSelected(string formId, string controlId, string item, bool selected) { Call(nameof(SetItemSelected), formId, controlId, item, selected); }
 
         // 1-arg methods
         public string GetSelectedElementLocator(string elementType)
