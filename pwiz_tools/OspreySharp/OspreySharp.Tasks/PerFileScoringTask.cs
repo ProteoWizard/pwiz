@@ -577,16 +577,7 @@ namespace pwiz.OspreySharp.Tasks
             bool librarySuppliesDecoys = config.DecoysInLibrary ||
                 config.DecoyMethod == DecoyMethod.FromLibrary;
             if (librarySuppliesDecoys)
-            {
-                LibraryDecoyMarker.ApplyLibraryDecoyMarking(
-                    library, config.DecoyPrefixes, out var markingStats);
-                ctx.LogInfo(string.Format(
-                    @"Library-decoy mode: matched prefixes {0}",
-                    FormatPrefixList(config.DecoyPrefixes)));
-                ctx.LogInfo(string.Format(
-                    @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
-                    markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
-            }
+                MarkSuppliedDecoys(library, config, ctx);
 
             int nLibraryTargets = 0;
             foreach (var entry in library)
@@ -624,129 +615,8 @@ namespace pwiz.OspreySharp.Tasks
             else
             {
                 decoys = new List<LibraryEntry>();
-
-                // Match Rust pipeline.rs at v26.6.0 (bcd7249): the
-                // "no decoys at all" check runs BEFORE manifest
-                // application. The manifest CAN flip predictor-stripped
-                // entries to IsDecoy=true (the Carafe failure mode commit
-                // d23d496 was built for), so this ordering means a
-                // manifest cannot rescue a load that the prefix scan
-                // misses entirely. TODO(brendanmaclean,maccoss): discuss
-                // with Mike whether this should be relaxed to defer the
-                // check until after manifest application; current C#
-                // ordering matches Rust v26.6.0 for byte parity on the
-                // cross-impl Test-Regression gate.
-                int nLibraryDecoys = library.Count - nLibraryTargets;
-                if (nLibraryDecoys == 0)
-                {
-                    ctx.LogError(string.Format(
-                        @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
-                        @"Check that the library actually contains decoys with one of these prefixes on " +
-                        @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
-                        FormatPrefixList(config.DecoyPrefixes)));
-                    ctx.ExitCode = 1;
+                if (!TryPairSuppliedDecoys(library, config, nLibraryTargets, ctx))
                     return false;
-                }
-
-                // Pair each decoy with its target so their base_ids match
-                // -- required for SVM target-decoy competition, LDA
-                // calibration, and CV fold grouping. Hybrid path:
-                // manifest first when provided (exact pairs from
-                // FDRBench), composition fallback for whatever the
-                // manifest doesn't cover. Net result on real Carafe-
-                // generated entrapment libraries: ~30% via manifest,
-                // ~70% via composition, >99% total.
-                var pairingState = new PairingState();
-                LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                    out int nTargetsForStats, out int nDecoysForStats);
-                var pairingStats = new PairingStats
-                {
-                    NTargets = nTargetsForStats,
-                    NDecoys = nDecoysForStats,
-                };
-                if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
-                {
-                    ctx.LogInfo(string.Format(
-                        @"Loading decoy pairing manifest from {0}",
-                        config.DecoyPairingManifestPath));
-                    DecoyPairingManifest manifest;
-                    try
-                    {
-                        manifest = DecoyPairingManifest.FromTsv(
-                            config.DecoyPairingManifestPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogError(string.Format(
-                            @"Failed to read decoy pairing manifest {0}: {1}",
-                            config.DecoyPairingManifestPath, ex.Message));
-                        ctx.ExitCode = 1;
-                        return false;
-                    }
-                    var manifestStats = manifest.ApplyToLibrary(library, pairingState);
-                    pairingStats.NPairedViaManifest = manifestStats.NPaired;
-                    if (manifestStats.NProteinsReplaced > 0)
-                    {
-                        ctx.LogInfo(string.Format(
-                            @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
-                            @"entries (clean source-protein accessions from the manifest's " +
-                            @"`proteins` column)",
-                            manifestStats.NProteinsReplaced));
-                    }
-                    if (manifestStats.NNewlyMarkedDecoy > 0)
-                    {
-                        // Manifest classified entries as decoy that were
-                        // loaded as targets (the predictor stripped the
-                        // decoy prefix). Update the decoy count so the
-                        // pairing fraction is honest.
-                        ctx.LogInfo(string.Format(
-                            @"Library-decoy mode: manifest classified {0} additional library " +
-                            @"entries as decoys (their protein accessions lacked a decoy prefix)",
-                            manifestStats.NNewlyMarkedDecoy));
-                        LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                            out nTargetsForStats, out nDecoysForStats);
-                        pairingStats.NTargets = nTargetsForStats;
-                        pairingStats.NDecoys = nDecoysForStats;
-                    }
-                }
-                else
-                {
-                    ctx.LogInfo(
-                        @"Pairing library decoys to targets by amino-acid composition " +
-                        @"(no manifest provided).");
-                }
-                pairingStats.NPairedViaComposition =
-                    LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                        library, config.DecoyPrefixes, pairingState);
-                pairingStats.NPaired = pairingStats.NPairedViaManifest +
-                    pairingStats.NPairedViaComposition;
-                // Defense-in-depth saturating subtract (matches Rust's
-                // saturating_sub intent; not load-bearing).
-                pairingStats.NUnpairedDecoys = Math.Max(0,
-                    pairingStats.NDecoys - pairingStats.NPaired);
-                pairingStats.NUnpairedTargets = Math.Max(0,
-                    pairingStats.NTargets - pairingState.ClaimedTargets.Count);
-                ctx.LogInfo(string.Format(
-                    @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
-                    @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
-                    pairingStats.NPaired, pairingStats.NDecoys,
-                    pairingStats.PairedFraction * 100.0,
-                    pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
-                    pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
-                if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
-                {
-                    ctx.LogError(string.Format(
-                        @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
-                        @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
-                        @"target-decoy competition. Either supply a pairing manifest, ensure the " +
-                        @"library uses matching protein accessions with one of `decoy_prefixes` " +
-                        @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
-                        pairingStats.PairedFraction * 100.0,
-                        config.DecoyPairMinFraction * 100.0,
-                        FormatPrefixList(config.DecoyPrefixes)));
-                    ctx.ExitCode = 1;
-                    return false;
-                }
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;
@@ -787,6 +657,160 @@ namespace pwiz.OspreySharp.Tasks
 
             _fullLibrary = fullLibrary;
             _libraryById = libraryById;
+            return true;
+        }
+
+        /// <summary>
+        /// When the library supplies its own decoys (DIA-NN / EncyclopeDIA
+        /// output with rev_ / DECOY_ prefixes), mark them in place by Decoy
+        /// column / protein-accession prefix. DecoyMethod.FromLibrary is treated
+        /// as a synonym for DecoysInLibrary -- historically it silently fell
+        /// through to Reverse generation, the bug behind v26.5.3's library-decoy
+        /// mode being effectively unusable. Marking runs BEFORE the target count
+        /// is taken so the count reflects post-marking state and matches Rust
+        /// pipeline.rs.
+        /// </summary>
+        private void MarkSuppliedDecoys(List<LibraryEntry> library, OspreyConfig config, PipelineContext ctx)
+        {
+            LibraryDecoyMarker.ApplyLibraryDecoyMarking(
+                library, config.DecoyPrefixes, out var markingStats);
+            ctx.LogInfo(string.Format(
+                @"Library-decoy mode: matched prefixes {0}",
+                FormatPrefixList(config.DecoyPrefixes)));
+            ctx.LogInfo(string.Format(
+                @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
+                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
+        }
+
+        /// <summary>
+        /// Library-supplied-decoy path: confirm the library actually contains
+        /// decoys, then pair each decoy with its target so their base_ids match
+        /// -- required for SVM target-decoy competition, LDA calibration, and CV
+        /// fold grouping. Hybrid: manifest first when provided (exact pairs from
+        /// FDRBench), amino-acid composition fallback for the remainder. Returns
+        /// false (with <see cref="PipelineContext.ExitCode"/> set) when there
+        /// are no decoys at all, the pairing manifest is unreadable, or the
+        /// paired fraction is below <c>config.DecoyPairMinFraction</c>.
+        /// </summary>
+        private bool TryPairSuppliedDecoys(
+            List<LibraryEntry> library, OspreyConfig config, int nLibraryTargets, PipelineContext ctx)
+        {
+            // Match Rust pipeline.rs at v26.6.0 (bcd7249): the
+            // "no decoys at all" check runs BEFORE manifest
+            // application. The manifest CAN flip predictor-stripped
+            // entries to IsDecoy=true (the Carafe failure mode commit
+            // d23d496 was built for), so this ordering means a
+            // manifest cannot rescue a load that the prefix scan
+            // misses entirely. TODO(brendanmaclean,maccoss): discuss
+            // with Mike whether this should be relaxed to defer the
+            // check until after manifest application; current C#
+            // ordering matches Rust v26.6.0 for byte parity on the
+            // cross-impl Test-Regression gate.
+            int nLibraryDecoys = library.Count - nLibraryTargets;
+            if (nLibraryDecoys == 0)
+            {
+                ctx.LogError(string.Format(
+                    @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
+                    @"Check that the library actually contains decoys with one of these prefixes on " +
+                    @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
+                    FormatPrefixList(config.DecoyPrefixes)));
+                ctx.ExitCode = 1;
+                return false;
+            }
+
+            // Hybrid pairing. Net result on real Carafe-generated entrapment
+            // libraries: ~30% via manifest, ~70% via composition, >99% total.
+            var pairingState = new PairingState();
+            LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                out int nTargetsForStats, out int nDecoysForStats);
+            var pairingStats = new PairingStats
+            {
+                NTargets = nTargetsForStats,
+                NDecoys = nDecoysForStats,
+            };
+            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                ctx.LogInfo(string.Format(
+                    @"Loading decoy pairing manifest from {0}",
+                    config.DecoyPairingManifestPath));
+                DecoyPairingManifest manifest;
+                try
+                {
+                    manifest = DecoyPairingManifest.FromTsv(
+                        config.DecoyPairingManifestPath);
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogError(string.Format(
+                        @"Failed to read decoy pairing manifest {0}: {1}",
+                        config.DecoyPairingManifestPath, ex.Message));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
+                var manifestStats = manifest.ApplyToLibrary(library, pairingState);
+                pairingStats.NPairedViaManifest = manifestStats.NPaired;
+                if (manifestStats.NProteinsReplaced > 0)
+                {
+                    ctx.LogInfo(string.Format(
+                        @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
+                        @"entries (clean source-protein accessions from the manifest's " +
+                        @"`proteins` column)",
+                        manifestStats.NProteinsReplaced));
+                }
+                if (manifestStats.NNewlyMarkedDecoy > 0)
+                {
+                    // Manifest classified entries as decoy that were
+                    // loaded as targets (the predictor stripped the
+                    // decoy prefix). Update the decoy count so the
+                    // pairing fraction is honest.
+                    ctx.LogInfo(string.Format(
+                        @"Library-decoy mode: manifest classified {0} additional library " +
+                        @"entries as decoys (their protein accessions lacked a decoy prefix)",
+                        manifestStats.NNewlyMarkedDecoy));
+                    LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                        out nTargetsForStats, out nDecoysForStats);
+                    pairingStats.NTargets = nTargetsForStats;
+                    pairingStats.NDecoys = nDecoysForStats;
+                }
+            }
+            else
+            {
+                ctx.LogInfo(
+                    @"Pairing library decoys to targets by amino-acid composition " +
+                    @"(no manifest provided).");
+            }
+            pairingStats.NPairedViaComposition =
+                LibraryDecoyPairing.PairLibraryDecoysByComposition(
+                    library, config.DecoyPrefixes, pairingState);
+            pairingStats.NPaired = pairingStats.NPairedViaManifest +
+                pairingStats.NPairedViaComposition;
+            // Defense-in-depth saturating subtract (matches Rust's
+            // saturating_sub intent; not load-bearing).
+            pairingStats.NUnpairedDecoys = Math.Max(0,
+                pairingStats.NDecoys - pairingStats.NPaired);
+            pairingStats.NUnpairedTargets = Math.Max(0,
+                pairingStats.NTargets - pairingState.ClaimedTargets.Count);
+            ctx.LogInfo(string.Format(
+                @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
+                @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
+                pairingStats.NPaired, pairingStats.NDecoys,
+                pairingStats.PairedFraction * 100.0,
+                pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
+                pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
+            if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
+            {
+                ctx.LogError(string.Format(
+                    @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
+                    @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
+                    @"target-decoy competition. Either supply a pairing manifest, ensure the " +
+                    @"library uses matching protein accessions with one of `decoy_prefixes` " +
+                    @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
+                    pairingStats.PairedFraction * 100.0,
+                    config.DecoyPairMinFraction * 100.0,
+                    FormatPrefixList(config.DecoyPrefixes)));
+                ctx.ExitCode = 1;
+                return false;
+            }
             return true;
         }
 
