@@ -456,6 +456,8 @@ namespace pwiz.Skyline.ToolsUI
                     var form = FindFormById(formId);
                     if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
                         InvokeGridCellContextMenuItem(form, gridName, column, row, menuPath);
+                    else if (!string.IsNullOrEmpty(controlId) && FindControl<Control>(form, controlId) is SequenceTree)
+                        InvokeTreeNodeContextMenuItem(menuPath);
                     else
                         InvokeGraphContextMenuItem(form, menuPath);
                 });
@@ -500,6 +502,22 @@ namespace pwiz.Skyline.ToolsUI
                     @"The cell at column {0}, row {1} has no context menu.", column, row));
             RaiseProtectedHandler(menuStrip, @"OnOpening", new CancelEventArgs());
             FindMenuItemIn(menuStrip.Items, menuPath).PerformClick();
+        }
+
+        // Invokes an item on the Targets tree's right-click context menu (e.g. "Pick Children", which
+        // opens the pick-list popup). The tree's ContextMenuStrip is shown manually rather than wired to
+        // the control, so it is fetched from the main window; its Opening is fired (the way a right-click
+        // would) so item enablement is computed for the currently selected node. Select the node first
+        // (skyline_set_item_selected on the tree) -- items like Pick Children act on the selection.
+        private static void InvokeTreeNodeContextMenuItem(string menuPath)
+        {
+            var menuStrip = Program.MainWindow.ContextMenuTreeNode;
+            RaiseProtectedHandler(menuStrip, @"OnOpening", new CancelEventArgs());
+            var item = FindMenuItemIn(menuStrip.Items, menuPath);
+            if (!item.Enabled)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Tree context-menu item '{0}' is disabled for the current selection. Select the target node first (skyline_set_item_selected on the tree).", menuPath));
+            item.PerformClick();
         }
 
         // The DataGridView of the grid named gridName on the form (its DataboundGridControl's inner
@@ -702,6 +720,20 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        // Matches a ToolStrip item by its name or caption; for an image-only item (no caption, e.g. the
+        // pick-list's green-check OK button) it falls back to the tooltip, which is how a user reads it.
+        private static ControlMatchQuality ToolStripMatchQuality(ToolStripItem item, string key)
+        {
+            var quality = MatchQuality(item.Name, item.Text, key);
+            if (string.IsNullOrEmpty(item.Text))
+            {
+                var tipQuality = MatchQuality(null, item.ToolTipText, key);
+                if (tipQuality > quality)
+                    quality = tipQuality;
+            }
+            return quality;
+        }
+
         // Picks the ToolStripItem that best matches key (same ranking as FindClickTarget: highest
         // text-match quality, then prefer a visible+enabled item). Returns null if none matches.
         private static ToolStripItem BestToolStripItem(IEnumerable<ToolStripItem> items, string key)
@@ -711,7 +743,7 @@ namespace pwiz.Skyline.ToolsUI
             var bestInteractable = false;
             foreach (var item in items)
             {
-                var quality = MatchQuality(item.Name, item.Text, key);
+                var quality = ToolStripMatchQuality(item, key);
                 if (quality == ControlMatchQuality.None)
                     continue;
                 var interactable = item.Visible && item.Enabled;
@@ -1024,7 +1056,15 @@ namespace pwiz.Skyline.ToolsUI
             {
                 InvokeOnUiThread(() =>
                 {
-                    var control = FindListOrTreeControl(FindFormById(formId), controlId);
+                    var form = FindFormById(formId);
+                    // The pick-list popup (Pick Children) is an owner-drawn ListBox whose checkboxes are
+                    // PickListChoice.Chosen, not a CheckedListBox; match the item by its visible label.
+                    if (form is PopupPickList pickList)
+                    {
+                        pickList.SetItemChecked(FindPickListIndex(pickList, item), isChecked);
+                        return;
+                    }
+                    var control = FindListOrTreeControl(form, controlId);
                     switch (control)
                     {
                         case CheckedListBox checkedListBox:
@@ -1114,6 +1154,28 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Control {0} on form {1} is not a list, tree, or list-view control.", controlId, GetFormId(form)));
             return match;
+        }
+
+        // Finds the index of the best-matching choice (by its visible label) in a pick-list popup.
+        // Throws if none matches. The index matches PopupPickList.SetItemChecked's item ordering.
+        private static int FindPickListIndex(PopupPickList pickList, string item)
+        {
+            var labels = pickList.ItemNames.ToList();
+            int best = -1;
+            var bestQuality = ControlMatchQuality.None;
+            for (int i = 0; i < labels.Count; i++)
+            {
+                var quality = MatchQuality(null, labels[i], item);
+                if (quality > bestQuality)
+                {
+                    best = i;
+                    bestQuality = quality;
+                }
+            }
+            if (best < 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Item not found in the pick list: {0}.", item));
+            return best;
         }
 
         // Finds the index of the best-matching item (by display text) in a ListBox. Throws if none.
@@ -1780,7 +1842,7 @@ namespace pwiz.Skyline.ToolsUI
                 Consider(ControlMatches(control, button), control.Visible && control.Enabled,
                     () => MakeControlTarget(control));
             foreach (var item in EnumerateToolStripItems(form))
-                Consider(MatchQuality(item.Name, item.Text, button), item.Visible && item.Enabled,
+                Consider(ToolStripMatchQuality(item, button), item.Visible && item.Enabled,
                     () => new ClickTarget { ToolStripItem = item });
             // Items inside a CheckedListBox (e.g. the "Applies to" list) are not controls, so match them
             // by their display text and treat a hit as a click that toggles the item's check.

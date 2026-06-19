@@ -550,15 +550,17 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_invoke_context_menu_item"),
      Description("Invoke an item on a right-click context menu by its visible path, e.g. " +
         "'Normalize To > None'. The target is given by controlId: leave it empty/null for the form's " +
-        "graph (HasGraph=True), or pass a grid cell locator 'grid[column,row]' to right-click that " +
-        "cell -- e.g. a Document Grid column-header menu (Number Format, Sort, Filter). The grid name " +
+        "graph (HasGraph=True), pass a grid cell locator 'grid[column,row]' to right-click that " +
+        "cell -- e.g. a Document Grid column-header menu (Number Format, Sort, Filter) -- or pass the " +
+        "name of the Targets tree ('sequenceTree') to use its node menu, e.g. 'Pick Children' to open a " +
+        "node's pick-list popup (select the node first with skyline_set_item_selected). The grid name " +
         "may be empty for the form's single grid; column/row are zero-based indices into the grid's " +
         "visible columns and rows (row may be -1 for a column header). The menu is built the way a " +
         "right-click would, then the item is matched by its visible text (mnemonic '&' and trailing " +
         "ellipsis ignored) or control name, case-insensitively, with '>'-separated segments.")]
     public static string InvokeContextMenuItem(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Empty/null for the form's graph, or a grid cell locator 'grid[column,row]'")] string controlId,
+        [Description("Empty/null for the form's graph, a grid cell locator 'grid[column,row]', or a tree name like 'sequenceTree'")] string controlId,
         [Description("Context menu path with '>'-separated segments, e.g. 'Normalize To > None'")] string menuPath)
     {
         return Invoke(connection =>
@@ -669,10 +671,12 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_set_item_checked"),
-     Description("Check or uncheck an item in a checked-list box, a tree view, or a list view on a form. For a " +
-        "checked-list box the item is matched by its display text; for a tree view the item is a " +
-        "'>'-separated path of node texts, e.g. 'Peptides > Precursors > Precursor Results'. Use to " +
-        "check columns in the Customize Report field tree, the annotation 'Applies to' list, etc.")]
+     Description("Check or uncheck an item in a checked-list box, a tree view, a list view, or a Pick-Children " +
+        "pick-list popup on a form. For a checked-list box or pick-list the item is matched by its display " +
+        "text; for a tree view the item is a '>'-separated path of node texts, e.g. " +
+        "'Peptides > Precursors > Precursor Results'. Use to check columns in the Customize Report field " +
+        "tree, the annotation 'Applies to' list, or transitions in a precursor's pick-list (opened with " +
+        "skyline_invoke_context_menu_item 'Pick Children'; commit it with skyline_click_form_button 'OK').")]
     public static string SetItemChecked(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("List/tree control name on the form, or null when the form has a single one")] string controlId,

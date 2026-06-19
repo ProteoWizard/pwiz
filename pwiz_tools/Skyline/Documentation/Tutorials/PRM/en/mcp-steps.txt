@@ -144,13 +144,51 @@ InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Normaliz
 # appear only when a peptide with library data is selected. Selecting a specific target
 # (skyline_set_selection) is available but its element locators are not captured here.
 
+# --- Configuring a Skyline Document for PRM (the tutorial's manual path) -----------------
+# The streamlined wizard above configures full-scan for you. The tutorial also teaches the manual
+# path: open the document, set Transition Settings by hand, then add the precursor transitions with
+# the Targets-tree pick-list. These steps are connector-driveable (validated live through OK on
+# Transition Settings; the Pick Children popup is covered by PickChildrenConnectorTest).
+#
+# Settings > Transition Settings -- tabs are selected with ClickFormButton on the tab text, and the
+# combo boxes resolve from their adjacent labels (SetFormValue label -> next control in tab order).
+# InvokeMenuItem  "Settings > Transition Settings"
+# WaitForForm     "TransitionSettingsUI:Transition Settings"
+# ClickFormButton "TransitionSettingsUI:Transition Settings" "Full-Scan"
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Isotope peaks included" "Count"
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Precursor mass analyzer" "QIT"
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Acquisition method" "PRM"
+# # RT extraction window: the textbox inside the "time around MS/MS IDs" flow panel is tbxTimeAroundMs2Ids.
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "tbxTimeAroundMs2Ids" "2"
+# ClickFormButton "TransitionSettingsUI:Transition Settings" "Library"
+# # Ion match tolerance: addressed by control NAME textMzMatchTolerance.
+# # DISCREPANCY: the tutorial says enter 0.7, but current Skyline validates "<= 0.6" ("Method match
+# # tolerance m/z must be less than or equal to 0.6") and rejects 0.7 on OK. Use 0.6 (or update the
+# # tutorial). The dialog-watch surfaces the validation alert as the SetFormValue/OK error text.
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "textMzMatchTolerance" "0.6"
+# ClickFormButton "TransitionSettingsUI:Transition Settings" "OK"
+# WaitForNoForm   "TransitionSettingsUI:Transition Settings"
+#
+# Add the precursor transitions per precursor via the Targets-tree pick-list ("Pick Children"):
+# InvokeMenuItem  "Edit > Expand All > Precursors"
+# # For each precursor node (path = 'Protein > Peptide > Precursor', using the live node texts):
+# SetItemSelected       "SequenceTreeForm:Targets" "sequenceTree" "<protein> > <peptide> > <precursor>" true
+# InvokeContextMenuItem "SequenceTreeForm:Targets" "sequenceTree" "Pick Children"
+# WaitForForm           "PopupPickList:*"
+# SetItemChecked        "PopupPickList:*" "" "<transition label>" true
+# ClickFormButton       "PopupPickList:*" "OK"
+# WaitForNoForm         "PopupPickList:*"
+
 # --- Notes / known limitations found while validating against a live Skyline ---
 # 1. The native Save As / Save dialog IS driveable (modern IFileDialog: file name set via
 #    WM_SETTEXT on its Edit, accepted via the Save button). It lists as "FileDialog:Save As".
 #    This tutorial opens an already-saved document, so it is not exercised here.
-# 2. Still NOT supported: selecting a tabbed settings dialog's tab (SelectTab); checking a
-#    precursor in a tree pop-up pick-list; and GetFormState (enumerate a form's controls + labels),
-#    which is what would let the connector DISCOVER the right item label/name per form instead of
-#    relying on prior knowledge of control names.
+# 2. Now supported (were prior gaps): selecting a tabbed settings dialog's tab -- ClickFormButton on
+#    the tab's text; and checking a transition in the Targets-tree pop-up pick-list -- select the
+#    node (SetItemSelected on "sequenceTree"), open it with InvokeContextMenuItem "sequenceTree"
+#    "Pick Children", toggle items with SetItemChecked, commit with ClickFormButton "OK" (the green
+#    check). See the "Configuring a Skyline Document for PRM" section below. Still NOT supported:
+#    GetFormState (enumerate a form's controls + labels), which is what would let the connector
+#    DISCOVER the right item label/name per form instead of relying on prior knowledge of names.
 # 3. RadioButton selection (e.g. the "PRM" workflow, the "Retention time filtering" options) is
 #    done with SetFormValue "<formId>" "<radio label>" true.
