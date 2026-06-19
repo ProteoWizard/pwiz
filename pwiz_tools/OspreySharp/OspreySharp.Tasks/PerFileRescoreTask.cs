@@ -426,8 +426,11 @@ namespace pwiz.OspreySharp.Tasks
                 if (ctx.Config.ProteinFdr.HasValue && bundle.PerFileEntries.Count > 0)
                 {
                     var fullLibrary = ctx.Get<FullLibrary>().Value;
-                    ProteinFdr.RunFirstPassProteinFdr(
-                        bundle.PerFileEntries, fullLibrary, ctx.Config);
+                    // Silent (logInfo: null) -- the rehydration recompute runs
+                    // before compaction with no log output, as it did when it
+                    // called ProteinFdr.RunFirstPassProteinFdr directly.
+                    ProteinFdrEngine.RunFirstPass(
+                        bundle.PerFileEntries, fullLibrary, ctx.Config, null);
                 }
                 var stats = RescoreCompaction.Apply(bundle, ctx.Config);
                 ctx.LogInfo(string.Format(

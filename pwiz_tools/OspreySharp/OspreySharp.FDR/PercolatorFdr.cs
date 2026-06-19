@@ -976,6 +976,19 @@ namespace pwiz.OspreySharp.FDR
 
         /// <summary>
         /// Core competition logic: group by base_id, compete, return winners sorted by score desc.
+        ///
+        /// This is deliberately a SEPARATE implementation from
+        /// <see cref="FdrController.CompeteAndFilter{T}"/>, not a duplicate to be
+        /// merged: the two serve different regimes. This array/index form is the
+        /// hot Percolator path -- it works on pre-flattened primitive arrays and a
+        /// caller-supplied index subset, returns winner arrays for downstream
+        /// scratch-pooled q-value passes (see <c>CountPassing</c>), and
+        /// allocates nothing on the scratch overload. <c>CompeteAndFilter</c> is
+        /// the ergonomic generic form for simple-FDR callers
+        /// (<see cref="PercolatorEngine.RunSimpleFdr"/>): it competes an
+        /// <c>IEnumerable&lt;T&gt;</c> via score/decoy/id selectors and returns a
+        /// typed result. Same competition rule (strict &gt;, ties to decoy), two
+        /// shapes tuned to performance vs. ergonomics.
         /// </summary>
         public static void CompeteFromIndices(
             double[] scores,
@@ -1090,26 +1103,7 @@ namespace pwiz.OspreySharp.FDR
         public static void ComputeConservativeQvalues(
             double[] scores, bool[] isDecoy, double[] qValues)
         {
-            int n = isDecoy.Length;
-            int nTarget = 0;
-            int nDecoy = 0;
-
-            for (int i = 0; i < n; i++)
-            {
-                if (isDecoy[i])
-                    nDecoy++;
-                else
-                    nTarget++;
-                qValues[i] = nTarget > 0 ? (double)(nDecoy + 1) / nTarget : 1.0;
-            }
-
-            // Backward pass: make monotonically non-increasing
-            double qMin = 1.0;
-            for (int i = n - 1; i >= 0; i--)
-            {
-                qMin = Math.Min(qMin, qValues[i]);
-                qValues[i] = qMin;
-            }
+            ComputeQvaluesCore(isDecoy, qValues, isDecoy.Length, decoyOffset: 1);
         }
 
         /// <summary>
@@ -1119,25 +1113,7 @@ namespace pwiz.OspreySharp.FDR
         private static void ComputeQvalues(
             double[] scores, bool[] isDecoy, double[] qValues)
         {
-            int n = isDecoy.Length;
-            int nTarget = 0;
-            int nDecoy = 0;
-
-            for (int i = 0; i < n; i++)
-            {
-                if (isDecoy[i])
-                    nDecoy++;
-                else
-                    nTarget++;
-                qValues[i] = nTarget > 0 ? (double)nDecoy / nTarget : 1.0;
-            }
-
-            double qMin = 1.0;
-            for (int i = n - 1; i >= 0; i--)
-            {
-                qMin = Math.Min(qMin, qValues[i]);
-                qValues[i] = qMin;
-            }
+            ComputeQvaluesCore(isDecoy, qValues, isDecoy.Length, decoyOffset: 0);
         }
 
         /// <summary>
@@ -1351,20 +1327,39 @@ namespace pwiz.OspreySharp.FDR
         private static void ComputeQvaluesInto(
             double[] scores, bool[] isDecoy, double[] qValuesOut, int n)
         {
-            // Bit-identical to ComputeQvalues but operates on prefix [0..n).
+            ComputeQvaluesCore(isDecoy, qValuesOut, n, decoyOffset: 0);
+        }
+
+        /// <summary>
+        /// Shared core behind <see cref="ComputeConservativeQvalues"/>,
+        /// <see cref="ComputeQvalues"/>, and <see cref="ComputeQvaluesInto"/>.
+        /// Walks the score-descending prefix [0..<paramref name="n"/>)
+        /// accumulating target / decoy counts, writes
+        /// FDR = (nDecoy + <paramref name="decoyOffset"/>) / nTarget at each rank,
+        /// then enforces a monotone-non-increasing q-value with a backward pass.
+        /// <paramref name="decoyOffset"/> is 1 for the conservative (Savitski +1)
+        /// estimate and 0 for the plain ratio. Scores are not read -- the input is
+        /// assumed already sorted by score descending.
+        /// </summary>
+        private static void ComputeQvaluesCore(
+            bool[] isDecoy, double[] qValues, int n, int decoyOffset)
+        {
             int nTarget = 0;
             int nDecoy = 0;
             for (int i = 0; i < n; i++)
             {
-                if (isDecoy[i]) nDecoy++;
-                else nTarget++;
-                qValuesOut[i] = nTarget > 0 ? (double)nDecoy / nTarget : 1.0;
+                if (isDecoy[i])
+                    nDecoy++;
+                else
+                    nTarget++;
+                qValues[i] = nTarget > 0 ? (double)(nDecoy + decoyOffset) / nTarget : 1.0;
             }
+
             double qMin = 1.0;
             for (int i = n - 1; i >= 0; i--)
             {
-                qMin = Math.Min(qMin, qValuesOut[i]);
-                qValuesOut[i] = qMin;
+                qMin = Math.Min(qMin, qValues[i]);
+                qValues[i] = qMin;
             }
         }
 
@@ -1984,10 +1979,10 @@ namespace pwiz.OspreySharp.FDR
         /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
         /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
         /// the direct (<see cref="RunPercolator"/>) and streaming
-        /// (FirstJoinTask.RunPercolatorStreaming) paths select identical subsets for
-        /// identical input instead of hand-mirroring the dedup + index map-back.
+        /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
+        /// for identical input instead of hand-mirroring the dedup + index map-back.
         /// </summary>
-        public static int[] BuildTrainingSubset(
+        internal static int[] BuildTrainingSubset(
             bool[] labels, uint[] entryIds, string[] peptides,
             IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
             out int[] bestPerPrecursor)
@@ -2065,7 +2060,7 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>
         /// Subsample entries by peptide group, keeping target-decoy pairs and charge states together.
         /// </summary>
-        public static int[] SubsampleByPeptideGroup(
+        internal static int[] SubsampleByPeptideGroup(
             bool[] labels, uint[] entryIds, string[] peptides,
             int maxEntries, ulong seed)
         {
