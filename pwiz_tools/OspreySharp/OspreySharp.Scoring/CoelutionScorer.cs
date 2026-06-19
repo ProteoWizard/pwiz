@@ -900,23 +900,59 @@ namespace pwiz.OspreySharp.Scoring
                 }
             }
 
-            // Build FdrEntry. The six blob/scalar fields below mirror
-            // Rust CoelutionScoredEntry::{fragment_mzs, fragment_intensities,
-            // reference_xic, peak.area, peak.signal_to_noise} so the
-            // reconciled .scores.parquet write-back can produce byte-
-            // identical blob columns for cross-impl validation.
-            //
+            // Build FdrEntry from the winning peak + feature vector (frag
+            // blobs, reference-XIC slice, bounds). Extracted to BuildFdrEntry.
+            var entry = BuildFdrEntry(
+                candidate, bestPeak, features, cwtCandidatesOut,
+                xics, refXicIdx, refXicIntensities, windowRts, startScan, apexSpectrum);
+
+            if (!overrideBounds.HasValue)
+            {
+                _diagnostics?.WriteCwtPathRow(
+                    context.FileName, candidate.Id,
+                    diagNCwtPeaks, peaks.Count, diagNScored, true, xics);
+            }
+            return entry;
+        }
+
+
+        /// <summary>
+        /// Build the <see cref="FdrEntry"/> for a scored candidate's winning peak.
+        /// Serializes the full library fragment list (m/z + relative intensity),
+        /// slices the reference XIC across the winning peak's [start..end] window,
+        /// and copies the feature vector + bounds onto the entry. Pure: no logging,
+        /// no diagnostics -- the six blob/scalar fields mirror Rust
+        /// CoelutionScoredEntry::{fragment_mzs, fragment_intensities, reference_xic,
+        /// peak.area, peak.signal_to_noise} so the reconciled .scores.parquet
+        /// write-back stays byte-identical for cross-impl validation.
+        /// </summary>
+        private static FdrEntry BuildFdrEntry(
+            LibraryEntry candidate,
+            XICPeakBounds bestPeak,
+            double[] features,
+            List<CwtCandidate> cwtCandidatesOut,
+            List<XicData> xics,
+            int refXicIdx,
+            double[] refXicIntensities,
+            double[] windowRts,
+            int startScan,
+            Spectrum apexSpectrum)
+        {
             // FragmentMzs / FragmentIntensities iterate the FULL library
             // fragment list (not just the top-N used by XIC extraction)
             // because Rust's parquet writer at pipeline.rs:1620-1631
             // serializes every library fragment.
-            int nFrags = candidate.Fragments?.Count ?? 0;
+            var frags = candidate.Fragments;
+            int nFrags = frags?.Count ?? 0;
             double[] fragMzs = new double[nFrags];
             float[] fragInts = new float[nFrags];
-            for (int fi = 0; fi < nFrags; fi++)
+            if (frags != null)
             {
-                fragMzs[fi] = candidate.Fragments[fi].Mz;
-                fragInts[fi] = candidate.Fragments[fi].RelativeIntensity;
+                for (int fi = 0; fi < nFrags; fi++)
+                {
+                    fragMzs[fi] = frags[fi].Mz;
+                    fragInts[fi] = frags[fi].RelativeIntensity;
+                }
             }
 
             // ReferenceXic{Rts,Intensities} are sliced from the highest-
@@ -927,18 +963,17 @@ namespace pwiz.OspreySharp.Scoring
             // post-rank apex recompute) for non-override entries; the
             // override path's bestPeak retains its original boundaries.
             double[] refXicRtsAll = xics[refXicIdx].RetentionTimes;
-            int refMaxLen = Math.Min(
-                refXicRtsAll != null ? refXicRtsAll.Length : 0,
-                refXicIntensities != null ? refXicIntensities.Length : 0);
             double[] refXicRts;
             double[] refXicInts;
-            if (refMaxLen == 0)
+            if (refXicRtsAll == null || refXicIntensities == null ||
+                refXicRtsAll.Length == 0 || refXicIntensities.Length == 0)
             {
                 refXicRts = new double[0];
                 refXicInts = new double[0];
             }
             else
             {
+                int refMaxLen = Math.Min(refXicRtsAll.Length, refXicIntensities.Length);
                 int refSi = Math.Max(0, Math.Min(bestPeak.StartIndex, refMaxLen - 1));
                 int refEi = Math.Max(refSi, Math.Min(bestPeak.EndIndex, refMaxLen - 1));
                 int refLen = refEi - refSi + 1;
@@ -951,7 +986,7 @@ namespace pwiz.OspreySharp.Scoring
                 }
             }
 
-            var entry = new FdrEntry
+            return new FdrEntry
             {
                 EntryId = candidate.Id,
                 IsDecoy = candidate.IsDecoy,
@@ -972,14 +1007,6 @@ namespace pwiz.OspreySharp.Scoring
                 BoundsArea = bestPeak.Area,
                 BoundsSnr = bestPeak.SignalToNoise,
             };
-
-            if (!overrideBounds.HasValue)
-            {
-                _diagnostics?.WriteCwtPathRow(
-                    context.FileName, candidate.Id,
-                    diagNCwtPeaks, peaks.Count, diagNScored, true, xics);
-            }
-            return entry;
         }
 
 
