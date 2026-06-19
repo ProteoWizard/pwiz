@@ -219,63 +219,10 @@ namespace pwiz.OspreySharp.Scoring
                     candidate.Fragments.Count, nScans));
             }
 
-            // Find scan range for XIC extraction.
-            //
-            // For boundary overrides: use the given boundaries plus margin
-            // for SNR context — peak_width on each side, with a 0.2 min
-            // floor. Mirrors run_search at pipeline.rs:6473-6477.
-            //
-            // For normal search (matches Rust commit 885339b): extract over
-            // a window wider than rtTolerance so CWT has context on both
-            // sides of any in-tolerance apex to determine full peak
-            // boundaries. The apex itself is still required to be within
-            // rtTolerance (enforced in the candidate-scoring loop below).
-            // Half-width is rtTolerance plus max(rtTolerance, 0.1) —
-            // tight-calibration runs get a 0.1 min floor of extra context;
-            // wider runs scale with rtTolerance.
-            // Two filter shapes mirroring Rust pipeline.rs:7031-7065 byte-
-            // for-byte. The override branch uses [rtLo, rtHi]; the
-            // normal-search branch uses |rt - expectedRt| <= xicHalfWidth.
-            // Mathematically identical but NOT f64-equivalent at the
-            // boundary -- writing out the precomputed `rtHi = expectedRt
-            // + xicHalfWidth` and comparing `rt <= rtHi` can include /
-            // exclude a boundary scan that the abs-diff form would not,
-            // because the two arithmetic chains round differently in the
-            // last bit. Without the abs-diff form, ~1k entries per
-            // Stellar file pick a different best apex than Rust because a
-            // single boundary spectrum slips into one side's window and
-            // not the other's, cascading through CWT peak detection.
-            int startScan = -1, endScan = -1;
-            if (overrideBounds.HasValue)
-            {
-                var ob = overrideBounds.Value;
-                double peakWidth = Math.Max(0.1, ob.End - ob.Start);
-                double margin = Math.Max(0.2, peakWidth);
-                double rtLo = ob.Start - margin;
-                double rtHi = ob.End + margin;
-                for (int i = 0; i < nScans; i++)
-                {
-                    if (windowRts[i] >= rtLo && windowRts[i] <= rtHi)
-                    {
-                        if (startScan < 0)
-                            startScan = i;
-                        endScan = i;
-                    }
-                }
-            }
-            else
-            {
-                double xicHalfWidth = rtTolerance + Math.Max(rtTolerance, 0.1);
-                for (int i = 0; i < nScans; i++)
-                {
-                    if (Math.Abs(windowRts[i] - expectedRt) <= xicHalfWidth)
-                    {
-                        if (startScan < 0)
-                            startScan = i;
-                        endScan = i;
-                    }
-                }
-            }
+            // Find scan range for XIC extraction. Extracted to FindScanRange
+            // (override-bounds vs normal-search filter shapes).
+            FindScanRange(overrideBounds, windowRts, nScans, expectedRt, rtTolerance,
+                out int startScan, out int endScan);
 
             if (diag)
             {
@@ -358,80 +305,14 @@ namespace pwiz.OspreySharp.Scoring
             if (xics.Count < 2)
                 return null;
 
-            // Detect candidate peaks with three-tier fallback matching Rust pipeline.rs:6244-6259.
-            //   1. CWT consensus (primary)
-            //   2. Peak detection on median polish elution profile (fallback 1)
-            //   3. Peak detection on reference XIC (fallback 2)
-            //
-            // For boundary overrides (Stage 6 re-scoring), peak detection is
-            // skipped and a single synthetic XICPeakBounds is built directly
-            // from the supplied (apex, start, end). Mirrors run_search at
-            // pipeline.rs:6596-6664.
-            List<XICPeakBounds> peaks;
-            // Track whether peaks came from CWT (vs fallback / override) so the
-            // top-N CWT candidate capture below only fires for the CWT path,
-            // matching Rust run_search at pipeline.rs:6856 which only stores
-            // CWT-sourced candidates on the returned CoelutionScoredEntry.
-            bool peaksFromCwt = false;
-            if (overrideBounds.HasValue)
-            {
-                peaks = BuildOverridePeaks(overrideBounds.Value, xics);
-                if (peaks == null)
-                    return null;
-            }
-            else
-            {
-                peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
-                peaksFromCwt = peaks.Count > 0;
-            }
-            // Snapshot CWT consensus peak count for the OSPREY_DUMP_CWT_PATH
-            // dump. The dump only fires for non-override entries (the
-            // override path bypasses CWT entirely on both Rust and C#);
-            // call sites below gate on `!overrideBounds.HasValue`. Sigma
-            // + consensus-signal stats are computed inside
-            // OspreyDiagnostics.WriteCwtPathRow when the dump is active,
-            // so production callers carry only this single int.
-            int diagNCwtPeaks = peaks.Count;
-
-            if (peaks.Count == 0)
-            {
-                // Fallback 1: detect peaks on the median polish elution profile.
-                // Rust: detect_all_xic_peaks(&mp.elution_profile, 0.01, 5.0)
-                var polishXics = new List<KeyValuePair<int, double[]>>();
-                for (int f = 0; f < xics.Count; f++)
-                    polishXics.Add(new KeyValuePair<int, double[]>(
-                        xics[f].FragmentIndex, xics[f].Intensities));
-                double[] polishRts = xics[0].RetentionTimes;
-
-                var fullPolish = TukeyMedianPolish.Compute(polishXics, polishRts, 10, 0.01);
-                if (fullPolish != null && fullPolish.ElutionProfileRts != null &&
-                    fullPolish.ElutionProfileIntensities != null)
-                {
-                    peaks = PeakDetector.DetectAllXicPeaks(
-                        fullPolish.ElutionProfileRts,
-                        fullPolish.ElutionProfileIntensities,
-                        0.01, 5.0);
-                }
-            }
-
-            if (peaks.Count == 0)
-            {
-                // Fallback 2: detect peaks on the reference XIC (highest total intensity).
-                // Rust: detect_all_xic_peaks(ref_xic, 0.01, 5.0)
-                int refIdx = 0;
-                double bestTotal = 0.0;
-                for (int f = 0; f < xics.Count; f++)
-                {
-                    double total = 0.0;
-                    for (int i = 0; i < xics[f].Intensities.Length; i++)
-                        total += xics[f].Intensities[i];
-                    if (total > bestTotal) { bestTotal = total; refIdx = f; }
-                }
-                peaks = PeakDetector.DetectAllXicPeaks(
-                    xics[refIdx].RetentionTimes,
-                    xics[refIdx].Intensities,
-                    0.01, 5.0);
-            }
+            // Detect candidate peaks (3-tier CWT/fallback, or a synthetic peak
+            // from override bounds). Extracted to DetectCandidatePeaks; returns
+            // null ONLY when an override produced a degenerate index range
+            // (the original override `if (peaks == null) return null`).
+            List<XICPeakBounds> peaks = DetectCandidatePeaks(
+                overrideBounds, xics, out int diagNCwtPeaks);
+            if (peaks == null)
+                return null;
 
             if (diag)
             {
@@ -845,60 +726,8 @@ namespace pwiz.OspreySharp.Scoring
             // The stored coelution_score is the raw mean (NOT the RT-
             // penalized rank score) -- reconciliation has its own RT
             // tolerance logic via consensus RT comparison.
-            List<CwtCandidate> cwtCandidatesOut = null;
-            int topN = context.Config.Reconciliation != null
-                ? context.Config.Reconciliation.TopNPeaks
-                : 0;
-            if (capturedPeaks != null && capturedPeaks.Count > 0 && topN > 0)
-            {
-                // Rust scored_candidates.sort_by at pipeline.rs:7329 is
-                // STABLE (slice::sort_by is stable) AND uses f64::total_cmp,
-                // which distinguishes -0.0 < +0.0. The default
-                // Comparer<double> treats them equal, so two peaks whose
-                // rank_score = coelution * rt_penalty * intensityWeight
-                // collapses to a signed zero (intensityWeight = 0 when
-                // ref_xic intensity at apex is 0; sign comes from
-                // coelution) compare as tied under standard <, while
-                // Rust orders them positive-then-negative. Pair LINQ
-                // OrderByDescending (stable per .NET contract) with
-                // TotalOrder.Comparer to match Rust byte-for-byte.
-                capturedPeaks = capturedPeaks
-                    .OrderByDescending(p => p.rankScore, TotalOrder.Comparer)
-                    .ToList();
-                int kept = Math.Min(topN, capturedPeaks.Count);
-                cwtCandidatesOut = new List<CwtCandidate>(kept);
-                double[] refRts = xics[refXicIdx].RetentionTimes;
-                for (int k = 0; k < kept; k++)
-                {
-                    var cap = capturedPeaks[k];
-                    var p = cap.peak;
-                    int safeStart = Math.Max(0, Math.Min(p.StartIndex, refXicIntensities.Length - 1));
-                    int safeEnd = Math.Max(safeStart, Math.Min(p.EndIndex, refXicIntensities.Length - 1));
-                    int apexIdx = safeStart;
-                    double apexVal = refXicIntensities[safeStart];
-                    for (int s = safeStart; s <= safeEnd; s++)
-                    {
-                        if (refXicIntensities[s] >= apexVal)
-                        {
-                            apexVal = refXicIntensities[s];
-                            apexIdx = s;
-                        }
-                    }
-                    double area = PeakDetector.TrapezoidalArea(
-                        refRts, refXicIntensities, safeStart, safeEnd);
-                    double snr = PeakDetector.ComputeSnr(
-                        refXicIntensities, apexIdx, safeStart, safeEnd);
-                    cwtCandidatesOut.Add(new CwtCandidate
-                    {
-                        ApexRt = refRts[apexIdx],
-                        StartRt = refRts[safeStart],
-                        EndRt = refRts[safeEnd],
-                        Area = area,
-                        Snr = snr,
-                        CoelutionScore = cap.coelutionScore,
-                    });
-                }
-            }
+            List<CwtCandidate> cwtCandidatesOut = CaptureCwtCandidates(
+                capturedPeaks, xics, refXicIdx, refXicIntensities, context);
 
             // Build FdrEntry from the winning peak + feature vector (frag
             // blobs, reference-XIC slice, bounds). Extracted to BuildFdrEntry.
@@ -913,6 +742,210 @@ namespace pwiz.OspreySharp.Scoring
                     diagNCwtPeaks, peaks.Count, diagNScored, true, xics);
             }
             return entry;
+        }
+
+
+        /// <summary>
+        /// Find the [startScan..endScan] range for XIC extraction. For boundary
+        /// overrides: the given boundaries plus margin for SNR context (peak_width
+        /// each side, 0.2 min floor; run_search pipeline.rs:6473-6477). For normal
+        /// search (Rust commit 885339b): a window wider than rtTolerance so CWT has
+        /// context on both sides of any in-tolerance apex; half-width is
+        /// rtTolerance + max(rtTolerance, 0.1). Both yield -1/-1 when no scan
+        /// matches. The normal branch uses the abs-diff form |rt - expectedRt| &lt;=
+        /// xicHalfWidth (NOT a precomputed rtHi compare): the two arithmetic chains
+        /// round differently in the last bit, and ~1k entries per Stellar file pick
+        /// a different best apex if a single boundary spectrum slips in/out of the
+        /// window (cascades through CWT peak detection). Mirrors pipeline.rs:7031-7065.
+        /// </summary>
+        private static void FindScanRange(
+            (double Apex, double Start, double End)? overrideBounds,
+            double[] windowRts, int nScans,
+            double expectedRt, double rtTolerance,
+            out int startScan, out int endScan)
+        {
+            startScan = -1;
+            endScan = -1;
+            if (overrideBounds.HasValue)
+            {
+                var ob = overrideBounds.Value;
+                double peakWidth = Math.Max(0.1, ob.End - ob.Start);
+                double margin = Math.Max(0.2, peakWidth);
+                double rtLo = ob.Start - margin;
+                double rtHi = ob.End + margin;
+                for (int i = 0; i < nScans; i++)
+                {
+                    if (windowRts[i] >= rtLo && windowRts[i] <= rtHi)
+                    {
+                        if (startScan < 0)
+                            startScan = i;
+                        endScan = i;
+                    }
+                }
+            }
+            else
+            {
+                double xicHalfWidth = rtTolerance + Math.Max(rtTolerance, 0.1);
+                for (int i = 0; i < nScans; i++)
+                {
+                    if (Math.Abs(windowRts[i] - expectedRt) <= xicHalfWidth)
+                    {
+                        if (startScan < 0)
+                            startScan = i;
+                        endScan = i;
+                    }
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Capture the top-N CWT peak candidates (Stage 6 reconciliation input),
+        /// ranked by penalized rank score, with each kept candidate's apex / area
+        /// / SNR recomputed over the reference-XIC slice. Mirrors Rust run_search
+        /// at pipeline.rs:6852-6879. The stored coelution_score is the raw mean
+        /// (NOT the RT-penalized rank score) -- reconciliation has its own RT
+        /// tolerance logic via consensus RT comparison. Returns null when there
+        /// is nothing to capture (override path / no captured peaks / TopN == 0).
+        /// </summary>
+        private static List<CwtCandidate> CaptureCwtCandidates(
+            List<(XICPeakBounds peak, double coelutionScore, double rankScore)> capturedPeaks,
+            List<XicData> xics,
+            int refXicIdx,
+            double[] refXicIntensities,
+            ScoringContext context)
+        {
+            int topN = context.Config.Reconciliation != null
+                ? context.Config.Reconciliation.TopNPeaks
+                : 0;
+            if (capturedPeaks == null || capturedPeaks.Count == 0 || topN <= 0)
+                return null;
+
+            // Rust scored_candidates.sort_by at pipeline.rs:7329 is
+            // STABLE (slice::sort_by is stable) AND uses f64::total_cmp,
+            // which distinguishes -0.0 < +0.0. The default
+            // Comparer<double> treats them equal, so two peaks whose
+            // rank_score = coelution * rt_penalty * intensityWeight
+            // collapses to a signed zero (intensityWeight = 0 when
+            // ref_xic intensity at apex is 0; sign comes from
+            // coelution) compare as tied under standard <, while
+            // Rust orders them positive-then-negative. Pair LINQ
+            // OrderByDescending (stable per .NET contract) with
+            // TotalOrder.Comparer to match Rust byte-for-byte.
+            var ordered = capturedPeaks
+                .OrderByDescending(p => p.rankScore, TotalOrder.Comparer)
+                .ToList();
+            int kept = Math.Min(topN, ordered.Count);
+            var cwtCandidatesOut = new List<CwtCandidate>(kept);
+            double[] refRts = xics[refXicIdx].RetentionTimes;
+            for (int k = 0; k < kept; k++)
+            {
+                var cap = ordered[k];
+                var p = cap.peak;
+                int safeStart = Math.Max(0, Math.Min(p.StartIndex, refXicIntensities.Length - 1));
+                int safeEnd = Math.Max(safeStart, Math.Min(p.EndIndex, refXicIntensities.Length - 1));
+                int apexIdx = safeStart;
+                double apexVal = refXicIntensities[safeStart];
+                for (int s = safeStart; s <= safeEnd; s++)
+                {
+                    if (refXicIntensities[s] >= apexVal)
+                    {
+                        apexVal = refXicIntensities[s];
+                        apexIdx = s;
+                    }
+                }
+                double area = PeakDetector.TrapezoidalArea(
+                    refRts, refXicIntensities, safeStart, safeEnd);
+                double snr = PeakDetector.ComputeSnr(
+                    refXicIntensities, apexIdx, safeStart, safeEnd);
+                cwtCandidatesOut.Add(new CwtCandidate
+                {
+                    ApexRt = refRts[apexIdx],
+                    StartRt = refRts[safeStart],
+                    EndRt = refRts[safeEnd],
+                    Area = area,
+                    Snr = snr,
+                    CoelutionScore = cap.coelutionScore,
+                });
+            }
+            return cwtCandidatesOut;
+        }
+
+
+        /// <summary>
+        /// Detect candidate peaks with a three-tier fallback (matches Rust
+        /// pipeline.rs:6244-6259): (1) CWT consensus, (2) peak detection on the
+        /// median-polish elution profile, (3) peak detection on the reference
+        /// XIC (highest total intensity). For boundary overrides (Stage 6
+        /// re-scoring) peak detection is skipped and a single synthetic
+        /// <see cref="XICPeakBounds"/> is built from the supplied (apex, start,
+        /// end); mirrors run_search at pipeline.rs:6596-6664. Returns null ONLY
+        /// when an override produced a degenerate index range; otherwise a
+        /// (possibly empty) peak list. <paramref name="diagNCwtPeaks"/> snapshots
+        /// the CWT consensus peak count for the OSPREY_DUMP_CWT_PATH dump.
+        /// </summary>
+        private static List<XICPeakBounds> DetectCandidatePeaks(
+            (double Apex, double Start, double End)? overrideBounds,
+            List<XicData> xics,
+            out int diagNCwtPeaks)
+        {
+            List<XICPeakBounds> peaks;
+            if (overrideBounds.HasValue)
+            {
+                peaks = BuildOverridePeaks(overrideBounds.Value, xics);
+                if (peaks == null)
+                {
+                    diagNCwtPeaks = 0;
+                    return null;
+                }
+            }
+            else
+            {
+                peaks = CwtPeakDetector.DetectConsensusPeaks(xics, 0.0);
+            }
+            diagNCwtPeaks = peaks.Count;
+
+            if (peaks.Count == 0)
+            {
+                // Fallback 1: detect peaks on the median polish elution profile.
+                // Rust: detect_all_xic_peaks(&mp.elution_profile, 0.01, 5.0)
+                var polishXics = new List<KeyValuePair<int, double[]>>();
+                for (int f = 0; f < xics.Count; f++)
+                    polishXics.Add(new KeyValuePair<int, double[]>(
+                        xics[f].FragmentIndex, xics[f].Intensities));
+                double[] polishRts = xics[0].RetentionTimes;
+
+                var fullPolish = TukeyMedianPolish.Compute(polishXics, polishRts, 10, 0.01);
+                if (fullPolish != null && fullPolish.ElutionProfileRts != null &&
+                    fullPolish.ElutionProfileIntensities != null)
+                {
+                    peaks = PeakDetector.DetectAllXicPeaks(
+                        fullPolish.ElutionProfileRts,
+                        fullPolish.ElutionProfileIntensities,
+                        0.01, 5.0);
+                }
+            }
+
+            if (peaks.Count == 0)
+            {
+                // Fallback 2: detect peaks on the reference XIC (highest total intensity).
+                // Rust: detect_all_xic_peaks(ref_xic, 0.01, 5.0)
+                int refIdx = 0;
+                double bestTotal = 0.0;
+                for (int f = 0; f < xics.Count; f++)
+                {
+                    double total = 0.0;
+                    for (int i = 0; i < xics[f].Intensities.Length; i++)
+                        total += xics[f].Intensities[i];
+                    if (total > bestTotal) { bestTotal = total; refIdx = f; }
+                }
+                peaks = PeakDetector.DetectAllXicPeaks(
+                    xics[refIdx].RetentionTimes,
+                    xics[refIdx].Intensities,
+                    0.01, 5.0);
+            }
+
+            return peaks;
         }
 
 
