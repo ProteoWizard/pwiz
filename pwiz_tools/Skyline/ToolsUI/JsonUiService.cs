@@ -1908,7 +1908,10 @@ namespace pwiz.Skyline.ToolsUI
                     comboBox.SelectedIndex = index;
                     break;
                 case TextBoxBase textBox:
-                    textBox.Text = value;
+                    // A multi-line textbox lays out and parses its lines on CRLF (what pressing Enter
+                    // inserts), so normalize any bare newlines -- otherwise "a\nb" shows and parses as
+                    // one line, e.g. the Define Annotation value list.
+                    textBox.Text = textBox.Multiline ? NormalizeNewlines(value) : value;
                     break;
                 case DataGridView grid:
                     if (grid.CurrentCell == null)
@@ -1942,6 +1945,13 @@ namespace pwiz.Skyline.ToolsUI
                     control.Text = value;
                     break;
             }
+        }
+
+        // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses when the user
+        // presses Enter, and that callers (e.g. the annotation value list) split on.
+        private static string NormalizeNewlines(string value)
+        {
+            return value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
         }
 
         // Finds the first editable control after the given control in tab order -- the input a "Name:"

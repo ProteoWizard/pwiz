@@ -63,6 +63,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(@"ConnectorAnnotation", defineAnnotationDlg.AnnotationName,
                 @"SetFormValue did not set the Name field through its label."));
 
+            // SetFormValue into the multi-line value-list TextBox: newline-separated text becomes
+            // separate list values (bare '\n' is normalized to the CRLF the dialog splits on). The
+            // Values box is enabled only for a Value List, so set the type first.
+            JsonUiService.SetFormValue(dlgId, @"Type", @"Value List");
+            JsonUiService.SetFormValue(dlgId, @"Values", "Healthy\nDiseased");
+            RunUI(() => CollectionAssert.AreEqual(new[] { @"Healthy", @"Diseased" },
+                defineAnnotationDlg.Items.ToArray(),
+                @"SetFormValue did not set the multi-line value list as separate values."));
+
             // The "Replicates" target starts unchecked.
             RunUI(() => Assert.IsFalse(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate)));
