@@ -43,6 +43,8 @@ namespace pwiz.OspreySharp.Scoring
     /// </summary>
     public interface IScoringDiagnostics
     {
+        HashSet<uint> DiagSearchEntryIds { get; }
+
         bool ShouldDumpSearchXicFor(uint entryId);
 
         void WriteSearchXicDump(LibraryEntry candidate,
