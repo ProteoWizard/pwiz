@@ -85,13 +85,27 @@ SetGridText     "DocumentGridForm:Document Grid: Replicates" "" 3 0 "102\n102\n1
 # (6b) [DONE] ListBox/Tree (de)select -> SetItemSelected. (The Customize Report reorder/remove buttons
 #      are ordinary buttons -> ClickFormButton.)
 # (10) [DONE] SetFormValue resolves a matched label to the field it labels (next editable in tab order).
-# (7)  [REMAINING] Right-click a grid COLUMN HEADER context menu (Number Format, Filter, Sort).
-# (8)  The Pivot Editor, Find Column, Choose Format, Edit Group Comparison dialogs -- mostly fillable
-#      now with the verbs above; each still needs its specific controls walked.
+# (7)  [DONE] Right-click a grid cell / COLUMN HEADER context menu -> InvokeContextMenuItem with a
+#      "grid[column,row]" controlId (row -1 = header). Validated live: Sort, and Number Format
+#      (opened Choose Format) on a Document Grid column. SetFormValue takes the same cell locator.
+# (11) [DONE] Lazily-built MAIN-menu submenus -> InvokeMenuItem opens each level (e.g. View > Live
+#      Reports > Group Comparisons > <name>). Validated live opening a group comparison grid.
+# (12) [DONE] Multi-line TextBox values -> SetFormValue normalizes '\n' to CRLF (e.g. the value list).
+#
+# VALIDATED END-TO-END LIVE (Rat_plasma): audit log, document grid + reports, annotations (Cohort
+# value list + SubjectID, Applies-to), Result File Rules (Rule Set Editor + Rule Editor, grid-cell
+# locator to make a rule row current), Customize Report (check/uncheck tree columns incl. deep paths
+# like Peptides > Precursors > Precursor Results > Total Area; name + OK), Group Comparison (Edit
+# form, view grid + Bar Graph), and grid column-header context menus.
+#
+# REMAINING MINOR GAPS:
+# (8)  ListBox RANGE select (the Customize Report shift-click "First Position".."Peptide Note" then
+#      remove). SetItemSelected selects one item; a range needs each item, or just uncheck the
+#      unwanted columns in the tree instead.
 # (9)  Out of scope (desktop, not Skyline): the Notepad copy/paste of SampleInfo.txt.
+# (13) Label->field resolution misses when the field is not the next control in tab order (the Customize
+#      Report "Report Name" label -> tbxViewName); pass the control name in that case.
 #
-# USABILITY NOTE: for the "single grid on the form" case, GetGridText/SetGridText need an EMPTY
-# gridId/controlId. The literal string "null" is treated as a control name and fails; the MCP layer
-# should map an omitted/"null" argument to a real null.
-#
-# Suggested next, by leverage: (7) grid-header context menus, then walk the remaining (8) dialogs.
+# USABILITY NOTE: for the "single grid on the form" case, GetGridText/SetGridText/the cell locator need
+# an EMPTY gridId/controlId. The literal string "null" is treated as a control name and fails; the MCP
+# layer should map an omitted/"null" argument to a real null.
