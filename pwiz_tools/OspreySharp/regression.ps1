@@ -58,8 +58,8 @@
 .PARAMETER KeepRunDirs
     Number of most-recent TestResults\regression-* run dirs to keep; older ones are
     pruned at startup (before the build) to reclaim disk (default 2). Each run dir
-    holds multi-GB spectra caches and is gitignored scratch nothing else cleans, so
-    on a long-lived build agent they accumulate until the disk fills.
+    holds multi-GB spectra caches and is gitignored scratch that nothing else cleans
+    up. On a long-lived build agent these otherwise accumulate until the disk fills.
 
 .EXAMPLE
     # Local: run Stellar straight-through + resume against the committed golden
@@ -81,6 +81,7 @@ param(
     [int]$Threads = 16,
     [switch]$TeamCity,
     [switch]$NoBuild,
+    [ValidateRange(0, [int]::MaxValue)]
     [int]$KeepRunDirs = 2,
     [double]$Tolerance = 1e-9
 )
