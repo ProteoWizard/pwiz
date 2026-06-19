@@ -1653,22 +1653,39 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Walks a menu by path (segments split on '>', '|', '/') starting from the given items,
-        // matching each segment by normalized text or control name. Must run on the UI thread (and,
-        // for a context menu, after the menu has been populated). Throws if no item matches.
+        // matching each segment by normalized text or control name. Opens each submenu level so items
+        // built on DropDownOpening (e.g. the View > Live Reports > Group Comparisons list, recent
+        // files) are present before the next segment is matched. Must run on the UI thread. Throws if
+        // no segment matches.
         private static ToolStripMenuItem FindMenuItemIn(ToolStripItemCollection rootItems, string menuPath)
         {
             var segments = ParseMenuSegments(menuPath);
             var items = rootItems;
+            var opened = new List<ToolStripDropDownItem>();
             ToolStripMenuItem current = null;
-            foreach (var segment in segments)
+            try
             {
-                current = items.OfType<ToolStripMenuItem>().FirstOrDefault(i => MenuItemMatches(i, segment));
-                if (current == null)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Menu item not found: {0} (no match for '{1}').", menuPath, segment));
-                items = current.DropDownItems;
+                for (int i = 0; i < segments.Length; i++)
+                {
+                    current = items.OfType<ToolStripMenuItem>().FirstOrDefault(item => MenuItemMatches(item, segments[i]));
+                    if (current == null)
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"Menu item not found: {0} (no match for '{1}').", menuPath, segments[i]));
+                    if (i < segments.Length - 1)
+                    {
+                        current.ShowDropDown(); // populate items built on DropDownOpening
+                        opened.Add(current);
+                        items = current.DropDownItems;
+                    }
+                }
+                return current;
             }
-            return current;
+            finally
+            {
+                // Close the dropdowns this opened (the found item is still clickable while hidden).
+                for (int i = opened.Count - 1; i >= 0; i--)
+                    opened[i].HideDropDown();
+            }
         }
 
         private static bool MenuItemMatches(ToolStripMenuItem item, string label)
