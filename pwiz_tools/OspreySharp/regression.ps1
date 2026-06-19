@@ -55,6 +55,12 @@
 .PARAMETER NoBuild
     Skip the OspreySharp build step (use the existing Release binary).
 
+.PARAMETER KeepRunDirs
+    Number of most-recent TestResults\regression-* run dirs to keep; older ones are
+    pruned at startup (before the build) to reclaim disk (default 2). Each run dir
+    holds multi-GB spectra caches and is gitignored scratch that nothing else cleans
+    up. On a long-lived build agent these otherwise accumulate until the disk fills.
+
 .EXAMPLE
     # Local: run Stellar straight-through + resume against the committed golden
     .\regression.ps1 -Dataset Stellar
@@ -75,6 +81,8 @@ param(
     [int]$Threads = 16,
     [switch]$TeamCity,
     [switch]$NoBuild,
+    [ValidateRange(0, [int]::MaxValue)]
+    [int]$KeepRunDirs = 2,
     [double]$Tolerance = 1e-9
 )
 
@@ -122,6 +130,34 @@ function Write-Problem-Tc([string]$msg) {
     if ($TeamCity) { Write-Host ("##teamcity[buildProblem description='{0}']" -f (Format-TcMessage $msg)) }
     Write-Host "ERROR: $msg" -ForegroundColor Red
 }
+
+# --- Reclaim disk: prune stale TestResults run dirs ---------------------------
+# Each invocation writes a timestamped TestResults\regression-<stamp> dir holding
+# multi-GB .spectra.bin caches (via --work-dir). They are gitignored scratch and
+# nothing else cleans them, so on a long-lived build agent they accumulate until
+# the disk fills (the Astral straight-through leg alone needs ~26 GB). Prune here,
+# FIRST -- before the build, data acquisition, and the new run dir -- so even a
+# near-full disk can run it (deleting needs ~no free space) and the rest of the
+# run has the reclaimed space. Keeps the most recent $KeepRunDirs dirs (the latest
+# is useful for post-mortem on a red gate). The dir names sort chronologically
+# (regression-YYYYMMDD_HHMMSS), so a Name sort orders oldest-first.
+function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
+    if (-not (Test-Path $TestResultsDir)) { return }
+    $runDirs = @(Get-ChildItem -Path $TestResultsDir -Directory -Filter 'regression-*' `
+        -ErrorAction SilentlyContinue | Sort-Object Name)
+    if ($runDirs.Count -le $Keep) { return }
+    $stale = $runDirs[0..($runDirs.Count - $Keep - 1)]
+    Write-Progress-Tc ("Pruning {0} stale TestResults run dir(s), keeping the most recent {1}" -f $stale.Count, $Keep)
+    foreach ($d in $stale) {
+        try {
+            Remove-Item -LiteralPath $d.FullName -Recurse -Force -ErrorAction Stop
+            Write-Host "  pruned $($d.Name)"
+        } catch {
+            Write-Host "  WARN: failed to prune $($d.FullName): $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+}
+Remove-StaleRunDirs (Join-Path $scriptRoot 'TestResults') $KeepRunDirs
 
 # --- Build (unless -NoBuild) --------------------------------------------------
 if (-not $NoBuild) {
