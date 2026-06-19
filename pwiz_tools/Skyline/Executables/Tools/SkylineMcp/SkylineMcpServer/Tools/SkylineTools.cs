@@ -669,7 +669,7 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_set_item_checked"),
-     Description("Check or uncheck an item in a checked-list box or a tree view on a form. For a " +
+     Description("Check or uncheck an item in a checked-list box, a tree view, or a list view on a form. For a " +
         "checked-list box the item is matched by its display text; for a tree view the item is a " +
         "'>'-separated path of node texts, e.g. 'Peptides > Precursors > Precursor Results'. Use to " +
         "check columns in the Customize Report field tree, the annotation 'Applies to' list, etc.")]
@@ -687,7 +687,7 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_set_item_selected"),
-     Description("Select or deselect an item in a list box / checked-list box or a tree view on a " +
+     Description("Select or deselect an item in a list box / checked-list box, a tree view, or a list view on a " +
         "form. For a list the item is matched by its display text; for a tree view the item is a " +
         "'>'-separated path of node texts. Selecting highlights the item (a tree view selects that " +
         "node); this is separate from checking it.")]

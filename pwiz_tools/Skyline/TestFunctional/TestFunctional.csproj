@@ -463,6 +463,7 @@
     <Compile Include="ContextMenuConnectorTest.cs" />
     <Compile Include="GridCellConnectorTest.cs" />
     <Compile Include="LazyMenuConnectorTest.cs" />
+    <Compile Include="PivotListViewConnectorTest.cs" />
     <Compile Include="PlainGridConnectorTest.cs" />
     <Compile Include="SetGridTextConnectorTest.cs" />
     <Compile Include="SetItemConnectorTest.cs" />

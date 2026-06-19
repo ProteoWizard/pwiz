@@ -1033,9 +1033,12 @@ namespace pwiz.Skyline.ToolsUI
                         case TreeView treeView:
                             FindTreeNode(treeView, item).Checked = isChecked;
                             break;
+                        case ListView listView:
+                            FindListViewItem(listView, item).Checked = isChecked;
+                            break;
                         default:
                             throw new ArgumentException(LlmInstruction.Format(
-                                @"Checking items is supported for a CheckedListBox or TreeView, not {0}.", control.Name));
+                                @"Checking items is supported for a CheckedListBox, TreeView, or ListView, not {0}.", control.Name));
                     }
                 });
                 return true;
@@ -1067,9 +1070,15 @@ namespace pwiz.Skyline.ToolsUI
                             else if (treeView.SelectedNode == node)
                                 treeView.SelectedNode = null;
                             break;
+                        case ListView listView:
+                            var listViewItem = FindListViewItem(listView, item);
+                            listViewItem.Selected = selected;
+                            if (selected)
+                                listViewItem.EnsureVisible();
+                            break;
                         default:
                             throw new ArgumentException(LlmInstruction.Format(
-                                @"Selecting items is supported for a ListBox or TreeView, not {0}.", control.Name));
+                                @"Selecting items is supported for a ListBox, TreeView, or ListView, not {0}.", control.Name));
                     }
                 });
                 return true;
@@ -1081,16 +1090,16 @@ namespace pwiz.Skyline.ToolsUI
         // such control on the form. Throws if there is none, or more than one and no name was given.
         private static Control FindListOrTreeControl(Form form, string controlId)
         {
-            bool IsListOrTree(Control control) => control is ListBox || control is TreeView;
+            bool IsListOrTree(Control control) => control is ListBox || control is TreeView || control is ListView;
             if (string.IsNullOrEmpty(controlId))
             {
                 var controls = EnumerateControls(form).Where(IsListOrTree).ToList();
                 if (controls.Count == 0)
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"No list or tree control found on form {0}.", GetFormId(form)));
+                        @"No list, tree, or list-view control found on form {0}.", GetFormId(form)));
                 if (controls.Count > 1)
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"Form {0} has more than one list or tree control; pass a controlId.", GetFormId(form)));
+                        @"Form {0} has more than one list/tree/list-view control; pass a controlId.", GetFormId(form)));
                 return controls[0];
             }
             var match = FindControl<Control>(form, controlId);
@@ -1100,10 +1109,10 @@ namespace pwiz.Skyline.ToolsUI
             if (match is System.Windows.Forms.Label)
                 match = NextControlInTabOrder(form, match, IsListOrTree)
                     ?? throw new ArgumentException(LlmInstruction.Format(
-                        @"'{0}' on form {1} is a label with no list or tree control after it.", controlId, GetFormId(form)));
+                        @"'{0}' on form {1} is a label with no list/tree/list-view control after it.", controlId, GetFormId(form)));
             if (!IsListOrTree(match))
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"Control {0} on form {1} is not a list or tree control.", controlId, GetFormId(form)));
+                    @"Control {0} on form {1} is not a list, tree, or list-view control.", controlId, GetFormId(form)));
             return match;
         }
 
@@ -1124,6 +1133,26 @@ namespace pwiz.Skyline.ToolsUI
             if (best < 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Item not found in {0}: {1}.", listBox.Name, item));
+            return best;
+        }
+
+        // Finds the best-matching item (by its text or name) in a ListView. Throws if none.
+        private static ListViewItem FindListViewItem(ListView listView, string item)
+        {
+            ListViewItem best = null;
+            var bestQuality = ControlMatchQuality.None;
+            foreach (ListViewItem listViewItem in listView.Items)
+            {
+                var quality = MatchQuality(listViewItem.Name, listViewItem.Text, item);
+                if (quality > bestQuality)
+                {
+                    best = listViewItem;
+                    bestQuality = quality;
+                }
+            }
+            if (best == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Item not found in {0}: {1}.", listView.Name, item));
             return best;
         }
 
