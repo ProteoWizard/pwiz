@@ -585,7 +585,7 @@ namespace pwiz.OspreySharp.Tasks
             // Assemble this file's rescore targets (multi-charge consensus +
             // reconciliation dedup + gap-fill) and resolve its input mzML.
             // Bails when there is no work or the file has no input_files entry.
-            if (!TryAssembleRescoreTargets(fileNum, nTotalFiles, fileName, fdrEntries, inputs, ctx,
+            if (!TryAssembleRescoreTargets(fileNum, nTotalFiles, fileName, inputs, ctx,
                     out var combinedTargets, out var gapFillTargets, out string inputFile))
                 return (totalRescored, totalGapCwt, totalGapForced);
 
@@ -771,7 +771,7 @@ namespace pwiz.OspreySharp.Tasks
         /// file has no input_files entry.
         /// </summary>
         private bool TryAssembleRescoreTargets(
-            int fileNum, int nTotalFiles, string fileName, List<FdrEntry> fdrEntries,
+            int fileNum, int nTotalFiles, string fileName,
             RescorePassInputs inputs, PipelineContext ctx,
             out Dictionary<int, (double Apex, double Start, double End)> combinedTargets,
             out List<GapFillTarget> gapFillTargets,
