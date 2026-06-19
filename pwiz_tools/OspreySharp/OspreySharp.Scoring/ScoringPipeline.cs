@@ -40,9 +40,10 @@ namespace pwiz.OspreySharp.Scoring
     /// diagnostic dump sink -- are now injected, logging via an
     /// <see cref="Action{T}"/> and the dump sink via
     /// <see cref="IScoringDiagnostics"/> (nullable; invoked null-conditionally).
-    /// The arithmetic, Parallel usage, CWT / peak / feature logic, and tie-breaks
-    /// are unchanged, so cross-impl parity is unaffected. Tasks calls this through
-    /// thin facades that keep their original PipelineContext signatures.
+    /// The orchestration (per-window Parallel scoring via <see cref="CoelutionScorer"/>
+    /// and the dedup tie-breaks) is moved verbatim, so cross-impl parity is
+    /// unaffected. Tasks calls this through thin facades that keep their original
+    /// PipelineContext signatures.
     /// </summary>
     public class ScoringPipeline
     {

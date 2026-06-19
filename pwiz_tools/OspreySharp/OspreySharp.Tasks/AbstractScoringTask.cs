@@ -75,14 +75,6 @@ namespace pwiz.OspreySharp.Tasks
         internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
 
 
-        // Local alias so existing dump code using F10 continues to read cleanly.
-        // The actual formatter lives in OspreyDiagnostics now.
-        private static string F10(double v)
-        {
-            return OspreyDiagnosticsLog.F10(v);
-        }
-
-
         /// <summary>
         /// Extract unique isolation windows from the first cycle of MS2 spectra.
         /// </summary>
