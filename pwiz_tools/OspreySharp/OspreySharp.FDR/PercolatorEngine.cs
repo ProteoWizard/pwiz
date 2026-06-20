@@ -50,11 +50,19 @@ namespace pwiz.OspreySharp.FDR
         /// .2nd-pass.fdr_scores.bin sidecars; mirrors Rust
         /// pipeline.rs:4394-4468) can call it as well as the first-pass run.
         /// </summary>
-        public static void RunPercolatorFdr(
+        /// <summary>
+        /// Returns <c>true</c> when a diagnostic-only (<c>*Only</c>) dump fired and
+        /// the run should stop early; the Tasks-layer caller owns the process exit.
+        /// Returns <c>false</c> on a normal completion (the FdrEntry stubs are
+        /// scored and q-valued). <paramref name="diagnostics"/> is <c>null</c>
+        /// (diagnostics off) on every production run.
+        /// </summary>
+        public static bool RunPercolatorFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             string[] featureNames,
             Action<string> logInfo,
+            PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass")
         {
             int numFeatures = featureNames.Length;
@@ -107,7 +115,8 @@ namespace pwiz.OspreySharp.FDR
                 TestFdr = config.RunFdr,
                 MaxIterations = 10,
                 NFolds = 3,
-                FeatureNames = featureNames
+                FeatureNames = featureNames,
+                Diagnostics = diagnostics
             };
 
             // Streaming vs direct dispatch, matching Rust
@@ -129,6 +138,12 @@ namespace pwiz.OspreySharp.FDR
             {
                 results = PercolatorFdr.RunPercolator(percEntries, percConfig);
             }
+
+            // A diagnostic-only (*Only) dump fired inside the engine; it left the
+            // run as a pure no-op and signalled here. Stop without scoring the
+            // stubs and let the Tasks-layer caller perform the process exit.
+            if (results.DiagnosticAbort)
+                return true;
 
             // Map results back to FdrEntry stubs
             var resultMap = new Dictionary<string, PercolatorResult>();
@@ -209,6 +224,7 @@ namespace pwiz.OspreySharp.FDR
             logInfo(string.Format(
                 "[COUNT] {0} unique precursors (best q across files): {1}",
                 passLabel, bestQByPrecursor.Count));
+            return false;
         }
 
         /// <summary>
@@ -341,9 +357,16 @@ namespace pwiz.OspreySharp.FDR
                 CValues = percConfig.CValues,
                 MaxTrainSize = percConfig.MaxTrainSize,
                 FeatureNames = percConfig.FeatureNames,
-                TrainOnly = true
+                TrainOnly = true,
+                Diagnostics = percConfig.Diagnostics
             };
             PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
+
+            // A diagnostic-only (*Only) dump can fire during the train-only pass
+            // (standardizer / subsample / SVM-weights dumps all run there);
+            // forward the abort sentinel so RunPercolatorFdr stops before scoring.
+            if (trainResults.DiagnosticAbort)
+                return trainResults;
 
             // 4. Apply averaged model to ALL entries and compute q-values.
             return PercolatorFdr.ScorePopulationAndComputeFdr(percEntries, trainResults, percConfig);

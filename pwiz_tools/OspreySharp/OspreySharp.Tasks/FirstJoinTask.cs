@@ -1037,9 +1037,46 @@ namespace pwiz.OspreySharp.Tasks
             PipelineContext ctx,
             string passLabel = "First-pass")
         {
-            PercolatorEngine.RunPercolatorFdr(
+            bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config, ParquetScoreCache.PIN_FEATURE_NAMES,
-                ctx.LogInfo, passLabel);
+                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
+            if (aborted)
+            {
+                // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left
+                // the run a pure no-op and signalled here; the Tasks layer -- not
+                // the engine -- owns the process exit (this is the early-exit the
+                // engine's former inline Environment.Exit(0) used to perform).
+                ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
+                Environment.Exit(0);
+            }
+        }
+
+        /// <summary>
+        /// Translate the run's <see cref="IOspreyDiagnostics"/> Stage 5 Percolator
+        /// gate flags into the small <see cref="PercolatorDiagnosticsConfig"/> the
+        /// FDR engine accepts. Returns <c>null</c> when diagnostics are off or no
+        /// Percolator dump is requested -- the common case -- so the engine's dump
+        /// call sites short-circuit on a single null check and allocate nothing.
+        /// </summary>
+        private static PercolatorDiagnosticsConfig BuildPercolatorDiagnostics(IOspreyDiagnostics diag)
+        {
+            if (diag == null ||
+                !(diag.DumpStandardizer || diag.DumpPercInput ||
+                  diag.DumpSubsample || diag.DumpSvmWeights))
+            {
+                return null;
+            }
+            return new PercolatorDiagnosticsConfig
+            {
+                DumpStandardizer = diag.DumpStandardizer,
+                StandardizerOnly = diag.StandardizerOnly,
+                DumpPercInput = diag.DumpPercInput,
+                PercInputOnly = diag.PercInputOnly,
+                DumpSubsample = diag.DumpSubsample,
+                SubsampleOnly = diag.SubsampleOnly,
+                DumpSvmWeights = diag.DumpSvmWeights,
+                SvmWeightsOnly = diag.SvmWeightsOnly
+            };
         }
 
         /// <summary>
