@@ -224,10 +224,8 @@ namespace pwiz.Skyline.Model.Results
             int count = dataFile.SpectrumCount;
             for (int i = 0; i < count; i++)
             {
-                // Check the SRM CV param from metadata only; GetSrmSpectrum loads the full binary
-                // arrays, so gating here avoids decompressing every non-SRM scan in mixed files.
-                if (!dataFile.IsSrmSpectrum(i))
-                    continue;
+                // Read each scan once, in forward order. GetSrmSpectrum already returns null for
+                // non-SRM scans, so no separate metadata pre-check is needed.
                 var spectrum = dataFile.GetSrmSpectrum(i);
                 if (spectrum?.Precursors == null || spectrum.Precursors.Count == 0 || spectrum.Mzs == null)
                     continue;
