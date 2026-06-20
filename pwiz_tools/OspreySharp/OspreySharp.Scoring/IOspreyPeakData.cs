@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -27,14 +27,29 @@ using pwiz.OspreySharp.Core;
 
 namespace pwiz.OspreySharp.Scoring
 {
+    // Per-candidate peak data presented to the feature calculators, as a four-level
+    // tier hierarchy of increasing data access. A calculator implements against the
+    // narrowest tier it needs, so the type system records each score's data
+    // dependency and the harness presents each score with no more than it requires.
+    //
+    // The first two tiers mirror Skyline's ISummaryPeakData / IDetailedPeakData; the
+    // top two expose spectral data Skyline's chromatogram-centric results layer does
+    // NOT provide at scoring time, in two honest levels:
+    //
+    //   IOspreySummaryPeakData       identity + chosen peak location (stats only)
+    //   IOspreyDetailedPeakData      + per-fragment XICs                          (Skyline-achievable)
+    //   IOspreyApexSpectrumPeakData  + the single apex MS2 spectrum               (one level above Skyline)
+    //   IOspreyApexSpectraPeakData   + the apex +/- 2 MS2 spectra                 (two levels above Skyline)
+
     /// <summary>
-    /// Per-candidate peak data, mirroring Skyline's <c>ISummaryPeakData</c>: the
-    /// identity and the chosen peak location a feature scores against. Osprey's
+    /// Summary per-candidate peak data, mirroring Skyline's <c>ISummaryPeakData</c>:
+    /// the identity and the chosen peak location a feature scores against. Osprey's
     /// scoring is flat -- one precursor (<see cref="Candidate"/>) at its best peak
     /// (<see cref="PeakBounds"/>) within one isolation window -- so this is a flat
-    /// view, not Skyline's peptide/group/transition tree.
+    /// view, not Skyline's peptide/group/transition tree. The rt-deviation family
+    /// (rt_deviation / abs_rt_deviation) reads only this tier.
     /// </summary>
-    public interface IOspreyPeakData
+    public interface IOspreySummaryPeakData
     {
         /// <summary>The candidate library entry: precursor plus theoretical fragments.</summary>
         LibraryEntry Candidate { get; }
@@ -59,39 +74,61 @@ namespace pwiz.OspreySharp.Scoring
     }
 
     /// <summary>
-    /// Detailed per-candidate peak data, mirroring Skyline's
-    /// <c>IDetailedPeakData</c>: adds the per-fragment extracted-ion chromatograms
-    /// on the shared scan axis. Spectral accessors (apex / MS1 spectra) -- the part
-    /// Skyline's chromatogram-centric results layer cannot supply -- are added by
-    /// the feature families that read them.
+    /// Detailed per-candidate peak data, mirroring Skyline's <c>IDetailedPeakData</c>:
+    /// adds the per-fragment extracted-ion chromatograms on the shared scan axis. The
+    /// coelution, peak-shape, and median-polish families read this tier (the
+    /// median-polish fit is an XIC-derived byproduct the harness publishes). This is
+    /// the richest tier Skyline's results layer can currently supply.
     /// </summary>
-    public interface IOspreyDetailedPeakData : IOspreyPeakData
+    public interface IOspreyDetailedPeakData : IOspreySummaryPeakData
     {
         /// <summary>
         /// Per-fragment XICs (FragmentIndex, RetentionTimes, Intensities) on the
         /// shared scan axis. The full set is iterated to select the reference XIC.
         /// </summary>
         IReadOnlyList<XicData> Xics { get; }
+    }
 
+    /// <summary>
+    /// Apex-spectrum per-candidate peak data: adds the single MS2 spectrum at the
+    /// chosen peak apex. This is the first tier beyond what Skyline's
+    /// chromatogram-centric results layer can supply -- a Skyline implementation
+    /// would throw on <see cref="ApexSpectrum"/>. The xcorr feature and the
+    /// apex-match family (consecutive_ions, explained_intensity, the two
+    /// mass-accuracy means) read this tier: they match the candidate's theoretical
+    /// fragments against the apex spectrum's sorted m/z and index-aligned intensity
+    /// arrays.
+    /// </summary>
+    public interface IOspreyApexSpectrumPeakData : IOspreyDetailedPeakData
+    {
         /// <summary>
         /// The MS2 spectrum at the chosen peak apex
-        /// (windowSpectra[startScan + bestPeak.ApexIndex]). This is the spectral
-        /// surface Skyline's chromatogram-centric results layer cannot supply -- a
-        /// Skyline implementation of this interface would throw here. The
-        /// apex-match family matches the candidate's theoretical fragments against
-        /// this spectrum's sorted m/z and index-aligned intensity arrays.
+        /// (windowSpectra[startScan + bestPeak.ApexIndex]). The spectral surface
+        /// Skyline's chromatogram-centric results layer cannot supply.
         /// </summary>
         Spectrum ApexSpectrum { get; }
 
         /// <summary>
         /// Window-global spectrum index of the chosen apex
-        /// (= <see cref="WindowStartIndex"/> + <see cref="ApexLocalIndex"/>). The
-        /// xcorr feature indexes the preprocessed cache HERE. INDEX TRAP: this is a
-        /// distinct index space from the Savitzky-Golay sweep's candidate-local
-        /// index -- see <see cref="ApexLocalIndex"/> / <see cref="WindowLength"/>.
+        /// (= WindowStartIndex + candidate-local apex). The xcorr feature indexes the
+        /// preprocessed cache HERE. INDEX TRAP: this is a distinct index space from
+        /// the Savitzky-Golay sweep's candidate-local index -- see
+        /// <see cref="IOspreyApexSpectraPeakData"/>.
         /// </summary>
         int ApexGlobalIndex { get; }
+    }
 
+    /// <summary>
+    /// Apex-spectra per-candidate peak data: adds the apex +/- 2 MS2 spectra (five
+    /// scans). This is the widest spectral access -- two levels beyond Skyline -- and
+    /// is read only by the Savitzky-Golay sweep (sg_weighted_xcorr / sg_weighted_cosine),
+    /// which weights the per-scan xcorr / cosine over the apex and its two neighbors on
+    /// each side. (The MS1 family also rides this tier today because it reads the window
+    /// RT axis; it drops to <see cref="IOspreyDetailedPeakData"/> once its MS1 precursor
+    /// XIC + isotope envelope are produced upstream.)
+    /// </summary>
+    public interface IOspreyApexSpectraPeakData : IOspreyApexSpectrumPeakData
+    {
         /// <summary>
         /// Candidate-local apex index within the scoring range
         /// (= bestPeak.ApexIndex). The SG sweep builds candIdx = ApexLocalIndex +
@@ -102,7 +139,8 @@ namespace pwiz.OspreySharp.Scoring
         /// <summary>
         /// startScan: the offset mapping a candidate-local index to a window-global
         /// index (globalIdx = WindowStartIndex + candIdx). Kept distinct from
-        /// <see cref="ApexGlobalIndex"/>; at offset 0 they coincide by construction.
+        /// <see cref="IOspreyApexSpectrumPeakData.ApexGlobalIndex"/>; at offset 0 they
+        /// coincide by construction.
         /// </summary>
         int WindowStartIndex { get; }
 
@@ -121,10 +159,9 @@ namespace pwiz.OspreySharp.Scoring
         /// <summary>
         /// The window's per-scan retention-time axis (the shared <c>windowRts</c>
         /// reference, a per-window value -- not a per-candidate copy). The MS1 family
-        /// (features 13, 14) maps an XIC scan index i to an absolute RT via
+        /// maps an XIC scan index i to an absolute RT via
         /// WindowRetentionTimes[<see cref="WindowStartIndex"/> + i] to find the nearest
-        /// MS1 scan. Just RT, not a spectral surface, so unlike
-        /// <see cref="ApexSpectrum"/> a chromatogram-centric implementation can supply it.
+        /// MS1 scan. Just RT, not a spectral surface.
         /// </summary>
         IReadOnlyList<double> WindowRetentionTimes { get; }
     }

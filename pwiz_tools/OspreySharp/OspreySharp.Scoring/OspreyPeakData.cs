@@ -28,18 +28,19 @@ using pwiz.OspreySharp.Core;
 namespace pwiz.OspreySharp.Scoring
 {
     /// <summary>
-    /// Reusable <see cref="IOspreyDetailedPeakData"/> adapter over the harness's
-    /// per-candidate scoring state. One instance is created per window and
-    /// <see cref="Set"/> is called for each candidate, so the per-candidate
-    /// scoring loop allocates no peak-data objects. Windows are scored on separate
-    /// threads, so each window owns its own instance -- this is never shared task
-    /// state.
+    /// Reusable <see cref="IOspreyApexSpectraPeakData"/> adapter over the harness's
+    /// per-candidate scoring state. It implements the widest peak-data tier; each
+    /// calculator receives it narrowed to the tier its family declares. One instance
+    /// is created per window and <see cref="Set"/> is called for each candidate, so the
+    /// per-candidate scoring loop allocates no peak-data objects. Windows are scored on
+    /// separate threads, so each window owns its own instance -- this is never shared
+    /// task state.
     ///
-    /// Lives in Scoring (alongside the <see cref="IOspreyDetailedPeakData"/> seam it
-    /// implements and the feature calculators that consume it); relocated out of the
-    /// Tasks layer so the coelution scorer can move down here too.
+    /// Lives in Scoring (alongside the peak-data tier seam it implements and the
+    /// feature calculators that consume it); relocated out of the Tasks layer so the
+    /// coelution scorer can move down here too.
     /// </summary>
-    public sealed class OspreyPeakData : IOspreyDetailedPeakData
+    public sealed class OspreyPeakData : IOspreyApexSpectraPeakData
     {
         private LibraryEntry _candidate;
         private XICPeakBounds _peakBounds;

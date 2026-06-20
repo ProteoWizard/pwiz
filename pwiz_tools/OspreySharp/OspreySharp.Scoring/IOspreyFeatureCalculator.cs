@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -32,6 +32,12 @@ namespace pwiz.OspreySharp.Scoring
     /// the shared scoring context. The parity-critical order and identity of the
     /// 21 features lives in <see cref="OspreyFeatureCalculators"/>, not on the
     /// calculator.
+    ///
+    /// The SPI is typed to the least-specific peak-data tier
+    /// (<see cref="IOspreySummaryPeakData"/>); each abstract base below narrows it to
+    /// the tier its family needs, so a calculator declares its data dependency in the
+    /// type system and the harness presents no more data than the score reads. See the
+    /// tier hierarchy in <c>IOspreyPeakData.cs</c>.
     /// </summary>
     public interface IOspreyFeatureCalculator
     {
@@ -44,35 +50,85 @@ namespace pwiz.OspreySharp.Scoring
         /// <summary>
         /// Compute this feature's value for one candidate peak.
         /// </summary>
-        double Calculate(OspreyScoringContext context, IOspreyPeakData peakData);
+        double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData);
     }
 
     /// <summary>
-    /// Base for OspreySharp scoring calculators, mirroring Skyline's
-    /// <c>DetailedPeakFeatureCalculator</c> (it narrows the peak data to the
-    /// detailed view). Every current Osprey feature reads detailed
-    /// (chromatogram/spectrum) data, so -- unlike Skyline -- there is no
-    /// summary-only calculator base. The data-interface split
-    /// (<see cref="IOspreyPeakData"/> / <see cref="IOspreyDetailedPeakData"/>)
-    /// still mirrors <c>ISummaryPeakData</c> / <c>IDetailedPeakData</c>.
+    /// Base for scores that read only summary peak data (identity + chosen peak
+    /// location), mirroring Skyline's <c>SummaryPeakFeatureCalculator</c>. The
+    /// rt-deviation family is the only Osprey family at this tier.
+    /// </summary>
+    public abstract class SummaryOspreyFeatureCalculator : IOspreyFeatureCalculator
+    {
+        public abstract string Name { get; }
+
+        public abstract double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData);
+    }
+
+    /// <summary>
+    /// Base for scores that read per-fragment XICs, mirroring Skyline's
+    /// <c>DetailedPeakFeatureCalculator</c>. Narrows the SPI's summary peak data to
+    /// <see cref="IOspreyDetailedPeakData"/>; throws a clear error rather than a raw
+    /// <see cref="InvalidCastException"/> if a narrower view is supplied. The
+    /// coelution, peak-shape, and median-polish families ride this tier.
     /// </summary>
     public abstract class DetailedOspreyFeatureCalculator : IOspreyFeatureCalculator
     {
         public abstract string Name { get; }
 
-        public double Calculate(OspreyScoringContext context, IOspreyPeakData peakData)
+        public double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
         {
-            // Every Osprey calculator reads detailed (chromatogram/spectrum) data, so
-            // the SPI accepts the summary base for Skyline-shape parity but narrows
-            // here. Throw a clear error rather than a raw InvalidCastException if a
-            // caller passes a summary-only implementation.
             var detailed = peakData as IOspreyDetailedPeakData;
             if (detailed == null)
                 throw new InvalidOperationException(
-                    @"OspreySharp feature calculators require IOspreyDetailedPeakData; a summary-only IOspreyPeakData was provided.");
+                    @"This OspreySharp feature calculator requires IOspreyDetailedPeakData; a narrower peak-data tier was provided.");
             return Calculate(context, detailed);
         }
 
         protected abstract double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData);
+    }
+
+    /// <summary>
+    /// Base for scores that read the single apex MS2 spectrum -- the first tier above
+    /// what Skyline's results layer can supply. Narrows the SPI's summary peak data to
+    /// <see cref="IOspreyApexSpectrumPeakData"/>. The xcorr feature and the apex-match
+    /// family ride this tier.
+    /// </summary>
+    public abstract class ApexSpectrumOspreyFeatureCalculator : IOspreyFeatureCalculator
+    {
+        public abstract string Name { get; }
+
+        public double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
+        {
+            var apex = peakData as IOspreyApexSpectrumPeakData;
+            if (apex == null)
+                throw new InvalidOperationException(
+                    @"This OspreySharp feature calculator requires IOspreyApexSpectrumPeakData; a narrower peak-data tier was provided.");
+            return Calculate(context, apex);
+        }
+
+        protected abstract double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData);
+    }
+
+    /// <summary>
+    /// Base for scores that read the apex +/- 2 MS2 spectra -- the widest tier, two
+    /// levels above Skyline. Narrows the SPI's summary peak data to
+    /// <see cref="IOspreyApexSpectraPeakData"/>. The Savitzky-Golay sweep rides this
+    /// tier (and the MS1 family until its data is produced upstream).
+    /// </summary>
+    public abstract class ApexSpectraOspreyFeatureCalculator : IOspreyFeatureCalculator
+    {
+        public abstract string Name { get; }
+
+        public double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
+        {
+            var spectra = peakData as IOspreyApexSpectraPeakData;
+            if (spectra == null)
+                throw new InvalidOperationException(
+                    @"This OspreySharp feature calculator requires IOspreyApexSpectraPeakData; a narrower peak-data tier was provided.");
+            return Calculate(context, spectra);
+        }
+
+        protected abstract double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData);
     }
 }

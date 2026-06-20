@@ -61,7 +61,7 @@ namespace pwiz.OspreySharp.Test
                 new XicData(1, rts, frag1),
             };
             var bounds = new XICPeakBounds { StartIndex = 1, EndIndex = 5, ApexIndex = 3 };
-            var peakData = new FakeDetailedPeakData(xics, bounds);
+            var peakData = new FakePeakData(xics, bounds);
 
             var context = new OspreyScoringContext(null);
             context.ClearByproducts();
@@ -84,7 +84,7 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual("peak_sharpness", OspreyFeatureCalculators.Get(5).Name);
 
             // Degenerate peak data (no XICs) yields 0.0 for every peak-shape feature.
-            var empty = new FakeDetailedPeakData(new List<XicData>(), bounds);
+            var empty = new FakePeakData(new List<XicData>(), bounds);
             context.ClearByproducts();
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(3).Calculate(context, empty), TOLERANCE);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(4).Calculate(context, empty), TOLERANCE);
@@ -110,7 +110,7 @@ namespace pwiz.OspreySharp.Test
                 new XicData(1, rts, frag1),
             };
             var bounds = new XICPeakBounds { StartIndex = 0, EndIndex = 4, ApexIndex = 2 };
-            var peakData = new FakeDetailedPeakData(xics, bounds);
+            var peakData = new FakePeakData(xics, bounds);
 
             double expectedCorr = ScoringMath.PearsonCorrelationInRange(frag0, frag1, 0, 4);
             Assert.IsTrue(expectedCorr > 0.0, "fixture fragments should positively correlate");
@@ -132,7 +132,7 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual("n_coeluting_fragments", OspreyFeatureCalculators.Get(2).Name);
 
             // Fewer than two fragments -> all coelution features 0.
-            var single = new FakeDetailedPeakData(
+            var single = new FakePeakData(
                 new List<XicData> { new XicData(0, rts, frag0) }, bounds);
             context.ClearByproducts();
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(0).Calculate(context, single), TOLERANCE);
@@ -151,7 +151,7 @@ namespace pwiz.OspreySharp.Test
         {
             var rts = new double[] { 0, 1, 2 };
             var frag0 = new double[] { 1, 2, 1 };
-            var peakData = new FakeDetailedPeakData(
+            var peakData = new FakePeakData(
                 new List<XicData> { new XicData(0, rts, frag0) },
                 new XICPeakBounds { StartIndex = 0, EndIndex = 2, ApexIndex = 1 });
 
@@ -179,13 +179,13 @@ namespace pwiz.OspreySharp.Test
             var context = new OspreyScoringContext(null);
             context.ClearByproducts();
 
-            var late = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var late = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 apexRetentionTime: 12.5, expectedRt: 10.0);
             Assert.AreEqual(2.5, OspreyFeatureCalculators.Get(11).Calculate(context, late), TOLERANCE);
             Assert.AreEqual(2.5, OspreyFeatureCalculators.Get(12).Calculate(context, late), TOLERANCE);
 
             // Earlier-than-expected apex -> negative deviation, positive absolute.
-            var early = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var early = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 apexRetentionTime: 8.0, expectedRt: 10.0);
             Assert.AreEqual(-2.0, OspreyFeatureCalculators.Get(11).Calculate(context, early), TOLERANCE);
             Assert.AreEqual(2.0, OspreyFeatureCalculators.Get(12).Calculate(context, early), TOLERANCE);
@@ -208,7 +208,7 @@ namespace pwiz.OspreySharp.Test
         {
             var rts = new double[] { 0, 1, 2, 3, 4 };
             var frag0 = new double[] { 1, 2, 3, 2, 1 };
-            var peakData = new FakeDetailedPeakData(
+            var peakData = new FakePeakData(
                 new List<XicData> { new XicData(0, rts, frag0) },
                 new XICPeakBounds { StartIndex = 0, EndIndex = 4, ApexIndex = 2 },
                 candidate: new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0),
@@ -256,7 +256,7 @@ namespace pwiz.OspreySharp.Test
                     Frag(999.0, IonType.Y, 2),
                 },
             };
-            var peakData = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var peakData = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 candidate: candidate, apexSpectrum: apex);
 
             var context = new OspreyScoringContext(config);
@@ -282,7 +282,7 @@ namespace pwiz.OspreySharp.Test
             {
                 Fragments = new List<LibraryFragment> { Frag(999.0, IonType.B, 1) },
             };
-            var noMatchData = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var noMatchData = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 candidate: noMatch, apexSpectrum: apex);
             var noMatchContext = new OspreyScoringContext(config);
             noMatchContext.ClearByproducts();
@@ -318,7 +318,7 @@ namespace pwiz.OspreySharp.Test
 
             // Interior apex: startScan=10, apexLocal=5, rangeLen=8 -> candIdx 3..7 all
             // in range, globalIdx 13..17. ScoreXcorr echoes the index.
-            var interior = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var interior = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 candidate: candidate, apexSpectrum: windowSpectra[15],
                 apexGlobalIndex: 15, apexLocalIndex: 5, windowStartIndex: 10,
                 windowLength: 8, windowSpectra: windowSpectra);
@@ -339,7 +339,7 @@ namespace pwiz.OspreySharp.Test
             // Edge apex: apexLocal=0 -> offsets -2,-1 skip (candIdx<0); offsets 0,1,2
             // -> globalIdx 10,11,12. NO renormalization: only those weights apply.
             // 10*(17/35) + 11*(12/35) + 12*(-3/35) = 266/35 = 7.6.
-            var edge = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var edge = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 candidate: candidate, apexSpectrum: windowSpectra[10],
                 apexGlobalIndex: 10, apexLocalIndex: 0, windowStartIndex: 10,
                 windowLength: 8, windowSpectra: windowSpectra);
@@ -358,7 +358,7 @@ namespace pwiz.OspreySharp.Test
             };
         }
 
-        private sealed class FakeDetailedPeakData : IOspreyDetailedPeakData
+        private sealed class FakePeakData : IOspreyApexSpectraPeakData
         {
             private readonly IReadOnlyList<XicData> _xics;
             private readonly XICPeakBounds _peakBounds;
@@ -373,7 +373,7 @@ namespace pwiz.OspreySharp.Test
             private readonly IReadOnlyList<Spectrum> _windowSpectra;
             private readonly IReadOnlyList<double> _windowRetentionTimes;
 
-            public FakeDetailedPeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
+            public FakePeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
                 double apexRetentionTime = 0.0, double expectedRt = 0.0,
                 LibraryEntry candidate = null, Spectrum apexSpectrum = null,
                 int apexGlobalIndex = 0, int apexLocalIndex = 0, int windowStartIndex = 0,

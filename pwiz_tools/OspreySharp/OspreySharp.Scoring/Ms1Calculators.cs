@@ -64,7 +64,7 @@ namespace pwiz.OspreySharp.Scoring
         public double PrecursorCoelution;
         public double IsotopeCosine;
 
-        public static Ms1ScoringByproduct GetOrCompute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        public static Ms1ScoringByproduct GetOrCompute(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             if (context.TryGetInfo(out Ms1ScoringByproduct byproduct))
                 return byproduct;
@@ -73,7 +73,7 @@ namespace pwiz.OspreySharp.Scoring
             return byproduct;
         }
 
-        private static Ms1ScoringByproduct Compute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        private static Ms1ScoringByproduct Compute(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             // Both feature values default to 0.0 (mirrors the inline
             // ms1PrecursorCoelution / ms1IsotopeCosine seeds). Inner early-returns
@@ -198,11 +198,11 @@ namespace pwiz.OspreySharp.Scoring
     /// parity traps (seed-0.0 / '&gt;=' reference-XIC pick, skip-not-zerofill sampling,
     /// the &lt; 1e-10 Pearson denominator guard with feature-side NaN-&gt;0.0).
     /// </summary>
-    internal sealed class Ms1PrecursorCoelutionCalc : DetailedOspreyFeatureCalculator
+    internal sealed class Ms1PrecursorCoelutionCalc : ApexSpectraOspreyFeatureCalculator
     {
         public override string Name { get { return "ms1_precursor_coelution"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             // HRAM gate: no MS1 features -> exactly 0.0, do not even build the byproduct.
             if (!context.HasMs1Features || context.Ms1Spectra == null || context.Ms1Spectra.Count == 0)
@@ -222,11 +222,11 @@ namespace pwiz.OspreySharp.Scoring
     /// a negative score there, so the feature stays 0.0). Uses the UNMODIFIED
     /// Candidate.Sequence.
     /// </summary>
-    internal sealed class Ms1IsotopeCosineCalc : DetailedOspreyFeatureCalculator
+    internal sealed class Ms1IsotopeCosineCalc : ApexSpectraOspreyFeatureCalculator
     {
         public override string Name { get { return "ms1_isotope_cosine"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             // Same HRAM gate as feature 13.
             if (!context.HasMs1Features || context.Ms1Spectra == null || context.Ms1Spectra.Count == 0)

@@ -50,7 +50,7 @@ namespace pwiz.OspreySharp.Scoring
         public double AbsMassErrSum;
         public int NMatched;
 
-        public static ApexFragmentMatchSet GetOrCompute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        public static ApexFragmentMatchSet GetOrCompute(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             if (context.TryGetInfo(out ApexFragmentMatchSet matchSet))
                 return matchSet;
@@ -59,7 +59,7 @@ namespace pwiz.OspreySharp.Scoring
             return matchSet;
         }
 
-        private static ApexFragmentMatchSet Compute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        private static ApexFragmentMatchSet Compute(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             var matchSet = new ApexFragmentMatchSet();
 
@@ -143,11 +143,11 @@ namespace pwiz.OspreySharp.Scoring
     /// boolean <see cref="SpectralScorer.HasMatch"/> pass keyed by ion type +
     /// ordinal, with the same closed-both-ends tolerance window.
     /// </summary>
-    internal sealed class ConsecutiveIonsCalc : DetailedOspreyFeatureCalculator
+    internal sealed class ConsecutiveIonsCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "consecutive_ions"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             var candidate = peakData.Candidate;
             if (candidate.Fragments == null || candidate.Fragments.Count == 0)
@@ -211,11 +211,11 @@ namespace pwiz.OspreySharp.Scoring
     /// (<c>totalIntensity &gt; 1e-12</c>); below it the feature is exactly 0.0
     /// (never NaN/Inf).
     /// </summary>
-    internal sealed class ExplainedIntensityCalc : DetailedOspreyFeatureCalculator
+    internal sealed class ExplainedIntensityCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "explained_intensity"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             var matchSet = ApexFragmentMatchSet.GetOrCompute(context, peakData);
             return matchSet.TotalIntensity > 1e-12
@@ -229,11 +229,11 @@ namespace pwiz.OspreySharp.Scoring
     /// tolerance unit, typically ppm) over matched fragments. No-match fallback is
     /// exactly 0.0 (Rust returns a 0.0 mean on empty matches).
     /// </summary>
-    internal sealed class MassAccuracyMeanCalc : DetailedOspreyFeatureCalculator
+    internal sealed class MassAccuracyMeanCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "mass_accuracy_deviation_mean"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             var matchSet = ApexFragmentMatchSet.GetOrCompute(context, peakData);
             return matchSet.NMatched > 0
@@ -250,11 +250,11 @@ namespace pwiz.OspreySharp.Scoring
     /// caused ~65 divergent Astral rows. (Rust compute_mass_accuracy returns
     /// (0.0, tolerance, tolerance) on empty matches, osprey-scoring/src/lib.rs:462.)
     /// </summary>
-    internal sealed class AbsMassAccuracyMeanCalc : DetailedOspreyFeatureCalculator
+    internal sealed class AbsMassAccuracyMeanCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "abs_mass_accuracy_deviation_mean"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             var matchSet = ApexFragmentMatchSet.GetOrCompute(context, peakData);
             return matchSet.NMatched > 0

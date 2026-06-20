@@ -30,22 +30,22 @@ namespace pwiz.OspreySharp.Scoring
     /// predicted) retention time. NaN propagates by design; there is no no-score
     /// fallback here.
     /// </summary>
-    internal sealed class RtDeviationCalc : DetailedOspreyFeatureCalculator
+    internal sealed class RtDeviationCalc : SummaryOspreyFeatureCalculator
     {
         public override string Name { get { return "rt_deviation"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        public override double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
         {
             return peakData.ApexRetentionTime - peakData.ExpectedRt;
         }
     }
 
     /// <summary>abs_rt_deviation: the absolute value of rt_deviation.</summary>
-    internal sealed class AbsRtDeviationCalc : DetailedOspreyFeatureCalculator
+    internal sealed class AbsRtDeviationCalc : SummaryOspreyFeatureCalculator
     {
         public override string Name { get { return "abs_rt_deviation"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        public override double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
         {
             return Math.Abs(peakData.ApexRetentionTime - peakData.ExpectedRt);
         }
