@@ -196,12 +196,12 @@ namespace pwiz.OspreySharp.Test
 
         /// <summary>
         /// MS1 family (ms1_precursor_coelution / ms1_isotope_cosine): both features
-        /// are HRAM-only. The HRAM gate is on the context -- when SetMs1Machinery was
-        /// never called (so HasMs1Features stays false and Ms1Spectra is null), both
-        /// calculators short-circuit to exactly 0.0 before any byproduct work. The
+        /// are HRAM-only and now pure consumers of MS1 data produced upstream by the
+        /// extractor. When no MS1 data is supplied (the peak-data accessors are null,
+        /// i.e. a unit-resolution run or no MS1 scan), both return exactly 0.0. The
         /// numeric path (calibration, reference-XIC pick, nearest-MS1 sampling,
-        /// isotope envelope) is covered by the end-to-end 1e-9 cross-impl parity gate
-        /// against the Rust reference on the HRAM datasets.
+        /// isotope envelope) lives in the extractor and is covered by the end-to-end
+        /// 1e-9 cross-impl parity gate against the Rust reference on the HRAM datasets.
         /// </summary>
         [TestMethod]
         public void TestMs1Calculators()
@@ -214,11 +214,10 @@ namespace pwiz.OspreySharp.Test
                 candidate: new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0),
                 windowRetentionTimes: rts);
 
-            // No SetMs1Machinery -> HasMs1Features is false -> HRAM gate returns 0.0
-            // for both features, without touching the (null) MS1 spectra.
+            // The fake supplies no MS1 data (Ms1PrecursorXic / ApexIsotopeEnvelope
+            // null), so both features return 0.0 without any MS1 work.
             var context = new OspreyScoringContext(null);
             context.ClearByproducts();
-            Assert.IsFalse(context.HasMs1Features);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(13).Calculate(context, peakData), TOLERANCE);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(14).Calculate(context, peakData), TOLERANCE);
 
@@ -406,6 +405,11 @@ namespace pwiz.OspreySharp.Test
             public int WindowLength { get { return _windowLength; } }
             public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
             public IReadOnlyList<double> WindowRetentionTimes { get { return _windowRetentionTimes; } }
+            // MS1 data is produced upstream by the extractor; the fake supplies none,
+            // so the MS1 features evaluate to 0.0 (the HRAM-off path under test).
+            public XicData Ms1PrecursorXic { get { return null; } }
+            public XicData Ms1ReferenceXic { get { return null; } }
+            public double[] ApexIsotopeEnvelope { get { return null; } }
         }
 
         /// <summary>

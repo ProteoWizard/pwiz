@@ -54,6 +54,9 @@ namespace pwiz.OspreySharp.Scoring
         private int _windowLength;
         private IReadOnlyList<Spectrum> _windowSpectra;
         private IReadOnlyList<double> _windowRetentionTimes;
+        private XicData _ms1PrecursorXic;
+        private XicData _ms1ReferenceXic;
+        private double[] _apexIsotopeEnvelope;
 
         public void Set(LibraryEntry candidate, XICPeakBounds peakBounds, IReadOnlyList<XicData> xics,
             double apexRetentionTime, double expectedRt, Spectrum apexSpectrum,
@@ -72,6 +75,26 @@ namespace pwiz.OspreySharp.Scoring
             _windowLength = windowLength;
             _windowSpectra = windowSpectra;
             _windowRetentionTimes = windowRetentionTimes;
+            // Reset the produced MS1 data each candidate; SetMs1 overrides it when
+            // the extractor produced it (HRAM + MS1 present). Without this reset the
+            // reused instance would leak the previous candidate's MS1 chromatograms.
+            _ms1PrecursorXic = null;
+            _ms1ReferenceXic = null;
+            _apexIsotopeEnvelope = null;
+        }
+
+        /// <summary>
+        /// Publish the MS1 data the extractor produced for this candidate (the
+        /// precursor chromatogram, its co-sampled reference fragment chromatogram,
+        /// and the apex isotope envelope). Called only when the run has MS1 features
+        /// and an MS1 scan was found; otherwise the <see cref="Set"/> reset leaves
+        /// all three null and the MS1 features evaluate to 0.0.
+        /// </summary>
+        public void SetMs1(XicData ms1PrecursorXic, XicData ms1ReferenceXic, double[] apexIsotopeEnvelope)
+        {
+            _ms1PrecursorXic = ms1PrecursorXic;
+            _ms1ReferenceXic = ms1ReferenceXic;
+            _apexIsotopeEnvelope = apexIsotopeEnvelope;
         }
 
         public LibraryEntry Candidate { get { return _candidate; } }
@@ -86,5 +109,8 @@ namespace pwiz.OspreySharp.Scoring
         public int WindowLength { get { return _windowLength; } }
         public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
         public IReadOnlyList<double> WindowRetentionTimes { get { return _windowRetentionTimes; } }
+        public XicData Ms1PrecursorXic { get { return _ms1PrecursorXic; } }
+        public XicData Ms1ReferenceXic { get { return _ms1ReferenceXic; } }
+        public double[] ApexIsotopeEnvelope { get { return _apexIsotopeEnvelope; } }
     }
 }

@@ -87,6 +87,35 @@ namespace pwiz.OspreySharp.Scoring
         /// shared scan axis. The full set is iterated to select the reference XIC.
         /// </summary>
         IReadOnlyList<XicData> Xics { get; }
+
+        /// <summary>
+        /// The MS1 precursor-intensity chromatogram the harness produced for this
+        /// candidate: the precursor m/z sampled at the nearest MS1 scan along the
+        /// peak (missing MS1 scans skipped, so its length is the number of present
+        /// MS1 scans, not the peak width). <c>null</c> for unit-resolution runs / no
+        /// MS1 / a too-short peak. The ms1_precursor_coelution feature correlates it
+        /// against <see cref="Ms1ReferenceXic"/>. Mirrors how Skyline produces MS1
+        /// chromatograms upstream so the score is a pure consumer.
+        /// </summary>
+        XicData Ms1PrecursorXic { get; }
+
+        /// <summary>
+        /// The reference fragment XIC co-sampled at the SAME retained MS1 scans as
+        /// <see cref="Ms1PrecursorXic"/> (the MS1-specific reference selection:
+        /// highest-total-intensity fragment, last-on-tie). The partner the
+        /// ms1_precursor_coelution Pearson correlation runs against. <c>null</c>
+        /// whenever <see cref="Ms1PrecursorXic"/> is.
+        /// </summary>
+        XicData Ms1ReferenceXic { get; }
+
+        /// <summary>
+        /// The observed isotope-envelope intensities at the apex MS1 scan (the
+        /// <see cref="IsotopeEnvelope"/> extraction the harness ran for this
+        /// candidate). <c>null</c> when there is no apex MS1 scan. The
+        /// ms1_isotope_cosine feature applies the M0 gate and cosines it against the
+        /// theoretical envelope. This part has no Skyline analog yet.
+        /// </summary>
+        double[] ApexIsotopeEnvelope { get; }
     }
 
     /// <summary>
