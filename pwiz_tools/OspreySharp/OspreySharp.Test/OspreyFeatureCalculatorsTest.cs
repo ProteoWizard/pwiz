@@ -347,6 +347,60 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual(266.0 / 35.0, OspreyFeatureCalculators.Get(17).Calculate(edgeContext, edge), TOLERANCE);
         }
 
+        /// <summary>
+        /// The production <see cref="OspreyPeakData.TryGetApexOffsetSpectrum"/> bounded
+        /// accessor (tested directly, not via the fake's copy): interior offsets map
+        /// candidate-local to window-global (cacheIndex = windowStartIndex +
+        /// apexLocalIndex + offset) and return the window spectrum there; offsets that
+        /// fall outside [0, windowLength) at a window edge return false -- the
+        /// asymmetric skip the Savitzky-Golay sweep relies on.
+        /// </summary>
+        [TestMethod]
+        public void TestApexOffsetSpectrumAccessor()
+        {
+            var windowSpectra = new List<Spectrum>();
+            for (int i = 0; i < 20; i++)
+                windowSpectra.Add(new Spectrum { Mzs = new double[0], Intensities = new float[0] });
+
+            // startScan=10, apexLocal=5, rangeLen=8 -> candIdx 3..7 valid (globalIdx 13..17).
+            var peakData = new OspreyPeakData();
+            peakData.Set(null, new XICPeakBounds(), new List<XicData>(),
+                0.0, 0.0, windowSpectra[15],
+                apexGlobalIndex: 15, apexLocalIndex: 5, windowStartIndex: 10, windowLength: 8,
+                windowSpectra: windowSpectra);
+            for (int offset = -2; offset <= 2; offset++)
+            {
+                Assert.IsTrue(peakData.TryGetApexOffsetSpectrum(offset, out var s, out int idx),
+                    string.Format("offset {0} should be in range", offset));
+                Assert.AreEqual(15 + offset, idx);
+                Assert.AreSame(windowSpectra[15 + offset], s);
+            }
+
+            // Lower edge: apexLocal=0 -> offsets -2,-1 fall below 0 and are skipped;
+            // 0,1,2 resolve to globalIdx 10,11,12.
+            var edge = new OspreyPeakData();
+            edge.Set(null, new XICPeakBounds(), new List<XicData>(),
+                0.0, 0.0, windowSpectra[10],
+                apexGlobalIndex: 10, apexLocalIndex: 0, windowStartIndex: 10, windowLength: 8,
+                windowSpectra: windowSpectra);
+            Assert.IsFalse(edge.TryGetApexOffsetSpectrum(-2, out _, out _));
+            Assert.IsFalse(edge.TryGetApexOffsetSpectrum(-1, out _, out _));
+            Assert.IsTrue(edge.TryGetApexOffsetSpectrum(0, out _, out int i0));
+            Assert.AreEqual(10, i0);
+            Assert.IsTrue(edge.TryGetApexOffsetSpectrum(2, out _, out int i2));
+            Assert.AreEqual(12, i2);
+
+            // Upper edge: apexLocal=7 at the top of an 8-wide range -> candIdx 8 (offset
+            // +1) equals windowLength and is skipped.
+            var upper = new OspreyPeakData();
+            upper.Set(null, new XICPeakBounds(), new List<XicData>(),
+                0.0, 0.0, windowSpectra[17],
+                apexGlobalIndex: 17, apexLocalIndex: 7, windowStartIndex: 10, windowLength: 8,
+                windowSpectra: windowSpectra);
+            Assert.IsTrue(upper.TryGetApexOffsetSpectrum(0, out _, out _));
+            Assert.IsFalse(upper.TryGetApexOffsetSpectrum(1, out _, out _));
+        }
+
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
         {
             return new LibraryFragment
