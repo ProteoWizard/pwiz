@@ -53,7 +53,6 @@ namespace pwiz.OspreySharp.Scoring
         private int _windowStartIndex;
         private int _windowLength;
         private IReadOnlyList<Spectrum> _windowSpectra;
-        private IReadOnlyList<double> _windowRetentionTimes;
         private XicData _ms1PrecursorXic;
         private XicData _ms1ReferenceXic;
         private double[] _apexIsotopeEnvelope;
@@ -61,7 +60,7 @@ namespace pwiz.OspreySharp.Scoring
         public void Set(LibraryEntry candidate, XICPeakBounds peakBounds, IReadOnlyList<XicData> xics,
             double apexRetentionTime, double expectedRt, Spectrum apexSpectrum,
             int apexGlobalIndex, int apexLocalIndex, int windowStartIndex, int windowLength,
-            IReadOnlyList<Spectrum> windowSpectra, IReadOnlyList<double> windowRetentionTimes)
+            IReadOnlyList<Spectrum> windowSpectra)
         {
             _candidate = candidate;
             _peakBounds = peakBounds;
@@ -74,7 +73,6 @@ namespace pwiz.OspreySharp.Scoring
             _windowStartIndex = windowStartIndex;
             _windowLength = windowLength;
             _windowSpectra = windowSpectra;
-            _windowRetentionTimes = windowRetentionTimes;
             // Reset the produced MS1 data each candidate; SetMs1 overrides it when
             // the extractor produced it (HRAM + MS1 present). Without this reset the
             // reused instance would leak the previous candidate's MS1 chromatograms.
@@ -104,11 +102,24 @@ namespace pwiz.OspreySharp.Scoring
         public IReadOnlyList<XicData> Xics { get { return _xics; } }
         public Spectrum ApexSpectrum { get { return _apexSpectrum; } }
         public int ApexGlobalIndex { get { return _apexGlobalIndex; } }
-        public int ApexLocalIndex { get { return _apexLocalIndex; } }
-        public int WindowStartIndex { get { return _windowStartIndex; } }
-        public int WindowLength { get { return _windowLength; } }
-        public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
-        public IReadOnlyList<double> WindowRetentionTimes { get { return _windowRetentionTimes; } }
+
+        public bool TryGetApexOffsetSpectrum(int offset, out Spectrum spectrum, out int cacheIndex)
+        {
+            // candidate-local index within the scoring range; the window-spectrum
+            // list and the start/length come from the per-candidate Set. Out-of-range
+            // offsets (window edges) return false -- the asymmetric boundary skip.
+            int candIdx = _apexLocalIndex + offset;
+            if (candIdx < 0 || candIdx >= _windowLength)
+            {
+                spectrum = null;
+                cacheIndex = -1;
+                return false;
+            }
+            cacheIndex = _windowStartIndex + candIdx;
+            spectrum = _windowSpectra[cacheIndex];
+            return true;
+        }
+
         public XicData Ms1PrecursorXic { get { return _ms1PrecursorXic; } }
         public XicData Ms1ReferenceXic { get { return _ms1ReferenceXic; } }
         public double[] ApexIsotopeEnvelope { get { return _apexIsotopeEnvelope; } }

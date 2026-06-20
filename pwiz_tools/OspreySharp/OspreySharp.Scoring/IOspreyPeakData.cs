@@ -159,39 +159,22 @@ namespace pwiz.OspreySharp.Scoring
     public interface IOspreyApexSpectraPeakData : IOspreyApexSpectrumPeakData
     {
         /// <summary>
-        /// Candidate-local apex index within the scoring range
-        /// (= bestPeak.ApexIndex). The SG sweep builds candIdx = ApexLocalIndex +
-        /// offset and bound-checks it against [0, <see cref="WindowLength"/>).
+        /// Get the MS2 spectrum at the given offset from the peak apex. The
+        /// Savitzky-Golay sweep reads offsets -2..+2; this bounded accessor is the
+        /// ONLY spectral reach beyond the apex the scoring contract grants (it
+        /// replaces direct exposure of the whole window spectrum list, so a
+        /// calculator cannot read an arbitrary scan).
+        ///
+        /// Returns <c>false</c> at a window edge -- where the candidate-local index
+        /// (apex + <paramref name="offset"/>) falls outside [0, scoring-range) -- which
+        /// is the asymmetric boundary skip the sweep relies on (out-of-range offsets
+        /// contribute nothing, with no renormalization). On success
+        /// <paramref name="cacheIndex"/> is the window-global spectrum index the
+        /// preprocessed-xcorr cache is indexed by; at offset 0 it equals
+        /// <see cref="IOspreyApexSpectrumPeakData.ApexGlobalIndex"/> by construction.
+        /// The accessor owns the candidate-local/window-global index mapping (the
+        /// former "index trap"), so calculators no longer juggle the two index spaces.
         /// </summary>
-        int ApexLocalIndex { get; }
-
-        /// <summary>
-        /// startScan: the offset mapping a candidate-local index to a window-global
-        /// index (globalIdx = WindowStartIndex + candIdx). Kept distinct from
-        /// <see cref="IOspreyApexSpectrumPeakData.ApexGlobalIndex"/>; at offset 0 they
-        /// coincide by construction.
-        /// </summary>
-        int WindowStartIndex { get; }
-
-        /// <summary>
-        /// rangeLen = endScan - startScan + 1. The SG sweep bounds the
-        /// candidate-local index against THIS, NOT <see cref="WindowSpectra"/>.Count.
-        /// </summary>
-        int WindowLength { get; }
-
-        /// <summary>
-        /// The window's MS2 spectra (sorted by RT). The SG sweep reads
-        /// WindowSpectra[globalIdx] for each apex+/-2 offset.
-        /// </summary>
-        IReadOnlyList<Spectrum> WindowSpectra { get; }
-
-        /// <summary>
-        /// The window's per-scan retention-time axis (the shared <c>windowRts</c>
-        /// reference, a per-window value -- not a per-candidate copy). The MS1 family
-        /// maps an XIC scan index i to an absolute RT via
-        /// WindowRetentionTimes[<see cref="WindowStartIndex"/> + i] to find the nearest
-        /// MS1 scan. Just RT, not a spectral surface.
-        /// </summary>
-        IReadOnlyList<double> WindowRetentionTimes { get; }
+        bool TryGetApexOffsetSpectrum(int offset, out Spectrum spectrum, out int cacheIndex);
     }
 }

@@ -133,21 +133,18 @@ namespace pwiz.OspreySharp.Scoring
             var pool = context.XcorrScratchPool;
             var config = context.Config;
             var candidate = peakData.Candidate;
-            var windowSpectra = peakData.WindowSpectra;
-            int startScan = peakData.WindowStartIndex;
-            int rangeLen = peakData.WindowLength;
-            int apexLocal = peakData.ApexLocalIndex;
 
             double sgXcorr = 0.0;
             double sgCosine = 0.0;
             for (int offset = -2; offset <= 2; offset++)
             {
                 double weight = SG_WEIGHTS[offset + 2];
-                int candIdx = apexLocal + offset;
-                if (candIdx < 0 || candIdx >= rangeLen)
+                // The bounded apex+/-N accessor owns the candidate-local ->
+                // window-global index mapping and the asymmetric edge skip: it
+                // returns false when apex+offset falls outside the scoring range, so
+                // out-of-range offsets contribute nothing (no renormalization).
+                if (!peakData.TryGetApexOffsetSpectrum(offset, out var s, out int globalIdx))
                     continue;
-                int globalIdx = startScan + candIdx;
-                var s = windowSpectra[globalIdx];
                 sgXcorr += resolution.ScoreXcorr(preprocessedXcorr, globalIdx, s, candidate, scorer,
                     pool) * weight;
                 sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;

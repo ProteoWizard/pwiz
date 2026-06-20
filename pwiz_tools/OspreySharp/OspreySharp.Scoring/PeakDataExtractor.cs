@@ -516,7 +516,7 @@ namespace pwiz.OspreySharp.Scoring
             // and range length carry the index machinery the xcorr / SG family
             // reads; windowRts is shared by reference (no per-candidate copy).
             peakData.Set(candidate, bestPeak, xics, apexSpectrum.RetentionTime, expectedRt, apexSpectrum,
-                apexGlobalIdx, bestPeak.ApexIndex, startScan, rangeLen, windowSpectra, windowRts);
+                apexGlobalIdx, bestPeak.ApexIndex, startScan, rangeLen, windowSpectra);
 
             // Produce the MS1 data the ms1_precursor_coelution / ms1_isotope_cosine
             // features consume (HRAM only) -- the precursor chromatogram, its
