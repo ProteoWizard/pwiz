@@ -23,6 +23,17 @@
               command so the rehydrate paths fire) and asserts the resume blib
               equals the straight-through blib at 1e-9. The build is its own
               oracle, so no baseline is needed.
+      mode 3  HPC 4-task worker-chain self-consistency -- runs the distributed
+              --task pipeline (PerFileScoring -> FirstJoin -> PerFileRescore ->
+              MergeNode), each phase rehydrating the prior phase's on-disk
+              sidecars exactly as a multi-computer distribution would, and
+              asserts the chain's final blib equals the straight-through blib at
+              1e-9. Where mode 2 covers in-process straight-through resume, mode 3
+              covers the cross-process --task boundary rehydrate paths. Stages all
+              inputs + sidecars by copy under the run dir (the read-only data dir
+              is never touched); per-stage parquet/sidecar bisection of a red gate
+              lives in ai/scripts/OspreySharp/Compare (Compare-Stage7-Rehydration-
+              Strict-CSharp.ps1).
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -41,6 +52,11 @@
 .PARAMETER SkipResume
     Skip the mode-2 resume self-consistency leg (mode 1 only).
 
+.PARAMETER SkipHpcChain
+    Skip the mode-3 HPC 4-task worker-chain leg. The overnight gate leaves it on
+    (the chain is part of the standing cadence); this switch is for fast local
+    iteration when only the straight-through correctness matters.
+
 .PARAMETER DownloadsPath
     Override the downloads folder (default: Windows Downloads, honoring
     SKYLINE_DOWNLOAD_PATH and a relocated Downloads).
@@ -54,6 +70,12 @@
 
 .PARAMETER NoBuild
     Skip the OspreySharp build step (use the existing Release binary).
+
+.PARAMETER KeepRunDirs
+    Number of most-recent TestResults\regression-* run dirs to keep; older ones are
+    pruned at startup (before the build) to reclaim disk (default 2). Each run dir
+    holds multi-GB spectra caches and is gitignored scratch that nothing else cleans
+    up. On a long-lived build agent these otherwise accumulate until the disk fills.
 
 .EXAMPLE
     # Local: run Stellar straight-through + resume against the committed golden
@@ -71,10 +93,13 @@ param(
     [ValidateSet('Stellar', 'Astral', 'All')] [string]$Dataset = 'All',
     [switch]$CreateGolden,
     [switch]$SkipResume,
+    [switch]$SkipHpcChain,
     [string]$DownloadsPath,
     [int]$Threads = 16,
     [switch]$TeamCity,
     [switch]$NoBuild,
+    [ValidateRange(0, [int]::MaxValue)]
+    [int]$KeepRunDirs = 2,
     [double]$Tolerance = 1e-9
 )
 
@@ -122,6 +147,34 @@ function Write-Problem-Tc([string]$msg) {
     if ($TeamCity) { Write-Host ("##teamcity[buildProblem description='{0}']" -f (Format-TcMessage $msg)) }
     Write-Host "ERROR: $msg" -ForegroundColor Red
 }
+
+# --- Reclaim disk: prune stale TestResults run dirs ---------------------------
+# Each invocation writes a timestamped TestResults\regression-<stamp> dir holding
+# multi-GB .spectra.bin caches (via --work-dir). They are gitignored scratch and
+# nothing else cleans them, so on a long-lived build agent they accumulate until
+# the disk fills (the Astral straight-through leg alone needs ~26 GB). Prune here,
+# FIRST -- before the build, data acquisition, and the new run dir -- so even a
+# near-full disk can run it (deleting needs ~no free space) and the rest of the
+# run has the reclaimed space. Keeps the most recent $KeepRunDirs dirs (the latest
+# is useful for post-mortem on a red gate). The dir names sort chronologically
+# (regression-YYYYMMDD_HHMMSS), so a Name sort orders oldest-first.
+function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
+    if (-not (Test-Path $TestResultsDir)) { return }
+    $runDirs = @(Get-ChildItem -Path $TestResultsDir -Directory -Filter 'regression-*' `
+        -ErrorAction SilentlyContinue | Sort-Object Name)
+    if ($runDirs.Count -le $Keep) { return }
+    $stale = $runDirs[0..($runDirs.Count - $Keep - 1)]
+    Write-Progress-Tc ("Pruning {0} stale TestResults run dir(s), keeping the most recent {1}" -f $stale.Count, $Keep)
+    foreach ($d in $stale) {
+        try {
+            Remove-Item -LiteralPath $d.FullName -Recurse -Force -ErrorAction Stop
+            Write-Host "  pruned $($d.Name)"
+        } catch {
+            Write-Host "  WARN: failed to prune $($d.FullName): $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+}
+Remove-StaleRunDirs (Join-Path $scriptRoot 'TestResults') $KeepRunDirs
 
 # --- Build (unless -NoBuild) --------------------------------------------------
 if (-not $NoBuild) {
@@ -229,6 +282,121 @@ function Invoke-ResumeInvalidation {
     } | Remove-Item -Force
 }
 
+# --- mode 3: HPC 4-task worker chain ------------------------------------------
+# Low-level runner for a single --task phase: CWD = its own scratch dir so the
+# task's CWD-relative outputs (parquets, sidecars, blib) land there, mirroring a
+# real HPC worker that ships only its inputs and writes beside them. Throws on a
+# non-zero exit so the chain aborts loudly at the failing phase.
+function Invoke-OspreyTaskRun {
+    param([string]$WorkDir, [string[]]$CliArgs, [string]$LogName)
+    New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
+    $logPath = Join-Path $WorkDir $LogName
+    Push-Location $WorkDir
+    try {
+        & $ospreyExe @CliArgs 2>&1 | Tee-Object -FilePath $logPath | Out-Null
+        $exit = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+    if ($exit -ne 0) { throw "OspreySharp --task exited $exit (see $logPath)" }
+}
+
+# Stage the library (+ its .libcache when present) into a phase dir.
+function Copy-LibraryInto {
+    param([string]$Library, [string]$Dir)
+    Copy-Item $Library (Join-Path $Dir (Split-Path -Leaf $Library))
+    $libCache = $Library + '.libcache'
+    if (Test-Path $libCache) { Copy-Item $libCache (Join-Path $Dir (Split-Path -Leaf $libCache)) }
+}
+
+# Run the distributed --task pipeline end to end against copied inputs under
+# $ChainRoot and return the final merge-node blib. Each phase rehydrates the
+# prior phase's on-disk sidecars, exactly as a multi-computer distribution would;
+# nothing is held in memory across phases. All inputs/sidecars are copied (never
+# referenced in place), so the read-only data dir is untouched.
+function Invoke-HpcChain {
+    param([string[]]$Mzmls, [string]$Library, [string]$Resolution, [string]$ChainRoot)
+    $libName = Split-Path -Leaf $Library
+    # Stable, file-order stem list (NOT hashtable key order) so the --input-scores
+    # argument order matches the straight-through's file order deterministically.
+    $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
+    $mzmlByStem = @{}
+    foreach ($m in $Mzmls) { $mzmlByStem[[IO.Path]::GetFileNameWithoutExtension($m)] = $m }
+
+    # Phase 1: per-file raw workers (Stage 1-4). Writes <stem>.scores.parquet +
+    # <stem>.calibration.json per file.
+    $ph1 = Join-Path $ChainRoot 'phase1_scoring'
+    New-Item -ItemType Directory -Path $ph1 -Force | Out-Null
+    foreach ($m in $Mzmls) { Copy-Item $m (Join-Path $ph1 (Split-Path -Leaf $m)) }
+    Copy-LibraryInto -Library $Library -Dir $ph1
+    $a1 = @()
+    foreach ($m in $Mzmls) { $a1 += @('-i', (Split-Path -Leaf $m)) }
+    $a1 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+             '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
+    Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
+
+    # Phase 2: 1st-join (Stage 5). Consumes the per-file parquets, writes the
+    # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. A
+    # 0-byte stub mzML lets the task derive sidecar paths without reading spectra.
+    $ph2 = Join-Path $ChainRoot 'phase2_firstjoin'
+    New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
+    foreach ($s in $stemList) {
+        Copy-Item (Join-Path $ph1 "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
+        Copy-Item (Join-Path $ph1 "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
+        New-Item -ItemType File -Path (Join-Path $ph2 "$s.mzML") -Force | Out-Null
+    }
+    Copy-LibraryInto -Library $Library -Dir $ph2
+    $a2 = @('--task', 'FirstJoin')
+    foreach ($s in $stemList) { $a2 += @('--input-scores', "$s.scores.parquet") }
+    $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+             '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+    Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
+
+    # Phase 3: per-file rescore workers (Stage 6), one independent worker per
+    # file. Each reloads its real mzML + Stage 4 parquet/calibration + the Stage 5
+    # sidecar pair, and writes <stem>.scores-reconciled.parquet + the 2nd-pass bin.
+    $ph3Dirs = @{}
+    foreach ($s in $stemList) {
+        $ph3 = Join-Path $ChainRoot "phase3_rescore_$s"
+        $ph3Dirs[$s] = $ph3
+        New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
+        Copy-Item $mzmlByStem[$s] (Join-Path $ph3 (Split-Path -Leaf $mzmlByStem[$s]))
+        Copy-Item (Join-Path $ph1 "$s.scores.parquet")          (Join-Path $ph3 "$s.scores.parquet")
+        Copy-Item (Join-Path $ph1 "$s.calibration.json")        (Join-Path $ph3 "$s.calibration.json")
+        Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
+        Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
+        Copy-LibraryInto -Library $Library -Dir $ph3
+        $a3 = @('--task', 'PerFileRescore', '--input-scores', "$s.scores.parquet",
+                '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+                '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+        Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
+    }
+
+    # Phase 4: 2nd-join merge node (Stage 7 + blib). Consumes each worker's
+    # reconciled parquet + sidecars (never the original Stage 4 parquet, and never
+    # an mzML -- a 0-byte stub provides path derivation only) and writes the blib.
+    $ph4 = Join-Path $ChainRoot 'phase4_mergenode'
+    New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
+    foreach ($s in $stemList) {
+        $ph3 = $ph3Dirs[$s]
+        Copy-Item (Join-Path $ph3 "$s.scores-reconciled.parquet") (Join-Path $ph4 "$s.scores-reconciled.parquet")
+        Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")   (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
+        Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
+        Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
+        $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
+        if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
+        New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
+    }
+    Copy-LibraryInto -Library $Library -Dir $ph4
+    $a4 = @('--task', 'MergeNode')
+    foreach ($s in $stemList) { $a4 += @('--input-scores', "$s.scores-reconciled.parquet") }
+    $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+             '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+    Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
+
+    return (Join-Path $ph4 'output.blib')
+}
+
 # --- Per-dataset legs ---------------------------------------------------------
 $overallFail = $false
 $summaryLines = [System.Collections.Generic.List[string]]::new()
@@ -276,6 +444,28 @@ foreach ($name in $selected) {
         Write-Problem-Tc "$name mode1 (vs golden): FAIL -- $($m1.Issues.Count) issue(s)"
         $m1.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
         $summaryLines.Add("$name mode1 (vs golden): FAIL ($($m1.Issues.Count) issues)")
+    }
+
+    # ---- mode 3: HPC 4-task worker chain vs straight-through ----
+    # Runs BEFORE mode 2: mode 2 invalidates + re-runs $straightDir in place, so
+    # $straightBlib is the pristine straight-through output only until then.
+    if (-not $SkipHpcChain) {
+        Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
+        $chainRoot = Join-Path $runRoot "$name\chain"
+        $sw3 = [Diagnostics.Stopwatch]::StartNew()
+        $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
+            -Resolution $cfg.Resolution -ChainRoot $chainRoot
+        $sw3.Stop()
+        Write-Host ("  HPC chain wall {0:mm\:ss}; blib {1:N0} bytes" -f $sw3.Elapsed, (Get-Item $chainBlib).Length)
+        $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
+        if ($m3.Pass) {
+            $summaryLines.Add("$name mode3 (HPC chain==straight): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode3 (HPC chain==straight): FAIL -- $($m3.Issues.Count) issue(s)"
+            $m3.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode3 (HPC chain==straight): FAIL ($($m3.Issues.Count) issues)")
+        }
     }
 
     # ---- mode 2: resume vs straight-through self-consistency ----
