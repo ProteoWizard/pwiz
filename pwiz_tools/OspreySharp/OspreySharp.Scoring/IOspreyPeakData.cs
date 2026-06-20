@@ -148,13 +148,13 @@ namespace pwiz.OspreySharp.Scoring
     }
 
     /// <summary>
-    /// Apex-spectra per-candidate peak data: adds the apex +/- 2 MS2 spectra (five
-    /// scans). This is the widest spectral access -- two levels beyond Skyline -- and
-    /// is read only by the Savitzky-Golay sweep (sg_weighted_xcorr / sg_weighted_cosine),
-    /// which weights the per-scan xcorr / cosine over the apex and its two neighbors on
-    /// each side. (The MS1 family also rides this tier today because it reads the window
-    /// RT axis; it drops to <see cref="IOspreyDetailedPeakData"/> once its MS1 precursor
-    /// XIC + isotope envelope are produced upstream.)
+    /// Apex-spectra per-candidate peak data: adds bounded access to the apex +/- 2 MS2
+    /// spectra (five scans) via <see cref="TryGetApexOffsetSpectrum"/>. This is the
+    /// widest spectral access -- two levels beyond Skyline -- and is read only by the
+    /// Savitzky-Golay sweep (sg_weighted_xcorr / sg_weighted_cosine), which weights the
+    /// per-scan xcorr / cosine over the apex and its two neighbors on each side. (The
+    /// MS1 family does NOT ride this tier: its precursor XIC + isotope envelope are
+    /// produced upstream and exposed on <see cref="IOspreyDetailedPeakData"/>.)
     /// </summary>
     public interface IOspreyApexSpectraPeakData : IOspreyApexSpectrumPeakData
     {
