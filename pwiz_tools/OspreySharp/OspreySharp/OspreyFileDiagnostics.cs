@@ -153,6 +153,42 @@ namespace pwiz.OspreySharp
         public bool PercolatorOnly { get; } = IsOne(@"OSPREY_PERCOLATOR_ONLY");
 
         /// <summary>
+        /// OSPREY_DUMP_STANDARDIZER: dump the fitted Stage 5 feature standardizer
+        /// (mean/scale per feature) right after FeatureStandardizer.FitTransform.
+        /// </summary>
+        public bool DumpStandardizer { get; } = IsOne(@"OSPREY_DUMP_STANDARDIZER");
+
+        /// <summary>OSPREY_STANDARDIZER_ONLY: exit after the standardizer dump.</summary>
+        public bool StandardizerOnly { get; } = IsOne(@"OSPREY_STANDARDIZER_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_PERC_INPUT: dump the raw per-entry feature vectors fed into
+        /// the standardizer, for 2nd-pass divergence localization.
+        /// </summary>
+        public bool DumpPercInput { get; } = IsOne(@"OSPREY_DUMP_PERC_INPUT");
+
+        /// <summary>OSPREY_PERC_INPUT_ONLY: exit after the Percolator-input dump.</summary>
+        public bool PercInputOnly { get; } = IsOne(@"OSPREY_PERC_INPUT_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_SUBSAMPLE: dump subsample membership + fold assignment per
+        /// entry after best-per-precursor dedup and peptide-grouped subsampling.
+        /// </summary>
+        public bool DumpSubsample { get; } = IsOne(@"OSPREY_DUMP_SUBSAMPLE");
+
+        /// <summary>OSPREY_SUBSAMPLE_ONLY: exit after the subsample dump.</summary>
+        public bool SubsampleOnly { get; } = IsOne(@"OSPREY_SUBSAMPLE_ONLY");
+
+        /// <summary>
+        /// OSPREY_DUMP_SVM_WEIGHTS: dump per-fold SVM weights, bias, and iteration
+        /// count right after training converges and before Granholm calibration.
+        /// </summary>
+        public bool DumpSvmWeights { get; } = IsOne(@"OSPREY_DUMP_SVM_WEIGHTS");
+
+        /// <summary>OSPREY_SVM_WEIGHTS_ONLY: exit after the SVM-weights dump.</summary>
+        public bool SvmWeightsOnly { get; } = IsOne(@"OSPREY_SVM_WEIGHTS_ONLY");
+
+        /// <summary>
         /// OSPREY_DUMP_RESCORED: dump per-precursor state AFTER the
         /// per-file Stage 6 rescore loop completes (consensus +
         /// reconciliation overlay, plus gap-fill stubs once Phase 2
@@ -375,7 +411,9 @@ namespace pwiz.OspreySharp
             DumpCalSample || CalSampleOnly || DumpCalWindows || CalWindowsOnly ||
             DumpCalMatch || CalMatchOnly || DumpMs2CalErrors || Ms2CalErrorsOnly ||
             DumpLdaScores || LdaScoresOnly || DumpLoessInput || LoessInputOnly ||
-            DumpPercolator || PercolatorOnly || DumpRescored || RescoredOnly ||
+            DumpPercolator || PercolatorOnly || DumpStandardizer || StandardizerOnly ||
+            DumpPercInput || PercInputOnly || DumpSubsample || SubsampleOnly ||
+            DumpSvmWeights || SvmWeightsOnly || DumpRescored || RescoredOnly ||
             DumpMpInputs || DumpPredictRt || DumpCwtPath || DumpConsensus ||
             ConsensusOnly || DumpMulticharge || MultichargeOnly || DumpRefit ||
             RefitOnly || DumpReconciliation || ReconciliationOnly || DumpCalibration ||

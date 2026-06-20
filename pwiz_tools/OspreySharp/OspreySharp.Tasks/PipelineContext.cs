@@ -95,6 +95,26 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         private readonly Dictionary<Type, Type> _producerByByproduct = new Dictionary<Type, Type>();
 
+#if DEBUG
+        /// <summary>
+        /// DEBUG-only guard for the shared-mutable-buffer ordering invariant of
+        /// the <see cref="PerFileEntries"/> milestone family (ScoredEntries ->
+        /// CompactedEntries -> RescoredEntries). Those milestones wrap the SAME
+        /// backing list and mutate it in place; correctness relies on each
+        /// milestone being consumed before the buffer is re-published at the next
+        /// milestone (see PipelineByproducts.cs). <see cref="_consumedByproducts"/>
+        /// records byproduct types read via <see cref="TryGet{TInfo}"/>;
+        /// <see cref="_milestoneByBuffer"/> records, per backing-list reference,
+        /// the milestone type last published over it. Keying on the list reference
+        /// (not a static type order) makes the guard path-independent: the merge
+        /// path publishes RescoredEntries directly over the ScoredEntries buffer,
+        /// skipping CompactedEntries.
+        /// </summary>
+        private readonly HashSet<Type> _consumedByproducts = new HashSet<Type>();
+        private readonly Dictionary<object, Type> _milestoneByBuffer =
+            new Dictionary<object, Type>(ReferenceComparer.Instance);
+#endif
+
         /// <summary>
         /// The configuration parsed from CLI args and the input library.
         ///
@@ -284,6 +304,9 @@ namespace pwiz.OspreySharp.Tasks
         /// </summary>
         public void Publish<TInfo>(TInfo info)
         {
+#if DEBUG
+            AssertMilestoneConsumedBeforeRepublish(info);
+#endif
             _byproducts.Add(typeof(TInfo), info);
         }
 
@@ -299,6 +322,9 @@ namespace pwiz.OspreySharp.Tasks
             if (_byproducts.TryGetValue(typeof(TInfo), out var obj))
             {
                 info = (TInfo)obj;
+#if DEBUG
+                _consumedByproducts.Add(typeof(TInfo));
+#endif
                 return true;
             }
             info = default;
@@ -360,6 +386,48 @@ namespace pwiz.OspreySharp.Tasks
             }
             return true;
         }
+
+#if DEBUG
+        /// <summary>
+        /// DEBUG-time enforcement of the <see cref="PerFileEntries"/> milestone
+        /// ordering invariant. When a milestone is published over a backing list
+        /// that already holds a prior milestone (same list reference), assert the
+        /// prior milestone was consumed (read via <see cref="TryGet{TInfo}"/> /
+        /// <see cref="Get{TInfo}"/>) before this in-place re-publish. Non-milestone
+        /// byproducts are ignored. See <see cref="_milestoneByBuffer"/>.
+        /// </summary>
+        private void AssertMilestoneConsumedBeforeRepublish<TInfo>(TInfo info)
+        {
+            if (!(info is PerFileEntries milestone))
+                return;
+            object buffer = milestone.Value;
+            if (buffer == null)
+                return;
+            if (_milestoneByBuffer.TryGetValue(buffer, out var priorMilestone))
+            {
+                System.Diagnostics.Debug.Assert(_consumedByproducts.Contains(priorMilestone),
+                    string.Format(
+                        @"PerFileEntries ordering invariant violated: milestone '{0}' is being published over a backing list still holding unconsumed milestone '{1}'. Each milestone must be consumed before the shared buffer is re-published at the next milestone.",
+                        typeof(TInfo).Name, priorMilestone.Name));
+            }
+            _milestoneByBuffer[buffer] = typeof(TInfo);
+        }
+
+        private sealed class ReferenceComparer : IEqualityComparer<object>
+        {
+            public static readonly ReferenceComparer Instance = new ReferenceComparer();
+
+            bool IEqualityComparer<object>.Equals(object x, object y)
+            {
+                return ReferenceEquals(x, y);
+            }
+
+            int IEqualityComparer<object>.GetHashCode(object obj)
+            {
+                return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
+            }
+        }
+#endif
     }
 
     /// <summary>

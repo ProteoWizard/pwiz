@@ -85,6 +85,15 @@ namespace pwiz.OspreySharp.FDR
         /// </summary>
         public bool TrainOnly { get; set; }
 
+        /// <summary>
+        /// Stage 5 diagnostic-dump gates, or <c>null</c> (the common case) when
+        /// diagnostics are off. Carried in by the Tasks-layer caller so
+        /// <see cref="PercolatorFdr.RunPercolator"/> stays a pure function of its
+        /// inputs -- it reads no env vars and never exits the process. See
+        /// <see cref="PercolatorDiagnosticsConfig"/>.
+        /// </summary>
+        public PercolatorDiagnosticsConfig Diagnostics { get; set; }
+
         public PercolatorConfig()
         {
             TrainFdr = 0.01;
@@ -181,6 +190,15 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>Number of iterations used per fold.</summary>
         public List<int> IterationsPerFold { get; set; }
 
+        /// <summary>
+        /// Set when <see cref="PercolatorFdr.RunPercolator"/> wrote a
+        /// diagnostic-only (<c>*Only</c>) dump and stopped early instead of
+        /// completing FDR. The Tasks-layer caller inspects this and performs the
+        /// process early-exit; the engine itself never exits. The other fields are
+        /// unpopulated when this is <c>true</c>.
+        /// </summary>
+        public bool DiagnosticAbort { get; set; }
+
         public PercolatorResults()
         {
             Entries = new List<PercolatorResult>();
@@ -235,32 +253,27 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine(
                 $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
-            // Stage 5 standardizer dump. Gated by OSPREY_DUMP_STANDARDIZER=1;
-            // exits via OSPREY_STANDARDIZER_ONLY=1. Mirrors Rust
-            // dump_stage5_standardizer in osprey-fdr/src/percolator.rs.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_STANDARDIZER"), @"1"))
+            // Stage 5 standardizer dump. Gated by the injected diagnostics config
+            // (OSPREY_DUMP_STANDARDIZER); a *Only request returns the abort
+            // sentinel so the Tasks-layer caller -- not this engine -- decides the
+            // early-exit. Mirrors Rust dump_stage5_standardizer in
+            // osprey-fdr/src/percolator.rs.
+            if (config.Diagnostics != null && config.Diagnostics.DumpStandardizer)
             {
                 WriteStage5StandardizerDump(standardizer, config.FeatureNames);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_STANDARDIZER_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_STANDARDIZER_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.StandardizerOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // One-shot diagnostic for 2nd-pass divergence localization.
-            // Gated by OSPREY_DUMP_PERC_INPUT=1; exits via
-            // OSPREY_PERC_INPUT_ONLY=1. Dumps the raw per-entry feature
-            // vectors fed into the standardizer so cross-impl compare
-            // can pinpoint which rows differ.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_PERC_INPUT"), @"1"))
+            // Gated by OSPREY_DUMP_PERC_INPUT; a *Only request returns the abort
+            // sentinel. Dumps the raw per-entry feature vectors fed into the
+            // standardizer so cross-impl compare can pinpoint which rows differ.
+            if (config.Diagnostics != null && config.Diagnostics.DumpPercInput)
             {
                 WriteStage5PercInputDump(entries, config.FeatureNames);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_PERC_INPUT_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_PERC_INPUT_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.PercInputOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // 3a. Best-per-precursor: pick the single best-scoring observation per
@@ -336,20 +349,18 @@ namespace pwiz.OspreySharp.FDR
             int[] foldAssignments = CreateStratifiedFoldsByPeptide(
                 subLabels, subPeptides, subEntryIds, config.NFolds);
 
-            // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE=1;
-            // exits via OSPREY_SUBSAMPLE_ONLY=1. Captures subsample membership and
-            // fold assignment per entry, mirroring the Rust dump in
-            // osprey-fdr/src/percolator.rs. The dump is inlined here (not routed
-            // through OspreyDiagnostics) because OspreySharp.FDR does not
-            // reference the main OspreySharp assembly.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SUBSAMPLE"), @"1"))
+            // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE;
+            // a *Only request returns the abort sentinel. Captures subsample
+            // membership and fold assignment per entry, mirroring the Rust dump in
+            // osprey-fdr/src/percolator.rs. The dump writer is inlined here (not
+            // routed through OspreyDiagnostics) because OspreySharp.FDR does not
+            // reference the main OspreySharp assembly; only the gate flag + the
+            // early-exit decision are lifted out to the Tasks-layer caller.
+            if (config.Diagnostics != null && config.Diagnostics.DumpSubsample)
             {
                 WriteStage5SubsampleDump(entries, trainSubset, foldAssignments);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SUBSAMPLE_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_SUBSAMPLE_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.SubsampleOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // 5. Find best initial feature
@@ -444,19 +455,16 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
 
-            // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS=1;
-            // exits via OSPREY_SVM_WEIGHTS_ONLY=1. Captures per-fold weights,
-            // bias, and iteration count right after SVM training converges
-            // and before Granholm calibration. Mirrors rust side in
+            // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
+            // a *Only request returns the abort sentinel. Captures per-fold
+            // weights, bias, and iteration count right after SVM training
+            // converges and before Granholm calibration. Mirrors rust side in
             // osprey-fdr/src/percolator.rs::dump_stage5_svm_weights.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SVM_WEIGHTS"), @"1"))
+            if (config.Diagnostics != null && config.Diagnostics.DumpSvmWeights)
             {
                 WriteStage5SvmWeightsDump(foldModels, foldIterations, config.FeatureNames);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SVM_WEIGHTS_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_SVM_WEIGHTS_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.SvmWeightsOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // Train-only mode: return fold models + standardizer; skip the

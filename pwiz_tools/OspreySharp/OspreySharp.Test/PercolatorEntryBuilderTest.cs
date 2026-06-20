@@ -46,7 +46,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestBuildFeatureFallbackAndCounts()
         {
-            int nFeat = AbstractScoringTask.NUM_PIN_FEATURES;
+            int nFeat = ScoringTaskShared.NUM_PIN_FEATURES;
 
             // Entry 0: well-formed 21-feature target -> kept by reference.
             var goodFeatures = new double[nFeat];

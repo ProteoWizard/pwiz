@@ -37,7 +37,7 @@ namespace pwiz.OspreySharp.Tasks
     /// reconciliation planning. Mirrors the Stage 6 entry block in
     /// osprey/src/pipeline.rs ~3208-3273.
     ///
-    /// Standalone collaborator (does not inherit <see cref="AbstractScoringTask"/>):
+    /// Standalone collaborator (not part of the scoring-task family):
     /// takes the pipeline context for logging, and routes every diagnostic dump
     /// through the injected <c>_ctx.Diagnostics</c> sink (the *_ONLY abort uses
     /// <c>OspreyDiagnosticsLog.ExitAfterDump</c>), preserving the Stage-6 dump
