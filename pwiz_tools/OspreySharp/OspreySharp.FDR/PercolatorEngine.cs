@@ -48,15 +48,14 @@ namespace pwiz.OspreySharp.FDR
         /// (driven from the Tasks layer for the HPC distribution case where
         /// workers wrote reconciled .scores.parquet but no
         /// .2nd-pass.fdr_scores.bin sidecars; mirrors Rust
-        /// pipeline.rs:4394-4468) can call it as well as the first-pass run.
-        /// </summary>
-        /// <summary>
-        /// Returns <c>true</c> when a diagnostic-only (<c>*Only</c>) dump fired and
-        /// the run should stop early; the Tasks-layer caller owns the process exit.
-        /// Returns <c>false</c> on a normal completion (the FdrEntry stubs are
-        /// scored and q-valued). <paramref name="diagnostics"/> is <c>null</c>
+        /// pipeline.rs:4394-4468) can call it as well as the first-pass run. The
+        /// <paramref name="diagnostics"/> Stage 5 dump gates are <c>null</c>
         /// (diagnostics off) on every production run.
         /// </summary>
+        /// <returns><c>true</c> when a diagnostic-only (<c>*Only</c>) dump fired and
+        /// the run should stop early -- the Tasks-layer caller owns the process exit;
+        /// <c>false</c> on a normal completion (the FdrEntry stubs are scored and
+        /// q-valued).</returns>
         public static bool RunPercolatorFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
