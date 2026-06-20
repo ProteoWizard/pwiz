@@ -87,12 +87,12 @@ namespace pwiz.OspreySharp.Tasks
     /// <c>ctx.Get&lt;ReconciliationActions&gt;()</c>, etc. (a cache miss
     /// materializes the producing task), dispatches into
     /// <see cref="ExecuteRescore"/>, then runs the per-process
-    /// diagnostic-writer close + cross-impl bisection dump. Inherits
-    /// the scoring engine (RunCoelutionScoring, LoadLibrary,
-    /// ExtractIsolationWindows, ...) from
-    /// <see cref="AbstractScoringTask"/>.
+    /// diagnostic-writer close + cross-impl bisection dump. Reaches the
+    /// scoring engine (RunCoelutionScoring via <see cref="ScoringPipeline"/>,
+    /// ExtractIsolationWindows via <see cref="ScoringTaskShared"/>) directly
+    /// rather than through a base class.
     /// </summary>
-    internal sealed class PerFileRescoreTask : AbstractScoringTask
+    internal sealed class PerFileRescoreTask : OspreyTask
     {
         // Captured during Run so MergeNodeTask (downstream) can reach
         // the post-rescore version. Per the ownership-transfer semantics
@@ -464,7 +464,7 @@ namespace pwiz.OspreySharp.Tasks
         ///   <item>Reload MS2/MS1 mass calibration from the sibling .calibration.json.</item>
         ///   <item>Pick the refined RT calibration when present, else fall back to
         ///       the original first-pass calibration.</item>
-        ///   <item>Call <see cref="AbstractScoringTask.RunCoelutionScoring"/> with the override-aware
+        ///   <item>Call <see cref="ScoringPipeline.RunCoelutionScoring"/> with the override-aware
         ///       <see cref="ScoringContext"/>.</item>
         ///   <item>Overlay the re-scored entries back onto the per-file
         ///       FdrEntry stubs by entry_id, preserving ParquetIndex.</item>
@@ -653,18 +653,18 @@ namespace pwiz.OspreySharp.Tasks
 
             // Build isolation windows from the loaded spectra (same as
             // the first-pass ProcessFile path).
-            var isolationWindows = ExtractIsolationWindows(spectra);
+            var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
 
             // Re-score the subset.
             var swRescore = Stopwatch.StartNew();
             List<FdrEntry> rescored;
             if (subsetLibrary.Count > 0)
             {
-                rescored = RunCoelutionScoring(
+                rescored = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
                     subsetLibrary, spectra, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    context, ctx);
+                    context);
             }
             else
             {
@@ -952,7 +952,7 @@ namespace pwiz.OspreySharp.Tasks
         /// <summary>
         /// Build the per-file scoring subset: the boundary_overrides map
         /// keyed by entry_id, and the subset library handed to
-        /// <see cref="AbstractScoringTask.RunCoelutionScoring"/> so it
+        /// <see cref="ScoringPipeline.RunCoelutionScoring"/> so it
         /// doesn't waste work on entries we're not re-scoring. The subset
         /// is the same library entries the original Stage 1-4 scoring used,
         /// just a smaller list.
@@ -1269,11 +1269,11 @@ namespace pwiz.OspreySharp.Tasks
                 // No BoundaryOverrides -- CWT picks peaks freely.
 
                 var swCwt = Stopwatch.StartNew();
-                var cwtResults = RunCoelutionScoring(
+                var cwtResults = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
                     gapFillLibrary, spectra, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    cwtContext, ctx);
+                    cwtContext);
                 swCwt.Stop();
 
                 cwtHitIds = new HashSet<uint>();
@@ -1337,11 +1337,11 @@ namespace pwiz.OspreySharp.Tasks
                 forcedContext.OriginalRtMad = rtMadFromCalJson;
 
                 var swForced = Stopwatch.StartNew();
-                var forcedResults = RunCoelutionScoring(
+                var forcedResults = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
                     forcedLibrary, spectra, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    forcedContext, ctx);
+                    forcedContext);
                 swForced.Stop();
                 nGapForced = forcedResults.Count;
 

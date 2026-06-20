@@ -64,7 +64,7 @@ namespace pwiz.OspreySharp.Tasks
     /// <c>PlanningPerformed</c> byproduct is the gate for that next task —
     /// it is <c>true</c> only when the Stage 6 planning block actually ran.
     /// </summary>
-    internal sealed class FirstJoinTask : AbstractScoringTask
+    internal sealed class FirstJoinTask : OspreyTask
     {
         public override string Name => @"FirstJoin";
 
@@ -525,7 +525,7 @@ namespace pwiz.OspreySharp.Tasks
                             if (entry.RunPeptideQvalue <= peptideGate ||
                                 (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
                             {
-                                firstPassBaseIds.Add(entry.EntryId & BASE_ID_MASK);
+                                firstPassBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
                             }
                         }
                     }
@@ -533,7 +533,7 @@ namespace pwiz.OspreySharp.Tasks
                     foreach (var kvp in perFileEntries)
                     {
                         beforeCount += kvp.Value.Count;
-                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & BASE_ID_MASK));
+                        kvp.Value.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
                         kvp.Value.TrimExcess();
                         afterCount += kvp.Value.Count;
                     }

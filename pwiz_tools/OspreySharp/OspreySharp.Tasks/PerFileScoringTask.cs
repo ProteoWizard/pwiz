@@ -62,7 +62,7 @@ namespace pwiz.OspreySharp.Tasks
     /// instance properties for FirstJoinTask + downstream tasks to
     /// consume after this one completes successfully.
     /// </summary>
-    internal sealed class PerFileScoringTask : AbstractScoringTask
+    internal sealed class PerFileScoringTask : OspreyTask
     {
 
         public override string Name => @"PerFileScoring";
@@ -1208,7 +1208,7 @@ namespace pwiz.OspreySharp.Tasks
                 fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
 
             // Extract isolation windows from spectra
-            var isolationWindows = ExtractIsolationWindows(spectra);
+            var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
             ctx.LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
             ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
@@ -1295,11 +1295,11 @@ namespace pwiz.OspreySharp.Tasks
         {
             // Run coelution scoring across all isolation windows
             var swScoring = Stopwatch.StartNew();
-            var scoredEntries = RunCoelutionScoring(
+            var scoredEntries = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
                 fullLibrary, spectra, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
-                context, ctx);
+                context);
             swScoring.Stop();
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001
@@ -1321,9 +1321,9 @@ namespace pwiz.OspreySharp.Tasks
             // onto the same chromatographic feature within an isolation
             // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
             // same call site, between scoring and pair-deduplication.
-            scoredEntries = DeduplicateDoubleCounting(
+            scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicateDoubleCounting(
                 scoredEntries, fullLibrary, spectra, ms2Cal,
-                isolationWindows, config, ctx);
+                isolationWindows, config);
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
             ctx.LogInfo(string.Format(
@@ -1332,7 +1332,7 @@ namespace pwiz.OspreySharp.Tasks
 
             // Deduplicate: keep best target and best decoy per base_id
             int nBeforeDedup = scoredEntries.Count;
-            scoredEntries = DeduplicatePairs(scoredEntries, ctx);
+            scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicatePairs(scoredEntries);
             int nAfterDedup = scoredEntries.Count;
             ctx.LogInfo(string.Format(
                 "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
@@ -1506,7 +1506,7 @@ namespace pwiz.OspreySharp.Tasks
             };
 
             var sorted = scoredEntries
-                .Where(e => e.Features != null && e.Features.Length == NUM_PIN_FEATURES)
+                .Where(e => e.Features != null && e.Features.Length == ScoringTaskShared.NUM_PIN_FEATURES)
                 .OrderBy(e => e.ModifiedSequence, StringComparer.Ordinal)
                 .ThenBy(e => e.Charge)
                 .ThenBy(e => e.ScanNumber)
@@ -1531,7 +1531,7 @@ namespace pwiz.OspreySharp.Tasks
                         e.ScanNumber.ToString(),
                         e.Charge.ToString()
                     };
-                    for (int i = 0; i < NUM_PIN_FEATURES; i++)
+                    for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
                         cols.Add(e.Features[i].ToString("G17"));
                     cols.Add(e.ModifiedSequence ?? "");
                     writer.WriteLine(string.Join("\t", cols));
@@ -1581,7 +1581,7 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Format("Parsing mzML: {0}", inputFile));
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
-                s_mzmlReadGate.Wait();
+                ScoringTaskShared.s_mzmlReadGate.Wait();
             try
             {
                 mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
@@ -1589,7 +1589,7 @@ namespace pwiz.OspreySharp.Tasks
             finally
             {
                 if (serializeMzmlRead)
-                    s_mzmlReadGate.Release();
+                    ScoringTaskShared.s_mzmlReadGate.Release();
             }
             ms2Spectra = mzmlResult.Ms2Spectra;
             ms1Spectra = mzmlResult.Ms1Spectra;
