@@ -54,7 +54,9 @@ namespace pwiz.OspreySharp.Core
 
         /// <summary>
         /// Detect library format from file extension.
-        /// .blib -> Blib, .sky -> SkylineDocument, default -> DiannTsv.
+        /// .blib -> Blib, .sky -> SkylineDocument, default -> DiannTsv. An .elib
+        /// path is rejected: EncyclopeDIA reading was removed, and falling through
+        /// to the TSV loader would fail with a confusing parse error instead.
         /// </summary>
         public static LibrarySource FromPath(string path)
         {
@@ -63,6 +65,10 @@ namespace pwiz.OspreySharp.Core
             {
                 case ".blib":
                     return new LibrarySource(LibraryFormat.Blib, path);
+                case ".elib":
+                    throw new System.NotSupportedException(
+                        "EncyclopeDIA .elib spectral libraries are no longer supported; " +
+                        "convert the library to DIA-NN TSV (.tsv) or .blib.");
                 case ".sky":
                     return new LibrarySource(LibraryFormat.SkylineDocument, path);
                 default:
