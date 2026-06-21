@@ -61,7 +61,7 @@ namespace pwiz.OspreySharp.Test
                 new XicData(1, rts, frag1),
             };
             var bounds = new XICPeakBounds { StartIndex = 1, EndIndex = 5, ApexIndex = 3 };
-            var peakData = new FakeDetailedPeakData(xics, bounds);
+            var peakData = new FakePeakData(xics, bounds);
 
             var context = new OspreyScoringContext(null);
             context.ClearByproducts();
@@ -84,7 +84,7 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual("peak_sharpness", OspreyFeatureCalculators.Get(5).Name);
 
             // Degenerate peak data (no XICs) yields 0.0 for every peak-shape feature.
-            var empty = new FakeDetailedPeakData(new List<XicData>(), bounds);
+            var empty = new FakePeakData(new List<XicData>(), bounds);
             context.ClearByproducts();
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(3).Calculate(context, empty), TOLERANCE);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(4).Calculate(context, empty), TOLERANCE);
@@ -110,7 +110,7 @@ namespace pwiz.OspreySharp.Test
                 new XicData(1, rts, frag1),
             };
             var bounds = new XICPeakBounds { StartIndex = 0, EndIndex = 4, ApexIndex = 2 };
-            var peakData = new FakeDetailedPeakData(xics, bounds);
+            var peakData = new FakePeakData(xics, bounds);
 
             double expectedCorr = ScoringMath.PearsonCorrelationInRange(frag0, frag1, 0, 4);
             Assert.IsTrue(expectedCorr > 0.0, "fixture fragments should positively correlate");
@@ -132,7 +132,7 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual("n_coeluting_fragments", OspreyFeatureCalculators.Get(2).Name);
 
             // Fewer than two fragments -> all coelution features 0.
-            var single = new FakeDetailedPeakData(
+            var single = new FakePeakData(
                 new List<XicData> { new XicData(0, rts, frag0) }, bounds);
             context.ClearByproducts();
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(0).Calculate(context, single), TOLERANCE);
@@ -151,7 +151,7 @@ namespace pwiz.OspreySharp.Test
         {
             var rts = new double[] { 0, 1, 2 };
             var frag0 = new double[] { 1, 2, 1 };
-            var peakData = new FakeDetailedPeakData(
+            var peakData = new FakePeakData(
                 new List<XicData> { new XicData(0, rts, frag0) },
                 new XICPeakBounds { StartIndex = 0, EndIndex = 2, ApexIndex = 1 });
 
@@ -179,13 +179,13 @@ namespace pwiz.OspreySharp.Test
             var context = new OspreyScoringContext(null);
             context.ClearByproducts();
 
-            var late = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var late = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 apexRetentionTime: 12.5, expectedRt: 10.0);
             Assert.AreEqual(2.5, OspreyFeatureCalculators.Get(11).Calculate(context, late), TOLERANCE);
             Assert.AreEqual(2.5, OspreyFeatureCalculators.Get(12).Calculate(context, late), TOLERANCE);
 
             // Earlier-than-expected apex -> negative deviation, positive absolute.
-            var early = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var early = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 apexRetentionTime: 8.0, expectedRt: 10.0);
             Assert.AreEqual(-2.0, OspreyFeatureCalculators.Get(11).Calculate(context, early), TOLERANCE);
             Assert.AreEqual(2.0, OspreyFeatureCalculators.Get(12).Calculate(context, early), TOLERANCE);
@@ -196,29 +196,27 @@ namespace pwiz.OspreySharp.Test
 
         /// <summary>
         /// MS1 family (ms1_precursor_coelution / ms1_isotope_cosine): both features
-        /// are HRAM-only. The HRAM gate is on the context -- when SetMs1Machinery was
-        /// never called (so HasMs1Features stays false and Ms1Spectra is null), both
-        /// calculators short-circuit to exactly 0.0 before any byproduct work. The
+        /// are HRAM-only and now pure consumers of MS1 data produced upstream by the
+        /// extractor. When no MS1 data is supplied (the peak-data accessors are null,
+        /// i.e. a unit-resolution run or no MS1 scan), both return exactly 0.0. The
         /// numeric path (calibration, reference-XIC pick, nearest-MS1 sampling,
-        /// isotope envelope) is covered by the end-to-end 1e-9 cross-impl parity gate
-        /// against the Rust reference on the HRAM datasets.
+        /// isotope envelope) lives in the extractor and is covered by the end-to-end
+        /// 1e-9 cross-impl parity gate against the Rust reference on the HRAM datasets.
         /// </summary>
         [TestMethod]
         public void TestMs1Calculators()
         {
             var rts = new double[] { 0, 1, 2, 3, 4 };
             var frag0 = new double[] { 1, 2, 3, 2, 1 };
-            var peakData = new FakeDetailedPeakData(
+            var peakData = new FakePeakData(
                 new List<XicData> { new XicData(0, rts, frag0) },
                 new XICPeakBounds { StartIndex = 0, EndIndex = 4, ApexIndex = 2 },
-                candidate: new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0),
-                windowRetentionTimes: rts);
+                candidate: new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0));
 
-            // No SetMs1Machinery -> HasMs1Features is false -> HRAM gate returns 0.0
-            // for both features, without touching the (null) MS1 spectra.
+            // The fake supplies no MS1 data (Ms1PrecursorXic / ApexIsotopeEnvelope
+            // null), so both features return 0.0 without any MS1 work.
             var context = new OspreyScoringContext(null);
             context.ClearByproducts();
-            Assert.IsFalse(context.HasMs1Features);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(13).Calculate(context, peakData), TOLERANCE);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(14).Calculate(context, peakData), TOLERANCE);
 
@@ -256,7 +254,7 @@ namespace pwiz.OspreySharp.Test
                     Frag(999.0, IonType.Y, 2),
                 },
             };
-            var peakData = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var peakData = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 candidate: candidate, apexSpectrum: apex);
 
             var context = new OspreyScoringContext(config);
@@ -282,7 +280,7 @@ namespace pwiz.OspreySharp.Test
             {
                 Fragments = new List<LibraryFragment> { Frag(999.0, IonType.B, 1) },
             };
-            var noMatchData = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var noMatchData = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 candidate: noMatch, apexSpectrum: apex);
             var noMatchContext = new OspreyScoringContext(config);
             noMatchContext.ClearByproducts();
@@ -318,7 +316,7 @@ namespace pwiz.OspreySharp.Test
 
             // Interior apex: startScan=10, apexLocal=5, rangeLen=8 -> candIdx 3..7 all
             // in range, globalIdx 13..17. ScoreXcorr echoes the index.
-            var interior = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var interior = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 candidate: candidate, apexSpectrum: windowSpectra[15],
                 apexGlobalIndex: 15, apexLocalIndex: 5, windowStartIndex: 10,
                 windowLength: 8, windowSpectra: windowSpectra);
@@ -339,7 +337,7 @@ namespace pwiz.OspreySharp.Test
             // Edge apex: apexLocal=0 -> offsets -2,-1 skip (candIdx<0); offsets 0,1,2
             // -> globalIdx 10,11,12. NO renormalization: only those weights apply.
             // 10*(17/35) + 11*(12/35) + 12*(-3/35) = 266/35 = 7.6.
-            var edge = new FakeDetailedPeakData(new List<XicData>(), new XICPeakBounds(),
+            var edge = new FakePeakData(new List<XicData>(), new XICPeakBounds(),
                 candidate: candidate, apexSpectrum: windowSpectra[10],
                 apexGlobalIndex: 10, apexLocalIndex: 0, windowStartIndex: 10,
                 windowLength: 8, windowSpectra: windowSpectra);
@@ -347,6 +345,60 @@ namespace pwiz.OspreySharp.Test
             edgeContext.SetWindow(new IndexEchoResolution(), null, null, null);
             edgeContext.ClearByproducts();
             Assert.AreEqual(266.0 / 35.0, OspreyFeatureCalculators.Get(17).Calculate(edgeContext, edge), TOLERANCE);
+        }
+
+        /// <summary>
+        /// The production <see cref="OspreyPeakData.TryGetApexOffsetSpectrum"/> bounded
+        /// accessor (tested directly, not via the fake's copy): interior offsets map
+        /// candidate-local to window-global (cacheIndex = windowStartIndex +
+        /// apexLocalIndex + offset) and return the window spectrum there; offsets that
+        /// fall outside [0, windowLength) at a window edge return false -- the
+        /// asymmetric skip the Savitzky-Golay sweep relies on.
+        /// </summary>
+        [TestMethod]
+        public void TestApexOffsetSpectrumAccessor()
+        {
+            var windowSpectra = new List<Spectrum>();
+            for (int i = 0; i < 20; i++)
+                windowSpectra.Add(new Spectrum { Mzs = new double[0], Intensities = new float[0] });
+
+            // startScan=10, apexLocal=5, rangeLen=8 -> candIdx 3..7 valid (globalIdx 13..17).
+            var peakData = new OspreyPeakData();
+            peakData.Set(null, new XICPeakBounds(), new List<XicData>(),
+                0.0, 0.0, windowSpectra[15],
+                apexGlobalIndex: 15, apexLocalIndex: 5, windowStartIndex: 10, windowLength: 8,
+                windowSpectra: windowSpectra);
+            for (int offset = -2; offset <= 2; offset++)
+            {
+                Assert.IsTrue(peakData.TryGetApexOffsetSpectrum(offset, out var s, out int idx),
+                    string.Format("offset {0} should be in range", offset));
+                Assert.AreEqual(15 + offset, idx);
+                Assert.AreSame(windowSpectra[15 + offset], s);
+            }
+
+            // Lower edge: apexLocal=0 -> offsets -2,-1 fall below 0 and are skipped;
+            // 0,1,2 resolve to globalIdx 10,11,12.
+            var edge = new OspreyPeakData();
+            edge.Set(null, new XICPeakBounds(), new List<XicData>(),
+                0.0, 0.0, windowSpectra[10],
+                apexGlobalIndex: 10, apexLocalIndex: 0, windowStartIndex: 10, windowLength: 8,
+                windowSpectra: windowSpectra);
+            Assert.IsFalse(edge.TryGetApexOffsetSpectrum(-2, out _, out _));
+            Assert.IsFalse(edge.TryGetApexOffsetSpectrum(-1, out _, out _));
+            Assert.IsTrue(edge.TryGetApexOffsetSpectrum(0, out _, out int i0));
+            Assert.AreEqual(10, i0);
+            Assert.IsTrue(edge.TryGetApexOffsetSpectrum(2, out _, out int i2));
+            Assert.AreEqual(12, i2);
+
+            // Upper edge: apexLocal=7 at the top of an 8-wide range -> candIdx 8 (offset
+            // +1) equals windowLength and is skipped.
+            var upper = new OspreyPeakData();
+            upper.Set(null, new XICPeakBounds(), new List<XicData>(),
+                0.0, 0.0, windowSpectra[17],
+                apexGlobalIndex: 17, apexLocalIndex: 7, windowStartIndex: 10, windowLength: 8,
+                windowSpectra: windowSpectra);
+            Assert.IsTrue(upper.TryGetApexOffsetSpectrum(0, out _, out _));
+            Assert.IsFalse(upper.TryGetApexOffsetSpectrum(1, out _, out _));
         }
 
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
@@ -358,7 +410,7 @@ namespace pwiz.OspreySharp.Test
             };
         }
 
-        private sealed class FakeDetailedPeakData : IOspreyDetailedPeakData
+        private sealed class FakePeakData : IOspreyApexSpectraPeakData
         {
             private readonly IReadOnlyList<XicData> _xics;
             private readonly XICPeakBounds _peakBounds;
@@ -371,14 +423,12 @@ namespace pwiz.OspreySharp.Test
             private readonly int _windowStartIndex;
             private readonly int _windowLength;
             private readonly IReadOnlyList<Spectrum> _windowSpectra;
-            private readonly IReadOnlyList<double> _windowRetentionTimes;
 
-            public FakeDetailedPeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
+            public FakePeakData(IReadOnlyList<XicData> xics, XICPeakBounds peakBounds,
                 double apexRetentionTime = 0.0, double expectedRt = 0.0,
                 LibraryEntry candidate = null, Spectrum apexSpectrum = null,
                 int apexGlobalIndex = 0, int apexLocalIndex = 0, int windowStartIndex = 0,
-                int windowLength = 0, IReadOnlyList<Spectrum> windowSpectra = null,
-                IReadOnlyList<double> windowRetentionTimes = null)
+                int windowLength = 0, IReadOnlyList<Spectrum> windowSpectra = null)
             {
                 _xics = xics;
                 _peakBounds = peakBounds;
@@ -391,7 +441,6 @@ namespace pwiz.OspreySharp.Test
                 _windowStartIndex = windowStartIndex;
                 _windowLength = windowLength;
                 _windowSpectra = windowSpectra;
-                _windowRetentionTimes = windowRetentionTimes;
             }
 
             public LibraryEntry Candidate { get { return _candidate; } }
@@ -401,11 +450,26 @@ namespace pwiz.OspreySharp.Test
             public IReadOnlyList<XicData> Xics { get { return _xics; } }
             public Spectrum ApexSpectrum { get { return _apexSpectrum; } }
             public int ApexGlobalIndex { get { return _apexGlobalIndex; } }
-            public int ApexLocalIndex { get { return _apexLocalIndex; } }
-            public int WindowStartIndex { get { return _windowStartIndex; } }
-            public int WindowLength { get { return _windowLength; } }
-            public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
-            public IReadOnlyList<double> WindowRetentionTimes { get { return _windowRetentionTimes; } }
+
+            public bool TryGetApexOffsetSpectrum(int offset, out Spectrum spectrum, out int cacheIndex)
+            {
+                int candIdx = _apexLocalIndex + offset;
+                if (candIdx < 0 || candIdx >= _windowLength)
+                {
+                    spectrum = null;
+                    cacheIndex = -1;
+                    return false;
+                }
+                cacheIndex = _windowStartIndex + candIdx;
+                spectrum = _windowSpectra[cacheIndex];
+                return true;
+            }
+
+            // MS1 data is produced upstream by the extractor; the fake supplies none,
+            // so the MS1 features evaluate to 0.0 (the HRAM-off path under test).
+            public XicData Ms1PrecursorXic { get { return null; } }
+            public XicData Ms1ReferenceXic { get { return null; } }
+            public double[] ApexIsotopeEnvelope { get { return null; } }
         }
 
         /// <summary>
