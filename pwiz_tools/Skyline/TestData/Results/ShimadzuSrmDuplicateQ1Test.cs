@@ -170,10 +170,10 @@ namespace pwiz.SkylineTestData.Results
         // transition-aware matching rule. Those two real co-targets together define the channels
         // measured at this Q1 — the union of their products {81.05, 97.1, 109.05, 121} (the values
         // in the file's binary m/z arrays; the isolation-window labels are integer-rounded). A
-        // peptide is assigned only when a strict majority of its own transitions match those
-        // channels (matched*2 > total). The names encode "matched of total":
+        // peptide is assigned only when at least half of its own transitions match those
+        // channels (matched*2 >= total). The names encode "matched of total":
         private const string PHANTOM_MINORITY = "PhantomMinority1of3"; // excluded
-        private const string PHANTOM_HALF = "PhantomHalf2of4";         // excluded (exact boundary)
+        private const string PHANTOM_HALF = "PhantomHalf2of4";         // included (exact boundary)
         private const string PHANTOM_MAJORITY = "PhantomMajority2of3"; // included
         private const string PHANTOM_MARKER = "Phantom";
 
@@ -201,16 +201,16 @@ namespace pwiz.SkylineTestData.Results
 
         /// <summary>
         /// Deciding which compound(s) a shared-Q1 SRM spectrum belongs to must use the product ions,
-        /// not the precursor m/z alone. A peptide is assigned the data at a shared Q1 only when a
-        /// strict majority of its own transitions match the channels the file actually measured there
-        /// (matched*2 &gt; total); a compound matching only a minority is an incidental collision —
+        /// not the precursor m/z alone. A peptide is assigned the data at a shared Q1 only when at
+        /// least half of its own transitions match the channels the file actually measured there
+        /// (matched*2 &gt;= total); a compound matching only a minority is an incidental collision —
         /// e.g. a compound targeted by a different acquisition method — and must not be handed that
         /// Q1's chromatogram.
         ///
         /// Injects three synthetic compounds at DOC / 17α-OH-P's Q1 (331.227) that bracket the rule:
-        /// 1 of 3 (minority → no data), 2 of 4 (exactly half → no data, since the majority is strict),
-        /// and 2 of 3 (bare majority → data). Together they pin the threshold from both sides and at
-        /// the off-by-one boundary, while the genuinely co-targeted compounds still get their data.
+        /// 1 of 3 (minority → no data), 2 of 4 (exactly half → data), and 2 of 3 (majority → data).
+        /// Together they pin the threshold from both sides and at the off-by-one boundary, while the
+        /// genuinely co-targeted compounds still get their data.
         /// Same support thread as <see cref="ShimadzuSrmDuplicateQ1ImportTest"/>.
         /// </summary>
         [TestMethod]
@@ -269,7 +269,7 @@ namespace pwiz.SkylineTestData.Results
                         "Test setup: injected compound '" + name + "' is missing from the imported document");
                     Assert.AreEqual(expectData, GroupHasData(pair.NodeGroup),
                         "Compound '" + name + "' should " + (expectData ? "have" : "not have") +
-                        " chromatogram data under strict-majority (matched*2 > total) transition matching.");
+                        " chromatogram data under at-least-half (matched*2 >= total) transition matching.");
                 }
 
                 // Sanity: the real co-targets at this Q1 still import (confirms the shared 97.1 / 81.05
@@ -297,11 +297,11 @@ namespace pwiz.SkylineTestData.Results
                 Assert.IsTrue(q3Measured,
                     "Test setup: expected the shared 81.05 product channel to be measured in this file");
 
-                // Minority and exactly-half compounds must be denied this Q1's signal; a bare majority
-                // must receive it. The half case pins the strict ">" (a loosening to ">=" would hand it
-                // data and trip this).
+                // A minority compound must be denied this Q1's signal; half-or-more must receive it.
+                // The half case pins the ">=" boundary (a tightening to ">" would deny it data and
+                // trip this).
                 AssertPhantom(PHANTOM_MINORITY, false);
-                AssertPhantom(PHANTOM_HALF, false);
+                AssertPhantom(PHANTOM_HALF, true);
                 AssertPhantom(PHANTOM_MAJORITY, true);
             }
         }

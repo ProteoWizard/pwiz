@@ -226,8 +226,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // Read each scan once, in forward order. GetSrmSpectrum returns an empty spectrum
                 // (no precursors) for non-SRM scans, which the guard below skips, so no separate
-                // metadata pre-check is needed -- and a per-scan pre-check would re-read each index
-                // and break ProteoWizard's forward-streaming mzXML read.
+                // metadata pre-check is needed.
                 var spectrum = dataFile.GetSrmSpectrum(i);
                 if (spectrum?.Precursors == null || spectrum.Precursors.Count == 0 || spectrum.Mzs == null)
                     continue;
@@ -326,8 +325,8 @@ namespace pwiz.Skyline.Model.Results
 
             var peptideFinder = _spectra.HasSrmSpectra ? new PeptideFinder(_document) : null;
 
-            // Per precursor m/z, the peptides this file actually targets: those matching a majority of
-            // their transitions against the aggregate product channels measured at that Q1 (see
+            // Per precursor m/z, the peptides this file actually targets: those matching at least half
+            // of their transitions against the aggregate product channels measured at that Q1 (see
             // PeptideFinder.FindMatchingPeptides). Resolved once so a same-Q1 collision is handled
             // consistently for every spectrum, and an incidental Q1 neighbor is not handed another
             // compound's signal.

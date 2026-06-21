@@ -50,16 +50,16 @@ namespace pwiz.Skyline.Model.Results
 
         /// <summary>
         /// Return the peptide doc node(s) the SRM data at this precursor m/z should be assigned to:
-        /// peptides whose precursor Mz matches within tolerance and that match a strict majority of
+        /// peptides whose precursor Mz matches within tolerance and that match at least half of
         /// their own product ions against <paramref name="productMzs"/>. <paramref name="productMzs"/>
         /// is the union of product channels measured at this Q1 across the file (assembled by the
         /// caller), not a single spectrum -- a compound's transitions can arrive in separate scans, so
-        /// the match is made against that aggregate. The majority test lets genuinely co-targeted
+        /// the match is made against that aggregate. The half-or-more test lets genuinely co-targeted
         /// same-Q1 compounds each get their own chromatogram (including a real compound whose product
         /// set is a subset of a larger co-Q1 compound, or one with an occasional unmeasured transition),
         /// while an incidental Q1 neighbor that shares only a minority of its transitions -- e.g. a
         /// compound targeted by a different acquisition method -- is not handed this compound's signal.
-        /// Returns nothing when no candidate matches a majority (the caller then emits the data
+        /// Returns nothing when no candidate matches at least half (the caller then emits the data
         /// unmatched so it still surfaces).
         /// </summary>
         public IEnumerable<PeptideDocNode> FindMatchingPeptides(SignedMz precursorMz, IList<SignedMz> productMzs)
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.Model.Results
             var seen = new HashSet<int>();
             foreach (var candidate in candidates)
             {
-                if (!MatchesMajorityOfTransitions(candidate.NodeGroup, productMzs))
+                if (!MatchesAtLeastHalfOfTransitions(candidate.NodeGroup, productMzs))
                     continue;
                 if (seen.Add(candidate.NodePeptide.Id.GlobalIndex))
                     yield return candidate.NodePeptide;
@@ -117,15 +117,15 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// True if the transition group matches more than half of its own product ions among the
-        /// spectrum's measured products (within tolerance, same polarity). A strict majority keeps a
+        /// True if the transition group matches at least half of its own product ions among the
+        /// spectrum's measured products (within tolerance, same polarity). A half-or-more match keeps a
         /// genuinely targeted compound -- even one whose product set is a subset of a larger co-Q1
         /// compound, or that has an occasional transition the file did not measure -- while rejecting
         /// an incidental Q1 neighbor that shares only a minority of its transitions. Where two kept
         /// precursors share transitions, those shared products are split between them downstream (each
         /// emitted peptide binds the channels that match its own transitions).
         /// </summary>
-        private bool MatchesMajorityOfTransitions(TransitionGroupDocNode nodeGroup, IList<SignedMz> productMzs)
+        private bool MatchesAtLeastHalfOfTransitions(TransitionGroupDocNode nodeGroup, IList<SignedMz> productMzs)
         {
             if (nodeGroup == null)
                 return false;
@@ -145,7 +145,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
-            return total > 0 && matched * 2 > total;
+            return total > 0 && matched * 2 >= total;
         }
 
         /// <summary>
