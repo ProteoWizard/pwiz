@@ -224,8 +224,10 @@ namespace pwiz.Skyline.Model.Results
             int count = dataFile.SpectrumCount;
             for (int i = 0; i < count; i++)
             {
-                // Read each scan once, in forward order. GetSrmSpectrum already returns null for
-                // non-SRM scans, so no separate metadata pre-check is needed.
+                // Read each scan once, in forward order. GetSrmSpectrum returns an empty spectrum
+                // (no precursors) for non-SRM scans, which the guard below skips, so no separate
+                // metadata pre-check is needed -- and a per-scan pre-check would re-read each index
+                // and break ProteoWizard's forward-streaming mzXML read.
                 var spectrum = dataFile.GetSrmSpectrum(i);
                 if (spectrum?.Precursors == null || spectrum.Precursors.Count == 0 || spectrum.Mzs == null)
                     continue;
