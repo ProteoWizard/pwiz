@@ -31,7 +31,6 @@ namespace pwiz.OspreySharp.Core
     {
         DiannTsv,
         Blib,
-        Elib,
         SkylineDocument
     }
 
@@ -55,7 +54,7 @@ namespace pwiz.OspreySharp.Core
 
         /// <summary>
         /// Detect library format from file extension.
-        /// .blib -> Blib, .elib -> Elib, .sky -> SkylineDocument, default -> DiannTsv.
+        /// .blib -> Blib, .sky -> SkylineDocument, default -> DiannTsv.
         /// </summary>
         public static LibrarySource FromPath(string path)
         {
@@ -64,8 +63,6 @@ namespace pwiz.OspreySharp.Core
             {
                 case ".blib":
                     return new LibrarySource(LibraryFormat.Blib, path);
-                case ".elib":
-                    return new LibrarySource(LibraryFormat.Elib, path);
                 case ".sky":
                     return new LibrarySource(LibraryFormat.SkylineDocument, path);
                 default:
