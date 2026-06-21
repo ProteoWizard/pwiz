@@ -34,7 +34,7 @@ namespace pwiz.OspreySharp.Scoring
     /// no Savitzky-Golay sweep, no shared byproduct.
     ///
     /// INDEX TRAP: this feature indexes the preprocessed cache at the WINDOW-GLOBAL
-    /// apex index (<see cref="IOspreyApexSpectraPeakData.ApexGlobalIndex"/> =
+    /// apex index (<see cref="IOspreyApexSpectrumPeakData.ApexGlobalIndex"/> =
     /// WindowStartIndex + candidate-local apex). It is a DIFFERENT index space from
     /// the SG sweep (features 17/18), which bound-checks a candidate-local index
     /// against WindowLength before mapping to global. Do not unify the two.

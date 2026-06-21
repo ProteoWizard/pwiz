@@ -113,8 +113,10 @@ namespace pwiz.OspreySharp.Scoring
     /// <summary>
     /// Base for scores that read the apex +/- 2 MS2 spectra -- the widest tier, two
     /// levels above Skyline. Narrows the SPI's summary peak data to
-    /// <see cref="IOspreyApexSpectraPeakData"/>. The Savitzky-Golay sweep rides this
-    /// tier (and the MS1 family until its data is produced upstream).
+    /// <see cref="IOspreyApexSpectraPeakData"/>. The Savitzky-Golay sweep is the only
+    /// family that rides this tier; the MS1 family does NOT (its precursor XIC +
+    /// isotope envelope are produced upstream and exposed on
+    /// <see cref="IOspreyDetailedPeakData"/>).
     /// </summary>
     public abstract class ApexSpectraOspreyFeatureCalculator : IOspreyFeatureCalculator
     {
