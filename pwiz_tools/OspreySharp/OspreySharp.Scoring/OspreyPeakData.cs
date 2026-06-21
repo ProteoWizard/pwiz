@@ -28,18 +28,19 @@ using pwiz.OspreySharp.Core;
 namespace pwiz.OspreySharp.Scoring
 {
     /// <summary>
-    /// Reusable <see cref="IOspreyDetailedPeakData"/> adapter over the harness's
-    /// per-candidate scoring state. One instance is created per window and
-    /// <see cref="Set"/> is called for each candidate, so the per-candidate
-    /// scoring loop allocates no peak-data objects. Windows are scored on separate
-    /// threads, so each window owns its own instance -- this is never shared task
-    /// state.
+    /// Reusable <see cref="IOspreyApexSpectraPeakData"/> adapter over the harness's
+    /// per-candidate scoring state. It implements the widest peak-data tier; each
+    /// calculator receives it narrowed to the tier its family declares. One instance
+    /// is created per window and <see cref="Set"/> is called for each candidate, so the
+    /// per-candidate scoring loop allocates no peak-data objects. Windows are scored on
+    /// separate threads, so each window owns its own instance -- this is never shared
+    /// task state.
     ///
-    /// Lives in Scoring (alongside the <see cref="IOspreyDetailedPeakData"/> seam it
-    /// implements and the feature calculators that consume it); relocated out of the
-    /// Tasks layer so the coelution scorer can move down here too.
+    /// Lives in Scoring (alongside the peak-data tier seam it implements and the
+    /// feature calculators that consume it); relocated out of the Tasks layer so the
+    /// coelution scorer can move down here too.
     /// </summary>
-    public sealed class OspreyPeakData : IOspreyDetailedPeakData
+    public sealed class OspreyPeakData : IOspreyApexSpectraPeakData
     {
         private LibraryEntry _candidate;
         private XICPeakBounds _peakBounds;
@@ -52,12 +53,14 @@ namespace pwiz.OspreySharp.Scoring
         private int _windowStartIndex;
         private int _windowLength;
         private IReadOnlyList<Spectrum> _windowSpectra;
-        private IReadOnlyList<double> _windowRetentionTimes;
+        private XicData _ms1PrecursorXic;
+        private XicData _ms1ReferenceXic;
+        private double[] _apexIsotopeEnvelope;
 
         public void Set(LibraryEntry candidate, XICPeakBounds peakBounds, IReadOnlyList<XicData> xics,
             double apexRetentionTime, double expectedRt, Spectrum apexSpectrum,
             int apexGlobalIndex, int apexLocalIndex, int windowStartIndex, int windowLength,
-            IReadOnlyList<Spectrum> windowSpectra, IReadOnlyList<double> windowRetentionTimes)
+            IReadOnlyList<Spectrum> windowSpectra)
         {
             _candidate = candidate;
             _peakBounds = peakBounds;
@@ -70,7 +73,26 @@ namespace pwiz.OspreySharp.Scoring
             _windowStartIndex = windowStartIndex;
             _windowLength = windowLength;
             _windowSpectra = windowSpectra;
-            _windowRetentionTimes = windowRetentionTimes;
+            // Reset the produced MS1 data each candidate; SetMs1 overrides it when
+            // the extractor produced it (HRAM + MS1 present). Without this reset the
+            // reused instance would leak the previous candidate's MS1 chromatograms.
+            _ms1PrecursorXic = null;
+            _ms1ReferenceXic = null;
+            _apexIsotopeEnvelope = null;
+        }
+
+        /// <summary>
+        /// Publish the MS1 data the extractor produced for this candidate (the
+        /// precursor chromatogram, its co-sampled reference fragment chromatogram,
+        /// and the apex isotope envelope). Called only when the run has MS1 features
+        /// and an MS1 scan was found; otherwise the <see cref="Set"/> reset leaves
+        /// all three null and the MS1 features evaluate to 0.0.
+        /// </summary>
+        public void SetMs1(XicData ms1PrecursorXic, XicData ms1ReferenceXic, double[] apexIsotopeEnvelope)
+        {
+            _ms1PrecursorXic = ms1PrecursorXic;
+            _ms1ReferenceXic = ms1ReferenceXic;
+            _apexIsotopeEnvelope = apexIsotopeEnvelope;
         }
 
         public LibraryEntry Candidate { get { return _candidate; } }
@@ -80,10 +102,26 @@ namespace pwiz.OspreySharp.Scoring
         public IReadOnlyList<XicData> Xics { get { return _xics; } }
         public Spectrum ApexSpectrum { get { return _apexSpectrum; } }
         public int ApexGlobalIndex { get { return _apexGlobalIndex; } }
-        public int ApexLocalIndex { get { return _apexLocalIndex; } }
-        public int WindowStartIndex { get { return _windowStartIndex; } }
-        public int WindowLength { get { return _windowLength; } }
-        public IReadOnlyList<Spectrum> WindowSpectra { get { return _windowSpectra; } }
-        public IReadOnlyList<double> WindowRetentionTimes { get { return _windowRetentionTimes; } }
+
+        public bool TryGetApexOffsetSpectrum(int offset, out Spectrum spectrum, out int cacheIndex)
+        {
+            // candidate-local index within the scoring range; the window-spectrum
+            // list and the start/length come from the per-candidate Set. Out-of-range
+            // offsets (window edges) return false -- the asymmetric boundary skip.
+            int candIdx = _apexLocalIndex + offset;
+            if (candIdx < 0 || candIdx >= _windowLength)
+            {
+                spectrum = null;
+                cacheIndex = -1;
+                return false;
+            }
+            cacheIndex = _windowStartIndex + candIdx;
+            spectrum = _windowSpectra[cacheIndex];
+            return true;
+        }
+
+        public XicData Ms1PrecursorXic { get { return _ms1PrecursorXic; } }
+        public XicData Ms1ReferenceXic { get { return _ms1ReferenceXic; } }
+        public double[] ApexIsotopeEnvelope { get { return _apexIsotopeEnvelope; } }
     }
 }

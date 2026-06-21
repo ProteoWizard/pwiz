@@ -72,10 +72,20 @@
     Skip the OspreySharp build step (use the existing Release binary).
 
 .PARAMETER KeepRunDirs
-    Number of most-recent TestResults\regression-* run dirs to keep; older ones are
-    pruned at startup (before the build) to reclaim disk (default 2). Each run dir
-    holds multi-GB spectra caches and is gitignored scratch that nothing else cleans
-    up. On a long-lived build agent these otherwise accumulate until the disk fills.
+    Number of most-recent TestResults\regression-* run dirs to keep when pruning
+    ORPHANS at startup (default 0 -- keep none). A normal run now removes its own
+    output when it finishes (see -KeepOutput), so this only clears dirs left behind
+    by a previously killed run (TeamCity timeout / OOM). Raise it to retain old run
+    dirs on a roomy local disk.
+
+.PARAMETER KeepOutput
+    Keep this run's TestResults\regression-<stamp> output instead of deleting it. By
+    default the run deletes its scratch as it goes -- each HPC-chain phase and each
+    dataset as soon as it is consumed, then the whole run root at the end -- so it
+    leaves no multi-GB output behind to starve the next run on a shared build agent.
+    The raw input data (downloaded mzML/library) is NEVER touched. Pass this locally
+    to retain output for post-mortem; a red CI gate's diagnosis lives in the build
+    log, not these files.
 
 .EXAMPLE
     # Local: run Stellar straight-through + resume against the committed golden
@@ -99,7 +109,8 @@ param(
     [switch]$TeamCity,
     [switch]$NoBuild,
     [ValidateRange(0, [int]::MaxValue)]
-    [int]$KeepRunDirs = 2,
+    [int]$KeepRunDirs = 0,
+    [switch]$KeepOutput,
     [double]$Tolerance = 1e-9
 )
 
@@ -148,16 +159,17 @@ function Write-Problem-Tc([string]$msg) {
     Write-Host "ERROR: $msg" -ForegroundColor Red
 }
 
-# --- Reclaim disk: prune stale TestResults run dirs ---------------------------
-# Each invocation writes a timestamped TestResults\regression-<stamp> dir holding
-# multi-GB .spectra.bin caches (via --work-dir). They are gitignored scratch and
-# nothing else cleans them, so on a long-lived build agent they accumulate until
-# the disk fills (the Astral straight-through leg alone needs ~26 GB). Prune here,
+# --- Reclaim disk: prune orphaned TestResults run dirs ------------------------
+# A normal run now removes its OWN TestResults\regression-<stamp> dir as it goes
+# (each HPC-chain phase + dataset when consumed, then the run root at the end --
+# see the cleanup below and -KeepOutput), so between runs there is normally nothing
+# here. This startup prune is the safety net for ORPHANS: a dir left by a run that
+# was killed (TeamCity timeout / OOM) before it reached its own cleanup. Run here
 # FIRST -- before the build, data acquisition, and the new run dir -- so even a
-# near-full disk can run it (deleting needs ~no free space) and the rest of the
-# run has the reclaimed space. Keeps the most recent $KeepRunDirs dirs (the latest
-# is useful for post-mortem on a red gate). The dir names sort chronologically
-# (regression-YYYYMMDD_HHMMSS), so a Name sort orders oldest-first.
+# near-full disk can run it (deleting needs ~no free space) and the rest of the run
+# has the reclaimed space. Keeps the most recent $KeepRunDirs (default 0 = keep
+# none). The dir names sort chronologically (regression-YYYYMMDD_HHMMSS), so a Name
+# sort orders oldest-first.
 function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
     if (-not (Test-Path $TestResultsDir)) { return }
     $runDirs = @(Get-ChildItem -Path $TestResultsDir -Directory -Filter 'regression-*' `
@@ -175,6 +187,15 @@ function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
     }
 }
 Remove-StaleRunDirs (Join-Path $scriptRoot 'TestResults') $KeepRunDirs
+
+# Best-effort recursive delete of a scratch path (a run/phase/dataset output dir or
+# a single dead-weight input copy). Swallows errors -- reclaiming disk must never
+# fail the gate. Honors -KeepOutput so a local post-mortem can retain everything.
+function Remove-Scratch([string]$Path) {
+    if ($KeepOutput) { return }
+    if ([string]::IsNullOrEmpty($Path) -or -not (Test-Path -LiteralPath $Path)) { return }
+    Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
+}
 
 # --- Build (unless -NoBuild) --------------------------------------------------
 if (-not $NoBuild) {
@@ -334,6 +355,13 @@ function Invoke-HpcChain {
     $a1 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
     Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
+    # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
+    # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
+    # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
+    if (-not $KeepOutput) {
+        Get-ChildItem -Path $ph1 -Filter '*.mzML' -File -ErrorAction SilentlyContinue |
+            Remove-Item -Force -ErrorAction SilentlyContinue
+    }
 
     # Phase 2: 1st-join (Stage 5). Consumes the per-file parquets, writes the
     # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. A
@@ -370,7 +398,24 @@ function Invoke-HpcChain {
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
                 '--protein-fdr', '0.01', '--threads', $Threads.ToString())
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
+        # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
+        # consumes only those plus the calibration / reconciliation / 1st-pass
+        # sidecars copied above -- never this worker's mzML, input scores.parquet,
+        # or library. Drop those big inputs now so at most one worker's mzML +
+        # library copy is on disk at a time (the out-of-disk failure was several of
+        # them coexisting with the straight-through leg's spectra caches).
+        if (-not $KeepOutput) {
+            Remove-Item (Join-Path $ph3 (Split-Path -Leaf $mzmlByStem[$s])) -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 "$s.scores.parquet") -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 $libName) -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 ($libName + '.libcache')) -Force -ErrorAction SilentlyContinue
+        }
     }
+
+    # Phases 1 and 2 are fully consumed once every rescore worker has copied its
+    # inputs (phase 4 reads only phase-3 outputs). Free them before the merge node.
+    Remove-Scratch $ph1
+    Remove-Scratch $ph2
 
     # Phase 4: 2nd-join merge node (Stage 7 + blib). Consumes each worker's
     # reconciled parquet + sidecars (never the original Stage 4 parquet, and never
@@ -387,6 +432,9 @@ function Invoke-HpcChain {
         if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
         New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
     }
+    # The merge node now has every worker's reconciled output copied in; the phase-3
+    # worker dirs are done.
+    foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
     Copy-LibraryInto -Library $Library -Dir $ph4
     $a4 = @('--task', 'MergeNode')
     foreach ($s in $stemList) { $a4 += @('--input-scores', "$s.scores-reconciled.parquet") }
@@ -401,6 +449,11 @@ function Invoke-HpcChain {
 $overallFail = $false
 $summaryLines = [System.Collections.Generic.List[string]]::new()
 
+# Self-cleaning: each dataset's scratch is removed as soon as its legs finish, and
+# the whole run root in the finally below -- so the run leaves no multi-GB output
+# behind to starve the next run on a shared agent. -KeepOutput (honored by
+# Remove-Scratch) opts out for local post-mortem.
+try {
 foreach ($name in $selected) {
     $cfg = $datasets[$name]
     Write-Progress-Tc "Dataset $name"
@@ -488,16 +541,27 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode2 (resume==straight): FAIL ($($m2.Issues.Count) issues)")
         }
     }
+
+    # All legs for this dataset are done -- free its scratch now so peak disk stays
+    # at ~one dataset (the next dataset / the perf-gate step gets the space back).
+    Remove-Scratch (Join-Path $runRoot $name)
+}
+}
+finally {
+    # Safety net for a dataset that threw before its own cleanup -- drop the whole
+    # run root. Raw input data lives outside $runRoot and is untouched.
+    Remove-Scratch $runRoot
 }
 
 # --- Summary + exit -----------------------------------------------------------
 Write-Host ""
 Write-Host "=== OspreySharp regression summary ===" -ForegroundColor Cyan
 $summaryLines | ForEach-Object { Write-Host "  $_" }
-# No artifacts are published. The diagnosis on a red gate lives in the build log
-# (every per-file log is Tee'd to the console TeamCity captures) and the
-# buildProblem line (which names the failing dataset + leg + first divergent
-# columns); the run outputs stay on the agent under the gitignored TestResults.
+# No artifacts are published, and the run's scratch under TestResults is deleted on
+# completion (the downloaded raw input data is kept). A red gate's diagnosis lives in
+# the build log (every per-file log is Tee'd to the console TeamCity captures) and
+# the buildProblem line (which names the failing dataset + leg + first divergent
+# columns), NOT in the run output files. Pass -KeepOutput to retain them locally.
 if ($overallFail) {
     Write-Problem-Tc 'OspreySharp regression FAILED'
     exit 1
