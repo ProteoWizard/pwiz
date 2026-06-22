@@ -67,11 +67,11 @@ namespace pwiz.SkylineTestFunctional
             var wizard = WaitForOpenForm<ImportPeptideSearchDlg>();
             string wizardId = FormIdOfType(nameof(ImportPeptideSearchDlg));
 
-            // 2) Click "Add Files" (btnAddFile) -> the native "Add Input Files" dialog appears.
+            // 2) Click "Add Files" -> the native "Add Input Files" dialog appears.
             // Wait for it the way the AI Connector would: poll GetOpenForms (the discovery method
             // IJsonToolService exposes) until the native FileDialog shows up, rather than the
             // internal NativeDialogAutomation helper.
-            JsonUiService.ClickFormButton(wizardId, @"btnAddFile");
+            JsonUiService.ClickFormButton(wizardId, @"Add Files");
             string addFilesId = WaitForNativeFileDialogId();
 
             // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,

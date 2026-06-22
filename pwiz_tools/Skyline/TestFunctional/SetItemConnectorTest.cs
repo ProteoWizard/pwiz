@@ -65,17 +65,17 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
 
             // SetItemChecked sets the "Replicates" item's check explicitly (idempotent, unlike a toggle).
-            JsonUiService.SetItemChecked(dlgId, @"checkedListBoxAppliesTo", @"Replicates", true);
+            JsonUiService.SetItemChecked(dlgId, @"Applies to",@"Replicates", true);
             RunUI(() => Assert.IsTrue(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
                 @"SetItemChecked did not check the Replicates item."));
-            JsonUiService.SetItemChecked(dlgId, @"checkedListBoxAppliesTo", @"Replicates", false);
+            JsonUiService.SetItemChecked(dlgId, @"Applies to",@"Replicates", false);
             RunUI(() => Assert.IsFalse(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
                 @"SetItemChecked did not uncheck the Replicates item."));
 
             // SetItemSelected highlights an item (separate from checking it).
-            JsonUiService.SetItemSelected(dlgId, @"checkedListBoxAppliesTo", @"Peptides", true);
+            JsonUiService.SetItemSelected(dlgId, @"Applies to",@"Peptides", true);
             RunUI(() =>
             {
                 var checkedListBox = (CheckedListBox)defineAnnotationDlg.Controls
@@ -102,10 +102,9 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(pwiz.Common.DataBinding.Controls.Editor.ViewEditor)).Id;
 
             var tree = viewEditor.ChooseColumnsTab.AvailableFieldsTree;
-            string treeName = null, parentText = null, childText = null;
+            string parentText = null, childText = null;
             RunUI(() =>
             {
-                treeName = tree.Name;
                 var root = tree.Nodes[0];
                 root.Expand(); // populate the lazily-built children
                 parentText = root.Text;
@@ -113,14 +112,16 @@ namespace pwiz.SkylineTestFunctional
             });
             string nodePath = parentText + @" > " + childText;
 
-            JsonUiService.SetItemChecked(editorId, treeName, nodePath, true);
+            // The field tree has no caption and no label, so it is addressed by its type -- "TreeView"
+            // is the only tree on the form (a type match, weaker than any visible-text match).
+            JsonUiService.SetItemChecked(editorId, @"TreeView", nodePath, true);
             RunUI(() =>
             {
                 var node = tree.Nodes[0].Nodes.Cast<TreeNode>().First(n => n.Text == childText);
                 Assert.IsTrue(node.Checked, @"SetItemChecked did not check the tree node " + nodePath);
             });
 
-            JsonUiService.SetItemSelected(editorId, treeName, nodePath, true);
+            JsonUiService.SetItemSelected(editorId, @"TreeView", nodePath, true);
             RunUI(() => Assert.AreEqual(childText, tree.SelectedNode?.Text,
                 @"SetItemSelected did not select the tree node."));
 

@@ -29,8 +29,10 @@
 #     InvokeMenuItem walks the main menu. Items that are context-dependent (e.g. Show Library,
 #     Show Dot Product) only appear -- and so only match -- when the current selection makes them
 #     available, exactly as in the real UI.
-#   - A text field labelled only by an adjacent Label (e.g. "Ion match tolerance") can NOT yet be
-#     addressed by that label, only by its control Name. The steps below do not need to.
+#   - Controls are matched by the VISIBLE TEXT a user sees, never by an internal control name. A text
+#     field with no caption is addressed by its adjacent Label (e.g. "Ion match tolerance" sets the box
+#     that label names); a control with no caption and no label is addressed by its type ("TreeView",
+#     "ListView"); a form's single grid/list/tree takes an empty controlId.
 #
 # Harness synchronization primitives (poll skyline_get_open_forms; NOT MCP methods):
 #   WaitForForm     "<formId>"   -- wait until that form/dialog is listed by GetOpenForms
@@ -158,24 +160,26 @@ InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Normaliz
 # SetFormValue    "TransitionSettingsUI:Transition Settings" "Isotope peaks included" "Count"
 # SetFormValue    "TransitionSettingsUI:Transition Settings" "Precursor mass analyzer" "QIT"
 # SetFormValue    "TransitionSettingsUI:Transition Settings" "Acquisition method" "PRM"
-# # RT extraction window: the textbox inside the "time around MS/MS IDs" flow panel is tbxTimeAroundMs2Ids.
-# SetFormValue    "TransitionSettingsUI:Transition Settings" "tbxTimeAroundMs2Ids" "2"
+# # RT extraction window: the box sits in a flow panel between the labels "Use only scans within" and
+# # "minutes of MS/MS IDs"; the preceding label resolves to the box (label -> next editable field).
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Use only scans within" "2"
 # ClickFormButton "TransitionSettingsUI:Transition Settings" "Library"
-# # Ion match tolerance: addressed by control NAME textMzMatchTolerance.
+# # Ion match tolerance: the "Ion match tolerance" label resolves to the box it names.
 # # DISCREPANCY: the tutorial says enter 0.7, but current Skyline validates "<= 0.6" ("Method match
 # # tolerance m/z must be less than or equal to 0.6") and rejects 0.7 on OK. Use 0.6 (or update the
 # # tutorial). The dialog-watch surfaces the validation alert as the SetFormValue/OK error text.
-# SetFormValue    "TransitionSettingsUI:Transition Settings" "textMzMatchTolerance" "0.6"
+# SetFormValue    "TransitionSettingsUI:Transition Settings" "Ion match tolerance" "0.6"
 # ClickFormButton "TransitionSettingsUI:Transition Settings" "OK"
 # WaitForNoForm   "TransitionSettingsUI:Transition Settings"
 #
-# Add the precursor transitions per precursor via the Targets-tree pick-list ("Pick Children"):
+# Add the precursor transitions per precursor via the Targets-tree pick-list ("Pick Children"). The
+# tree has no caption, so it is the form's single tree -- pass an EMPTY controlId.
 # InvokeMenuItem  "Edit > Expand All > Precursors"
 # # For each precursor node (path = 'Protein > Peptide > Precursor', using the live node texts). A
 # # tree path is split ONLY on '>', so a UniProt protein name keeps its '|' (e.g.
 # # 'sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [66, 75] > 582.3190++'). Each segment is matched exactly.
-# SetItemSelected       "SequenceTreeForm:Targets" "sequenceTree" "<protein> > <peptide> > <precursor>" true
-# InvokeContextMenuItem "SequenceTreeForm:Targets" "sequenceTree" "Pick Children"
+# SetItemSelected       "SequenceTreeForm:Targets" "" "<protein> > <peptide> > <precursor>" true
+# InvokeContextMenuItem "SequenceTreeForm:Targets" "" "Pick Children"
 # WaitForForm           "PopupPickList:*"
 # SetItemChecked        "PopupPickList:*" "" "<transition label>" true
 # ClickFormButton       "PopupPickList:*" "OK"
@@ -187,9 +191,10 @@ InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Normaliz
 #    This tutorial opens an already-saved document, so it is not exercised here.
 # 2. Now supported (were prior gaps): selecting a tabbed settings dialog's tab -- ClickFormButton on
 #    the tab's text; and checking a transition in the Targets-tree pop-up pick-list -- select the
-#    node (SetItemSelected on "sequenceTree"), open it with InvokeContextMenuItem "sequenceTree"
-#    "Pick Children", toggle items with SetItemChecked, commit with ClickFormButton "OK" (the green
-#    check). See the "Configuring a Skyline Document for PRM" section below. Still NOT supported:
+#    node (SetItemSelected with an empty controlId, the form's single tree), open it with
+#    InvokeContextMenuItem "" "Pick Children", toggle items with SetItemChecked, commit with
+#    ClickFormButton "OK" (the green check). See the "Configuring a Skyline Document for PRM" section
+#    below. Still NOT supported:
 #    GetFormState (enumerate a form's controls + labels), which is what would let the connector
 #    DISCOVER the right item label/name per form instead of relying on prior knowledge of names.
 # 3. RadioButton selection (e.g. the "PRM" workflow, the "Retention time filtering" options) is

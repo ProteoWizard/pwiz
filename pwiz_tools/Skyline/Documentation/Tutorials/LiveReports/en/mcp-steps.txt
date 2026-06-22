@@ -49,9 +49,9 @@ InvokeMenuItem  "Settings > Document Settings"
 WaitForForm     "DocumentSettingsDlg:Document Settings"
 ClickFormButton "DocumentSettingsDlg:Document Settings" "Add"
 WaitForForm     "DefineAnnotationDlg:Define Annotation"
-# NOTE (gap 10): use the textbox control NAME "tbxName", NOT the label "Name". SetFormValue matches
-#   the "Name:" LABEL by its visible text and would set the label instead of the input. See gap (10).
-SetFormValue    "DefineAnnotationDlg:Define Annotation" "tbxName" "SubjectID"
+# The "Name" label resolves to the textbox it names: SetFormValue matches the "Name:" label by its
+# visible text, sees it is a label, and sets the next editable field in tab order (the textbox).
+SetFormValue    "DefineAnnotationDlg:Define Annotation" "Name" "SubjectID"
 # Type defaults to "Text". Check "Replicates" in the Applies-to CheckedListBox (ClickFormButton now
 # toggles a checked-list item). Validated.
 ClickFormButton "DefineAnnotationDlg:Define Annotation" "Replicates"
@@ -105,9 +105,10 @@ SetGridText     "DocumentGridForm:Document Grid: Replicates" "" 3 0 "102\n102\n1
 #      then remove; the Pivot Editor multi-column select). SetItemSelected selects one item; a range
 #      needs each item, or just uncheck the unwanted columns in the tree instead.
 # (9)  Out of scope (desktop, not Skyline): the Notepad copy/paste of SampleInfo.txt.
-# (13) Label->field resolution misses when the field is not the next control in tab order (the Customize
-#      Report "Report Name" label -> tbxViewName); pass the control name in that case.
 #
-# USABILITY NOTE: for the "single grid on the form" case, GetGridText/SetGridText/the cell locator need
-# an EMPTY gridId/controlId. The literal string "null" is treated as a control name and fails; the MCP
-# layer should map an omitted/"null" argument to a real null.
+# CONTROL ADDRESSING: controls are matched by the VISIBLE TEXT a user sees, never by an internal control
+# name. A caption-less text field is addressed by its adjacent Label (which resolves to the field it
+# names, e.g. "Name" -> the name textbox; "Report Name" -> the report-name textbox). A caption-less,
+# label-less control is addressed by its TYPE ("TreeView" -> the Customize Report field tree, "ListView"
+# -> the Pivot Editor available-columns list). A form's single grid/list/tree takes an EMPTY controlId
+# (the literal string "null" is NOT special -- pass an empty string).

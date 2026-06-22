@@ -68,7 +68,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => columnText = pivotEditor.AvailableColumnList.Items[0].Text);
             Assert.IsFalse(string.IsNullOrEmpty(columnText));
 
-            JsonUiService.SetItemSelected(pivotId, @"availableColumnList", columnText, true);
+            // The available-columns list has no caption; address it by its type ("ListView").
+            JsonUiService.SetItemSelected(pivotId, @"ListView", columnText, true);
             RunUI(() => Assert.IsTrue(
                 pivotEditor.AvailableColumnList.SelectedItems.Cast<ListViewItem>().Any(i => i.Text == columnText),
                 @"SetItemSelected did not select the list-view item."));

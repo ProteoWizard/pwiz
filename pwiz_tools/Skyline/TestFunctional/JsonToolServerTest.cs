@@ -27,6 +27,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding;
@@ -42,6 +43,7 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -112,6 +114,7 @@ namespace pwiz.SkylineTestFunctional
             server.RunCommand(CommandArgs.ARG_NEW, CommandArgs.ARG_DISCARD_CHANGES);
             TestUiMode(server);
             TestUndoRedo(server);
+            TestBlockedAndDisabledUIControls(server);
         }
 
         /// <summary>
@@ -1943,6 +1946,77 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
             return header + "\n" +
                    "TestSmallMol,Ala,,light,,,225,44,1,1,3\n" +
                    "TestSmallMol,Arg,,light,,,310,217,1,1,19\n";
+        }
+
+        private void TestBlockedAndDisabledUIControls(JsonToolServer server)
+        {
+            var forms = server.GetOpenForms();
+            var treeFormId = forms.First(f => f.Type == nameof(SequenceTreeForm)).Id;
+            var treeForm = FormUtil.OpenForms.OfType<SequenceTreeForm>().First();
+
+            // 1. Disable the form and verify that interacting with it throws
+            RunUI(() => treeForm.Enabled = false);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.SetItemChecked(treeFormId, null, @"Peptides", true));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.ClickFormButton(treeFormId, @"ok"));
+            }
+            finally
+            {
+                RunUI(() => treeForm.Enabled = true);
+            }
+
+            // 2. Disable a specific control and verify that interacting with it throws. The Targets tree
+            // has no caption, so it is reached as the form's single tree (empty controlId), not by name.
+            var tree = treeForm.SequenceTree;
+            RunUI(() => tree.Enabled = false);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.SetItemChecked(treeFormId, null, @"Peptides", true));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.SetItemSelected(treeFormId, null, @"Peptides", true));
+            }
+            finally
+            {
+                RunUI(() => tree.Enabled = true);
+            }
+
+            // 3. Disable a menu item and verify that invoking it throws
+            var fileMenu = SkylineWindow.MainMenuStrip.Items.OfType<ToolStripMenuItem>().First(i => i.Text.Contains("File"));
+            var saveItem = fileMenu.DropDownItems.OfType<ToolStripMenuItem>().First(i => i.Text.Contains("Save"));
+            bool originalEnabled = false;
+            RunUI(() => {
+                originalEnabled = saveItem.Enabled;
+                saveItem.Enabled = false;
+            });
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.InvokeMenuItem("File > Save"));
+            }
+            finally
+            {
+                RunUI(() => saveItem.Enabled = originalEnabled);
+            }
+
+            // 4. While a modal dialog is open, every other window is blocked at the Win32 level (the
+            // managed Control.Enabled of those forms stays true), so verbs targeting them must throw --
+            // a user could not reach them either until the dialog is handled.
+            var transitionSettings = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            try
+            {
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.InvokeMenuItem(@"File > Save"));
+                AssertEx.ThrowsException<Exception>(() =>
+                    server.SetItemChecked(treeFormId, null, @"Peptides", true));
+            }
+            finally
+            {
+                OkDialog(transitionSettings, () => transitionSettings.DialogResult = DialogResult.Cancel);
+            }
         }
     }
 }

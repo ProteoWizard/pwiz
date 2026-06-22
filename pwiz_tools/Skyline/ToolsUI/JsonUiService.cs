@@ -428,13 +428,15 @@ namespace pwiz.Skyline.ToolsUI
             if (Program.MainWindow == null)
                 throw new InvalidOperationException(
                     @"Cannot invoke a menu item: the main Skyline window is not open yet (the StartPage may be showing).");
-            // A main-menu item cannot be clicked while a modal dialog is blocking the main window
-            // (the window, and so its menu, is disabled). Fail fast rather than silently no-op.
-            var mainHandle = InvokeOnUiThread(() => Program.MainWindow.Handle);
-            if (!User32.IsWindowEnabled(mainHandle))
-                throw new InvalidOperationException(
-                    @"Cannot invoke a menu item: a modal dialog is blocking the main Skyline window. Handle the open dialog first (see skyline_get_open_forms).");
-            var item = InvokeOnUiThread(() => FindMenuItem(menuPath));
+            var item = InvokeOnUiThread(() =>
+            {
+                // The main menu lives on the main window; gate it for a modal block / disabled state,
+                // then for the item's own enablement -- the same things that stop a user clicking it.
+                VerifyFormInteractable(Program.MainWindow);
+                var menuItem = FindMenuItem(menuPath);
+                VerifyEnabled(menuItem);
+                return menuItem;
+            });
             Program.MainWindow.BeginInvoke((Action)item.PerformClick);
         }
 
@@ -454,12 +456,30 @@ namespace pwiz.Skyline.ToolsUI
                 InvokeOnUiThread(() =>
                 {
                     var form = FindFormById(formId);
+
                     if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
+                    {
+                        VerifyInteractable(GetGridView(form, gridName));
                         InvokeGridCellContextMenuItem(form, gridName, column, row, menuPath);
-                    else if (!string.IsNullOrEmpty(controlId) && FindControl<Control>(form, controlId) is SequenceTree)
+                    }
+                    else if (EnumerateControls(form).OfType<SequenceTree>().FirstOrDefault() is SequenceTree tree)
+                    {
+                        // The Targets tree has no caption to match; it is identified as the form's tree
+                        // (controlId is unused -- pass empty). Used for "Pick Children" etc.
+                        VerifyInteractable(tree);
                         InvokeTreeNodeContextMenuItem(menuPath);
+                    }
                     else
+                    {
+                        var zedGraph = form is DockableFormEx graph ? TryGetZedGraphControl(graph) : null;
+                        // Gate the graph control when there is one; otherwise still gate the form so a
+                        // modal block is reported before the "not a graph form" error.
+                        if (zedGraph != null)
+                            VerifyInteractable(zedGraph);
+                        else
+                            VerifyFormInteractable(form);
                         InvokeGraphContextMenuItem(form, menuPath);
+                    }
                 });
                 return true;
             });
@@ -477,7 +497,9 @@ namespace pwiz.Skyline.ToolsUI
             using (var menuStrip = new ContextMenuStrip())
             {
                 PopulateGraphContextMenu(zedGraph, menuStrip);
-                FindMenuItemIn(menuStrip.Items, menuPath).PerformClick();
+                var item = FindMenuItemIn(menuStrip.Items, menuPath);
+                VerifyEnabled(item);
+                item.PerformClick();
             }
         }
 
@@ -501,7 +523,9 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"The cell at column {0}, row {1} has no context menu.", column, row));
             RaiseProtectedHandler(menuStrip, @"OnOpening", new CancelEventArgs());
-            FindMenuItemIn(menuStrip.Items, menuPath).PerformClick();
+            var item = FindMenuItemIn(menuStrip.Items, menuPath);
+            VerifyEnabled(item);
+            item.PerformClick();
         }
 
         // Invokes an item on the Targets tree's right-click context menu (e.g. "Pick Children", which
@@ -592,6 +616,10 @@ namespace pwiz.Skyline.ToolsUI
             ValidateFormIdFormat(formId);
             if (TryGetNativeDialog(formId, out var dialog))
             {
+                if (!User32.IsWindowEnabled(dialog.WindowHandle))
+                    throw new InvalidOperationException(LlmInstruction.Format(
+                        @"Cannot interact with native dialog '{0}' because it is blocked.", formId));
+
                 if (IsCancelAction(button))
                     dialog.Cancel();
                 else
@@ -601,7 +629,14 @@ namespace pwiz.Skyline.ToolsUI
             // Resolve the click target on the UI thread, then act inside the dialog-watch so a dialog
             // the click pops is observed: a resulting alert is surfaced (throws its text) and a native
             // dialog (e.g. Save/Open) returns immediately rather than blocking on its modal.
-            var target = InvokeOnUiThread(() => FindClickTarget(formId, button));
+            var target = InvokeOnUiThread(() =>
+            {
+                var form = FindFormById(formId);
+                VerifyFormInteractable(form);
+                var clickTarget = FindClickTarget(formId, button);
+                VerifyClickTargetEnabled(clickTarget, button);
+                return clickTarget;
+            });
             RunWithDialogWatch(() =>
             {
                 if (target.ButtonHandle != IntPtr.Zero)
@@ -642,6 +677,29 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
+        // The target gate for a resolved click target -- ClickFormButton's union of possible targets.
+        // A Win32 button is held only as a handle (the managed control was already resolved away), so it
+        // is checked with IsWindowEnabled; every other case is a Control or ToolStripItem -> VerifyEnabled.
+        private static void VerifyClickTargetEnabled(ClickTarget target, string requested)
+        {
+            if (target.ButtonHandle != IntPtr.Zero)
+            {
+                if (!User32.IsWindowEnabled(target.ButtonHandle))
+                    throw new InvalidOperationException(LlmInstruction.Format(
+                        @"Control '{0}' is disabled.", requested));
+            }
+            else if (target.ToolStripItem != null)
+                VerifyEnabled(target.ToolStripItem);
+            else if (target.TabPage != null)
+                VerifyEnabled(target.TabPage);
+            else if (target.CheckedList != null)
+                VerifyEnabled(target.CheckedList);
+            else if (target.Clickable is Control clickableControl)
+                VerifyEnabled(clickableControl);
+            else if (target.Control != null)
+                VerifyEnabled(target.Control);
+        }
+
         // Toggles the checked state of one item in a CheckedListBox. SetItemChecked raises ItemCheck --
         // the same event a user's click raises -- so any handler keyed on the selection stays in sync.
         // Must run on the UI thread.
@@ -673,7 +731,12 @@ namespace pwiz.Skyline.ToolsUI
             // surfaced/returned rather than blocking.
             RunWithDialogWatch(() =>
             {
-                InvokeOnUiThread(() => FindAndClickToolStripItem(formId, menuPath));
+                InvokeOnUiThread(() =>
+                {
+                    var form = FindFormById(formId);
+                    VerifyFormInteractable(form);
+                    FindAndClickToolStripItem(formId, menuPath);
+                });
                 return true;
             });
         }
@@ -699,6 +762,7 @@ namespace pwiz.Skyline.ToolsUI
                         if (!(current is ToolStripDropDownItem dropDownItem))
                             throw new ArgumentException(LlmInstruction.Format(
                                 @"Toolbar item '{0}' on form {1} is not a dropdown.", segments[i - 1], formId));
+                        VerifyEnabled(dropDownItem);
                         // Show the dropdown so items built on DropDownOpening are present.
                         dropDownItem.ShowDropDown();
                         opened.Add(dropDownItem);
@@ -710,6 +774,8 @@ namespace pwiz.Skyline.ToolsUI
                             @"Toolbar item not found on form {0}: {1} (no match for '{2}').",
                             formId, menuPath, segments[i]));
                 }
+
+                VerifyEnabled(current);
                 current.PerformClick();
             }
             finally
@@ -724,10 +790,10 @@ namespace pwiz.Skyline.ToolsUI
         // pick-list's green-check OK button) it falls back to the tooltip, which is how a user reads it.
         private static ControlMatchQuality ToolStripMatchQuality(ToolStripItem item, string key)
         {
-            var quality = MatchQuality(item.Name, item.Text, key);
+            var quality = MatchQuality(item.Text, key);
             if (string.IsNullOrEmpty(item.Text))
             {
-                var tipQuality = MatchQuality(null, item.ToolTipText, key);
+                var tipQuality = MatchQuality(item.ToolTipText, key);
                 if (tipQuality > quality)
                     quality = tipQuality;
             }
@@ -770,6 +836,10 @@ namespace pwiz.Skyline.ToolsUI
                 ValidateFormIdFormat(formId);
                 if (TryGetNativeDialog(formId, out var dialog))
                 {
+                    if (!User32.IsWindowEnabled(dialog.WindowHandle))
+                        throw new InvalidOperationException(LlmInstruction.Format(
+                            @"Cannot interact with native dialog '{0}' because it is blocked.", formId));
+
                     if (!(dialog is FileDialogAutomation fileDialog))
                         throw new ArgumentException(LlmInstruction.Format(
                             @"Setting values is not supported for native dialog {0}.", formId));
@@ -779,9 +849,11 @@ namespace pwiz.Skyline.ToolsUI
                 InvokeOnUiThread(() =>
                 {
                     var form = FindFormById(formId);
+
                     // controlId can name a grid cell ("grid[column,row]") -- set that cell's value.
                     if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
                     {
+                        VerifyInteractable(GetGridView(form, gridName));
                         SetGridCellValue(form, gridName, column, row, value);
                         return;
                     }
@@ -799,6 +871,8 @@ namespace pwiz.Skyline.ToolsUI
                                 @"'{0}' on form {1} is a label with no editable field after it in tab order.",
                                 controlId, formId));
                     }
+
+                    VerifyInteractable(control);
                     SetControlValue(control, value);
                 });
             });
@@ -819,7 +893,15 @@ namespace pwiz.Skyline.ToolsUI
             {
                 InvokeOnUiThread(() =>
                 {
-                    var target = FindGrid(FindFormById(formId), controlId);
+                    var form = FindFormById(formId);
+
+                    var target = FindGrid(form, controlId);
+                    var gridView = target.Databound != null ? target.Databound.DataGridView : target.DataGridView;
+                    if (gridView != null)
+                        VerifyInteractable(gridView);
+                    else
+                        VerifyFormInteractable(form);
+
                     if (target.Databound != null)
                         PasteGridText(target.Databound, column, row, text ?? string.Empty);
                     else
@@ -846,15 +928,16 @@ namespace pwiz.Skyline.ToolsUI
             var targets = EnumerateGridTargets(form).ToList();
             if (!string.IsNullOrEmpty(controlId))
             {
-                var named = targets
-                    .Select(target => new { target, quality = MatchQuality(target.Name, null, controlId) })
-                    .Where(match => match.quality != ControlMatchQuality.None)
-                    .OrderByDescending(match => match.quality)
-                    .Select(match => match.target)
-                    .FirstOrDefault();
+                // A grid carries no visible caption, so on a form with several grids its control name is
+                // the only stable way to choose one. This is the lone place the connector matches by
+                // name (MatchQuality otherwise matches visible text only); pass an empty controlId when
+                // the form has a single grid.
+                var named = targets.FirstOrDefault(target =>
+                    string.Equals(target.Name, controlId, StringComparison.OrdinalIgnoreCase));
                 if (named == null)
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"Grid not found on form {0}: {1}.", GetFormId(form), controlId));
+                        @"Grid not found on form {0}: {1}. Pass an empty controlId for the form's single grid.",
+                        GetFormId(form), controlId));
                 return named;
             }
             if (targets.Count == 0)
@@ -1061,10 +1144,13 @@ namespace pwiz.Skyline.ToolsUI
                     // PickListChoice.Chosen, not a CheckedListBox; match the item by its visible label.
                     if (form is PopupPickList pickList)
                     {
+                        VerifyInteractable(pickList);
                         pickList.SetItemChecked(FindPickListIndex(pickList, item), isChecked);
                         return;
                     }
                     var control = FindListOrTreeControl(form, controlId);
+                    VerifyInteractable(control);
+
                     switch (control)
                     {
                         case CheckedListBox checkedListBox:
@@ -1097,7 +1183,10 @@ namespace pwiz.Skyline.ToolsUI
             {
                 InvokeOnUiThread(() =>
                 {
-                    var control = FindListOrTreeControl(FindFormById(formId), controlId);
+                    var form = FindFormById(formId);
+                    var control = FindListOrTreeControl(form, controlId);
+                    VerifyInteractable(control);
+
                     switch (control)
                     {
                         case ListBox listBox: // CheckedListBox derives from ListBox
@@ -1165,7 +1254,7 @@ namespace pwiz.Skyline.ToolsUI
             var bestQuality = ControlMatchQuality.None;
             for (int i = 0; i < labels.Count; i++)
             {
-                var quality = MatchQuality(null, labels[i], item);
+                var quality = MatchQuality(labels[i], item);
                 if (quality > bestQuality)
                 {
                     best = i;
@@ -1185,7 +1274,7 @@ namespace pwiz.Skyline.ToolsUI
             var bestQuality = ControlMatchQuality.None;
             for (int i = 0; i < listBox.Items.Count; i++)
             {
-                var quality = MatchQuality(null, listBox.GetItemText(listBox.Items[i]), item);
+                var quality = MatchQuality(listBox.GetItemText(listBox.Items[i]), item);
                 if (quality > bestQuality)
                 {
                     best = i;
@@ -1205,7 +1294,7 @@ namespace pwiz.Skyline.ToolsUI
             var bestQuality = ControlMatchQuality.None;
             foreach (ListViewItem listViewItem in listView.Items)
             {
-                var quality = MatchQuality(listViewItem.Name, listViewItem.Text, item);
+                var quality = MatchQuality(listViewItem.Text, item);
                 if (quality > bestQuality)
                 {
                     best = listViewItem;
@@ -1248,7 +1337,7 @@ namespace pwiz.Skyline.ToolsUI
             var bestQuality = ControlMatchQuality.None;
             foreach (TreeNode node in nodes)
             {
-                var quality = MatchQuality(node.Name, node.Text, key);
+                var quality = MatchQuality(node.Text, key);
                 if (quality > bestQuality)
                 {
                     best = node;
@@ -1734,6 +1823,72 @@ namespace pwiz.Skyline.ToolsUI
                 formId));
         }
 
+        // Guards that the connector never does anything a user could not. Two concerns make a target
+        // interactable: (1) no modal dialog is blocking its window, and (2) the target itself is enabled.
+        // They are split into VerifyFormInteractable (the form/modal gate) and VerifyEnabled (the target
+        // gate); VerifyInteractable(control) combines them for the common single-control case so a verb
+        // has one obvious call and cannot enforce only half. Every verb routes through these helpers
+        // rather than re-checking inline. Must run on the UI thread (the modal check reads a window handle).
+
+        // The form gate: throws if a modal dialog is blocking the form's window, or the form is disabled.
+        // The modal check must use the Win32 enabled state of the TOP-LEVEL window (e.g. the main window
+        // for a docked form): showing a modal dialog calls EnableWindow(false) on the other windows
+        // WITHOUT flipping their managed Control.Enabled, so a managed-only check would miss it.
+        private static void VerifyFormInteractable(Form form)
+        {
+            var topLevel = TopLevelFormOf(form);
+            if (!User32.IsWindowEnabled(topLevel.Handle))
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Cannot interact with form '{0}': a modal dialog is blocking it. Handle the open dialog first (see skyline_get_open_forms).",
+                    GetFormId(form)));
+
+            if (!form.Enabled)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Form '{0}' is disabled.", GetFormId(form)));
+        }
+
+        // The single chokepoint for a verb that acts on one resolved control: gate the control's form
+        // (modal/disabled) AND the control itself (Control.Enabled also reflects a disabled ancestor).
+        private static void VerifyInteractable(Control target)
+        {
+            var form = target.FindForm();
+            if (form != null)
+                VerifyFormInteractable(form);
+            VerifyEnabled(target);
+        }
+
+        // The target gate for a control: throws if it (or, via Control.Enabled, an ancestor) is disabled.
+        private static void VerifyEnabled(Control control)
+        {
+            if (!control.Enabled)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Control '{0}' is disabled.", control.Name));
+        }
+
+        // The target gate for a menu/toolbar item (a ToolStripItem is not a Control).
+        private static void VerifyEnabled(ToolStripItem item)
+        {
+            if (!item.Enabled)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Menu or toolbar item '{0}' is disabled.",
+                    string.IsNullOrEmpty(item.Text) ? item.Name : item.Text));
+        }
+
+        // The top-level form hosting a control (e.g. the main window for a docked form). FindForm on a
+        // form returns itself, so each step goes through Parent first to climb past the current form.
+        private static Form TopLevelFormOf(Control control)
+        {
+            var form = control as Form ?? control.FindForm();
+            while (form?.Parent != null)
+            {
+                var parentForm = form.Parent.FindForm();
+                if (parentForm == null)
+                    break;
+                form = parentForm;
+            }
+            return form;
+        }
+
         // --- Generic form interaction helpers ---
 
         // Walks the main menu by path (segments split on '>', '|', '/'), matching each segment by
@@ -1866,7 +2021,7 @@ namespace pwiz.Skyline.ToolsUI
                 for (int i = 0; i < checkedList.Items.Count; i++)
                 {
                     int index = i; // capture a stable value for the closure
-                    Consider(MatchQuality(null, checkedList.GetItemText(checkedList.Items[index]), button),
+                    Consider(MatchQuality(checkedList.GetItemText(checkedList.Items[index]), button),
                         interactable,
                         () => new ClickTarget { CheckedList = checkedList, CheckedListItemIndex = index });
                 }
@@ -1968,29 +2123,49 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // How well a control matches a requested name/label. Higher is better; callers prefer the
-        // best match in the form and accept a weaker one only when nothing matches better.
+        // How well a control matches a requested label. Higher is better; callers prefer the best match
+        // in the form and accept a weaker one only when nothing matches better.
         private enum ControlMatchQuality
         {
             None = 0,     // no match
-            Stripped = 1, // matched only after ignoring non-alphanumeric symbols ("Next" == "Next >")
-            Exact = 2,    // matched on control name, or on visible text after light normalization
+            Type = 1,     // matched the control's type name ("ListView"/"TreeView") -- a last resort for a
+                          // caption-less control that no visible text identifies; any text match wins.
+            Stripped = 2, // matched the visible text after ignoring non-alphanumeric symbols ("Next" == "Next >")
+            Exact = 3,    // matched the visible text after light normalization
         }
 
         private static ControlMatchQuality ControlMatches(Control control, string key)
         {
-            return MatchQuality(control.Name, control.Text, key);
+            var quality = MatchQuality(control.Text, key);
+            // A caption-less control (e.g. an unlabeled list/tree) has no visible text to match, so allow
+            // referring to it by what KIND of control it is -- the weakest match, below any text match.
+            if (quality == ControlMatchQuality.None && MatchesControlType(control, key))
+                return ControlMatchQuality.Type;
+            return quality;
         }
 
-        // Match quality of a control/item with the given name and visible text against a requested key.
-        // Used for both WinForms controls and ToolStripItems (which are not Controls but have the same
-        // Name/Text pair).
-        private static ControlMatchQuality MatchQuality(string name, string text, string key)
+        // True if key names the control's type or any of its base types -- so "ListView" matches a
+        // ColumnListView and "TreeView" an AvailableFieldsTree. Lets a caption-less control be referred
+        // to by its kind. Stops at Control: a key like "Control"/"UserControl" is too broad to be useful.
+        private static bool MatchesControlType(Control control, string key)
         {
-            // Best: the stable control name, or the visible text after light normalization (mnemonic
-            // '&' and a trailing ellipsis/period removed -- see NormalizeLabel).
-            if (string.Equals(name, key, StringComparison.OrdinalIgnoreCase)
-                || string.Equals(NormalizeLabel(text), NormalizeLabel(key), StringComparison.CurrentCultureIgnoreCase))
+            for (var type = control.GetType(); type != null && type != typeof(Control); type = type.BaseType)
+                if (string.Equals(type.Name, key, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
+        }
+
+        // Match quality of a control/item against a requested key, by VISIBLE TEXT only -- the connector
+        // deliberately does not match on the internal control Name, so a step refers to a control the way
+        // a user sees it (its caption, or the label that names it -- see the label->field resolution in
+        // SetFormValue/FindListOrTreeControl). A control with no caption (e.g. a text box) is reached via
+        // its label; a grid, which has no caption at all, is the lone exception (matched by name in
+        // FindGrid). Used for WinForms controls, ToolStripItems, list items, and tree nodes alike.
+        private static ControlMatchQuality MatchQuality(string text, string key)
+        {
+            // Best: the visible text after light normalization (mnemonic '&' and a trailing
+            // ellipsis/period removed -- see NormalizeLabel).
+            if (string.Equals(NormalizeLabel(text), NormalizeLabel(key), StringComparison.CurrentCultureIgnoreCase))
                 return ControlMatchQuality.Exact;
             // Fallback: ignore every non-alphanumeric character, so a tutorial's "Next" matches a
             // button captioned "Next >" (and "Back" a "< Back"). Used only when nothing matches exactly.

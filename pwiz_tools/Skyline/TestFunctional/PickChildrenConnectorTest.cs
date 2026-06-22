@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(SequenceTreeForm)).Id;
 
             // Select the precursor node; Pick Children acts on the selection, so the node must be in it.
-            JsonUiService.SetItemSelected(treeFormId, @"sequenceTree", precursorPath, true);
+            JsonUiService.SetItemSelected(treeFormId, string.Empty, precursorPath, true);
             RunUI(() =>
             {
                 Assert.IsTrue(precursorNode.IsInSelection, @"Precursor node was not put into the selection.");
@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => transitionsBefore = SkylineWindow.Document.MoleculeTransitionCount);
 
             // Right-click > Pick Children opens the (modeless) pick-list popup.
-            JsonUiService.InvokeContextMenuItem(treeFormId, @"sequenceTree", @"Pick Children");
+            JsonUiService.InvokeContextMenuItem(treeFormId, string.Empty, @"Pick Children");
             var popup = WaitForOpenForm<PopupPickList>();
             string popupId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(PopupPickList)).Id;
