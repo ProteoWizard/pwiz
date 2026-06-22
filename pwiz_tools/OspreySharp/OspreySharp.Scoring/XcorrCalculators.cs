@@ -34,7 +34,7 @@ namespace pwiz.OspreySharp.Scoring
     /// no Savitzky-Golay sweep, no shared byproduct.
     ///
     /// INDEX TRAP: this feature indexes the preprocessed cache at the WINDOW-GLOBAL
-    /// apex index (<see cref="IOspreyDetailedPeakData.ApexGlobalIndex"/> =
+    /// apex index (<see cref="IOspreyApexSpectrumPeakData.ApexGlobalIndex"/> =
     /// WindowStartIndex + candidate-local apex). It is a DIFFERENT index space from
     /// the SG sweep (features 17/18), which bound-checks a candidate-local index
     /// against WindowLength before mapping to global. Do not unify the two.
@@ -50,11 +50,11 @@ namespace pwiz.OspreySharp.Scoring
     /// allocation. This family is the perf gate -- keep the pool on the call.
     /// Mirrors inline AbstractScoringTask.cs apex xcorr.
     /// </summary>
-    internal sealed class XcorrCalc : DetailedOspreyFeatureCalculator
+    internal sealed class XcorrCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "xcorr"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             // Single apex-spectrum xcorr via the resolution strategy. The Spectrum
             // arg is passed for fidelity with the inline call; the Unit/HRAM cache
@@ -114,7 +114,7 @@ namespace pwiz.OspreySharp.Scoring
         public double SgXcorr;   // feature 17
         public double SgCosine;  // feature 18
 
-        public static SgWeightedSweep GetOrCompute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        public static SgWeightedSweep GetOrCompute(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             if (context.TryGetInfo(out SgWeightedSweep sweep))
                 return sweep;
@@ -123,7 +123,7 @@ namespace pwiz.OspreySharp.Scoring
             return sweep;
         }
 
-        private static SgWeightedSweep Compute(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        private static SgWeightedSweep Compute(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             var sweep = new SgWeightedSweep();
 
@@ -133,21 +133,18 @@ namespace pwiz.OspreySharp.Scoring
             var pool = context.XcorrScratchPool;
             var config = context.Config;
             var candidate = peakData.Candidate;
-            var windowSpectra = peakData.WindowSpectra;
-            int startScan = peakData.WindowStartIndex;
-            int rangeLen = peakData.WindowLength;
-            int apexLocal = peakData.ApexLocalIndex;
 
             double sgXcorr = 0.0;
             double sgCosine = 0.0;
             for (int offset = -2; offset <= 2; offset++)
             {
                 double weight = SG_WEIGHTS[offset + 2];
-                int candIdx = apexLocal + offset;
-                if (candIdx < 0 || candIdx >= rangeLen)
+                // The bounded apex+/-N accessor owns the candidate-local ->
+                // window-global index mapping and the asymmetric edge skip: it
+                // returns false when apex+offset falls outside the scoring range, so
+                // out-of-range offsets contribute nothing (no renormalization).
+                if (!peakData.TryGetApexOffsetSpectrum(offset, out var s, out int globalIdx))
                     continue;
-                int globalIdx = startScan + candIdx;
-                var s = windowSpectra[globalIdx];
                 sgXcorr += resolution.ScoreXcorr(preprocessedXcorr, globalIdx, s, candidate, scorer,
                     pool) * weight;
                 sgCosine += ComputeCosineAtScan(candidate, s, config) * weight;
@@ -241,11 +238,11 @@ namespace pwiz.OspreySharp.Scoring
     /// the apex+/-2 spectra are scanned once. See <see cref="SgWeightedSweep"/> for
     /// the index trap, asymmetric boundary skip, and accumulation-order hazards.
     /// </summary>
-    internal sealed class SgXcorrCalc : DetailedOspreyFeatureCalculator
+    internal sealed class SgXcorrCalc : ApexSpectraOspreyFeatureCalculator
     {
         public override string Name { get { return "sg_weighted_xcorr"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             return SgWeightedSweep.GetOrCompute(context, peakData).SgXcorr;
         }
@@ -259,11 +256,11 @@ namespace pwiz.OspreySharp.Scoring
     /// byproduct. See <see cref="SgWeightedSweep"/> for the index trap, asymmetric
     /// boundary skip, accumulation-order, and tie-break hazards.
     /// </summary>
-    internal sealed class SgCosineCalc : DetailedOspreyFeatureCalculator
+    internal sealed class SgCosineCalc : ApexSpectraOspreyFeatureCalculator
     {
         public override string Name { get { return "sg_weighted_cosine"; } }
 
-        protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
+        protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             return SgWeightedSweep.GetOrCompute(context, peakData).SgCosine;
         }

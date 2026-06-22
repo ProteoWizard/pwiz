@@ -62,7 +62,7 @@ namespace pwiz.OspreySharp.Tasks
     /// instance properties for FirstJoinTask + downstream tasks to
     /// consume after this one completes successfully.
     /// </summary>
-    internal sealed class PerFileScoringTask : AbstractScoringTask
+    internal sealed class PerFileScoringTask : OspreyTask
     {
 
         public override string Name => @"PerFileScoring";
@@ -577,16 +577,7 @@ namespace pwiz.OspreySharp.Tasks
             bool librarySuppliesDecoys = config.DecoysInLibrary ||
                 config.DecoyMethod == DecoyMethod.FromLibrary;
             if (librarySuppliesDecoys)
-            {
-                LibraryDecoyMarker.ApplyLibraryDecoyMarking(
-                    library, config.DecoyPrefixes, out var markingStats);
-                ctx.LogInfo(string.Format(
-                    @"Library-decoy mode: matched prefixes {0}",
-                    FormatPrefixList(config.DecoyPrefixes)));
-                ctx.LogInfo(string.Format(
-                    @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
-                    markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
-            }
+                MarkSuppliedDecoys(library, config, ctx);
 
             int nLibraryTargets = 0;
             foreach (var entry in library)
@@ -624,129 +615,8 @@ namespace pwiz.OspreySharp.Tasks
             else
             {
                 decoys = new List<LibraryEntry>();
-
-                // Match Rust pipeline.rs at v26.6.0 (bcd7249): the
-                // "no decoys at all" check runs BEFORE manifest
-                // application. The manifest CAN flip predictor-stripped
-                // entries to IsDecoy=true (the Carafe failure mode commit
-                // d23d496 was built for), so this ordering means a
-                // manifest cannot rescue a load that the prefix scan
-                // misses entirely. TODO(brendanmaclean,maccoss): discuss
-                // with Mike whether this should be relaxed to defer the
-                // check until after manifest application; current C#
-                // ordering matches Rust v26.6.0 for byte parity on the
-                // cross-impl Test-Regression gate.
-                int nLibraryDecoys = library.Count - nLibraryTargets;
-                if (nLibraryDecoys == 0)
-                {
-                    ctx.LogError(string.Format(
-                        @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
-                        @"Check that the library actually contains decoys with one of these prefixes on " +
-                        @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
-                        FormatPrefixList(config.DecoyPrefixes)));
-                    ctx.ExitCode = 1;
+                if (!TryPairSuppliedDecoys(library, config, nLibraryTargets, ctx))
                     return false;
-                }
-
-                // Pair each decoy with its target so their base_ids match
-                // -- required for SVM target-decoy competition, LDA
-                // calibration, and CV fold grouping. Hybrid path:
-                // manifest first when provided (exact pairs from
-                // FDRBench), composition fallback for whatever the
-                // manifest doesn't cover. Net result on real Carafe-
-                // generated entrapment libraries: ~30% via manifest,
-                // ~70% via composition, >99% total.
-                var pairingState = new PairingState();
-                LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                    out int nTargetsForStats, out int nDecoysForStats);
-                var pairingStats = new PairingStats
-                {
-                    NTargets = nTargetsForStats,
-                    NDecoys = nDecoysForStats,
-                };
-                if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
-                {
-                    ctx.LogInfo(string.Format(
-                        @"Loading decoy pairing manifest from {0}",
-                        config.DecoyPairingManifestPath));
-                    DecoyPairingManifest manifest;
-                    try
-                    {
-                        manifest = DecoyPairingManifest.FromTsv(
-                            config.DecoyPairingManifestPath);
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogError(string.Format(
-                            @"Failed to read decoy pairing manifest {0}: {1}",
-                            config.DecoyPairingManifestPath, ex.Message));
-                        ctx.ExitCode = 1;
-                        return false;
-                    }
-                    var manifestStats = manifest.ApplyToLibrary(library, pairingState);
-                    pairingStats.NPairedViaManifest = manifestStats.NPaired;
-                    if (manifestStats.NProteinsReplaced > 0)
-                    {
-                        ctx.LogInfo(string.Format(
-                            @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
-                            @"entries (clean source-protein accessions from the manifest's " +
-                            @"`proteins` column)",
-                            manifestStats.NProteinsReplaced));
-                    }
-                    if (manifestStats.NNewlyMarkedDecoy > 0)
-                    {
-                        // Manifest classified entries as decoy that were
-                        // loaded as targets (the predictor stripped the
-                        // decoy prefix). Update the decoy count so the
-                        // pairing fraction is honest.
-                        ctx.LogInfo(string.Format(
-                            @"Library-decoy mode: manifest classified {0} additional library " +
-                            @"entries as decoys (their protein accessions lacked a decoy prefix)",
-                            manifestStats.NNewlyMarkedDecoy));
-                        LibraryDecoyPairing.CountTargetsAndDecoys(library,
-                            out nTargetsForStats, out nDecoysForStats);
-                        pairingStats.NTargets = nTargetsForStats;
-                        pairingStats.NDecoys = nDecoysForStats;
-                    }
-                }
-                else
-                {
-                    ctx.LogInfo(
-                        @"Pairing library decoys to targets by amino-acid composition " +
-                        @"(no manifest provided).");
-                }
-                pairingStats.NPairedViaComposition =
-                    LibraryDecoyPairing.PairLibraryDecoysByComposition(
-                        library, config.DecoyPrefixes, pairingState);
-                pairingStats.NPaired = pairingStats.NPairedViaManifest +
-                    pairingStats.NPairedViaComposition;
-                // Defense-in-depth saturating subtract (matches Rust's
-                // saturating_sub intent; not load-bearing).
-                pairingStats.NUnpairedDecoys = Math.Max(0,
-                    pairingStats.NDecoys - pairingStats.NPaired);
-                pairingStats.NUnpairedTargets = Math.Max(0,
-                    pairingStats.NTargets - pairingState.ClaimedTargets.Count);
-                ctx.LogInfo(string.Format(
-                    @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
-                    @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
-                    pairingStats.NPaired, pairingStats.NDecoys,
-                    pairingStats.PairedFraction * 100.0,
-                    pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
-                    pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
-                if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
-                {
-                    ctx.LogError(string.Format(
-                        @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
-                        @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
-                        @"target-decoy competition. Either supply a pairing manifest, ensure the " +
-                        @"library uses matching protein accessions with one of `decoy_prefixes` " +
-                        @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
-                        pairingStats.PairedFraction * 100.0,
-                        config.DecoyPairMinFraction * 100.0,
-                        FormatPrefixList(config.DecoyPrefixes)));
-                    ctx.ExitCode = 1;
-                    return false;
-                }
             }
             swLibrary.Stop();
             double totalSec = swLibrary.Elapsed.TotalSeconds;
@@ -787,6 +657,160 @@ namespace pwiz.OspreySharp.Tasks
 
             _fullLibrary = fullLibrary;
             _libraryById = libraryById;
+            return true;
+        }
+
+        /// <summary>
+        /// When the library supplies its own decoys (DIA-NN / EncyclopeDIA
+        /// output with rev_ / DECOY_ prefixes), mark them in place by Decoy
+        /// column / protein-accession prefix. DecoyMethod.FromLibrary is treated
+        /// as a synonym for DecoysInLibrary -- historically it silently fell
+        /// through to Reverse generation, the bug behind v26.5.3's library-decoy
+        /// mode being effectively unusable. Marking runs BEFORE the target count
+        /// is taken so the count reflects post-marking state and matches Rust
+        /// pipeline.rs.
+        /// </summary>
+        private void MarkSuppliedDecoys(List<LibraryEntry> library, OspreyConfig config, PipelineContext ctx)
+        {
+            LibraryDecoyMarker.ApplyLibraryDecoyMarking(
+                library, config.DecoyPrefixes, out var markingStats);
+            ctx.LogInfo(string.Format(
+                @"Library-decoy mode: matched prefixes {0}",
+                FormatPrefixList(config.DecoyPrefixes)));
+            ctx.LogInfo(string.Format(
+                @"[COUNT] Library-decoy mode: {0} flagged ({1} via Decoy column, {2} via protein-accession prefix)",
+                markingStats.NMarked, markingStats.NViaColumn, markingStats.NViaPrefix));
+        }
+
+        /// <summary>
+        /// Library-supplied-decoy path: confirm the library actually contains
+        /// decoys, then pair each decoy with its target so their base_ids match
+        /// -- required for SVM target-decoy competition, LDA calibration, and CV
+        /// fold grouping. Hybrid: manifest first when provided (exact pairs from
+        /// FDRBench), amino-acid composition fallback for the remainder. Returns
+        /// false (with <see cref="PipelineContext.ExitCode"/> set) when there
+        /// are no decoys at all, the pairing manifest is unreadable, or the
+        /// paired fraction is below <c>config.DecoyPairMinFraction</c>.
+        /// </summary>
+        private bool TryPairSuppliedDecoys(
+            List<LibraryEntry> library, OspreyConfig config, int nLibraryTargets, PipelineContext ctx)
+        {
+            // Match Rust pipeline.rs at v26.6.0 (bcd7249): the
+            // "no decoys at all" check runs BEFORE manifest
+            // application. The manifest CAN flip predictor-stripped
+            // entries to IsDecoy=true (the Carafe failure mode commit
+            // d23d496 was built for), so this ordering means a
+            // manifest cannot rescue a load that the prefix scan
+            // misses entirely. TODO(brendanmaclean,maccoss): discuss
+            // with Mike whether this should be relaxed to defer the
+            // check until after manifest application; current C#
+            // ordering matches Rust v26.6.0 for byte parity on the
+            // cross-impl Test-Regression gate.
+            int nLibraryDecoys = library.Count - nLibraryTargets;
+            if (nLibraryDecoys == 0)
+            {
+                ctx.LogError(string.Format(
+                    @"decoys_in_library mode requested but no library entries match prefixes {0}. " +
+                    @"Check that the library actually contains decoys with one of these prefixes on " +
+                    @"a protein accession, or unset decoys_in_library so Osprey generates decoys.",
+                    FormatPrefixList(config.DecoyPrefixes)));
+                ctx.ExitCode = 1;
+                return false;
+            }
+
+            // Hybrid pairing. Net result on real Carafe-generated entrapment
+            // libraries: ~30% via manifest, ~70% via composition, >99% total.
+            var pairingState = new PairingState();
+            LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                out int nTargetsForStats, out int nDecoysForStats);
+            var pairingStats = new PairingStats
+            {
+                NTargets = nTargetsForStats,
+                NDecoys = nDecoysForStats,
+            };
+            if (!string.IsNullOrEmpty(config.DecoyPairingManifestPath))
+            {
+                ctx.LogInfo(string.Format(
+                    @"Loading decoy pairing manifest from {0}",
+                    config.DecoyPairingManifestPath));
+                DecoyPairingManifest manifest;
+                try
+                {
+                    manifest = DecoyPairingManifest.FromTsv(
+                        config.DecoyPairingManifestPath);
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogError(string.Format(
+                        @"Failed to read decoy pairing manifest {0}: {1}",
+                        config.DecoyPairingManifestPath, ex.Message));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
+                var manifestStats = manifest.ApplyToLibrary(library, pairingState);
+                pairingStats.NPairedViaManifest = manifestStats.NPaired;
+                if (manifestStats.NProteinsReplaced > 0)
+                {
+                    ctx.LogInfo(string.Format(
+                        @"Library-decoy mode: manifest replaced protein_ids on {0} library " +
+                        @"entries (clean source-protein accessions from the manifest's " +
+                        @"`proteins` column)",
+                        manifestStats.NProteinsReplaced));
+                }
+                if (manifestStats.NNewlyMarkedDecoy > 0)
+                {
+                    // Manifest classified entries as decoy that were
+                    // loaded as targets (the predictor stripped the
+                    // decoy prefix). Update the decoy count so the
+                    // pairing fraction is honest.
+                    ctx.LogInfo(string.Format(
+                        @"Library-decoy mode: manifest classified {0} additional library " +
+                        @"entries as decoys (their protein accessions lacked a decoy prefix)",
+                        manifestStats.NNewlyMarkedDecoy));
+                    LibraryDecoyPairing.CountTargetsAndDecoys(library,
+                        out nTargetsForStats, out nDecoysForStats);
+                    pairingStats.NTargets = nTargetsForStats;
+                    pairingStats.NDecoys = nDecoysForStats;
+                }
+            }
+            else
+            {
+                ctx.LogInfo(
+                    @"Pairing library decoys to targets by amino-acid composition " +
+                    @"(no manifest provided).");
+            }
+            pairingStats.NPairedViaComposition =
+                LibraryDecoyPairing.PairLibraryDecoysByComposition(
+                    library, config.DecoyPrefixes, pairingState);
+            pairingStats.NPaired = pairingStats.NPairedViaManifest +
+                pairingStats.NPairedViaComposition;
+            // Defense-in-depth saturating subtract (matches Rust's
+            // saturating_sub intent; not load-bearing).
+            pairingStats.NUnpairedDecoys = Math.Max(0,
+                pairingStats.NDecoys - pairingStats.NPaired);
+            pairingStats.NUnpairedTargets = Math.Max(0,
+                pairingStats.NTargets - pairingState.ClaimedTargets.Count);
+            ctx.LogInfo(string.Format(
+                @"Library-decoy pairing: paired {0}/{1} decoys ({2:F1}%); " +
+                @"manifest={3}, composition={4}; {5} unpaired decoys, {6} unpaired targets",
+                pairingStats.NPaired, pairingStats.NDecoys,
+                pairingStats.PairedFraction * 100.0,
+                pairingStats.NPairedViaManifest, pairingStats.NPairedViaComposition,
+                pairingStats.NUnpairedDecoys, pairingStats.NUnpairedTargets));
+            if (pairingStats.PairedFraction < config.DecoyPairMinFraction)
+            {
+                ctx.LogError(string.Format(
+                    @"Library-decoy pairing failed: only {0:F1}% of decoys paired with a target " +
+                    @"(threshold: {1:F0}%). FDR estimates would be unreliable without proper " +
+                    @"target-decoy competition. Either supply a pairing manifest, ensure the " +
+                    @"library uses matching protein accessions with one of `decoy_prefixes` " +
+                    @"({2}), or unset `decoys_in_library` so Osprey generates its own decoys.",
+                    pairingStats.PairedFraction * 100.0,
+                    config.DecoyPairMinFraction * 100.0,
+                    FormatPrefixList(config.DecoyPrefixes)));
+                ctx.ExitCode = 1;
+                return false;
+            }
             return true;
         }
 
@@ -993,8 +1017,7 @@ namespace pwiz.OspreySharp.Tasks
             PipelineContext ctx)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-            if (File.Exists(scoresPath)
-                && TaskValiditySidecar.IsValid(scoresPath, Name, validityKey))
+            if (PerFileResumeDriver.IsCurrent(scoresPath, Name, validityKey))
             {
                 var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx);
                 if (loaded != null)
@@ -1012,21 +1035,12 @@ namespace pwiz.OspreySharp.Tasks
                 fileIdx + 1, totalFiles, inputFile));
             // Clear stale sidecar so a mid-ProcessFile crash leaves no
             // false-positive sidecar on the next invocation.
-            TaskValiditySidecar.Delete(scoresPath, Name);
+            PerFileResumeDriver.ClearStale(scoresPath, Name);
             var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, ctx);
             if (fileResult != null)
             {
-                try
-                {
-                    TaskValiditySidecar.Write(scoresPath, Name, OspreyVersion.Current,
-                        validityKey, new[] { inputFile });
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        @"  Failed to write {0} sidecar for {1}: {2}",
-                        Name, scoresPath, ex.Message));
-                }
+                PerFileResumeDriver.Stamp(scoresPath, Name, OspreyVersion.Current,
+                    validityKey, new[] { inputFile }, ctx.LogWarning);
             }
             return fileResult;
         }
@@ -1194,15 +1208,158 @@ namespace pwiz.OspreySharp.Tasks
                 fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
 
             // Extract isolation windows from spectra
-            var isolationWindows = ExtractIsolationWindows(spectra);
+            var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
             ctx.LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
             ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
 
-            // RT calibration
+            // Resolve the per-file calibration (load a cached/Rust JSON or
+            // compute via Calibrator) and persist the calibration JSON.
+            RTCalibration rtCalibration = ResolveCalibration(
+                inputFile, fileName, fullLibrary, spectra, ms1Spectra,
+                context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal, ctx);
+
+            // Optional early exit after Stage 3 (calibration only, no main search).
+            // Used for Stage 1-3 perf benchmarking and walking up to the main
+            // search incrementally without paying the Stage 4 cost.
+            if (OspreyEnvironment.ExitAfterCalibration)
+            {
+                ctx.LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
+                return new List<FdrEntry>();
+            }
+
+            // Surface the per-file calibration to Stage 6 reconciliation
+            // (multi-file runs only). Threaded calls share a
+            // ConcurrentDictionary; null on single-file paths that don't
+            // need cross-file consensus.
+            if (perFileCalibrationsOut != null && rtCalibration != null)
+                perFileCalibrationsOut[fileName] = rtCalibration;
+
+            // Run coelution scoring, then drop double-counted features and
+            // deduplicate target/decoy pairs per base_id. Extracted to
+            // ScoreAndDeduplicate so ProcessFile reads as a sequencer.
+            var scoredEntries = ScoreAndDeduplicate(
+                fullLibrary, spectra, ms1Spectra, isolationWindows,
+                rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
+
+            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
+            if (config.WritePin)
+            {
+                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
+            }
+
+            // Persist the full FdrEntry results (with features) to
+            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
+            // CWT candidates per file, and (b) a subsequent --task FirstJoin
+            // invocation can pick them up without re-running Stages 1-4.
+            // Same path convention as Rust (`scores_path_for_input`).
+            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
+            // as a Phase 4 follow-up. The metadata dictionary is precomputed
+            // in Run() against the original (un-mutated) outer config — see
+            // Run() for why. Skipped only in --task FirstJoin mode (no Stages 1-4
+            // ran here, so there is nothing fresh to persist).
+            if (parquetFooterMetadata != null)
+            {
+                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
+                // Reuse the entry-id -> LibraryEntry map Run() built once
+                // before the per-file fan-out (WriteScoresParquet needs
+                // it to pull sequence / precursor_mz / protein_ids from
+                // the library since FdrEntry doesn't carry these).
+                var swParquet = Stopwatch.StartNew();
+                ParquetScoreCache.WriteScoresParquet(
+                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
+                swParquet.Stop();
+                ctx.LogInfo(string.Format(
+                    "Wrote {0} scored entries to {1} ({2:F1}s)",
+                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+            }
+
+            return scoredEntries;
+        }
+
+        /// <summary>
+        /// Run coelution scoring across the isolation windows, then apply the two
+        /// dedup passes -- double-counting removal (different precursors latched
+        /// onto one chromatographic feature) and target/decoy pair-dedup per
+        /// base_id. Extracted from <see cref="ProcessFile"/> as pure code motion;
+        /// the parity-locked scoring + dedup cores are invoked whole.
+        /// </summary>
+        private List<FdrEntry> ScoreAndDeduplicate(
+            List<LibraryEntry> fullLibrary,
+            List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            List<IsolationWindow> isolationWindows,
+            RTCalibration rtCalibration,
+            MzCalibrationResult ms2Cal, MzCalibrationResult ms1Cal,
+            ScoringContext context, OspreyConfig config,
+            string fileName, PipelineContext ctx)
+        {
+            // Run coelution scoring across all isolation windows
+            var swScoring = Stopwatch.StartNew();
+            var scoredEntries = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
+                fullLibrary, spectra, ms1Spectra,
+                isolationWindows, rtCalibration,
+                ms2Cal, ms1Cal,
+                context);
+            swScoring.Stop();
+            double scoringSeconds = swScoring.Elapsed.TotalSeconds;
+            double ratePerSec = scoringSeconds > 0.001
+                ? scoredEntries.Count / scoringSeconds
+                : 0.0;
+            ctx.LogInfo(string.Format(
+                "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
+                scoringSeconds, scoredEntries.Count, ratePerSec));
+
+            int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
+            ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
+                scoredEntries.Count,
+                nScoredTargets,
+                nScoredDecoys,
+                fileName));
+
+            // Drop double-counted entries (different precursors that latch
+            // onto the same chromatographic feature within an isolation
+            // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
+            // same call site, between scoring and pair-deduplication.
+            scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicateDoubleCounting(
+                scoredEntries, fullLibrary, spectra, ms2Cal,
+                isolationWindows, config);
+            nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
+            nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
+            ctx.LogInfo(string.Format(
+                "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
+                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
+
+            // Deduplicate: keep best target and best decoy per base_id
+            int nBeforeDedup = scoredEntries.Count;
+            scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicatePairs(scoredEntries);
+            int nAfterDedup = scoredEntries.Count;
+            ctx.LogInfo(string.Format(
+                "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
+                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
+
+            return scoredEntries;
+        }
+
+        /// <summary>
+        /// Resolve the per-file RT/MS1/MS2 calibration: load a cached/Rust
+        /// calibration JSON when OSPREY_LOAD_CALIBRATION points at one, else
+        /// compute it via <see cref="Calibrator"/>; then persist the full
+        /// calibration JSON next to the input. Returns the RT calibration (null
+        /// when disabled / not computed); <paramref name="ms2Cal"/> and
+        /// <paramref name="ms1Cal"/> receive the mass calibrations (Uncalibrated
+        /// when none). Extracted from ProcessFile (pure code motion).
+        /// </summary>
+        private RTCalibration ResolveCalibration(
+            string inputFile, string fileName,
+            List<LibraryEntry> fullLibrary, List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            ScoringContext context, OspreyConfig config,
+            out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+            PipelineContext ctx)
+        {
             RTCalibration rtCalibration = null;
-            MzCalibrationResult ms2Cal = MzCalibrationResult.Uncalibrated();
-            MzCalibrationResult ms1Cal = MzCalibrationResult.Uncalibrated();
+            ms2Cal = MzCalibrationResult.Uncalibrated();
+            ms1Cal = MzCalibrationResult.Uncalibrated();
             // Total matches scored during pass 1 of calibration; threaded
             // into CalibrationMetadata.NumSampledPrecursors to match Rust's
             // accumulated_matches.len() (Stellar Single: 192289). Stays 0
@@ -1316,100 +1473,7 @@ namespace pwiz.OspreySharp.Tasks
                 ctx.LogInfo("Warning: failed to save calibration JSON: " + ex.Message);
             }
 
-            // Optional early exit after Stage 3 (calibration only, no main search).
-            // Used for Stage 1-3 perf benchmarking and walking up to the main
-            // search incrementally without paying the Stage 4 cost.
-            if (OspreyEnvironment.ExitAfterCalibration)
-            {
-                ctx.LogInfo("[BENCH] OSPREY_EXIT_AFTER_CALIBRATION set - exiting after Stage 3 (calibration done)");
-                return new List<FdrEntry>();
-            }
-
-            // Surface the per-file calibration to Stage 6 reconciliation
-            // (multi-file runs only). Threaded calls share a
-            // ConcurrentDictionary; null on single-file paths that don't
-            // need cross-file consensus.
-            if (perFileCalibrationsOut != null && rtCalibration != null)
-                perFileCalibrationsOut[fileName] = rtCalibration;
-
-            // Run coelution scoring across all isolation windows
-            var swScoring = Stopwatch.StartNew();
-            var scoredEntries = RunCoelutionScoring(
-                fullLibrary, spectra, ms1Spectra,
-                isolationWindows, rtCalibration,
-                ms2Cal, ms1Cal,
-                context, ctx);
-            swScoring.Stop();
-            double scoringSeconds = swScoring.Elapsed.TotalSeconds;
-            double ratePerSec = scoringSeconds > 0.001
-                ? scoredEntries.Count / scoringSeconds
-                : 0.0;
-            ctx.LogInfo(string.Format(
-                "[TIMING] Coelution scoring: {0:F1}s ({1} candidates, {2:F0} cand/s)",
-                scoringSeconds, scoredEntries.Count, ratePerSec));
-
-            int nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
-            int nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(string.Format("Scored {0} entries ({1} targets, {2} decoys) for {3}",
-                scoredEntries.Count,
-                nScoredTargets,
-                nScoredDecoys,
-                fileName));
-
-            // Drop double-counted entries (different precursors that latch
-            // onto the same chromatographic feature within an isolation
-            // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
-            // same call site, between scoring and pair-deduplication.
-            scoredEntries = DeduplicateDoubleCounting(
-                scoredEntries, fullLibrary, spectra, ms2Cal,
-                isolationWindows, config, ctx);
-            nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
-            nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
-            ctx.LogInfo(string.Format(
-                "[COUNT] Coelution scored [{0}]: {1} entries ({2} targets, {3} decoys)",
-                fileName, scoredEntries.Count, nScoredTargets, nScoredDecoys));
-
-            // Deduplicate: keep best target and best decoy per base_id
-            int nBeforeDedup = scoredEntries.Count;
-            scoredEntries = DeduplicatePairs(scoredEntries, ctx);
-            int nAfterDedup = scoredEntries.Count;
-            ctx.LogInfo(string.Format(
-                "[COUNT] Deduplication [{0}]: {1} -> {2} ({3} removed)",
-                fileName, nBeforeDedup, nAfterDedup, nBeforeDedup - nAfterDedup));
-
-            // Optional: write per-entry feature TSV for comparison against Rust's PIN output
-            if (config.WritePin)
-            {
-                WriteFeatureDump(inputFile, fileName, scoredEntries, ctx);
-            }
-
-            // Persist the full FdrEntry results (with features) to
-            // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
-            // CWT candidates per file, and (b) a subsequent --task FirstJoin
-            // invocation can pick them up without re-running Stages 1-4.
-            // Same path convention as Rust (`scores_path_for_input`).
-            // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
-            // as a Phase 4 follow-up. The metadata dictionary is precomputed
-            // in Run() against the original (un-mutated) outer config — see
-            // Run() for why. Skipped only in --task FirstJoin mode (no Stages 1-4
-            // ran here, so there is nothing fresh to persist).
-            if (parquetFooterMetadata != null)
-            {
-                string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
-                // Reuse the entry-id -> LibraryEntry map Run() built once
-                // before the per-file fan-out (WriteScoresParquet needs
-                // it to pull sequence / precursor_mz / protein_ids from
-                // the library since FdrEntry doesn't carry these).
-                var swParquet = Stopwatch.StartNew();
-                ParquetScoreCache.WriteScoresParquet(
-                    parquetPath, scoredEntries, parquetFooterMetadata, _libraryById, fileName);
-                swParquet.Stop();
-                ctx.LogInfo(string.Format(
-                    "Wrote {0} scored entries to {1} ({2:F1}s)",
-                    scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
-            }
-
-            return scoredEntries;
+            return rtCalibration;
         }
 
         /// <summary>
@@ -1442,7 +1506,7 @@ namespace pwiz.OspreySharp.Tasks
             };
 
             var sorted = scoredEntries
-                .Where(e => e.Features != null && e.Features.Length == NUM_PIN_FEATURES)
+                .Where(e => e.Features != null && e.Features.Length == ScoringTaskShared.NUM_PIN_FEATURES)
                 .OrderBy(e => e.ModifiedSequence, StringComparer.Ordinal)
                 .ThenBy(e => e.Charge)
                 .ThenBy(e => e.ScanNumber)
@@ -1467,7 +1531,7 @@ namespace pwiz.OspreySharp.Tasks
                         e.ScanNumber.ToString(),
                         e.Charge.ToString()
                     };
-                    for (int i = 0; i < NUM_PIN_FEATURES; i++)
+                    for (int i = 0; i < ScoringTaskShared.NUM_PIN_FEATURES; i++)
                         cols.Add(e.Features[i].ToString("G17"));
                     cols.Add(e.ModifiedSequence ?? "");
                     writer.WriteLine(string.Join("\t", cols));
@@ -1517,7 +1581,7 @@ namespace pwiz.OspreySharp.Tasks
             ctx.LogInfo(string.Format("Parsing mzML: {0}", inputFile));
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
-                s_mzmlReadGate.Wait();
+                ScoringTaskShared.s_mzmlReadGate.Wait();
             try
             {
                 mzmlResult = MzmlReader.LoadAllSpectra(inputFile);
@@ -1525,7 +1589,7 @@ namespace pwiz.OspreySharp.Tasks
             finally
             {
                 if (serializeMzmlRead)
-                    s_mzmlReadGate.Release();
+                    ScoringTaskShared.s_mzmlReadGate.Release();
             }
             ms2Spectra = mzmlResult.Ms2Spectra;
             ms1Spectra = mzmlResult.Ms1Spectra;

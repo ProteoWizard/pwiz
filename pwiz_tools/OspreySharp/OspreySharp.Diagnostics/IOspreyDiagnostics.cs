@@ -66,6 +66,14 @@ namespace pwiz.OspreySharp
         bool LoessInputOnly { get; }
         bool DumpPercolator { get; }
         bool PercolatorOnly { get; }
+        bool DumpStandardizer { get; }
+        bool StandardizerOnly { get; }
+        bool DumpPercInput { get; }
+        bool PercInputOnly { get; }
+        bool DumpSubsample { get; }
+        bool SubsampleOnly { get; }
+        bool DumpSvmWeights { get; }
+        bool SvmWeightsOnly { get; }
         bool DumpRescored { get; }
         bool RescoredOnly { get; }
         bool DumpMpInputs { get; }
