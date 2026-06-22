@@ -115,7 +115,7 @@ namespace CommonTest.DataBinding
             var nullableType = typeof (Nullable<>).MakeGenericType(value.GetType());
             var constructor = nullableType.GetConstructor(new[] {value.GetType()});
             Assert.IsNotNull(constructor);
-            return constructor?.Invoke(new[] {value});
+            return constructor.Invoke(new[] {value});
         }
 
         private string ValueToString(object value, CultureInfo cultureInfo)
