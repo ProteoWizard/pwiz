@@ -83,6 +83,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null) { return CallClient(c => c.GetReportDocTopics(dataSource)); }
     public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
     public FormInfo[] GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
+    public ControlInfo[] GetControls(string formId) { return CallClient(c => c.GetControls(formId)); }
     public string GetUiMode() { return CallClient(c => c.GetUiMode()); }
     public UndoRedoEntry[] GetUndoRedo() { return CallClient(c => c.GetUndoRedo()); }
 

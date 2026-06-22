@@ -1401,6 +1401,7 @@
     <Compile Include="ToolsUI\JsonToolServer.cs" />
     <Compile Include="ToolsUI\JsonTutorialCatalog.cs" />
     <Compile Include="ToolsUI\JsonUiService.cs" />
+    <Compile Include="ToolsUI\UiElement.cs" />
     <Compile Include="ToolsUI\FileDialogAutomation.cs" />
     <Compile Include="ToolsUI\NativeDialogAutomation.cs" />
     <Compile Include="ToolsUI\OpenFileDialogAutomation.cs" />

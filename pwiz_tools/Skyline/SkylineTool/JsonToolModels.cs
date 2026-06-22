@@ -312,6 +312,24 @@ namespace SkylineTool
     }
 
     /// <summary>
+    /// Information about one interactive control on a form, returned by GetControls. Lets a caller
+    /// discover what is on a form -- and how to address it -- without reading the source: match a
+    /// control by its <see cref="Label"/> (the visible text that names it) or, when it has none, by its
+    /// <see cref="Type"/>. <see cref="Name"/> is the internal control name, informational only.
+    /// </summary>
+    public class ControlInfo
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public string Label { get; set; }
+        public string Value { get; set; }
+        public bool Enabled { get; set; }
+        public bool Visible { get; set; }
+        /// <summary>The connector verbs that can act on this control (e.g. "click", "set_form_value").</summary>
+        public string[] Actions { get; set; }
+    }
+
+    /// <summary>
     /// A document tree element with name and locator returned by GetLocations.
     /// </summary>
     public class LocationEntry

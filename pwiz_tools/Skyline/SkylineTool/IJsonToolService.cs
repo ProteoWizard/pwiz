@@ -315,6 +315,15 @@ namespace SkylineTool
         FormInfo[] GetOpenForms();
 
         /// <summary>
+        /// Lists the interactive controls on a form so a caller can discover what is there -- and how to
+        /// address it -- without reading the source. Each control reports its Name (informational), Type,
+        /// the visible Label that names it, current Value, enabled/visible state, and the actions it
+        /// supports. Match a control by its Label, or -- when it has none -- by its Type.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ControlInfo[] GetControls(string formId);
+
+        /// <summary>
         /// Invokes a main-menu item by its visible path, e.g. "File > Import > Peptide Search".
         /// Each segment is matched against a menu item's text (mnemonic '&amp;' and trailing
         /// ellipsis ignored) or its control name, case-insensitively. The click is posted

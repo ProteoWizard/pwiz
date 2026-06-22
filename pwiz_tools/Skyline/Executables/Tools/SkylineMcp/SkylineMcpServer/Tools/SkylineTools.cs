@@ -531,6 +531,31 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_get_controls"),
+     Description("List the interactive controls on a form so you can discover what is there -- and how " +
+        "to address it -- without reading source code. Returns tab-separated lines with each control's " +
+        "Type, the visible Label that names it (its own caption, or the label beside a caption-less " +
+        "field), current Value, Enabled/Visible, internal Name (informational), and the connector " +
+        "Actions it supports. Address a control by its Label (e.g. set_form_value with \"Ion match " +
+        "tolerance\"); a control with no Label is addressed by its Type (e.g. \"TreeView\"), and a form's " +
+        "single grid/list/tree by an empty controlId. Get the formId from skyline_get_open_forms.")]
+    public static string GetControls(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var controls = connection.GetControls(formId);
+            if (controls == null || controls.Length == 0)
+                return $"No interactive controls found on {formId}.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Type\tLabel\tValue\tEnabled\tVisible\tName\tActions");
+            foreach (var c in controls)
+                sb.AppendLine($"{c.Type}\t{c.Label}\t{c.Value}\t{c.Enabled}\t{c.Visible}\t{c.Name}\t{string.Join(", ", c.Actions ?? new string[0])}");
+            return sb.ToString().TrimEnd();
+        });
+    }
+
     [McpServerTool(Name = "skyline_invoke_menu_item"),
      Description("Invoke a Skyline main-menu item by its visible path, e.g. " +
         "'File > Import > Peptide Search'. Segments are separated by '>' and matched against each " +

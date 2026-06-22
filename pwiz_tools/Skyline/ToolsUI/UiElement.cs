@@ -1,0 +1,366 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Windows.Forms;
+using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Util.Extensions;
+
+namespace pwiz.Skyline.ToolsUI
+{
+    // Capability interfaces -- what the user (and so the connector) can DO with an element. A verb asks
+    // for the capability it needs; the element supplies the behavior, so the verb does not switch on type.
+    internal interface IClickable { void Click(); }
+    internal interface IValueControl { void SetValue(string value); string GetValue(); }
+    internal interface IItemContainer { void SetItemChecked(string item, bool isChecked); void SetItemSelected(string item, bool selected); }
+    internal interface IGridControl { string GetGridText(CancellationToken cancellationToken); void SetGridText(int column, int row, string text); }
+
+    /// <summary>
+    /// A connector-facing view of one UI element on a form. Subclasses wrap a specific kind of control
+    /// (or a ToolStrip item) and implement the capability interfaces it supports, so the verbs match and
+    /// act polymorphically instead of switching on WinForms types. Each element also knows its own
+    /// <see cref="Label"/> (the visible text that identifies it) and its <see cref="Children"/>, so
+    /// matching and form enumeration are a single recursive walk.
+    /// </summary>
+    internal abstract class UiElement
+    {
+        /// <summary>The underlying control's Name -- informational (for discovery via GetControls); the
+        /// connector does NOT match on it. Empty for elements with no backing control name.</summary>
+        public abstract string Name { get; }
+
+        /// <summary>The element's type, used for the "match by kind" fallback ("ListView"/"TreeView").</summary>
+        public abstract Type ElementType { get; }
+
+        /// <summary>The visible text that identifies this element to a user: its own caption (a button,
+        /// a checkbox, a tab) or, for a caption-less field, the Label immediately before it in tab order.
+        /// Null when nothing labels it (then it is reached by its type or as the form's only one).</summary>
+        public virtual string Label => null;
+
+        public abstract bool IsEnabled { get; }
+        public abstract bool IsVisible { get; }
+
+        /// <summary>The element's current value, for a value control (else null) -- informational.</summary>
+        public virtual string Value => null;
+
+        /// <summary>The elements nested inside this one, for the recursive form walk.</summary>
+        public virtual IEnumerable<UiElement> Children => Enumerable.Empty<UiElement>();
+
+        /// <summary>This element and every element under it, depth-first.</summary>
+        public IEnumerable<UiElement> SelfAndDescendants()
+        {
+            yield return this;
+            foreach (var child in Children)
+            foreach (var descendant in child.SelfAndDescendants())
+                yield return descendant;
+        }
+
+        /// <summary>The names of the actions this element supports, for discovery via GetControls.</summary>
+        public IEnumerable<string> Actions
+        {
+            get
+            {
+                if (this is IClickable) yield return @"click";
+                if (this is IValueControl) yield return @"set_form_value";
+                if (this is IItemContainer) yield return @"set_item_checked / set_item_selected";
+                if (this is IGridControl) yield return @"get_grid_text / set_grid_text";
+            }
+        }
+    }
+
+    // ---- Control-backed elements ----------------------------------------------------------------
+
+    /// <summary>Base for an element backed by a WinForms <see cref="Control"/>.</summary>
+    internal abstract class ControlElement : UiElement
+    {
+        protected ControlElement(Control control) { Control = control; }
+
+        public Control Control { get; }
+        public override string Name => Control.Name;
+        public override Type ElementType => Control.GetType();
+        public override bool IsEnabled => Control.Enabled;
+        public override bool IsVisible => Control.Visible;
+        public override IEnumerable<UiElement> Children =>
+            Control.Controls.Cast<Control>().Select(UiElementFactory.For);
+
+        // Default: a caption-less field is named by the Label immediately before it in tab order
+        // (e.g. "Name:" -> the name textbox, "Use only scans within" -> the RT box). Caption-bearing
+        // elements (button, checkbox, tab) override this to return their own text.
+        public override string Label
+        {
+            get
+            {
+                var previous = Control.FindForm()?.GetNextControl(Control, false);
+                return previous is System.Windows.Forms.Label label ? label.Text : null;
+            }
+        }
+    }
+
+    /// <summary>A control with no special capability (panel, group box, label, ...) -- kept so the walk
+    /// recurses through it to its children.</summary>
+    internal sealed class GenericControlElement : ControlElement
+    {
+        public GenericControlElement(Control control) : base(control) { }
+    }
+
+    /// <summary>A push button (or any ButtonBase) -- clicked with BM_CLICK, which fires the Click handler
+    /// like a real mouse click (even for an AutoCheck=false checkbox) and bypasses PerformClick's gates.</summary>
+    internal class ButtonElement : ControlElement, IClickable
+    {
+        public ButtonElement(Control control) : base(control) { }
+        public override string Label => Control.Text;
+        // BM_CLICK is sent cross-thread (it is thread-safe and reads an already-created handle), so a
+        // click that opens a modal does not block the caller -- the dialog-watch handles it.
+        public virtual void Click() =>
+            User32.SendMessage(Control.Handle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+    }
+
+    /// <summary>A checkbox: clickable (toggles via its handler) and value-settable (sets the checked state).</summary>
+    internal sealed class CheckBoxElement : ButtonElement, IValueControl
+    {
+        private readonly CheckBox _checkBox;
+        public CheckBoxElement(CheckBox checkBox) : base(checkBox) { _checkBox = checkBox; }
+        public override string Value => _checkBox.Checked.ToString();
+        public string GetValue() => Value;
+        public void SetValue(string value) => _checkBox.Checked = UiValue.ParseBool(value);
+    }
+
+    /// <summary>A radio button: clicking/setting it checks it (WinForms unchecks its siblings).</summary>
+    internal sealed class RadioButtonElement : ButtonElement, IValueControl
+    {
+        private readonly RadioButton _radioButton;
+        public RadioButtonElement(RadioButton radioButton) : base(radioButton) { _radioButton = radioButton; }
+        public override string Value => _radioButton.Checked.ToString();
+        public string GetValue() => Value;
+        public void SetValue(string value) => _radioButton.Checked = UiValue.ParseBool(value);
+    }
+
+    /// <summary>A text box -- a caption-less field named by its adjacent label.</summary>
+    internal sealed class TextBoxElement : ControlElement, IValueControl
+    {
+        private readonly TextBoxBase _textBox;
+        public TextBoxElement(TextBoxBase textBox) : base(textBox) { _textBox = textBox; }
+        public override string Value => _textBox.Text;
+        public string GetValue() => _textBox.Text;
+        // A multi-line box parses/lays out on CRLF (what Enter inserts), so normalize bare newlines.
+        public void SetValue(string value) =>
+            _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value) : value;
+    }
+
+    /// <summary>A combo box -- value set by selecting the matching item.</summary>
+    internal sealed class ComboBoxElement : ControlElement, IValueControl
+    {
+        private readonly ComboBox _comboBox;
+        public ComboBoxElement(ComboBox comboBox) : base(comboBox) { _comboBox = comboBox; }
+        public override string Value => _comboBox.GetItemText(_comboBox.SelectedItem);
+        public string GetValue() => Value;
+        public void SetValue(string value)
+        {
+            int index = _comboBox.FindStringExact(value);
+            if (index < 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"No item '{0}' in combo box {1}.", value, _comboBox.Name));
+            _comboBox.SelectedIndex = index;
+        }
+    }
+
+    /// <summary>A list-like control whose items can be checked or selected -- a CheckedListBox, ListBox,
+    /// ListView, or TreeView. Items are matched by their text (a TreeView item by a '>'-separated path).
+    /// The item logic lives in shared helpers so the verb and this element drive it the same way.</summary>
+    internal sealed class ListContainerElement : ControlElement, IItemContainer
+    {
+        public ListContainerElement(Control control) : base(control) { }
+        // A CheckedListBox exposes its items as clickable children (so "click Replicates" toggles that
+        // item like a user's click). Other list/tree items are an internal detail, driven via the
+        // IItemContainer methods, so they are not surfaced as separate elements.
+        public override IEnumerable<UiElement> Children =>
+            Control is CheckedListBox checkedListBox
+                ? Enumerable.Range(0, checkedListBox.Items.Count)
+                    .Select(i => (UiElement) new CheckedListItemElement(checkedListBox, i))
+                : Enumerable.Empty<UiElement>();
+        public void SetItemChecked(string item, bool isChecked) => JsonUiService.SetListItemChecked(Control, item, isChecked);
+        public void SetItemSelected(string item, bool selected) => JsonUiService.SetListItemSelected(Control, item, selected);
+    }
+
+    /// <summary>One item of a CheckedListBox -- clicking it toggles its check, the way a user's click on
+    /// a CheckOnClick item does.</summary>
+    internal sealed class CheckedListItemElement : UiElement, IClickable
+    {
+        private readonly CheckedListBox _list;
+        private readonly int _index;
+        public CheckedListItemElement(CheckedListBox list, int index) { _list = list; _index = index; }
+        public override string Name => string.Empty;
+        public override Type ElementType => _list.GetType();
+        public override string Label => _list.GetItemText(_list.Items[_index]);
+        public override bool IsEnabled => _list.Enabled;
+        public override bool IsVisible => _list.Visible;
+        public void Click() =>
+            JsonUiService.InvokeOnUiThread(() => _list.SetItemChecked(_index, !_list.GetItemChecked(_index)));
+    }
+
+    /// <summary>A custom IButtonControl that is not a WinForms ButtonBase (e.g. a StartPage tile) --
+    /// clicked via PerformClick.</summary>
+    internal sealed class ClickableControlElement : ControlElement, IClickable
+    {
+        private readonly IButtonControl _button;
+        public ClickableControlElement(Control control) : base(control) { _button = (IButtonControl) control; }
+        public override string Label => Control.Text;
+        public void Click() => JsonUiService.InvokeOnUiThread(() => _button.PerformClick());
+    }
+
+    /// <summary>A ToolStrip (menu strip / toolbar) -- its items are its children.</summary>
+    internal sealed class ToolStripElement : ControlElement
+    {
+        private readonly ToolStrip _toolStrip;
+        public ToolStripElement(ToolStrip toolStrip) : base(toolStrip) { _toolStrip = toolStrip; }
+        public override IEnumerable<UiElement> Children =>
+            _toolStrip.Items.Cast<ToolStripItem>().Select(item => (UiElement) new ToolStripItemElement(item));
+    }
+
+    /// <summary>A menu or toolbar item -- clicked via PerformClick. An image-only item (no caption) is
+    /// named by its tooltip, the way a user reads it (e.g. the pick-list's green-check "OK").</summary>
+    internal sealed class ToolStripItemElement : UiElement, IClickable
+    {
+        private readonly ToolStripItem _item;
+        public ToolStripItemElement(ToolStripItem item) { _item = item; }
+        public override string Name => _item.Name;
+        public override Type ElementType => _item.GetType();
+        // A ToolStripControlHost reports its hosted control's Text as its own; let the hosted control
+        // (this element's child) own that label, so the verbs act on the real control, not the host.
+        public override string Label => _item is ToolStripControlHost ? null
+            : string.IsNullOrEmpty(_item.Text) ? _item.ToolTipText : _item.Text;
+        public override bool IsEnabled => _item.Enabled;
+        public override bool IsVisible => _item.Visible;
+        // A ToolStripControlHost hosts a real control (e.g. the Audit Log "Enable audit logging" checkbox);
+        // expose it so the verbs reach it as the control it is. Otherwise descend into dropdown items.
+        public override IEnumerable<UiElement> Children
+        {
+            get
+            {
+                if (_item is ToolStripControlHost host && host.Control != null)
+                    yield return UiElementFactory.For(host.Control);
+                if (_item is ToolStripDropDownItem dropDownItem)
+                    foreach (ToolStripItem child in dropDownItem.DropDownItems)
+                        yield return new ToolStripItemElement(child);
+            }
+        }
+        public void Click() => JsonUiService.InvokeOnUiThread(() => _item.PerformClick());
+    }
+
+    /// <summary>A grid -- a DataboundGridControl (e.g. the Document Grid) driven through its rich paste
+    /// path, or a standalone DataGridView driven by direct cell access. Read as TSV, or set a cell.</summary>
+    internal sealed class GridElement : ControlElement, IGridControl
+    {
+        private readonly DataboundGridControl _databound; // null for a plain DataGridView
+        private readonly DataGridView _dataGridView;
+        public GridElement(DataboundGridControl databound) : base(databound)
+        {
+            _databound = databound;
+            _dataGridView = databound.DataGridView;
+        }
+        public GridElement(DataGridView dataGridView) : base(dataGridView) { _dataGridView = dataGridView; }
+        public DataGridView DataGridView => _dataGridView;
+        // Cells are content, not child controls, so the inherited Children (the grid's child controls --
+        // e.g. a DataboundGridControl's nav bar, which can host other controls) is what to enumerate.
+        // A DataboundGridControl uses its rich copy path (the same content as Copy All, and cancellable
+        // for a large grid); a plain DataGridView is read cell by cell.
+        public string GetGridText(CancellationToken cancellationToken) =>
+            _databound != null ? _databound.GetCopyText(cancellationToken) : JsonUiService.GetDataGridViewText(_dataGridView);
+        public void SetGridText(int column, int row, string text)
+        {
+            if (_databound != null)
+                JsonUiService.PasteGridText(_databound, column, row, text);
+            else
+                JsonUiService.SetDataGridViewText(_dataGridView, column, row, text);
+        }
+    }
+
+    /// <summary>A tab page -- "clicking" it selects its tab on the parent TabControl.</summary>
+    internal sealed class TabPageElement : ControlElement, IClickable
+    {
+        private readonly TabPage _tabPage;
+        public TabPageElement(TabPage tabPage) : base(tabPage) { _tabPage = tabPage; }
+        public override string Label => _tabPage.Text;
+        public void Click() => JsonUiService.InvokeOnUiThread(() =>
+        {
+            if (!(_tabPage.Parent is TabControl tabControl))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Tab '{0}' is not on a tab control.", _tabPage.Text));
+            tabControl.SelectedTab = _tabPage;
+        });
+    }
+
+    // Small value helpers shared by the value elements.
+    internal static class UiValue
+    {
+        public static bool ParseBool(string value) =>
+            bool.TryParse(value, out var parsed) ? parsed : value == @"1";
+
+        // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
+        public static string NormalizeNewlines(string value) =>
+            value == null ? null : System.Text.RegularExpressions.Regex.Replace(value, @"\r\n?|\n", "\r\n");
+    }
+
+    /// <summary>
+    /// Builds the <see cref="UiElement"/> for a WinForms control, choosing the subclass by its kind.
+    /// </summary>
+    internal static class UiElementFactory
+    {
+        public static UiElement For(Control control)
+        {
+            switch (control)
+            {
+                case CheckBox checkBox: return new CheckBoxElement(checkBox);
+                case RadioButton radioButton: return new RadioButtonElement(radioButton);
+                case ButtonBase button: return new ButtonElement(button);
+                case ComboBox comboBox: return new ComboBoxElement(comboBox);
+                case TextBoxBase textBox: return new TextBoxElement(textBox);
+                case TabPage tabPage: return new TabPageElement(tabPage);
+                case CheckedListBox _:
+                case ListBox _:
+                case ListView _:
+                case TreeView _:
+                    return new ListContainerElement(control);
+                case DataboundGridControl databound: return new GridElement(databound);
+                // A standalone grid; the inner grid of a DataboundGridControl is driven through it, so
+                // that one is left as a plain element.
+                case DataGridView dataGridView when !HasDataboundAncestor(dataGridView):
+                    return new GridElement(dataGridView);
+                case ToolStrip toolStrip: return new ToolStripElement(toolStrip);
+                default:
+                    // A custom clickable that is not a ButtonBase (e.g. a StartPage tile).
+                    if (control is IButtonControl)
+                        return new ClickableControlElement(control);
+                    return new GenericControlElement(control);
+            }
+        }
+
+        private static bool HasDataboundAncestor(Control control)
+        {
+            for (var parent = control.Parent; parent != null; parent = parent.Parent)
+                if (parent is DataboundGridControl)
+                    return true;
+            return false;
+        }
+    }
+}

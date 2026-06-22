@@ -548,8 +548,7 @@ namespace pwiz.Skyline.ToolsUI
         // grid, or a standalone DataGridView), or the form's single grid when gridName is empty.
         private static DataGridView GetGridView(Form form, string gridName)
         {
-            var target = FindGrid(form, gridName);
-            return target.Databound != null ? target.Databound.DataGridView : target.DataGridView;
+            return FindGrid(form, gridName).DataGridView;
         }
 
         // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single
@@ -628,93 +627,26 @@ namespace pwiz.Skyline.ToolsUI
             }
             // Resolve the click target on the UI thread, then act inside the dialog-watch so a dialog
             // the click pops is observed: a resulting alert is surfaced (throws its text) and a native
-            // dialog (e.g. Save/Open) returns immediately rather than blocking on its modal.
-            var target = InvokeOnUiThread(() =>
+            // dialog (e.g. Save/Open) returns immediately rather than blocking on its modal. Each element
+            // knows how to click itself (a button via BM_CLICK so an AutoCheck=false checkbox still
+            // toggles; a menu/toolbar item or tile via PerformClick; a tab by selecting it; a
+            // CheckedListBox item by toggling its check).
+            var element = InvokeOnUiThread(() =>
             {
                 var form = FindFormById(formId);
                 VerifyFormInteractable(form);
-                var clickTarget = FindClickTarget(formId, button);
-                VerifyClickTargetEnabled(clickTarget, button);
-                return clickTarget;
+                var clickable = FindElement(form, button, e => e is IClickable, @"clickable control");
+                VerifyInteractable(clickable);
+                return clickable;
             });
             RunWithDialogWatch(() =>
             {
-                if (target.ButtonHandle != IntPtr.Zero)
-                {
-                    // A Win32 button (Button / CheckBox / RadioButton): BM_CLICK clicks like a mouse --
-                    // it fires the Click handler (so an AutoCheck=false checkbox toggles) and bypasses
-                    // PerformClick's CanSelect / validation gates (which can silently no-op).
-                    User32.SendMessage(target.ButtonHandle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
-                }
-                else if (target.Clickable != null)
-                {
-                    // A custom IButtonControl (e.g. a StartPage tile) -- PerformClick on the UI thread.
-                    InvokeOnUiThread(() => target.Clickable.PerformClick());
-                }
-                else if (target.ToolStripItem != null)
-                {
-                    // A menu / toolbar item (ToolStripButton, dropdown item, ...) -- PerformClick.
-                    InvokeOnUiThread(() => target.ToolStripItem.PerformClick());
-                }
-                else if (target.TabPage != null)
-                {
-                    // A tab: select it on its TabControl (a mouse click would hit the page content,
-                    // not the tab header).
-                    InvokeOnUiThread(() => SelectTabPage(target.TabPage));
-                }
-                else if (target.CheckedList != null)
-                {
-                    // An item in a CheckedListBox (e.g. "Applies to > Replicates") -- toggle its check,
-                    // the way a CheckOnClick item toggles when a user clicks it.
-                    InvokeOnUiThread(() => ToggleCheckedListItem(target.CheckedList, target.CheckedListItemIndex));
-                }
-                else
-                {
-                    // Any other control -- synthesize a mouse click at its center on the UI thread.
-                    InvokeOnUiThread(() => ClickControlWithMouse(target.Control));
-                }
+                // The element clicks itself; each handles its own threading (a Win32 BM_CLICK is sent
+                // cross-thread so a click that opens a modal does not block here, while a managed
+                // PerformClick / property-set marshals to the UI thread internally).
+                ((IClickable)element).Click();
                 return true;
             });
-        }
-
-        // The target gate for a resolved click target -- ClickFormButton's union of possible targets.
-        // A Win32 button is held only as a handle (the managed control was already resolved away), so it
-        // is checked with IsWindowEnabled; every other case is a Control or ToolStripItem -> VerifyEnabled.
-        private static void VerifyClickTargetEnabled(ClickTarget target, string requested)
-        {
-            if (target.ButtonHandle != IntPtr.Zero)
-            {
-                if (!User32.IsWindowEnabled(target.ButtonHandle))
-                    throw new InvalidOperationException(LlmInstruction.Format(
-                        @"Control '{0}' is disabled.", requested));
-            }
-            else if (target.ToolStripItem != null)
-                VerifyEnabled(target.ToolStripItem);
-            else if (target.TabPage != null)
-                VerifyEnabled(target.TabPage);
-            else if (target.CheckedList != null)
-                VerifyEnabled(target.CheckedList);
-            else if (target.Clickable is Control clickableControl)
-                VerifyEnabled(clickableControl);
-            else if (target.Control != null)
-                VerifyEnabled(target.Control);
-        }
-
-        // Toggles the checked state of one item in a CheckedListBox. SetItemChecked raises ItemCheck --
-        // the same event a user's click raises -- so any handler keyed on the selection stays in sync.
-        // Must run on the UI thread.
-        private static void ToggleCheckedListItem(CheckedListBox checkedList, int index)
-        {
-            checkedList.SetItemChecked(index, !checkedList.GetItemChecked(index));
-        }
-
-        // Selects the tab a TabPage belongs to. Must run on the UI thread.
-        private static void SelectTabPage(TabPage tabPage)
-        {
-            if (!(tabPage.Parent is TabControl tabControl))
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Tab '{0}' is not on a tab control.", tabPage.Text));
-            tabControl.SelectedTab = tabPage;
         }
 
         /// <summary>
@@ -857,23 +789,12 @@ namespace pwiz.Skyline.ToolsUI
                         SetGridCellValue(form, gridName, column, row, value);
                         return;
                     }
-                    var control = FindControl<Control>(form, controlId);
-                    if (control == null)
-                        throw new ArgumentException(LlmInstruction.Format(
-                            @"Control not found on form {0}: {1}.", formId, controlId));
-                    // A user edits a field, not its caption. When the match is a label (e.g. "Name:"),
-                    // set the editable control it labels -- the next one in tab order -- instead, since
-                    // changing a label's text is not something a user could do through the UI.
-                    if (control is System.Windows.Forms.Label)
-                    {
-                        control = NextEditableInTabOrder(form, control)
-                            ?? throw new ArgumentException(LlmInstruction.Format(
-                                @"'{0}' on form {1} is a label with no editable field after it in tab order.",
-                                controlId, formId));
-                    }
-
-                    VerifyInteractable(control);
-                    SetControlValue(control, value);
+                    // A field is matched by its own Label (its caption, or the label that names a
+                    // caption-less box -- see UiElement.Label), so a label never has to be matched and
+                    // resolved forward to its field.
+                    var element = FindElement(form, controlId, e => e is IValueControl, @"settable control");
+                    VerifyInteractable(element);
+                    ((IValueControl)element).SetValue(value);
                 });
             });
         }
@@ -893,19 +814,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 InvokeOnUiThread(() =>
                 {
-                    var form = FindFormById(formId);
-
-                    var target = FindGrid(form, controlId);
-                    var gridView = target.Databound != null ? target.Databound.DataGridView : target.DataGridView;
-                    if (gridView != null)
-                        VerifyInteractable(gridView);
-                    else
-                        VerifyFormInteractable(form);
-
-                    if (target.Databound != null)
-                        PasteGridText(target.Databound, column, row, text ?? string.Empty);
-                    else
-                        SetDataGridViewText(target.DataGridView, column, row, text ?? string.Empty);
+                    var grid = FindGrid(FindFormById(formId), controlId);
+                    VerifyInteractable(grid);
+                    grid.SetGridText(column, row, text ?? string.Empty);
                 });
                 return true;
             });
@@ -923,30 +834,32 @@ namespace pwiz.Skyline.ToolsUI
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the
         // single grid on the form. Throws if there is no grid, or more than one and no name was given.
-        private static GridTarget FindGrid(Form form, string controlId)
+        private static GridElement FindGrid(Form form, string controlId)
         {
             var targets = EnumerateGridTargets(form).ToList();
+            GridTarget target;
             if (!string.IsNullOrEmpty(controlId))
             {
                 // A grid carries no visible caption, so on a form with several grids its control name is
                 // the only stable way to choose one. This is the lone place the connector matches by
                 // name (MatchQuality otherwise matches visible text only); pass an empty controlId when
                 // the form has a single grid.
-                var named = targets.FirstOrDefault(target =>
-                    string.Equals(target.Name, controlId, StringComparison.OrdinalIgnoreCase));
-                if (named == null)
+                target = targets.FirstOrDefault(t =>
+                    string.Equals(t.Name, controlId, StringComparison.OrdinalIgnoreCase));
+                if (target == null)
                     throw new ArgumentException(LlmInstruction.Format(
                         @"Grid not found on form {0}: {1}. Pass an empty controlId for the form's single grid.",
                         GetFormId(form), controlId));
-                return named;
             }
-            if (targets.Count == 0)
+            else if (targets.Count == 0)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"No grid found on form {0}.", GetFormId(form)));
-            if (targets.Count > 1)
+            else if (targets.Count > 1)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Form {0} has more than one grid; pass a controlId to choose one.", GetFormId(form)));
-            return targets[0];
+            else
+                target = targets[0];
+            return target.Databound != null ? new GridElement(target.Databound) : new GridElement(target.DataGridView);
         }
 
         // The grids on a form: each DataboundGridControl, plus each DataGridView that is not inside a
@@ -970,7 +883,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // Sets the anchor cell (column/row are zero-based indices into the grid's visible columns and
         // its rows) and pastes the tab-separated text there.
-        private static void PasteGridText(DataboundGridControl grid, int column, int row, string text)
+        internal static void PasteGridText(DataboundGridControl grid, int column, int row, string text)
         {
             var dataGridView = grid.DataGridView;
             var visibleColumns = VisibleGridColumns(dataGridView);
@@ -988,7 +901,7 @@ namespace pwiz.Skyline.ToolsUI
         // anchor cell, the way a user typing cell-by-cell would. Skips read-only cells. Throws if the
         // anchor (or a row a multi-row paste reaches) is out of range -- pasting cannot add rows beyond
         // the grid's new row, just as a user cannot type into a row that is not there.
-        private static void SetDataGridViewText(DataGridView dataGridView, int column, int row, string text)
+        internal static void SetDataGridViewText(DataGridView dataGridView, int column, int row, string text)
         {
             var visibleColumns = VisibleGridColumns(dataGridView);
             if (column < 0 || column >= visibleColumns.Length)
@@ -1024,11 +937,7 @@ namespace pwiz.Skyline.ToolsUI
         // and its rows) to value, reusing the grid paste path so a DataboundGridControl stays in sync.
         private static void SetGridCellValue(Form form, string gridName, int column, int row, string value)
         {
-            var target = FindGrid(form, gridName);
-            if (target.Databound != null)
-                PasteGridText(target.Databound, column, row, value);
-            else
-                SetDataGridViewText(target.DataGridView, column, row, value);
+            FindGrid(form, gridName).SetGridText(column, row, value);
         }
 
         // Splits pasted text into row lines, normalizing newlines and dropping a single trailing empty
@@ -1054,12 +963,7 @@ namespace pwiz.Skyline.ToolsUI
             using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
             {
                 var text = InvokeOnUiThread(() =>
-                {
-                    var target = FindGrid(FindFormById(formId), gridId);
-                    return target.Databound != null
-                        ? target.Databound.GetCopyText(cancellation.Token)
-                        : GetDataGridViewText(target.DataGridView);
-                });
+                    FindGrid(FindFormById(formId), gridId).GetGridText(cancellation.Token));
                 if (text == null)
                     throw new OperationCanceledException(LlmInstruction.Format(
                         @"Reading the grid {0} was cancelled.", formId));
@@ -1069,7 +973,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // Reads a plain DataGridView as tab-separated text: the column headers followed by every data
         // row (each cell shown as the user sees it).
-        private static string GetDataGridViewText(DataGridView dataGridView)
+        internal static string GetDataGridViewText(DataGridView dataGridView)
         {
             var visibleColumns = VisibleGridColumns(dataGridView);
             var lines = new List<string>
@@ -1148,27 +1052,33 @@ namespace pwiz.Skyline.ToolsUI
                         pickList.SetItemChecked(FindPickListIndex(pickList, item), isChecked);
                         return;
                     }
-                    var control = FindListOrTreeControl(form, controlId);
-                    VerifyInteractable(control);
-
-                    switch (control)
-                    {
-                        case CheckedListBox checkedListBox:
-                            checkedListBox.SetItemChecked(FindListItemIndex(checkedListBox, item), isChecked);
-                            break;
-                        case TreeView treeView:
-                            FindTreeNode(treeView, item).Checked = isChecked;
-                            break;
-                        case ListView listView:
-                            FindListViewItem(listView, item).Checked = isChecked;
-                            break;
-                        default:
-                            throw new ArgumentException(LlmInstruction.Format(
-                                @"Checking items is supported for a CheckedListBox, TreeView, or ListView, not {0}.", control.Name));
-                    }
+                    var element = FindElement(form, controlId, e => e is IItemContainer, @"list, tree, or list-view control");
+                    VerifyInteractable(element);
+                    ((IItemContainer)element).SetItemChecked(item, isChecked);
                 });
                 return true;
             });
+        }
+
+        // Checks/unchecks an item on a list-like control by its text (a TreeView item by a '>'-separated
+        // path). Shared by the SetItemChecked verb and ListContainerElement so both drive it identically.
+        internal static void SetListItemChecked(Control control, string item, bool isChecked)
+        {
+            switch (control)
+            {
+                case CheckedListBox checkedListBox:
+                    checkedListBox.SetItemChecked(FindListItemIndex(checkedListBox, item), isChecked);
+                    break;
+                case TreeView treeView:
+                    FindTreeNode(treeView, item).Checked = isChecked;
+                    break;
+                case ListView listView:
+                    FindListViewItem(listView, item).Checked = isChecked;
+                    break;
+                default:
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Checking items is supported for a CheckedListBox, TreeView, or ListView, not {0}.", control.Name));
+            }
         }
 
         /// <summary>
@@ -1184,65 +1094,40 @@ namespace pwiz.Skyline.ToolsUI
                 InvokeOnUiThread(() =>
                 {
                     var form = FindFormById(formId);
-                    var control = FindListOrTreeControl(form, controlId);
-                    VerifyInteractable(control);
-
-                    switch (control)
-                    {
-                        case ListBox listBox: // CheckedListBox derives from ListBox
-                            listBox.SetSelected(FindListItemIndex(listBox, item), selected);
-                            break;
-                        case TreeView treeView:
-                            var node = FindTreeNode(treeView, item);
-                            if (selected)
-                                treeView.SelectedNode = node;
-                            else if (treeView.SelectedNode == node)
-                                treeView.SelectedNode = null;
-                            break;
-                        case ListView listView:
-                            var listViewItem = FindListViewItem(listView, item);
-                            listViewItem.Selected = selected;
-                            if (selected)
-                                listViewItem.EnsureVisible();
-                            break;
-                        default:
-                            throw new ArgumentException(LlmInstruction.Format(
-                                @"Selecting items is supported for a ListBox, TreeView, or ListView, not {0}.", control.Name));
-                    }
+                    var element = FindElement(form, controlId, e => e is IItemContainer, @"list, tree, or list-view control");
+                    VerifyInteractable(element);
+                    ((IItemContainer)element).SetItemSelected(item, selected);
                 });
                 return true;
             });
         }
 
-        // Finds the ListBox/CheckedListBox or TreeView to act on: the one named controlId (resolving a
-        // matched label to the list/tree it labels), or -- when controlId is null/empty -- the single
-        // such control on the form. Throws if there is none, or more than one and no name was given.
-        private static Control FindListOrTreeControl(Form form, string controlId)
+        // Selects/deselects an item on a list-like control by its text (a TreeView item by a '>'-separated
+        // path). Shared by the SetItemSelected verb and ListContainerElement.
+        internal static void SetListItemSelected(Control control, string item, bool selected)
         {
-            bool IsListOrTree(Control control) => control is ListBox || control is TreeView || control is ListView;
-            if (string.IsNullOrEmpty(controlId))
+            switch (control)
             {
-                var controls = EnumerateControls(form).Where(IsListOrTree).ToList();
-                if (controls.Count == 0)
+                case ListBox listBox: // CheckedListBox derives from ListBox
+                    listBox.SetSelected(FindListItemIndex(listBox, item), selected);
+                    break;
+                case TreeView treeView:
+                    var node = FindTreeNode(treeView, item);
+                    if (selected)
+                        treeView.SelectedNode = node;
+                    else if (treeView.SelectedNode == node)
+                        treeView.SelectedNode = null;
+                    break;
+                case ListView listView:
+                    var listViewItem = FindListViewItem(listView, item);
+                    listViewItem.Selected = selected;
+                    if (selected)
+                        listViewItem.EnsureVisible();
+                    break;
+                default:
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"No list, tree, or list-view control found on form {0}.", GetFormId(form)));
-                if (controls.Count > 1)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Form {0} has more than one list/tree/list-view control; pass a controlId.", GetFormId(form)));
-                return controls[0];
+                        @"Selecting items is supported for a ListBox, TreeView, or ListView, not {0}.", control.Name));
             }
-            var match = FindControl<Control>(form, controlId);
-            if (match == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Control not found on form {0}: {1}.", GetFormId(form), controlId));
-            if (match is System.Windows.Forms.Label)
-                match = NextControlInTabOrder(form, match, IsListOrTree)
-                    ?? throw new ArgumentException(LlmInstruction.Format(
-                        @"'{0}' on form {1} is a label with no list/tree/list-view control after it.", controlId, GetFormId(form)));
-            if (!IsListOrTree(match))
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Control {0} on form {1} is not a list, tree, or list-view control.", controlId, GetFormId(form)));
-            return match;
         }
 
         // Finds the index of the best-matching choice (by its visible label) in a pick-list popup.
@@ -1346,6 +1231,43 @@ namespace pwiz.Skyline.ToolsUI
             }
             return best;
         }
+
+        /// <summary>
+        /// Lists the interactive controls on a form so a caller can discover what is there -- and how to
+        /// address it -- without reading the source. Each control reports its Name (informational), Type,
+        /// the visible Label that identifies it, current Value, enabled/visible state, and the connector
+        /// actions it supports. Only controls a user can act on are returned (buttons, fields, lists, ...).
+        /// </summary>
+        public static ControlInfo[] GetControls(string formId)
+        {
+            ValidateFormIdFormat(formId);
+            return InvokeOnUiThread(() =>
+            {
+                var form = FindFormById(formId);
+                // Report form-level controls; menu and list items (clickable pseudo-elements) are an
+                // internal detail of the walk, not controls to list here.
+                return UiElementFactory.For(form).SelfAndDescendants()
+                    .Where(element => element is ControlElement && element.Actions.Any())
+                    .Select(element => new ControlInfo
+                    {
+                        Name = element.Name,
+                        Type = element.ElementType.Name,
+                        Label = NullIfEmpty(CleanLabel(element.Label)),
+                        Value = element.Value,
+                        Enabled = element.IsEnabled,
+                        Visible = element.IsVisible,
+                        Actions = element.Actions.ToArray(),
+                    })
+                    .ToArray();
+            });
+        }
+
+        private static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
+
+        // The label as a caller would type it: mnemonic '&' and a trailing colon/ellipsis removed, so a
+        // "Name:" label is reported (and addressable) as "Name". Matching tolerates either form anyway.
+        private static string CleanLabel(string text) =>
+            string.IsNullOrEmpty(text) ? text : NormalizeLabel(text).TrimEnd(' ', ':');
 
         // Level 3: Complete UI operations - Graphs
 
@@ -1823,6 +1745,63 @@ namespace pwiz.Skyline.ToolsUI
                 formId));
         }
 
+        // Finds the one element on the form with the requested capability that the caller asked for: the
+        // best match of key against each candidate's visible Label (or, failing that, its type), the same
+        // ranking FindBestMatch uses (best quality, then prefer a visible+enabled element). An empty key
+        // means "the form's single element with this capability". Throws if none (or, for an empty key,
+        // more than one) matches. This is the single finder the action verbs share -- see GetControls for
+        // what a caller can discover. Must run on the UI thread.
+        private static UiElement FindElement(Form form, string key, Func<UiElement, bool> hasCapability, string capabilityNoun)
+        {
+            var candidates = UiElementFactory.For(form).SelfAndDescendants().Where(hasCapability).ToList();
+            if (string.IsNullOrEmpty(key))
+            {
+                if (candidates.Count == 0)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"No {0} found on form {1}.", capabilityNoun, GetFormId(form)));
+                if (candidates.Count > 1)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Form {0} has more than one {1}; pass a Label or type to choose one (see skyline_get_controls).",
+                        GetFormId(form), capabilityNoun));
+                return candidates[0];
+            }
+            UiElement best = null;
+            var bestQuality = ControlMatchQuality.None;
+            var bestInteractable = false;
+            foreach (var element in candidates)
+            {
+                var quality = ElementMatches(element, key);
+                if (quality == ControlMatchQuality.None)
+                    continue;
+                var interactable = element.IsVisible && element.IsEnabled;
+                if (quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
+                {
+                    best = element;
+                    bestQuality = quality;
+                    bestInteractable = interactable;
+                }
+            }
+            if (best == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"No {0} found on form {1} matching '{2}'. Use skyline_get_controls to list the controls.",
+                    capabilityNoun, GetFormId(form), key));
+            return best;
+        }
+
+        // The element gate: the same modal-block + enabled check as VerifyInteractable(Control), for a
+        // resolved element. Control-backed elements reuse the control path; others check their own state.
+        private static void VerifyInteractable(UiElement element)
+        {
+            if (element is ControlElement controlElement)
+            {
+                VerifyInteractable(controlElement.Control);
+                return;
+            }
+            if (!element.IsEnabled)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"'{0}' is disabled.", element.Label ?? element.Name));
+        }
+
         // Guards that the connector never does anything a user could not. Two concerns make a target
         // interactable: (1) no modal dialog is blocking its window, and (2) the target itself is enabled.
         // They are split into VerifyFormInteractable (the form/modal gate) and VerifyEnabled (the target
@@ -1967,151 +1946,6 @@ namespace pwiz.Skyline.ToolsUI
             return segments;
         }
 
-        // A resolved click target. Exactly one member is set, classified in FindClickTarget /
-        // MakeControlTarget: a Win32 button (Button/CheckBox/RadioButton) clicked via BM_CLICK; a
-        // custom IButtonControl (e.g. a StartPage tile) or a ToolStripItem (menu/toolbar item) clicked
-        // via PerformClick; an item in a CheckedListBox (e.g. "Applies to") toggled like a click; or any
-        // other control clicked with a synthesized mouse click.
-        private class ClickTarget
-        {
-            public IntPtr ButtonHandle;
-            public IButtonControl Clickable;
-            public ToolStripItem ToolStripItem;
-            public TabPage TabPage;
-            public CheckedListBox CheckedList;
-            public int CheckedListItemIndex;
-            public Control Control;
-        }
-
-        // Resolves a click target on a form by control/item name or visible text. Searches the whole
-        // WinForms control tree (any control -- the same breadth as SetFormValue) AND the ToolStrip
-        // items (menus, toolbars, dropdowns), which are not in the control tree. Ranks by match quality
-        // (exact over symbol-stripped), then prefers a visible+enabled target so a hidden duplicate
-        // does not win. Must run on the UI thread. Throws if nothing matches.
-        private static ClickTarget FindClickTarget(string formId, string button)
-        {
-            var form = FindFormById(formId);
-            ClickTarget best = null;
-            var bestQuality = ControlMatchQuality.None;
-            var bestInteractable = false;
-
-            void Consider(ControlMatchQuality quality, bool interactable, Func<ClickTarget> make)
-            {
-                if (quality == ControlMatchQuality.None)
-                    return;
-                if (quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
-                {
-                    best = make();
-                    bestQuality = quality;
-                    bestInteractable = interactable;
-                }
-            }
-
-            foreach (var control in EnumerateControls(form))
-                Consider(ControlMatches(control, button), control.Visible && control.Enabled,
-                    () => MakeControlTarget(control));
-            foreach (var item in EnumerateToolStripItems(form))
-                Consider(ToolStripMatchQuality(item, button), item.Visible && item.Enabled,
-                    () => new ClickTarget { ToolStripItem = item });
-            // Items inside a CheckedListBox (e.g. the "Applies to" list) are not controls, so match them
-            // by their display text and treat a hit as a click that toggles the item's check.
-            foreach (var checkedList in EnumerateControls(form).OfType<CheckedListBox>())
-            {
-                var interactable = checkedList.Visible && checkedList.Enabled;
-                for (int i = 0; i < checkedList.Items.Count; i++)
-                {
-                    int index = i; // capture a stable value for the closure
-                    Consider(MatchQuality(checkedList.GetItemText(checkedList.Items[index]), button),
-                        interactable,
-                        () => new ClickTarget { CheckedList = checkedList, CheckedListItemIndex = index });
-                }
-            }
-
-            if (best == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"No clickable control found on form {0}: {1}.", formId, button));
-            return best;
-        }
-
-        // Classifies a control into a click target: a Win32 button (Button/CheckBox/RadioButton) is
-        // clicked via BM_CLICK (which fires the Click handler even for an AutoCheck=false checkbox); a
-        // custom IButtonControl (e.g. a StartPage tile) via PerformClick; anything else via a mouse click.
-        private static ClickTarget MakeControlTarget(Control control)
-        {
-            if (control is ButtonBase)
-                return new ClickTarget { ButtonHandle = control.Handle };
-            if (control is IButtonControl buttonControl)
-                return new ClickTarget { Clickable = buttonControl };
-            if (control is TabPage tabPage)
-                return new ClickTarget { TabPage = tabPage };
-            return new ClickTarget { Control = control };
-        }
-
-        // Enumerates every ToolStripItem reachable from the form's ToolStrips (MenuStrip, ToolStrip,
-        // BindingNavigator, ...), descending into dropdown items so submenu/dropdown items are included.
-        private static IEnumerable<ToolStripItem> EnumerateToolStripItems(Control form)
-        {
-            return EnumerateControls(form).OfType<ToolStrip>().SelectMany(s => EnumerateToolStripItems(s.Items));
-        }
-
-        private static IEnumerable<ToolStripItem> EnumerateToolStripItems(ToolStripItemCollection items)
-        {
-            foreach (ToolStripItem item in items)
-            {
-                yield return item;
-                if (item is ToolStripDropDownItem dropDownItem)
-                    foreach (var child in EnumerateToolStripItems(dropDownItem.DropDownItems))
-                        yield return child;
-            }
-        }
-
-        // Synthesizes a left mouse click at the center of a control that is neither a button nor a
-        // ToolStripItem (e.g. a link or a custom control). Must run on the UI thread.
-        private static void ClickControlWithMouse(Control control)
-        {
-            var lParam = (IntPtr)(((control.Height / 2) << 16) | ((control.Width / 2) & 0xFFFF));
-            User32.SendMessage(control.Handle, User32.WinMessageType.WM_LBUTTONDOWN, (IntPtr)MK_LBUTTON, lParam);
-            User32.SendMessage(control.Handle, User32.WinMessageType.WM_LBUTTONUP, IntPtr.Zero, lParam);
-        }
-
-        private const int MK_LBUTTON = 0x0001;
-
-        // Searches the form for the control of type T that best matches key.
-        private static T FindControl<T>(Control parent, string key) where T : Control
-        {
-            return (T)FindBestMatch(parent, key, c => c is T);
-        }
-
-        // Finds the control under parent that best matches key among controls passing the filter.
-        // Ranking: highest text-match quality first (exact over symbol-stripped), then a
-        // visible+enabled control over a hidden/disabled one of the same quality. The latter matters
-        // when two controls share a caption but only one is live -- e.g. a wizard's last page has both
-        // the visible "Finish" nav button and a hidden early-"Finish" button. Returns null if none.
-        private static Control FindBestMatch(Control parent, string key, Func<Control, bool> filter)
-        {
-            Control best = null;
-            var bestQuality = ControlMatchQuality.None;
-            var bestInteractable = false;
-            foreach (var control in EnumerateControls(parent))
-            {
-                if (!filter(control))
-                    continue;
-                var quality = ControlMatches(control, key);
-                if (quality == ControlMatchQuality.None)
-                    continue;
-                var interactable = control.Visible && control.Enabled;
-                if (quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
-                {
-                    best = control;
-                    bestQuality = quality;
-                    bestInteractable = interactable;
-                    if (quality == ControlMatchQuality.Exact && interactable)
-                        break; // best possible -- exact text on a live control
-                }
-            }
-            return best;
-        }
-
         // Depth-first (pre-order) enumeration of all controls under the given parent.
         private static IEnumerable<Control> EnumerateControls(Control parent)
         {
@@ -2134,22 +1968,22 @@ namespace pwiz.Skyline.ToolsUI
             Exact = 3,    // matched the visible text after light normalization
         }
 
-        private static ControlMatchQuality ControlMatches(Control control, string key)
+        // How well a UiElement matches a requested key: by its visible Label, else (the weakest match) by
+        // its kind. The single ranking the verbs use to find the element to act on.
+        private static ControlMatchQuality ElementMatches(UiElement element, string key)
         {
-            var quality = MatchQuality(control.Text, key);
-            // A caption-less control (e.g. an unlabeled list/tree) has no visible text to match, so allow
-            // referring to it by what KIND of control it is -- the weakest match, below any text match.
-            if (quality == ControlMatchQuality.None && MatchesControlType(control, key))
+            var quality = MatchQuality(element.Label, key);
+            if (quality == ControlMatchQuality.None && MatchesControlType(element.ElementType, key))
                 return ControlMatchQuality.Type;
             return quality;
         }
 
-        // True if key names the control's type or any of its base types -- so "ListView" matches a
-        // ColumnListView and "TreeView" an AvailableFieldsTree. Lets a caption-less control be referred
-        // to by its kind. Stops at Control: a key like "Control"/"UserControl" is too broad to be useful.
-        private static bool MatchesControlType(Control control, string key)
+        // True if key names the type or any of its base types -- so "ListView" matches a ColumnListView
+        // and "TreeView" an AvailableFieldsTree. Lets a caption-less control be referred to by its kind.
+        // Stops at Control: a key like "Control"/"UserControl" is too broad to be useful.
+        private static bool MatchesControlType(Type controlType, string key)
         {
-            for (var type = control.GetType(); type != null && type != typeof(Control); type = type.BaseType)
+            for (var type = controlType; type != null && type != typeof(Control); type = type.BaseType)
                 if (string.Equals(type.Name, key, StringComparison.OrdinalIgnoreCase))
                     return true;
             return false;
@@ -2183,108 +2017,6 @@ namespace pwiz.Skyline.ToolsUI
             return string.IsNullOrEmpty(text)
                 ? string.Empty
                 : new string(text.Where(char.IsLetterOrDigit).ToArray());
-        }
-
-        private static void SetControlValue(Control control, string value)
-        {
-            switch (control)
-            {
-                case CheckBox checkBox:
-                    checkBox.Checked = bool.TryParse(value, out var parsed) ? parsed : value == @"1";
-                    break;
-                case RadioButton radioButton:
-                    // Selecting a radio button checks it; WinForms auto-unchecks its siblings and
-                    // raises CheckedChanged so any UI logic keyed on the selection stays in sync.
-                    radioButton.Checked = bool.TryParse(value, out var radioParsed) ? radioParsed : value == @"1";
-                    break;
-                case ComboBox comboBox:
-                    int index = comboBox.FindStringExact(value);
-                    if (index < 0)
-                        throw new ArgumentException(LlmInstruction.Format(
-                            @"No item '{0}' in combo box {1}.", value, control.Name));
-                    comboBox.SelectedIndex = index;
-                    break;
-                case TextBoxBase textBox:
-                    // A multi-line textbox lays out and parses its lines on CRLF (what pressing Enter
-                    // inserts), so normalize any bare newlines -- otherwise "a\nb" shows and parses as
-                    // one line, e.g. the Define Annotation value list.
-                    textBox.Text = textBox.Multiline ? NormalizeNewlines(value) : value;
-                    break;
-                case DataGridView grid:
-                    if (grid.CurrentCell == null)
-                    {
-                        // Try to find first editable cell if no current cell
-                        foreach (DataGridViewRow row in grid.Rows)
-                        {
-                            foreach (DataGridViewCell cell in row.Cells)
-                            {
-                                if (!cell.ReadOnly && cell.Visible)
-                                {
-                                    grid.CurrentCell = cell;
-                                    break;
-                                }
-                            }
-                            if (grid.CurrentCell != null) break;
-                        }
-                    }
-                    if (grid.CurrentCell == null)
-                        throw new ArgumentException(LlmInstruction.Format(
-                            @"No editable cell found in grid {0}.", control.Name));
-                    grid.CurrentCell.Value = value;
-                    break;
-                case System.Windows.Forms.Label _:
-                    // A user cannot edit a label's caption, so setting it would not mirror the UI.
-                    // SetFormValue resolves a matched label to its field before reaching here; this
-                    // guard keeps the invariant if SetControlValue is ever called with one directly.
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Cannot set a value on the label {0}.", control.Name));
-                default:
-                    control.Text = value;
-                    break;
-            }
-        }
-
-        // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses when the user
-        // presses Enter, and that callers (e.g. the annotation value list) split on.
-        private static string NormalizeNewlines(string value)
-        {
-            return value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
-        }
-
-        // Finds the first editable control after the given control in tab order -- the input a "Name:"
-        // label labels, for example. Used to resolve a matched label to the field it names. Returns
-        // null if no editable control follows. Must run on the UI thread.
-        private static Control NextEditableInTabOrder(Control container, Control afterControl)
-        {
-            return NextControlInTabOrder(container, afterControl, IsEditableValueControl);
-        }
-
-        // Finds the first visible+enabled control after the given control in tab order that satisfies
-        // the predicate -- used to resolve a matched label to the field it labels. Must run on the UI
-        // thread. Returns null if none follows.
-        private static Control NextControlInTabOrder(Control container, Control afterControl, Func<Control, bool> predicate)
-        {
-            for (var next = container.GetNextControl(afterControl, true);
-                 next != null;
-                 next = container.GetNextControl(next, true))
-            {
-                if (next.Visible && next.Enabled && predicate(next))
-                    return next;
-            }
-            return null;
-        }
-
-        // True for controls a user can type into or pick a value from -- the kinds a label labels.
-        private static bool IsEditableValueControl(Control control)
-        {
-            return control is TextBoxBase
-                || control is ComboBox
-                || control is NumericUpDown
-                || control is DateTimePicker
-                || control is CheckBox
-                || control is RadioButton
-                || control is ListBox
-                || control is TrackBar;
         }
 
         // True when the requested button names the cancel/close action of a native dialog. Locale
