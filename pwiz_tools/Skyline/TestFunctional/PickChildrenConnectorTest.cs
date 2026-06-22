@@ -49,11 +49,13 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // Insert a single peptide so the Targets tree has a precursor with child transitions.
+            // Insert a single peptide so the Targets tree has a precursor with child transitions. The
+            // protein name contains '|' (a UniProt-style "sp|ACC|NAME") so the test also exercises that
+            // a '>'-separated node path is split only on '>', not on the '|' in the node text.
             RunUI(() => SkylineWindow.SequenceTree.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID)));
             RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg =>
             {
-                SetClipboardText(TextUtil.LineSeparate("ELVISLIVESK\tProtein1"));
+                SetClipboardText(TextUtil.LineSeparate("ELVISLIVESK\tsp|P12345|TEST_PROT"));
                 pasteDlg.PastePeptides();
                 pasteDlg.OkDialog();
             });
@@ -67,6 +69,8 @@ namespace pwiz.SkylineTestFunctional
                 var groupNode = SkylineWindow.SequenceTree.Nodes[0];
                 var peptideNode = groupNode.Nodes[0];
                 precursorNode = (TreeNodeMS) peptideNode.Nodes[0];
+                Assert.IsTrue(groupNode.Text.Contains("|"),
+                    @"Expected the protein node text to contain '|' to exercise tree-path splitting.");
                 precursorPath = string.Format("{0} > {1} > {2}",
                     groupNode.Text, peptideNode.Text, precursorNode.Text);
             });

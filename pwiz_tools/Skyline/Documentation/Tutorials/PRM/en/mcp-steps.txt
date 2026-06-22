@@ -171,7 +171,9 @@ InvokeContextMenuItem "GraphSummary:Peak Areas - Replicate Comparison" "Normaliz
 #
 # Add the precursor transitions per precursor via the Targets-tree pick-list ("Pick Children"):
 # InvokeMenuItem  "Edit > Expand All > Precursors"
-# # For each precursor node (path = 'Protein > Peptide > Precursor', using the live node texts):
+# # For each precursor node (path = 'Protein > Peptide > Precursor', using the live node texts). A
+# # tree path is split ONLY on '>', so a UniProt protein name keeps its '|' (e.g.
+# # 'sp|P02769|ALBU_BOVIN > K.LVNELTEFAK.T [66, 75] > 582.3190++'). Each segment is matched exactly.
 # SetItemSelected       "SequenceTreeForm:Targets" "sequenceTree" "<protein> > <peptide> > <precursor>" true
 # InvokeContextMenuItem "SequenceTreeForm:Targets" "sequenceTree" "Pick Children"
 # WaitForForm           "PopupPickList:*"

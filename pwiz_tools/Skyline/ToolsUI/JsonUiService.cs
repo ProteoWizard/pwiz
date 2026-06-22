@@ -1223,7 +1223,7 @@ namespace pwiz.Skyline.ToolsUI
         // matched. Must run on the UI thread. Throws if a segment does not match.
         private static TreeNode FindTreeNode(TreeView treeView, string path)
         {
-            var segments = ParseMenuSegments(path);
+            var segments = ParseTreePath(path);
             var nodes = treeView.Nodes;
             TreeNode current = null;
             for (int i = 0; i < segments.Length; i++)
@@ -1783,6 +1783,20 @@ namespace pwiz.Skyline.ToolsUI
         {
             return string.Equals(NormalizeLabel(item.Text), NormalizeLabel(label), StringComparison.CurrentCultureIgnoreCase)
                 || string.Equals(item.Name, label, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Splits a tree-node path into its segments on '>' ONLY -- unlike a menu path, a node's text
+        // legitimately contains '|' and '/' (e.g. a UniProt protein name "sp|P02769|ALBU_BOVIN", or a
+        // small-molecule formula), so those must not be treated as separators. Throws if empty.
+        private static string[] ParseTreePath(string path)
+        {
+            var segments = (path ?? string.Empty)
+                .Split('>').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+            if (segments.Length == 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Empty tree path: {0}. Expected '>'-separated node texts, e.g. 'Protein > Peptide > Precursor'.",
+                    path ?? string.Empty));
+            return segments;
         }
 
         // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
