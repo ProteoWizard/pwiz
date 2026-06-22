@@ -511,8 +511,12 @@ namespace pwiz.Common.DataBinding.Filtering
             {
                 return operands.All(operand => elementMatches(values[0], operand));
             }
-            // Different lengths, neither broadcastable: no match.
-            return false;
+            // Different lengths and neither is a single value: there is no meaningful element-wise
+            // comparison (unlike equality, which is simply not-equal), so surface an error rather than
+            // returning a misleading false.
+            throw new FormatException(string.Format(
+                MessageResources.ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_,
+                values.Count, operands.Count));
         }
 
         public override object ParseOperandTokens(IFilterOperation operation, CultureInfo cultureInfo, IList<string> values)

@@ -363,6 +363,15 @@ namespace pwiz.Common.CommonResources {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Cannot compare a list of {0} values with a list of {1} values..
+        /// </summary>
+        public static string ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_ {
+            get {
+                return ResourceManager.GetString("ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Run command:.
         /// </summary>
         public static string ProcessRunner_Run_Run_command_ {

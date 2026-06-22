@@ -199,4 +199,7 @@
   <data name="PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_" xml:space="preserve">
     <value>The filter value must be a positive number.</value>
   </data>
+  <data name="ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_" xml:space="preserve">
+    <value>Cannot compare a list of {0} values with a list of {1} values.</value>
+  </data>
 </root>

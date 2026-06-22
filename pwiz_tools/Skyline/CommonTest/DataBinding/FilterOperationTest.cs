@@ -180,8 +180,10 @@ namespace CommonTest.DataBinding
             Assert.IsTrue(Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0 }, "15,30"));
             Assert.IsFalse(Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0 }, "15,40"));
 
-            // Differing lengths, neither broadcastable: no match.
-            Assert.IsFalse(Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0, 50.0 }, "15,30"));
+            // Differing lengths, neither broadcastable: an ordered comparison has no meaningful answer
+            // (unlike equality), so it throws rather than returning a misleading false.
+            AssertEx.ThrowsException<FormatException>(
+                () => Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0, 50.0 }, "15,30"));
         }
 
         [TestMethod]
