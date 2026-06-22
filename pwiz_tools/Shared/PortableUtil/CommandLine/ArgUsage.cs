@@ -58,11 +58,13 @@ namespace pwiz.Common.CommandLine
         public const string FORMAT_NO_BORDERS = "no-borders";
 
         /// <summary>
-        /// Host-supplied descriptions, headers and value-error messages. Defaults to a
-        /// no-op provider (empty strings/null descriptions) so the framework never NREs
-        /// before a host installs its own.
+        /// Host-supplied descriptions, headers and value-error messages. Defaults to a provider
+        /// that throws: descriptions/headers/error text are inherently host-specific, so a host
+        /// that renders usage or reports a value error MUST install one. Failing loudly here turns
+        /// a "seam not installed" bug into an immediate exception instead of silently emitting
+        /// empty/mis-encoded output the byte-identical golden HTML test cannot catch.
         /// </summary>
-        public static IArgUsageProvider Provider { get; set; } = new NullArgUsageProvider();
+        public static IArgUsageProvider Provider { get; set; } = new NotInstalledArgUsageProvider();
 
         /// <summary>
         /// Classifies a value as a remote URL (left untouched by <see cref="NameValuePair.ValueFullPath"/>
@@ -82,23 +84,29 @@ namespace pwiz.Common.CommandLine
         /// </summary>
         public static Func<string, string> HtmlEncode { get; set; } = WebUtility.HtmlEncode;
 
-        private class NullArgUsageProvider : IArgUsageProvider
+        private class NotInstalledArgUsageProvider : IArgUsageProvider
         {
-            public string GetDescription(string argName) { return null; }
-            public string AppliesToHeader { get { return string.Empty; } }
-            public string ArgumentHeader { get { return string.Empty; } }
-            public string DescriptionHeader { get { return string.Empty; } }
+            private static InvalidOperationException NotInstalled()
+            {
+                return new InvalidOperationException(
+                    @"No IArgUsageProvider has been installed on ArgUsage.Provider. The host application must install one before rendering usage or reporting a command-line value error.");
+            }
 
-            public string ValueMissingMessage(string argText) { return string.Empty; }
-            public string ValueUnexpectedMessage(string argText) { return string.Empty; }
-            public string ValueInvalidMessage(string argText, string value, string[] argValues) { return string.Empty; }
-            public string ValueInvalidBoolMessage(string argText, string value) { return string.Empty; }
-            public string ValueInvalidIntMessage(string argText, string value) { return string.Empty; }
-            public string ValueOutOfRangeIntMessage(string argText, int value, int minVal, int maxVal) { return string.Empty; }
-            public string ValueInvalidDoubleMessage(string argText, string value) { return string.Empty; }
-            public string ValueOutOfRangeDoubleMessage(string argText, double value, double minVal, double maxVal) { return string.Empty; }
-            public string ValueInvalidDateMessage(string argText, string value) { return string.Empty; }
-            public string ValueInvalidPathMessage(string argText, string value) { return string.Empty; }
+            public string GetDescription(string argName) { throw NotInstalled(); }
+            public string AppliesToHeader { get { throw NotInstalled(); } }
+            public string ArgumentHeader { get { throw NotInstalled(); } }
+            public string DescriptionHeader { get { throw NotInstalled(); } }
+
+            public string ValueMissingMessage(string argText) { throw NotInstalled(); }
+            public string ValueUnexpectedMessage(string argText) { throw NotInstalled(); }
+            public string ValueInvalidMessage(string argText, string value, string[] argValues) { throw NotInstalled(); }
+            public string ValueInvalidBoolMessage(string argText, string value) { throw NotInstalled(); }
+            public string ValueInvalidIntMessage(string argText, string value) { throw NotInstalled(); }
+            public string ValueOutOfRangeIntMessage(string argText, int value, int minVal, int maxVal) { throw NotInstalled(); }
+            public string ValueInvalidDoubleMessage(string argText, string value) { throw NotInstalled(); }
+            public string ValueOutOfRangeDoubleMessage(string argText, double value, double minVal, double maxVal) { throw NotInstalled(); }
+            public string ValueInvalidDateMessage(string argText, string value) { throw NotInstalled(); }
+            public string ValueInvalidPathMessage(string argText, string value) { throw NotInstalled(); }
         }
     }
 }

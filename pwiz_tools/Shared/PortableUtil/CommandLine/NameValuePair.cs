@@ -30,7 +30,7 @@ namespace pwiz.Common.CommandLine
     /// </summary>
     public class NameValuePair
     {
-        public static NameValuePair EMPTY = new NameValuePair(null, null);
+        public static readonly NameValuePair EMPTY = new NameValuePair(null, null);
 
         public NameValuePair(string name, string value)
         {
