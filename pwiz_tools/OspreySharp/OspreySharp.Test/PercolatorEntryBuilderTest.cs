@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.Tasks;
 
 namespace pwiz.OspreySharp.Test
@@ -45,7 +46,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestBuildFeatureFallbackAndCounts()
         {
-            int nFeat = AbstractScoringTask.NUM_PIN_FEATURES;
+            int nFeat = ScoringTaskShared.NUM_PIN_FEATURES;
 
             // Entry 0: well-formed 21-feature target -> kept by reference.
             var goodFeatures = new double[nFeat];
@@ -75,7 +76,7 @@ namespace pwiz.OspreySharp.Test
             };
 
             var result = PercolatorEntryBuilder.Build(
-                perFileEntries,
+                perFileEntries, nFeat,
                 out int nWithFeatures, out int nWithoutFeatures,
                 out int nInputTargets, out int nInputDecoys);
 

@@ -1,7 +1,7 @@
 /*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
- * AI assistance: Claude Code (Claude Opus 4.7) <noreply .at. anthropic.com>
+ * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
  *
  * Based on osprey (https://github.com/MacCossLab/osprey)
  *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
@@ -26,87 +26,34 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
-using pwiz.OspreySharp.Scoring;
 
-namespace pwiz.OspreySharp.Tasks
+namespace pwiz.OspreySharp.Scoring
 {
     /// <summary>
-    /// Base class for tasks that drive the OspreySharp scoring engine
-    /// (PerFileScoringTask and PerFileRescoreTask). Owns the shared
-    /// per-window scoring + per-candidate feature computation +
-    /// library prep + dedup helpers; subclasses orchestrate the
-    /// per-file or per-pass flow that uses them.
-    ///
-    /// Methods are protected so subclasses can call them as bare
-    /// names; static helpers and constants are protected static so
-    /// subclasses (or static contexts inside them) can reach them
-    /// without back-references.
-    ///
-    /// Phase A scope: a mechanical lift of the methods that used to
-    /// live on AnalysisPipeline. The shared scoring engine now lives
-    /// here; AnalysisPipeline becomes the thin task-pipeline driver
-    /// (Run + log sinks).
+    /// Owns coelution scoring plus the double-counting / pair deduplication
+    /// passes. Relocated out of AbstractScoringTask to sever the exe-layer
+    /// PipelineContext dependency (mirrors <see cref="CoelutionScorer"/>): the
+    /// two ambient dependencies the methods carried -- logging and the per-entry
+    /// diagnostic dump sink -- are now injected, logging via an
+    /// <see cref="Action{T}"/> and the dump sink via
+    /// <see cref="IScoringDiagnostics"/> (nullable; invoked null-conditionally).
+    /// The orchestration (per-window Parallel scoring via <see cref="CoelutionScorer"/>
+    /// and the dedup tie-breaks) is moved verbatim, so cross-impl parity is
+    /// unaffected. Tasks calls this through thin facades that keep their original
+    /// PipelineContext signatures.
     /// </summary>
-    public abstract class AbstractScoringTask : OspreyTask
+    public class ScoringPipeline
     {
-        // Internal so FirstJoinTask (which now owns RunPercolatorFdr +
-        // RunPercolatorStreaming + BuildBasicFeatures) can reuse the
-        // same feature width without redeclaring it. Derives from the
-        // single source of truth in OspreySharp.Scoring so the two cannot drift.
-        internal const int NUM_PIN_FEATURES = OspreyFeatureCalculators.FeatureCount;
+        private readonly Action<string> _logInfo;
+        private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
 
-
-        // EntryId encodes target/decoy in the high bit; base_id is the
-        // lower 31 bits, shared by a target and its paired decoy.
-        // Internal so the Tasks/ subfolder partials (e.g. FirstJoinTask)
-        // can use the same constant.
-        internal const uint BASE_ID_MASK = 0x7FFFFFFFu;
-
-
-        // Serializes mzML reads across concurrent ProcessFile() calls.
-        // The producer inside MzmlReader.LoadAllSpectra is a sequential
-        // XmlReader over a FileStream, so 3 files parsing in parallel
-        // means 3 sequential disk scans fighting for the same head/cache.
-        // Gating the parse step funnels the disk-bound work into one
-        // stream at a time while leaving the subsequent main-search
-        // phase free to run in parallel across files.
-        // Internal so LoadSpectra (now on PerFileScoringTask) can take
-        // the same gate without redeclaring a parallel SemaphoreSlim.
-        internal static readonly SemaphoreSlim s_mzmlReadGate = new SemaphoreSlim(1, 1);
-
-
-        // Local alias so existing dump code using F10 continues to read cleanly.
-        // The actual formatter lives in OspreyDiagnostics now.
-        private static string F10(double v)
+        public ScoringPipeline(Action<string> logInfo, IScoringDiagnostics diagnostics)
         {
-            return OspreyDiagnosticsLog.F10(v);
-        }
-
-
-        /// <summary>
-        /// Extract unique isolation windows from the first cycle of MS2 spectra.
-        /// </summary>
-        protected List<IsolationWindow> ExtractIsolationWindows(List<Spectrum> spectra)
-        {
-            var windows = new List<IsolationWindow>();
-            var seenCenters = new HashSet<int>();
-
-            foreach (var spectrum in spectra)
-            {
-                int centerKey = (int)Math.Round(spectrum.IsolationWindow.Center * 10.0);
-                if (seenCenters.Contains(centerKey))
-                    break;
-                seenCenters.Add(centerKey);
-                windows.Add(spectrum.IsolationWindow);
-            }
-
-            // Sort by center m/z
-            windows.Sort((a, b) => a.Center.CompareTo(b.Center));
-            return windows;
+            _logInfo = logInfo ?? (_ => { });
+            _diagnostics = diagnostics;
         }
 
 
@@ -115,7 +62,7 @@ namespace pwiz.OspreySharp.Tasks
         /// For each window, finds candidate entries whose precursor falls in the window,
         /// extracts fragment XICs, detects CWT peaks, and scores at each peak.
         /// </summary>
-        protected List<FdrEntry> RunCoelutionScoring(
+        public List<FdrEntry> RunCoelutionScoring(
             List<LibraryEntry> fullLibrary,
             List<Spectrum> spectra,
             List<MS1Spectrum> ms1Spectra,
@@ -123,8 +70,7 @@ namespace pwiz.OspreySharp.Tasks
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
-            ScoringContext context,
-            PipelineContext ctx)
+            ScoringContext context)
         {
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
@@ -227,7 +173,7 @@ namespace pwiz.OspreySharp.Tasks
                     config.RtCalibration.MinRtTolerance,
                     Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                ctx.LogInfo(string.Format(
+                _logInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
                     rtToleranceGlobal, mad,
                     context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
@@ -255,7 +201,7 @@ namespace pwiz.OspreySharp.Tasks
                     Unit = calUnit
                 };
                 string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
-                ctx.LogInfo(string.Format(
+                _logInfo(string.Format(
                     "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
                     calTol, unitStr));
 
@@ -265,7 +211,7 @@ namespace pwiz.OspreySharp.Tasks
                 // built, so no rebuild is needed here.)
                 config.FragmentTolerance = searchFragTol;
 
-                ctx.LogInfo(string.Format(
+                _logInfo(string.Format(
                     "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
                     ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
             }
@@ -273,10 +219,10 @@ namespace pwiz.OspreySharp.Tasks
             // Per-entry search XIC diagnostic: log the intent once at start.
             // The per-entry dump check happens inline in ScoreCandidate via
             // the injected IScoringDiagnostics.ShouldDumpSearchXicFor(entry.Id).
-            var diagSearchIds = ctx.Diagnostics?.DiagSearchEntryIds;
+            var diagSearchIds = _diagnostics?.DiagSearchEntryIds;
             if (diagSearchIds != null)
             {
-                ctx.LogInfo(string.Format(
+                _logInfo(string.Format(
                     "[BISECT] OSPREY_DIAG_SEARCH_ENTRY_IDS: will dump {0} entries",
                     diagSearchIds.Count));
             }
@@ -293,16 +239,10 @@ namespace pwiz.OspreySharp.Tasks
             if (maxWindows > 0 && maxWindows < isolationWindows.Count)
             {
                 windowsToScore = isolationWindows.Take(maxWindows).ToList();
-                ctx.LogInfo(string.Format(
+                _logInfo(string.Format(
                     "[BENCH] OSPREY_MAX_SCORING_WINDOWS={0} - capping {1} windows to first {0}",
                     maxWindows, isolationWindows.Count));
             }
-
-            // Bracket the main-search parallel loop with the dotTrace Measure
-            // API and peak-memory logging. When no profiler is attached the
-            // ProfilerHooks calls are inexpensive no-ops.
-            ProfilerHooks.LogMemoryStats(ctx.LogInfo, "pre-main-search");
-            ProfilerHooks.StartMeasure();
 
             // Process each isolation window (parallelizable). Per-window
             // results land in windowResults[wIdx] so the final flatten is
@@ -318,7 +258,7 @@ namespace pwiz.OspreySharp.Tasks
             // Construct the per-window coelution scorer once. It captures the
             // log sink + the scoring-diagnostics sink (null when -d is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
-            var coelutionScorer = new CoelutionScorer(ctx.LogInfo, ctx.Diagnostics as IScoringDiagnostics);
+            var coelutionScorer = new CoelutionScorer(_logInfo, _diagnostics);
 
             Parallel.For(0, windowsToScore.Count, new ParallelOptions
             {
@@ -348,7 +288,7 @@ namespace pwiz.OspreySharp.Tasks
                     windowsProcessed++;
                     if (windowsProcessed % 10 == 0 || windowsProcessed == windowsToScore.Count)
                     {
-                        ctx.LogInfo(string.Format("  Scored {0}/{1} isolation windows",
+                        _logInfo(string.Format("  Scored {0}/{1} isolation windows",
                             windowsProcessed, windowsToScore.Count));
                     }
                 }
@@ -361,65 +301,18 @@ namespace pwiz.OspreySharp.Tasks
                     allEntries.AddRange(windowResults[wIdx]);
             }
 
-            ProfilerHooks.SaveAndStopMeasure();
-            ProfilerHooks.LogMemoryStats(ctx.LogInfo, "post-main-search");
-
             if (context.XcorrScratchPool != null)
             {
-                ctx.LogInfo(string.Format(
+                _logInfo(string.Format(
                     "[POOL] scratch_allocs={0}, bins_allocs={1}",
                     context.XcorrScratchPool.ScratchAllocCount,
                     context.XcorrScratchPool.BinsAllocCount));
             }
 
             // Summarize per-window timings.
-            LogWindowTimingSummary(windowTimings, ctx);
+            LogWindowTimingSummary(windowTimings);
 
             return allEntries;
-        }
-
-
-        /// <summary>
-        /// Per-window timing record for diagnostic summarization.
-        /// </summary>
-        private class WindowTiming
-        {
-            public double CenterMz { get; set; }
-            public double Seconds { get; set; }
-            public int CandidateCount { get; set; }
-        }
-
-
-        /// <summary>
-        /// Log min/median/max per-window scoring times and the slowest window's candidate count.
-        /// </summary>
-        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings, PipelineContext ctx)
-        {
-            if (timings == null || timings.Count == 0)
-                return;
-
-            var sorted = timings.OrderBy(t => t.Seconds).ToList();
-            int n = sorted.Count;
-            double minS = sorted[0].Seconds;
-            double maxS = sorted[n - 1].Seconds;
-            double medS = sorted[n / 2].Seconds;
-            var slowest = sorted[n - 1];
-            ctx.LogInfo(string.Format(
-                "[TIMING] Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
-                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
-        }
-
-
-        /// <summary>
-        /// Find the MS1 spectrum with retention time closest to the given RT.
-        /// Assumes MS1 spectra are sorted by RT. Thin forwarder to the single
-        /// implementation in Core (<see cref="MS1Spectrum.FindNearest"/>) so the
-        /// harness (here + <c>Calibrator</c>) and the MS1 feature calculators share
-        /// one binary search / tie-break and cannot drift.
-        /// </summary>
-        internal static MS1Spectrum FindNearestMs1(List<MS1Spectrum> ms1Spectra, double rt)
-        {
-            return MS1Spectrum.FindNearest(ms1Spectra, rt);
         }
 
 
@@ -432,14 +325,13 @@ namespace pwiz.OspreySharp.Tasks
         /// so the same precursor cannot be counted twice from a shared
         /// chromatographic feature.
         /// </summary>
-        protected List<FdrEntry> DeduplicateDoubleCounting(
+        public List<FdrEntry> DeduplicateDoubleCounting(
             List<FdrEntry> entries,
             List<LibraryEntry> library,
             IList<Spectrum> spectra,
             MzCalibrationResult ms2Cal,
             List<IsolationWindow> isolationWindows,
-            OspreyConfig config,
-            PipelineContext ctx)
+            OspreyConfig config)
         {
             int originalCount = entries.Count;
             if (originalCount == 0 || isolationWindows == null || isolationWindows.Count == 0)
@@ -621,7 +513,7 @@ namespace pwiz.OspreySharp.Tasks
             int removedDecoys = removedCount - removedTargets;
             if (removedCount > 0)
             {
-                ctx.LogInfo(string.Format(
+                _logInfo(string.Format(
                     "Double-counting deduplication: removed {0} entries " +
                     "({1} targets, {2} decoys; {3} remaining)",
                     removedCount, removedTargets, removedDecoys,
@@ -635,7 +527,7 @@ namespace pwiz.OspreySharp.Tasks
         }
 
 
-        protected List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries, PipelineContext ctx)
+        public List<FdrEntry> DeduplicatePairs(List<FdrEntry> entries)
         {
             // Group by base_id (mask off high bit)
             var groups = new Dictionary<uint, KeyValuePair<FdrEntry, FdrEntry>>();
@@ -691,11 +583,42 @@ namespace pwiz.OspreySharp.Tasks
             int removed = entries.Count - deduped.Count;
             if (removed > 0)
             {
-                ctx.LogInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
+                _logInfo(string.Format("Deduplicated: {0} -> {1} entries ({2} removed)",
                     entries.Count, deduped.Count, removed));
             }
 
             return deduped;
+        }
+
+
+        /// <summary>
+        /// Per-window timing record for diagnostic summarization.
+        /// </summary>
+        private class WindowTiming
+        {
+            public double CenterMz { get; set; }
+            public double Seconds { get; set; }
+            public int CandidateCount { get; set; }
+        }
+
+
+        /// <summary>
+        /// Log min/median/max per-window scoring times and the slowest window's candidate count.
+        /// </summary>
+        private void LogWindowTimingSummary(ConcurrentBag<WindowTiming> timings)
+        {
+            if (timings == null || timings.Count == 0)
+                return;
+
+            var sorted = timings.OrderBy(t => t.Seconds).ToList();
+            int n = sorted.Count;
+            double minS = sorted[0].Seconds;
+            double maxS = sorted[n - 1].Seconds;
+            double medS = sorted[n / 2].Seconds;
+            var slowest = sorted[n - 1];
+            _logInfo(string.Format(
+                "[TIMING] Per-window: min={0:F2}s, median={1:F2}s, max={2:F2}s (slowest m/z={3:F1} had {4} candidates)",
+                minS, medS, maxS, slowest.CenterMz, slowest.CandidateCount));
         }
     }
 }
