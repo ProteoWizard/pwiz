@@ -1293,7 +1293,7 @@ namespace pwiz.OspreySharp.Tasks
                     && config.PrecursorTolerance.Unit == ToleranceUnit.Ppm
                     ? config.PrecursorTolerance.Tolerance
                     : 10.0;
-                var apexMs1 = AbstractScoringTask.FindNearestMs1(ms1Spectra, apexRt);
+                var apexMs1 = ScoringTaskShared.FindNearestMs1(ms1Spectra, apexRt);
                 if (apexMs1 != null)
                 {
                     var envelope = IsotopeEnvelope.Extract(

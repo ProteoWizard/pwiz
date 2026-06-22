@@ -575,8 +575,10 @@ namespace pwiz.OspreySharp.Test
             var blib = LibrarySource.FromPath("library.blib");
             Assert.AreEqual(LibraryFormat.Blib, blib.Format);
 
-            var elib = LibrarySource.FromPath("library.elib");
-            Assert.AreEqual(LibraryFormat.Elib, elib.Format);
+            // EncyclopeDIA .elib reading was removed; an .elib path is rejected
+            // with a clear error rather than mis-parsed as DIA-NN TSV.
+            Assert.ThrowsException<NotSupportedException>(
+                () => LibrarySource.FromPath("library.elib"));
         }
 
         [TestMethod]

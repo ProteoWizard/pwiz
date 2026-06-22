@@ -158,8 +158,15 @@ namespace pwiz.OspreySharp.Tasks
 
         /// <summary>
         /// Run protein-level FDR using parsimony and picked-protein
-        /// competition. Moved here from AnalysisPipeline as part of
-        /// the Phase A monolith breakup.
+        /// competition. The orchestration (collect best scores, detected-peptide
+        /// gate, parsimony, picked-protein FDR, summary logging, q-value
+        /// propagation) lives in <see cref="ProteinFdrEngine.RunSecondPass"/>,
+        /// shared with the first-pass / rehydration paths. It returns the
+        /// parsimony / FDR artifacts so the Stage-7 diagnostic dumps and the
+        /// <c>Stage7ProteinFdrOnly</c> early-exit can stay in this Tasks facade --
+        /// OspreySharp.FDR cannot reference OspreySharp.Diagnostics (the
+        /// Diagnostics project references FDR), so the dump / Environment.Exit
+        /// cannot move into the engine.
         /// </summary>
         private void RunProteinFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
@@ -167,91 +174,24 @@ namespace pwiz.OspreySharp.Tasks
             OspreyConfig config,
             PipelineContext ctx)
         {
-            // Collect best peptide scores
-            var bestScores = ProteinFdr.CollectBestPeptideScores(perFileEntries);
-            ctx.LogInfo(string.Format("Collected scores for {0} unique peptides", bestScores.Count));
-
-            // Get detected peptide set: targets passing experiment-level
-            // q-value at the configured fdr_level (matches Rust pipeline.rs
-            // second-pass parsimony input which filters on
-            // `effective_experiment_qvalue(peptide_gate_level) <= experiment_fdr`
-            // where peptide_gate_level = config.fdr_level (Peptide if config
-            // is Protein, otherwise the config value). The Rust default
-            // `FdrLevel::Precursor` means a default run filters on precursor-
-            // level experiment q-values, NOT peptide-level. Matching that
-            // here prevents losing ~1500 peptides to an unintentionally
-            // stricter Peptide-level gate.
-            // Rust pipeline.rs:4510 maps `FdrLevel::Protein -> Peptide` and
-            // passes other variants through. C#'s FdrLevel enum doesn't
-            // include `Protein` (just Precursor/Peptide/Both), so the remap
-            // is a no-op here -- pass config.FdrLevel through directly. The
-            // important property is that the gate level matches Rust's
-            // default `FdrLevel::Precursor`, NOT a hardcoded Peptide.
-            var peptideGateLevel = config.FdrLevel;
-            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var kvp in perFileEntries)
-            {
-                foreach (var entry in kvp.Value)
-                {
-                    if (!entry.IsDecoy &&
-                        entry.EffectiveExperimentQvalue(peptideGateLevel) <= config.ExperimentFdr)
-                    {
-                        detectedPeptides.Add(entry.ModifiedSequence);
-                    }
-                }
-            }
-
-            ctx.LogInfo(string.Format("Detected {0} unique peptides at {1:P1} experiment FDR ({2})",
-                detectedPeptides.Count, config.ExperimentFdr, peptideGateLevel));
-            ctx.LogInfo(string.Format(
-                "[COUNT] Detected peptides for protein FDR: {0} unique",
-                detectedPeptides.Count));
+            var result = ProteinFdrEngine.RunSecondPass(
+                perFileEntries, fullLibrary, config, ctx.LogInfo);
 
             // Cross-impl bisection dump (env-var-gated, no-op in production).
             if (ctx.Diagnostics?.DumpDetectedPeptides ?? false)
-                ctx.Diagnostics?.WriteStage7DetectedPeptidesDump(detectedPeptides);
-
-            // Build protein parsimony
-            var parsimony = ProteinFdr.BuildProteinParsimony(
-                fullLibrary, config.SharedPeptides, detectedPeptides);
-
-            ctx.LogInfo(string.Format("Protein parsimony: {0} groups", parsimony.Groups.Count));
-            ctx.LogInfo(string.Format(
-                "[COUNT] Protein parsimony groups: {0}", parsimony.Groups.Count));
-
-            // Compute protein FDR. Gate is config.RunFdr (1x) per Savitski's
-            // convention, matching Rust pipeline.rs:4389
-            // (compute_protein_fdr at config.run_fdr). The previous 2x gate
-            // was a divergence from Rust that has since been corrected.
-            var proteinFdr = ProteinFdr.ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
-
-            // Count passing proteins
-            int passingProteins = 0;
-            foreach (var kvp in proteinFdr.GroupQvalues)
-            {
-                if (kvp.Value <= config.ProteinFdr.Value)
-                    passingProteins++;
-            }
-
-            ctx.LogInfo(string.Format("{0} protein groups pass {1:P1} protein FDR",
-                passingProteins, config.ProteinFdr.Value));
-            ctx.LogInfo(string.Format(
-                "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
-                passingProteins, config.ProteinFdr.Value));
+                ctx.Diagnostics?.WriteStage7DetectedPeptidesDump(result.DetectedPeptides);
 
             // Stage 7 cross-impl bisection dump (no-op unless
-            // OSPREY_DUMP_STAGE7_PROTEIN_FDR=1). Fires before propagation so
-            // the dumped state captures the picked-protein computation in
-            // isolation, matching Rust diagnostics.dump_stage7_protein_fdr.
+            // OSPREY_DUMP_STAGE7_PROTEIN_FDR=1). Mirrors Rust
+            // diagnostics.dump_stage7_protein_fdr. The engine has already
+            // propagated q-values onto the stubs, but the dump reads only the
+            // parsimony / FDR result (not the stubs), so it is unaffected.
             if (ctx.Diagnostics?.DumpStage7ProteinFdr ?? false)
             {
-                ctx.Diagnostics?.WriteStage7ProteinFdrDump(parsimony, proteinFdr);
+                ctx.Diagnostics?.WriteStage7ProteinFdrDump(result.Parsimony, result.ProteinFdr);
                 if (ctx.Diagnostics?.Stage7ProteinFdrOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
-
-            // Propagate protein q-values to FdrEntry stubs
-            ProteinFdr.PropagateProteinQvalues(perFileEntries, proteinFdr, true, true);
         }
 
         /// <summary>
