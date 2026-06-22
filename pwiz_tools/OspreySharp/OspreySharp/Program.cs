@@ -802,7 +802,7 @@ namespace pwiz.OspreySharp
             Console.Error.WriteLine("");
             Console.Error.WriteLine("OPTIONS:");
             Console.Error.WriteLine("    -i, --input <files>           Input mzML file(s)");
-            Console.Error.WriteLine("    -l, --library <file>          Spectral library (.tsv, .blib, .elib)");
+            Console.Error.WriteLine("    -l, --library <file>          Spectral library (.tsv, .blib)");
             Console.Error.WriteLine("    -o, --output <file>           Output blib file");
             Console.Error.WriteLine("    --work-dir <dir>              Write derived artifacts AND the spectra cache here");
             Console.Error.WriteLine("                                 (so input data can be read-only); default: beside input");
