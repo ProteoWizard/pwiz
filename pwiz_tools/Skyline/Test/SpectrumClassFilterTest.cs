@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Common.CommonResources;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
@@ -78,12 +79,11 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(Predicate(@" = 17.00")(spectrum));
             Assert.IsFalse(Predicate(@" = 17.00")(CeSpectrum(@"ce17_4", 17.4)));
 
-            // A negative collision energy is rejected at parse time with the specific "must be positive"
-            // message (not the generic "invalid format" one). Equality is a valid operator for the
-            // list-valued CollisionEnergy property, so only the negative sign is at fault here.
+            // CollisionEnergy is a PositiveNumber column, so a negative operand is rejected at parse time
+            // (by PositiveNumberFilterHandler) with the "must be a positive number" message.
             AssertEx.ThrowsException<FormatException>(
                 () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17"),
-                SpectraResources.SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value);
+                MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_);
 
             // Ordered comparison operators work on the list-valued CollisionEnergy: the operator is
             // applied to each MS-level CE and, for a single operand, the criterion holds only if every
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTest
             // now allowed, the negative value (not the operator) is the problem.
             AssertEx.ThrowsException<FormatException>(
                 () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" > -20"),
-                SpectraResources.SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value);
+                MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_);
         }
 
         [TestMethod]

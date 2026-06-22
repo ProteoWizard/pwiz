@@ -196,4 +196,7 @@
   <data name="PrecisionNumber_Parse_Unable_to_parse___0___as_a_number" xml:space="preserve">
     <value>Unable to parse '{0}' as a number</value>
   </data>
+  <data name="PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_" xml:space="preserve">
+    <value>The filter value must be a positive number.</value>
+  </data>
 </root>

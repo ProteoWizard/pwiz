@@ -352,7 +352,16 @@ namespace pwiz.Common.CommonResources {
                 return ResourceManager.GetString("PrecisionNumber_Parse_Unable_to_parse___0___as_a_number", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The filter value must be a positive number..
+        /// </summary>
+        public static string PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_ {
+            get {
+                return ResourceManager.GetString("PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Run command:.
         /// </summary>

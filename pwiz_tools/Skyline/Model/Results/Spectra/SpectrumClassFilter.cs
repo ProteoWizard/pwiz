@@ -141,40 +141,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
             };
         }
 
-        /// <summary>
-        /// Throws a <see cref="FormatException"/> if any CollisionEnergy criterion uses a negative
-        /// operand. Collision energy is read from the spectrum file as a positive magnitude (the
-        /// mzML/PSI convention, <c>MS:1000045</c>), and a spectrum's scan polarity is already pinned by
-        /// the precursor charge, so a negative collision energy in a spectrum filter is meaningless.
-        /// Rejecting it with a helpful message (rather than silently never matching) tells the user to
-        /// enter the magnitude as a positive value.
-        /// </summary>
-        private static void ValidateCollisionEnergyOperands(SpectrumClassFilter filter)
-        {
-            var collisionEnergyPath = SpectrumClassColumn.CollisionEnergy.PropertyPath;
-            foreach (var spec in filter.Clauses.SelectMany(clause => clause.FilterSpecs))
-            {
-                if (!Equals(spec.ColumnId, collisionEnergyPath))
-                {
-                    continue;
-                }
-                // InvariantOperandText is a single value or a comma-separated list of doubles (invariant
-                // formatting uses '.' for the decimal point and ',' to separate list items).
-                var operandText = spec.Predicate.InvariantOperandText;
-                if (string.IsNullOrEmpty(operandText))
-                {
-                    continue;
-                }
-                if (operandText.Split(',').Any(token =>
-                        double.TryParse(token.Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out var value) &&
-                        value < 0))
-                {
-                    throw new FormatException(SpectraResources
-                        .SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value);
-                }
-            }
-        }
-
         public override string ToString()
         {
             return GetAbbreviatedText();
@@ -412,21 +378,21 @@ namespace pwiz.Skyline.Model.Results.Spectra
             FormatException firstError = null;
             foreach (var localizer in GetParseLocalizers())
             {
-                SpectrumClassFilter filter;
                 try
                 {
-                    filter = new SpectrumClassFilter(CreateSerializer(localizer).ParseFilterString(filterString));
+                    return new SpectrumClassFilter(CreateSerializer(localizer).ParseFilterString(filterString));
+                }
+                catch (FilterOperandException)
+                {
+                    // An operand that is invalid for its column's type (e.g. a negative CollisionEnergy)
+                    // is invalid in every locale, so surface its specific message rather than retrying
+                    // and reporting the generic "invalid format" message below.
+                    throw;
                 }
                 catch (FormatException ex)
                 {
                     firstError = firstError ?? ex;
-                    continue;
                 }
-                // Parsed successfully in this culture. Apply semantic validation outside the catch so
-                // its specific message surfaces rather than being mistaken for a parse failure and
-                // replaced by the generic "invalid format" message below.
-                ValidateCollisionEnergyOperands(filter);
-                return filter;
             }
             // Replace the serializer's terse "invalid filter string" with a message that shows the
             // expected form (e.g. column/operator/value with spaces, combined with "and"/"or").

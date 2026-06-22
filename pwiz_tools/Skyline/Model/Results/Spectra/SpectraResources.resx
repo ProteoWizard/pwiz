@@ -154,7 +154,4 @@
   <data name="SpectrumClassFilter_GetText_All" xml:space="preserve">
     <value>All</value>
   </data>
-  <data name="SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value" xml:space="preserve">
-    <value>Collision Energy is measured in eV, which is a positive magnitude, so a spectrum filter cannot use a negative Collision Energy. Enter the value as a positive number, for example 'CollisionEnergy = 17'. The scan polarity does not need to be specified; it is already determined by the precursor.</value>
-  </data>
 </root>

@@ -5,6 +5,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Collections;
+using pwiz.Common.CommonResources;
+using pwiz.Common.DataBinding.Attributes;
 
 namespace pwiz.Common.DataBinding.Filtering
 {
@@ -659,6 +661,126 @@ namespace pwiz.Common.DataBinding.Filtering
             public int? Compare(object value, object operand)
             {
                 return (value as IComparable)?.CompareTo(operand);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Thrown when a filter operand is invalid for its column's type (e.g. a negative value for a
+    /// <see cref="PositiveNumber"/> column). A distinct type so callers that try parsing under several
+    /// locales (e.g. SpectrumClassFilter.ParseFilterString) can surface this message immediately rather
+    /// than retrying — the operand is invalid regardless of locale.
+    /// </summary>
+    public class FilterOperandException : FormatException
+    {
+        public FilterOperandException(string message) : base(message)
+        {
+        }
+    }
+
+    /// <summary>
+    /// A numeric value that is constrained to be non-negative. Used as a column type so the data-binding
+    /// filter (via <see cref="PositiveNumberFilterHandler"/>) rejects negative filter operands.
+    /// </summary>
+    [FilterHandler(typeof(PositiveNumberFilterHandler))]
+    public readonly struct PositiveNumber : IFormattable, IComparable, IComparable<PositiveNumber>, IEquatable<PositiveNumber>
+    {
+        public PositiveNumber(double value)
+        {
+            Value = value;
+        }
+
+        public double Value { get; }
+
+        public static implicit operator PositiveNumber(double value)
+        {
+            return new PositiveNumber(value);
+        }
+
+        public static implicit operator double(PositiveNumber positiveNumber)
+        {
+            return positiveNumber.Value;
+        }
+
+        public override string ToString()
+        {
+            return Value.ToString(CultureInfo.CurrentCulture);
+        }
+
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            return Value.ToString(format, formatProvider);
+        }
+
+        public int CompareTo(PositiveNumber other)
+        {
+            return Value.CompareTo(other.Value);
+        }
+
+        public int CompareTo(object obj)
+        {
+            return obj is PositiveNumber other ? CompareTo(other) : 1;
+        }
+
+        public bool Equals(PositiveNumber other)
+        {
+            return Value.Equals(other.Value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is PositiveNumber other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode();
+        }
+    }
+
+    /// <summary>
+    /// Numeric filter handler for <see cref="PositiveNumber"/> columns: behaves like
+    /// <see cref="NumericFilterHandler"/> but rejects a negative operand at parse time.
+    /// </summary>
+    public class PositiveNumberFilterHandler : NumericFilterHandler
+    {
+        public override object DeserializeOperand(IFilterOperation operation, string text)
+        {
+            return RejectNegative(base.DeserializeOperand(operation, text));
+        }
+
+        protected override PrecisionNumber ParseTypedOperand(IFilterOperation operation, CultureInfo cultureInfo, string text)
+        {
+            var operand = base.ParseTypedOperand(operation, cultureInfo, text);
+            RejectNegative(operand);
+            return operand;
+        }
+
+        protected override bool TryConvertColumnValue(object value, out double columnValue)
+        {
+            if (value is PositiveNumber positiveNumber)
+            {
+                columnValue = positiveNumber.Value;
+                return true;
+            }
+            return base.TryConvertColumnValue(value, out columnValue);
+        }
+
+        private static object RejectNegative(object operand)
+        {
+            if (operand is PrecisionNumber precisionNumber)
+            {
+                RejectNegative(precisionNumber);
+            }
+            return operand;
+        }
+
+        private static void RejectNegative(PrecisionNumber operand)
+        {
+            if (operand.ToDouble() < 0)
+            {
+                throw new FilterOperandException(
+                    MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_);
             }
         }
     }

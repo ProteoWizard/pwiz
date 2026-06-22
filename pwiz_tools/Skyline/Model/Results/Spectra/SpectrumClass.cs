@@ -20,6 +20,7 @@
 using JetBrains.Annotations;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util;
 
@@ -60,7 +61,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             get; private set;
         }
 
-        public FormattableList<double> CollisionEnergy
+        public FormattableList<PositiveNumber> CollisionEnergy
         {
             get; private set;
         }

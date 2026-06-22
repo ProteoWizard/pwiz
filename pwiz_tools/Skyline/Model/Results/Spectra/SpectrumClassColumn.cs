@@ -23,6 +23,7 @@ using System.Linq;
 using System.Reflection;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Databinding.Entities;
@@ -252,15 +253,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// Returns the collision energies found across the spectrum's precursor levels as a list (one
         /// entry per level, so the same value can repeat), or null if the spectrum reports none.
         /// </summary>
-        private static FormattableList<double> GetCollisionEnergy(SpectrumMetadata spectrumMetadata)
+        private static FormattableList<PositiveNumber> GetCollisionEnergy(SpectrumMetadata spectrumMetadata)
         {
-            var collisionEnergies = GetMsLevelValues(spectrumMetadata, precursor => precursor.CollisionEnergy).OfType<double>().ToList();
+            var collisionEnergies = GetMsLevelValues(spectrumMetadata, precursor => precursor.CollisionEnergy)
+                .OfType<double>().Select(ce => new PositiveNumber(ce)).ToList();
             if (collisionEnergies.Count == 0)
             {
                 return null;
             }
 
-            return new FormattableList<double>(collisionEnergies);
+            return new FormattableList<PositiveNumber>(collisionEnergies);
         }
 
         private static double? GetIsolationWindowWidth(IEnumerable<SpectrumPrecursor> precursors)
