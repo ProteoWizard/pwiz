@@ -23,6 +23,17 @@
               command so the rehydrate paths fire) and asserts the resume blib
               equals the straight-through blib at 1e-9. The build is its own
               oracle, so no baseline is needed.
+      mode 3  HPC 4-task worker-chain self-consistency -- runs the distributed
+              --task pipeline (PerFileScoring -> FirstJoin -> PerFileRescore ->
+              MergeNode), each phase rehydrating the prior phase's on-disk
+              sidecars exactly as a multi-computer distribution would, and
+              asserts the chain's final blib equals the straight-through blib at
+              1e-9. Where mode 2 covers in-process straight-through resume, mode 3
+              covers the cross-process --task boundary rehydrate paths. Stages all
+              inputs + sidecars by copy under the run dir (the read-only data dir
+              is never touched); per-stage parquet/sidecar bisection of a red gate
+              lives in ai/scripts/OspreySharp/Compare (Compare-Stage7-Rehydration-
+              Strict-CSharp.ps1).
 
     NO dependency on the sibling ai/ checkout: data acquisition, blib golden
     capture/compare, and the tolerance comparators all live under
@@ -41,6 +52,11 @@
 .PARAMETER SkipResume
     Skip the mode-2 resume self-consistency leg (mode 1 only).
 
+.PARAMETER SkipHpcChain
+    Skip the mode-3 HPC 4-task worker-chain leg. The overnight gate leaves it on
+    (the chain is part of the standing cadence); this switch is for fast local
+    iteration when only the straight-through correctness matters.
+
 .PARAMETER DownloadsPath
     Override the downloads folder (default: Windows Downloads, honoring
     SKYLINE_DOWNLOAD_PATH and a relocated Downloads).
@@ -54,6 +70,22 @@
 
 .PARAMETER NoBuild
     Skip the OspreySharp build step (use the existing Release binary).
+
+.PARAMETER KeepRunDirs
+    Number of most-recent TestResults\regression-* run dirs to keep when pruning
+    ORPHANS at startup (default 0 -- keep none). A normal run now removes its own
+    output when it finishes (see -KeepOutput), so this only clears dirs left behind
+    by a previously killed run (TeamCity timeout / OOM). Raise it to retain old run
+    dirs on a roomy local disk.
+
+.PARAMETER KeepOutput
+    Keep this run's TestResults\regression-<stamp> output instead of deleting it. By
+    default the run deletes its scratch as it goes -- each HPC-chain phase and each
+    dataset as soon as it is consumed, then the whole run root at the end -- so it
+    leaves no multi-GB output behind to starve the next run on a shared build agent.
+    The raw input data (downloaded mzML/library) is NEVER touched. Pass this locally
+    to retain output for post-mortem; a red CI gate's diagnosis lives in the build
+    log, not these files.
 
 .EXAMPLE
     # Local: run Stellar straight-through + resume against the committed golden
@@ -71,10 +103,14 @@ param(
     [ValidateSet('Stellar', 'Astral', 'All')] [string]$Dataset = 'All',
     [switch]$CreateGolden,
     [switch]$SkipResume,
+    [switch]$SkipHpcChain,
     [string]$DownloadsPath,
     [int]$Threads = 16,
     [switch]$TeamCity,
     [switch]$NoBuild,
+    [ValidateRange(0, [int]::MaxValue)]
+    [int]$KeepRunDirs = 0,
+    [switch]$KeepOutput,
     [double]$Tolerance = 1e-9
 )
 
@@ -121,6 +157,44 @@ function Write-Progress-Tc([string]$msg) {
 function Write-Problem-Tc([string]$msg) {
     if ($TeamCity) { Write-Host ("##teamcity[buildProblem description='{0}']" -f (Format-TcMessage $msg)) }
     Write-Host "ERROR: $msg" -ForegroundColor Red
+}
+
+# --- Reclaim disk: prune orphaned TestResults run dirs ------------------------
+# A normal run now removes its OWN TestResults\regression-<stamp> dir as it goes
+# (each HPC-chain phase + dataset when consumed, then the run root at the end --
+# see the cleanup below and -KeepOutput), so between runs there is normally nothing
+# here. This startup prune is the safety net for ORPHANS: a dir left by a run that
+# was killed (TeamCity timeout / OOM) before it reached its own cleanup. Run here
+# FIRST -- before the build, data acquisition, and the new run dir -- so even a
+# near-full disk can run it (deleting needs ~no free space) and the rest of the run
+# has the reclaimed space. Keeps the most recent $KeepRunDirs (default 0 = keep
+# none). The dir names sort chronologically (regression-YYYYMMDD_HHMMSS), so a Name
+# sort orders oldest-first.
+function Remove-StaleRunDirs([string]$TestResultsDir, [int]$Keep) {
+    if (-not (Test-Path $TestResultsDir)) { return }
+    $runDirs = @(Get-ChildItem -Path $TestResultsDir -Directory -Filter 'regression-*' `
+        -ErrorAction SilentlyContinue | Sort-Object Name)
+    if ($runDirs.Count -le $Keep) { return }
+    $stale = $runDirs[0..($runDirs.Count - $Keep - 1)]
+    Write-Progress-Tc ("Pruning {0} stale TestResults run dir(s), keeping the most recent {1}" -f $stale.Count, $Keep)
+    foreach ($d in $stale) {
+        try {
+            Remove-Item -LiteralPath $d.FullName -Recurse -Force -ErrorAction Stop
+            Write-Host "  pruned $($d.Name)"
+        } catch {
+            Write-Host "  WARN: failed to prune $($d.FullName): $($_.Exception.Message)" -ForegroundColor Yellow
+        }
+    }
+}
+Remove-StaleRunDirs (Join-Path $scriptRoot 'TestResults') $KeepRunDirs
+
+# Best-effort recursive delete of a scratch path (a run/phase/dataset output dir or
+# a single dead-weight input copy). Swallows errors -- reclaiming disk must never
+# fail the gate. Honors -KeepOutput so a local post-mortem can retain everything.
+function Remove-Scratch([string]$Path) {
+    if ($KeepOutput) { return }
+    if ([string]::IsNullOrEmpty($Path) -or -not (Test-Path -LiteralPath $Path)) { return }
+    Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
 }
 
 # --- Build (unless -NoBuild) --------------------------------------------------
@@ -229,10 +303,157 @@ function Invoke-ResumeInvalidation {
     } | Remove-Item -Force
 }
 
+# --- mode 3: HPC 4-task worker chain ------------------------------------------
+# Low-level runner for a single --task phase: CWD = its own scratch dir so the
+# task's CWD-relative outputs (parquets, sidecars, blib) land there, mirroring a
+# real HPC worker that ships only its inputs and writes beside them. Throws on a
+# non-zero exit so the chain aborts loudly at the failing phase.
+function Invoke-OspreyTaskRun {
+    param([string]$WorkDir, [string[]]$CliArgs, [string]$LogName)
+    New-Item -ItemType Directory -Path $WorkDir -Force | Out-Null
+    $logPath = Join-Path $WorkDir $LogName
+    Push-Location $WorkDir
+    try {
+        & $ospreyExe @CliArgs 2>&1 | Tee-Object -FilePath $logPath | Out-Null
+        $exit = $LASTEXITCODE
+    } finally {
+        Pop-Location
+    }
+    if ($exit -ne 0) { throw "OspreySharp --task exited $exit (see $logPath)" }
+}
+
+# Stage the library (+ its .libcache when present) into a phase dir.
+function Copy-LibraryInto {
+    param([string]$Library, [string]$Dir)
+    Copy-Item $Library (Join-Path $Dir (Split-Path -Leaf $Library))
+    $libCache = $Library + '.libcache'
+    if (Test-Path $libCache) { Copy-Item $libCache (Join-Path $Dir (Split-Path -Leaf $libCache)) }
+}
+
+# Run the distributed --task pipeline end to end against copied inputs under
+# $ChainRoot and return the final merge-node blib. Each phase rehydrates the
+# prior phase's on-disk sidecars, exactly as a multi-computer distribution would;
+# nothing is held in memory across phases. All inputs/sidecars are copied (never
+# referenced in place), so the read-only data dir is untouched.
+function Invoke-HpcChain {
+    param([string[]]$Mzmls, [string]$Library, [string]$Resolution, [string]$ChainRoot)
+    $libName = Split-Path -Leaf $Library
+    # Stable, file-order stem list (NOT hashtable key order) so the --input-scores
+    # argument order matches the straight-through's file order deterministically.
+    $stemList = @($Mzmls | ForEach-Object { [IO.Path]::GetFileNameWithoutExtension($_) })
+    $mzmlByStem = @{}
+    foreach ($m in $Mzmls) { $mzmlByStem[[IO.Path]::GetFileNameWithoutExtension($m)] = $m }
+
+    # Phase 1: per-file raw workers (Stage 1-4). Writes <stem>.scores.parquet +
+    # <stem>.calibration.json per file.
+    $ph1 = Join-Path $ChainRoot 'phase1_scoring'
+    New-Item -ItemType Directory -Path $ph1 -Force | Out-Null
+    foreach ($m in $Mzmls) { Copy-Item $m (Join-Path $ph1 (Split-Path -Leaf $m)) }
+    Copy-LibraryInto -Library $Library -Dir $ph1
+    $a1 = @()
+    foreach ($m in $Mzmls) { $a1 += @('-i', (Split-Path -Leaf $m)) }
+    $a1 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+             '--protein-fdr', '0.01', '--threads', $Threads.ToString(), '--task', 'PerFileScoring')
+    Invoke-OspreyTaskRun -WorkDir $ph1 -CliArgs $a1 -LogName 'phase1.log'
+    # Phase 1's copied mzMLs are dead weight once it has run: phase 2/3 read its
+    # parquets + calibration, never its mzML (phase 3 re-copies the mzML from the
+    # data dir). Drop them so they don't sit on disk through the per-file rescore loop.
+    if (-not $KeepOutput) {
+        Get-ChildItem -Path $ph1 -Filter '*.mzML' -File -ErrorAction SilentlyContinue |
+            Remove-Item -Force -ErrorAction SilentlyContinue
+    }
+
+    # Phase 2: 1st-join (Stage 5). Consumes the per-file parquets, writes the
+    # <stem>.1st-pass.fdr_scores.bin + <stem>.reconciliation.json sidecar pair. A
+    # 0-byte stub mzML lets the task derive sidecar paths without reading spectra.
+    $ph2 = Join-Path $ChainRoot 'phase2_firstjoin'
+    New-Item -ItemType Directory -Path $ph2 -Force | Out-Null
+    foreach ($s in $stemList) {
+        Copy-Item (Join-Path $ph1 "$s.scores.parquet")   (Join-Path $ph2 "$s.scores.parquet")
+        Copy-Item (Join-Path $ph1 "$s.calibration.json") (Join-Path $ph2 "$s.calibration.json")
+        New-Item -ItemType File -Path (Join-Path $ph2 "$s.mzML") -Force | Out-Null
+    }
+    Copy-LibraryInto -Library $Library -Dir $ph2
+    $a2 = @('--task', 'FirstJoin')
+    foreach ($s in $stemList) { $a2 += @('--input-scores', "$s.scores.parquet") }
+    $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+             '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+    Invoke-OspreyTaskRun -WorkDir $ph2 -CliArgs $a2 -LogName 'phase2.log'
+
+    # Phase 3: per-file rescore workers (Stage 6), one independent worker per
+    # file. Each reloads its real mzML + Stage 4 parquet/calibration + the Stage 5
+    # sidecar pair, and writes <stem>.scores-reconciled.parquet + the 2nd-pass bin.
+    $ph3Dirs = @{}
+    foreach ($s in $stemList) {
+        $ph3 = Join-Path $ChainRoot "phase3_rescore_$s"
+        $ph3Dirs[$s] = $ph3
+        New-Item -ItemType Directory -Path $ph3 -Force | Out-Null
+        Copy-Item $mzmlByStem[$s] (Join-Path $ph3 (Split-Path -Leaf $mzmlByStem[$s]))
+        Copy-Item (Join-Path $ph1 "$s.scores.parquet")          (Join-Path $ph3 "$s.scores.parquet")
+        Copy-Item (Join-Path $ph1 "$s.calibration.json")        (Join-Path $ph3 "$s.calibration.json")
+        Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
+        Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
+        Copy-LibraryInto -Library $Library -Dir $ph3
+        $a3 = @('--task', 'PerFileRescore', '--input-scores', "$s.scores.parquet",
+                '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+                '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+        Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
+        # This worker has written its reconciled parquet + 2nd-pass bin; phase 4
+        # consumes only those plus the calibration / reconciliation / 1st-pass
+        # sidecars copied above -- never this worker's mzML, input scores.parquet,
+        # or library. Drop those big inputs now so at most one worker's mzML +
+        # library copy is on disk at a time (the out-of-disk failure was several of
+        # them coexisting with the straight-through leg's spectra caches).
+        if (-not $KeepOutput) {
+            Remove-Item (Join-Path $ph3 (Split-Path -Leaf $mzmlByStem[$s])) -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 "$s.scores.parquet") -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 $libName) -Force -ErrorAction SilentlyContinue
+            Remove-Item (Join-Path $ph3 ($libName + '.libcache')) -Force -ErrorAction SilentlyContinue
+        }
+    }
+
+    # Phases 1 and 2 are fully consumed once every rescore worker has copied its
+    # inputs (phase 4 reads only phase-3 outputs). Free them before the merge node.
+    Remove-Scratch $ph1
+    Remove-Scratch $ph2
+
+    # Phase 4: 2nd-join merge node (Stage 7 + blib). Consumes each worker's
+    # reconciled parquet + sidecars (never the original Stage 4 parquet, and never
+    # an mzML -- a 0-byte stub provides path derivation only) and writes the blib.
+    $ph4 = Join-Path $ChainRoot 'phase4_mergenode'
+    New-Item -ItemType Directory -Path $ph4 -Force | Out-Null
+    foreach ($s in $stemList) {
+        $ph3 = $ph3Dirs[$s]
+        Copy-Item (Join-Path $ph3 "$s.scores-reconciled.parquet") (Join-Path $ph4 "$s.scores-reconciled.parquet")
+        Copy-Item (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")   (Join-Path $ph4 "$s.1st-pass.fdr_scores.bin")
+        Copy-Item (Join-Path $ph3 "$s.calibration.json")          (Join-Path $ph4 "$s.calibration.json")
+        Copy-Item (Join-Path $ph3 "$s.reconciliation.json")       (Join-Path $ph4 "$s.reconciliation.json")
+        $pass2 = Join-Path $ph3 "$s.2nd-pass.fdr_scores.bin"
+        if (Test-Path $pass2) { Copy-Item $pass2 (Join-Path $ph4 "$s.2nd-pass.fdr_scores.bin") }
+        New-Item -ItemType File -Path (Join-Path $ph4 "$s.mzML") -Force | Out-Null
+    }
+    # The merge node now has every worker's reconciled output copied in; the phase-3
+    # worker dirs are done.
+    foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
+    Copy-LibraryInto -Library $Library -Dir $ph4
+    $a4 = @('--task', 'MergeNode')
+    foreach ($s in $stemList) { $a4 += @('--input-scores', "$s.scores-reconciled.parquet") }
+    $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
+             '--protein-fdr', '0.01', '--threads', $Threads.ToString())
+    Invoke-OspreyTaskRun -WorkDir $ph4 -CliArgs $a4 -LogName 'phase4.log'
+
+    return (Join-Path $ph4 'output.blib')
+}
+
 # --- Per-dataset legs ---------------------------------------------------------
 $overallFail = $false
 $summaryLines = [System.Collections.Generic.List[string]]::new()
 
+# Self-cleaning: each dataset's scratch is removed as soon as its legs finish, and
+# the whole run root in the finally below -- so the run leaves no multi-GB output
+# behind to starve the next run on a shared agent. -KeepOutput (honored by
+# Remove-Scratch) opts out for local post-mortem.
+try {
 foreach ($name in $selected) {
     $cfg = $datasets[$name]
     Write-Progress-Tc "Dataset $name"
@@ -278,6 +499,28 @@ foreach ($name in $selected) {
         $summaryLines.Add("$name mode1 (vs golden): FAIL ($($m1.Issues.Count) issues)")
     }
 
+    # ---- mode 3: HPC 4-task worker chain vs straight-through ----
+    # Runs BEFORE mode 2: mode 2 invalidates + re-runs $straightDir in place, so
+    # $straightBlib is the pristine straight-through output only until then.
+    if (-not $SkipHpcChain) {
+        Write-Progress-Tc "${name}: HPC 4-task chain self-consistency (mode 3)"
+        $chainRoot = Join-Path $runRoot "$name\chain"
+        $sw3 = [Diagnostics.Stopwatch]::StartNew()
+        $chainBlib = Invoke-HpcChain -Mzmls $inputs.Mzmls -Library $inputs.Library `
+            -Resolution $cfg.Resolution -ChainRoot $chainRoot
+        $sw3.Stop()
+        Write-Host ("  HPC chain wall {0:mm\:ss}; blib {1:N0} bytes" -f $sw3.Elapsed, (Get-Item $chainBlib).Length)
+        $m3 = Compare-BlibFull -BlibExpected $straightBlib -BlibActual $chainBlib -Tolerance $Tolerance
+        if ($m3.Pass) {
+            $summaryLines.Add("$name mode3 (HPC chain==straight): PASS")
+        } else {
+            $overallFail = $true
+            Write-Problem-Tc "$name mode3 (HPC chain==straight): FAIL -- $($m3.Issues.Count) issue(s)"
+            $m3.Issues | Select-Object -First 15 | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+            $summaryLines.Add("$name mode3 (HPC chain==straight): FAIL ($($m3.Issues.Count) issues)")
+        }
+    }
+
     # ---- mode 2: resume vs straight-through self-consistency ----
     if (-not $SkipResume) {
         Write-Progress-Tc "${name}: resume self-consistency (mode 2)"
@@ -298,16 +541,27 @@ foreach ($name in $selected) {
             $summaryLines.Add("$name mode2 (resume==straight): FAIL ($($m2.Issues.Count) issues)")
         }
     }
+
+    # All legs for this dataset are done -- free its scratch now so peak disk stays
+    # at ~one dataset (the next dataset / the perf-gate step gets the space back).
+    Remove-Scratch (Join-Path $runRoot $name)
+}
+}
+finally {
+    # Safety net for a dataset that threw before its own cleanup -- drop the whole
+    # run root. Raw input data lives outside $runRoot and is untouched.
+    Remove-Scratch $runRoot
 }
 
 # --- Summary + exit -----------------------------------------------------------
 Write-Host ""
 Write-Host "=== OspreySharp regression summary ===" -ForegroundColor Cyan
 $summaryLines | ForEach-Object { Write-Host "  $_" }
-# No artifacts are published. The diagnosis on a red gate lives in the build log
-# (every per-file log is Tee'd to the console TeamCity captures) and the
-# buildProblem line (which names the failing dataset + leg + first divergent
-# columns); the run outputs stay on the agent under the gitignored TestResults.
+# No artifacts are published, and the run's scratch under TestResults is deleted on
+# completion (the downloaded raw input data is kept). A red gate's diagnosis lives in
+# the build log (every per-file log is Tee'd to the console TeamCity captures) and
+# the buildProblem line (which names the failing dataset + leg + first divergent
+# columns), NOT in the run output files. Pass -KeepOutput to retain them locally.
 if ($overallFail) {
     Write-Problem-Tc 'OspreySharp regression FAILED'
     exit 1

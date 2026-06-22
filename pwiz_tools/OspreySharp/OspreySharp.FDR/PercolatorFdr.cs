@@ -85,6 +85,15 @@ namespace pwiz.OspreySharp.FDR
         /// </summary>
         public bool TrainOnly { get; set; }
 
+        /// <summary>
+        /// Stage 5 diagnostic-dump gates, or <c>null</c> (the common case) when
+        /// diagnostics are off. Carried in by the Tasks-layer caller so
+        /// <see cref="PercolatorFdr.RunPercolator"/> stays a pure function of its
+        /// inputs -- it reads no env vars and never exits the process. See
+        /// <see cref="PercolatorDiagnosticsConfig"/>.
+        /// </summary>
+        public PercolatorDiagnosticsConfig Diagnostics { get; set; }
+
         public PercolatorConfig()
         {
             TrainFdr = 0.01;
@@ -181,6 +190,15 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>Number of iterations used per fold.</summary>
         public List<int> IterationsPerFold { get; set; }
 
+        /// <summary>
+        /// Set when <see cref="PercolatorFdr.RunPercolator"/> wrote a
+        /// diagnostic-only (<c>*Only</c>) dump and stopped early instead of
+        /// completing FDR. The Tasks-layer caller inspects this and performs the
+        /// process early-exit; the engine itself never exits. The other fields are
+        /// unpopulated when this is <c>true</c>.
+        /// </summary>
+        public bool DiagnosticAbort { get; set; }
+
         public PercolatorResults()
         {
             Entries = new List<PercolatorResult>();
@@ -235,32 +253,27 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine(
                 $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
-            // Stage 5 standardizer dump. Gated by OSPREY_DUMP_STANDARDIZER=1;
-            // exits via OSPREY_STANDARDIZER_ONLY=1. Mirrors Rust
-            // dump_stage5_standardizer in osprey-fdr/src/percolator.rs.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_STANDARDIZER"), @"1"))
+            // Stage 5 standardizer dump. Gated by the injected diagnostics config
+            // (OSPREY_DUMP_STANDARDIZER); a *Only request returns the abort
+            // sentinel so the Tasks-layer caller -- not this engine -- decides the
+            // early-exit. Mirrors Rust dump_stage5_standardizer in
+            // osprey-fdr/src/percolator.rs.
+            if (config.Diagnostics != null && config.Diagnostics.DumpStandardizer)
             {
                 WriteStage5StandardizerDump(standardizer, config.FeatureNames);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_STANDARDIZER_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_STANDARDIZER_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.StandardizerOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // One-shot diagnostic for 2nd-pass divergence localization.
-            // Gated by OSPREY_DUMP_PERC_INPUT=1; exits via
-            // OSPREY_PERC_INPUT_ONLY=1. Dumps the raw per-entry feature
-            // vectors fed into the standardizer so cross-impl compare
-            // can pinpoint which rows differ.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_PERC_INPUT"), @"1"))
+            // Gated by OSPREY_DUMP_PERC_INPUT; a *Only request returns the abort
+            // sentinel. Dumps the raw per-entry feature vectors fed into the
+            // standardizer so cross-impl compare can pinpoint which rows differ.
+            if (config.Diagnostics != null && config.Diagnostics.DumpPercInput)
             {
                 WriteStage5PercInputDump(entries, config.FeatureNames);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_PERC_INPUT_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_PERC_INPUT_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.PercInputOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // 3a. Best-per-precursor: pick the single best-scoring observation per
@@ -336,20 +349,18 @@ namespace pwiz.OspreySharp.FDR
             int[] foldAssignments = CreateStratifiedFoldsByPeptide(
                 subLabels, subPeptides, subEntryIds, config.NFolds);
 
-            // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE=1;
-            // exits via OSPREY_SUBSAMPLE_ONLY=1. Captures subsample membership and
-            // fold assignment per entry, mirroring the Rust dump in
-            // osprey-fdr/src/percolator.rs. The dump is inlined here (not routed
-            // through OspreyDiagnostics) because OspreySharp.FDR does not
-            // reference the main OspreySharp assembly.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SUBSAMPLE"), @"1"))
+            // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE;
+            // a *Only request returns the abort sentinel. Captures subsample
+            // membership and fold assignment per entry, mirroring the Rust dump in
+            // osprey-fdr/src/percolator.rs. The dump writer is inlined here (not
+            // routed through OspreyDiagnostics) because OspreySharp.FDR does not
+            // reference the main OspreySharp assembly; only the gate flag + the
+            // early-exit decision are lifted out to the Tasks-layer caller.
+            if (config.Diagnostics != null && config.Diagnostics.DumpSubsample)
             {
                 WriteStage5SubsampleDump(entries, trainSubset, foldAssignments);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SUBSAMPLE_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_SUBSAMPLE_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.SubsampleOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // 5. Find best initial feature
@@ -444,19 +455,16 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
 
-            // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS=1;
-            // exits via OSPREY_SVM_WEIGHTS_ONLY=1. Captures per-fold weights,
-            // bias, and iteration count right after SVM training converges
-            // and before Granholm calibration. Mirrors rust side in
+            // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
+            // a *Only request returns the abort sentinel. Captures per-fold
+            // weights, bias, and iteration count right after SVM training
+            // converges and before Granholm calibration. Mirrors rust side in
             // osprey-fdr/src/percolator.rs::dump_stage5_svm_weights.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SVM_WEIGHTS"), @"1"))
+            if (config.Diagnostics != null && config.Diagnostics.DumpSvmWeights)
             {
                 WriteStage5SvmWeightsDump(foldModels, foldIterations, config.FeatureNames);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SVM_WEIGHTS_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_SVM_WEIGHTS_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.SvmWeightsOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // Train-only mode: return fold models + standardizer; skip the
@@ -976,6 +984,19 @@ namespace pwiz.OspreySharp.FDR
 
         /// <summary>
         /// Core competition logic: group by base_id, compete, return winners sorted by score desc.
+        ///
+        /// This is deliberately a SEPARATE implementation from
+        /// <see cref="FdrController.CompeteAndFilter{T}"/>, not a duplicate to be
+        /// merged: the two serve different regimes. This array/index form is the
+        /// hot Percolator path -- it works on pre-flattened primitive arrays and a
+        /// caller-supplied index subset, returns winner arrays for downstream
+        /// scratch-pooled q-value passes (see <c>CountPassing</c>), and
+        /// allocates nothing on the scratch overload. <c>CompeteAndFilter</c> is
+        /// the ergonomic generic form for simple-FDR callers
+        /// (<see cref="PercolatorEngine.RunSimpleFdr"/>): it competes an
+        /// <c>IEnumerable&lt;T&gt;</c> via score/decoy/id selectors and returns a
+        /// typed result. Same competition rule (strict &gt;, ties to decoy), two
+        /// shapes tuned to performance vs. ergonomics.
         /// </summary>
         public static void CompeteFromIndices(
             double[] scores,
@@ -1090,26 +1111,7 @@ namespace pwiz.OspreySharp.FDR
         public static void ComputeConservativeQvalues(
             double[] scores, bool[] isDecoy, double[] qValues)
         {
-            int n = isDecoy.Length;
-            int nTarget = 0;
-            int nDecoy = 0;
-
-            for (int i = 0; i < n; i++)
-            {
-                if (isDecoy[i])
-                    nDecoy++;
-                else
-                    nTarget++;
-                qValues[i] = nTarget > 0 ? (double)(nDecoy + 1) / nTarget : 1.0;
-            }
-
-            // Backward pass: make monotonically non-increasing
-            double qMin = 1.0;
-            for (int i = n - 1; i >= 0; i--)
-            {
-                qMin = Math.Min(qMin, qValues[i]);
-                qValues[i] = qMin;
-            }
+            ComputeQvaluesCore(isDecoy, qValues, isDecoy.Length, decoyOffset: 1);
         }
 
         /// <summary>
@@ -1119,25 +1121,7 @@ namespace pwiz.OspreySharp.FDR
         private static void ComputeQvalues(
             double[] scores, bool[] isDecoy, double[] qValues)
         {
-            int n = isDecoy.Length;
-            int nTarget = 0;
-            int nDecoy = 0;
-
-            for (int i = 0; i < n; i++)
-            {
-                if (isDecoy[i])
-                    nDecoy++;
-                else
-                    nTarget++;
-                qValues[i] = nTarget > 0 ? (double)nDecoy / nTarget : 1.0;
-            }
-
-            double qMin = 1.0;
-            for (int i = n - 1; i >= 0; i--)
-            {
-                qMin = Math.Min(qMin, qValues[i]);
-                qValues[i] = qMin;
-            }
+            ComputeQvaluesCore(isDecoy, qValues, isDecoy.Length, decoyOffset: 0);
         }
 
         /// <summary>
@@ -1351,20 +1335,39 @@ namespace pwiz.OspreySharp.FDR
         private static void ComputeQvaluesInto(
             double[] scores, bool[] isDecoy, double[] qValuesOut, int n)
         {
-            // Bit-identical to ComputeQvalues but operates on prefix [0..n).
+            ComputeQvaluesCore(isDecoy, qValuesOut, n, decoyOffset: 0);
+        }
+
+        /// <summary>
+        /// Shared core behind <see cref="ComputeConservativeQvalues"/>,
+        /// <see cref="ComputeQvalues"/>, and <see cref="ComputeQvaluesInto"/>.
+        /// Walks the score-descending prefix [0..<paramref name="n"/>)
+        /// accumulating target / decoy counts, writes
+        /// FDR = (nDecoy + <paramref name="decoyOffset"/>) / nTarget at each rank,
+        /// then enforces a monotone-non-increasing q-value with a backward pass.
+        /// <paramref name="decoyOffset"/> is 1 for the conservative (Savitski +1)
+        /// estimate and 0 for the plain ratio. Scores are not read -- the input is
+        /// assumed already sorted by score descending.
+        /// </summary>
+        private static void ComputeQvaluesCore(
+            bool[] isDecoy, double[] qValues, int n, int decoyOffset)
+        {
             int nTarget = 0;
             int nDecoy = 0;
             for (int i = 0; i < n; i++)
             {
-                if (isDecoy[i]) nDecoy++;
-                else nTarget++;
-                qValuesOut[i] = nTarget > 0 ? (double)nDecoy / nTarget : 1.0;
+                if (isDecoy[i])
+                    nDecoy++;
+                else
+                    nTarget++;
+                qValues[i] = nTarget > 0 ? (double)(nDecoy + decoyOffset) / nTarget : 1.0;
             }
+
             double qMin = 1.0;
             for (int i = n - 1; i >= 0; i--)
             {
-                qMin = Math.Min(qMin, qValuesOut[i]);
-                qValuesOut[i] = qMin;
+                qMin = Math.Min(qMin, qValues[i]);
+                qValues[i] = qMin;
             }
         }
 
@@ -1984,10 +1987,10 @@ namespace pwiz.OspreySharp.FDR
         /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
         /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
         /// the direct (<see cref="RunPercolator"/>) and streaming
-        /// (FirstJoinTask.RunPercolatorStreaming) paths select identical subsets for
-        /// identical input instead of hand-mirroring the dedup + index map-back.
+        /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
+        /// for identical input instead of hand-mirroring the dedup + index map-back.
         /// </summary>
-        public static int[] BuildTrainingSubset(
+        internal static int[] BuildTrainingSubset(
             bool[] labels, uint[] entryIds, string[] peptides,
             IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
             out int[] bestPerPrecursor)
@@ -2065,7 +2068,7 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>
         /// Subsample entries by peptide group, keeping target-decoy pairs and charge states together.
         /// </summary>
-        public static int[] SubsampleByPeptideGroup(
+        internal static int[] SubsampleByPeptideGroup(
             bool[] labels, uint[] entryIds, string[] peptides,
             int maxEntries, ulong seed)
         {
