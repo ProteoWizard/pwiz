@@ -169,14 +169,5 @@ namespace pwiz.Skyline.Model.Results.Spectra {
                 return ResourceManager.GetString("SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The &apos;{0}&apos; operator cannot be used to filter the spectrum property &apos;{1}&apos;..
-        /// </summary>
-        public static string SpectrumClassFilter_ValidateOperations_Operator_cannot_filter_property {
-            get {
-                return ResourceManager.GetString("SpectrumClassFilter_ValidateOperations_Operator_cannot_filter_property", resourceCulture);
-            }
-        }
     }
 }

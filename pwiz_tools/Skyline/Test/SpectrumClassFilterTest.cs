@@ -85,23 +85,29 @@ namespace pwiz.SkylineTest
                 () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17"),
                 SpectraResources.SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value);
 
-            // CollisionEnergy is list-valued (a spectrum can report a CE per MS level), so ordered
-            // comparison operators do not apply. The dialog never offers them, but a hand-typed or
-            // imported filter could; such a filter is rejected at parse time rather than silently
-            // matching nothing. The operator problem takes precedence over the value sign for "> -20".
-            foreach (var (op, criterion) in new[]
-                     {
-                         (FilterOperations.OP_IS_GREATER_THAN, @" > 20"),
-                         (FilterOperations.OP_IS_LESS_THAN, @" < 5"),
-                         (FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL, @" >= 10"),
-                         (FilterOperations.OP_IS_GREATER_THAN, @" > -20")
-                     })
+            // Ordered comparison operators work on the list-valued CollisionEnergy: the operator is
+            // applied to each MS-level CE and, for a single operand, the criterion holds only if every
+            // CE satisfies it. With a single CE of 17:
+            Assert.IsTrue(Predicate(@" > 15")(spectrum));
+            Assert.IsFalse(Predicate(@" > 17")(spectrum));   // strict ">" uses exact precision
+            Assert.IsTrue(Predicate(@" < 20")(spectrum));
+            Assert.IsTrue(Predicate(@" >= 17")(spectrum));
+            Assert.IsTrue(Predicate(@" <= 17")(spectrum));
+
+            // A spectrum with a CE per MS level: "> 15" holds only if every CE exceeds 15.
+            var multiCe = new SpectrumMetadata(@"multi", 1.0).ChangePrecursors(new[]
             {
-                AssertEx.ThrowsException<FormatException>(
-                    () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + criterion),
-                    string.Format(SpectraResources.SpectrumClassFilter_ValidateOperations_Operator_cannot_filter_property,
-                        op.DisplayName, SpectrumClassColumn.CollisionEnergy.GetLocalizedColumnName(CultureInfo.CurrentCulture)));
-            }
+                new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(17.0) },
+                new[] { new SpectrumPrecursor(new SignedMz(250.0)).ChangeCollisionEnergy(35.0) }
+            });
+            Assert.IsTrue(Predicate(@" > 15")(multiCe));     // both 17 and 35 are > 15
+            Assert.IsFalse(Predicate(@" > 20")(multiCe));    // 17 is not > 20
+
+            // A negative collision energy is still rejected regardless of the operator: with comparisons
+            // now allowed, the negative value (not the operator) is the problem.
+            AssertEx.ThrowsException<FormatException>(
+                () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" > -20"),
+                SpectraResources.SpectrumClassFilter_ValidateCollisionEnergyOperands_Collision_energy_must_be_a_positive_value);
         }
 
         [TestMethod]

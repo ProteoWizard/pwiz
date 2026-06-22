@@ -141,47 +141,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
             };
         }
 
-        private static readonly ImmutableList<IFilterOperation> COMPARISON_OPERATIONS = ImmutableList.ValueOf(new[]
-        {
-            FilterOperations.OP_IS_GREATER_THAN, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL,
-            FilterOperations.OP_IS_LESS_THAN, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL
-        });
-
-        /// <summary>
-        /// Throws a <see cref="FormatException"/> if any criterion pairs an operator with a property
-        /// whose type does not support it. The Edit Spectrum Filter dialog only offers operators that
-        /// apply, but a filter typed by hand or imported from a transition list can pair, for example, a
-        /// comparison operator (&gt;, &lt;, ...) with a list-valued property such as CollisionEnergy or
-        /// the precursor m/z lists. That combination has no meaning and would otherwise silently match
-        /// nothing; rejecting it here turns the silent no-op into a clear error.
-        /// </summary>
-        private static void ValidateOperations(SpectrumClassFilter filter)
-        {
-            var dataSchema = new DataSchema();
-            foreach (var spec in filter.Clauses.SelectMany(clause => clause.FilterSpecs))
-            {
-                // Only the ordered comparison operators are checked here. Other operators (equals,
-                // contains, is-blank, ...) have legitimate uses across property types that IsValidFor
-                // would over-reject (e.g. is-blank on a non-nullable property), so leave them alone.
-                if (!COMPARISON_OPERATIONS.Contains(spec.Operation))
-                {
-                    continue;
-                }
-                var column = SpectrumClassColumn.FindColumn(spec.ColumnId);
-                if (column == null)
-                {
-                    continue; // Unknown properties are reported separately by ValidateFilterString.
-                }
-                var filterHandler = dataSchema.GetFilterHandler(column.ValueType);
-                if (filterHandler != null && !spec.Operation.IsValidFor(filterHandler))
-                {
-                    throw new FormatException(string.Format(
-                        SpectraResources.SpectrumClassFilter_ValidateOperations_Operator_cannot_filter_property,
-                        spec.Operation.DisplayName, column.GetLocalizedColumnName(CultureInfo.CurrentCulture)));
-                }
-            }
-        }
-
         /// <summary>
         /// Throws a <see cref="FormatException"/> if any CollisionEnergy criterion uses a negative
         /// operand. Collision energy is read from the spectrum file as a positive magnitude (the
@@ -465,11 +424,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
                 // Parsed successfully in this culture. Apply semantic validation outside the catch so
                 // its specific message surfaces rather than being mistaken for a parse failure and
-                // replaced by the generic "invalid format" message below. Check operator/property
-                // compatibility first: for "CollisionEnergy > -20" the unusable operator is the real
-                // problem (making it positive would still leave an invalid filter), so it should win
-                // over the negative-value message.
-                ValidateOperations(filter);
+                // replaced by the generic "invalid format" message below.
                 ValidateCollisionEnergyOperands(filter);
                 return filter;
             }

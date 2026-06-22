@@ -480,6 +480,39 @@ namespace pwiz.Common.DataBinding.Filtering
             return false;
         }
 
+        /// <summary>
+        /// Applies a comparison operator element-wise between a list-valued column and a list operand.
+        /// Equal-length lists compare pairwise by index; when one side has a single element it is
+        /// broadcast against every element of the other side; the criterion holds only if every element
+        /// comparison holds. Lists of different lengths (neither of length one) never match.
+        /// <paramref name="elementMatches"/> applies the operator (including its ComparisonMatches
+        /// reduction) to one column element and one operand element.
+        /// </summary>
+        public bool MatchesComparison(object columnValue, object operandValue, Func<object, object, bool> elementMatches)
+        {
+            var values = ToListValue(columnValue)?.AsEnumerable().ToList();
+            var operands = (operandValue as IListColumnValue)?.AsEnumerable().ToList();
+            if (values == null || operands == null || values.Count == 0 || operands.Count == 0)
+            {
+                return false;
+            }
+            if (values.Count == operands.Count)
+            {
+                return values.Zip(operands, elementMatches).All(matched => matched);
+            }
+            // Broadcast a single element on either side against every element of the other.
+            if (operands.Count == 1)
+            {
+                return values.All(value => elementMatches(value, operands[0]));
+            }
+            if (values.Count == 1)
+            {
+                return operands.All(operand => elementMatches(values[0], operand));
+            }
+            // Different lengths, neither broadcastable: no match.
+            return false;
+        }
+
         public override object ParseOperandTokens(IFilterOperation operation, CultureInfo cultureInfo, IList<string> values)
         {
             return ListColumnValue.FromItems(

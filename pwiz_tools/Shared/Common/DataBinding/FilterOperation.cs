@@ -445,11 +445,27 @@ namespace pwiz.Common.DataBinding
 
             public override bool IsValidFor(IFilterHandler filterHandler)
             {
-                return filterHandler is IFilterHandler.IComparison;
+                if (filterHandler is IFilterHandler.IComparison)
+                {
+                    return true;
+                }
+                // A list-valued column supports comparison when its element handler does (the operator
+                // is applied element-wise; see ListFilterHandler.MatchesComparison).
+                return filterHandler is ListFilterHandler listHandler &&
+                       listHandler.ElementHandler is IFilterHandler.IComparison;
             }
 
             public override bool Matches(IFilterHandler filterHandler, object columnValue, object operandValue)
             {
+                if (filterHandler is ListFilterHandler listHandler &&
+                    listHandler.ElementHandler is IFilterHandler.IComparison elementComparison)
+                {
+                    return listHandler.MatchesComparison(columnValue, operandValue, (value, operand) =>
+                    {
+                        int? elementComparisonValue = elementComparison.Compare(value, operand);
+                        return elementComparisonValue.HasValue && ComparisonMatches(elementComparisonValue.Value);
+                    });
+                }
                 int? comparisonValue = (filterHandler as IFilterHandler.IComparison)?.Compare(columnValue, operandValue);
                 return comparisonValue.HasValue && ComparisonMatches(comparisonValue.Value);
             }
