@@ -76,11 +76,12 @@ namespace pwiz.MSGraph
             bool isDiscrete = minDotRadius != maxDotRadius && heatMapData.MaxPoint.Point.Z <= legendStep;
             double maxZValue = logScale ? Math.Log(heatMapData.MaxPoint.Point.Z) : heatMapData.MaxPoint.Point.Z;
 
-            // Guard against degenerate maxZValue causing non-finite scale values
-            // Math.Log(1) = 0 causes division by zero; negative infinity and NaN also problematic
-            if (maxZValue == 0 || double.IsNaN(maxZValue) || double.IsInfinity(maxZValue))
+            // Guard against a degenerate maxZValue producing a non-finite or non-positive scale.
+            // A log color scale assumes maxZ >= 1 (Math.Log >= 0): Math.Log(1) = 0 divides by zero,
+            // and Math.Log of a Z in (0,1) is negative -- both must fall back to a valid positive
+            // scale. Clamping maxZValue here (not just scale below) keeps fullScale/scale positive.
+            if (maxZValue <= 0 || double.IsNaN(maxZValue) || double.IsInfinity(maxZValue))
             {
-                // Fallback to minimal valid scale when maxZValue would cause division by zero
                 maxZValue = 1.0;
             }
 
