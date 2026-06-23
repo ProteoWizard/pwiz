@@ -1063,14 +1063,14 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     var element = FindElement(form, controlId, e => e.SupportsAction(UiAction.SetItemChecked), @"list, tree, or list-view control");
                     VerifyInteractable(element);
-                    ((ListContainerElement)element).SetItemChecked(item, isChecked);
+                    SetListItemChecked(((ControlElement)element).Control, item, isChecked);
                 });
                 return true;
             });
         }
 
         // Checks/unchecks an item on a list-like control by its text (a TreeView item by a '>'-separated
-        // path). Shared by the SetItemChecked verb and ListContainerElement so both drive it identically.
+        // path). Shared by the SetItemChecked verb and the list elements so both drive it identically.
         internal static void SetListItemChecked(Control control, string item, bool isChecked)
         {
             switch (control)
@@ -1105,14 +1105,14 @@ namespace pwiz.Skyline.ToolsUI
                     var form = FindFormById(formId);
                     var element = FindElement(form, controlId, e => e.SupportsAction(UiAction.SetItemSelected), @"list, tree, or list-view control");
                     VerifyInteractable(element);
-                    ((ListContainerElement)element).SetItemSelected(item, selected);
+                    SetListItemSelected(((ControlElement)element).Control, item, selected);
                 });
                 return true;
             });
         }
 
         // Selects/deselects an item on a list-like control by its text (a TreeView item by a '>'-separated
-        // path). Shared by the SetItemSelected verb and ListContainerElement.
+        // path). Shared by the SetItemSelected verb and the list elements.
         internal static void SetListItemSelected(Control control, string item, bool selected)
         {
             switch (control)

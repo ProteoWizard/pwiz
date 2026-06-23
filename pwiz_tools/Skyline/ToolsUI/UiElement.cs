@@ -162,6 +162,14 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
+    /// <summary>Base for an element backed by a strongly-typed control, so subclasses use the control as
+    /// its real type (e.g. a CheckedListBox) without casting.</summary>
+    internal abstract class ControlElement<T> : ControlElement where T : Control
+    {
+        protected ControlElement(T control) : base(control) { }
+        public new T Control => (T) base.Control;
+    }
+
     /// <summary>A control with no special capability (panel, group box, label, ...) -- kept so the walk
     /// recurses through it to its children.</summary>
     internal sealed class GenericControlElement : ControlElement
@@ -286,33 +294,18 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    /// <summary>A list-like control whose items can be checked or selected -- a CheckedListBox, ListBox,
-    /// ListView, or TreeView. Items are matched by their text (a TreeView item by a '>'-separated path)
-    /// through the typed set_item_checked / set_item_selected verbs. A CheckedListBox item is toggled the
-    /// way a user does it: set_selected_index to the item, then click (which toggles the selected item's
-    /// check); its value is the checked items' text, one per line.</summary>
-    internal sealed class ListContainerElement : ControlElement
+    /// <summary>A ListControl -- a ListBox or CheckedListBox. Select an item by index
+    /// (set_selected_index) or by its text (set_item_selected).</summary>
+    internal class ListControlElement<T> : ControlElement<T> where T : ListControl
     {
-        public ListContainerElement(Control control) : base(control) { }
-        private CheckedListBox CheckedList => Control as CheckedListBox;
-        // A CheckedListBox's value is the text of its checked items, one per line; other lists have none.
-        public override string Value => CheckedList == null ? null
-            : string.Join(Environment.NewLine,
-                CheckedList.CheckedItems.Cast<object>().Select(CheckedList.GetItemText));
-        public void SetItemChecked(string item, bool isChecked) => JsonUiService.SetListItemChecked(Control, item, isChecked);
-        public void SetItemSelected(string item, bool selected) => JsonUiService.SetListItemSelected(Control, item, selected);
+        public ListControlElement(T control) : base(control) { }
         public override bool SupportsAction(UiAction action)
         {
             switch (action)
             {
-                case UiAction.SetItemChecked:
+                case UiAction.SetSelectedIndex:
                 case UiAction.SetItemSelected:
                     return true;
-                case UiAction.SetSelectedIndex:
-                    return Control is ListControl; // ListBox / CheckedListBox have a SelectedIndex
-                case UiAction.Click:
-                case UiAction.GetValue:
-                    return CheckedList != null;
                 default:
                     return base.SupportsAction(action);
             }
@@ -322,30 +315,84 @@ namespace pwiz.Skyline.ToolsUI
             switch (action)
             {
                 case UiAction.SetSelectedIndex:
-                    JsonUiService.InvokeOnUiThread(() => ((ListControl) Control).SelectedIndex = UiValue.ToInt(value));
+                    JsonUiService.InvokeOnUiThread(() => Control.SelectedIndex = UiValue.ToInt(value));
+                    return null;
+                // The value is the item text; the action selects it (the typed verb also deselects).
+                case UiAction.SetItemSelected:
+                    JsonUiService.SetListItemSelected(Control, value as string, true);
+                    return null;
+                default:
+                    return base.PerformAction(action, value, cancellationToken);
+            }
+        }
+    }
+
+    /// <summary>A CheckedListBox. Besides the ListControl actions, an item is checked by its text
+    /// (set_item_checked) or toggled the way a user does it -- set_selected_index to the item, then click,
+    /// which toggles the selected item's check. Its value is the checked items' text, one per line.</summary>
+    internal sealed class CheckedListBoxElement : ListControlElement<CheckedListBox>
+    {
+        public CheckedListBoxElement(CheckedListBox control) : base(control) { }
+        public override string Value =>
+            string.Join(Environment.NewLine, Control.CheckedItems.Cast<object>().Select(Control.GetItemText));
+        public override bool SupportsAction(UiAction action)
+        {
+            switch (action)
+            {
+                case UiAction.SetItemChecked:
+                case UiAction.Click:
+                case UiAction.GetValue:
+                    return true;
+                default:
+                    return base.SupportsAction(action);
+            }
+        }
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
+        {
+            switch (action)
+            {
+                // The value is the item text; the action checks it (the typed verb also unchecks).
+                case UiAction.SetItemChecked:
+                    JsonUiService.SetListItemChecked(Control, value as string, true);
                     return null;
                 case UiAction.Click:
-                    // A click on a CheckedListBox toggles the checked state of the selected item, the way
-                    // a user's click/space does. Move to the item first with set_selected_index.
+                    // A click toggles the checked state of the selected item, the way a user's click/space
+                    // does. Move to the item first with set_selected_index.
                     JsonUiService.InvokeOnUiThread(() =>
                     {
-                        int index = CheckedList.SelectedIndex;
+                        int index = Control.SelectedIndex;
                         if (index < 0)
                             throw new ArgumentException(new LlmInstruction(
                                 @"No item is selected -- choose one first with set_selected_index."));
-                        CheckedList.SetItemChecked(index, !CheckedList.GetItemChecked(index));
+                        Control.SetItemChecked(index, !Control.GetItemChecked(index));
                     });
                     return null;
                 case UiAction.GetValue:
                     return Value;
-                // The value is the item (a CheckedListBox item by text, a TreeView item by '>'-path); the
-                // action checks/selects it. This is the path for a caption-less list/tree, addressed by a
-                // ControlId; the typed verbs (which also uncheck/deselect) stay for the common, labeled case.
+                default:
+                    return base.PerformAction(action, value, cancellationToken);
+            }
+        }
+    }
+
+    /// <summary>A control whose items are checked or selected by their text -- a TreeView (a node by a
+    /// '>'-separated path) or a ListView. Not a ListControl (it has no SelectedIndex); a caption-less one
+    /// is reached through a ControlId of its Type. The value is the item; the typed verbs also
+    /// uncheck/deselect.</summary>
+    internal class ItemContainerElement<T> : ControlElement<T> where T : Control
+    {
+        public ItemContainerElement(T control) : base(control) { }
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.SetItemChecked || action == UiAction.SetItemSelected || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
+        {
+            switch (action)
+            {
                 case UiAction.SetItemChecked:
-                    SetItemChecked(value as string, true);
+                    JsonUiService.SetListItemChecked(Control, value as string, true);
                     return null;
                 case UiAction.SetItemSelected:
-                    SetItemSelected(value as string, true);
+                    JsonUiService.SetListItemSelected(Control, value as string, true);
                     return null;
                 default:
                     return base.PerformAction(action, value, cancellationToken);
@@ -558,11 +605,11 @@ namespace pwiz.Skyline.ToolsUI
                 case ComboBox comboBox: return new ComboBoxElement(comboBox);
                 case TextBoxBase textBox: return new TextBoxElement(textBox);
                 case TabPage tabPage: return new TabPageElement(tabPage);
-                case CheckedListBox _:
-                case ListBox _:
-                case ListView _:
-                case TreeView _:
-                    return new ListContainerElement(control);
+                // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
+                case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox);
+                case ListBox listBox: return new ListControlElement<ListBox>(listBox);
+                case TreeView treeView: return new ItemContainerElement<TreeView>(treeView);
+                case ListView listView: return new ItemContainerElement<ListView>(listView);
                 case DataboundGridControl databound: return new GridElement(databound);
                 // A standalone grid; the inner grid of a DataboundGridControl is driven through it, so
                 // that one is left as a plain element.
