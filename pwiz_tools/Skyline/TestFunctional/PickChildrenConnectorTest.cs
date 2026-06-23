@@ -32,12 +32,12 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the Targets-tree "Pick Children" path through the AI connector verbs: select a
-    /// precursor node (<see cref="JsonUiService.SetItemSelected"/>), open its pick-list through the
-    /// tree's context menu -- a <see cref="ControlId"/> whose Type is "ContextMenu" on the tree, then
-    /// the "Pick Children" item -- toggle a transition in the popup with
-    /// <see cref="JsonUiService.SetItemChecked"/>, and commit with the green-check "OK" button via
-    /// <see cref="JsonUiService.ClickFormButton"/> (an image-only ToolStrip item matched by its tooltip).
+    /// Exercises the Targets-tree "Pick Children" path through the AI connector: select a precursor node
+    /// (a select_item action on the tree), open its pick-list through the tree's context menu -- a
+    /// <see cref="ControlId"/> whose Type is "ContextMenu" on the tree, then the "Pick Children" item --
+    /// toggle a transition in the popup with a check_item/uncheck_item action on the pop-up element, and
+    /// commit with the green-check "OK" button via <see cref="JsonUiService.ClickFormButton"/> (an
+    /// image-only ToolStrip item matched by its tooltip).
     /// </summary>
     [TestClass]
     public class PickChildrenConnectorTest : AbstractFunctionalTest
@@ -80,7 +80,12 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(SequenceTreeForm)).Id;
 
             // Select the precursor node; Pick Children acts on the selection, so the node must be in it.
-            JsonUiService.SetItemSelected(treeFormId, string.Empty, precursorPath, true);
+            var targetsTree = new ControlId
+            {
+                Parent = new ControlId { Type = @"Form", Name = treeFormId },
+                Type = @"SequenceTree",
+            };
+            JsonUiService.PerformAction(targetsTree, @"select_item", precursorPath);
             RunUI(() =>
             {
                 Assert.IsTrue(precursorNode.IsInSelection, @"Precursor node was not put into the selection.");
@@ -118,9 +123,10 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsFalse(string.IsNullOrEmpty(label));
 
-            JsonUiService.SetItemChecked(popupId, string.Empty, label, !wasChecked);
+            var pickList = new ControlId { Type = @"Form", Name = popupId };
+            JsonUiService.PerformAction(pickList, wasChecked ? @"uncheck_item" : @"check_item", label);
             RunUI(() => Assert.AreEqual(!wasChecked, popup.GetItemChecked(0),
-                @"SetItemChecked did not toggle the pick-list item."));
+                @"check_item/uncheck_item did not toggle the pick-list item."));
 
             // Commit with the green-check "OK" button (image-only ToolStrip item, matched by tooltip).
             JsonUiService.ClickFormButton(popupId, @"OK");

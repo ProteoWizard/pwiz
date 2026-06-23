@@ -68,8 +68,8 @@ namespace pwiz.SkylineTestFunctional
             var appliesToList = controls.FirstOrDefault(c => c.Id.Type == @"CheckedListBox");
             Assert.IsNotNull(appliesToList, @"Expected the Applies-to CheckedListBox.");
             Assert.AreEqual(@"Applies to", appliesToList.Id.Label);
-            Assert.IsTrue(appliesToList.Actions.Any(a => a.Contains(@"set_item")),
-                @"The list should report a set-item action.");
+            CollectionAssert.Contains(appliesToList.Actions, @"check_item",
+                @"The list should report the check_item action.");
 
             // The OK button is discoverable by its own caption and reports that it can be clicked.
             var okButton = controls.FirstOrDefault(c => c.Id.Label == @"OK");

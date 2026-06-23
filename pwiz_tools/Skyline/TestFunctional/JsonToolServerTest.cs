@@ -1953,13 +1953,19 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
             var forms = server.GetOpenForms();
             var treeFormId = forms.First(f => f.Type == nameof(SequenceTreeForm)).Id;
             var treeForm = FormUtil.OpenForms.OfType<SequenceTreeForm>().First();
+            // The Targets tree has no caption, so it is addressed through a ControlId by its Type.
+            var treeId = new ControlId
+            {
+                Parent = new ControlId { Type = @"Form", Name = treeFormId },
+                Type = @"SequenceTree",
+            };
 
             // 1. Disable the form and verify that interacting with it throws
             RunUI(() => treeForm.Enabled = false);
             try
             {
                 AssertEx.ThrowsException<Exception>(() =>
-                    server.SetItemChecked(treeFormId, null, @"Peptides", true));
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
                 AssertEx.ThrowsException<Exception>(() =>
                     server.ClickFormButton(treeFormId, @"ok"));
             }
@@ -1968,16 +1974,15 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
                 RunUI(() => treeForm.Enabled = true);
             }
 
-            // 2. Disable a specific control and verify that interacting with it throws. The Targets tree
-            // has no caption, so it is reached as the form's single tree (empty controlId), not by name.
+            // 2. Disable a specific control and verify that interacting with it throws.
             var tree = treeForm.SequenceTree;
             RunUI(() => tree.Enabled = false);
             try
             {
                 AssertEx.ThrowsException<Exception>(() =>
-                    server.SetItemChecked(treeFormId, null, @"Peptides", true));
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
                 AssertEx.ThrowsException<Exception>(() =>
-                    server.SetItemSelected(treeFormId, null, @"Peptides", true));
+                    server.PerformAction(treeId, @"select_item", @"Peptides"));
             }
             finally
             {
@@ -2011,7 +2016,7 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
                 AssertEx.ThrowsException<Exception>(() =>
                     server.InvokeMenuItem(@"File > Save"));
                 AssertEx.ThrowsException<Exception>(() =>
-                    server.SetItemChecked(treeFormId, null, @"Peptides", true));
+                    server.PerformAction(treeId, @"check_item", @"Peptides"));
             }
             finally
             {

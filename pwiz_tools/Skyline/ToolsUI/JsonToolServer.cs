@@ -910,16 +910,6 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.CloseForm(formId);
         }
 
-        public void SetItemChecked(string formId, string controlId, string item, bool isChecked)
-        {
-            JsonUiService.SetItemChecked(formId, controlId, item, isChecked);
-        }
-
-        public void SetItemSelected(string formId, string controlId, string item, bool selected)
-        {
-            JsonUiService.SetItemSelected(formId, controlId, item, selected);
-        }
-
         public string GetGraphData(string graphId, string filePath = null)
         {
             return JsonUiService.GetGraphData(graphId, filePath);

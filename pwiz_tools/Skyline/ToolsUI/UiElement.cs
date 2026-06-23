@@ -23,6 +23,7 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Util.Extensions;
 
@@ -33,8 +34,8 @@ namespace pwiz.Skyline.ToolsUI
     internal enum UiAction
     {
         GetActions, GetChildren, Click, SetValue, GetValue,
-        SetItemChecked, SetItemSelected, GetGridText, SetGridText, SetCurrentCellAddress, SetSelectedIndex,
-        Expand, Collapse
+        CheckItem, UncheckItem, SelectItem, UnselectItem, GetGridText, SetGridText, SetCurrentCellAddress,
+        SetSelectedIndex, Expand, Collapse
     }
 
     // Converts between a UiAction and its wire name (the snake_case string the connector uses).
@@ -296,7 +297,7 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A ListControl -- a ListBox or CheckedListBox. Select an item by index
-    /// (set_selected_index) or by its text (set_item_selected).</summary>
+    /// (set_selected_index) or by its text (select_item / unselect_item).</summary>
     internal class ListControlElement<T> : ControlElement<T> where T : ListControl
     {
         public ListControlElement(T control) : base(control) { }
@@ -305,7 +306,8 @@ namespace pwiz.Skyline.ToolsUI
             switch (action)
             {
                 case UiAction.SetSelectedIndex:
-                case UiAction.SetItemSelected:
+                case UiAction.SelectItem:
+                case UiAction.UnselectItem:
                     return true;
                 default:
                     return base.SupportsAction(action);
@@ -316,11 +318,13 @@ namespace pwiz.Skyline.ToolsUI
             switch (action)
             {
                 case UiAction.SetSelectedIndex:
-                    JsonUiService.InvokeOnUiThread(() => Control.SelectedIndex = UiValue.ToInt(value));
+                    Control.SelectedIndex = UiValue.ToInt(value);
                     return null;
-                // The value is the item text; the action selects it (the typed verb also deselects).
-                case UiAction.SetItemSelected:
-                    JsonUiService.SetListItemSelected(Control, value as string, true);
+                case UiAction.SelectItem:
+                    ListItems.SetSelected(Control, value as string, true);
+                    return null;
+                case UiAction.UnselectItem:
+                    ListItems.SetSelected(Control, value as string, false);
                     return null;
                 default:
                     return base.PerformAction(action, value, cancellationToken);
@@ -328,9 +332,9 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    /// <summary>A CheckedListBox. Besides the ListControl actions, an item is checked by its text
-    /// (set_item_checked) or toggled the way a user does it -- set_selected_index to the item, then click,
-    /// which toggles the selected item's check. Its value is the checked items' text, one per line.</summary>
+    /// <summary>A CheckedListBox. Besides the ListControl actions, an item is checked/unchecked by its text
+    /// (check_item / uncheck_item) or toggled the way a user does it -- set_selected_index to the item, then
+    /// click, which toggles the selected item's check. Its value is the checked items' text, one per line.</summary>
     internal sealed class CheckedListBoxElement : ListControlElement<CheckedListBox>
     {
         public CheckedListBoxElement(CheckedListBox control) : base(control) { }
@@ -340,7 +344,8 @@ namespace pwiz.Skyline.ToolsUI
         {
             switch (action)
             {
-                case UiAction.SetItemChecked:
+                case UiAction.CheckItem:
+                case UiAction.UncheckItem:
                 case UiAction.Click:
                 case UiAction.GetValue:
                     return true;
@@ -352,13 +357,16 @@ namespace pwiz.Skyline.ToolsUI
         {
             switch (action)
             {
-                // The value is the item text; the action checks it (the typed verb also unchecks).
-                case UiAction.SetItemChecked:
-                    JsonUiService.SetListItemChecked(Control, value as string, true);
+                case UiAction.CheckItem:
+                    ListItems.SetChecked(Control, value as string, true);
+                    return null;
+                case UiAction.UncheckItem:
+                    ListItems.SetChecked(Control, value as string, false);
                     return null;
                 case UiAction.Click:
                     // A click toggles the checked state of the selected item, the way a user's click/space
-                    // does. Move to the item first with set_selected_index.
+                    // does (move to the item first with set_selected_index). The click runs off the UI
+                    // thread inside the dialog-watch, so marshal the toggle.
                     JsonUiService.InvokeOnUiThread(() =>
                     {
                         int index = Control.SelectedIndex;
@@ -378,25 +386,32 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A control whose items are checked or selected by their text -- a TreeView (a node by a
     /// '>'-separated path) or a ListView. Not a ListControl (it has no SelectedIndex); a caption-less one
-    /// is reached through a ControlId of its Type. The value is the item; the typed verbs also
-    /// uncheck/deselect.</summary>
+    /// is reached through a ControlId of its Type. The value is the item.</summary>
     internal class ItemContainerElement<T> : ControlElement<T> where T : Control
     {
         public ItemContainerElement(T control) : base(control) { }
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.SetItemChecked || action == UiAction.SetItemSelected || base.SupportsAction(action);
+        public override bool SupportsAction(UiAction action)
+        {
+            switch (action)
+            {
+                case UiAction.CheckItem:
+                case UiAction.UncheckItem:
+                case UiAction.SelectItem:
+                case UiAction.UnselectItem:
+                    return true;
+                default:
+                    return base.SupportsAction(action);
+            }
+        }
         public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             switch (action)
             {
-                case UiAction.SetItemChecked:
-                    JsonUiService.SetListItemChecked(Control, value as string, true);
-                    return null;
-                case UiAction.SetItemSelected:
-                    JsonUiService.SetListItemSelected(Control, value as string, true);
-                    return null;
-                default:
-                    return base.PerformAction(action, value, cancellationToken);
+                case UiAction.CheckItem: ListItems.SetChecked(Control, value as string, true); return null;
+                case UiAction.UncheckItem: ListItems.SetChecked(Control, value as string, false); return null;
+                case UiAction.SelectItem: ListItems.SetSelected(Control, value as string, true); return null;
+                case UiAction.UnselectItem: ListItems.SetSelected(Control, value as string, false); return null;
+                default: return base.PerformAction(action, value, cancellationToken);
             }
         }
     }
@@ -431,6 +446,156 @@ namespace pwiz.Skyline.ToolsUI
                 default:
                     return base.PerformAction(action, value, cancellationToken);
             }
+        }
+    }
+
+    /// <summary>The Pick Children pop-up. Its checkboxes are PickListChoice.Chosen, not a CheckedListBox, so
+    /// it checks/unchecks an item by its display text through the pop-up itself (check_item/uncheck_item).</summary>
+    internal sealed class PopupPickListElement : ControlElement<PopupPickList>
+    {
+        public PopupPickListElement(PopupPickList control) : base(control) { }
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.CheckItem || action == UiAction.UncheckItem || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
+        {
+            switch (action)
+            {
+                case UiAction.CheckItem:
+                    Control.SetItemChecked(ListItems.FindPickListIndex(Control, value as string), true);
+                    return null;
+                case UiAction.UncheckItem:
+                    Control.SetItemChecked(ListItems.FindPickListIndex(Control, value as string), false);
+                    return null;
+                default:
+                    return base.PerformAction(action, value, cancellationToken);
+            }
+        }
+    }
+
+    /// <summary>The item operations the list/tree/list-view (and pick-list) elements share -- checking,
+    /// selecting, and matching an item by its visible text (a TreeView node by a '>'-separated path).
+    /// These were moved off JsonUiService now that only the elements drive them; they reuse the connector's
+    /// text matching (JsonUiService.MatchQuality) and run on the UI thread (the service marshals there).</summary>
+    internal static class ListItems
+    {
+        public static void SetChecked(Control control, string item, bool isChecked)
+        {
+            switch (control)
+            {
+                case CheckedListBox checkedListBox:
+                    checkedListBox.SetItemChecked(FindListItemIndex(checkedListBox, item), isChecked);
+                    break;
+                case TreeView treeView:
+                    FindTreeNode(treeView, item).Checked = isChecked;
+                    break;
+                case ListView listView:
+                    FindListViewItem(listView, item).Checked = isChecked;
+                    break;
+                default:
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Checking items is supported for a CheckedListBox, TreeView, or ListView, not {0}.", control.Name));
+            }
+        }
+
+        public static void SetSelected(Control control, string item, bool selected)
+        {
+            switch (control)
+            {
+                case ListBox listBox: // CheckedListBox derives from ListBox
+                    listBox.SetSelected(FindListItemIndex(listBox, item), selected);
+                    break;
+                case TreeView treeView:
+                    var node = FindTreeNode(treeView, item);
+                    if (selected)
+                        treeView.SelectedNode = node;
+                    else if (treeView.SelectedNode == node)
+                        treeView.SelectedNode = null;
+                    break;
+                case ListView listView:
+                    var listViewItem = FindListViewItem(listView, item);
+                    listViewItem.Selected = selected;
+                    if (selected)
+                        listViewItem.EnsureVisible();
+                    break;
+                default:
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Selecting items is supported for a ListBox, TreeView, or ListView, not {0}.", control.Name));
+            }
+        }
+
+        // Index of the best-matching choice (by its visible label) in a pick-list pop-up. Throws if none.
+        public static int FindPickListIndex(PopupPickList pickList, string item)
+        {
+            var labels = pickList.ItemNames.ToList();
+            int best = BestMatch(labels.Count, i => labels[i], item);
+            if (best < 0)
+                throw new ArgumentException(LlmInstruction.Format(@"Item not found in the pick list: {0}.", item));
+            return best;
+        }
+
+        // Index of the best-matching item (by display text) in a ListBox. Throws if none.
+        private static int FindListItemIndex(ListBox listBox, string item)
+        {
+            int best = BestMatch(listBox.Items.Count, i => listBox.GetItemText(listBox.Items[i]), item);
+            if (best < 0)
+                throw new ArgumentException(LlmInstruction.Format(@"Item not found in {0}: {1}.", listBox.Name, item));
+            return best;
+        }
+
+        // The best-matching item (by its text) in a ListView. Throws if none.
+        private static ListViewItem FindListViewItem(ListView listView, string item)
+        {
+            int best = BestMatch(listView.Items.Count, i => listView.Items[i].Text, item);
+            if (best < 0)
+                throw new ArgumentException(LlmInstruction.Format(@"Item not found in {0}: {1}.", listView.Name, item));
+            return listView.Items[best];
+        }
+
+        // Walks a TreeView by a '>'-separated path of node texts, expanding each level so nodes built on
+        // demand (e.g. the Customize Report field tree) are present before the next segment is matched.
+        private static TreeNode FindTreeNode(TreeView treeView, string path)
+        {
+            // A node's text legitimately contains '|' and '/' (e.g. a UniProt name "sp|P02769|ALBU_BOVIN"),
+            // so split on '>' only.
+            var segments = (path ?? string.Empty)
+                .Split('>').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+            if (segments.Length == 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Empty tree path: {0}. Expected '>'-separated node texts, e.g. 'Protein > Peptide > Precursor'.",
+                    path ?? string.Empty));
+            var nodes = treeView.Nodes;
+            TreeNode current = null;
+            for (int i = 0; i < segments.Length; i++)
+            {
+                int best = BestMatch(nodes.Count, j => nodes[j].Text, segments[i]);
+                if (best < 0)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Tree node not found: {0} (no match for '{1}').", path, segments[i]));
+                current = nodes[best];
+                if (i < segments.Length - 1)
+                {
+                    current.Expand(); // populate lazily-built children before descending
+                    nodes = current.Nodes;
+                }
+            }
+            return current;
+        }
+
+        // The index of the best text match among count items (by the connector's label matching), or -1.
+        private static int BestMatch(int count, Func<int, string> textOf, string key)
+        {
+            int best = -1;
+            var bestQuality = JsonUiService.ControlMatchQuality.None;
+            for (int i = 0; i < count; i++)
+            {
+                var quality = JsonUiService.MatchQuality(textOf(i), key);
+                if (quality > bestQuality)
+                {
+                    best = i;
+                    bestQuality = quality;
+                }
+            }
+            return best;
         }
     }
 
@@ -650,6 +815,8 @@ namespace pwiz.Skyline.ToolsUI
                 case DataGridView dataGridView when !HasDataboundAncestor(dataGridView):
                     return new GridElement(dataGridView);
                 case ToolStrip toolStrip: return new ToolStripElement(toolStrip);
+                // The Pick Children pop-up checks items through itself, not its inner owner-drawn ListBox.
+                case PopupPickList pickList: return new PopupPickListElement(pickList);
                 default:
                     // A custom clickable that is not a ButtonBase (e.g. a StartPage tile).
                     if (control is IButtonControl)

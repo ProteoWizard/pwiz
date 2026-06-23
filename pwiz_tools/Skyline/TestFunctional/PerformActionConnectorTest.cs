@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
 
             // An unsupported action on a control reports a clear error rather than acting.
             AssertEx.ThrowsException<System.Exception>(() =>
-                JsonUiService.PerformAction(nameById, @"set_item_checked", @"x"));
+                JsonUiService.PerformAction(nameById, @"check_item", @"x"));
 
             // click: close the dialog by clicking its Cancel button, located by label.
             OkDialog(defineAnnotationDlg, () =>

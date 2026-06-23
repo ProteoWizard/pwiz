@@ -34,8 +34,8 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonUiService.SetItemChecked"/> and <see cref="JsonUiService.SetItemSelected"/>
-    /// against both kinds of control they support:
+    /// Exercises the check_item / uncheck_item / select_item PerformAction actions against both kinds of
+    /// control that support them:
     ///   * a CheckedListBox -- the Define Annotation "Applies to" list (item matched by text);
     ///   * a TreeView -- the Customize Report field tree (item is a '>'-separated node path).
     /// Matched by the English item/node text, so the test runs in en.
@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
             TestTreeView();
         }
 
-        // SetItemChecked / SetItemSelected on the "Applies to" CheckedListBox.
+        // check_item / uncheck_item / select_item on the "Applies to" CheckedListBox, addressed by label.
         private void TestCheckedListBox()
         {
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
@@ -64,25 +64,30 @@ namespace pwiz.SkylineTestFunctional
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             string dlgId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
+            var appliesTo = new ControlId
+            {
+                Parent = new ControlId { Type = @"Form", Name = dlgId },
+                Label = @"Applies to",
+            };
 
-            // SetItemChecked sets the "Replicates" item's check explicitly (idempotent, unlike a toggle).
-            JsonUiService.SetItemChecked(dlgId, @"Applies to",@"Replicates", true);
+            // check_item / uncheck_item set the "Replicates" item's check explicitly (idempotent).
+            JsonUiService.PerformAction(appliesTo, @"check_item", @"Replicates");
             RunUI(() => Assert.IsTrue(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
-                @"SetItemChecked did not check the Replicates item."));
-            JsonUiService.SetItemChecked(dlgId, @"Applies to",@"Replicates", false);
+                @"check_item did not check the Replicates item."));
+            JsonUiService.PerformAction(appliesTo, @"uncheck_item", @"Replicates");
             RunUI(() => Assert.IsFalse(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
-                @"SetItemChecked did not uncheck the Replicates item."));
+                @"uncheck_item did not uncheck the Replicates item."));
 
-            // SetItemSelected highlights an item (separate from checking it).
-            JsonUiService.SetItemSelected(dlgId, @"Applies to",@"Peptides", true);
+            // select_item highlights an item (separate from checking it).
+            JsonUiService.PerformAction(appliesTo, @"select_item", @"Peptides");
             RunUI(() =>
             {
                 var checkedListBox = (CheckedListBox)defineAnnotationDlg.Controls
                     .Find(@"checkedListBoxAppliesTo", true).First();
                 Assert.AreEqual(@"Peptides", checkedListBox.GetItemText(checkedListBox.SelectedItem),
-                    @"SetItemSelected did not select the Peptides item.");
+                    @"select_item did not select the Peptides item.");
             });
 
             OkDialog(defineAnnotationDlg, () => defineAnnotationDlg.DialogResult = DialogResult.Cancel);
@@ -90,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);
         }
 
-        // SetItemChecked / SetItemSelected on the Customize Report field tree, addressed by node path.
+        // check_item / select_item on the Customize Report field tree, addressed by node path.
         private void TestTreeView()
         {
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
@@ -122,16 +127,16 @@ namespace pwiz.SkylineTestFunctional
                 Parent = new ControlId { Type = @"Form", Name = editorId },
                 Type = @"TreeView",
             };
-            JsonUiService.PerformAction(treeId, @"set_item_checked", nodePath);
+            JsonUiService.PerformAction(treeId, @"check_item", nodePath);
             RunUI(() =>
             {
                 var node = tree.Nodes[0].Nodes.Cast<TreeNode>().First(n => n.Text == childText);
-                Assert.IsTrue(node.Checked, @"set_item_checked did not check the tree node " + nodePath);
+                Assert.IsTrue(node.Checked, @"check_item did not check the tree node " + nodePath);
             });
 
-            JsonUiService.PerformAction(treeId, @"set_item_selected", nodePath);
+            JsonUiService.PerformAction(treeId, @"select_item", nodePath);
             RunUI(() => Assert.AreEqual(childText, tree.SelectedNode?.Text,
-                @"set_item_selected did not select the tree node."));
+                @"select_item did not select the tree node."));
 
             // expand / collapse a node by a path whose segments are a child's text or its index. Collapse
             // the root by its index (0), then expand it again by its text.

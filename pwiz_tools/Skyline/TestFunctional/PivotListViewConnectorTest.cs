@@ -29,12 +29,13 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonUiService.SetItemSelected"/> on a ListView -- the available-columns
-    /// list in the Pivot Editor (a ColumnListView). The item is matched by text, like a ListBox.
+    /// Exercises the select_item PerformAction action on a ListView -- the available-columns list in the
+    /// Pivot Editor (a ColumnListView). The item is matched by text, like a ListBox.
     /// </summary>
     [TestClass]
     public class PivotListViewConnectorTest : AbstractFunctionalTest
@@ -69,10 +70,15 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(string.IsNullOrEmpty(columnText));
 
             // The available-columns list has no caption; address it by its type ("ListView").
-            JsonUiService.SetItemSelected(pivotId, @"ListView", columnText, true);
+            var listView = new ControlId
+            {
+                Parent = new ControlId { Type = @"Form", Name = pivotId },
+                Type = @"ListView",
+            };
+            JsonUiService.PerformAction(listView, @"select_item", columnText);
             RunUI(() => Assert.IsTrue(
                 pivotEditor.AvailableColumnList.SelectedItems.Cast<ListViewItem>().Any(i => i.Text == columnText),
-                @"SetItemSelected did not select the list-view item."));
+                @"select_item did not select the list-view item."));
 
             OkDialog(pivotEditor, () => pivotEditor.DialogResult = DialogResult.Cancel);
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));

@@ -1041,189 +1041,6 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        /// <summary>
-        /// Checks or unchecks an item in a CheckedListBox or a TreeView on a form (see
-        /// <see cref="IJsonToolService"/>). For a CheckedListBox the item is matched by its display
-        /// text; for a TreeView <paramref name="item"/> is a '&gt;'-separated path of node texts.
-        /// </summary>
-        public static void SetItemChecked(string formId, string controlId, string item, bool isChecked)
-        {
-            ValidateFormIdFormat(formId);
-            RunWithDialogWatch(() =>
-            {
-                InvokeOnUiThread(() =>
-                {
-                    var form = FindFormById(formId);
-                    // The pick-list popup (Pick Children) is an owner-drawn ListBox whose checkboxes are
-                    // PickListChoice.Chosen, not a CheckedListBox; match the item by its visible label.
-                    if (form is PopupPickList pickList)
-                    {
-                        VerifyInteractable(pickList);
-                        pickList.SetItemChecked(FindPickListIndex(pickList, item), isChecked);
-                        return;
-                    }
-                    var element = FindElement(form, controlId, e => e.SupportsAction(UiAction.SetItemChecked), @"list, tree, or list-view control");
-                    VerifyInteractable(element);
-                    SetListItemChecked(((ControlElement)element).Control, item, isChecked);
-                });
-                return true;
-            });
-        }
-
-        // Checks/unchecks an item on a list-like control by its text (a TreeView item by a '>'-separated
-        // path). Shared by the SetItemChecked verb and the list elements so both drive it identically.
-        internal static void SetListItemChecked(Control control, string item, bool isChecked)
-        {
-            switch (control)
-            {
-                case CheckedListBox checkedListBox:
-                    checkedListBox.SetItemChecked(FindListItemIndex(checkedListBox, item), isChecked);
-                    break;
-                case TreeView treeView:
-                    FindTreeNode(treeView, item).Checked = isChecked;
-                    break;
-                case ListView listView:
-                    FindListViewItem(listView, item).Checked = isChecked;
-                    break;
-                default:
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Checking items is supported for a CheckedListBox, TreeView, or ListView, not {0}.", control.Name));
-            }
-        }
-
-        /// <summary>
-        /// Selects or deselects an item in a ListBox/CheckedListBox or a TreeView on a form (see
-        /// <see cref="IJsonToolService"/>). For a list the item is matched by its display text; for a
-        /// TreeView <paramref name="item"/> is a '&gt;'-separated path of node texts.
-        /// </summary>
-        public static void SetItemSelected(string formId, string controlId, string item, bool selected)
-        {
-            ValidateFormIdFormat(formId);
-            RunWithDialogWatch(() =>
-            {
-                InvokeOnUiThread(() =>
-                {
-                    var form = FindFormById(formId);
-                    var element = FindElement(form, controlId, e => e.SupportsAction(UiAction.SetItemSelected), @"list, tree, or list-view control");
-                    VerifyInteractable(element);
-                    SetListItemSelected(((ControlElement)element).Control, item, selected);
-                });
-                return true;
-            });
-        }
-
-        // Selects/deselects an item on a list-like control by its text (a TreeView item by a '>'-separated
-        // path). Shared by the SetItemSelected verb and the list elements.
-        internal static void SetListItemSelected(Control control, string item, bool selected)
-        {
-            switch (control)
-            {
-                case ListBox listBox: // CheckedListBox derives from ListBox
-                    listBox.SetSelected(FindListItemIndex(listBox, item), selected);
-                    break;
-                case TreeView treeView:
-                    var node = FindTreeNode(treeView, item);
-                    if (selected)
-                        treeView.SelectedNode = node;
-                    else if (treeView.SelectedNode == node)
-                        treeView.SelectedNode = null;
-                    break;
-                case ListView listView:
-                    var listViewItem = FindListViewItem(listView, item);
-                    listViewItem.Selected = selected;
-                    if (selected)
-                        listViewItem.EnsureVisible();
-                    break;
-                default:
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Selecting items is supported for a ListBox, TreeView, or ListView, not {0}.", control.Name));
-            }
-        }
-
-        // Finds the index of the best-matching choice (by its visible label) in a pick-list popup.
-        // Throws if none matches. The index matches PopupPickList.SetItemChecked's item ordering.
-        private static int FindPickListIndex(PopupPickList pickList, string item)
-        {
-            var labels = pickList.ItemNames.ToList();
-            int best = -1;
-            var bestQuality = ControlMatchQuality.None;
-            for (int i = 0; i < labels.Count; i++)
-            {
-                var quality = MatchQuality(labels[i], item);
-                if (quality > bestQuality)
-                {
-                    best = i;
-                    bestQuality = quality;
-                }
-            }
-            if (best < 0)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Item not found in the pick list: {0}.", item));
-            return best;
-        }
-
-        // Finds the index of the best-matching item (by display text) in a ListBox. Throws if none.
-        private static int FindListItemIndex(ListBox listBox, string item)
-        {
-            int best = -1;
-            var bestQuality = ControlMatchQuality.None;
-            for (int i = 0; i < listBox.Items.Count; i++)
-            {
-                var quality = MatchQuality(listBox.GetItemText(listBox.Items[i]), item);
-                if (quality > bestQuality)
-                {
-                    best = i;
-                    bestQuality = quality;
-                }
-            }
-            if (best < 0)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Item not found in {0}: {1}.", listBox.Name, item));
-            return best;
-        }
-
-        // Finds the best-matching item (by its text or name) in a ListView. Throws if none.
-        private static ListViewItem FindListViewItem(ListView listView, string item)
-        {
-            ListViewItem best = null;
-            var bestQuality = ControlMatchQuality.None;
-            foreach (ListViewItem listViewItem in listView.Items)
-            {
-                var quality = MatchQuality(listViewItem.Text, item);
-                if (quality > bestQuality)
-                {
-                    best = listViewItem;
-                    bestQuality = quality;
-                }
-            }
-            if (best == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Item not found in {0}: {1}.", listView.Name, item));
-            return best;
-        }
-
-        // Walks a TreeView by a '>'-separated path of node texts, expanding each level so nodes built
-        // on demand (e.g. the Customize Report field tree) are present before the next segment is
-        // matched. Must run on the UI thread. Throws if a segment does not match.
-        private static TreeNode FindTreeNode(TreeView treeView, string path)
-        {
-            var segments = ParseTreePath(path);
-            var nodes = treeView.Nodes;
-            TreeNode current = null;
-            for (int i = 0; i < segments.Length; i++)
-            {
-                current = BestTreeNode(nodes, segments[i]);
-                if (current == null)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Tree node not found: {0} (no match for '{1}').", path, segments[i]));
-                if (i < segments.Length - 1)
-                {
-                    current.Expand(); // populate lazily-built children before descending
-                    nodes = current.Nodes;
-                }
-            }
-            return current;
-        }
 
         // Resolves a tree path -- an array whose segments select a child at each level (an integer is the
         // child at that index; a string is the first child whose text matches it) -- to its TreeNode,
@@ -1296,23 +1113,6 @@ namespace pwiz.Skyline.ToolsUI
                     return token.Type == JTokenType.Integer ? (object) (int) token : token.Value<string>();
                 default: return segment as string;
             }
-        }
-
-        // Picks the child node that best matches key by node name or visible text. Returns null if none.
-        private static TreeNode BestTreeNode(TreeNodeCollection nodes, string key)
-        {
-            TreeNode best = null;
-            var bestQuality = ControlMatchQuality.None;
-            foreach (TreeNode node in nodes)
-            {
-                var quality = MatchQuality(node.Text, key);
-                if (quality > bestQuality)
-                {
-                    best = node;
-                    bestQuality = quality;
-                }
-            }
-            return best;
         }
 
         /// <summary>
@@ -1407,8 +1207,10 @@ namespace pwiz.Skyline.ToolsUI
                     case UiAction.SetGridText:
                     case UiAction.SetCurrentCellAddress:
                     case UiAction.SetSelectedIndex:
-                    case UiAction.SetItemChecked:
-                    case UiAction.SetItemSelected:
+                    case UiAction.CheckItem:
+                    case UiAction.UncheckItem:
+                    case UiAction.SelectItem:
+                    case UiAction.UnselectItem:
                         // Mutating actions: run inside the dialog-watch (a paste can raise a conversion
                         // alert) and on the UI thread.
                         object setResult = null;
@@ -2160,20 +1962,6 @@ namespace pwiz.Skyline.ToolsUI
                 || string.Equals(item.Name, label, StringComparison.OrdinalIgnoreCase);
         }
 
-        // Splits a tree-node path into its segments on '>' ONLY -- unlike a menu path, a node's text
-        // legitimately contains '|' and '/' (e.g. a UniProt protein name "sp|P02769|ALBU_BOVIN", or a
-        // small-molecule formula), so those must not be treated as separators. Throws if empty.
-        private static string[] ParseTreePath(string path)
-        {
-            var segments = (path ?? string.Empty)
-                .Split('>').Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
-            if (segments.Length == 0)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Empty tree path: {0}. Expected '>'-separated node texts, e.g. 'Protein > Peptide > Precursor'.",
-                    path ?? string.Empty));
-            return segments;
-        }
-
         // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
         private static string[] ParseMenuSegments(string menuPath)
         {
@@ -2200,7 +1988,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // How well a control matches a requested label. Higher is better; callers prefer the best match
         // in the form and accept a weaker one only when nothing matches better.
-        private enum ControlMatchQuality
+        internal enum ControlMatchQuality
         {
             None = 0,     // no match
             Type = 1,     // matched the control's type name ("ListView"/"TreeView") -- a last resort for a
@@ -2248,7 +2036,7 @@ namespace pwiz.Skyline.ToolsUI
         // SetFormValue/FindListOrTreeControl). A control with no caption (e.g. a text box) is reached via
         // its label; a grid, which has no caption at all, is the lone exception (matched by name in
         // FindGrid). Used for WinForms controls, ToolStripItems, list items, and tree nodes alike.
-        private static ControlMatchQuality MatchQuality(string text, string key)
+        internal static ControlMatchQuality MatchQuality(string text, string key)
         {
             // Best: the visible text after light normalization (mnemonic '&' and a trailing
             // ellipsis/period removed -- see NormalizeLabel).

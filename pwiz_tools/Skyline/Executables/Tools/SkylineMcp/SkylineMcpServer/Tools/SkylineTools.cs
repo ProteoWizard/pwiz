@@ -562,9 +562,11 @@ public static class SkylineTools
         "\"TreeView\"), and/or its Name, then perform an action. Only the properties you set are used to " +
         "match. Actions: 'get_actions' (lists the actions this control supports); 'get_children' (lists " +
         "child controls as JSON); 'click'; 'set_value' (uses 'value'); 'get_value' (returns the current " +
-        "value); 'get_grid_text'/'set_grid_text' (a grid's text); 'set_current_cell_address' (value 'col,row'); " +
-        "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text " +
-        "or its index, e.g. [\"Peptides\", 0]). " +
+        "value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a list/tree/list-view item by its " +
+        "text, value the item -- a TreeView node by a '>'-separated path); 'set_selected_index' (a list, " +
+        "value the index); 'get_grid_text'/'set_grid_text' (a grid's text); 'set_current_cell_address' " +
+        "(value 'col,row'); 'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are " +
+        "a child's text or its index, e.g. [\"Peptides\", 0]). " +
         "For a control's right-click menu, pass controlId as the JSON {\"parent\": <the control's " +
         "ControlId from get_children>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
         "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
@@ -572,7 +574,7 @@ public static class SkylineTools
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, set_value, get_value, get_grid_text, set_grid_text, set_current_cell_address, expand, collapse")] string action,
+        [Description("Action: get_actions, get_children, click, set_value, get_value, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, expand, collapse")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Internal control name, e.g. one echoed by skyline_get_controls (optional)")] string name = null,
@@ -739,45 +741,6 @@ public static class SkylineTools
         {
             connection.CloseForm(formId);
             return $"Closed {formId}.";
-        });
-    }
-
-    [McpServerTool(Name = "skyline_set_item_checked"),
-     Description("Check or uncheck an item in a checked-list box, a tree view, a list view, or a Pick-Children " +
-        "pick-list popup on a form. For a checked-list box or pick-list the item is matched by its display " +
-        "text; for a tree view the item is a '>'-separated path of node texts, e.g. " +
-        "'Peptides > Precursors > Precursor Results'. Use to check columns in the Customize Report field " +
-        "tree, the annotation 'Applies to' list, or transitions in a precursor's pick-list (opened from " +
-        "the tree's context menu -- a skyline_perform_action with a ControlId of Type 'ContextMenu' on the " +
-        "tree, then 'Pick Children'; commit it with skyline_click_form_button 'OK').")]
-    public static string SetItemChecked(
-        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("List/tree control name on the form, or null when the form has a single one")] string controlId,
-        [Description("Item display text, or a '>'-separated node path for a tree view")] string item,
-        [Description("True to check the item, false to uncheck it")] bool isChecked)
-    {
-        return Invoke(connection =>
-        {
-            connection.SetItemChecked(formId, controlId, item, isChecked);
-            return $"Set checked={isChecked} on '{item}' in {formId}.";
-        });
-    }
-
-    [McpServerTool(Name = "skyline_set_item_selected"),
-     Description("Select or deselect an item in a list box / checked-list box, a tree view, or a list view on a " +
-        "form. For a list the item is matched by its display text; for a tree view the item is a " +
-        "'>'-separated path of node texts. Selecting highlights the item (a tree view selects that " +
-        "node); this is separate from checking it.")]
-    public static string SetItemSelected(
-        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("List/tree control name on the form, or null when the form has a single one")] string controlId,
-        [Description("Item display text, or a '>'-separated node path for a tree view")] string item,
-        [Description("True to select the item, false to deselect it")] bool selected)
-    {
-        return Invoke(connection =>
-        {
-            connection.SetItemSelected(formId, controlId, item, selected);
-            return $"Set selected={selected} on '{item}' in {formId}.";
         });
     }
 
