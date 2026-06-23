@@ -50,6 +50,10 @@ namespace pwiz.Common.CommandLine
     /// Static seams that decouple the generic CLI-argument framework from its host
     /// application. Defaults keep PortableUtil a pure-BCL leaf usable on its own; a host
     /// overrides them at startup (Skyline does so in the CommandArgs static constructor).
+    /// These are process-global, set once per process - not per parser instance - so a single
+    /// process is expected to host a single argument model (Skyline.exe and OspreySharp.exe are
+    /// separate processes). A future host that drives two argument models in one process would
+    /// need to revisit this.
     /// </summary>
     public static class ArgUsage
     {
