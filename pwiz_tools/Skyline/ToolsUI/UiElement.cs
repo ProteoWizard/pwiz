@@ -33,7 +33,8 @@ namespace pwiz.Skyline.ToolsUI
     internal enum UiAction
     {
         GetActions, GetChildren, Click, SetValue, GetValue,
-        SetItemChecked, SetItemSelected, GetGridText, SetGridText, SetCurrentCellAddress, SetSelectedIndex
+        SetItemChecked, SetItemSelected, GetGridText, SetGridText, SetCurrentCellAddress, SetSelectedIndex,
+        Expand, Collapse
     }
 
     // Converts between a UiAction and its wire name (the snake_case string the connector uses).
@@ -400,6 +401,39 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
+    /// <summary>A TreeView. Besides checking/selecting a node by text, a node is expanded or collapsed
+    /// (expand/collapse) by a path: an array whose segments select a child at each level -- a string is the
+    /// first child whose text matches it, an integer is the child at that index.</summary>
+    internal sealed class TreeViewElement : ItemContainerElement<TreeView>
+    {
+        public TreeViewElement(TreeView control) : base(control) { }
+        public override bool SupportsAction(UiAction action)
+        {
+            switch (action)
+            {
+                case UiAction.Expand:
+                case UiAction.Collapse:
+                    return true;
+                default:
+                    return base.SupportsAction(action);
+            }
+        }
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
+        {
+            switch (action)
+            {
+                case UiAction.Expand:
+                    JsonUiService.ResolveTreePath(Control, value).Expand();
+                    return null;
+                case UiAction.Collapse:
+                    JsonUiService.ResolveTreePath(Control, value).Collapse();
+                    return null;
+                default:
+                    return base.PerformAction(action, value, cancellationToken);
+            }
+        }
+    }
+
     /// <summary>A custom IButtonControl that is not a WinForms ButtonBase (e.g. a StartPage tile) --
     /// clicked via PerformClick.</summary>
     internal sealed class ClickableControlElement : ControlElement
@@ -608,7 +642,7 @@ namespace pwiz.Skyline.ToolsUI
                 // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
                 case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox);
                 case ListBox listBox: return new ListControlElement<ListBox>(listBox);
-                case TreeView treeView: return new ItemContainerElement<TreeView>(treeView);
+                case TreeView treeView: return new TreeViewElement(treeView);
                 case ListView listView: return new ItemContainerElement<ListView>(listView);
                 case DataboundGridControl databound: return new GridElement(databound);
                 // A standalone grid; the inner grid of a DataboundGridControl is driven through it, so

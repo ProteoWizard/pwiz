@@ -562,7 +562,9 @@ public static class SkylineTools
         "\"TreeView\"), and/or its Name, then perform an action. Only the properties you set are used to " +
         "match. Actions: 'get_actions' (lists the actions this control supports); 'get_children' (lists " +
         "child controls as JSON); 'click'; 'set_value' (uses 'value'); 'get_value' (returns the current " +
-        "value); 'get_grid_text'/'set_grid_text' (a grid's text); 'set_current_cell_address' (value 'col,row'). " +
+        "value); 'get_grid_text'/'set_grid_text' (a grid's text); 'set_current_cell_address' (value 'col,row'); " +
+        "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text " +
+        "or its index, e.g. [\"Peptides\", 0]). " +
         "For a control's right-click menu, pass controlId as the JSON {\"parent\": <the control's " +
         "ControlId from get_children>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
         "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
@@ -570,11 +572,11 @@ public static class SkylineTools
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, set_value, get_value, get_grid_text, set_grid_text, set_current_cell_address")] string action,
+        [Description("Action: get_actions, get_children, click, set_value, get_value, get_grid_text, set_grid_text, set_current_cell_address, expand, collapse")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Internal control name, e.g. one echoed by skyline_get_controls (optional)")] string name = null,
-        [Description("Value for set_value/set_grid_text, or 'col,row' for set_current_cell_address (optional)")] string value = null,
+        [Description("Value for set_value/set_grid_text, 'col,row' for set_current_cell_address, or a JSON array path for expand/collapse (optional)")] string value = null,
         [Description("A full ControlId as JSON (e.g. one from get_children, or wrapped as a ContextMenu); overrides label/type/name when given (optional)")] string controlId = null)
     {
         return Invoke(connection =>

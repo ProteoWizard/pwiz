@@ -29,6 +29,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -1222,6 +1223,79 @@ namespace pwiz.Skyline.ToolsUI
                 }
             }
             return current;
+        }
+
+        // Resolves a tree path -- an array whose segments select a child at each level (an integer is the
+        // child at that index; a string is the first child whose text matches it) -- to its TreeNode,
+        // expanding each ancestor so lazily-built children are present before descending. The path value is
+        // an object[] (an in-process caller) or a JSON array (over the wire). Must run on the UI thread.
+        internal static TreeNode ResolveTreePath(TreeView treeView, object pathValue)
+        {
+            var path = ToTreePath(pathValue);
+            if (path.Length == 0)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The path is empty -- give an array of child names (strings) and/or indexes (integers)."));
+            var nodes = treeView.Nodes;
+            TreeNode current = null;
+            for (int i = 0; i < path.Length; i++)
+            {
+                current = FindChildNode(nodes, path[i]);
+                if (i < path.Length - 1)
+                {
+                    current.Expand(); // populate lazily-built children before descending
+                    nodes = current.Nodes;
+                }
+            }
+            return current;
+        }
+
+        // One step of a tree path: an integer selects the child at that index; a string selects the first
+        // child whose text matches it (the first, not the best -- ties go to document order).
+        private static TreeNode FindChildNode(TreeNodeCollection nodes, object segment)
+        {
+            if (segment is int index)
+            {
+                if (index < 0 || index >= nodes.Count)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Child index {0} is out of range; there are {1} children.", index, nodes.Count));
+                return nodes[index];
+            }
+            var text = segment as string;
+            foreach (TreeNode node in nodes)
+                if (MatchQuality(node.Text, text) != ControlMatchQuality.None)
+                    return node;
+            throw new ArgumentException(LlmInstruction.Format(@"No child node matches '{0}'.", text));
+        }
+
+        // The path segments from the value a tree expand/collapse action carries: an object[] of strings
+        // and integers (an in-process caller) or a JSON array (over the wire). A JSON integer is a child
+        // index; a JSON string is a child's text.
+        private static object[] ToTreePath(object pathValue)
+        {
+            switch (pathValue)
+            {
+                case null:
+                    return new object[0];
+                case string json:
+                    return JArray.Parse(json).Select(ToTreePathSegment).ToArray();
+                case System.Collections.IEnumerable items:
+                    return items.Cast<object>().Select(ToTreePathSegment).ToArray();
+                default:
+                    throw new ArgumentException(new LlmInstruction(
+                        @"A tree path must be an array of child names (strings) and/or indexes (integers)."));
+            }
+        }
+
+        private static object ToTreePathSegment(object segment)
+        {
+            switch (segment)
+            {
+                case int i: return i;
+                case long l: return (int) l;
+                case JToken token:
+                    return token.Type == JTokenType.Integer ? (object) (int) token : token.Value<string>();
+                default: return segment as string;
+            }
         }
 
         // Picks the child node that best matches key by node name or visible text. Returns null if none.

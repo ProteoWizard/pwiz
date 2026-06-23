@@ -133,6 +133,16 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(childText, tree.SelectedNode?.Text,
                 @"set_item_selected did not select the tree node."));
 
+            // expand / collapse a node by a path whose segments are a child's text or its index. Collapse
+            // the root by its index (0), then expand it again by its text.
+            RunUI(() => tree.Nodes[0].Expand());
+            JsonUiService.PerformAction(treeId, @"collapse", new object[] { 0 });
+            RunUI(() => Assert.IsFalse(tree.Nodes[0].IsExpanded,
+                @"collapse did not collapse the root node addressed by index."));
+            JsonUiService.PerformAction(treeId, @"expand", new object[] { parentText });
+            RunUI(() => Assert.IsTrue(tree.Nodes[0].IsExpanded,
+                @"expand did not expand the root node addressed by text."));
+
             OkDialog(viewEditor, () => viewEditor.DialogResult = DialogResult.Cancel);
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
         }
