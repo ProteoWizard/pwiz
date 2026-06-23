@@ -449,23 +449,64 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    /// <summary>The Pick Children pop-up. Its checkboxes are PickListChoice.Chosen, not a CheckedListBox, so
-    /// it checks/unchecks an item by its display text through the pop-up itself (check_item/uncheck_item).</summary>
-    internal sealed class PopupPickListElement : ControlElement<PopupPickList>
+    /// <summary>The owner-drawn ListBox on the Pick Children pop-up. It is a plain ListBox whose checkbox is
+    /// painted from PickListChoice.Chosen on the PopupPickList -- not a real CheckedListBox check -- so a
+    /// check routes through PopupPickList.SetItemChecked. To the connector it presents exactly as a
+    /// CheckedListBox (check_item/uncheck_item, click toggles the selected item, get_value reads the checked
+    /// items, plus the ListControl select actions). When PopupPickList is reworked to host a real
+    /// CheckedListBox, this special case can go away.</summary>
+    internal sealed class PopupPickListElement : ListControlElement<ListBox>
     {
-        public PopupPickListElement(PopupPickList control) : base(control) { }
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.CheckItem || action == UiAction.UncheckItem || base.SupportsAction(action);
+        public PopupPickListElement(ListBox control) : base(control) { }
+        private PopupPickList PickList => (PopupPickList) Control.FindForm();
+        public override Type ElementType => typeof(CheckedListBox);
+        public override string Value
+        {
+            get
+            {
+                var pickList = PickList;
+                var names = pickList.ItemNames.ToList();
+                return string.Join(Environment.NewLine,
+                    Enumerable.Range(0, names.Count).Where(pickList.GetItemChecked).Select(i => names[i]));
+            }
+        }
+        public override bool SupportsAction(UiAction action)
+        {
+            switch (action)
+            {
+                case UiAction.CheckItem:
+                case UiAction.UncheckItem:
+                case UiAction.Click:
+                case UiAction.GetValue:
+                    return true;
+                default:
+                    return base.SupportsAction(action);
+            }
+        }
         public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             switch (action)
             {
                 case UiAction.CheckItem:
-                    Control.SetItemChecked(ListItems.FindPickListIndex(Control, value as string), true);
+                    PickList.SetItemChecked(ListItems.FindPickListIndex(PickList, value as string), true);
                     return null;
                 case UiAction.UncheckItem:
-                    Control.SetItemChecked(ListItems.FindPickListIndex(Control, value as string), false);
+                    PickList.SetItemChecked(ListItems.FindPickListIndex(PickList, value as string), false);
                     return null;
+                case UiAction.Click:
+                    // A click toggles the selected item's check, like a user's click/space (move to the item
+                    // first with set_selected_index). Runs off the UI thread inside the dialog-watch.
+                    JsonUiService.InvokeOnUiThread(() =>
+                    {
+                        int index = Control.SelectedIndex;
+                        if (index < 0)
+                            throw new ArgumentException(new LlmInstruction(
+                                @"No item is selected -- choose one first with set_selected_index."));
+                        PickList.ToggleItem(index);
+                    });
+                    return null;
+                case UiAction.GetValue:
+                    return Value;
                 default:
                     return base.PerformAction(action, value, cancellationToken);
             }
@@ -806,6 +847,8 @@ namespace pwiz.Skyline.ToolsUI
                 case TabPage tabPage: return new TabPageElement(tabPage);
                 // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
                 case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox);
+                // The Pick Children pop-up's owner-drawn ListBox presents as a CheckedListBox.
+                case ListBox listBox when listBox.FindForm() is PopupPickList: return new PopupPickListElement(listBox);
                 case ListBox listBox: return new ListControlElement<ListBox>(listBox);
                 case TreeView treeView: return new TreeViewElement(treeView);
                 case ListView listView: return new ItemContainerElement<ListView>(listView);
@@ -815,8 +858,6 @@ namespace pwiz.Skyline.ToolsUI
                 case DataGridView dataGridView when !HasDataboundAncestor(dataGridView):
                     return new GridElement(dataGridView);
                 case ToolStrip toolStrip: return new ToolStripElement(toolStrip);
-                // The Pick Children pop-up checks items through itself, not its inner owner-drawn ListBox.
-                case PopupPickList pickList: return new PopupPickListElement(pickList);
                 default:
                     // A custom clickable that is not a ButtonBase (e.g. a StartPage tile).
                     if (control is IButtonControl)

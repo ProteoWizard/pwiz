@@ -123,7 +123,13 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsFalse(string.IsNullOrEmpty(label));
 
-            var pickList = new ControlId { Type = @"Form", Name = popupId };
+            // The pick-list's owner-drawn ListBox presents as a CheckedListBox, so it is addressed by that
+            // Type and driven with check_item / uncheck_item exactly like one.
+            var pickList = new ControlId
+            {
+                Parent = new ControlId { Type = @"Form", Name = popupId },
+                Type = @"CheckedListBox",
+            };
             JsonUiService.PerformAction(pickList, wasChecked ? @"uncheck_item" : @"check_item", label);
             RunUI(() => Assert.AreEqual(!wasChecked, popup.GetItemChecked(0),
                 @"check_item/uncheck_item did not toggle the pick-list item."));
