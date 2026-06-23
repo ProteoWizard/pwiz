@@ -116,6 +116,15 @@ namespace pwiz.OspreySharp.Test
             // but must accept both --task forms without throwing.
             Assert.IsTrue(Parse(@"-d").Diagnostics);
             Assert.IsNull(Parse(@"--task=MergeNode", @"-l", @"ref.blib", @"-o", @"out.blib").SelectedTask);
+
+            // Logging: --timestamp / --memstamp are value-less flags (default off);
+            // --log-file takes a path.
+            Assert.IsFalse(Parse(@"-i", @"a.mzML").IsTimeStamped);
+            Assert.IsFalse(Parse(@"-i", @"a.mzML").IsMemStamped);
+            Assert.IsNull(Parse(@"-i", @"a.mzML").LogFilePath);
+            Assert.IsTrue(Parse(@"--timestamp").IsTimeStamped);
+            Assert.IsTrue(Parse(@"--memstamp").IsMemStamped);
+            Assert.AreEqual(@"run.log", Parse(@"--log-file", @"run.log").LogFilePath);
         }
 
         [TestMethod]
@@ -175,10 +184,11 @@ namespace pwiz.OspreySharp.Test
             // representative arg present, and box-drawing borders (not lower-128 ascii).
             string defaultHelp = OspreyCommandArgs.BuildUsage(null);
             foreach (var title in new[] { @"General I/O", @"Scoring & Tolerance", @"FDR & Protein Inference",
-                @"Decoys", @"Performance", @"Distributed / HPC", @"Diagnostics & Info" })
+                @"Decoys", @"Performance", @"Distributed / HPC", @"Logging", @"Diagnostics & Info" })
                 StringAssert.Contains(defaultHelp, title);
             StringAssert.Contains(defaultHelp, @"--input");
             StringAssert.Contains(defaultHelp, @"--parallel-files");
+            StringAssert.Contains(defaultHelp, @"--timestamp");
             StringAssert.Contains(defaultHelp, @"--help");
             StringAssert.Contains(defaultHelp, ArgUsage.Provider.ArgumentHeader);
             Assert.IsTrue(defaultHelp.Contains('│') || defaultHelp.Contains('─'),

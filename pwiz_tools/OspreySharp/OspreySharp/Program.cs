@@ -68,6 +68,10 @@ namespace pwiz.OspreySharp
                 return 1;
             }
 
+            // Tracks whether _out was swapped to a --log-file StreamWriter we must
+            // flush and dispose (never dispose the shared Console.Error writer).
+            bool loggingToFile = false;
+
             try
             {
                 // Scan args for the HPC task selector up front so error
@@ -136,6 +140,29 @@ namespace pwiz.OspreySharp
                 {
                     LogError(err);
                     return 1;
+                }
+
+                // Apply per-line output decoration and optional log-file redirection now
+                // that args have validated (an invalid command line stays on stderr and
+                // creates no file). All logging funnels through _out (see Log* methods).
+                _out.IsTimeStamped = config.IsTimeStamped;
+                _out.IsMemStamped = config.IsMemStamped;
+                if (!string.IsNullOrEmpty(config.LogFilePath))
+                {
+                    try
+                    {
+                        _out = new CommandStatusWriter(new StreamWriter(config.LogFilePath))
+                        {
+                            IsTimeStamped = config.IsTimeStamped,
+                            IsMemStamped = config.IsMemStamped
+                        };
+                        loggingToFile = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        LogError(string.Format("Failed to open log file {0}: {1}", config.LogFilePath, ex.Message));
+                        return 1;
+                    }
                 }
 
                 // Create the configured directories only after args validate, so
@@ -213,6 +240,15 @@ namespace pwiz.OspreySharp
             {
                 LogError(string.Format("Fatal error: {0}", ex.Message));
                 return 1;
+            }
+            finally
+            {
+                // Flush and close the --log-file writer (never the shared Console.Error).
+                if (loggingToFile)
+                {
+                    _out.Flush();
+                    _out.Dispose();
+                }
             }
         }
 

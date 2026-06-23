@@ -149,6 +149,24 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public bool Diagnostics { get; set; }
 
+        /// <summary>
+        /// --timestamp: prefix each output line with [yyyy/MM/dd HH:mm:ss]. Runtime
+        /// output decoration only -- not part of any identity hash.
+        /// </summary>
+        public bool IsTimeStamped { get; set; }
+
+        /// <summary>
+        /// --memstamp: prefix each output line with managed and private memory (MB).
+        /// Pairs with <see cref="IsTimeStamped"/> for perfviz. Runtime-only.
+        /// </summary>
+        public bool IsMemStamped { get; set; }
+
+        /// <summary>
+        /// --log-file: redirect all output to this file instead of stderr. Null leaves
+        /// output on stderr. Runtime-only.
+        /// </summary>
+        public string LogFilePath { get; set; }
+
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 
