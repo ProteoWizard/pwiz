@@ -69,27 +69,13 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    // Capability interfaces -- what the user (and so the connector) can DO with an element. A verb asks
-    // for the capability it needs; the element supplies the behavior, so the verb does not switch on type.
-    internal interface IClickable { void Click(); }
-    internal interface IValueControl { void SetValue(string value); string GetValue(); }
-    internal interface IItemContainer { void SetItemChecked(string item, bool isChecked); void SetItemSelected(string item, bool selected); }
-    internal interface IGridControl
-    {
-        string GetGridText(CancellationToken cancellationToken);
-        // Pastes tab/newline-separated text starting at the grid's current cell (move there first with
-        // SetCurrentCellAddress), the way pasting at the selected cell would.
-        void SetGridText(string text);
-        // Moves the current cell. The point's X is the visible-column index, its Y is the row index.
-        void SetCurrentCellAddress(System.Drawing.Point cell);
-    }
-
     /// <summary>
     /// A connector-facing view of one UI element on a form. Subclasses wrap a specific kind of control
-    /// (or a ToolStrip item) and implement the capability interfaces it supports, so the verbs match and
-    /// act polymorphically instead of switching on WinForms types. Each element also knows its own
-    /// <see cref="Label"/> (the visible text that identifies it) and its <see cref="Children"/>, so
-    /// matching and form enumeration are a single recursive walk.
+    /// (or a ToolStrip item) and declare the actions it supports (<see cref="SupportsAction"/>) and how to
+    /// perform them (<see cref="PerformAction"/>), so the verbs act polymorphically instead of switching
+    /// on WinForms types. Each element also knows its own <see cref="Label"/> (the visible text that
+    /// identifies it) and its <see cref="Children"/>, so matching and form enumeration are a single
+    /// recursive walk.
     /// </summary>
     internal abstract class UiElement
     {
@@ -123,10 +109,10 @@ namespace pwiz.Skyline.ToolsUI
                 yield return descendant;
         }
 
-        /// <summary>True if this element can be clicked, value-set, item-checked, or is a grid -- i.e.
-        /// it does something beyond the universal get_actions/get_children. Used to filter GetControls.</summary>
+        /// <summary>True if this element supports an action beyond the universal get_actions/get_children
+        /// -- i.e. there is something a user can do with it. Used to filter GetControls.</summary>
         public bool HasCapability =>
-            this is IClickable || this is IValueControl || this is IItemContainer || this is IGridControl;
+            SupportedActions.Any(action => action != UiAction.GetActions && action != UiAction.GetChildren);
 
         /// <summary>Whether this element supports the given action. The base supports only the universal
         /// GetActions and GetChildren; each kind of element overrides this to add the actions it can do.</summary>
@@ -185,7 +171,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A push button (or any ButtonBase) -- clicked with BM_CLICK, which fires the Click handler
     /// like a real mouse click (even for an AutoCheck=false checkbox) and bypasses PerformClick's gates.</summary>
-    internal class ButtonElement : ControlElement, IClickable
+    internal class ButtonElement : ControlElement
     {
         public ButtonElement(Control control) : base(control) { }
         public override string Label => Control.Text;
@@ -207,7 +193,7 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A checkbox: clickable (toggles via its handler) and value-settable (sets the checked state).</summary>
-    internal sealed class CheckBoxElement : ButtonElement, IValueControl
+    internal sealed class CheckBoxElement : ButtonElement
     {
         private readonly CheckBox _checkBox;
         public CheckBoxElement(CheckBox checkBox) : base(checkBox) { _checkBox = checkBox; }
@@ -229,7 +215,7 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A radio button: clicking/setting it checks it (WinForms unchecks its siblings).</summary>
-    internal sealed class RadioButtonElement : ButtonElement, IValueControl
+    internal sealed class RadioButtonElement : ButtonElement
     {
         private readonly RadioButton _radioButton;
         public RadioButtonElement(RadioButton radioButton) : base(radioButton) { _radioButton = radioButton; }
@@ -250,7 +236,7 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A text box -- a caption-less field named by its adjacent label.</summary>
-    internal sealed class TextBoxElement : ControlElement, IValueControl
+    internal sealed class TextBoxElement : ControlElement
     {
         private readonly TextBoxBase _textBox;
         public TextBoxElement(TextBoxBase textBox) : base(textBox) { _textBox = textBox; }
@@ -273,7 +259,7 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A combo box -- value set by selecting the matching item.</summary>
-    internal sealed class ComboBoxElement : ControlElement, IValueControl
+    internal sealed class ComboBoxElement : ControlElement
     {
         private readonly ComboBox _comboBox;
         public ComboBoxElement(ComboBox comboBox) : base(comboBox) { _comboBox = comboBox; }
@@ -305,7 +291,7 @@ namespace pwiz.Skyline.ToolsUI
     /// through the typed set_item_checked / set_item_selected verbs. A CheckedListBox item is toggled the
     /// way a user does it: set_selected_index to the item, then click (which toggles the selected item's
     /// check); its value is the checked items' text, one per line.</summary>
-    internal sealed class ListContainerElement : ControlElement, IItemContainer
+    internal sealed class ListContainerElement : ControlElement
     {
         public ListContainerElement(Control control) : base(control) { }
         private CheckedListBox CheckedList => Control as CheckedListBox;
@@ -369,7 +355,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A custom IButtonControl that is not a WinForms ButtonBase (e.g. a StartPage tile) --
     /// clicked via PerformClick.</summary>
-    internal sealed class ClickableControlElement : ControlElement, IClickable
+    internal sealed class ClickableControlElement : ControlElement
     {
         private readonly IButtonControl _button;
         public ClickableControlElement(Control control) : base(control) { _button = (IButtonControl) control; }
@@ -395,7 +381,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A menu or toolbar item -- clicked via PerformClick. An image-only item (no caption) is
     /// named by its tooltip, the way a user reads it (e.g. the pick-list's green-check "OK").</summary>
-    internal sealed class ToolStripItemElement : UiElement, IClickable
+    internal sealed class ToolStripItemElement : UiElement
     {
         private readonly ToolStripItem _item;
         public ToolStripItemElement(ToolStripItem item) { _item = item; }
@@ -434,7 +420,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A grid -- a DataboundGridControl (e.g. the Document Grid) driven through its rich paste
     /// path, or a standalone DataGridView driven by direct cell access. Read as TSV, or set a cell.</summary>
-    internal sealed class GridElement : ControlElement, IGridControl
+    internal sealed class GridElement : ControlElement
     {
         private readonly DataboundGridControl _databound; // null for a plain DataGridView
         private readonly DataGridView _dataGridView;
@@ -500,7 +486,7 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A tab page -- "clicking" it selects its tab on the parent TabControl.</summary>
-    internal sealed class TabPageElement : ControlElement, IClickable
+    internal sealed class TabPageElement : ControlElement
     {
         private readonly TabPage _tabPage;
         public TabPageElement(TabPage tabPage) : base(tabPage) { _tabPage = tabPage; }

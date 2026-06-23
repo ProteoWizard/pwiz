@@ -585,7 +585,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 var form = FindFormById(formId);
                 VerifyFormInteractable(form);
-                var clickable = FindElement(form, button, e => e is IClickable, @"clickable control");
+                var clickable = FindElement(form, button, e => e.SupportsAction(UiAction.Click), @"clickable control");
                 VerifyInteractable(clickable);
                 return clickable;
             });
@@ -594,7 +594,7 @@ namespace pwiz.Skyline.ToolsUI
                 // The element clicks itself; each handles its own threading (a Win32 BM_CLICK is sent
                 // cross-thread so a click that opens a modal does not block here, while a managed
                 // PerformClick / property-set marshals to the UI thread internally).
-                ((IClickable)element).Click();
+                element.PerformAction(UiAction.Click, null, CancellationToken.None);
                 return true;
             });
         }
@@ -742,9 +742,9 @@ namespace pwiz.Skyline.ToolsUI
                     // A field is matched by its own Label (its caption, or the label that names a
                     // caption-less box -- see UiElement.Label), so a label never has to be matched and
                     // resolved forward to its field.
-                    var element = FindElement(form, controlId, e => e is IValueControl, @"settable control");
+                    var element = FindElement(form, controlId, e => e.SupportsAction(UiAction.SetValue), @"settable control");
                     VerifyInteractable(element);
-                    ((IValueControl)element).SetValue(value);
+                    element.PerformAction(UiAction.SetValue, value, CancellationToken.None);
                 });
             });
         }
@@ -1061,9 +1061,9 @@ namespace pwiz.Skyline.ToolsUI
                         pickList.SetItemChecked(FindPickListIndex(pickList, item), isChecked);
                         return;
                     }
-                    var element = FindElement(form, controlId, e => e is IItemContainer, @"list, tree, or list-view control");
+                    var element = FindElement(form, controlId, e => e.SupportsAction(UiAction.SetItemChecked), @"list, tree, or list-view control");
                     VerifyInteractable(element);
-                    ((IItemContainer)element).SetItemChecked(item, isChecked);
+                    ((ListContainerElement)element).SetItemChecked(item, isChecked);
                 });
                 return true;
             });
@@ -1103,9 +1103,9 @@ namespace pwiz.Skyline.ToolsUI
                 InvokeOnUiThread(() =>
                 {
                     var form = FindFormById(formId);
-                    var element = FindElement(form, controlId, e => e is IItemContainer, @"list, tree, or list-view control");
+                    var element = FindElement(form, controlId, e => e.SupportsAction(UiAction.SetItemSelected), @"list, tree, or list-view control");
                     VerifyInteractable(element);
-                    ((IItemContainer)element).SetItemSelected(item, selected);
+                    ((ListContainerElement)element).SetItemSelected(item, selected);
                 });
                 return true;
             });
