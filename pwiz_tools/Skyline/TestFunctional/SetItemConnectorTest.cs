@@ -64,11 +64,8 @@ namespace pwiz.SkylineTestFunctional
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             string dlgId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
-            var appliesTo = new ControlId
-            {
-                Parent = new ControlId { Type = @"Form", Name = dlgId },
-                Label = @"Applies to",
-            };
+            var appliesTo = new UiElementPath(
+                new UiElementPath(null, dlgId, null, @"Form"), @"Applies to", null, null);
 
             // check_item / uncheck_item set the "Replicates" item's check explicitly (idempotent).
             JsonUiService.PerformAction(appliesTo, @"check_item", @"Replicates");
@@ -119,14 +116,11 @@ namespace pwiz.SkylineTestFunctional
             string nodePath = parentText + @" > " + childText;
 
             // The field tree has no caption and no label -- the caption-less edge case -- so the typed
-            // verbs (which match a Label) cannot reach it. It is addressed instead through a ControlId by
+            // verbs (which match a Label) cannot reach it. It is addressed instead through a path by
             // its Type ("TreeView", the only tree on the form) via the general PerformAction path; the
             // value is the '>'-separated node path, and the action checks/selects it.
-            var treeId = new ControlId
-            {
-                Parent = new ControlId { Type = @"Form", Name = editorId },
-                Type = @"TreeView",
-            };
+            var treeId = new UiElementPath(
+                new UiElementPath(null, editorId, null, @"Form"), null, null, @"TreeView");
             JsonUiService.PerformAction(treeId, @"check_item", nodePath);
             RunUI(() =>
             {

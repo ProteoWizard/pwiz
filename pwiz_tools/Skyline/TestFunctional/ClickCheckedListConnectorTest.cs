@@ -80,11 +80,8 @@ namespace pwiz.SkylineTestFunctional
 
             // The Applies-to CheckedListBox, addressed by its "Applies to" label. Find the index of the
             // "Replicates" item to select it.
-            var appliesTo = new ControlId
-            {
-                Parent = new ControlId { Type = @"Form", Name = dlgId },
-                Label = @"Applies to",
-            };
+            var appliesTo = new UiElementPath(
+                new UiElementPath(null, dlgId, null, @"Form"), @"Applies to", null, null);
             int replicatesIndex = -1;
             RunUI(() =>
             {

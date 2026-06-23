@@ -313,35 +313,20 @@ namespace SkylineTool
 
     /// <summary>
     /// Information about one interactive control on a form, returned by GetControls. Lets a caller
-    /// discover what is on a form -- and how to address it -- without reading the source: <see cref="Id"/>
-    /// is the locator to pass back (to PerformAction or a typed verb), and the rest reports the control's
-    /// current state and the actions it supports.
+    /// discover what is on a form -- and how to address it -- without reading the source: <see cref="Path"/>
+    /// is the locator to pass back (to PerformAction), and the rest reports the control's current state and
+    /// the actions it supports. <see cref="Name"/> is the internal control name -- informational only, the
+    /// connector does not match on it.
     /// </summary>
     public class ControlInfo
     {
-        public ControlId Id { get; set; }
+        public UiElementPath Path { get; set; }
+        public string Name { get; set; }
         public string Value { get; set; }
         public bool Enabled { get; set; }
         public bool Visible { get; set; }
         /// <summary>The actions that can be performed on this control (e.g. "click", "set_value").</summary>
         public string[] Actions { get; set; }
-    }
-
-    /// <summary>
-    /// A locator that refers to a control, menu item, or list item -- or a form. Only the properties that
-    /// are set are used to find the match, so a caller can pass as little as needed: a <see cref="Label"/>
-    /// (the visible text that names it), a <see cref="Type"/> for a caption-less control ("TreeView"),
-    /// and/or a <see cref="Name"/> (the internal control name, e.g. one echoed back by GetControls).
-    /// <see cref="Parent"/> narrows the search to within another control. It is also how the owning form is
-    /// given: the chain bottoms out at a form -- a ControlId with <see cref="Type"/> "Form" and
-    /// <see cref="Name"/> set to the form id from GetOpenForms -- so a form has a well-defined ControlId too.
-    /// </summary>
-    public class ControlId
-    {
-        public ControlId Parent { get; set; }
-        public string Name { get; set; }
-        public string Label { get; set; }
-        public string Type { get; set; }
     }
 
     /// <summary>
@@ -361,5 +346,81 @@ namespace SkylineTool
     {
         public int Index { get; set; }
         public string Description { get; set; }
+    }
+
+    /// <summary>
+    /// A path that refers to a UI element -- a control, a menu/list item, or a tree node -- relative to its
+    /// <see cref="Parent"/>. Within the parent's children an element is matched by any combination of:
+    /// <see cref="Text"/> (its visible text), <see cref="Index"/> (its position in the parent's child list),
+    /// and <see cref="Type"/> (its kind, e.g. "TreeView" for a caption-less control, or "ContextMenu" for a
+    /// control's right-click menu); whichever are set must all match, else it is an element-not-found error.
+    /// The chain bottoms out at a form: a path with a null <see cref="Parent"/> names the form, its
+    /// <see cref="Text"/> set to the form id from GetOpenForms (and <see cref="Type"/> "Form").
+    /// </summary>
+    public class UiElementPath
+    {
+        public UiElementPath(UiElementPath parent, string text, int? index, string type = null)
+        {
+            Parent = parent;
+            Text = text;
+            Index = index;
+            Type = type;
+        }
+
+        private UiElementPath()
+        {
+        }
+
+        public UiElementPath Parent { get; private set; }
+        public string Text { get; private set; }
+        public int? Index { get; private set; }
+        public string Type { get; private set; }
+
+        protected bool Equals(UiElementPath other)
+        {
+            return Equals(Parent, other.Parent) && Text == other.Text && Index == other.Index && Type == other.Type;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
+            if (obj.GetType() != GetType())
+            {
+                return false;
+            }
+
+            return Equals((UiElementPath)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (Parent != null ? Parent.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Text != null ? Text.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ Index.GetHashCode();
+                hashCode = (hashCode * 397) ^ (Type != null ? Type.GetHashCode() : 0);
+                return hashCode;
+            }
+        }
+
+        public override string ToString()
+        {
+            var result = Text ?? Index?.ToString() ?? Type ?? string.Empty;
+            if (Parent == null)
+            {
+                return result;
+            }
+            return Parent + ">" + result;
+        }
     }
 }

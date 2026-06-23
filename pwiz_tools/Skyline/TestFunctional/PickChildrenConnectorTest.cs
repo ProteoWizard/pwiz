@@ -34,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
     /// <summary>
     /// Exercises the Targets-tree "Pick Children" path through the AI connector: select a precursor node
     /// (a select_item action on the tree), open its pick-list through the tree's context menu -- a
-    /// <see cref="ControlId"/> whose Type is "ContextMenu" on the tree, then the "Pick Children" item --
+    /// <see cref="UiElementPath"/> whose Type is "ContextMenu" on the tree, then the "Pick Children" item --
     /// toggle a transition in the popup with a check_item/uncheck_item action on the pop-up element, and
     /// commit with the green-check "OK" button via <see cref="JsonUiService.ClickFormButton"/> (an
     /// image-only ToolStrip item matched by its tooltip).
@@ -80,11 +80,8 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(SequenceTreeForm)).Id;
 
             // Select the precursor node; Pick Children acts on the selection, so the node must be in it.
-            var targetsTree = new ControlId
-            {
-                Parent = new ControlId { Type = @"Form", Name = treeFormId },
-                Type = @"SequenceTree",
-            };
+            var targetsTree = new UiElementPath(
+                new UiElementPath(null, treeFormId, null, @"Form"), null, null, @"SequenceTree");
             JsonUiService.PerformAction(targetsTree, @"select_item", precursorPath);
             RunUI(() =>
             {
@@ -97,18 +94,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => transitionsBefore = SkylineWindow.Document.MoleculeTransitionCount);
 
             // Right-click > Pick Children opens the (modeless) pick-list popup, via the tree's context
-            // menu (a ControlId of Type "ContextMenu" on the tree), with the item matched by visible text.
-            var treeContextMenu = new ControlId
-            {
-                Parent = new ControlId
-                {
-                    Parent = new ControlId { Type = @"Form", Name = treeFormId },
-                    Type = @"SequenceTree",
-                },
-                Type = @"ContextMenu",
-            };
+            // menu (a path of Type "ContextMenu" on the tree), with the item matched by visible text.
+            var treeContextMenu = new UiElementPath(targetsTree, null, null, @"ContextMenu");
             JsonUiService.PerformAction(
-                new ControlId { Parent = treeContextMenu, Label = @"Pick Children" }, @"click", null);
+                new UiElementPath(treeContextMenu, @"Pick Children", null, null), @"click", null);
             var popup = WaitForOpenForm<PopupPickList>();
             string popupId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(PopupPickList)).Id;
@@ -125,11 +114,8 @@ namespace pwiz.SkylineTestFunctional
 
             // The pick-list's owner-drawn ListBox presents as a CheckedListBox, so it is addressed by that
             // Type and driven with check_item / uncheck_item exactly like one.
-            var pickList = new ControlId
-            {
-                Parent = new ControlId { Type = @"Form", Name = popupId },
-                Type = @"CheckedListBox",
-            };
+            var pickList = new UiElementPath(
+                new UiElementPath(null, popupId, null, @"Form"), null, null, @"CheckedListBox");
             JsonUiService.PerformAction(pickList, wasChecked ? @"uncheck_item" : @"check_item", label);
             RunUI(() => Assert.AreEqual(!wasChecked, popup.GetItemChecked(0),
                 @"check_item/uncheck_item did not toggle the pick-list item."));

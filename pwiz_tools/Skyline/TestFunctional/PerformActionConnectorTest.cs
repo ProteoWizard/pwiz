@@ -34,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Exercises <see cref="JsonUiService.PerformAction"/> -- the general "locate a control by a
-    /// <see cref="ControlId"/>, then act on it" method. Resolves a control by its label, by the Name
+    /// <see cref="UiElementPath"/>, then act on it" method. Resolves a control by its label, by the Path
     /// echoed from GetControls, and performs set_value, get_value, and click.
     /// </summary>
     [TestClass]
@@ -55,52 +55,54 @@ namespace pwiz.SkylineTestFunctional
             string dlgId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
 
-            // The form is referred to by a ControlId of Type "Form"; controls hang off it as Parent.
-            var formId = new ControlId { Type = @"Form", Name = dlgId };
+            // The form is the root of every path (Parent null, Text the form id, Type "Form"); controls
+            // hang off it as Parent.
+            var formPath = new UiElementPath(null, dlgId, null, @"Form");
 
             // set_value: locate the name box by the label that names it, set its value.
-            var nameById = new ControlId { Parent = formId, Label = @"Name" };
-            JsonUiService.PerformAction(nameById, @"set_value", @"MyAnnotation");
+            var namePath = new UiElementPath(formPath, @"Name", null, null);
+            JsonUiService.PerformAction(namePath, @"set_value", @"MyAnnotation");
             RunUI(() => Assert.AreEqual(@"MyAnnotation", NameTextBox(defineAnnotationDlg).Text,
                 @"PerformAction set_value did not set the name box."));
 
             // get_value reads it back (the return is typed per the action -- a string here).
-            Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(nameById, @"get_value", null),
+            Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(namePath, @"get_value", null),
                 @"PerformAction get_value did not return the name box value.");
 
             // get_actions: every control lists what it supports (a string[]).
-            var actions = (string[]) JsonUiService.PerformAction(nameById, @"get_actions", null);
+            var actions = (string[]) JsonUiService.PerformAction(namePath, @"get_actions", null);
             CollectionAssert.Contains(actions, @"set_value");
             CollectionAssert.Contains(actions, @"get_children");
 
-            // get_children: returns the children as ControlId[], each parented to the queried control.
-            var formChildren = (ControlId[]) JsonUiService.PerformAction(formId, @"get_children", null);
+            // get_children: returns the children as UiElementPath[], each with a null Parent (the caller
+            // re-parents them to the element it queried).
+            var formChildren = (UiElementPath[]) JsonUiService.PerformAction(formPath, @"get_children", null);
             Assert.IsTrue(formChildren.Length > 0, @"Expected the form to report child controls.");
-            Assert.IsTrue(formChildren.All(c => ReferenceEquals(c.Parent, formId)),
-                @"Each child's Parent should be the queried control.");
+            Assert.IsTrue(formChildren.All(c => c.Parent == null),
+                @"Each child returned by get_children should have a null Parent.");
 
-            // A controlId with no selectors set resolves to its Parent itself -- so addressing a control
+            // A path with no selectors set resolves to its Parent itself -- so addressing a control
             // under a Form parent with nothing else (the way the MCP tool sends a form-only target)
             // returns the form's own children.
-            var formViaParent = new ControlId { Parent = formId };
-            var childrenViaParent = (ControlId[]) JsonUiService.PerformAction(formViaParent, @"get_children", null);
+            var formViaParent = new UiElementPath(formPath, null, null, null);
+            var childrenViaParent = (UiElementPath[]) JsonUiService.PerformAction(formViaParent, @"get_children", null);
             Assert.AreEqual(formChildren.Length, childrenViaParent.Length,
                 @"get_children with no selectors under a Form should resolve to the form itself.");
 
-            // Round-trip: the ControlId GetControls returns (carrying the Name) resolves the same control.
+            // Round-trip: the Path GetControls returns resolves the same control, and Name is echoed.
             var nameInfo = JsonUiService.GetControls(dlgId)
-                .First(c => c.Id.Type == @"TextBox" && c.Id.Label == @"Name");
-            Assert.IsFalse(string.IsNullOrEmpty(nameInfo.Id.Name), @"Expected GetControls to echo the control Name.");
-            Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(nameInfo.Id, @"get_value", null),
-                @"PerformAction did not resolve the control by its Name.");
+                .First(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
+            Assert.IsFalse(string.IsNullOrEmpty(nameInfo.Name), @"Expected GetControls to echo the control Name.");
+            Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(nameInfo.Path, @"get_value", null),
+                @"PerformAction did not resolve the control by the Path GetControls returned.");
 
             // An unsupported action on a control reports a clear error rather than acting.
             AssertEx.ThrowsException<System.Exception>(() =>
-                JsonUiService.PerformAction(nameById, @"check_item", @"x"));
+                JsonUiService.PerformAction(namePath, @"check_item", @"x"));
 
             // click: close the dialog by clicking its Cancel button, located by label.
             OkDialog(defineAnnotationDlg, () =>
-                JsonUiService.PerformAction(new ControlId { Parent = formId, Label = @"Cancel" }, @"click", null));
+                JsonUiService.PerformAction(new UiElementPath(formPath, @"Cancel", null, null), @"click", null));
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);
         }

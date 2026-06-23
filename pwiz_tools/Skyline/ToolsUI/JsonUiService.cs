@@ -1127,20 +1127,34 @@ namespace pwiz.Skyline.ToolsUI
             return InvokeOnUiThread(() =>
             {
                 var form = FindFormById(formId);
-                // Report form-level controls; menu and list items (clickable pseudo-elements) are an
-                // internal detail of the walk, not controls to list here.
-                return UiElementFactory.For(form).SelfAndDescendants()
-                    .Where(element => element is ControlElement && element.HasCapability)
-                    .Select(element => new ControlInfo
-                    {
-                        Id = ToControlId(element, formId),
-                        Value = element.Value,
-                        Enabled = element.IsEnabled,
-                        Visible = element.IsVisible,
-                        Actions = element.SupportedActions.Select(UiActions.ToName).ToArray(),
-                    })
-                    .ToArray();
+                var result = new List<ControlInfo>();
+                CollectControls(UiElementFactory.For(form), FormPath(formId), result);
+                return result.ToArray();
             });
+        }
+
+        // Walks the (flattened) control tree depth-first, adding a ControlInfo for every actionable control
+        // with its full path. Menu and list items (not ControlElements) are not listed here -- discover
+        // them with get_children -- so the walk does not descend into them.
+        private static void CollectControls(UiElement parent, UiElementPath parentPath, List<ControlInfo> result)
+        {
+            int index = 0;
+            foreach (var child in parent.Children)
+            {
+                var childPath = PathFor(child, index++, parentPath);
+                if (child is ControlElement && child.HasCapability)
+                    result.Add(new ControlInfo
+                    {
+                        Path = childPath,
+                        Name = NullIfEmpty(child.Name),
+                        Value = child.Value,
+                        Enabled = child.IsEnabled,
+                        Visible = child.IsVisible,
+                        Actions = child.SupportedActions.Select(UiActions.ToName).ToArray(),
+                    });
+                if (child is ControlElement)
+                    CollectControls(child, childPath, result);
+            }
         }
 
         private static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
@@ -1150,30 +1164,22 @@ namespace pwiz.Skyline.ToolsUI
         private static string CleanLabel(string text) =>
             string.IsNullOrEmpty(text) ? text : NormalizeLabel(text).TrimEnd(' ', ':');
 
-        // The locator a caller can pass back to refer to this element (e.g. to PerformAction). The owning
-        // form is the Parent -- a ControlId of Type "Form" naming the form id from GetOpenForms.
-        private static ControlId ToControlId(UiElement element, string formId) =>
-            ControlIdFor(element, FormControlId(formId));
+        // The path that refers to this element: its visible Text, its Index in the parent's child list, and
+        // its Type, under the given parent path.
+        private static UiElementPath PathFor(UiElement element, int index, UiElementPath parentPath) =>
+            new UiElementPath(parentPath, NullIfEmpty(CleanLabel(element.Label)), index, element.ElementType.Name);
 
-        // The locator for an element whose container is given by parentId (so the chain is preserved).
-        private static ControlId ControlIdFor(UiElement element, ControlId parentId) => new ControlId
-        {
-            Parent = parentId,
-            Name = NullIfEmpty(element.Name),
-            Label = NullIfEmpty(CleanLabel(element.Label)),
-            Type = element.ElementType.Name,
-        };
-
-        private static ControlId FormControlId(string formId) => new ControlId { Type = @"Form", Name = formId };
+        // The path that names a form -- the root of every path (Parent null, Text the form id, Type "Form").
+        private static UiElementPath FormPath(string formId) => new UiElementPath(null, formId, null, @"Form");
 
         /// <summary>
         /// The most general way to interact with a control, menu item, or list item (see
-        /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="controlId"/> refers to,
+        /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="path"/> refers to,
         /// then perform <paramref name="action"/> on it. The action determines the value and return types:
-        /// "get_actions" -> string[]; "get_children" -> ControlId[]; "click" -> null; "set_value" (string
+        /// "get_actions" -> string[]; "get_children" -> UiElementPath[]; "click" -> null; "set_value" (string
         /// value) -> null; "get_value" -> string.
         /// </summary>
-        public static object PerformAction(ControlId controlId, string action, object value)
+        public static object PerformAction(UiElementPath path, string action, object value)
         {
             if (!UiActions.TryParse(action, out var uiAction))
                 throw new ArgumentException(LlmInstruction.Format(
@@ -1186,17 +1192,18 @@ namespace pwiz.Skyline.ToolsUI
                 var token = cancellation.Token;
                 switch (uiAction)
                 {
-                    // GetActions/GetChildren need the caller's ControlId (to name the children), so the service
-                    // handles them; the element handles the operational actions through its PerformAction.
+                    // GetActions/GetChildren are answered by the service; the returned child paths have a null
+                    // Parent (the caller knows the parent it asked about). The element handles the operational
+                    // actions through its PerformAction.
                     case UiAction.GetActions:
-                        return InvokeOnUiThread(() => ResolveControlId(controlId).SupportedActions.Select(UiActions.ToName).ToArray());
+                        return InvokeOnUiThread(() => ResolvePath(path).SupportedActions.Select(UiActions.ToName).ToArray());
                     case UiAction.GetChildren:
-                        return InvokeOnUiThread(() => ResolveControlId(controlId).Children
-                            .Select(child => ControlIdFor(child, controlId)).ToArray());
+                        return InvokeOnUiThread(() => ResolvePath(path).Children
+                            .Select((child, index) => PathFor(child, index, null)).ToArray());
                     case UiAction.Click:
                         // A click runs inside the dialog-watch (the element handles its own threading); resolve
                         // and verify first on the UI thread.
-                        var clickElement = InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction));
+                        var clickElement = InvokeOnUiThread(() => RequireAction(ResolvePath(path), uiAction));
                         RunWithDialogWatch(() =>
                         {
                             clickElement.PerformAction(uiAction, value, token);
@@ -1211,18 +1218,21 @@ namespace pwiz.Skyline.ToolsUI
                     case UiAction.UncheckItem:
                     case UiAction.SelectItem:
                     case UiAction.UnselectItem:
+                    case UiAction.SelectTab:
+                    case UiAction.Expand:
+                    case UiAction.Collapse:
                         // Mutating actions: run inside the dialog-watch (a paste can raise a conversion
                         // alert) and on the UI thread.
                         object setResult = null;
                         RunWithDialogWatch(() =>
                         {
-                            setResult = InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction).PerformAction(uiAction, value, token));
+                            setResult = InvokeOnUiThread(() => RequireAction(ResolvePath(path), uiAction).PerformAction(uiAction, value, token));
                             return true;
                         });
                         return setResult;
                     default:
                         // Read-only / other actions: resolve, verify, perform on the UI thread.
-                        return InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction).PerformAction(uiAction, value, token));
+                        return InvokeOnUiThread(() => RequireAction(ResolvePath(path), uiAction).PerformAction(uiAction, value, token));
                 }
             }
         }
@@ -1240,41 +1250,58 @@ namespace pwiz.Skyline.ToolsUI
                 string.Join(@", ", element.SupportedActions.Select(UiActions.ToName))));
         }
 
-        // Resolves a ControlId to the single element it refers to, using only the properties that are set.
-        // A Parent narrows the search to within that element; otherwise the search is the whole form. Among
-        // matches, prefers the best Label match, then a visible+enabled one. Must run on the UI thread.
-        private static UiElement ResolveControlId(ControlId controlId)
+        // Resolves a UiElementPath to the single element it refers to. The path is matched segment by
+        // segment: each segment names a child of the element its Parent resolves to, by Index (its position
+        // in the parent's child list), Text (its visible label), and/or Type -- every property that is set
+        // must match. The chain bottoms out at a form. Must run on the UI thread.
+        private static UiElement ResolvePath(UiElementPath path)
         {
-            if (controlId == null)
-                throw new ArgumentException(new LlmInstruction(@"A controlId is required."));
+            if (path == null)
+                throw new ArgumentException(new LlmInstruction(@"A path is required."));
 
-            // The chain bottoms out at a form: a root ControlId (no Parent) names the form -- its Name is
-            // the form id from GetOpenForms (its Type is "Form"). Everything else is found within a Parent.
-            if (controlId.Parent == null)
+            // The root of a path (no Parent) names a form: its Text is the form id from GetOpenForms (its
+            // Type is "Form"). Everything else is a child of the element its Parent resolves to.
+            if (path.Parent == null)
             {
-                if (string.IsNullOrEmpty(controlId.Name))
+                if (string.IsNullOrEmpty(path.Text))
                     throw new ArgumentException(new LlmInstruction(
-                        @"The root of a controlId must name a form: Type 'Form' and Name set to the form id from skyline_get_open_forms."));
-                return UiElementFactory.For(FindFormById(controlId.Name));
+                        @"The root of a path must name a form: Text set to the form id from skyline_get_open_forms (Type 'Form')."));
+                return UiElementFactory.For(FindFormById(path.Text));
             }
             // Type "ContextMenu" addresses the parent control's right-click menu (which is never a child of
             // the control): build the menu so its items can be listed (get_children) or invoked (click).
             // For a grid it is the current cell's menu (move there first with set_current_cell_address).
-            if (string.Equals(controlId.Type, @"ContextMenu", StringComparison.OrdinalIgnoreCase))
-                return new ContextMenuElement(ResolveControlId(controlId.Parent));
+            if (string.Equals(path.Type, @"ContextMenu", StringComparison.OrdinalIgnoreCase))
+                return new ContextMenuElement(ResolvePath(path.Parent));
 
-            // No selector set -> the parent element itself (so get_children on a form lists its controls,
-            // and get_children on a control walks into it).
-            if (controlId.Name == null && controlId.Label == null && controlId.Type == null)
-                return ResolveControlId(controlId.Parent);
+            // Nothing set on this segment -> the parent element itself (so get_children on a form lists its
+            // controls, and get_children on a control walks into it).
+            if (path.Text == null && path.Index == null && path.Type == null)
+                return ResolvePath(path.Parent);
 
-            var scope = ResolveControlId(controlId.Parent).SelfAndDescendants().Skip(1);
+            var children = ResolvePath(path.Parent).Children.ToList();
+
+            // An Index pins the exact child; Text/Type (if set) must then also match it.
+            if (path.Index.HasValue)
+            {
+                if (path.Index.Value < 0 || path.Index.Value >= children.Count)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"No child at index {0}; the parent has {1} children.", path.Index.Value, children.Count));
+                var indexed = children[path.Index.Value];
+                if (!MatchesPath(indexed, path, out _))
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"The child at index {0} does not match the Text/Type in the path.", path.Index.Value));
+                return indexed;
+            }
+
+            // No Index -> search the children by Text/Type, preferring the best Text match, then an
+            // interactable (visible+enabled) one.
             UiElement best = null;
             var bestQuality = ControlMatchQuality.None;
             var bestInteractable = false;
-            foreach (var element in scope)
+            foreach (var element in children)
             {
-                if (!MatchesControlId(element, controlId, out var quality))
+                if (!MatchesPath(element, path, out var quality))
                     continue;
                 var interactable = element.IsVisible && element.IsEnabled;
                 if (best == null || quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
@@ -1286,29 +1313,26 @@ namespace pwiz.Skyline.ToolsUI
             }
             if (best == null)
                 throw new ArgumentException(new LlmInstruction(
-                    @"No control found matching the controlId. Use skyline_get_controls to list the controls."));
+                    @"No control found matching the path. Use skyline_get_controls to list the controls."));
             return best;
         }
 
-        // True if every set property of the controlId matches the element; quality ranks Label matches
-        // (an exact label beats a symbol-stripped one) so the closest match wins among several.
-        private static bool MatchesControlId(UiElement element, ControlId controlId, out ControlMatchQuality quality)
+        // True if every set property (Text, Type) of the path segment matches the element; quality ranks
+        // Text matches (an exact label beats a symbol-stripped one) so the closest match wins among several.
+        // Index is resolved by the caller (it is a position, not a property of the element).
+        private static bool MatchesPath(UiElement element, UiElementPath path, out ControlMatchQuality quality)
         {
             quality = ControlMatchQuality.None;
-            if (controlId.Name != null && !string.Equals(element.Name, controlId.Name, StringComparison.OrdinalIgnoreCase))
+            if (path.Type != null && !MatchesControlType(element.ElementType, path.Type))
                 return false;
-            if (controlId.Type != null && !MatchesControlType(element.ElementType, controlId.Type))
-                return false;
-            if (controlId.Label != null)
+            if (path.Text != null)
             {
-                quality = MatchQuality(element.Label, controlId.Label);
+                quality = MatchQuality(element.Label, path.Text);
                 if (quality == ControlMatchQuality.None)
                     return false;
             }
-            else if (controlId.Name != null)
-                quality = ControlMatchQuality.Exact; // a name is an exact identity
             else
-                quality = ControlMatchQuality.Type; // a type-only match is the weakest
+                quality = ControlMatchQuality.Type; // a type-only (or index-only) match is the weakest
             return true;
         }
 

@@ -537,8 +537,8 @@ public static class SkylineTools
         "Type, the visible Label that names it (its own caption, or the label beside a caption-less " +
         "field), current Value, Enabled/Visible, internal Name (informational), and the connector " +
         "Actions it supports. Address a control by its Label (e.g. set_form_value with \"Ion match " +
-        "tolerance\"); a control with no Label is addressed by its Type (e.g. \"TreeView\"), and a form's " +
-        "single grid/list/tree by an empty controlId. Get the formId from skyline_get_open_forms.")]
+        "tolerance\"); a control with no Label is addressed by its Type (e.g. \"TreeView\"). Get the " +
+        "formId from skyline_get_open_forms.")]
     public static string GetControls(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
     {
@@ -551,50 +551,45 @@ public static class SkylineTools
             var sb = new StringBuilder();
             sb.AppendLine("Type\tLabel\tValue\tEnabled\tVisible\tName\tActions");
             foreach (var c in controls)
-                sb.AppendLine($"{c.Id?.Type}\t{c.Id?.Label}\t{c.Value}\t{c.Enabled}\t{c.Visible}\t{c.Id?.Name}\t{string.Join(", ", c.Actions ?? new string[0])}");
+                sb.AppendLine($"{c.Path?.Type}\t{c.Path?.Text}\t{c.Value}\t{c.Enabled}\t{c.Visible}\t{c.Name}\t{string.Join(", ", c.Actions ?? new string[0])}");
             return sb.ToString().TrimEnd();
         });
     }
 
     [McpServerTool(Name = "skyline_perform_action"),
      Description("The most general way to interact with a control, menu item, or list item: locate it by " +
-        "its Label (the visible text that names it), its Type (for a caption-less control, e.g. " +
-        "\"TreeView\"), and/or its Name, then perform an action. Only the properties you set are used to " +
-        "match. Actions: 'get_actions' (lists the actions this control supports); 'get_children' (lists " +
-        "child controls as JSON); 'click'; 'set_value' (uses 'value'); 'get_value' (returns the current " +
-        "value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a list/tree/list-view item by its " +
-        "text, value the item -- a TreeView node by a '>'-separated path); 'set_selected_index' (a list, " +
-        "value the index); 'get_grid_text'/'set_grid_text' (a grid's text); 'set_current_cell_address' " +
-        "(value 'col,row'); 'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are " +
-        "a child's text or its index, e.g. [\"Peptides\", 0]). " +
-        "For a control's right-click menu, pass controlId as the JSON {\"parent\": <the control's " +
-        "ControlId from get_children>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
+        "its Label (the visible text that names it) and/or its Type (for a caption-less control, e.g. " +
+        "\"TreeView\") among the form's controls, then perform an action. Only the properties you set are " +
+        "used to match. Actions: 'get_actions' (lists the actions this control supports); 'get_children' " +
+        "(lists child elements as JSON UiElementPaths -- each with a null parent, so to act on one set its " +
+        "parent to the path of the element you listed); 'click'; 'set_value' (uses 'value'); 'get_value' " +
+        "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +
+        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path); " +
+        "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
+        "'set_current_cell_address' (value 'col,row'); 'select_tab' (a TabControl, value the tab text); " +
+        "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text or " +
+        "its index, e.g. [\"Peptides\", 0]). " +
+        "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
+        "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
         "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
-        "controlId is given it is used as-is and label/type/name are ignored. Discover controls with " +
+        "path is given it is used as-is and label/type are ignored. Discover controls with " +
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, set_value, get_value, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, expand, collapse")] string action,
+        [Description("Action: get_actions, get_children, click, set_value, get_value, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, select_tab, expand, collapse")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
-        [Description("Internal control name, e.g. one echoed by skyline_get_controls (optional)")] string name = null,
-        [Description("Value for set_value/set_grid_text, 'col,row' for set_current_cell_address, or a JSON array path for expand/collapse (optional)")] string value = null,
-        [Description("A full ControlId as JSON (e.g. one from get_children, or wrapped as a ContextMenu); overrides label/type/name when given (optional)")] string controlId = null)
+        [Description("Value for set_value/set_grid_text, 'col,row' for set_current_cell_address, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
+        [Description("A full UiElementPath as JSON (e.g. one from get_children re-parented, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
     {
         return Invoke(connection =>
         {
-            var id = string.IsNullOrEmpty(controlId)
-                ? new ControlId
-                {
-                    Parent = new ControlId { Type = "Form", Name = form },
-                    Label = label,
-                    Type = type,
-                    Name = name,
-                }
-                : JsonSerializer.Deserialize<ControlId>(controlId,
+            var target = string.IsNullOrEmpty(path)
+                ? new UiElementPath(new UiElementPath(null, form, null, "Form"), label, null, type)
+                : JsonSerializer.Deserialize<UiElementPath>(path,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             // The result is the action's return (raw JSON for arrays, a string for get_value, or empty).
-            var text = connection.PerformAction(id, action, value)?.ToString();
+            var text = connection.PerformAction(target, action, value)?.ToString();
             return string.IsNullOrEmpty(text) ? $"Performed '{action}'." : text;
         });
     }
@@ -703,7 +698,7 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_set_current_cell_address"),
      Description("Move the current cell of a grid on a form, so the next skyline_set_grid_text pastes " +
-        "there, or a context menu (a ControlId with Type 'ContextMenu' on the grid) opens for that " +
+        "there, or a context menu (a path with Type 'ContextMenu' on the grid) opens for that " +
         "cell. column and row are zero-based indices into the grid's visible columns and its rows -- " +
         "the same indices skyline_get_grid_text reports.")]
     public static string SetCurrentCellAddress(

@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -37,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     ///     toggle it but clicking it does);
     ///   * <see cref="JsonUiService.ClickToolStripItem"/> -- the Document Grid "Reports" dropdown,
     ///     whose items are built on demand and so are not reachable by ClickFormButton;
-    ///   * <see cref="JsonUiService.ClickFormButton"/> on a tab -- selecting a Peptide Settings tab.
+    ///   * a select_tab action on a TabControl -- selecting a Peptide Settings tab by its text.
     /// Forms are found by type name and controls/items matched by visible text, so the test is
     /// translation-proof where it uses control names and runs in en otherwise.
     /// </summary>
@@ -110,7 +111,7 @@ namespace pwiz.SkylineTestFunctional
             return documentGrid;
         }
 
-        // ClickFormButton selects a tab on a tabbed dialog.
+        // A select_tab action on the (caption-less) TabControl selects a tab by its visible text.
         private void ClickTab()
         {
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -118,10 +119,12 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(PeptideSettingsUI)).Id;
 
             RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Digest);
-            JsonUiService.ClickFormButton(settingsId, @"Quantification");
+            var tabControl = new UiElementPath(
+                new UiElementPath(null, settingsId, null, @"Form"), null, null, @"TabControl");
+            JsonUiService.PerformAction(tabControl, @"select_tab", @"Quantification");
             WaitForConditionUI(() => peptideSettings.SelectedTab == PeptideSettingsUI.TABS.Quantification);
             RunUI(() => Assert.AreEqual(PeptideSettingsUI.TABS.Quantification, peptideSettings.SelectedTab,
-                @"ClickFormButton did not select the Quantification tab."));
+                @"select_tab did not select the Quantification tab."));
 
             OkDialog(peptideSettings, () => peptideSettings.DialogResult = DialogResult.Cancel);
         }

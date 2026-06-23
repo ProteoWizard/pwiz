@@ -1953,12 +1953,9 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
             var forms = server.GetOpenForms();
             var treeFormId = forms.First(f => f.Type == nameof(SequenceTreeForm)).Id;
             var treeForm = FormUtil.OpenForms.OfType<SequenceTreeForm>().First();
-            // The Targets tree has no caption, so it is addressed through a ControlId by its Type.
-            var treeId = new ControlId
-            {
-                Parent = new ControlId { Type = @"Form", Name = treeFormId },
-                Type = @"SequenceTree",
-            };
+            // The Targets tree has no caption, so it is addressed through a path by its Type.
+            var treeId = new UiElementPath(
+                new UiElementPath(null, treeFormId, null, @"Form"), null, null, @"SequenceTree");
 
             // 1. Disable the form and verify that interacting with it throws
             RunUI(() => treeForm.Enabled = false);

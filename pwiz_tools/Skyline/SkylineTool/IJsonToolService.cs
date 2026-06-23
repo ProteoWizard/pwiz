@@ -325,15 +325,15 @@ namespace SkylineTool
 
         /// <summary>
         /// The most general way to interact with a control, menu item, or list item: locate it by the
-        /// <paramref name="controlId"/> (only the set properties are used -- see <see cref="ControlId"/>),
+        /// <paramref name="path"/> (only the set properties are used -- see <see cref="UiElementPath"/>),
         /// then perform <paramref name="action"/> on it. The action determines the type expected for
         /// <paramref name="value"/> and the type returned. Every control supports "get_actions" (returns
-        /// <c>string[]</c> of the actions it supports) and "get_children" (returns <c>ControlId[]</c>);
+        /// <c>string[]</c> of the actions it supports) and "get_children" (returns <c>UiElementPath[]</c>);
         /// other actions are "click" (returns null), "set_value" (takes a string value, returns null), and
         /// "get_value" (returns the control's current value as a string). The typed verbs (e.g.
         /// <see cref="ClickFormButton"/>) remain for the common cases.
         /// </summary>
-        object PerformAction(ControlId controlId, string action, object value);
+        object PerformAction(UiElementPath path, string action, object value);
 
         /// <summary>
         /// Invokes a main-menu item by its visible path, e.g. "File > Import > Peptide Search".

@@ -35,7 +35,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         GetActions, GetChildren, Click, SetValue, GetValue,
         CheckItem, UncheckItem, SelectItem, UnselectItem, GetGridText, SetGridText, SetCurrentCellAddress,
-        SetSelectedIndex, Expand, Collapse
+        SetSelectedIndex, Expand, Collapse, SelectTab
     }
 
     // Converts between a UiAction and its wire name (the snake_case string the connector uses).
@@ -128,7 +128,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Performs an action on this element (the action determines the type of <paramref
         /// name="value"/> and of the result). Each kind of element overrides this to do its own actions,
         /// calling base for the rest. GetActions and GetChildren are handled by the service (they need the
-        /// caller's ControlId), so they do not reach here.</summary>
+        /// caller's path), so they do not reach here.</summary>
         public virtual object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             throw new ArgumentException(LlmInstruction.Format(
@@ -149,7 +149,35 @@ namespace pwiz.Skyline.ToolsUI
         public override bool IsEnabled => Control.Enabled;
         public override bool IsVisible => Control.Visible;
         public override IEnumerable<UiElement> Children =>
-            Control.Controls.Cast<Control>().Select(UiElementFactory.For);
+            FlattenChildControls(Control).Select(UiElementFactory.For);
+
+        // The control's children for the form walk, FLATTENED: a non-UserControl layout container (Panel,
+        // GroupBox, TableLayoutPanel, SplitContainer, a TabPage, ...) is transparent -- its controls are
+        // pulled up so every control is a direct child of the form (or of the nearest UserControl). A
+        // UserControl is a boundary: it appears as a child and owns its own (likewise flattened) children.
+        // A TabControl is kept (so its tabs can be selected via select_tab) but its tab contents are
+        // flattened up to this level too, so they are addressable as direct children.
+        internal static IEnumerable<Control> FlattenChildControls(Control container)
+        {
+            foreach (Control control in container.Controls)
+            {
+                if (control is UserControl)
+                    yield return control;
+                else if (control is TabControl)
+                {
+                    yield return control;
+                    foreach (var inner in FlattenChildControls(control))
+                        yield return inner;
+                }
+                else if (control is TabPage || control.Controls.Count > 0)
+                {
+                    foreach (var inner in FlattenChildControls(control))
+                        yield return inner;
+                }
+                else
+                    yield return control;
+            }
+        }
 
         // Default: a caption-less field is named by the Label immediately before it in tab order
         // (e.g. "Name:" -> the name textbox, "Use only scans within" -> the RT box). Caption-bearing
@@ -386,7 +414,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A control whose items are checked or selected by their text -- a TreeView (a node by a
     /// '>'-separated path) or a ListView. Not a ListControl (it has no SelectedIndex); a caption-less one
-    /// is reached through a ControlId of its Type. The value is the item.</summary>
+    /// is reached through a path of its Type. The value is the item.</summary>
     internal class ItemContainerElement<T> : ControlElement<T> where T : Control
     {
         public ItemContainerElement(T control) : base(control) { }
@@ -753,11 +781,11 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    /// <summary>The right-click context menu of a control -- addressed by a ControlId whose Type is
+    /// <summary>The right-click context menu of a control -- addressed by a path whose Type is
     /// "ContextMenu" and whose Parent is that control. Its Children are the menu's top-level items, built
     /// the way a right-click would (so items added on demand are present); drill into a submenu with
     /// get_children on its item, and invoke an item with click. A control's own get_children never returns
-    /// its context menu -- you ask for it explicitly with this ControlId. For a grid the menu is the one
+    /// its context menu -- you ask for it explicitly with this path. For a grid the menu is the one
     /// for the current cell (move there first with set_current_cell_address).</summary>
     internal sealed class ContextMenuElement : UiElement
     {
@@ -772,25 +800,40 @@ namespace pwiz.Skyline.ToolsUI
                 .Select(item => (UiElement) new ToolStripItemElement(item));
     }
 
-    /// <summary>A tab page -- "clicking" it selects its tab on the parent TabControl.</summary>
-    internal sealed class TabPageElement : ControlElement
+    /// <summary>A TabControl -- select one of its tabs by the tab's text (select_tab). The tab pages
+    /// themselves are not elements; their controls are flattened up to the form, so a control on a tab is
+    /// addressed directly (select its tab first to make it visible).</summary>
+    internal sealed class TabElement : ControlElement<TabControl>
     {
-        private readonly TabPage _tabPage;
-        public TabPageElement(TabPage tabPage) : base(tabPage) { _tabPage = tabPage; }
-        public override string Label => _tabPage.Text;
-        public void Click() => JsonUiService.InvokeOnUiThread(() =>
-        {
-            if (!(_tabPage.Parent is TabControl tabControl))
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Tab '{0}' is not on a tab control.", _tabPage.Text));
-            tabControl.SelectedTab = _tabPage;
-        });
+        public TabElement(TabControl control) : base(control) { }
+        // The tab contents are flattened to the form, so the TabControl itself has no children.
+        public override IEnumerable<UiElement> Children => Enumerable.Empty<UiElement>();
         public override bool SupportsAction(UiAction action) =>
-            action == UiAction.Click || base.SupportsAction(action);
+            action == UiAction.SelectTab || base.SupportsAction(action);
         public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
-            if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value, cancellationToken);
+            if (action != UiAction.SelectTab)
+                return base.PerformAction(action, value, cancellationToken);
+            JsonUiService.InvokeOnUiThread(() =>
+            {
+                var text = value as string;
+                var tabs = Control.TabPages.Cast<TabPage>().ToList();
+                int best = -1;
+                var bestQuality = JsonUiService.ControlMatchQuality.None;
+                for (int i = 0; i < tabs.Count; i++)
+                {
+                    var quality = JsonUiService.MatchQuality(tabs[i].Text, text);
+                    if (quality > bestQuality)
+                    {
+                        best = i;
+                        bestQuality = quality;
+                    }
+                }
+                if (best < 0)
+                    throw new ArgumentException(LlmInstruction.Format(@"No tab matches '{0}'.", text));
+                Control.SelectedTab = tabs[best];
+            });
+            return null;
         }
     }
 
@@ -844,7 +887,7 @@ namespace pwiz.Skyline.ToolsUI
                 case ButtonBase button: return new ButtonElement(button);
                 case ComboBox comboBox: return new ComboBoxElement(comboBox);
                 case TextBoxBase textBox: return new TextBoxElement(textBox);
-                case TabPage tabPage: return new TabPageElement(tabPage);
+                case TabControl tabControl: return new TabElement(tabControl);
                 // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
                 case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox);
                 // The Pick Children pop-up's owner-drawn ListBox presents as a CheckedListBox.

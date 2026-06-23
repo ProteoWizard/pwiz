@@ -38,10 +38,10 @@ namespace pwiz.SkylineTestFunctional
     /// <summary>
     /// Exercises acting on a particular grid cell through the current cell:
     ///   * <see cref="JsonUiService.SetFormValue"/> with a "grid[column,row]" controlId sets a cell;
-    ///   * <see cref="JsonUiService.SetCurrentCellAddress"/> moves to a cell, then a <see cref="ControlId"/>
+    ///   * <see cref="JsonUiService.SetCurrentCellAddress"/> moves to a cell, then a <see cref="UiElementPath"/>
     ///     whose Type is "ContextMenu" on the grid invokes that cell's right-click context menu (here,
     ///     sorting a Document Grid column descending).
-    /// Menu items are matched by control name, so the test is translation-proof.
+    /// Menu items are matched by their visible text.
     /// </summary>
     [TestClass]
     public class GridCellConnectorTest : AbstractFunctionalTest
@@ -108,16 +108,11 @@ namespace pwiz.SkylineTestFunctional
             // Move to the first column (row 0), then choose Sort Descending from that cell's context menu
             // -- the grid's context menu acts on the current cell.
             JsonUiService.SetCurrentCellAddress(gridId, string.Empty, new System.Drawing.Point(0, 0));
-            var gridContextMenu = new ControlId
-            {
-                Parent = new ControlId
-                {
-                    Parent = new ControlId { Type = @"Form", Name = gridId },
-                    Type = @"DataboundGridControl",
-                },
-                Type = @"ContextMenu",
-            };
-            var sortDescending = new ControlId { Parent = gridContextMenu, Name = @"sortDescendingToolStripMenuItem" };
+            var gridContextMenu = new UiElementPath(
+                new UiElementPath(
+                    new UiElementPath(null, gridId, null, @"Form"), null, null, @"DataboundGridControl"),
+                null, null, @"ContextMenu");
+            var sortDescending = new UiElementPath(gridContextMenu, @"Sort Descending", null, null);
             JsonUiService.PerformAction(sortDescending, @"click", null);
             WaitForConditionUI(() => documentGrid.IsComplete);
 
