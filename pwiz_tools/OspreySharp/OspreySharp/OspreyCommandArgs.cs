@@ -208,12 +208,29 @@ namespace pwiz.OspreySharp
                 c._config.InputScores = Program.ResolveInputScores(scorePaths);
                 return true;
             } };
+        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_HPC =
+            new ArgumentGroup<OspreyCommandArgs>(() => @"Distributed / HPC", true,
+                ARG_TASK, ARG_INPUT_SCORES);
+
+        // --- Performance ------------------------------------------------------------------
+        // OUTER vs INNER parallelism, kept deliberately separate. --parallel-files is the
+        // number of input files scored at once (each file's Stage 1-4 work is independent);
+        // --threads is the per-file main-search thread budget, divided across whatever files
+        // run concurrently. --parallel-files takes an OPTIONAL value (handled specially in
+        // TokenizeAndDispatch): absent = one file at a time, no value = RAM/CPU-aware auto,
+        // <N> = exactly N. Unlike the rest of OspreySharp's in-process work this is not HPC
+        // (the Rust HPC split fans files across nodes, one file per process), so it gets its
+        // own group rather than sitting under Distributed / HPC.
+        public static readonly OspreyArgument ARG_PARALLEL_FILES = new OspreyArgument(@"parallel-files",
+            () => @"[<N>]", (c, p) => c._config.FileParallelism = string.IsNullOrEmpty(p.Value)
+                ? FileParallelism.Auto
+                : FileParallelism.Explicit(int.Parse(p.Value)));
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
             () => @"<count>", (c, p) => c._config.NThreads = int.Parse(p.Value));
 
-        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_HPC =
-            new ArgumentGroup<OspreyCommandArgs>(() => @"Distributed / HPC", true,
-                ARG_TASK, ARG_INPUT_SCORES, ARG_THREADS);
+        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_PERFORMANCE =
+            new ArgumentGroup<OspreyCommandArgs>(() => @"Performance", true,
+                ARG_PARALLEL_FILES, ARG_THREADS);
 
         // --- Diagnostics & Info -----------------------------------------------------------
         // -h/--help and -v/--version are terminal: the tokenizer renders help / prints the
@@ -242,6 +259,7 @@ namespace pwiz.OspreySharp
                     GROUP_SCORING,
                     GROUP_FDR,
                     GROUP_DECOYS,
+                    GROUP_PERFORMANCE,
                     GROUP_HPC,
                     GROUP_INFO,
                     new ParaUsageBlock(@"EXAMPLES:"),
@@ -327,6 +345,22 @@ namespace pwiz.OspreySharp
                         throw new ArgumentException(
                             @"--task requires a task name (PerFileScoring, FirstJoin, PerFileRescore, or MergeNode).");
                     i++;
+                    continue;
+                }
+                if (ReferenceEquals(matched, ARG_PARALLEL_FILES))
+                {
+                    // Optional value: consume the next token as the explicit count
+                    // ONLY when it is a non-flag positive integer; otherwise this is
+                    // auto mode and the token is left for normal processing (e.g. a
+                    // trailing positional mzML). Mirrors the --help [fmt] lookahead.
+                    i++;
+                    string parallelValue = null;
+                    if (i < args.Length && IsPositiveInteger(args[i]))
+                    {
+                        parallelValue = args[i];
+                        i++;
+                    }
+                    matched.ProcessValue(this, new NameValuePair(matched.Name, parallelValue));
                     continue;
                 }
 
@@ -458,6 +492,24 @@ namespace pwiz.OspreySharp
             return args[i];
         }
 
+        /// <summary>
+        /// True when <paramref name="token"/> is a plain positive integer (no sign,
+        /// digits only). Used by the <c>--parallel-files</c> optional-value lookahead
+        /// to tell an explicit count from auto-mode-plus-trailing-token; a leading '-'
+        /// is therefore correctly treated as the next flag, not a value.
+        /// </summary>
+        private static bool IsPositiveInteger(string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                return false;
+            foreach (char c in token)
+            {
+                if (c < '0' || c > '9')
+                    return false;
+            }
+            return int.TryParse(token, out int n) && n > 0;
+        }
+
         private static double ParseDouble(string value, string flagName)
         {
             double result;
@@ -575,7 +627,8 @@ namespace pwiz.OspreySharp
                 { @"write-pin", @"Write PIN files for external tools" },
                 { @"task", @"HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline." },
                 { @"input-scores", @"HPC: one or more .scores.parquet files, or a single directory (non-recursive). Mutex with --input." },
-                { @"threads", @"Number of threads (default: all cores)" },
+                { @"parallel-files", @"Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. <N>: exactly N regardless of RAM/cores. Distinct from --threads." },
+                { @"threads", @"Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by --parallel-files" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },

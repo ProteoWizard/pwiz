@@ -171,8 +171,22 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public FdrLevel FdrLevel { get; set; } = FdrLevel.Precursor;
 
-        /// <summary>Number of threads to use.</summary>
+        /// <summary>
+        /// INNER per-file main-search thread budget. Set by <c>--threads</c>.
+        /// Divided across concurrent files (see <see cref="FileParallelism"/>)
+        /// so total thread demand stays near the core count.
+        /// </summary>
         public int NThreads { get; set; } = Environment.ProcessorCount;
+
+        /// <summary>
+        /// OUTER across-files parallelism request, set by <c>--parallel-files</c>.
+        /// Default <see cref="Core.FileParallelism.Sequential"/> (one file at a
+        /// time) is safe on any machine; <c>--parallel-files</c> opts into
+        /// RAM/CPU-aware auto or an explicit count. Resolved to a concrete
+        /// concurrent-file count at run time by <see cref="FileParallelismResolver"/>;
+        /// not part of any identity / cache hash (a per-run scheduling decision).
+        /// </summary>
+        public FileParallelism FileParallelism { get; set; } = FileParallelism.Sequential;
 
         /// <summary>
         /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):

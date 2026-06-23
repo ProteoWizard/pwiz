@@ -98,6 +98,18 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual(@"m.tsv", Parse(@"--decoys-in-library", @"--decoy-pairing-manifest", @"m.tsv").DecoyPairingManifestPath);
             Assert.IsTrue(Parse(@"--write-pin").WritePin);
 
+            // Performance: --parallel-files has an OPTIONAL value. Absent =
+            // sequential default; no value = auto; <N> = explicit. The optional
+            // value must not swallow the following flag.
+            Assert.AreEqual(FileParallelismMode.Sequential, Parse(@"-i", @"a.mzML").FileParallelism.Mode);
+            Assert.AreEqual(FileParallelismMode.Auto, Parse(@"--parallel-files").FileParallelism.Mode);
+            var explicitN = Parse(@"--parallel-files", @"4").FileParallelism;
+            Assert.AreEqual(FileParallelismMode.Explicit, explicitN.Mode);
+            Assert.AreEqual(4, explicitN.Count);
+            var autoThenInput = Parse(@"--parallel-files", @"-i", @"a.mzML");
+            Assert.AreEqual(FileParallelismMode.Auto, autoThenInput.FileParallelism.Mode);
+            CollectionAssert.AreEqual(new[] { @"a.mzML" }, autoThenInput.InputFiles.ToArray());
+
             // Diagnostics. --task is resolved in Main, so ParseArgs alone leaves SelectedTask null
             // but must accept both --task forms without throwing.
             Assert.IsTrue(Parse(@"-d").Diagnostics);
@@ -161,9 +173,10 @@ namespace pwiz.OspreySharp.Test
             // representative arg present, and box-drawing borders (not lower-128 ascii).
             string defaultHelp = OspreyCommandArgs.BuildUsage(null);
             foreach (var title in new[] { @"General I/O", @"Scoring & Tolerance", @"FDR & Protein Inference",
-                @"Decoys", @"Distributed / HPC", @"Diagnostics & Info" })
+                @"Decoys", @"Performance", @"Distributed / HPC", @"Diagnostics & Info" })
                 StringAssert.Contains(defaultHelp, title);
             StringAssert.Contains(defaultHelp, @"--input");
+            StringAssert.Contains(defaultHelp, @"--parallel-files");
             StringAssert.Contains(defaultHelp, @"--help");
             StringAssert.Contains(defaultHelp, ArgUsage.Provider.ArgumentHeader);
             Assert.IsTrue(defaultHelp.Contains('│') || defaultHelp.Contains('─'),
