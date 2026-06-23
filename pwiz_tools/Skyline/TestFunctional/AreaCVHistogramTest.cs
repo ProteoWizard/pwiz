@@ -655,7 +655,7 @@ namespace pwiz.SkylineTestFunctional
             // Verify GraphHeatMap actually plotted the data point -- not merely that it
             // inserted the (always-present) color curves. A point landing in a curve proves
             // the discrete legend-remap path (where #4209 crashed) actually executed.
-            int pointsPlotted = graphPane.CurveList.Cast<CurveItem>().Sum(c => c.Points.Count);
+            int pointsPlotted = graphPane.CurveList.Sum(c => c.Points.Count);
             AssertEx.IsTrue(pointsPlotted > 0,
                 "GraphHeatMap should have plotted the test point, exercising the crash-prone discrete remap path");
 
