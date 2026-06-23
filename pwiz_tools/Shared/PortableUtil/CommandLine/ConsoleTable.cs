@@ -20,11 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using pwiz.Common.SystemUtil;
 
-namespace pwiz.Skyline.Util
+namespace pwiz.Common.CommandLine
 {
-    class ConsoleTable
+    public class ConsoleTable
     {
         /// <summary>
         /// This will hold the header of the table.
@@ -316,7 +315,12 @@ namespace pwiz.Skyline.Util
                                                         - (widths.Length - 1) // cell separators
                                                         - (Borders ? 2 : 0);  // outside borders if applicable
             }
-            Assume.IsTrue(widths.All(w => w > 0));
+            // Was Assume.IsTrue(widths.All(w => w > 0)) when this lived in Skyline. Inlined as a
+            // throw to keep PortableUtil a pure-BCL leaf (no CommonUtil dependency). Skyline's
+            // ExceptionUtil.IsProgrammingDefect classifies InvalidOperationException as a coding
+            // defect, so the failure is still treated like the old assertion.
+            if (!widths.All(w => w > 0))
+                throw new InvalidOperationException(@"ConsoleTable column widths must all be greater than zero.");
 
             return widths;
         }
