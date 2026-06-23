@@ -1116,66 +1116,37 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Lists the interactive controls on a form so a caller can discover what is there -- and how to
-        /// address it -- without reading the source. Each control reports its Name (informational), Type,
-        /// the visible Label that identifies it, current Value, enabled/visible state, and the connector
-        /// actions it supports. Only controls a user can act on are returned (buttons, fields, lists, ...).
+        /// Lists the controls directly on a form so a caller can discover what is there -- and how to
+        /// address it -- without reading the source: this is the form element's <see cref="UiElement.GetChildren"/>.
+        /// Each control reports its Name (informational), Type, the visible Label that identifies it, and
+        /// its enabled/visible state, with a parentless Path the caller re-parents to act on it (and walks
+        /// deeper with the get_children action). Use the get_value / get_actions actions for a control's
+        /// value and the actions it supports.
         /// </summary>
         public static ControlInfo[] GetControls(string formId)
         {
             ValidateFormIdFormat(formId);
-            return InvokeOnUiThread(() =>
-            {
-                var form = FindFormById(formId);
-                var result = new List<ControlInfo>();
-                CollectControls(UiElementFactory.For(form), FormPath(formId), result);
-                return result.ToArray();
-            });
+            // A native dialog is enumerated on this (pipe) thread via UI Automation, never inside
+            // InvokeOnUiThread: while it is modal the UI thread is busy in its own message loop, so a
+            // marshalled call would deadlock.
+            if (TryGetNativeDialog(formId, out var dialog))
+                return dialog.GetChildren();
+            return InvokeOnUiThread(() => UiElementFactory.For(FindFormById(formId)).GetChildren());
         }
 
-        // Walks the (flattened) control tree depth-first, adding a ControlInfo for every actionable control
-        // with its full path. Menu and list items (not ControlElements) are not listed here -- discover
-        // them with get_children -- so the walk does not descend into them.
-        private static void CollectControls(UiElement parent, UiElementPath parentPath, List<ControlInfo> result)
-        {
-            int index = 0;
-            foreach (var child in parent.Children)
-            {
-                var childPath = PathFor(child, index++, parentPath);
-                if (child is ControlElement && child.HasCapability)
-                    result.Add(new ControlInfo
-                    {
-                        Path = childPath,
-                        Name = NullIfEmpty(child.Name),
-                        Enabled = child.IsEnabled,
-                        Visible = child.IsVisible,
-                    });
-                if (child is ControlElement)
-                    CollectControls(child, childPath, result);
-            }
-        }
-
-        private static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
+        internal static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
 
         // The label as a caller would type it: mnemonic '&' and a trailing colon/ellipsis removed, so a
         // "Name:" label is reported (and addressable) as "Name". Matching tolerates either form anyway.
-        private static string CleanLabel(string text) =>
+        internal static string CleanLabel(string text) =>
             string.IsNullOrEmpty(text) ? text : NormalizeLabel(text).TrimEnd(' ', ':');
-
-        // The path that refers to this element: its visible Text, its Index in the parent's child list, and
-        // its Type, under the given parent path.
-        private static UiElementPath PathFor(UiElement element, int index, UiElementPath parentPath) =>
-            new UiElementPath(parentPath, NullIfEmpty(CleanLabel(element.Label)), index, element.ElementType.Name);
-
-        // The path that names a form -- the root of every path (Parent null, Text the form id, Type "Form").
-        private static UiElementPath FormPath(string formId) => new UiElementPath(null, formId, null, @"Form");
 
         /// <summary>
         /// The most general way to interact with a control, menu item, or list item (see
         /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="path"/> refers to,
         /// then perform <paramref name="action"/> on it. The action determines the value and return types:
-        /// "get_actions" -> string[]; "get_children" -> UiElementPath[]; "click" -> null; "set_value" (string
-        /// value) -> null; "get_value" -> string.
+        /// "get_actions" -> string[]; "get_children" -> ControlInfo[] (parentless paths the caller
+        /// re-parents); "click" -> null; "set_value" (string value) -> null; "get_value" -> string.
         /// </summary>
         public static object PerformAction(UiElementPath path, string action, object value)
         {
@@ -1188,6 +1159,12 @@ namespace pwiz.Skyline.ToolsUI
             using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
             {
                 var token = cancellation.Token;
+                // A path rooted at a native dialog is resolved and acted on this (pipe) thread: the dialog
+                // runs its own modal loop on the UI thread, so marshalling to it (or to RunWithDialogWatch's
+                // background work) would deadlock. The dialog's elements post Win32 messages, which is safe
+                // from any thread.
+                if (TryGetNativeDialog(RootFormText(path), out var nativeDialog))
+                    return PerformActionOnNativeDialog(nativeDialog, path, uiAction, value, token);
                 switch (uiAction)
                 {
                     // GetActions/GetChildren are answered by the service; the returned child paths have a null
@@ -1196,8 +1173,7 @@ namespace pwiz.Skyline.ToolsUI
                     case UiAction.GetActions:
                         return InvokeOnUiThread(() => ResolvePath(path).SupportedActions.Select(UiActions.ToName).ToArray());
                     case UiAction.GetChildren:
-                        return InvokeOnUiThread(() => ResolvePath(path).Children
-                            .Select((child, index) => PathFor(child, index, null)).ToArray());
+                        return InvokeOnUiThread(() => ResolvePath(path).GetChildren());
                     case UiAction.Click:
                         // A click runs inside the dialog-watch (the element handles its own threading); resolve
                         // and verify first on the UI thread.
@@ -1235,6 +1211,25 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        // Dispatches an action on a native dialog (or one of its elements). Everything runs on the calling
+        // (pipe) thread -- the dialog is modal on the UI thread, so it must not be marshalled there -- and
+        // the path is resolved against the dialog as its root. The dialog's elements dispatch to UI
+        // Automation / Win32 messages, which are safe from any thread.
+        private static object PerformActionOnNativeDialog(NativeDialogAutomation dialog, UiElementPath path,
+            UiAction uiAction, object value, CancellationToken token)
+        {
+            var element = ResolvePath(path, _ => dialog);
+            switch (uiAction)
+            {
+                case UiAction.GetActions:
+                    return element.SupportedActions.Select(UiActions.ToName).ToArray();
+                case UiAction.GetChildren:
+                    return element.GetChildren();
+                default:
+                    return RequireAction(element, uiAction).PerformAction(uiAction, value, token);
+            }
+        }
+
         // Verifies the resolved element is interactable and supports the action, returning it. Throws a
         // clear error (listing the element's actions) if it does not.
         private static UiElement RequireAction(UiElement element, UiAction action)
@@ -1248,77 +1243,45 @@ namespace pwiz.Skyline.ToolsUI
                 string.Join(@", ", element.SupportedActions.Select(UiActions.ToName))));
         }
 
+        // The form id at the root of a path -- the Text of its deepest (Parent-less) segment, or null.
+        private static string RootFormText(UiElementPath path)
+        {
+            while (path?.Parent != null)
+                path = path.Parent;
+            return path?.Text;
+        }
+
+        // Resolves a managed path: its root form is found in FormUtil.OpenForms. Must run on the UI thread.
+        private static UiElement ResolvePath(UiElementPath path) =>
+            ResolvePath(path, formId => UiElementFactory.For(FindFormById(formId)));
+
         // Resolves a UiElementPath to the single element it refers to. The path is matched segment by
         // segment: each segment names a child of the element its Parent resolves to, by Index (its position
         // in the parent's child list), Text (its visible label), and/or Type -- every property that is set
-        // must match. The chain bottoms out at a form. Must run on the UI thread.
-        private static UiElement ResolvePath(UiElementPath path)
+        // must match. The chain bottoms out at a form, resolved by <paramref name="rootResolver"/> (a
+        // WinForms form, or a native dialog) from its id.
+        private static UiElement ResolvePath(UiElementPath path, Func<string, UiElement> rootResolver)
         {
             if (path == null)
                 throw new ArgumentException(new LlmInstruction(@"A path is required."));
 
             // The root of a path (no Parent) names a form: its Text is the form id from GetOpenForms (its
-            // Type is "Form"). Everything else is a child of the element its Parent resolves to.
+            // Type is "Form"). Everything else is a child of the element its Parent resolves to -- the parent
+            // resolves the chain, then GetChild picks the element this segment names.
             if (path.Parent == null)
             {
                 if (string.IsNullOrEmpty(path.Text))
                     throw new ArgumentException(new LlmInstruction(
                         @"The root of a path must name a form: Text set to the form id from skyline_get_open_forms (Type 'Form')."));
-                return UiElementFactory.For(FindFormById(path.Text));
+                return rootResolver(path.Text);
             }
-            // Type "ContextMenu" addresses the parent control's right-click menu (which is never a child of
-            // the control): build the menu so its items can be listed (get_children) or invoked (click).
-            // For a grid it is the current cell's menu (move there first with set_current_cell_address).
-            if (string.Equals(path.Type, @"ContextMenu", StringComparison.OrdinalIgnoreCase))
-                return new ContextMenuElement(ResolvePath(path.Parent));
-
-            // Nothing set on this segment -> the parent element itself (so get_children on a form lists its
-            // controls, and get_children on a control walks into it).
-            if (path.Text == null && path.Index == null && path.Type == null)
-                return ResolvePath(path.Parent);
-
-            var children = ResolvePath(path.Parent).Children.ToList();
-
-            // An Index pins the exact child; Text/Type (if set) must then also match it.
-            if (path.Index.HasValue)
-            {
-                if (path.Index.Value < 0 || path.Index.Value >= children.Count)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"No child at index {0}; the parent has {1} children.", path.Index.Value, children.Count));
-                var indexed = children[path.Index.Value];
-                if (!MatchesPath(indexed, path, out _))
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"The child at index {0} does not match the Text/Type in the path.", path.Index.Value));
-                return indexed;
-            }
-
-            // No Index -> search the children by Text/Type, preferring the best Text match, then an
-            // interactable (visible+enabled) one.
-            UiElement best = null;
-            var bestQuality = ControlMatchQuality.None;
-            var bestInteractable = false;
-            foreach (var element in children)
-            {
-                if (!MatchesPath(element, path, out var quality))
-                    continue;
-                var interactable = element.IsVisible && element.IsEnabled;
-                if (best == null || quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
-                {
-                    best = element;
-                    bestQuality = quality;
-                    bestInteractable = interactable;
-                }
-            }
-            if (best == null)
-                throw new ArgumentException(new LlmInstruction(
-                    @"No control found matching the path. Use skyline_get_controls to list the controls."));
-            return best;
+            return ResolvePath(path.Parent, rootResolver).GetChild(path);
         }
 
         // True if every set property (Text, Type) of the path segment matches the element; quality ranks
         // Text matches (an exact label beats a symbol-stripped one) so the closest match wins among several.
         // Index is resolved by the caller (it is a position, not a property of the element).
-        private static bool MatchesPath(UiElement element, UiElementPath path, out ControlMatchQuality quality)
+        internal static bool MatchesPath(UiElement element, UiElementPath path, out ControlMatchQuality quality)
         {
             quality = ControlMatchQuality.None;
             if (path.Type != null && !MatchesControlType(element.ElementType, path.Type))

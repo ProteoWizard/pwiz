@@ -46,8 +46,13 @@ namespace pwiz.Skyline.ToolsUI
     ///
     /// Use <see cref="WaitForDialog{T}"/> or <see cref="GetOpenDialogs"/> to obtain an instance;
     /// <see cref="Create"/> chooses the subclass that matches a given dialog element.
+    ///
+    /// A dialog is a <see cref="UiElement"/>: it presents to the connector exactly like any other form (it
+    /// is listed by GetOpenForms and addressed by a path whose Text is its id), and its <see cref="Children"/>
+    /// are connector elements (buttons, a file-name field) that dispatch their actions to this automation
+    /// (Accept/Cancel/EnterPath) instead of to a WinForms control.
     /// </summary>
-    public abstract class NativeDialogAutomation
+    public abstract class NativeDialogAutomation : UiElement
     {
         protected const string DIALOG_CLASS_NAME = @"#32770"; // Win32 dialog window class
         private const int DEFAULT_TIMEOUT_MILLIS = 30 * 1000;
@@ -75,6 +80,14 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>The dialog window's caption.</summary>
         public string Title => DialogElement.Current.Name;
+
+        // UiElement: a native dialog is the root of its own path, so most of these are not used for matching
+        // (the dialog is found by its form id, not walked into as a child). They are implemented so the
+        // dialog is a first-class element whose children can be listed and acted on like any form's.
+        public override string Name => string.Empty;
+        public override Type ElementType => GetType();
+        public override bool IsEnabled => User32.IsWindowEnabled(WindowHandle);
+        public override bool IsVisible => true;
 
         protected AutomationElement DialogElement =>
             _dialogElement ?? (_dialogElement = AutomationElement.FromHandle(WindowHandle));

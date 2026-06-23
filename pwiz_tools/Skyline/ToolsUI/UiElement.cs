@@ -26,12 +26,13 @@ using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
     // The actions a UiElement can be asked to do (see UiElement.SupportsAction / PerformAction). Every
     // element supports GetActions and GetChildren; the rest depend on the kind of control.
-    internal enum UiAction
+    public enum UiAction
     {
         GetActions, GetChildren, Click, SetValue, GetValue,
         CheckItem, UncheckItem, SelectItem, UnselectItem, GetGridText, SetGridText, SetCurrentCellAddress,
@@ -78,8 +79,13 @@ namespace pwiz.Skyline.ToolsUI
     /// on WinForms types. Each element also knows its own <see cref="Label"/> (the visible text that
     /// identifies it) and its <see cref="Children"/>, so matching and form enumeration are a single
     /// recursive walk.
+    ///
+    /// Most elements wrap a WinForms <see cref="Control"/> (see <see cref="ControlElement"/>), but the base
+    /// is public and control-agnostic so a non-WinForms surface can present itself the same way -- a native
+    /// dialog (<see cref="NativeDialogAutomation"/>) is itself a UiElement whose children dispatch to UI
+    /// Automation rather than to a Control.
     /// </summary>
-    internal abstract class UiElement
+    public abstract class UiElement
     {
         /// <summary>The underlying control's Name -- informational (for discovery via GetControls); the
         /// connector does NOT match on it. Empty for elements with no backing control name.</summary>
@@ -101,6 +107,11 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>The elements nested inside this one, for the recursive form walk.</summary>
         public virtual IEnumerable<UiElement> Children => Enumerable.Empty<UiElement>();
+
+        /// <summary>True if this element is a control a caller acts on (a button, field, list, ...) rather
+        /// than a menu/list item or other pseudo-element. GetControls lists controls and descends through
+        /// them; it does not list or descend into the others.</summary>
+        public virtual bool IsControl => false;
 
         /// <summary>This element and every element under it, depth-first.</summary>
         public IEnumerable<UiElement> SelfAndDescendants()
@@ -134,6 +145,80 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.Format(
                 @"The action '{0}' is not supported on this control.", UiActions.ToName(action)));
         }
+
+        /// <summary>This element's children as <see cref="ControlInfo"/>, each with a parentless,
+        /// single-segment Path: the caller re-parents it (onto the path of the element it listed) before
+        /// acting. The form walk is one level at a time -- GetControls and the get_children action both
+        /// return this; descend by calling GetChildren on a child.</summary>
+        public virtual ControlInfo[] GetChildren()
+        {
+            return Children
+                .Select((child, index) => new ControlInfo
+                {
+                    Path = child.PathSegment(index),
+                    Name = JsonUiService.NullIfEmpty(child.Name),
+                    Enabled = child.IsEnabled,
+                    Visible = child.IsVisible,
+                })
+                .ToArray();
+        }
+
+        /// <summary>The single child the <paramref name="path"/>'s leaf segment names, with its Parent
+        /// ignored (the caller has resolved the chain down to this element). A segment with no selector is
+        /// this element itself; Type "ContextMenu" is this control's right-click menu; otherwise Index pins
+        /// the child and Text/Type must match it.</summary>
+        public UiElement GetChild(UiElementPath path)
+        {
+            // Type "ContextMenu" addresses this control's right-click menu (never one of its real children).
+            if (string.Equals(path.Type, @"ContextMenu", StringComparison.OrdinalIgnoreCase))
+                return new ContextMenuElement(this);
+            // No selector -> this element itself (get_children on a form lists its controls; on a control
+            // walks into it).
+            if (path.Text == null && path.Index == null && path.Type == null)
+                return this;
+
+            var children = Children.ToList();
+
+            // An Index pins the exact child; Text/Type (if set) must then also match it.
+            if (path.Index.HasValue)
+            {
+                if (path.Index.Value < 0 || path.Index.Value >= children.Count)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"No child at index {0}; the parent has {1} children.", path.Index.Value, children.Count));
+                var indexed = children[path.Index.Value];
+                if (!JsonUiService.MatchesPath(indexed, path, out _))
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"The child at index {0} does not match the Text/Type in the path.", path.Index.Value));
+                return indexed;
+            }
+
+            // No Index -> search the children by Text/Type, preferring the best Text match, then an
+            // interactable (visible+enabled) one.
+            UiElement best = null;
+            var bestQuality = JsonUiService.ControlMatchQuality.None;
+            var bestInteractable = false;
+            foreach (var element in children)
+            {
+                if (!JsonUiService.MatchesPath(element, path, out var quality))
+                    continue;
+                var interactable = element.IsVisible && element.IsEnabled;
+                if (best == null || quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
+                {
+                    best = element;
+                    bestQuality = quality;
+                    bestInteractable = interactable;
+                }
+            }
+            if (best == null)
+                throw new ArgumentException(new LlmInstruction(
+                    @"No control found matching the path. Use skyline_get_controls to list the controls."));
+            return best;
+        }
+
+        /// <summary>The parentless path segment that addresses this element as the index-th child of its
+        /// parent (its Text, Index, and Type). The caller re-parents it onto the element it listed.</summary>
+        internal UiElementPath PathSegment(int index) =>
+            new UiElementPath(null, JsonUiService.NullIfEmpty(JsonUiService.CleanLabel(Label)), index, ElementType.Name);
     }
 
     // ---- Control-backed elements ----------------------------------------------------------------
@@ -144,12 +229,13 @@ namespace pwiz.Skyline.ToolsUI
         protected ControlElement(Control control) { Control = control; }
 
         public Control Control { get; }
+        public override bool IsControl => true;
         public override string Name => Control.Name;
         public override Type ElementType => Control.GetType();
         public override bool IsEnabled => Control.Enabled;
         public override bool IsVisible => Control.Visible;
         public override IEnumerable<UiElement> Children =>
-            FlattenChildControls(Control).Select(UiElementFactory.For);
+            FlattenChildControls(Control).Select(UiElementFactory.For).Where(element => element != null);
 
         // The control's children for the form walk, FLATTENED: a non-UserControl layout container (Panel,
         // GroupBox, TableLayoutPanel, SplitContainer, a TabPage, ...) is transparent -- its controls are
@@ -200,11 +286,13 @@ namespace pwiz.Skyline.ToolsUI
         public new T Control => (T) base.Control;
     }
 
-    /// <summary>A control with no special capability (panel, group box, label, ...) -- kept so the walk
-    /// recurses through it to its children.</summary>
-    internal sealed class GenericControlElement : ControlElement
+    /// <summary>A Form or a UserControl -- a boundary that owns its (flattened) children. It has no action
+    /// of its own; it exists so the walk can list and descend into the controls it contains. Every other
+    /// container (Panel, GroupBox, ...) is transparent (its controls are pulled up to the nearest Form or
+    /// UserControl), so the only things that need a container element are these two.</summary>
+    internal sealed class ContainerElement : ControlElement
     {
-        public GenericControlElement(Control control) : base(control) { }
+        public ContainerElement(Control control) : base(control) { }
     }
 
     /// <summary>A push button (or any ButtonBase) -- clicked with BM_CLICK, which fires the Click handler
@@ -717,7 +805,11 @@ namespace pwiz.Skyline.ToolsUI
             get
             {
                 if (_item is ToolStripControlHost host && host.Control != null)
-                    yield return UiElementFactory.For(host.Control);
+                {
+                    var hosted = UiElementFactory.For(host.Control);
+                    if (hosted != null)
+                        yield return hosted;
+                }
                 if (_item is ToolStripDropDownItem dropDownItem)
                     foreach (ToolStripItem child in dropDownItem.DropDownItems)
                         yield return new ToolStripItemElement(child);
@@ -901,11 +993,17 @@ namespace pwiz.Skyline.ToolsUI
                 case DataGridView dataGridView when !HasDataboundAncestor(dataGridView):
                     return new GridElement(dataGridView);
                 case ToolStrip toolStrip: return new ToolStripElement(toolStrip);
+                // A Form or UserControl is a boundary that owns its (flattened) children; everything else
+                // that contains controls is transparent, so these are the only containers to descend into.
+                case Form form: return new ContainerElement(form);
+                case UserControl userControl: return new ContainerElement(userControl);
                 default:
                     // A custom clickable that is not a ButtonBase (e.g. a StartPage tile).
                     if (control is IButtonControl)
                         return new ClickableControlElement(control);
-                    return new GenericControlElement(control);
+                    // Anything else reaching here is a leaf with no capability (a label, a spacer, an empty
+                    // panel); it is not something a caller can act on, so it is not an element.
+                    return null;
             }
         }
 
