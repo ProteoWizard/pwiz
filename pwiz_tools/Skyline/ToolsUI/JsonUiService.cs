@@ -1295,36 +1295,43 @@ namespace pwiz.Skyline.ToolsUI
             if (!UiActions.TryParse(action, out var uiAction))
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
-            switch (uiAction)
+            // Capture the disconnect check on this (server) thread before any marshaling, so a long action
+            // (e.g. reading a large grid) is abandoned if the client goes away rather than pinning the
+            // single-instance server. The element receives the token through its PerformAction.
+            using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
             {
-                // GetActions/GetChildren need the caller's ControlId (to name the children), so the service
-                // handles them; the element handles the operational actions through its PerformAction.
-                case UiAction.GetActions:
-                    return InvokeOnUiThread(() => ResolveControlId(controlId).SupportedActions.Select(UiActions.ToName).ToArray());
-                case UiAction.GetChildren:
-                    return InvokeOnUiThread(() => ResolveControlId(controlId).Children
-                        .Select(child => ControlIdFor(child, controlId)).ToArray());
-                case UiAction.Click:
-                    // A click runs inside the dialog-watch (the element handles its own threading); resolve
-                    // and verify first on the UI thread.
-                    var clickElement = InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction));
-                    RunWithDialogWatch(() =>
-                    {
-                        clickElement.PerformAction(uiAction, value);
-                        return true;
-                    });
-                    return null;
-                case UiAction.SetValue:
-                    object setResult = null;
-                    RunWithDialogWatch(() =>
-                    {
-                        setResult = InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction).PerformAction(uiAction, value));
-                        return true;
-                    });
-                    return setResult;
-                default:
-                    // Read-only / other actions: resolve, verify, perform on the UI thread.
-                    return InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction).PerformAction(uiAction, value));
+                var token = cancellation.Token;
+                switch (uiAction)
+                {
+                    // GetActions/GetChildren need the caller's ControlId (to name the children), so the service
+                    // handles them; the element handles the operational actions through its PerformAction.
+                    case UiAction.GetActions:
+                        return InvokeOnUiThread(() => ResolveControlId(controlId).SupportedActions.Select(UiActions.ToName).ToArray());
+                    case UiAction.GetChildren:
+                        return InvokeOnUiThread(() => ResolveControlId(controlId).Children
+                            .Select(child => ControlIdFor(child, controlId)).ToArray());
+                    case UiAction.Click:
+                        // A click runs inside the dialog-watch (the element handles its own threading); resolve
+                        // and verify first on the UI thread.
+                        var clickElement = InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction));
+                        RunWithDialogWatch(() =>
+                        {
+                            clickElement.PerformAction(uiAction, value, token);
+                            return true;
+                        });
+                        return null;
+                    case UiAction.SetValue:
+                        object setResult = null;
+                        RunWithDialogWatch(() =>
+                        {
+                            setResult = InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction).PerformAction(uiAction, value, token));
+                            return true;
+                        });
+                        return setResult;
+                    default:
+                        // Read-only / other actions: resolve, verify, perform on the UI thread.
+                        return InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction).PerformAction(uiAction, value, token));
+                }
             }
         }
 

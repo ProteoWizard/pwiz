@@ -134,7 +134,7 @@ namespace pwiz.Skyline.ToolsUI
         /// name="value"/> and of the result). Each kind of element overrides this to do its own actions,
         /// calling base for the rest. GetActions and GetChildren are handled by the service (they need the
         /// caller's ControlId), so they do not reach here.</summary>
-        public virtual object PerformAction(UiAction action, object value)
+        public virtual object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             throw new ArgumentException(LlmInstruction.Format(
                 @"The action '{0}' is not supported on this control.", UiActions.ToName(action)));
@@ -188,10 +188,10 @@ namespace pwiz.Skyline.ToolsUI
             User32.SendMessage(Control.Handle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value);
+            return base.PerformAction(action, value, cancellationToken);
         }
     }
 
@@ -206,13 +206,13 @@ namespace pwiz.Skyline.ToolsUI
         // Click is added by ButtonElement; this adds the value actions.
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             switch (action)
             {
                 case UiAction.SetValue: SetValue(value as string); return null;
                 case UiAction.GetValue: return GetValue();
-                default: return base.PerformAction(action, value);
+                default: return base.PerformAction(action, value, cancellationToken);
             }
         }
     }
@@ -227,13 +227,13 @@ namespace pwiz.Skyline.ToolsUI
         public void SetValue(string value) => _radioButton.Checked = UiValue.ParseBool(value);
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             switch (action)
             {
                 case UiAction.SetValue: SetValue(value as string); return null;
                 case UiAction.GetValue: return GetValue();
-                default: return base.PerformAction(action, value);
+                default: return base.PerformAction(action, value, cancellationToken);
             }
         }
     }
@@ -250,13 +250,13 @@ namespace pwiz.Skyline.ToolsUI
             _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value) : value;
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             switch (action)
             {
                 case UiAction.SetValue: SetValue(value as string); return null;
                 case UiAction.GetValue: return GetValue();
-                default: return base.PerformAction(action, value);
+                default: return base.PerformAction(action, value, cancellationToken);
             }
         }
     }
@@ -278,13 +278,13 @@ namespace pwiz.Skyline.ToolsUI
         }
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             switch (action)
             {
                 case UiAction.SetValue: SetValue(value as string); return null;
                 case UiAction.GetValue: return GetValue();
-                default: return base.PerformAction(action, value);
+                default: return base.PerformAction(action, value, cancellationToken);
             }
         }
     }
@@ -309,13 +309,13 @@ namespace pwiz.Skyline.ToolsUI
             action == UiAction.SetItemChecked || action == UiAction.SetItemSelected || base.SupportsAction(action);
         // These need an item and a state, which do not fit PerformAction's single value; they are driven
         // through the typed methods (or get_children to reach a checkable item and click it).
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             if (action == UiAction.SetItemChecked || action == UiAction.SetItemSelected)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Use skyline_set_item_checked / skyline_set_item_selected for '{0}', or get_children to reach an item and click it.",
                     UiActions.ToName(action)));
-            return base.PerformAction(action, value);
+            return base.PerformAction(action, value, cancellationToken);
         }
     }
 
@@ -335,10 +335,10 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.InvokeOnUiThread(() => _list.SetItemChecked(_index, !_list.GetItemChecked(_index)));
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value);
+            return base.PerformAction(action, value, cancellationToken);
         }
     }
 
@@ -352,10 +352,10 @@ namespace pwiz.Skyline.ToolsUI
         public void Click() => JsonUiService.InvokeOnUiThread(() => _button.PerformClick());
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value);
+            return base.PerformAction(action, value, cancellationToken);
         }
     }
 
@@ -398,10 +398,10 @@ namespace pwiz.Skyline.ToolsUI
         public void Click() => JsonUiService.InvokeOnUiThread(() => _item.PerformClick());
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value);
+            return base.PerformAction(action, value, cancellationToken);
         }
     }
 
@@ -433,14 +433,14 @@ namespace pwiz.Skyline.ToolsUI
         }
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.GetGridText || action == UiAction.SetGridText || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             if (action == UiAction.GetGridText)
-                return GetGridText(CancellationToken.None);
+                return GetGridText(cancellationToken);
             if (action == UiAction.SetGridText)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Use skyline_set_grid_text to set a cell on this grid -- it takes the column, row, and text."));
-            return base.PerformAction(action, value);
+            return base.PerformAction(action, value, cancellationToken);
         }
     }
 
@@ -459,10 +459,10 @@ namespace pwiz.Skyline.ToolsUI
         });
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value)
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value);
+            return base.PerformAction(action, value, cancellationToken);
         }
     }
 
