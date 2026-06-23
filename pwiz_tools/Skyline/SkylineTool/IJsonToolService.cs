@@ -380,6 +380,15 @@ namespace SkylineTool
         void SetFormValue(string formId, string controlId, string value);
 
         /// <summary>
+        /// Returns the current value of a control on a form, found by its visible label: a text box's
+        /// text, a combo box's selected item, a check/radio's checked state, or a CheckedListBox's checked
+        /// items (their text, one per line).
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">The control's visible label, or null when the form has a single valued control.</param>
+        string GetFormValue(string formId, string controlId);
+
+        /// <summary>
         /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at its current
         /// cell -- move there first with <see cref="SetCurrentCellAddress"/>. The text may be a multi-cell TSV
         /// block (it fills down and to the right). Works for the Document Grid (and other

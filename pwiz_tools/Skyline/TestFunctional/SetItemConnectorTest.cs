@@ -29,6 +29,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -112,18 +113,25 @@ namespace pwiz.SkylineTestFunctional
             });
             string nodePath = parentText + @" > " + childText;
 
-            // The field tree has no caption and no label, so it is addressed by its type -- "TreeView"
-            // is the only tree on the form (a type match, weaker than any visible-text match).
-            JsonUiService.SetItemChecked(editorId, @"TreeView", nodePath, true);
+            // The field tree has no caption and no label -- the caption-less edge case -- so the typed
+            // verbs (which match a Label) cannot reach it. It is addressed instead through a ControlId by
+            // its Type ("TreeView", the only tree on the form) via the general PerformAction path; the
+            // value is the '>'-separated node path, and the action checks/selects it.
+            var treeId = new ControlId
+            {
+                Parent = new ControlId { Type = @"Form", Name = editorId },
+                Type = @"TreeView",
+            };
+            JsonUiService.PerformAction(treeId, @"set_item_checked", nodePath);
             RunUI(() =>
             {
                 var node = tree.Nodes[0].Nodes.Cast<TreeNode>().First(n => n.Text == childText);
-                Assert.IsTrue(node.Checked, @"SetItemChecked did not check the tree node " + nodePath);
+                Assert.IsTrue(node.Checked, @"set_item_checked did not check the tree node " + nodePath);
             });
 
-            JsonUiService.SetItemSelected(editorId, @"TreeView", nodePath, true);
+            JsonUiService.PerformAction(treeId, @"set_item_selected", nodePath);
             RunUI(() => Assert.AreEqual(childText, tree.SelectedNode?.Text,
-                @"SetItemSelected did not select the tree node."));
+                @"set_item_selected did not select the tree node."));
 
             OkDialog(viewEditor, () => viewEditor.DialogResult = DialogResult.Cancel);
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));

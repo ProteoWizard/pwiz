@@ -114,6 +114,7 @@ namespace SkylineTool
         public void ClickFormButton(string formId, string button) { Call(nameof(ClickFormButton), formId, button); }
         public void ClickToolStripItem(string formId, string menuPath) { Call(nameof(ClickToolStripItem), formId, menuPath); }
         public void SetFormValue(string formId, string controlId, string value) { Call(nameof(SetFormValue), formId, controlId, value); }
+        public string GetFormValue(string formId, string controlId) { return Call(nameof(GetFormValue), formId, controlId); }
         public void SetGridText(string formId, string controlId, string text) { Call(nameof(SetGridText), formId, controlId, text); }
         public void SetCurrentCellAddress(string formId, string controlId, System.Drawing.Point cell) { Call(nameof(SetCurrentCellAddress), formId, controlId, cell); }
         public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }

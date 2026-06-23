@@ -666,6 +666,18 @@ public static class SkylineTools
         });
     }
 
+    [McpServerTool(Name = "skyline_get_form_value"),
+     Description("Get the current value of a control on an open form, found by its visible label: a text " +
+        "box's text, a combo box's selected item, a check/radio's checked state ('True'/'False'), or a " +
+        "CheckedListBox's checked items (their text, one per line). Pass null for controlId when the form " +
+        "has a single valued control.")]
+    public static string GetFormValue(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("The control's visible label, or null when the form has a single valued control")] string controlId)
+    {
+        return Invoke(connection => connection.GetFormValue(formId, controlId) ?? string.Empty);
+    }
+
     [McpServerTool(Name = "skyline_set_grid_text"),
      Description("Paste tab-separated values into a grid on a form, starting at its current cell, the " +
         "way typing/pasting there would. Move to the target cell first with skyline_set_current_cell_address. " +

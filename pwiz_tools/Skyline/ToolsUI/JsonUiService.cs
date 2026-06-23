@@ -557,9 +557,9 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Clicks a control on an open form -- a Button, a CheckBox or RadioButton, a custom
-        /// IButtonControl (e.g. a StartPage tile), a ToolStrip/menu/toolbar item, an item in a
-        /// CheckedListBox (its check is toggled), or any other control (matched by control name or
-        /// visible text) -- or accepts/cancels a native dialog (see <see cref="IJsonToolService"/>).
+        /// IButtonControl (e.g. a StartPage tile), a ToolStrip/menu/toolbar item, or any other clickable
+        /// control (matched by its visible label) -- or accepts/cancels a native dialog (see
+        /// <see cref="IJsonToolService"/>).
         /// </summary>
         public static void ClickFormButton(string formId, string button)
         {
@@ -580,8 +580,7 @@ namespace pwiz.Skyline.ToolsUI
             // the click pops is observed: a resulting alert is surfaced (throws its text) and a native
             // dialog (e.g. Save/Open) returns immediately rather than blocking on its modal. Each element
             // knows how to click itself (a button via BM_CLICK so an AutoCheck=false checkbox still
-            // toggles; a menu/toolbar item or tile via PerformClick; a tab by selecting it; a
-            // CheckedListBox item by toggling its check).
+            // toggles; a menu/toolbar item or tile via PerformClick; a tab by selecting it).
             var element = InvokeOnUiThread(() =>
             {
                 var form = FindFormById(formId);
@@ -748,6 +747,19 @@ namespace pwiz.Skyline.ToolsUI
                     ((IValueControl)element).SetValue(value);
                 });
             });
+        }
+
+        /// <summary>
+        /// Returns the current value of a control on a form, found by its Label: a text box's text, a combo
+        /// box's selected item, a check/radio's checked state, or a CheckedListBox's checked items (their
+        /// text, one per line). See <see cref="IJsonToolService"/>.
+        /// </summary>
+        public static string GetFormValue(string formId, string controlId)
+        {
+            ValidateFormIdFormat(formId);
+            return InvokeOnUiThread(() =>
+                FindElement(FindFormById(formId), controlId,
+                    e => e.SupportsAction(UiAction.GetValue), @"control with a value").Value);
         }
 
         /// <summary>
@@ -1320,6 +1332,9 @@ namespace pwiz.Skyline.ToolsUI
                     case UiAction.SetValue:
                     case UiAction.SetGridText:
                     case UiAction.SetCurrentCellAddress:
+                    case UiAction.SetSelectedIndex:
+                    case UiAction.SetItemChecked:
+                    case UiAction.SetItemSelected:
                         // Mutating actions: run inside the dialog-watch (a paste can raise a conversion
                         // alert) and on the UI thread.
                         object setResult = null;
@@ -2120,15 +2135,27 @@ namespace pwiz.Skyline.ToolsUI
             Exact = 3,    // matched the visible text after light normalization
         }
 
-        // How well a UiElement matches a requested key: by its visible Label, else (the weakest match) by
-        // its kind. The single ranking the verbs use to find the element to act on.
+        // How well a UiElement matches a requested key, by its visible Label ONLY (the verbs address a
+        // control the way a user reads it). The rule: prefer an exact match of the Label string; failing
+        // that, when key has no symbol characters, compare with all symbols stripped, case-insensitively
+        // (so "Name" matches a "Name:" label and "Next" a "Next >" button). When key itself contains a
+        // symbol, only the exact (case-sensitive) match counts.
         private static ControlMatchQuality ElementMatches(UiElement element, string key)
         {
-            var quality = MatchQuality(element.Label, key);
-            if (quality == ControlMatchQuality.None && MatchesControlType(element.ElementType, key))
-                return ControlMatchQuality.Type;
-            return quality;
+            if (element.Label == null)
+                return ControlMatchQuality.None;
+            if (string.Equals(element.Label, key, StringComparison.Ordinal))
+                return ControlMatchQuality.Exact;
+            if (!HasSymbol(key) && string.Equals(
+                    StripToAlphanumeric(element.Label), StripToAlphanumeric(key), StringComparison.CurrentCultureIgnoreCase))
+                return ControlMatchQuality.Stripped;
+            return ControlMatchQuality.None;
         }
+
+        // True if text contains a symbol character -- anything that is neither a letter, a digit, nor
+        // whitespace (e.g. ':', '>', '&', '.').
+        private static bool HasSymbol(string text) =>
+            !string.IsNullOrEmpty(text) && text.Any(c => !char.IsLetterOrDigit(c) && !char.IsWhiteSpace(c));
 
         // True if key names the type or any of its base types -- so "ListView" matches a ColumnListView
         // and "TreeView" an AvailableFieldsTree. Lets a caption-less control be referred to by its kind.

@@ -131,6 +131,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { CallClientVoid(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
     public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en") { return CallClient(c => c.GetTutorialImageBytes(name, imageFilename, language)); }
     public void SetFormValue(string formId, string controlId, string value) { CallClientVoid(c => c.SetFormValue(formId, controlId, value)); }
+    public string GetFormValue(string formId, string controlId) { return CallClient(c => c.GetFormValue(formId, controlId)); }
     public void SetGridText(string formId, string controlId, string text) { CallClientVoid(c => c.SetGridText(formId, controlId, text)); }
     public void SetCurrentCellAddress(string formId, string controlId, System.Drawing.Point cell) { CallClientVoid(c => c.SetCurrentCellAddress(formId, controlId, cell)); }
 

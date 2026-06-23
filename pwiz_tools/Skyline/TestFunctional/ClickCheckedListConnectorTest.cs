@@ -28,15 +28,17 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises two AI Connector behaviors on the Define Annotation dialog:
+    /// Exercises AI Connector behaviors on the Define Annotation dialog:
     ///   * <see cref="JsonUiService.SetFormValue"/> matched against a label ("Name") sets the editable
     ///     control the label labels (the Name TextBox), not the label itself;
-    ///   * <see cref="JsonUiService.ClickFormButton"/> on an item inside the "Applies to" CheckedListBox
-    ///     toggles that item's check (the items are not controls, so they are matched by display text).
+    ///   * checking an item in the "Applies to" CheckedListBox the way a user does -- a set_selected_index
+    ///     action to the item, then a click that toggles the selected item's check;
+    ///   * <see cref="JsonUiService.GetFormValue"/> reads the CheckedListBox's checked items.
     /// Matched by the English label/item text, so the test runs in en.
     /// </summary>
     [TestClass]
@@ -76,21 +78,45 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.IsFalse(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate)));
 
-            // ClickFormButton toggles the "Replicates" item in the Applies-to CheckedListBox on.
-            JsonUiService.ClickFormButton(dlgId, @"Replicates");
+            // The Applies-to CheckedListBox, addressed by its "Applies to" label. Find the index of the
+            // "Replicates" item to select it.
+            var appliesTo = new ControlId
+            {
+                Parent = new ControlId { Type = @"Form", Name = dlgId },
+                Label = @"Applies to",
+            };
+            int replicatesIndex = -1;
+            RunUI(() =>
+            {
+                var checkedListBox = (CheckedListBox) defineAnnotationDlg.Controls
+                    .Find(@"checkedListBoxAppliesTo", true).First();
+                for (int i = 0; i < checkedListBox.Items.Count; i++)
+                    if (checkedListBox.GetItemText(checkedListBox.Items[i]) == @"Replicates")
+                        replicatesIndex = i;
+            });
+            Assert.IsTrue(replicatesIndex >= 0, @"Expected a Replicates item in the Applies-to list.");
+
+            // Check it the way a user does: select the item, then click the CheckedListBox (a click
+            // toggles the selected item's check).
+            JsonUiService.PerformAction(appliesTo, @"set_selected_index", replicatesIndex.ToString());
+            JsonUiService.PerformAction(appliesTo, @"click", null);
             WaitForConditionUI(() =>
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate));
             RunUI(() => Assert.IsTrue(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
-                @"ClickFormButton did not check the Replicates item in the Applies-to list."));
+                @"Selecting and clicking did not check the Replicates item in the Applies-to list."));
 
-            // Clicking it again toggles it back off.
-            JsonUiService.ClickFormButton(dlgId, @"Replicates");
+            // GetFormValue on the CheckedListBox returns the checked items' text, one per line.
+            Assert.AreEqual(@"Replicates", JsonUiService.GetFormValue(dlgId, @"Applies to"),
+                @"GetFormValue did not return the checked Applies-to items.");
+
+            // Clicking it again toggles it back off (it is still the selected item).
+            JsonUiService.PerformAction(appliesTo, @"click", null);
             WaitForConditionUI(() =>
                 !defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate));
             RunUI(() => Assert.IsFalse(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
-                @"ClickFormButton did not uncheck the Replicates item on the second click."));
+                @"Clicking again did not uncheck the Replicates item."));
 
             OkDialog(defineAnnotationDlg, () => defineAnnotationDlg.DialogResult = DialogResult.Cancel);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);

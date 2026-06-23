@@ -33,7 +33,7 @@ namespace pwiz.Skyline.ToolsUI
     internal enum UiAction
     {
         GetActions, GetChildren, Click, SetValue, GetValue,
-        SetItemChecked, SetItemSelected, GetGridText, SetGridText, SetCurrentCellAddress
+        SetItemChecked, SetItemSelected, GetGridText, SetGridText, SetCurrentCellAddress, SetSelectedIndex
     }
 
     // Converts between a UiAction and its wire name (the snake_case string the connector uses).
@@ -301,55 +301,69 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A list-like control whose items can be checked or selected -- a CheckedListBox, ListBox,
-    /// ListView, or TreeView. Items are matched by their text (a TreeView item by a '>'-separated path).
-    /// The item logic lives in shared helpers so the verb and this element drive it the same way.</summary>
+    /// ListView, or TreeView. Items are matched by their text (a TreeView item by a '>'-separated path)
+    /// through the typed set_item_checked / set_item_selected verbs. A CheckedListBox item is toggled the
+    /// way a user does it: set_selected_index to the item, then click (which toggles the selected item's
+    /// check); its value is the checked items' text, one per line.</summary>
     internal sealed class ListContainerElement : ControlElement, IItemContainer
     {
         public ListContainerElement(Control control) : base(control) { }
-        // A CheckedListBox exposes its items as clickable children (so "click Replicates" toggles that
-        // item like a user's click). Other list/tree items are an internal detail, driven via the
-        // IItemContainer methods, so they are not surfaced as separate elements.
-        public override IEnumerable<UiElement> Children =>
-            Control is CheckedListBox checkedListBox
-                ? Enumerable.Range(0, checkedListBox.Items.Count)
-                    .Select(i => (UiElement) new CheckedListItemElement(checkedListBox, i))
-                : Enumerable.Empty<UiElement>();
+        private CheckedListBox CheckedList => Control as CheckedListBox;
+        // A CheckedListBox's value is the text of its checked items, one per line; other lists have none.
+        public override string Value => CheckedList == null ? null
+            : string.Join(Environment.NewLine,
+                CheckedList.CheckedItems.Cast<object>().Select(CheckedList.GetItemText));
         public void SetItemChecked(string item, bool isChecked) => JsonUiService.SetListItemChecked(Control, item, isChecked);
         public void SetItemSelected(string item, bool selected) => JsonUiService.SetListItemSelected(Control, item, selected);
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.SetItemChecked || action == UiAction.SetItemSelected || base.SupportsAction(action);
-        // These need an item and a state, which do not fit PerformAction's single value; they are driven
-        // through the typed methods (or get_children to reach a checkable item and click it).
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
+        public override bool SupportsAction(UiAction action)
         {
-            if (action == UiAction.SetItemChecked || action == UiAction.SetItemSelected)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Use skyline_set_item_checked / skyline_set_item_selected for '{0}', or get_children to reach an item and click it.",
-                    UiActions.ToName(action)));
-            return base.PerformAction(action, value, cancellationToken);
+            switch (action)
+            {
+                case UiAction.SetItemChecked:
+                case UiAction.SetItemSelected:
+                    return true;
+                case UiAction.SetSelectedIndex:
+                    return Control is ListControl; // ListBox / CheckedListBox have a SelectedIndex
+                case UiAction.Click:
+                case UiAction.GetValue:
+                    return CheckedList != null;
+                default:
+                    return base.SupportsAction(action);
+            }
         }
-    }
-
-    /// <summary>One item of a CheckedListBox -- clicking it toggles its check, the way a user's click on
-    /// a CheckOnClick item does.</summary>
-    internal sealed class CheckedListItemElement : UiElement, IClickable
-    {
-        private readonly CheckedListBox _list;
-        private readonly int _index;
-        public CheckedListItemElement(CheckedListBox list, int index) { _list = list; _index = index; }
-        public override string Name => string.Empty;
-        public override Type ElementType => _list.GetType();
-        public override string Label => _list.GetItemText(_list.Items[_index]);
-        public override bool IsEnabled => _list.Enabled;
-        public override bool IsVisible => _list.Visible;
-        public void Click() =>
-            JsonUiService.InvokeOnUiThread(() => _list.SetItemChecked(_index, !_list.GetItemChecked(_index)));
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.Click || base.SupportsAction(action);
         public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
-            if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value, cancellationToken);
+            switch (action)
+            {
+                case UiAction.SetSelectedIndex:
+                    JsonUiService.InvokeOnUiThread(() => ((ListControl) Control).SelectedIndex = UiValue.ToInt(value));
+                    return null;
+                case UiAction.Click:
+                    // A click on a CheckedListBox toggles the checked state of the selected item, the way
+                    // a user's click/space does. Move to the item first with set_selected_index.
+                    JsonUiService.InvokeOnUiThread(() =>
+                    {
+                        int index = CheckedList.SelectedIndex;
+                        if (index < 0)
+                            throw new ArgumentException(new LlmInstruction(
+                                @"No item is selected -- choose one first with set_selected_index."));
+                        CheckedList.SetItemChecked(index, !CheckedList.GetItemChecked(index));
+                    });
+                    return null;
+                case UiAction.GetValue:
+                    return Value;
+                // The value is the item (a CheckedListBox item by text, a TreeView item by '>'-path); the
+                // action checks/selects it. This is the path for a caption-less list/tree, addressed by a
+                // ControlId; the typed verbs (which also uncheck/deselect) stay for the common, labeled case.
+                case UiAction.SetItemChecked:
+                    SetItemChecked(value as string, true);
+                    return null;
+                case UiAction.SetItemSelected:
+                    SetItemSelected(value as string, true);
+                    return null;
+                default:
+                    return base.PerformAction(action, value, cancellationToken);
+            }
         }
     }
 
@@ -528,6 +542,18 @@ namespace pwiz.Skyline.ToolsUI
                 return new System.Drawing.Point(x, y);
             throw new ArgumentException(new LlmInstruction(
                 @"set_current_cell_address needs a point: the cell's column index as X and row index as Y."));
+        }
+
+        // The int a set_selected_index value carries: a real int (an in-process caller) or its text.
+        public static int ToInt(object value)
+        {
+            if (value is int i)
+                return i;
+            if (value is long l)
+                return (int) l;
+            if (int.TryParse(value?.ToString(), out var parsed))
+                return parsed;
+            throw new ArgumentException(new LlmInstruction(@"This action needs an integer value."));
         }
     }
 
