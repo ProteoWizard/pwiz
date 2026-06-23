@@ -525,6 +525,15 @@ namespace pwiz.OspreySharp
             var sb = new StringBuilder();
             sb.AppendLine(@"<html><head>");
             sb.AppendLine(@"<meta charset=""utf-8"">");
+            // Self-contained stylesheet (OspreySharp does not pull in Skyline's documentation
+            // stylesheet) so the generated tables render with borders in a browser.
+            sb.AppendLine(@"<style>");
+            sb.AppendLine(@"body { font-family: sans-serif; }");
+            sb.AppendLine(@"table { border-collapse: collapse; margin-bottom: 1em; }");
+            sb.AppendLine(@"th, td { border: 1px solid #999; padding: 2px 6px; text-align: left; vertical-align: top; }");
+            sb.AppendLine(@"th { background-color: #eee; }");
+            sb.AppendLine(@".RowType { font-weight: bold; font-size: larger; margin-top: 1em; }");
+            sb.AppendLine(@"</style>");
             sb.AppendLine(@"</head><body>");
             foreach (var block in UsageBlocks)
                 sb.Append(block.ToHtmlString());
