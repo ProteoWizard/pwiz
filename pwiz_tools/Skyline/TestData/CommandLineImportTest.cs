@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Common.CommandLine;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -61,7 +62,7 @@ namespace pwiz.SkylineTestData
             };
             var output = RunCommand(args);
 
-            AssertEx.Contains(output, new CommandArgs.ValueOutOfRangeDoubleException(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, badCutoff, 0, 1).Message);
+            AssertEx.Contains(output, new ValueOutOfRangeDoubleException(CommandArgs.ARG_IMPORT_PEPTIDE_SEARCH_CUTOFF, badCutoff, 0, 1).Message);
 
             args[3] = "--import-search-cutoff-score=" + Settings.Default.LibraryResultCutOff;
             output = RunCommand(args);
