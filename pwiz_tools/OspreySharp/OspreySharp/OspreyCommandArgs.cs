@@ -222,9 +222,23 @@ namespace pwiz.OspreySharp
         // (the Rust HPC split fans files across nodes, one file per process), so it gets its
         // own group rather than sitting under Distributed / HPC.
         public static readonly OspreyArgument ARG_PARALLEL_FILES = new OspreyArgument(@"parallel-files",
-            () => @"[<N>]", (c, p) => c._config.FileParallelism = string.IsNullOrEmpty(p.Value)
-                ? FileParallelism.Auto
-                : FileParallelism.Explicit(int.Parse(p.Value)));
+            () => @"[<N>]", (c, p) =>
+            {
+                if (string.IsNullOrEmpty(p.Value))
+                {
+                    c._config.FileParallelism = FileParallelism.Auto;
+                }
+                else
+                {
+                    // 0 is the value a user most naturally types to mean "off" --
+                    // map it to sequential rather than silently falling through to
+                    // auto. Positive N is an explicit concurrent-file count.
+                    int n = int.Parse(p.Value);
+                    c._config.FileParallelism = n <= 0
+                        ? FileParallelism.Sequential
+                        : FileParallelism.Explicit(n);
+                }
+            });
         public static readonly OspreyArgument ARG_THREADS = new OspreyArgument(@"threads",
             () => @"<count>", (c, p) => c._config.NThreads = int.Parse(p.Value));
 
@@ -349,13 +363,14 @@ namespace pwiz.OspreySharp
                 }
                 if (ReferenceEquals(matched, ARG_PARALLEL_FILES))
                 {
-                    // Optional value: consume the next token as the explicit count
-                    // ONLY when it is a non-flag positive integer; otherwise this is
-                    // auto mode and the token is left for normal processing (e.g. a
-                    // trailing positional mzML). Mirrors the --help [fmt] lookahead.
+                    // Optional value: consume the next token as the count ONLY when
+                    // it is a non-flag non-negative integer (0 = sequential, N = N
+                    // files); otherwise this is auto mode and the token is left for
+                    // normal processing (e.g. a trailing positional mzML). Mirrors
+                    // the --help [fmt] lookahead.
                     i++;
                     string parallelValue = null;
-                    if (i < args.Length && IsPositiveInteger(args[i]))
+                    if (i < args.Length && IsNonNegativeInteger(args[i]))
                     {
                         parallelValue = args[i];
                         i++;
@@ -493,12 +508,13 @@ namespace pwiz.OspreySharp
         }
 
         /// <summary>
-        /// True when <paramref name="token"/> is a plain positive integer (no sign,
-        /// digits only). Used by the <c>--parallel-files</c> optional-value lookahead
-        /// to tell an explicit count from auto-mode-plus-trailing-token; a leading '-'
-        /// is therefore correctly treated as the next flag, not a value.
+        /// True when <paramref name="token"/> is a plain non-negative integer (no
+        /// sign, digits only). Used by the <c>--parallel-files</c> optional-value
+        /// lookahead to tell an explicit count (including <c>0</c> = sequential) from
+        /// auto-mode-plus-trailing-token; a leading '-' is therefore correctly treated
+        /// as the next flag, not a value.
         /// </summary>
-        private static bool IsPositiveInteger(string token)
+        private static bool IsNonNegativeInteger(string token)
         {
             if (string.IsNullOrEmpty(token))
                 return false;
@@ -507,7 +523,7 @@ namespace pwiz.OspreySharp
                 if (c < '0' || c > '9')
                     return false;
             }
-            return int.TryParse(token, out int n) && n > 0;
+            return int.TryParse(token, out int n) && n >= 0;
         }
 
         private static double ParseDouble(string value, string flagName)

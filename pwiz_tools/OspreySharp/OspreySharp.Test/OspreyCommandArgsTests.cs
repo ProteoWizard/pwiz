@@ -106,6 +106,8 @@ namespace pwiz.OspreySharp.Test
             var explicitN = Parse(@"--parallel-files", @"4").FileParallelism;
             Assert.AreEqual(FileParallelismMode.Explicit, explicitN.Mode);
             Assert.AreEqual(4, explicitN.Count);
+            // 0 is the natural "off" -> sequential (consumed as a value, no stray warning).
+            Assert.AreEqual(FileParallelismMode.Sequential, Parse(@"--parallel-files", @"0").FileParallelism.Mode);
             var autoThenInput = Parse(@"--parallel-files", @"-i", @"a.mzML");
             Assert.AreEqual(FileParallelismMode.Auto, autoThenInput.FileParallelism.Mode);
             CollectionAssert.AreEqual(new[] { @"a.mzML" }, autoThenInput.InputFiles.ToArray());
