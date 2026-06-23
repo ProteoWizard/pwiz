@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Model
                             // unlabeled adduct (e.g. [M-H], [M+H]), not just charge-only ones, mirroring the
                             // derivation done when the precursor group is first created in GetMoleculeTransitionGroup.
                             var labeledAdduct = adduct;
-                            if (!adduct.HasIsotopeLabels && !tranGroup.CustomMolecule.HasChemicalFormula)
+                            if (!adduct.HasIsotopeLabels && !pep.CustomMolecule.HasChemicalFormula)
                             {
                                 var mzCalc = adduct.ApplyToMass(pep.CustomMolecule.MonoisotopicMass);
                                 if (!Equals(precursorMonoMz, mzCalc.Value))

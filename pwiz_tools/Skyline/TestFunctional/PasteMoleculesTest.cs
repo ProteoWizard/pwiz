@@ -148,6 +148,8 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             NewDocument();
+            TestHeavyPrecursorMultipleTransitionsNoFormulas();
+            TestHeavyPrecursorMultipleTransitionsNoFormulasPositive();
             TestMultipleFragmentsPerLinePaste();
             TestMultipleFragmentsPerLine();
             TestDuplicateFragmentOnLine();
@@ -171,7 +173,6 @@ namespace pwiz.SkylineTestFunctional
             TestLabelsNoFormulas();
             TestHeavyLightPairs();
             TestHeavyPrecursorNoFormulas();
-            TestHeavyPrecursorMultipleTransitionsNoFormulas();
             TestImportAllData(true);
             TestImportAllData(false);
             TestInconsistentMoleculeDescriptions();
@@ -2849,6 +2850,36 @@ namespace pwiz.SkylineTestFunctional
             var pastedDoc = PasteNewDocument(input); // New document, decline automanage to keep the explicit transitions
 
             // One molecule list, one molecule, two precursors (light 86.8 and heavy 87.9), two transitions each
+            AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 2, 4);
+            foreach (var tranGroup in pastedDoc.MoleculeTransitionGroups)
+            {
+                AssertEx.AreEqual(2, tranGroup.TransitionCount,
+                    string.Format("precursor {0} should have two transitions", tranGroup.PrecursorAdduct));
+            }
+            AssertEx.AreEqual(1, pastedDoc.MoleculeTransitionGroups.Count(t => !t.PrecursorAdduct.HasIsotopeLabels)); // light
+            AssertEx.AreEqual(1, pastedDoc.MoleculeTransitionGroups.Count(t => t.PrecursorAdduct.HasIsotopeLabels));  // inferred heavy
+            AssertEx.Serializable(pastedDoc);
+            NewDocument();
+        }
+
+        void TestHeavyPrecursorMultipleTransitionsNoFormulasPositive()
+        {
+            // Positive-mode counterpart of TestHeavyPrecursorMultipleTransitionsNoFormulas, confirming the fix
+            // is polarity- and adduct-agnostic: the matching gate keys on !HasIsotopeLabels, not charge-only, so
+            // a protonation adduct [M+H] behaves the same as the deprotonation [M-H] case. A mass-only molecule
+            // declared with [M+H] at two precursor m/z values (light 100.0, heavier 101.1 inferred as [M1.1+H]),
+            // each with two transitions, must group the two heavy transitions under a SINGLE heavy precursor.
+            // Unlike the [M-H] case, this list does not trip SkylineWindow.HandleSmallMoleculeAutomanage's
+            // heuristic (auto-pick refinement leaves the transition count unchanged), so no auto-manage prompt
+            // is offered - hence expectAutoManage:false.
+            var input =
+                "Molecule List Name,Molecule Name,Molecule Formula,Precursor Adduct,Precursor Mz,Precursor Charge,Explicit Retention Time,Explicit Retention Time Window,Product Mz,Product Charge,Product Adduct,Label Type\n" +
+                "AcideOrganique,Glucose,,M+H,100.0,1,1,1,50.0,1,M+,\n" +
+                "AcideOrganique,Glucose,,M+H,100.0,1,1,1,100.1,1,M+,\n" +
+                "AcideOrganique,Glucose,,M+H,101.1,1,1,1,51.0,1,M+,\n" +
+                "AcideOrganique,Glucose,,M+H,101.1,1,1,1,101.1,1,M+,\n";
+            var pastedDoc = PasteNewDocument(input, expectAutoManage:false);
+
             AssertEx.IsDocumentState(pastedDoc, null, 1, 1, 2, 4);
             foreach (var tranGroup in pastedDoc.MoleculeTransitionGroups)
             {
