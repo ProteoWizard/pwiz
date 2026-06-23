@@ -121,54 +121,23 @@ namespace pwiz.Skyline.ToolsUI
         public bool HasCapability =>
             this is IClickable || this is IValueControl || this is IItemContainer || this is IGridControl;
 
-        /// <summary>Whether this element supports the given action. Every element supports GetActions and
-        /// GetChildren; the rest depend on the capability interfaces it implements. Overridable.</summary>
-        public virtual bool SupportsAction(UiAction action)
-        {
-            switch (action)
-            {
-                case UiAction.GetActions:
-                case UiAction.GetChildren:
-                    return true;
-                case UiAction.Click:
-                    return this is IClickable;
-                case UiAction.SetValue:
-                case UiAction.GetValue:
-                    return this is IValueControl;
-                case UiAction.SetItemChecked:
-                case UiAction.SetItemSelected:
-                    return this is IItemContainer;
-                case UiAction.GetGridText:
-                case UiAction.SetGridText:
-                    return this is IGridControl;
-                default:
-                    return false;
-            }
-        }
+        /// <summary>Whether this element supports the given action. The base supports only the universal
+        /// GetActions and GetChildren; each kind of element overrides this to add the actions it can do.</summary>
+        public virtual bool SupportsAction(UiAction action) =>
+            action == UiAction.GetActions || action == UiAction.GetChildren;
 
         /// <summary>The actions this element supports, for discovery via GetActions / GetControls.</summary>
         public IEnumerable<UiAction> SupportedActions =>
             ((UiAction[]) Enum.GetValues(typeof(UiAction))).Where(SupportsAction);
 
-        /// <summary>Performs an action on this element. The action determines the type of <paramref
-        /// name="value"/> and of the result. GetActions and GetChildren are handled by the service (they
-        /// need the caller's ControlId), so this dispatches the element-intrinsic actions. Overridable.</summary>
+        /// <summary>Performs an action on this element (the action determines the type of <paramref
+        /// name="value"/> and of the result). Each kind of element overrides this to do its own actions,
+        /// calling base for the rest. GetActions and GetChildren are handled by the service (they need the
+        /// caller's ControlId), so they do not reach here.</summary>
         public virtual object PerformAction(UiAction action, object value)
         {
-            switch (action)
-            {
-                case UiAction.Click:
-                    ((IClickable) this).Click();
-                    return null;
-                case UiAction.SetValue:
-                    ((IValueControl) this).SetValue(value as string);
-                    return null;
-                case UiAction.GetValue:
-                    return ((IValueControl) this).GetValue();
-                default:
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"The action '{0}' is not supported on this element via PerformAction.", UiActions.ToName(action)));
-            }
+            throw new ArgumentException(LlmInstruction.Format(
+                @"The action '{0}' is not supported on this control.", UiActions.ToName(action)));
         }
     }
 
@@ -217,6 +186,13 @@ namespace pwiz.Skyline.ToolsUI
         // click that opens a modal does not block the caller -- the dialog-watch handles it.
         public virtual void Click() =>
             User32.SendMessage(Control.Handle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.Click || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            if (action == UiAction.Click) { Click(); return null; }
+            return base.PerformAction(action, value);
+        }
     }
 
     /// <summary>A checkbox: clickable (toggles via its handler) and value-settable (sets the checked state).</summary>
@@ -227,6 +203,18 @@ namespace pwiz.Skyline.ToolsUI
         public override string Value => _checkBox.Checked.ToString();
         public string GetValue() => Value;
         public void SetValue(string value) => _checkBox.Checked = UiValue.ParseBool(value);
+        // Click is added by ButtonElement; this adds the value actions.
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            switch (action)
+            {
+                case UiAction.SetValue: SetValue(value as string); return null;
+                case UiAction.GetValue: return GetValue();
+                default: return base.PerformAction(action, value);
+            }
+        }
     }
 
     /// <summary>A radio button: clicking/setting it checks it (WinForms unchecks its siblings).</summary>
@@ -237,6 +225,17 @@ namespace pwiz.Skyline.ToolsUI
         public override string Value => _radioButton.Checked.ToString();
         public string GetValue() => Value;
         public void SetValue(string value) => _radioButton.Checked = UiValue.ParseBool(value);
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            switch (action)
+            {
+                case UiAction.SetValue: SetValue(value as string); return null;
+                case UiAction.GetValue: return GetValue();
+                default: return base.PerformAction(action, value);
+            }
+        }
     }
 
     /// <summary>A text box -- a caption-less field named by its adjacent label.</summary>
@@ -249,6 +248,17 @@ namespace pwiz.Skyline.ToolsUI
         // A multi-line box parses/lays out on CRLF (what Enter inserts), so normalize bare newlines.
         public void SetValue(string value) =>
             _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value) : value;
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            switch (action)
+            {
+                case UiAction.SetValue: SetValue(value as string); return null;
+                case UiAction.GetValue: return GetValue();
+                default: return base.PerformAction(action, value);
+            }
+        }
     }
 
     /// <summary>A combo box -- value set by selecting the matching item.</summary>
@@ -265,6 +275,17 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"No item '{0}' in combo box {1}.", value, _comboBox.Name));
             _comboBox.SelectedIndex = index;
+        }
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            switch (action)
+            {
+                case UiAction.SetValue: SetValue(value as string); return null;
+                case UiAction.GetValue: return GetValue();
+                default: return base.PerformAction(action, value);
+            }
         }
     }
 
@@ -284,6 +305,18 @@ namespace pwiz.Skyline.ToolsUI
                 : Enumerable.Empty<UiElement>();
         public void SetItemChecked(string item, bool isChecked) => JsonUiService.SetListItemChecked(Control, item, isChecked);
         public void SetItemSelected(string item, bool selected) => JsonUiService.SetListItemSelected(Control, item, selected);
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.SetItemChecked || action == UiAction.SetItemSelected || base.SupportsAction(action);
+        // These need an item and a state, which do not fit PerformAction's single value; they are driven
+        // through the typed methods (or get_children to reach a checkable item and click it).
+        public override object PerformAction(UiAction action, object value)
+        {
+            if (action == UiAction.SetItemChecked || action == UiAction.SetItemSelected)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Use skyline_set_item_checked / skyline_set_item_selected for '{0}', or get_children to reach an item and click it.",
+                    UiActions.ToName(action)));
+            return base.PerformAction(action, value);
+        }
     }
 
     /// <summary>One item of a CheckedListBox -- clicking it toggles its check, the way a user's click on
@@ -300,6 +333,13 @@ namespace pwiz.Skyline.ToolsUI
         public override bool IsVisible => _list.Visible;
         public void Click() =>
             JsonUiService.InvokeOnUiThread(() => _list.SetItemChecked(_index, !_list.GetItemChecked(_index)));
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.Click || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            if (action == UiAction.Click) { Click(); return null; }
+            return base.PerformAction(action, value);
+        }
     }
 
     /// <summary>A custom IButtonControl that is not a WinForms ButtonBase (e.g. a StartPage tile) --
@@ -310,6 +350,13 @@ namespace pwiz.Skyline.ToolsUI
         public ClickableControlElement(Control control) : base(control) { _button = (IButtonControl) control; }
         public override string Label => Control.Text;
         public void Click() => JsonUiService.InvokeOnUiThread(() => _button.PerformClick());
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.Click || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            if (action == UiAction.Click) { Click(); return null; }
+            return base.PerformAction(action, value);
+        }
     }
 
     /// <summary>A ToolStrip (menu strip / toolbar) -- its items are its children.</summary>
@@ -349,6 +396,13 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
         public void Click() => JsonUiService.InvokeOnUiThread(() => _item.PerformClick());
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.Click || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            if (action == UiAction.Click) { Click(); return null; }
+            return base.PerformAction(action, value);
+        }
     }
 
     /// <summary>A grid -- a DataboundGridControl (e.g. the Document Grid) driven through its rich paste
@@ -377,6 +431,17 @@ namespace pwiz.Skyline.ToolsUI
             else
                 JsonUiService.SetDataGridViewText(_dataGridView, column, row, text);
         }
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.GetGridText || action == UiAction.SetGridText || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            if (action == UiAction.GetGridText)
+                return GetGridText(CancellationToken.None);
+            if (action == UiAction.SetGridText)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Use skyline_set_grid_text to set a cell on this grid -- it takes the column, row, and text."));
+            return base.PerformAction(action, value);
+        }
     }
 
     /// <summary>A tab page -- "clicking" it selects its tab on the parent TabControl.</summary>
@@ -392,6 +457,13 @@ namespace pwiz.Skyline.ToolsUI
                     @"Tab '{0}' is not on a tab control.", _tabPage.Text));
             tabControl.SelectedTab = _tabPage;
         });
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.Click || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value)
+        {
+            if (action == UiAction.Click) { Click(); return null; }
+            return base.PerformAction(action, value);
+        }
     }
 
     // Small value helpers shared by the value elements.
