@@ -55,7 +55,9 @@ namespace pwiz.OspreySharp
 
             if (args.Length == 0)
             {
-                OspreyCommandArgs.PrintUsage(null);
+                // No args is a usage error (exit 1), so the prompt goes to stderr; an explicit
+                // --help instead writes to stdout (see OspreyCommandArgs.PrintUsage).
+                OspreyCommandArgs.PrintUsage(null, Console.Error);
                 return 1;
             }
 

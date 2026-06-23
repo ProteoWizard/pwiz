@@ -473,17 +473,19 @@ namespace pwiz.OspreySharp
         // --- Help rendering (generated from the declarations; cannot drift) ---------------
 
         /// <summary>
-        /// Writes generated usage help to stderr (matching the former PrintUsage channel).
-        /// <paramref name="formatType"/>: null/"unicode" = unicode tables (default, like Skyline),
-        /// "ascii" = lower-128 ascii tables, "sections" = section names, "html" = HTML, anything
-        /// else = a section filter.
+        /// Writes generated usage help to <paramref name="writer"/> (default stdout, so an explicit
+        /// `--help [html]` can be captured with a plain `>` redirect; Main passes stderr for the
+        /// no-args usage-error path). <paramref name="formatType"/>: null/"unicode" = unicode tables
+        /// (default, like Skyline), "ascii" = lower-128 ascii tables, "sections" = section names,
+        /// "html" = HTML, anything else = a section filter.
         /// </summary>
-        internal static void PrintUsage(string formatType)
+        internal static void PrintUsage(string formatType, TextWriter writer = null)
         {
+            writer = writer ?? Console.Out;
             if (string.Equals(formatType, @"html", StringComparison.OrdinalIgnoreCase))
-                Console.Error.Write(GenerateUsageHtml());
+                writer.Write(GenerateUsageHtml());
             else
-                Console.Error.Write(BuildUsage(formatType));
+                writer.Write(BuildUsage(formatType));
         }
 
         internal static string BuildUsage(string formatType)
