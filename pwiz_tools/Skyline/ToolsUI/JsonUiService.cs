@@ -1247,7 +1247,7 @@ namespace pwiz.Skyline.ToolsUI
                 // Report form-level controls; menu and list items (clickable pseudo-elements) are an
                 // internal detail of the walk, not controls to list here.
                 return UiElementFactory.For(form).SelfAndDescendants()
-                    .Where(element => element is ControlElement && element.Actions.Any())
+                    .Where(element => element is ControlElement && element.HasCapability)
                     .Select(element => new ControlInfo
                     {
                         Id = ToControlId(element, formId),
@@ -1269,9 +1269,13 @@ namespace pwiz.Skyline.ToolsUI
 
         // The locator a caller can pass back to refer to this element (e.g. to PerformAction). The owning
         // form is the Parent -- a ControlId of Type "Form" naming the form id from GetOpenForms.
-        private static ControlId ToControlId(UiElement element, string formId) => new ControlId
+        private static ControlId ToControlId(UiElement element, string formId) =>
+            ControlIdFor(element, FormControlId(formId));
+
+        // The locator for an element whose container is given by parentId (so the chain is preserved).
+        private static ControlId ControlIdFor(UiElement element, ControlId parentId) => new ControlId
         {
-            Parent = FormControlId(formId),
+            Parent = parentId,
             Name = NullIfEmpty(element.Name),
             Label = NullIfEmpty(CleanLabel(element.Label)),
             Type = element.ElementType.Name,
@@ -1282,37 +1286,45 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         /// The most general way to interact with a control, menu item, or list item (see
         /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="controlId"/> refers to,
-        /// then perform <paramref name="action"/> ("click", "set_value", or "get_value") on it.
+        /// then perform <paramref name="action"/> on it. The action determines the value and return types:
+        /// "get_actions" -> string[]; "get_children" -> ControlId[]; "click" -> null; "set_value" (string
+        /// value) -> null; "get_value" -> string.
         /// </summary>
-        public static string PerformAction(ControlId controlId, string action, string value)
+        public static object PerformAction(ControlId controlId, string action, object value)
         {
-            var normalized = (action ?? string.Empty).Trim().ToLowerInvariant();
+            // Accept any case / underscore style, so "get_actions", "GetActions", "getActions" all match.
+            var normalized = (action ?? string.Empty).Trim().ToLowerInvariant().Replace(@"_", string.Empty);
             switch (normalized)
             {
+                case @"getactions":
+                    return InvokeOnUiThread(() => ResolveControlId(controlId).Actions.ToArray());
+                case @"getchildren":
+                    return InvokeOnUiThread(() => ResolveControlId(controlId).Children
+                        .Select(child => ControlIdFor(child, controlId)).ToArray());
                 case @"click":
                     var clickable = InvokeOnUiThread(() => RequireCapability<IClickable>(ResolveControlId(controlId), action));
                     RunWithDialogWatch(() =>
                     {
                         // The element clicks itself (each handles its own threading -- see ClickFormButton).
-                        ((IClickable)clickable).Click();
+                        clickable.Click();
                         return true;
                     });
-                    return string.Empty;
-                case @"set_value":
-                case @"set_form_value":
+                    return null;
+                case @"setvalue":
+                    var stringValue = value as string ?? value?.ToString();
                     RunWithDialogWatch(() =>
                     {
                         InvokeOnUiThread(() =>
-                            RequireCapability<IValueControl>(ResolveControlId(controlId), action).SetValue(value));
+                            RequireCapability<IValueControl>(ResolveControlId(controlId), action).SetValue(stringValue));
                         return true;
                     });
-                    return string.Empty;
-                case @"get_value":
+                    return null;
+                case @"getvalue":
                     return InvokeOnUiThread(() =>
                         RequireCapability<IValueControl>(ResolveControlId(controlId), action).GetValue());
                 default:
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"Unsupported action '{0}'. Supported actions: click, set_value, get_value.", action));
+                        @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
             }
         }
 

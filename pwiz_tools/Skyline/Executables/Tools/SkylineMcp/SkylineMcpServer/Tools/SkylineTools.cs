@@ -559,14 +559,14 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_perform_action"),
      Description("The most general way to interact with a control, menu item, or list item: locate it by " +
         "its Label (the visible text that names it), its Type (for a caption-less control, e.g. " +
-        "\"TreeView\"), and/or its Name, then perform an action. Set 'parent' to narrow the search to " +
-        "within another control (e.g. an item inside a list, or a submenu item inside a menu). Only the " +
-        "properties you set are used to match. Actions: 'click'; 'set_value' (uses 'value'); 'get_value' " +
-        "(returns the current value). Discover controls and how to address them with skyline_get_controls; " +
-        "the typed tools (skyline_click_form_button, skyline_set_form_value, ...) remain for common cases.")]
+        "\"TreeView\"), and/or its Name, then perform an action. Only the properties you set are used to " +
+        "match. Actions: 'get_actions' (lists the actions this control supports); 'get_children' (lists " +
+        "child controls as JSON); 'click'; 'set_value' (uses 'value'); 'get_value' (returns the current " +
+        "value). Discover controls and how to address them with skyline_get_controls; the typed tools " +
+        "(skyline_click_form_button, skyline_set_form_value, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action to perform: click, set_value, or get_value")] string action,
+        [Description("Action: get_actions, get_children, click, set_value, or get_value")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Internal control name, e.g. one echoed by skyline_get_controls (optional)")] string name = null,
@@ -581,8 +581,9 @@ public static class SkylineTools
                 Type = type,
                 Name = name,
             };
-            var result = connection.PerformAction(controlId, action, value);
-            return string.IsNullOrEmpty(result) ? $"Performed '{action}'." : result;
+            // The result is the action's return (raw JSON for arrays, a string for get_value, or empty).
+            var text = connection.PerformAction(controlId, action, value)?.ToString();
+            return string.IsNullOrEmpty(text) ? $"Performed '{action}'." : text;
         });
     }
 

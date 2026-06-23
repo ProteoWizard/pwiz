@@ -97,7 +97,8 @@ namespace SkylineTool
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
         public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
         public ControlInfo[] GetControls(string formId) { return CallTyped<ControlInfo[]>(nameof(GetControls), formId); }
-        public string PerformAction(ControlId controlId, string action, string value) { return Call(nameof(PerformAction), controlId, action, value); }
+        // Returns the result as raw JSON text (object/array) or a string; the caller interprets it by action.
+        public object PerformAction(ControlId controlId, string action, object value) { return Call(nameof(PerformAction), controlId, action, value); }
         public string GetUiMode() { return Call(nameof(GetUiMode)); }
         public UndoRedoEntry[] GetUndoRedo() { return CallTyped<UndoRedoEntry[]>(nameof(GetUndoRedo)); }
 

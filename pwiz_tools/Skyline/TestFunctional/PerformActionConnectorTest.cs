@@ -64,15 +64,26 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => Assert.AreEqual(@"MyAnnotation", NameTextBox(defineAnnotationDlg).Text,
                 @"PerformAction set_value did not set the name box."));
 
-            // get_value reads it back.
-            Assert.AreEqual(@"MyAnnotation", JsonUiService.PerformAction(nameById, @"get_value", null),
+            // get_value reads it back (the return is typed per the action -- a string here).
+            Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(nameById, @"get_value", null),
                 @"PerformAction get_value did not return the name box value.");
+
+            // get_actions: every control lists what it supports (a string[]).
+            var actions = (string[]) JsonUiService.PerformAction(nameById, @"get_actions", null);
+            CollectionAssert.Contains(actions, @"set_value");
+            CollectionAssert.Contains(actions, @"get_children");
+
+            // get_children: returns the children as ControlId[], each parented to the queried control.
+            var formChildren = (ControlId[]) JsonUiService.PerformAction(formId, @"get_children", null);
+            Assert.IsTrue(formChildren.Length > 0, @"Expected the form to report child controls.");
+            Assert.IsTrue(formChildren.All(c => ReferenceEquals(c.Parent, formId)),
+                @"Each child's Parent should be the queried control.");
 
             // Round-trip: the ControlId GetControls returns (carrying the Name) resolves the same control.
             var nameInfo = JsonUiService.GetControls(dlgId)
                 .First(c => c.Id.Type == @"TextBox" && c.Id.Label == @"Name");
             Assert.IsFalse(string.IsNullOrEmpty(nameInfo.Id.Name), @"Expected GetControls to echo the control Name.");
-            Assert.AreEqual(@"MyAnnotation", JsonUiService.PerformAction(nameInfo.Id, @"get_value", null),
+            Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(nameInfo.Id, @"get_value", null),
                 @"PerformAction did not resolve the control by its Name.");
 
             // An unsupported action on a control reports a clear error rather than acting.

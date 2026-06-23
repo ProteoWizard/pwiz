@@ -75,6 +75,11 @@ namespace pwiz.Skyline.ToolsUI
                 yield return descendant;
         }
 
+        /// <summary>True if this element can be clicked, value-set, item-checked, or is a grid -- i.e.
+        /// it does something beyond the universal get_actions/get_children. Used to filter GetControls.</summary>
+        public bool HasCapability =>
+            this is IClickable || this is IValueControl || this is IItemContainer || this is IGridControl;
+
         /// <summary>The actions this element supports (the PerformAction verbs), for discovery via
         /// GetControls. "click", "set_value", and "get_value" can be driven through PerformAction; the
         /// item and grid actions are driven through their typed methods.</summary>
@@ -82,6 +87,9 @@ namespace pwiz.Skyline.ToolsUI
         {
             get
             {
+                // Every element supports these.
+                yield return @"get_actions";
+                yield return @"get_children";
                 if (this is IClickable) yield return @"click";
                 if (this is IValueControl) { yield return @"set_value"; yield return @"get_value"; }
                 if (this is IItemContainer) { yield return @"set_item_checked"; yield return @"set_item_selected"; }
