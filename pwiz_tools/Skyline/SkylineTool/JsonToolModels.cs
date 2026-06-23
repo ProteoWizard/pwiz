@@ -328,17 +328,17 @@ namespace SkylineTool
     }
 
     /// <summary>
-    /// A locator that refers to a control, menu item, or list item. Only the properties that are set are
-    /// used to find the match, so a caller can pass as little as needed: a <see cref="Label"/> (the visible
-    /// text that names it), a <see cref="Type"/> for a caption-less control ("TreeView"), and/or a
-    /// <see cref="Name"/> (the internal control name, e.g. one echoed back by GetControls). <see cref="Form"/>
-    /// is the owning form's id (from GetOpenForms). <see cref="Parent"/> narrows the search to within
-    /// another control -- e.g. an item inside a list, or a submenu item inside a menu.
+    /// A locator that refers to a control, menu item, or list item -- or a form. Only the properties that
+    /// are set are used to find the match, so a caller can pass as little as needed: a <see cref="Label"/>
+    /// (the visible text that names it), a <see cref="Type"/> for a caption-less control ("TreeView"),
+    /// and/or a <see cref="Name"/> (the internal control name, e.g. one echoed back by GetControls).
+    /// <see cref="Parent"/> narrows the search to within another control. It is also how the owning form is
+    /// given: the chain bottoms out at a form -- a ControlId with <see cref="Type"/> "Form" and
+    /// <see cref="Name"/> set to the form id from GetOpenForms -- so a form has a well-defined ControlId too.
     /// </summary>
     public class ControlId
     {
         public ControlId Parent { get; set; }
-        public string Form { get; set; }
         public string Name { get; set; }
         public string Label { get; set; }
         public string Type { get; set; }

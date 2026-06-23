@@ -574,7 +574,13 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            var controlId = new ControlId { Form = form, Label = label, Type = type, Name = name };
+            var controlId = new ControlId
+            {
+                Parent = new ControlId { Type = "Form", Name = form },
+                Label = label,
+                Type = type,
+                Name = name,
+            };
             var result = connection.PerformAction(controlId, action, value);
             return string.IsNullOrEmpty(result) ? $"Performed '{action}'." : result;
         });

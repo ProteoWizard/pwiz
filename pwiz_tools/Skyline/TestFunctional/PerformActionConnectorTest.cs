@@ -55,8 +55,11 @@ namespace pwiz.SkylineTestFunctional
             string dlgId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
 
+            // The form is referred to by a ControlId of Type "Form"; controls hang off it as Parent.
+            var formId = new ControlId { Type = @"Form", Name = dlgId };
+
             // set_value: locate the name box by the label that names it, set its value.
-            var nameById = new ControlId { Form = dlgId, Label = @"Name" };
+            var nameById = new ControlId { Parent = formId, Label = @"Name" };
             JsonUiService.PerformAction(nameById, @"set_value", @"MyAnnotation");
             RunUI(() => Assert.AreEqual(@"MyAnnotation", NameTextBox(defineAnnotationDlg).Text,
                 @"PerformAction set_value did not set the name box."));
@@ -78,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
 
             // click: close the dialog by clicking its Cancel button, located by label.
             OkDialog(defineAnnotationDlg, () =>
-                JsonUiService.PerformAction(new ControlId { Form = dlgId, Label = @"Cancel" }, @"click", null));
+                JsonUiService.PerformAction(new ControlId { Parent = formId, Label = @"Cancel" }, @"click", null));
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);
         }

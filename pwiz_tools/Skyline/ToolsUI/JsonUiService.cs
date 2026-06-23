@@ -1267,14 +1267,17 @@ namespace pwiz.Skyline.ToolsUI
         private static string CleanLabel(string text) =>
             string.IsNullOrEmpty(text) ? text : NormalizeLabel(text).TrimEnd(' ', ':');
 
-        // The locator a caller can pass back to refer to this element (e.g. to PerformAction).
+        // The locator a caller can pass back to refer to this element (e.g. to PerformAction). The owning
+        // form is the Parent -- a ControlId of Type "Form" naming the form id from GetOpenForms.
         private static ControlId ToControlId(UiElement element, string formId) => new ControlId
         {
-            Form = formId,
+            Parent = FormControlId(formId),
             Name = NullIfEmpty(element.Name),
             Label = NullIfEmpty(CleanLabel(element.Label)),
             Type = element.ElementType.Name,
         };
+
+        private static ControlId FormControlId(string formId) => new ControlId { Type = @"Form", Name = formId };
 
         /// <summary>
         /// The most general way to interact with a control, menu item, or list item (see
@@ -1332,18 +1335,21 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (controlId == null)
                 throw new ArgumentException(new LlmInstruction(@"A controlId is required."));
+
+            // The chain bottoms out at a form: a root ControlId (no Parent) names the form -- its Name is
+            // the form id from GetOpenForms (its Type is "Form"). Everything else is found within a Parent.
+            if (controlId.Parent == null)
+            {
+                if (string.IsNullOrEmpty(controlId.Name))
+                    throw new ArgumentException(new LlmInstruction(
+                        @"The root of a controlId must name a form: Type 'Form' and Name set to the form id from skyline_get_open_forms."));
+                return UiElementFactory.For(FindFormById(controlId.Name));
+            }
             if (controlId.Name == null && controlId.Label == null && controlId.Type == null)
                 throw new ArgumentException(new LlmInstruction(
                     @"A controlId needs at least a Name, Label, or Type to identify a control."));
 
-            IEnumerable<UiElement> scope;
-            if (controlId.Parent != null)
-                scope = ResolveControlId(controlId.Parent).SelfAndDescendants().Skip(1);
-            else if (!string.IsNullOrEmpty(controlId.Form))
-                scope = UiElementFactory.For(FindFormById(controlId.Form)).SelfAndDescendants();
-            else
-                throw new ArgumentException(new LlmInstruction(@"A controlId needs a Form (or a Parent)."));
-
+            var scope = ResolveControlId(controlId.Parent).SelfAndDescendants().Skip(1);
             UiElement best = null;
             var bestQuality = ControlMatchQuality.None;
             var bestInteractable = false;
