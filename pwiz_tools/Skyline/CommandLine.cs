@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.PanoramaClient;
 using pwiz.Common.Collections;
+using pwiz.Common.CommandLine;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -4824,7 +4825,7 @@ namespace pwiz.Skyline
             if (skylineFile == null)
             {
                 // Mimic the usage error before --new was allowed inside running Skyline UI
-                _out.WriteLine(Resources.Error___0_, new CommandArgs.ValueMissingException(CommandArgs.ARG_NEW).Message);
+                _out.WriteLine(Resources.Error___0_, new ValueMissingException(CommandArgs.ARG_NEW).Message);
                 return null;
             }
             return NewSkyFile(skylineFile, overwrite) ? _doc : null;
