@@ -44,6 +44,9 @@ namespace pwiz.Common.CommandLine
         private readonly Func<string[]> _dynamicValues;
 
         public string Name { get; private set; }
+        // Optional short alias (e.g. "i" for "--input", surfaced as "-i"). Used by hosts whose
+        // tokenizer accepts single-dash short flags; the long Name remains the canonical identifier.
+        public string ShortName { get; set; }
         public string AppliesTo { get; set; }
         public string Description
         {
@@ -91,10 +94,13 @@ namespace pwiz.Common.CommandLine
         {
             get
             {
-                var retValue = ArgumentText;
+                // Hosts that set a ShortName (e.g. OspreySharp's -i) get it shown alongside the
+                // long form: "-i, --input ...". Skyline leaves ShortName null, so this prefix is
+                // empty and the rendered text is unchanged.
+                var retValue = (ShortName != null ? @"-" + ShortName + @", " : string.Empty) + ArgumentText;
                 if (ValueExample != null)
                 {
-                    var valueText = '=' + (WrapValue ? Environment.NewLine : string.Empty) + ValueExample();
+                    var valueText = ArgUsage.ArgumentValueSeparator + (WrapValue ? Environment.NewLine : string.Empty) + ValueExample();
                     if (OptionalValue)
                         valueText = '[' + valueText + ']';
                     retValue += valueText;

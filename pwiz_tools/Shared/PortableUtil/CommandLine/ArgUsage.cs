@@ -58,6 +58,14 @@ namespace pwiz.Common.CommandLine
         public const string FORMAT_NO_BORDERS = "no-borders";
 
         /// <summary>
+        /// Separator rendered between an argument and its value example in usage help
+        /// (e.g. <c>--name=&lt;value&gt;</c>). Defaults to <c>"="</c> for hosts whose grammar is
+        /// <c>--name=value</c> (Skyline); a host with space-separated values (OspreySharp) sets
+        /// it to a space so the generated help matches what its parser actually accepts.
+        /// </summary>
+        public static string ArgumentValueSeparator { get; set; } = "=";
+
+        /// <summary>
         /// Host-supplied descriptions, headers and value-error messages. Defaults to a provider
         /// that throws: descriptions/headers/error text are inherently host-specific, so a host
         /// that renders usage or reports a value error MUST install one. Failing loudly here turns
