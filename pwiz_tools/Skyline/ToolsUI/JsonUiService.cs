@@ -1254,7 +1254,7 @@ namespace pwiz.Skyline.ToolsUI
                         Value = element.Value,
                         Enabled = element.IsEnabled,
                         Visible = element.IsVisible,
-                        Actions = element.Actions.ToArray(),
+                        Actions = element.SupportedActions.Select(UiActions.ToName).ToArray(),
                     })
                     .ToArray();
             });
@@ -1292,52 +1292,53 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static object PerformAction(ControlId controlId, string action, object value)
         {
-            // Accept any case / underscore style, so "get_actions", "GetActions", "getActions" all match.
-            var normalized = (action ?? string.Empty).Trim().ToLowerInvariant().Replace(@"_", string.Empty);
-            switch (normalized)
+            if (!UiActions.TryParse(action, out var uiAction))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
+            switch (uiAction)
             {
-                case @"getactions":
-                    return InvokeOnUiThread(() => ResolveControlId(controlId).Actions.ToArray());
-                case @"getchildren":
+                // GetActions/GetChildren need the caller's ControlId (to name the children), so the service
+                // handles them; the element handles the operational actions through its PerformAction.
+                case UiAction.GetActions:
+                    return InvokeOnUiThread(() => ResolveControlId(controlId).SupportedActions.Select(UiActions.ToName).ToArray());
+                case UiAction.GetChildren:
                     return InvokeOnUiThread(() => ResolveControlId(controlId).Children
                         .Select(child => ControlIdFor(child, controlId)).ToArray());
-                case @"click":
-                    var clickable = InvokeOnUiThread(() => RequireCapability<IClickable>(ResolveControlId(controlId), action));
+                case UiAction.Click:
+                    // A click runs inside the dialog-watch (the element handles its own threading); resolve
+                    // and verify first on the UI thread.
+                    var clickElement = InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction));
                     RunWithDialogWatch(() =>
                     {
-                        // The element clicks itself (each handles its own threading -- see ClickFormButton).
-                        clickable.Click();
+                        clickElement.PerformAction(uiAction, value);
                         return true;
                     });
                     return null;
-                case @"setvalue":
-                    var stringValue = value as string ?? value?.ToString();
+                case UiAction.SetValue:
+                    object setResult = null;
                     RunWithDialogWatch(() =>
                     {
-                        InvokeOnUiThread(() =>
-                            RequireCapability<IValueControl>(ResolveControlId(controlId), action).SetValue(stringValue));
+                        setResult = InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction).PerformAction(uiAction, value));
                         return true;
                     });
-                    return null;
-                case @"getvalue":
-                    return InvokeOnUiThread(() =>
-                        RequireCapability<IValueControl>(ResolveControlId(controlId), action).GetValue());
+                    return setResult;
                 default:
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
+                    // Read-only / other actions: resolve, verify, perform on the UI thread.
+                    return InvokeOnUiThread(() => RequireAction(ResolveControlId(controlId), uiAction).PerformAction(uiAction, value));
             }
         }
 
-        // Verifies the resolved element is interactable and supports the capability the action needs,
-        // returning it cast to that capability. Throws a clear error (listing the element's actions) if not.
-        private static T RequireCapability<T>(UiElement element, string action) where T : class
+        // Verifies the resolved element is interactable and supports the action, returning it. Throws a
+        // clear error (listing the element's actions) if it does not.
+        private static UiElement RequireAction(UiElement element, UiAction action)
         {
             VerifyInteractable(element);
-            if (element is T capability)
-                return capability;
+            if (element.SupportsAction(action))
+                return element;
             throw new ArgumentException(LlmInstruction.Format(
                 @"The control '{0}' does not support the action '{1}'. It supports: {2}.",
-                element.Label ?? element.Name, action, string.Join(@", ", element.Actions)));
+                element.Label ?? element.Name, UiActions.ToName(action),
+                string.Join(@", ", element.SupportedActions.Select(UiActions.ToName))));
         }
 
         // Resolves a ControlId to the single element it refers to, using only the properties that are set.

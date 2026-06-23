@@ -29,6 +29,47 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
+    // The actions a UiElement can be asked to do (see UiElement.SupportsAction / PerformAction). Every
+    // element supports GetActions and GetChildren; the rest depend on the kind of control.
+    internal enum UiAction
+    {
+        GetActions, GetChildren, Click, SetValue, GetValue,
+        SetItemChecked, SetItemSelected, GetGridText, SetGridText
+    }
+
+    // Converts between a UiAction and its wire name (the snake_case string the connector uses).
+    internal static class UiActions
+    {
+        public static string ToName(UiAction action)
+        {
+            var name = action.ToString();
+            var sb = new System.Text.StringBuilder();
+            for (int i = 0; i < name.Length; i++)
+            {
+                if (i > 0 && char.IsUpper(name[i]))
+                    sb.Append('_');
+                sb.Append(char.ToLowerInvariant(name[i]));
+            }
+            return sb.ToString();
+        }
+
+        // Parses a wire name case- and underscore-insensitively, so "get_actions"/"GetActions" both work.
+        public static bool TryParse(string name, out UiAction action)
+        {
+            var normalized = (name ?? string.Empty).Replace(@"_", string.Empty).Trim();
+            foreach (UiAction candidate in Enum.GetValues(typeof(UiAction)))
+            {
+                if (string.Equals(candidate.ToString(), normalized, StringComparison.OrdinalIgnoreCase))
+                {
+                    action = candidate;
+                    return true;
+                }
+            }
+            action = default(UiAction);
+            return false;
+        }
+    }
+
     // Capability interfaces -- what the user (and so the connector) can DO with an element. A verb asks
     // for the capability it needs; the element supplies the behavior, so the verb does not switch on type.
     internal interface IClickable { void Click(); }
@@ -80,20 +121,53 @@ namespace pwiz.Skyline.ToolsUI
         public bool HasCapability =>
             this is IClickable || this is IValueControl || this is IItemContainer || this is IGridControl;
 
-        /// <summary>The actions this element supports (the PerformAction verbs), for discovery via
-        /// GetControls. "click", "set_value", and "get_value" can be driven through PerformAction; the
-        /// item and grid actions are driven through their typed methods.</summary>
-        public IEnumerable<string> Actions
+        /// <summary>Whether this element supports the given action. Every element supports GetActions and
+        /// GetChildren; the rest depend on the capability interfaces it implements. Overridable.</summary>
+        public virtual bool SupportsAction(UiAction action)
         {
-            get
+            switch (action)
             {
-                // Every element supports these.
-                yield return @"get_actions";
-                yield return @"get_children";
-                if (this is IClickable) yield return @"click";
-                if (this is IValueControl) { yield return @"set_value"; yield return @"get_value"; }
-                if (this is IItemContainer) { yield return @"set_item_checked"; yield return @"set_item_selected"; }
-                if (this is IGridControl) { yield return @"get_grid_text"; yield return @"set_grid_text"; }
+                case UiAction.GetActions:
+                case UiAction.GetChildren:
+                    return true;
+                case UiAction.Click:
+                    return this is IClickable;
+                case UiAction.SetValue:
+                case UiAction.GetValue:
+                    return this is IValueControl;
+                case UiAction.SetItemChecked:
+                case UiAction.SetItemSelected:
+                    return this is IItemContainer;
+                case UiAction.GetGridText:
+                case UiAction.SetGridText:
+                    return this is IGridControl;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>The actions this element supports, for discovery via GetActions / GetControls.</summary>
+        public IEnumerable<UiAction> SupportedActions =>
+            ((UiAction[]) Enum.GetValues(typeof(UiAction))).Where(SupportsAction);
+
+        /// <summary>Performs an action on this element. The action determines the type of <paramref
+        /// name="value"/> and of the result. GetActions and GetChildren are handled by the service (they
+        /// need the caller's ControlId), so this dispatches the element-intrinsic actions. Overridable.</summary>
+        public virtual object PerformAction(UiAction action, object value)
+        {
+            switch (action)
+            {
+                case UiAction.Click:
+                    ((IClickable) this).Click();
+                    return null;
+                case UiAction.SetValue:
+                    ((IValueControl) this).SetValue(value as string);
+                    return null;
+                case UiAction.GetValue:
+                    return ((IValueControl) this).GetValue();
+                default:
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"The action '{0}' is not supported on this element via PerformAction.", UiActions.ToName(action)));
             }
         }
     }
