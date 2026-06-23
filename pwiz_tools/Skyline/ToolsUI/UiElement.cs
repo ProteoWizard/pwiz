@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Util.Extensions;
@@ -182,10 +181,14 @@ namespace pwiz.Skyline.ToolsUI
     {
         public ButtonElement(Control control) : base(control) { }
         public override string Label => Control.Text;
-        // BM_CLICK is sent cross-thread (it is thread-safe and reads an already-created handle), so a
-        // click that opens a modal does not block the caller -- the dialog-watch handles it.
+        // BM_CLICK is POSTED (not sent) cross-thread: like a real user click it returns to the message
+        // loop at once. A click that opens a modal dialog must not block the worker thread until that
+        // modal closes -- SendMessage would, because the button's WndProc runs the modal loop before it
+        // returns, which pins the worker and wedges the single-threaded JsonTool server behind the modal.
+        // The main thread runs the posted click when it next pumps; the resulting dialog is then driven by
+        // later commands, exactly like the asynchronous main-menu path.
         public virtual void Click() =>
-            User32.SendMessage(Control.Handle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+            User32.PostMessageA(Control.Handle, User32.WinMessageType.BM_CLICK, 0, 0);
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.Click || base.SupportsAction(action);
         public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
