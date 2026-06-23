@@ -525,14 +525,16 @@ namespace pwiz.OspreySharp
             var sb = new StringBuilder();
             sb.AppendLine(@"<html><head>");
             sb.AppendLine(@"<meta charset=""utf-8"">");
-            // Self-contained stylesheet (OspreySharp does not pull in Skyline's documentation
-            // stylesheet) so the generated tables render with borders in a browser.
+            // Self-contained stylesheet (OspreySharp does not reference Skyline, so it cannot call
+            // DocumentationGenerator.GetStyleSheetHtml). The rules are copied from that Skyline
+            // stylesheet so OspreySharp's generated help matches Skyline's look (cell padding,
+            // header shading, section-title size).
             sb.AppendLine(@"<style>");
-            sb.AppendLine(@"body { font-family: sans-serif; }");
-            sb.AppendLine(@"table { border-collapse: collapse; margin-bottom: 1em; }");
-            sb.AppendLine(@"th, td { border: 1px solid #999; padding: 2px 6px; text-align: left; vertical-align: top; }");
-            sb.AppendLine(@"th { background-color: #eee; }");
-            sb.AppendLine(@".RowType { font-weight: bold; font-size: larger; margin-top: 1em; }");
+            sb.AppendLine(@"body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; }");
+            sb.AppendLine(@".RowType { font-size: 1.769em; line-height: 1.3em; font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; color: #000; }");
+            sb.AppendLine(@"table { border: 1px solid #bbb; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px; }");
+            sb.AppendLine(@"th { background-color: #ededed; color: #636363; text-align: left; padding: 10px 8px; font-weight: bold; border: 1px solid #bbb; }");
+            sb.AppendLine(@"td { color: #2a2a2a; vertical-align: top; padding: 10px 8px; border: 1px solid #bbb; }");
             sb.AppendLine(@"</style>");
             sb.AppendLine(@"</head><body>");
             foreach (var block in UsageBlocks)
