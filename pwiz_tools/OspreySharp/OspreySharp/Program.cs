@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.IO;
 
@@ -46,6 +47,11 @@ namespace pwiz.OspreySharp
         // decoy mode (Stellar, DecoysInLibrary=false) is unaffected; datasets run
         // with --decoys-in-library are.
 
+        // All user-visible output funnels through one CommandStatusWriter so the
+        // --timestamp / --memstamp / --log-file options (added in later commits) apply
+        // uniformly. Defaults to stderr; --version / --help stay on stdout.
+        private static CommandStatusWriter _out = new CommandStatusWriter(Console.Error);
+
         static int Main(string[] args)
         {
             // Route OspreyDiagnostics dump messages through the same logging
@@ -55,9 +61,10 @@ namespace pwiz.OspreySharp
 
             if (args.Length == 0)
             {
-                // No args is a usage error (exit 1), so the prompt goes to stderr; an explicit
-                // --help instead writes to stdout (see OspreyCommandArgs.PrintUsage).
-                OspreyCommandArgs.PrintUsage(null, Console.Error);
+                // No args is a usage error (exit 1), so the prompt goes to stderr (_out
+                // wraps Console.Error); an explicit --help instead writes to stdout
+                // (see OspreyCommandArgs.PrintUsage).
+                OspreyCommandArgs.PrintUsage(null, _out);
                 return 1;
             }
 
@@ -408,17 +415,17 @@ namespace pwiz.OspreySharp
 
         internal static void LogInfo(string message)
         {
-            Console.Error.WriteLine("[INFO] {0}", message);
+            _out.WriteLine("[INFO] {0}", message);
         }
 
         internal static void LogWarning(string message)
         {
-            Console.Error.WriteLine("[WARN] {0}", message);
+            _out.WriteLine("[WARN] {0}", message);
         }
 
         internal static void LogError(string message)
         {
-            Console.Error.WriteLine("[ERROR] {0}", message);
+            _out.WriteLine("[ERROR] {0}", message);
         }
     }
 }
