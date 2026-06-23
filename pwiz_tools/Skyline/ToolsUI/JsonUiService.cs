@@ -1147,10 +1147,8 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         Path = childPath,
                         Name = NullIfEmpty(child.Name),
-                        Value = child.Value,
                         Enabled = child.IsEnabled,
                         Visible = child.IsVisible,
-                        Actions = child.SupportedActions.Select(UiActions.ToName).ToArray(),
                     });
                 if (child is ControlElement)
                     CollectControls(child, childPath, result);

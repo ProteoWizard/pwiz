@@ -58,23 +58,29 @@ namespace pwiz.SkylineTestFunctional
             var controls = JsonUiService.GetControls(dlgId);
             Assert.IsTrue(controls.Length > 0, @"GetControls returned nothing.");
 
+            // GetControls reports each control's Path and state but not its actions -- those come from the
+            // get_actions action (Value likewise comes from get_value), so they are not computed up front.
+
             // The name field has no caption of its own -- it is discoverable by the "Name" label that
-            // names it, and reports that it can be value-set.
+            // names it, and get_actions reports that it can be value-set.
             var nameField = controls.FirstOrDefault(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
             Assert.IsNotNull(nameField, @"Expected a TextBox discoverable by the label 'Name'.");
-            CollectionAssert.Contains(nameField.Actions, @"set_value");
+            CollectionAssert.Contains(
+                (string[]) JsonUiService.PerformAction(nameField.Path, @"get_actions", null), @"set_value");
 
-            // The Applies-to list is discoverable by its "Applies to" label and reports an item action.
+            // The Applies-to list is discoverable by its "Applies to" label and supports an item action.
             var appliesToList = controls.FirstOrDefault(c => c.Path.Type == @"CheckedListBox");
             Assert.IsNotNull(appliesToList, @"Expected the Applies-to CheckedListBox.");
             Assert.AreEqual(@"Applies to", appliesToList.Path.Text);
-            CollectionAssert.Contains(appliesToList.Actions, @"check_item",
+            CollectionAssert.Contains(
+                (string[]) JsonUiService.PerformAction(appliesToList.Path, @"get_actions", null), @"check_item",
                 @"The list should report the check_item action.");
 
-            // The OK button is discoverable by its own caption and reports that it can be clicked.
+            // The OK button is discoverable by its own caption and supports a click.
             var okButton = controls.FirstOrDefault(c => c.Path.Text == @"OK");
             Assert.IsNotNull(okButton, @"Expected an OK button discoverable by its caption.");
-            CollectionAssert.Contains(okButton.Actions, @"click");
+            CollectionAssert.Contains(
+                (string[]) JsonUiService.PerformAction(okButton.Path, @"get_actions", null), @"click");
 
             OkDialog(defineAnnotationDlg, () => defineAnnotationDlg.DialogResult = DialogResult.Cancel);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
