@@ -381,7 +381,7 @@ namespace SkylineTool
 
         /// <summary>
         /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at its current
-        /// cell -- move there first with <see cref="SetCurrentCell"/>. The text may be a multi-cell TSV
+        /// cell -- move there first with <see cref="SetCurrentCellAddress"/>. The text may be a multi-cell TSV
         /// block (it fills down and to the right). Works for the Document Grid (and other
         /// DataboundGridControl grids) and for a plain DataGridView.
         /// </summary>
@@ -399,7 +399,7 @@ namespace SkylineTool
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
         /// <param name="cell">The target cell: X = visible-column index, Y = row index.</param>
-        void SetCurrentCell(string formId, string controlId, System.Drawing.Point cell);
+        void SetCurrentCellAddress(string formId, string controlId, System.Drawing.Point cell);
 
         /// <summary>
         /// Returns all the text in a grid on a form -- the column headers followed by every data row --

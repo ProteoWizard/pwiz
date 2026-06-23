@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     /// <summary>
     /// Exercises acting on a particular grid cell through the current cell:
     ///   * <see cref="JsonUiService.SetFormValue"/> with a "grid[column,row]" controlId sets a cell;
-    ///   * <see cref="JsonUiService.SetCurrentCell"/> moves to a cell, then a <see cref="ControlId"/>
+    ///   * <see cref="JsonUiService.SetCurrentCellAddress"/> moves to a cell, then a <see cref="ControlId"/>
     ///     whose Type is "ContextMenu" on the grid invokes that cell's right-click context menu (here,
     ///     sorting a Document Grid column descending).
     /// Menu items are matched by control name, so the test is translation-proof.
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Move to the first column (row 0), then choose Sort Descending from that cell's context menu
             // -- the grid's context menu acts on the current cell.
-            JsonUiService.SetCurrentCell(gridId, string.Empty, new System.Drawing.Point(0, 0));
+            JsonUiService.SetCurrentCellAddress(gridId, string.Empty, new System.Drawing.Point(0, 0));
             var gridContextMenu = new ControlId
             {
                 Parent = new ControlId

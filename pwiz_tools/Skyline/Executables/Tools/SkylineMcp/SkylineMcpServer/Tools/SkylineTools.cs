@@ -562,19 +562,19 @@ public static class SkylineTools
         "\"TreeView\"), and/or its Name, then perform an action. Only the properties you set are used to " +
         "match. Actions: 'get_actions' (lists the actions this control supports); 'get_children' (lists " +
         "child controls as JSON); 'click'; 'set_value' (uses 'value'); 'get_value' (returns the current " +
-        "value); 'get_grid_text'/'set_grid_text' (a grid's text); 'set_current_cell' (value 'col,row'). " +
+        "value); 'get_grid_text'/'set_grid_text' (a grid's text); 'set_current_cell_address' (value 'col,row'). " +
         "For a control's right-click menu, pass controlId as the JSON {\"parent\": <the control's " +
         "ControlId from get_children>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
-        "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell). When " +
+        "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
         "controlId is given it is used as-is and label/type/name are ignored. Discover controls with " +
         "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
     public static string PerformAction(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
-        [Description("Action: get_actions, get_children, click, set_value, get_value, get_grid_text, set_grid_text, set_current_cell")] string action,
+        [Description("Action: get_actions, get_children, click, set_value, get_value, get_grid_text, set_grid_text, set_current_cell_address")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Internal control name, e.g. one echoed by skyline_get_controls (optional)")] string name = null,
-        [Description("Value for set_value/set_grid_text, or 'col,row' for set_current_cell (optional)")] string value = null,
+        [Description("Value for set_value/set_grid_text, or 'col,row' for set_current_cell_address (optional)")] string value = null,
         [Description("A full ControlId as JSON (e.g. one from get_children, or wrapped as a ContextMenu); overrides label/type/name when given (optional)")] string controlId = null)
     {
         return Invoke(connection =>
@@ -668,7 +668,7 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_set_grid_text"),
      Description("Paste tab-separated values into a grid on a form, starting at its current cell, the " +
-        "way typing/pasting there would. Move to the target cell first with skyline_set_current_cell. " +
+        "way typing/pasting there would. Move to the target cell first with skyline_set_current_cell_address. " +
         "Use for the Document Grid and other data grids -- e.g. to fill annotation columns or a rules " +
         "grid. The text may be a multi-cell block: separate cell values with tabs and rows with " +
         "newlines (it fills down and to the right). Works for DataboundGridControl grids and plain " +
@@ -685,12 +685,12 @@ public static class SkylineTools
         });
     }
 
-    [McpServerTool(Name = "skyline_set_current_cell"),
+    [McpServerTool(Name = "skyline_set_current_cell_address"),
      Description("Move the current cell of a grid on a form, so the next skyline_set_grid_text pastes " +
         "there, or a context menu (a ControlId with Type 'ContextMenu' on the grid) opens for that " +
         "cell. column and row are zero-based indices into the grid's visible columns and its rows -- " +
         "the same indices skyline_get_grid_text reports.")]
-    public static string SetCurrentCell(
+    public static string SetCurrentCellAddress(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
         [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
         [Description("Zero-based column index (into the grid's visible columns)")] int column,
@@ -698,7 +698,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.SetCurrentCell(formId, controlId, new System.Drawing.Point(column, row));
+            connection.SetCurrentCellAddress(formId, controlId, new System.Drawing.Point(column, row));
             return $"Moved to cell (column {column}, row {row}) on {formId}.";
         });
     }

@@ -33,7 +33,7 @@ namespace pwiz.Skyline.ToolsUI
     internal enum UiAction
     {
         GetActions, GetChildren, Click, SetValue, GetValue,
-        SetItemChecked, SetItemSelected, GetGridText, SetGridText, SetCurrentCell
+        SetItemChecked, SetItemSelected, GetGridText, SetGridText, SetCurrentCellAddress
     }
 
     // Converts between a UiAction and its wire name (the snake_case string the connector uses).
@@ -78,10 +78,10 @@ namespace pwiz.Skyline.ToolsUI
     {
         string GetGridText(CancellationToken cancellationToken);
         // Pastes tab/newline-separated text starting at the grid's current cell (move there first with
-        // SetCurrentCell), the way pasting at the selected cell would.
+        // SetCurrentCellAddress), the way pasting at the selected cell would.
         void SetGridText(string text);
         // Moves the current cell. The point's X is the visible-column index, its Y is the row index.
-        void SetCurrentCell(System.Drawing.Point cell);
+        void SetCurrentCellAddress(System.Drawing.Point cell);
     }
 
     /// <summary>
@@ -438,7 +438,7 @@ namespace pwiz.Skyline.ToolsUI
         public string GetGridText(CancellationToken cancellationToken) =>
             _databound != null ? _databound.GetCopyText(cancellationToken) : JsonUiService.GetDataGridViewText(_dataGridView);
         // Pastes starting at the current cell -- the anchor a user would have clicked. Move the current
-        // cell first with SetCurrentCell; the text may be a multi-cell TSV block (it fills down/right).
+        // cell first with SetCurrentCellAddress; the text may be a multi-cell TSV block (it fills down/right).
         public void SetGridText(string text)
         {
             var anchor = JsonUiService.CurrentGridCell(_dataGridView);
@@ -449,18 +449,18 @@ namespace pwiz.Skyline.ToolsUI
         }
         // Moves the current cell so the next SetGridText / context menu acts there. X is the visible-column
         // index, Y is the row index (the same indices GetGridText's columns/rows are reported in).
-        public void SetCurrentCell(System.Drawing.Point cell) =>
+        public void SetCurrentCellAddress(System.Drawing.Point cell) =>
             JsonUiService.SetCurrentGridCell(_dataGridView, cell.X, cell.Y);
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.GetGridText || action == UiAction.SetGridText ||
-            action == UiAction.SetCurrentCell || base.SupportsAction(action);
+            action == UiAction.SetCurrentCellAddress || base.SupportsAction(action);
         public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
         {
             switch (action)
             {
                 case UiAction.GetGridText: return GetGridText(cancellationToken);
                 case UiAction.SetGridText: SetGridText(value as string); return null;
-                case UiAction.SetCurrentCell: SetCurrentCell(UiValue.ToPoint(value)); return null;
+                case UiAction.SetCurrentCellAddress: SetCurrentCellAddress(UiValue.ToPoint(value)); return null;
                 default: return base.PerformAction(action, value, cancellationToken);
             }
         }
@@ -471,7 +471,7 @@ namespace pwiz.Skyline.ToolsUI
     /// the way a right-click would (so items added on demand are present); drill into a submenu with
     /// get_children on its item, and invoke an item with click. A control's own get_children never returns
     /// its context menu -- you ask for it explicitly with this ControlId. For a grid the menu is the one
-    /// for the current cell (move there first with set_current_cell).</summary>
+    /// for the current cell (move there first with set_current_cell_address).</summary>
     internal sealed class ContextMenuElement : UiElement
     {
         private readonly UiElement _owner;
@@ -517,7 +517,7 @@ namespace pwiz.Skyline.ToolsUI
         public static string NormalizeNewlines(string value) =>
             value == null ? null : System.Text.RegularExpressions.Regex.Replace(value, @"\r\n?|\n", "\r\n");
 
-        // The Point a set_current_cell value carries: a real Point (an in-process caller), or "x,y" text.
+        // The Point a set_current_cell_address value carries: a real Point (an in-process caller), or "x,y" text.
         // (Over the wire the server has already turned the JSON object into a Point before it reaches here.)
         public static System.Drawing.Point ToPoint(object value)
         {
@@ -527,7 +527,7 @@ namespace pwiz.Skyline.ToolsUI
             if (parts?.Length == 2 && int.TryParse(parts[0].Trim(), out var x) && int.TryParse(parts[1].Trim(), out var y))
                 return new System.Drawing.Point(x, y);
             throw new ArgumentException(new LlmInstruction(
-                @"set_current_cell needs a point: the cell's column index as X and row index as Y."));
+                @"set_current_cell_address needs a point: the cell's column index as X and row index as Y."));
         }
     }
 

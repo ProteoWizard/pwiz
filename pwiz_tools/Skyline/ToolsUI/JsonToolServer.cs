@@ -890,9 +890,9 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.SetGridText(formId, controlId, text);
         }
 
-        public void SetCurrentCell(string formId, string controlId, System.Drawing.Point cell)
+        public void SetCurrentCellAddress(string formId, string controlId, System.Drawing.Point cell)
         {
-            JsonUiService.SetCurrentCell(formId, controlId, cell);
+            JsonUiService.SetCurrentCellAddress(formId, controlId, cell);
         }
 
         public string GetGridText(string formId, string gridId)

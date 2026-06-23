@@ -455,7 +455,7 @@ namespace pwiz.Skyline.ToolsUI
                 RaiseProtectedHandler(treeMenu, @"OnOpening", new CancelEventArgs());
                 return treeMenu;
             }
-            // A grid's menu is the one for its current cell (move there first with set_current_cell).
+            // A grid's menu is the one for its current cell (move there first with set_current_cell_address).
             if (owner is GridElement gridElement)
                 return BuildGridCellContextMenu(gridElement.DataGridView);
             // A graph builds a fresh menu through its ContextMenuBuilder. The graph can be addressed as
@@ -485,7 +485,7 @@ namespace pwiz.Skyline.ToolsUI
             var cell = dataGridView.CurrentCell;
             if (cell == null)
                 throw new ArgumentException(new LlmInstruction(
-                    @"The grid has no current cell -- move to one first with set_current_cell."));
+                    @"The grid has no current cell -- move to one first with set_current_cell_address."));
             var args = new DataGridViewCellContextMenuStripNeededEventArgs(cell.ColumnIndex, cell.RowIndex);
             RaiseProtectedHandler(dataGridView, @"OnCellContextMenuStripNeeded", args);
             var menuStrip = args.ContextMenuStrip;
@@ -752,7 +752,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at its current
-        /// cell -- move there first with <see cref="SetCurrentCell"/> (the anchor a user would click). The
+        /// cell -- move there first with <see cref="SetCurrentCellAddress"/> (the anchor a user would click). The
         /// text may be a multi-cell TSV block (it fills down and to the right). Works for a
         /// DataboundGridControl (e.g. the Document Grid) and for a plain DataGridView (e.g. the Rule Set
         /// Editor's rules grid). See <see cref="IJsonToolService"/>.
@@ -780,14 +780,14 @@ namespace pwiz.Skyline.ToolsUI
         /// the visible-column index and Y is the row index -- the same indices the grid reports columns
         /// and rows in. See <see cref="IJsonToolService"/>.
         /// </summary>
-        public static void SetCurrentCell(string formId, string controlId, System.Drawing.Point cell)
+        public static void SetCurrentCellAddress(string formId, string controlId, System.Drawing.Point cell)
         {
             ValidateFormIdFormat(formId);
             InvokeOnUiThread(() =>
             {
                 var grid = FindGrid(FindFormById(formId), controlId);
                 VerifyInteractable(grid);
-                grid.SetCurrentCell(cell);
+                grid.SetCurrentCellAddress(cell);
             });
         }
 
@@ -908,7 +908,7 @@ namespace pwiz.Skyline.ToolsUI
         private static void SetGridCellValue(Form form, string gridName, int column, int row, string value)
         {
             var grid = FindGrid(form, gridName);
-            grid.SetCurrentCell(new System.Drawing.Point(column, row));
+            grid.SetCurrentCellAddress(new System.Drawing.Point(column, row));
             grid.SetGridText(value);
         }
 
@@ -1319,7 +1319,7 @@ namespace pwiz.Skyline.ToolsUI
                         return null;
                     case UiAction.SetValue:
                     case UiAction.SetGridText:
-                    case UiAction.SetCurrentCell:
+                    case UiAction.SetCurrentCellAddress:
                         // Mutating actions: run inside the dialog-watch (a paste can raise a conversion
                         // alert) and on the UI thread.
                         object setResult = null;
@@ -1368,7 +1368,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             // Type "ContextMenu" addresses the parent control's right-click menu (which is never a child of
             // the control): build the menu so its items can be listed (get_children) or invoked (click).
-            // For a grid it is the current cell's menu (move there first with set_current_cell).
+            // For a grid it is the current cell's menu (move there first with set_current_cell_address).
             if (string.Equals(controlId.Type, @"ContextMenu", StringComparison.OrdinalIgnoreCase))
                 return new ContextMenuElement(ResolveControlId(controlId.Parent));
 
