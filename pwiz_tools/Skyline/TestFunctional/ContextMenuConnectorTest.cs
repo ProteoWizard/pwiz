@@ -24,16 +24,17 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonUiService.InvokeContextMenuItem"/> -- the AI Connector verb that
-    /// drives a graph's right-click context menu (a menu that, unlike the main menu, is built on
-    /// demand by the graph's ContextMenuBuilder). It toggles the Peak Areas graph's "Log Scale" item
-    /// and verifies the backing setting changed. The item is matched by its locale-independent
-    /// control name (peptideLogScaleContextMenuItem), so the test is translation-proof, and the graph
-    /// is located the way the connector would -- via <see cref="JsonUiService.GetOpenForms"/>.
+    /// Exercises driving a graph's right-click context menu through a <see cref="ControlId"/> whose Type
+    /// is "ContextMenu" (a menu that, unlike the main menu, is built on demand by the graph's
+    /// ContextMenuBuilder). It toggles the Peak Areas graph's "Log Scale" item and verifies the backing
+    /// setting changed. The item is matched by its locale-independent control name
+    /// (peptideLogScaleContextMenuItem), so the test is translation-proof, and the graph is located the
+    /// way the connector would -- via <see cref="JsonUiService.GetOpenForms"/>.
     /// </summary>
     [TestClass]
     public class ContextMenuConnectorTest : AbstractFunctionalTest
@@ -63,17 +64,24 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
 
-            // Find the graph the way the AI Connector would -- by enumerating open forms -- then drive
-            // its context menu item by control name (translation-proof).
+            // Find the graph the way the AI Connector would -- by enumerating open forms -- then drive its
+            // context menu through a ControlId: the graph form's context menu (Type "ContextMenu"), then
+            // its item by control name (translation-proof).
             string graphId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == @"GraphSummary" && form.HasGraph).Id;
-            JsonUiService.InvokeContextMenuItem(graphId, null, @"peptideLogScaleContextMenuItem");
+            var contextMenu = new ControlId
+            {
+                Parent = new ControlId { Type = @"Form", Name = graphId },
+                Type = @"ContextMenu",
+            };
+            var logScaleItem = new ControlId { Parent = contextMenu, Name = @"peptideLogScaleContextMenuItem" };
+            JsonUiService.PerformAction(logScaleItem, @"click", null);
 
             // The menu item has CheckOnClick=true, so the click flipped it from unchecked to checked,
             // turning the log scale on.
             WaitForConditionUI(() => Settings.Default.AreaLogScale);
             RunUI(() => Assert.IsTrue(Settings.Default.AreaLogScale,
-                @"InvokeContextMenuItem did not toggle the Peak Areas Log Scale setting."));
+                @"Clicking the context-menu item did not toggle the Peak Areas Log Scale setting."));
         }
     }
 }

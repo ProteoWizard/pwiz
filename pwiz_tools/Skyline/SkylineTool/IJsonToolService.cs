@@ -346,20 +346,6 @@ namespace SkylineTool
         void InvokeMenuItem(string menuPath);
 
         /// <summary>
-        /// Invokes an item on a right-click context menu by its visible path, e.g. "Normalize To >
-        /// None". The target is <paramref name="controlId"/>: null/empty for the form's graph, or a
-        /// grid cell locator "grid[column,row]" to right-click that cell (the grid name may be empty
-        /// for the form's single grid; column/row are zero-based indices into the grid's visible
-        /// columns and rows, and row may be -1 for a column header). The menu is built the way a
-        /// right-click would, then the item is matched by text or control name like
-        /// <see cref="InvokeMenuItem"/>.
-        /// </summary>
-        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        /// <param name="controlId">Null/empty for the graph, or a grid cell locator "grid[column,row]".</param>
-        /// <param name="menuPath">Menu path; segments separated by '>' (also '|' or '/').</param>
-        void InvokeContextMenuItem(string formId, string controlId, string menuPath);
-
-        /// <summary>
         /// Clicks a control on an open form, matching <paramref name="button"/> against the control's
         /// name or visible text: a Button, a CheckBox or RadioButton, a custom IButtonControl (e.g. a
         /// StartPage tile), a ToolStrip / menu / toolbar item, or any other control. For a native
@@ -394,17 +380,26 @@ namespace SkylineTool
         void SetFormValue(string formId, string controlId, string value);
 
         /// <summary>
-        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at the given
-        /// anchor cell, the way typing/pasting there would. Works for the Document Grid (and other
-        /// DataboundGridControl grids) and for a plain DataGridView. <paramref name="column"/> and
-        /// <paramref name="row"/> are zero-based indices into the grid's visible columns and its rows.
+        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at its current
+        /// cell -- move there first with <see cref="SetCurrentCell"/>. The text may be a multi-cell TSV
+        /// block (it fills down and to the right). Works for the Document Grid (and other
+        /// DataboundGridControl grids) and for a plain DataGridView.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
-        /// <param name="column">Zero-based anchor column (index into visible columns).</param>
-        /// <param name="row">Zero-based anchor row.</param>
-        /// <param name="text">Tab-separated (and newline-separated) values to paste.</param>
-        void SetGridText(string formId, string controlId, int column, int row, string text);
+        /// <param name="text">Tab-separated (and newline-separated) values to paste at the current cell.</param>
+        void SetGridText(string formId, string controlId, string text);
+
+        /// <summary>
+        /// Moves the current cell of a grid on a form (move there before pasting with
+        /// <see cref="SetGridText"/> or opening the cell's context menu). <paramref name="cell"/>'s X is
+        /// the visible-column index and Y is the row index -- the same indices the grid reports columns
+        /// and rows in.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
+        /// <param name="cell">The target cell: X = visible-column index, Y = row index.</param>
+        void SetCurrentCell(string formId, string controlId, System.Drawing.Point cell);
 
         /// <summary>
         /// Returns all the text in a grid on a form -- the column headers followed by every data row --

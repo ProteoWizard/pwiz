@@ -89,9 +89,10 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsTrue(noteColumn >= 0);
 
-            // Paste two newline-separated values into the Note column starting at row 0. controlId is
-            // null because the Document Grid form has a single grid.
-            JsonUiService.SetGridText(gridId, null, noteColumn, 0, TextUtil.LineSeparate(@"First note", @"Second note"));
+            // Move to the Note column at row 0, then paste two newline-separated values starting there.
+            // controlId is null because the Document Grid form has a single grid.
+            JsonUiService.SetCurrentCell(gridId, null, new System.Drawing.Point(noteColumn, 0));
+            JsonUiService.SetGridText(gridId, null, TextUtil.LineSeparate(@"First note", @"Second note"));
             WaitForConditionUI(() => documentGrid.IsComplete);
 
             var notes = SkylineWindow.Document.Peptides.Select(pep => pep.Note).ToArray();

@@ -27,16 +27,17 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Exercises the Targets-tree "Pick Children" path through the AI connector verbs: select a
-    /// precursor node (<see cref="JsonUiService.SetItemSelected"/>), open its pick-list with
-    /// <see cref="JsonUiService.InvokeContextMenuItem"/> ("Pick Children"), toggle a transition in the
-    /// popup with <see cref="JsonUiService.SetItemChecked"/>, and commit with the green-check "OK"
-    /// button via <see cref="JsonUiService.ClickFormButton"/> (an image-only ToolStrip item matched by
-    /// its tooltip).
+    /// precursor node (<see cref="JsonUiService.SetItemSelected"/>), open its pick-list through the
+    /// tree's context menu -- a <see cref="ControlId"/> whose Type is "ContextMenu" on the tree, then
+    /// the "Pick Children" item -- toggle a transition in the popup with
+    /// <see cref="JsonUiService.SetItemChecked"/>, and commit with the green-check "OK" button via
+    /// <see cref="JsonUiService.ClickFormButton"/> (an image-only ToolStrip item matched by its tooltip).
     /// </summary>
     [TestClass]
     public class PickChildrenConnectorTest : AbstractFunctionalTest
@@ -90,8 +91,19 @@ namespace pwiz.SkylineTestFunctional
             int transitionsBefore = 0;
             RunUI(() => transitionsBefore = SkylineWindow.Document.MoleculeTransitionCount);
 
-            // Right-click > Pick Children opens the (modeless) pick-list popup.
-            JsonUiService.InvokeContextMenuItem(treeFormId, string.Empty, @"Pick Children");
+            // Right-click > Pick Children opens the (modeless) pick-list popup, via the tree's context
+            // menu (a ControlId of Type "ContextMenu" on the tree), with the item matched by visible text.
+            var treeContextMenu = new ControlId
+            {
+                Parent = new ControlId
+                {
+                    Parent = new ControlId { Type = @"Form", Name = treeFormId },
+                    Type = @"SequenceTree",
+                },
+                Type = @"ContextMenu",
+            };
+            JsonUiService.PerformAction(
+                new ControlId { Parent = treeContextMenu, Label = @"Pick Children" }, @"click", null);
             var popup = WaitForOpenForm<PopupPickList>();
             string popupId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(PopupPickList)).Id;

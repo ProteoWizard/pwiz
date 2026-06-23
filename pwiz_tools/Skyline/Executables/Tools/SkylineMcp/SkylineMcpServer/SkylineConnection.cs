@@ -110,7 +110,6 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void SetItemSelected(string formId, string controlId, string item, bool selected) { CallClientVoid(c => c.SetItemSelected(formId, controlId, item, selected)); }
 
     // 2-arg methods
-    public void InvokeContextMenuItem(string formId, string controlId, string menuPath) { CallClientVoid(c => c.InvokeContextMenuItem(formId, controlId, menuPath)); }
     public void ClickToolStripItem(string formId, string menuPath) { CallClientVoid(c => c.ClickToolStripItem(formId, menuPath)); }
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
@@ -132,6 +131,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { CallClientVoid(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
     public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en") { return CallClient(c => c.GetTutorialImageBytes(name, imageFilename, language)); }
     public void SetFormValue(string formId, string controlId, string value) { CallClientVoid(c => c.SetFormValue(formId, controlId, value)); }
+    public void SetGridText(string formId, string controlId, string text) { CallClientVoid(c => c.SetGridText(formId, controlId, text)); }
+    public void SetCurrentCell(string formId, string controlId, System.Drawing.Point cell) { CallClientVoid(c => c.SetCurrentCell(formId, controlId, cell)); }
 
     // 4-arg methods
     public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }
@@ -141,7 +142,6 @@ public class SkylineConnection : IJsonToolService, IDisposable
     {
         return CallClient(c => c.GetReportFromDefinitionRows(definition, offset, count, includeMaxLength, culture));
     }
-    public void SetGridText(string formId, string controlId, int column, int row, string text) { CallClientVoid(c => c.SetGridText(formId, controlId, column, row, text)); }
 
     // 7-arg methods
     public ReportRowsResult GetReportRows(string reportName, int offset, int count, string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)

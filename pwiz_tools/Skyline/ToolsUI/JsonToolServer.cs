@@ -870,11 +870,6 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.InvokeMenuItem(menuPath);
         }
 
-        public void InvokeContextMenuItem(string formId, string controlId, string menuPath)
-        {
-            JsonUiService.InvokeContextMenuItem(formId, controlId, menuPath);
-        }
-
         public void ClickFormButton(string formId, string button)
         {
             JsonUiService.ClickFormButton(formId, button);
@@ -890,9 +885,14 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.SetFormValue(formId, controlId, value);
         }
 
-        public void SetGridText(string formId, string controlId, int column, int row, string text)
+        public void SetGridText(string formId, string controlId, string text)
         {
-            JsonUiService.SetGridText(formId, controlId, column, row, text);
+            JsonUiService.SetGridText(formId, controlId, text);
+        }
+
+        public void SetCurrentCell(string formId, string controlId, System.Drawing.Point cell)
+        {
+            JsonUiService.SetCurrentCell(formId, controlId, cell);
         }
 
         public string GetGridText(string formId, string gridId)

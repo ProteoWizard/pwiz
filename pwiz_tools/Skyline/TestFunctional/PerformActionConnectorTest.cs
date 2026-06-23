@@ -79,6 +79,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(formChildren.All(c => ReferenceEquals(c.Parent, formId)),
                 @"Each child's Parent should be the queried control.");
 
+            // A controlId with no selectors set resolves to its Parent itself -- so addressing a control
+            // under a Form parent with nothing else (the way the MCP tool sends a form-only target)
+            // returns the form's own children.
+            var formViaParent = new ControlId { Parent = formId };
+            var childrenViaParent = (ControlId[]) JsonUiService.PerformAction(formViaParent, @"get_children", null);
+            Assert.AreEqual(formChildren.Length, childrenViaParent.Length,
+                @"get_children with no selectors under a Form should resolve to the form itself.");
+
             // Round-trip: the ControlId GetControls returns (carrying the Name) resolves the same control.
             var nameInfo = JsonUiService.GetControls(dlgId)
                 .First(c => c.Id.Type == @"TextBox" && c.Id.Label == @"Name");

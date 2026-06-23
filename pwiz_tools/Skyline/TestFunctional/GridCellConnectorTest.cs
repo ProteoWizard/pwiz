@@ -31,17 +31,17 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the grid-cell locator "grid[column,row]" used as the controlId of two verbs:
-    ///   * <see cref="JsonUiService.SetFormValue"/> sets a single grid cell;
-    ///   * <see cref="JsonUiService.InvokeContextMenuItem"/> invokes a grid cell's right-click context
-    ///     menu (here, sorting a Document Grid column descending).
-    /// The grid name is left empty (the form's single grid) for the Document Grid, and given explicitly
-    /// where the form has more than one grid. Menu items are matched by control name, so the test is
-    /// translation-proof.
+    /// Exercises acting on a particular grid cell through the current cell:
+    ///   * <see cref="JsonUiService.SetFormValue"/> with a "grid[column,row]" controlId sets a cell;
+    ///   * <see cref="JsonUiService.SetCurrentCell"/> moves to a cell, then a <see cref="ControlId"/>
+    ///     whose Type is "ContextMenu" on the grid invokes that cell's right-click context menu (here,
+    ///     sorting a Document Grid column descending).
+    /// Menu items are matched by control name, so the test is translation-proof.
     /// </summary>
     [TestClass]
     public class GridCellConnectorTest : AbstractFunctionalTest
@@ -85,8 +85,8 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);
         }
 
-        // InvokeContextMenuItem with a "[column,row]" controlId right-clicks a Document Grid cell and
-        // sorts that column descending through its context menu.
+        // Moving to a Document Grid cell and invoking its right-click context menu (Type "ContextMenu" on
+        // the grid) sorts that column descending.
         private void InvokeGridCellContextMenu()
         {
             RunUI(() => SkylineWindow.NewDocument());
@@ -105,8 +105,20 @@ namespace pwiz.SkylineTestFunctional
             string gridId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(DocumentGridForm)).Id;
 
-            // Right-click the first column (row 0) and choose Sort Descending from its context menu.
-            JsonUiService.InvokeContextMenuItem(gridId, @"[0,0]", @"sortDescendingToolStripMenuItem");
+            // Move to the first column (row 0), then choose Sort Descending from that cell's context menu
+            // -- the grid's context menu acts on the current cell.
+            JsonUiService.SetCurrentCell(gridId, string.Empty, new System.Drawing.Point(0, 0));
+            var gridContextMenu = new ControlId
+            {
+                Parent = new ControlId
+                {
+                    Parent = new ControlId { Type = @"Form", Name = gridId },
+                    Type = @"DataboundGridControl",
+                },
+                Type = @"ContextMenu",
+            };
+            var sortDescending = new ControlId { Parent = gridContextMenu, Name = @"sortDescendingToolStripMenuItem" };
+            JsonUiService.PerformAction(sortDescending, @"click", null);
             WaitForConditionUI(() => documentGrid.IsComplete);
 
             // The first column is now sorted descending: read it back and check the order.
@@ -119,7 +131,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(firstColumn.Count >= 2, gridText);
             for (int i = 1; i < firstColumn.Count; i++)
                 Assert.IsTrue(string.CompareOrdinal(firstColumn[i - 1], firstColumn[i]) >= 0,
-                    @"InvokeContextMenuItem did not sort the column descending: " + gridText);
+                    @"The grid cell context menu did not sort the column descending: " + gridText);
 
             RunUI(() => SkylineWindow.ShowDocumentGrid(false));
         }

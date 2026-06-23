@@ -65,8 +65,10 @@ namespace pwiz.SkylineTestFunctional
             string gridText = JsonUiService.GetGridText(editorId, @"dataGridViewRules");
             StringAssert.Contains(gridText.Split('\n')[0], @"Pattern");
 
-            // SetGridText types "D" into the Pattern cell of the first row, like a user editing it.
-            JsonUiService.SetGridText(editorId, @"dataGridViewRules", patternColumn, 0, @"D");
+            // Move to the Pattern cell of the first row, then SetGridText types "D" there, like a user
+            // editing it.
+            JsonUiService.SetCurrentCell(editorId, @"dataGridViewRules", new System.Drawing.Point(patternColumn, 0));
+            JsonUiService.SetGridText(editorId, @"dataGridViewRules", @"D");
             RunUI(() => Assert.AreEqual(@"D", rulesGrid.Rows[0].Cells[@"colPattern"].Value?.ToString(),
                 @"SetGridText did not set the Pattern cell in the plain rules grid."));
 

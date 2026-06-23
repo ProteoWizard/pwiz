@@ -111,11 +111,11 @@ namespace SkylineTool
 
         // UI interaction
         public void InvokeMenuItem(string menuPath) { Call(nameof(InvokeMenuItem), menuPath); }
-        public void InvokeContextMenuItem(string formId, string controlId, string menuPath) { Call(nameof(InvokeContextMenuItem), formId, controlId, menuPath); }
         public void ClickFormButton(string formId, string button) { Call(nameof(ClickFormButton), formId, button); }
         public void ClickToolStripItem(string formId, string menuPath) { Call(nameof(ClickToolStripItem), formId, menuPath); }
         public void SetFormValue(string formId, string controlId, string value) { Call(nameof(SetFormValue), formId, controlId, value); }
-        public void SetGridText(string formId, string controlId, int column, int row, string text) { Call(nameof(SetGridText), formId, controlId, column, row, text); }
+        public void SetGridText(string formId, string controlId, string text) { Call(nameof(SetGridText), formId, controlId, text); }
+        public void SetCurrentCell(string formId, string controlId, System.Drawing.Point cell) { Call(nameof(SetCurrentCell), formId, controlId, cell); }
         public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
         public void CloseForm(string formId) { Call(nameof(CloseForm), formId); }
         public void SetItemChecked(string formId, string controlId, string item, bool isChecked) { Call(nameof(SetItemChecked), formId, controlId, item, isChecked); }
