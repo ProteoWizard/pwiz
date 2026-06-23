@@ -42,15 +42,27 @@ namespace pwiz.Skyline.Util
         {
             DataGridView = boundDataGridView;
             BindingListSource = bindingListSource;
-            DataGridView.KeyDown += DataGridViewOnKeyDown;
         }
 
         /// <summary>
-        /// Attaches a DataGridViewPasteHandler to the specified DataGridView.
+        /// Attaches a DataGridViewPasteHandler to the specified DataGridView so a Ctrl-V there pastes
+        /// through it.
         /// </summary>
         public static DataGridViewPasteHandler Attach(DataGridView boundDataGridView, BindingListSource bindingListSource)
         {
-            return new DataGridViewPasteHandler(boundDataGridView, bindingListSource);
+            var handler = new DataGridViewPasteHandler(boundDataGridView, bindingListSource);
+            boundDataGridView.KeyDown += handler.DataGridViewOnKeyDown;
+            return handler;
+        }
+
+        /// <summary>
+        /// Pastes <paramref name="text"/> into the grid at its current cell, exactly as a Ctrl-V would,
+        /// without attaching to the grid's key events. Used by automation (the AI Connector) so it does not
+        /// have to own a long-lived handler. Returns true if the document changed.
+        /// </summary>
+        public static bool PasteText(DataGridView boundDataGridView, BindingListSource bindingListSource, string text)
+        {
+            return new DataGridViewPasteHandler(boundDataGridView, bindingListSource).PasteText(text);
         }
 
         public DataGridView DataGridView { get; }

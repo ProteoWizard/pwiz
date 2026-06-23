@@ -841,7 +841,10 @@ namespace pwiz.Skyline.ToolsUI
                     @"Form {0} has more than one grid; pass a controlId to choose one.", GetFormId(form)));
             else
                 target = targets[0];
-            return target.Databound != null ? new GridElement(target.Databound) : new GridElement(target.DataGridView);
+            // The factory wraps a bound inner grid as a BoundGridElement (rich copy/paste) and a standalone
+            // DataGridView as a plain GridElement.
+            var dataGridView = target.Databound != null ? target.Databound.DataGridView : target.DataGridView;
+            return (GridElement) UiElementFactory.For(dataGridView);
         }
 
         // The grids on a form: each DataboundGridControl, plus each DataGridView that is not inside a
@@ -861,22 +864,6 @@ namespace pwiz.Skyline.ToolsUI
                 if (parent is DataboundGridControl)
                     return true;
             return false;
-        }
-
-        // Sets the anchor cell (column/row are zero-based indices into the grid's visible columns and
-        // its rows) and pastes the tab-separated text there.
-        internal static void PasteGridText(DataboundGridControl grid, int column, int row, string text)
-        {
-            var dataGridView = grid.DataGridView;
-            var visibleColumns = VisibleGridColumns(dataGridView);
-            if (column < 0 || column >= visibleColumns.Length)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
-            if (row < 0 || row >= dataGridView.Rows.Count)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Row {0} is out of range; the grid has {1} rows.", row, dataGridView.Rows.Count));
-            dataGridView.CurrentCell = dataGridView.Rows[row].Cells[visibleColumns[column].Index];
-            grid.PasteText(text);
         }
 
         // Pastes tab/newline-separated text into a plain DataGridView by setting cell values from the

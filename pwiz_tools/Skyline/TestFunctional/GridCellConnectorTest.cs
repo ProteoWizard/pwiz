@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // Moving to a Document Grid cell and invoking its right-click context menu (Type "ContextMenu" on
-        // the grid) sorts that column descending.
+        // the inner grid, walked into via the DataboundGridControl) sorts that column descending.
         private void InvokeGridCellContextMenu()
         {
             RunUI(() => SkylineWindow.NewDocument());
@@ -106,11 +106,14 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(DocumentGridForm)).Id;
 
             // Move to the first column (row 0), then choose Sort Descending from that cell's context menu
-            // -- the grid's context menu acts on the current cell.
+            // -- the grid's context menu acts on the current cell. The DataboundGridControl is a container;
+            // its inner grid (a DataGridView) owns the context menu, so the path walks into it.
             JsonUiService.SetCurrentCellAddress(gridId, string.Empty, new System.Drawing.Point(0, 0));
             var gridContextMenu = new UiElementPath(
                 new UiElementPath(
-                    new UiElementPath(null, gridId, null, @"Form"), null, null, @"DataboundGridControl"),
+                    new UiElementPath(
+                        new UiElementPath(null, gridId, null, @"Form"), null, null, @"DataboundGridControl"),
+                    null, null, @"DataGridView"),
                 null, null, @"ContextMenu");
             var sortDescending = new UiElementPath(gridContextMenu, @"Sort Descending", null, null);
             JsonUiService.PerformAction(sortDescending, @"click", null);

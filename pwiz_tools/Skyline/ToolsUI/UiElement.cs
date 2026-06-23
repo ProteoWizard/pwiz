@@ -22,9 +22,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
@@ -234,36 +237,9 @@ namespace pwiz.Skyline.ToolsUI
         public override Type ElementType => Control.GetType();
         public override bool IsEnabled => Control.Enabled;
         public override bool IsVisible => Control.Visible;
-        public override IEnumerable<UiElement> Children =>
-            FlattenChildControls(Control).Select(UiElementFactory.For).Where(element => element != null);
 
-        // The control's children for the form walk, FLATTENED: a non-UserControl layout container (Panel,
-        // GroupBox, TableLayoutPanel, SplitContainer, a TabPage, ...) is transparent -- its controls are
-        // pulled up so every control is a direct child of the form (or of the nearest UserControl). A
-        // UserControl is a boundary: it appears as a child and owns its own (likewise flattened) children.
-        // A TabControl is kept (so its tabs can be selected via select_tab) but its tab contents are
-        // flattened up to this level too, so they are addressable as direct children.
-        internal static IEnumerable<Control> FlattenChildControls(Control container)
-        {
-            foreach (Control control in container.Controls)
-            {
-                if (control is UserControl)
-                    yield return control;
-                else if (control is TabControl)
-                {
-                    yield return control;
-                    foreach (var inner in FlattenChildControls(control))
-                        yield return inner;
-                }
-                else if (control is TabPage || control.Controls.Count > 0)
-                {
-                    foreach (var inner in FlattenChildControls(control))
-                        yield return inner;
-                }
-                else
-                    yield return control;
-            }
-        }
+        // Most controls have no children -- a button, a text box, a list. Only a ContainerElement (a Form
+        // or UserControl) owns children; the inherited (empty) Children is correct for everything else.
 
         // Default: a caption-less field is named by the Label immediately before it in tab order
         // (e.g. "Name:" -> the name textbox, "Use only scans within" -> the RT box). Caption-bearing
@@ -293,6 +269,32 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class ContainerElement : ControlElement
     {
         public ContainerElement(Control control) : base(control) { }
+
+        public override IEnumerable<UiElement> Children => FlattenChildren(Control);
+
+        // This container's child elements for the form walk, FLATTENED. A control the factory recognizes as
+        // an element is yielded as that element: a UserControl as a ContainerElement that owns its own
+        // (likewise flattened) children, and a grid/list/tree/toolstrip as a leaf the caller walks into via
+        // its own children. A control the factory does not recognize (a Panel, GroupBox, SplitContainer, a
+        // TabPage, ...) is transparent -- its controls are pulled up so every control is a direct child of
+        // the form (or of the nearest UserControl). A TabControl is kept (so its tabs can be selected via
+        // select_tab) and its tab contents are flattened up to this level too. Matching the factory (rather
+        // than guessing from Control.Count) keeps a complex control with internal child controls -- a
+        // DataGridView, with its scroll bars -- a single element instead of dissolving it into its parts.
+        private static IEnumerable<UiElement> FlattenChildren(Control container)
+        {
+            foreach (Control control in container.Controls)
+            {
+                var element = UiElementFactory.For(control);
+                if (element != null)
+                    yield return element;
+                // Recurse through a transparent container (no element of its own), and through a TabControl
+                // (kept above) to flatten its tab contents up alongside it.
+                if (element == null || control is TabControl)
+                    foreach (var inner in FlattenChildren(control))
+                        yield return inner;
+            }
+        }
     }
 
     /// <summary>A push button (or any ButtonBase) -- clicked with BM_CLICK, which fires the Click handler
@@ -825,34 +827,25 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    /// <summary>A grid -- a DataboundGridControl (e.g. the Document Grid) driven through its rich paste
-    /// path, or a standalone DataGridView driven by direct cell access. Read as TSV, or set a cell.</summary>
-    internal sealed class GridElement : ControlElement
+    /// <summary>A grid -- the DataGridView a caller reads as TSV or sets a cell on, by direct cell access.
+    /// A bound grid (the inner grid of a DataboundGridControl, e.g. the Document Grid) is a
+    /// <see cref="BoundGridElement"/> that overrides the read/write with the rich copy/paste path.</summary>
+    internal class GridElement : ControlElement
     {
-        private readonly DataboundGridControl _databound; // null for a plain DataGridView
         private readonly DataGridView _dataGridView;
-        public GridElement(DataboundGridControl databound) : base(databound)
-        {
-            _databound = databound;
-            _dataGridView = databound.DataGridView;
-        }
         public GridElement(DataGridView dataGridView) : base(dataGridView) { _dataGridView = dataGridView; }
         public DataGridView DataGridView => _dataGridView;
-        // Cells are content, not child controls, so the inherited Children (the grid's child controls --
-        // e.g. a DataboundGridControl's nav bar, which can host other controls) is what to enumerate.
-        // A DataboundGridControl uses its rich copy path (the same content as Copy All, and cancellable
-        // for a large grid); a plain DataGridView is read cell by cell.
-        public string GetGridText(CancellationToken cancellationToken) =>
-            _databound != null ? _databound.GetCopyText(cancellationToken) : JsonUiService.GetDataGridViewText(_dataGridView);
+
+        // A grid is a leaf in the walk (not a ContainerElement): its content is read/written through the
+        // grid actions, not by walking into child controls. The plain path reads/writes cells directly.
+        public virtual string GetGridText(CancellationToken cancellationToken) =>
+            JsonUiService.GetDataGridViewText(_dataGridView);
         // Pastes starting at the current cell -- the anchor a user would have clicked. Move the current
         // cell first with SetCurrentCellAddress; the text may be a multi-cell TSV block (it fills down/right).
-        public void SetGridText(string text)
+        public virtual void SetGridText(string text)
         {
             var anchor = JsonUiService.CurrentGridCell(_dataGridView);
-            if (_databound != null)
-                JsonUiService.PasteGridText(_databound, anchor.X, anchor.Y, text);
-            else
-                JsonUiService.SetDataGridViewText(_dataGridView, anchor.X, anchor.Y, text);
+            JsonUiService.SetDataGridViewText(_dataGridView, anchor.X, anchor.Y, text);
         }
         // Moves the current cell so the next SetGridText / context menu acts there. X is the visible-column
         // index, Y is the row index (the same indices GetGridText's columns/rows are reported in).
@@ -870,6 +863,34 @@ namespace pwiz.Skyline.ToolsUI
                 case UiAction.SetCurrentCellAddress: SetCurrentCellAddress(UiValue.ToPoint(value)); return null;
                 default: return base.PerformAction(action, value, cancellationToken);
             }
+        }
+    }
+
+    /// <summary>A data-bound grid (a <see cref="BoundDataGridView"/>) -- its rows are a BindingListSource,
+    /// reached with <c>DataSource as BindingListSource</c>. Reads with the view's rich copy (the same
+    /// content as Copy All, cancellable for a large grid) and writes through the bound paste handler (so the
+    /// document stays in sync), instead of the base's direct cell access.</summary>
+    internal sealed class BoundGridElement : GridElement
+    {
+        public BoundGridElement(BoundDataGridView boundDataGridView) : base(boundDataGridView) { }
+        private BindingListSource BindingListSource => DataGridView.DataSource as BindingListSource;
+
+        public override string GetGridText(CancellationToken cancellationToken)
+        {
+            var bindingListSource = BindingListSource;
+            return bindingListSource == null
+                ? base.GetGridText(cancellationToken) // not bound yet -- read the cells directly
+                : bindingListSource.ViewContext.CopyToString(DataGridView, bindingListSource, cancellationToken);
+        }
+
+        public override void SetGridText(string text)
+        {
+            var bindingListSource = BindingListSource;
+            if (bindingListSource == null)
+                base.SetGridText(text);
+            else
+                // Pastes at the current cell exactly as Ctrl-V would, keeping the bound document in sync.
+                DataGridViewPasteHandler.PasteText(DataGridView, bindingListSource, text);
         }
     }
 
@@ -987,14 +1008,15 @@ namespace pwiz.Skyline.ToolsUI
                 case ListBox listBox: return new ListControlElement<ListBox>(listBox);
                 case TreeView treeView: return new TreeViewElement(treeView);
                 case ListView listView: return new ItemContainerElement<ListView>(listView);
-                case DataboundGridControl databound: return new GridElement(databound);
-                // A standalone grid; the inner grid of a DataboundGridControl is driven through it, so
-                // that one is left as a plain element.
-                case DataGridView dataGridView when !HasDataboundAncestor(dataGridView):
-                    return new GridElement(dataGridView);
+                // The grid itself -- the inner grid of a DataboundGridControl (a BoundDataGridView, driven
+                // through its rich copy/paste path) or a standalone DataGridView (direct cell access). The
+                // DataboundGridControl is a UserControl you walk into to reach this grid and its nav bar.
+                case BoundDataGridView boundDataGridView: return new BoundGridElement(boundDataGridView);
+                case DataGridView dataGridView: return new GridElement(dataGridView);
                 case ToolStrip toolStrip: return new ToolStripElement(toolStrip);
-                // A Form or UserControl is a boundary that owns its (flattened) children; everything else
-                // that contains controls is transparent, so these are the only containers to descend into.
+                // A Form or UserControl (including a DataboundGridControl) is a boundary that owns its
+                // (flattened) children; everything else that contains controls is transparent, so these are
+                // the only containers to descend into.
                 case Form form: return new ContainerElement(form);
                 case UserControl userControl: return new ContainerElement(userControl);
                 default:
@@ -1005,14 +1027,6 @@ namespace pwiz.Skyline.ToolsUI
                     // panel); it is not something a caller can act on, so it is not an element.
                     return null;
             }
-        }
-
-        private static bool HasDataboundAncestor(Control control)
-        {
-            for (var parent = control.Parent; parent != null; parent = parent.Parent)
-                if (parent is DataboundGridControl)
-                    return true;
-            return false;
         }
     }
 }
