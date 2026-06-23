@@ -474,8 +474,9 @@ namespace pwiz.OspreySharp
 
         /// <summary>
         /// Writes generated usage help to stderr (matching the former PrintUsage channel).
-        /// <paramref name="formatType"/>: null/"ascii" = ascii tables, "unicode" = unicode
-        /// tables, "sections" = section names, "html" = HTML, anything else = a section filter.
+        /// <paramref name="formatType"/>: null/"unicode" = unicode tables (default, like Skyline),
+        /// "ascii" = lower-128 ascii tables, "sections" = section names, "html" = HTML, anything
+        /// else = a section filter.
         /// </summary>
         internal static void PrintUsage(string formatType)
         {
@@ -496,10 +497,10 @@ namespace pwiz.OspreySharp
             }
 
             string renderFormat;
-            if (formatType == null || string.Equals(formatType, ArgUsage.FORMAT_ASCII, StringComparison.OrdinalIgnoreCase))
-                renderFormat = ArgUsage.FORMAT_ASCII;          // ascii bordered tables (default)
-            else if (string.Equals(formatType, @"unicode", StringComparison.OrdinalIgnoreCase))
-                renderFormat = null;                            // unicode bordered tables
+            if (formatType == null || string.Equals(formatType, @"unicode", StringComparison.OrdinalIgnoreCase))
+                renderFormat = null;                            // unicode bordered tables (default, like Skyline)
+            else if (string.Equals(formatType, ArgUsage.FORMAT_ASCII, StringComparison.OrdinalIgnoreCase))
+                renderFormat = ArgUsage.FORMAT_ASCII;          // ascii (lower-128) tables on request
             else
             {
                 // Treat as a section-name filter.

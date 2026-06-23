@@ -157,25 +157,33 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestHelpRendering()
         {
-            // ascii (default): bordered tables, every group title and a representative arg present.
-            string ascii = OspreyCommandArgs.BuildUsage(null);
+            // Default (no format): unicode tables, like Skyline. Every group title and a
+            // representative arg present, and box-drawing borders (not lower-128 ascii).
+            string defaultHelp = OspreyCommandArgs.BuildUsage(null);
             foreach (var title in new[] { @"General I/O", @"Scoring & Tolerance", @"FDR & Protein Inference",
                 @"Decoys", @"Distributed / HPC", @"Diagnostics & Info" })
-                StringAssert.Contains(ascii, title);
+                StringAssert.Contains(defaultHelp, title);
+            StringAssert.Contains(defaultHelp, @"--input");
+            StringAssert.Contains(defaultHelp, @"--help");
+            StringAssert.Contains(defaultHelp, ArgUsage.Provider.ArgumentHeader);
+            Assert.IsTrue(defaultHelp.Contains('│') || defaultHelp.Contains('─'),
+                @"default help should use unicode box-drawing borders");
+
+            // "unicode" is an explicit alias for the default.
+            Assert.AreEqual(defaultHelp, OspreyCommandArgs.BuildUsage(@"unicode"));
+
+            // ascii on request: lower-128 borders only (no box-drawing).
+            string ascii = OspreyCommandArgs.BuildUsage(@"ascii");
             StringAssert.Contains(ascii, @"--input");
-            StringAssert.Contains(ascii, @"--help");
-            StringAssert.Contains(ascii, ArgUsage.Provider.ArgumentHeader);
+            Assert.IsTrue(ascii.Contains('+'), @"ascii help should use '+' corner borders");
+            Assert.IsFalse(ascii.Contains('│') || ascii.Contains('─'),
+                @"ascii help must not contain unicode box-drawing characters");
 
             // sections: one section title per line, nothing else.
             string sections = OspreyCommandArgs.BuildUsage(@"sections");
             foreach (var title in new[] { @"General I/O", @"Diagnostics & Info" })
                 StringAssert.Contains(sections, title);
             Assert.IsFalse(sections.Contains(@"--input"), @"sections should list titles only");
-
-            // unicode: box-drawing borders.
-            string unicode = OspreyCommandArgs.BuildUsage(@"unicode");
-            Assert.IsTrue(unicode.Contains('│') || unicode.Contains('─'),
-                @"unicode help should use box-drawing borders");
 
             // section filter: only the matching group.
             string filtered = OspreyCommandArgs.BuildUsage(@"Decoys");
