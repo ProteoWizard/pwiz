@@ -75,15 +75,17 @@ namespace pwiz.Skyline.ToolsUI
                 yield return descendant;
         }
 
-        /// <summary>The names of the actions this element supports, for discovery via GetControls.</summary>
+        /// <summary>The actions this element supports (the PerformAction verbs), for discovery via
+        /// GetControls. "click", "set_value", and "get_value" can be driven through PerformAction; the
+        /// item and grid actions are driven through their typed methods.</summary>
         public IEnumerable<string> Actions
         {
             get
             {
                 if (this is IClickable) yield return @"click";
-                if (this is IValueControl) yield return @"set_form_value";
-                if (this is IItemContainer) yield return @"set_item_checked / set_item_selected";
-                if (this is IGridControl) yield return @"get_grid_text / set_grid_text";
+                if (this is IValueControl) { yield return @"set_value"; yield return @"get_value"; }
+                if (this is IItemContainer) { yield return @"set_item_checked"; yield return @"set_item_selected"; }
+                if (this is IGridControl) { yield return @"get_grid_text"; yield return @"set_grid_text"; }
             }
         }
     }

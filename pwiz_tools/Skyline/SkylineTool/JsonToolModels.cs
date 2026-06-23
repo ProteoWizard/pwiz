@@ -313,20 +313,35 @@ namespace SkylineTool
 
     /// <summary>
     /// Information about one interactive control on a form, returned by GetControls. Lets a caller
-    /// discover what is on a form -- and how to address it -- without reading the source: match a
-    /// control by its <see cref="Label"/> (the visible text that names it) or, when it has none, by its
-    /// <see cref="Type"/>. <see cref="Name"/> is the internal control name, informational only.
+    /// discover what is on a form -- and how to address it -- without reading the source: <see cref="Id"/>
+    /// is the locator to pass back (to PerformAction or a typed verb), and the rest reports the control's
+    /// current state and the actions it supports.
     /// </summary>
     public class ControlInfo
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public string Label { get; set; }
+        public ControlId Id { get; set; }
         public string Value { get; set; }
         public bool Enabled { get; set; }
         public bool Visible { get; set; }
-        /// <summary>The connector verbs that can act on this control (e.g. "click", "set_form_value").</summary>
+        /// <summary>The actions that can be performed on this control (e.g. "click", "set_value").</summary>
         public string[] Actions { get; set; }
+    }
+
+    /// <summary>
+    /// A locator that refers to a control, menu item, or list item. Only the properties that are set are
+    /// used to find the match, so a caller can pass as little as needed: a <see cref="Label"/> (the visible
+    /// text that names it), a <see cref="Type"/> for a caption-less control ("TreeView"), and/or a
+    /// <see cref="Name"/> (the internal control name, e.g. one echoed back by GetControls). <see cref="Form"/>
+    /// is the owning form's id (from GetOpenForms). <see cref="Parent"/> narrows the search to within
+    /// another control -- e.g. an item inside a list, or a submenu item inside a menu.
+    /// </summary>
+    public class ControlId
+    {
+        public ControlId Parent { get; set; }
+        public string Form { get; set; }
+        public string Name { get; set; }
+        public string Label { get; set; }
+        public string Type { get; set; }
     }
 
     /// <summary>

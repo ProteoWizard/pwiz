@@ -1250,9 +1250,7 @@ namespace pwiz.Skyline.ToolsUI
                     .Where(element => element is ControlElement && element.Actions.Any())
                     .Select(element => new ControlInfo
                     {
-                        Name = element.Name,
-                        Type = element.ElementType.Name,
-                        Label = NullIfEmpty(CleanLabel(element.Label)),
+                        Id = ToControlId(element, formId),
                         Value = element.Value,
                         Enabled = element.IsEnabled,
                         Visible = element.IsVisible,
@@ -1268,6 +1266,126 @@ namespace pwiz.Skyline.ToolsUI
         // "Name:" label is reported (and addressable) as "Name". Matching tolerates either form anyway.
         private static string CleanLabel(string text) =>
             string.IsNullOrEmpty(text) ? text : NormalizeLabel(text).TrimEnd(' ', ':');
+
+        // The locator a caller can pass back to refer to this element (e.g. to PerformAction).
+        private static ControlId ToControlId(UiElement element, string formId) => new ControlId
+        {
+            Form = formId,
+            Name = NullIfEmpty(element.Name),
+            Label = NullIfEmpty(CleanLabel(element.Label)),
+            Type = element.ElementType.Name,
+        };
+
+        /// <summary>
+        /// The most general way to interact with a control, menu item, or list item (see
+        /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="controlId"/> refers to,
+        /// then perform <paramref name="action"/> ("click", "set_value", or "get_value") on it.
+        /// </summary>
+        public static string PerformAction(ControlId controlId, string action, string value)
+        {
+            var normalized = (action ?? string.Empty).Trim().ToLowerInvariant();
+            switch (normalized)
+            {
+                case @"click":
+                    var clickable = InvokeOnUiThread(() => RequireCapability<IClickable>(ResolveControlId(controlId), action));
+                    RunWithDialogWatch(() =>
+                    {
+                        // The element clicks itself (each handles its own threading -- see ClickFormButton).
+                        ((IClickable)clickable).Click();
+                        return true;
+                    });
+                    return string.Empty;
+                case @"set_value":
+                case @"set_form_value":
+                    RunWithDialogWatch(() =>
+                    {
+                        InvokeOnUiThread(() =>
+                            RequireCapability<IValueControl>(ResolveControlId(controlId), action).SetValue(value));
+                        return true;
+                    });
+                    return string.Empty;
+                case @"get_value":
+                    return InvokeOnUiThread(() =>
+                        RequireCapability<IValueControl>(ResolveControlId(controlId), action).GetValue());
+                default:
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Unsupported action '{0}'. Supported actions: click, set_value, get_value.", action));
+            }
+        }
+
+        // Verifies the resolved element is interactable and supports the capability the action needs,
+        // returning it cast to that capability. Throws a clear error (listing the element's actions) if not.
+        private static T RequireCapability<T>(UiElement element, string action) where T : class
+        {
+            VerifyInteractable(element);
+            if (element is T capability)
+                return capability;
+            throw new ArgumentException(LlmInstruction.Format(
+                @"The control '{0}' does not support the action '{1}'. It supports: {2}.",
+                element.Label ?? element.Name, action, string.Join(@", ", element.Actions)));
+        }
+
+        // Resolves a ControlId to the single element it refers to, using only the properties that are set.
+        // A Parent narrows the search to within that element; otherwise the search is the whole form. Among
+        // matches, prefers the best Label match, then a visible+enabled one. Must run on the UI thread.
+        private static UiElement ResolveControlId(ControlId controlId)
+        {
+            if (controlId == null)
+                throw new ArgumentException(new LlmInstruction(@"A controlId is required."));
+            if (controlId.Name == null && controlId.Label == null && controlId.Type == null)
+                throw new ArgumentException(new LlmInstruction(
+                    @"A controlId needs at least a Name, Label, or Type to identify a control."));
+
+            IEnumerable<UiElement> scope;
+            if (controlId.Parent != null)
+                scope = ResolveControlId(controlId.Parent).SelfAndDescendants().Skip(1);
+            else if (!string.IsNullOrEmpty(controlId.Form))
+                scope = UiElementFactory.For(FindFormById(controlId.Form)).SelfAndDescendants();
+            else
+                throw new ArgumentException(new LlmInstruction(@"A controlId needs a Form (or a Parent)."));
+
+            UiElement best = null;
+            var bestQuality = ControlMatchQuality.None;
+            var bestInteractable = false;
+            foreach (var element in scope)
+            {
+                if (!MatchesControlId(element, controlId, out var quality))
+                    continue;
+                var interactable = element.IsVisible && element.IsEnabled;
+                if (best == null || quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
+                {
+                    best = element;
+                    bestQuality = quality;
+                    bestInteractable = interactable;
+                }
+            }
+            if (best == null)
+                throw new ArgumentException(new LlmInstruction(
+                    @"No control found matching the controlId. Use skyline_get_controls to list the controls."));
+            return best;
+        }
+
+        // True if every set property of the controlId matches the element; quality ranks Label matches
+        // (an exact label beats a symbol-stripped one) so the closest match wins among several.
+        private static bool MatchesControlId(UiElement element, ControlId controlId, out ControlMatchQuality quality)
+        {
+            quality = ControlMatchQuality.None;
+            if (controlId.Name != null && !string.Equals(element.Name, controlId.Name, StringComparison.OrdinalIgnoreCase))
+                return false;
+            if (controlId.Type != null && !MatchesControlType(element.ElementType, controlId.Type))
+                return false;
+            if (controlId.Label != null)
+            {
+                quality = MatchQuality(element.Label, controlId.Label);
+                if (quality == ControlMatchQuality.None)
+                    return false;
+            }
+            else if (controlId.Name != null)
+                quality = ControlMatchQuality.Exact; // a name is an exact identity
+            else
+                quality = ControlMatchQuality.Type; // a type-only match is the weakest
+            return true;
+        }
 
         // Level 3: Complete UI operations - Graphs
 

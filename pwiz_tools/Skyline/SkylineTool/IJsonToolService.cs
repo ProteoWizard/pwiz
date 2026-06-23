@@ -324,6 +324,16 @@ namespace SkylineTool
         ControlInfo[] GetControls(string formId);
 
         /// <summary>
+        /// The most general way to interact with a control, menu item, or list item: locate it by the
+        /// <paramref name="controlId"/> (only the set properties are used -- see <see cref="ControlId"/>),
+        /// then perform <paramref name="action"/> on it. Actions: "click"; "set_value" (uses
+        /// <paramref name="value"/>); "get_value" (returns the control's current value). The typed verbs
+        /// (e.g. <see cref="ClickFormButton"/>) remain for the common cases.
+        /// </summary>
+        /// <returns>The result of the action -- the value for "get_value", otherwise empty.</returns>
+        string PerformAction(ControlId controlId, string action, string value);
+
+        /// <summary>
         /// Invokes a main-menu item by its visible path, e.g. "File > Import > Peptide Search".
         /// Each segment is matched against a menu item's text (mnemonic '&amp;' and trailing
         /// ellipsis ignored) or its control name, case-insensitively. The click is posted

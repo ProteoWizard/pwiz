@@ -60,19 +60,19 @@ namespace pwiz.SkylineTestFunctional
 
             // The name field has no caption of its own -- it is discoverable by the "Name" label that
             // names it, and reports that it can be value-set.
-            var nameField = controls.FirstOrDefault(c => c.Type == @"TextBox" && c.Label == @"Name");
+            var nameField = controls.FirstOrDefault(c => c.Id.Type == @"TextBox" && c.Id.Label == @"Name");
             Assert.IsNotNull(nameField, @"Expected a TextBox discoverable by the label 'Name'.");
-            CollectionAssert.Contains(nameField.Actions, @"set_form_value");
+            CollectionAssert.Contains(nameField.Actions, @"set_value");
 
             // The Applies-to list is discoverable by its "Applies to" label and reports an item action.
-            var appliesToList = controls.FirstOrDefault(c => c.Type == @"CheckedListBox");
+            var appliesToList = controls.FirstOrDefault(c => c.Id.Type == @"CheckedListBox");
             Assert.IsNotNull(appliesToList, @"Expected the Applies-to CheckedListBox.");
-            Assert.AreEqual(@"Applies to", appliesToList.Label);
+            Assert.AreEqual(@"Applies to", appliesToList.Id.Label);
             Assert.IsTrue(appliesToList.Actions.Any(a => a.Contains(@"set_item")),
                 @"The list should report a set-item action.");
 
             // The OK button is discoverable by its own caption and reports that it can be clicked.
-            var okButton = controls.FirstOrDefault(c => c.Label == @"OK");
+            var okButton = controls.FirstOrDefault(c => c.Id.Label == @"OK");
             Assert.IsNotNull(okButton, @"Expected an OK button discoverable by its caption.");
             CollectionAssert.Contains(okButton.Actions, @"click");
 
