@@ -100,11 +100,6 @@ namespace pwiz.OspreySharp.IO
                     entries = blibLoader.Load(path);
                     break;
 
-                case LibraryFormat.Elib:
-                    var elibLoader = new ElibLoader();
-                    entries = elibLoader.Load(path);
-                    break;
-
                 default:
                     throw new NotSupportedException(string.Format(
                         "Unsupported library format: {0}", config.LibrarySource.Format));

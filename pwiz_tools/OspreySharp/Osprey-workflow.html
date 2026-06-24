@@ -199,7 +199,7 @@
 
   <rect class="input-pill" x="260"  y="16" width="260" height="48" rx="24"/>
   <text class="stage-title" x="390" y="38" text-anchor="middle">Spectral library</text>
-  <text class="stage-desc"  x="390" y="54" text-anchor="middle">DIA-NN TSV, .blib, or .elib</text>
+  <text class="stage-desc"  x="390" y="54" text-anchor="middle">DIA-NN TSV or .blib</text>
 
   <rect class="input-pill" x="680" y="16" width="260" height="48" rx="24"/>
   <text class="stage-title" x="810" y="38" text-anchor="middle">DIA mzML file(s)</text>
@@ -816,6 +816,12 @@
     files sequentially and is unaffected. A fully fair
     WSL-vs-Windows comparison would set
     <code>OSPREY_MAX_PARALLEL_FILES=1</code> on both sides too.
+    (Historical: as of the <code>--parallel-files</code> work, C# now
+    processes files <em>sequentially by default</em>, so this run's
+    behavior is now the default and no longer needs the env cap;
+    concurrency is opt-in via <code>--parallel-files [N]</code>, and
+    <code>OSPREY_MAX_PARALLEL_FILES</code> remains only as a back-compat
+    cap.)
   </p>
   <p>
     <strong>BLIB writer:</strong> OspreySharp's <code>BlibWriter</code>

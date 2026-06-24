@@ -198,24 +198,17 @@ namespace pwiz.OspreySharp.Tasks
                 { @"osprey.reconciled", @"false" },
             };
 
-            // File-level parallelism is configurable via
-            // OSPREY_MAX_PARALLEL_FILES. See AnalysisPipeline (and
-            // Osprey-workflow.html) for the policy.
-            int maxParallelFiles = OspreyEnvironment.MaxParallelFiles;
-
-            // Determine how many files will actually run concurrently so
-            // ProcessFile can divide the inner main-search thread budget
-            // and avoid oversubscription. Stored on the per-run RunPlan
-            // (driver-owned run state), not on the parsed OspreyConfig.
-            if (nFiles == 1 || maxParallelFiles == 1)
-                ctx.RunPlan.EffectiveFileParallelism = 1;
-            else if (maxParallelFiles > 1)
-                ctx.RunPlan.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
-            else
-                ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
+            // Resolve how many input files run concurrently for this invocation
+            // (--parallel-files, the OSPREY_MAX_PARALLEL_FILES back-compat cap,
+            // free RAM, and core count) in the one shared place. Stored on the
+            // per-run RunPlan (driver-owned run state), not on the parsed
+            // OspreyConfig; ProcessFile reads it to divide the inner main-search
+            // thread budget and avoid oversubscription.
+            int effectiveParallelism = ResolveFileParallelism(config, nFiles, ctx.LogInfo);
+            ctx.RunPlan.EffectiveFileParallelism = effectiveParallelism;
 
             var swAllFiles = Stopwatch.StartNew();
-            if (config.InputFiles.Count == 1)
+            if (nFiles == 1)
             {
                 // Single file: process directly (no parallel overhead)
                 string inputFile = config.InputFiles[0];
@@ -228,15 +221,13 @@ namespace pwiz.OspreySharp.Tasks
                 if (fileResult != null)
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
             }
-            else if (maxParallelFiles == 1)
+            else if (effectiveParallelism == 1)
             {
-                // Strictly sequential: one file at a time. Matches the
-                // memory envelope of the single-file path while still
-                // sharing the library load. Useful for 3-file Astral
-                // runs that would OOM in parallel.
-                ctx.LogInfo(string.Format(
-                    @"[BENCH] OSPREY_MAX_PARALLEL_FILES=1 - processing {0} files sequentially",
-                    config.InputFiles.Count));
+                // Strictly sequential: one file at a time (the default, or an
+                // explicit --parallel-files 1 / OSPREY_MAX_PARALLEL_FILES=1).
+                // Matches the memory envelope of the single-file path while
+                // still sharing the library load -- the safe choice for 3-file
+                // Astral runs that would OOM in parallel.
                 string validityKey = ValidityKey(ctx);
                 for (int fileIdx = 0; fileIdx < config.InputFiles.Count; fileIdx++)
                 {
@@ -252,16 +243,12 @@ namespace pwiz.OspreySharp.Tasks
             }
             else
             {
-                // Multiple files: process in parallel, optionally
-                // capped via OSPREY_MAX_PARALLEL_FILES.
-                var parallelOpts = new ParallelOptions();
-                if (maxParallelFiles > 1)
+                // Multiple files in parallel, bounded by the resolved
+                // concurrent-file count (see ResolveFileParallelism).
+                var parallelOpts = new ParallelOptions
                 {
-                    parallelOpts.MaxDegreeOfParallelism = maxParallelFiles;
-                    ctx.LogInfo(string.Format(
-                        @"[BENCH] OSPREY_MAX_PARALLEL_FILES={0} - capping parallel file count",
-                        maxParallelFiles));
-                }
+                    MaxDegreeOfParallelism = effectiveParallelism
+                };
                 string validityKey = ValidityKey(ctx);
                 var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
                 Parallel.For(0, config.InputFiles.Count, parallelOpts, fileIdx =>
@@ -350,16 +337,12 @@ namespace pwiz.OspreySharp.Tasks
             // (Stage 6 rescore's fileNameToIdx in particular) already has the
             // synthetic input paths by the time this load runs.
 
-            // Mirror Run's EffectiveFileParallelism bookkeeping (unused by the
-            // disk-load path, which never calls ProcessFile, but kept so the
-            // RunPlan reflects the same per-run state either way).
-            int maxParallelFiles = OspreyEnvironment.MaxParallelFiles;
-            if (nFiles == 1 || maxParallelFiles == 1)
-                ctx.RunPlan.EffectiveFileParallelism = 1;
-            else if (maxParallelFiles > 1)
-                ctx.RunPlan.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
-            else
-                ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
+            // Mirror Run's EffectiveFileParallelism bookkeeping via the shared
+            // resolver (unused by the disk-load path, which never calls
+            // ProcessFile, but kept so the RunPlan reflects the same per-run
+            // state either way). No log callback: this path does not parallelize,
+            // so it should not emit a file-parallelism decision line.
+            ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
 
             var swAllFiles = Stopwatch.StartNew();
             LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths, perFileCalibrations, ctx);
@@ -429,16 +412,12 @@ namespace pwiz.OspreySharp.Tasks
 
             int nFiles = config.InputFiles?.Count ?? 0;
 
-            // Mirror Run's EffectiveFileParallelism bookkeeping (unused by the
-            // disk-load path, which never calls ProcessFile, but kept so the
-            // RunPlan reflects the same per-run state either way).
-            int maxParallelFiles = OspreyEnvironment.MaxParallelFiles;
-            if (nFiles == 1 || maxParallelFiles == 1)
-                ctx.RunPlan.EffectiveFileParallelism = 1;
-            else if (maxParallelFiles > 1)
-                ctx.RunPlan.EffectiveFileParallelism = Math.Min(maxParallelFiles, nFiles);
-            else
-                ctx.RunPlan.EffectiveFileParallelism = Math.Min(nFiles, Environment.ProcessorCount);
+            // Mirror Run's EffectiveFileParallelism bookkeeping via the shared
+            // resolver (unused by the disk-load path, which never calls
+            // ProcessFile, but kept so the RunPlan reflects the same per-run
+            // state either way). No log callback: this path does not parallelize,
+            // so it should not emit a file-parallelism decision line.
+            ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
 
             var swAllFiles = Stopwatch.StartNew();
             if (config.InputFiles != null)
@@ -540,6 +519,27 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Resolve the effective concurrent-file count for this invocation via the
+        /// shared <see cref="FileParallelismResolver"/> -- the single owner of the
+        /// precedence between <c>--parallel-files</c>, the
+        /// <c>OSPREY_MAX_PARALLEL_FILES</c> back-compat cap, free RAM, and the core
+        /// count. The memory probe and per-file footprint estimate are evaluated
+        /// lazily (auto mode only), so the common sequential / explicit paths do no
+        /// I/O. <paramref name="log"/> is null on the disk-load bookkeeping paths
+        /// that never actually parallelize, so they compute the same number without
+        /// emitting a misleading decision line.
+        /// </summary>
+        private static int ResolveFileParallelism(OspreyConfig config, int nFiles, Action<string> log)
+        {
+            return FileParallelismResolver.Resolve(
+                config.FileParallelism, nFiles, OspreyEnvironment.MaxParallelFiles,
+                Environment.ProcessorCount,
+                SystemMemory.AvailablePhysicalBytes,
+                () => FileParallelismResolver.EstimatePerFileBytes(config.InputFiles),
+                log);
         }
 
         /// <summary>

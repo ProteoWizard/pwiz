@@ -39,13 +39,18 @@ namespace pwiz.OspreySharp.Core
     public static class OspreyEnvironment
     {
         /// <summary>
-        /// OSPREY_MAX_PARALLEL_FILES: cap on concurrent file processing in the
-        /// Parallel.For over input files. Values:
-        ///   0 / unset = use .NET default (all files at once)
+        /// OSPREY_MAX_PARALLEL_FILES: legacy back-compat cap on concurrent file
+        /// processing, superseded by the <c>--parallel-files</c> CLI argument
+        /// (which wins when both are set). Consulted by
+        /// <see cref="FileParallelismResolver"/> only when the argument is absent.
+        /// Values:
+        ///   0 / unset = no cap from here (the default is now strictly sequential)
         ///   1        = strictly sequential
         ///   N &gt; 1    = at most N files concurrently
-        /// Useful for memory-bound datasets (Astral HRAM) where three 30 GB
-        /// working sets exceed a 64 GB budget.
+        /// Note the default changed: an unset value used to mean "all files at
+        /// once"; it now means "one file at a time" -- opt into concurrency with
+        /// <c>--parallel-files</c>. Useful historically for memory-bound datasets
+        /// (Astral HRAM) where three large working sets exceed a 64 GB budget.
         /// </summary>
         public static readonly int MaxParallelFiles = ParseIntOrZero(@"OSPREY_MAX_PARALLEL_FILES");
 

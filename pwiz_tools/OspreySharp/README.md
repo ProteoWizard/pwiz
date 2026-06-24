@@ -34,7 +34,7 @@ or the reference), not a "similar but different" interpretation.
 |--------------------------|----------------------------------|--------------------------------------------|
 | `osprey-core`            | `OspreySharp.Core`               | Shared types, config, enums                |
 | `osprey-ml`              | `OspreySharp.ML`                 | LDA, SVM, matrix, q-values, PEP, PRNG      |
-| `osprey-io`              | `OspreySharp.IO`                 | DIA-NN TSV, blib, elib readers/writers     |
+| `osprey-io`              | `OspreySharp.IO`                 | DIA-NN TSV, blib readers/writers           |
 | `osprey-chromatography`  | `OspreySharp.Chromatography`     | CWT peak detection, LOESS, RT/mass calib   |
 | `osprey-scoring`         | `OspreySharp.Scoring`            | Spectral scoring, calibration LDA, batch   |
 | `osprey-fdr`             | `OspreySharp.FDR`                | Percolator SVM, protein FDR                |
@@ -58,7 +58,7 @@ after that is a mix of "ported but never diffed" and "not ported yet".
   -------------------------------------------- --------------------------
 
   INPUTS
-  +- Spectral library (TSV / blib / elib)
+  +- Spectral library (TSV / blib)
   +- DIA mzML file(s)
 
   STAGE 1  -  Library preparation
@@ -169,7 +169,7 @@ pwiz_tools/OspreySharp/
   OspreySharp/                  CLI + end-to-end pipeline (AnalysisPipeline.cs)
   OspreySharp.Core/             Types, config, enums
   OspreySharp.ML/               LDA, SVM, Matrix, QValueCalculator, PEP, PRNG
-  OspreySharp.IO/               Readers/writers (DIA-NN TSV, blib, elib)
+  OspreySharp.IO/               Readers/writers (DIA-NN TSV, blib)
   OspreySharp.Chromatography/   CWT peaks, LOESS, RT/mass calibration
   OspreySharp.Scoring/          Spectral scoring, CalibrationScorer
   OspreySharp.FDR/              Percolator SVM, protein FDR
