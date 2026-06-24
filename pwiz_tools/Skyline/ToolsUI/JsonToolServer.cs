@@ -448,7 +448,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public DocumentStatus GetDocumentStatus()
         {
-            var doc = Program.MainWindow.Document;
+            var doc = Program.MainWindow?.Document;
+            if (doc == null)
+            {
+                return null;
+            }
             string docPath = _toolService.GetDocumentPath();
 
             string groupsLabel, moleculesLabel;
@@ -460,7 +464,7 @@ namespace pwiz.Skyline.ToolsUI
             else
             {
                 groupsLabel = @"Proteins/Lists";
-                moleculesLabel = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.mixed
+                moleculesLabel = doc?.DocumentType == SrmDocument.DOCUMENT_TYPE.mixed
                     ? @"Peptides/Molecules"
                     : @"Peptides";
             }

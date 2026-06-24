@@ -241,13 +241,44 @@ namespace pwiz.Skyline.ToolsUI
         // Most controls have no children -- a button, a text box, a list. Only a ContainerElement (a Form
         // or UserControl) owns children; the inherited (empty) Children is correct for everything else.
 
-        // Default: a caption-less field is named by the Label immediately before it in tab order
+        // Every control can be clicked. A control that is itself a button -- including a custom
+        // IButtonControl tile such as a StartPage action box, whose clickable surface is covered by child
+        // labels and an icon -- is clicked through its handler, which is reliable regardless of those
+        // children. Anything else gets a real left-click at its center, the only way to drive an owner-drawn
+        // control whose click is a mouse handler. The mouse messages are POSTED (like a user click) so a
+        // click that opens a modal does not block the worker thread. A subclass with a more direct gesture
+        // overrides Click: a button uses BM_CLICK (to bypass PerformClick's gates), a tab selects itself.
+        public virtual void Click()
+        {
+            if (Control is IButtonControl button)
+            {
+                JsonUiService.InvokeOnUiThread(button.PerformClick);
+                return;
+            }
+            var clientSize = JsonUiService.InvokeOnUiThread(() => Control.ClientSize);
+            int lParam = (clientSize.Height / 2) << 16 | (clientSize.Width / 2); // MAKELPARAM(centerX, centerY)
+            User32.PostMessageA(Control.Handle, User32.WinMessageType.WM_LBUTTONDOWN, 1 /* MK_LBUTTON */, lParam);
+            User32.PostMessageA(Control.Handle, User32.WinMessageType.WM_LBUTTONUP, 0, lParam);
+        }
+        public override bool SupportsAction(UiAction action) =>
+            action == UiAction.Click || base.SupportsAction(action);
+        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
+        {
+            if (action == UiAction.Click) { Click(); return null; }
+            return base.PerformAction(action, value, cancellationToken);
+        }
+
+        // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
+        // such as a StartPage ActionBoxControl, whose Text is its visible caption ("Blank Document"). A
+        // plain field has no caption of its own; it is named by the Label immediately before it in tab order
         // (e.g. "Name:" -> the name textbox, "Use only scans within" -> the RT box). Caption-bearing
         // elements (button, checkbox, tab) override this to return their own text.
         public override string Label
         {
             get
             {
+                if (Control is IButtonControl && !string.IsNullOrEmpty(Control.Text))
+                    return Control.Text;
                 var previous = Control.FindForm()?.GetNextControl(Control, false);
                 return previous is System.Windows.Forms.Label label ? label.Text : null;
             }
@@ -309,15 +340,8 @@ namespace pwiz.Skyline.ToolsUI
         // returns, which pins the worker and wedges the single-threaded JsonTool server behind the modal.
         // The main thread runs the posted click when it next pumps; the resulting dialog is then driven by
         // later commands, exactly like the asynchronous main-menu path.
-        public virtual void Click() =>
+        public override void Click() =>
             User32.PostMessageA(Control.Handle, User32.WinMessageType.BM_CLICK, 0, 0);
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value, cancellationToken);
-        }
     }
 
     /// <summary>A checkbox: clickable (toggles via its handler) and value-settable (sets the checked state).</summary>
@@ -758,21 +782,13 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    /// <summary>A custom IButtonControl that is not a WinForms ButtonBase (e.g. a StartPage tile) --
-    /// clicked via PerformClick.</summary>
+    /// <summary>A custom IButtonControl that is not a WinForms ButtonBase (e.g. a StartPage tile). The base
+    /// Click already drives an IButtonControl through PerformClick; this just reports the control's own
+    /// caption as the Label.</summary>
     internal sealed class ClickableControlElement : ControlElement
     {
-        private readonly IButtonControl _button;
-        public ClickableControlElement(Control control) : base(control) { _button = (IButtonControl) control; }
+        public ClickableControlElement(Control control) : base(control) { }
         public override string Label => Control.Text;
-        public void Click() => JsonUiService.InvokeOnUiThread(() => _button.PerformClick());
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value, cancellationToken);
-        }
     }
 
     /// <summary>A ToolStrip (menu strip / toolbar) -- its items are its children.</summary>
