@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
 
@@ -61,7 +60,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>The OK or Cancel button of a native dialog. A click dispatches to the dialog's Accept or
     /// Cancel (the gesture differs by dialog type), so the connector drives it like any form button.</summary>
-    internal sealed class NativeDialogButton : UiElement
+    internal sealed class NativeDialogButton : UiElement, IClickableElement
     {
         private readonly NativeDialog _dialog;
         private readonly bool _accept;
@@ -79,23 +78,18 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => _label;
         public override bool IsEnabled => _dialog.IsEnabled;
         public override bool IsVisible => true;
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
+        public void Click()
         {
-            if (action != UiAction.Click)
-                return base.PerformAction(action, value, cancellationToken);
             if (_accept)
                 _dialog.Accept();
             else
                 _dialog.Cancel();
-            return null;
         }
     }
 
     /// <summary>The file-name field of a native file dialog. set_value types the path(s) into it (without
     /// accepting -- click OK to commit), dispatching to the dialog's EnterPath.</summary>
-    internal sealed class NativeFileNameElement : UiElement
+    internal sealed class NativeFileNameElement : UiElement, IWriteValueElement
     {
         private readonly FileDialogAutomation _dialog;
         public NativeFileNameElement(FileDialogAutomation dialog) { _dialog = dialog; }
@@ -105,14 +99,6 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => @"File name";
         public override bool IsEnabled => _dialog.IsEnabled;
         public override bool IsVisible => true;
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.SetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            if (action != UiAction.SetValue)
-                return base.PerformAction(action, value, cancellationToken);
-            _dialog.EnterPath(value as string);
-            return null;
-        }
+        public void SetValue(string value) => _dialog.EnterPath(value);
     }
 }

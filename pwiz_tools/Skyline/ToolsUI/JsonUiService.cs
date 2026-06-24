@@ -579,7 +579,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 var form = FindFormById(formId);
                 VerifyFormInteractable(form);
-                var clickable = UiElementFactory.For(form).FindElement(button, UiAction.Click);
+                var clickable = UiElementFactory.For(form).FindElement(button, UiActions.Click);
                 VerifyInteractable(clickable);
                 return clickable;
             });
@@ -588,7 +588,7 @@ namespace pwiz.Skyline.ToolsUI
                 // The element clicks itself; each handles its own threading (a Win32 BM_CLICK is sent
                 // cross-thread so a click that opens a modal does not block here, while a managed
                 // PerformClick / property-set marshals to the UI thread internally).
-                element.PerformAction(UiAction.Click, null, CancellationToken.None);
+                UiActions.Click.Invoke(element, null, CancellationToken.None);
                 return true;
             });
         }
@@ -740,9 +740,9 @@ namespace pwiz.Skyline.ToolsUI
                     // A field is matched by its own Label (its caption, or the label that names a
                     // caption-less box -- see UiElement.Label), so a label never has to be matched and
                     // resolved forward to its field.
-                    var element = UiElementFactory.For(form).FindElement(controlId, UiAction.SetValue);
+                    var element = UiElementFactory.For(form).FindElement(controlId, UiActions.SetValue);
                     VerifyInteractable(element);
-                    element.PerformAction(UiAction.SetValue, value, CancellationToken.None);
+                    UiActions.SetValue.Invoke(element, value, CancellationToken.None);
                 });
             });
         }
@@ -756,7 +756,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             ValidateFormIdFormat(formId);
             return InvokeOnUiThread(() =>
-                UiElementFactory.For(FindFormById(formId)).FindElement(controlId, UiAction.GetValue).Value);
+                UiElementFactory.For(FindFormById(formId)).FindElement(controlId, UiActions.GetValue).Value);
         }
 
         /// <summary>
@@ -810,7 +810,7 @@ namespace pwiz.Skyline.ToolsUI
         private static GridElement FindGrid(Form form, string controlId)
         {
             return (GridElement) UiElementFactory.For(form)
-                .FindElement(controlId ?? string.Empty, UiAction.SetGridText);
+                .FindElement(controlId ?? string.Empty, UiActions.SetGridText);
         }
 
         // Pastes tab/newline-separated text into a plain DataGridView by setting cell values from the
@@ -1074,97 +1074,67 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static object PerformAction(UiElementPath path, string action, object value)
         {
-            if (!UiActions.TryParse(action, out var uiAction))
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
+            var uiAction = UiActions.ByName(action) ?? throw new ArgumentException(LlmInstruction.Format(
+                @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
             // Capture the disconnect check on this (server) thread before any marshaling, so a long action
             // (e.g. reading a large grid) is abandoned if the client goes away rather than pinning the
-            // single-instance server. The element receives the token through its PerformAction.
+            // single-instance server. The action receives the token through its Invoke.
             using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
             {
                 var token = cancellation.Token;
                 // A path rooted at a native dialog is resolved and acted on this (pipe) thread: the dialog
                 // runs its own modal loop on the UI thread, so marshalling to it (or to RunWithDialogWatch's
-                // background work) would deadlock. The dialog's elements post Win32 messages, which is safe
-                // from any thread.
+                // background work) would deadlock. The dialog's elements post Win32 messages / drive UI
+                // Automation, which is safe from any thread, so the action's thread policy is bypassed here.
                 if (TryGetNativeDialog(RootFormText(path), out var nativeDialog))
-                    return PerformActionOnNativeDialog(nativeDialog, path, uiAction, value, token);
-                switch (uiAction)
                 {
-                    // GetActions/GetChildren are answered by the service; the returned child paths have a null
-                    // Parent (the caller knows the parent it asked about). The element handles the operational
-                    // actions through its PerformAction.
-                    case UiAction.GetActions:
-                        return InvokeOnUiThread(() => ResolvePath(path).SupportedActions.Select(UiActions.ToName).ToArray());
-                    case UiAction.GetChildren:
-                        return InvokeOnUiThread(() => ResolvePath(path).GetChildren());
-                    case UiAction.Click:
-                        // A click runs inside the dialog-watch (the element handles its own threading); resolve
-                        // and verify first on the UI thread.
-                        var clickElement = InvokeOnUiThread(() => RequireAction(ResolvePath(path), uiAction));
-                        RunWithDialogWatch(() =>
-                        {
-                            clickElement.PerformAction(uiAction, value, token);
-                            return true;
-                        });
-                        return null;
-                    case UiAction.SetValue:
-                    case UiAction.SetGridText:
-                    case UiAction.SetCurrentCellAddress:
-                    case UiAction.SetSelectedIndex:
-                    case UiAction.CheckItem:
-                    case UiAction.UncheckItem:
-                    case UiAction.SelectItem:
-                    case UiAction.UnselectItem:
-                    case UiAction.SelectTab:
-                    case UiAction.Expand:
-                    case UiAction.Collapse:
-                        // Mutating actions: run inside the dialog-watch (a paste can raise a conversion
-                        // alert) and on the UI thread.
-                        object setResult = null;
-                        RunWithDialogWatch(() =>
-                        {
-                            setResult = InvokeOnUiThread(() => RequireAction(ResolvePath(path), uiAction).PerformAction(uiAction, value, token));
-                            return true;
-                        });
-                        return setResult;
-                    default:
-                        // Read-only / other actions: resolve, verify, perform on the UI thread.
-                        return InvokeOnUiThread(() => RequireAction(ResolvePath(path), uiAction).PerformAction(uiAction, value, token));
+                    var nativeElement = RequireAction(ResolvePath(path, _ => nativeDialog), uiAction);
+                    return uiAction.Invoke(nativeElement, value, token);
                 }
+                // Resolve + verify on the UI thread (a control's gates read window handles), then run the
+                // action with the thread/dialog policy it declares. get_actions/get_children are ordinary
+                // reads now -- the action's Invoke returns the element's SupportedActions / GetChildren(),
+                // whose child paths are parentless (the caller knows the parent it asked about).
+                var element = InvokeOnUiThread(() => RequireAction(ResolvePath(path), uiAction));
+                return ExecuteAction(uiAction, element, value, token);
             }
         }
 
-        // Dispatches an action on a native dialog (or one of its elements). Everything runs on the calling
-        // (pipe) thread -- the dialog is modal on the UI thread, so it must not be marshalled there -- and
-        // the path is resolved against the dialog as its root. The dialog's elements dispatch to UI
-        // Automation / Win32 messages, which are safe from any thread.
-        private static object PerformActionOnNativeDialog(NativeDialog dialog, UiElementPath path,
-            UiAction uiAction, object value, CancellationToken token)
+        // Runs a resolved action with the threading it declares: a mutation or click runs inside the
+        // dialog-watch (so a dialog it pops is surfaced rather than blocking the worker); a click runs its
+        // Invoke on the calling (worker) thread because the element marshals its own gesture (a posted
+        // BM_CLICK must not be sent from the UI thread), while every other action is marshalled to the UI
+        // thread. Must be called off the UI thread.
+        private static object ExecuteAction(UiAction action, UiElement element, object value, CancellationToken token)
         {
-            var element = ResolvePath(path, _ => dialog);
-            switch (uiAction)
+            if (!action.WatchForDialog)
+                return action.RunOnUiThread
+                    ? InvokeOnUiThread(() => action.Invoke(element, value, token))
+                    : action.Invoke(element, value, token);
+            object result = null;
+            RunWithDialogWatch(() =>
             {
-                case UiAction.GetActions:
-                    return element.SupportedActions.Select(UiActions.ToName).ToArray();
-                case UiAction.GetChildren:
-                    return element.GetChildren();
-                default:
-                    return RequireAction(element, uiAction).PerformAction(uiAction, value, token);
-            }
+                result = action.RunOnUiThread
+                    ? InvokeOnUiThread(() => action.Invoke(element, value, token))
+                    : action.Invoke(element, value, token);
+                return true;
+            });
+            return result;
         }
 
-        // Verifies the resolved element is interactable and supports the action, returning it. Throws a
-        // clear error (listing the element's actions) if it does not.
+        // Verifies the resolved element supports the action (it is the kind the action targets) and, for an
+        // action that requires it, that the element is interactable (not blocked by a modal, and enabled).
+        // Returns the element; throws a clear error (listing the element's actions) if it does not apply.
         private static UiElement RequireAction(UiElement element, UiAction action)
         {
-            VerifyInteractable(element);
-            if (element.SupportsAction(action))
-                return element;
-            throw new ArgumentException(LlmInstruction.Format(
-                @"The control '{0}' does not support the action '{1}'. It supports: {2}.",
-                element.Label ?? element.Name, UiActions.ToName(action),
-                string.Join(@", ", element.SupportedActions.Select(UiActions.ToName))));
+            if (!action.AppliesTo(element))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The control '{0}' does not support the action '{1}'. It supports: {2}.",
+                    element.Label ?? element.Name, action.SnakeCaseName,
+                    string.Join(@", ", element.SupportedActions.Select(a => a.SnakeCaseName))));
+            if (action.MustBeEnabled)
+                VerifyInteractable(element);
+            return element;
         }
 
         // The form id at the root of a path -- the Text of its deepest (Parent-less) segment, or null.

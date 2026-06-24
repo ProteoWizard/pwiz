@@ -33,21 +33,109 @@ using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
-    // The actions a UiElement can be asked to do (see UiElement.SupportsAction / PerformAction). Every
-    // element supports GetActions and GetChildren; the rest depend on the kind of control.
-    public enum UiAction
+    // ---- Capability interfaces ------------------------------------------------------------------
+    // The "kind" a UiAction targets: an action applies to an element when the element implements the
+    // action's interface (UiAction<T>.AppliesTo is `element is T`), and the action drives the element
+    // through that interface's method. A control's element class declares the capabilities it has by
+    // implementing these, instead of a per-element switch over an action enum.
+
+    /// <summary>An element a click acts on (a button, a field, a menu item, a native dialog button). The
+    /// element marshals its own gesture -- a posted BM_CLICK, a PerformClick on the UI thread, a native
+    /// Accept/Cancel -- so Click may be called from the connector's worker thread.</summary>
+    public interface IClickableElement { void Click(); }
+
+    /// <summary>An element whose value can be read (a text box, a combo box, a check state, a list of
+    /// checked items).</summary>
+    public interface IReadValueElement { string GetValue(); }
+
+    /// <summary>An element whose value can be set (a text box, a combo box, a check state, a file name).</summary>
+    public interface IWriteValueElement { void SetValue(string value); }
+
+    /// <summary>An element whose items are checked/unchecked by their visible text (a CheckedListBox, a
+    /// TreeView, a ListView, the pick-list pop-up).</summary>
+    public interface ICheckItemsElement { void SetItemChecked(string item, bool isChecked); }
+
+    /// <summary>An element whose items are selected/unselected by their visible text (a list box, a tree,
+    /// a list view).</summary>
+    public interface ISelectItemsElement { void SetItemSelected(string item, bool isSelected); }
+
+    /// <summary>A list whose selection can be moved to a given index.</summary>
+    public interface ISelectIndexElement { void SetSelectedIndex(int index); }
+
+    /// <summary>A tree whose nodes can be expanded/collapsed by a path (an array of child names/indexes).</summary>
+    public interface IExpandCollapseElement { void Expand(object path); void Collapse(object path); }
+
+    /// <summary>A tab control whose tab can be selected by the tab's visible text.</summary>
+    public interface ISelectTabElement { void SelectTab(string tabText); }
+
+    // ---- Actions --------------------------------------------------------------------------------
+
+    /// <summary>
+    /// One thing the connector can ask a <see cref="UiElement"/> to do (the verbs ClickFormButton,
+    /// SetFormValue, the grid verbs, and the generic perform_action all act through these). An action is a
+    /// singleton object -- see <see cref="UiActions"/> for the set of them -- that knows its wire
+    /// <see cref="SnakeCaseName"/>, the gates the connector must honor before performing it
+    /// (<see cref="MustBeVisible"/> / <see cref="MustBeEnabled"/> -- a user could not act on a control they
+    /// cannot see or that is disabled), and the thread it runs on (<see cref="WatchForDialog"/> /
+    /// <see cref="RunOnUiThread"/>). It decides whether it <see cref="AppliesTo"/> an element (usually: the
+    /// element is the right kind -- it implements the action's capability interface) and how to
+    /// <see cref="Invoke"/> it (by calling that interface's method). This inverts the old per-element switch
+    /// over an action enum: a new control kind declares its capabilities by implementing interfaces, and a
+    /// new action is usually just one <see cref="UiActions"/> entry.
+    /// </summary>
+    public abstract class UiAction
     {
-        GetActions, GetChildren, Click, SetValue, GetValue,
-        CheckItem, UncheckItem, SelectItem, UnselectItem, GetGridText, SetGridText, SetCurrentCellAddress,
-        SetSelectedIndex, Expand, Collapse, SelectTab
+        protected UiAction(string name)
+        {
+            Name = name;
+            SnakeCaseName = UiActions.ToSnakeCase(name);
+        }
+
+        /// <summary>The PascalCase action name; <see cref="SnakeCaseName"/> is the snake_case wire form.</summary>
+        public string Name { get; }
+        public string SnakeCaseName { get; }
+
+        /// <summary>Whether the element must be visible / enabled for the action to be performed -- the gates
+        /// a user faces. A pure read (get_value, get_actions, get_children, get_grid_text) clears these, so a
+        /// disabled or off-screen control can still be inspected; a mutation or click leaves them set.</summary>
+        public bool MustBeVisible { get; internal set; } = true;
+        public bool MustBeEnabled { get; internal set; } = true;
+
+        /// <summary>Threading policy for the generic perform_action dispatch. A mutation or click runs inside
+        /// the dialog-watch (<see cref="WatchForDialog"/>) so a dialog it pops is surfaced rather than
+        /// blocking; a click runs its <see cref="Invoke"/> on the calling (worker) thread
+        /// (<see cref="RunOnUiThread"/> = false) because a clickable element marshals its own gesture (a
+        /// posted BM_CLICK must not be sent from the UI thread), while every other action is marshalled to the
+        /// UI thread.</summary>
+        public bool WatchForDialog { get; internal set; }
+        public bool RunOnUiThread { get; internal set; } = true;
+
+        /// <summary>Whether this action is meaningful for the element -- usually whether the element is the
+        /// kind the action targets (it implements the action's capability interface).</summary>
+        public abstract bool AppliesTo(UiElement element);
+
+        /// <summary>Whether the action can currently be performed on the element: it applies and the element
+        /// passes the visible/enabled gates the action requires.</summary>
+        public bool IsEnabled(UiElement element) =>
+            AppliesTo(element)
+            && (!MustBeVisible || element.IsVisible)
+            && (!MustBeEnabled || element.IsEnabled);
+
+        /// <summary>Performs the action on the element (the action determines the argument and result types).</summary>
+        public abstract object Invoke(UiElement element, object argument, CancellationToken cancellationToken);
     }
 
-    // Converts between a UiAction and its wire name (the snake_case string the connector uses).
-    internal static class UiActions
+    /// <summary>
+    /// The set of <see cref="UiAction"/> singletons (these replace the former enum members) and the lookup
+    /// over them. Most actions whose Invoke is just a method call on a capability interface are built from
+    /// the generic <see cref="SimpleAction{T,TArg}"/> -- no per-action class. Only get_grid_text, which
+    /// needs the cancellation token, has its own class.
+    /// </summary>
+    public static class UiActions
     {
-        public static string ToName(UiAction action)
+        // PascalCase -> snake_case ("GetActions" -> "get_actions").
+        public static string ToSnakeCase(string name)
         {
-            var name = action.ToString();
             var sb = new System.Text.StringBuilder();
             for (int i = 0; i < name.Length; i++)
             {
@@ -58,29 +146,114 @@ namespace pwiz.Skyline.ToolsUI
             return sb.ToString();
         }
 
-        // Parses a wire name case- and underscore-insensitively, so "get_actions"/"GetActions" both work.
-        public static bool TryParse(string name, out UiAction action)
+        /// <summary>An action that targets element kind <typeparamref name="T"/> (a capability interface or
+        /// an element type) and whose Invoke is a single call <c>func(element, argument)</c> -- so an action
+        /// needs no class of its own, just an entry below. The argument is handed to the func as
+        /// <typeparamref name="TArg"/> (the JSON value is already a string or the raw object; an action that
+        /// wants an int or a cell parses it inside its func). <paramref name="mustBeEnabled"/> is false for a
+        /// pure read (it may also be inspected off-screen); set <see cref="UiAction.WatchForDialog"/> /
+        /// <see cref="UiAction.RunOnUiThread"/> via an initializer for a mutation or click.</summary>
+        private sealed class SimpleAction<T, TArg> : UiAction where T : class
+        {
+            private readonly Func<T, TArg, object> _invoke;
+            public SimpleAction(string name, Func<T, TArg, object> invoke, bool mustBeEnabled = true) : base(name)
+            {
+                _invoke = invoke;
+                // Visible and enabled gates move together: a read clears both, a mutation/click leaves both set.
+                MustBeEnabled = mustBeEnabled;
+                MustBeVisible = mustBeEnabled;
+            }
+            public override bool AppliesTo(UiElement element) => element is T;
+            public override object Invoke(UiElement element, object argument, CancellationToken cancellationToken)
+            {
+                if (!(element is T typed))
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"The action '{0}' does not apply to this control.", SnakeCaseName));
+                return _invoke(typed, argument is TArg arg ? arg : default(TArg));
+            }
+        }
+
+        // get_grid_text is the one action whose Invoke needs the cancellation token (a large copy is
+        // abandoned if the client disconnects), so it cannot be a SimpleAction (whose func is just
+        // (element, argument) -> result).
+        private sealed class GetGridTextAction : UiAction
+        {
+            public GetGridTextAction() : base(@"GetGridText") { MustBeVisible = false; MustBeEnabled = false; }
+            public override bool AppliesTo(UiElement element) => element is GridElement;
+            public override object Invoke(UiElement element, object argument, CancellationToken cancellationToken) =>
+                ((GridElement) element).GetGridText(cancellationToken);
+        }
+
+        // get_actions / get_children apply to every element (not one capability kind), so they target the
+        // base UiElement type; they are reads (mustBeEnabled: false).
+        public static readonly UiAction GetActions = new SimpleAction<UiElement, object>(
+            @"GetActions", (e, _) => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray(), mustBeEnabled: false);
+        public static readonly UiAction GetChildren = new SimpleAction<UiElement, object>(
+            @"GetChildren", (e, _) => e.GetChildren(), mustBeEnabled: false);
+
+        // A click runs its Invoke on the worker thread (RunOnUiThread = false) -- the element marshals its
+        // own gesture -- inside the dialog-watch.
+        public static readonly UiAction Click = new SimpleAction<IClickableElement, object>(
+            @"Click", (e, _) => { e.Click(); return null; }) { WatchForDialog = true, RunOnUiThread = false };
+
+        public static readonly UiAction GetValue = new SimpleAction<IReadValueElement, object>(
+            @"GetValue", (e, _) => e.GetValue(), mustBeEnabled: false);
+        public static readonly UiAction SetValue = new SimpleAction<IWriteValueElement, string>(
+            @"SetValue", (e, value) => { e.SetValue(value); return null; }) { WatchForDialog = true };
+
+        public static readonly UiAction CheckItem = new SimpleAction<ICheckItemsElement, string>(
+            @"CheckItem", (e, item) => { e.SetItemChecked(item, true); return null; }) { WatchForDialog = true };
+        public static readonly UiAction UncheckItem = new SimpleAction<ICheckItemsElement, string>(
+            @"UncheckItem", (e, item) => { e.SetItemChecked(item, false); return null; }) { WatchForDialog = true };
+        public static readonly UiAction SelectItem = new SimpleAction<ISelectItemsElement, string>(
+            @"SelectItem", (e, item) => { e.SetItemSelected(item, true); return null; }) { WatchForDialog = true };
+        public static readonly UiAction UnselectItem = new SimpleAction<ISelectItemsElement, string>(
+            @"UnselectItem", (e, item) => { e.SetItemSelected(item, false); return null; }) { WatchForDialog = true };
+        public static readonly UiAction SetSelectedIndex = new SimpleAction<ISelectIndexElement, object>(
+            @"SetSelectedIndex", (e, arg) => { e.SetSelectedIndex(UiValue.ToInt(arg)); return null; }) { WatchForDialog = true };
+
+        public static readonly UiAction GetGridText = new GetGridTextAction();
+        public static readonly UiAction SetGridText = new SimpleAction<GridElement, string>(
+            @"SetGridText", (e, text) => { e.SetGridText(text); return null; }) { WatchForDialog = true };
+        public static readonly UiAction SetCurrentCellAddress = new SimpleAction<GridElement, object>(
+            @"SetCurrentCellAddress", (e, arg) =>
+            {
+                var cell = UiValue.ToColumnRow(arg);
+                e.SetCurrentCellAddress(cell[0], cell[1]);
+                return null;
+            }) { WatchForDialog = true };
+
+        public static readonly UiAction Expand = new SimpleAction<IExpandCollapseElement, object>(
+            @"Expand", (e, path) => { e.Expand(path); return null; }) { WatchForDialog = true };
+        public static readonly UiAction Collapse = new SimpleAction<IExpandCollapseElement, object>(
+            @"Collapse", (e, path) => { e.Collapse(path); return null; }) { WatchForDialog = true };
+        public static readonly UiAction SelectTab = new SimpleAction<ISelectTabElement, string>(
+            @"SelectTab", (e, tab) => { e.SelectTab(tab); return null; }) { WatchForDialog = true };
+
+        // Every action, in get_actions / get_children listing order (the universal ones first).
+        public static readonly UiAction[] AllActions =
+        {
+            GetActions, GetChildren, Click, GetValue, SetValue, CheckItem, UncheckItem, SelectItem,
+            UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
+            Collapse, SelectTab
+        };
+
+        // The action with the given wire name, matched case- and underscore-insensitively, or null.
+        public static UiAction ByName(string name)
         {
             var normalized = (name ?? string.Empty).Replace(@"_", string.Empty).Trim();
-            foreach (UiAction candidate in Enum.GetValues(typeof(UiAction)))
-            {
-                if (string.Equals(candidate.ToString(), normalized, StringComparison.OrdinalIgnoreCase))
-                {
-                    action = candidate;
-                    return true;
-                }
-            }
-            action = default(UiAction);
-            return false;
+            return AllActions.FirstOrDefault(action =>
+                string.Equals(action.Name, normalized, StringComparison.OrdinalIgnoreCase));
         }
     }
 
     /// <summary>
     /// A connector-facing view of one UI element on a form. Subclasses wrap a specific kind of control
-    /// (or a ToolStrip item) and declare the actions it supports (<see cref="SupportsAction"/>) and how to
-    /// perform them (<see cref="PerformAction"/>), so the verbs act polymorphically instead of switching
-    /// on WinForms types. Each element also knows its own <see cref="Label"/> (the visible text that
-    /// identifies it) and its <see cref="Children"/>, so matching and form enumeration are a single
+    /// (or a ToolStrip item) and declare the actions they support by implementing the matching capability
+    /// interfaces (<see cref="IClickableElement"/>, <see cref="IWriteValueElement"/>, ...); each
+    /// <see cref="UiAction"/> targets one of those interfaces, so the verbs act polymorphically instead of
+    /// switching on WinForms types. Each element also knows its own <see cref="Label"/> (the visible text
+    /// that identifies it) and its <see cref="Children"/>, so matching and form enumeration are a single
     /// recursive walk.
     ///
     /// Most elements wrap a WinForms <see cref="Control"/> (see <see cref="ControlElement"/>), but the base
@@ -120,12 +293,12 @@ namespace pwiz.Skyline.ToolsUI
         /// error when nothing (or, for an empty text, more than one thing) matches.</summary>
         public UiElement FindElement(string text, UiAction action)
         {
-            var candidates = SelfAndDescendants().Where(element => element.SupportsAction(action)).ToList();
+            var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
             if (string.IsNullOrEmpty(text))
             {
                 if (candidates.Count == 0)
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"Nothing here supports the action '{0}'.", UiActions.ToName(action)));
+                        @"Nothing here supports the action '{0}'.", action.SnakeCaseName));
                 if (candidates.Count == 1)
                     return candidates[0];
                 // Several support it: take the single interactable (visible + enabled) one, so a hidden
@@ -137,12 +310,12 @@ namespace pwiz.Skyline.ToolsUI
                     return interactable[0];
                 throw new ArgumentException(LlmInstruction.Format(
                     @"More than one control supports the action '{0}'; pass a label or name to choose one (see skyline_get_controls).",
-                    UiActions.ToName(action)));
+                    action.SnakeCaseName));
             }
             return BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false)
                 ?? throw new ArgumentException(LlmInstruction.Format(
                     @"No control matching '{0}' supports the action '{1}'. Use skyline_get_controls to list the controls.",
-                    text, UiActions.ToName(action)));
+                    text, action.SnakeCaseName));
         }
 
         // The best of the candidates whose text matches at the given strictness: prefer an interactable
@@ -217,24 +390,11 @@ namespace pwiz.Skyline.ToolsUI
                 yield return descendant;
         }
 
-        /// <summary>Whether this element supports the given action. The base supports only the universal
-        /// GetActions and GetChildren; each kind of element overrides this to add the actions it can do.</summary>
-        public virtual bool SupportsAction(UiAction action) =>
-            action == UiAction.GetActions || action == UiAction.GetChildren;
-
-        /// <summary>The actions this element supports, for discovery via GetActions / GetControls.</summary>
+        /// <summary>The actions this element supports, for discovery via GetActions / GetControls: every
+        /// action that <see cref="UiAction.AppliesTo"/> this element (it is the kind the action targets).
+        /// The capability is declared by the interfaces the element implements, not by an override here.</summary>
         public IEnumerable<UiAction> SupportedActions =>
-            ((UiAction[]) Enum.GetValues(typeof(UiAction))).Where(SupportsAction);
-
-        /// <summary>Performs an action on this element (the action determines the type of <paramref
-        /// name="value"/> and of the result). Each kind of element overrides this to do its own actions,
-        /// calling base for the rest. GetActions and GetChildren are handled by the service (they need the
-        /// caller's path), so they do not reach here.</summary>
-        public virtual object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            throw new ArgumentException(LlmInstruction.Format(
-                @"The action '{0}' is not supported on this control.", UiActions.ToName(action)));
-        }
+            UiActions.AllActions.Where(action => action.AppliesTo(this));
 
         /// <summary>This element's children as <see cref="ControlInfo"/>, each with a parentless,
         /// single-segment Path: the caller re-parents it (onto the path of the element it listed) before
@@ -348,8 +508,10 @@ namespace pwiz.Skyline.ToolsUI
 
     // ---- Control-backed elements ----------------------------------------------------------------
 
-    /// <summary>Base for an element backed by a WinForms <see cref="Control"/>.</summary>
-    internal abstract class ControlElement : UiElement
+    /// <summary>Base for an element backed by a WinForms <see cref="Control"/>. Every control is clickable
+    /// (see <see cref="Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
+    /// capability interface.</summary>
+    internal abstract class ControlElement : UiElement, IClickableElement
     {
         protected ControlElement(Control control) { Control = control; }
 
@@ -396,13 +558,6 @@ namespace pwiz.Skyline.ToolsUI
             int lParam = (clientSize.Height / 2) << 16 | (clientSize.Width / 2); // MAKELPARAM(centerX, centerY)
             User32.PostMessageA(Control.Handle, User32.WinMessageType.WM_LBUTTONDOWN, 1 /* MK_LBUTTON */, lParam);
             User32.PostMessageA(Control.Handle, User32.WinMessageType.WM_LBUTTONUP, 0, lParam);
-        }
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value, cancellationToken);
         }
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
@@ -489,51 +644,29 @@ namespace pwiz.Skyline.ToolsUI
             User32.PostMessageA(Control.Handle, User32.WinMessageType.BM_CLICK, 0, 0);
     }
 
-    /// <summary>A checkbox: clickable (toggles via its handler) and value-settable (sets the checked state).</summary>
-    internal sealed class CheckBoxElement : ButtonElement
+    /// <summary>A checkbox: clickable (toggles via its handler -- from ButtonElement) and value-settable
+    /// (sets the checked state).</summary>
+    internal sealed class CheckBoxElement : ButtonElement, IReadValueElement, IWriteValueElement
     {
         private readonly CheckBox _checkBox;
         public CheckBoxElement(CheckBox checkBox) : base(checkBox) { _checkBox = checkBox; }
         public override string Value => _checkBox.Checked.ToString();
         public string GetValue() => Value;
         public void SetValue(string value) => _checkBox.Checked = UiValue.ParseBool(value);
-        // Click is added by ButtonElement; this adds the value actions.
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.SetValue: SetValue(value as string); return null;
-                case UiAction.GetValue: return GetValue();
-                default: return base.PerformAction(action, value, cancellationToken);
-            }
-        }
     }
 
     /// <summary>A radio button: clicking/setting it checks it (WinForms unchecks its siblings).</summary>
-    internal sealed class RadioButtonElement : ButtonElement
+    internal sealed class RadioButtonElement : ButtonElement, IReadValueElement, IWriteValueElement
     {
         private readonly RadioButton _radioButton;
         public RadioButtonElement(RadioButton radioButton) : base(radioButton) { _radioButton = radioButton; }
         public override string Value => _radioButton.Checked.ToString();
         public string GetValue() => Value;
         public void SetValue(string value) => _radioButton.Checked = UiValue.ParseBool(value);
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.SetValue: SetValue(value as string); return null;
-                case UiAction.GetValue: return GetValue();
-                default: return base.PerformAction(action, value, cancellationToken);
-            }
-        }
     }
 
     /// <summary>A text box -- a caption-less field named by its adjacent label.</summary>
-    internal sealed class TextBoxElement : ControlElement
+    internal sealed class TextBoxElement : ControlElement, IReadValueElement, IWriteValueElement
     {
         private readonly TextBoxBase _textBox;
         public TextBoxElement(TextBoxBase textBox) : base(textBox) { _textBox = textBox; }
@@ -542,21 +675,10 @@ namespace pwiz.Skyline.ToolsUI
         // A multi-line box parses/lays out on CRLF (what Enter inserts), so normalize bare newlines.
         public void SetValue(string value) =>
             _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value) : value;
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.SetValue: SetValue(value as string); return null;
-                case UiAction.GetValue: return GetValue();
-                default: return base.PerformAction(action, value, cancellationToken);
-            }
-        }
     }
 
     /// <summary>A combo box -- value set by selecting the matching item.</summary>
-    internal sealed class ComboBoxElement : ControlElement
+    internal sealed class ComboBoxElement : ControlElement, IReadValueElement, IWriteValueElement
     {
         private readonly ComboBox _comboBox;
         public ComboBoxElement(ComboBox comboBox) : base(comboBox) { _comboBox = comboBox; }
@@ -570,170 +692,66 @@ namespace pwiz.Skyline.ToolsUI
                     @"No item '{0}' in combo box {1}.", value, _comboBox.Name));
             _comboBox.SelectedIndex = index;
         }
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.SetValue || action == UiAction.GetValue || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.SetValue: SetValue(value as string); return null;
-                case UiAction.GetValue: return GetValue();
-                default: return base.PerformAction(action, value, cancellationToken);
-            }
-        }
     }
 
     /// <summary>A ListControl -- a ListBox or CheckedListBox. Select an item by index
     /// (set_selected_index) or by its text (select_item / unselect_item).</summary>
-    internal class ListControlElement<T> : ControlElement<T> where T : ListControl
+    internal class ListControlElement<T> : ControlElement<T>, ISelectIndexElement, ISelectItemsElement
+        where T : ListControl
     {
         public ListControlElement(T control) : base(control) { }
-        public override bool SupportsAction(UiAction action)
-        {
-            switch (action)
-            {
-                case UiAction.SetSelectedIndex:
-                case UiAction.SelectItem:
-                case UiAction.UnselectItem:
-                    return true;
-                default:
-                    return base.SupportsAction(action);
-            }
-        }
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.SetSelectedIndex:
-                    Control.SelectedIndex = UiValue.ToInt(value);
-                    return null;
-                case UiAction.SelectItem:
-                    ListItems.SetSelected(Control, value as string, true);
-                    return null;
-                case UiAction.UnselectItem:
-                    ListItems.SetSelected(Control, value as string, false);
-                    return null;
-                default:
-                    return base.PerformAction(action, value, cancellationToken);
-            }
-        }
+        public void SetSelectedIndex(int index) => Control.SelectedIndex = index;
+        public void SetItemSelected(string item, bool isSelected) =>
+            ListItems.SetSelected(Control, item, isSelected);
     }
 
     /// <summary>A CheckedListBox. Besides the ListControl actions, an item is checked/unchecked by its text
     /// (check_item / uncheck_item) or toggled the way a user does it -- set_selected_index to the item, then
     /// click, which toggles the selected item's check. Its value is the checked items' text, one per line.</summary>
-    internal sealed class CheckedListBoxElement : ListControlElement<CheckedListBox>
+    internal sealed class CheckedListBoxElement : ListControlElement<CheckedListBox>,
+        ICheckItemsElement, IReadValueElement
     {
         public CheckedListBoxElement(CheckedListBox control) : base(control) { }
         public override string Value =>
             string.Join(Environment.NewLine, Control.CheckedItems.Cast<object>().Select(Control.GetItemText));
-        public override bool SupportsAction(UiAction action)
-        {
-            switch (action)
+        public string GetValue() => Value;
+        public void SetItemChecked(string item, bool isChecked) =>
+            ListItems.SetChecked(Control, item, isChecked);
+        // A click toggles the checked state of the selected item, the way a user's click/space does (move to
+        // the item first with set_selected_index). The click runs off the UI thread inside the dialog-watch,
+        // so marshal the toggle.
+        public override void Click() =>
+            JsonUiService.InvokeOnUiThread(() =>
             {
-                case UiAction.CheckItem:
-                case UiAction.UncheckItem:
-                case UiAction.Click:
-                case UiAction.GetValue:
-                    return true;
-                default:
-                    return base.SupportsAction(action);
-            }
-        }
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.CheckItem:
-                    ListItems.SetChecked(Control, value as string, true);
-                    return null;
-                case UiAction.UncheckItem:
-                    ListItems.SetChecked(Control, value as string, false);
-                    return null;
-                case UiAction.Click:
-                    // A click toggles the checked state of the selected item, the way a user's click/space
-                    // does (move to the item first with set_selected_index). The click runs off the UI
-                    // thread inside the dialog-watch, so marshal the toggle.
-                    JsonUiService.InvokeOnUiThread(() =>
-                    {
-                        int index = Control.SelectedIndex;
-                        if (index < 0)
-                            throw new ArgumentException(new LlmInstruction(
-                                @"No item is selected -- choose one first with set_selected_index."));
-                        Control.SetItemChecked(index, !Control.GetItemChecked(index));
-                    });
-                    return null;
-                case UiAction.GetValue:
-                    return Value;
-                default:
-                    return base.PerformAction(action, value, cancellationToken);
-            }
-        }
+                int index = Control.SelectedIndex;
+                if (index < 0)
+                    throw new ArgumentException(new LlmInstruction(
+                        @"No item is selected -- choose one first with set_selected_index."));
+                Control.SetItemChecked(index, !Control.GetItemChecked(index));
+            });
     }
 
     /// <summary>A control whose items are checked or selected by their text -- a TreeView (a node by a
     /// '>'-separated path) or a ListView. Not a ListControl (it has no SelectedIndex); a caption-less one
     /// is reached through a path of its Type. The value is the item.</summary>
-    internal class ItemContainerElement<T> : ControlElement<T> where T : Control
+    internal class ItemContainerElement<T> : ControlElement<T>, ICheckItemsElement, ISelectItemsElement
+        where T : Control
     {
         public ItemContainerElement(T control) : base(control) { }
-        public override bool SupportsAction(UiAction action)
-        {
-            switch (action)
-            {
-                case UiAction.CheckItem:
-                case UiAction.UncheckItem:
-                case UiAction.SelectItem:
-                case UiAction.UnselectItem:
-                    return true;
-                default:
-                    return base.SupportsAction(action);
-            }
-        }
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.CheckItem: ListItems.SetChecked(Control, value as string, true); return null;
-                case UiAction.UncheckItem: ListItems.SetChecked(Control, value as string, false); return null;
-                case UiAction.SelectItem: ListItems.SetSelected(Control, value as string, true); return null;
-                case UiAction.UnselectItem: ListItems.SetSelected(Control, value as string, false); return null;
-                default: return base.PerformAction(action, value, cancellationToken);
-            }
-        }
+        public void SetItemChecked(string item, bool isChecked) =>
+            ListItems.SetChecked(Control, item, isChecked);
+        public void SetItemSelected(string item, bool isSelected) =>
+            ListItems.SetSelected(Control, item, isSelected);
     }
 
     /// <summary>A TreeView. Besides checking/selecting a node by text, a node is expanded or collapsed
     /// (expand/collapse) by a path: an array whose segments select a child at each level -- a string is the
     /// first child whose text matches it, an integer is the child at that index.</summary>
-    internal sealed class TreeViewElement : ItemContainerElement<TreeView>
+    internal sealed class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement
     {
         public TreeViewElement(TreeView control) : base(control) { }
-        public override bool SupportsAction(UiAction action)
-        {
-            switch (action)
-            {
-                case UiAction.Expand:
-                case UiAction.Collapse:
-                    return true;
-                default:
-                    return base.SupportsAction(action);
-            }
-        }
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.Expand:
-                    JsonUiService.ResolveTreePath(Control, value).Expand();
-                    return null;
-                case UiAction.Collapse:
-                    JsonUiService.ResolveTreePath(Control, value).Collapse();
-                    return null;
-                default:
-                    return base.PerformAction(action, value, cancellationToken);
-            }
-        }
+        public void Expand(object path) => JsonUiService.ResolveTreePath(Control, path).Expand();
+        public void Collapse(object path) => JsonUiService.ResolveTreePath(Control, path).Collapse();
     }
 
     /// <summary>The owner-drawn ListBox on the Pick Children pop-up. It is a plain ListBox whose checkbox is
@@ -742,7 +760,8 @@ namespace pwiz.Skyline.ToolsUI
     /// CheckedListBox (check_item/uncheck_item, click toggles the selected item, get_value reads the checked
     /// items, plus the ListControl select actions). When PopupPickList is reworked to host a real
     /// CheckedListBox, this special case can go away.</summary>
-    internal sealed class PopupPickListElement : ListControlElement<ListBox>
+    internal sealed class PopupPickListElement : ListControlElement<ListBox>,
+        ICheckItemsElement, IReadValueElement
     {
         public PopupPickListElement(ListBox control) : base(control) { }
         private PopupPickList PickList => (PopupPickList) Control.FindForm();
@@ -757,46 +776,29 @@ namespace pwiz.Skyline.ToolsUI
                     Enumerable.Range(0, names.Count).Where(pickList.GetItemChecked).Select(i => names[i]));
             }
         }
-        public override bool SupportsAction(UiAction action)
-        {
-            switch (action)
+        public string GetValue() => Value;
+        public void SetItemChecked(string item, bool isChecked) =>
+            PickList.SetItemChecked(FindPickListIndex(item), isChecked);
+        // A click toggles the selected item's check, like a user's click/space (move to the item first with
+        // set_selected_index). Runs off the UI thread inside the dialog-watch.
+        public override void Click() =>
+            JsonUiService.InvokeOnUiThread(() =>
             {
-                case UiAction.CheckItem:
-                case UiAction.UncheckItem:
-                case UiAction.Click:
-                case UiAction.GetValue:
-                    return true;
-                default:
-                    return base.SupportsAction(action);
-            }
-        }
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
+                int index = Control.SelectedIndex;
+                if (index < 0)
+                    throw new ArgumentException(new LlmInstruction(
+                        @"No item is selected -- choose one first with set_selected_index."));
+                PickList.ToggleItem(index);
+            });
+
+        // Index of the best-matching choice (by its visible label) in this pick-list pop-up. Throws if none.
+        private int FindPickListIndex(string item)
         {
-            switch (action)
-            {
-                case UiAction.CheckItem:
-                    PickList.SetItemChecked(ListItems.FindPickListIndex(PickList, value as string), true);
-                    return null;
-                case UiAction.UncheckItem:
-                    PickList.SetItemChecked(ListItems.FindPickListIndex(PickList, value as string), false);
-                    return null;
-                case UiAction.Click:
-                    // A click toggles the selected item's check, like a user's click/space (move to the item
-                    // first with set_selected_index). Runs off the UI thread inside the dialog-watch.
-                    JsonUiService.InvokeOnUiThread(() =>
-                    {
-                        int index = Control.SelectedIndex;
-                        if (index < 0)
-                            throw new ArgumentException(new LlmInstruction(
-                                @"No item is selected -- choose one first with set_selected_index."));
-                        PickList.ToggleItem(index);
-                    });
-                    return null;
-                case UiAction.GetValue:
-                    return Value;
-                default:
-                    return base.PerformAction(action, value, cancellationToken);
-            }
+            var labels = PickList.ItemNames.ToList();
+            int best = ListItems.BestMatch(labels.Count, i => labels[i], item);
+            if (best < 0)
+                throw new ArgumentException(LlmInstruction.Format(@"Item not found in the pick list: {0}.", item));
+            return best;
         }
     }
 
@@ -851,16 +853,6 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Index of the best-matching choice (by its visible label) in a pick-list pop-up. Throws if none.
-        public static int FindPickListIndex(PopupPickList pickList, string item)
-        {
-            var labels = pickList.ItemNames.ToList();
-            int best = BestMatch(labels.Count, i => labels[i], item);
-            if (best < 0)
-                throw new ArgumentException(LlmInstruction.Format(@"Item not found in the pick list: {0}.", item));
-            return best;
-        }
-
         // Index of the best-matching item (by display text) in a ListBox. Throws if none.
         private static int FindListItemIndex(ListBox listBox, string item)
         {
@@ -910,7 +902,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // The index of the best text match among count items (by the connector's label matching), or -1.
-        private static int BestMatch(int count, Func<int, string> textOf, string key)
+        internal static int BestMatch(int count, Func<int, string> textOf, string key)
         {
             int best = -1;
             var bestQuality = JsonUiService.ControlMatchQuality.None;
@@ -947,7 +939,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A menu or toolbar item -- clicked via PerformClick. An image-only item (no caption) is
     /// named by its tooltip, the way a user reads it (e.g. the pick-list's green-check "OK").</summary>
-    internal sealed class ToolStripItemElement : UiElement
+    internal sealed class ToolStripItemElement : UiElement, IClickableElement
     {
         private readonly ToolStripItem _item;
         public ToolStripItemElement(ToolStripItem item) { _item = item; }
@@ -979,13 +971,6 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
         public void Click() => JsonUiService.InvokeOnUiThread(() => _item.PerformClick());
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.Click || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            if (action == UiAction.Click) { Click(); return null; }
-            return base.PerformAction(action, value, cancellationToken);
-        }
     }
 
     /// <summary>A grid -- the DataGridView a caller reads as TSV or sets a cell on, by direct cell access.
@@ -1018,22 +1003,6 @@ namespace pwiz.Skyline.ToolsUI
         // visible-column index, row is the row index (the same indices GetGridText's columns/rows use).
         public void SetCurrentCellAddress(int column, int row) =>
             JsonUiService.SetCurrentGridCell(_dataGridView, column, row);
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.GetGridText || action == UiAction.SetGridText ||
-            action == UiAction.SetCurrentCellAddress || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            switch (action)
-            {
-                case UiAction.GetGridText: return GetGridText(cancellationToken);
-                case UiAction.SetGridText: SetGridText(value as string); return null;
-                case UiAction.SetCurrentCellAddress:
-                    var cell = UiValue.ToColumnRow(value);
-                    SetCurrentCellAddress(cell[0], cell[1]);
-                    return null;
-                default: return base.PerformAction(action, value, cancellationToken);
-            }
-        }
     }
 
     /// <summary>A data-bound grid (a <see cref="BoundDataGridView"/>) -- its rows are a BindingListSource,
@@ -1087,26 +1056,20 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A TabControl -- select one of its tabs by the tab's text (select_tab). The tab pages
     /// themselves are not elements; their controls are flattened up to the form, so a control on a tab is
     /// addressed directly (select its tab first to make it visible).</summary>
-    internal sealed class TabElement : ControlElement<TabControl>
+    internal sealed class TabElement : ControlElement<TabControl>, ISelectTabElement
     {
         public TabElement(TabControl control) : base(control) { }
         // The tab contents are flattened to the form, so the TabControl itself has no children.
         public override IEnumerable<UiElement> Children => Enumerable.Empty<UiElement>();
-        public override bool SupportsAction(UiAction action) =>
-            action == UiAction.SelectTab || base.SupportsAction(action);
-        public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
-        {
-            if (action != UiAction.SelectTab)
-                return base.PerformAction(action, value, cancellationToken);
+        public void SelectTab(string tabText) =>
             JsonUiService.InvokeOnUiThread(() =>
             {
-                var text = value as string;
                 var tabs = Control.TabPages.Cast<TabPage>().ToList();
                 int best = -1;
                 var bestQuality = JsonUiService.ControlMatchQuality.None;
                 for (int i = 0; i < tabs.Count; i++)
                 {
-                    var quality = JsonUiService.MatchQuality(tabs[i].Text, text);
+                    var quality = JsonUiService.MatchQuality(tabs[i].Text, tabText);
                     if (quality > bestQuality)
                     {
                         best = i;
@@ -1114,11 +1077,9 @@ namespace pwiz.Skyline.ToolsUI
                     }
                 }
                 if (best < 0)
-                    throw new ArgumentException(LlmInstruction.Format(@"No tab matches '{0}'.", text));
+                    throw new ArgumentException(LlmInstruction.Format(@"No tab matches '{0}'.", tabText));
                 Control.SelectedTab = tabs[best];
             });
-            return null;
-        }
     }
 
     // Small value helpers shared by the value elements.
