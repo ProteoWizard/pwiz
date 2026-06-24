@@ -52,6 +52,24 @@ namespace pwiz.OspreySharp.Core
         public static bool PerfStats { get; set; }
 
         /// <summary>
+        /// When true (--verbose), implementer-grade detail that the default log hides is
+        /// emitted (e.g. per-fold Percolator iterations). Use <see cref="WriteVerbose"/> to
+        /// gate such lines.
+        /// </summary>
+        public static bool Verbose { get; set; }
+
+        /// <summary>
+        /// Write a line to <see cref="Out"/> only when <see cref="Verbose"/> is set. The
+        /// inherited WriteLine(format, args) overload routes through the overridden
+        /// WriteLine(string), so stamps/filtering still apply.
+        /// </summary>
+        public static void WriteVerbose(string format, params object[] args)
+        {
+            if (Verbose)
+                Out.WriteLine(format, args);
+        }
+
+        /// <summary>
         /// True if a line is a machine-parseable stat line (leading [COUNT]/[TIMING]/[STAGE-WALL],
         /// ignoring leading spaces) gated by <see cref="PerfStats"/>.
         /// </summary>

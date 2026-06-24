@@ -174,6 +174,13 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public bool PerfStats { get; set; }
 
+        /// <summary>
+        /// --verbose: show implementer-grade detail that is hidden by default (e.g. the
+        /// per-fold Percolator training iterations, which the default log collapses to one
+        /// line per round). Runtime-only.
+        /// </summary>
+        public bool Verbose { get; set; }
+
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 

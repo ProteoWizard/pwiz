@@ -105,9 +105,6 @@ namespace pwiz.OspreySharp.FDR
                 "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
                 passLabel, nWithFeatures, nWithoutFeatures));
 
-            logInfo(string.Format("Running {0} Percolator on {1} entries...",
-                passLabel, percEntries.Count));
-
             var percConfig = new PercolatorConfig
             {
                 TrainFdr = config.RunFdr,
@@ -117,6 +114,12 @@ namespace pwiz.OspreySharp.FDR
                 FeatureNames = featureNames,
                 Diagnostics = diagnostics
             };
+
+            // Section header (full input population). The cross-validation fold count and the
+            // actual training-subset size are reported by RunPercolator once the subsample is
+            // built, just above the per-iteration percent lines.
+            logInfo(string.Format("Running {0} Percolator on {1} entries...",
+                passLabel, percEntries.Count));
 
             // Streaming vs direct dispatch, matching Rust
             // osprey/src/pipeline.rs::run_percolator_fdr. Above the

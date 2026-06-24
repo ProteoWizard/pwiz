@@ -170,6 +170,7 @@ namespace pwiz.OspreySharp
                 // + --log-file), with machine [COUNT]/[TIMING]/[STAGE-WALL] lines dropped unless
                 // --perf-stats is set (perf tools pass it; default human log stays clean).
                 OspreyOutput.PerfStats = config.PerfStats;
+                OspreyOutput.Verbose = config.Verbose;
                 OspreyOutput.Out = new StatFilteringTextWriter(_out);
 
                 // Create the configured directories only after args validate, so
