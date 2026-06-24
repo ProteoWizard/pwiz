@@ -20,8 +20,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
@@ -844,9 +846,82 @@ namespace pwiz.Skyline.ToolsUI
             return result;
         }
 
-        public void ClickButton(string button) => JsonUiService.ClickFormControl(this, button);
+        // Clicks a button (or any clickable) on the form by its caption. Resolve + verify synchronously on
+        // the UI thread (so a control not found / disabled fails here), then post the click fire-and-forget
+        // so a click that opens a modal does not block; the modal is driven by later commands. Each element
+        // knows how to click itself (a button via BM_CLICK so an AutoCheck=false checkbox still toggles; a
+        // menu/toolbar item or tile via PerformClick; a tab by selecting it).
+        public void ClickButton(string button)
+        {
+            var element = JsonUiService.InvokeOnUiThread(() =>
+            {
+                JsonUiService.VerifyFormInteractable(Form);
+                var clickable = FindElement(button, UiActions.Click);
+                JsonUiService.VerifyInteractable(clickable);
+                return clickable;
+            });
+            JsonUiService.BeginInvokeOnUiThread(() => UiActions.Click.Invoke(element, null));
+        }
 
-        public void SetValue(string controlId, string value) => JsonUiService.SetFormControlValue(this, controlId, value);
+        // Sets a control's value (or a grid cell) on the form. The control is resolved + gated synchronously
+        // on the UI thread (so a control not found / disabled fails here), then the value is applied
+        // fire-and-forget -- a void action, so a setter that pops a validation or confirmation alert does not
+        // block; the alert becomes a form the caller drives next.
+        public void SetValue(string controlId, string value)
+        {
+            var apply = JsonUiService.InvokeOnUiThread(() =>
+            {
+                // controlId can name a grid cell ("grid[column,row]") -- set that cell's value: move the
+                // current cell there and paste, reusing the grid path so a DataboundGridControl stays in
+                // sync. The grid is resolved through the same finder as every other control.
+                if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
+                {
+                    var gridElement = FindGrid(gridName);
+                    JsonUiService.VerifyInteractable(gridElement);
+                    return (Action) (() =>
+                    {
+                        gridElement.SetCurrentCellAddress(column, row);
+                        gridElement.SetGridText(value);
+                    });
+                }
+                // A field is matched by its own Label (its caption, or the label that names a caption-less
+                // box -- see UiElement.Label), so a label never has to be matched and resolved to its field.
+                var element = FindElement(controlId, UiActions.SetValue);
+                JsonUiService.VerifyInteractable(element);
+                return (Action) (() => UiActions.SetValue.Invoke(element, value));
+            });
+            JsonUiService.BeginInvokeOnUiThread(apply);
+        }
+
+        // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the single
+        // grid on the form, resolved through the shared element finder. A grid supports the grid actions and
+        // is matched by its control name (it has no caption -- see GridElement.MatchesText), so FindElement
+        // picks it out of the form's controls just like any other control. The factory wraps a bound inner
+        // grid (a DataboundGridControl's BoundDataGridView) as a BoundGridElement with the rich copy/paste
+        // path, and a standalone DataGridView as a plain GridElement; the DataboundGridControl itself is a
+        // transparent container the walk descends through to reach the inner grid.
+        internal GridElement FindGrid(string controlId)
+        {
+            return (GridElement) FindElement(controlId ?? string.Empty, UiActions.SetGridText);
+        }
+
+        // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single grid).
+        // Returns false for a plain control id (no "[col,row]" suffix). column/row are zero-based indices
+        // into the grid's visible columns and its rows; row may be -1 for a header.
+        private static bool TryParseGridCell(string controlId, out string gridName, out int column, out int row)
+        {
+            gridName = controlId ?? string.Empty;
+            column = row = 0;
+            if (string.IsNullOrEmpty(controlId))
+                return false;
+            var match = Regex.Match(controlId, @"^(?<name>.*?)\s*\[\s*(?<col>-?\d+)\s*,\s*(?<row>-?\d+)\s*\]$");
+            if (!match.Success)
+                return false;
+            gridName = match.Groups[@"name"].Value;
+            column = int.Parse(match.Groups[@"col"].Value);
+            row = int.Parse(match.Groups[@"row"].Value);
+            return true;
+        }
 
         // Closing is a void action -- post it fire-and-forget so a "save changes?" confirmation it raises
         // becomes a form the caller drives next rather than blocking.
@@ -861,7 +936,13 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.ExecuteAction(action, element, value);
         }
 
-        public System.Drawing.Bitmap CaptureImage() => JsonUiService.InvokeOnUiThread(() => JsonUiService.CaptureForm(Form));
+        // Activates the form and captures it (redacting any sensitive regions), as a right-click "capture
+        // screenshot" would. Runs on the UI thread.
+        public System.Drawing.Bitmap CaptureImage() => JsonUiService.InvokeOnUiThread(() =>
+        {
+            ScreenCapture.ActivateForm(Form);
+            return ScreenCapture.CaptureAndRedact(ScreenCapture.GetWindowRectangle(Form), Form);
+        });
 
         /// <summary>Invokes a menu item on this form's main menu by its '>'-separated path (e.g. "File &gt;
         /// Import &gt; Peptide Search"). The path is resolved through the element model -- the menu is a
@@ -1000,8 +1081,8 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement
     {
         public TreeViewElement(TreeView control) : base(control) { }
-        public void Expand(object path) => JsonUiService.ResolveTreePath(Control, path).Expand();
-        public void Collapse(object path) => JsonUiService.ResolveTreePath(Control, path).Collapse();
+        public void Expand(object path) => ResolveTreePath(path).Expand();
+        public void Collapse(object path) => ResolveTreePath(path).Collapse();
 
         // The Targets tree's node menu is shown manually, so it lives on the main window rather than on the
         // tree's own ContextMenuStrip; raise its Opening so item enablement reflects the current selection
@@ -1010,6 +1091,79 @@ namespace pwiz.Skyline.ToolsUI
             Control is SequenceTree
                 ? JsonUiService.OpenContextMenu(Program.MainWindow.ContextMenuTreeNode)
                 : base.BuildContextMenu();
+
+        // Resolves a tree path -- an array whose segments select a child at each level (an integer is the
+        // child at that index; a string is the first child whose text matches it) -- to its TreeNode,
+        // expanding each ancestor so lazily-built children are present before descending. The path value is
+        // an object[] (an in-process caller) or a JSON array (over the wire). Must run on the UI thread.
+        private TreeNode ResolveTreePath(object pathValue)
+        {
+            var path = ToTreePath(pathValue);
+            if (path.Length == 0)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The path is empty -- give an array of child names (strings) and/or indexes (integers)."));
+            var nodes = Control.Nodes;
+            TreeNode current = null;
+            for (int i = 0; i < path.Length; i++)
+            {
+                current = FindChildNode(nodes, path[i]);
+                if (i < path.Length - 1)
+                {
+                    current.Expand(); // populate lazily-built children before descending
+                    nodes = current.Nodes;
+                }
+            }
+            return current;
+        }
+
+        // One step of a tree path: an integer selects the child at that index; a string selects the first
+        // child whose text matches it (the first, not the best -- ties go to document order).
+        private static TreeNode FindChildNode(TreeNodeCollection nodes, object segment)
+        {
+            if (segment is int index)
+            {
+                if (index < 0 || index >= nodes.Count)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Child index {0} is out of range; there are {1} children.", index, nodes.Count));
+                return nodes[index];
+            }
+            var text = segment as string;
+            foreach (TreeNode node in nodes)
+                if (TextMatches(node.Text, text))
+                    return node;
+            throw new ArgumentException(LlmInstruction.Format(@"No child node matches '{0}'.", text));
+        }
+
+        // The path segments from the value a tree expand/collapse action carries: an object[] of strings
+        // and integers (an in-process caller) or a JSON array (over the wire). A JSON integer is a child
+        // index; a JSON string is a child's text.
+        private static object[] ToTreePath(object pathValue)
+        {
+            switch (pathValue)
+            {
+                case null:
+                    return new object[0];
+                case string json:
+                    return JArray.Parse(json).Select(ToTreePathSegment).ToArray();
+                case System.Collections.IEnumerable items:
+                    return items.Cast<object>().Select(ToTreePathSegment).ToArray();
+                default:
+                    throw new ArgumentException(new LlmInstruction(
+                        @"A tree path must be an array of child names (strings) and/or indexes (integers)."));
+            }
+        }
+
+        private static object ToTreePathSegment(object segment)
+        {
+            switch (segment)
+            {
+                case int i: return i;
+                case long l: return (int) l;
+                case JToken token:
+                    return token.Type == JTokenType.Integer ? (object) (int) token : token.Value<string>();
+                default: return segment as string;
+            }
+        }
     }
 
     /// <summary>The owner-drawn ListBox on the Pick Children pop-up. It is a plain ListBox whose checkbox is
@@ -1203,7 +1357,7 @@ namespace pwiz.Skyline.ToolsUI
         /// clickable while hidden. Must run on the UI thread.</summary>
         public UiElement ResolveMenuItem(string menuPath)
         {
-            var segments = JsonUiService.ParseMenuSegments(menuPath);
+            var segments = ParseMenuSegments(menuPath);
             UiElement current = this;
             var opened = new List<ToolStripItemElement>();
             try
@@ -1247,6 +1401,19 @@ namespace pwiz.Skyline.ToolsUI
                 return false;
             JsonUiService.BeginInvokeOnUiThread(() => UiActions.Click.Invoke(leaf, null));
             return true;
+        }
+
+        // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
+        private static string[] ParseMenuSegments(string menuPath)
+        {
+            var segments = (menuPath ?? string.Empty)
+                .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
+            if (segments.Length == 0)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Empty menu path: {0}. Expected e.g. 'File > Import > Peptide Search'.",
+                    menuPath ?? string.Empty));
+            return segments;
         }
     }
 
@@ -1316,24 +1483,130 @@ namespace pwiz.Skyline.ToolsUI
         // grid actions, not by walking into child controls. The plain path reads/writes cells directly. A
         // large read is cancelled through the form's CancellationToken (a bound grid honors it; the plain
         // cell read is synchronous).
-        public virtual string GetGridText() =>
-            JsonUiService.GetDataGridViewText(_dataGridView);
+
+        // Reads a plain DataGridView as tab-separated text: the column headers followed by every data row
+        // (each cell shown as the user sees it).
+        public virtual string GetGridText()
+        {
+            var visibleColumns = VisibleColumns();
+            var lines = new List<string>
+            {
+                TextUtil.ToEscapedTSV(visibleColumns.Select(col => col.HeaderText))
+            };
+            foreach (DataGridViewRow gridRow in _dataGridView.Rows)
+            {
+                if (gridRow.IsNewRow)
+                    continue;
+                lines.Add(TextUtil.ToEscapedTSV(visibleColumns.Select(col => CellDisplayText(gridRow.Cells[col.Index]))));
+            }
+            return TextUtil.LineSeparate(lines);
+        }
+
         // Pastes starting at the current cell -- the anchor a user would have clicked. Move the current
         // cell first with SetCurrentCellAddress; the text may be a multi-cell TSV block (it fills down/right).
         public virtual void SetGridText(string text)
         {
-            var anchor = JsonUiService.CurrentGridCell(_dataGridView);
-            JsonUiService.SetDataGridViewText(_dataGridView, anchor.X, anchor.Y, text);
+            var anchor = CurrentCellPoint();
+            PasteCellText(anchor.X, anchor.Y, text);
         }
+
         // Moves the current cell so the next SetGridText / context menu acts there. column is the
         // visible-column index, row is the row index (the same indices GetGridText's columns/rows use).
-        public void SetCurrentCellAddress(int column, int row) =>
-            JsonUiService.SetCurrentGridCell(_dataGridView, column, row);
+        public void SetCurrentCellAddress(int column, int row)
+        {
+            var visibleColumns = VisibleColumns();
+            if (column < 0 || column >= visibleColumns.Length)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
+            if (row < 0 || row >= _dataGridView.Rows.Count)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Row {0} is out of range; the grid has {1} rows.", row, _dataGridView.Rows.Count));
+            _dataGridView.CurrentCell = _dataGridView.Rows[row].Cells[visibleColumns[column].Index];
+        }
 
         // A grid's menu is the one for its current cell (move there first with SetCurrentCellAddress), built
         // by raising the cell's CellContextMenuStripNeeded -- not the grid's own ContextMenuStrip.
-        public override ContextMenuStrip BuildContextMenu() =>
-            JsonUiService.BuildGridCellContextMenu(_dataGridView);
+        public override ContextMenuStrip BuildContextMenu()
+        {
+            var cell = _dataGridView.CurrentCell;
+            if (cell == null)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The grid has no current cell -- move to one first with set_current_cell_address."));
+            var args = new DataGridViewCellContextMenuStripNeededEventArgs(cell.ColumnIndex, cell.RowIndex);
+            JsonUiService.RaiseProtectedHandler(_dataGridView, @"OnCellContextMenuStripNeeded", args);
+            if (args.ContextMenuStrip == null)
+                throw new ArgumentException(new LlmInstruction(@"The current cell has no context menu."));
+            return JsonUiService.OpenContextMenu(args.ContextMenuStrip);
+        }
+
+        // The current cell as a point (X = visible-column index, Y = row index), or (0,0) when the grid has
+        // no current cell -- the anchor SetGridText pastes from.
+        private System.Drawing.Point CurrentCellPoint()
+        {
+            var cell = _dataGridView.CurrentCell;
+            if (cell == null)
+                return new System.Drawing.Point(0, 0);
+            int column = Array.FindIndex(VisibleColumns(), col => col.Index == cell.ColumnIndex);
+            return new System.Drawing.Point(Math.Max(0, column), cell.RowIndex);
+        }
+
+        // Pastes tab/newline-separated text into the grid by setting cell values from the anchor cell, the
+        // way a user typing cell-by-cell would. Skips read-only cells. Throws if the anchor (or a row a
+        // multi-row paste reaches) is out of range -- pasting cannot add rows beyond the grid's new row.
+        private void PasteCellText(int column, int row, string text)
+        {
+            var visibleColumns = VisibleColumns();
+            if (column < 0 || column >= visibleColumns.Length)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
+            if (row < 0)
+                throw new ArgumentException(LlmInstruction.Format(@"Row {0} is out of range.", row));
+            var lines = SplitPasteLines(text);
+            for (int iLine = 0; iLine < lines.Length; iLine++)
+            {
+                int rowIndex = row + iLine;
+                if (rowIndex >= _dataGridView.Rows.Count)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Row {0} is past the end of the grid ({1} rows).", rowIndex, _dataGridView.Rows.Count));
+                var cellValues = lines[iLine].Split('\t');
+                for (int iCol = 0; iCol < cellValues.Length && column + iCol < visibleColumns.Length; iCol++)
+                {
+                    var cell = _dataGridView.Rows[rowIndex].Cells[visibleColumns[column + iCol].Index];
+                    if (cell.ReadOnly)
+                        continue;
+                    // Go through the cell's edit lifecycle so the value is committed (and pushed to any data
+                    // source) the way ending a cell edit does. A grid that validates whole rows governs
+                    // whether a partially-filled new row is kept -- the same as for a user.
+                    _dataGridView.CurrentCell = cell;
+                    _dataGridView.BeginEdit(true);
+                    cell.Value = cellValues[iCol];
+                    _dataGridView.EndEdit();
+                }
+            }
+        }
+
+        // The visible columns of the grid in display order -- the columns a column index counts.
+        private DataGridViewColumn[] VisibleColumns()
+        {
+            return _dataGridView.Columns.Cast<DataGridViewColumn>()
+                .Where(col => col.Visible).OrderBy(col => col.DisplayIndex).ToArray();
+        }
+
+        // The display text of a grid cell: the formatted value the user sees, or empty for a null.
+        private static string CellDisplayText(DataGridViewCell cell)
+        {
+            return (cell.FormattedValue ?? cell.Value)?.ToString() ?? string.Empty;
+        }
+
+        // Splits pasted text into row lines, normalizing newlines and dropping a single trailing empty line
+        // (from text that ends with a newline).
+        private static string[] SplitPasteLines(string text)
+        {
+            var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            if (lines.Length > 1 && lines[lines.Length - 1].Length == 0)
+                lines = lines.Take(lines.Length - 1).ToArray();
+            return lines;
+        }
     }
 
     /// <summary>A data-bound grid (a <see cref="BoundDataGridView"/>) -- its rows are a BindingListSource,

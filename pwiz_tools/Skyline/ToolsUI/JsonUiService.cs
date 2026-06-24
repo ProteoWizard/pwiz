@@ -498,45 +498,10 @@ namespace pwiz.Skyline.ToolsUI
             return graphMenu;
         }
 
-        // Raises the grid's CellContextMenuStripNeeded for its current cell (as a right-click there does)
-        // to obtain the menu, then fires its Opening so on-demand items are built.
-        internal static ContextMenuStrip BuildGridCellContextMenu(DataGridView dataGridView)
-        {
-            var cell = dataGridView.CurrentCell;
-            if (cell == null)
-                throw new ArgumentException(new LlmInstruction(
-                    @"The grid has no current cell -- move to one first with set_current_cell_address."));
-            var args = new DataGridViewCellContextMenuStripNeededEventArgs(cell.ColumnIndex, cell.RowIndex);
-            RaiseProtectedHandler(dataGridView, @"OnCellContextMenuStripNeeded", args);
-            var menuStrip = args.ContextMenuStrip;
-            if (menuStrip == null)
-                throw new ArgumentException(new LlmInstruction(@"The current cell has no context menu."));
-            RaiseProtectedHandler(menuStrip, @"OnOpening", new CancelEventArgs());
-            return menuStrip;
-        }
-
-        // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single
-        // grid). Returns false for a plain control id (no "[col,row]" suffix). column/row are
-        // zero-based indices into the grid's visible columns and its rows; row may be -1 for a header.
-        private static bool TryParseGridCell(string controlId, out string gridName, out int column, out int row)
-        {
-            gridName = controlId ?? string.Empty;
-            column = row = 0;
-            if (string.IsNullOrEmpty(controlId))
-                return false;
-            var match = Regex.Match(controlId, @"^(?<name>.*?)\s*\[\s*(?<col>-?\d+)\s*,\s*(?<row>-?\d+)\s*\]$");
-            if (!match.Success)
-                return false;
-            gridName = match.Groups[@"name"].Value;
-            column = int.Parse(match.Groups[@"col"].Value);
-            row = int.Parse(match.Groups[@"row"].Value);
-            return true;
-        }
-
         // Raises a protected On&lt;Event&gt; method (e.g. DataGridView.OnCellContextMenuStripNeeded,
         // ContextMenuStrip.OnOpening) by reflection, walking up to where it is declared, so the wired
         // handlers run the way the real UI event would.
-        private static void RaiseProtectedHandler(object target, string methodName, object eventArgs)
+        internal static void RaiseProtectedHandler(object target, string methodName, object eventArgs)
         {
             for (var type = target.GetType(); type != null; type = type.BaseType)
             {
@@ -579,27 +544,6 @@ namespace pwiz.Skyline.ToolsUI
             ResolveForm(formId, CancellationToken.None).ClickButton(button);
         }
 
-        // Clicks a control on a managed form by its visible label (FormElement.ClickButton). Resolves the
-        // click target on the UI thread, then acts inside the dialog-watch so a dialog the click pops is
-        // observed: a resulting alert is surfaced (throws its text) and a native dialog (e.g. Save/Open)
-        // returns immediately rather than blocking on its modal. Each element knows how to click itself (a
-        // button via BM_CLICK so an AutoCheck=false checkbox still toggles; a menu/toolbar item or tile via
-        // PerformClick; a tab by selecting it).
-        internal static void ClickFormControl(FormElement formElement, string button)
-        {
-            // Resolve + verify synchronously on the UI thread, so a control not found / disabled fails here.
-            var element = InvokeOnUiThread(() =>
-            {
-                VerifyFormInteractable(formElement.Form);
-                var clickable = formElement.FindElement(button, UiActions.Click);
-                VerifyInteractable(clickable);
-                return clickable;
-            });
-            // The click is a void action -- post it fire-and-forget so a click that opens a modal does not
-            // block; the modal is driven by later commands.
-            BeginInvokeOnUiThread(() => UiActions.Click.Invoke(element, null));
-        }
-
         /// <summary>
         /// Clicks an item on a form's ToolStrip (toolbar / menu strip) by its path, e.g.
         /// "Reports &gt; Replicates" -- the toolbar button "Reports" then the "Replicates" item in its
@@ -627,36 +571,6 @@ namespace pwiz.Skyline.ToolsUI
         public static void SetFormValue(string formId, string controlId, string value)
         {
             ResolveForm(formId, CancellationToken.None).SetValue(controlId, value);
-        }
-
-        // Sets a control's value (or a grid cell) on a managed form (FormElement.SetValue). The control is
-        // resolved + gated synchronously on the UI thread (so a control not found / disabled fails here),
-        // then the value is applied fire-and-forget -- a void action, so a setter that pops a validation or
-        // confirmation alert does not block; the alert becomes a form the caller drives next.
-        internal static void SetFormControlValue(FormElement formElement, string controlId, string value)
-        {
-            var apply = InvokeOnUiThread(() =>
-            {
-                // controlId can name a grid cell ("grid[column,row]") -- set that cell's value: move the
-                // current cell there and paste, reusing the grid path so a DataboundGridControl stays in
-                // sync. The grid is resolved through the same finder as every other control.
-                if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
-                {
-                    var gridElement = FindGrid(formElement, gridName);
-                    VerifyInteractable(gridElement);
-                    return (Action) (() =>
-                    {
-                        gridElement.SetCurrentCellAddress(column, row);
-                        gridElement.SetGridText(value);
-                    });
-                }
-                // A field is matched by its own Label (its caption, or the label that names a caption-less
-                // box -- see UiElement.Label), so a label never has to be matched and resolved to its field.
-                var element = formElement.FindElement(controlId, UiActions.SetValue);
-                VerifyInteractable(element);
-                return (Action) (() => UiActions.SetValue.Invoke(element, value));
-            });
-            BeginInvokeOnUiThread(apply);
         }
 
         /// <summary>
@@ -693,7 +607,7 @@ namespace pwiz.Skyline.ToolsUI
             // conversion alert the paste raises becomes a form the caller drives rather than blocking here.
             var grid = InvokeOnUiThread(() =>
             {
-                var g = FindGrid(new FormElement(FindFormById(formId), CancellationToken.None), controlId);
+                var g = new FormElement(FindFormById(formId), CancellationToken.None).FindGrid(controlId);
                 VerifyInteractable(g);
                 return g;
             });
@@ -712,7 +626,7 @@ namespace pwiz.Skyline.ToolsUI
             // Resolve + gate synchronously, then move the cell fire-and-forget (a void action).
             var grid = InvokeOnUiThread(() =>
             {
-                var g = FindGrid(new FormElement(FindFormById(formId), CancellationToken.None), controlId);
+                var g = new FormElement(FindFormById(formId), CancellationToken.None).FindGrid(controlId);
                 VerifyInteractable(g);
                 return g;
             });
@@ -726,82 +640,6 @@ namespace pwiz.Skyline.ToolsUI
         // bound inner grid (a DataboundGridControl's BoundDataGridView) as a BoundGridElement with the rich
         // copy/paste path, and a standalone DataGridView as a plain GridElement; the DataboundGridControl
         // itself is a transparent container the walk descends through to reach the inner grid.
-        private static GridElement FindGrid(FormElement formElement, string controlId)
-        {
-            return (GridElement) formElement.FindElement(controlId ?? string.Empty, UiActions.SetGridText);
-        }
-
-        // Pastes tab/newline-separated text into a plain DataGridView by setting cell values from the
-        // anchor cell, the way a user typing cell-by-cell would. Skips read-only cells. Throws if the
-        // anchor (or a row a multi-row paste reaches) is out of range -- pasting cannot add rows beyond
-        // the grid's new row, just as a user cannot type into a row that is not there.
-        internal static void SetDataGridViewText(DataGridView dataGridView, int column, int row, string text)
-        {
-            var visibleColumns = VisibleGridColumns(dataGridView);
-            if (column < 0 || column >= visibleColumns.Length)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
-            if (row < 0)
-                throw new ArgumentException(LlmInstruction.Format(@"Row {0} is out of range.", row));
-            var lines = SplitPasteLines(text);
-            for (int iLine = 0; iLine < lines.Length; iLine++)
-            {
-                int rowIndex = row + iLine;
-                if (rowIndex >= dataGridView.Rows.Count)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Row {0} is past the end of the grid ({1} rows).", rowIndex, dataGridView.Rows.Count));
-                var cellValues = lines[iLine].Split('\t');
-                for (int iCol = 0; iCol < cellValues.Length && column + iCol < visibleColumns.Length; iCol++)
-                {
-                    var cell = dataGridView.Rows[rowIndex].Cells[visibleColumns[column + iCol].Index];
-                    if (cell.ReadOnly)
-                        continue;
-                    // Go through the cell's edit lifecycle so the value is committed (and pushed to any
-                    // data source) the way ending a cell edit does. A grid that validates whole rows
-                    // governs whether a partially-filled new row is kept -- the same as for a user.
-                    dataGridView.CurrentCell = cell;
-                    dataGridView.BeginEdit(true);
-                    cell.Value = cellValues[iCol];
-                    dataGridView.EndEdit();
-                }
-            }
-        }
-
-        // The grid's current cell as a point (X = visible-column index, Y = row index), or (0,0) when the
-        // grid has no current cell -- the anchor SetGridText pastes from.
-        internal static System.Drawing.Point CurrentGridCell(DataGridView dataGridView)
-        {
-            var cell = dataGridView.CurrentCell;
-            if (cell == null)
-                return new System.Drawing.Point(0, 0);
-            var visibleColumns = VisibleGridColumns(dataGridView);
-            int column = Array.FindIndex(visibleColumns, col => col.Index == cell.ColumnIndex);
-            return new System.Drawing.Point(Math.Max(0, column), cell.RowIndex);
-        }
-
-        // Moves the grid's current cell to the visible-column index x and row index y, validating both.
-        internal static void SetCurrentGridCell(DataGridView dataGridView, int x, int y)
-        {
-            var visibleColumns = VisibleGridColumns(dataGridView);
-            if (x < 0 || x >= visibleColumns.Length)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Column {0} is out of range; the grid has {1} visible columns.", x, visibleColumns.Length));
-            if (y < 0 || y >= dataGridView.Rows.Count)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Row {0} is out of range; the grid has {1} rows.", y, dataGridView.Rows.Count));
-            dataGridView.CurrentCell = dataGridView.Rows[y].Cells[visibleColumns[x].Index];
-        }
-
-        // Splits pasted text into row lines, normalizing newlines and dropping a single trailing empty
-        // line (from text that ends with a newline).
-        private static string[] SplitPasteLines(string text)
-        {
-            var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-            if (lines.Length > 1 && lines[lines.Length - 1].Length == 0)
-                lines = lines.Take(lines.Length - 1).ToArray();
-            return lines;
-        }
-
         /// <summary>
         /// Returns all the text in a grid on a form -- the column headers followed by every data row --
         /// as tab-separated columns and newline-separated rows. Works for a DataboundGridControl (the
@@ -820,7 +658,7 @@ namespace pwiz.Skyline.ToolsUI
                 RunWithDialogWatch(() =>
                 {
                     text = InvokeOnUiThread(() =>
-                        FindGrid(new FormElement(FindFormById(formId), cancellation.Token), gridId).GetGridText());
+                        new FormElement(FindFormById(formId), cancellation.Token).FindGrid(gridId).GetGridText());
                     return true;
                 });
                 if (text == null)
@@ -830,38 +668,6 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Reads a plain DataGridView as tab-separated text: the column headers followed by every data
-        // row (each cell shown as the user sees it).
-        internal static string GetDataGridViewText(DataGridView dataGridView)
-        {
-            var visibleColumns = VisibleGridColumns(dataGridView);
-            var lines = new List<string>
-            {
-                TextUtil.ToEscapedTSV(visibleColumns.Select(col => col.HeaderText))
-            };
-            foreach (DataGridViewRow gridRow in dataGridView.Rows)
-            {
-                if (gridRow.IsNewRow)
-                    continue;
-                lines.Add(TextUtil.ToEscapedTSV(visibleColumns.Select(col => CellText(gridRow.Cells[col.Index]))));
-            }
-            return TextUtil.LineSeparate(lines);
-        }
-
-        // The display text of a grid cell: the formatted value the user sees, or empty for a null.
-        private static string CellText(DataGridViewCell cell)
-        {
-            return (cell.FormattedValue ?? cell.Value)?.ToString() ?? string.Empty;
-        }
-
-        // The visible columns of a grid in display order -- the columns that
-        // SetGridText's column index counts.
-        private static DataGridViewColumn[] VisibleGridColumns(DataGridView dataGridView)
-        {
-            return dataGridView.Columns.Cast<DataGridViewColumn>()
-                .Where(col => col.Visible).OrderBy(col => col.DisplayIndex).ToArray();
-        }
-
         /// <summary>
         /// Closes an open form: a dialog, a docked or floating tool window (e.g. the Document Grid or
         /// Audit Log), or a native dialog (which is cancelled) -- see <see cref="IJsonToolService"/>.
@@ -869,80 +675,6 @@ namespace pwiz.Skyline.ToolsUI
         public static void CloseForm(string formId)
         {
             ResolveForm(formId, CancellationToken.None).Close();
-        }
-
-
-        // Resolves a tree path -- an array whose segments select a child at each level (an integer is the
-        // child at that index; a string is the first child whose text matches it) -- to its TreeNode,
-        // expanding each ancestor so lazily-built children are present before descending. The path value is
-        // an object[] (an in-process caller) or a JSON array (over the wire). Must run on the UI thread.
-        internal static TreeNode ResolveTreePath(TreeView treeView, object pathValue)
-        {
-            var path = ToTreePath(pathValue);
-            if (path.Length == 0)
-                throw new ArgumentException(new LlmInstruction(
-                    @"The path is empty -- give an array of child names (strings) and/or indexes (integers)."));
-            var nodes = treeView.Nodes;
-            TreeNode current = null;
-            for (int i = 0; i < path.Length; i++)
-            {
-                current = FindChildNode(nodes, path[i]);
-                if (i < path.Length - 1)
-                {
-                    current.Expand(); // populate lazily-built children before descending
-                    nodes = current.Nodes;
-                }
-            }
-            return current;
-        }
-
-        // One step of a tree path: an integer selects the child at that index; a string selects the first
-        // child whose text matches it (the first, not the best -- ties go to document order).
-        private static TreeNode FindChildNode(TreeNodeCollection nodes, object segment)
-        {
-            if (segment is int index)
-            {
-                if (index < 0 || index >= nodes.Count)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Child index {0} is out of range; there are {1} children.", index, nodes.Count));
-                return nodes[index];
-            }
-            var text = segment as string;
-            foreach (TreeNode node in nodes)
-                if (UiElement.TextMatches(node.Text, text))
-                    return node;
-            throw new ArgumentException(LlmInstruction.Format(@"No child node matches '{0}'.", text));
-        }
-
-        // The path segments from the value a tree expand/collapse action carries: an object[] of strings
-        // and integers (an in-process caller) or a JSON array (over the wire). A JSON integer is a child
-        // index; a JSON string is a child's text.
-        private static object[] ToTreePath(object pathValue)
-        {
-            switch (pathValue)
-            {
-                case null:
-                    return new object[0];
-                case string json:
-                    return JArray.Parse(json).Select(ToTreePathSegment).ToArray();
-                case System.Collections.IEnumerable items:
-                    return items.Cast<object>().Select(ToTreePathSegment).ToArray();
-                default:
-                    throw new ArgumentException(new LlmInstruction(
-                        @"A tree path must be an array of child names (strings) and/or indexes (integers)."));
-            }
-        }
-
-        private static object ToTreePathSegment(object segment)
-        {
-            switch (segment)
-            {
-                case int i: return i;
-                case long l: return (int) l;
-                case JToken token:
-                    return token.Type == JTokenType.Integer ? (object) (int) token : token.Value<string>();
-                default: return segment as string;
-            }
         }
 
         /// <summary>
@@ -1385,16 +1117,6 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Captures a screenshot of an open form (with redaction). Caller owns the bitmap. Must be called on
-        // the UI thread (FormElement.CaptureImage marshals it), and only after CheckScreenCaptureAvailability
-        // has returned null.
-        internal static System.Drawing.Bitmap CaptureForm(Form form)
-        {
-            ScreenCapture.ActivateForm(form);
-            var screenRect = ScreenCapture.GetWindowRectangle(form);
-            return ScreenCapture.CaptureAndRedact(screenRect, form);
-        }
-
         private const string MIME_TYPE_PNG = @"image/png";
 
         private static byte[] BitmapToPngBytes(System.Drawing.Bitmap bitmap)
@@ -1550,21 +1272,6 @@ namespace pwiz.Skyline.ToolsUI
                 form = parentForm;
             }
             return form;
-        }
-
-        // --- Generic form interaction helpers ---
-
-        // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
-        internal static string[] ParseMenuSegments(string menuPath)
-        {
-            var segments = (menuPath ?? string.Empty)
-                .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => s.Trim()).Where(s => s.Length > 0).ToArray();
-            if (segments.Length == 0)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Empty menu path: {0}. Expected e.g. 'File > Import > Peptide Search'.",
-                    menuPath ?? string.Empty));
-            return segments;
         }
 
         // True when the requested button names the cancel/close action of a native dialog. Locale
