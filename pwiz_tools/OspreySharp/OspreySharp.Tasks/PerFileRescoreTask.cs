@@ -664,7 +664,7 @@ namespace pwiz.OspreySharp.Tasks
                     subsetLibrary, spectra, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    context);
+                    context, passLabel: "Re-scored");
             }
             else
             {
@@ -1273,7 +1273,7 @@ namespace pwiz.OspreySharp.Tasks
                     gapFillLibrary, spectra, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    cwtContext);
+                    cwtContext, passLabel: "Gap-fill scored");
                 swCwt.Stop();
 
                 cwtHitIds = new HashSet<uint>();
@@ -1341,7 +1341,7 @@ namespace pwiz.OspreySharp.Tasks
                     forcedLibrary, spectra, ms1Spectra,
                     isolationWindows, rtCal,
                     ms2Cal, ms1Cal,
-                    forcedContext);
+                    forcedContext, passLabel: "Gap-fill forced-integration scored");
                 swForced.Stop();
                 nGapForced = forcedResults.Count;
 

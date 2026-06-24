@@ -165,9 +165,12 @@ namespace pwiz.OspreySharp
                     }
                 }
 
-                // Point the Core output seam at _out so below-exe layers (FDR, IO) emit
-                // through the same CommandStatusWriter (stamps + --log-file).
-                OspreyOutput.Out = _out;
+                // Point the Core output seam at a stat-filtering wrapper over _out: below-exe
+                // layers (FDR, IO) and LogInfo emit through the same CommandStatusWriter (stamps
+                // + --log-file), with machine [COUNT]/[TIMING]/[STAGE-WALL] lines dropped unless
+                // --perf-stats is set (perf tools pass it; default human log stays clean).
+                OspreyOutput.PerfStats = config.PerfStats;
+                OspreyOutput.Out = new StatFilteringTextWriter(_out);
 
                 // Create the configured directories only after args validate, so
                 // an invalid command line surfaces the validation message instead
@@ -455,7 +458,7 @@ namespace pwiz.OspreySharp
 
         internal static void LogInfo(string message)
         {
-            _out.WriteLine("[INFO] {0}", message);
+            OspreyOutput.Out.WriteLine(message);
         }
 
         internal static void LogWarning(string message)

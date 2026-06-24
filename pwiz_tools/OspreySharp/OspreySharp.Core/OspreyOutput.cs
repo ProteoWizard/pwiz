@@ -42,5 +42,74 @@ namespace pwiz.OspreySharp.Core
     public static class OspreyOutput
     {
         public static TextWriter Out { get; set; } = Console.Error;
+
+        /// <summary>
+        /// When false (default), the machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines
+        /// are suppressed so the human log stays clean (each has a human-readable plain twin
+        /// that remains). The --perf-stats flag sets this true so the perf tools
+        /// (Test-PerfGate.ps1, Measure-Pipeline.ps1, Osprey-workflow.html) get the tagged lines.
+        /// </summary>
+        public static bool PerfStats { get; set; }
+
+        /// <summary>
+        /// True if a line is a machine-parseable stat line (leading [COUNT]/[TIMING]/[STAGE-WALL],
+        /// ignoring leading spaces) gated by <see cref="PerfStats"/>.
+        /// </summary>
+        public static bool IsStatLine(string line)
+        {
+            if (string.IsNullOrEmpty(line))
+                return false;
+            int i = 0;
+            while (i < line.Length && line[i] == ' ')
+                i++;
+            return string.CompareOrdinal(line, i, "[COUNT]", 0, 7) == 0
+                || string.CompareOrdinal(line, i, "[TIMING]", 0, 8) == 0
+                || string.CompareOrdinal(line, i, "[STAGE-WALL]", 0, 12) == 0;
+        }
+    }
+
+    /// <summary>
+    /// Wraps an inner <see cref="TextWriter"/> and drops machine-parseable stat lines
+    /// (<see cref="OspreyOutput.IsStatLine"/>) unless <see cref="OspreyOutput.PerfStats"/> is
+    /// set, forwarding everything else unchanged. <c>Program</c> wraps its
+    /// CommandStatusWriter in one of these so the default human log is clean while
+    /// --perf-stats restores the tagged lines for the perf tools. Inherited WriteLine(format,
+    /// args) overloads route through <see cref="WriteLine(string)"/>, so they are filtered too.
+    /// </summary>
+    public sealed class StatFilteringTextWriter : TextWriter
+    {
+        private readonly TextWriter _inner;
+
+        public StatFilteringTextWriter(TextWriter inner)
+        {
+            _inner = inner;
+        }
+
+        public override System.Text.Encoding Encoding
+        {
+            get { return _inner.Encoding; }
+        }
+
+        public override void Flush()
+        {
+            _inner.Flush();
+        }
+
+        public override void Write(char value)
+        {
+            _inner.Write(value);
+        }
+
+        public override void Write(string value)
+        {
+            _inner.Write(value);
+        }
+
+        public override void WriteLine(string value)
+        {
+            if (!OspreyOutput.PerfStats && OspreyOutput.IsStatLine(value))
+                return;
+            _inner.WriteLine(value);
+        }
     }
 }

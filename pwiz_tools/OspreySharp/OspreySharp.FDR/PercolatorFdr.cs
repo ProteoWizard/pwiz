@@ -440,7 +440,7 @@ namespace pwiz.OspreySharp.FDR
                 foldModels[fold] = TrainFold(
                     subFeatures, subLabels, subEntryIds, subPeptides,
                     foldTrainIndices[fold], initialScores, config, trainFdr,
-                    svmScratchPool, out iters);
+                    svmScratchPool, fold, out iters);
                 foldIterations[fold] = iters;
                 swFold.Stop();
                 foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
@@ -831,6 +831,12 @@ namespace pwiz.OspreySharp.FDR
         // SVM fold training
         // ============================================================
 
+        // Serializes the per-cycle progress lines emitted from inside the
+        // parallel fold training (OspreyParallel.For below). The folds run on
+        // dedicated threads, so without this their WriteLine calls into the
+        // shared OspreyOutput.Out could interleave mid-line.
+        private static readonly object _trainProgressLock = new object();
+
         private static LinearSvmClassifier TrainFold(
             Matrix stdFeatures,
             bool[] labels,
@@ -841,6 +847,7 @@ namespace pwiz.OspreySharp.FDR
             PercolatorConfig config,
             double trainFdr,
             SvmTrainScratchPool svmScratchPool,
+            int foldIndex,
             out int bestIteration)
         {
             int nFeatures = stdFeatures.Cols;
@@ -952,6 +959,20 @@ namespace pwiz.OspreySharp.FDR
 
                 // v. Count passing targets
                 int nPassing = CountPassing(newTrainScores, trainLabels, trainEntryIds, trainFdr, foldScratch);
+
+                // Per-cycle progress so the otherwise-silent SVM training (tens of
+                // seconds on Stellar/Astral-scale inputs) shows liveness, the way
+                // Skyline reports mProphet LDA refinement cycles. The folds train
+                // in parallel, so each line names its fold and the writes are
+                // serialized. A determinate ProgressStatus does not fit: the loop
+                // stops on convergence (consecutiveNoImprove) before MaxIterations.
+                lock (_trainProgressLock)
+                {
+                    OspreyOutput.Out.WriteLine(
+                        "  Percolator fold {0}/{1}: iteration {2} of {3} ({4} targets at {5:P0} FDR)",
+                        foldIndex + 1, config.NFolds, iteration + 1, config.MaxIterations,
+                        nPassing, trainFdr);
+                }
 
                 if (nPassing > bestPassing)
                 {

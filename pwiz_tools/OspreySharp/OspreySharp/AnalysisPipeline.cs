@@ -103,7 +103,7 @@ namespace pwiz.OspreySharp
 
                     if (ctx.CanRehydrate(task))
                     {
-                        LogInfo(string.Format(@"[task] {0}: skipping (outputs valid)", task.Name));
+                        LogInfo(string.Format(@"[TASK] {0}:skipping (outputs valid)", task.Name));
                         continue;
                     }
 
@@ -174,7 +174,7 @@ namespace pwiz.OspreySharp
             // sidecars at the start of Run.
 
             var sw = Stopwatch.StartNew();
-            ctx.LogInfo(string.Format(@"[task] {0}: starting", task.Name));
+            ctx.LogInfo(string.Format(@"[TASK] {0}:starting", task.Name));
             bool keepGoing = task.Run(ctx);
             // The driver has now run this task, so its state is in memory: mark it
             // materialized so a later Demand/Get by a downstream task returns the
@@ -182,7 +182,7 @@ namespace pwiz.OspreySharp
             // _runOrHydrated guard that formerly bridged the Run and Rehydrate paths.
             ctx.MarkMaterialized(task);
             sw.Stop();
-            ctx.LogInfo(string.Format(@"[task] {0}: done ({1:F1}s)",
+            ctx.LogInfo(string.Format(@"[TASK] {0}:done ({1:F1}s)",
                 task.Name, sw.Elapsed.TotalSeconds));
 
             // [STAGE-WALL] one line per task->stage with parseable format

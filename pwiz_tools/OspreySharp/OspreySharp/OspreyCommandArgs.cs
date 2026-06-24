@@ -257,10 +257,12 @@ namespace pwiz.OspreySharp
             (c, p) => c._config.IsMemStamped = true);
         public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
             () => @"<path>", (c, p) => c._config.LogFilePath = p.Value);
+        public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
+            (c, p) => c._config.PerfStats = true);
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LOGGING =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Logging", true,
-                ARG_TIMESTAMP, ARG_MEMSTAMP, ARG_LOG_FILE);
+                ARG_TIMESTAMP, ARG_MEMSTAMP, ARG_LOG_FILE, ARG_PERF_STATS);
 
         // --- Diagnostics & Info -----------------------------------------------------------
         // -h/--help and -v/--version are terminal: the tokenizer renders help / prints the
@@ -665,6 +667,7 @@ namespace pwiz.OspreySharp
                 { @"timestamp", @"Prefix each output line with [yyyy/MM/dd HH:mm:ss]" },
                 { @"memstamp", @"Prefix each output line with managed and private memory in MB (pair with --timestamp for perfviz)" },
                 { @"log-file", @"Write all output to this file instead of stderr" },
+                { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },

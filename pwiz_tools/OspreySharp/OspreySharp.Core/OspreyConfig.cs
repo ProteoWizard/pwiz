@@ -167,6 +167,13 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public string LogFilePath { get; set; }
 
+        /// <summary>
+        /// --perf-stats: emit the machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for
+        /// the perf tools (Test-PerfGate.ps1, Measure-Pipeline.ps1). Off by default so the
+        /// human log stays clean. Runtime-only.
+        /// </summary>
+        public bool PerfStats { get; set; }
+
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 

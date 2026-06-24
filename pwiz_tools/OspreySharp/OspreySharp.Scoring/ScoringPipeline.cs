@@ -70,7 +70,8 @@ namespace pwiz.OspreySharp.Scoring
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
-            ScoringContext context)
+            ScoringContext context,
+            string passLabel = null)
         {
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
@@ -258,7 +259,7 @@ namespace pwiz.OspreySharp.Scoring
             // Construct the per-window coelution scorer once. It captures the
             // log sink + the scoring-diagnostics sink (null when -d is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
-            var coelutionScorer = new CoelutionScorer(_logInfo, _diagnostics);
+            var coelutionScorer = new CoelutionScorer(_diagnostics);
 
             Parallel.For(0, windowsToScore.Count, new ParallelOptions
             {
@@ -288,8 +289,8 @@ namespace pwiz.OspreySharp.Scoring
                     windowsProcessed++;
                     if (windowsProcessed % 10 == 0 || windowsProcessed == windowsToScore.Count)
                     {
-                        _logInfo(string.Format("  Scored {0}/{1} isolation windows",
-                            windowsProcessed, windowsToScore.Count));
+                        _logInfo(string.Format("  {0} {1}/{2} isolation windows",
+                            passLabel ?? "Scored", windowsProcessed, windowsToScore.Count));
                     }
                 }
             });
@@ -301,13 +302,6 @@ namespace pwiz.OspreySharp.Scoring
                     allEntries.AddRange(windowResults[wIdx]);
             }
 
-            if (context.XcorrScratchPool != null)
-            {
-                _logInfo(string.Format(
-                    "[POOL] scratch_allocs={0}, bins_allocs={1}",
-                    context.XcorrScratchPool.ScratchAllocCount,
-                    context.XcorrScratchPool.BinsAllocCount));
-            }
 
             // Summarize per-window timings.
             LogWindowTimingSummary(windowTimings);
