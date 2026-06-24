@@ -5365,7 +5365,6 @@
     <Compile Include="Util\AxisLabelScaler.cs" />
     <Compile Include="Util\BackgroundEventThreads.cs" />
     <Compile Include="Util\BioMassCalc.cs" />
-    <Compile Include="Util\ConsoleTable.cs" />
     <Compile Include="Util\CreateHandleDebugBase.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -7199,6 +7198,10 @@
     <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Shared\PortableUtil\PortableUtil.csproj">
+      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
+      <Name>PortableUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\PanoramaClient\PanoramaClient.csproj">
       <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>

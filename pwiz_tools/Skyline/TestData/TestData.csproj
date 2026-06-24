@@ -224,6 +224,10 @@
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj">
+      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
+      <Name>PortableUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
