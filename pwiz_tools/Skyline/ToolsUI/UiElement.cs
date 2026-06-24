@@ -152,24 +152,32 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>This element's children as <see cref="ControlInfo"/>, each with a parentless,
         /// single-segment Path: the caller re-parents it (onto the path of the element it listed) before
         /// acting. The form walk is one level at a time -- GetControls and the get_children action both
-        /// return this; descend by calling GetChildren on a child.</summary>
+        /// return this; descend by calling GetChildren on a child. Each child's Index is its position among
+        /// the siblings of its same Type, so adding a control of another Type never shifts it.</summary>
         public virtual ControlInfo[] GetChildren()
         {
-            return Children
-                .Select((child, index) => new ControlInfo
+            var indexByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var result = new List<ControlInfo>();
+            foreach (var child in Children)
+            {
+                indexByType.TryGetValue(child.ElementType.Name, out var typeIndex);
+                indexByType[child.ElementType.Name] = typeIndex + 1;
+                result.Add(new ControlInfo
                 {
-                    Path = child.PathSegment(index),
+                    Path = child.PathSegment(typeIndex),
                     Name = JsonUiService.NullIfEmpty(child.Name),
                     Enabled = child.IsEnabled,
                     Visible = child.IsVisible,
-                })
-                .ToArray();
+                });
+            }
+            return result.ToArray();
         }
 
         /// <summary>The single child the <paramref name="path"/>'s leaf segment names, with its Parent
         /// ignored (the caller has resolved the chain down to this element). A segment with no selector is
-        /// this element itself; Type "ContextMenu" is this control's right-click menu; otherwise Index pins
-        /// the child and Text/Type must match it.</summary>
+        /// this element itself; Type "ContextMenu" is this control's right-click menu; an Index (which
+        /// requires a Type) pins the index-th child of that exact Type; otherwise the child is matched by
+        /// Text and/or Type.</summary>
         public UiElement GetChild(UiElementPath path)
         {
             // Type "ContextMenu" addresses this control's right-click menu (never one of its real children).
@@ -182,16 +190,23 @@ namespace pwiz.Skyline.ToolsUI
 
             var children = Children.ToList();
 
-            // An Index pins the exact child; Text/Type (if set) must then also match it.
+            // An Index is the position among the children of its exact Type (so it is stable as other kinds
+            // of control come and go), and is meaningless without that Type. Text (if set) must also match.
             if (path.Index.HasValue)
             {
-                if (path.Index.Value < 0 || path.Index.Value >= children.Count)
+                if (path.Type == null)
+                    throw new ArgumentException(new LlmInstruction(
+                        @"A path Index requires a Type: it is the index among the children of that exact Type."));
+                var ofType = children
+                    .Where(child => string.Equals(child.ElementType.Name, path.Type, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+                if (path.Index.Value < 0 || path.Index.Value >= ofType.Count)
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"No child at index {0}; the parent has {1} children.", path.Index.Value, children.Count));
-                var indexed = children[path.Index.Value];
-                if (!JsonUiService.MatchesPath(indexed, path, out _))
+                        @"No {0} at index {1}; the parent has {2} of that type.", path.Type, path.Index.Value, ofType.Count));
+                var indexed = ofType[path.Index.Value];
+                if (path.Text != null && JsonUiService.MatchQuality(indexed.Label, path.Text) == JsonUiService.ControlMatchQuality.None)
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"The child at index {0} does not match the Text/Type in the path.", path.Index.Value));
+                        @"The {0} at index {1} does not match the Text '{2}' in the path.", path.Type, path.Index.Value, path.Text));
                 return indexed;
             }
 
@@ -218,10 +233,11 @@ namespace pwiz.Skyline.ToolsUI
             return best;
         }
 
-        /// <summary>The parentless path segment that addresses this element as the index-th child of its
-        /// parent (its Text, Index, and Type). The caller re-parents it onto the element it listed.</summary>
-        internal UiElementPath PathSegment(int index) =>
-            new UiElementPath(null, JsonUiService.NullIfEmpty(JsonUiService.CleanLabel(Label)), index, ElementType.Name);
+        /// <summary>The parentless path segment that addresses this element as the <paramref name="typeIndex"/>-th
+        /// child of its parent among the siblings of this element's Type (its Text, that Index, and its Type).
+        /// The caller re-parents it onto the element it listed.</summary>
+        internal UiElementPath PathSegment(int typeIndex) =>
+            new UiElementPath(null, JsonUiService.NullIfEmpty(JsonUiService.CleanLabel(Label)), typeIndex, ElementType.Name);
     }
 
     // ---- Control-backed elements ----------------------------------------------------------------

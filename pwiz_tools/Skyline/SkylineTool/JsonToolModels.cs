@@ -349,11 +349,13 @@ namespace SkylineTool
     /// <summary>
     /// A path that refers to a UI element -- a control, a menu/list item, or a tree node -- relative to its
     /// <see cref="Parent"/>. Within the parent's children an element is matched by any combination of:
-    /// <see cref="Text"/> (its visible text), <see cref="Index"/> (its position in the parent's child list),
-    /// and <see cref="Type"/> (its kind, e.g. "TreeView" for a caption-less control, or "ContextMenu" for a
-    /// control's right-click menu); whichever are set must all match, else it is an element-not-found error.
-    /// The chain bottoms out at a form: a path with a null <see cref="Parent"/> names the form, its
-    /// <see cref="Text"/> set to the form id from GetOpenForms (and <see cref="Type"/> "Form").
+    /// <see cref="Text"/> (its visible text), <see cref="Type"/> (its kind, e.g. "TreeView" for a
+    /// caption-less control, or "ContextMenu" for a control's right-click menu), and <see cref="Index"/> (its
+    /// position among the siblings of that exact Type, so it is stable as other kinds of control come and go).
+    /// An Index is only meaningful together with a Type. Whichever properties are set must all match, else it
+    /// is an element-not-found error. The chain bottoms out at a form: a path with a null <see cref="Parent"/>
+    /// names the form, its <see cref="Text"/> set to the form id from GetOpenForms (and <see cref="Type"/>
+    /// "Form").
     /// </summary>
     public class UiElementPath
     {
