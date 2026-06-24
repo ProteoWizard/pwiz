@@ -6,6 +6,11 @@
        pwiz assembly. Props are inlined here on purpose - a Directory.Build.props
        under Shared/ would leak into the sibling non-SDK projects. -->
   <PropertyGroup>
+    <!-- Pin the project identity so every solution that adds PortableUtil resolves it to the
+         same GUID. SDK-style projects carry no GUID by default, so each solution (and Visual
+         Studio) mints its own, causing solution churn. This is the long-standing GUID already
+         used by Skyline.sln, OspreySharp.sln, and every CommonUtil/Test* ProjectReference. -->
+    <ProjectGuid>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</ProjectGuid>
     <TargetFrameworks>net472;net8.0</TargetFrameworks>
     <!-- SDK-style csproj defaults to AnyCPU, but Skyline.sln/OspreySharp.sln use
          x64 configurations. Declare both so the x64 sln configs map cleanly and
