@@ -401,14 +401,15 @@ namespace SkylineTool
 
         /// <summary>
         /// Moves the current cell of a grid on a form (move there before pasting with
-        /// <see cref="SetGridText"/> or opening the cell's context menu). <paramref name="cell"/>'s X is
-        /// the visible-column index and Y is the row index -- the same indices the grid reports columns
-        /// and rows in.
+        /// <see cref="SetGridText"/> or opening the cell's context menu). <paramref name="column"/> is the
+        /// visible-column index and <paramref name="row"/> is the row index -- the same indices the grid
+        /// reports columns and rows in.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
-        /// <param name="cell">The target cell: X = visible-column index, Y = row index.</param>
-        void SetCurrentCellAddress(string formId, string controlId, System.Drawing.Point cell);
+        /// <param name="column">The target visible-column index.</param>
+        /// <param name="row">The target row index.</param>
+        void SetCurrentCellAddress(string formId, string controlId, int column, int row);
 
         /// <summary>
         /// Returns all the text in a grid on a form -- the column headers followed by every data row --

@@ -415,7 +415,15 @@ namespace SkylineTool
 
         public override string ToString()
         {
-            var result = Text ?? Index?.ToString() ?? Type ?? string.Empty;
+            string result;
+            if (Type != null && Index.HasValue)
+            {
+                result = Type + "[" + Index + "]";
+            }
+            else
+            {
+                result = Text ?? Index.ToString();
+            }
             if (Parent == null)
             {
                 return result;

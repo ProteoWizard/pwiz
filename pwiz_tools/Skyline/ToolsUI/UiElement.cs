@@ -879,10 +879,10 @@ namespace pwiz.Skyline.ToolsUI
             var anchor = JsonUiService.CurrentGridCell(_dataGridView);
             JsonUiService.SetDataGridViewText(_dataGridView, anchor.X, anchor.Y, text);
         }
-        // Moves the current cell so the next SetGridText / context menu acts there. X is the visible-column
-        // index, Y is the row index (the same indices GetGridText's columns/rows are reported in).
-        public void SetCurrentCellAddress(System.Drawing.Point cell) =>
-            JsonUiService.SetCurrentGridCell(_dataGridView, cell.X, cell.Y);
+        // Moves the current cell so the next SetGridText / context menu acts there. column is the
+        // visible-column index, row is the row index (the same indices GetGridText's columns/rows use).
+        public void SetCurrentCellAddress(int column, int row) =>
+            JsonUiService.SetCurrentGridCell(_dataGridView, column, row);
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.GetGridText || action == UiAction.SetGridText ||
             action == UiAction.SetCurrentCellAddress || base.SupportsAction(action);
@@ -892,7 +892,10 @@ namespace pwiz.Skyline.ToolsUI
             {
                 case UiAction.GetGridText: return GetGridText(cancellationToken);
                 case UiAction.SetGridText: SetGridText(value as string); return null;
-                case UiAction.SetCurrentCellAddress: SetCurrentCellAddress(UiValue.ToPoint(value)); return null;
+                case UiAction.SetCurrentCellAddress:
+                    var cell = UiValue.ToColumnRow(value);
+                    SetCurrentCellAddress(cell[0], cell[1]);
+                    return null;
                 default: return base.PerformAction(action, value, cancellationToken);
             }
         }
@@ -992,17 +995,29 @@ namespace pwiz.Skyline.ToolsUI
         public static string NormalizeNewlines(string value) =>
             value == null ? null : System.Text.RegularExpressions.Regex.Replace(value, @"\r\n?|\n", "\r\n");
 
-        // The Point a set_current_cell_address value carries: a real Point (an in-process caller), or "x,y" text.
-        // (Over the wire the server has already turned the JSON object into a Point before it reaches here.)
-        public static System.Drawing.Point ToPoint(object value)
+        // The [column, row] a set_current_cell_address value carries: a two-element integer array. An
+        // in-process caller passes new[] { column, row }; over the wire it is the JSON array [column, row]
+        // (a JArray, or the string "[column, row]" when sent through a string-valued parameter).
+        public static int[] ToColumnRow(object value)
         {
-            if (value is System.Drawing.Point point)
-                return point;
-            var parts = (value as string)?.Split(',');
-            if (parts?.Length == 2 && int.TryParse(parts[0].Trim(), out var x) && int.TryParse(parts[1].Trim(), out var y))
-                return new System.Drawing.Point(x, y);
+            // A string form "[0, 1]" or "0, 1" (the brackets are optional).
+            if (value is string text)
+            {
+                var parts = text.Trim().Trim('[', ']').Split(',');
+                if (parts.Length == 2 && int.TryParse(parts[0].Trim(), out var x) && int.TryParse(parts[1].Trim(), out var y))
+                    return new[] { x, y };
+            }
+            // An array/list (int[], object[], or a Newtonsoft JArray -- all IEnumerable).
+            else if (value is System.Collections.IEnumerable sequence && !(value is string))
+            {
+                var cell = new System.Collections.Generic.List<int>();
+                foreach (var item in sequence)
+                    cell.Add(ToInt(item));
+                if (cell.Count == 2)
+                    return cell.ToArray();
+            }
             throw new ArgumentException(new LlmInstruction(
-                @"set_current_cell_address needs a point: the cell's column index as X and row index as Y."));
+                @"set_current_cell_address needs a two-element [column, row] array: the cell's visible-column index and its row index."));
         }
 
         // The int a set_selected_index value carries: a real int (an in-process caller) or its text.

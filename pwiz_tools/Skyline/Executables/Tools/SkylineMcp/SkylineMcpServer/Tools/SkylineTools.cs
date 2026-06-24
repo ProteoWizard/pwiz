@@ -566,7 +566,7 @@ public static class SkylineTools
         "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +
         "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path); " +
         "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
-        "'set_current_cell_address' (value 'col,row'); 'select_tab' (a TabControl, value the tab text); " +
+        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'select_tab' (a TabControl, value the tab text); " +
         "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text or " +
         "its index, e.g. [\"Peptides\", 0]). " +
         "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
@@ -579,7 +579,7 @@ public static class SkylineTools
         [Description("Action: get_actions, get_children, click, set_value, get_value, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, select_tab, expand, collapse")] string action,
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
-        [Description("Value for set_value/set_grid_text, 'col,row' for set_current_cell_address, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
+        [Description("Value for set_value/set_grid_text, a [column, row] array for set_current_cell_address, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
         [Description("A full UiElementPath as JSON (e.g. one from get_children re-parented, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
     {
         return Invoke(connection =>
@@ -709,7 +709,7 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.SetCurrentCellAddress(formId, controlId, new System.Drawing.Point(column, row));
+            connection.SetCurrentCellAddress(formId, controlId, column, row);
             return $"Moved to cell (column {column}, row {row}) on {formId}.";
         });
     }

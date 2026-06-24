@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Move to the Note column at row 0, then paste two newline-separated values starting there.
             // controlId is null because the Document Grid form has a single grid.
-            JsonUiService.SetCurrentCellAddress(gridId, null, new System.Drawing.Point(noteColumn, 0));
+            JsonUiService.SetCurrentCellAddress(gridId, null, noteColumn, 0);
             JsonUiService.SetGridText(gridId, null, TextUtil.LineSeparate(@"First note", @"Second note"));
             WaitForConditionUI(() => documentGrid.IsComplete);
 

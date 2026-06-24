@@ -789,18 +789,18 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Moves the current cell of a grid on a form (move there before pasting with
-        /// <see cref="SetGridText"/> or opening the cell's context menu). <paramref name="cell"/>'s X is
-        /// the visible-column index and Y is the row index -- the same indices the grid reports columns
-        /// and rows in. See <see cref="IJsonToolService"/>.
+        /// <see cref="SetGridText"/> or opening the cell's context menu). <paramref name="column"/> is the
+        /// visible-column index and <paramref name="row"/> is the row index -- the same indices the grid
+        /// reports columns and rows in. See <see cref="IJsonToolService"/>.
         /// </summary>
-        public static void SetCurrentCellAddress(string formId, string controlId, System.Drawing.Point cell)
+        public static void SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
             ValidateFormIdFormat(formId);
             InvokeOnUiThread(() =>
             {
                 var grid = FindGrid(FindFormById(formId), controlId);
                 VerifyInteractable(grid);
-                grid.SetCurrentCellAddress(cell);
+                grid.SetCurrentCellAddress(column, row);
             });
         }
 
@@ -908,7 +908,7 @@ namespace pwiz.Skyline.ToolsUI
         private static void SetGridCellValue(Form form, string gridName, int column, int row, string value)
         {
             var grid = FindGrid(form, gridName);
-            grid.SetCurrentCellAddress(new System.Drawing.Point(column, row));
+            grid.SetCurrentCellAddress(column, row);
             grid.SetGridText(value);
         }
 

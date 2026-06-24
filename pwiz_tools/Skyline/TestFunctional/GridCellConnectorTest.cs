@@ -108,7 +108,7 @@ namespace pwiz.SkylineTestFunctional
             // Move to the first column (row 0), then choose Sort Descending from that cell's context menu
             // -- the grid's context menu acts on the current cell. The DataboundGridControl is a container;
             // its inner grid (a DataGridView) owns the context menu, so the path walks into it.
-            JsonUiService.SetCurrentCellAddress(gridId, string.Empty, new System.Drawing.Point(0, 0));
+            JsonUiService.SetCurrentCellAddress(gridId, string.Empty, 0, 0);
             var gridContextMenu = new UiElementPath(
                 new UiElementPath(
                     new UiElementPath(

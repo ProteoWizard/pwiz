@@ -116,7 +116,7 @@ namespace SkylineTool
         public void SetFormValue(string formId, string controlId, string value) { Call(nameof(SetFormValue), formId, controlId, value); }
         public string GetFormValue(string formId, string controlId) { return Call(nameof(GetFormValue), formId, controlId); }
         public void SetGridText(string formId, string controlId, string text) { Call(nameof(SetGridText), formId, controlId, text); }
-        public void SetCurrentCellAddress(string formId, string controlId, System.Drawing.Point cell) { Call(nameof(SetCurrentCellAddress), formId, controlId, cell); }
+        public void SetCurrentCellAddress(string formId, string controlId, int column, int row) { Call(nameof(SetCurrentCellAddress), formId, controlId, column, row); }
         public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
         public void CloseForm(string formId) { Call(nameof(CloseForm), formId); }
 
