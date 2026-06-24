@@ -1,114 +1,111 @@
-# Live Reports tutorial (en) -- SkylineMCP / AI Connector steps  [PARTIAL -- see gaps at bottom]
+# Live Reports tutorial (en) -- MCP / AI Connector steps  [WORK IN PROGRESS -- through Result File Rules]
 #
-# English (en) step list. Verbs: InvokeMenuItem, InvokeContextMenuItem, ClickFormButton,
-# ClickToolStripItem, SetFormValue, SetGridText, GetGridText, CloseForm, and the WaitForForm /
-# WaitForNoForm sync primitives. Each localized tutorial needs its own; {DATA} is not localized.
-#
-# {DATA} is the LiveReports folder that contains Rat_plasma.sky and SampleInfo.txt
+# The actual skyline_* MCP tool calls used to drive the Live Reports tutorial, in order, with notes on
+# friction worth simplifying in the API (see the list at the bottom -- that is the point of this file).
+# {DATA} = the LiveReports folder with Rat_plasma.sky and SampleInfo.txt
 # (https://skyline.ms/tutorials/LiveReports.zip).
 #
-# STATUS: validated live through the Document Grid section. The tutorial then reaches the "Define
-# Annotation" dialog, which is blocked on two remaining verb gaps (plain DataGridView cells and a
-# CheckedListBox item -- see the gap list). Steps below are validated unless marked BLOCKED.
+# Tools used: skyline_invoke_menu_item, skyline_get_open_forms, skyline_get_controls,
+# skyline_click_form_button, skyline_set_form_value, skyline_perform_action (accept / check_item /
+# select_tab / get_value / get_children / click / set_value), skyline_click_toolstrip_item,
+# skyline_set_current_cell_address, skyline_get_grid_text, skyline_close_form.
+#
+# Control addressing: controls are matched by the VISIBLE TEXT a user sees, never by an internal
+# control name. A caption-less field is addressed by its adjacent label ("Name" -> the name textbox).
+# A caption-less, label-less control is addressed by its TYPE ("TabControl", "CheckedListBox"). A form's
+# single grid takes an EMPTY gridId (the literal "null" is NOT special -- pass an empty string).
 
-# --- Open the starting document ---
-# (If a prior document has unsaved changes, File > Open first shows a "Save changes?" prompt
-# (MultiButtonMsgDlg) -- answer No to discard. Validated.)
-InvokeMenuItem  "File > Open"
-WaitForForm     "FileDialog:Open"
-SetFormValue    "FileDialog:Open" "FileName" {DATA}\Rat_plasma.sky
-ClickFormButton "FileDialog:Open" "Open"
-WaitForNoForm   "FileDialog:Open"
+# === Get into the main window (a fresh launch shows the StartPage; the main window/menus do not exist yet) ===
+skyline_click_form_button   "StartPage:Start Page" "Blank Document"
+
+# === Open the starting document (native Open dialog) ===
+skyline_invoke_menu_item    "File > Open"
+# Native Windows Open dialog (FileDialog:Open, IsNative=True); controlId is ignored, value is the path.
+skyline_set_form_value      "FileDialog:Open" "filename" "{DATA}\Rat_plasma.sky"
+# Accept with the ACCEPT action (NOT click_form_button "Open"): a native dialog has no caption-addressable
+# buttons -- accept hits its default button, close_form cancels it. (locale-proof; see friction A)
+skyline_perform_action      form="FileDialog:Open" action="accept"
 # Document: 48 proteins, 125 peptides, 721 transitions, 42 replicates.
 
-# --- Enable Audit Logging ---
-InvokeMenuItem  "View > Live Reports > Audit Log"
-WaitForForm     "AuditLogForm:Audit Log: All Info"
-# "Enable audit logging" is a CheckBox with AutoCheck=false that acts on its Click handler, so it
-# must be CLICKED (ClickFormButton), not value-set. Validated.
-ClickFormButton "AuditLogForm:Audit Log: All Info" "Enable audit logging"
-# Close the Audit Log window. CloseForm now closes a docked/floating tool window. Validated.
-CloseForm       "AuditLogForm:Audit Log: All Info"
+# === Enable Audit Logging ===
+skyline_invoke_menu_item    "View > Live Reports > Audit Log"
+# "Enable audit logging" lives on the grid's nav bar inside the DataboundGridControl; click_form_button
+# searches descendants and finds it. It is a checkable item (no get_value).
+skyline_click_form_button   "AuditLogForm:Audit Log: All Info" "Enable audit logging"
+skyline_close_form          "AuditLogForm:Audit Log: All Info"
 
-# --- Showing the Document Grid ---
-# Note: the Document Grid opens on whichever view the saved document last used (here "Peptides"),
-# so the form title -- and thus the form id -- is "Document Grid: <ViewName>". Read it back from
-# GetOpenForms rather than assuming "Proteins".
-InvokeMenuItem  "View > Live Reports > Document Grid"
-WaitForForm     "DocumentGridForm:Document Grid: *"
-# The "Reports" dropdown items are built on demand; ClickToolStripItem opens the dropdown first.
-# Validated (Proteins, Replicates).
-ClickToolStripItem "DocumentGridForm:Document Grid: Peptides" "Reports > Proteins"
-# GetGridText returns the whole grid (headers + every row) as TSV. Validated (48-protein report).
-GetGridText     "DocumentGridForm:Document Grid: Proteins" null
-ClickToolStripItem "DocumentGridForm:Document Grid: Proteins" "Reports > Replicates"
+# === Document Grid + Reports ===
+skyline_invoke_menu_item    "View > Live Reports > Document Grid"
+# Opens on the last-used view; the form id is "Document Grid: <ViewName>". The Reports dropdown items are
+# built on demand -> click_toolstrip_item opens the dropdown first.
+skyline_click_toolstrip_item "DocumentGridForm:Document Grid: Proteins" "Reports > Replicates"
+# Read the whole grid as TSV. gridId = EMPTY string for the single grid (see friction F).
+skyline_get_grid_text       "DocumentGridForm:Document Grid: Replicates" ""
 
-# --- Defining some Replicate Annotations ---
-# SubjectID (a plain Text annotation) is now fully driveable end-to-end. Validated.
-InvokeMenuItem  "Settings > Document Settings"
-WaitForForm     "DocumentSettingsDlg:Document Settings"
-ClickFormButton "DocumentSettingsDlg:Document Settings" "Add"
-WaitForForm     "DefineAnnotationDlg:Define Annotation"
-# The "Name" label resolves to the textbox it names: SetFormValue matches the "Name:" label by its
-# visible text, sees it is a label, and sets the next editable field in tab order (the textbox).
-SetFormValue    "DefineAnnotationDlg:Define Annotation" "Name" "SubjectID"
-# Type defaults to "Text". Check "Replicates" in the Applies-to CheckedListBox (ClickFormButton now
-# toggles a checked-list item). Validated.
-ClickFormButton "DefineAnnotationDlg:Define Annotation" "Replicates"
-ClickFormButton "DefineAnnotationDlg:Define Annotation" "OK"
-ClickFormButton "DocumentSettingsDlg:Document Settings" "OK"
+# === Define Replicate Annotations (Cohort value list, SubjectID text) ===
+skyline_invoke_menu_item    "Settings > Document Settings"
+# "Add" is ambiguous (one per tab); the interactable-preference picks the visible/enabled one on the
+# active tab. (Control NAME, e.g. btnAddAnnotation, is NOT matched -- only visible text. See friction E.)
+skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "Add"
+skyline_set_form_value      "DefineAnnotationDlg:Define Annotation" "Name" "Cohort"
+skyline_set_form_value      "DefineAnnotationDlg:Define Annotation" "Type" "Value List"
+skyline_set_form_value      "DefineAnnotationDlg:Define Annotation" "Values" "Healthy\nDiseased"  # \n -> CRLF
+skyline_perform_action      form="DefineAnnotationDlg:Define Annotation" action="check_item" label="Applies to" value="Replicates"
+skyline_click_form_button   "DefineAnnotationDlg:Define Annotation" "OK"
+# Repeat Add for SubjectID (Type defaults to "Text"): Name=SubjectID, check Applies-to "Replicates", OK.
+skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "OK"
+# NOTE: a graceful File>Exit persists annotation DEFINITIONS to global settings, so on a LATER run
+# "Add Cohort" errors "already defined" -- instead CHECK the existing one (see friction H):
+#   skyline_perform_action form="DocumentSettingsDlg:Document Settings" action="check_item" type="CheckedListBox" value="Cohort"
 
-# Fill the SubjectID column in the Replicates report. This grid IS a DataboundGridControl, so
-# SetGridText pastes the whole 42-row column at once. Validated (read back with GetGridText).
-InvokeMenuItem  "View > Live Reports > Document Grid"
-ClickToolStripItem "DocumentGridForm:Document Grid: *" "Reports > Replicates"
-SetGridText     "DocumentGridForm:Document Grid: Replicates" "" 3 0 "102\n102\n102\n...(42 rows)"
-
-# The "Cohort" Value-List annotation is now driveable: its "Values" control is a multi-line TextBox
-# (not a grid), so after SetFormValue "Type" "Value List", set the values with
-#   SetFormValue "DefineAnnotationDlg:Define Annotation" "Values" "Healthy\nDiseased"
-# (the "Values" label resolves to the textbox via gap (10)).
+# === Result File Rules (auto-fill Cohort/SubjectID from the result file names) ===
+skyline_invoke_menu_item    "Settings > Document Settings"
+# Select the "Result Files" tab on the dialog's TabControl (caption-less -> addressed by type).
+skyline_perform_action      form="DocumentSettingsDlg:Document Settings" action="select_tab" type="TabControl" value="Result Files"
+skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "Add"
+# The "..." (Edit) toolstrip button only opens the Rule Editor when a rules-grid row is CURRENT -- set the
+# current cell first, then click "...". (See friction D. The "..." label only resolves after fix B.)
+skyline_set_current_cell_address "MetadataRuleSetEditor:Rule Set Editor" "dataGridViewRules" 0 0
+skyline_click_form_button   "MetadataRuleSetEditor:Rule Set Editor" "..."
+# Rule 1: D -> Diseased -> Cohort. (Pattern field label is "Pattern (regular expression)" -- needs fix C.)
+skyline_set_form_value      "MetadataRuleEditor:Rule Editor" "Pattern (regular expression)" "D"
+skyline_set_form_value      "MetadataRuleEditor:Rule Editor" "Replacement" "Diseased"
+skyline_set_form_value      "MetadataRuleEditor:Rule Editor" "Target" "Cohort"
+skyline_get_grid_text       "MetadataRuleEditor:Rule Editor" ""   # Preview: the 21 D_ files match -> Diseased
+skyline_click_form_button   "MetadataRuleEditor:Rule Editor" "OK"
+# Rule 2 (set cell row 1, "..."): H -> Healthy -> Cohort.
+# Rule 3 (set cell row 2, "..."): Pattern "(.)_(...)" -> Replacement "$1$2" -> Target "SubjectID"
+#         (regex groups -> SubjectID D102..H162). Verified in the Preview.
+skyline_set_form_value      "MetadataRuleSetEditor:Rule Set Editor" "Name" "Cohort and SubjectID"
+skyline_click_form_button   "MetadataRuleSetEditor:Rule Set Editor" "OK"
+skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "OK"
+# Result (read back with GetGridText on Document Grid: Replicates): Cohort=Diseased/Healthy and
+# SubjectID=D102..H162 fill in for all 42 replicates.
 
 # ========================================================================================
-# VERB GAPS
+# FRICTION / API-SIMPLIFICATION OPPORTUNITIES (observed this run)
 # ========================================================================================
-# (1)  [DONE] Click a CheckBox / ToolStrip button. ClickFormButton clicks any control + ToolStrip items.
-# (1b) [DONE] Dynamically-built dropdown ITEMS -> ClickToolStripItem (opens the dropdown, then matches).
-# (2)  [DONE] Close a docked/floating form or dialog -> CloseForm.
-# (3)  [DONE] SelectTab on a tabbed dialog -> ClickFormButton on the tab text.
-# (3b) [DONE] Read a grid -> GetGridText; paste into a DataboundGridControl -> SetGridText.
-# (4)  [DONE] Plain DataGridView read (GetGridText) and cell set (SetGridText). A grid that validates
-#      whole rows still governs whether a partial new row is kept (e.g. the Rule Set Editor).
-# (5)  [DONE] TreeView expand + check a node -> SetItemChecked with a '>'-separated node path (each
-#      level is expanded so lazily-built nodes are present). Validated live on the Customize Report tree.
-# (6)  [DONE] CheckedListBox item (un)check -> ClickFormButton (toggle) or SetItemChecked (explicit).
-# (6b) [DONE] ListBox/Tree (de)select -> SetItemSelected. (The Customize Report reorder/remove buttons
-#      are ordinary buttons -> ClickFormButton.)
-# (10) [DONE] SetFormValue resolves a matched label to the field it labels (next editable in tab order).
-# (7)  [DONE] Right-click a grid cell / COLUMN HEADER context menu -> InvokeContextMenuItem with a
-#      "grid[column,row]" controlId (row -1 = header). Validated live: Sort, and Number Format
-#      (opened Choose Format) on a Document Grid column. SetFormValue takes the same cell locator.
-# (11) [DONE] Lazily-built MAIN-menu submenus -> InvokeMenuItem opens each level (e.g. View > Live
-#      Reports > Group Comparisons > <name>). Validated live opening a group comparison grid.
-# (12) [DONE] Multi-line TextBox values -> SetFormValue normalizes '\n' to CRLF (e.g. the value list).
-# (14) [DONE] ListView item select/check -> SetItemSelected/SetItemChecked (e.g. the Pivot Editor
-#      available-columns ColumnListView). Validated live driving a Pivot Editor pivot (Mean of a column).
+# A. Native-dialog accept. The intuitive first guess was click_form_button "Open"; the answer is the
+#    "accept" action. Consider surfacing accept in the typed tools, or accepting "Open"/"Save"/"OK" on a
+#    native dialog as aliases that map to the default button (still locale-proof).
+# B. [FIXED this session] Caption-less "..." Edit button reported an EMPTY label and was unmatchable.
+#    NormalizeLabel now keeps the original when trimming empties it, so "..." is addressable.
+# C. [FIXED this session] Labels with symbols (e.g. "Pattern (regular expression)"): get_controls reported
+#    the NORMALIZED label but matching used the RAW one, so the discovered label was unmatchable (and the
+#    parens disabled the loose match). TextMatches now also matches the normalized label.
+# D. The "..." Edit button silently no-ops unless a rules-grid row is current. Consider auto-selecting the
+#    new row, or returning a clear error ("no current row") instead of doing nothing.
+# E. "Add" ambiguity across tabs works only because off-tab buttons report Visible=false. Names are never
+#    matched. A way to scope by tab, or a clearer error when ambiguous, would help.
+# F. gridId / single-grid forms: pass an EMPTY string; the literal "null" is taken as a grid name and
+#    fails. Easy to get wrong -- consider treating "null"/"none" as the single grid too.
+# G. [FIXED this session] Reading a validation/alert message. When OK is blocked by a CommonAlertDlg, the
+#    text lived in a plain Label (not an addressable control), so it took a screenshot to read. The form
+#    gate now includes the blocking CommonAlertDlg's message in its exception.
+# H. Global-settings leak (not strictly an API issue, but affects repeatable scripting): a graceful
+#    File>Exit persists annotation DEFINITIONS, so re-runs must CHECK the annotation rather than ADD it.
 #
-# VALIDATED END-TO-END LIVE (Rat_plasma): audit log, document grid + reports, annotations (Cohort
-# value list + SubjectID, Applies-to), Result File Rules (Rule Set Editor + Rule Editor, grid-cell
-# locator to make a rule row current), Customize Report (check/uncheck tree columns incl. deep paths
-# like Peptides > Precursors > Precursor Results > Total Area; Find Column dialog; name + OK), Group
-# Comparison (Edit form, view grid + Bar Graph), grid column-header context menus, and the Pivot Editor.
-#
-# REMAINING MINOR GAPS:
-# (8)  ListBox/ListView RANGE select (the Customize Report shift-click "First Position".."Peptide Note"
-#      then remove; the Pivot Editor multi-column select). SetItemSelected selects one item; a range
-#      needs each item, or just uncheck the unwanted columns in the tree instead.
-# (9)  Out of scope (desktop, not Skyline): the Notepad copy/paste of SampleInfo.txt.
-#
-# CONTROL ADDRESSING: controls are matched by the VISIBLE TEXT a user sees, never by an internal control
-# name. A caption-less text field is addressed by its adjacent Label (which resolves to the field it
-# names, e.g. "Name" -> the name textbox; "Report Name" -> the report-name textbox). A caption-less,
-# label-less control is addressed by its TYPE ("TreeView" -> the Customize Report field tree, "ListView"
-# -> the Pivot Editor available-columns list). A form's single grid/list/tree takes an EMPTY controlId
-# (the literal string "null" is NOT special -- pass an empty string).
+# REMAINING (not yet driven this run): Creating a list of samples (List Designer + paste SampleInfo.txt),
+# pivoting on Replicate Name, the Normalized Area column + number format + sub-properties, column averages,
+# row/column-header pivots, changing the normalization method + a report filter, Group Comparison + heat
+# map with dendrograms, adding report definitions, inspecting the audit log, and exporting a report.

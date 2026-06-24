@@ -392,9 +392,15 @@ namespace pwiz.Skyline.ToolsUI
                 return;
             var topLevel = TopLevelFormOf(form);
             if (!User32.IsWindowEnabled(topLevel.Handle))
+            {
+                // A modal dialog has disabled the form. If it is an alert (CommonAlertDlg), include its text so
+                // the caller sees what it says without having to capture a screenshot of it.
+                var alertMessage = JsonUiService.BlockingAlertMessage();
                 throw new InvalidOperationException(LlmInstruction.Format(
-                    @"Cannot interact with form '{0}': a modal dialog is blocking it. Handle the open dialog first (see skyline_get_open_forms).",
-                    JsonUiService.GetFormId(form)));
+                    @"Cannot interact with form '{0}': it is blocked by an open dialog{1}. Handle the open dialog first (see skyline_get_open_forms).",
+                    JsonUiService.GetFormId(form),
+                    alertMessage != null ? @" which says: " + alertMessage : string.Empty));
+            }
             if (!form.Enabled)
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Form '{0}' is disabled.", JsonUiService.GetFormId(form)));
@@ -504,7 +510,12 @@ namespace pwiz.Skyline.ToolsUI
             if (candidate == null || key == null)
                 return false;
             if (strict)
-                return string.Equals(candidate, key, StringComparison.Ordinal);
+                // Match the raw text or its normalized form (the mnemonic '&' and trailing punctuation/space
+                // removed -- see NormalizeLabel), so the label GetControls/get_children report (which is the
+                // normalized one) is matchable even when it carries a symbol of its own, which disables the
+                // symbol-insensitive loose match below.
+                return string.Equals(candidate, key, StringComparison.Ordinal)
+                    || string.Equals(NormalizeLabel(candidate), key, StringComparison.Ordinal);
             if (HasSymbol(key))
                 return false;
             return string.Equals(StripToAlphanumeric(candidate), StripToAlphanumeric(key),
@@ -685,12 +696,15 @@ namespace pwiz.Skyline.ToolsUI
         // The label as a caller would type it: the mnemonic '&' removed and any trailing ellipsis, period,
         // colon (including the full-width Japanese colon '：'), or whitespace trimmed -- so a "Name:" label is
         // reported (and addressable) as "Name", and a "&Peptide Search..." menu caption as "Peptide Search".
-        // Matching tolerates either form anyway.
+        // Matching tolerates either form anyway. If trimming removes everything -- the whole caption is
+        // punctuation, e.g. a "..." or ":" button -- keep the original so the control is still reported with a
+        // label and stays addressable, rather than vanishing into an empty (null) name.
         internal static string NormalizeLabel(string text)
         {
             if (string.IsNullOrEmpty(text))
                 return text;
-            return text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', '：', ':', ' ').Trim();
+            var normalized = text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', '：', ':', ' ').Trim();
+            return normalized.Length == 0 ? text : normalized;
         }
     }
 

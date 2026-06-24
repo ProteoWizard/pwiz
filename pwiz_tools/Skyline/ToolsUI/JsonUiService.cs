@@ -331,6 +331,15 @@ namespace pwiz.Skyline.ToolsUI
                 : alert.Message + Environment.NewLine + alert.DetailMessage;
         }
 
+        // The text of an alert dialog (CommonAlertDlg) currently open in this process, or null if none -- so
+        // the form gate can tell the caller what the blocking dialog says instead of only that something is
+        // blocking. Must be called on the UI thread (it reads the open forms).
+        internal static string BlockingAlertMessage()
+        {
+            var alert = FormUtil.OpenForms.OfType<CommonAlertDlg>().FirstOrDefault(dlg => dlg.Visible);
+            return alert == null ? null : GetAlertText(alert);
+        }
+
         // Returns the handles of this process's modal dialogs: visible, enabled, top-level windows
         // whose owner window is disabled -- the signature of a modal dialog blocking its owner.
         private static IList<IntPtr> FindModalDialogWindows()
