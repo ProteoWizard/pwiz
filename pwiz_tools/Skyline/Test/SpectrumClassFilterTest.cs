@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -42,7 +43,17 @@ namespace pwiz.SkylineTest
     public class SpectrumClassFilterTest : AbstractUnitTest
     {
         [TestMethod]
-        public void TestSpectrumPrecursorFilterOperand()
+        public void TestSpectrumClassFilter()
+        {
+            TestSpectrumPrecursorFilterOperand();
+            TestCollisionEnergyFilter();
+            TestCollisionEnergyComparisonLengthMismatch();
+            TestSpectrumClassFilterSerialization();
+            TestTransitionGroupSpectrumClassFilter();
+            TestRoundTripSpectrumFilters();
+        }
+
+        private void TestSpectrumPrecursorFilterOperand()
         {
             double precursorMz = 422.5;
             var expectedSpectrumPrecursors =
@@ -56,8 +67,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(expectedSpectrumPrecursors, operandValue);
         }
 
-        [TestMethod]
-        public void TestCollisionEnergyFilter()
+        private void TestCollisionEnergyFilter()
         {
             // Collision energy is read straight from the spectrum file as a positive magnitude (the
             // mzML/PSI convention), regardless of scan polarity, and the filter compares it as a plain
@@ -80,10 +90,10 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(Predicate(@" = 17.00")(CeSpectrum(@"ce17_4", 17.4)));
 
             // CollisionEnergy is a PositiveNumber column, so a negative operand is rejected at parse time
-            // (by PositiveNumberFilterHandler) with the "must be a positive number" message.
+            // (by PositiveNumberFilterHandler) with the "cannot be negative" message. Zero is allowed.
             AssertEx.ThrowsException<FormatException>(
                 () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" = -17"),
-                MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_);
+                MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_);
 
             // Ordered comparison operators work on the list-valued CollisionEnergy: the operator is
             // applied to each MS-level CE and, for a single operand, the criterion holds only if every
@@ -107,18 +117,49 @@ namespace pwiz.SkylineTest
             // now allowed, the negative value (not the operator) is the problem.
             AssertEx.ThrowsException<FormatException>(
                 () => SpectrumClassFilter.ParseFilterString(nameof(SpectrumClass.CollisionEnergy) + @" > -20"),
-                MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_);
+                MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_);
         }
 
-        [TestMethod]
-        public void TestSpectrumClassFilterSerialization()
+        private void TestCollisionEnergyComparisonLengthMismatch()
+        {
+            // A multi-value comparison operand pairwise-compares against the spectrum's CE list. This is
+            // the predicate the extraction layer (SpectrumFilterPair.MatchesSpectrum) invokes per spectrum.
+            // (Built directly: the spectrum-filter string grammar broadcasts a single value for a
+            // comparison rather than accepting a multi-value operand, so this is only reachable
+            // programmatically — but the predicate must still behave predictably.)
+            var filter = new SpectrumClassFilter(new FilterClause(new[]
+            {
+                new FilterSpec(SpectrumClassColumn.CollisionEnergy.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"15,30")
+            }));
+            var predicate = filter.MakePredicate();
+
+            SpectrumMetadata CeSpectrum(string id, params double[] ces) => new SpectrumMetadata(id, 1.0)
+                .ChangePrecursors(ces.Select(ce => (IEnumerable<SpectrumPrecursor>)
+                    new[] { new SpectrumPrecursor(new SignedMz(500.0)).ChangeCollisionEnergy(ce) }));
+
+            // Equal lengths compare pairwise: a multi-value comparison is perfectly valid when it lines up.
+            Assert.IsTrue(predicate(CeSpectrum(@"ok", 17, 35)));    // 17 > 15 and 35 > 30
+            Assert.IsFalse(predicate(CeSpectrum(@"no", 17, 25)));   // 25 is not > 30
+
+            // Length mismatch (3 vs 2), neither a single value: the comparison throws rather than
+            // silently returning a misleading false. MakePredicate wraps it as an InvalidDataException with
+            // spectrum-filter context, so chromatogram extraction reports a clear, meaningful error (which
+            // its standard exception handling surfaces) rather than faulting with an opaque exception.
+            AssertEx.ThrowsException<InvalidDataException>(
+                () => predicate(CeSpectrum(@"mismatch", 17, 35, 50)),
+                string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                    string.Format(
+                        MessageResources.ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_,
+                        3, 2)));
+        }
+
+        private void TestSpectrumClassFilterSerialization()
         {
             var spectrumClassFilter = CreateTestSpectrumClassFilter();
             VerifyRoundTrip(spectrumClassFilter);
         }
 
-        [TestMethod]
-        public void TestTransitionGroupSpectrumClassFilter()
+        private void TestTransitionGroupSpectrumClassFilter()
         {
             var peptide = new Peptide("ELVIS");
             var srmSettings = SrmSettingsList.GetDefault();
@@ -134,8 +175,7 @@ namespace pwiz.SkylineTest
             AssertEx.Serializable(srmDocument);
         }
 
-        [TestMethod]
-        public void TestRoundTripSpectrumFilters()
+        private void TestRoundTripSpectrumFilters()
         {
             var filterSpecs = new[]
             {

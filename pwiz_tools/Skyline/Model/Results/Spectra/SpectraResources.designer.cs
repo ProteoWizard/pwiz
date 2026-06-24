@@ -104,7 +104,16 @@ namespace pwiz.Skyline.Model.Results.Spectra {
                 return ResourceManager.GetString("SpectrumClassFilter_GetText_All", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error evaluating the spectrum filter: {0}.
+        /// </summary>
+        public static string SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Criteria which MS1 spectra must satisfy to be included in extracted chromatogram.
         /// </summary>

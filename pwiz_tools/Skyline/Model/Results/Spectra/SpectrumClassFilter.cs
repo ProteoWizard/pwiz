@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -128,16 +129,30 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 .Select(clause => clause.MakePredicate<SpectrumClass>(dataSchema)).ToList();
             return x =>
             {
-                var spectrumClass = new SpectrumClass(new SpectrumClassKey(SpectrumClassColumn.ALL, x));
-                foreach (var predicate in predicates)
+                try
                 {
-                    if (predicate(spectrumClass))
+                    var spectrumClass = new SpectrumClass(new SpectrumClassKey(SpectrumClassColumn.ALL, x));
+                    foreach (var predicate in predicates)
                     {
-                        return true;
+                        if (predicate(spectrumClass))
+                        {
+                            return true;
+                        }
                     }
-                }
 
-                return false;
+                    return false;
+                }
+                catch (ListComparisonException exception)
+                {
+                    // A multi-value comparison operand pairwise-compares against the spectrum's value list
+                    // (e.g. CollisionEnergy per MS level), which is valid when the lengths line up but can
+                    // only be detected per spectrum. When they do not, surface the mismatch with
+                    // spectrum-filter context so chromatogram extraction reports a clear error rather than
+                    // failing with an opaque exception.
+                    throw new InvalidDataException(string.Format(
+                        SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                        exception.Message), exception);
+                }
             };
         }
 

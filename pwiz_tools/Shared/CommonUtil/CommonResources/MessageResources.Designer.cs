@@ -354,11 +354,11 @@ namespace pwiz.Common.CommonResources {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The filter value must be a positive number..
+        ///   Looks up a localized string similar to The filter value cannot be negative..
         /// </summary>
-        public static string PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_ {
+        public static string PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_ {
             get {
-                return ResourceManager.GetString("PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_", resourceCulture);
+                return ResourceManager.GetString("PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_", resourceCulture);
             }
         }
 

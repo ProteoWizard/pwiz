@@ -514,7 +514,7 @@ namespace pwiz.Common.DataBinding.Filtering
             // Different lengths and neither is a single value: there is no meaningful element-wise
             // comparison (unlike equality, which is simply not-equal), so surface an error rather than
             // returning a misleading false.
-            throw new FormatException(string.Format(
+            throw new ListComparisonException(string.Format(
                 MessageResources.ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_,
                 values.Count, operands.Count));
         }
@@ -683,6 +683,21 @@ namespace pwiz.Common.DataBinding.Filtering
     }
 
     /// <summary>
+    /// Thrown by <see cref="ListFilterHandler.MatchesComparison"/> when a comparison operator is applied to
+    /// two lists whose lengths differ with neither being a single (broadcastable) value, so there is no
+    /// meaningful element-wise pairing. A distinct type (rather than a bare <see cref="FormatException"/>)
+    /// so a caller evaluating the filter — e.g. SpectrumClassFilter, where the column value count is only
+    /// known per spectrum — can recognize and surface this specific condition without catching unrelated
+    /// format errors.
+    /// </summary>
+    public class ListComparisonException : FormatException
+    {
+        public ListComparisonException(string message) : base(message)
+        {
+        }
+    }
+
+    /// <summary>
     /// A numeric value that is constrained to be non-negative. Used as a column type so the data-binding
     /// filter (via <see cref="PositiveNumberFilterHandler"/>) rejects negative filter operands.
     /// </summary>
@@ -781,10 +796,11 @@ namespace pwiz.Common.DataBinding.Filtering
 
         private static void RejectNegative(PrecisionNumber operand)
         {
+            // Reject a negative operand; zero is allowed (e.g. "CollisionEnergy > 0" is a meaningful filter).
             if (operand.ToDouble() < 0)
             {
                 throw new FilterOperandException(
-                    MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_must_be_a_positive_number_);
+                    MessageResources.PositiveNumberFilterHandler_RejectNegative_The_filter_value_cannot_be_negative_);
             }
         }
     }
