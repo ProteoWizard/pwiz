@@ -43,7 +43,9 @@ namespace pwiz.Common.DataBinding.Filtering
             _rootColumn = rootColumn;
             CultureInfo = _rootColumn.DataSchema.DataSchemaLocalizer.FormatProvider;
             var decimalSeparator = Regex.Escape(CultureInfo.NumberFormat.NumberDecimalSeparator);
-            _regexNumber = new Regex(@"-?[0-9]+" + decimalSeparator + @"?[0-9]*([Ee][+-]?[0-9]+)?");
+            // Accept either a leading-digit form (5, 5., 5.5) or a leading-decimal form (.5), matching
+            // NumberStyles.Float, so an operand like ".5" parses without needing quotes.
+            _regexNumber = new Regex(@"-?(?:[0-9]+(?:" + decimalSeparator + @"[0-9]*)?|" + decimalSeparator + @"[0-9]+)([Ee][+-]?[0-9]+)?");
         }
 
         public CultureInfo CultureInfo

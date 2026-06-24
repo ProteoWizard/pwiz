@@ -113,6 +113,32 @@ namespace pwiz.SkylineTest
             Assert.AreEqual("Ms1Precursors contains 400,0", text);
         }
 
+        [TestMethod]
+        public void TestLeadingDecimalOperand()
+        {
+            // A numeric operand written without a leading zero (".5") must tokenize as a number, parsing
+            // identically to "0.5", rather than failing to parse as an invalid filter.
+            var serializer = new FilterClauseSerializer(
+                ColumnDescriptor.RootColumn(GetDataSchema(DataSchemaLocalizer.INVARIANT), typeof(SpectrumClass)));
+            var leadingDecimal = serializer.ParseFilterString("CollisionEnergy >= .5");
+            var withLeadingZero = serializer.ParseFilterString("CollisionEnergy >= 0.5");
+            Assert.AreEqual(1, leadingDecimal.Count);
+            Assert.AreEqual(FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL, leadingDecimal[0].FilterSpecs[0].Operation);
+            AssertEx.AreEqual(withLeadingZero[0], leadingDecimal[0]);
+
+            // Negative operands parse too, including the leading-decimal form ("-.5" == "-0.5"). Uses
+            // CompensationVoltage because it allows negative values (CollisionEnergy rejects them).
+            AssertEx.AreEqual(
+                serializer.ParseFilterString("CompensationVoltage >= -0.5")[0],
+                serializer.ParseFilterString("CompensationVoltage >= -.5")[0]);
+
+            // Zero is a valid operand; the leading-decimal form (".0") parses identically to "0.0".
+            AssertEx.AreEqual(
+                serializer.ParseFilterString("CollisionEnergy >= 0.0")[0],
+                serializer.ParseFilterString("CollisionEnergy >= .0")[0]);
+            Assert.AreEqual(1, serializer.ParseFilterString("CollisionEnergy = 0").Count);
+        }
+
         private DataSchema GetDataSchema(DataSchemaLocalizer localizer)
         {
             return new DataSchema(localizer);
