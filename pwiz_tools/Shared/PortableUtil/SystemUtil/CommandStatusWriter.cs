@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -31,9 +30,8 @@ namespace pwiz.Common.SystemUtil
     /// memory stamp, and tracking whether any error message has been written.
     ///
     /// Lives in PortableUtil (pure BCL, no .resx) so both Skyline and OspreySharp can
-    /// share it. The only host-specific input is the localized "Error:" prefix used to
-    /// detect error lines: a host installs its localized variant via
-    /// <see cref="AddErrorMessageHint"/>.
+    /// share it. The only host-specific input is error-line detection: a host that
+    /// localizes its "Error:" prefix assigns <see cref="IsErrorMessage"/>.
     /// </summary>
     public class CommandStatusWriter : TextWriter
     {
@@ -145,7 +143,7 @@ namespace pwiz.Common.SystemUtil
             _writer.WriteLine(message);
             Flush();
 
-            if (IsErrorMessage(value))
+            if (!IsErrorReported && IsErrorMessage(value))
             {
                 IsErrorReported = true;
             }
@@ -153,45 +151,22 @@ namespace pwiz.Common.SystemUtil
 
         public const string ERROR_MESSAGE_HINT = @"Error:";
 
-        // Line prefixes that mark an error message, seeded with the invariant
-        // ERROR_MESSAGE_HINT ("Error:") because Skyline-daily output may be unlocalized.
-        // A host that localizes its "Error:" prefix (e.g. Skyline) adds the localized
-        // variant once at startup via AddErrorMessageHint. Static because localization
-        // is process-wide and a log-file writer swapped in mid-run must see the same
-        // hints without re-propagating per-instance state.
-        private static readonly List<string> ERROR_MESSAGE_HINTS = new List<string> { ERROR_MESSAGE_HINT };
-
         /// <summary>
-        /// Adds a (typically localized) line prefix that marks an error message, beyond
-        /// the invariant <see cref="ERROR_MESSAGE_HINT"/>. PortableUtil carries no .resx,
-        /// so a host that localizes its "Error:" prefix installs the localized variant here.
+        /// Predicate deciding whether a written line marks an error (which flips
+        /// <see cref="IsErrorReported"/>). Defaults to <see cref="DefaultIsErrorMessage"/>
+        /// (the invariant "Error:" prefix). A host that localizes its error prefix
+        /// (e.g. Skyline) assigns a lambda that also checks the localized variant.
+        /// CRITICAL: this is a Func invoked per line, so the host lambda re-resolves its
+        /// localized string to the current UI culture on every call. NEVER capture a
+        /// localized string in a static -- tests switch language in-process, so a frozen
+        /// first-locale value would miss every later language's error lines.
         /// </summary>
-        public static void AddErrorMessageHint(string hint)
-        {
-            if (string.IsNullOrEmpty(hint))
-                return;
-            lock (ERROR_MESSAGE_HINTS)
-            {
-                if (!ERROR_MESSAGE_HINTS.Contains(hint))
-                    ERROR_MESSAGE_HINTS.Add(hint);
-            }
-        }
+        public static Func<string, bool> IsErrorMessage { get; set; } = DefaultIsErrorMessage;
 
-        private bool IsErrorMessage(string message)
+        public static bool DefaultIsErrorMessage(string message)
         {
-            if (message != null && !IsErrorReported)
-            {
-                lock (ERROR_MESSAGE_HINTS)
-                {
-                    foreach (var hint in ERROR_MESSAGE_HINTS)
-                    {
-                        if (message.StartsWith(hint, StringComparison.CurrentCulture))
-                            return true;
-                    }
-                }
-            }
-
-            return false;
+            return message != null &&
+                   message.StartsWith(ERROR_MESSAGE_HINT, StringComparison.InvariantCulture);
         }
 
         private string MemStamp(long memUsed)

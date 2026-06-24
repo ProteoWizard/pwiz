@@ -186,10 +186,6 @@ namespace pwiz.Skyline
             SkylineRemoteAccountServices.Initialize();
             SecurityProtocolInitializer.Initialize(); // Enable highest available security level for HTTPS connections
 
-            // CommandStatusWriter lives in PortableUtil (no .resx); install Skyline's
-            // localized "Error:" prefix so localized command-line runs still detect errors.
-            CommandStatusWriter.AddErrorMessageHint(Resources.CommandStatusWriter_WriteLine_Error_);
-
             // For testing and debugging Skyline command-line interface.
             // Scan every arg, not just args[0], so --opendoc composes order-independently
             // with --start-page (and any future GUI-launch flag).

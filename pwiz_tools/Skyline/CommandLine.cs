@@ -96,6 +96,19 @@ namespace pwiz.Skyline
         /// </summary>
         private bool _importedResults;
 
+        static CommandLine()
+        {
+            // CommandStatusWriter lives in PortableUtil (no .resx). Supply Skyline's full
+            // error-line predicate as a lambda so the localized "Error:" prefix re-resolves
+            // to the current UI culture on every line. NEVER capture the localized string in
+            // a static: tests switch language in-process, so a frozen first-locale value
+            // would miss every later language's error lines.
+            CommandStatusWriter.IsErrorMessage = message =>
+                message != null &&
+                (message.StartsWith(CommandStatusWriter.ERROR_MESSAGE_HINT, StringComparison.InvariantCulture) ||
+                 message.StartsWith(Resources.CommandStatusWriter_WriteLine_Error_, StringComparison.CurrentCulture));
+        }
+
         public CommandLine(CommandStatusWriter output, SrmDocument doc = null, string skylineFile = null)
         {
             _out = output;
