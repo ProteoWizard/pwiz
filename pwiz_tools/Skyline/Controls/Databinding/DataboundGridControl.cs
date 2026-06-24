@@ -51,6 +51,8 @@ namespace pwiz.Skyline.Controls.Databinding
         private bool _errorMessagePending;
         private bool _suppressErrorMessages;
         private DataGridViewPasteHandler _boundDataGridViewPasteHandler;
+        private readonly ToolTip _cellEditToolTip;
+        private Control _cellEditToolTipControl;
         private bool _inColumnChange;
         private IViewContext _viewContext;
         private ReplicatePivotColumns _replicatePivotColumns;
@@ -62,6 +64,8 @@ namespace pwiz.Skyline.Controls.Databinding
         public DataboundGridControl()
         {
             InitializeComponent();
+            // Owned by the designer container so it is disposed with the control (avoids a native leak)
+            _cellEditToolTip = new ToolTip(components);
             _boundDataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView, bindingListSource);
             DataGridViewPasteHandler.Attach(ReplicatePivotDataGridView, bindingListSource);
             replicatePivotDataGridView.CellValueChanged += replicatePivotDataGridView_CellValueChanged;
@@ -71,8 +75,103 @@ namespace pwiz.Skyline.Controls.Databinding
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_PCA_Plot, null,
                 pCAToolStripMenuItem_Click));
 
+            // Columns implementing ICellValidatingColumn show red cell errors and block exit on bad input
+            boundDataGridView.CellValidating += boundDataGridView_CellValidating;
+            boundDataGridView.CellEndEdit += boundDataGridView_CellEndEdit;
+            boundDataGridView.EditingControlShowing += boundDataGridView_EditingControlShowing;
+
             // Attach the event handlers for the BindingListSource
             BindingListSource = bindingListSource;
+        }
+
+        private void boundDataGridView_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+            if (!(boundDataGridView.Columns[e.ColumnIndex] is ICellValidatingColumn validatingColumn))
+            {
+                return;
+            }
+            var cell = boundDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            var error = validatingColumn.GetValidationError(e.FormattedValue?.ToString());
+            if (string.IsNullOrEmpty(error))
+            {
+                cell.ErrorText = string.Empty;
+                cell.Style.ForeColor = Color.Empty;
+            }
+            else
+            {
+                e.Cancel = true;
+                cell.ErrorText = error;
+                cell.Style.ForeColor = Color.Red;
+                // Proactively show the reason for the blocked exit next to the editing control
+                var editingControl = boundDataGridView.EditingControl;
+                if (editingControl != null)
+                {
+                    _cellEditToolTip.Show(error, editingControl, 0, editingControl.Height, 3000);
+                    // Remember the control we showed against so we can hide against the same one
+                    _cellEditToolTipControl = editingControl;
+                }
+            }
+        }
+
+        private void boundDataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            // Clear any error styling once editing ends (successful commit or Escape revert)
+            if (e.RowIndex < 0 || e.ColumnIndex < 0)
+            {
+                return;
+            }
+            if (!(boundDataGridView.Columns[e.ColumnIndex] is ICellValidatingColumn))
+            {
+                return;
+            }
+            var cell = boundDataGridView.Rows[e.RowIndex].Cells[e.ColumnIndex];
+            cell.ErrorText = string.Empty;
+            cell.Style.ForeColor = Color.Empty;
+            // Hide against the control the tooltip was shown on (not boundDataGridView), or it can linger
+            if (_cellEditToolTipControl != null)
+            {
+                _cellEditToolTip.Hide(_cellEditToolTipControl);
+                _cellEditToolTipControl = null;
+            }
+        }
+
+        private void boundDataGridView_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            // Color the editing text red in real time while a validating column's text fails to parse
+            if (!(e.Control is TextBox textBox))
+            {
+                return;
+            }
+            textBox.TextChanged -= ValidatingEditControl_TextChanged;
+            if (boundDataGridView.CurrentCell?.OwningColumn is ICellValidatingColumn)
+            {
+                textBox.TextChanged += ValidatingEditControl_TextChanged;
+                ValidatingEditControl_TextChanged(textBox, EventArgs.Empty);
+            }
+            else
+            {
+                // The grid reuses one editing control across cells; clear any red text/tooltip left by a
+                // prior invalid validating-column edit so a non-validating cell does not inherit it.
+                textBox.ForeColor = SystemColors.WindowText;
+                _cellEditToolTip.SetToolTip(textBox, string.Empty);
+            }
+        }
+
+        private void ValidatingEditControl_TextChanged(object sender, EventArgs e)
+        {
+            if (!(sender is TextBox textBox) ||
+                !(boundDataGridView.CurrentCell?.OwningColumn is ICellValidatingColumn validatingColumn))
+            {
+                return;
+            }
+            var error = validatingColumn.GetValidationError(textBox.Text);
+            textBox.ForeColor = string.IsNullOrEmpty(error) ? SystemColors.WindowText : Color.Red;
+            // Hover tooltip on the edit box explains the parse error in real time (mirrors FormulaBox)
+            _cellEditToolTip.SetToolTip(textBox, error ?? string.Empty);
         }
 
         public BindingListSource BindingListSource
@@ -413,7 +512,7 @@ namespace pwiz.Skyline.Controls.Databinding
                 ViewContext = BindingListSource.ViewContext
             })
             {
-                quickFilterForm.SetFilter(BindingListSource.ViewInfo.DataSchema, _columnFilterPropertyDescriptor, BindingListSource.RowFilter);
+                quickFilterForm.SetFilter(_columnFilterPropertyDescriptor, BindingListSource.RowFilter);
                 if (FormUtil.ShowDialog(this, quickFilterForm) == DialogResult.OK)
                 {
                     BindingListSource.RowFilter = quickFilterForm.RowFilter;
