@@ -698,11 +698,11 @@ namespace pwiz.OspreySharp.IO
             int logCount = Interlocked.Increment(ref s_unsortedLogCount);
             if (logCount <= MaxUnsortedLogLines)
             {
-                Console.Error.WriteLine(
+                OspreyOutput.Out.WriteLine(
                     $"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
                 if (logCount == MaxUnsortedLogLines)
                 {
-                    Console.Error.WriteLine(
+                    OspreyOutput.Out.WriteLine(
                         $"[unsorted-spectrum] suppressing further lines (>{MaxUnsortedLogLines} per process)");
                 }
             }

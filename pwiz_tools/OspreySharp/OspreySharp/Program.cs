@@ -165,6 +165,10 @@ namespace pwiz.OspreySharp
                     }
                 }
 
+                // Point the Core output seam at _out so below-exe layers (FDR, IO) emit
+                // through the same CommandStatusWriter (stamps + --log-file).
+                OspreyOutput.Out = _out;
+
                 // Create the configured directories only after args validate, so
                 // an invalid command line surfaces the validation message instead
                 // of a Directory.CreateDirectory side effect / generic error.

@@ -250,7 +250,7 @@ namespace pwiz.OspreySharp.FDR
             Matrix stdFeatures;
             var standardizer = FeatureStandardizer.FitTransform(features, out stdFeatures);
             swSetup.Stop();
-            Console.Error.WriteLine(
+            OspreyOutput.Out.WriteLine(
                 $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
             // Stage 5 standardizer dump. Gated by the injected diagnostics config
@@ -305,7 +305,7 @@ namespace pwiz.OspreySharp.FDR
                     dedupDecoys++;
                 else dedupTargets++;
             }
-            Console.Error.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
+            OspreyOutput.Out.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
                 bestPerPrecursor.Length, dedupTargets, dedupDecoys, n);
 
             int subN = trainSubset.Length;
@@ -316,7 +316,7 @@ namespace pwiz.OspreySharp.FDR
                     subDecoys++;
                 else subTargets++;
             }
-            Console.Error.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
+            OspreyOutput.Out.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
                 subN, subTargets, subDecoys, bestPerPrecursor.Length);
 
             // Build subset-local arrays
@@ -384,7 +384,7 @@ namespace pwiz.OspreySharp.FDR
                                    bestFeatIdx < config.FeatureNames.Length)
                 ? config.FeatureNames[bestFeatIdx]
                 : string.Format("feature_{0}", bestFeatIdx);
-            Console.Error.WriteLine(
+            OspreyOutput.Out.WriteLine(
                 "[COUNT] Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
                 bestFeatName, bestFeatPassing, trainFdr * 100.0);
 
@@ -449,10 +449,10 @@ namespace pwiz.OspreySharp.FDR
 
             for (int fold = 0; fold < config.NFolds; fold++)
             {
-                Console.Error.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
+                OspreyOutput.Out.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
                     fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]);
             }
-            Console.Error.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
+            OspreyOutput.Out.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
 
             // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
@@ -2206,7 +2206,7 @@ namespace pwiz.OspreySharp.FDR
                     sw.Write('\t'); sw.WriteLine(foldFor[i].ToString(inv));
                 }
             }
-            Console.Error.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
+            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
         }
 
         /// <summary>
@@ -2255,7 +2255,7 @@ namespace pwiz.OspreySharp.FDR
                     sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
                 }
             }
-            Console.Error.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
+            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
         }
 
         /// <summary>
@@ -2289,7 +2289,7 @@ namespace pwiz.OspreySharp.FDR
                     sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stds[i]));
                 }
             }
-            Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
+            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
         }
 
         /// <summary>
@@ -2342,7 +2342,7 @@ namespace pwiz.OspreySharp.FDR
                     sw.WriteLine();
                 }
             }
-            Console.Error.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
+            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
         }
 
         // ============================================================
