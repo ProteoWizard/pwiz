@@ -95,6 +95,7 @@ namespace SkylineTool
         public string[] GetSettingsListTypes() { return CallTyped<string[]>(nameof(GetSettingsListTypes)); }
         public TutorialListItem[] GetAvailableTutorials() { return CallTyped<TutorialListItem[]>(nameof(GetAvailableTutorials)); }
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
+        public int UnfinishedActionCount() { return CallTyped<int>(nameof(UnfinishedActionCount)); }
         public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
         public ControlInfo[] GetControls(string formId) { return CallTyped<ControlInfo[]>(nameof(GetControls), formId); }
         // Returns the result as raw JSON text (object/array) or a string; the caller interprets it by action.

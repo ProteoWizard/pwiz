@@ -115,27 +115,50 @@ namespace pwiz.Skyline.ToolsUI
             syncContext.Send(_ => action(), null);
         }
 
+        private static int _unfinishedActionCount;
+
+        /// <summary>
+        /// The number of fire-and-forget actions (posted by <see cref="BeginInvokeOnUiThread"/>) that have
+        /// been posted but have not yet finished running. Incremented when an action is posted and
+        /// decremented when its delegate returns -- so an action that opens a modal dialog stays counted
+        /// until that modal closes (its delegate is blocked in the modal's message loop). It is therefore
+        /// usually equal to the number of modal dialogs the connector's actions have raised and left open,
+        /// and a caller can poll it to wait until pending sets/clicks have actually been applied.
+        /// </summary>
+        public static int UnfinishedActionCount => Volatile.Read(ref _unfinishedActionCount);
+
         /// <summary>
         /// Posts an action to the UI thread fire-and-forget (BeginInvoke, not Invoke): the caller returns at
         /// once and does not wait for or observe the result. Used for a void action (a click, a value set)
         /// so a gesture that opens a modal dialog does not block -- the modal is driven by later commands,
         /// the same way the main-menu-item path posts its click. Posted on the same (main-window) queue as
         /// <see cref="InvokeOnUiThread(System.Action)"/>, so a later synchronous read sees this action's
-        /// effect (the queue is FIFO). Must be called off the UI thread.
+        /// effect (the queue is FIFO). The action is counted in <see cref="UnfinishedActionCount"/> from when
+        /// it is posted until its delegate returns. Must be called off the UI thread.
         /// </summary>
         public static void BeginInvokeOnUiThread(Action action)
         {
+            Interlocked.Increment(ref _unfinishedActionCount);
+            void Run()
+            {
+                try { action(); }
+                finally { Interlocked.Decrement(ref _unfinishedActionCount); }
+            }
             var mainWindow = Program.MainWindow;
             if (mainWindow != null && !mainWindow.IsDisposed)
             {
-                mainWindow.BeginInvoke(action);
+                mainWindow.BeginInvoke((Action) Run);
                 return;
             }
             var syncContext = Program.UiSynchronizationContext;
             if (syncContext == null)
+            {
+                // The action will never run, so it is not pending after all.
+                Interlocked.Decrement(ref _unfinishedActionCount);
                 throw new InvalidOperationException(
                     @"No UI thread is available to handle this request.");
-            syncContext.Post(_ => action(), null);
+            }
+            syncContext.Post(_ => Run(), null);
         }
 
         /// <summary>
@@ -237,15 +260,14 @@ namespace pwiz.Skyline.ToolsUI
                 var newModals = FindModalDialogWindows().Where(h => !knownModals.Contains(h)).ToList();
                 if (newModals.Count == 0)
                     continue;
-                var decision = ClassifyNewModals(newModals);
-                if (decision.KeepWaiting)
+                if (ShouldKeepWaiting(newModals, out var alertText))
                 {
                     // Every new modal is a LongWaitDlg progress dialog; ignore them and keep waiting.
                     knownModals.UnionWith(newModals);
                     continue;
                 }
-                if (decision.AlertText != null)
-                    throw new InvalidOperationException(decision.AlertText);
+                if (alertText != null)
+                    throw new InvalidOperationException(alertText);
                 return result; // a blocking modal (e.g. a file dialog) is up; return rather than block
             }
 
@@ -264,12 +286,13 @@ namespace pwiz.Skyline.ToolsUI
             RunWithDialogWatch(() => { work(); return true; });
         }
 
-        // Classifies newly-appeared modal dialogs on the UI thread. Returns KeepWaiting when every new
-        // modal is a LongWaitDlg (progress), an alert's text when one is a CommonAlertDlg (the caller
-        // throws it), or neither (the caller returns and lets the model drive the dialog).
-        private static ModalDecision ClassifyNewModals(IList<IntPtr> newModals)
+        // Classifies newly-appeared modal dialogs on the UI thread. Returns true when every new modal is a
+        // LongWaitDlg (progress) and the watch should keep waiting; otherwise false, with alertText set to a
+        // CommonAlertDlg's text (the caller throws it) or null for a native / other modal (the caller returns
+        // and lets the model drive the dialog).
+        private static bool ShouldKeepWaiting(IList<IntPtr> newModals, out string alertText)
         {
-            return InvokeOnUiThread(() =>
+            var decision = InvokeOnUiThread(() =>
             {
                 foreach (var hwnd in newModals)
                 {
@@ -278,17 +301,13 @@ namespace pwiz.Skyline.ToolsUI
                     if (form is LongWaitDlg)
                         continue; // progress dialog -- not a blocker
                     if (form is CommonAlertDlg alert)
-                        return new ModalDecision { AlertText = GetAlertText(alert) };
-                    return new ModalDecision(); // native / other modal -- caller drives it
+                        return (keepWaiting: false, alertText: GetAlertText(alert));
+                    return (keepWaiting: false, alertText: (string) null); // native / other modal -- caller drives it
                 }
-                return new ModalDecision { KeepWaiting = true };
+                return (keepWaiting: true, alertText: (string) null);
             });
-        }
-
-        private class ModalDecision
-        {
-            public bool KeepWaiting;
-            public string AlertText;
+            alertText = decision.alertText;
+            return decision.keepWaiting;
         }
 
         private static string GetAlertText(CommonAlertDlg alert)
@@ -452,16 +471,8 @@ namespace pwiz.Skyline.ToolsUI
             if (Program.MainWindow == null)
                 throw new InvalidOperationException(
                     @"Cannot invoke a menu item: the main Skyline window is not open yet (the StartPage may be showing).");
-            var item = InvokeOnUiThread(() =>
-            {
-                // The main menu lives on the main window; gate it for a modal block / disabled state,
-                // then for the item's own enablement -- the same things that stop a user clicking it.
-                VerifyFormInteractable(Program.MainWindow);
-                var menuItem = FindMenuItem(menuPath);
-                VerifyEnabled(menuItem);
-                return menuItem;
-            });
-            Program.MainWindow.BeginInvoke((Action)item.PerformClick);
+            // The main menu is the main window's; drive it through that form's element model.
+            new FormElement(Program.MainWindow, CancellationToken.None).InvokeMenuItem(menuPath);
         }
 
         // Builds the right-click context menu for owner the way a right-click would (so items added on
@@ -614,100 +625,14 @@ namespace pwiz.Skyline.ToolsUI
         public static void ClickToolStripItem(string formId, string menuPath)
         {
             ValidateFormIdFormat(formId);
-            // Resolve + click on the UI thread, inside the dialog-watch so a dialog the click opens is
-            // surfaced/returned rather than blocking.
-            RunWithDialogWatch(() =>
-            {
-                InvokeOnUiThread(() =>
-                {
-                    var form = FindFormById(formId);
-                    VerifyFormInteractable(form);
-                    FindAndClickToolStripItem(formId, menuPath);
-                });
-                return true;
-            });
-        }
-
-        // Walks a form's ToolStrip items by path, opening each level's dropdown so dynamically-built
-        // items are populated, then clicks the final item. Must run on the UI thread. Throws if a
-        // segment does not match.
-        private static void FindAndClickToolStripItem(string formId, string menuPath)
-        {
-            var form = FindFormById(formId);
-            var segments = ParseMenuSegments(menuPath);
-            var opened = new List<ToolStripDropDownItem>();
-            try
-            {
-                // The first segment is a top-level item on one of the form's ToolStrips.
-                var candidates = EnumerateControls(form).OfType<ToolStrip>()
-                    .SelectMany(strip => strip.Items.Cast<ToolStripItem>());
-                ToolStripItem current = null;
-                for (int i = 0; i < segments.Length; i++)
-                {
-                    if (i > 0)
-                    {
-                        if (!(current is ToolStripDropDownItem dropDownItem))
-                            throw new ArgumentException(LlmInstruction.Format(
-                                @"Toolbar item '{0}' on form {1} is not a dropdown.", segments[i - 1], formId));
-                        VerifyEnabled(dropDownItem);
-                        // Show the dropdown so items built on DropDownOpening are present.
-                        dropDownItem.ShowDropDown();
-                        opened.Add(dropDownItem);
-                        candidates = dropDownItem.DropDownItems.Cast<ToolStripItem>();
-                    }
-                    current = BestToolStripItem(candidates, segments[i]);
-                    if (current == null)
-                        throw new ArgumentException(LlmInstruction.Format(
-                            @"Toolbar item not found on form {0}: {1} (no match for '{2}').",
-                            formId, menuPath, segments[i]));
-                }
-
-                VerifyEnabled(current);
-                current.PerformClick();
-            }
-            finally
-            {
-                // Close any dropdowns this opened (PerformClick usually closes them; be sure).
-                for (int i = opened.Count - 1; i >= 0; i--)
-                    opened[i].HideDropDown();
-            }
-        }
-
-        // Matches a ToolStrip item by its name or caption; for an image-only item (no caption, e.g. the
-        // pick-list's green-check OK button) it falls back to the tooltip, which is how a user reads it.
-        private static ControlMatchQuality ToolStripMatchQuality(ToolStripItem item, string key)
-        {
-            var quality = MatchQuality(item.Text, key);
-            if (string.IsNullOrEmpty(item.Text))
-            {
-                var tipQuality = MatchQuality(item.ToolTipText, key);
-                if (tipQuality > quality)
-                    quality = tipQuality;
-            }
-            return quality;
-        }
-
-        // Picks the ToolStripItem that best matches key (same ranking as FindClickTarget: highest
-        // text-match quality, then prefer a visible+enabled item). Returns null if none matches.
-        private static ToolStripItem BestToolStripItem(IEnumerable<ToolStripItem> items, string key)
-        {
-            ToolStripItem best = null;
-            var bestQuality = ControlMatchQuality.None;
-            var bestInteractable = false;
-            foreach (var item in items)
-            {
-                var quality = ToolStripMatchQuality(item, key);
-                if (quality == ControlMatchQuality.None)
-                    continue;
-                var interactable = item.Visible && item.Enabled;
-                if (quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
-                {
-                    best = item;
-                    bestQuality = quality;
-                    bestInteractable = interactable;
-                }
-            }
-            return best;
+            // The path-walk, matching, gating, and click all live in ToolStripElement.ClickMenuItem; the
+            // first segment is a top-level item on one of the form's toolstrips, so try each until one has it.
+            var toolStrips = InvokeOnUiThread(() =>
+                new FormElement(FindFormById(formId), CancellationToken.None)
+                    .SelfAndDescendants().OfType<ToolStripElement>().ToList());
+            if (!toolStrips.Any(toolStrip => toolStrip.ClickMenuItem(menuPath)))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Toolbar item not found on form {0}: {1}.", formId, menuPath));
         }
 
         /// <summary>
@@ -999,7 +924,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             var text = segment as string;
             foreach (TreeNode node in nodes)
-                if (MatchQuality(node.Text, text) != ControlMatchQuality.None)
+                if (UiElement.TextMatches(node.Text, text))
                     return node;
             throw new ArgumentException(LlmInstruction.Format(@"No child node matches '{0}'.", text));
         }
@@ -1579,7 +1504,7 @@ namespace pwiz.Skyline.ToolsUI
         // The element gate: gate the modal-block + enabled state of a resolved element before a verb acts
         // on it. A control-backed element gates its form (modal/disabled) AND the control itself
         // (Control.Enabled also reflects a disabled ancestor); a non-control element checks its own state.
-        private static void VerifyInteractable(UiElement element)
+        internal static void VerifyInteractable(UiElement element)
         {
             if (element is ControlElement controlElement)
             {
@@ -1606,7 +1531,7 @@ namespace pwiz.Skyline.ToolsUI
         // The modal check must use the Win32 enabled state of the TOP-LEVEL window (e.g. the main window
         // for a docked form): showing a modal dialog calls EnableWindow(false) on the other windows
         // WITHOUT flipping their managed Control.Enabled, so a managed-only check would miss it.
-        private static void VerifyFormInteractable(Form form)
+        internal static void VerifyFormInteractable(Form form)
         {
             var topLevel = TopLevelFormOf(form);
             if (!User32.IsWindowEnabled(topLevel.Handle))
@@ -1627,15 +1552,6 @@ namespace pwiz.Skyline.ToolsUI
                     @"Control '{0}' is disabled.", control.Name));
         }
 
-        // The target gate for a menu/toolbar item (a ToolStripItem is not a Control).
-        private static void VerifyEnabled(ToolStripItem item)
-        {
-            if (!item.Enabled)
-                throw new InvalidOperationException(LlmInstruction.Format(
-                    @"Menu or toolbar item '{0}' is disabled.",
-                    string.IsNullOrEmpty(item.Text) ? item.Name : item.Text));
-        }
-
         // The top-level form hosting a control (e.g. the main window for a docked form). FindForm on a
         // form returns itself, so each step goes through Parent first to climb past the current form.
         private static Form TopLevelFormOf(Control control)
@@ -1653,57 +1569,8 @@ namespace pwiz.Skyline.ToolsUI
 
         // --- Generic form interaction helpers ---
 
-        // Walks the main menu by path (segments split on '>', '|', '/'), matching each segment by
-        // normalized text or by control name. Must run on the UI thread. Throws if no item matches.
-        private static ToolStripMenuItem FindMenuItem(string menuPath)
-        {
-            return FindMenuItemIn(Program.MainWindow.MainMenuStrip.Items, menuPath);
-        }
-
-        // Walks a menu by path (segments split on '>', '|', '/') starting from the given items,
-        // matching each segment by normalized text or control name. Opens each submenu level so items
-        // built on DropDownOpening (e.g. the View > Live Reports > Group Comparisons list, recent
-        // files) are present before the next segment is matched. Must run on the UI thread. Throws if
-        // no segment matches.
-        private static ToolStripMenuItem FindMenuItemIn(ToolStripItemCollection rootItems, string menuPath)
-        {
-            var segments = ParseMenuSegments(menuPath);
-            var items = rootItems;
-            var opened = new List<ToolStripDropDownItem>();
-            ToolStripMenuItem current = null;
-            try
-            {
-                for (int i = 0; i < segments.Length; i++)
-                {
-                    current = items.OfType<ToolStripMenuItem>().FirstOrDefault(item => MenuItemMatches(item, segments[i]));
-                    if (current == null)
-                        throw new ArgumentException(LlmInstruction.Format(
-                            @"Menu item not found: {0} (no match for '{1}').", menuPath, segments[i]));
-                    if (i < segments.Length - 1)
-                    {
-                        current.ShowDropDown(); // populate items built on DropDownOpening
-                        opened.Add(current);
-                        items = current.DropDownItems;
-                    }
-                }
-                return current;
-            }
-            finally
-            {
-                // Close the dropdowns this opened (the found item is still clickable while hidden).
-                for (int i = opened.Count - 1; i >= 0; i--)
-                    opened[i].HideDropDown();
-            }
-        }
-
-        private static bool MenuItemMatches(ToolStripMenuItem item, string label)
-        {
-            return string.Equals(NormalizeLabel(item.Text), NormalizeLabel(label), StringComparison.CurrentCultureIgnoreCase)
-                || string.Equals(item.Name, label, StringComparison.OrdinalIgnoreCase);
-        }
-
         // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
-        private static string[] ParseMenuSegments(string menuPath)
+        internal static string[] ParseMenuSegments(string menuPath)
         {
             var segments = (menuPath ?? string.Empty)
                 .Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries)
@@ -1713,58 +1580,6 @@ namespace pwiz.Skyline.ToolsUI
                     @"Empty menu path: {0}. Expected e.g. 'File > Import > Peptide Search'.",
                     menuPath ?? string.Empty));
             return segments;
-        }
-
-        // Depth-first (pre-order) enumeration of all controls under the given parent.
-        private static IEnumerable<Control> EnumerateControls(Control parent)
-        {
-            foreach (Control child in parent.Controls)
-            {
-                yield return child;
-                foreach (var descendant in EnumerateControls(child))
-                    yield return descendant;
-            }
-        }
-
-        // How well a control matches a requested label. Higher is better; callers prefer the best match
-        // in the form and accept a weaker one only when nothing matches better.
-        internal enum ControlMatchQuality
-        {
-            None = 0,     // no match
-            Type = 1,     // matched the control's type name ("ListView"/"TreeView") -- a last resort for a
-                          // caption-less control that no visible text identifies; any text match wins.
-            Stripped = 2, // matched the visible text after ignoring non-alphanumeric symbols ("Next" == "Next >")
-            Exact = 3,    // matched the visible text after light normalization
-        }
-
-        // Match quality of a control/item against a requested key, by VISIBLE TEXT only -- the connector
-        // deliberately does not match on the internal control Name, so a step refers to a control the way
-        // a user sees it (its caption, or the label that names it -- see the label->field resolution in
-        // SetFormValue/FindListOrTreeControl). A control with no caption (e.g. a text box) is reached via
-        // its label; a grid, which has no caption at all, is the lone exception (matched by name in
-        // FindGrid). Used for WinForms controls, ToolStripItems, list items, and tree nodes alike.
-        internal static ControlMatchQuality MatchQuality(string text, string key)
-        {
-            // Best: the visible text after light normalization (mnemonic '&' and a trailing
-            // ellipsis/period removed -- see NormalizeLabel).
-            if (string.Equals(NormalizeLabel(text), NormalizeLabel(key), StringComparison.CurrentCultureIgnoreCase))
-                return ControlMatchQuality.Exact;
-            // Fallback: ignore every non-alphanumeric character, so a tutorial's "Next" matches a
-            // button captioned "Next >" (and "Back" a "< Back"). Used only when nothing matches exactly.
-            var keyStripped = StripToAlphanumeric(key);
-            if (keyStripped.Length > 0
-                && string.Equals(StripToAlphanumeric(text), keyStripped, StringComparison.CurrentCultureIgnoreCase))
-                return ControlMatchQuality.Stripped;
-            return ControlMatchQuality.None;
-        }
-
-        // Removes every character that is not a letter or digit (spaces and punctuation included), for
-        // the loose, symbol-insensitive comparison tier.
-        private static string StripToAlphanumeric(string text)
-        {
-            return string.IsNullOrEmpty(text)
-                ? string.Empty
-                : new string(text.Where(char.IsLetterOrDigit).ToArray());
         }
 
         // True when the requested button names the cancel/close action of a native dialog. Locale

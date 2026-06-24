@@ -854,6 +854,11 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.SetReplicate(replicateName);
         }
 
+        public int UnfinishedActionCount()
+        {
+            return JsonUiService.UnfinishedActionCount;
+        }
+
         public FormInfo[] GetOpenForms()
         {
             return JsonUiService.GetOpenForms();

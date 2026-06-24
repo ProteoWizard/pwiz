@@ -351,29 +351,38 @@ namespace pwiz.Skyline.ToolsUI
         /// error when nothing (or, for an empty text, more than one thing) matches.</summary>
         public UiElement FindElement(string text, UiAction action)
         {
+            if (!string.IsNullOrEmpty(text))
+                return FindElementOrNull(text, action)
+                    ?? throw new ArgumentException(LlmInstruction.Format(
+                        @"No control matching '{0}' supports the action '{1}'. Use skyline_get_controls to list the controls.",
+                        text, action.SnakeCaseName));
+            // Empty text means "the single element that supports the action".
             var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
-            if (string.IsNullOrEmpty(text))
-            {
-                if (candidates.Count == 0)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Nothing here supports the action '{0}'.", action.SnakeCaseName));
-                if (candidates.Count == 1)
-                    return candidates[0];
-                // Several support it: take the single interactable (visible + enabled) one, so a hidden
-                // sibling never makes "the form's single grid/control" ambiguous -- e.g. the Document Grid's
-                // DataboundGridControl hosts a bound grid AND a collapsed replicate-pivot grid; only the
-                // bound one is visible. If more than one is still interactable, the caller must name one.
-                var interactable = candidates.Where(IsInteractable).ToList();
-                if (interactable.Count == 1)
-                    return interactable[0];
+            if (candidates.Count == 0)
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"More than one control supports the action '{0}'; pass a label or name to choose one (see skyline_get_controls).",
-                    action.SnakeCaseName));
-            }
-            return BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false)
-                ?? throw new ArgumentException(LlmInstruction.Format(
-                    @"No control matching '{0}' supports the action '{1}'. Use skyline_get_controls to list the controls.",
-                    text, action.SnakeCaseName));
+                    @"Nothing here supports the action '{0}'.", action.SnakeCaseName));
+            if (candidates.Count == 1)
+                return candidates[0];
+            // Several support it: take the single interactable (visible + enabled) one, so a hidden sibling
+            // never makes "the form's single grid/control" ambiguous -- e.g. the Document Grid's
+            // DataboundGridControl hosts a bound grid AND a collapsed replicate-pivot grid; only the bound one
+            // is visible. If more than one is still interactable, the caller must name one.
+            var interactable = candidates.Where(IsInteractable).ToList();
+            if (interactable.Count == 1)
+                return interactable[0];
+            throw new ArgumentException(LlmInstruction.Format(
+                @"More than one control supports the action '{0}'; pass a label or name to choose one (see skyline_get_controls).",
+                action.SnakeCaseName));
+        }
+
+        /// <summary>Like <see cref="FindElement"/> for a non-empty text, but returns null instead of throwing
+        /// when nothing matches -- for a caller (a menu walk over several toolstrips) that tries one container
+        /// and falls through to the next. An exact (strict) match is preferred over a loose one, and within a
+        /// tier an interactable element over a hidden one.</summary>
+        public UiElement FindElementOrNull(string text, UiAction action)
+        {
+            var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
+            return BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false);
         }
 
         // The best of the candidates whose text matches at the given strictness: prefer an interactable
@@ -402,18 +411,31 @@ namespace pwiz.Skyline.ToolsUI
         /// no symbol of its own (a caller who typed a ':' or '&gt;' is taken to mean it exactly). An element
         /// with no Label (a grid, a spacer) matches nothing here; a grid overrides this to match its control
         /// name, the one place the connector matches on a name rather than on visible text.</summary>
-        public virtual bool MatchesText(string text, bool strict)
+        public virtual bool MatchesText(string text, bool strict) => TextMatches(Label, text, strict);
+
+        /// <summary>The connector's text match between a control/item/menu/tab's visible text and a requested
+        /// key, at one strictness. Strict requires an exact match (case- and symbol-sensitive); loose ignores
+        /// case and every non-alphanumeric symbol -- so "Name" matches "Name:" and "Next" a "Next &gt;"
+        /// button -- but only when the key carries no symbol of its own (a caller who typed a ':' or '&gt;' is
+        /// taken to mean it exactly). The element matchers (<see cref="MatchesText"/>) and the list/tree/tab/
+        /// toolstrip matchers all use this, so they rank candidates the same way (a strict match preferred
+        /// over a loose one) without a separate quality enum.</summary>
+        public static bool TextMatches(string candidate, string key, bool strict)
         {
-            var label = Label;
-            if (label == null || text == null)
+            if (candidate == null || key == null)
                 return false;
             if (strict)
-                return string.Equals(label, text, StringComparison.Ordinal);
-            if (HasSymbol(text))
+                return string.Equals(candidate, key, StringComparison.Ordinal);
+            if (HasSymbol(key))
                 return false;
-            return string.Equals(StripToAlphanumeric(label), StripToAlphanumeric(text),
+            return string.Equals(StripToAlphanumeric(candidate), StripToAlphanumeric(key),
                 StringComparison.CurrentCultureIgnoreCase);
         }
+
+        /// <summary>Whether the candidate matches the key at all -- an exact (strict) or symbol-insensitive
+        /// (loose) match -- for callers that just need a yes/no rather than a strict-then-loose ranking.</summary>
+        public static bool TextMatches(string candidate, string key) =>
+            TextMatches(candidate, key, true) || TextMatches(candidate, key, false);
 
         /// <summary>Whether this element is of the named type -- its <see cref="ElementType"/> or any base
         /// type up to (but not including) Control, so "ListView" matches a ColumnListView and "TreeView" an
@@ -822,6 +844,20 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         public System.Drawing.Bitmap CaptureImage() => JsonUiService.InvokeOnUiThread(() => JsonUiService.CaptureForm(Form));
+
+        /// <summary>Invokes a menu item on this form's main menu by its '>'-separated path (e.g. "File &gt;
+        /// Import &gt; Peptide Search"). The path is resolved through the element model -- the menu is a
+        /// <see cref="ToolStripElement"/> over <see cref="System.Windows.Forms.Form.MainMenuStrip"/>, and each
+        /// segment is found by <see cref="FindElement"/> matching its visible text -- opening each level's
+        /// dropdown so items built on demand are present, then the leaf's click is posted fire-and-forget so a
+        /// menu item that opens a modal does not block.</summary>
+        public void InvokeMenuItem(string menuPath)
+        {
+            if (Form.MainMenuStrip == null)
+                throw new ArgumentException(new LlmInstruction(@"This form has no main menu."));
+            if (!new ToolStripElement(Form.MainMenuStrip) { FormElement = this }.ClickMenuItem(menuPath))
+                throw new ArgumentException(LlmInstruction.Format(@"Menu item not found: {0}.", menuPath));
+        }
     }
 
     /// <summary>A push button (or any ButtonBase) -- clicked with BM_CLICK, which fires the Click handler
@@ -1001,7 +1037,8 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>The item operations the list/tree/list-view (and pick-list) elements share -- checking,
     /// selecting, and matching an item by its visible text (a TreeView node by a '>'-separated path).
     /// These were moved off JsonUiService now that only the elements drive them; they reuse the connector's
-    /// text matching (JsonUiService.MatchQuality) and run on the UI thread (the service marshals there).</summary>
+    /// text matching (<see cref="UiElement.TextMatches(string,string,bool)"/>) and run on the UI thread (the
+    /// service marshals there).</summary>
     internal static class ListItems
     {
         public static void SetChecked(Control control, string item, bool isChecked)
@@ -1097,21 +1134,18 @@ namespace pwiz.Skyline.ToolsUI
             return current;
         }
 
-        // The index of the best text match among count items (by the connector's label matching), or -1.
+        // The index of the best text match among count items (by the connector's label matching), or -1: the
+        // first item that matches the key strictly, else the first that matches loosely (a strict match wins
+        // over a loose one, the same ranking FindElement uses).
         internal static int BestMatch(int count, Func<int, string> textOf, string key)
         {
-            int best = -1;
-            var bestQuality = JsonUiService.ControlMatchQuality.None;
             for (int i = 0; i < count; i++)
-            {
-                var quality = JsonUiService.MatchQuality(textOf(i), key);
-                if (quality > bestQuality)
-                {
-                    best = i;
-                    bestQuality = quality;
-                }
-            }
-            return best;
+                if (UiElement.TextMatches(textOf(i), key, true))
+                    return i;
+            for (int i = 0; i < count; i++)
+                if (UiElement.TextMatches(textOf(i), key, false))
+                    return i;
+            return -1;
         }
     }
 
@@ -1124,13 +1158,70 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => Control.Text;
     }
 
-    /// <summary>A ToolStrip (menu strip / toolbar) -- its items are its children.</summary>
+    /// <summary>A ToolStrip (menu strip / toolbar) -- its items are its children. It owns the logic for
+    /// matching a '>'-separated menu/toolbar path to an item: <see cref="ResolveMenuItem"/> walks the path,
+    /// finding each segment by its visible text and opening each level's dropdown so lazily-built items are
+    /// present. Both InvokeMenuItem (over the main menu strip) and ClickToolStripItem (over a form's
+    /// toolbars) drive it through this.</summary>
     internal sealed class ToolStripElement : ControlElement
     {
         private readonly ToolStrip _toolStrip;
         public ToolStripElement(ToolStrip toolStrip) : base(toolStrip) { _toolStrip = toolStrip; }
         public override IEnumerable<UiElement> Children =>
             _toolStrip.Items.Cast<ToolStripItem>().Select(item => (UiElement) new ToolStripItemElement(item, FormElement));
+
+        /// <summary>Resolves a '>'-separated menu/toolbar path (e.g. "Reports &gt; Replicates") to its leaf
+        /// item element within this toolstrip, opening each non-leaf level's dropdown so items built on demand
+        /// are present before the next segment is matched; returns null when the path is not in this toolstrip
+        /// (so a caller can try the next). Closes the dropdowns it opened before returning -- the leaf stays
+        /// clickable while hidden. Must run on the UI thread.</summary>
+        public UiElement ResolveMenuItem(string menuPath)
+        {
+            var segments = JsonUiService.ParseMenuSegments(menuPath);
+            UiElement current = this;
+            var opened = new List<ToolStripItemElement>();
+            try
+            {
+                for (int i = 0; i < segments.Length; i++)
+                {
+                    current = current.FindElementOrNull(segments[i], UiActions.Click);
+                    if (current == null)
+                        return null; // this toolstrip does not have the path
+                    if (i < segments.Length - 1 && current is ToolStripItemElement dropDown)
+                    {
+                        dropDown.ShowDropDown(); // populate items built on DropDownOpening
+                        opened.Add(dropDown);
+                    }
+                }
+                return current;
+            }
+            finally
+            {
+                for (int i = opened.Count - 1; i >= 0; i--)
+                    opened[i].HideDropDown();
+            }
+        }
+
+        /// <summary>Resolves and clicks the menu/toolbar item the path names: finds it (and gates the form and
+        /// item) synchronously on the UI thread, then posts its click fire-and-forget so an item that opens a
+        /// modal does not block. Returns false (clicking nothing) when the path is not in this toolstrip, so a
+        /// caller can try the next toolstrip on the form. Throws if the form is blocked or the item disabled.</summary>
+        public bool ClickMenuItem(string menuPath)
+        {
+            var leaf = JsonUiService.InvokeOnUiThread(() =>
+            {
+                JsonUiService.VerifyFormInteractable(FormElement.Form);
+                var item = ResolveMenuItem(menuPath);
+                if (item == null)
+                    return null;
+                JsonUiService.VerifyInteractable(item);
+                return item;
+            });
+            if (leaf == null)
+                return false;
+            JsonUiService.BeginInvokeOnUiThread(() => UiActions.Click.Invoke(leaf, null));
+            return true;
+        }
     }
 
     /// <summary>A menu or toolbar item -- clicked via PerformClick. An image-only item (no caption) is
@@ -1173,6 +1264,11 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
         public void Click() => JsonUiService.InvokeOnUiThread(() => _item.PerformClick());
+
+        // Opens / closes this item's dropdown (a menu/toolbar dropdown item), so a menu walk can populate
+        // items built on DropDownOpening before matching the next path segment. A no-op for a leaf item.
+        public void ShowDropDown() => (_item as ToolStripDropDownItem)?.ShowDropDown();
+        public void HideDropDown() => (_item as ToolStripDropDownItem)?.HideDropDown();
     }
 
     /// <summary>A grid -- the DataGridView a caller reads as TSV or sets a cell on, by direct cell access.
@@ -1269,20 +1365,12 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.InvokeOnUiThread(() =>
             {
                 var tabs = Control.TabPages.Cast<TabPage>().ToList();
-                int best = -1;
-                var bestQuality = JsonUiService.ControlMatchQuality.None;
-                for (int i = 0; i < tabs.Count; i++)
-                {
-                    var quality = JsonUiService.MatchQuality(tabs[i].Text, tabText);
-                    if (quality > bestQuality)
-                    {
-                        best = i;
-                        bestQuality = quality;
-                    }
-                }
-                if (best < 0)
+                // The tab whose text matches strictly, else loosely (a strict match wins over a loose one).
+                var tab = tabs.FirstOrDefault(t => TextMatches(t.Text, tabText, true))
+                          ?? tabs.FirstOrDefault(t => TextMatches(t.Text, tabText, false));
+                if (tab == null)
                     throw new ArgumentException(LlmInstruction.Format(@"No tab matches '{0}'.", tabText));
-                Control.SelectedTab = tabs[best];
+                Control.SelectedTab = tab;
             });
     }
 
