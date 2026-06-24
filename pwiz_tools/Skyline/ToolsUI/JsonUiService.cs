@@ -616,15 +616,10 @@ namespace pwiz.Skyline.ToolsUI
         public static void SetGridText(string formId, string controlId, string text)
         {
             ValidateFormIdFormat(formId);
-            // Resolve + gate the grid synchronously, then paste fire-and-forget: a void action, so a type
-            // conversion alert the paste raises becomes a form the caller drives rather than blocking here.
-            var grid = OnFormThread(formId, CancellationToken.None, formElement =>
-            {
-                var g = formElement.FindGrid(controlId);
-                VerifyInteractable(g);
-                return g;
-            });
-            grid.BeginInvokeOnUiThread(() => grid.SetGridText(text ?? string.Empty));
+            // Resolve the grid synchronously; the action's Invoke gates it and pastes fire-and-forget, so a
+            // type conversion alert the paste raises becomes a form the caller drives rather than blocking here.
+            var grid = OnFormThread(formId, CancellationToken.None, formElement => formElement.FindGrid(controlId));
+            UiActions.SetGridText.Invoke(grid, text ?? string.Empty);
         }
 
         /// <summary>
@@ -636,14 +631,9 @@ namespace pwiz.Skyline.ToolsUI
         public static void SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
             ValidateFormIdFormat(formId);
-            // Resolve + gate synchronously, then move the cell fire-and-forget (a void action).
-            var grid = OnFormThread(formId, CancellationToken.None, formElement =>
-            {
-                var g = formElement.FindGrid(controlId);
-                VerifyInteractable(g);
-                return g;
-            });
-            grid.BeginInvokeOnUiThread(() => grid.SetCurrentCellAddress(column, row));
+            // Resolve the grid synchronously; the action's Invoke gates it and moves the cell fire-and-forget.
+            var grid = OnFormThread(formId, CancellationToken.None, formElement => formElement.FindGrid(controlId));
+            UiActions.SetCurrentCellAddress.Invoke(grid, new[] { column, row });
         }
 
         /// <summary>
@@ -696,13 +686,6 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(formId, CancellationToken.None).GetControls();
         }
 
-        internal static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
-
-        // The label as a caller would type it: mnemonic '&' and a trailing colon/ellipsis removed, so a
-        // "Name:" label is reported (and addressable) as "Name". Matching tolerates either form anyway.
-        internal static string CleanLabel(string text) =>
-            string.IsNullOrEmpty(text) ? text : NormalizeLabel(text).TrimEnd(' ', ':');
-
         /// <summary>
         /// The most general way to interact with a control, menu item, or list item (see
         /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="path"/> refers to,
@@ -729,34 +712,21 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Runs a resolved action with the threading its ReturnsValue declares. A void action (a click, a
-        // value set) is posted to the UI thread fire-and-forget: the verb returns at once, and a gesture that
-        // opens a modal does not block -- the modal is driven by later commands, exactly like the
-        // main-menu-item path. A value action (get_value, get_grid_text) must be waited for, so it is run
-        // synchronously on the UI thread inside the dialog-watch (which returns rather than hanging if a modal
-        // is up). The element resolution / gating has already happened synchronously, so a bad path or a
-        // disabled control still fails before this. Must be called off the UI thread.
+        // Runs a resolved action, which gates and marshals itself (see UiAction.Invoke): a void action posts
+        // fire-and-forget; a value action (get_value, get_grid_text) is run synchronously and its result
+        // returned. The value action is run inside the dialog-watch so that if producing the value brings up a
+        // modal, the watch surfaces it (or leaves it open) rather than the server blocking on it; a void action
+        // is posted and returns at once, so it needs no watch. Must be called off the UI thread.
         internal static object ExecuteAction(UiAction action, UiElement element, object value)
         {
-            // Marshal through the element itself (not the main window), so an action on a form running on its
-            // own thread is driven through that form's message loop -- see UiElement.InvokeOnUiThread.
             if (!action.ReturnsValue)
-            {
-                element.BeginInvokeOnUiThread(() => action.Invoke(element, value));
-                return null;
-            }
-            object result = null;
-            RunWithDialogWatch(() =>
-            {
-                result = element.InvokeOnUiThread(() => action.Invoke(element, value));
-                return true;
-            });
-            return result;
+                return action.Invoke(element, value);
+            return RunWithDialogWatch(() => action.Invoke(element, value));
         }
 
-        // Verifies the resolved element supports the action (it is the kind the action targets) and, for an
-        // action that requires it, that the element is interactable (not blocked by a modal, and enabled).
-        // Returns the element; throws a clear error (listing the element's actions) if it does not apply.
+        // Verifies the resolved element supports the action (it is the kind the action targets); the
+        // interactable gate is applied later by UiAction.Invoke. Returns the element; throws a clear error
+        // (listing the element's actions) if the action does not apply.
         internal static UiElement RequireAction(UiElement element, UiAction action)
         {
             if (!action.AppliesTo(element))
@@ -764,8 +734,6 @@ namespace pwiz.Skyline.ToolsUI
                     @"The control '{0}' does not support the action '{1}'. It supports: {2}.",
                     element.Label ?? element.Name, action.SnakeCaseName,
                     string.Join(@", ", element.SupportedActions.Select(a => a.SnakeCaseName))));
-            if (action.MustBeEnabled)
-                VerifyInteractable(element);
             return element;
         }
 
@@ -878,9 +846,10 @@ namespace pwiz.Skyline.ToolsUI
 
         // Resolves a formId to the window it addresses -- a WinForms form (FormElement) or a native common
         // dialog (NativeDialog) -- so every verb drives both through IFormElement and none special-cases a
-        // native dialog. Native dialogs are matched first, on this (pipe) thread (their UI thread is busy in
-        // the modal loop, so they are enumerated via UI Automation, never marshalled); a managed form is then
-        // found on the UI thread. Throws if no open window has the id.
+        // native dialog. Native dialogs are matched first, on this (pipe) thread: they are non-managed windows
+        // enumerated via UI Automation cross-thread (no Control to marshal through), which runs alongside their
+        // modal loop rather than on it. A managed form is then found on the UI thread. Throws if no open window
+        // has the id.
         private static IFormElement ResolveForm(string formId, CancellationToken cancellationToken)
         {
             ValidateFormIdFormat(formId);
@@ -1228,90 +1197,6 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.Format(
                 @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
                 formId));
-        }
-
-        // The element gate: gate the modal-block + enabled state of a resolved element before a verb acts
-        // on it. A control-backed element gates its form (modal/disabled) AND the control itself
-        // (Control.Enabled also reflects a disabled ancestor); a non-control element checks its own state.
-        internal static void VerifyInteractable(UiElement element)
-        {
-            if (element is ControlElement controlElement)
-            {
-                var control = controlElement.Control;
-                var form = control.FindForm();
-                if (form != null)
-                    VerifyFormInteractable(form);
-                VerifyEnabled(control);
-                return;
-            }
-            if (!element.IsEnabled)
-                throw new InvalidOperationException(LlmInstruction.Format(
-                    @"'{0}' is disabled.", element.Label ?? element.Name));
-        }
-
-        // Guards that the connector never does anything a user could not. Two concerns make a target
-        // interactable: (1) no modal dialog is blocking its window, and (2) the target itself is enabled.
-        // They are split into VerifyFormInteractable (the form/modal gate) and VerifyEnabled (the target
-        // gate); VerifyInteractable(control) combines them for the common single-control case so a verb
-        // has one obvious call and cannot enforce only half. Every verb routes through these helpers
-        // rather than re-checking inline. Must run on the UI thread (the modal check reads a window handle).
-
-        // The form gate: throws if a modal dialog is blocking the form's window, or the form is disabled.
-        // The modal check must use the Win32 enabled state of the TOP-LEVEL window (e.g. the main window
-        // for a docked form): showing a modal dialog calls EnableWindow(false) on the other windows
-        // WITHOUT flipping their managed Control.Enabled, so a managed-only check would miss it.
-        internal static void VerifyFormInteractable(Form form)
-        {
-            var topLevel = TopLevelFormOf(form);
-            if (!User32.IsWindowEnabled(topLevel.Handle))
-                throw new InvalidOperationException(LlmInstruction.Format(
-                    @"Cannot interact with form '{0}': a modal dialog is blocking it. Handle the open dialog first (see skyline_get_open_forms).",
-                    GetFormId(form)));
-
-            if (!form.Enabled)
-                throw new InvalidOperationException(LlmInstruction.Format(
-                    @"Form '{0}' is disabled.", GetFormId(form)));
-        }
-
-        // The target gate for a control: throws if it (or, via Control.Enabled, an ancestor) is disabled.
-        private static void VerifyEnabled(Control control)
-        {
-            if (!control.Enabled)
-                throw new InvalidOperationException(LlmInstruction.Format(
-                    @"Control '{0}' is disabled.", control.Name));
-        }
-
-        // The top-level form hosting a control (e.g. the main window for a docked form). FindForm on a
-        // form returns itself, so each step goes through Parent first to climb past the current form.
-        private static Form TopLevelFormOf(Control control)
-        {
-            var form = control as Form ?? control.FindForm();
-            while (form?.Parent != null)
-            {
-                var parentForm = form.Parent.FindForm();
-                if (parentForm == null)
-                    break;
-                form = parentForm;
-            }
-            return form;
-        }
-
-        // True when the requested button names the cancel/close action of a native dialog. Locale
-        // sensitive by nature; callers that key on the visible label inherit that.
-        internal static bool IsCancelAction(string button)
-        {
-            var normalized = NormalizeLabel(button);
-            return string.Equals(normalized, @"Cancel", StringComparison.CurrentCultureIgnoreCase)
-                || string.Equals(normalized, @"Close", StringComparison.OrdinalIgnoreCase);
-        }
-
-        // Strips the mnemonic '&' and a trailing ellipsis/period so menu and button captions compare
-        // equal to the plain label a tutorial uses ("Peptide Search" == "&Peptide Search...").
-        private static string NormalizeLabel(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return string.Empty;
-            return text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', ' ').Trim();
         }
 
         /// <summary>

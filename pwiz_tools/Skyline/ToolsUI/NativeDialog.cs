@@ -177,13 +177,13 @@ namespace pwiz.Skyline.ToolsUI
 
         public ControlInfo[] GetControls() => GetChildren();
 
+        // A native dialog has no caption-addressable buttons (matching "OK"/"Cancel" would not survive a
+        // localized build). Confirm it with the accept action and dismiss it with Close (close_form) instead.
         public void ClickButton(string button)
         {
-            VerifyNotBlocked();
-            if (JsonUiService.IsCancelAction(button))
-                Cancel();
-            else
-                Accept();
+            throw new ArgumentException(LlmInstruction.Format(
+                @"The native dialog '{0}' has no named buttons. Use the accept action to confirm it, or close_form to cancel it.",
+                FormId));
         }
 
         // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base
@@ -321,5 +321,6 @@ namespace pwiz.Skyline.ToolsUI
                 Thread.Sleep(POLL_INTERVAL_MILLIS);
             }
         }
+
     }
 }

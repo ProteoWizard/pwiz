@@ -120,10 +120,27 @@ namespace pwiz.Skyline.ToolsUI
             && (!MustBeVisible || element.IsVisible)
             && (!MustBeEnabled || element.IsEnabled);
 
-        /// <summary>Performs the action on the element (the action determines the argument and result types).
-        /// An action that needs the request's cancellation token (a large grid read) gets it from the
-        /// element -- every UiElement reaches its form's token through its FormElement -- not a parameter.</summary>
-        public abstract object Invoke(UiElement element, object argument);
+        /// <summary>Performs the action on the element, owning its gating and threading. When the action
+        /// requires interactability (a click or a mutation -- see <see cref="MustBeEnabled"/>) the element's
+        /// form and the element itself are gated first, synchronously on the element's UI thread, so a control
+        /// blocked by a modal or disabled fails here. Then a void action is posted to that UI thread
+        /// fire-and-forget (so a gesture that opens a modal does not block -- the modal is driven by later
+        /// commands), while a value action (a read) is run synchronously and its result returned. The actual
+        /// operation is <see cref="InvokeCore"/>; the element reaches its form's cancellation token (a large
+        /// grid read) through its FormElement, not a parameter.</summary>
+        public object Invoke(UiElement element, object argument)
+        {
+            if (MustBeEnabled)
+                element.InvokeOnUiThread(element.VerifyInteractable);
+            if (ReturnsValue)
+                return element.InvokeOnUiThread(() => InvokeCore(element, argument));
+            element.BeginInvokeOnUiThread(() => InvokeCore(element, argument));
+            return null;
+        }
+
+        /// <summary>The action's actual operation on the element (the action determines the argument and result
+        /// types). Runs on the element's UI thread; gating and marshaling are handled by <see cref="Invoke"/>.</summary>
+        protected abstract object InvokeCore(UiElement element, object argument);
     }
 
     /// <summary>
@@ -168,7 +185,7 @@ namespace pwiz.Skyline.ToolsUI
 
             public override bool AppliesTo(UiElement element) => element is T;
 
-            public override object Invoke(UiElement element, object argument)
+            protected override object InvokeCore(UiElement element, object argument)
             {
                 if (!(element is T typed))
                     throw new ArgumentException(LlmInstruction.Format(
@@ -279,12 +296,20 @@ namespace pwiz.Skyline.ToolsUI
                 return null;
             });
 
+        // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
+        public static readonly UiAction Accept = SimpleAction<IFormElement>(
+            @"Accept", e =>
+            {
+                e.Accept();
+                return null;
+            });
+
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, CheckItem, UncheckItem, SelectItem,
             UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
-            Collapse, SelectTab
+            Collapse, SelectTab, Accept
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.
@@ -337,6 +362,58 @@ namespace pwiz.Skyline.ToolsUI
 
         public abstract bool IsEnabled { get; }
         public abstract bool IsVisible { get; }
+
+        /// <summary>The managed form this element belongs to, whose modal-block / enabled state gates acting on
+        /// the element (see <see cref="VerifyInteractable"/>). Null for an element with no managed form of its
+        /// own (a native dialog) -- then only the element's own enabled state is checked.</summary>
+        internal virtual Form OwningForm => null;
+
+        /// <summary>Throws if the connector cannot currently act on this element -- the same gates a user faces:
+        /// no modal dialog is blocking its <see cref="OwningForm"/>, and the element itself is enabled. The base
+        /// checks the form (if any) and the element's own <see cref="IsEnabled"/>; a control narrows the second
+        /// check to the control. Called by <see cref="UiAction.Invoke"/> on the element's UI thread (the modal
+        /// check reads a window handle).</summary>
+        public virtual void VerifyInteractable()
+        {
+            VerifyFormInteractable(OwningForm);
+            if (!IsEnabled)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"'{0}' is disabled.", Label ?? Name));
+        }
+
+        // The form gate: throws if a modal dialog is blocking the form's window, or the form is disabled. No-op
+        // when there is no form (a native dialog gates itself through IsEnabled). The modal check must use the
+        // Win32 enabled state of the TOP-LEVEL window (e.g. the main window for a docked form): showing a modal
+        // dialog calls EnableWindow(false) on the other windows WITHOUT flipping their managed Control.Enabled,
+        // so a managed-only check would miss it.
+        protected static void VerifyFormInteractable(Form form)
+        {
+            if (form == null)
+                return;
+            var topLevel = TopLevelFormOf(form);
+            if (!User32.IsWindowEnabled(topLevel.Handle))
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Cannot interact with form '{0}': a modal dialog is blocking it. Handle the open dialog first (see skyline_get_open_forms).",
+                    JsonUiService.GetFormId(form)));
+            if (!form.Enabled)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Form '{0}' is disabled.", JsonUiService.GetFormId(form)));
+        }
+
+        // The top-level form hosting a control (e.g. the main window for a docked form). FindForm on a form
+        // returns itself, so each step goes through Parent first to climb past the current form.
+        private static Form TopLevelFormOf(Control control)
+        {
+            var form = control as Form ?? control.FindForm();
+            while (form?.Parent != null)
+            {
+                var parentForm = form.Parent.FindForm();
+                if (parentForm == null)
+                    break;
+                form = parentForm;
+            }
+            return form;
+        }
 
         /// <summary>The element's current value, for a value control (else null) -- informational.</summary>
         public virtual string Value => null;
@@ -512,7 +589,7 @@ namespace pwiz.Skyline.ToolsUI
                 result.Add(new ControlInfo
                 {
                     Path = child.PathSegment(typeIndex),
-                    Name = JsonUiService.NullIfEmpty(child.Name),
+                    Name = NullIfEmpty(child.Name),
                     Enabled = child.IsEnabled,
                     Visible = child.IsVisible,
                 });
@@ -603,7 +680,53 @@ namespace pwiz.Skyline.ToolsUI
         /// child of its parent among the siblings of this element's Type (its Text, that Index, and its Type).
         /// The caller re-parents it onto the element it listed.</summary>
         internal UiElementPath PathSegment(int typeIndex) =>
-            new UiElementPath(null, JsonUiService.NullIfEmpty(JsonUiService.CleanLabel(Label)), typeIndex, ElementType.Name);
+            new UiElementPath(null, NullIfEmpty(CleanLabel(Label)), typeIndex, ElementType.Name);
+        internal static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
+        // The label as a caller would type it: mnemonic '&' and a trailing colon/ellipsis removed, so a
+        // "Name:" label is reported (and addressable) as "Name". Matching tolerates either form anyway.
+        internal static string CleanLabel(string text) =>
+            string.IsNullOrEmpty(text) ? text : NormalizeLabel(text).TrimEnd(' ', ':');
+        // Strips the mnemonic '&' and a trailing ellipsis/period so menu and button captions compare
+        // equal to the plain label a tutorial uses ("Peptide Search" == "&Peptide Search...").
+        protected static string NormalizeLabel(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return string.Empty;
+            return text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', ' ').Trim();
+        }
+    }
+
+    // ---- Form-bound elements --------------------------------------------------------------------
+
+    /// <summary>A managed UI element that belongs to a form: a control (<see cref="ControlElement"/>) or a
+    /// menu/toolbar item (<see cref="ToolStripItemElement"/>). Unlike the form-less base <see cref="UiElement"/>
+    /// (which marshals through the main window) or a native dialog element (<see cref="NativeElement"/>, which
+    /// runs inline), it knows its <see cref="FormElement"/>, so it both marshals and gates through that form: a
+    /// form on its own thread (e.g. a BackgroundThreadLongWaitDlg) is driven through its own message loop, not
+    /// the main window's, and a modal blocking the form stops the element being acted on.</summary>
+    internal abstract class UiComponent : UiElement
+    {
+        /// <summary>The form this element belongs to -- the root of the element tree it was built in. Set once
+        /// when the element is created: by <see cref="FormElement.ElementFor"/> for a control (the FormElement
+        /// sets its own to itself), or in the constructor of a <see cref="ToolStripItemElement"/>. Every element
+        /// reaches its form's <see cref="CancellationToken"/> through it.</summary>
+        public FormElement FormElement { get; internal set; }
+
+        /// <summary>The token that fires when the connector client disconnects, so a long read (a large grid
+        /// copy) is abandoned. It belongs to the <see cref="FormElement"/>; every element shares it.</summary>
+        public virtual CancellationToken CancellationToken => FormElement.CancellationToken;
+
+        // Marshaled through the element's own form, not the main window: a form on its own thread runs its
+        // message loop there, so the element must be touched through that form's Invoke/BeginInvoke.
+        // FormElement?.Form is null (so the dispatch falls back to the main window) only before the form is
+        // wired up; a FormElement's own form is itself.
+        public override void InvokeOnUiThread(Action action) => JsonUiService.InvokeOnUiThread(action, FormElement?.Form);
+        public override T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func, FormElement?.Form);
+        public override void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action, FormElement?.Form);
+
+        // The element's form gates acting on it (a modal blocking the form); a control narrows this to its own
+        // hosting form (which also catches a disabled ancestor).
+        internal override Form OwningForm => FormElement?.Form;
     }
 
     // ---- Control-backed elements ----------------------------------------------------------------
@@ -611,28 +734,25 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>Base for an element backed by a WinForms <see cref="Control"/>. Every control is clickable
     /// (see <see cref="Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
     /// capability interface.</summary>
-    internal abstract class ControlElement : UiElement, IClickableElement
+    internal abstract class ControlElement : UiComponent, IClickableElement
     {
         protected ControlElement(Control control) { Control = control; }
 
         public Control Control { get; }
 
-        /// <summary>The form this control belongs to -- the root of the element tree it was built in. Set
-        /// once by <see cref="FormElement.ElementFor"/> when the element is created (the FormElement sets its
-        /// own to itself). Every control reaches its form's <see cref="CancellationToken"/> through it.</summary>
-        public FormElement FormElement { get; internal set; }
+        // The control's hosting form gates acting on it (a modal blocking the form, or a disabled ancestor).
+        internal override Form OwningForm => Control.FindForm();
 
-        /// <summary>The token that fires when the connector client disconnects, so a long read (a large grid
-        /// copy) is abandoned. It belongs to the <see cref="FormElement"/>; every control shares it.</summary>
-        public virtual CancellationToken CancellationToken => FormElement.CancellationToken;
-
-        // A control is marshaled through its form, not the main window: a form on its own thread (e.g. a
-        // BackgroundThreadLongWaitDlg) runs its message loop there, so its controls must be touched through
-        // that form's Invoke/BeginInvoke. FormElement?.Form is this control's form (a FormElement's own form
-        // is itself); when it is null or its handle is not yet up, the dispatch falls back to the main window.
-        public override void InvokeOnUiThread(Action action) => JsonUiService.InvokeOnUiThread(action, FormElement?.Form);
-        public override T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func, FormElement?.Form);
-        public override void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action, FormElement?.Form);
+        // Gate the form, then the control itself: Control.Enabled (unlike IsEnabled) ignores visibility, so a
+        // control hidden on an unselected flattened tab can still be acted on, and it reflects a disabled
+        // ancestor. The form gate already covered a disabled form, so check only the control here.
+        public override void VerifyInteractable()
+        {
+            VerifyFormInteractable(OwningForm);
+            if (!Control.Enabled)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Control '{0}' is disabled.", Control.Name));
+        }
 
         public override string Name => Control.Name;
         public override Type ElementType => Control.GetType();
@@ -670,7 +790,7 @@ namespace pwiz.Skyline.ToolsUI
             if (!(Control is IButtonControl button))
                 throw new ArgumentException(LlmInstruction.Format(
                     @"The control '{0}' cannot be clicked: it is not a button. Set its value, or act on the button/menu item that triggers it.",
-                    Label ?? JsonUiService.NullIfEmpty(Name) ?? ElementType.Name));
+                    Label ?? NullIfEmpty(Name) ?? ElementType.Name));
             InvokeOnUiThread(button.PerformClick);
         }
 
@@ -713,7 +833,7 @@ namespace pwiz.Skyline.ToolsUI
             if (Control.ContextMenuStrip != null)
                 return JsonUiService.OpenContextMenu(Control.ContextMenuStrip);
             throw new ArgumentException(LlmInstruction.Format(
-                @"{0} has no context menu.", Label ?? JsonUiService.NullIfEmpty(Name) ?? ElementType.Name));
+                @"{0} has no context menu.", Label ?? NullIfEmpty(Name) ?? ElementType.Name));
         }
     }
 
@@ -739,12 +859,17 @@ namespace pwiz.Skyline.ToolsUI
         string Title { get; }
         /// <summary>The form's controls as parentless ControlInfo (the get_controls verb).</summary>
         ControlInfo[] GetControls();
-        /// <summary>Clicks a control on the form by its visible label, or accepts/cancels a native dialog.</summary>
+        /// <summary>Clicks a control on the form by its visible label. (To confirm a form or dialog use the
+        /// accept action, and to dismiss it use Close -- neither keys on a localized button caption.)</summary>
         void ClickButton(string button);
         /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name).</summary>
         void SetValue(string controlId, string value);
         /// <summary>Closes (a form) or cancels (a native dialog).</summary>
         void Close();
+        /// <summary>Accepts the form/dialog -- the equivalent of pressing its default button (a managed form
+        /// clicks its AcceptButton, a native dialog does its OK gesture), so confirming a dialog never keys on
+        /// a localized button caption (cancelling is <see cref="Close"/>). Exposed as the accept action.</summary>
+        void Accept();
         /// <summary>Resolves the path against this form and performs the action in the form's thread context.
         /// The action gets its cancellation token from the resolved element (its FormElement), not a parameter.</summary>
         object PerformAction(UiElementPath path, UiAction action, object value);
@@ -872,51 +997,33 @@ namespace pwiz.Skyline.ToolsUI
             return result;
         }
 
-        // Clicks a button (or any clickable) on the form by its caption. Resolve + verify synchronously on
-        // the UI thread (so a control not found / disabled fails here), then post the click fire-and-forget
-        // so a click that opens a modal does not block; the modal is driven by later commands. Each element
-        // knows how to click itself (a button via BM_CLICK so an AutoCheck=false checkbox still toggles; a
+        // Clicks a button (or any clickable) on the form by its caption. Resolve the target synchronously on
+        // the UI thread (so a missing control fails here); the action's Invoke then gates the form and control
+        // and posts the click fire-and-forget so a click that opens a modal does not block. Each element knows
+        // how to click itself (a button via BM_CLICK so an AutoCheck=false checkbox still toggles; a
         // menu/toolbar item or tile via PerformClick; a tab by selecting it).
         public void ClickButton(string button)
         {
-            var element = InvokeOnUiThread(() =>
-            {
-                JsonUiService.VerifyFormInteractable(Form);
-                var clickable = FindElement(button, UiActions.Click);
-                JsonUiService.VerifyInteractable(clickable);
-                return clickable;
-            });
-            BeginInvokeOnUiThread(() => UiActions.Click.Invoke(element, null));
+            var element = InvokeOnUiThread(() => FindElement(button, UiActions.Click));
+            UiActions.Click.Invoke(element, null);
         }
 
-        // Sets a control's value (or a grid cell) on the form. The control is resolved + gated synchronously
-        // on the UI thread (so a control not found / disabled fails here), then the value is applied
-        // fire-and-forget -- a void action, so a setter that pops a validation or confirmation alert does not
-        // block; the alert becomes a form the caller drives next.
+        // Sets a control's value (or a grid cell) on the form. The target is resolved synchronously on the UI
+        // thread (so a missing control fails here); the action's Invoke then gates it and applies the value
+        // fire-and-forget -- so a setter that pops a validation or confirmation alert does not block. A grid
+        // cell ("grid[column,row]") moves the current cell there and pastes, reusing the grid path so a
+        // DataboundGridControl stays in sync; a field is matched by its own Label.
         public void SetValue(string controlId, string value)
         {
-            var apply = InvokeOnUiThread(() =>
+            if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
             {
-                // controlId can name a grid cell ("grid[column,row]") -- set that cell's value: move the
-                // current cell there and paste, reusing the grid path so a DataboundGridControl stays in
-                // sync. The grid is resolved through the same finder as every other control.
-                if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
-                {
-                    var gridElement = FindGrid(gridName);
-                    JsonUiService.VerifyInteractable(gridElement);
-                    return (Action) (() =>
-                    {
-                        gridElement.SetCurrentCellAddress(column, row);
-                        gridElement.SetGridText(value);
-                    });
-                }
-                // A field is matched by its own Label (its caption, or the label that names a caption-less
-                // box -- see UiElement.Label), so a label never has to be matched and resolved to its field.
-                var element = FindElement(controlId, UiActions.SetValue);
-                JsonUiService.VerifyInteractable(element);
-                return (Action) (() => UiActions.SetValue.Invoke(element, value));
-            });
-            BeginInvokeOnUiThread(apply);
+                var gridElement = InvokeOnUiThread(() => FindGrid(gridName));
+                UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
+                UiActions.SetGridText.Invoke(gridElement, value);
+                return;
+            }
+            var element = InvokeOnUiThread(() => FindElement(controlId, UiActions.SetValue));
+            UiActions.SetValue.Invoke(element, value);
         }
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the single
@@ -952,6 +1059,18 @@ namespace pwiz.Skyline.ToolsUI
         // Closing is a void action -- post it fire-and-forget so a "save changes?" confirmation it raises
         // becomes a form the caller drives next rather than blocking.
         public void Close() => BeginInvokeOnUiThread(() => Form.Close());
+
+        // Accepts the form by clicking its default button (the AcceptButton, what pressing Enter does), so the
+        // connector confirms a dialog without matching a localized "OK" caption. Runs on the UI thread via the
+        // Accept action's Invoke (which gates the form), so it does not marshal again here.
+        public void Accept()
+        {
+            var acceptButton = Form.AcceptButton;
+            if (acceptButton == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The form '{0}' has no default (accept) button.", FormId));
+            acceptButton.PerformClick();
+        }
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
         {
@@ -1414,18 +1533,11 @@ namespace pwiz.Skyline.ToolsUI
         /// caller can try the next toolstrip on the form. Throws if the form is blocked or the item disabled.</summary>
         public bool ClickMenuItem(string menuPath)
         {
-            var leaf = InvokeOnUiThread(() =>
-            {
-                JsonUiService.VerifyFormInteractable(FormElement.Form);
-                var item = ResolveMenuItem(menuPath);
-                if (item == null)
-                    return null;
-                JsonUiService.VerifyInteractable(item);
-                return item;
-            });
+            var leaf = InvokeOnUiThread(() => ResolveMenuItem(menuPath));
             if (leaf == null)
                 return false;
-            BeginInvokeOnUiThread(() => UiActions.Click.Invoke(leaf, null));
+            // Invoke gates the item's form (a modal blocking it) and the item itself, then posts the click.
+            UiActions.Click.Invoke(leaf, null);
             return true;
         }
 
@@ -1446,14 +1558,13 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A menu or toolbar item -- clicked via PerformClick. An image-only item (no caption) is
     /// named by its tooltip, the way a user reads it (e.g. the pick-list's green-check "OK"). It carries its
     /// form so it can build the element for a hosted control (FormElement.ElementFor).</summary>
-    internal sealed class ToolStripItemElement : UiElement, IClickableElement
+    internal sealed class ToolStripItemElement : UiComponent, IClickableElement
     {
         private readonly ToolStripItem _item;
-        private readonly FormElement _formElement;
         public ToolStripItemElement(ToolStripItem item, FormElement formElement)
         {
             _item = item;
-            _formElement = formElement;
+            FormElement = formElement;
         }
         public override string Name => _item.Name;
         public override Type ElementType => _item.GetType();
@@ -1473,20 +1584,16 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (_item is ToolStripControlHost host && host.Control != null)
                 {
-                    var hosted = _formElement.ElementFor(host.Control);
+                    var hosted = FormElement.ElementFor(host.Control);
                     if (hosted != null)
                         yield return hosted;
                 }
                 if (_item is ToolStripDropDownItem dropDownItem)
                     foreach (ToolStripItem child in dropDownItem.DropDownItems)
-                        yield return new ToolStripItemElement(child, _formElement);
+                        yield return new ToolStripItemElement(child, FormElement);
             }
         }
-        // A menu/toolbar item is marshaled through its form (like a control -- see ControlElement), so an
-        // item on a form running on its own thread is driven through that form's message loop.
-        public override void InvokeOnUiThread(Action action) => JsonUiService.InvokeOnUiThread(action, _formElement?.Form);
-        public override T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func, _formElement?.Form);
-        public override void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action, _formElement?.Form);
+        // Marshaling through, and gating by, this item's form are inherited from UiComponent.
 
         public void Click() => InvokeOnUiThread(() => _item.PerformClick());
 
