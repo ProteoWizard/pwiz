@@ -85,6 +85,15 @@ namespace pwiz.OspreySharp.FDR
         /// </summary>
         public bool TrainOnly { get; set; }
 
+        /// <summary>
+        /// Stage 5 diagnostic-dump gates, or <c>null</c> (the common case) when
+        /// diagnostics are off. Carried in by the Tasks-layer caller so
+        /// <see cref="PercolatorFdr.RunPercolator"/> stays a pure function of its
+        /// inputs -- it reads no env vars and never exits the process. See
+        /// <see cref="PercolatorDiagnosticsConfig"/>.
+        /// </summary>
+        public PercolatorDiagnosticsConfig Diagnostics { get; set; }
+
         public PercolatorConfig()
         {
             TrainFdr = 0.01;
@@ -181,6 +190,15 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>Number of iterations used per fold.</summary>
         public List<int> IterationsPerFold { get; set; }
 
+        /// <summary>
+        /// Set when <see cref="PercolatorFdr.RunPercolator"/> wrote a
+        /// diagnostic-only (<c>*Only</c>) dump and stopped early instead of
+        /// completing FDR. The Tasks-layer caller inspects this and performs the
+        /// process early-exit; the engine itself never exits. The other fields are
+        /// unpopulated when this is <c>true</c>.
+        /// </summary>
+        public bool DiagnosticAbort { get; set; }
+
         public PercolatorResults()
         {
             Entries = new List<PercolatorResult>();
@@ -235,17 +253,27 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine(
                 $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
-            // Stage 5 standardizer dump. Gated by OSPREY_DUMP_STANDARDIZER=1;
-            // exits via OSPREY_STANDARDIZER_ONLY=1. Mirrors Rust
-            // dump_stage5_standardizer in osprey-fdr/src/percolator.rs.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_STANDARDIZER"), @"1"))
+            // Stage 5 standardizer dump. Gated by the injected diagnostics config
+            // (OSPREY_DUMP_STANDARDIZER); a *Only request returns the abort
+            // sentinel so the Tasks-layer caller -- not this engine -- decides the
+            // early-exit. Mirrors Rust dump_stage5_standardizer in
+            // osprey-fdr/src/percolator.rs.
+            if (config.Diagnostics != null && config.Diagnostics.DumpStandardizer)
             {
                 WriteStage5StandardizerDump(standardizer, config.FeatureNames);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_STANDARDIZER_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_STANDARDIZER_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.StandardizerOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
+            }
+
+            // One-shot diagnostic for 2nd-pass divergence localization.
+            // Gated by OSPREY_DUMP_PERC_INPUT; a *Only request returns the abort
+            // sentinel. Dumps the raw per-entry feature vectors fed into the
+            // standardizer so cross-impl compare can pinpoint which rows differ.
+            if (config.Diagnostics != null && config.Diagnostics.DumpPercInput)
+            {
+                WriteStage5PercInputDump(entries, config.FeatureNames);
+                if (config.Diagnostics.PercInputOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // 3a. Best-per-precursor: pick the single best-scoring observation per
@@ -253,8 +281,22 @@ namespace pwiz.OspreySharp.FDR
             //     this avoids the SVM seeing the same precursor's target/decoy pair
             //     N times, which would inflate apparent target/decoy separation and
             //     cause the SVM to learn file-specific noise rather than peptide
-            //     discriminating features. Matches the Rust streaming Percolator path.
-            int[] bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries);
+            //     discriminating features. Mirrors the streaming Percolator path's
+            //     dedup step (RunPercolatorStreaming); the Rust direct path
+            //     historically omitted this step, but on multi-file inputs sized
+            //     below the streaming threshold (Stellar 3-file at 393k entries)
+            //     the omission produced a statistically incorrect training set
+            //     that treated multi-file repeats of the same precursor as
+            //     independent samples. Rust was patched to match this dedup
+            //     (osprey-fdr/src/percolator.rs::run_percolator direct path).
+            // 3b. ...then, if still > MaxTrainSize, subsample by peptide groups
+            //     (so target/decoy pairs and same-peptide multi-charge stay
+            //     together). Both selection steps live in BuildTrainingSubset so
+            //     this direct path and the streaming path cannot drift.
+            int[] bestPerPrecursor;
+            int[] trainSubset = BuildTrainingSubset(
+                labels, entryIds, peptides, entries, config.MaxTrainSize, config.Seed,
+                out bestPerPrecursor);
 
             int dedupTargets = 0, dedupDecoys = 0;
             for (int i = 0; i < bestPerPrecursor.Length; i++)
@@ -265,31 +307,6 @@ namespace pwiz.OspreySharp.FDR
             }
             Console.Error.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
                 bestPerPrecursor.Length, dedupTargets, dedupDecoys, n);
-
-            // 3b. If still > MaxTrainSize, subsample by peptide groups
-            //     (so target/decoy pairs and same-peptide multi-charge stay together).
-            int[] trainSubset = bestPerPrecursor;
-            if (config.MaxTrainSize > 0 && bestPerPrecursor.Length > config.MaxTrainSize)
-            {
-                var dedupLabels = new bool[bestPerPrecursor.Length];
-                var dedupEntryIds = new uint[bestPerPrecursor.Length];
-                var dedupPeptides = new string[bestPerPrecursor.Length];
-                for (int i = 0; i < bestPerPrecursor.Length; i++)
-                {
-                    int gi = bestPerPrecursor[i];
-                    dedupLabels[i] = labels[gi];
-                    dedupEntryIds[i] = entryIds[gi];
-                    dedupPeptides[i] = peptides[gi];
-                }
-
-                int[] localSelected = SubsampleByPeptideGroup(
-                    dedupLabels, dedupEntryIds, dedupPeptides,
-                    config.MaxTrainSize, config.Seed);
-
-                trainSubset = new int[localSelected.Length];
-                for (int i = 0; i < localSelected.Length; i++)
-                    trainSubset[i] = bestPerPrecursor[localSelected[i]];
-            }
 
             int subN = trainSubset.Length;
             int subTargets = 0, subDecoys = 0;
@@ -332,20 +349,18 @@ namespace pwiz.OspreySharp.FDR
             int[] foldAssignments = CreateStratifiedFoldsByPeptide(
                 subLabels, subPeptides, subEntryIds, config.NFolds);
 
-            // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE=1;
-            // exits via OSPREY_SUBSAMPLE_ONLY=1. Captures subsample membership and
-            // fold assignment per entry, mirroring the Rust dump in
-            // osprey-fdr/src/percolator.rs. The dump is inlined here (not routed
-            // through OspreyDiagnostics) because OspreySharp.FDR does not
-            // reference the main OspreySharp assembly.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SUBSAMPLE"), @"1"))
+            // Stage 5 sub-stage diagnostic dump. Gated by OSPREY_DUMP_SUBSAMPLE;
+            // a *Only request returns the abort sentinel. Captures subsample
+            // membership and fold assignment per entry, mirroring the Rust dump in
+            // osprey-fdr/src/percolator.rs. The dump writer is inlined here (not
+            // routed through OspreyDiagnostics) because OspreySharp.FDR does not
+            // reference the main OspreySharp assembly; only the gate flag + the
+            // early-exit decision are lifted out to the Tasks-layer caller.
+            if (config.Diagnostics != null && config.Diagnostics.DumpSubsample)
             {
                 WriteStage5SubsampleDump(entries, trainSubset, foldAssignments);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SUBSAMPLE_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_SUBSAMPLE_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.SubsampleOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // 5. Find best initial feature
@@ -400,17 +415,32 @@ namespace pwiz.OspreySharp.FDR
                 foldTrainIndices[fold] = list.ToArray();
             }
 
+            // One scratch pool for the whole outer-fold Parallel.For and
+            // every nested GridSearchC.Parallel.For below. Initial size
+            // = the subsampled training set; grid_search inner SVMs may
+            // need a different (typically smaller) capacity, handled by
+            // SvmTrainScratch.EnsureCapacity on rent. Pool grows
+            // organically to the parallel-worker high-water mark and
+            // arrays stay in gen-2 LOH for the rest of the run.
+            var svmScratchPool = new SvmTrainScratchPool(subN, nFeatures);
+
             // Train all folds in parallel. Each fold reads from the shared
             // subFeatures matrix (read-only) and produces an independent model.
-            // Matches the Rust implementation's into_par_iter() over folds.
+            // Mirrors Rust's into_par_iter(). Use OspreyParallel.For (explicit
+            // dedicated threads) rather than TPL Parallel.For: the TPL
+            // TaskReplicator was throttling effective parallelism to ~2.5x
+            // on HRAM Astral (vs Rust rayon's ~9x) even with the same
+            // per-call cost. Explicit threads remove the ThreadPool
+            // scheduling variable.
             var swTrain = Stopwatch.StartNew();
-            System.Threading.Tasks.Parallel.For(0, config.NFolds, fold =>
+            OspreyParallel.For(0, config.NFolds, config.NFolds, fold =>
             {
                 var swFold = Stopwatch.StartNew();
                 int iters;
                 foldModels[fold] = TrainFold(
                     subFeatures, subLabels, subEntryIds, subPeptides,
-                    foldTrainIndices[fold], initialScores, config, trainFdr, out iters);
+                    foldTrainIndices[fold], initialScores, config, trainFdr,
+                    svmScratchPool, out iters);
                 foldIterations[fold] = iters;
                 swFold.Stop();
                 foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
@@ -425,19 +455,16 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
 
-            // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS=1;
-            // exits via OSPREY_SVM_WEIGHTS_ONLY=1. Captures per-fold weights,
-            // bias, and iteration count right after SVM training converges
-            // and before Granholm calibration. Mirrors rust side in
+            // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
+            // a *Only request returns the abort sentinel. Captures per-fold
+            // weights, bias, and iteration count right after SVM training
+            // converges and before Granholm calibration. Mirrors rust side in
             // osprey-fdr/src/percolator.rs::dump_stage5_svm_weights.
-            if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_DUMP_SVM_WEIGHTS"), @"1"))
+            if (config.Diagnostics != null && config.Diagnostics.DumpSvmWeights)
             {
                 WriteStage5SvmWeightsDump(foldModels, foldIterations, config.FeatureNames);
-                if (string.Equals(Environment.GetEnvironmentVariable(@"OSPREY_SVM_WEIGHTS_ONLY"), @"1"))
-                {
-                    Console.Error.WriteLine(@"[BISECT] OSPREY_SVM_WEIGHTS_ONLY set - aborting after dump");
-                    Environment.Exit(0);
-                }
+                if (config.Diagnostics.SvmWeightsOnly)
+                    return new PercolatorResults { DiagnosticAbort = true };
             }
 
             // Train-only mode: return fold models + standardizer; skip the
@@ -729,7 +756,7 @@ namespace pwiz.OspreySharp.FDR
             var pepOrder = new int[nWinners];
             for (int k = 0; k < nWinners; k++)
                 pepOrder[k] = k;
-            Array.Sort(pepOrder, (a, b) =>
+            Array.Sort(pepOrder, (a, b) => // Array.Sort OK: TDC's CompeteAll already produced one winner per base_id, so each base_id appears at most once in pepOrder -- no ties.
             {
                 uint ba = entryIds[winnerIndices[a]] & BASE_ID_MASK;
                 uint bb = entryIds[winnerIndices[b]] & BASE_ID_MASK;
@@ -813,10 +840,18 @@ namespace pwiz.OspreySharp.FDR
             double[] initialScores,
             PercolatorConfig config,
             double trainFdr,
+            SvmTrainScratchPool svmScratchPool,
             out int bestIteration)
         {
             int nFeatures = stdFeatures.Cols;
             var currentScores = (double[])initialScores.Clone();
+
+            // Rent one scratch for this outer fold's sequential Train calls
+            // (the final per-iteration Train at the bottom of the loop). The
+            // inner parallel grid search rents its own scratches from the
+            // same pool. Return at the end of the fold.
+            var foldScratch = svmScratchPool != null ? svmScratchPool.Rent() : null;
+            try {
 
             var bestModel = LinearSvmClassifier.Train(
                 Matrix.Zeros(0, nFeatures), new bool[0], 1.0, config.Seed);
@@ -859,7 +894,19 @@ namespace pwiz.OspreySharp.FDR
                 for (int i = 0; i < svmIndices.Count; i++)
                     svmGlobalIndices[i] = trainIndices[svmIndices[i]];
 
-                var svmFeatures = ExtractRows(stdFeatures, svmGlobalIndices);
+                // svmFeatures is live from here through the Train call below
+                // (used by Train + DecisionFunction). Use foldScratch.TrainData
+                // to avoid an 8+ MB LOH allocation per TrainFold iteration.
+                Matrix svmFeatures;
+                if (foldScratch != null)
+                {
+                    foldScratch.EnsureExtractCapacity(svmGlobalIndices.Length, nFeatures);
+                    svmFeatures = ExtractRowsInto(stdFeatures, svmGlobalIndices, foldScratch.TrainData);
+                }
+                else
+                {
+                    svmFeatures = ExtractRows(stdFeatures, svmGlobalIndices);
+                }
                 var svmLabels = new bool[svmIndices.Count];
                 var svmEntryIds = new uint[svmIndices.Count];
                 for (int i = 0; i < svmIndices.Count; i++)
@@ -878,21 +925,33 @@ namespace pwiz.OspreySharp.FDR
                 double bestC = GridSearchC(
                     svmFeatures, svmLabels, svmEntryIds,
                     config.CValues, svmFoldAssignments, config.NFolds,
-                    config.Seed, trainFdr);
+                    config.Seed, trainFdr, svmScratchPool);
 
                 // iii. Train SVM with best C
                 var model = LinearSvmClassifier.Train(
-                    svmFeatures, svmLabels, bestC, config.Seed);
+                    svmFeatures, svmLabels, bestC, config.Seed, foldScratch);
 
                 // iv. Score ALL training set entries with new model
-                var trainFeatures = ExtractRows(stdFeatures, trainIndices);
+                // trainFeatures is live just for the DecisionFunction call;
+                // foldScratch.TestData is not used elsewhere in this iteration
+                // (svmFeatures is in TrainData), so reuse it here.
+                Matrix trainFeatures;
+                if (foldScratch != null)
+                {
+                    foldScratch.EnsureExtractCapacity(trainIndices.Length, nFeatures);
+                    trainFeatures = ExtractRowsInto(stdFeatures, trainIndices, foldScratch.TestData);
+                }
+                else
+                {
+                    trainFeatures = ExtractRows(stdFeatures, trainIndices);
+                }
                 var newTrainScores = model.DecisionFunction(trainFeatures);
 
                 for (int i = 0; i < trainIndices.Length; i++)
                     currentScores[trainIndices[i]] = newTrainScores[i];
 
                 // v. Count passing targets
-                int nPassing = CountPassing(newTrainScores, trainLabels, trainEntryIds, trainFdr);
+                int nPassing = CountPassing(newTrainScores, trainLabels, trainEntryIds, trainFdr, foldScratch);
 
                 if (nPassing > bestPassing)
                 {
@@ -912,6 +971,11 @@ namespace pwiz.OspreySharp.FDR
 
             bestIteration = Math.Max(bestIteration, 1);
             return bestModel;
+
+            } finally {
+                if (foldScratch != null && svmScratchPool != null)
+                    svmScratchPool.Return(foldScratch);
+            }
         }
 
         // ============================================================
@@ -920,6 +984,19 @@ namespace pwiz.OspreySharp.FDR
 
         /// <summary>
         /// Core competition logic: group by base_id, compete, return winners sorted by score desc.
+        ///
+        /// This is deliberately a SEPARATE implementation from
+        /// <see cref="FdrController.CompeteAndFilter{T}"/>, not a duplicate to be
+        /// merged: the two serve different regimes. This array/index form is the
+        /// hot Percolator path -- it works on pre-flattened primitive arrays and a
+        /// caller-supplied index subset, returns winner arrays for downstream
+        /// scratch-pooled q-value passes (see <c>CountPassing</c>), and
+        /// allocates nothing on the scratch overload. <c>CompeteAndFilter</c> is
+        /// the ergonomic generic form for simple-FDR callers
+        /// (<see cref="PercolatorEngine.RunSimpleFdr"/>): it competes an
+        /// <c>IEnumerable&lt;T&gt;</c> via score/decoy/id selectors and returns a
+        /// typed result. Same competition rule (strict &gt;, ties to decoy), two
+        /// shapes tuned to performance vs. ergonomics.
         /// </summary>
         public static void CompeteFromIndices(
             double[] scores,
@@ -1034,26 +1111,7 @@ namespace pwiz.OspreySharp.FDR
         public static void ComputeConservativeQvalues(
             double[] scores, bool[] isDecoy, double[] qValues)
         {
-            int n = isDecoy.Length;
-            int nTarget = 0;
-            int nDecoy = 0;
-
-            for (int i = 0; i < n; i++)
-            {
-                if (isDecoy[i])
-                    nDecoy++;
-                else
-                    nTarget++;
-                qValues[i] = nTarget > 0 ? (double)(nDecoy + 1) / nTarget : 1.0;
-            }
-
-            // Backward pass: make monotonically non-increasing
-            double qMin = 1.0;
-            for (int i = n - 1; i >= 0; i--)
-            {
-                qMin = Math.Min(qMin, qValues[i]);
-                qValues[i] = qMin;
-            }
+            ComputeQvaluesCore(isDecoy, qValues, isDecoy.Length, decoyOffset: 1);
         }
 
         /// <summary>
@@ -1063,25 +1121,7 @@ namespace pwiz.OspreySharp.FDR
         private static void ComputeQvalues(
             double[] scores, bool[] isDecoy, double[] qValues)
         {
-            int n = isDecoy.Length;
-            int nTarget = 0;
-            int nDecoy = 0;
-
-            for (int i = 0; i < n; i++)
-            {
-                if (isDecoy[i])
-                    nDecoy++;
-                else
-                    nTarget++;
-                qValues[i] = nTarget > 0 ? (double)nDecoy / nTarget : 1.0;
-            }
-
-            double qMin = 1.0;
-            for (int i = n - 1; i >= 0; i--)
-            {
-                qMin = Math.Min(qMin, qValues[i]);
-                qValues[i] = qMin;
-            }
+            ComputeQvaluesCore(isDecoy, qValues, isDecoy.Length, decoyOffset: 0);
         }
 
         /// <summary>
@@ -1090,25 +1130,245 @@ namespace pwiz.OspreySharp.FDR
         public static int CountPassing(
             double[] scores, bool[] labels, uint[] entryIds, double fdrThreshold)
         {
-            var allIndices = new int[scores.Length];
-            for (int i = 0; i < scores.Length; i++)
-                allIndices[i] = i;
+            return CountPassing(scores, labels, entryIds, fdrThreshold, null);
+        }
 
-            int[] wi;
-            double[] ws;
-            bool[] wd;
-            CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
-
-            var qValues = new double[wi.Length];
-            ComputeQvalues(ws, wd, qValues);
-
-            int count = 0;
-            for (int rank = 0; rank < wi.Length; rank++)
+        /// <summary>
+        /// Overload that reuses pre-allocated buffers from a
+        /// <see cref="SvmTrainScratch"/>. Pass null
+        /// to allocate per-call (the legacy path). For the hot Percolator
+        /// path (CountPassing is called ~570x per grid-search session),
+        /// passing scratch eliminates ~400 KB of per-call LOH allocation
+        /// (int[scores.Length] + double[winners]) plus the
+        /// CompeteFromIndices internal allocations via the scratch-aware
+        /// helper below.
+        /// </summary>
+        public static int CountPassing(
+            double[] scores, bool[] labels, uint[] entryIds, double fdrThreshold,
+            SvmTrainScratch scratch)
+        {
+            if (scratch == null)
             {
-                if (!labels[wi[rank]] && qValues[rank] <= fdrThreshold)
-                    count++;
+                // Allocating path -- preserved verbatim for callers
+                // that don't have a scratch (tests, non-hot sites).
+                var allIndices = new int[scores.Length];
+                for (int i = 0; i < scores.Length; i++)
+                    allIndices[i] = i;
+
+                int[] wi;
+                double[] ws;
+                bool[] wd;
+                CompeteFromIndices(scores, labels, entryIds, allIndices, out wi, out ws, out wd);
+
+                var qValues = new double[wi.Length];
+                ComputeQvalues(ws, wd, qValues);
+
+                int count = 0;
+                for (int rank = 0; rank < wi.Length; rank++)
+                {
+                    if (!labels[wi[rank]] && qValues[rank] <= fdrThreshold)
+                        count++;
+                }
+                return count;
             }
-            return count;
+
+            scratch.EnsureCountPassingCapacity(scores.Length);
+            int[] allIdx = scratch.CountPassingIndices;
+            for (int i = 0; i < scores.Length; i++)
+                allIdx[i] = i;
+
+            int winnerCount = CompeteFromIndicesInto(
+                scores, labels, entryIds, allIdx, scores.Length, scratch);
+
+            double[] qVals = scratch.CountPassingQvalues;
+            // ComputeQvalues operates on a winner-sized slice; pass the
+            // prefix of the pooled arrays (Compute reads scores[i] for
+            // i in [0, n), assuming n = winnerCount).
+            ComputeQvaluesInto(
+                scratch.CompetitionWinnerScores, scratch.CompetitionWinnerIsDecoy,
+                qVals, winnerCount);
+
+            int[] winIdx = scratch.CompetitionWinnerIndices;
+            int passCount = 0;
+            for (int rank = 0; rank < winnerCount; rank++)
+            {
+                if (!labels[winIdx[rank]] && qVals[rank] <= fdrThreshold)
+                    passCount++;
+            }
+            return passCount;
+        }
+
+        /// <summary>
+        /// Scratch-pooled internal variant of <see cref="CompeteFromIndices"/>.
+        /// Writes winners into <paramref name="scratch"/>'s three
+        /// CompetitionWinner* arrays (prefix [0..returned count) is
+        /// active). Same algorithm as the allocating version; only the
+        /// output destination differs. Returns the active winner count.
+        /// </summary>
+        private static int CompeteFromIndicesInto(
+            double[] scores, bool[] labels, uint[] entryIds,
+            int[] indices, int indicesCount,
+            SvmTrainScratch scratch)
+        {
+            // Allocate the small per-call dictionaries / list at full
+            // expected capacity to avoid rehash growth. Could be pooled
+            // on scratch in a follow-up; the n*p allocations above are
+            // the bigger LOH issue.
+            var targets = new Dictionary<uint, KeyValuePair<int, double>>(indicesCount / 2);
+            var decoys = new Dictionary<uint, KeyValuePair<int, double>>(indicesCount / 2);
+
+            for (int ii = 0; ii < indicesCount; ii++)
+            {
+                int idx = indices[ii];
+                uint baseId = entryIds[idx] & BASE_ID_MASK;
+                double s = scores[idx];
+                if (labels[idx])
+                {
+                    KeyValuePair<int, double> existing;
+                    if (decoys.TryGetValue(baseId, out existing))
+                    {
+                        if (s > existing.Value)
+                            decoys[baseId] = new KeyValuePair<int, double>(idx, s);
+                    }
+                    else
+                    {
+                        decoys[baseId] = new KeyValuePair<int, double>(idx, s);
+                    }
+                }
+                else
+                {
+                    KeyValuePair<int, double> existing;
+                    if (targets.TryGetValue(baseId, out existing))
+                    {
+                        if (s > existing.Value)
+                            targets[baseId] = new KeyValuePair<int, double>(idx, s);
+                    }
+                    else
+                    {
+                        targets[baseId] = new KeyValuePair<int, double>(idx, s);
+                    }
+                }
+            }
+
+            // Walk pairs into local struct array (parallel-array layout
+            // avoids the per-element Tuple class allocation that the
+            // public CompeteFromIndices pays).
+            int maxWinners = targets.Count + decoys.Count;
+            scratch.EnsureCountPassingCapacity(maxWinners);
+            int[] winIdx = scratch.CompetitionWinnerIndices;
+            double[] winScores = scratch.CompetitionWinnerScores;
+            bool[] winDecoy = scratch.CompetitionWinnerIsDecoy;
+            // baseIds for tie-break ordering; reuse CountPassingIndices
+            // as a uint[] surrogate (interpret bits). Cleaner: small
+            // separate buffer; for now allocate per-call (small).
+            var winBaseIds = new uint[maxWinners];
+
+            int n = 0;
+            foreach (var kvp in targets)
+            {
+                uint baseId = kvp.Key;
+                int tIdx = kvp.Value.Key;
+                double tScore = kvp.Value.Value;
+                KeyValuePair<int, double> de;
+                if (decoys.TryGetValue(baseId, out de))
+                {
+                    if (tScore > de.Value)
+                    { winIdx[n] = tIdx; winScores[n] = tScore; winDecoy[n] = false; winBaseIds[n] = baseId; n++; }
+                    else
+                    { winIdx[n] = de.Key; winScores[n] = de.Value; winDecoy[n] = true; winBaseIds[n] = baseId; n++; }
+                }
+                else
+                {
+                    winIdx[n] = tIdx; winScores[n] = tScore; winDecoy[n] = false; winBaseIds[n] = baseId; n++;
+                }
+            }
+            foreach (var kvp in decoys)
+            {
+                if (!targets.ContainsKey(kvp.Key))
+                {
+                    winIdx[n] = kvp.Value.Key; winScores[n] = kvp.Value.Value;
+                    winDecoy[n] = true; winBaseIds[n] = kvp.Key; n++;
+                }
+            }
+
+            // Sort: score desc, then baseId asc. Build index permutation
+            // then permute the parallel arrays. Sorting an int[] of
+            // length n with a comparison delegate beats the previous
+            // List<Tuple<...>>.Sort because no per-element boxing was
+            // required to populate the list.
+            var perm = new int[n];
+            for (int i = 0; i < n; i++) perm[i] = i;
+            // The tie-break key (winBaseIds) is unique per row -- post-deduplication
+            // best-per-precursor selection above guarantees one row per (base_id, isDecoy)
+            // tuple -- so the comparator never returns 0 for distinct rows and introsort's
+            // instability is moot. Exemption comment must be on the Array.Sort line itself
+            // for the regex in CodeInspectionTest.TestNoUnstableArraySort to recognize it.
+            Array.Sort(perm, (a, b) => // Array.Sort OK: unique baseId tie-break makes comparator total
+            {
+                int cmp = winScores[b].CompareTo(winScores[a]);
+                if (cmp != 0) return cmp;
+                return winBaseIds[a].CompareTo(winBaseIds[b]);
+            });
+
+            // Apply permutation in-place via scratch swap arrays. Reuse
+            // the still-spare prefix of CountPassingQvalues as a double
+            // swap buffer; for int and bool we need small temp arrays.
+            var tmpIdx = new int[n];
+            var tmpScores = new double[n];
+            var tmpDecoy = new bool[n];
+            for (int i = 0; i < n; i++)
+            {
+                tmpIdx[i] = winIdx[perm[i]];
+                tmpScores[i] = winScores[perm[i]];
+                tmpDecoy[i] = winDecoy[perm[i]];
+            }
+            Array.Copy(tmpIdx, winIdx, n);
+            Array.Copy(tmpScores, winScores, n);
+            Array.Copy(tmpDecoy, winDecoy, n);
+            return n;
+        }
+
+        /// <summary>
+        /// Variant of <see cref="ComputeQvalues"/> that operates on the
+        /// active prefix [0..n) of pre-allocated arrays.
+        /// </summary>
+        private static void ComputeQvaluesInto(
+            double[] scores, bool[] isDecoy, double[] qValuesOut, int n)
+        {
+            ComputeQvaluesCore(isDecoy, qValuesOut, n, decoyOffset: 0);
+        }
+
+        /// <summary>
+        /// Shared core behind <see cref="ComputeConservativeQvalues"/>,
+        /// <see cref="ComputeQvalues"/>, and <see cref="ComputeQvaluesInto"/>.
+        /// Walks the score-descending prefix [0..<paramref name="n"/>)
+        /// accumulating target / decoy counts, writes
+        /// FDR = (nDecoy + <paramref name="decoyOffset"/>) / nTarget at each rank,
+        /// then enforces a monotone-non-increasing q-value with a backward pass.
+        /// <paramref name="decoyOffset"/> is 1 for the conservative (Savitski +1)
+        /// estimate and 0 for the plain ratio. Scores are not read -- the input is
+        /// assumed already sorted by score descending.
+        /// </summary>
+        private static void ComputeQvaluesCore(
+            bool[] isDecoy, double[] qValues, int n, int decoyOffset)
+        {
+            int nTarget = 0;
+            int nDecoy = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (isDecoy[i])
+                    nDecoy++;
+                else
+                    nTarget++;
+                qValues[i] = nTarget > 0 ? (double)(nDecoy + decoyOffset) / nTarget : 1.0;
+            }
+
+            double qMin = 1.0;
+            for (int i = n - 1; i >= 0; i--)
+            {
+                qMin = Math.Min(qMin, qValues[i]);
+                qValues[i] = qMin;
+            }
         }
 
         /// <summary>
@@ -1219,13 +1479,30 @@ namespace pwiz.OspreySharp.FDR
         private static double GridSearchC(
             Matrix features, bool[] labels, uint[] entryIds,
             double[] cValues, int[] foldAssignments, int nFolds,
-            ulong seed, double fdrThreshold)
+            ulong seed, double fdrThreshold,
+            SvmTrainScratchPool svmScratchPool)
         {
-            double bestC = cValues[0];
-            int bestTotal = 0;
-
-            foreach (double c in cValues)
+            // Evaluate each candidate C in parallel. Mirrors Rust's
+            // c_values.par_iter() in osprey-ml/src/svm.rs::grid_search_c.
+            // Each C is independent (no shared mutable state during
+            // training); the per-C totalPassing is stored by index so
+            // the tie-break below is deterministic. OspreyParallel.For
+            // (explicit threads) replaces TPL Parallel.For for the same
+            // reason as the outer loop above.
+            var totalPassingByC = new int[cValues.Length];
+            OspreyParallel.For(0, cValues.Length, cValues.Length, ci =>
             {
+                // Rent one scratch per parallel c-value; reused across
+                // the inner sequential nFolds Train calls. Returned at
+                // end of this parallel body.
+                var localScratch = svmScratchPool != null ? svmScratchPool.Rent() : null;
+                // Ensure ExtractRowsInto buffers can hold the larger of
+                // train/test sizes (= labels.Length, the parent set,
+                // which is the upper bound on either subset).
+                if (localScratch != null)
+                    localScratch.EnsureExtractCapacity(labels.Length, features.Cols);
+                try {
+                double c = cValues[ci];
                 int totalPassing = 0;
                 for (int fold = 0; fold < nFolds; fold++)
                 {
@@ -1242,13 +1519,22 @@ namespace pwiz.OspreySharp.FDR
                     if (trainIdx.Count == 0 || testIdx.Count == 0)
                         continue;
 
-                    var trainFeatures = ExtractRows(features, trainIdx.ToArray());
+                    Matrix trainFeatures, testFeatures;
+                    if (localScratch != null)
+                    {
+                        trainFeatures = ExtractRowsInto(features, trainIdx.ToArray(), localScratch.TrainData);
+                        testFeatures = ExtractRowsInto(features, testIdx.ToArray(), localScratch.TestData);
+                    }
+                    else
+                    {
+                        trainFeatures = ExtractRows(features, trainIdx.ToArray());
+                        testFeatures = ExtractRows(features, testIdx.ToArray());
+                    }
                     var trainLabels = new bool[trainIdx.Count];
                     for (int i = 0; i < trainIdx.Count; i++)
                         trainLabels[i] = labels[trainIdx[i]];
 
-                    var model = LinearSvmClassifier.Train(trainFeatures, trainLabels, c, seed);
-                    var testFeatures = ExtractRows(features, testIdx.ToArray());
+                    var model = LinearSvmClassifier.Train(trainFeatures, trainLabels, c, seed, localScratch);
                     var testScores = model.DecisionFunction(testFeatures);
                     var testLabels = new bool[testIdx.Count];
                     var testEntryIds = new uint[testIdx.Count];
@@ -1258,16 +1544,28 @@ namespace pwiz.OspreySharp.FDR
                         testEntryIds[i] = entryIds[testIdx[i]];
                     }
 
-                    totalPassing += CountPassing(testScores, testLabels, testEntryIds, fdrThreshold);
+                    totalPassing += CountPassing(testScores, testLabels, testEntryIds, fdrThreshold, localScratch);
                 }
+                totalPassingByC[ci] = totalPassing;
+                } finally {
+                    if (localScratch != null && svmScratchPool != null)
+                        svmScratchPool.Return(localScratch);
+                }
+            });
 
-                if (totalPassing > bestTotal)
+            // Tie-break: first index with the maximum totalPassing wins,
+            // matching the strict `>` semantics of the prior serial loop
+            // and the corresponding Rust path.
+            double bestC = cValues[0];
+            int bestTotal = totalPassingByC[0];
+            for (int ci = 1; ci < cValues.Length; ci++)
+            {
+                if (totalPassingByC[ci] > bestTotal)
                 {
-                    bestTotal = totalPassing;
-                    bestC = c;
+                    bestTotal = totalPassingByC[ci];
+                    bestC = cValues[ci];
                 }
             }
-
             return bestC;
         }
 
@@ -1508,7 +1806,7 @@ namespace pwiz.OspreySharp.FDR
             // Propagate the winner's q-value to all observations sharing the
             // same base_id (both target and decoy sides). Matches Rust's
             // base_id_exp_prec_q HashMap at osprey-fdr/src/percolator.rs:2168
-            // — without this, non-winning per-file observations of a
+            // -- without this, non-winning per-file observations of a
             // multi-file precursor stay at q=1.0 and downstream stages that
             // gate on experiment_precursor_qvalue (Stage 6 calibration refit
             // and reconciliation) miss the bulk of the consensus pool.
@@ -1682,6 +1980,48 @@ namespace pwiz.OspreySharp.FDR
         // ============================================================
 
         /// <summary>
+        /// Build the SVM training subset for one Percolator pass: best-per-precursor
+        /// dedup, then -- only when the deduped count still exceeds
+        /// <paramref name="maxTrainSize"/> -- a peptide-grouped subsample. Returns
+        /// indices into the original <paramref name="entries"/> list;
+        /// <paramref name="bestPerPrecursor"/> returns the post-dedup indices so the
+        /// caller can emit its own path-specific [COUNT] dedup line. Owned here so
+        /// the direct (<see cref="RunPercolator"/>) and streaming
+        /// (PercolatorEngine.RunPercolatorStreaming) paths select identical subsets
+        /// for identical input instead of hand-mirroring the dedup + index map-back.
+        /// </summary>
+        internal static int[] BuildTrainingSubset(
+            bool[] labels, uint[] entryIds, string[] peptides,
+            IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
+            out int[] bestPerPrecursor)
+        {
+            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries);
+            if (maxTrainSize <= 0 || bestPerPrecursor.Length <= maxTrainSize)
+                return bestPerPrecursor;
+
+            // Project the deduped rows into local arrays, subsample by peptide
+            // group, then map the local selection back to entries indices.
+            int m = bestPerPrecursor.Length;
+            var dedupLabels = new bool[m];
+            var dedupEntryIds = new uint[m];
+            var dedupPeptides = new string[m];
+            for (int i = 0; i < m; i++)
+            {
+                int gi = bestPerPrecursor[i];
+                dedupLabels[i] = labels[gi];
+                dedupEntryIds[i] = entryIds[gi];
+                dedupPeptides[i] = peptides[gi];
+            }
+
+            int[] localSelected = SubsampleByPeptideGroup(
+                dedupLabels, dedupEntryIds, dedupPeptides, maxTrainSize, seed);
+            var trainSubset = new int[localSelected.Length];
+            for (int i = 0; i < localSelected.Length; i++)
+                trainSubset[i] = bestPerPrecursor[localSelected[i]];
+            return trainSubset;
+        }
+
+        /// <summary>
         /// Pick the best-scoring observation per (base_id, isDecoy) tuple across all
         /// entries. Used to deduplicate multi-file observations of the same precursor
         /// before SVM training, so the SVM doesn't see the same peptide N times.
@@ -1721,14 +2061,14 @@ namespace pwiz.OspreySharp.FDR
                 result[idx++] = i;
             foreach (int i in bestDecoy.Values)
                 result[idx++] = i;
-            Array.Sort(result); // deterministic order for downstream subsampling
+            Array.Sort(result); // Array.Sort OK: result holds unique entry indices (one per base_id from bestTarget/bestDecoy), so no ties
             return result;
         }
 
         /// <summary>
         /// Subsample entries by peptide group, keeping target-decoy pairs and charge states together.
         /// </summary>
-        public static int[] SubsampleByPeptideGroup(
+        internal static int[] SubsampleByPeptideGroup(
             bool[] labels, uint[] entryIds, string[] peptides,
             int maxEntries, ulong seed)
         {
@@ -1833,7 +2173,20 @@ namespace pwiz.OspreySharp.FDR
 
             var order = new int[n];
             for (int i = 0; i < n; i++) order[i] = i;
-            Array.Sort(order, (a, b) => entries[a].EntryId.CompareTo(entries[b].EntryId));
+            // EntryId is NOT unique in the 2nd-pass entries[] vector --
+            // a single (base_id, charge) precursor observed across N
+            // files contributes N entries with the same EntryId, and
+            // post-reconciliation gap-fill can add yet more duplicates
+            // at the same (EntryId, Charge, ScanNumber). Tie-break on
+            // the input index a (native_position) so the dump order
+            // is deterministic AND matches Rust's stable
+            // sort_by_key(|&i| entries[i].entry_id), which preserves
+            // native_position order at duplicate EntryIds.
+            Array.Sort(order, (a, b) => // Array.Sort OK: tie-break on native_position (the input index a/b) makes the comparator total
+            {
+                int c = entries[a].EntryId.CompareTo(entries[b].EntryId);
+                return c != 0 ? c : a.CompareTo(b);
+            });
 
             using (var sw = new StreamWriter(path))
             {
@@ -1939,6 +2292,59 @@ namespace pwiz.OspreySharp.FDR
             Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
         }
 
+        /// <summary>
+        /// One-shot diagnostic dump of the raw per-entry feature vectors
+        /// fed into FeatureStandardizer.FitTransform. Mirrors Rust
+        /// dump_stage5_perc_input. Writes cs_stage5_perc_input.tsv with
+        /// columns native_position, entry_id, is_decoy, &lt;features...&gt;
+        /// sorted by (entry_id, native_position).
+        /// </summary>
+        private static void WriteStage5PercInputDump(
+            IList<PercolatorEntry> entries,
+            string[] featureNames)
+        {
+            const string path = @"cs_stage5_perc_input.tsv";
+            var inv = CultureInfo.InvariantCulture;
+            int nFeatures = entries.Count > 0 ? entries[0].Features.Length : 0;
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.Write(@"native_position	entry_id	is_decoy");
+                for (int i = 0; i < nFeatures; i++)
+                {
+                    string name = (featureNames != null && i < featureNames.Length)
+                        ? featureNames[i]
+                        : @"unknown";
+                    sw.Write('\t'); sw.Write(name);
+                }
+                sw.WriteLine();
+
+                int n = entries.Count;
+                int[] order = new int[n];
+                for (int i = 0; i < n; i++) order[i] = i;
+                Array.Sort(order, (a, b) => // Array.Sort OK: tie-break on native_position (the input index a/b) makes the comparator total
+                {
+                    int c = entries[a].EntryId.CompareTo(entries[b].EntryId);
+                    return c != 0 ? c : a.CompareTo(b);
+                });
+
+                foreach (int idx in order)
+                {
+                    var e = entries[idx];
+                    sw.Write(idx.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.EntryId.ToString(inv));
+                    sw.Write('\t'); sw.Write(e.IsDecoy ? @"true" : @"false");
+                    for (int i = 0; i < e.Features.Length; i++)
+                    {
+                        sw.Write('\t');
+                        sw.Write(Diagnostics.FormatF64Roundtrip(e.Features[i]));
+                    }
+                    sw.WriteLine();
+                }
+            }
+            Console.Error.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
+        }
+
         // ============================================================
         // Utility
         // ============================================================
@@ -1959,6 +2365,37 @@ namespace pwiz.OspreySharp.FDR
                 Array.Copy(src, srcOffset, data, dstOffset, nCols);
             }
             return Matrix.WrapNoClone(data, nRows, nCols);
+        }
+
+        /// <summary>
+        /// Variant of <see cref="ExtractRows"/> that writes into a
+        /// caller-supplied <paramref name="destData"/> buffer (must be
+        /// at least <c>rowIndices.Length * matrix.Cols</c> long) and
+        /// wraps the prefix as a Matrix. Avoids the ~8 MB LOH allocation
+        /// per call on HRAM Astral. The trailing unused suffix of
+        /// <paramref name="destData"/> is left untouched (Matrix.Rows
+        /// hides it).
+        /// </summary>
+        private static Matrix ExtractRowsInto(Matrix matrix, int[] rowIndices, double[] destData)
+        {
+            int nCols = matrix.Cols;
+            int nRows = rowIndices.Length;
+            int need = nRows * nCols;
+            if (destData.Length < need)
+                throw new ArgumentException(
+                    string.Format("destData length {0} < required {1}", destData.Length, need));
+            double[] src = matrix.Data;
+            for (int i = 0; i < nRows; i++)
+            {
+                int srcOffset = rowIndices[i] * nCols;
+                int dstOffset = i * nCols;
+                Array.Copy(src, srcOffset, destData, dstOffset, nCols);
+            }
+            // Pool-friendly wrap: Matrix.WrapPrefixNoClone accepts a
+            // backing array >= rows*cols. The trailing suffix of
+            // destData (from prior larger calls) is left untouched and
+            // never read.
+            return Matrix.WrapPrefixNoClone(destData, nRows, nCols);
         }
     }
 }

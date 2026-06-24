@@ -289,6 +289,7 @@
     <Compile Include="SrmSettingsChangeTest.cs" />
     <Compile Include="SrmSettingsTest.cs" />
     <Compile Include="SSRCalc3Test.cs" />
+    <Compile Include="StartPageArgTest.cs" />
     <Compile Include="StatisticsTest.cs" />
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="DiskSpaceTest.cs" />
@@ -314,6 +315,10 @@
     <Compile Include="ZedGraphTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
+      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
+      <Name>CommonFileDialogs</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
       <Project>{86F8E7F5-A3ED-4519-9AD9-BF9ABD6DD69F}</Project>
       <Name>CommonMsData</Name>
@@ -325,6 +330,10 @@
     <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj">
+      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
+      <Name>PortableUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\PanoramaClient\PanoramaClient.csproj">
       <Project>{bf849cf8-25d7-4619-b001-9ed8e3771c44}</Project>

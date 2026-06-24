@@ -25,6 +25,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
@@ -35,12 +36,34 @@ using pwiz.Skyline.Properties;
 namespace pwiz.Skyline.Util
 {
     /// <summary>
+    /// Result of <see cref="ScreenCapture.EnsurePermission"/>. The pipe-thread
+    /// caller never blocks on a user click: a first-time prompt schedules the
+    /// dialog asynchronously and returns <see cref="PermissionResult.pending"/>,
+    /// letting the LLM surface the prompt and retry.
+    /// <see cref="PermissionResult.unavailable"/> covers transient inability to
+    /// host a dialog at all (Skyline mid-startup or mid-shutdown) so the LLM
+    /// is not falsely told a dialog has opened.
+    /// </summary>
+    public enum PermissionResult
+    {
+        granted,
+        denied,
+        pending,
+        unavailable
+    }
+
+    /// <summary>
     /// Production screen capture utility for Skyline forms.
     /// Provides DPI-aware capture with redaction of non-Skyline windows.
     /// </summary>
     public static class ScreenCapture
     {
-        private static bool _sessionPermissionGranted;
+        private static volatile bool _sessionPermissionGranted;
+        private static volatile bool _sessionDenied;
+        // 0 = no prompt outstanding, 1 = prompt scheduled or open.
+        // Treated as a bool but stored as int so Interlocked.CompareExchange
+        // can give us a single atomic check-and-set across concurrent pipe threads.
+        private static int _promptPending;
 
         /// <summary>
         /// Resets the session-level screen capture permission. Used by tests.
@@ -48,6 +71,8 @@ namespace pwiz.Skyline.Util
         public static void ResetSessionPermission()
         {
             _sessionPermissionGranted = false;
+            _sessionDenied = false;
+            Interlocked.Exchange(ref _promptPending, 0);
         }
 
         public class PointFactor
@@ -282,32 +307,74 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Checks whether screen capture is permitted, showing a confirmation dialog if needed.
-        /// Must be called on the UI thread.
+        /// Returns the current screen-capture permission state. Must be called from a
+        /// background thread (e.g. the JSON-RPC pipe thread); the first-time prompt
+        /// path schedules the modal dialog on the UI thread via
+        /// <see cref="Control.BeginInvoke(Delegate)"/> and returns
+        /// <see cref="PermissionResult.pending"/> immediately, so the calling thread
+        /// never blocks on a user click. Subsequent calls while the dialog is open
+        /// also return <see cref="PermissionResult.pending"/> without opening a
+        /// second dialog.
         /// </summary>
-        /// <param name="wasFirstPrompt">True if the permission dialog was shown this call
-        /// (callers may need to delay for repaint after the dialog dismisses).</param>
-        /// <returns>True if permission is granted.</returns>
-        public static bool EnsurePermission(out bool wasFirstPrompt)
+        public static PermissionResult EnsurePermission()
         {
-            wasFirstPrompt = false;
+            // Capture MainWindow once. The pipe thread can reach this line
+            // before MainWindow is set (early startup) or after it has been
+            // cleared (shutdown), in which case we cannot show a prompt at all.
+            var mainWindow = Program.MainWindow;
+            if (mainWindow == null)
+                return PermissionResult.unavailable;
+
+            Assume.IsTrue(mainWindow.InvokeRequired);
+
             if (Settings.Default.AllowMcpScreenCapture || _sessionPermissionGranted)
-                return true;
+                return PermissionResult.granted;
+            if (_sessionDenied)
+                return PermissionResult.denied;
 
-            wasFirstPrompt = true;
-            using (var dlg = new ScreenCapturePermissionDlg())
+            // Atomic transition into the pending state. If another pipe thread
+            // already won this race, fall through and return pending without
+            // scheduling a second dialog.
+            if (Interlocked.CompareExchange(ref _promptPending, 1, 0) != 0)
+                return PermissionResult.pending;
+
+            // SafeBeginInvoke returns false if MainWindow has lost its handle
+            // (e.g. Skyline is shutting down). Clear the gate and report
+            // unavailable rather than pending so the LLM is not told to wait
+            // on a dialog that will never open.
+            if (!CommonActionUtil.SafeBeginInvoke(mainWindow, ShowPermissionDialog))
             {
-                if (dlg.ShowDialog(Program.MainWindow) != DialogResult.OK)
-                    return false;
+                Interlocked.Exchange(ref _promptPending, 0);
+                return PermissionResult.unavailable;
+            }
+            return PermissionResult.pending;
+        }
 
-                _sessionPermissionGranted = true;
-                if (dlg.DoNotAskAgain)
+        private static void ShowPermissionDialog()
+        {
+            try
+            {
+                using (var dlg = new ScreenCapturePermissionDlg())
                 {
-                    Settings.Default.AllowMcpScreenCapture = true;
-                    Settings.Default.Save();
+                    if (dlg.ShowDialog(Program.MainWindow) == DialogResult.OK)
+                    {
+                        _sessionPermissionGranted = true;
+                        if (dlg.DoNotAskAgain)
+                        {
+                            Settings.Default.AllowMcpScreenCapture = true;
+                            Settings.Default.Save();
+                        }
+                    }
+                    else
+                    {
+                        _sessionDenied = true;
+                    }
                 }
             }
-            return true;
+            finally
+            {
+                Interlocked.Exchange(ref _promptPending, 0);
+            }
         }
 
         // Private helpers

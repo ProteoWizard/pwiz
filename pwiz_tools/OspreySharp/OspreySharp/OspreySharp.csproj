@@ -11,16 +11,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj" />
     <ProjectReference Include="..\OspreySharp.Core\OspreySharp.Core.csproj" />
+    <ProjectReference Include="..\OspreySharp.Diagnostics\OspreySharp.Diagnostics.csproj" />
     <ProjectReference Include="..\OspreySharp.ML\OspreySharp.ML.csproj" />
     <ProjectReference Include="..\OspreySharp.IO\OspreySharp.IO.csproj" />
     <ProjectReference Include="..\OspreySharp.Chromatography\OspreySharp.Chromatography.csproj" />
     <ProjectReference Include="..\OspreySharp.Scoring\OspreySharp.Scoring.csproj" />
     <ProjectReference Include="..\OspreySharp.FDR\OspreySharp.FDR.csproj" />
+    <ProjectReference Include="..\OspreySharp.Tasks\OspreySharp.Tasks.csproj" />
   </ItemGroup>
 
 </Project>

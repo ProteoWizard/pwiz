@@ -392,7 +392,7 @@ namespace pwiz.OspreySharp.Test
             Assert.IsTrue(config.PrefilterEnabled);
             Assert.AreEqual(0.01, config.ExperimentFdr, TOLERANCE);
             Assert.AreEqual(FdrMethod.Percolator, config.FdrMethod);
-            Assert.AreEqual(FdrLevel.Both, config.FdrLevel);
+            Assert.AreEqual(FdrLevel.Precursor, config.FdrLevel);
             Assert.AreEqual(SharedPeptideMode.All, config.SharedPeptides);
         }
 
@@ -435,8 +435,8 @@ namespace pwiz.OspreySharp.Test
         public void TestSearchHashDeterministic()
         {
             var config = new OspreyConfig();
-            string hash1 = config.SearchParameterHash();
-            string hash2 = config.SearchParameterHash();
+            string hash1 = config.Identity.SearchParameterHash();
+            string hash2 = config.Identity.SearchParameterHash();
 
             Assert.AreEqual(hash1, hash2);
             Assert.AreEqual(64, hash1.Length); // SHA-256 hex is 64 chars
@@ -446,11 +446,124 @@ namespace pwiz.OspreySharp.Test
         public void TestSearchHashChangesWithTolerance()
         {
             var config = new OspreyConfig();
-            string hash1 = config.SearchParameterHash();
+            string hash1 = config.Identity.SearchParameterHash();
             config.FragmentTolerance.Tolerance = 20.0;
-            string hash2 = config.SearchParameterHash();
+            string hash2 = config.Identity.SearchParameterHash();
 
             Assert.AreNotEqual(hash1, hash2);
+        }
+
+        [TestMethod]
+        public void TestEscapeForRustDebugMatchesRustOutput()
+        {
+            // Rust's {:?} on String escapes \, ", \n, \r, \t, \0, and
+            // sub-0x20 / 0x7F control chars. Windows paths with
+            // backslashes are the load-bearing case: a Windows manifest
+            // path must hash identically under Rust and C#. Linux paths
+            // (forward slashes) contain no special chars under either
+            // formatter, so the function is platform-neutral -- it just
+            // mirrors Rust's debug-format on whatever string it is given.
+            // Expected outputs below pin the exact char sequence Rust's
+            // {:?} would produce on the same input.
+            Assert.AreEqual(@"T:\\test\\manifest.tsv",
+                SearchIdentity.EscapeForRustDebug(@"T:\test\manifest.tsv"));
+            Assert.AreEqual(@"/srv/data/manifest.tsv",
+                SearchIdentity.EscapeForRustDebug(@"/srv/data/manifest.tsv"));
+            Assert.AreEqual(@"line1\nline2",
+                SearchIdentity.EscapeForRustDebug("line1\nline2"));
+            Assert.AreEqual(@"with \""quotes\""",
+                SearchIdentity.EscapeForRustDebug("with \"quotes\""));
+            Assert.AreEqual(@"\t\r\n\0",
+                SearchIdentity.EscapeForRustDebug("\t\r\n\0"));
+            // DEL (0x7F) and sub-0x20 control chars render as Rust's
+            // `\u{HEX}` form.
+            Assert.AreEqual(@"a\u{7f}b",
+                SearchIdentity.EscapeForRustDebug("ab"));
+            Assert.AreEqual(@"\u{1}\u{1f}",
+                SearchIdentity.EscapeForRustDebug(""));
+            Assert.AreEqual(@"plain-ascii-7",
+                SearchIdentity.EscapeForRustDebug(@"plain-ascii-7"));
+            Assert.AreEqual(string.Empty,
+                SearchIdentity.EscapeForRustDebug(string.Empty));
+        }
+
+        [TestMethod]
+        public void TestSearchHashFoldsDecoyPairingManifestPath()
+        {
+            // The manifest path is folded into the search hash as
+            // `decoy_pairing_manifest:None\n` or
+            // `decoy_pairing_manifest:Some("ESCAPED")\n`. We pin (a) the
+            // exact escaped representation for the load-bearing Windows
+            // and Linux path shapes, and (b) that identical inputs
+            // produce identical hashes while distinct inputs diverge.
+            //
+            // Paths use the imaginary T:\ drive and a non-existent /srv
+            // tree so the test is portable across developer machines
+            // (no filesystem touch required; the hash is purely a string
+            // operation).
+            const string winPath = @"T:\test\manifest.tsv";
+            const string linuxPath = @"/srv/test/manifest.tsv";
+            const string winPathAlt = @"T:\test\manifesx.tsv";
+
+            // Pin the exact pre-hash escape that goes into Some("...").
+            Assert.AreEqual(@"T:\\test\\manifest.tsv",
+                SearchIdentity.EscapeForRustDebug(winPath));
+            Assert.AreEqual(linuxPath,
+                SearchIdentity.EscapeForRustDebug(linuxPath));
+
+            var configEmpty = new OspreyConfig();
+            string hashEmpty = configEmpty.Identity.SearchParameterHash();
+
+            var configWin = new OspreyConfig { DecoyPairingManifestPath = winPath };
+            string hashWin = configWin.Identity.SearchParameterHash();
+            // Hash determinism: identical config -> identical hash.
+            Assert.AreEqual(hashWin, configWin.Identity.SearchParameterHash());
+            // Sensitivity: setting a manifest path changes the hash.
+            Assert.AreNotEqual(hashEmpty, hashWin);
+
+            var configLinux = new OspreyConfig { DecoyPairingManifestPath = linuxPath };
+            string hashLinux = configLinux.Identity.SearchParameterHash();
+            Assert.AreEqual(hashLinux, configLinux.Identity.SearchParameterHash());
+            // Distinct path shapes (different escape semantics) produce
+            // distinct hashes.
+            Assert.AreNotEqual(hashWin, hashLinux);
+
+            // Off-by-one: paths differing in a single character produce
+            // distinct hashes (catches accidental aliasing in the escape
+            // path).
+            var configWinAlt = new OspreyConfig { DecoyPairingManifestPath = winPathAlt };
+            Assert.AreNotEqual(hashWin, configWinAlt.Identity.SearchParameterHash());
+        }
+
+        [TestMethod]
+        public void TestSearchHashStableForNonRoundDecoyPairMinFraction()
+        {
+            // SearchParameterHash folds DecoyPairMinFraction (double) via
+            // the default formatter. For round defaults (0.80) C# and
+            // Rust's ryu produce matching output. For non-canonical
+            // doubles (e.g. 1/3) the two formatters CAN diverge -- this
+            // test pins the C# behavior so we notice future drift. If
+            // this test starts failing on a runtime upgrade, the hash
+            // for any non-round threshold has changed and cross-impl
+            // cache compatibility for that value is broken until we
+            // either match Rust's ryu output explicitly or document the
+            // divergence.
+            var configA = new OspreyConfig { DecoyPairMinFraction = 1.0 / 3.0 };
+            var configB = new OspreyConfig { DecoyPairMinFraction = 1.0 / 3.0 };
+            // Deterministic across two constructions of the same config.
+            Assert.AreEqual(configA.Identity.SearchParameterHash(),
+                configB.Identity.SearchParameterHash());
+            // Sensitive to a tiny perturbation of the threshold.
+            var configC = new OspreyConfig { DecoyPairMinFraction = (1.0 / 3.0) + 1e-12 };
+            Assert.AreNotEqual(configA.Identity.SearchParameterHash(),
+                configC.Identity.SearchParameterHash());
+            // Sensitive to the default vs an explicit set to the same
+            // value (catches a regression where the default would not be
+            // hashed identically to an explicit-set).
+            var configDefault = new OspreyConfig();
+            var configExplicit80 = new OspreyConfig { DecoyPairMinFraction = 0.80 };
+            Assert.AreEqual(configDefault.Identity.SearchParameterHash(),
+                configExplicit80.Identity.SearchParameterHash());
         }
 
         [TestMethod]
@@ -462,8 +575,10 @@ namespace pwiz.OspreySharp.Test
             var blib = LibrarySource.FromPath("library.blib");
             Assert.AreEqual(LibraryFormat.Blib, blib.Format);
 
-            var elib = LibrarySource.FromPath("library.elib");
-            Assert.AreEqual(LibraryFormat.Elib, elib.Format);
+            // EncyclopeDIA .elib reading was removed; an .elib path is rejected
+            // with a clear error rather than mis-parsed as DIA-NN TSV.
+            Assert.ThrowsException<NotSupportedException>(
+                () => LibrarySource.FromPath("library.elib"));
         }
 
         [TestMethod]

@@ -30,38 +30,43 @@ namespace pwiz.OspreySharp.IO
 {
     /// <summary>
     /// Reader / writer for the per-file <c>.&lt;phase&gt;-pass.fdr_scores.bin</c>
-    /// sidecar: the v2 binary format that persists the full FDR statistics
-    /// for an entry (SVM discriminant + 4 q-values + PEP). Used at the
-    /// Stage 5 → Stage 6 boundary so a Stage 6 worker can run without
-    /// re-running first-pass Percolator.
+    /// sidecar: the v3 binary format that persists the full FDR statistics
+    /// for an entry (SVM discriminant + 4 q-values + PEP +
+    /// <c>run_protein_qvalue</c>). Used at the Stage 5 → Stage 6 boundary
+    /// so a Stage 6 worker can run without re-running first-pass Percolator
+    /// AND apply the same protein-rescue compaction predicate the in-process
+    /// pipeline uses.
     ///
     /// Mirrors <c>write_fdr_scores_sidecar</c> + <c>load_fdr_scores_sidecar</c>
     /// in <c>osprey/crates/osprey/src/pipeline.rs</c>. Cross-impl byte
-    /// parity is verified by a separate harness script.
+    /// parity is verified by a separate harness script via the
+    /// <c>OSPREY_CROSS_IMPL_FDR_SIDECAR_OUT</c> test hook.
     ///
-    /// Format (32-byte header + N × 52-byte records, all little-endian):
+    /// Format (32-byte header + N × 60-byte records, all little-endian):
     /// <code>
     ///   magic         [0..8]   = b"OSPRYFDR"
-    ///   version       [8]      = u8 (= 2)
+    ///   version       [8]      = u8 (= 3)
     ///   pass          [9]      = u8 (1 = first-pass, 2 = second-pass)
     ///   reserved      [10..16] = 6 bytes (zero)
     ///   entry_count   [16..24] = u64
     ///   reserved      [24..32] = 8 bytes (zero)
-    ///   body          [32..]   = entry_count * 52 bytes:
-    ///                            u32 entry_id
-    ///                            f64 svm_score
-    ///                            f64 run_precursor_qvalue
-    ///                            f64 run_peptide_qvalue
-    ///                            f64 experiment_precursor_qvalue
-    ///                            f64 experiment_peptide_qvalue
-    ///                            f64 pep
+    ///   body          [32..]   = entry_count * 60 bytes:
+    ///                            [0..4]   u32 entry_id
+    ///                            [4..12]  f64 svm_score
+    ///                            [12..20] f64 run_precursor_qvalue
+    ///                            [20..28] f64 run_peptide_qvalue
+    ///                            [28..36] f64 experiment_precursor_qvalue
+    ///                            [36..44] f64 experiment_peptide_qvalue
+    ///                            [44..52] f64 pep
+    ///                            [52..60] f64 run_protein_qvalue
     /// </code>
-    /// Records are written pre-compaction at the Stage 5 → Stage 6
-    /// boundary: every input entry contributes one record so q-values
-    /// are preserved even for entries that may not survive later
-    /// compaction. The pre-compaction call site is at the bottom of the
-    /// first-pass FDR block, just before the compaction loop runs,
-    /// mirroring Rust's <c>persist_fdr_scores</c> at
+    /// Records are written pre-compaction but POST first-pass protein
+    /// FDR at the Stage 5 → Stage 6 boundary: every input entry
+    /// contributes one record so q-values are preserved even for
+    /// entries that may not survive later compaction, AND so
+    /// <c>run_protein_qvalue</c> carries real values rather than the
+    /// default 1.0. Mirrors the post-protein-FDR
+    /// <c>persist_fdr_scores</c> call site in Rust's
     /// <c>pipeline.rs</c>. Each record carries the entry's
     /// <c>entry_id</c> for identity verification (the per-position
     /// <c>entries[i].EntryId == record.entry_id</c> check during load
@@ -73,6 +78,15 @@ namespace pwiz.OspreySharp.IO
     /// loader also rejects mismatches on the header <c>pass</c> byte
     /// so a 2nd-pass sidecar can never silently scramble 1st-pass
     /// stubs (or vice versa).
+    ///
+    /// v2 → v3 (2026-05-02): added <c>run_protein_qvalue</c> to
+    /// support the Stage 6 worker's compaction step. The in-process
+    /// pipeline filters pre-Stage-6 entries by
+    /// <c>run_peptide_qvalue ≤ 0.01</c> OR
+    /// <c>run_protein_qvalue ≤ 0.01</c> (the protein-rescue branch);
+    /// the v2 sidecar carried only the first half of that predicate,
+    /// so a rehydrated worker couldn't reproduce in-process compaction
+    /// when <c>--protein-fdr</c> is set. v3 closes that gap.
     /// </summary>
     public static class FdrScoresSidecar
     {
@@ -80,9 +94,9 @@ namespace pwiz.OspreySharp.IO
         private static readonly byte[] Magic =
             { (byte)'O', (byte)'S', (byte)'P', (byte)'R', (byte)'Y', (byte)'F', (byte)'D', (byte)'R' };
 
-        public const byte FormatVersion = 2;
+        public const byte FormatVersion = 3;
         public const int HeaderLength = 32;
-        public const int RecordLength = 52;
+        public const int RecordLength = 60;
 
         /// <summary>
         /// Pass identifier embedded in the header. Mirrors the Rust pass
@@ -93,6 +107,28 @@ namespace pwiz.OspreySharp.IO
         {
             FirstPass = 1,
             SecondPass = 2,
+        }
+
+        /// <summary>
+        /// Compute <c>HeaderLength + headerCount * RecordLength</c> with
+        /// overflow detection. Returns false if the result would not fit
+        /// in <see cref="int"/> (a corrupt or malicious sidecar with a
+        /// huge headerCount would otherwise wrap silently and let the
+        /// size check pass spuriously, leading to out-of-bounds reads in
+        /// the record loop).
+        /// </summary>
+        private static bool TryComputeExpectedLen(ulong headerCount, out int expectedLen)
+        {
+            try
+            {
+                expectedLen = checked(HeaderLength + (int)headerCount * RecordLength);
+                return true;
+            }
+            catch (OverflowException)
+            {
+                expectedLen = 0;
+                return false;
+            }
         }
 
         /// <summary>
@@ -114,7 +150,11 @@ namespace pwiz.OspreySharp.IO
         private static string ScoresPath(string inputPath, string passLabel)
         {
             string stem = Path.GetFileNameWithoutExtension(inputPath) ?? "unknown";
-            string parent = Path.GetDirectoryName(inputPath);
+            // Route through ArtifactPaths so the sidecar follows the scores
+            // parquet into --output-dir (default = the input's own directory).
+            // Every caller -- straight-through writes, resume reads, and the
+            // resume-check iterators -- shares this, so they stay consistent.
+            string parent = ArtifactPaths.ResolveOutputDir(inputPath);
             string filename = string.Format("{0}.{1}.fdr_scores.bin", stem, passLabel);
             return string.IsNullOrEmpty(parent) ? filename : Path.Combine(parent, filename);
         }
@@ -141,13 +181,19 @@ namespace pwiz.OspreySharp.IO
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            // Stage to sibling .tmp file then rename. Avoids partial-file
-            // corruption if the writer is interrupted; not strictly
-            // atomic on overwrite (delete + move), see Write() doc.
-            string tmpPath = path + ".tmp";
-            try
+            // Atomic write via FileSaver: write to a unique sibling
+            // temp file (allocated by Path.GetRandomFileName +
+            // FileStream.CreateNew, so parallel writers retry past
+            // any astronomically-rare name collision) and promote it
+            // to the destination on Commit. On exception, the
+            // using-block disposes FileSaver which deletes the temp
+            // without touching the destination. The FileStream is
+            // disposed in an inner block before Commit so the file is
+            // unlocked when File.Move runs (FileShare.None would
+            // otherwise block the move).
+            using (var saver = new FileSaver(path))
             {
-                using (var fs = new FileStream(tmpPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
                 using (var bw = new BinaryWriter(fs))
                 {
                     // Header
@@ -158,7 +204,7 @@ namespace pwiz.OspreySharp.IO
                     bw.Write((ulong)entries.Count);                   // [16..24]
                     bw.Write(new byte[8]);                            // [24..32] reserved
 
-                    // Body: 52 bytes per entry (entry_id + 6 f64s)
+                    // Body: 60 bytes per entry (entry_id + 7 f64s)
                     foreach (var e in entries)
                     {
                         bw.Write(e.EntryId);                          // [0..4]
@@ -168,17 +214,10 @@ namespace pwiz.OspreySharp.IO
                         bw.Write(e.ExperimentPrecursorQvalue);        // [28..36]
                         bw.Write(e.ExperimentPeptideQvalue);          // [36..44]
                         bw.Write(e.Pep);                              // [44..52]
+                        bw.Write(e.RunProteinQvalue);                 // [52..60]
                     }
                 }
-
-                if (File.Exists(path))
-                    File.Delete(path);
-                File.Move(tmpPath, path);
-            }
-            finally
-            {
-                if (File.Exists(tmpPath))
-                    File.Delete(tmpPath);
+                saver.Commit();
             }
         }
 
@@ -186,11 +225,32 @@ namespace pwiz.OspreySharp.IO
         /// Read per-file FDR scores from <paramref name="path"/> into
         /// <paramref name="entries"/>. Returns true on success, false on
         /// any of: missing file, bad magic, unsupported version, pass-byte
-        /// mismatch against <paramref name="expectedPass"/>, count
-        /// mismatch, or size mismatch. Records are positional, so the
-        /// caller's <paramref name="entries"/> list must already be sized
-        /// to match the FdrEntry sequence the sidecar was written from
-        /// (pre-compaction at the Stage 5 → Stage 6 boundary).
+        /// mismatch against <paramref name="expectedPass"/>, or size
+        /// mismatch (file length doesn't match header count + record
+        /// width).
+        ///
+        /// Records are matched to entries by <c>entry_id</c>, NOT by
+        /// position. This handles two multi-file realities:
+        /// <list type="bullet">
+        /// <item>The 1st-pass sidecar is written PRE-gap-fill (stage 5
+        /// boundary), so its row count is smaller than the reconciled
+        /// parquet's row count after Stage 6 appends gap-fill stubs.
+        /// Gap-fill stubs in <paramref name="entries"/> get no record
+        /// applied — they keep their default (Score=0, q=1) values.</item>
+        /// <item>The 2nd-pass sidecar is written POST-compaction +
+        /// post-rescore + post-gap-fill, so its row count is smaller
+        /// than the full reconciled parquet's row count. Entries not
+        /// in the sidecar get no record applied.</item>
+        /// </list>
+        /// Single-file (or any case where sidecar count == entry count)
+        /// degenerates to position-based loading because the entry_id
+        /// dictionary lookup matches one-to-one. The original strict
+        /// position+entry_id check this method previously enforced was
+        /// hiding the post-compaction / post-gap-fill mismatch on
+        /// multi-file runs (1644-row delta on Stellar 3-file
+        /// stage6_rescored.tsv was rooted in the 1st-pass loader
+        /// rejecting Rust's pre-gap-fill sidecar against the post-gap-
+        /// fill parquet load).
         /// </summary>
         public static bool TryRead(string path, IList<FdrEntry> entries, Pass expectedPass)
         {
@@ -225,26 +285,117 @@ namespace pwiz.OspreySharp.IO
                 return false;
             // bytes 10..16 reserved, ignored
             ulong headerCount = BitConverter.ToUInt64(data, 16);
-            if (headerCount != (ulong)entries.Count)
+            // Reject sidecars whose declared count exceeds physical
+            // record capacity. (headerCount can validly be < entries
+            // count — see comment above on pre-gap-fill / post-
+            // compaction sidecars.) Use checked arithmetic so a
+            // corrupt or malicious sidecar with a huge headerCount
+            // is rejected loudly instead of wrapping int silently.
+            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
                 return false;
-
-            int expectedLen = HeaderLength + entries.Count * RecordLength;
             if (data.Length != expectedLen)
                 return false;
 
+            // Build lookup so position-skewed entries align by entry_id.
+            // Single-file degenerates to a 1:1 map (no perf cost vs the
+            // old positional walk).
+            var byEntryId = new Dictionary<uint, int>(entries.Count);
             for (int i = 0; i < entries.Count; i++)
+                byEntryId[entries[i].EntryId] = i;
+
+            for (int rec = 0; rec < (int)headerCount; rec++)
             {
-                int off = HeaderLength + i * RecordLength;
-                var e = entries[i];
+                int off = HeaderLength + rec * RecordLength;
                 uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
-                if (recordEntryId != e.EntryId)
+                if (!byEntryId.TryGetValue(recordEntryId, out int entryIdx))
+                {
+                    // Sidecar carries an entry the caller's stub list
+                    // doesn't contain. The caller is expected to pass
+                    // a SUPERSET of the sidecar's entries (the post-
+                    // rescore parquet for the 1st-pass sidecar, for
+                    // example) — a record that fails to find its
+                    // entry_id signals the sidecar was written from a
+                    // different parquet (or from a different binary
+                    // version with different entry_id assignment). That
+                    // is corruption, not the gap-fill or post-compaction
+                    // case we tolerate, and must be rejected.
                     return false;
+                }
+                var e = entries[entryIdx];
                 e.Score                       = BitConverter.ToDouble(data, off + 4);
                 e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
                 e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
                 e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
                 e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
                 e.Pep                         = BitConverter.ToDouble(data, off + 44);
+                e.RunProteinQvalue            = BitConverter.ToDouble(data, off + 52);
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Overlay sidecar scores onto <paramref name="entriesByEntryId"/>
+        /// without requiring a parquet stub list. Same validation rules as
+        /// <see cref="TryRead(string,IList{FdrEntry},Pass)"/>, but the
+        /// caller supplies an entry_id-keyed dictionary directly so we
+        /// skip rereading the source parquet just to size-check the
+        /// sidecar. Used by --task MergeNode Stage 7 where the compacted
+        /// entry list already covers every sidecar record we care about.
+        /// </summary>
+        public static bool TryReadOverlay(string path,
+            IDictionary<uint, FdrEntry> entriesByEntryId, Pass expectedPass)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (entriesByEntryId == null) throw new ArgumentNullException(nameof(entriesByEntryId));
+
+            byte[] data;
+            try
+            {
+                data = File.ReadAllBytes(path);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (data.Length < HeaderLength)
+                return false;
+            for (int i = 0; i < Magic.Length; i++)
+            {
+                if (data[i] != Magic[i])
+                    return false;
+            }
+            byte version = data[8];
+            if (version != FormatVersion)
+                return false;
+            byte passByte = data[9];
+            if (passByte != (byte)expectedPass)
+                return false;
+            ulong headerCount = BitConverter.ToUInt64(data, 16);
+            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                return false;
+            if (data.Length != expectedLen)
+                return false;
+
+            for (int rec = 0; rec < (int)headerCount; rec++)
+            {
+                int off = HeaderLength + rec * RecordLength;
+                uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
+                if (!entriesByEntryId.TryGetValue(recordEntryId, out FdrEntry e))
+                {
+                    // Sidecar can carry entries not in the (possibly
+                    // compacted) caller dict — that's expected for
+                    // --task MergeNode where compaction has already
+                    // dropped failing precursors. Skip silently.
+                    continue;
+                }
+                e.Score                       = BitConverter.ToDouble(data, off + 4);
+                e.RunPrecursorQvalue          = BitConverter.ToDouble(data, off + 12);
+                e.RunPeptideQvalue            = BitConverter.ToDouble(data, off + 20);
+                e.ExperimentPrecursorQvalue   = BitConverter.ToDouble(data, off + 28);
+                e.ExperimentPeptideQvalue     = BitConverter.ToDouble(data, off + 36);
+                e.Pep                         = BitConverter.ToDouble(data, off + 44);
+                e.RunProteinQvalue            = BitConverter.ToDouble(data, off + 52);
             }
             return true;
         }

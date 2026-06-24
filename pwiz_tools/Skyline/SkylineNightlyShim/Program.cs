@@ -31,17 +31,13 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using Ionic.Zip;
+using SkylineNightly;
 
 namespace SkylineNightlyShim
 {
     static class Program
     {
-        private const string TEAM_CITY_ZIP_URL =
-            "https://teamcity.labkey.org/guestAuth/repository/download/{0}/.lastFinished/SkylineNightly.zip{1}";
-
         private const string TEAM_CITY_BUILD_TYPE_64_MASTER = "bt209";
-        private const string TEAM_CITY_USER_NAME = "guest";
-        private const string TEAM_CITY_USER_PASSWORD = "guest";
         private const string SKYLINENIGHTLY_ZIP = "SkylineNightly.zip";
 
         static void Log(string what)
@@ -112,16 +108,18 @@ namespace SkylineNightlyShim
         static void Main(string[] args)
         {
 
-            // The current recommendation from MSFT for future-proofing HTTPS https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
-            // is don't specify TLS levels at all, let the OS decide. But we worry that this will mess up Win7 and Win8 installs, so we continue to specify explicitly
+            // Refuse to launch SkylineNightly if the test machine isn't configured with
+            // a TeamCity token — without one, the nightly run can't fetch SkylineTester
+            // either, and a clear message from the shim beats an obscure failure later.
+            string teamCityToken;
             try
             {
-                var Tls13 = (SecurityProtocolType)12288; // From decompiled SecurityProtocolType - compiler has no definition for some reason
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12 | Tls13;
+                teamCityToken = TeamCityNightlyAuth.GetRequiredToken();
             }
-            catch (NotSupportedException)
+            catch (IOException e)
             {
-                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12; // Probably an older Windows Server
+                Log(e.Message);
+                return;
             }
 
             // Do our work in the SkylineNightly directory
@@ -143,8 +141,8 @@ namespace SkylineNightlyShim
                 using (var client = new WebClient())
                 {
                     // Attempt to update SkylineNightly.exe
-                    client.Credentials = new NetworkCredential(TEAM_CITY_USER_NAME, TEAM_CITY_USER_PASSWORD);
-                    string zipFileLink = string.Format(TEAM_CITY_ZIP_URL, TEAM_CITY_BUILD_TYPE_64_MASTER, "?branch=master");
+                    TeamCityNightlyAuth.ConfigureClient(client, teamCityToken);
+                    string zipFileLink = TeamCityNightlyAuth.GetArtifactUrl(TEAM_CITY_BUILD_TYPE_64_MASTER, SKYLINENIGHTLY_ZIP, "?branch=master", false);
                     var fileName = Path.Combine(nightlyDirectory ?? throw new InvalidOperationException(), SKYLINENIGHTLY_ZIP);
                     Log("Update " + nightlyDirectory + " with " + zipFileLink);
                     client.DownloadFile(zipFileLink, fileName);

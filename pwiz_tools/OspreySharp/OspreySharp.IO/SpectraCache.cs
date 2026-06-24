@@ -37,6 +37,11 @@ namespace pwiz.OspreySharp.IO
     /// Format (little-endian):
     /// [magic: 8 bytes "OSPRSPC\0"]
     /// [version: uint32]
+    /// [source_size: uint64]   source file length, or 0 when unknown
+    /// [source_mtime: int64]   source last-write time, Unix milliseconds UTC,
+    ///                         or 0 when unknown. Unix-ms so OspreySharp and
+    ///                         Rust osprey compute identical values for the same
+    ///                         file and can share one cache (cross-impl gate).
     /// [n_ms2: uint32]
     /// [n_ms1: uint32]
     /// For each MS2 spectrum:
@@ -53,17 +58,29 @@ namespace pwiz.OspreySharp.IO
             (byte)'O', (byte)'S', (byte)'P', (byte)'R',
             (byte)'S', (byte)'P', (byte)'C', 0
         };
-        private const uint VERSION = 1;
+        // VERSION 2 (2026-05-09): mzML load now sorts non-monotonic centroids
+        // before caching, so caches written by VERSION 1 may contain unsorted
+        // peaks that produce undefined-behavior divergence in fragment matching.
+        // Old caches are invalidated on this version bump so the fresh load
+        // path (which sorts) re-populates them.
+        // VERSION 3 (2026-06-09): header now carries the source file's size +
+        // last-write-time (Unix ms) so a cache that lives apart from its data
+        // file (--cache-dir / --output-dir) is rejected when the source changes.
+        // Old caches re-populate on this bump.
+        private const uint VERSION = 3;
 
         /// <summary>
         /// Save spectra to a binary cache file.
         /// </summary>
-        public static void SaveSpectraCache(string path, List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra)
+        public static void SaveSpectraCache(string path, List<Spectrum> ms2Spectra, List<MS1Spectrum> ms1Spectra,
+            string sourcePath = null)
         {
             if (ms2Spectra == null)
                 ms2Spectra = new List<Spectrum>();
             if (ms1Spectra == null)
                 ms1Spectra = new List<MS1Spectrum>();
+
+            ComputeSourceFingerprint(sourcePath, out long sourceSize, out long sourceMtimeMs);
 
             using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
             using (var w = new BinaryWriter(fs))
@@ -71,6 +88,8 @@ namespace pwiz.OspreySharp.IO
                 // Header
                 w.Write(MAGIC);
                 w.Write(VERSION);
+                w.Write((ulong)sourceSize);
+                w.Write(sourceMtimeMs);
                 w.Write((uint)ms2Spectra.Count);
                 w.Write((uint)ms1Spectra.Count);
 
@@ -106,7 +125,7 @@ namespace pwiz.OspreySharp.IO
         /// Load spectra from a binary cache file.
         /// Returns null if the file does not exist or has invalid magic/version.
         /// </summary>
-        public static SpectraCacheResult LoadSpectraCache(string path)
+        public static SpectraCacheResult LoadSpectraCache(string path, string sourcePath = null)
         {
             if (!File.Exists(path))
                 return null;
@@ -128,6 +147,20 @@ namespace pwiz.OspreySharp.IO
                 uint version = r.ReadUInt32();
                 if (version != VERSION)
                     return null;
+
+                // Validate source fingerprint: reject a cache whose data file
+                // changed since it was written. Skipped when the cache recorded
+                // no fingerprint (storedSize == 0) or the source is unavailable
+                // for comparison (e.g. a resume run whose mzML is not beside the
+                // cache) -- a within-run cache is trusted in that case.
+                ulong storedSize = r.ReadUInt64();
+                long storedMtimeMs = r.ReadInt64();
+                if (storedSize != 0 && !string.IsNullOrEmpty(sourcePath))
+                {
+                    ComputeSourceFingerprint(sourcePath, out long actualSize, out long actualMtimeMs);
+                    if (actualSize != 0 && ((ulong)actualSize != storedSize || actualMtimeMs != storedMtimeMs))
+                        return null;
+                }
 
                 uint nMs2 = r.ReadUInt32();
                 uint nMs1 = r.ReadUInt32();
@@ -172,10 +205,41 @@ namespace pwiz.OspreySharp.IO
         /// </summary>
         public static string GetCachePath(string inputFile)
         {
-            return Path.ChangeExtension(inputFile, "spectra.bin");
+            // Preserve the historical filename ("{stem}.spectra.bin", the same
+            // result Path.ChangeExtension produced); only the directory is
+            // redirected by ArtifactPaths (beside the data file by default, else
+            // the configured cache/output dir).
+            string fileName = Path.GetFileNameWithoutExtension(inputFile) + ".spectra.bin";
+            return Path.Combine(ArtifactPaths.ResolveCacheDir(inputFile), fileName);
         }
 
         #region Private helpers
+
+        // Source file fingerprint: length + last-write-time as Unix milliseconds
+        // UTC. Unix-ms (not .NET ticks) so OspreySharp and Rust osprey derive the
+        // same value for the same file. Returns (0, 0) when the source is null,
+        // missing, or cannot be stat'd, which the load path treats as "no
+        // fingerprint -- trust the cache".
+        private static void ComputeSourceFingerprint(string sourcePath, out long size, out long mtimeMs)
+        {
+            size = 0;
+            mtimeMs = 0;
+            if (string.IsNullOrEmpty(sourcePath))
+                return;
+            try
+            {
+                var fi = new FileInfo(sourcePath);
+                if (!fi.Exists)
+                    return;
+                size = fi.Length;
+                mtimeMs = new DateTimeOffset(fi.LastWriteTimeUtc).ToUnixTimeMilliseconds();
+            }
+            catch (Exception)
+            {
+                size = 0;
+                mtimeMs = 0;
+            }
+        }
 
         private static void WriteDoubleArray(BinaryWriter w, double[] values)
         {
