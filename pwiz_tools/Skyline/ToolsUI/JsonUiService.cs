@@ -475,47 +475,32 @@ namespace pwiz.Skyline.ToolsUI
             new FormElement(Program.MainWindow, CancellationToken.None).InvokeMenuItem(menuPath);
         }
 
-        // Builds the right-click context menu for owner the way a right-click would (so items added on
-        // demand are present), for ContextMenuElement to list or invoke. The Targets-tree menu and a
-        // control's own ContextMenuStrip are owned elsewhere (do not dispose); the grid-cell and graph
-        // menus are freshly built. Runs on the UI thread.
-        internal static ContextMenuStrip BuildContextMenu(UiElement owner)
+        // Fires a context menu's Opening (so items added on demand are present) and returns it, for a
+        // ControlElement that surfaces an already-built menu (its own ContextMenuStrip, the Targets-tree
+        // menu). The menu is owned elsewhere -- do not dispose it. Runs on the UI thread.
+        internal static ContextMenuStrip OpenContextMenu(ContextMenuStrip menu)
         {
-            var control = (owner as ControlElement)?.Control;
-            // The Targets tree's node menu is shown manually, so it lives on the main window. Its Opening
-            // is fired so item enablement reflects the current selection (select the node first).
-            if (control is SequenceTree)
-            {
-                var treeMenu = Program.MainWindow.ContextMenuTreeNode;
-                RaiseProtectedHandler(treeMenu, @"OnOpening", new CancelEventArgs());
-                return treeMenu;
-            }
-            // A grid's menu is the one for its current cell (move there first with set_current_cell_address).
-            if (owner is GridElement gridElement)
-                return BuildGridCellContextMenu(gridElement.DataGridView);
-            // A graph builds a fresh menu through its ContextMenuBuilder. The graph can be addressed as
-            // its ZedGraphControl, or -- since a graph form is just its graph -- as the form itself.
+            RaiseProtectedHandler(menu, @"OnOpening", new CancelEventArgs());
+            return menu;
+        }
+
+        // Builds a fresh context menu for a graph through its ContextMenuBuilder, or returns null when the
+        // control is not a graph. The graph can be addressed as its ZedGraphControl, or -- since a graph form
+        // is just its graph -- as the form itself. Runs on the UI thread.
+        internal static ContextMenuStrip TryBuildGraphContextMenu(Control control)
+        {
             var zedGraph = control as ZedGraphControl
                 ?? (control as DockableFormEx != null ? TryGetZedGraphControl((DockableFormEx) control) : null);
-            if (zedGraph != null)
-            {
-                var graphMenu = new ContextMenuStrip();
-                PopulateGraphContextMenu(zedGraph, graphMenu);
-                return graphMenu;
-            }
-            // Otherwise the control's own ContextMenuStrip, if it has one.
-            if (control?.ContextMenuStrip != null)
-            {
-                RaiseProtectedHandler(control.ContextMenuStrip, @"OnOpening", new CancelEventArgs());
-                return control.ContextMenuStrip;
-            }
-            throw new ArgumentException(LlmInstruction.Format(
-                @"{0} has no context menu.", owner.Label ?? NullIfEmpty(owner.Name) ?? owner.ElementType.Name));
+            if (zedGraph == null)
+                return null;
+            var graphMenu = new ContextMenuStrip();
+            PopulateGraphContextMenu(zedGraph, graphMenu);
+            return graphMenu;
         }
 
         // Raises the grid's CellContextMenuStripNeeded for its current cell (as a right-click there does)
         // to obtain the menu, then fires its Opening so on-demand items are built.
-        private static ContextMenuStrip BuildGridCellContextMenu(DataGridView dataGridView)
+        internal static ContextMenuStrip BuildGridCellContextMenu(DataGridView dataGridView)
         {
             var cell = dataGridView.CurrentCell;
             if (cell == null)

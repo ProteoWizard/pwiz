@@ -669,6 +669,24 @@ namespace pwiz.Skyline.ToolsUI
                 return new ContextMenuElement(this);
             return base.GetChild(path);
         }
+
+        /// <summary>Builds this control's right-click context menu the way a right-click would (so items added
+        /// on demand are present), for <see cref="ContextMenuElement"/> to list or invoke. The default is the
+        /// control's own <see cref="System.Windows.Forms.Control.ContextMenuStrip"/> (a graph builds a fresh
+        /// menu); a grid and the Targets tree, whose menus are built/owned elsewhere, override this. Runs on
+        /// the UI thread.</summary>
+        public virtual ContextMenuStrip BuildContextMenu()
+        {
+            // A graph (this control is a ZedGraphControl, or a graph form is just its graph) builds a fresh menu.
+            var graphMenu = JsonUiService.TryBuildGraphContextMenu(Control);
+            if (graphMenu != null)
+                return graphMenu;
+            // Otherwise the control's own ContextMenuStrip, with its Opening raised so on-demand items appear.
+            if (Control.ContextMenuStrip != null)
+                return JsonUiService.OpenContextMenu(Control.ContextMenuStrip);
+            throw new ArgumentException(LlmInstruction.Format(
+                @"{0} has no context menu.", Label ?? JsonUiService.NullIfEmpty(Name) ?? ElementType.Name));
+        }
     }
 
     /// <summary>Base for an element backed by a strongly-typed control, so subclasses use the control as
@@ -984,6 +1002,14 @@ namespace pwiz.Skyline.ToolsUI
         public TreeViewElement(TreeView control) : base(control) { }
         public void Expand(object path) => JsonUiService.ResolveTreePath(Control, path).Expand();
         public void Collapse(object path) => JsonUiService.ResolveTreePath(Control, path).Collapse();
+
+        // The Targets tree's node menu is shown manually, so it lives on the main window rather than on the
+        // tree's own ContextMenuStrip; raise its Opening so item enablement reflects the current selection
+        // (select the node first). Any other TreeView falls back to the default.
+        public override ContextMenuStrip BuildContextMenu() =>
+            Control is SequenceTree
+                ? JsonUiService.OpenContextMenu(Program.MainWindow.ContextMenuTreeNode)
+                : base.BuildContextMenu();
     }
 
     /// <summary>The owner-drawn ListBox on the Pick Children pop-up. It is a plain ListBox whose checkbox is
@@ -1303,6 +1329,11 @@ namespace pwiz.Skyline.ToolsUI
         // visible-column index, row is the row index (the same indices GetGridText's columns/rows use).
         public void SetCurrentCellAddress(int column, int row) =>
             JsonUiService.SetCurrentGridCell(_dataGridView, column, row);
+
+        // A grid's menu is the one for its current cell (move there first with SetCurrentCellAddress), built
+        // by raising the cell's CellContextMenuStripNeeded -- not the grid's own ContextMenuStrip.
+        public override ContextMenuStrip BuildContextMenu() =>
+            JsonUiService.BuildGridCellContextMenu(_dataGridView);
     }
 
     /// <summary>A data-bound grid (a <see cref="BoundDataGridView"/>) -- its rows are a BindingListSource,
@@ -1349,7 +1380,7 @@ namespace pwiz.Skyline.ToolsUI
         public override bool IsEnabled => _owner.IsEnabled;
         public override bool IsVisible => _owner.IsVisible;
         public override IEnumerable<UiElement> Children =>
-            JsonUiService.BuildContextMenu(_owner).Items.Cast<ToolStripItem>()
+            _owner.BuildContextMenu().Items.Cast<ToolStripItem>()
                 .Select(item => (UiElement) new ToolStripItemElement(item, _owner.FormElement));
     }
 
