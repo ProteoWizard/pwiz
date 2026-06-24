@@ -108,13 +108,105 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The element's current value, for a value control (else null) -- informational.</summary>
         public virtual string Value => null;
 
+        /// <summary>Finds the one element this verb's <paramref name="text"/> names that supports
+        /// <paramref name="action"/>: the single rule the by-text verbs (ClickFormButton, SetFormValue,
+        /// GetFormValue, and the grid verbs) share for deciding which control a piece of text refers to.
+        /// The search is the same recursive walk the form enumeration uses -- so a control nested in a
+        /// UserControl (a grid inside a DataboundGridControl) is reached -- filtered to the elements that
+        /// support the action. An exact (case- and symbol-sensitive) Label match is preferred over a loose
+        /// one, and within a tier an interactable (visible + enabled) element wins, so a hidden duplicate --
+        /// the same field on an unselected, flattened tab -- never shadows the one the user sees. An empty
+        /// <paramref name="text"/> means "the single element that supports the action". Throws an LLM-facing
+        /// error when nothing (or, for an empty text, more than one thing) matches.</summary>
+        public UiElement FindElement(string text, UiAction action)
+        {
+            var candidates = SelfAndDescendants().Where(element => element.SupportsAction(action)).ToList();
+            if (string.IsNullOrEmpty(text))
+            {
+                if (candidates.Count == 0)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Nothing here supports the action '{0}'.", UiActions.ToName(action)));
+                if (candidates.Count == 1)
+                    return candidates[0];
+                // Several support it: take the single interactable (visible + enabled) one, so a hidden
+                // sibling never makes "the form's single grid/control" ambiguous -- e.g. the Document Grid's
+                // DataboundGridControl hosts a bound grid AND a collapsed replicate-pivot grid; only the
+                // bound one is visible. If more than one is still interactable, the caller must name one.
+                var interactable = candidates.Where(IsInteractable).ToList();
+                if (interactable.Count == 1)
+                    return interactable[0];
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"More than one control supports the action '{0}'; pass a label or name to choose one (see skyline_get_controls).",
+                    UiActions.ToName(action)));
+            }
+            return BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false)
+                ?? throw new ArgumentException(LlmInstruction.Format(
+                    @"No control matching '{0}' supports the action '{1}'. Use skyline_get_controls to list the controls.",
+                    text, UiActions.ToName(action)));
+        }
+
+        // The best of the candidates whose text matches at the given strictness: prefer an interactable
+        // (visible + enabled) one so a hidden duplicate never shadows the control the user sees. Returns
+        // null when none matches at this strictness (the caller then falls back to a looser match).
+        private static UiElement BestMatch(IEnumerable<UiElement> candidates, string text, bool strict)
+        {
+            UiElement best = null;
+            foreach (var element in candidates)
+            {
+                if (!element.MatchesText(text, strict))
+                    continue;
+                if (best == null || (!IsInteractable(best) && IsInteractable(element)))
+                    best = element;
+            }
+            return best;
+        }
+
+        private static bool IsInteractable(UiElement element) => element.IsVisible && element.IsEnabled;
+
+        /// <summary>Whether this element's visible text identifies it to the requested <paramref name="text"/>:
+        /// the centralized text match used both to resolve a path segment (<see cref="GetChild"/>) and to find
+        /// a control by a verb's text (<see cref="FindElement"/>). Strict requires the Label to match exactly
+        /// (case- and symbol-sensitive); loose ignores case and every non-alphanumeric symbol -- so "Name"
+        /// matches a "Name:" label and "Next" a "Next &gt;" button -- but only when the requested text carries
+        /// no symbol of its own (a caller who typed a ':' or '&gt;' is taken to mean it exactly). An element
+        /// with no Label (a grid, a spacer) matches nothing here; a grid overrides this to match its control
+        /// name, the one place the connector matches on a name rather than on visible text.</summary>
+        public virtual bool MatchesText(string text, bool strict)
+        {
+            var label = Label;
+            if (label == null || text == null)
+                return false;
+            if (strict)
+                return string.Equals(label, text, StringComparison.Ordinal);
+            if (HasSymbol(text))
+                return false;
+            return string.Equals(StripToAlphanumeric(label), StripToAlphanumeric(text),
+                StringComparison.CurrentCultureIgnoreCase);
+        }
+
+        /// <summary>Whether this element is of the named type -- its <see cref="ElementType"/> or any base
+        /// type up to (but not including) Control, so "ListView" matches a ColumnListView and "TreeView" an
+        /// AvailableFieldsTree. Used to resolve a path segment's Type and to list the children of a Type
+        /// (<see cref="GetChildren(string)"/>).</summary>
+        public virtual bool MatchesType(string typeName)
+        {
+            if (string.IsNullOrEmpty(typeName))
+                return false;
+            for (var type = ElementType; type != null && type != typeof(Control); type = type.BaseType)
+                if (string.Equals(type.Name, typeName, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            return false;
+        }
+
+        /// <summary>This element's children of the named type (see <see cref="MatchesType"/>), in child
+        /// order -- the candidates a path segment's Type (optionally pinned by Index) selects from.</summary>
+        public virtual IEnumerable<UiElement> GetChildren(string typeName)
+        {
+            return Children.Where(child => child.MatchesType(typeName));
+        }
+
         /// <summary>The elements nested inside this one, for the recursive form walk.</summary>
         public virtual IEnumerable<UiElement> Children => Enumerable.Empty<UiElement>();
-
-        /// <summary>True if this element is a control a caller acts on (a button, field, list, ...) rather
-        /// than a menu/list item or other pseudo-element. GetControls lists controls and descends through
-        /// them; it does not list or descend into the others.</summary>
-        public virtual bool IsControl => false;
 
         /// <summary>This element and every element under it, depth-first.</summary>
         public IEnumerable<UiElement> SelfAndDescendants()
@@ -124,11 +216,6 @@ namespace pwiz.Skyline.ToolsUI
             foreach (var descendant in child.SelfAndDescendants())
                 yield return descendant;
         }
-
-        /// <summary>True if this element supports an action beyond the universal get_actions/get_children
-        /// -- i.e. there is something a user can do with it. Used to filter GetControls.</summary>
-        public bool HasCapability =>
-            SupportedActions.Any(action => action != UiAction.GetActions && action != UiAction.GetChildren);
 
         /// <summary>Whether this element supports the given action. The base supports only the universal
         /// GetActions and GetChildren; each kind of element overrides this to add the actions it can do.</summary>
@@ -178,60 +265,79 @@ namespace pwiz.Skyline.ToolsUI
         /// this element itself; Type "ContextMenu" is this control's right-click menu; an Index (which
         /// requires a Type) pins the index-th child of that exact Type; otherwise the child is matched by
         /// Text and/or Type.</summary>
-        public UiElement GetChild(UiElementPath path)
+        public virtual UiElement GetChild(UiElementPath path)
         {
-            // Type "ContextMenu" addresses this control's right-click menu (never one of its real children).
-            if (string.Equals(path.Type, @"ContextMenu", StringComparison.OrdinalIgnoreCase))
-                return new ContextMenuElement(this);
-            // No selector -> this element itself (get_children on a form lists its controls; on a control
-            // walks into it).
-            if (path.Text == null && path.Index == null && path.Type == null)
+            // A segment with no selector at all is this element itself (get_children on a form lists its
+            // controls; on a control walks into it).
+            if (string.IsNullOrEmpty(path.Type) && path.Text == null && !path.Index.HasValue)
                 return this;
 
-            var children = Children.ToList();
-
-            // An Index is the position among the children of its exact Type (so it is stable as other kinds
-            // of control come and go), and is meaningless without that Type. Text (if set) must also match.
-            if (path.Index.HasValue)
+            List<UiElement> candidates;
+            if (!string.IsNullOrEmpty(path.Type))
             {
-                if (path.Type == null)
+                candidates = GetChildren(path.Type).ToList();
+            }
+            else
+            {
+                // An Index is the position among the children of an exact Type, so it is meaningless
+                // without one; Text (alone) searches all the children.
+                if (path.Index.HasValue)
                     throw new ArgumentException(new LlmInstruction(
                         @"A path Index requires a Type: it is the index among the children of that exact Type."));
-                var ofType = children
-                    .Where(child => string.Equals(child.ElementType.Name, path.Type, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
-                if (path.Index.Value < 0 || path.Index.Value >= ofType.Count)
+                candidates = Children.ToList();
+            }
+
+            // An Index pins the index-th child of that Type; Text, if also set, must match it.
+            if (path.Index.HasValue)
+            {
+                if (path.Index < 0 || path.Index >= candidates.Count)
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"No {0} at index {1}; the parent has {2} of that type.", path.Type, path.Index.Value, ofType.Count));
-                var indexed = ofType[path.Index.Value];
-                if (path.Text != null && JsonUiService.MatchQuality(indexed.Label, path.Text) == JsonUiService.ControlMatchQuality.None)
+                        @"No {0} at index {1}; the parent has {2} of that type.", path.Type, path.Index.Value, candidates.Count));
+                var indexed = candidates[path.Index.Value];
+                if (path.Text != null && !indexed.MatchesText(path.Text, false))
                     throw new ArgumentException(LlmInstruction.Format(
                         @"The {0} at index {1} does not match the Text '{2}' in the path.", path.Type, path.Index.Value, path.Text));
                 return indexed;
             }
 
-            // No Index -> search the children by Text/Type, preferring the best Text match, then an
-            // interactable (visible+enabled) one.
-            UiElement best = null;
-            var bestQuality = JsonUiService.ControlMatchQuality.None;
-            var bestInteractable = false;
-            foreach (var element in children)
-            {
-                if (!JsonUiService.MatchesPath(element, path, out var quality))
-                    continue;
-                var interactable = element.IsVisible && element.IsEnabled;
-                if (best == null || quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
-                {
-                    best = element;
-                    bestQuality = quality;
-                    bestInteractable = interactable;
-                }
-            }
-            if (best == null)
-                throw new ArgumentException(new LlmInstruction(
-                    @"No control found matching the path. Use skyline_get_controls to list the controls."));
-            return best;
+            // Text (if set) selects by visible text -- an exact match preferred over a loose one. Otherwise
+            // (Type only) the children of that Type. Either way, prefer an interactable (visible + enabled)
+            // child over a hidden duplicate -- e.g. the visible bound grid over the collapsed pivot grid.
+            UiElement match;
+            if (path.Text != null)
+                match = PreferInteractable(candidates.Where(child => child.MatchesText(path.Text, true)))
+                        ?? PreferInteractable(candidates.Where(child => child.MatchesText(path.Text, false)));
+            else
+                match = PreferInteractable(candidates);
+            return match ?? throw new ArgumentException(new LlmInstruction(
+                @"No control found matching the path. Use skyline_get_controls to list the controls."));
         }
+
+        // The first interactable (visible + enabled) element, or -- when none is interactable -- the first
+        // one (so a legitimately disabled target still resolves). Null only for an empty sequence. Lets a
+        // Type/Text match prefer the control the user sees over a hidden duplicate.
+        private static UiElement PreferInteractable(IEnumerable<UiElement> elements)
+        {
+            UiElement first = null;
+            foreach (var element in elements)
+            {
+                if (IsInteractable(element))
+                    return element;
+                if (first == null)
+                    first = element;
+            }
+            return first;
+        }
+
+        protected static string StripToAlphanumeric(string input)
+        {
+            return new string((input ?? string.Empty).Where(char.IsLetterOrDigit).ToArray());
+        }
+
+        // True if text has a symbol of its own -- a character that is neither a letter, a digit, nor
+        // whitespace (':', '>', '&', '.') -- which a loose text match honors by declining to strip it away.
+        protected static bool HasSymbol(string text) =>
+            !string.IsNullOrEmpty(text) && text.Any(c => !char.IsLetterOrDigit(c) && !char.IsWhiteSpace(c));
 
         /// <summary>The parentless path segment that addresses this element as the <paramref name="typeIndex"/>-th
         /// child of its parent among the siblings of this element's Type (its Text, that Index, and its Type).
@@ -248,10 +354,25 @@ namespace pwiz.Skyline.ToolsUI
         protected ControlElement(Control control) { Control = control; }
 
         public Control Control { get; }
-        public override bool IsControl => true;
         public override string Name => Control.Name;
         public override Type ElementType => Control.GetType();
-        public override bool IsEnabled => Control.Enabled;
+
+        public override bool IsEnabled
+        {
+            get
+            {
+                if (!IsVisible)
+                {
+                    return false;
+                }
+                if (true != Control.FindForm()?.Enabled)
+                {
+                    return false;
+                }
+
+                return Control.Enabled;
+            }
+        }
         public override bool IsVisible => Control.Visible;
 
         // Most controls have no children -- a button, a text box, a list. Only a ContainerElement (a Form
@@ -298,6 +419,14 @@ namespace pwiz.Skyline.ToolsUI
                 var previous = Control.FindForm()?.GetNextControl(Control, false);
                 return previous is System.Windows.Forms.Label label ? label.Text : null;
             }
+        }
+
+        public override UiElement GetChild(UiElementPath path)
+        {
+            // Type "ContextMenu" addresses this control's right-click menu (never one of its real children).
+            if (string.Equals(path.Type, ContextMenuElement.TypeName, StringComparison.OrdinalIgnoreCase))
+                return new ContextMenuElement(this);
+            return base.GetChild(path);
         }
     }
 
@@ -868,6 +997,12 @@ namespace pwiz.Skyline.ToolsUI
         public GridElement(DataGridView dataGridView) : base(dataGridView) { _dataGridView = dataGridView; }
         public DataGridView DataGridView => _dataGridView;
 
+        // A grid carries no caption, so it is addressed by its control Name -- the one place the connector
+        // matches on a name rather than on visible text (an empty name picks the form's single grid, handled
+        // by FindElement). The name match is the same whether strict or loose.
+        public override bool MatchesText(string text, bool strict) =>
+            string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase);
+
         // A grid is a leaf in the walk (not a ContainerElement): its content is read/written through the
         // grid actions, not by walking into child controls. The plain path reads/writes cells directly.
         public virtual string GetGridText(CancellationToken cancellationToken) =>
@@ -937,6 +1072,7 @@ namespace pwiz.Skyline.ToolsUI
     /// for the current cell (move there first with set_current_cell_address).</summary>
     internal sealed class ContextMenuElement : UiElement
     {
+        public const string TypeName = "ContextMenu";
         private readonly UiElement _owner;
         public ContextMenuElement(UiElement owner) { _owner = owner; }
         public override string Name => string.Empty;

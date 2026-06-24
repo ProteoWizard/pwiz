@@ -496,13 +496,6 @@ namespace pwiz.Skyline.ToolsUI
             return menuStrip;
         }
 
-        // The DataGridView of the grid named gridName on the form (its DataboundGridControl's inner
-        // grid, or a standalone DataGridView), or the form's single grid when gridName is empty.
-        private static DataGridView GetGridView(Form form, string gridName)
-        {
-            return FindGrid(form, gridName).DataGridView;
-        }
-
         // Parses a grid-cell locator "name[column,row]" (the name is optional -> the form's single
         // grid). Returns false for a plain control id (no "[col,row]" suffix). column/row are
         // zero-based indices into the grid's visible columns and its rows; row may be -1 for a header.
@@ -586,7 +579,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 var form = FindFormById(formId);
                 VerifyFormInteractable(form);
-                var clickable = FindElement(form, button, e => e.SupportsAction(UiAction.Click), @"clickable control");
+                var clickable = UiElementFactory.For(form).FindElement(button, UiAction.Click);
                 VerifyInteractable(clickable);
                 return clickable;
             });
@@ -733,17 +726,21 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     var form = FindFormById(formId);
 
-                    // controlId can name a grid cell ("grid[column,row]") -- set that cell's value.
+                    // controlId can name a grid cell ("grid[column,row]") -- set that cell's value: move the
+                    // current cell there and paste, reusing the grid path so a DataboundGridControl stays in
+                    // sync. The grid is resolved through the same finder as every other control.
                     if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
                     {
-                        VerifyInteractable(GetGridView(form, gridName));
-                        SetGridCellValue(form, gridName, column, row, value);
+                        var gridElement = FindGrid(form, gridName);
+                        VerifyInteractable(gridElement);
+                        gridElement.SetCurrentCellAddress(column, row);
+                        gridElement.SetGridText(value);
                         return;
                     }
                     // A field is matched by its own Label (its caption, or the label that names a
                     // caption-less box -- see UiElement.Label), so a label never has to be matched and
                     // resolved forward to its field.
-                    var element = FindElement(form, controlId, e => e.SupportsAction(UiAction.SetValue), @"settable control");
+                    var element = UiElementFactory.For(form).FindElement(controlId, UiAction.SetValue);
                     VerifyInteractable(element);
                     element.PerformAction(UiAction.SetValue, value, CancellationToken.None);
                 });
@@ -759,8 +756,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             ValidateFormIdFormat(formId);
             return InvokeOnUiThread(() =>
-                FindElement(FindFormById(formId), controlId,
-                    e => e.SupportsAction(UiAction.GetValue), @"control with a value").Value);
+                UiElementFactory.For(FindFormById(formId)).FindElement(controlId, UiAction.GetValue).Value);
         }
 
         /// <summary>
@@ -804,66 +800,17 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        // A grid the connector can drive: a DataboundGridControl (driven through its rich paste/copy
-        // path, which keeps the bound document in sync) or a standalone DataGridView (driven by direct
-        // cell access, the way a user types into the cells).
-        private class GridTarget
-        {
-            public DataboundGridControl Databound;
-            public DataGridView DataGridView;
-            public string Name;
-        }
-
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the
-        // single grid on the form. Throws if there is no grid, or more than one and no name was given.
+        // single grid on the form, resolved through the shared element finder. A grid supports the grid
+        // actions and is matched by its control name (it has no caption -- see GridElement.MatchesText), so
+        // FindElement picks it out of the form's controls just like any other control. The factory wraps a
+        // bound inner grid (a DataboundGridControl's BoundDataGridView) as a BoundGridElement with the rich
+        // copy/paste path, and a standalone DataGridView as a plain GridElement; the DataboundGridControl
+        // itself is a transparent container the walk descends through to reach the inner grid.
         private static GridElement FindGrid(Form form, string controlId)
         {
-            var targets = EnumerateGridTargets(form).ToList();
-            GridTarget target;
-            if (!string.IsNullOrEmpty(controlId))
-            {
-                // A grid carries no visible caption, so on a form with several grids its control name is
-                // the only stable way to choose one. This is the lone place the connector matches by
-                // name (MatchQuality otherwise matches visible text only); pass an empty controlId when
-                // the form has a single grid.
-                target = targets.FirstOrDefault(t =>
-                    string.Equals(t.Name, controlId, StringComparison.OrdinalIgnoreCase));
-                if (target == null)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Grid not found on form {0}: {1}. Pass an empty controlId for the form's single grid.",
-                        GetFormId(form), controlId));
-            }
-            else if (targets.Count == 0)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"No grid found on form {0}.", GetFormId(form)));
-            else if (targets.Count > 1)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Form {0} has more than one grid; pass a controlId to choose one.", GetFormId(form)));
-            else
-                target = targets[0];
-            // The factory wraps a bound inner grid as a BoundGridElement (rich copy/paste) and a standalone
-            // DataGridView as a plain GridElement.
-            var dataGridView = target.Databound != null ? target.Databound.DataGridView : target.DataGridView;
-            return (GridElement) UiElementFactory.For(dataGridView);
-        }
-
-        // The grids on a form: each DataboundGridControl, plus each DataGridView that is not inside a
-        // DataboundGridControl (those inner grids are driven through the DataboundGridControl instead).
-        private static IEnumerable<GridTarget> EnumerateGridTargets(Form form)
-        {
-            foreach (var databound in EnumerateControls(form).OfType<DataboundGridControl>())
-                yield return new GridTarget { Databound = databound, Name = databound.Name };
-            foreach (var dataGridView in EnumerateControls(form).OfType<DataGridView>())
-                if (!HasDataboundAncestor(dataGridView))
-                    yield return new GridTarget { DataGridView = dataGridView, Name = dataGridView.Name };
-        }
-
-        private static bool HasDataboundAncestor(Control control)
-        {
-            for (var parent = control.Parent; parent != null; parent = parent.Parent)
-                if (parent is DataboundGridControl)
-                    return true;
-            return false;
+            return (GridElement) UiElementFactory.For(form)
+                .FindElement(controlId ?? string.Empty, UiAction.SetGridText);
         }
 
         // Pastes tab/newline-separated text into a plain DataGridView by setting cell values from the
@@ -900,16 +847,6 @@ namespace pwiz.Skyline.ToolsUI
                     dataGridView.EndEdit();
                 }
             }
-        }
-
-        // Sets a single grid cell (column/row are zero-based indices into the grid's visible columns and
-        // its rows) to value: move the current cell there, then paste, reusing the grid paste path so a
-        // DataboundGridControl stays in sync.
-        private static void SetGridCellValue(Form form, string gridName, int column, int row, string value)
-        {
-            var grid = FindGrid(form, gridName);
-            grid.SetCurrentCellAddress(column, row);
-            grid.SetGridText(value);
         }
 
         // The grid's current cell as a point (X = visible-column index, Y = row index), or (0,0) when the
@@ -1263,25 +1200,6 @@ namespace pwiz.Skyline.ToolsUI
                 return rootResolver(path.Text);
             }
             return ResolvePath(path.Parent, rootResolver).GetChild(path);
-        }
-
-        // True if every set property (Text, Type) of the path segment matches the element; quality ranks
-        // Text matches (an exact label beats a symbol-stripped one) so the closest match wins among several.
-        // Index is resolved by the caller (it is a position, not a property of the element).
-        internal static bool MatchesPath(UiElement element, UiElementPath path, out ControlMatchQuality quality)
-        {
-            quality = ControlMatchQuality.None;
-            if (path.Type != null && !MatchesControlType(element.ElementType, path.Type))
-                return false;
-            if (path.Text != null)
-            {
-                quality = MatchQuality(element.Label, path.Text);
-                if (quality == ControlMatchQuality.None)
-                    return false;
-            }
-            else
-                quality = ControlMatchQuality.Type; // a type-only (or index-only) match is the weakest
-            return true;
         }
 
         // Level 3: Complete UI operations - Graphs
@@ -1760,56 +1678,18 @@ namespace pwiz.Skyline.ToolsUI
                 formId));
         }
 
-        // Finds the one element on the form with the requested capability that the caller asked for: the
-        // best match of key against each candidate's visible Label (or, failing that, its type), the same
-        // ranking FindBestMatch uses (best quality, then prefer a visible+enabled element). An empty key
-        // means "the form's single element with this capability". Throws if none (or, for an empty key,
-        // more than one) matches. This is the single finder the action verbs share -- see GetControls for
-        // what a caller can discover. Must run on the UI thread.
-        private static UiElement FindElement(Form form, string key, Func<UiElement, bool> hasCapability, string capabilityNoun)
-        {
-            var candidates = UiElementFactory.For(form).SelfAndDescendants().Where(hasCapability).ToList();
-            if (string.IsNullOrEmpty(key))
-            {
-                if (candidates.Count == 0)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"No {0} found on form {1}.", capabilityNoun, GetFormId(form)));
-                if (candidates.Count > 1)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Form {0} has more than one {1}; pass a Label or type to choose one (see skyline_get_controls).",
-                        GetFormId(form), capabilityNoun));
-                return candidates[0];
-            }
-            UiElement best = null;
-            var bestQuality = ControlMatchQuality.None;
-            var bestInteractable = false;
-            foreach (var element in candidates)
-            {
-                var quality = ElementMatches(element, key);
-                if (quality == ControlMatchQuality.None)
-                    continue;
-                var interactable = element.IsVisible && element.IsEnabled;
-                if (quality > bestQuality || (quality == bestQuality && interactable && !bestInteractable))
-                {
-                    best = element;
-                    bestQuality = quality;
-                    bestInteractable = interactable;
-                }
-            }
-            if (best == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"No {0} found on form {1} matching '{2}'. Use skyline_get_controls to list the controls.",
-                    capabilityNoun, GetFormId(form), key));
-            return best;
-        }
-
-        // The element gate: the same modal-block + enabled check as VerifyInteractable(Control), for a
-        // resolved element. Control-backed elements reuse the control path; others check their own state.
+        // The element gate: gate the modal-block + enabled state of a resolved element before a verb acts
+        // on it. A control-backed element gates its form (modal/disabled) AND the control itself
+        // (Control.Enabled also reflects a disabled ancestor); a non-control element checks its own state.
         private static void VerifyInteractable(UiElement element)
         {
             if (element is ControlElement controlElement)
             {
-                VerifyInteractable(controlElement.Control);
+                var control = controlElement.Control;
+                var form = control.FindForm();
+                if (form != null)
+                    VerifyFormInteractable(form);
+                VerifyEnabled(control);
                 return;
             }
             if (!element.IsEnabled)
@@ -1839,16 +1719,6 @@ namespace pwiz.Skyline.ToolsUI
             if (!form.Enabled)
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Form '{0}' is disabled.", GetFormId(form)));
-        }
-
-        // The single chokepoint for a verb that acts on one resolved control: gate the control's form
-        // (modal/disabled) AND the control itself (Control.Enabled also reflects a disabled ancestor).
-        private static void VerifyInteractable(Control target)
-        {
-            var form = target.FindForm();
-            if (form != null)
-                VerifyFormInteractable(form);
-            VerifyEnabled(target);
         }
 
         // The target gate for a control: throws if it (or, via Control.Enabled, an ancestor) is disabled.
@@ -1967,39 +1837,6 @@ namespace pwiz.Skyline.ToolsUI
                           // caption-less control that no visible text identifies; any text match wins.
             Stripped = 2, // matched the visible text after ignoring non-alphanumeric symbols ("Next" == "Next >")
             Exact = 3,    // matched the visible text after light normalization
-        }
-
-        // How well a UiElement matches a requested key, by its visible Label ONLY (the verbs address a
-        // control the way a user reads it). The rule: prefer an exact match of the Label string; failing
-        // that, when key has no symbol characters, compare with all symbols stripped, case-insensitively
-        // (so "Name" matches a "Name:" label and "Next" a "Next >" button). When key itself contains a
-        // symbol, only the exact (case-sensitive) match counts.
-        private static ControlMatchQuality ElementMatches(UiElement element, string key)
-        {
-            if (element.Label == null)
-                return ControlMatchQuality.None;
-            if (string.Equals(element.Label, key, StringComparison.Ordinal))
-                return ControlMatchQuality.Exact;
-            if (!HasSymbol(key) && string.Equals(
-                    StripToAlphanumeric(element.Label), StripToAlphanumeric(key), StringComparison.CurrentCultureIgnoreCase))
-                return ControlMatchQuality.Stripped;
-            return ControlMatchQuality.None;
-        }
-
-        // True if text contains a symbol character -- anything that is neither a letter, a digit, nor
-        // whitespace (e.g. ':', '>', '&', '.').
-        private static bool HasSymbol(string text) =>
-            !string.IsNullOrEmpty(text) && text.Any(c => !char.IsLetterOrDigit(c) && !char.IsWhiteSpace(c));
-
-        // True if key names the type or any of its base types -- so "ListView" matches a ColumnListView
-        // and "TreeView" an AvailableFieldsTree. Lets a caption-less control be referred to by its kind.
-        // Stops at Control: a key like "Control"/"UserControl" is too broad to be useful.
-        private static bool MatchesControlType(Type controlType, string key)
-        {
-            for (var type = controlType; type != null && type != typeof(Control); type = type.BaseType)
-                if (string.Equals(type.Name, key, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            return false;
         }
 
         // Match quality of a control/item against a requested key, by VISIBLE TEXT only -- the connector

@@ -79,7 +79,6 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => _label;
         public override bool IsEnabled => _dialog.IsEnabled;
         public override bool IsVisible => true;
-        public override bool IsControl => true;
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.Click || base.SupportsAction(action);
         public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
@@ -106,7 +105,6 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => @"File name";
         public override bool IsEnabled => _dialog.IsEnabled;
         public override bool IsVisible => true;
-        public override bool IsControl => true;
         public override bool SupportsAction(UiAction action) =>
             action == UiAction.SetValue || base.SupportsAction(action);
         public override object PerformAction(UiAction action, object value, CancellationToken cancellationToken)
