@@ -115,12 +115,15 @@ namespace pwiz.SkylineTestFunctional
             });
             string nodePath = parentText + @" > " + childText;
 
-            // The field tree has no caption and no label -- the caption-less edge case -- so the typed
-            // verbs (which match a Label) cannot reach it. It is addressed instead through a path by
-            // its Type ("TreeView", the only tree on the form) via the general PerformAction path; the
-            // value is the '>'-separated node path, and the action checks/selects it.
+            // The field tree has no caption, and it lives inside the ChooseColumnsTab UserControl (the
+            // ViewEditor has a second AvailableFieldsTree on its FilterTab too). Path resolution is strict --
+            // one level at a time -- so the tree is reached by walking into that UserControl by its Type and
+            // then the TreeView within it, rather than by matching a single "TreeView" against the whole
+            // form. The value is the '>'-separated node path, and the action checks/selects it.
             var treeId = new UiElementPath(
-                new UiElementPath(null, editorId, null, @"Form"), null, null, @"TreeView");
+                new UiElementPath(
+                    new UiElementPath(null, editorId, null, @"Form"), null, null, @"ChooseColumnsTab"),
+                null, null, @"TreeView");
             JsonUiService.PerformAction(treeId, @"check_item", nodePath);
             RunUI(() =>
             {
