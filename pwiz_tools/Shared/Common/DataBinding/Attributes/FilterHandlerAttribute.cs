@@ -2,7 +2,7 @@
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2023 University of Washington - Seattle, WA
+ * Copyright 2026 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 
 namespace pwiz.Common.DataBinding.Attributes
 {
-    /// <summary>
-    /// Use this attribute to indicate that a particular type can be used
-    /// in a filter operation, without converting to string.
-    /// <see cref="FilterOperations.GetTypeToConvertOperandTo"/>.
-    /// Usually used in conjunction with <see cref="System.ComponentModel.TypeConverterAttribute"/>.
-    /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class FilterableAttribute : Attribute
+    public class FilterHandlerAttribute : Attribute
     {
+        public FilterHandlerAttribute(Type filterHandlerType)
+        {
+            FilterHandlerType = filterHandlerType;
+        }
+
+        public Type FilterHandlerType { get; }
     }
 }

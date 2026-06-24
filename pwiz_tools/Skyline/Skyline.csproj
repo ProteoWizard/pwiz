@@ -433,6 +433,7 @@
     <Compile Include="Controls\Databinding\AnnotationValueListDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\IDataboundGridForm.cs" />
     <Compile Include="Controls\Databinding\SkylineViewContext.cs" />
+    <Compile Include="Controls\Databinding\SpectrumFilterDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SurrogateStandardDataGridViewColumn.cs" />
     <Compile Include="Controls\Databinding\SkylineWindowDataSchema.cs" />
     <Compile Include="Controls\FilesTree\BackgroundActionService.cs" />
@@ -4534,6 +4535,7 @@
     <None Include="Resources\IrtCalculator.png" />
     <None Include="Resources\OptDB.png" />
     <None Include="Resources\ProtDB.png" />
+    <None Include="Resources\Edit_Item.bmp" />
     <Content Include="SkylineDocPointer.ico" />
     <Content Include="SkylineProcessRunner.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
