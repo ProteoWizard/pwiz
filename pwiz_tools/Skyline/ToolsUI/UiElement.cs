@@ -680,19 +680,17 @@ namespace pwiz.Skyline.ToolsUI
         /// child of its parent among the siblings of this element's Type (its Text, that Index, and its Type).
         /// The caller re-parents it onto the element it listed.</summary>
         internal UiElementPath PathSegment(int typeIndex) =>
-            new UiElementPath(null, NullIfEmpty(CleanLabel(Label)), typeIndex, ElementType.Name);
+            new UiElementPath(null, NullIfEmpty(NormalizeLabel(Label)), typeIndex, ElementType.Name);
         internal static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
-        // The label as a caller would type it: mnemonic '&' and a trailing colon/ellipsis removed, so a
-        // "Name:" label is reported (and addressable) as "Name". Matching tolerates either form anyway.
-        internal static string CleanLabel(string text) =>
-            string.IsNullOrEmpty(text) ? text : NormalizeLabel(text).TrimEnd(' ', ':');
-        // Strips the mnemonic '&' and a trailing ellipsis/period so menu and button captions compare
-        // equal to the plain label a tutorial uses ("Peptide Search" == "&Peptide Search...").
-        protected static string NormalizeLabel(string text)
+        // The label as a caller would type it: the mnemonic '&' removed and any trailing ellipsis, period,
+        // colon (including the full-width Japanese colon '：'), or whitespace trimmed -- so a "Name:" label is
+        // reported (and addressable) as "Name", and a "&Peptide Search..." menu caption as "Peptide Search".
+        // Matching tolerates either form anyway.
+        internal static string NormalizeLabel(string text)
         {
             if (string.IsNullOrEmpty(text))
-                return string.Empty;
-            return text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', ' ').Trim();
+                return text;
+            return text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', '：', ':', ' ').Trim();
         }
     }
 
