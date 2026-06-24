@@ -426,9 +426,12 @@ namespace pwiz.Skyline.Model
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
                         if (precursor.SignedMz.CompareTolerant(tranGroup.PrecursorMz, MzMatchTolerance) == 0)
                         {
-                            // Special case for mz-only, charge-only transitions - may need to derive an isotope mass
+                            // Special case for mz-only molecules with no declared label - may need to derive an
+                            // isotope mass so a heavier sibling matches its existing precursor. This applies to any
+                            // unlabeled adduct (e.g. [M-H], [M+H]), not just charge-only ones, mirroring the
+                            // derivation done when the precursor group is first created in GetMoleculeTransitionGroup.
                             var labeledAdduct = adduct;
-                            if (adduct.IsChargeOnly && !tranGroup.CustomMolecule.HasChemicalFormula)
+                            if (!adduct.HasIsotopeLabels && !pep.CustomMolecule.HasChemicalFormula)
                             {
                                 var mzCalc = adduct.ApplyToMass(pep.CustomMolecule.MonoisotopicMass);
                                 if (!Equals(precursorMonoMz, mzCalc.Value))
