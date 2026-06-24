@@ -117,12 +117,11 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\PortableUtil\PortableUtil.csproj">
-      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
-      <Name>PortableUtil</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <!-- NOTE: do NOT add a ProjectReference to the SDK-style PortableUtil here until the
+       legacy bjam C++ tool builds (MSConvertGUI/SeeMS/Bumbershoot, which consume CommonUtil)
+       can restore/TF-resolve SDK projects. CommonUtil currently uses no PortableUtil type;
+       the edge is only needed once Immutable/ProgressStatus relocate into PortableUtil, at
+       which point the build-infra fix must land first. See the console-output TODO. -->
   <ItemGroup>
     <Compile Include="Collections\BigList.cs" />
     <Compile Include="Collections\DisposableCollection.cs" />
