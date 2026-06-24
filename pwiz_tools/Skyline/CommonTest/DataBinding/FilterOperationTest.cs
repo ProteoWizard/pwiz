@@ -153,10 +153,12 @@ namespace CommonTest.DataBinding
         [TestMethod]
         public void TestListComparisonFilterOperations()
         {
-            // A comparison operator applied to a list-valued column (handled by ListFilterHandler over a
-            // numeric element handler) is evaluated element-wise: equal-length lists compare pairwise by
-            // index; a single element on either side is broadcast against the other; the criterion holds
-            // only if every element comparison holds; differing lengths (neither one) never match.
+            // A comparison or equality operator applied to a list-valued column (handled by
+            // ListFilterHandler over a numeric element handler) is evaluated element-wise: equal-length
+            // lists compare pairwise by index; a single element on either side is broadcast against the
+            // other; the criterion holds only if every element comparison holds. For comparison operators a
+            // non-broadcastable length mismatch throws (no meaningful answer); for equality it is simply
+            // not-equal.
             var listHandler = new ListFilterHandler(NumericFilterHandler.INSTANCE);
 
             bool Match(IFilterOperation op, double[] values, string operandText)
@@ -184,6 +186,20 @@ namespace CommonTest.DataBinding
             // (unlike equality), so it throws rather than returning a misleading false.
             AssertEx.ThrowsException<FormatException>(
                 () => Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0, 50.0 }, "15,30"));
+
+            // Equality is element-wise and broadcasts a single element on either side, symmetric with the
+            // comparison operators above.
+            Assert.IsTrue(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 17.0 }, "17"));    // 1 operand vs N values
+            Assert.IsFalse(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 18.0 }, "17"));
+            Assert.IsTrue(Match(FilterOperations.OP_EQUALS, new[] { 17.0 }, "17,17"));       // N operands vs 1 value
+            Assert.IsFalse(Match(FilterOperations.OP_EQUALS, new[] { 17.0 }, "17,18"));
+            Assert.IsTrue(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 35.0 }, "17,35")); // pairwise
+            Assert.IsFalse(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 35.0 }, "17,36"));
+            Assert.IsTrue(Match(FilterOperations.OP_NOT_EQUALS, new[] { 17.0 }, "17,18"));   // != inverts the broadcast
+
+            // Unlike comparison, a non-broadcastable length mismatch for equality is not-equal, not an error.
+            Assert.IsFalse(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 35.0, 50.0 }, "15,30"));
+            Assert.IsTrue(Match(FilterOperations.OP_NOT_EQUALS, new[] { 17.0, 35.0, 50.0 }, "15,30"));
         }
 
         [TestMethod]

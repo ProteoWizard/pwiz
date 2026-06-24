@@ -423,10 +423,20 @@ namespace pwiz.Common.DataBinding.Filtering
                 return listValue.Count == 0;
             }
 
+            // Broadcast a single element on either side against every element of the other, symmetric with
+            // ListFilterHandler.MatchesComparison, so "x = 1,2,3" and "1,2,3 = x" behave consistently: a
+            // single operand must equal every value, and a single value must equal every operand. (Unlike
+            // comparison, a non-broadcastable length mismatch is simply not-equal rather than an error.)
             if (listOperand.Count == 1)
             {
                 return listValue.Count > 0 && listValue.AsEnumerable()
                     .All(item => ElementHandler.ValueEqualsOperand(item, listOperand.AsEnumerable().First()));
+            }
+
+            if (listValue.Count == 1)
+            {
+                var singleValue = listValue.AsEnumerable().First();
+                return listOperand.AsEnumerable().All(operandItem => ElementHandler.ValueEqualsOperand(singleValue, operandItem));
             }
 
             if (listOperand.Count != listValue.Count)
