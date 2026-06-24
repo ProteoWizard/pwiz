@@ -155,7 +155,7 @@ namespace pwiz.OspreySharp.Tasks
             double libRtRange = libMaxRt - libMinRt;
             double mzmlRtRange = mzmlMaxRt - mzmlMinRt;
 
-            _ctx.LogInfo(string.Format(
+            _ctx.LogVerbose(string.Format(
                 "Library RT range: {0:F1}-{1:F1}, mzML RT range: {2:F1}-{3:F1} min",
                 libMinRt, libMaxRt, mzmlMinRt, mzmlMaxRt));
 
@@ -177,7 +177,7 @@ namespace pwiz.OspreySharp.Tasks
             double toleranceFraction = rangesSimilar ? 0.2 : 0.5;
             double initialTolerance = mzmlRtRange * toleranceFraction;
 
-            _ctx.LogInfo(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
+            _ctx.LogVerbose(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
 
             // Sample library entries (paired target+decoy). Use seed 43 to match
             // Rust's sample_library_for_calibration(..., 42 + attempt=1) on the
@@ -277,7 +277,7 @@ namespace pwiz.OspreySharp.Tasks
                 config.RtCalibration.MinRtTolerance,
                 Math.Min(config.RtCalibration.MaxRtTolerance, madTolerance));
 
-            _ctx.LogInfo(string.Format(
+            _ctx.LogVerbose(string.Format(
                 "First-pass RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4})",
                 pass1Tolerance,
                 pass1.Stats.MAD,
@@ -290,7 +290,7 @@ namespace pwiz.OspreySharp.Tasks
             // initial wide window.
             if (pass1Tolerance < initialTolerance * 0.5)
             {
-                _ctx.LogInfo(string.Format(
+                _ctx.LogVerbose(string.Format(
                     "Calibration refinement: re-scoring with {0:F2} min tolerance (was {1:F1} min)",
                     pass1Tolerance, initialTolerance));
 
@@ -308,7 +308,7 @@ namespace pwiz.OspreySharp.Tasks
                         config.RtCalibration.MinRtTolerance,
                         Math.Min(config.RtCalibration.MaxRtTolerance, refinedMadTolerance));
 
-                    _ctx.LogInfo(string.Format(
+                    _ctx.LogVerbose(string.Format(
                         "Refined RT tolerance: {0:F2} min (MAD={1:F3}, robust_SD={2:F3}, residual_SD={3:F3}, {4} points, R^2={5:F4})",
                         refinedTolerance,
                         pass2.Stats.MAD,
@@ -442,9 +442,6 @@ namespace pwiz.OspreySharp.Tasks
             _ctx.LogInfo(string.Format(
                 "[COUNT] Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
                 passNumber, fileName, nTargetWins, nDecoyWins));
-            _ctx.LogInfo(string.Format(
-                "Calibration pass {0} LDA passing count: {1} (returned by TrainAndScoreCalibration)",
-                passNumber, nPassing));
 
             // Cross-implementation diagnostic: dump per-entry LDA discriminant + q-value
             // sorted by entry_id for stable diff with rust_lda_scores.txt. Gated by
@@ -460,6 +457,9 @@ namespace pwiz.OspreySharp.Tasks
             // quality gate (logs the S/N filter + calibration-point counts).
             var (libRtsDetected, measuredRtsDetected) = CollectCalibrationPoints(
                 matchArray, matchRts, snrByEntryId, passNumber, fileName, nTargetWins);
+            _ctx.LogInfo(string.Format(
+                "Calibration pass {0}: {1} RT calibration points (from {2} peptides at 1% FDR)",
+                passNumber, libRtsDetected.Count, nPassing));
 
             if (libRtsDetected.Count < minLoessPoints)
             {
@@ -507,7 +507,7 @@ namespace pwiz.OspreySharp.Tasks
                 var stats = rtCal.Stats();
                 _ctx.LogInfo(string.Format("[TIMING] Calibration pass {0} LOESS fit: {1:F2}s",
                     passNumber, swLoess.Elapsed.TotalSeconds));
-                _ctx.LogInfo(string.Format(
+                _ctx.LogVerbose(string.Format(
                     "RT calibration pass {0}: {1} points, R2={2:F4}, residual SD={3:F3} min, MAD={4:F3}",
                     passNumber, stats.NPoints, stats.RSquared, stats.ResidualSD, stats.MAD));
 
@@ -669,7 +669,7 @@ namespace pwiz.OspreySharp.Tasks
 
             if (nSnrFiltered > 0)
             {
-                _ctx.LogInfo(string.Format(
+                _ctx.LogVerbose(string.Format(
                     "  RT quality filter (pass {0}): {1} -> {2} peptides (removed {3} with S/N < {4:F1})",
                     passNumber, nTargetWins, libRtsDetected.Count, nSnrFiltered, MIN_SNR_FOR_RT_CAL));
             }
@@ -677,8 +677,6 @@ namespace pwiz.OspreySharp.Tasks
             _ctx.LogInfo(string.Format(
                 "[COUNT] Calibration pass {0} high-quality (S/N>=5) [{1}]: {2}",
                 passNumber, fileName, libRtsDetected.Count));
-            _ctx.LogInfo(string.Format("Pass {0} found {1} calibration points",
-                passNumber, libRtsDetected.Count));
 
             return (libRtsDetected, measuredRtsDetected);
         }
@@ -724,10 +722,10 @@ namespace pwiz.OspreySharp.Tasks
             string unitStr = config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th";
             ms1Calibration = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
             ms2Calibration = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
-            _ctx.LogInfo(string.Format(
+            _ctx.LogVerbose(string.Format(
                 "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
                 passNumber, ms1Calibration.Mean, unitStr, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
-            _ctx.LogInfo(string.Format(
+            _ctx.LogVerbose(string.Format(
                 "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
                 passNumber, ms2Calibration.Mean, unitStr, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
         }

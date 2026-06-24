@@ -94,7 +94,7 @@ namespace pwiz.OspreySharp.Tasks
                 if (unmatchedKeys.Count > 0)
                 {
                     ctx.LogWarning(string.Format(
-                        "--task MergeNode: {0} perFileEntries key(s) have no matching " +
+                        "--task SecondPassFDR: {0} perFileEntries key(s) have no matching " +
                         "config.InputFiles entry and will be skipped: [{1}]. This usually " +
                         "indicates an input-file rename or path drift between Stage 5 and " +
                         "Stage 7; the skipped files will not get a 2nd-pass sidecar.",
@@ -113,13 +113,10 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 if (missingPass2 > 0)
                 {
-                    ctx.LogInfo(string.Format(
-                        "--task MergeNode: {0}/{1} file(s) lack a 2nd-pass sidecar -- running " +
-                        "second-pass FDR to compute scores from reconciled features " +
-                        "(HPC distribution path; mirrors Rust pipeline.rs:4394-4468).",
+                    ctx.LogVerbose(string.Format(
+                        "{0}/{1} file(s) have no precomputed second-pass FDR scores -- computing " +
+                        "them here from the reconciled features (reused distributed-run code path).",
                         missingPass2, totalFiles));
-                    ctx.LogInfo(string.Empty);
-                    ctx.LogInfo("Second-pass FDR");
                     // Reload PIN features from the reconciled parquets.
                     // PerFileScoringTask's bundle-hydration path
                     // explicitly nulls Features after stub load (see
@@ -266,7 +263,7 @@ namespace pwiz.OspreySharp.Tasks
                 }
 
                 // Compute the task validity key once so each per-file
-                // .MergeNode.osprey.task sidecar carries an identical
+                // .SecondPassFDR.osprey.task sidecar carries an identical
                 // key. AnalysisPipeline.WriteTaskSidecars also writes
                 // these at end-of-Run, but that step is bypassed when
                 // OspreyDiagnosticsLog.ExitAfterDump calls Environment.Exit
@@ -326,8 +323,8 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 if (pass2Failures == 0 && pass2Written > 0)
                 {
-                    ctx.LogInfo(string.Format(
-                        @"Wrote 2nd-pass FDR sidecars for {0} file(s){1}",
+                    ctx.LogVerbose(string.Format(
+                        @"Wrote 2nd-pass FDR scores for {0} file(s){1}",
                         pass2Written,
                         pass2AlreadyOnDisk > 0
                             ? string.Format(@" ({0} already on disk; skipped)", pass2AlreadyOnDisk)
@@ -344,7 +341,7 @@ namespace pwiz.OspreySharp.Tasks
             // written to it). RunProteinFdr's detected_peptides gate filters on
             // ExperimentPrecursorQvalue, which has to be the 2nd-pass value to
             // match Rust pipeline.rs:4480-4494's reload-then-second-pass-FDR
-            // sequence. Without this reload, single-file --task MergeNode runs
+            // sequence. Without this reload, single-file --task SecondPassFDR runs
             // include ~19 borderline peptides whose 1st-pass q-value passes
             // <=1% but 2nd-pass q-value does not, producing a 1-protein delta
             // in the Stage 7 picked-protein output cross-impl.
@@ -384,8 +381,8 @@ namespace pwiz.OspreySharp.Tasks
                 }
                 if (filesReloaded > 0)
                 {
-                    ctx.LogInfo(string.Format(
-                        "--task MergeNode: reloaded 2nd-pass FDR sidecar for {0}/{1} file(s) post-compaction",
+                    ctx.LogVerbose(string.Format(
+                        "Reloaded 2nd-pass FDR scores for {0}/{1} file(s) post-compaction",
                         filesReloaded, filesReloaded + filesMissing));
                 }
             }

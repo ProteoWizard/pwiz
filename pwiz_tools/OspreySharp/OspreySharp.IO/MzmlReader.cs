@@ -130,11 +130,14 @@ namespace pwiz.OspreySharp.IO
             // Collect into typed lists in original order
             var ms2Spectra = new List<Spectrum>();
             var ms1Spectra = new List<MS1Spectrum>();
+            int unsortedCount = 0;
             for (int i = 0; i < totalCount; i++)
             {
                 DecodedSpectrum d;
                 if (!results.TryGetValue(i, out d) || d == null)
                     continue;
+                if (d.WasUnsorted)
+                    unsortedCount++;
                 if (d.MsLevel == 1)
                     ms1Spectra.Add(d.ToMs1Spectrum());
                 else if (d.MsLevel == 2)
@@ -145,7 +148,7 @@ namespace pwiz.OspreySharp.IO
                 }
             }
 
-            return new MzmlResult(ms2Spectra, ms1Spectra);
+            return new MzmlResult(ms2Spectra, ms1Spectra, unsortedCount);
         }
 
         /// <summary>
@@ -623,11 +626,12 @@ namespace pwiz.OspreySharp.IO
 
             mzArray = mzArray ?? Array.Empty<double>();
             intensityArray = intensityArray ?? Array.Empty<float>();
-            EnsureSortedSpectrum(raw.Index, ref mzArray, ref intensityArray);
+            bool wasUnsorted = EnsureSortedSpectrum(raw.Index, ref mzArray, ref intensityArray);
 
             return new DecodedSpectrum
             {
                 Index = raw.Index,
+                WasUnsorted = wasUnsorted,
                 MsLevel = raw.MsLevel,
                 RetentionTime = raw.RetentionTime,
                 PrecursorMz = raw.PrecursorMz,
@@ -663,17 +667,17 @@ namespace pwiz.OspreySharp.IO
         private static int s_unsortedLogCount;
         private const int MaxUnsortedLogLines = 10;
 
-        private static void EnsureSortedSpectrum(uint spectrumIndex,
+        private static bool EnsureSortedSpectrum(uint spectrumIndex,
             ref double[] mzArray, ref float[] intensityArray)
         {
             if (mzArray == null || mzArray.Length < 2)
-                return;
+                return false;
             // Defensive guard: a malformed mzML where the m/z and intensity
             // arrays are not the same length would IndexOutOfRange on the
             // permutation step. Skip sorting in that case (downstream code
             // already has its own length checks).
             if (intensityArray == null || intensityArray.Length != mzArray.Length)
-                return;
+                return false;
             // Walk the array once: detect NaN m/z (malformed mzML — fail
             // loudly so a user report surfaces) and check sortedness in
             // the same pass. NaN comparison semantics differ between
@@ -694,16 +698,23 @@ namespace pwiz.OspreySharp.IO
                     sorted = false;
             }
             if (sorted)
-                return;
-            int logCount = Interlocked.Increment(ref s_unsortedLogCount);
-            if (logCount <= MaxUnsortedLogLines)
+                return false;
+            // Re-sorting below is unconditional (correctness); the per-spectrum
+            // notice is implementer detail -- some instrument mzML carries a tiny
+            // fraction of unsorted peak arrays (e.g. Astral ~0.07%) that Osprey
+            // silently corrects -- so it stays behind --verbose.
+            if (OspreyOutput.Verbose)
             {
-                OspreyOutput.Out.WriteLine(
-                    $"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
-                if (logCount == MaxUnsortedLogLines)
+                int logCount = Interlocked.Increment(ref s_unsortedLogCount);
+                if (logCount <= MaxUnsortedLogLines)
                 {
                     OspreyOutput.Out.WriteLine(
-                        $"[unsorted-spectrum] suppressing further lines (>{MaxUnsortedLogLines} per process)");
+                        $"[unsorted-spectrum] spectrum_index={spectrumIndex} n_peaks={mzArray.Length}");
+                    if (logCount == MaxUnsortedLogLines)
+                    {
+                        OspreyOutput.Out.WriteLine(
+                            $"[unsorted-spectrum] suppressing further lines (>{MaxUnsortedLogLines} per process)");
+                    }
                 }
             }
             int n = mzArray.Length;
@@ -719,6 +730,7 @@ namespace pwiz.OspreySharp.IO
             }
             mzArray = sortedMzs;
             intensityArray = sortedInts;
+            return true;
         }
 
         #endregion
@@ -757,6 +769,7 @@ namespace pwiz.OspreySharp.IO
             public bool HasPrecursor, HasIsolationWindow;
             public double[] MzArray;
             public float[] IntensityArray;
+            public bool WasUnsorted;
 
             public MS1Spectrum ToMs1Spectrum()
             {
@@ -838,11 +851,13 @@ namespace pwiz.OspreySharp.IO
     {
         public List<Spectrum> Ms2Spectra { get; private set; }
         public List<MS1Spectrum> Ms1Spectra { get; private set; }
+        public int UnsortedSpectrumCount { get; private set; }
 
-        public MzmlResult(List<Spectrum> ms2, List<MS1Spectrum> ms1)
+        public MzmlResult(List<Spectrum> ms2, List<MS1Spectrum> ms1, int unsortedSpectrumCount = 0)
         {
             Ms2Spectra = ms2;
             Ms1Spectra = ms1;
+            UnsortedSpectrumCount = unsortedSpectrumCount;
         }
     }
 }

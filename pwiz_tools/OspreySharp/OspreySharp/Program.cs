@@ -91,7 +91,7 @@ namespace pwiz.OspreySharp
                     {
                         if (i + 1 >= args.Length || args[i + 1].StartsWith("-", StringComparison.Ordinal))
                         {
-                            LogError("--task requires a task name (PerFileScoring, FirstJoin, PerFileRescore, or MergeNode).");
+                            LogError("--task requires a task name (PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
                             return 1;
                         }
                         taskName = args[i + 1];
@@ -188,7 +188,7 @@ namespace pwiz.OspreySharp
 
                 // Non-fatal warning: --task PerFileScoring with --output
                 // supplied — that Stage 1-4 worker mode ignores --output. The
-                // rescore worker (--task PerFileRescore, identified by
+                // rescore worker (--task PerFileRescoring, identified by
                 // --input-scores) requires --output, so the warning would be
                 // incorrect/confusing there.
                 if (config.NoJoin && !fromInputScores && !string.IsNullOrEmpty(config.OutputBlib))
@@ -289,24 +289,24 @@ namespace pwiz.OspreySharp
                 task = HpcTask.PerFileScoring;
                 return null;
             }
-            if (string.Equals(taskName, "FirstJoin", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(taskName, "FirstPassFDR", StringComparison.OrdinalIgnoreCase))
             {
                 task = HpcTask.FirstJoin;
                 return null;
             }
-            if (string.Equals(taskName, "PerFileRescore", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(taskName, "PerFileRescoring", StringComparison.OrdinalIgnoreCase))
             {
                 task = HpcTask.PerFileRescore;
                 return null;
             }
-            if (string.Equals(taskName, "MergeNode", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(taskName, "SecondPassFDR", StringComparison.OrdinalIgnoreCase))
             {
                 task = HpcTask.MergeNode;
                 return null;
             }
             task = default;
             return string.Format(
-                "--task: unknown task '{0}'. Valid tasks: PerFileScoring, FirstJoin, PerFileRescore, MergeNode.",
+                "--task: unknown task '{0}'. Valid tasks: PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.",
                 taskName);
         }
 
@@ -333,7 +333,7 @@ namespace pwiz.OspreySharp
                         // Stage 1-4 worker: mzML in, per-file .scores.parquet out.
                         if (hasInputScores)
                             return "--task PerFileScoring takes -i <mzML>, not --input-scores " +
-                                   "(did you mean --task PerFileRescore?).";
+                                   "(did you mean --task PerFileRescoring?).";
                         if (!hasInputFiles)
                             return "--task PerFileScoring requires --input <mzML...>.";
                         if (config.LibrarySource == null)
@@ -343,43 +343,43 @@ namespace pwiz.OspreySharp
                     case HpcTask.PerFileRescore:
                         // Stage 6 worker: --input-scores in, reconciled per-file out.
                         if (hasInputFiles)
-                            return "--task PerFileRescore takes --input-scores, not -i <mzML> " +
+                            return "--task PerFileRescoring takes --input-scores, not -i <mzML> " +
                                    "(mzML paths are derived from the parquet stems).";
                         if (!hasInputScores)
-                            return "--task PerFileRescore requires --input-scores <path...>.";
+                            return "--task PerFileRescoring requires --input-scores <path...>.";
                         if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                            return "--task PerFileRescore requires --library and --output.";
+                            return "--task PerFileRescoring requires --library and --output.";
                         return null;
 
                     case HpcTask.FirstJoin:
                         if (hasInputFiles)
-                            return "--task FirstJoin cannot be combined with --input. Use --input-scores instead.";
+                            return "--task FirstPassFDR cannot be combined with --input. Use --input-scores instead.";
                         if (!hasInputScores)
-                            return "--task FirstJoin requires --input-scores <path...>.";
+                            return "--task FirstPassFDR requires --input-scores <path...>.";
                         if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                            return "--task FirstJoin requires --library and --output.";
+                            return "--task FirstPassFDR requires --library and --output.";
                         // FirstJoin writes the Stage 5 → Stage 6 boundary file
                         // pair, only meaningful with 2+ siblings to reconcile
                         // against and reconciliation enabled. Reject early.
                         if (config.InputScores.Count < 2)
                             return string.Format(
-                                "--task FirstJoin requires --input-scores with 2+ parquet files " +
+                                "--task FirstPassFDR requires --input-scores with 2+ parquet files " +
                                 "(got {0}). The Stage 5 → Stage 6 boundary file pair is only meaningful for " +
                                 "multi-file fan-back-in.",
                                 config.InputScores.Count);
                         if (!config.Reconciliation.Enabled)
-                            return "--task FirstJoin requires Reconciliation.Enabled = true " +
+                            return "--task FirstPassFDR requires Reconciliation.Enabled = true " +
                                    "(got false from config). The Stage 5 → Stage 6 boundary file pair is " +
                                    "only meaningful when reconciliation runs.";
                         return null;
 
                     case HpcTask.MergeNode:
                         if (hasInputFiles)
-                            return "--task MergeNode cannot be combined with --input. Use --input-scores instead.";
+                            return "--task SecondPassFDR cannot be combined with --input. Use --input-scores instead.";
                         if (!hasInputScores)
-                            return "--task MergeNode requires --input-scores <path...>.";
+                            return "--task SecondPassFDR requires --input-scores <path...>.";
                         if (config.LibrarySource == null || string.IsNullOrEmpty(config.OutputBlib))
-                            return "--task MergeNode requires --library and --output.";
+                            return "--task SecondPassFDR requires --library and --output.";
                         return null;
                 }
             }
@@ -412,7 +412,7 @@ namespace pwiz.OspreySharp
         /// Directory mode collects both the Stage 4 <c>*.scores.parquet</c> files
         /// and the Stage 6 <c>*.scores-reconciled.parquet</c> siblings, then
         /// dedupes per stem: for any stem that has both, only the reconciled file
-        /// is returned (the authoritative later pass; the <c>--task MergeNode</c>
+        /// is returned (the authoritative later pass; the <c>--task SecondPassFDR</c>
         /// reconciled-input gate expects reconciled parquets). A stem with only an
         /// original is returned as-is. The two suffixes are unambiguous, so this
         /// never returns both files for one stem (see

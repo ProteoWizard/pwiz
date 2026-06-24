@@ -125,7 +125,7 @@ namespace pwiz.OspreySharp.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileRescore");
+            StringAssert.Contains(err, "--task PerFileRescoring");
             StringAssert.Contains(err, "--input-scores");
         }
 
@@ -136,7 +136,7 @@ namespace pwiz.OspreySharp.Test
             config.InputScores = new List<string> { "a.scores.parquet" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileRescore");
+            StringAssert.Contains(err, "--task PerFileRescoring");
             StringAssert.Contains(err, "--library and --output");
         }
 
@@ -151,7 +151,7 @@ namespace pwiz.OspreySharp.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task PerFileRescore");
+            StringAssert.Contains(err, "--task PerFileRescoring");
             StringAssert.Contains(err, "not -i <mzML>");
         }
 
@@ -175,7 +175,7 @@ namespace pwiz.OspreySharp.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstJoin");
+            StringAssert.Contains(err, "--task FirstPassFDR");
             StringAssert.Contains(err, "--input-scores");
         }
 
@@ -189,7 +189,7 @@ namespace pwiz.OspreySharp.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstJoin");
+            StringAssert.Contains(err, "--task FirstPassFDR");
             StringAssert.Contains(err, "cannot be combined with --input");
         }
 
@@ -200,7 +200,7 @@ namespace pwiz.OspreySharp.Test
             config.InputScores = new List<string> { "a.scores.parquet", "b.scores.parquet" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstJoin");
+            StringAssert.Contains(err, "--task FirstPassFDR");
             StringAssert.Contains(err, "--library and --output");
         }
 
@@ -215,7 +215,7 @@ namespace pwiz.OspreySharp.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task FirstJoin");
+            StringAssert.Contains(err, "--task FirstPassFDR");
             StringAssert.Contains(err, "2+ parquet files");
         }
 
@@ -247,7 +247,7 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestValidateMergeNodeRequiresInputScores()
         {
-            // Uncontested gap from ultrareview: --task MergeNode without
+            // Uncontested gap from ultrareview: --task SecondPassFDR without
             // --input-scores (even with -i mzML) used to pass validation and
             // silently run the full pipeline. It must now fail fast.
             var config = TaskConfig(HpcTask.MergeNode);
@@ -256,7 +256,7 @@ namespace pwiz.OspreySharp.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "--task SecondPassFDR");
             // -i present -> the cross is reported first; either way it must not pass.
         }
 
@@ -268,7 +268,7 @@ namespace pwiz.OspreySharp.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "--task SecondPassFDR");
             StringAssert.Contains(err, "--input-scores");
         }
 
@@ -279,7 +279,7 @@ namespace pwiz.OspreySharp.Test
             config.InputScores = new List<string> { "a.scores-reconciled.parquet" };
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "--task SecondPassFDR");
             StringAssert.Contains(err, "--library and --output");
         }
 
@@ -293,7 +293,7 @@ namespace pwiz.OspreySharp.Test
             config.OutputBlib = "out.blib";
             string err = Program.ValidateArgs(config);
             Assert.IsNotNull(err);
-            StringAssert.Contains(err, "--task MergeNode");
+            StringAssert.Contains(err, "--task SecondPassFDR");
             StringAssert.Contains(err, "cannot be combined with --input");
         }
 
@@ -384,28 +384,28 @@ namespace pwiz.OspreySharp.Test
         [TestMethod]
         public void TestResolveTaskFirstJoin()
         {
-            Assert.IsNull(Program.ResolveTask("FirstJoin", out HpcTask task));
+            Assert.IsNull(Program.ResolveTask("FirstPassFDR", out HpcTask task));
             Assert.AreEqual(HpcTask.FirstJoin, task);
         }
 
         [TestMethod]
         public void TestResolveTaskPerFileRescore()
         {
-            Assert.IsNull(Program.ResolveTask("PerFileRescore", out HpcTask task));
+            Assert.IsNull(Program.ResolveTask("PerFileRescoring", out HpcTask task));
             Assert.AreEqual(HpcTask.PerFileRescore, task);
         }
 
         [TestMethod]
         public void TestResolveTaskMergeNode()
         {
-            Assert.IsNull(Program.ResolveTask("MergeNode", out HpcTask task));
+            Assert.IsNull(Program.ResolveTask("SecondPassFDR", out HpcTask task));
             Assert.AreEqual(HpcTask.MergeNode, task);
         }
 
         [TestMethod]
         public void TestResolveTaskIsCaseInsensitive()
         {
-            Assert.IsNull(Program.ResolveTask("perfilerescore", out HpcTask task));
+            Assert.IsNull(Program.ResolveTask("perfilerescoring", out HpcTask task));
             Assert.AreEqual(HpcTask.PerFileRescore, task);
         }
 
@@ -494,8 +494,8 @@ namespace pwiz.OspreySharp.Test
         public void TestParseArgsAcceptsTaskAndValidArgs()
         {
             // --task and ordinary flags must NOT throw.
-            Program.ParseArgs(new[] { "--task", "FirstJoin", "-l", "ref.blib", "-o", "out.blib" });
-            Program.ParseArgs(new[] { "--task=MergeNode", "-l", "ref.blib", "-o", "out.blib" });
+            Program.ParseArgs(new[] { "--task", "FirstPassFDR", "-l", "ref.blib", "-o", "out.blib" });
+            Program.ParseArgs(new[] { "--task=SecondPassFDR", "-l", "ref.blib", "-o", "out.blib" });
         }
 
         [TestMethod]

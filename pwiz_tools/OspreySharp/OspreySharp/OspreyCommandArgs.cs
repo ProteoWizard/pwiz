@@ -194,7 +194,7 @@ namespace pwiz.OspreySharp
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            new[] { @"PerFileScoring", @"FirstJoin", @"PerFileRescore", @"MergeNode" }, (c, p) => true);
+            new[] { @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR" }, (c, p) => true);
         public static readonly OspreyArgument ARG_INPUT_SCORES = new OspreyArgument(@"input-scores",
             () => @"<paths|dir>", (c, p) => true) { Variadic = true, ProcessVariadic = (c, toks) =>
             {
@@ -378,7 +378,7 @@ namespace pwiz.OspreySharp
                     i++;
                     if (i >= args.Length || args[i].StartsWith(@"-"))
                         throw new ArgumentException(
-                            @"--task requires a task name (PerFileScoring, FirstJoin, PerFileRescore, or MergeNode).");
+                            @"--task requires a task name (PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
                     i++;
                     continue;
                 }

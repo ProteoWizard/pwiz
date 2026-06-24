@@ -223,7 +223,7 @@ namespace pwiz.OspreySharp.Core
         /// <summary>
         /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
         /// include only the per-file fan-out, not the join. Set by both
-        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescore</c>; the
+        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
         /// concrete behavior depends on the input type. With <c>-i</c> mzML it
         /// is the Stage 1-4 worker — each input produces a
         /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
@@ -245,14 +245,14 @@ namespace pwiz.OspreySharp.Core
         /// having written the boundary files
         /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
         /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
-        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstJoin</c>.
+        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstPassFDR</c>.
         /// </summary>
         public bool StopAfterStage5 { get; set; }
 
         /// <summary>
         /// HPC: when true, every <c>--input-scores</c> parquet must carry
         /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
-        /// by <c>--task MergeNode</c>; the post-Stage-6 (reconciled)
+        /// by <c>--task SecondPassFDR</c>; the post-Stage-6 (reconciled)
         /// entry point. Stages 1-6 are skipped: the pipeline loads
         /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
         /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,

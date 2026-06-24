@@ -66,13 +66,13 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     internal sealed class FirstJoinTask : OspreyTask
     {
-        public override string Name => @"FirstJoin";
+        public override string Name => @"FirstPassFDR";
 
         /// <summary>
         /// Computes the Stage 5 first-join (Percolator first-pass FDR + Stage 6
-        /// planning) in straight-through, --task FirstJoin (StopAfterStage5), and
+        /// planning) in straight-through, --task FirstPassFDR (StopAfterStage5), and
         /// the --input-scores full-pipeline. Excluded in --task PerFileScoring
-        /// (stops at Stage 1-4), --task PerFileRescore, and the --task MergeNode
+        /// (stops at Stage 1-4), --task PerFileRescoring, and the --task SecondPassFDR
         /// stage (where it rehydrates the bundle rather than recomputing).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
@@ -80,9 +80,9 @@ namespace pwiz.OspreySharp.Tasks
             var c = ctx.Config;
             bool inputs = c.InputScores != null && c.InputScores.Count > 0;
             // The (inputs && StopAfterStage5) clause leans on a CLI-enforced
-            // invariant: StopAfterStage5 is set by --task FirstJoin, which
+            // invariant: StopAfterStage5 is set by --task FirstPassFDR, which
             // requires --input-scores, so StopAfterStage5 implies inputs at
-            // parse time -- a --task FirstJoin run can never reach here without
+            // parse time -- a --task FirstPassFDR run can never reach here without
             // InputScores.
             // ProgramTests.TestValidateFirstJoinRequiresInputScores pins that
             // rejection, since the membership truth table (PipelineMembershipTest)
@@ -185,7 +185,7 @@ namespace pwiz.OspreySharp.Tasks
             // this run owns the full first-join work. The bundle-present
             // disk-load counterpart lives in Rehydrate. The driver reaches this
             // task here only in the bundle-absent modes (straight-through,
-            // --task FirstJoin); a worker-mode consumer materializes it via
+            // --task FirstPassFDR); a worker-mode consumer materializes it via
             // ctx.Demand which routes to Rehydrate.
             var config = ctx.Config;
 
@@ -203,10 +203,18 @@ namespace pwiz.OspreySharp.Tasks
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
-            // Stage 5: First-pass FDR.
-            ctx.LogInfo(string.Empty);
-            ctx.LogInfo(string.Format(@"Running {0} FDR control on coelution results...",
-                config.FdrMethod));
+            // Stage 5: First-pass FDR. The Percolator path prints its own
+            // "Running First-pass Percolator on N entries..." line from the FDR
+            // engine, so the generic header would just be a redundant second
+            // header right after the [TASK] FirstPassFDR banner. Emit it only for
+            // the other methods (Simple / fallback), which otherwise go straight
+            // to per-file result lines with no header of their own.
+            if (config.FdrMethod != FdrMethod.Percolator)
+            {
+                ctx.LogInfo(string.Empty);
+                ctx.LogInfo(string.Format(@"Running {0} FDR control on coelution results...",
+                    config.FdrMethod));
+            }
 
             var swFdr = Stopwatch.StartNew();
             RunFdr(perFileEntries, config, ctx);
@@ -225,7 +233,6 @@ namespace pwiz.OspreySharp.Tasks
             if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
             {
                 ctx.LogInfo(string.Empty);
-                ctx.LogInfo(@"First-pass protein FDR");
                 var swFirstPassProtein = Stopwatch.StartNew();
                 RunFirstPassProteinFdr(perFileEntries, fullLibrary, config, ctx);
                 swFirstPassProtein.Stop();
@@ -245,7 +252,7 @@ namespace pwiz.OspreySharp.Tasks
             if (fdrSidecarFailures > 0 && config.StopAfterStage5)
             {
                 ctx.LogError(string.Format(
-                    @"--task FirstJoin: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
+                    @"--task FirstPassFDR: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
                     @"writes failed; boundary file pair is incomplete. See warnings above.",
                     fdrSidecarFailures, perFileEntries.Count));
                 ctx.ExitCode = 1;
@@ -552,7 +559,7 @@ namespace pwiz.OspreySharp.Tasks
         /// <see cref="_didPlan"/> output fields the next task
         /// (PerFileRescoreTask) consumes and returns true. Returns false
         /// (with <see cref="PipelineContext.ExitCode"/> set) on the
-        /// --task FirstJoin StopAfterStage5 exit paths.
+        /// --task FirstPassFDR StopAfterStage5 exit paths.
         /// Mirrors pipeline.rs Stage 6 entry
         /// block at lines 3208-3273. The caller gates this on
         /// bundle == null (Stage 6 state already exists upstream on the
@@ -567,7 +574,7 @@ namespace pwiz.OspreySharp.Tasks
             PipelineContext ctx)
         {
             ctx.LogInfo(string.Empty);
-            ctx.LogInfo(@"Stage 6: planning");
+            ctx.LogInfo(@"Reconciliation planning");
 
             // Four cross-file planning phases (multi-charge consensus, cross-run
             // consensus RTs, per-file calibration refit, reconciliation
@@ -578,7 +585,7 @@ namespace pwiz.OspreySharp.Tasks
             // Stage 5 → Stage 6 boundary: write the per-file
             // .reconciliation.json envelope (the .fdr_scores.bin
             // companion was already written above pre-compaction).
-            // Pairs with the --task PerFileRescore Stage 6
+            // Pairs with the --task PerFileRescoring Stage 6
             // worker mode (next sprint).
             //
             // Surfaces gap-fill targets via out param so the in-
@@ -600,20 +607,20 @@ namespace pwiz.OspreySharp.Tasks
                 if (reconWriteFailures > 0)
                 {
                     ctx.LogError(string.Format(
-                        @"--task FirstJoin: {0}/{1} reconciliation.json " +
+                        @"--task FirstPassFDR: {0}/{1} reconciliation.json " +
                         @"writes failed; boundary file pair is incomplete. See warnings above.",
                         reconWriteFailures, perFileEntries.Count));
                     ctx.ExitCode = 1;
                     return false;
                 }
                 ctx.LogInfo(string.Format(
-                    @"--task FirstJoin: Stage 5 + reconciliation planning " +
+                    @"--task FirstPassFDR: Stage 5 + reconciliation planning " +
                     @"complete; wrote {0} reconciliation.json + matching fdr_scores.bin " +
                     @"sidecar pair(s). Exiting before Stage 6 rescore.",
                     perFileEntries.Count));
                 // Success: return true (not false). The stop after Stage 5 is now
                 // a membership fact -- PerFileRescore and MergeNode are excluded
-                // by IsIncluded under --task FirstJoin, so the driver loop iterates no
+                // by IsIncluded under --task FirstPassFDR, so the driver loop iterates no
                 // further. The failure path above keeps ExitCode=1; return false.
                 ctx.ExitCode = 0;
                 return true;
@@ -687,7 +694,7 @@ namespace pwiz.OspreySharp.Tasks
         /// pre-compaction). Mirrors the matching block in
         /// osprey/src/pipeline.rs immediately after
         /// dump_stage6_reconciliation. The file is written sibling to
-        /// the input mzML (or, in --task FirstJoin mode, the synthetic input
+        /// the input mzML (or, in --task FirstPassFDR mode, the synthetic input
         /// path derived from the parquet stem).
         /// </summary>
         /// <returns>
@@ -788,7 +795,7 @@ namespace pwiz.OspreySharp.Tasks
             // The multi-file stems set goes into every per-file
             // reconciliation.json so a worker rescoring its single
             // parquet can compute the join-wide reconciliation hash that
-            // --task MergeNode will validate against. Sort + dedup once;
+            // --task SecondPassFDR will validate against. Sort + dedup once;
             // BuildReconciliationFile copies the list into the wire form.
             var joinFileStems = new List<string>(perFileEntries.Count);
             foreach (var fEntry in perFileEntries)
@@ -850,7 +857,7 @@ namespace pwiz.OspreySharp.Tasks
         /// Resolve a path whose stem matches <paramref name="fileName"/>, used
         /// only as the base for sidecar file naming (the path itself need
         /// not exist). In normal mode this is the input mzML; in
-        /// --task FirstJoin mode where InputFiles is empty we synthesize the
+        /// --task FirstPassFDR mode where InputFiles is empty we synthesize the
         /// path from the matching .scores.parquet by replacing the
         /// `.scores.parquet` suffix with `.mzML`. Mirrors the Rust
         /// `synthetic_input_from_parquet` helper.
@@ -875,7 +882,7 @@ namespace pwiz.OspreySharp.Tasks
                     }
                 }
             }
-            // --task FirstJoin fallback: derive a synthetic mzML path from the
+            // --task FirstPassFDR fallback: derive a synthetic mzML path from the
             // matching parquet stem so all the existing sidecar path
             // helpers keep working without conditional branches.
             if (perFileParquetPaths != null
@@ -1096,7 +1103,7 @@ namespace pwiz.OspreySharp.Tasks
             PipelineContext ctx)
         {
             // Orchestration (compute + propagation + summary logging) lives in
-            // ProteinFdrEngine.RunFirstPass (shared with the --task MergeNode
+            // ProteinFdrEngine.RunFirstPass (shared with the --task SecondPassFDR
             // rehydration path in PerFileRescoreTask). It returns the parsimony /
             // FDR artifacts so we can emit the Stage-6 diagnostic dump here WITHOUT
             // recomputing them. The dump + ProteinFdrOnly early-exit stay in this

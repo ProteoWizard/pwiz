@@ -115,7 +115,7 @@ namespace pwiz.OspreySharp.Test
             // Diagnostics. --task is resolved in Main, so ParseArgs alone leaves SelectedTask null
             // but must accept both --task forms without throwing.
             Assert.IsTrue(Parse(@"-d").Diagnostics);
-            Assert.IsNull(Parse(@"--task=MergeNode", @"-l", @"ref.blib", @"-o", @"out.blib").SelectedTask);
+            Assert.IsNull(Parse(@"--task=SecondPassFDR", @"-l", @"ref.blib", @"-o", @"out.blib").SelectedTask);
 
             // Logging: --timestamp / --memstamp are value-less flags (default off);
             // --log-file takes a path.
