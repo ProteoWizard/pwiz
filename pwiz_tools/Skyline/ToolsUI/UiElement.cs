@@ -22,11 +22,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
@@ -76,8 +74,9 @@ namespace pwiz.Skyline.ToolsUI
     /// singleton object -- see <see cref="UiActions"/> for the set of them -- that knows its wire
     /// <see cref="SnakeCaseName"/>, the gates the connector must honor before performing it
     /// (<see cref="MustBeVisible"/> / <see cref="MustBeEnabled"/> -- a user could not act on a control they
-    /// cannot see or that is disabled), and the thread it runs on (<see cref="WatchForDialog"/> /
-    /// <see cref="RunOnUiThread"/>). It decides whether it <see cref="AppliesTo"/> an element (usually: the
+    /// cannot see or that is disabled), and whether it <see cref="ReturnsValue"/> (a value action is run
+    /// synchronously; a void action is posted fire-and-forget). It decides whether it
+    /// <see cref="AppliesTo"/> an element (usually: the
     /// element is the right kind -- it implements the action's capability interface) and how to
     /// <see cref="Invoke"/> it (by calling that interface's method). This inverts the old per-element switch
     /// over an action enum: a new control kind declares its capabilities by implementing interfaces, and a
@@ -101,14 +100,12 @@ namespace pwiz.Skyline.ToolsUI
         public bool MustBeVisible { get; internal set; } = true;
         public bool MustBeEnabled { get; internal set; } = true;
 
-        /// <summary>Threading policy for the generic perform_action dispatch. A mutation or click runs inside
-        /// the dialog-watch (<see cref="WatchForDialog"/>) so a dialog it pops is surfaced rather than
-        /// blocking; a click runs its <see cref="Invoke"/> on the calling (worker) thread
-        /// (<see cref="RunOnUiThread"/> = false) because a clickable element marshals its own gesture (a
-        /// posted BM_CLICK must not be sent from the UI thread), while every other action is marshalled to the
-        /// UI thread.</summary>
-        public bool WatchForDialog { get; internal set; }
-        public bool RunOnUiThread { get; internal set; } = true;
+        /// <summary>Whether the action produces a result the caller waits for (get_value, get_grid_text,
+        /// get_actions, get_children). Drives the threading: a value action is run synchronously, inside the
+        /// dialog-watch so it does not hang if a modal is up; a void action (a click, a value set) is posted
+        /// fire-and-forget, so a gesture that opens a modal does not block and the modal is driven by later
+        /// commands -- the same way clicking a main-menu item already works.</summary>
+        public bool ReturnsValue { get; internal set; }
 
         /// <summary>Whether this action is meaningful for the element -- usually whether the element is the
         /// kind the action targets (it implements the action's capability interface).</summary>
@@ -153,8 +150,8 @@ namespace pwiz.Skyline.ToolsUI
         /// needs no class of its own, just an entry below. The argument is handed to the func as
         /// <typeparamref name="TArg"/> (the JSON value is already a string or the raw object; an action that
         /// wants an int or a cell parses it inside its func). <paramref name="mustBeEnabled"/> is false for a
-        /// pure read (it may also be inspected off-screen); set <see cref="UiAction.WatchForDialog"/> /
-        /// <see cref="UiAction.RunOnUiThread"/> via an initializer for a mutation or click.</summary>
+        /// pure read (it may also be inspected off-screen), which also passes <c>returnsValue: true</c> so the
+        /// dispatch waits for its result instead of posting it fire-and-forget.</summary>
         private sealed class SimpleActionImpl<T, TArg> : UiAction
         {
             private readonly Func<T, TArg, object> _invoke;
@@ -179,76 +176,77 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // get_actions / get_children apply to every element (not one capability kind), so they target the
-        // base UiElement type; they are reads (mustBeEnabled: false).
+        // base UiElement type; they are reads (mustBeEnabled: false, returnsValue: true).
         public static readonly UiAction GetActions = SimpleAction<UiElement>(
-            @"GetActions", e => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray(), mustBeEnabled: false);
+            @"GetActions", e => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray(),
+            mustBeEnabled: false, returnsValue: true);
 
         public static readonly UiAction GetChildren = SimpleAction<UiElement>(
-            @"GetChildren", e => e.GetChildren(), mustBeEnabled: false);
+            @"GetChildren", e => e.GetChildren(), mustBeEnabled: false, returnsValue: true);
 
-        // A click runs its Invoke on the worker thread (RunOnUiThread = false) -- the element marshals its
-        // own gesture -- inside the dialog-watch.
+        // A void action (click, value set, item check, ...) is posted fire-and-forget; only a value action
+        // (get_value, get_grid_text) is run synchronously inside the dialog-watch -- see UiAction.ReturnsValue.
         public static readonly UiAction Click = SimpleAction<IClickableElement>(
             @"Click", e =>
             {
                 e.Click();
                 return null;
-            }, watchForDialog: true, runOnUiThread: false);
+            });
 
         public static readonly UiAction GetValue = SimpleAction<IReadValueElement>(
-            @"GetValue", e => e.GetValue(), mustBeEnabled: false);
+            @"GetValue", e => e.GetValue(), mustBeEnabled: false, returnsValue: true);
 
         public static readonly UiAction SetValue = SimpleAction<IWriteValueElement, string>(
             @"SetValue", (e, value) =>
             {
                 e.SetValue(value);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
             @"CheckItem", (e, item) =>
             {
                 e.SetItemChecked(item, true);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction UncheckItem = SimpleAction<ICheckItemsElement, string>(
             @"UncheckItem", (e, item) =>
             {
                 e.SetItemChecked(item, false);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction SelectItem = SimpleAction<ISelectItemsElement, string>(
             @"SelectItem", (e, item) =>
             {
                 e.SetItemSelected(item, true);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction UnselectItem = SimpleAction<ISelectItemsElement, string>(
             @"UnselectItem", (e, item) =>
             {
                 e.SetItemSelected(item, false);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction SetSelectedIndex = SimpleAction<ISelectIndexElement, object>(
             @"SetSelectedIndex", (e, arg) =>
             {
                 e.SetSelectedIndex(UiValue.ToInt(arg));
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction GetGridText = SimpleAction<GridElement>(
-            @"GetGridText", e => e.GetGridText(), mustBeEnabled: false);
+            @"GetGridText", e => e.GetGridText(), mustBeEnabled: false, returnsValue: true);
 
         public static readonly UiAction SetGridText = SimpleAction<GridElement, string>(
             @"SetGridText", (e, text) =>
             {
                 e.SetGridText(text);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction SetCurrentCellAddress = SimpleAction<GridElement, object>(
             @"SetCurrentCellAddress", (e, arg) =>
@@ -256,28 +254,28 @@ namespace pwiz.Skyline.ToolsUI
                 var cell = UiValue.ToColumnRow(arg);
                 e.SetCurrentCellAddress(cell[0], cell[1]);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
             @"Expand", (e, path) =>
             {
                 e.Expand(path);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction Collapse = SimpleAction<IExpandCollapseElement, object>(
             @"Collapse", (e, path) =>
             {
                 e.Collapse(path);
                 return null;
-            }, watchForDialog: true);
+            });
 
         public static readonly UiAction SelectTab = SimpleAction<ISelectTabElement, string>(
             @"SelectTab", (e, tab) =>
             {
                 e.SelectTab(tab);
                 return null;
-            }, watchForDialog: true);
+            });
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
@@ -295,22 +293,15 @@ namespace pwiz.Skyline.ToolsUI
                 string.Equals(action.Name, normalized, StringComparison.OrdinalIgnoreCase));
         }
 
-        public static UiAction SimpleAction<T>(string name, Func<T, object> action, bool mustBeEnabled = true, bool watchForDialog = false, bool runOnUiThread = true, bool mustBeVisible = true)
+        public static UiAction SimpleAction<T>(string name, Func<T, object> action, bool mustBeEnabled = true, bool returnsValue = false)
         {
-            return SimpleAction<T, object>(name, (element, arg) => action(element), mustBeEnabled, watchForDialog, runOnUiThread, mustBeVisible);
+            return SimpleAction<T, object>(name, (element, arg) => action(element), mustBeEnabled, returnsValue);
         }
 
         public static UiAction SimpleAction<T, TArg>(string name, Func<T, TArg, object> action,
-            bool mustBeEnabled = true,
-            bool watchForDialog = false, bool runOnUiThread = true, bool mustBeVisible = true)
+            bool mustBeEnabled = true, bool returnsValue = false)
         {
-            return new SimpleActionImpl<T, TArg>(name, action, mustBeEnabled)
-            {
-                RunOnUiThread = runOnUiThread,
-                MustBeVisible = true,
-                WatchForDialog = watchForDialog,
-                MustBeEnabled = mustBeEnabled
-            };
+            return new SimpleActionImpl<T, TArg>(name, action, mustBeEnabled) { ReturnsValue = returnsValue };
         }
 }
 
@@ -755,12 +746,12 @@ namespace pwiz.Skyline.ToolsUI
         public UiElement ElementFor(Control control)
         {
             var element = CreateElement(control);
-            if (element is ControlElement controlElement)
-                controlElement.FormElement = this;
+            if (element != null)
+                element.FormElement = this;
             return element;
         }
 
-        private UiElement CreateElement(Control control)
+        private ControlElement CreateElement(Control control)
         {
             switch (control)
             {
@@ -801,17 +792,25 @@ namespace pwiz.Skyline.ToolsUI
         public string FormId => JsonUiService.GetFormId(Form);
         public string Title => JsonUiService.GetFormTitle(Form);
 
-        public ControlInfo[] GetControls() => JsonUiService.InvokeOnUiThread(GetChildren);
+        // A value read: run synchronously inside the dialog-watch so it does not hang if a modal is up.
+        public ControlInfo[] GetControls()
+        {
+            ControlInfo[] result = null;
+            JsonUiService.RunWithDialogWatch(() =>
+            {
+                result = JsonUiService.InvokeOnUiThread(GetChildren);
+                return true;
+            });
+            return result;
+        }
 
         public void ClickButton(string button) => JsonUiService.ClickFormControl(this, button);
 
         public void SetValue(string controlId, string value) => JsonUiService.SetFormControlValue(this, controlId, value);
 
-        public void Close() => JsonUiService.RunWithDialogWatch(() =>
-        {
-            JsonUiService.InvokeOnUiThread(() => Form.Close());
-            return true;
-        });
+        // Closing is a void action -- post it fire-and-forget so a "save changes?" confirmation it raises
+        // becomes a form the caller drives next rather than blocking.
+        public void Close() => JsonUiService.BeginInvokeOnUiThread(() => Form.Close());
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
         {

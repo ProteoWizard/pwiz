@@ -116,6 +116,29 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
+        /// Posts an action to the UI thread fire-and-forget (BeginInvoke, not Invoke): the caller returns at
+        /// once and does not wait for or observe the result. Used for a void action (a click, a value set)
+        /// so a gesture that opens a modal dialog does not block -- the modal is driven by later commands,
+        /// the same way the main-menu-item path posts its click. Posted on the same (main-window) queue as
+        /// <see cref="InvokeOnUiThread(System.Action)"/>, so a later synchronous read sees this action's
+        /// effect (the queue is FIFO). Must be called off the UI thread.
+        /// </summary>
+        public static void BeginInvokeOnUiThread(Action action)
+        {
+            var mainWindow = Program.MainWindow;
+            if (mainWindow != null && !mainWindow.IsDisposed)
+            {
+                mainWindow.BeginInvoke(action);
+                return;
+            }
+            var syncContext = Program.UiSynchronizationContext;
+            if (syncContext == null)
+                throw new InvalidOperationException(
+                    @"No UI thread is available to handle this request.");
+            syncContext.Post(_ => action(), null);
+        }
+
+        /// <summary>
         /// Whether there is a UI thread to marshal to -- either a live main window or the captured
         /// synchronization context (the StartPage case, before the main window exists).
         /// </summary>
@@ -568,6 +591,7 @@ namespace pwiz.Skyline.ToolsUI
         // PerformClick; a tab by selecting it).
         internal static void ClickFormControl(FormElement formElement, string button)
         {
+            // Resolve + verify synchronously on the UI thread, so a control not found / disabled fails here.
             var element = InvokeOnUiThread(() =>
             {
                 VerifyFormInteractable(formElement.Form);
@@ -575,11 +599,9 @@ namespace pwiz.Skyline.ToolsUI
                 VerifyInteractable(clickable);
                 return clickable;
             });
-            RunWithDialogWatch(() =>
-            {
-                UiActions.Click.Invoke(element, null);
-                return true;
-            });
+            // The click is a void action -- post it fire-and-forget so a click that opens a modal does not
+            // block; the modal is driven by later commands.
+            BeginInvokeOnUiThread(() => UiActions.Click.Invoke(element, null));
         }
 
         /// <summary>
@@ -697,35 +719,34 @@ namespace pwiz.Skyline.ToolsUI
             ResolveForm(formId, CancellationToken.None).SetValue(controlId, value);
         }
 
-        // Sets a control's value (or a grid cell) on a managed form (FormElement.SetValue). Watches for a
-        // dialog so a setter that triggers a validation/confirmation alert fails fast with its text, or that
-        // opens a native dialog returns immediately, instead of blocking.
+        // Sets a control's value (or a grid cell) on a managed form (FormElement.SetValue). The control is
+        // resolved + gated synchronously on the UI thread (so a control not found / disabled fails here),
+        // then the value is applied fire-and-forget -- a void action, so a setter that pops a validation or
+        // confirmation alert does not block; the alert becomes a form the caller drives next.
         internal static void SetFormControlValue(FormElement formElement, string controlId, string value)
         {
-            RunWithDialogWatch(() =>
+            var apply = InvokeOnUiThread(() =>
             {
-                InvokeOnUiThread(() =>
+                // controlId can name a grid cell ("grid[column,row]") -- set that cell's value: move the
+                // current cell there and paste, reusing the grid path so a DataboundGridControl stays in
+                // sync. The grid is resolved through the same finder as every other control.
+                if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
                 {
-                    // controlId can name a grid cell ("grid[column,row]") -- set that cell's value: move the
-                    // current cell there and paste, reusing the grid path so a DataboundGridControl stays in
-                    // sync. The grid is resolved through the same finder as every other control.
-                    if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
+                    var gridElement = FindGrid(formElement, gridName);
+                    VerifyInteractable(gridElement);
+                    return (Action) (() =>
                     {
-                        var gridElement = FindGrid(formElement, gridName);
-                        VerifyInteractable(gridElement);
                         gridElement.SetCurrentCellAddress(column, row);
                         gridElement.SetGridText(value);
-                        return;
-                    }
-                    // A field is matched by its own Label (its caption, or the label that names a
-                    // caption-less box -- see UiElement.Label), so a label never has to be matched and
-                    // resolved forward to its field.
-                    var element = formElement.FindElement(controlId, UiActions.SetValue);
-                    VerifyInteractable(element);
-                    UiActions.SetValue.Invoke(element, value);
-                });
-                return true;
+                    });
+                }
+                // A field is matched by its own Label (its caption, or the label that names a caption-less
+                // box -- see UiElement.Label), so a label never has to be matched and resolved to its field.
+                var element = formElement.FindElement(controlId, UiActions.SetValue);
+                VerifyInteractable(element);
+                return (Action) (() => UiActions.SetValue.Invoke(element, value));
             });
+            BeginInvokeOnUiThread(apply);
         }
 
         /// <summary>
@@ -736,9 +757,16 @@ namespace pwiz.Skyline.ToolsUI
         public static string GetFormValue(string formId, string controlId)
         {
             ValidateFormIdFormat(formId);
-            return InvokeOnUiThread(() =>
-                new FormElement(FindFormById(formId), CancellationToken.None)
-                    .FindElement(controlId, UiActions.GetValue).Value);
+            // A value read: run it synchronously inside the dialog-watch so it does not hang if a modal is up.
+            string result = null;
+            RunWithDialogWatch(() =>
+            {
+                result = InvokeOnUiThread(() =>
+                    new FormElement(FindFormById(formId), CancellationToken.None)
+                        .FindElement(controlId, UiActions.GetValue).Value);
+                return true;
+            });
+            return result;
         }
 
         /// <summary>
@@ -751,18 +779,15 @@ namespace pwiz.Skyline.ToolsUI
         public static void SetGridText(string formId, string controlId, string text)
         {
             ValidateFormIdFormat(formId);
-            // A type conversion error during the paste raises an alert; watch for it so it is surfaced
-            // rather than left blocking the main window.
-            RunWithDialogWatch(() =>
+            // Resolve + gate the grid synchronously, then paste fire-and-forget: a void action, so a type
+            // conversion alert the paste raises becomes a form the caller drives rather than blocking here.
+            var grid = InvokeOnUiThread(() =>
             {
-                InvokeOnUiThread(() =>
-                {
-                    var grid = FindGrid(new FormElement(FindFormById(formId), CancellationToken.None), controlId);
-                    VerifyInteractable(grid);
-                    grid.SetGridText(text ?? string.Empty);
-                });
-                return true;
+                var g = FindGrid(new FormElement(FindFormById(formId), CancellationToken.None), controlId);
+                VerifyInteractable(g);
+                return g;
             });
+            BeginInvokeOnUiThread(() => grid.SetGridText(text ?? string.Empty));
         }
 
         /// <summary>
@@ -774,12 +799,14 @@ namespace pwiz.Skyline.ToolsUI
         public static void SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
             ValidateFormIdFormat(formId);
-            InvokeOnUiThread(() =>
+            // Resolve + gate synchronously, then move the cell fire-and-forget (a void action).
+            var grid = InvokeOnUiThread(() =>
             {
-                var grid = FindGrid(new FormElement(FindFormById(formId), CancellationToken.None), controlId);
-                VerifyInteractable(grid);
-                grid.SetCurrentCellAddress(column, row);
+                var g = FindGrid(new FormElement(FindFormById(formId), CancellationToken.None), controlId);
+                VerifyInteractable(g);
+                return g;
             });
+            BeginInvokeOnUiThread(() => grid.SetCurrentCellAddress(column, row));
         }
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the
@@ -877,9 +904,15 @@ namespace pwiz.Skyline.ToolsUI
             // copy is abandoned if the client goes away rather than pinning the single-instance server.
             using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
             {
-                // The FormElement carries the disconnect token; the grid it produces reads with it.
-                var text = InvokeOnUiThread(() =>
-                    FindGrid(new FormElement(FindFormById(formId), cancellation.Token), gridId).GetGridText());
+                // A value read: run it synchronously inside the dialog-watch so it does not hang if a modal
+                // is up. The FormElement carries the disconnect token; the grid it produces reads with it.
+                string text = null;
+                RunWithDialogWatch(() =>
+                {
+                    text = InvokeOnUiThread(() =>
+                        FindGrid(new FormElement(FindFormById(formId), cancellation.Token), gridId).GetGridText());
+                    return true;
+                });
                 if (text == null)
                     throw new OperationCanceledException(LlmInstruction.Format(
                         @"Reading the grid {0} was cancelled.", formId));
@@ -1048,23 +1081,24 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Runs a resolved action with the threading it declares: a mutation or click runs inside the
-        // dialog-watch (so a dialog it pops is surfaced rather than blocking the worker); a click runs its
-        // Invoke on the calling (worker) thread because the element marshals its own gesture (a posted
-        // BM_CLICK must not be sent from the UI thread), while every other action is marshalled to the UI
-        // thread. Must be called off the UI thread.
+        // Runs a resolved action with the threading its ReturnsValue declares. A void action (a click, a
+        // value set) is posted to the UI thread fire-and-forget: the verb returns at once, and a gesture that
+        // opens a modal does not block -- the modal is driven by later commands, exactly like the
+        // main-menu-item path. A value action (get_value, get_grid_text) must be waited for, so it is run
+        // synchronously on the UI thread inside the dialog-watch (which returns rather than hanging if a modal
+        // is up). The element resolution / gating has already happened synchronously, so a bad path or a
+        // disabled control still fails before this. Must be called off the UI thread.
         internal static object ExecuteAction(UiAction action, UiElement element, object value)
         {
-            if (!action.WatchForDialog)
-                return action.RunOnUiThread
-                    ? InvokeOnUiThread(() => action.Invoke(element, value))
-                    : action.Invoke(element, value);
+            if (!action.ReturnsValue)
+            {
+                BeginInvokeOnUiThread(() => action.Invoke(element, value));
+                return null;
+            }
             object result = null;
             RunWithDialogWatch(() =>
             {
-                result = action.RunOnUiThread
-                    ? InvokeOnUiThread(() => action.Invoke(element, value))
-                    : action.Invoke(element, value);
+                result = InvokeOnUiThread(() => action.Invoke(element, value));
                 return true;
             });
             return result;
