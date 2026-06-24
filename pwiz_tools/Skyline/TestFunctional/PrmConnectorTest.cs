@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestFunctional
             // 2) Click "Add Files" -> the native "Add Input Files" dialog appears.
             // Wait for it the way the AI Connector would: poll GetOpenForms (the discovery method
             // IJsonToolService exposes) until the native FileDialog shows up, rather than the
-            // internal NativeDialogAutomation helper.
+            // internal NativeDialog helper.
             JsonUiService.ClickFormButton(wizardId, @"Add Files");
             string addFilesId = WaitForNativeFileDialogId();
 

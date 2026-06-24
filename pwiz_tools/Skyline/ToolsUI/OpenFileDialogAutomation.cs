@@ -30,7 +30,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>
     /// Drives the native Windows common Open/Save file dialog (such as the OpenFileDialog shown
     /// by <c>SkylineWindow.ShowOpenFileDialog</c>) using UI Automation. See
-    /// <see cref="NativeDialogAutomation"/> for the threading contract and how to obtain an
+    /// <see cref="NativeDialog"/> for the threading contract and how to obtain an
     /// instance.
     /// </summary>
     public class OpenFileDialogAutomation : FileDialogAutomation

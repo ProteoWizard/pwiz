@@ -33,7 +33,7 @@ namespace pwiz.Skyline.ToolsUI
     /// path-entry gesture is abstract. They share the single "FileDialog" type name the MCP layer
     /// uses to route SetFormValue / ClickFormButton to either dialog uniformly.
     /// </summary>
-    public abstract class FileDialogAutomation : NativeDialogAutomation
+    public abstract class FileDialogAutomation : NativeDialog
     {
         protected FileDialogAutomation(IntPtr windowHandle) : base(windowHandle)
         {
@@ -45,14 +45,14 @@ namespace pwiz.Skyline.ToolsUI
         // it) and a file-name field (set_value enters the path). They dispatch to this automation.
         public override IEnumerable<UiElement> Children => new UiElement[]
         {
-            new NativeDialogButtonElement(this, true, @"OK"),
-            new NativeDialogButtonElement(this, false, @"Cancel"),
+            new NativeDialogButton(this, true, @"OK"),
+            new NativeDialogButton(this, false, @"Cancel"),
             new NativeFileNameElement(this),
         };
 
         /// <summary>
         /// Types the file name(s) into the dialog's file name field without accepting; call
-        /// <see cref="NativeDialogAutomation.Accept"/> to open/save. The Open dialog accepts several
+        /// <see cref="NativeDialog.Accept"/> to open/save. The Open dialog accepts several
         /// space-quoted paths for a multiselect (see <see cref="OpenFileDialogAutomation.QuotePaths"/>);
         /// the Save dialog takes a single path.
         /// </summary>
@@ -61,13 +61,13 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>The OK or Cancel button of a native dialog. A click dispatches to the dialog's Accept or
     /// Cancel (the gesture differs by dialog type), so the connector drives it like any form button.</summary>
-    internal sealed class NativeDialogButtonElement : UiElement
+    internal sealed class NativeDialogButton : UiElement
     {
-        private readonly NativeDialogAutomation _dialog;
+        private readonly NativeDialog _dialog;
         private readonly bool _accept;
         private readonly string _label;
 
-        public NativeDialogButtonElement(NativeDialogAutomation dialog, bool accept, string label)
+        public NativeDialogButton(NativeDialog dialog, bool accept, string label)
         {
             _dialog = dialog;
             _accept = accept;

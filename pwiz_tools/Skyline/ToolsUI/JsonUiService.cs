@@ -1202,7 +1202,7 @@ namespace pwiz.Skyline.ToolsUI
         // (pipe) thread -- the dialog is modal on the UI thread, so it must not be marshalled there -- and
         // the path is resolved against the dialog as its root. The dialog's elements dispatch to UI
         // Automation / Win32 messages, which are safe from any thread.
-        private static object PerformActionOnNativeDialog(NativeDialogAutomation dialog, UiElementPath path,
+        private static object PerformActionOnNativeDialog(NativeDialog dialog, UiElementPath path,
             UiAction uiAction, object value, CancellationToken token)
         {
             var element = ResolvePath(path, _ => dialog);
@@ -1340,7 +1340,7 @@ namespace pwiz.Skyline.ToolsUI
             // on the pipe thread, NOT inside InvokeOnUiThread: when such a dialog is modal the UI
             // thread is busy in the dialog's own message loop, and querying it from that thread
             // can deadlock.
-            foreach (var dialog in NativeDialogAutomation.GetOpenDialogs())
+            foreach (var dialog in NativeDialog.GetOpenDialogs())
             {
                 results.Add(new FormInfo
                 {
@@ -1355,14 +1355,14 @@ namespace pwiz.Skyline.ToolsUI
             return results.ToArray();
         }
 
-        private static string GetNativeDialogId(NativeDialogAutomation dialog)
+        private static string GetNativeDialogId(NativeDialog dialog)
         {
             return dialog.DialogTypeName + @":" + dialog.Title;
         }
 
-        private static bool TryGetNativeDialog(string formId, out NativeDialogAutomation dialog)
+        private static bool TryGetNativeDialog(string formId, out NativeDialog dialog)
         {
-            foreach (var openDialog in NativeDialogAutomation.GetOpenDialogs())
+            foreach (var openDialog in NativeDialog.GetOpenDialogs())
             {
                 if (GetNativeDialogId(openDialog) == formId)
                 {
@@ -1525,7 +1525,7 @@ namespace pwiz.Skyline.ToolsUI
         // WinForms path this runs entirely on the calling (pipe) thread: the capture is a screen
         // copy by window handle and must not marshal to the UI thread, which may be blocked in a
         // modal dialog's message loop.
-        private static string GetNativeDialogImage(NativeDialogAutomation dialog, string filePath)
+        private static string GetNativeDialogImage(NativeDialog dialog, string filePath)
         {
             if (!HasUiDispatch())
                 return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
@@ -1541,7 +1541,7 @@ namespace pwiz.Skyline.ToolsUI
             return filePath.ToForwardSlashPath();
         }
 
-        private static ImageBytesMetadata GetNativeDialogImageBytes(NativeDialogAutomation dialog)
+        private static ImageBytesMetadata GetNativeDialogImageBytes(NativeDialog dialog)
         {
             if (!HasUiDispatch())
                 return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };

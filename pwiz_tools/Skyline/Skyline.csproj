@@ -1403,7 +1403,7 @@
     <Compile Include="ToolsUI\JsonUiService.cs" />
     <Compile Include="ToolsUI\UiElement.cs" />
     <Compile Include="ToolsUI\FileDialogAutomation.cs" />
-    <Compile Include="ToolsUI\NativeDialogAutomation.cs" />
+    <Compile Include="ToolsUI\NativeDialog.cs" />
     <Compile Include="ToolsUI\OpenFileDialogAutomation.cs" />
     <Compile Include="ToolsUI\SaveFileDialogAutomation.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />

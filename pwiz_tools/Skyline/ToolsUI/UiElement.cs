@@ -85,7 +85,7 @@ namespace pwiz.Skyline.ToolsUI
     ///
     /// Most elements wrap a WinForms <see cref="Control"/> (see <see cref="ControlElement"/>), but the base
     /// is public and control-agnostic so a non-WinForms surface can present itself the same way -- a native
-    /// dialog (<see cref="NativeDialogAutomation"/>) is itself a UiElement whose children dispatch to UI
+    /// dialog (<see cref="NativeDialog"/>) is itself a UiElement whose children dispatch to UI
     /// Automation rather than to a Control.
     /// </summary>
     public abstract class UiElement

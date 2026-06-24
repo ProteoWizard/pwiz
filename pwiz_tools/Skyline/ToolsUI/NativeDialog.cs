@@ -52,7 +52,7 @@ namespace pwiz.Skyline.ToolsUI
     /// are connector elements (buttons, a file-name field) that dispatch their actions to this automation
     /// (Accept/Cancel/EnterPath) instead of to a WinForms control.
     /// </summary>
-    public abstract class NativeDialogAutomation : UiElement
+    public abstract class NativeDialog : UiElement
     {
         protected const string DIALOG_CLASS_NAME = @"#32770"; // Win32 dialog window class
         private const int DEFAULT_TIMEOUT_MILLIS = 30 * 1000;
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private AutomationElement _dialogElement;
 
-        protected NativeDialogAutomation(IntPtr windowHandle)
+        protected NativeDialog(IntPtr windowHandle)
         {
             WindowHandle = windowHandle;
         }
@@ -96,7 +96,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Returns the automation wrapper for the given native dialog element, choosing the
         /// subclass that matches the dialog, or null if no subclass handles it.
         /// </summary>
-        public static NativeDialogAutomation Create(AutomationElement dialog)
+        public static NativeDialog Create(AutomationElement dialog)
         {
             IntPtr handle;
             try
@@ -125,9 +125,9 @@ namespace pwiz.Skyline.ToolsUI
         /// Returns automation wrappers for the native dialogs currently open in this process,
         /// found via UI Automation. Must be called from a thread other than the UI thread.
         /// </summary>
-        public static IList<NativeDialogAutomation> GetOpenDialogs()
+        public static IList<NativeDialog> GetOpenDialogs()
         {
-            var result = new List<NativeDialogAutomation>();
+            var result = new List<NativeDialog>();
             var seen = new HashSet<IntPtr>();
             foreach (var element in FindDialogElements())
             {
@@ -142,7 +142,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Waits for a native dialog of the given type to appear in this process and returns its
         /// automation wrapper.
         /// </summary>
-        public static T WaitForDialog<T>(int millisTimeout = DEFAULT_TIMEOUT_MILLIS) where T : NativeDialogAutomation
+        public static T WaitForDialog<T>(int millisTimeout = DEFAULT_TIMEOUT_MILLIS) where T : NativeDialog
         {
             return PollUntil(millisTimeout, typeof(T).Name,
                 () => GetOpenDialogs().OfType<T>().FirstOrDefault());

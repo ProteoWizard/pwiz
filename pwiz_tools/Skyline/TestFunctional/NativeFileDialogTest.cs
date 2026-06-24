@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
             // Show the native Open dialog without blocking the test thread, then wait for it to
             // appear and obtain its automation wrapper.
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            var fileDialog = NativeDialogAutomation.WaitForDialog<OpenFileDialogAutomation>();
+            var fileDialog = NativeDialog.WaitForDialog<OpenFileDialogAutomation>();
 
             // GetOpenForms includes the native dialog, flagged as native.
             var nativeForms = JsonUiService.GetOpenForms().Where(form => form.IsNative).ToArray();
@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Dismiss the dialog and confirm it leaves the document unchanged.
             fileDialog.Cancel();
-            WaitForCondition(() => !NativeDialogAutomation.GetOpenDialogs().Any());
+            WaitForCondition(() => !NativeDialog.GetOpenDialogs().Any());
             Assert.AreSame(documentBefore, SkylineWindow.Document);
 
             // Exercise the open flow used by OpenDocument: save the current document, start a new
@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var documentBeforeOpen = SkylineWindow.Document;
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            NativeDialogAutomation.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAccept(savePath);
+            NativeDialog.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAccept(savePath);
             WaitForDocumentChangeLoaded(documentBeforeOpen);
             Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath);
         }

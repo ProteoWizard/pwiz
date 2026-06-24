@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var documentBeforeOpen = SkylineWindow.Document;
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            NativeDialogAutomation.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAcceptViaButton(savePath);
+            NativeDialog.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAcceptViaButton(savePath);
             WaitForDocumentChangeLoaded(documentBeforeOpen);
             Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath);
         }

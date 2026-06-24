@@ -28,7 +28,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>
     /// Drives the native Windows common Save file dialog (the modern Vista-style dialog shown by
     /// <see cref="System.Windows.Forms.SaveFileDialog"/>), using UI Automation to locate controls and
-    /// Win32 window messages to drive them. See <see cref="NativeDialogAutomation"/> for the threading
+    /// Win32 window messages to drive them. See <see cref="NativeDialog"/> for the threading
     /// contract and how to obtain an instance.
     ///
     /// Unlike the Open dialog, the Save dialog does NOT expose the classic file-name combo

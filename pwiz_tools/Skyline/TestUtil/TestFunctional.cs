@@ -491,7 +491,7 @@ namespace pwiz.SkylineTestUtil
             var documentBefore = SkylineWindow.Document;
             // Post the modal dialog to the UI thread so the test thread is free to drive it.
             SkylineBeginInvoke(() => SkylineWindow.ShowOpenFileDialog());
-            NativeDialogAutomation.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAccept(path);
+            NativeDialog.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAccept(path);
             // Clicking Open starts the load on the UI thread after EnterPathAndAccept returns,
             // so wait for the new document (not the one that was current before) to finish loading.
             WaitForDocumentChangeLoaded(documentBefore);
