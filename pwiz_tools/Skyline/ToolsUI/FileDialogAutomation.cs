@@ -56,6 +56,10 @@ namespace pwiz.Skyline.ToolsUI
         /// the Save dialog takes a single path.
         /// </summary>
         public abstract void EnterPath(string path);
+
+        // The connector's set_value on a file dialog (its controlId is ignored -- a file dialog has the one
+        // file-name field) types the path; click OK to commit.
+        protected override void SetValueCore(string value) => EnterPath(value);
     }
 
     /// <summary>The OK or Cancel button of a native dialog. A click dispatches to the dialog's Accept or

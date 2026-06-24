@@ -557,38 +557,27 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void ClickFormButton(string formId, string button)
         {
-            ValidateFormIdFormat(formId);
-            if (TryGetNativeDialog(formId, out var dialog))
-            {
-                if (!User32.IsWindowEnabled(dialog.WindowHandle))
-                    throw new InvalidOperationException(LlmInstruction.Format(
-                        @"Cannot interact with native dialog '{0}' because it is blocked.", formId));
+            ResolveForm(formId, CancellationToken.None).ClickButton(button);
+        }
 
-                if (IsCancelAction(button))
-                    dialog.Cancel();
-                else
-                    dialog.Accept();
-                return;
-            }
-            // Resolve the click target on the UI thread, then act inside the dialog-watch so a dialog
-            // the click pops is observed: a resulting alert is surfaced (throws its text) and a native
-            // dialog (e.g. Save/Open) returns immediately rather than blocking on its modal. Each element
-            // knows how to click itself (a button via BM_CLICK so an AutoCheck=false checkbox still
-            // toggles; a menu/toolbar item or tile via PerformClick; a tab by selecting it).
+        // Clicks a control on a managed form by its visible label (FormElement.ClickButton). Resolves the
+        // click target on the UI thread, then acts inside the dialog-watch so a dialog the click pops is
+        // observed: a resulting alert is surfaced (throws its text) and a native dialog (e.g. Save/Open)
+        // returns immediately rather than blocking on its modal. Each element knows how to click itself (a
+        // button via BM_CLICK so an AutoCheck=false checkbox still toggles; a menu/toolbar item or tile via
+        // PerformClick; a tab by selecting it).
+        internal static void ClickFormControl(FormElement formElement, string button)
+        {
             var element = InvokeOnUiThread(() =>
             {
-                var form = FindFormById(formId);
-                VerifyFormInteractable(form);
-                var clickable = UiElementFactory.For(form).FindElement(button, UiActions.Click);
+                VerifyFormInteractable(formElement.Form);
+                var clickable = formElement.FindElement(button, UiActions.Click);
                 VerifyInteractable(clickable);
                 return clickable;
             });
             RunWithDialogWatch(() =>
             {
-                // The element clicks itself; each handles its own threading (a Win32 BM_CLICK is sent
-                // cross-thread so a click that opens a modal does not block here, while a managed
-                // PerformClick / property-set marshals to the UI thread internally).
-                UiActions.Click.Invoke(element, null, CancellationToken.None);
+                UiActions.Click.Invoke(element, null);
                 return true;
             });
         }
@@ -705,33 +694,24 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void SetFormValue(string formId, string controlId, string value)
         {
-            // Watch for a dialog so a setter that triggers a validation/confirmation alert fails fast
-            // with its text, or that opens a native dialog returns immediately, instead of blocking.
+            ResolveForm(formId, CancellationToken.None).SetValue(controlId, value);
+        }
+
+        // Sets a control's value (or a grid cell) on a managed form (FormElement.SetValue). Watches for a
+        // dialog so a setter that triggers a validation/confirmation alert fails fast with its text, or that
+        // opens a native dialog returns immediately, instead of blocking.
+        internal static void SetFormControlValue(FormElement formElement, string controlId, string value)
+        {
             RunWithDialogWatch(() =>
             {
-                ValidateFormIdFormat(formId);
-                if (TryGetNativeDialog(formId, out var dialog))
-                {
-                    if (!User32.IsWindowEnabled(dialog.WindowHandle))
-                        throw new InvalidOperationException(LlmInstruction.Format(
-                            @"Cannot interact with native dialog '{0}' because it is blocked.", formId));
-
-                    if (!(dialog is FileDialogAutomation fileDialog))
-                        throw new ArgumentException(LlmInstruction.Format(
-                            @"Setting values is not supported for native dialog {0}.", formId));
-                    fileDialog.EnterPath(value);
-                    return;
-                }
                 InvokeOnUiThread(() =>
                 {
-                    var form = FindFormById(formId);
-
                     // controlId can name a grid cell ("grid[column,row]") -- set that cell's value: move the
                     // current cell there and paste, reusing the grid path so a DataboundGridControl stays in
                     // sync. The grid is resolved through the same finder as every other control.
                     if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
                     {
-                        var gridElement = FindGrid(form, gridName);
+                        var gridElement = FindGrid(formElement, gridName);
                         VerifyInteractable(gridElement);
                         gridElement.SetCurrentCellAddress(column, row);
                         gridElement.SetGridText(value);
@@ -740,10 +720,11 @@ namespace pwiz.Skyline.ToolsUI
                     // A field is matched by its own Label (its caption, or the label that names a
                     // caption-less box -- see UiElement.Label), so a label never has to be matched and
                     // resolved forward to its field.
-                    var element = UiElementFactory.For(form).FindElement(controlId, UiActions.SetValue);
+                    var element = formElement.FindElement(controlId, UiActions.SetValue);
                     VerifyInteractable(element);
-                    UiActions.SetValue.Invoke(element, value, CancellationToken.None);
+                    UiActions.SetValue.Invoke(element, value);
                 });
+                return true;
             });
         }
 
@@ -756,7 +737,8 @@ namespace pwiz.Skyline.ToolsUI
         {
             ValidateFormIdFormat(formId);
             return InvokeOnUiThread(() =>
-                UiElementFactory.For(FindFormById(formId)).FindElement(controlId, UiActions.GetValue).Value);
+                new FormElement(FindFormById(formId), CancellationToken.None)
+                    .FindElement(controlId, UiActions.GetValue).Value);
         }
 
         /// <summary>
@@ -775,7 +757,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 InvokeOnUiThread(() =>
                 {
-                    var grid = FindGrid(FindFormById(formId), controlId);
+                    var grid = FindGrid(new FormElement(FindFormById(formId), CancellationToken.None), controlId);
                     VerifyInteractable(grid);
                     grid.SetGridText(text ?? string.Empty);
                 });
@@ -794,7 +776,7 @@ namespace pwiz.Skyline.ToolsUI
             ValidateFormIdFormat(formId);
             InvokeOnUiThread(() =>
             {
-                var grid = FindGrid(FindFormById(formId), controlId);
+                var grid = FindGrid(new FormElement(FindFormById(formId), CancellationToken.None), controlId);
                 VerifyInteractable(grid);
                 grid.SetCurrentCellAddress(column, row);
             });
@@ -807,10 +789,9 @@ namespace pwiz.Skyline.ToolsUI
         // bound inner grid (a DataboundGridControl's BoundDataGridView) as a BoundGridElement with the rich
         // copy/paste path, and a standalone DataGridView as a plain GridElement; the DataboundGridControl
         // itself is a transparent container the walk descends through to reach the inner grid.
-        private static GridElement FindGrid(Form form, string controlId)
+        private static GridElement FindGrid(FormElement formElement, string controlId)
         {
-            return (GridElement) UiElementFactory.For(form)
-                .FindElement(controlId ?? string.Empty, UiActions.SetGridText);
+            return (GridElement) formElement.FindElement(controlId ?? string.Empty, UiActions.SetGridText);
         }
 
         // Pastes tab/newline-separated text into a plain DataGridView by setting cell values from the
@@ -896,8 +877,9 @@ namespace pwiz.Skyline.ToolsUI
             // copy is abandoned if the client goes away rather than pinning the single-instance server.
             using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
             {
+                // The FormElement carries the disconnect token; the grid it produces reads with it.
                 var text = InvokeOnUiThread(() =>
-                    FindGrid(FindFormById(formId), gridId).GetGridText(cancellation.Token));
+                    FindGrid(new FormElement(FindFormById(formId), cancellation.Token), gridId).GetGridText());
                 if (text == null)
                     throw new OperationCanceledException(LlmInstruction.Format(
                         @"Reading the grid {0} was cancelled.", formId));
@@ -943,26 +925,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void CloseForm(string formId)
         {
-            ValidateFormIdFormat(formId);
-            // Closing may itself raise a confirmation (e.g. "save changes?"); watch for it so it is
-            // surfaced rather than left blocking the main window.
-            RunWithDialogWatch(() =>
-            {
-                if (TryGetNativeDialog(formId, out var dialog))
-                {
-                    dialog.Cancel();
-                    return true;
-                }
-                InvokeOnUiThread(() =>
-                {
-                    var form = FindFormById(formId);
-                    if (form == null)
-                        throw new ArgumentException(LlmInstruction.Format(
-                            @"Form not found: {0}. Use skyline_get_open_forms to list open forms.", formId));
-                    form.Close();
-                });
-                return true;
-            });
+            ResolveForm(formId, CancellationToken.None).Close();
         }
 
 
@@ -1049,13 +1012,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static ControlInfo[] GetControls(string formId)
         {
-            ValidateFormIdFormat(formId);
-            // A native dialog is enumerated on this (pipe) thread via UI Automation, never inside
-            // InvokeOnUiThread: while it is modal the UI thread is busy in its own message loop, so a
-            // marshalled call would deadlock.
-            if (TryGetNativeDialog(formId, out var dialog))
-                return dialog.GetChildren();
-            return InvokeOnUiThread(() => UiElementFactory.For(FindFormById(formId)).GetChildren());
+            return ResolveForm(formId, CancellationToken.None).GetControls();
         }
 
         internal static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
@@ -1078,25 +1035,16 @@ namespace pwiz.Skyline.ToolsUI
                 @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
             // Capture the disconnect check on this (server) thread before any marshaling, so a long action
             // (e.g. reading a large grid) is abandoned if the client goes away rather than pinning the
-            // single-instance server. The action receives the token through its Invoke.
+            // single-instance server. The token is carried by the FormElement, which hands it to every
+            // element in its tree, so the action reaches it without a parameter.
             using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
             {
-                var token = cancellation.Token;
-                // A path rooted at a native dialog is resolved and acted on this (pipe) thread: the dialog
-                // runs its own modal loop on the UI thread, so marshalling to it (or to RunWithDialogWatch's
-                // background work) would deadlock. The dialog's elements post Win32 messages / drive UI
-                // Automation, which is safe from any thread, so the action's thread policy is bypassed here.
-                if (TryGetNativeDialog(RootFormText(path), out var nativeDialog))
-                {
-                    var nativeElement = RequireAction(ResolvePath(path, _ => nativeDialog), uiAction);
-                    return uiAction.Invoke(nativeElement, value, token);
-                }
-                // Resolve + verify on the UI thread (a control's gates read window handles), then run the
-                // action with the thread/dialog policy it declares. get_actions/get_children are ordinary
-                // reads now -- the action's Invoke returns the element's SupportedActions / GetChildren(),
-                // whose child paths are parentless (the caller knows the parent it asked about).
-                var element = InvokeOnUiThread(() => RequireAction(ResolvePath(path), uiAction));
-                return ExecuteAction(uiAction, element, value, token);
+                // The path's root names a form; resolve it (managed or native) and let it perform the action
+                // in its own thread context (a managed form on the UI thread inside the dialog-watch; a native
+                // dialog on this calling thread). get_actions/get_children are ordinary reads -- the action's
+                // Invoke returns the element's SupportedActions / GetChildren(), whose child paths are
+                // parentless (the caller knows the parent it asked about).
+                return ResolveForm(RootFormText(path), cancellation.Token).PerformAction(path, uiAction, value);
             }
         }
 
@@ -1105,18 +1053,18 @@ namespace pwiz.Skyline.ToolsUI
         // Invoke on the calling (worker) thread because the element marshals its own gesture (a posted
         // BM_CLICK must not be sent from the UI thread), while every other action is marshalled to the UI
         // thread. Must be called off the UI thread.
-        private static object ExecuteAction(UiAction action, UiElement element, object value, CancellationToken token)
+        internal static object ExecuteAction(UiAction action, UiElement element, object value)
         {
             if (!action.WatchForDialog)
                 return action.RunOnUiThread
-                    ? InvokeOnUiThread(() => action.Invoke(element, value, token))
-                    : action.Invoke(element, value, token);
+                    ? InvokeOnUiThread(() => action.Invoke(element, value))
+                    : action.Invoke(element, value);
             object result = null;
             RunWithDialogWatch(() =>
             {
                 result = action.RunOnUiThread
-                    ? InvokeOnUiThread(() => action.Invoke(element, value, token))
-                    : action.Invoke(element, value, token);
+                    ? InvokeOnUiThread(() => action.Invoke(element, value))
+                    : action.Invoke(element, value);
                 return true;
             });
             return result;
@@ -1125,7 +1073,7 @@ namespace pwiz.Skyline.ToolsUI
         // Verifies the resolved element supports the action (it is the kind the action targets) and, for an
         // action that requires it, that the element is interactable (not blocked by a modal, and enabled).
         // Returns the element; throws a clear error (listing the element's actions) if it does not apply.
-        private static UiElement RequireAction(UiElement element, UiAction action)
+        internal static UiElement RequireAction(UiElement element, UiAction action)
         {
             if (!action.AppliesTo(element))
                 throw new ArgumentException(LlmInstruction.Format(
@@ -1145,9 +1093,10 @@ namespace pwiz.Skyline.ToolsUI
             return path?.Text;
         }
 
-        // Resolves a managed path: its root form is found in FormUtil.OpenForms. Must run on the UI thread.
-        private static UiElement ResolvePath(UiElementPath path) =>
-            ResolvePath(path, formId => UiElementFactory.For(FindFormById(formId)));
+        // Resolves a UiElementPath against an already-resolved root form (the FormElement or NativeDialog the
+        // verb is acting on), so the path's root segment maps to that form and the rest walks into it.
+        internal static UiElement ResolvePathFrom(UiElementPath path, UiElement root) =>
+            ResolvePath(path, _ => root);
 
         // Resolves a UiElementPath to the single element it refers to. The path is matched segment by
         // segment: each segment names a child of the element its Parent resolves to, by Index (its position
@@ -1236,30 +1185,25 @@ namespace pwiz.Skyline.ToolsUI
                     Title = dialog.Title,
                     HasGraph = false,
                     DockState = @"Dialog",
-                    Id = GetNativeDialogId(dialog),
+                    Id = dialog.FormId,
                     IsNative = true,
                 });
             }
             return results.ToArray();
         }
 
-        private static string GetNativeDialogId(NativeDialog dialog)
+        // Resolves a formId to the window it addresses -- a WinForms form (FormElement) or a native common
+        // dialog (NativeDialog) -- so every verb drives both through IFormElement and none special-cases a
+        // native dialog. Native dialogs are matched first, on this (pipe) thread (their UI thread is busy in
+        // the modal loop, so they are enumerated via UI Automation, never marshalled); a managed form is then
+        // found on the UI thread. Throws if no open window has the id.
+        private static IFormElement ResolveForm(string formId, CancellationToken cancellationToken)
         {
-            return dialog.DialogTypeName + @":" + dialog.Title;
-        }
-
-        private static bool TryGetNativeDialog(string formId, out NativeDialog dialog)
-        {
-            foreach (var openDialog in NativeDialog.GetOpenDialogs())
-            {
-                if (GetNativeDialogId(openDialog) == formId)
-                {
-                    dialog = openDialog;
-                    return true;
-                }
-            }
-            dialog = null;
-            return false;
+            ValidateFormIdFormat(formId);
+            foreach (var dialog in NativeDialog.GetOpenDialogs())
+                if (dialog.FormId == formId)
+                    return dialog;
+            return InvokeOnUiThread(() => new FormElement(FindFormById(formId), cancellationToken));
         }
 
         public static string GetGraphData(string graphId, string filePath)
@@ -1352,106 +1296,56 @@ namespace pwiz.Skyline.ToolsUI
         public static string GetFormImage(string formId, string filePath)
         {
             ValidateFormIdFormat(formId);
-            if (TryGetNativeDialog(formId, out var nativeDialog))
-                return GetNativeDialogImage(nativeDialog, filePath);
-            string denial = CheckImageToolPreflight(formId,
-                () => FindFormById(formId),
-                requiresScreenCapture: true);
-            if (denial != null)
-                return denial;
-            return InvokeOnUiThread(() =>
-            {
-                // Re-resolve the form on the UI thread so a close during the
-                // pipe-thread work in CheckScreenCaptureAvailability surfaces
-                // as the same "form not found" ArgumentException as a bad
-                // formId, not as ObjectDisposedException during capture.
-                var form = FindFormById(formId);
-                using (var bitmap = CaptureGrantedForm(form))
-                {
-                    filePath = filePath ?? GetMcpTmpFilePath(
-                        FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG);
-                    DirectoryEx.CreateForFilePath(filePath);
-                    bitmap.Save(filePath, ImageFormat.Png);
-                }
-                return filePath.ToForwardSlashPath();
-            });
-        }
-
-        public static ImageBytesMetadata GetFormImageBytes(string formId)
-        {
-            ValidateFormIdFormat(formId);
-            if (TryGetNativeDialog(formId, out var nativeDialog))
-                return GetNativeDialogImageBytes(nativeDialog);
-            string denial = CheckImageToolPreflight(formId,
-                () => FindFormById(formId),
-                requiresScreenCapture: true);
-            if (denial != null)
-            {
-                // Permission denial / desktop unavailable: return a structured
-                // Message instead of bytes. The wrapper emits Message as plain
-                // text content (no error flag) so the response shape matches
-                // what the legacy file-based path returned for the same condition.
-                return new ImageBytesMetadata { Message = denial };
-            }
-            return InvokeOnUiThread(() =>
-            {
-                var form = FindFormById(formId);
-                using (var bitmap = CaptureGrantedForm(form))
-                {
-                    return new ImageBytesMetadata
-                    {
-                        Data = BitmapToPngBytes(bitmap),
-                        FilePath = GetMcpTmpFilePath(FORM_FILE_PREFIX, GetFormTitle(form), EXT_PNG)
-                            .ToForwardSlashPath(),
-                        MimeType = MIME_TYPE_PNG
-                    };
-                }
-            });
-        }
-
-        // Captures a native dialog (e.g. the Open/Save file dialog) to a PNG file. Unlike the
-        // WinForms path this runs entirely on the calling (pipe) thread: the capture is a screen
-        // copy by window handle and must not marshal to the UI thread, which may be blocked in a
-        // modal dialog's message loop.
-        private static string GetNativeDialogImage(NativeDialog dialog, string filePath)
-        {
+            // Guard against there being no desktop session before resolving the form, so a missing UI thread
+            // returns the "try again" message rather than failing to find the form.
             if (!HasUiDispatch())
                 return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
+            // ResolveForm throws "form not found" before any permission prompt, so a bad id never prompts.
+            var form = ResolveForm(formId, CancellationToken.None);
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
                 return denial;
-            using (var bitmap = CaptureNativeWindow(dialog.WindowHandle))
+            // The form captures itself in its own thread context (a managed form on the UI thread with
+            // redaction; a native dialog by window handle on this thread).
+            using (var bitmap = form.CaptureImage())
             {
-                filePath = filePath ?? GetMcpTmpFilePath(FORM_FILE_PREFIX, dialog.Title, EXT_PNG);
+                filePath = filePath ?? GetMcpTmpFilePath(FORM_FILE_PREFIX, form.Title, EXT_PNG);
                 DirectoryEx.CreateForFilePath(filePath);
                 bitmap.Save(filePath, ImageFormat.Png);
             }
             return filePath.ToForwardSlashPath();
         }
 
-        private static ImageBytesMetadata GetNativeDialogImageBytes(NativeDialog dialog)
+        public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
+            ValidateFormIdFormat(formId);
             if (!HasUiDispatch())
                 return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
+            var form = ResolveForm(formId, CancellationToken.None);
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
+            {
+                // Permission denial / desktop unavailable: return a structured Message instead of bytes. The
+                // wrapper emits Message as plain text content (no error flag) so the response shape matches
+                // what the legacy file-based path returned for the same condition.
                 return new ImageBytesMetadata { Message = denial };
-            using (var bitmap = CaptureNativeWindow(dialog.WindowHandle))
+            }
+            using (var bitmap = form.CaptureImage())
             {
                 return new ImageBytesMetadata
                 {
                     Data = BitmapToPngBytes(bitmap),
-                    FilePath = GetMcpTmpFilePath(FORM_FILE_PREFIX, dialog.Title, EXT_PNG)
-                        .ToForwardSlashPath(),
+                    FilePath = GetMcpTmpFilePath(FORM_FILE_PREFIX, form.Title, EXT_PNG).ToForwardSlashPath(),
                     MimeType = MIME_TYPE_PNG
                 };
             }
         }
 
-        // Captures a screenshot of a native window by its handle. GetWindowRect returns logical
-        // coordinates, scaled to physical pixels to match the screen copy (the same convention as
-        // ScreenCapture.GetForeignWindowRects).
-        private static System.Drawing.Bitmap CaptureNativeWindow(IntPtr windowHandle)
+        // Captures a screenshot of a native window (e.g. the Open/Save file dialog) by its handle, on the
+        // calling (pipe) thread -- the capture is a screen copy and must not marshal to the UI thread, which
+        // may be blocked in the dialog's modal loop. GetWindowRect returns logical coordinates, scaled to
+        // physical pixels to match the screen copy (the same convention as ScreenCapture.GetForeignWindowRects).
+        internal static System.Drawing.Bitmap CaptureNativeWindow(IntPtr windowHandle)
         {
             User32.SetForegroundWindow(windowHandle);
             var rect = new User32.RECT();
@@ -1547,10 +1441,10 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Captures a screenshot of an open form (with redaction). Caller owns
-        // the bitmap. Must be called on the UI thread, and only after
-        // CheckScreenCaptureAvailability has returned null.
-        private static System.Drawing.Bitmap CaptureGrantedForm(Form form)
+        // Captures a screenshot of an open form (with redaction). Caller owns the bitmap. Must be called on
+        // the UI thread (FormElement.CaptureImage marshals it), and only after CheckScreenCaptureAvailability
+        // has returned null.
+        internal static System.Drawing.Bitmap CaptureForm(Form form)
         {
             ScreenCapture.ActivateForm(form);
             var screenRect = ScreenCapture.GetWindowRectangle(form);
@@ -1574,7 +1468,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Returns the display title for a form, used both in GetOpenForms output
         /// and in FindFormById matching.
         /// </summary>
-        private static string GetFormTitle(Form form)
+        internal static string GetFormTitle(Form form)
         {
             if (form is DockableFormEx dockable)
                 return !string.IsNullOrEmpty(dockable.Text) ? dockable.Text
@@ -1586,7 +1480,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         /// Builds a stable form identifier from type name and title.
         /// </summary>
-        private static string GetFormId(Form form)
+        internal static string GetFormId(Form form)
         {
             return form.GetType().Name + @":" + GetFormTitle(form);
         }
@@ -1841,7 +1735,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // True when the requested button names the cancel/close action of a native dialog. Locale
         // sensitive by nature; callers that key on the visible label inherit that.
-        private static bool IsCancelAction(string button)
+        internal static bool IsCancelAction(string button)
         {
             var normalized = NormalizeLabel(button);
             return string.Equals(normalized, @"Cancel", StringComparison.CurrentCultureIgnoreCase)

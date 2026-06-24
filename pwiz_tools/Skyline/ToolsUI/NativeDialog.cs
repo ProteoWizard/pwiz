@@ -26,6 +26,8 @@ using System.Text;
 using System.Threading;
 using System.Windows.Automation;
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -52,7 +54,7 @@ namespace pwiz.Skyline.ToolsUI
     /// are connector elements (buttons, a file-name field) that dispatch their actions to this automation
     /// (Accept/Cancel/EnterPath) instead of to a WinForms control.
     /// </summary>
-    public abstract class NativeDialog : UiElement
+    public abstract class NativeDialog : UiElement, IFormElement
     {
         protected const string DIALOG_CLASS_NAME = @"#32770"; // Win32 dialog window class
         private const int DEFAULT_TIMEOUT_MILLIS = 30 * 1000;
@@ -164,6 +166,56 @@ namespace pwiz.Skyline.ToolsUI
         /// dialog type because the accept gesture differs by surface.
         /// </summary>
         public abstract void Accept();
+
+        // ---- IFormElement: drive the dialog the way JsonUiService drives any form -------------------
+        // Everything runs on the calling (pipe) thread: the dialog runs its own modal loop on the UI thread,
+        // so marshalling to it (or into RunWithDialogWatch's background work) would deadlock. The dialog's
+        // gestures post Win32 messages / drive UI Automation, which are safe from any thread.
+
+        /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "FileDialog:Open …".</summary>
+        public string FormId => DialogTypeName + @":" + Title;
+
+        public ControlInfo[] GetControls() => GetChildren();
+
+        public void ClickButton(string button)
+        {
+            VerifyNotBlocked();
+            if (JsonUiService.IsCancelAction(button))
+                Cancel();
+            else
+                Accept();
+        }
+
+        // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base
+        // refuses, and the file dialogs override SetValueCore to type the path.
+        public void SetValue(string controlId, string value)
+        {
+            VerifyNotBlocked();
+            SetValueCore(value);
+        }
+
+        protected virtual void SetValueCore(string value)
+        {
+            throw new ArgumentException(LlmInstruction.Format(
+                @"Setting values is not supported for native dialog {0}.", FormId));
+        }
+
+        public void Close() => Cancel();
+
+        public object PerformAction(UiElementPath path, UiAction action, object value)
+        {
+            var element = JsonUiService.RequireAction(JsonUiService.ResolvePathFrom(path, this), action);
+            return action.Invoke(element, value);
+        }
+
+        public System.Drawing.Bitmap CaptureImage() => JsonUiService.CaptureNativeWindow(WindowHandle);
+
+        private void VerifyNotBlocked()
+        {
+            if (!IsEnabled)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Cannot interact with native dialog '{0}' because it is blocked.", FormId));
+        }
 
         protected void BringToForeground()
         {

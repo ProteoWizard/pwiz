@@ -23,7 +23,7 @@ using System.Windows.Forms;
 
 namespace pwiz.Skyline.Controls.Startup
 {
-    public partial class RecentFileControl : UserControl
+    public partial class RecentFileControl : UserControl, IButtonControl
     {
         public RecentFileControl()
         {
@@ -33,6 +33,20 @@ namespace pwiz.Skyline.Controls.Startup
         public string FileName { get { return labelFileName.Text; } set { labelFileName.Text = value; } }
         public string FilePath { get { return labelFilePath.Text; } set { labelFilePath.Text = value; } }
         public Action EventAction { get; set; }
+
+        // IButtonControl: lets generic UI automation (e.g. the JSON tool service's ClickFormButton)
+        // drive a recent-file row like a button. PerformClick runs the same action a mouse click would.
+        public DialogResult DialogResult { get; set; }
+
+        public void NotifyDefault(bool value)
+        {
+            // No default-button visual state for these rows.
+        }
+
+        public void PerformClick()
+        {
+            ControlClick(this, EventArgs.Empty);
+        }
 
         private void ControlMouseEnter(object sender, EventArgs e)
         {

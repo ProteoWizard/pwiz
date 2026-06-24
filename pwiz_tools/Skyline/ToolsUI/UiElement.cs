@@ -121,15 +121,16 @@ namespace pwiz.Skyline.ToolsUI
             && (!MustBeVisible || element.IsVisible)
             && (!MustBeEnabled || element.IsEnabled);
 
-        /// <summary>Performs the action on the element (the action determines the argument and result types).</summary>
-        public abstract object Invoke(UiElement element, object argument, CancellationToken cancellationToken);
+        /// <summary>Performs the action on the element (the action determines the argument and result types).
+        /// An action that needs the request's cancellation token (a large grid read) gets it from the
+        /// element -- every UiElement reaches its form's token through its FormElement -- not a parameter.</summary>
+        public abstract object Invoke(UiElement element, object argument);
     }
 
     /// <summary>
     /// The set of <see cref="UiAction"/> singletons (these replace the former enum members) and the lookup
-    /// over them. Most actions whose Invoke is just a method call on a capability interface are built from
-    /// the generic <see cref="SimpleAction{T,TArg}"/> -- no per-action class. Only get_grid_text, which
-    /// needs the cancellation token, has its own class.
+    /// over them. Every action's Invoke is just a method call on a capability interface, so they are all
+    /// built from the generic <see cref="SimpleActionImpl{T,TArg}"/> -- no per-action class.
     /// </summary>
     public static class UiActions
     {
@@ -143,6 +144,7 @@ namespace pwiz.Skyline.ToolsUI
                     sb.Append('_');
                 sb.Append(char.ToLowerInvariant(name[i]));
             }
+
             return sb.ToString();
         }
 
@@ -153,18 +155,21 @@ namespace pwiz.Skyline.ToolsUI
         /// wants an int or a cell parses it inside its func). <paramref name="mustBeEnabled"/> is false for a
         /// pure read (it may also be inspected off-screen); set <see cref="UiAction.WatchForDialog"/> /
         /// <see cref="UiAction.RunOnUiThread"/> via an initializer for a mutation or click.</summary>
-        private sealed class SimpleAction<T, TArg> : UiAction where T : class
+        private sealed class SimpleActionImpl<T, TArg> : UiAction
         {
             private readonly Func<T, TArg, object> _invoke;
-            public SimpleAction(string name, Func<T, TArg, object> invoke, bool mustBeEnabled = true) : base(name)
+
+            public SimpleActionImpl(string name, Func<T, TArg, object> invoke, bool mustBeEnabled = true) : base(name)
             {
                 _invoke = invoke;
                 // Visible and enabled gates move together: a read clears both, a mutation/click leaves both set.
                 MustBeEnabled = mustBeEnabled;
                 MustBeVisible = mustBeEnabled;
             }
+
             public override bool AppliesTo(UiElement element) => element is T;
-            public override object Invoke(UiElement element, object argument, CancellationToken cancellationToken)
+
+            public override object Invoke(UiElement element, object argument)
             {
                 if (!(element is T typed))
                     throw new ArgumentException(LlmInstruction.Format(
@@ -173,62 +178,106 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // get_grid_text is the one action whose Invoke needs the cancellation token (a large copy is
-        // abandoned if the client disconnects), so it cannot be a SimpleAction (whose func is just
-        // (element, argument) -> result).
-        private sealed class GetGridTextAction : UiAction
-        {
-            public GetGridTextAction() : base(@"GetGridText") { MustBeVisible = false; MustBeEnabled = false; }
-            public override bool AppliesTo(UiElement element) => element is GridElement;
-            public override object Invoke(UiElement element, object argument, CancellationToken cancellationToken) =>
-                ((GridElement) element).GetGridText(cancellationToken);
-        }
-
         // get_actions / get_children apply to every element (not one capability kind), so they target the
         // base UiElement type; they are reads (mustBeEnabled: false).
-        public static readonly UiAction GetActions = new SimpleAction<UiElement, object>(
-            @"GetActions", (e, _) => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray(), mustBeEnabled: false);
-        public static readonly UiAction GetChildren = new SimpleAction<UiElement, object>(
-            @"GetChildren", (e, _) => e.GetChildren(), mustBeEnabled: false);
+        public static readonly UiAction GetActions = SimpleAction<UiElement>(
+            @"GetActions", e => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray(), mustBeEnabled: false);
+
+        public static readonly UiAction GetChildren = SimpleAction<UiElement>(
+            @"GetChildren", e => e.GetChildren(), mustBeEnabled: false);
 
         // A click runs its Invoke on the worker thread (RunOnUiThread = false) -- the element marshals its
         // own gesture -- inside the dialog-watch.
-        public static readonly UiAction Click = new SimpleAction<IClickableElement, object>(
-            @"Click", (e, _) => { e.Click(); return null; }) { WatchForDialog = true, RunOnUiThread = false };
+        public static readonly UiAction Click = SimpleAction<IClickableElement>(
+            @"Click", e =>
+            {
+                e.Click();
+                return null;
+            }, watchForDialog: true, runOnUiThread: false);
 
-        public static readonly UiAction GetValue = new SimpleAction<IReadValueElement, object>(
-            @"GetValue", (e, _) => e.GetValue(), mustBeEnabled: false);
-        public static readonly UiAction SetValue = new SimpleAction<IWriteValueElement, string>(
-            @"SetValue", (e, value) => { e.SetValue(value); return null; }) { WatchForDialog = true };
+        public static readonly UiAction GetValue = SimpleAction<IReadValueElement>(
+            @"GetValue", e => e.GetValue(), mustBeEnabled: false);
 
-        public static readonly UiAction CheckItem = new SimpleAction<ICheckItemsElement, string>(
-            @"CheckItem", (e, item) => { e.SetItemChecked(item, true); return null; }) { WatchForDialog = true };
-        public static readonly UiAction UncheckItem = new SimpleAction<ICheckItemsElement, string>(
-            @"UncheckItem", (e, item) => { e.SetItemChecked(item, false); return null; }) { WatchForDialog = true };
-        public static readonly UiAction SelectItem = new SimpleAction<ISelectItemsElement, string>(
-            @"SelectItem", (e, item) => { e.SetItemSelected(item, true); return null; }) { WatchForDialog = true };
-        public static readonly UiAction UnselectItem = new SimpleAction<ISelectItemsElement, string>(
-            @"UnselectItem", (e, item) => { e.SetItemSelected(item, false); return null; }) { WatchForDialog = true };
-        public static readonly UiAction SetSelectedIndex = new SimpleAction<ISelectIndexElement, object>(
-            @"SetSelectedIndex", (e, arg) => { e.SetSelectedIndex(UiValue.ToInt(arg)); return null; }) { WatchForDialog = true };
+        public static readonly UiAction SetValue = SimpleAction<IWriteValueElement, string>(
+            @"SetValue", (e, value) =>
+            {
+                e.SetValue(value);
+                return null;
+            }, watchForDialog: true);
 
-        public static readonly UiAction GetGridText = new GetGridTextAction();
-        public static readonly UiAction SetGridText = new SimpleAction<GridElement, string>(
-            @"SetGridText", (e, text) => { e.SetGridText(text); return null; }) { WatchForDialog = true };
-        public static readonly UiAction SetCurrentCellAddress = new SimpleAction<GridElement, object>(
+        public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
+            @"CheckItem", (e, item) =>
+            {
+                e.SetItemChecked(item, true);
+                return null;
+            }, watchForDialog: true);
+
+        public static readonly UiAction UncheckItem = SimpleAction<ICheckItemsElement, string>(
+            @"UncheckItem", (e, item) =>
+            {
+                e.SetItemChecked(item, false);
+                return null;
+            }, watchForDialog: true);
+
+        public static readonly UiAction SelectItem = SimpleAction<ISelectItemsElement, string>(
+            @"SelectItem", (e, item) =>
+            {
+                e.SetItemSelected(item, true);
+                return null;
+            }, watchForDialog: true);
+
+        public static readonly UiAction UnselectItem = SimpleAction<ISelectItemsElement, string>(
+            @"UnselectItem", (e, item) =>
+            {
+                e.SetItemSelected(item, false);
+                return null;
+            }, watchForDialog: true);
+
+        public static readonly UiAction SetSelectedIndex = SimpleAction<ISelectIndexElement, object>(
+            @"SetSelectedIndex", (e, arg) =>
+            {
+                e.SetSelectedIndex(UiValue.ToInt(arg));
+                return null;
+            }, watchForDialog: true);
+
+        public static readonly UiAction GetGridText = SimpleAction<GridElement>(
+            @"GetGridText", e => e.GetGridText(), mustBeEnabled: false);
+
+        public static readonly UiAction SetGridText = SimpleAction<GridElement, string>(
+            @"SetGridText", (e, text) =>
+            {
+                e.SetGridText(text);
+                return null;
+            }, watchForDialog: true);
+
+        public static readonly UiAction SetCurrentCellAddress = SimpleAction<GridElement, object>(
             @"SetCurrentCellAddress", (e, arg) =>
             {
                 var cell = UiValue.ToColumnRow(arg);
                 e.SetCurrentCellAddress(cell[0], cell[1]);
                 return null;
-            }) { WatchForDialog = true };
+            }, watchForDialog: true);
 
-        public static readonly UiAction Expand = new SimpleAction<IExpandCollapseElement, object>(
-            @"Expand", (e, path) => { e.Expand(path); return null; }) { WatchForDialog = true };
-        public static readonly UiAction Collapse = new SimpleAction<IExpandCollapseElement, object>(
-            @"Collapse", (e, path) => { e.Collapse(path); return null; }) { WatchForDialog = true };
-        public static readonly UiAction SelectTab = new SimpleAction<ISelectTabElement, string>(
-            @"SelectTab", (e, tab) => { e.SelectTab(tab); return null; }) { WatchForDialog = true };
+        public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
+            @"Expand", (e, path) =>
+            {
+                e.Expand(path);
+                return null;
+            }, watchForDialog: true);
+
+        public static readonly UiAction Collapse = SimpleAction<IExpandCollapseElement, object>(
+            @"Collapse", (e, path) =>
+            {
+                e.Collapse(path);
+                return null;
+            }, watchForDialog: true);
+
+        public static readonly UiAction SelectTab = SimpleAction<ISelectTabElement, string>(
+            @"SelectTab", (e, tab) =>
+            {
+                e.SelectTab(tab);
+                return null;
+            }, watchForDialog: true);
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
@@ -245,7 +294,25 @@ namespace pwiz.Skyline.ToolsUI
             return AllActions.FirstOrDefault(action =>
                 string.Equals(action.Name, normalized, StringComparison.OrdinalIgnoreCase));
         }
-    }
+
+        public static UiAction SimpleAction<T>(string name, Func<T, object> action, bool mustBeEnabled = true, bool watchForDialog = false, bool runOnUiThread = true, bool mustBeVisible = true)
+        {
+            return SimpleAction<T, object>(name, (element, arg) => action(element), mustBeEnabled, watchForDialog, runOnUiThread, mustBeVisible);
+        }
+
+        public static UiAction SimpleAction<T, TArg>(string name, Func<T, TArg, object> action,
+            bool mustBeEnabled = true,
+            bool watchForDialog = false, bool runOnUiThread = true, bool mustBeVisible = true)
+        {
+            return new SimpleActionImpl<T, TArg>(name, action, mustBeEnabled)
+            {
+                RunOnUiThread = runOnUiThread,
+                MustBeVisible = true,
+                WatchForDialog = watchForDialog,
+                MustBeEnabled = mustBeEnabled
+            };
+        }
+}
 
     /// <summary>
     /// A connector-facing view of one UI element on a form. Subclasses wrap a specific kind of control
@@ -516,6 +583,16 @@ namespace pwiz.Skyline.ToolsUI
         protected ControlElement(Control control) { Control = control; }
 
         public Control Control { get; }
+
+        /// <summary>The form this control belongs to -- the root of the element tree it was built in. Set
+        /// once by <see cref="FormElement.ElementFor"/> when the element is created (the FormElement sets its
+        /// own to itself). Every control reaches its form's <see cref="CancellationToken"/> through it.</summary>
+        public FormElement FormElement { get; internal set; }
+
+        /// <summary>The token that fires when the connector client disconnects, so a long read (a large grid
+        /// copy) is abandoned. It belongs to the <see cref="FormElement"/>; every control shares it.</summary>
+        public virtual CancellationToken CancellationToken => FormElement.CancellationToken;
+
         public override string Name => Control.Name;
         public override Type ElementType => Control.GetType();
 
@@ -540,24 +617,20 @@ namespace pwiz.Skyline.ToolsUI
         // Most controls have no children -- a button, a text box, a list. Only a ContainerElement (a Form
         // or UserControl) owns children; the inherited (empty) Children is correct for everything else.
 
-        // Every control can be clicked. A control that is itself a button -- including a custom
-        // IButtonControl tile such as a StartPage action box, whose clickable surface is covered by child
-        // labels and an icon -- is clicked through its handler, which is reliable regardless of those
-        // children. Anything else gets a real left-click at its center, the only way to drive an owner-drawn
-        // control whose click is a mouse handler. The mouse messages are POSTED (like a user click) so a
-        // click that opens a modal does not block the worker thread. A subclass with a more direct gesture
-        // overrides Click: a button uses BM_CLICK (to bypass PerformClick's gates), a tab selects itself.
+        // A control is clicked through its IButtonControl handler -- a real button, or a custom tile such as
+        // a StartPage action box or recent-file row, whose clickable surface is covered by child labels and
+        // an icon; PerformClick is reliable regardless of those children. A control that is not an
+        // IButtonControl has no programmatic click (clicking it would have to synthesize a mouse gesture at a
+        // guessed point, which is fragile), so it reports that it cannot be clicked. A subclass with a more
+        // direct gesture overrides Click: a button uses BM_CLICK (to bypass PerformClick's gates), a
+        // ToolStripItem / native dialog button drives its own.
         public virtual void Click()
         {
-            if (Control is IButtonControl button)
-            {
-                JsonUiService.InvokeOnUiThread(button.PerformClick);
-                return;
-            }
-            var clientSize = JsonUiService.InvokeOnUiThread(() => Control.ClientSize);
-            int lParam = (clientSize.Height / 2) << 16 | (clientSize.Width / 2); // MAKELPARAM(centerX, centerY)
-            User32.PostMessageA(Control.Handle, User32.WinMessageType.WM_LBUTTONDOWN, 1 /* MK_LBUTTON */, lParam);
-            User32.PostMessageA(Control.Handle, User32.WinMessageType.WM_LBUTTONUP, 0, lParam);
+            if (!(Control is IButtonControl button))
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The control '{0}' cannot be clicked: it is not a button. Set its value, or act on the button/menu item that triggers it.",
+                    Label ?? JsonUiService.NullIfEmpty(Name) ?? ElementType.Name));
+            JsonUiService.InvokeOnUiThread(button.PerformClick);
         }
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
@@ -593,30 +666,60 @@ namespace pwiz.Skyline.ToolsUI
         public new T Control => (T) base.Control;
     }
 
+    /// <summary>A top-level window the connector addresses by a formId: a WinForms form
+    /// (<see cref="FormElement"/>) or a native common dialog (<see cref="NativeDialog"/>). JsonUiService
+    /// resolves a formId to one of these and drives it entirely through this interface, so no verb
+    /// special-cases a native dialog. Each implementation runs its work in its own thread context: a managed
+    /// form marshals to the UI thread and can watch for a dialog the work pops; a native dialog -- whose UI
+    /// thread is busy in its own modal loop -- runs on the calling (pipe) thread and cannot be watched.</summary>
+    internal interface IFormElement
+    {
+        /// <summary>The "TypeName:Title" id this form is addressed by (matches skyline_get_open_forms).</summary>
+        string FormId { get; }
+        /// <summary>The form's visible title, for naming a captured-image file.</summary>
+        string Title { get; }
+        /// <summary>The form's controls as parentless ControlInfo (the get_controls verb).</summary>
+        ControlInfo[] GetControls();
+        /// <summary>Clicks a control on the form by its visible label, or accepts/cancels a native dialog.</summary>
+        void ClickButton(string button);
+        /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name).</summary>
+        void SetValue(string controlId, string value);
+        /// <summary>Closes (a form) or cancels (a native dialog).</summary>
+        void Close();
+        /// <summary>Resolves the path against this form and performs the action in the form's thread context.
+        /// The action gets its cancellation token from the resolved element (its FormElement), not a parameter.</summary>
+        object PerformAction(UiElementPath path, UiAction action, object value);
+        /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
+        /// the caller has done the screen-capture pre-flight).</summary>
+        System.Drawing.Bitmap CaptureImage();
+    }
+
     /// <summary>A Form or a UserControl -- a boundary that owns its (flattened) children. It has no action
     /// of its own; it exists so the walk can list and descend into the controls it contains. Every other
     /// container (Panel, GroupBox, ...) is transparent (its controls are pulled up to the nearest Form or
-    /// UserControl), so the only things that need a container element are these two.</summary>
-    internal sealed class ContainerElement : ControlElement
+    /// UserControl), so the only things that need a container element are these two. A Form is a
+    /// <see cref="FormElement"/> (a container that is also an addressable <see cref="IFormElement"/>).</summary>
+    internal class ContainerElement : ControlElement
     {
         public ContainerElement(Control control) : base(control) { }
 
         public override IEnumerable<UiElement> Children => FlattenChildren(Control);
 
-        // This container's child elements for the form walk, FLATTENED. A control the factory recognizes as
-        // an element is yielded as that element: a UserControl as a ContainerElement that owns its own
+        // This container's child elements for the form walk, FLATTENED. A control the form recognizes as an
+        // element (FormElement.ElementFor) is yielded as that element -- and tagged with the same FormElement,
+        // so it shares the form's cancellation token: a UserControl as a ContainerElement that owns its own
         // (likewise flattened) children, and a grid/list/tree/toolstrip as a leaf the caller walks into via
-        // its own children. A control the factory does not recognize (a Panel, GroupBox, SplitContainer, a
+        // its own children. A control ElementFor does not recognize (a Panel, GroupBox, SplitContainer, a
         // TabPage, ...) is transparent -- its controls are pulled up so every control is a direct child of
         // the form (or of the nearest UserControl). A TabControl is kept (so its tabs can be selected via
-        // select_tab) and its tab contents are flattened up to this level too. Matching the factory (rather
+        // select_tab) and its tab contents are flattened up to this level too. Recognizing the kind (rather
         // than guessing from Control.Count) keeps a complex control with internal child controls -- a
         // DataGridView, with its scroll bars -- a single element instead of dissolving it into its parts.
-        private static IEnumerable<UiElement> FlattenChildren(Control container)
+        private IEnumerable<UiElement> FlattenChildren(Control container)
         {
             foreach (Control control in container.Controls)
             {
-                var element = UiElementFactory.For(control);
+                var element = FormElement.ElementFor(control);
                 if (element != null)
                     yield return element;
                 // Recurse through a transparent container (no element of its own), and through a TabControl
@@ -626,6 +729,100 @@ namespace pwiz.Skyline.ToolsUI
                         yield return inner;
             }
         }
+    }
+
+    /// <summary>A WinForms top-level form, addressed by a formId. It is a <see cref="ContainerElement"/> (it
+    /// owns the form's flattened controls) that also implements <see cref="IFormElement"/>: the verbs resolve
+    /// a managed formId to this and call its methods, which marshal to the UI thread (and watch for a dialog
+    /// a mutation pops) so the connector drives a form the same way whether or not it is native. It carries
+    /// the request's <see cref="CancellationToken"/> and is the factory (<see cref="ElementFor"/>) for the
+    /// elements in its tree, tagging each with itself so every control can reach that token.</summary>
+    internal sealed class FormElement : ContainerElement, IFormElement
+    {
+        private readonly CancellationToken _cancellationToken;
+        public FormElement(Form form, CancellationToken cancellationToken) : base(form)
+        {
+            _cancellationToken = cancellationToken;
+            FormElement = this;
+        }
+        internal Form Form => (Form) Control;
+        public override CancellationToken CancellationToken => _cancellationToken;
+
+        /// <summary>Builds the <see cref="UiElement"/> for a control in this form's tree, choosing the
+        /// subclass by the control's kind and tagging it with this form (so it shares the cancellation
+        /// token). Returns null for a control that is not an element (a label, a spacer, a transparent
+        /// panel) -- the caller treats it as transparent and recurses into it.</summary>
+        public UiElement ElementFor(Control control)
+        {
+            var element = CreateElement(control);
+            if (element is ControlElement controlElement)
+                controlElement.FormElement = this;
+            return element;
+        }
+
+        private UiElement CreateElement(Control control)
+        {
+            switch (control)
+            {
+                case CheckBox checkBox: return new CheckBoxElement(checkBox);
+                case RadioButton radioButton: return new RadioButtonElement(radioButton);
+                case ButtonBase button: return new ButtonElement(button);
+                case ComboBox comboBox: return new ComboBoxElement(comboBox);
+                case TextBoxBase textBox: return new TextBoxElement(textBox);
+                case TabControl tabControl: return new TabElement(tabControl);
+                // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
+                case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox);
+                // The Pick Children pop-up's owner-drawn ListBox presents as a CheckedListBox.
+                case ListBox listBox when listBox.FindForm() is PopupPickList: return new PopupPickListElement(listBox);
+                case ListBox listBox: return new ListControlElement<ListBox>(listBox);
+                case TreeView treeView: return new TreeViewElement(treeView);
+                case ListView listView: return new ItemContainerElement<ListView>(listView);
+                // The grid itself -- the inner grid of a DataboundGridControl (a BoundDataGridView, driven
+                // through its rich copy/paste path) or a standalone DataGridView (direct cell access). The
+                // DataboundGridControl is a UserControl you walk into to reach this grid and its nav bar.
+                case BoundDataGridView boundDataGridView: return new BoundGridElement(boundDataGridView);
+                case DataGridView dataGridView: return new GridElement(dataGridView);
+                case ToolStrip toolStrip: return new ToolStripElement(toolStrip);
+                // A UserControl (including a DataboundGridControl) is a boundary that owns its (flattened)
+                // children; everything else that contains controls is transparent. A nested Form (rare as a
+                // child) is treated as a plain container under this form's token.
+                case UserControl userControl: return new ContainerElement(userControl);
+                case Form form: return new ContainerElement(form);
+                default:
+                    // A custom clickable that is not a ButtonBase (e.g. a StartPage tile).
+                    if (control is IButtonControl)
+                        return new ClickableControlElement(control);
+                    // Anything else reaching here is a leaf with no capability (a label, a spacer, an empty
+                    // panel); it is not something a caller can act on, so it is not an element.
+                    return null;
+            }
+        }
+
+        public string FormId => JsonUiService.GetFormId(Form);
+        public string Title => JsonUiService.GetFormTitle(Form);
+
+        public ControlInfo[] GetControls() => JsonUiService.InvokeOnUiThread(GetChildren);
+
+        public void ClickButton(string button) => JsonUiService.ClickFormControl(this, button);
+
+        public void SetValue(string controlId, string value) => JsonUiService.SetFormControlValue(this, controlId, value);
+
+        public void Close() => JsonUiService.RunWithDialogWatch(() =>
+        {
+            JsonUiService.InvokeOnUiThread(() => Form.Close());
+            return true;
+        });
+
+        public object PerformAction(UiElementPath path, UiAction action, object value)
+        {
+            // Resolve + verify on the UI thread (a control's gates read window handles), then run the action
+            // with the thread/dialog policy it declares.
+            var element = JsonUiService.InvokeOnUiThread(() =>
+                JsonUiService.RequireAction(JsonUiService.ResolvePathFrom(path, this), action));
+            return JsonUiService.ExecuteAction(action, element, value);
+        }
+
+        public System.Drawing.Bitmap CaptureImage() => JsonUiService.InvokeOnUiThread(() => JsonUiService.CaptureForm(Form));
     }
 
     /// <summary>A push button (or any ButtonBase) -- clicked with BM_CLICK, which fires the Click handler
@@ -934,15 +1131,21 @@ namespace pwiz.Skyline.ToolsUI
         private readonly ToolStrip _toolStrip;
         public ToolStripElement(ToolStrip toolStrip) : base(toolStrip) { _toolStrip = toolStrip; }
         public override IEnumerable<UiElement> Children =>
-            _toolStrip.Items.Cast<ToolStripItem>().Select(item => (UiElement) new ToolStripItemElement(item));
+            _toolStrip.Items.Cast<ToolStripItem>().Select(item => (UiElement) new ToolStripItemElement(item, FormElement));
     }
 
     /// <summary>A menu or toolbar item -- clicked via PerformClick. An image-only item (no caption) is
-    /// named by its tooltip, the way a user reads it (e.g. the pick-list's green-check "OK").</summary>
+    /// named by its tooltip, the way a user reads it (e.g. the pick-list's green-check "OK"). It carries its
+    /// form so it can build the element for a hosted control (FormElement.ElementFor).</summary>
     internal sealed class ToolStripItemElement : UiElement, IClickableElement
     {
         private readonly ToolStripItem _item;
-        public ToolStripItemElement(ToolStripItem item) { _item = item; }
+        private readonly FormElement _formElement;
+        public ToolStripItemElement(ToolStripItem item, FormElement formElement)
+        {
+            _item = item;
+            _formElement = formElement;
+        }
         public override string Name => _item.Name;
         public override Type ElementType => _item.GetType();
         // A ToolStripControlHost reports its hosted control's Text as its own; let the hosted control
@@ -961,13 +1164,13 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (_item is ToolStripControlHost host && host.Control != null)
                 {
-                    var hosted = UiElementFactory.For(host.Control);
+                    var hosted = _formElement.ElementFor(host.Control);
                     if (hosted != null)
                         yield return hosted;
                 }
                 if (_item is ToolStripDropDownItem dropDownItem)
                     foreach (ToolStripItem child in dropDownItem.DropDownItems)
-                        yield return new ToolStripItemElement(child);
+                        yield return new ToolStripItemElement(child, _formElement);
             }
         }
         public void Click() => JsonUiService.InvokeOnUiThread(() => _item.PerformClick());
@@ -989,8 +1192,10 @@ namespace pwiz.Skyline.ToolsUI
             string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase);
 
         // A grid is a leaf in the walk (not a ContainerElement): its content is read/written through the
-        // grid actions, not by walking into child controls. The plain path reads/writes cells directly.
-        public virtual string GetGridText(CancellationToken cancellationToken) =>
+        // grid actions, not by walking into child controls. The plain path reads/writes cells directly. A
+        // large read is cancelled through the form's CancellationToken (a bound grid honors it; the plain
+        // cell read is synchronous).
+        public virtual string GetGridText() =>
             JsonUiService.GetDataGridViewText(_dataGridView);
         // Pastes starting at the current cell -- the anchor a user would have clicked. Move the current
         // cell first with SetCurrentCellAddress; the text may be a multi-cell TSV block (it fills down/right).
@@ -1014,12 +1219,12 @@ namespace pwiz.Skyline.ToolsUI
         public BoundGridElement(BoundDataGridView boundDataGridView) : base(boundDataGridView) { }
         private BindingListSource BindingListSource => DataGridView.DataSource as BindingListSource;
 
-        public override string GetGridText(CancellationToken cancellationToken)
+        public override string GetGridText()
         {
             var bindingListSource = BindingListSource;
             return bindingListSource == null
-                ? base.GetGridText(cancellationToken) // not bound yet -- read the cells directly
-                : bindingListSource.ViewContext.CopyToString(DataGridView, bindingListSource, cancellationToken);
+                ? base.GetGridText() // not bound yet -- read the cells directly
+                : bindingListSource.ViewContext.CopyToString(DataGridView, bindingListSource, CancellationToken);
         }
 
         public override void SetGridText(string text)
@@ -1042,15 +1247,15 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class ContextMenuElement : UiElement
     {
         public const string TypeName = "ContextMenu";
-        private readonly UiElement _owner;
-        public ContextMenuElement(UiElement owner) { _owner = owner; }
+        private readonly ControlElement _owner;
+        public ContextMenuElement(ControlElement owner) { _owner = owner; }
         public override string Name => string.Empty;
         public override Type ElementType => typeof(ContextMenuStrip);
         public override bool IsEnabled => _owner.IsEnabled;
         public override bool IsVisible => _owner.IsVisible;
         public override IEnumerable<UiElement> Children =>
             JsonUiService.BuildContextMenu(_owner).Items.Cast<ToolStripItem>()
-                .Select(item => (UiElement) new ToolStripItemElement(item));
+                .Select(item => (UiElement) new ToolStripItemElement(item, _owner.FormElement));
     }
 
     /// <summary>A TabControl -- select one of its tabs by the tab's text (select_tab). The tab pages
@@ -1130,47 +1335,4 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    /// <summary>
-    /// Builds the <see cref="UiElement"/> for a WinForms control, choosing the subclass by its kind.
-    /// </summary>
-    internal static class UiElementFactory
-    {
-        public static UiElement For(Control control)
-        {
-            switch (control)
-            {
-                case CheckBox checkBox: return new CheckBoxElement(checkBox);
-                case RadioButton radioButton: return new RadioButtonElement(radioButton);
-                case ButtonBase button: return new ButtonElement(button);
-                case ComboBox comboBox: return new ComboBoxElement(comboBox);
-                case TextBoxBase textBox: return new TextBoxElement(textBox);
-                case TabControl tabControl: return new TabElement(tabControl);
-                // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
-                case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox);
-                // The Pick Children pop-up's owner-drawn ListBox presents as a CheckedListBox.
-                case ListBox listBox when listBox.FindForm() is PopupPickList: return new PopupPickListElement(listBox);
-                case ListBox listBox: return new ListControlElement<ListBox>(listBox);
-                case TreeView treeView: return new TreeViewElement(treeView);
-                case ListView listView: return new ItemContainerElement<ListView>(listView);
-                // The grid itself -- the inner grid of a DataboundGridControl (a BoundDataGridView, driven
-                // through its rich copy/paste path) or a standalone DataGridView (direct cell access). The
-                // DataboundGridControl is a UserControl you walk into to reach this grid and its nav bar.
-                case BoundDataGridView boundDataGridView: return new BoundGridElement(boundDataGridView);
-                case DataGridView dataGridView: return new GridElement(dataGridView);
-                case ToolStrip toolStrip: return new ToolStripElement(toolStrip);
-                // A Form or UserControl (including a DataboundGridControl) is a boundary that owns its
-                // (flattened) children; everything else that contains controls is transparent, so these are
-                // the only containers to descend into.
-                case Form form: return new ContainerElement(form);
-                case UserControl userControl: return new ContainerElement(userControl);
-                default:
-                    // A custom clickable that is not a ButtonBase (e.g. a StartPage tile).
-                    if (control is IButtonControl)
-                        return new ClickableControlElement(control);
-                    // Anything else reaching here is a leaf with no capability (a label, a spacer, an empty
-                    // panel); it is not something a caller can act on, so it is not an element.
-                    return null;
-            }
-        }
-    }
 }
