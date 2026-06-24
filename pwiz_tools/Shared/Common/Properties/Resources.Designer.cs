@@ -738,6 +738,15 @@ namespace pwiz.Common.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid filter string: {0}.
+        /// </summary>
+        public static string FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_ {
+            get {
+                return ResourceManager.GetString("FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Contains.
         /// </summary>
         public static string FilterOperations_Contains {
