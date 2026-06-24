@@ -472,6 +472,24 @@ namespace pwiz.Skyline.ToolsUI
                 yield return descendant;
         }
 
+        // --- UI-thread marshaling ----------------------------------------------------------------------
+        // Runs work on the thread that owns this element's window. A control-backed element marshals through
+        // its form, because a form created on its own thread (e.g. a BackgroundThreadLongWaitDlg) runs its
+        // message loop there, not on the main window's thread -- so its controls must be touched through its
+        // own Invoke/BeginInvoke, not the main window's (see ControlElement). The base marshals through the
+        // main window (or the startup synchronization context), the right choice for an element with no form
+        // of its own.
+
+        /// <summary>Runs a void action synchronously on this element's UI thread (exceptions propagate).</summary>
+        public virtual void InvokeOnUiThread(Action action) => JsonUiService.InvokeOnUiThread(action);
+
+        /// <summary>Runs a function synchronously on this element's UI thread and returns its result.</summary>
+        public virtual T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func);
+
+        /// <summary>Posts a void action to this element's UI thread fire-and-forget (it is counted in
+        /// <see cref="JsonUiService.UnfinishedActionCount"/> until it finishes).</summary>
+        public virtual void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action);
+
         /// <summary>The actions this element supports, for discovery via GetActions / GetControls: every
         /// action that <see cref="UiAction.AppliesTo"/> this element (it is the kind the action targets).
         /// The capability is declared by the interfaces the element implements, not by an override here.</summary>
@@ -608,6 +626,14 @@ namespace pwiz.Skyline.ToolsUI
         /// copy) is abandoned. It belongs to the <see cref="FormElement"/>; every control shares it.</summary>
         public virtual CancellationToken CancellationToken => FormElement.CancellationToken;
 
+        // A control is marshaled through its form, not the main window: a form on its own thread (e.g. a
+        // BackgroundThreadLongWaitDlg) runs its message loop there, so its controls must be touched through
+        // that form's Invoke/BeginInvoke. FormElement?.Form is this control's form (a FormElement's own form
+        // is itself); when it is null or its handle is not yet up, the dispatch falls back to the main window.
+        public override void InvokeOnUiThread(Action action) => JsonUiService.InvokeOnUiThread(action, FormElement?.Form);
+        public override T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func, FormElement?.Form);
+        public override void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action, FormElement?.Form);
+
         public override string Name => Control.Name;
         public override Type ElementType => Control.GetType();
 
@@ -645,7 +671,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"The control '{0}' cannot be clicked: it is not a button. Set its value, or act on the button/menu item that triggers it.",
                     Label ?? JsonUiService.NullIfEmpty(Name) ?? ElementType.Name));
-            JsonUiService.InvokeOnUiThread(button.PerformClick);
+            InvokeOnUiThread(button.PerformClick);
         }
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
@@ -840,7 +866,7 @@ namespace pwiz.Skyline.ToolsUI
             ControlInfo[] result = null;
             JsonUiService.RunWithDialogWatch(() =>
             {
-                result = JsonUiService.InvokeOnUiThread(GetChildren);
+                result = InvokeOnUiThread(GetChildren);
                 return true;
             });
             return result;
@@ -853,14 +879,14 @@ namespace pwiz.Skyline.ToolsUI
         // menu/toolbar item or tile via PerformClick; a tab by selecting it).
         public void ClickButton(string button)
         {
-            var element = JsonUiService.InvokeOnUiThread(() =>
+            var element = InvokeOnUiThread(() =>
             {
                 JsonUiService.VerifyFormInteractable(Form);
                 var clickable = FindElement(button, UiActions.Click);
                 JsonUiService.VerifyInteractable(clickable);
                 return clickable;
             });
-            JsonUiService.BeginInvokeOnUiThread(() => UiActions.Click.Invoke(element, null));
+            BeginInvokeOnUiThread(() => UiActions.Click.Invoke(element, null));
         }
 
         // Sets a control's value (or a grid cell) on the form. The control is resolved + gated synchronously
@@ -869,7 +895,7 @@ namespace pwiz.Skyline.ToolsUI
         // block; the alert becomes a form the caller drives next.
         public void SetValue(string controlId, string value)
         {
-            var apply = JsonUiService.InvokeOnUiThread(() =>
+            var apply = InvokeOnUiThread(() =>
             {
                 // controlId can name a grid cell ("grid[column,row]") -- set that cell's value: move the
                 // current cell there and paste, reusing the grid path so a DataboundGridControl stays in
@@ -890,7 +916,7 @@ namespace pwiz.Skyline.ToolsUI
                 JsonUiService.VerifyInteractable(element);
                 return (Action) (() => UiActions.SetValue.Invoke(element, value));
             });
-            JsonUiService.BeginInvokeOnUiThread(apply);
+            BeginInvokeOnUiThread(apply);
         }
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the single
@@ -925,20 +951,20 @@ namespace pwiz.Skyline.ToolsUI
 
         // Closing is a void action -- post it fire-and-forget so a "save changes?" confirmation it raises
         // becomes a form the caller drives next rather than blocking.
-        public void Close() => JsonUiService.BeginInvokeOnUiThread(() => Form.Close());
+        public void Close() => BeginInvokeOnUiThread(() => Form.Close());
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
         {
             // Resolve + verify on the UI thread (a control's gates read window handles), then run the action
             // with the thread/dialog policy it declares.
-            var element = JsonUiService.InvokeOnUiThread(() =>
+            var element = InvokeOnUiThread(() =>
                 JsonUiService.RequireAction(JsonUiService.ResolvePathFrom(path, this), action));
             return JsonUiService.ExecuteAction(action, element, value);
         }
 
         // Activates the form and captures it (redacting any sensitive regions), as a right-click "capture
         // screenshot" would. Runs on the UI thread.
-        public System.Drawing.Bitmap CaptureImage() => JsonUiService.InvokeOnUiThread(() =>
+        public System.Drawing.Bitmap CaptureImage() => InvokeOnUiThread(() =>
         {
             ScreenCapture.ActivateForm(Form);
             return ScreenCapture.CaptureAndRedact(ScreenCapture.GetWindowRectangle(Form), Form);
@@ -1052,7 +1078,7 @@ namespace pwiz.Skyline.ToolsUI
         // the item first with set_selected_index). The click runs off the UI thread inside the dialog-watch,
         // so marshal the toggle.
         public override void Click() =>
-            JsonUiService.InvokeOnUiThread(() =>
+            InvokeOnUiThread(() =>
             {
                 int index = Control.SelectedIndex;
                 if (index < 0)
@@ -1194,7 +1220,7 @@ namespace pwiz.Skyline.ToolsUI
         // A click toggles the selected item's check, like a user's click/space (move to the item first with
         // set_selected_index). Runs off the UI thread inside the dialog-watch.
         public override void Click() =>
-            JsonUiService.InvokeOnUiThread(() =>
+            InvokeOnUiThread(() =>
             {
                 int index = Control.SelectedIndex;
                 if (index < 0)
@@ -1388,7 +1414,7 @@ namespace pwiz.Skyline.ToolsUI
         /// caller can try the next toolstrip on the form. Throws if the form is blocked or the item disabled.</summary>
         public bool ClickMenuItem(string menuPath)
         {
-            var leaf = JsonUiService.InvokeOnUiThread(() =>
+            var leaf = InvokeOnUiThread(() =>
             {
                 JsonUiService.VerifyFormInteractable(FormElement.Form);
                 var item = ResolveMenuItem(menuPath);
@@ -1399,7 +1425,7 @@ namespace pwiz.Skyline.ToolsUI
             });
             if (leaf == null)
                 return false;
-            JsonUiService.BeginInvokeOnUiThread(() => UiActions.Click.Invoke(leaf, null));
+            BeginInvokeOnUiThread(() => UiActions.Click.Invoke(leaf, null));
             return true;
         }
 
@@ -1456,7 +1482,13 @@ namespace pwiz.Skyline.ToolsUI
                         yield return new ToolStripItemElement(child, _formElement);
             }
         }
-        public void Click() => JsonUiService.InvokeOnUiThread(() => _item.PerformClick());
+        // A menu/toolbar item is marshaled through its form (like a control -- see ControlElement), so an
+        // item on a form running on its own thread is driven through that form's message loop.
+        public override void InvokeOnUiThread(Action action) => JsonUiService.InvokeOnUiThread(action, _formElement?.Form);
+        public override T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func, _formElement?.Form);
+        public override void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action, _formElement?.Form);
+
+        public void Click() => InvokeOnUiThread(() => _item.PerformClick());
 
         // Opens / closes this item's dropdown (a menu/toolbar dropdown item), so a menu walk can populate
         // items built on DropDownOpening before matching the next path segment. A no-op for a leaf item.
@@ -1666,7 +1698,7 @@ namespace pwiz.Skyline.ToolsUI
         // The tab contents are flattened to the form, so the TabControl itself has no children.
         public override IEnumerable<UiElement> Children => Enumerable.Empty<UiElement>();
         public void SelectTab(string tabText) =>
-            JsonUiService.InvokeOnUiThread(() =>
+            InvokeOnUiThread(() =>
             {
                 var tabs = Control.TabPages.Cast<TabPage>().ToList();
                 // The tab whose text matches strictly, else loosely (a strict match wins over a loose one).

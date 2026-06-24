@@ -58,10 +58,12 @@ namespace pwiz.Skyline.ToolsUI
         // Level 1: Primitives - UI thread marshaling
 
         /// <summary>
-        /// Executes an action on the UI thread.
-        /// Exceptions propagate to the caller via wrapping to preserve the original stack trace.
+        /// Executes an action on the UI thread. Exceptions propagate to the caller via wrapping to preserve
+        /// the original stack trace. <paramref name="dispatcher"/> is the control to marshal through -- a
+        /// form on its own thread when given (see <see cref="UiElement.InvokeOnUiThread(System.Action)"/>),
+        /// otherwise (null) the main window. Most callers go through the <see cref="UiElement"/> methods.
         /// </summary>
-        public static void InvokeOnUiThread(Action action)
+        public static void InvokeOnUiThread(Action action, Control dispatcher = null)
         {
             Exception caught = null;
             DispatchToUiThread(() =>
@@ -74,7 +76,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     caught = ex;
                 }
-            });
+            }, dispatcher);
             if (caught is ArgumentException argEx)
                 throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
             if (caught != null)
@@ -86,22 +88,27 @@ namespace pwiz.Skyline.ToolsUI
         /// Must be called from a background thread (pipe server thread).
         /// Exceptions propagate to the caller.
         /// </summary>
-        public static T InvokeOnUiThread<T>(Func<T> func)
+        public static T InvokeOnUiThread<T>(Func<T> func, Control dispatcher = null)
         {
             T result = default(T);
-            DispatchToUiThread(() => result = func());
+            DispatchToUiThread(() => result = func(), dispatcher);
             return result;
         }
 
         /// <summary>
-        /// Marshals an action onto the UI thread. Uses the main window when it exists; otherwise the
-        /// UI-thread synchronization context captured at startup (see
-        /// <see cref="Program.UiSynchronizationContext"/>), so the form-introspection verbs work
-        /// while only the StartPage is showing, before the main window has been created. Must be
-        /// called off the UI thread.
+        /// Marshals an action onto the UI thread. When a <paramref name="dispatcher"/> control with a live
+        /// handle is given, it is used (so a form on its own thread is driven through its own message loop);
+        /// otherwise the main window, or -- before it exists -- the UI-thread synchronization context captured
+        /// at startup (see <see cref="Program.UiSynchronizationContext"/>), so the form-introspection verbs
+        /// work while only the StartPage is showing. Must be called off the UI thread.
         /// </summary>
-        private static void DispatchToUiThread(Action action)
+        private static void DispatchToUiThread(Action action, Control dispatcher = null)
         {
+            if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
+            {
+                dispatcher.Invoke(action);
+                return;
+            }
             var mainWindow = Program.MainWindow;
             if (mainWindow != null && !mainWindow.IsDisposed)
             {
@@ -136,13 +143,20 @@ namespace pwiz.Skyline.ToolsUI
         /// effect (the queue is FIFO). The action is counted in <see cref="UnfinishedActionCount"/> from when
         /// it is posted until its delegate returns. Must be called off the UI thread.
         /// </summary>
-        public static void BeginInvokeOnUiThread(Action action)
+        public static void BeginInvokeOnUiThread(Action action, Control dispatcher = null)
         {
             Interlocked.Increment(ref _unfinishedActionCount);
             void Run()
             {
                 try { action(); }
                 finally { Interlocked.Decrement(ref _unfinishedActionCount); }
+            }
+            // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own
+            // BeginInvoke; otherwise the main window, or the startup sync context before it exists.
+            if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
+            {
+                dispatcher.BeginInvoke((Action) Run);
+                return;
             }
             var mainWindow = Program.MainWindow;
             if (mainWindow != null && !mainWindow.IsDisposed)
@@ -585,9 +599,8 @@ namespace pwiz.Skyline.ToolsUI
             string result = null;
             RunWithDialogWatch(() =>
             {
-                result = InvokeOnUiThread(() =>
-                    new FormElement(FindFormById(formId), CancellationToken.None)
-                        .FindElement(controlId, UiActions.GetValue).Value);
+                result = OnFormThread(formId, CancellationToken.None,
+                    formElement => formElement.FindElement(controlId, UiActions.GetValue).Value);
                 return true;
             });
             return result;
@@ -605,13 +618,13 @@ namespace pwiz.Skyline.ToolsUI
             ValidateFormIdFormat(formId);
             // Resolve + gate the grid synchronously, then paste fire-and-forget: a void action, so a type
             // conversion alert the paste raises becomes a form the caller drives rather than blocking here.
-            var grid = InvokeOnUiThread(() =>
+            var grid = OnFormThread(formId, CancellationToken.None, formElement =>
             {
-                var g = new FormElement(FindFormById(formId), CancellationToken.None).FindGrid(controlId);
+                var g = formElement.FindGrid(controlId);
                 VerifyInteractable(g);
                 return g;
             });
-            BeginInvokeOnUiThread(() => grid.SetGridText(text ?? string.Empty));
+            grid.BeginInvokeOnUiThread(() => grid.SetGridText(text ?? string.Empty));
         }
 
         /// <summary>
@@ -624,22 +637,15 @@ namespace pwiz.Skyline.ToolsUI
         {
             ValidateFormIdFormat(formId);
             // Resolve + gate synchronously, then move the cell fire-and-forget (a void action).
-            var grid = InvokeOnUiThread(() =>
+            var grid = OnFormThread(formId, CancellationToken.None, formElement =>
             {
-                var g = new FormElement(FindFormById(formId), CancellationToken.None).FindGrid(controlId);
+                var g = formElement.FindGrid(controlId);
                 VerifyInteractable(g);
                 return g;
             });
-            BeginInvokeOnUiThread(() => grid.SetCurrentCellAddress(column, row));
+            grid.BeginInvokeOnUiThread(() => grid.SetCurrentCellAddress(column, row));
         }
 
-        // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the
-        // single grid on the form, resolved through the shared element finder. A grid supports the grid
-        // actions and is matched by its control name (it has no caption -- see GridElement.MatchesText), so
-        // FindElement picks it out of the form's controls just like any other control. The factory wraps a
-        // bound inner grid (a DataboundGridControl's BoundDataGridView) as a BoundGridElement with the rich
-        // copy/paste path, and a standalone DataGridView as a plain GridElement; the DataboundGridControl
-        // itself is a transparent container the walk descends through to reach the inner grid.
         /// <summary>
         /// Returns all the text in a grid on a form -- the column headers followed by every data row --
         /// as tab-separated columns and newline-separated rows. Works for a DataboundGridControl (the
@@ -657,8 +663,8 @@ namespace pwiz.Skyline.ToolsUI
                 string text = null;
                 RunWithDialogWatch(() =>
                 {
-                    text = InvokeOnUiThread(() =>
-                        new FormElement(FindFormById(formId), cancellation.Token).FindGrid(gridId).GetGridText());
+                    text = OnFormThread(formId, cancellation.Token,
+                        formElement => formElement.FindGrid(gridId).GetGridText());
                     return true;
                 });
                 if (text == null)
@@ -732,15 +738,17 @@ namespace pwiz.Skyline.ToolsUI
         // disabled control still fails before this. Must be called off the UI thread.
         internal static object ExecuteAction(UiAction action, UiElement element, object value)
         {
+            // Marshal through the element itself (not the main window), so an action on a form running on its
+            // own thread is driven through that form's message loop -- see UiElement.InvokeOnUiThread.
             if (!action.ReturnsValue)
             {
-                BeginInvokeOnUiThread(() => action.Invoke(element, value));
+                element.BeginInvokeOnUiThread(() => action.Invoke(element, value));
                 return null;
             }
             object result = null;
             RunWithDialogWatch(() =>
             {
-                result = InvokeOnUiThread(() => action.Invoke(element, value));
+                result = element.InvokeOnUiThread(() => action.Invoke(element, value));
                 return true;
             });
             return result;
@@ -880,6 +888,20 @@ namespace pwiz.Skyline.ToolsUI
                 if (dialog.FormId == formId)
                     return dialog;
             return InvokeOnUiThread(() => new FormElement(FindFormById(formId), cancellationToken));
+        }
+
+        // Resolves the managed form named by formId and runs func against it on that form's own UI thread --
+        // the correct thread even for a form created on its own background thread (e.g. a
+        // BackgroundThreadLongWaitDlg), whose controls must be touched through its message loop, not the main
+        // window's (see UiElement.InvokeOnUiThread). The form lookup runs on the main thread; func then runs on
+        // the form's thread, where it walks/reads the control tree. Must be called off the UI thread.
+        private static T OnFormThread<T>(string formId, CancellationToken cancellationToken, Func<FormElement, T> func)
+        {
+            return InvokeOnUiThread(() =>
+            {
+                var formElement = new FormElement(FindFormById(formId), cancellationToken);
+                return formElement.InvokeOnUiThread(() => func(formElement));
+            });
         }
 
         public static string GetGraphData(string graphId, string filePath)
