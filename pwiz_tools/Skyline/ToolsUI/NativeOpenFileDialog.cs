@@ -19,8 +19,6 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Automation;
 
 namespace pwiz.Skyline.ToolsUI
@@ -31,14 +29,14 @@ namespace pwiz.Skyline.ToolsUI
     /// <see cref="NativeDialog"/> for the threading contract and how to obtain an
     /// instance.
     /// </summary>
-    public class OpenFileDialogAutomation : FileDialogAutomation
+    public class NativeOpenFileDialog : NativeFileDialog
     {
         // Identifier assigned by the Windows common file dialog to its "File name" combo box
         // (cmb13). Unlike the localized control captions, it is stable across Windows versions
         // and locales, and its presence distinguishes a file dialog from other "#32770" dialogs.
         private const string FILE_NAME_COMBO_ID = @"1148";
 
-        public OpenFileDialogAutomation(IntPtr windowHandle) : base(windowHandle)
+        public NativeOpenFileDialog(IntPtr windowHandle) : base(windowHandle)
         {
         }
 
@@ -76,8 +74,8 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Types a file name into the dialog's file name box without accepting; call
-        /// <see cref="Accept"/> to open. Pass several space-quoted paths (<c>"a" "b"</c>, see
-        /// <see cref="QuotePaths"/>) to select multiple files in a multiselect dialog.
+        /// <see cref="Accept"/> to open. Pass several double-quoted, space-separated paths
+        /// (<c>"a" "b"</c>) to select multiple files in a multiselect dialog.
         /// </summary>
         public override void EnterPath(string path)
         {
@@ -88,15 +86,6 @@ namespace pwiz.Skyline.ToolsUI
         public override void Accept()
         {
             PressEnter(GetFileNameEdit());
-        }
-
-        /// <summary>
-        /// Builds the file name box value that selects several files at once: each path double-quoted
-        /// and space-separated, the convention the common dialog parses for a multiselect open.
-        /// </summary>
-        public static string QuotePaths(IEnumerable<string> paths)
-        {
-            return string.Join(@" ", paths.Select(p => @"""" + p + @""""));
         }
 
         private AutomationElement GetFileNameEdit()

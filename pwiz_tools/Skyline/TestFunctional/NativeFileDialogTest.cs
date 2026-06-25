@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     /// the MCP UI-introspection layer (enumerated by <see cref="JsonUiService.GetOpenForms"/> as a
     /// native form, and captured by <see cref="JsonUiService.GetFormImage"/> by its reported id
     /// even though it is not a WinForms form), it can be dismissed, and a file can be opened
-    /// through it with <see cref="OpenFileDialogAutomation.EnterPathAndAccept"/>.
+    /// through it with <see cref="NativeOpenFileDialog.EnterPathAndAccept"/>.
     /// </summary>
     [TestClass]
     public class NativeFileDialogTest : AbstractFunctionalTest
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
             // Show the native Open dialog without blocking the test thread, then wait for it to
             // appear and obtain its automation wrapper.
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            var fileDialog = NativeDialog.WaitForDialog<OpenFileDialogAutomation>();
+            var fileDialog = NativeDialog.WaitForDialog<NativeOpenFileDialog>();
 
             // GetOpenForms includes the native dialog, flagged as native.
             var nativeForms = JsonUiService.GetOpenForms().Where(form => form.IsNative).ToArray();
@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             });
             var documentBeforeOpen = SkylineWindow.Document;
             SkylineWindow.BeginInvoke((Action)(() => SkylineWindow.ShowOpenFileDialog()));
-            NativeDialog.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAccept(savePath);
+            NativeDialog.WaitForDialog<NativeOpenFileDialog>().EnterPathAndAccept(savePath);
             WaitForDocumentChangeLoaded(documentBeforeOpen);
             Assert.AreEqual(savePath, SkylineWindow.DocumentFilePath);
         }

@@ -79,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
             // click Open". A native dialog has no caption-addressable buttons, so it is confirmed with the
             // accept action (the connector's way to press its default button) rather than ClickFormButton.
             JsonUiService.SetFormValue(addFilesId, @"FileName",
-                OpenFileDialogAutomation.QuotePaths(new[] { file1, file2 }));
+                QuotePaths(new[] { file1, file2 }));
             JsonUiService.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"accept", null);
 
             // The wizard's search-file list now holds both files.
@@ -114,6 +114,13 @@ namespace pwiz.SkylineTestFunctional
                     return found;
             }
             return null;
+        }
+
+        // Builds the file name box value that selects several files at once: each path double-quoted
+        // and space-separated, the convention the common file dialog parses for a multiselect open.
+        private static string QuotePaths(IEnumerable<string> paths)
+        {
+            return string.Join(@" ", paths.Select(p => @"""" + p + @""""));
         }
 
         private static string FormIdOfType(string typeName)

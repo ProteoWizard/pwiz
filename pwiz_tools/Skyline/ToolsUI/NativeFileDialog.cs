@@ -23,15 +23,15 @@ using System;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// Base for the native common file dialogs -- Open (<see cref="OpenFileDialogAutomation"/>) and
-    /// Save (<see cref="SaveFileDialogAutomation"/>). Both are "#32770" dialogs that take a file name
+    /// Base for the native common file dialogs -- Open (<see cref="NativeOpenFileDialog"/>) and
+    /// Save (<see cref="NativeSaveFileDialog"/>). Both are "#32770" dialogs that take a file name
     /// and then accept or cancel, but they expose their file-name field differently, so the
     /// path-entry gesture is abstract. They share the single "FileDialog" type name the MCP layer
     /// uses to route SetFormValue / accept to either dialog uniformly.
     /// </summary>
-    public abstract class FileDialogAutomation : NativeDialog
+    public abstract class NativeFileDialog : NativeDialog
     {
-        protected FileDialogAutomation(IntPtr windowHandle) : base(windowHandle)
+        protected NativeFileDialog(IntPtr windowHandle) : base(windowHandle)
         {
         }
 
@@ -40,8 +40,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         /// Types the file name(s) into the dialog's file name field without accepting; call
         /// <see cref="NativeDialog.Accept"/> to open/save. The Open dialog accepts several
-        /// space-quoted paths for a multiselect (see <see cref="OpenFileDialogAutomation.QuotePaths"/>);
-        /// the Save dialog takes a single path.
+        /// double-quoted, space-separated paths for a multiselect; the Save dialog takes a single path.
         /// </summary>
         public abstract void EnterPath(string path);
 

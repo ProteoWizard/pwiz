@@ -502,7 +502,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public static void FileOpen(string path)
         {
-            RunNativeDlg<OpenFileDialogAutomation>(SkylineWindow.ShowOpenFileDialog, dlg =>
+            RunNativeDlg<NativeOpenFileDialog>(SkylineWindow.ShowOpenFileDialog, dlg =>
             {
                 dlg.EnterPathAndAccept(path);
             });

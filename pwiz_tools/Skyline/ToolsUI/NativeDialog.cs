@@ -42,9 +42,13 @@ namespace pwiz.Skyline.ToolsUI
     /// (AbstractFunctionalTest.OpenDocument) and the Skyline MCP server's UI interaction layer.
     ///
     /// A native dialog is modal and runs its own message loop on the Skyline UI thread, so the
-    /// action that displays it must be posted to the UI thread (e.g. with BeginInvoke) and these
-    /// methods must be called from a different thread (the test thread or the MCP pipe thread),
-    /// never the UI thread itself.
+    /// action that displays it does not return until the dialog closes and must therefore be posted
+    /// to the UI thread (e.g. with BeginInvoke). While the dialog is up the UI thread keeps pumping
+    /// that modal loop, so messages and posted actions still run there. The methods here drive an
+    /// already-open dialog by posting Win32 messages and through UI Automation, so they do not care
+    /// which thread they are called from -- a consumer may run them on a background thread (the test
+    /// thread or the MCP pipe thread) or post them back onto the UI thread, whose modal loop pumps
+    /// them.
     ///
     /// Use <see cref="WaitForDialog{T}"/> or <see cref="GetOpenDialogs"/> to obtain an instance;
     /// <see cref="Create"/> chooses the subclass that matches a given dialog element.
@@ -114,19 +118,19 @@ namespace pwiz.Skyline.ToolsUI
             }
             if (handle == IntPtr.Zero)
                 return null;
-            if (OpenFileDialogAutomation.IsOpenFileDialog(dialog))
-                return new OpenFileDialogAutomation(handle);
+            if (NativeOpenFileDialog.IsOpenFileDialog(dialog))
+                return new NativeOpenFileDialog(handle);
             // Check Save after Open: the modern Open dialog has the classic file-name combo
             // (AutomationId 1148) that IsOpenFileDialog keys on; the Save dialog does not, so the
             // two never both match.
-            if (SaveFileDialogAutomation.IsSaveFileDialog(dialog))
-                return new SaveFileDialogAutomation(handle);
+            if (NativeSaveFileDialog.IsSaveFileDialog(dialog))
+                return new NativeSaveFileDialog(handle);
             return null;
         }
 
         /// <summary>
         /// Returns automation wrappers for the native dialogs currently open in this process,
-        /// found via UI Automation. Must be called from a thread other than the UI thread.
+        /// found via UI Automation.
         /// </summary>
         public static IList<NativeDialog> GetOpenDialogs()
         {

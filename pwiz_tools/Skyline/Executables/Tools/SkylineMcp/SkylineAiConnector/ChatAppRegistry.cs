@@ -440,7 +440,9 @@ namespace SkylineAiConnector
                 }
                 catch
                 {
-                    // Ignore parsing error and start with empty config
+                    // The existing config is malformed. Back it up before we overwrite it with a fresh
+                    // config below, so the user can recover whatever was there if it mattered.
+                    TryBackupFile(configPath);
                 }
             }
 
@@ -455,6 +457,20 @@ namespace SkylineAiConnector
             if (directory != null)
                 Directory.CreateDirectory(directory);
             File.WriteAllText(configPath, root.ToJsonString(WRITE_OPTIONS));
+        }
+
+        // Makes a best-effort copy of a file alongside the original (".bak") before it is overwritten.
+        // Any failure is ignored: the backup is a convenience, not something the caller depends on.
+        private static void TryBackupFile(string filePath)
+        {
+            try
+            {
+                File.Copy(filePath, filePath + ".bak", true);
+            }
+            catch
+            {
+                // Best effort -- if the backup cannot be written, proceed with the overwrite anyway.
+            }
         }
 
         private static JsonObject EnsureObject(JsonObject parent, string key)

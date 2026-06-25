@@ -39,7 +39,7 @@ namespace pwiz.Skyline.ToolsUI
     /// IDOK control id (1). So the file name is set with WM_SETTEXT and the dialog accepted with
     /// BM_CLICK (Cancel is the inherited WM_CLOSE).
     /// </summary>
-    public class SaveFileDialogAutomation : FileDialogAutomation
+    public class NativeSaveFileDialog : NativeFileDialog
     {
         // Host of the file-name Edit. Its presence identifies the modern Save dialog (the Open dialog
         // uses the classic combo instead), and the Edit's own AutomationId (1001) is shared by the
@@ -49,14 +49,14 @@ namespace pwiz.Skyline.ToolsUI
         private const string EDIT_CLASS_NAME = @"Edit";
         private const string BUTTON_CLASS_NAME = @"Button";
 
-        public SaveFileDialogAutomation(IntPtr windowHandle) : base(windowHandle)
+        public NativeSaveFileDialog(IntPtr windowHandle) : base(windowHandle)
         {
         }
 
         /// <summary>
         /// Returns true if the given native dialog is a modern Save file dialog, identified by its
         /// file-name control host. Mutually exclusive with
-        /// <see cref="OpenFileDialogAutomation.IsOpenFileDialog"/> (the Open dialog has the classic
+        /// <see cref="NativeOpenFileDialog.IsOpenFileDialog"/> (the Open dialog has the classic
         /// combo, the Save dialog has this host).
         /// </summary>
         public static bool IsSaveFileDialog(AutomationElement dialog)
