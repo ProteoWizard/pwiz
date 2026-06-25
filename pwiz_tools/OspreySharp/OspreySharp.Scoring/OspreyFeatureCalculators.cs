@@ -21,6 +21,8 @@
  * limitations under the License.
  */
 
+using pwiz.OspreySharp.Core;
+
 namespace pwiz.OspreySharp.Scoring
 {
     /// <summary>
@@ -95,6 +97,37 @@ namespace pwiz.OspreySharp.Scoring
         public static IOspreyFeatureCalculator Get(int featureIndex)
         {
             return _calculators[featureIndex];
+        }
+
+        /// <summary>
+        /// Projects the 21 calculators into a single <see cref="OspreyFeatureInfo"/>
+        /// vector in parity-critical PIN-index order, pairing each supplied machine
+        /// <paramref name="featureNames"/> entry with that calculator's
+        /// <see cref="IOspreyFeatureCalculator.DisplayName"/> label and
+        /// <see cref="IOspreyFeatureCalculator.IsReversedScore"/> direction. The FDR
+        /// layer (which does not reference this assembly) takes this single vector by
+        /// value -- replacing the former parallel name / label / reversed arrays --
+        /// to label and direction-flag the rows of the feature-contribution report.
+        /// The machine name stays the caller's parity-critical PIN column name;
+        /// label + direction are owned by each calculator (the single source of
+        /// truth, in lockstep with the index order).
+        /// </summary>
+        /// <param name="featureNames">
+        /// The parity-critical PIN feature names, one per feature in index order
+        /// (typically <c>ParquetScoreCache.PIN_FEATURE_NAMES</c>). Must have
+        /// <see cref="FeatureCount"/> entries.
+        /// </param>
+        public static OspreyFeatureInfo[] BuildFeatureInfos(string[] featureNames)
+        {
+            if (featureNames == null || featureNames.Length != FeatureCount)
+                throw new System.ArgumentException(
+                    string.Format(@"BuildFeatureInfos expects {0} feature names", FeatureCount),
+                    nameof(featureNames));
+            var infos = new OspreyFeatureInfo[FeatureCount];
+            for (int i = 0; i < FeatureCount; i++)
+                infos[i] = new OspreyFeatureInfo(
+                    featureNames[i], _calculators[i].DisplayName, _calculators[i].IsReversedScore);
+            return infos;
         }
     }
 }

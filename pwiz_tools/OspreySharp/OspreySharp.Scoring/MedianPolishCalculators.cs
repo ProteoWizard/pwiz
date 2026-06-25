@@ -57,6 +57,10 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "median_polish_cosine"; } }
 
+        public override string DisplayName { get { return "Median-polish cosine"; } }
+
+        public override bool IsReversedScore { get { return false; } }   // higher is better
+
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
             if (context.TryGetInfo(out MedianPolishByproduct mp) && mp.Polish != null)
@@ -69,6 +73,10 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class MedianPolishResidualRatioCalc : DetailedOspreyFeatureCalculator
     {
         public override string Name { get { return "median_polish_residual_ratio"; } }
+
+        public override string DisplayName { get { return "Median-polish residual ratio"; } }
+
+        public override bool IsReversedScore { get { return true; } }   // lower is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
@@ -85,6 +93,10 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "median_polish_min_fragment_r2"; } }
 
+        public override string DisplayName { get { return "Median-polish min fragment R2"; } }
+
+        public override bool IsReversedScore { get { return false; } }   // higher is better
+
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
             if (context.TryGetInfo(out MedianPolishByproduct mp) && mp.Polish != null)
@@ -97,6 +109,10 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class MedianPolishResidualCorrelationCalc : DetailedOspreyFeatureCalculator
     {
         public override string Name { get { return "median_polish_residual_correlation"; } }
+
+        public override string DisplayName { get { return "Median-polish residual correlation"; } }
+
+        public override bool IsReversedScore { get { return true; } }   // lower is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
