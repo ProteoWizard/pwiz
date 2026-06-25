@@ -66,14 +66,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
         public static extern bool CreateHardLink(string lpFileName, string lpExistingFileName, IntPtr lpSecurityAttributes);
 
-        // Non-destructively checks a pipe's state without consuming data. Returns false (with a
-        // broken-pipe error) when the peer has disconnected -- a reliable disconnect check that
-        // NamedPipeServerStream.IsConnected does not provide without an I/O operation.
-        [DllImport("kernel32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        public static extern bool PeekNamedPipe(IntPtr hNamedPipe, IntPtr lpBuffer, uint nBufferSize,
-            IntPtr lpBytesRead, IntPtr lpTotalBytesAvail, IntPtr lpBytesLeftThisMessage);
-
         [DllImport("kernel32.dll")]
         public static extern int GetCurrentThreadId(); 
         

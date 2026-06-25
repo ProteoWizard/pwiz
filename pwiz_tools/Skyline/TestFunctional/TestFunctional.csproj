@@ -162,7 +162,6 @@
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
     <Compile Include="AlertWatchTest.cs" />
-    <Compile Include="ConnectorDisconnectTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddIrtStandardsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />

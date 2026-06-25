@@ -187,61 +187,6 @@ namespace pwiz.Skyline.ToolsUI
 
         private const int DIALOG_POLL_INTERVAL_MILLIS = 100;
 
-        // Ambient "is the calling client still connected?" check, set per request by the pipe server.
-        // ThreadStatic because RunWithDialogWatch's poll loop runs on the request's server thread.
-        // Lets a long-running verb bail when the client disconnects, so the single-instance server
-        // can move on to the next connection instead of staying blocked.
-        [ThreadStatic] private static Func<bool> _clientConnectedCheck;
-
-        public static void SetClientConnectedCheck(Func<bool> check)
-        {
-            _clientConnectedCheck = check;
-        }
-
-        // A CancellationTokenSource that fires when the calling client disconnects, so a long copy/read
-        // abandons instead of pinning the single-instance server. It polls the connected-check the pipe
-        // server installs; the caller passes that check (it is ThreadStatic to the server thread, so it
-        // must be read before any thread hop) and it is null in non-pipe contexts (tests), in which
-        // case the token simply never fires from a disconnect.
-        private sealed class ClientDisconnectCancellation : IDisposable
-        {
-            private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-            private readonly Thread _pollThread;
-
-            public ClientDisconnectCancellation(Func<bool> connectedCheck)
-            {
-                if (connectedCheck == null)
-                    return;
-                _pollThread = new Thread(() =>
-                {
-                    // WaitOne returns true once the token is cancelled (the work finished, in Dispose);
-                    // false on timeout, when we re-check whether the client is still connected.
-                    while (!_cancellationTokenSource.Token.WaitHandle.WaitOne(DIALOG_POLL_INTERVAL_MILLIS))
-                    {
-                        if (!connectedCheck())
-                        {
-                            _cancellationTokenSource.Cancel();
-                            return;
-                        }
-                    }
-                })
-                {
-                    IsBackground = true,
-                    Name = @"AI Connector disconnect poll"
-                };
-                _pollThread.Start();
-            }
-
-            public CancellationToken Token => _cancellationTokenSource.Token;
-
-            public void Dispose()
-            {
-                _cancellationTokenSource.Cancel(); // stop the poll thread, then wait for it to exit
-                _pollThread?.Join();
-                _cancellationTokenSource.Dispose();
-            }
-        }
-
         /// <summary>
         /// Runs <paramref name="work"/> on a background thread and waits for it, but never hangs behind a
         /// MODAL dialog that blocks one of this process's windows and that it cannot get past. A
@@ -268,8 +213,6 @@ namespace pwiz.Skyline.ToolsUI
 
             while (!worker.Join(DIALOG_POLL_INTERVAL_MILLIS))
             {
-                if (_clientConnectedCheck != null && !_clientConnectedCheck())
-                    return result; // client disconnected -- abandon the (possibly blocked) work so the server can move on
                 var newModals = FindModalDialogWindows().Where(h => !knownModals.Contains(h)).ToList();
                 if (newModals.Count == 0)
                     continue;
@@ -507,7 +450,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new InvalidOperationException(
                     @"Cannot invoke a menu item: the main Skyline window is not open yet (the StartPage may be showing).");
             // The main menu is the main window's; drive it through that form's element model.
-            new FormElement(Program.MainWindow, CancellationToken.None).InvokeMenuItem(menuPath);
+            new FormElement(Program.MainWindow).InvokeMenuItem(menuPath);
         }
 
         // Fires a context menu's Opening (so items added on demand are present) and returns it, for a
@@ -576,7 +519,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void ClickFormButton(string formId, string button)
         {
-            ResolveForm(formId, CancellationToken.None).ClickButton(button);
+            ResolveForm(formId).ClickButton(button);
         }
 
         /// <summary>
@@ -592,7 +535,7 @@ namespace pwiz.Skyline.ToolsUI
             // The path-walk, matching, gating, and click all live in ToolStripElement.ClickMenuItem; the
             // first segment is a top-level item on one of the form's toolstrips, so try each until one has it.
             var toolStrips = InvokeOnUiThread(() =>
-                new FormElement(FindFormById(formId), CancellationToken.None)
+                new FormElement(FindFormById(formId))
                     .SelfAndDescendants().OfType<ToolStripElement>().ToList());
             if (!toolStrips.Any(toolStrip => toolStrip.ClickMenuItem(menuPath)))
                 throw new ArgumentException(LlmInstruction.Format(
@@ -605,7 +548,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void SetFormValue(string formId, string controlId, string value)
         {
-            ResolveForm(formId, CancellationToken.None).SetValue(controlId, value);
+            ResolveForm(formId).SetValue(controlId, value);
         }
 
         /// <summary>
@@ -620,7 +563,7 @@ namespace pwiz.Skyline.ToolsUI
             string result = null;
             RunWithDialogWatch(() =>
             {
-                result = OnFormThread(formId, CancellationToken.None,
+                result = OnFormThread(formId,
                     formElement => formElement.FindElement(controlId, UiActions.GetValue).Value?.ToString());
                 return true;
             });
@@ -639,7 +582,7 @@ namespace pwiz.Skyline.ToolsUI
             ValidateFormIdFormat(formId);
             // Resolve the grid synchronously; the action's Invoke gates it and pastes fire-and-forget, so a
             // type conversion alert the paste raises becomes a form the caller drives rather than blocking here.
-            var grid = OnFormThread(formId, CancellationToken.None, formElement => formElement.FindGrid(controlId));
+            var grid = OnFormThread(formId, formElement => formElement.FindGrid(controlId));
             UiActions.SetGridText.Invoke(grid, text ?? string.Empty);
         }
 
@@ -653,7 +596,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             ValidateFormIdFormat(formId);
             // Resolve the grid synchronously; the action's Invoke gates it and moves the cell fire-and-forget.
-            var grid = OnFormThread(formId, CancellationToken.None, formElement => formElement.FindGrid(controlId));
+            var grid = OnFormThread(formId, formElement => formElement.FindGrid(controlId));
             UiActions.SetCurrentCellAddress.Invoke(grid, new[] { column, row });
         }
 
@@ -665,24 +608,14 @@ namespace pwiz.Skyline.ToolsUI
         public static string GetGridText(string formId, string gridId)
         {
             ValidateFormIdFormat(formId);
-            // Capture the disconnect check on this (server) thread before any marshaling, so a large
-            // copy is abandoned if the client goes away rather than pinning the single-instance server.
-            using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
+            // A value read: run it synchronously inside the dialog-watch so it does not hang if a modal is up.
+            string text = null;
+            RunWithDialogWatch(() =>
             {
-                // A value read: run it synchronously inside the dialog-watch so it does not hang if a modal
-                // is up. The FormElement carries the disconnect token; the grid it produces reads with it.
-                string text = null;
-                RunWithDialogWatch(() =>
-                {
-                    text = OnFormThread(formId, cancellation.Token,
-                        formElement => formElement.FindGrid(gridId).GetGridText());
-                    return true;
-                });
-                if (text == null)
-                    throw new OperationCanceledException(LlmInstruction.Format(
-                        @"Reading the grid {0} was cancelled.", formId));
-                return text;
-            }
+                text = OnFormThread(formId, formElement => formElement.FindGrid(gridId).GetGridText());
+                return true;
+            });
+            return text;
         }
 
         /// <summary>
@@ -691,7 +624,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void CloseForm(string formId)
         {
-            ResolveForm(formId, CancellationToken.None).Close();
+            ResolveForm(formId).Close();
         }
 
         /// <summary>
@@ -704,7 +637,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static ControlInfo[] GetControls(string formId)
         {
-            return ResolveForm(formId, CancellationToken.None).GetControls();
+            return ResolveForm(formId).GetControls();
         }
 
         /// <summary>
@@ -718,19 +651,12 @@ namespace pwiz.Skyline.ToolsUI
         {
             var uiAction = UiActions.ByName(action) ?? throw new ArgumentException(LlmInstruction.Format(
                 @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
-            // Capture the disconnect check on this (server) thread before any marshaling, so a long action
-            // (e.g. reading a large grid) is abandoned if the client goes away rather than pinning the
-            // single-instance server. The token is carried by the FormElement, which hands it to every
-            // element in its tree, so the action reaches it without a parameter.
-            using (var cancellation = new ClientDisconnectCancellation(_clientConnectedCheck))
-            {
-                // The path's root names a form; resolve it (managed or native) and let it perform the action
-                // in its own thread context (a managed form on the UI thread inside the dialog-watch; a native
-                // dialog on this calling thread). get_actions/get_children are ordinary reads -- the action's
-                // Invoke returns the element's SupportedActions / GetChildren(), whose child paths are
-                // parentless (the caller knows the parent it asked about).
-                return ResolveForm(RootFormText(path), cancellation.Token).PerformAction(path, uiAction, value);
-            }
+            // The path's root names a form; resolve it (managed or native) and let it perform the action in its
+            // own thread context (a managed form on the UI thread inside the dialog-watch; a native dialog on
+            // this calling thread). get_actions/get_children are ordinary reads -- the action's Invoke returns
+            // the element's SupportedActions / GetChildren(), whose child paths are parentless (the caller
+            // knows the parent it asked about).
+            return ResolveForm(RootFormText(path)).PerformAction(path, uiAction, value);
         }
 
         // Runs a resolved action, which gates and marshals itself (see UiAction.Invoke): a void action posts
@@ -871,13 +797,13 @@ namespace pwiz.Skyline.ToolsUI
         // enumerated via UI Automation cross-thread (no Control to marshal through), which runs alongside their
         // modal loop rather than on it. A managed form is then found on the UI thread. Throws if no open window
         // has the id.
-        private static IFormElement ResolveForm(string formId, CancellationToken cancellationToken)
+        private static IFormElement ResolveForm(string formId)
         {
             ValidateFormIdFormat(formId);
             foreach (var dialog in NativeDialog.GetOpenDialogs())
                 if (dialog.FormId == formId)
                     return dialog;
-            return InvokeOnUiThread(() => new FormElement(FindFormById(formId), cancellationToken));
+            return InvokeOnUiThread(() => new FormElement(FindFormById(formId)));
         }
 
         // Resolves the managed form named by formId and runs func against it on that form's own UI thread --
@@ -885,11 +811,11 @@ namespace pwiz.Skyline.ToolsUI
         // BackgroundThreadLongWaitDlg), whose controls must be touched through its message loop, not the main
         // window's (see UiElement.InvokeOnUiThread). The form lookup runs on the main thread; func then runs on
         // the form's thread, where it walks/reads the control tree. Must be called off the UI thread.
-        private static T OnFormThread<T>(string formId, CancellationToken cancellationToken, Func<FormElement, T> func)
+        private static T OnFormThread<T>(string formId, Func<FormElement, T> func)
         {
             return InvokeOnUiThread(() =>
             {
-                var formElement = new FormElement(FindFormById(formId), cancellationToken);
+                var formElement = new FormElement(FindFormById(formId));
                 return formElement.InvokeOnUiThread(() => func(formElement));
             });
         }
@@ -989,7 +915,7 @@ namespace pwiz.Skyline.ToolsUI
             if (!HasUiDispatch())
                 return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             // ResolveForm throws "form not found" before any permission prompt, so a bad id never prompts.
-            var form = ResolveForm(formId, CancellationToken.None);
+            var form = ResolveForm(formId);
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
                 return denial;
@@ -1009,7 +935,7 @@ namespace pwiz.Skyline.ToolsUI
             ValidateFormIdFormat(formId);
             if (!HasUiDispatch())
                 return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
-            var form = ResolveForm(formId, CancellationToken.None);
+            var form = ResolveForm(formId);
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
             {

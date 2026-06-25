@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Forms;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
@@ -124,8 +123,7 @@ namespace pwiz.Skyline.ToolsUI
         /// blocked by a modal or disabled fails here. Then a void action is posted to that UI thread
         /// fire-and-forget (so a gesture that opens a modal does not block -- the modal is driven by later
         /// commands), while a value action (a read) is run synchronously and its result returned. The actual
-        /// operation is <see cref="InvokeCore"/>; the element reaches its form's cancellation token (a large
-        /// grid read) through its FormElement, not a parameter.</summary>
+        /// operation is <see cref="InvokeCore"/>.</summary>
         public object Invoke(UiElement element, object argument)
         {
             if (MustBeEnabled)
@@ -761,13 +759,8 @@ namespace pwiz.Skyline.ToolsUI
     {
         /// <summary>The form this element belongs to -- the root of the element tree it was built in. Set once
         /// when the element is created: by <see cref="FormElement.ElementFor"/> for a control (the FormElement
-        /// sets its own to itself), or in the constructor of a <see cref="ToolStripItemElement"/>. Every element
-        /// reaches its form's <see cref="CancellationToken"/> through it.</summary>
+        /// sets its own to itself), or in the constructor of a <see cref="ToolStripItemElement"/>.</summary>
         public FormElement FormElement { get; internal set; }
-
-        /// <summary>The token that fires when the connector client disconnects, so a long read (a large grid
-        /// copy) is abandoned. It belongs to the <see cref="FormElement"/>; every element shares it.</summary>
-        public virtual CancellationToken CancellationToken => FormElement.CancellationToken;
 
         // Marshaled through the element's own form, not the main window: a form on its own thread runs its
         // message loop there, so the element must be touched through that form's Invoke/BeginInvoke.
@@ -923,8 +916,7 @@ namespace pwiz.Skyline.ToolsUI
         /// clicks its AcceptButton, a native dialog does its OK gesture), so confirming a dialog never keys on
         /// a localized button caption (cancelling is <see cref="Close"/>). Exposed as the accept action.</summary>
         void Accept();
-        /// <summary>Resolves the path against this form and performs the action in the form's thread context.
-        /// The action gets its cancellation token from the resolved element (its FormElement), not a parameter.</summary>
+        /// <summary>Resolves the path against this form and performs the action in the form's thread context.</summary>
         object PerformAction(UiElementPath path, UiAction action, object value);
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
         /// the caller has done the screen-capture pre-flight).</summary>
@@ -943,8 +935,8 @@ namespace pwiz.Skyline.ToolsUI
         public override IEnumerable<UiElement> Children => FlattenChildren(Control);
 
         // This container's child elements for the form walk, FLATTENED. A control the form recognizes as an
-        // element (FormElement.ElementFor) is yielded as that element -- and tagged with the same FormElement,
-        // so it shares the form's cancellation token: a UserControl as a ContainerElement that owns its own
+        // element (FormElement.ElementFor) is yielded as that element -- and tagged with the same FormElement:
+        // a UserControl as a ContainerElement that owns its own
         // (likewise flattened) children, and a grid/list/tree/toolstrip as a leaf the caller walks into via
         // its own children. A control ElementFor does not recognize (a Panel, GroupBox, SplitContainer, a
         // TabPage, ...) is transparent -- its controls are pulled up so every control is a direct child of
@@ -971,24 +963,20 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A WinForms top-level form, addressed by a formId. It is a <see cref="ContainerElement"/> (it
     /// owns the form's flattened controls) that also implements <see cref="IFormElement"/>: the verbs resolve
     /// a managed formId to this and call its methods, which marshal to the UI thread (and watch for a dialog
-    /// a mutation pops) so the connector drives a form the same way whether or not it is native. It carries
-    /// the request's <see cref="CancellationToken"/> and is the factory (<see cref="ElementFor"/>) for the
-    /// elements in its tree, tagging each with itself so every control can reach that token.</summary>
+    /// a mutation pops) so the connector drives a form the same way whether or not it is native. It is the
+    /// factory (<see cref="ElementFor"/>) for the elements in its tree, tagging each with itself.</summary>
     internal sealed class FormElement : ContainerElement, IFormElement
     {
-        private readonly CancellationToken _cancellationToken;
-        public FormElement(Form form, CancellationToken cancellationToken) : base(form)
+        public FormElement(Form form) : base(form)
         {
-            _cancellationToken = cancellationToken;
             FormElement = this;
         }
         internal Form Form => (Form) Control;
-        public override CancellationToken CancellationToken => _cancellationToken;
 
         /// <summary>Builds the <see cref="UiElement"/> for a control in this form's tree, choosing the
-        /// subclass by the control's kind and tagging it with this form (so it shares the cancellation
-        /// token). Returns null for a control that is not an element (a label, a spacer, a transparent
-        /// panel) -- the caller treats it as transparent and recurses into it.</summary>
+        /// subclass by the control's kind and tagging it with this form. Returns null for a control that is
+        /// not an element (a label, a spacer, a transparent panel) -- the caller treats it as transparent and
+        /// recurses into it.</summary>
         public UiElement ElementFor(Control control)
         {
             var element = CreateElement(control);
@@ -1721,9 +1709,7 @@ namespace pwiz.Skyline.ToolsUI
             string.Equals(Control.Name, text, StringComparison.OrdinalIgnoreCase);
 
         // A grid is a leaf in the walk (not a ContainerElement): its content is read/written through the
-        // grid actions, not by walking into child controls. The plain path reads/writes cells directly. A
-        // large read is cancelled through the form's CancellationToken (a bound grid honors it; the plain
-        // cell read is synchronous).
+        // grid actions, not by walking into child controls. The plain path reads/writes cells directly.
 
         // Reads a plain DataGridView as tab-separated text: the column headers followed by every data row
         // (each cell shown as the user sees it).
