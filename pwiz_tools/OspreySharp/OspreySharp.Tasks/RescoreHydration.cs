@@ -92,7 +92,7 @@ namespace pwiz.OspreySharp.Tasks
         /// they can compute the join-wide reconciliation parameter hash —
         /// the worker's <c>OspreyConfig.InputFiles</c> only has its single
         /// parquet, but the hash that the downstream
-        /// <c>--task MergeNode</c> merge node validates is computed over
+        /// <c>--task SecondPassFDR</c> merge node validates is computed over
         /// all files. Empty list when reading a v1 envelope (the worker
         /// falls back to its <c>InputFiles</c> stems in that case).
         /// </summary>

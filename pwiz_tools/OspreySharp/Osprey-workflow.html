@@ -345,7 +345,7 @@
 <!-- ================================================================= -->
 <g transform="translate(0, 1310)">
   <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
-    --task PerFileScoring exits here (per-file .scores.parquet on disk); --task FirstJoin resumes here on a coordinator node
+    --task PerFileScoring exits here (per-file .scores.parquet on disk); --task FirstPassFDR resumes here on a coordinator node
   </text>
 </g>
 
@@ -406,7 +406,7 @@
 <!-- ================================================================= -->
 <g transform="translate(0, 1850)">
   <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
-    --task FirstJoin stops here (writes the Stage 5 -> 6 boundary sidecars for HPC fan-back-out); the full pipeline continues
+    --task FirstPassFDR stops here (writes the Stage 5 -> 6 boundary sidecars for HPC fan-back-out); the full pipeline continues
   </text>
 </g>
 
@@ -444,7 +444,7 @@
 <!-- ================================================================= -->
 <g transform="translate(0, 2150)">
   <text x="600" y="14" text-anchor="middle" style="font-size: 10px; fill: #555;">
-    --task MergeNode --input-scores ... resumes here from reconciled per-file parquets (second join begins)
+    --task SecondPassFDR --input-scores ... resumes here from reconciled per-file parquets (second join begins)
   </text>
 </g>
 

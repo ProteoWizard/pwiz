@@ -52,12 +52,10 @@ namespace pwiz.OspreySharp.Scoring
         private readonly IScoringDiagnostics _diagnostics;   // nullable by contract; invoked null-conditionally
         private readonly PeakDataExtractor _extractor;
 
-        public CoelutionScorer(Action<string> logInfo, IScoringDiagnostics diagnostics)
+        public CoelutionScorer(IScoringDiagnostics diagnostics)
         {
             _diagnostics = diagnostics;
-            // logInfo is consumed only by the extractor (all detection-side [DIAG]
-            // logging moved there); it is not retained as a field here.
-            _extractor = new PeakDataExtractor(logInfo, diagnostics);
+            _extractor = new PeakDataExtractor(diagnostics);
         }
 
 

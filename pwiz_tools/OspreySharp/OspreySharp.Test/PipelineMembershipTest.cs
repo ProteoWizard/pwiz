@@ -63,11 +63,11 @@ namespace pwiz.OspreySharp.Test
                     new[] { true,  true,  true,  true  }),
                 (@"PerFileScoring",    new OspreyConfig { NoJoin = true },
                     new[] { true,  false, false, false }),
-                (@"FirstJoin",         WithInputScores(c => c.StopAfterStage5 = true),
+                (@"FirstPassFDR",      WithInputScores(c => c.StopAfterStage5 = true),
                     new[] { false, true,  false, false }),
-                (@"PerFileRescore",    WithInputScores(c => c.NoJoin = true),
+                (@"PerFileRescoring",  WithInputScores(c => c.NoJoin = true),
                     new[] { false, false, true,  false }),
-                (@"MergeNode",         WithInputScores(c => c.ExpectReconciledInput = true),
+                (@"SecondPassFDR",     WithInputScores(c => c.ExpectReconciledInput = true),
                     new[] { false, false, false, true  }),
                 // --input-scores with no --task: the single-node full pipeline.
                 // PerFileScoring lazy-rehydrates the supplied scores rather than

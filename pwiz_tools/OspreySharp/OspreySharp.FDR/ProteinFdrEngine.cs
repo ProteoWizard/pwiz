@@ -55,7 +55,7 @@ namespace pwiz.OspreySharp.FDR
         /// summary logging and returns the artifacts so the Tasks facade can emit the
         /// Stage-6 diagnostic dump + <c>ProteinFdrOnly</c> early-exit WITHOUT
         /// recomputing them. <paramref name="logInfo"/> may be null for the
-        /// <c>--task MergeNode</c> rehydration path (<c>PerFileRescoreTask</c>), which
+        /// <c>--task SecondPassFDR</c> rehydration path (<c>PerFileRescoreTask</c>), which
         /// runs the recompute silently before compaction.
         /// </summary>
         public static FirstPassProteinFdrResult RunFirstPass(
