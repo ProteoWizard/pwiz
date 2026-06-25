@@ -148,7 +148,18 @@ namespace pwiz.Skyline.ToolsUI
             Interlocked.Increment(ref _unfinishedActionCount);
             void Run()
             {
-                try { action(); }
+                try
+                {
+                    action();
+                }
+                catch (Exception exception)
+                {
+                    // A void action is posted fire-and-forget, so there is no caller frame to catch a failure;
+                    // it would otherwise reach the global handler as an "Unexpected Error". Show it as a normal
+                    // MessageDlg instead -- its message and stack are then also readable by the connector's form
+                    // gate (see BlockingAlertMessage), so the next command can report what went wrong.
+                    MessageDlg.ShowException((IWin32Window) dispatcher ?? Program.MainWindow, exception);
+                }
                 finally { Interlocked.Decrement(ref _unfinishedActionCount); }
             }
             // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own
