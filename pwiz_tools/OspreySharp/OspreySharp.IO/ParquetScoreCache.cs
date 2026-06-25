@@ -229,27 +229,32 @@ namespace pwiz.OspreySharp.IO
                 .ThenBy(idx => entries[idx].ScanNumber)
                 .ToArray();
 
-            for (int i = 0; i < n; i++)
+            using (var buildProgress = new ProgressReporter(
+                string.Format("Preparing {0} entries", n), n, "  ", 2.0))
             {
-                var entry = entries[sortedIndices[i]];
-                entryIds[i] = entry.EntryId;
-                isDecoys[i] = entry.IsDecoy;
-                sequences[i] = entry.Sequence ?? string.Empty;
-                modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
-                charges[i] = entry.Charge;
-                precursorMzs[i] = entry.PrecursorMz;
-                proteinIds[i] = entry.ProteinIds != null
-                    ? string.Join(";", entry.ProteinIds)
-                    : null;
-                scanNumbers[i] = entry.ScanNumber;
-                apexRts[i] = entry.ApexRt;
-                startRts[i] = entry.PeakBounds != null ? entry.PeakBounds.StartRt : 0.0;
-                endRts[i] = entry.PeakBounds != null ? entry.PeakBounds.EndRt : 0.0;
-                boundsAreas[i] = entry.PeakBounds != null ? entry.PeakBounds.Area : 0.0;
-                boundsSnrs[i] = entry.PeakBounds != null ? entry.PeakBounds.SignalToNoise : 0.0;
-                fileNames[i] = entry.FileName ?? string.Empty;
+                for (int i = 0; i < n; i++)
+                {
+                    var entry = entries[sortedIndices[i]];
+                    entryIds[i] = entry.EntryId;
+                    isDecoys[i] = entry.IsDecoy;
+                    sequences[i] = entry.Sequence ?? string.Empty;
+                    modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
+                    charges[i] = entry.Charge;
+                    precursorMzs[i] = entry.PrecursorMz;
+                    proteinIds[i] = entry.ProteinIds != null
+                        ? string.Join(";", entry.ProteinIds)
+                        : null;
+                    scanNumbers[i] = entry.ScanNumber;
+                    apexRts[i] = entry.ApexRt;
+                    startRts[i] = entry.PeakBounds != null ? entry.PeakBounds.StartRt : 0.0;
+                    endRts[i] = entry.PeakBounds != null ? entry.PeakBounds.EndRt : 0.0;
+                    boundsAreas[i] = entry.PeakBounds != null ? entry.PeakBounds.Area : 0.0;
+                    boundsSnrs[i] = entry.PeakBounds != null ? entry.PeakBounds.SignalToNoise : 0.0;
+                    fileNames[i] = entry.FileName ?? string.Empty;
 
-                ExtractPinFeatures(entry.Features, featureArrays, i);
+                    ExtractPinFeatures(entry.Features, featureArrays, i);
+                    buildProgress.Report(i + 1);
+                }
             }
 
             // Write to a temp file first, then move to final path (safe NAS writes)
@@ -268,28 +273,13 @@ namespace pwiz.OspreySharp.IO
 
                 using (var group = writer.CreateRowGroup())
                 {
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_ENTRY_ID, entryIds)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_IS_DECOY, isDecoys)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_SEQUENCE, sequences)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_CHARGE, charges)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_PROTEIN_IDS, proteinIds)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_APEX_RT, apexRts)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_START_RT, startRts)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_END_RT, endRts)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_BOUNDS_AREA, boundsAreas)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FILE_NAME, fileNames)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities)));
-
-                    for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        RunSync(group.WriteColumnAsync(new DataColumn(featureFields[f], featureArrays[f])));
+                    var columns = BuildRowGroupColumns(
+                        entryIds, isDecoys, sequences, modifiedSequences, charges,
+                        precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
+                        boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
+                        fragmentIntensities, refXicRts, refXicIntensities,
+                        featureFields, featureArrays);
+                    WriteRowGroupColumns(group, columns, n);
                 }
             }
 
@@ -365,94 +355,99 @@ namespace pwiz.OspreySharp.IO
                 .ThenBy(idx => entries[idx].ScanNumber)
                 .ToArray();
 
-            for (int i = 0; i < n; i++)
+            using (var buildProgress = new ProgressReporter(
+                string.Format("Preparing {0} entries", n), n, "  ", 2.0))
             {
-                var entry = entries[sortedIndices[i]];
-                // Assign ParquetIndex to match the row position we are
-                // about to write. Mirrors LoadFdrStubsFromParquet, which
-                // assigns ParquetIndex = row on read. Without this
-                // assignment, in-memory entries reach Stage 5
-                // ReconciliationPlanner with ParquetIndex = 0 (FdrEntry
-                // default), and every entry's per-file CWT lookup
-                // (fileCwt[entry.ParquetIndex]) grabs the first row's
-                // CwtCandidate list instead of its own -- the planner
-                // then force-integrates almost every entry because the
-                // wrong CWT list has no candidate near the expected RT.
-                // The HPC chain path was unaffected because its entries
-                // are reloaded via LoadFdrStubsFromParquet, which sets
-                // ParquetIndex correctly. Found by C# in-memory vs
-                // C# HPC-chain strict-rehydration bisection on Stellar
-                // (Stage 5 boundary check: .1st-pass.fdr_scores.bin
-                // byte-identical but reconciliation.json action shape
-                // diverged -- 35K use_cwt actions on HPC side, 814 on
-                // in-memory side, total identical).
-                entry.ParquetIndex = (uint)i;
-                entryIds[i] = entry.EntryId;
-                isDecoys[i] = entry.IsDecoy;
-                charges[i] = entry.Charge;
-                scanNumbers[i] = entry.ScanNumber;
-                modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
-                apexRts[i] = entry.ApexRt;
-                startRts[i] = entry.StartRt;
-                endRts[i] = entry.EndRt;
-                boundsAreas[i] = entry.BoundsArea;
-                boundsSnrs[i] = entry.BoundsSnr;
-                fileNames[i] = fileName ?? string.Empty;
-                fragmentMzs[i] = EncodeF64Blob(entry.FragmentMzs);
-                fragmentIntensities[i] = EncodeF32Blob(entry.FragmentIntensities);
-                refXicRts[i] = EncodeF64Blob(entry.ReferenceXicRts);
-                refXicIntensities[i] = EncodeF64Blob(entry.ReferenceXicIntensities);
-
-                // Mirror Rust's invariant: every row carries a cwt_candidates
-                // blob, even when the candidate list is empty. Rust's
-                // pipeline.rs::write_scores_parquet (at the cwt_candidates
-                // serialization site) unconditionally appends a 4-byte
-                // little-endian count prefix, so an entry with zero
-                // candidates becomes a 4-byte zero-length blob, never a
-                // null cell. ~57k post-compaction stubs per Stellar file
-                // had no peaks; without this normalization C# emitted
-                // null cells while Rust emitted empty blobs, producing
-                // a spurious cross-impl parquet diff at end-of-Stage-6.
-                //
-                // TODO(osprey-rust): the proper fix is on the Rust side --
-                // pipeline.rs should write null for empty candidate lists,
-                // which is more parquet-idiomatic and saves 4 bytes per
-                // empty row for downstream consumers. When that lands in
-                // maccoss/osprey, revert this branch to the original
-                // "skip null/empty" form.
-                // Use Array.Empty<>() (not `new List<>()`) on the null
-                // branch so we still emit the 4-byte zero-count blob
-                // without allocating a fresh List per empty row.
-                // CwtCandidateCodec.Encode takes IReadOnlyList<CwtCandidate>
-                // which both List<T> and T[] satisfy.
-                cwtCandidates[i] = CwtCandidateCodec.Encode(
-                    entry.CwtCandidates ?? (IReadOnlyList<CwtCandidate>)Array.Empty<CwtCandidate>());
-
-                LibraryEntry libEntry = null;
-                if (libraryById != null)
-                    libraryById.TryGetValue(entry.EntryId, out libEntry);
-                if (libEntry != null)
+                for (int i = 0; i < n; i++)
                 {
-                    sequences[i] = libEntry.Sequence ?? string.Empty;
-                    precursorMzs[i] = libEntry.PrecursorMz;
-                    proteinIds[i] = libEntry.ProteinIds != null
-                        ? string.Join(";", libEntry.ProteinIds)
-                        : null;
-                }
-                else
-                {
-                    sequences[i] = string.Empty;
-                    precursorMzs[i] = 0.0;
-                    proteinIds[i] = null;
-                }
+                    var entry = entries[sortedIndices[i]];
+                    // Assign ParquetIndex to match the row position we are
+                    // about to write. Mirrors LoadFdrStubsFromParquet, which
+                    // assigns ParquetIndex = row on read. Without this
+                    // assignment, in-memory entries reach Stage 5
+                    // ReconciliationPlanner with ParquetIndex = 0 (FdrEntry
+                    // default), and every entry's per-file CWT lookup
+                    // (fileCwt[entry.ParquetIndex]) grabs the first row's
+                    // CwtCandidate list instead of its own -- the planner
+                    // then force-integrates almost every entry because the
+                    // wrong CWT list has no candidate near the expected RT.
+                    // The HPC chain path was unaffected because its entries
+                    // are reloaded via LoadFdrStubsFromParquet, which sets
+                    // ParquetIndex correctly. Found by C# in-memory vs
+                    // C# HPC-chain strict-rehydration bisection on Stellar
+                    // (Stage 5 boundary check: .1st-pass.fdr_scores.bin
+                    // byte-identical but reconciliation.json action shape
+                    // diverged -- 35K use_cwt actions on HPC side, 814 on
+                    // in-memory side, total identical).
+                    entry.ParquetIndex = (uint)i;
+                    entryIds[i] = entry.EntryId;
+                    isDecoys[i] = entry.IsDecoy;
+                    charges[i] = entry.Charge;
+                    scanNumbers[i] = entry.ScanNumber;
+                    modifiedSequences[i] = entry.ModifiedSequence ?? string.Empty;
+                    apexRts[i] = entry.ApexRt;
+                    startRts[i] = entry.StartRt;
+                    endRts[i] = entry.EndRt;
+                    boundsAreas[i] = entry.BoundsArea;
+                    boundsSnrs[i] = entry.BoundsSnr;
+                    fileNames[i] = fileName ?? string.Empty;
+                    fragmentMzs[i] = EncodeF64Blob(entry.FragmentMzs);
+                    fragmentIntensities[i] = EncodeF32Blob(entry.FragmentIntensities);
+                    refXicRts[i] = EncodeF64Blob(entry.ReferenceXicRts);
+                    refXicIntensities[i] = EncodeF64Blob(entry.ReferenceXicIntensities);
 
-                var featureVec = entry.Features;
-                if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
-                {
-                    for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        featureArrays[f][i] = Finite(featureVec[f]);
+                    // Mirror Rust's invariant: every row carries a cwt_candidates
+                    // blob, even when the candidate list is empty. Rust's
+                    // pipeline.rs::write_scores_parquet (at the cwt_candidates
+                    // serialization site) unconditionally appends a 4-byte
+                    // little-endian count prefix, so an entry with zero
+                    // candidates becomes a 4-byte zero-length blob, never a
+                    // null cell. ~57k post-compaction stubs per Stellar file
+                    // had no peaks; without this normalization C# emitted
+                    // null cells while Rust emitted empty blobs, producing
+                    // a spurious cross-impl parquet diff at end-of-Stage-6.
+                    //
+                    // TODO(osprey-rust): the proper fix is on the Rust side --
+                    // pipeline.rs should write null for empty candidate lists,
+                    // which is more parquet-idiomatic and saves 4 bytes per
+                    // empty row for downstream consumers. When that lands in
+                    // maccoss/osprey, revert this branch to the original
+                    // "skip null/empty" form.
+                    // Use Array.Empty<>() (not `new List<>()`) on the null
+                    // branch so we still emit the 4-byte zero-count blob
+                    // without allocating a fresh List per empty row.
+                    // CwtCandidateCodec.Encode takes IReadOnlyList<CwtCandidate>
+                    // which both List<T> and T[] satisfy.
+                    cwtCandidates[i] = CwtCandidateCodec.Encode(
+                        entry.CwtCandidates ?? (IReadOnlyList<CwtCandidate>)Array.Empty<CwtCandidate>());
+
+                    LibraryEntry libEntry = null;
+                    if (libraryById != null)
+                        libraryById.TryGetValue(entry.EntryId, out libEntry);
+                    if (libEntry != null)
+                    {
+                        sequences[i] = libEntry.Sequence ?? string.Empty;
+                        precursorMzs[i] = libEntry.PrecursorMz;
+                        proteinIds[i] = libEntry.ProteinIds != null
+                            ? string.Join(";", libEntry.ProteinIds)
+                            : null;
+                    }
+                    else
+                    {
+                        sequences[i] = string.Empty;
+                        precursorMzs[i] = 0.0;
+                        proteinIds[i] = null;
+                    }
+
+                    var featureVec = entry.Features;
+                    if (featureVec != null && featureVec.Length == NUM_PIN_FEATURES)
+                    {
+                        for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                            featureArrays[f][i] = Finite(featureVec[f]);
+                    }
+                    // else: leave zeros (entries without features can't drive Stage 5+).
+                    buildProgress.Report(i + 1);
                 }
-                // else: leave zeros (entries without features can't drive Stage 5+).
             }
 
             string tempPath = Path.Combine(Path.GetTempPath(),
@@ -468,34 +463,87 @@ namespace pwiz.OspreySharp.IO
 
                 using (var group = writer.CreateRowGroup())
                 {
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_ENTRY_ID, entryIds)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_IS_DECOY, isDecoys)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_SEQUENCE, sequences)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_CHARGE, charges)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_PROTEIN_IDS, proteinIds)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_SCAN_NUMBER, scanNumbers)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_APEX_RT, apexRts)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_START_RT, startRts)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_END_RT, endRts)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_BOUNDS_AREA, boundsAreas)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FILE_NAME, fileNames)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts)));
-                    RunSync(group.WriteColumnAsync(new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities)));
-
-                    for (int f = 0; f < NUM_PIN_FEATURES; f++)
-                        RunSync(group.WriteColumnAsync(new DataColumn(featureFields[f], featureArrays[f])));
+                    var columns = BuildRowGroupColumns(
+                        entryIds, isDecoys, sequences, modifiedSequences, charges,
+                        precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
+                        boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
+                        fragmentIntensities, refXicRts, refXicIntensities,
+                        featureFields, featureArrays);
+                    WriteRowGroupColumns(group, columns, n);
                 }
             }
 
             if (File.Exists(path))
                 File.Delete(path);
             File.Move(tempPath, path);
+        }
+
+        /// <summary>
+        /// Assemble the row-group's <see cref="DataColumn"/> list in the exact physical order
+        /// both <see cref="WriteScoresParquet(string,List{CoelutionScoredEntry},Dictionary{string,string})"/>
+        /// overloads write -- the 19 fixed columns followed by the 21 PIN feature columns.
+        /// Centralizing the order keeps the two overloads identical and lets
+        /// <see cref="WriteRowGroupColumns"/> drive a per-column <see cref="ProgressReporter"/>
+        /// over the write. Parquet is name-indexed, so the order is informational for
+        /// correctness, but it is kept byte-for-byte identical to the prior explicit-call
+        /// sequence so the written parquet is unchanged.
+        /// </summary>
+        private static List<DataColumn> BuildRowGroupColumns(
+            uint[] entryIds, bool[] isDecoys, string[] sequences, string[] modifiedSequences,
+            byte[] charges, double[] precursorMzs, string[] proteinIds, uint[] scanNumbers,
+            double[] apexRts, double[] startRts, double[] endRts, double[] boundsAreas,
+            double[] boundsSnrs, string[] fileNames, byte[][] cwtCandidates, byte[][] fragmentMzs,
+            byte[][] fragmentIntensities, byte[][] refXicRts, byte[][] refXicIntensities,
+            DataField[] featureFields, double[][] featureArrays)
+        {
+            var columns = new List<DataColumn>(19 + NUM_PIN_FEATURES)
+            {
+                new DataColumn(FIELD_ENTRY_ID, entryIds),
+                new DataColumn(FIELD_IS_DECOY, isDecoys),
+                new DataColumn(FIELD_SEQUENCE, sequences),
+                new DataColumn(FIELD_MODIFIED_SEQUENCE, modifiedSequences),
+                new DataColumn(FIELD_CHARGE, charges),
+                new DataColumn(FIELD_PRECURSOR_MZ, precursorMzs),
+                new DataColumn(FIELD_PROTEIN_IDS, proteinIds),
+                new DataColumn(FIELD_SCAN_NUMBER, scanNumbers),
+                new DataColumn(FIELD_APEX_RT, apexRts),
+                new DataColumn(FIELD_START_RT, startRts),
+                new DataColumn(FIELD_END_RT, endRts),
+                new DataColumn(FIELD_BOUNDS_AREA, boundsAreas),
+                new DataColumn(FIELD_BOUNDS_SNR, boundsSnrs),
+                new DataColumn(FIELD_FILE_NAME, fileNames),
+                new DataColumn(FIELD_CWT_CANDIDATES, cwtCandidates),
+                new DataColumn(FIELD_FRAGMENT_MZS, fragmentMzs),
+                new DataColumn(FIELD_FRAGMENT_INTENSITIES, fragmentIntensities),
+                new DataColumn(FIELD_REFERENCE_XIC_RTS, refXicRts),
+                new DataColumn(FIELD_REFERENCE_XIC_INTENSITIES, refXicIntensities),
+            };
+            for (int f = 0; f < NUM_PIN_FEATURES; f++)
+                columns.Add(new DataColumn(featureFields[f], featureArrays[f]));
+            return columns;
+        }
+
+        /// <summary>
+        /// Write the assembled <paramref name="columns"/> to <paramref name="group"/> in order,
+        /// driving a per-column <see cref="ProgressReporter"/> so an Astral-scale parquet write
+        /// (~2.9M rows, 30-47s) reports a throttled percent instead of stalling silently. The
+        /// write order (and therefore the parquet bytes) is exactly the
+        /// <see cref="BuildRowGroupColumns"/> order. <paramref name="rowCount"/> is shown in the
+        /// heading only.
+        /// </summary>
+        private static void WriteRowGroupColumns(ParquetRowGroupWriter group,
+            List<DataColumn> columns, long rowCount)
+        {
+            using (var progress = new ProgressReporter(
+                string.Format("Writing {0} entries", rowCount), columns.Count, "  ", 2.0))
+            {
+                int col = 0;
+                foreach (var column in columns)
+                {
+                    RunSync(group.WriteColumnAsync(column));
+                    progress.Report(++col);
+                }
+            }
         }
 
         /// <summary>
