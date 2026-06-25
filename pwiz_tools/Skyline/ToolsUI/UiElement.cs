@@ -1726,11 +1726,16 @@ namespace pwiz.Skyline.ToolsUI
                     if (cell.ReadOnly)
                         continue;
                     // Go through the cell's edit lifecycle so the value is committed (and pushed to any data
-                    // source) the way ending a cell edit does. A grid that validates whole rows governs
-                    // whether a partially-filled new row is kept -- the same as for a user.
+                    // source) the way ending a cell edit does. Setting CurrentCell enters the row, which for a
+                    // bound grid's new row triggers the data source's AddNew (see DataGridView.OnRowEnter);
+                    // NotifyCurrentCellDirty marks the programmatic change dirty so EndEdit actually pushes the
+                    // value through -- a direct cell.Value assignment alone does not, so the new row would
+                    // otherwise stay empty. A grid that validates whole rows still governs whether a
+                    // partially-filled new row is kept -- the same as for a user.
                     _dataGridView.CurrentCell = cell;
                     _dataGridView.BeginEdit(true);
                     cell.Value = cellValues[iCol];
+                    _dataGridView.NotifyCurrentCellDirty(true);
                     _dataGridView.EndEdit();
                 }
             }
