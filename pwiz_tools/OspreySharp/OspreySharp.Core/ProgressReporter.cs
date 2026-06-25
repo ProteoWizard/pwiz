@@ -52,6 +52,14 @@ namespace pwiz.OspreySharp.Core
     /// </summary>
     public sealed class ProgressReporter : IDisposable
     {
+        /// <summary>
+        /// Throttle interval for the large I/O steps (mzML read, parquet writes). Wider
+        /// than the compute loops' cadence because on HRAM/Astral-class data these steps
+        /// run for tens of seconds and a 2s cadence emits a long string of percent lines;
+        /// 5s still reassures a watching user the run is alive without cluttering the log.
+        /// </summary>
+        public const double IO_INTERVAL_SECONDS = 5.0;
+
         private readonly long _total;
         private readonly string _indent;
         private readonly double _intervalSeconds;

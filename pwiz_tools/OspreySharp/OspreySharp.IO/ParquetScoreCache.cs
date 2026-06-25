@@ -230,7 +230,8 @@ namespace pwiz.OspreySharp.IO
                 .ToArray();
 
             using (var buildProgress = new ProgressReporter(
-                string.Format("Preparing {0} entries", n), n, string.Empty, 2.0))
+                string.Format("Preparing {0} entries", n), n, string.Empty,
+                ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 for (int i = 0; i < n; i++)
                 {
@@ -356,7 +357,8 @@ namespace pwiz.OspreySharp.IO
                 .ToArray();
 
             using (var buildProgress = new ProgressReporter(
-                string.Format("Preparing {0} entries", n), n, string.Empty, 2.0))
+                string.Format("Preparing {0} entries", n), n, string.Empty,
+                ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 for (int i = 0; i < n; i++)
                 {
@@ -535,7 +537,8 @@ namespace pwiz.OspreySharp.IO
             List<DataColumn> columns, long rowCount)
         {
             using (var progress = new ProgressReporter(
-                string.Format("Writing {0} entries", rowCount), columns.Count, string.Empty, 2.0))
+                string.Format("Writing {0} entries", rowCount), columns.Count, string.Empty,
+                ProgressReporter.IO_INTERVAL_SECONDS))
             {
                 int col = 0;
                 foreach (var column in columns)
