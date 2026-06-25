@@ -1,4 +1,4 @@
-# Live Reports tutorial (en) -- MCP / AI Connector steps  [WORK IN PROGRESS -- through Result File Rules]
+# Live Reports tutorial (en) -- MCP / AI Connector steps  [WORK IN PROGRESS -- through Changing annotation type]
 #
 # The actual skyline_* MCP tool calls used to drive the Live Reports tutorial, in order, with notes on
 # friction worth simplifying in the API (see the list at the bottom -- that is the point of this file).
@@ -82,6 +82,46 @@ skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "OK"
 # Result (read back with GetGridText on Document Grid: Replicates): Cohort=Diseased/Healthy and
 # SubjectID=D102..H162 fill in for all 42 replicates.
 
+# === Creating a list of samples (List Designer + paste SampleInfo.txt) ===
+skyline_invoke_menu_item    "Settings > Document Settings"
+skyline_perform_action      form="DocumentSettingsDlg:Document Settings" action="select_tab" type="TabControl" value="Lists"
+skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "Add"
+skyline_set_form_value      "ListDesigner:List Designer" "List name" "Samples"
+# Fill the property grid (dataGridViewProperties). Paste the 4 property names down column 0. End the paste
+# with a TRAILING BLANK ROW (a line of just tabs) so the LAST property ("Name") is committed -- see
+# finding I: a row commits when the paste enters the next row, and the ID/Display dropdowns only list
+# committed properties.
+skyline_set_current_cell_address "ListDesigner:List Designer" "dataGridViewProperties" 0 0
+skyline_set_grid_text       "ListDesigner:List Designer" "dataGridViewProperties" "SubjectID\nSex\nWeight\nName\n\t\t\t"
+# Weight is a Number; set the Property Type cell (a combo cell -- the handler sets it through the dropdown).
+skyline_set_current_cell_address "ListDesigner:List Designer" "dataGridViewProperties" 1 2
+skyline_set_grid_text       "ListDesigner:List Designer" "dataGridViewProperties" "Number"
+skyline_set_form_value      "ListDesigner:List Designer" "ID property" "SubjectID"
+skyline_set_form_value      "ListDesigner:List Designer" "Display property" "Name"   # only after Name is committed
+skyline_click_form_button   "ListDesigner:List Designer" "Save"
+skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "OK"
+# Show the list grid and paste the 14 sample rows (again with a trailing blank row so row 14 commits).
+skyline_invoke_menu_item    "View > Live Reports > Lists > Samples"
+skyline_set_current_cell_address "ListGridForm:List: Samples" "" 0 0
+skyline_set_grid_text       "ListGridForm:List: Samples" "" "D102\tM\t190\tDrizzle\n...(14 rows)...\nH162\tM\t235\tScamper\n\t\t\t"
+# NOTE on re-runs: the list DEFINITION persists to global settings (re-check "Samples" on the Lists tab),
+# but its DATA rows live in the document, so they must be re-pasted.
+
+# === Changing annotation type (SubjectID -> Lookup: Samples) ===
+# Populate the list FIRST (above), then change the type, so the lookup resolves. (If you change the type
+# while the list is empty, the column keeps showing the key.)
+skyline_invoke_menu_item    "Settings > Document Settings"
+skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "Edit List"    # the Annotations tab's Edit List
+# The annotation-list editor is a generic EditListDlg -- its form id carries the backtick: EditListDlg`2.
+skyline_perform_action      form="EditListDlg`2:Define Annotations" action="select_item" label="Annotations" value="SubjectID"
+skyline_click_form_button   "EditListDlg`2:Define Annotations" "Edit"
+skyline_set_form_value      "DefineAnnotationDlg:Define Annotation" "Type" "Lookup: Samples"
+skyline_click_form_button   "DefineAnnotationDlg:Define Annotation" "OK"
+skyline_click_form_button   "EditListDlg`2:Define Annotations" "OK"
+skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "OK"
+# Result: the SubjectID column in Document Grid: Replicates now shows the rat NAMES (Drizzle, Sniffles, ...)
+# instead of D102/D103/... GetGridText returns the looked-up display value, not the key.
+
 # ========================================================================================
 # FRICTION / API-SIMPLIFICATION OPPORTUNITIES (observed this run)
 # ========================================================================================
@@ -103,9 +143,25 @@ skyline_click_form_button   "DocumentSettingsDlg:Document Settings" "OK"
 #    text lived in a plain Label (not an addressable control), so it took a screenshot to read. The form
 #    gate now includes the blocking CommonAlertDlg's message in its exception.
 # H. Global-settings leak (not strictly an API issue, but affects repeatable scripting): a graceful
-#    File>Exit persists annotation DEFINITIONS, so re-runs must CHECK the annotation rather than ADD it.
+#    File>Exit persists annotation DEFINITIONS and LIST DEFINITIONS to global settings, so re-runs must
+#    CHECK them rather than ADD; list DATA, however, lives in the document and must be re-pasted.
+# I. [FIXED this session] Pasting into a plain (unbound) DataGridView -- the List Designer property grid,
+#    the Samples list grid -- used a manual cell-edit loop that could not commit a new row or grow the grid
+#    (a direct cell.Value set is not pushed through the new-row's AddNew), so a multi-row paste crashed.
+#    Refactored DataGridViewPasteHandler into a base (DataGridView only -- sets each cell through the
+#    editing control, the way a user's keystrokes do) + BoundDataGridViewPasteHandler (the document
+#    undo/batch-modify); GridElement now uses the base, and the List Designer attaches it so USERS get
+#    Ctrl-V there too. A grid that lazily commits its new row still needs a trailing blank paste row so the
+#    last real row commits (the new-row commits only when the paste enters the row after it).
+# J. The List Designer's ID/Display-property dropdowns are populated from the COMMITTED property rows, so
+#    setting "Display property" right after pasting fails ("Name" is still the new-row) and silently does
+#    not persist. Work around with the trailing-blank-row paste (finding I) before setting the dropdown.
+# K. A fire-and-forget error surfaces as Skyline's "Unexpected Error" dialog rather than a clean connector
+#    error: e.g. set_form_value on a combo whose item is not (yet) present, or the old multi-row grid paste.
+#    Worth routing such errors back to the caller (validate synchronously) instead of the global handler.
 #
-# REMAINING (not yet driven this run): Creating a list of samples (List Designer + paste SampleInfo.txt),
-# pivoting on Replicate Name, the Normalized Area column + number format + sub-properties, column averages,
-# row/column-header pivots, changing the normalization method + a report filter, Group Comparison + heat
-# map with dendrograms, adding report definitions, inspecting the audit log, and exporting a report.
+# REMAINING (not yet driven this run): the "Peptide Areas" custom report (Customize Report: remove a range
+# of columns, add Total Area from the column tree, reorder, add Replicates) + pivoting on Replicate Name;
+# the Normalized Area column + number format + sub-properties; column averages; row/column-header pivots;
+# changing the normalization method + a report filter; Group Comparison + heat map with dendrograms; adding
+# report definitions; inspecting the audit log; and exporting a report.

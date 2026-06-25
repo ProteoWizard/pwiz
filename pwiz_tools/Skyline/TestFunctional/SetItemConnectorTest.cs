@@ -22,8 +22,6 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Databinding;
-using pwiz.Skyline.EditUI;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -99,10 +97,10 @@ namespace pwiz.SkylineTestFunctional
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
             WaitForConditionUI(() => documentGrid.IsComplete);
 
-            var viewEditor = ShowDialog<pwiz.Common.DataBinding.Controls.Editor.ViewEditor>(
+            var viewEditor = ShowDialog<Common.DataBinding.Controls.Editor.ViewEditor>(
                 documentGrid.NavBar.CustomizeView);
             string editorId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(pwiz.Common.DataBinding.Controls.Editor.ViewEditor)).Id;
+                .First(form => form.Type == nameof(Common.DataBinding.Controls.Editor.ViewEditor)).Id;
 
             var tree = viewEditor.ChooseColumnsTab.AvailableFieldsTree;
             string parentText = null, childText = null;

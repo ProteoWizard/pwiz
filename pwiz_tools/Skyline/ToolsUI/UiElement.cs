@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -168,9 +169,7 @@ namespace pwiz.Skyline.ToolsUI
         /// an element type) and whose Invoke is a single call <c>func(element, argument)</c> -- so an action
         /// needs no class of its own, just an entry below. The argument is handed to the func as
         /// <typeparamref name="TArg"/> (the JSON value is already a string or the raw object; an action that
-        /// wants an int or a cell parses it inside its func). <paramref name="mustBeEnabled"/> is false for a
-        /// pure read (it may also be inspected off-screen), which also passes <c>returnsValue: true</c> so the
-        /// dispatch waits for its result instead of posting it fire-and-forget.</summary>
+        /// wants an int or a cell parses it inside its func).</summary>
         private sealed class SimpleActionImpl<T, TArg> : UiAction
         {
             private readonly Func<T, TArg, object> _invoke;
@@ -201,7 +200,7 @@ namespace pwiz.Skyline.ToolsUI
             mustBeEnabled: false, returnsValue: true);
 
         public static readonly UiAction GetChildren = SimpleAction<UiElement>(
-            @"GetChildren", e => e.GetChildren(), mustBeEnabled: false, returnsValue: true);
+            @"GetChildren", e => e.GetControlInfos(), mustBeEnabled: false, returnsValue: true);
 
         // A void action (click, value set, item check, ...) is posted fire-and-forget; only a value action
         // (get_value, get_grid_text) is run synchronously inside the dialog-watch -- see UiAction.ReturnsValue.
@@ -589,7 +588,7 @@ namespace pwiz.Skyline.ToolsUI
         /// acting. The form walk is one level at a time -- GetControls and the get_children action both
         /// return this; descend by calling GetChildren on a child. Each child's Index is its position among
         /// the siblings of its same Type, so adding a control of another Type never shifts it.</summary>
-        public virtual ControlInfo[] GetChildren()
+        public virtual ControlInfo[] GetControlInfos()
         {
             var indexByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var result = new List<ControlInfo>();
@@ -712,7 +711,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A managed UI element that belongs to a form: a control (<see cref="ControlElement"/>) or a
     /// menu/toolbar item (<see cref="ToolStripItemElement"/>). Unlike the form-less base <see cref="UiElement"/>
-    /// (which marshals through the main window) or a native dialog element (<see cref="NativeElement"/>, which
+    /// (which marshals through the main window) or a native dialog element (<see cref="NativeDialog"/>, which
     /// runs inline), it knows its <see cref="FormElement"/>, so it both marshals and gates through that form: a
     /// form on its own thread (e.g. a BackgroundThreadLongWaitDlg) is driven through its own message loop, not
     /// the main window's, and a modal blocking the form stops the element being acted on.</summary>
@@ -818,7 +817,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (Control is IButtonControl && !string.IsNullOrEmpty(Control.Text))
                     return Control.Text;
                 var previous = Control.FindForm()?.GetNextControl(Control, false);
-                return previous is System.Windows.Forms.Label label ? label.Text : null;
+                return (previous as Label)?.Text;
             }
         }
 
@@ -1003,7 +1002,7 @@ namespace pwiz.Skyline.ToolsUI
             ControlInfo[] result = null;
             JsonUiService.RunWithDialogWatch(() =>
             {
-                result = InvokeOnUiThread(GetChildren);
+                result = InvokeOnUiThread(GetControlInfos);
                 return true;
             });
             return result;
@@ -1102,11 +1101,7 @@ namespace pwiz.Skyline.ToolsUI
         });
 
         /// <summary>Invokes a menu item on this form's main menu by its '>'-separated path (e.g. "File &gt;
-        /// Import &gt; Peptide Search"). The path is resolved through the element model -- the menu is a
-        /// <see cref="ToolStripElement"/> over <see cref="System.Windows.Forms.Form.MainMenuStrip"/>, and each
-        /// segment is found by <see cref="FindElement"/> matching its visible text -- opening each level's
-        /// dropdown so items built on demand are present, then the leaf's click is posted fire-and-forget so a
-        /// menu item that opens a modal does not block.</summary>
+        /// Import &gt; Peptide Search").</summary>
         public void InvokeMenuItem(string menuPath)
         {
             if (Form.MainMenuStrip == null)
@@ -1474,7 +1469,7 @@ namespace pwiz.Skyline.ToolsUI
         // The index of the best text match among count items (by the connector's label matching), or -1: the
         // first item that matches the key strictly, else the first that matches loosely (a strict match wins
         // over a loose one, the same ranking FindElement uses).
-        internal static int BestMatch(int count, Func<int, string> textOf, string key)
+        internal static int BestMatch(int count, [InstantHandle] Func<int, string> textOf, string key)
         {
             for (int i = 0; i < count; i++)
                 if (UiElement.TextMatches(textOf(i), key, true))
@@ -1721,7 +1716,7 @@ namespace pwiz.Skyline.ToolsUI
             var bindingListSource = BindingListSource;
             return bindingListSource == null
                 ? base.GetGridText() // not bound yet -- read the cells directly
-                : bindingListSource.ViewContext.CopyToString(DataGridView, bindingListSource, CancellationToken);
+                : bindingListSource.ViewContext.GetCopyAllText(DataGridView, bindingListSource);
         }
 
         public override void SetGridText(string text)
@@ -1785,7 +1780,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
         public static string NormalizeNewlines(string value) =>
-            value == null ? null : System.Text.RegularExpressions.Regex.Replace(value, @"\r\n?|\n", "\r\n");
+            value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
 
         // The [column, row] a set_current_cell_address value carries: a two-element integer array. An
         // in-process caller passes new[] { column, row }; over the wire it is the JSON array [column, row]
@@ -1800,9 +1795,9 @@ namespace pwiz.Skyline.ToolsUI
                     return new[] { x, y };
             }
             // An array/list (int[], object[], or a Newtonsoft JArray -- all IEnumerable).
-            else if (value is System.Collections.IEnumerable sequence && !(value is string))
+            else if (value is System.Collections.IEnumerable sequence)
             {
-                var cell = new System.Collections.Generic.List<int>();
+                var cell = new List<int>();
                 foreach (var item in sequence)
                     cell.Add(ToInt(item));
                 if (cell.Count == 2)

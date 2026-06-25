@@ -432,6 +432,20 @@ namespace pwiz.SkylineTestUtil
             WaitForConditionUI(() => showDlgActionCompleted);
         }
 
+        protected static void RunNativeDlg<TDlg>([InstantHandle] Action showDlgAction,
+            [InstantHandle] [NotNull] Action<TDlg> exerciseDlgAction) where TDlg : NativeDialog
+        {
+            bool showDlgActionCompleted = false;
+            SkylineBeginInvoke(() =>
+            {
+                showDlgAction();
+                showDlgActionCompleted = true;
+            });
+            var dlg = NativeDialog.WaitForDialog<TDlg>();
+            SkylineBeginInvoke(() => exerciseDlgAction(dlg));
+            WaitForConditionUI(() => showDlgActionCompleted);
+        }
+
         /// <summary>
         /// Shows a dialog and tests the dialog by invoking an action on the test thread.
         /// Unlike <see cref="RunDlg{TDlg}"/>, the test action runs on the test thread instead of the
@@ -486,15 +500,12 @@ namespace pwiz.SkylineTestUtil
         /// <see cref="SkylineWindow"/>.OpenFile directly when a test should exercise the real
         /// open-file UI. Waits for the document to finish loading before returning.
         /// </summary>
-        public static void OpenDocument(string path)
+        public static void FileOpen(string path)
         {
-            var documentBefore = SkylineWindow.Document;
-            // Post the modal dialog to the UI thread so the test thread is free to drive it.
-            SkylineBeginInvoke(() => SkylineWindow.ShowOpenFileDialog());
-            NativeDialog.WaitForDialog<OpenFileDialogAutomation>().EnterPathAndAccept(path);
-            // Clicking Open starts the load on the UI thread after EnterPathAndAccept returns,
-            // so wait for the new document (not the one that was current before) to finish loading.
-            WaitForDocumentChangeLoaded(documentBefore);
+            RunNativeDlg<OpenFileDialogAutomation>(SkylineWindow.ShowOpenFileDialog, dlg =>
+            {
+                dlg.EnterPathAndAccept(path);
+            });
         }
 
         protected static void FocusDocument()

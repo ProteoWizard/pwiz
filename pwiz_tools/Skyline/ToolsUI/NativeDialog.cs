@@ -50,7 +50,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <see cref="Create"/> chooses the subclass that matches a given dialog element.
     ///
     /// A dialog is a <see cref="UiElement"/>: it presents to the connector exactly like any other form (it
-    /// is listed by GetOpenForms and addressed by a path whose Text is its id), and its <see cref="Children"/>
+    /// is listed by GetOpenForms and addressed by a path whose Text is its id), and its <see cref="GetControls"/>
     /// are connector elements (buttons, a file-name field) that dispatch their actions to this automation
     /// (Accept/Cancel/EnterPath) instead of to a WinForms control.
     /// </summary>

@@ -359,7 +359,7 @@ namespace SkylineTool
     /// </summary>
     public class UiElementPath
     {
-        public UiElementPath(UiElementPath parent, string text, int? index, string type = null)
+        public UiElementPath(UiElementPath parent, string text, int? index, string type)
         {
             Parent = parent;
             Text = text;
