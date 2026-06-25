@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -34,9 +35,9 @@ namespace pwiz.SkylineTestFunctional
     /// Exercises the generic form-automation verbs of the AI Connector (<see cref="JsonUiService"/>)
     /// against the first steps of the PRM tutorial's "Import Peptide Search" flow:
     ///   * <see cref="JsonUiService.InvokeMenuItem"/> -- "File > Import > Peptide Search".
-    ///   * <see cref="JsonUiService.ClickFormButton"/> -- the "Add Files" button, which opens the
+    ///   * <see cref="JsonToolServer.ClickFormButton"/> -- the "Add Files" button, which opens the
     ///     native "Add Input Files" dialog (a dialog owned by the modal wizard).
-    ///   * <see cref="JsonUiService.SetFormValue"/> + ClickFormButton -- select two files and Open,
+    ///   * <see cref="JsonToolServer.SetFormValue"/> + ClickFormButton -- select two files and Open,
     ///     driving the native dialog through the wrapper.
     /// The menu path is read from the live (localized) menu so the test is translation-proof.
     /// </summary>
@@ -51,6 +52,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             // The Import Peptide Search wizard bases its file dialog on the document's folder, so the
             // document must be saved. The two input files only need to exist (the dialog has
             // CheckPathExists=true) -- they are added to a list, not parsed, at this stage.
@@ -72,13 +76,13 @@ namespace pwiz.SkylineTestFunctional
             // Wait for it the way the AI Connector would: poll GetOpenForms (the discovery method
             // IJsonToolService exposes) until the native FileDialog shows up, rather than the
             // internal NativeDialog helper.
-            JsonUiService.ClickFormButton(wizardId, @"Add Files");
+            Program.MainJsonToolServer.ClickFormButton(wizardId, @"Add Files");
             string addFilesId = WaitForNativeFileDialogId();
 
             // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,
             // click Open". A native dialog has no caption-addressable buttons, so it is confirmed with the
             // accept action (the connector's way to press its default button) rather than ClickFormButton.
-            JsonUiService.SetFormValue(addFilesId, @"FileName",
+            Program.MainJsonToolServer.SetFormValue(addFilesId, @"FileName",
                 QuotePaths(new[] { file1, file2 }));
             JsonUiService.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"accept", null);
 

@@ -839,7 +839,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public ControlInfo[] GetControls(string formId)
         {
-            return JsonUiService.GetControls(formId);
+            return JsonUiService.ResolveForm(formId).GetControls();
         }
 
         public object PerformAction(UiElementPath path, string action, object value)
@@ -854,7 +854,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ClickFormButton(string formId, string button)
         {
-            JsonUiService.ClickFormButton(formId, button);
+            JsonUiService.ResolveForm(formId).ClickButton(button);
         }
 
         public void ClickToolStripItem(string formId, string menuPath)
@@ -864,7 +864,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void SetFormValue(string formId, string controlId, string value)
         {
-            JsonUiService.SetFormValue(formId, controlId, value);
+            JsonUiService.ResolveForm(formId).SetValue(controlId, value);
         }
 
         public string GetFormValue(string formId, string controlId)
@@ -889,7 +889,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void CloseForm(string formId)
         {
-            JsonUiService.CloseForm(formId);
+            JsonUiService.ResolveForm(formId).Close();
         }
 
         public string GetGraphData(string graphId, string filePath = null)

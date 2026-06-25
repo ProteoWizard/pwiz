@@ -454,17 +454,6 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Clicks a control on an open form -- a Button, a CheckBox or RadioButton, a custom
-        /// IButtonControl (e.g. a StartPage tile), a ToolStrip/menu/toolbar item, or any other clickable
-        /// control (matched by its visible label) -- or accepts/cancels a native dialog (see
-        /// <see cref="IJsonToolService"/>).
-        /// </summary>
-        public static void ClickFormButton(string formId, string button)
-        {
-            ResolveForm(formId).ClickButton(button);
-        }
-
-        /// <summary>
         /// Clicks an item on a form's ToolStrip (toolbar / menu strip) by its path, e.g.
         /// "Reports &gt; Replicates" -- the toolbar button "Reports" then the "Replicates" item in its
         /// dropdown. Each level's dropdown is opened first so that items built on demand (which are not
@@ -482,15 +471,6 @@ namespace pwiz.Skyline.ToolsUI
             if (!toolStrips.Any(toolStrip => toolStrip.ClickMenuItem(menuPath)))
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Toolbar item not found on form {0}: {1}.", formId, menuPath));
-        }
-
-        /// <summary>
-        /// Sets a control's value on an open form, or the file name(s) on a native file dialog
-        /// (see <see cref="IJsonToolService"/>).
-        /// </summary>
-        public static void SetFormValue(string formId, string controlId, string value)
-        {
-            ResolveForm(formId).SetValue(controlId, value);
         }
 
         /// <summary>
@@ -558,28 +538,6 @@ namespace pwiz.Skyline.ToolsUI
                 return true;
             });
             return text;
-        }
-
-        /// <summary>
-        /// Closes an open form: a dialog, a docked or floating tool window (e.g. the Document Grid or
-        /// Audit Log), or a native dialog (which is cancelled) -- see <see cref="IJsonToolService"/>.
-        /// </summary>
-        public static void CloseForm(string formId)
-        {
-            ResolveForm(formId).Close();
-        }
-
-        /// <summary>
-        /// Lists the controls directly on a form so a caller can discover what is there -- and how to
-        /// address it -- without reading the source: this is the form element's <see cref="UiElement.GetChildren"/>.
-        /// Each control reports its Name (informational), Type, the visible Label that identifies it, and
-        /// its enabled/visible state, with a parentless Path the caller re-parents to act on it (and walks
-        /// deeper with the get_children action). Use the get_value / get_actions actions for a control's
-        /// value and the actions it supports.
-        /// </summary>
-        public static ControlInfo[] GetControls(string formId)
-        {
-            return ResolveForm(formId).GetControls();
         }
 
         /// <summary>
@@ -739,7 +697,7 @@ namespace pwiz.Skyline.ToolsUI
         // enumerated via UI Automation cross-thread (no Control to marshal through), which runs alongside their
         // modal loop rather than on it. A managed form is then found on the UI thread. Throws if no open window
         // has the id.
-        private static IFormElement ResolveForm(string formId)
+        public static IFormElement ResolveForm(string formId)
         {
             ValidateFormIdFormat(formId);
             foreach (var dialog in NativeDialog.GetOpenDialogs())

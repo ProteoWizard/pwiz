@@ -22,6 +22,7 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
@@ -37,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Exercises acting on a particular grid cell through the current cell:
-    ///   * <see cref="JsonUiService.SetFormValue"/> with a "grid[column,row]" controlId sets a cell;
+    ///   * <see cref="JsonToolServer.SetFormValue"/> with a "grid[column,row]" controlId sets a cell;
     ///   * <see cref="JsonUiService.SetCurrentCellAddress"/> moves to a cell, then a <see cref="UiElementPath"/>
     ///     whose Type is "ContextMenu" on the grid invokes that cell's right-click context menu (here,
     ///     sorting a Document Grid column descending).
@@ -54,6 +55,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             SetFormValueIntoGridCell();
             InvokeGridCellContextMenu();
         }
@@ -77,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsTrue(patternColumn >= 0);
 
-            JsonUiService.SetFormValue(editorId, $@"dataGridViewRules[{patternColumn},0]", @"D");
+            Program.MainJsonToolServer.SetFormValue(editorId, $@"dataGridViewRules[{patternColumn},0]", @"D");
             RunUI(() => Assert.AreEqual(@"D", rulesGrid.Rows[0].Cells[@"colPattern"].Value?.ToString(),
                 @"SetFormValue did not set the grid cell named by the locator."));
 

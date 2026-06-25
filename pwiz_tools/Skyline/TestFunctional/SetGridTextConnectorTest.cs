@@ -23,6 +23,7 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
@@ -40,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
     ///     <see cref="DataboundGridControl"/> grid at an anchor cell -- like a Ctrl-V, but without the
     ///     system clipboard;
     ///   * <see cref="JsonUiService.GetGridText"/> reads the whole grid back as tab-separated text;
-    ///   * <see cref="JsonUiService.CloseForm"/> closes the grid form.
+    ///   * <see cref="JsonToolServer.CloseForm"/> closes the grid form.
     /// The grid is found with a null controlId/gridId (the Document Grid form has a single grid), and
     /// the "Note" column is targeted by its visible index, so the test is translation-proof.
     /// </summary>
@@ -55,6 +56,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             // Two peptides whose Note column we will fill by pasting.
             RunUI(() => SkylineWindow.NewDocument());
             RunUI(() => SkylineWindow.SequenceTree.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID)));
@@ -109,7 +113,7 @@ namespace pwiz.SkylineTestFunctional
             StringAssert.Contains(gridText, @"Second note");
 
             // CloseForm closes the (floating) Document Grid; GetOpenForms then no longer lists it.
-            JsonUiService.CloseForm(gridId);
+            Program.MainJsonToolServer.CloseForm(gridId);
             WaitForCondition(() => JsonUiService.GetOpenForms().All(form => form.Type != nameof(DocumentGridForm)));
         }
     }

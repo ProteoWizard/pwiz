@@ -21,6 +21,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -30,7 +31,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonUiService.SetFormValue"/> on plain controls, addressed by the visible
+    /// Exercises <see cref="JsonToolServer.SetFormValue"/> on plain controls, addressed by the visible
     /// text that names them: a text box by its "Name" label and a combo box by its "Type" label (the
     /// labels resolve to the caption-less fields they name). Runs in en (matches the English labels).
     /// </summary>
@@ -45,6 +46,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
@@ -53,12 +57,12 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
 
             // The name box has no caption of its own; "Name" matches the label that names it.
-            JsonUiService.SetFormValue(dlgId, @"Name", @"MyAnnotation");
+            Program.MainJsonToolServer.SetFormValue(dlgId, @"Name", @"MyAnnotation");
             RunUI(() => Assert.AreEqual(@"MyAnnotation", NameTextBox(defineAnnotationDlg).Text,
                 @"SetFormValue did not set the name box via its 'Name' label."));
 
             // The type combo, addressed by its "Type" label, picks the item by its visible text.
-            JsonUiService.SetFormValue(dlgId, @"Type", @"Number");
+            Program.MainJsonToolServer.SetFormValue(dlgId, @"Type", @"Number");
             RunUI(() => Assert.AreEqual(@"Number", TypeComboBox(defineAnnotationDlg).Text,
                 @"SetFormValue did not select 'Number' in the type combo via its 'Type' label."));
 

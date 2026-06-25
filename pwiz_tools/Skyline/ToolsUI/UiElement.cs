@@ -916,7 +916,7 @@ namespace pwiz.Skyline.ToolsUI
     /// special-cases a native dialog. Each implementation runs its work in its own thread context: a managed
     /// form marshals to the UI thread and can watch for a dialog the work pops; a native dialog -- whose UI
     /// thread is busy in its own modal loop -- runs on the calling (pipe) thread and cannot be watched.</summary>
-    internal interface IFormElement
+    public interface IFormElement
     {
         /// <summary>The "TypeName:Title" id this form is addressed by (matches skyline_get_open_forms).</summary>
         string FormId { get; }

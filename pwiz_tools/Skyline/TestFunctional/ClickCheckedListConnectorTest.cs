@@ -21,6 +21,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -32,7 +33,7 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Exercises AI Connector behaviors on the Define Annotation dialog:
-    ///   * <see cref="JsonUiService.SetFormValue"/> matched against a label ("Name") sets the editable
+    ///   * <see cref="JsonToolServer.SetFormValue"/> matched against a label ("Name") sets the editable
     ///     control the label labels (the Name TextBox), not the label itself;
     ///   * checking an item in the "Applies to" CheckedListBox the way a user does -- a set_selected_index
     ///     action to the item, then a click that toggles the selected item's check;
@@ -50,6 +51,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
@@ -59,15 +63,15 @@ namespace pwiz.SkylineTestFunctional
 
             // SetFormValue against the "Name" LABEL sets the editable field it labels (the Name
             // TextBox, AnnotationName), not the label itself.
-            JsonUiService.SetFormValue(dlgId, @"Name", @"ConnectorAnnotation");
+            Program.MainJsonToolServer.SetFormValue(dlgId, @"Name", @"ConnectorAnnotation");
             RunUI(() => Assert.AreEqual(@"ConnectorAnnotation", defineAnnotationDlg.AnnotationName,
                 @"SetFormValue did not set the Name field through its label."));
 
             // SetFormValue into the multi-line value-list TextBox: newline-separated text becomes
             // separate list values (bare '\n' is normalized to the CRLF the dialog splits on). The
             // Values box is enabled only for a Value List, so set the type first.
-            JsonUiService.SetFormValue(dlgId, @"Type", @"Value List");
-            JsonUiService.SetFormValue(dlgId, @"Values", "Healthy\nDiseased");
+            Program.MainJsonToolServer.SetFormValue(dlgId, @"Type", @"Value List");
+            Program.MainJsonToolServer.SetFormValue(dlgId, @"Values", "Healthy\nDiseased");
             RunUI(() => CollectionAssert.AreEqual(new[] { @"Healthy", @"Diseased" },
                 defineAnnotationDlg.Items.ToArray(),
                 @"SetFormValue did not set the multi-line value list as separate values."));

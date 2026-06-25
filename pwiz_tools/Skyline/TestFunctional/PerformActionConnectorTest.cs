@@ -21,6 +21,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -46,6 +47,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // GetControls is exercised through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
@@ -89,7 +93,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Round-trip: the (parentless) Path GetControls returns resolves the same control once it is
             // re-parented under the form, and Name is echoed.
-            var nameInfo = JsonUiService.GetControls(dlgId)
+            var nameInfo = Program.MainJsonToolServer.GetControls(dlgId)
                 .First(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
             Assert.IsNull(nameInfo.Path.Parent, @"GetControls should return a parentless path.");
             Assert.IsFalse(string.IsNullOrEmpty(nameInfo.Name), @"Expected GetControls to echo the control Name.");

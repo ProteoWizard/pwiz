@@ -111,7 +111,7 @@ namespace pwiz.Skyline.ToolsUI
         public DocumentLocation GetDocumentLocation()
         {
             DocumentLocation documentLocation = null;
-            Program.InvokeOnUiThread(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 if (!Program.MainWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
                 {
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.ToolsUI
                             chromatogramSet.MSDataFileInfos.First().FileId.GlobalIndex);
                     }
                 }
-            }));
+            });
             return documentLocation;
         }
 
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.ToolsUI
         [Obsolete]
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
-            Program.InvokeOnUiThread(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 if (documentLocation == null)
                     Program.MainWindow.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID));
@@ -145,20 +145,20 @@ namespace pwiz.Skyline.ToolsUI
                     Bookmark bookmark = Bookmark.ToBookmark(documentLocation, Program.MainWindow.DocumentUI);
                     Program.MainWindow.NavigateToBookmark(bookmark);
                 }
-            }));
+            });
         }
 
         public string GetDocumentLocationName()
         {
             string name = null;
-            Program.InvokeOnUiThread(new Action(() => name = Program.MainWindow.SequenceTree.SelectedNode.Text));
+            Program.InvokeOnUiThread(() => name = Program.MainWindow.SequenceTree.SelectedNode.Text);
             return name;
         }
 
         public string GetReplicateName()
         {
             string name = null;
-            Program.InvokeOnUiThread(new Action(() => name = Program.MainWindow.SelectedGraphChromName));
+            Program.InvokeOnUiThread(() => name = Program.MainWindow.SelectedGraphChromName);
             return name;
         }
 
@@ -290,20 +290,20 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportFasta(string textFasta)
         {
-            Program.InvokeOnUiThread(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 Program.MainWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
                     false, ToolsUIResources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
-            }));
+            });
         }
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            Program.InvokeOnUiThread(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
                     Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            }));
+            });
         }
 
         public void AddSpectralLibrary(string libraryName, string libraryPath)
@@ -316,13 +316,13 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             // CONSIDER: Add this Library Spec to Settings.Default.SpectralLibraryList?
-            Program.InvokeOnUiThread(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 Program.MainWindow.ModifyDocument(ToolsUIResources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
                         lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), AuditLogEntry.SettingsLogFunction);
                 Settings.Default.SpectralLibraryList.Add(librarySpec);
-            }));
+            });
         }
 
         private readonly object _documentChangeSendersLock = new object();
@@ -382,11 +382,11 @@ namespace pwiz.Skyline.ToolsUI
                     catch (TimeoutException)
                     {
                         var error = @"No response from " + documentChangeSender.Value.Name; 
-                        Program.BeginInvokeOnUiThread(new Action(() =>
+                        Program.BeginInvokeOnUiThread(() =>
                         {
                             Program.MainWindow.ShowImmediateWindow();
                             Program.MainWindow.ImmediateWindow.WriteLine(error);
-                        }));
+                        });
                         if (!documentChangeSender.Value.CountTimeout(MAX_TIMEOUT_COUNT))
                         {
                             deadSenders.Add(documentChangeSender.Key);
@@ -469,10 +469,10 @@ namespace pwiz.Skyline.ToolsUI
         public void DeleteElements(string[] elementLocatorStrings)
         {
             var elementLocators = elementLocatorStrings.Select(ElementLocator.Parse).ToList();
-            Program.InvokeOnUiThread(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 DeleteElementsNow(elementLocators);
-            }));
+            });
         }
 
         private void DeleteElementsNow(IEnumerable<ElementLocator> elementLocators)
@@ -508,17 +508,17 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportProperties(string csvText)
         {
-            Program.InvokeOnUiThread(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 Program.MainWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations, Program.MainWindow.Document.DocumentType,
                         ToolsUIResources.ToolService_ImportProperties_Import_Properties_from_external_tool));
-            }));
+            });
         }
 
         public void ImportPeakBoundaries(string csvText)
         {
-            Program.InvokeOnUiThread(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 lock (Program.MainWindow.GetDocumentChangeLock())
                 {
@@ -556,14 +556,14 @@ namespace pwiz.Skyline.ToolsUI
                                 Program.MainWindow.DocumentUI.DocumentType,
                                 ToolsUIResources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool)));
                 }
-            }));
+            });
         }
 
         public string GetSelectedElementLocator(string elementType)
         {
             ElementRef result = null;
             Exception exception = null;
-            Program.InvokeOnUiThread(new Action(() => 
+            Program.InvokeOnUiThread(() => 
             {
                 try
                 {
@@ -573,7 +573,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     exception = e;
                 }
-            }));
+            });
             if (exception != null)
             {
                 throw new TargetInvocationException(exception);

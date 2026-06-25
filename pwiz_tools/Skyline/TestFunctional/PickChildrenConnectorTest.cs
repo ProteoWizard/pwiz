@@ -20,6 +20,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -35,7 +36,7 @@ namespace pwiz.SkylineTestFunctional
     /// (a select_item action on the tree), open its pick-list through the tree's context menu -- a
     /// <see cref="UiElementPath"/> whose Type is "ContextMenu" on the tree, then the "Pick Children" item --
     /// toggle a transition in the popup with a check_item/uncheck_item action on the pop-up element, and
-    /// commit with the green-check "OK" button via <see cref="JsonUiService.ClickFormButton"/> (an
+    /// commit with the green-check "OK" button via <see cref="JsonToolServer.ClickFormButton"/> (an
     /// image-only ToolStrip item matched by its tooltip).
     /// </summary>
     [TestClass]
@@ -49,6 +50,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             // Insert a single peptide so the Targets tree has a precursor with child transitions. The
             // protein name contains '|' (a UniProt-style "sp|ACC|NAME") so the test also exercises that
             // a '>'-separated node path is split only on '>', not on the '|' in the node text.
@@ -120,7 +124,7 @@ namespace pwiz.SkylineTestFunctional
                 @"check_item/uncheck_item did not toggle the pick-list item."));
 
             // Commit with the green-check "OK" button (image-only ToolStrip item, matched by tooltip).
-            JsonUiService.ClickFormButton(popupId, @"OK");
+            Program.MainJsonToolServer.ClickFormButton(popupId, @"OK");
             WaitForClosedForm(popup);
 
             int transitionsAfter = 0;

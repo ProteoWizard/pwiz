@@ -21,6 +21,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -31,7 +32,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonUiService.GetControls"/> -- the form-introspection method that lists the
+    /// Exercises <see cref="JsonToolServer.GetControls"/> -- the form-introspection method that lists the
     /// interactive controls so a caller can discover what is on a form, and how to address it, without
     /// reading the source. Checks that a caption-less field is reported with the visible Label that names
     /// it, a list with its item action, and a button with its click action.
@@ -47,6 +48,10 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the verbs through the running JSON tool server (Program.MainJsonToolServer), the same
+            // path an external MCP client uses; it is torn down with the window (SkylineWindow.OnHandleDestroyed).
+            RunUI(() => Program.StartToolService());
+
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
@@ -55,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
 
             var formPath = new UiElementPath(null, dlgId, null, @"Form");
-            var controls = JsonUiService.GetControls(dlgId);
+            var controls = Program.MainJsonToolServer.GetControls(dlgId);
             Assert.IsTrue(controls.Length > 0, @"GetControls returned nothing.");
 
             // GetControls reports each control's (parentless) Path, state, and current Value, but not its

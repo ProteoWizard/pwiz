@@ -21,6 +21,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
@@ -33,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Exercises the AI Connector verbs that drive controls beyond plain Buttons:
-    ///   * <see cref="JsonUiService.ClickFormButton"/> on a CheckBox -- the Audit Log "Enable audit
+    ///   * <see cref="JsonToolServer.ClickFormButton"/> on a CheckBox -- the Audit Log "Enable audit
     ///     logging" checkbox (AutoCheck=false, acts on its Click handler, so SetFormValue would not
     ///     toggle it but clicking it does);
     ///   * <see cref="JsonUiService.ClickToolStripItem"/> -- the Document Grid "Reports" dropdown,
@@ -56,6 +57,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             // Start from a fresh document so its audit log has no entries -- toggling the checkbox in
             // either direction then does not raise the "this will clear the audit log" confirmation.
             RunUI(() => SkylineWindow.NewDocument());
@@ -87,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
                 .First(form => form.Type == nameof(AuditLogForm)).Id;
 
             bool before = SkylineWindow.Document.Settings.DataSettings.AuditLogging;
-            JsonUiService.ClickFormButton(auditFormId, @"Enable audit logging");
+            Program.MainJsonToolServer.ClickFormButton(auditFormId, @"Enable audit logging");
             WaitForConditionUI(() => SkylineWindow.Document.Settings.DataSettings.AuditLogging != before);
             RunUI(() => Assert.AreNotEqual(before, SkylineWindow.Document.Settings.DataSettings.AuditLogging,
                 @"ClickFormButton did not toggle the Enable audit logging checkbox."));
