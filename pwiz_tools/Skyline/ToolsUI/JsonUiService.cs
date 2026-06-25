@@ -25,6 +25,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -32,6 +33,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -241,15 +243,14 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Runs <paramref name="work"/> on a background thread and waits for it, but returns
-        /// immediately if a MODAL dialog appears that blocks one of this process's windows -- so the
-        /// call never hangs behind a modal it cannot get past. A <see cref="LongWaitDlg"/> is the
-        /// exception: it is a progress dialog the work itself drives, so the watch keeps waiting for
-        /// it. When a blocking modal appears, a <see cref="CommonAlertDlg"/> throws its text (so the
-        /// caller sees the message); any other modal (native Open/Save dialog, custom dialog) returns,
-        /// leaving it open for the caller to drive (GetOpenForms / SetFormValue / ClickFormButton).
-        /// Used by verbs that can pop a dialog (RunCommand, SetFormValue, ClickFormButton, ...). Must
-        /// be called off the UI thread.
+        /// Runs <paramref name="work"/> on a background thread and waits for it, but never hangs behind a
+        /// MODAL dialog that blocks one of this process's windows and that it cannot get past. A
+        /// <see cref="LongWaitDlg"/> is the exception: it is a progress dialog the work itself drives, so the
+        /// watch keeps waiting for it. Any other blocking modal throws its message (see
+        /// <see cref="BlockingAlertMessage"/>) -- a CommonAlertDlg's or ReportErrorDlg's text, or any other
+        /// dialog's title (a managed caption or a native Open/Save dialog's window title) -- so the caller
+        /// sees what is in the way (and can drive it: GetOpenForms / SetFormValue / ClickFormButton / accept).
+        /// Used by verbs that can pop a dialog (RunCommand, the value reads, ...). Must be called off the UI thread.
         /// </summary>
         public static T RunWithDialogWatch<T>(Func<T> work)
         {
@@ -272,15 +273,16 @@ namespace pwiz.Skyline.ToolsUI
                 var newModals = FindModalDialogWindows().Where(h => !knownModals.Contains(h)).ToList();
                 if (newModals.Count == 0)
                     continue;
-                if (ShouldKeepWaiting(newModals, out var alertText))
+                var blockingMessage = InvokeOnUiThread(() => FirstBlockingDialogMessage(newModals));
+                if (blockingMessage == null)
                 {
                     // Every new modal is a LongWaitDlg progress dialog; ignore them and keep waiting.
                     knownModals.UnionWith(newModals);
                     continue;
                 }
-                if (alertText != null)
-                    throw new InvalidOperationException(alertText);
-                return result; // a blocking modal (e.g. a file dialog) is up; return rather than block
+                // A modal is blocking (an alert/error, or any other dialog including a native one); surface its
+                // message so the caller sees what is in the way instead of hanging.
+                throw new InvalidOperationException(blockingMessage);
             }
 
             if (workError != null)
@@ -298,47 +300,56 @@ namespace pwiz.Skyline.ToolsUI
             RunWithDialogWatch(() => { work(); return true; });
         }
 
-        // Classifies newly-appeared modal dialogs on the UI thread. Returns true when every new modal is a
-        // LongWaitDlg (progress) and the watch should keep waiting; otherwise false, with alertText set to a
-        // CommonAlertDlg's text (the caller throws it) or null for a native / other modal (the caller returns
-        // and lets the model drive the dialog).
-        private static bool ShouldKeepWaiting(IList<IntPtr> newModals, out string alertText)
+        // The message a blocking modal dialog shows, or null for a LongWaitDlg (a progress dialog that does not
+        // block): a CommonAlertDlg's or ReportErrorDlg's text, or any other dialog's title -- a managed Form's
+        // caption, or, for a native window (no managed form), its window title.
+        private static string ModalDialogMessage(IntPtr hwnd, Form form)
         {
-            string localAlertText = null;
-            var decision = InvokeOnUiThread(() =>
+            switch (form)
             {
-                var forms = FormUtil.OpenForms.Where(f => f.IsHandleCreated).ToDictionary(f => f.Handle);
-                foreach (var hwnd in newModals)
-                {
-                    forms.TryGetValue(hwnd, out var form);
-                    if (form is LongWaitDlg)
-                        continue; // progress dialog -- not a blocker
-                    if (form is CommonAlertDlg alert)
-                    {
-                        localAlertText = alert.DetailedMessage;
-                    }
-                    return false;
-                }
-                return true;
-            });
-            alertText = localAlertText;
-            return decision;
+                case LongWaitDlg _:
+                    return null; // progress dialog -- not a blocker
+                case CommonAlertDlg alert:
+                    return alert.DetailedMessage;
+                case ReportErrorDlg error:
+                    return error.Message;
+                case null:
+                    return GetWindowTitle(hwnd); // a native window -- report its title
+                default:
+                    return form.Text; // any other managed dialog -- its caption
+            }
         }
 
-        private static string GetAlertText(CommonAlertDlg alert)
+        // The message of the first of the given modal windows that is actually blocking (not a LongWaitDlg
+        // progress dialog), or null if none blocks. The shared core of BlockingAlertMessage (the form gate)
+        // and the dialog-watch. Reads the open forms, so it must run on the UI thread.
+        private static string FirstBlockingDialogMessage(IEnumerable<IntPtr> modalHandles)
         {
-            return string.IsNullOrEmpty(alert.DetailMessage)
-                ? alert.Message
-                : alert.Message + Environment.NewLine + alert.DetailMessage;
+            var forms = FormUtil.OpenForms.Where(f => f.IsHandleCreated).ToDictionary(f => f.Handle);
+            foreach (var hwnd in modalHandles)
+            {
+                forms.TryGetValue(hwnd, out var form);
+                var message = ModalDialogMessage(hwnd, form);
+                if (message != null)
+                    return message;
+            }
+            return null;
         }
 
-        // The text of an alert dialog (CommonAlertDlg) currently open in this process, or null if none -- so
-        // the form gate can tell the caller what the blocking dialog says instead of only that something is
-        // blocking. Must be called on the UI thread (it reads the open forms).
+        // The title of a window (used for a native dialog, which has no managed Form), or empty if it has none.
+        private static string GetWindowTitle(IntPtr hwnd)
+        {
+            var buffer = new StringBuilder(256);
+            return User32.GetWindowText(hwnd, buffer, buffer.Capacity) > 0 ? buffer.ToString() : string.Empty;
+        }
+
+        // The message of a dialog currently blocking the UI -- a CommonAlertDlg's or ReportErrorDlg's text, or
+        // any other modal dialog's title (a managed caption or a native window's title), but never a LongWaitDlg
+        // progress dialog. Null if nothing is blocking, so the form gate can tell the caller what is in the way.
+        // Must run on the UI thread (it reads the open forms).
         internal static string BlockingAlertMessage()
         {
-            var alert = FormUtil.OpenForms.OfType<CommonAlertDlg>().FirstOrDefault(dlg => dlg.Visible);
-            return alert == null ? null : GetAlertText(alert);
+            return FirstBlockingDialogMessage(FindModalDialogWindows());
         }
 
         // Returns the handles of this process's modal dialogs: visible, enabled, top-level windows

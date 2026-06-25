@@ -65,6 +65,9 @@ namespace pwiz.Skyline.Alerts
         {
         }
 
+        /// <summary>The exception message shown in the dialog (what went wrong).</summary>
+        public string Message => _exceptionMessage;
+
         public ReportErrorDlg(Exception e, StackTrace stackTraceExceptionCaughtAt)
         {
             Init(e.GetType().Name, e.Message, ExceptionUtil.GetExceptionText(e, stackTraceExceptionCaughtAt));

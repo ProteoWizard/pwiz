@@ -1858,8 +1858,8 @@ namespace pwiz.Skyline.ToolsUI
 
         private string RunCommandImpl(string[] args, bool silent)
         {
-            // Run on a background thread and return immediately if the command pops a dialog (alert
-            // -> throws its text; native dialog -> returns), instead of blocking on a modal.
+            // Run on a background thread; if the command pops a blocking dialog, throw its message (the
+            // alert/error text, or any other dialog's title) instead of blocking on the modal.
             // See JsonUiService.RunWithDialogWatch.
             return JsonUiService.RunWithDialogWatch(() => RunCommandCore(args, silent));
         }

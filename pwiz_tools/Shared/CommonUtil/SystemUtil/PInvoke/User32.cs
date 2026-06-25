@@ -200,8 +200,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]
-        public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen); 
-        
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDC(IntPtr hWnd);
 
