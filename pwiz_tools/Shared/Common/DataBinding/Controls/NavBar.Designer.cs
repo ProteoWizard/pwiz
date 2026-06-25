@@ -7,24 +7,6 @@ namespace pwiz.Common.DataBinding.Controls
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary> 
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                // The Views button's DropDown is replaced at runtime with a ContextMenuStrip we build (see
-                // NavBarButtonViewsOnDropDownOpening); a ToolStripDropDownItem only disposes an auto-generated
-                // DropDown, not an assigned one, so dispose it here to release its static SystemEvents
-                // subscription -- otherwise it, and the document behind it, stays rooted.
-                navBarButtonViews?.DropDown?.Dispose();
-                components?.Dispose();
-            }
-            base.Dispose(disposing);
-        }
-
         #region Component Designer generated code
 
         /// <summary> 
