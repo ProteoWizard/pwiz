@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
 
         // ClickToolStripItem walks the Document Grid "Reports" dropdown (items built on demand)
         // to switch the displayed report.
-        private DocumentGridForm ClickToolStripDropDownItem()
+        private void ClickToolStripDropDownItem()
         {
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
@@ -110,7 +110,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Peptides");
             RunUI(() => Assert.AreEqual(@"Peptides", documentGrid.BindingListSource.ViewInfo.Name,
                 @"ClickToolStripItem did not switch the Document Grid report."));
-            return documentGrid;
         }
 
         // A select_tab action on the (caption-less) TabControl selects a tab by its visible text.
