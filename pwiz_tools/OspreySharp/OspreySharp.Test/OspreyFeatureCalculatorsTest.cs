@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
+using pwiz.OspreySharp.IO;
 using pwiz.OspreySharp.Scoring;
 
 namespace pwiz.OspreySharp.Test
@@ -399,6 +400,36 @@ namespace pwiz.OspreySharp.Test
                 windowSpectra: windowSpectra);
             Assert.IsTrue(upper.TryGetApexOffsetSpectrum(0, out _, out _));
             Assert.IsFalse(upper.TryGetApexOffsetSpectrum(1, out _, out _));
+        }
+
+        /// <summary>
+        /// <see cref="OspreyFeatureCalculators.BuildFeatureInfos"/> must merge the
+        /// caller's PIN feature names with the calculators by index: each info's name is
+        /// the supplied <see cref="ParquetScoreCache.PIN_FEATURE_NAMES"/> entry, while
+        /// its label and reversed-score direction come from the calculator at that same
+        /// index. Validating each field against its own source (the names array, then the
+        /// calculator) confirms the by-index merge without re-encoding the per-feature
+        /// label / direction data as a second oracle that would just break on any
+        /// deliberate calculator edit.
+        /// </summary>
+        [TestMethod]
+        public void TestBuildFeatureInfos()
+        {
+            var names = ParquetScoreCache.PIN_FEATURE_NAMES;
+            var infos = OspreyFeatureCalculators.BuildFeatureInfos(names);
+
+            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, infos.Length);
+            Assert.AreEqual(names.Length, infos.Length);
+            for (int i = 0; i < infos.Length; i++)
+            {
+                var calc = OspreyFeatureCalculators.Get(i);
+                Assert.AreEqual(names[i], infos[i].Name,
+                    string.Format("Name[{0}] should be the supplied PIN name", i));
+                Assert.AreEqual(calc.DisplayName, infos[i].Label,
+                    string.Format("Label[{0}] should be calculator {1}'s DisplayName", i, calc.Name));
+                Assert.AreEqual(calc.IsReversedScore, infos[i].IsReversedScore,
+                    string.Format("IsReversedScore[{0}] should be calculator {1}'s direction", i, calc.Name));
+            }
         }
 
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)

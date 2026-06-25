@@ -69,8 +69,18 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>Maximum paired entries for SVM cross-validation (default: 300000).</summary>
         public int MaxTrainSize { get; set; }
 
-        /// <summary>Optional feature names for logging (must match feature count).</summary>
-        public string[] FeatureNames { get; set; }
+        /// <summary>
+        /// Optional per-feature metadata (machine name, display label, expected
+        /// direction) in PIN-index order -- a single vector of
+        /// <see cref="OspreyFeatureInfo"/> populated by the Tasks layer from the
+        /// feature calculators (the FDR project does not reference the Scoring
+        /// assembly that owns the calculator SPI). The names drive the Stage 5
+        /// diagnostic dumps and the best-initial-feature log line; the labels +
+        /// directions drive the post-training feature-contribution report. Null
+        /// suppresses the names (logged as "unknown"/"feature_i") and the
+        /// unexpected-direction flag. Never used for scoring.
+        /// </summary>
+        public OspreyFeatureInfo[] FeatureInfos { get; set; }
 
         /// <summary>
         /// If true, <see cref="PercolatorFdr.RunPercolator"/> trains the fold
@@ -184,6 +194,14 @@ namespace pwiz.OspreySharp.FDR
         /// <summary>Bias terms from best model per fold.</summary>
         public List<double> FoldBiases { get; set; }
 
+        /// <summary>
+        /// The Skyline-style per-feature percent-contribution decomposition of the
+        /// trained averaged model, or <c>null</c> when scoring did not run (e.g. the
+        /// <c>TrainOnly</c> early-return or the empty-population shortcut). Carries
+        /// the decomposition object the report is printed from; not used by scoring.
+        /// </summary>
+        public FeatureContributions FeatureContributions { get; set; }
+
         /// <summary>Feature standardizer used during training.</summary>
         public FeatureStandardizer Standardizer { get; set; }
 
@@ -260,7 +278,7 @@ namespace pwiz.OspreySharp.FDR
             // osprey-fdr/src/percolator.rs.
             if (config.Diagnostics != null && config.Diagnostics.DumpStandardizer)
             {
-                WriteStage5StandardizerDump(standardizer, config.FeatureNames);
+                WriteStage5StandardizerDump(standardizer, config.FeatureInfos);
                 if (config.Diagnostics.StandardizerOnly)
                     return new PercolatorResults { DiagnosticAbort = true };
             }
@@ -271,7 +289,7 @@ namespace pwiz.OspreySharp.FDR
             // standardizer so cross-impl compare can pinpoint which rows differ.
             if (config.Diagnostics != null && config.Diagnostics.DumpPercInput)
             {
-                WriteStage5PercInputDump(entries, config.FeatureNames);
+                WriteStage5PercInputDump(entries, config.FeatureInfos);
                 if (config.Diagnostics.PercInputOnly)
                     return new PercolatorResults { DiagnosticAbort = true };
             }
@@ -379,10 +397,10 @@ namespace pwiz.OspreySharp.FDR
                     trainFdr = relaxedFdr;
             }
 
-            string bestFeatName = (config.FeatureNames != null &&
+            string bestFeatName = (config.FeatureInfos != null &&
                                    bestFeatIdx >= 0 &&
-                                   bestFeatIdx < config.FeatureNames.Length)
-                ? config.FeatureNames[bestFeatIdx]
+                                   bestFeatIdx < config.FeatureInfos.Length)
+                ? config.FeatureInfos[bestFeatIdx].Name
                 : string.Format("feature_{0}", bestFeatIdx);
             OspreyOutput.Out.WriteLine(
                 "[COUNT] Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
@@ -469,7 +487,7 @@ namespace pwiz.OspreySharp.FDR
             // osprey-fdr/src/percolator.rs::dump_stage5_svm_weights.
             if (config.Diagnostics != null && config.Diagnostics.DumpSvmWeights)
             {
-                WriteStage5SvmWeightsDump(foldModels, foldIterations, config.FeatureNames);
+                WriteStage5SvmWeightsDump(foldModels, foldIterations, config.FeatureInfos);
                 if (config.Diagnostics.SvmWeightsOnly)
                     return new PercolatorResults { DiagnosticAbort = true };
             }
@@ -633,6 +651,21 @@ namespace pwiz.OspreySharp.FDR
                     finalScores, labels, entryIds, peptides);
             }
 
+            // 8b. Feature weight + percent-contribution report (reporting only).
+            // The Accumulator sums per-feature target/decoy means over the FULL
+            // standardized matrix and averages the per-fold weights into the
+            // model it decomposes -- a pure read of stdFeatures + foldWeights that
+            // never perturbs finalScores / q-values (serial in row/index order).
+            // The table characterizes the AVERAGED model -- the same object the
+            // production streaming path (ScorePopulationAndComputeFdr) actually
+            // scores with -- not the per-entry CV ensemble that produced
+            // finalScores on this test / small-input standalone path.
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
+            for (int i = 0; i < n; i++)
+                contribAcc.Add(stdFeatures, i, labels[i]);   // labels[i] == IsDecoy
+            var contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
+            EmitFeatureContributions(contributions);
+
             // 9. Build results
             var results = new List<PercolatorResult>(n);
             for (int i = 0; i < n; i++)
@@ -655,7 +688,8 @@ namespace pwiz.OspreySharp.FDR
                 FoldWeights = foldWeights,
                 FoldBiases = foldBiases,
                 Standardizer = standardizer,
-                IterationsPerFold = iterationsPerFold
+                IterationsPerFold = iterationsPerFold,
+                FeatureContributions = contributions
             };
         }
 
@@ -725,6 +759,11 @@ namespace pwiz.OspreySharp.FDR
             var peptides = new string[n];
             var fileNames = new string[n];
             var featureBuf = new double[nFeatures];
+            // Accumulate per-feature target/decoy sums over the full standardized
+            // population for the feature-contribution report below. Reporting only;
+            // serial in row/index order (no PLINQ) so the printed numbers are stable
+            // and this never perturbs finalScores.
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
             for (int i = 0; i < n; i++)
             {
                 var entry = entries[i];
@@ -739,7 +778,12 @@ namespace pwiz.OspreySharp.FDR
                 for (int j = 0; j < nFeatures; j++)
                     score += avgWeights[j] * featureBuf[j];
                 finalScores[i] = score;
+
+                contribAcc.Add(featureBuf, entry.IsDecoy);
             }
+
+            var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
+            EmitFeatureContributions(contributions);
 
             // PEP via global target-decoy competition. CompeteAll returns
             // winners sorted by score-descending (matches the direct-path
@@ -830,7 +874,8 @@ namespace pwiz.OspreySharp.FDR
                 FoldWeights = trainResults.FoldWeights,
                 FoldBiases = trainResults.FoldBiases,
                 Standardizer = standardizer,
-                IterationsPerFold = trainResults.IterationsPerFold
+                IterationsPerFold = trainResults.IterationsPerFold,
+                FeatureContributions = contributions
             };
         }
 
@@ -2325,7 +2370,7 @@ namespace pwiz.OspreySharp.FDR
         private static void WriteStage5SvmWeightsDump(
             LinearSvmClassifier[] foldModels,
             int[] foldIterations,
-            string[] featureNames)
+            OspreyFeatureInfo[] featureInfos)
         {
             const string path = @"cs_stage5_svm_weights.tsv";
             var inv = CultureInfo.InvariantCulture;
@@ -2341,8 +2386,8 @@ namespace pwiz.OspreySharp.FDR
                     int iters = fold < foldIterations.Length ? foldIterations[fold] : 0;
                     for (int wi = 0; wi < weights.Length; wi++)
                     {
-                        string name = (featureNames != null && wi < featureNames.Length)
-                            ? featureNames[wi]
+                        string name = (featureInfos != null && wi < featureInfos.Length)
+                            ? featureInfos[wi].Name
                             : @"unknown";
                         sw.Write(fold.ToString(inv));
                         sw.Write('\t'); sw.Write(wi.ToString(inv));
@@ -2361,6 +2406,17 @@ namespace pwiz.OspreySharp.FDR
         }
 
         /// <summary>
+        /// Writes the feature-contribution table (<see cref="FeatureContributions.ToReportLines"/>)
+        /// to <c>OspreyOutput.Out</c> after Stage 5 training -- one row per line so each
+        /// keeps its own log timestamp prefix. Pure reporting; never moves q-values.
+        /// </summary>
+        private static void EmitFeatureContributions(FeatureContributions contributions)
+        {
+            foreach (string line in contributions.ToReportLines())
+                OspreyOutput.Out.WriteLine(line);
+        }
+
+        /// <summary>
         /// Cross-impl bisection dump of the feature standardizer state,
         /// taken right after FitTransform returns and before subsampling
         /// / fold assignment. Mirrors dump_stage5_standardizer in Rust.
@@ -2369,7 +2425,7 @@ namespace pwiz.OspreySharp.FDR
         /// </summary>
         private static void WriteStage5StandardizerDump(
             FeatureStandardizer standardizer,
-            string[] featureNames)
+            OspreyFeatureInfo[] featureInfos)
         {
             const string path = @"cs_stage5_standardizer.tsv";
             var inv = CultureInfo.InvariantCulture;
@@ -2382,8 +2438,8 @@ namespace pwiz.OspreySharp.FDR
                 sw.WriteLine(@"feature_idx	feature_name	mean	std");
                 for (int i = 0; i < means.Length; i++)
                 {
-                    string name = (featureNames != null && i < featureNames.Length)
-                        ? featureNames[i]
+                    string name = (featureInfos != null && i < featureInfos.Length)
+                        ? featureInfos[i].Name
                         : @"unknown";
                     sw.Write(i.ToString(inv));
                     sw.Write('\t'); sw.Write(name);
@@ -2403,7 +2459,7 @@ namespace pwiz.OspreySharp.FDR
         /// </summary>
         private static void WriteStage5PercInputDump(
             IList<PercolatorEntry> entries,
-            string[] featureNames)
+            OspreyFeatureInfo[] featureInfos)
         {
             const string path = @"cs_stage5_perc_input.tsv";
             var inv = CultureInfo.InvariantCulture;
@@ -2414,8 +2470,8 @@ namespace pwiz.OspreySharp.FDR
                 sw.Write(@"native_position	entry_id	is_decoy");
                 for (int i = 0; i < nFeatures; i++)
                 {
-                    string name = (featureNames != null && i < featureNames.Length)
-                        ? featureNames[i]
+                    string name = (featureInfos != null && i < featureInfos.Length)
+                        ? featureInfos[i].Name
                         : @"unknown";
                     sw.Write('\t'); sw.Write(name);
                 }

@@ -30,6 +30,7 @@ using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
+using pwiz.OspreySharp.Scoring;
 
 namespace pwiz.OspreySharp.Tasks
 {
@@ -1045,7 +1046,8 @@ namespace pwiz.OspreySharp.Tasks
             string passLabel = "First-pass")
         {
             bool aborted = PercolatorEngine.RunPercolatorFdr(
-                perFileEntries, config, ParquetScoreCache.PIN_FEATURE_NAMES,
+                perFileEntries, config,
+                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
             if (aborted)
             {
