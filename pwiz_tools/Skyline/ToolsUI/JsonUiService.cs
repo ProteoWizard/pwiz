@@ -155,7 +155,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own
                 // BeginInvoke; otherwise Program.BeginInvokeOnUiThread targets the main window, or the
-                // StartPage before it exists (and throws if neither is up).
+                // StartPage before it exists (and falls back to a background thread if neither is up).
                 if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
                     dispatcher.BeginInvoke((Action) Run);
                 else
@@ -297,8 +297,18 @@ namespace pwiz.Skyline.ToolsUI
         /// and Skyline's Immediate Window. Shows the Immediate Window and writes
         /// the header before returning.
         /// </summary>
+        /// <summary>Returns the main Skyline window, or throws an LLM-facing error if it does not exist yet
+        /// (only the start page is showing). For verbs that genuinely need the document / main window
+        /// itself, so they fail with a clear message instead of a NullReferenceException.</summary>
+        public static SkylineWindow RequireMainWindow()
+        {
+            return Program.MainWindow ?? throw new InvalidOperationException(LlmInstruction.Format(
+                @"This requires the main Skyline window, which is not available while the start page is showing."));
+        }
+
         public static TextWriter CreateImmediateWindowTee(TextWriter capture, string header)
         {
+            RequireMainWindow();
             TextWriter immediateWriter = null;
             Program.MainWindow.Invoke(new Action(() =>
             {

@@ -207,7 +207,7 @@ namespace pwiz.Skyline.ToolsUI
             });
 
         public static readonly UiAction GetValue = SimpleAction<UiElement>(
-            @"GetValue", e => e.Value, mustBeEnabled: false, returnsValue: true);
+            @"GetValue", e => UiElement.ConvertValue(e.Value), mustBeEnabled: false, returnsValue: true);
 
         public static readonly UiAction SetValue = SimpleAction<UiElement, object>(
             @"SetValue", (e, value) =>
@@ -416,9 +416,10 @@ namespace pwiz.Skyline.ToolsUI
             return form;
         }
 
-        /// <summary>The element's current value -- null, or one of the three types <see cref="ConvertValue"/>
-        /// produces (a bool, a double, or a string). The default control has no value. Exposed as get_value
-        /// and echoed in each <see cref="ControlInfo"/>.</summary>
+        /// <summary>The element's current value in its natural form (e.g. a grid cell's underlying object),
+        /// or null when the control has no value. <see cref="ConvertValue"/> normalizes it to null / bool /
+        /// double / string at the point it is exposed to the connector -- as get_value and echoed in each
+        /// <see cref="ControlInfo"/> -- so this property itself need not be one of those types.</summary>
         public virtual object Value => null;
 
         /// <summary>Sets this element's value (exposed as set_value); the argument has been run through
@@ -429,10 +430,10 @@ namespace pwiz.Skyline.ToolsUI
             throw new InvalidOperationException(LlmInstruction.Format(
                 @"Setting a value is not supported for this control."));
 
-        /// <summary>Coerces an arbitrary value to the only types a UiElement value may take: null stays null,
+        /// <summary>Coerces an arbitrary value to the only types the connector exchanges: null stays null,
         /// a bool stays a bool, any numeric type becomes a double, and everything else becomes its string
-        /// form. Applied wherever a raw value enters the value system (a grid cell read, a set_value
-        /// argument) so <see cref="Value"/> is always one of these three types.</summary>
+        /// form. Applied where a value crosses to/from the connector -- a get_value / ControlInfo read and a
+        /// set_value argument -- so the connector only ever sees null, a bool, a double, or a string.</summary>
         public static object ConvertValue(object value)
         {
             switch (value)
@@ -641,7 +642,7 @@ namespace pwiz.Skyline.ToolsUI
                     Name = NullIfEmpty(child.Name),
                     Enabled = child.IsEnabled,
                     Visible = child.IsVisible,
-                    Value = child.Value,
+                    Value = ConvertValue(child.Value),
                 });
             }
             return result.ToArray();
@@ -1683,15 +1684,9 @@ namespace pwiz.Skyline.ToolsUI
 
         // get_value / set_value act on the single current cell (the one set_current_cell_address moved to);
         // the whole grid is read/written in bulk with get_grid_text / set_grid_text. The value is null when
-        // there is no current cell.
-        public override object Value
-        {
-            get
-            {
-                var cell = _dataGridView.CurrentCell;
-                return cell == null ? null : ConvertValue(cell.Value);
-            }
-        }
+        // there is no current cell. This is the cell's raw underlying value; ConvertValue normalizes it for
+        // the connector at the point it is exposed (get_value, ControlInfo), not here.
+        public override object Value => _dataGridView.CurrentCell?.Value;
 
         public override void SetValue(object value)
         {
@@ -1699,6 +1694,11 @@ namespace pwiz.Skyline.ToolsUI
             if (cell == null)
                 throw new ArgumentException(new LlmInstruction(
                     @"The grid has no current cell -- move to one first with set_current_cell_address."));
+            // Setting a cell's value programmatically bypasses the read-only state the user would face, so
+            // refuse a read-only cell -- the connector must not do what the user could not.
+            if (cell.ReadOnly || _dataGridView.ReadOnly)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The current cell is read-only, so its value cannot be set."));
             cell.Value = value;
         }
 
