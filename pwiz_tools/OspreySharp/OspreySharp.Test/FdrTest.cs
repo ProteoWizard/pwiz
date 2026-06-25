@@ -417,9 +417,10 @@ namespace pwiz.OspreySharp.Test
                 OspreyOutput.Out = savedOut;
             }
 
-            // The averaged model is surfaced for the report.
-            Assert.IsNotNull(results.AvgWeights);
-            Assert.AreEqual(3, results.AvgWeights.Length);
+            // The contribution decomposition is surfaced on the results.
+            Assert.IsNotNull(results.FeatureContributions);
+            var features = results.FeatureContributions.Features;
+            Assert.AreEqual(3, features.Count);
 
             // The human-readable block is present.
             StringAssert.Contains(report,
@@ -441,20 +442,25 @@ namespace pwiz.OspreySharp.Test
             Assert.AreEqual(100.0, total, 0.2,
                 string.Format("contribution percentages should sum to ~100% (got {0})", total));
 
-            // The flag must match Skyline's weight-sign rule on the surfaced weights.
+            // The flag must match Skyline's weight-sign rule on the surfaced model:
+            // both the decomposition object's IsUnexpectedDirection and the printed
+            // row must agree with reversed XOR (coefficient < 0).
             for (int j = 0; j < 3; j++)
             {
-                bool expectedFlag = config.ReversedScore[j] ^ (results.AvgWeights[j] < 0.0);
+                bool expectedFlag = config.ReversedScore[j] ^ (features[j].Coefficient < 0.0);
+                Assert.AreEqual(expectedFlag, features[j].IsUnexpectedDirection,
+                    string.Format("Feature {0} object flag mismatch (weight={1})",
+                        (char)('A' + j), features[j].Coefficient));
                 bool rowFlagged = Regex.IsMatch(report,
                     @"Feature " + (char)('A' + j) + @"\b.*\(unexpected direction\)");
                 Assert.AreEqual(expectedFlag, rowFlagged,
-                    string.Format("Feature {0} unexpected-direction flag mismatch (weight={1})",
-                        (char)('A' + j), results.AvgWeights[j]));
+                    string.Format("Feature {0} printed-flag mismatch (weight={1})",
+                        (char)('A' + j), features[j].Coefficient));
             }
 
             // Feature B (declared reversed, but targets are higher here) must be the
             // flagged one: its trained weight is positive.
-            Assert.IsTrue(results.AvgWeights[1] > 0.0,
+            Assert.IsTrue(features[1].Coefficient > 0.0,
                 "fixture should drive a positive weight on the declared-reversed feature B");
             StringAssert.Contains(report, "(unexpected direction)");
 

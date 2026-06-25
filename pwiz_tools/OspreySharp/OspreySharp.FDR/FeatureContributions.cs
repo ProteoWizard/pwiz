@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.OspreySharp.ML;
 
 namespace pwiz.OspreySharp.FDR
 {
@@ -116,6 +117,98 @@ namespace pwiz.OspreySharp.FDR
         }
 
         /// <summary>
+        /// Streams the per-feature target/decoy sums over the standardized
+        /// population the model scores, then averages the per-fold weight vectors
+        /// and builds the <see cref="FeatureContributions"/>. Owns BOTH the summing
+        /// and the fold-averaging so the caller no longer hand-rolls either; the
+        /// only public path to a <see cref="FeatureContributions"/> from a trained
+        /// model.
+        /// </summary>
+        public sealed class Accumulator
+        {
+            private readonly double[] _sumTarget;
+            private readonly double[] _sumDecoy;
+            private long _nTarget;
+            private long _nDecoy;
+
+            /// <param name="featureCount">Number of features per entry.</param>
+            public Accumulator(int featureCount)
+            {
+                _sumTarget = new double[featureCount];
+                _sumDecoy = new double[featureCount];
+            }
+
+            /// <summary>
+            /// Accumulate one standardized feature vector (the streaming path's
+            /// reused featureBuf).
+            /// </summary>
+            public void Add(double[] standardizedFeatures, bool isDecoy)
+            {
+                if (isDecoy)
+                {
+                    _nDecoy++;
+                    for (int j = 0; j < _sumDecoy.Length; j++)
+                        _sumDecoy[j] += standardizedFeatures[j];
+                }
+                else
+                {
+                    _nTarget++;
+                    for (int j = 0; j < _sumTarget.Length; j++)
+                        _sumTarget[j] += standardizedFeatures[j];
+                }
+            }
+
+            /// <summary>
+            /// Accumulate one row of a standardized feature matrix (the direct
+            /// path's full stdFeatures matrix).
+            /// </summary>
+            public void Add(Matrix standardizedFeatures, int row, bool isDecoy)
+            {
+                if (isDecoy)
+                {
+                    _nDecoy++;
+                    for (int j = 0; j < _sumDecoy.Length; j++)
+                        _sumDecoy[j] += standardizedFeatures[row, j];
+                }
+                else
+                {
+                    _nTarget++;
+                    for (int j = 0; j < _sumTarget.Length; j++)
+                        _sumTarget[j] += standardizedFeatures[row, j];
+                }
+            }
+
+            /// <summary>
+            /// Average the per-fold weight vectors into the standardized averaged
+            /// model (mean_f over the folds, matching the scoring path) and
+            /// decompose it over the accumulated target/decoy sums.
+            /// </summary>
+            /// <param name="foldWeights">Per-fold standardized weight vectors.</param>
+            /// <param name="featureNames">Internal feature names, or null.</param>
+            /// <param name="featureLabels">Display labels, or null (falls back to name / index).</param>
+            /// <param name="reversedScore">Per-feature declared reversed-score flags, or null.</param>
+            public FeatureContributions Build(
+                IReadOnlyList<double[]> foldWeights,
+                string[] featureNames, string[] featureLabels, bool[] reversedScore)
+            {
+                int p = _sumTarget.Length;
+                int nFolds = foldWeights.Count;
+                var avgWeights = new double[p];
+                for (int f = 0; f < nFolds; f++)
+                {
+                    double[] foldW = foldWeights[f];
+                    for (int j = 0; j < p; j++)
+                        avgWeights[j] += foldW[j];
+                }
+                double nFoldsD = nFolds;
+                for (int j = 0; j < p; j++)
+                    avgWeights[j] /= nFoldsD;
+                return new FeatureContributions(avgWeights, _sumTarget, _sumDecoy,
+                    _nTarget, _nDecoy, featureNames, featureLabels, reversedScore);
+            }
+        }
+
+        /// <summary>
         /// The per-feature contributions in canonical feature-index order (not
         /// sorted for display). The presentation layer applies its own ordering.
         /// </summary>
@@ -145,7 +238,13 @@ namespace pwiz.OspreySharp.FDR
         /// <param name="featureNames">Internal feature names, or null.</param>
         /// <param name="featureLabels">Display labels, or null (falls back to name / index).</param>
         /// <param name="reversedScore">Per-feature declared reversed-score flags, or null.</param>
-        public FeatureContributions(
+        /// <remarks>
+        /// Internal: the public construction path from a trained model is
+        /// <see cref="Accumulator.Build"/>, which owns the fold-averaging that
+        /// produces <paramref name="avgWeights"/>. Tests construct directly to
+        /// exercise the decomposition from a hand-set model.
+        /// </remarks>
+        internal FeatureContributions(
             double[] avgWeights,
             double[] sumTarget, double[] sumDecoy, long nTarget, long nDecoy,
             string[] featureNames, string[] featureLabels, bool[] reversedScore)

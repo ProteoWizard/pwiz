@@ -201,15 +201,12 @@ namespace pwiz.OspreySharp.FDR
         public List<double> FoldBiases { get; set; }
 
         /// <summary>
-        /// The averaged (across-fold) standardized feature weight vector formed at
-        /// scoring time, or <c>null</c> when scoring did not run (e.g. the
-        /// <c>TrainOnly</c> early-return). Surfaced for the feature-contribution
-        /// report and tests; not used by scoring.
+        /// The Skyline-style per-feature percent-contribution decomposition of the
+        /// trained averaged model, or <c>null</c> when scoring did not run (e.g. the
+        /// <c>TrainOnly</c> early-return or the empty-population shortcut). Carries
+        /// the decomposition object the report is printed from; not used by scoring.
         /// </summary>
-        public double[] AvgWeights { get; set; }
-
-        /// <summary>The averaged (across-fold) bias paired with <see cref="AvgWeights"/>.</summary>
-        public double AvgBias { get; set; }
+        public FeatureContributions FeatureContributions { get; set; }
 
         /// <summary>Feature standardizer used during training.</summary>
         public FeatureStandardizer Standardizer { get; set; }
@@ -661,53 +658,19 @@ namespace pwiz.OspreySharp.FDR
             }
 
             // 8b. Feature weight + percent-contribution report (reporting only).
-            // Form the averaged model by averaging the per-fold weights (same
-            // arithmetic as the streaming path) and accumulate per-feature
-            // target/decoy means over the FULL standardized matrix -- the same
-            // population the model scores. Pure read of foldWeights + stdFeatures;
-            // never perturbs finalScores / q-values. Serial in row/index order.
-            // NOTE: this direct path scores each entry with its held-out fold
-            // model (the cross-validation ensemble), so the table characterizes
-            // the AVERAGED model -- the same object the production streaming path
-            // (ScorePopulationAndComputeFdr) actually scores with -- not the
-            // per-entry CV ensemble that produced finalScores here. The averaged
-            // model is the right thing to report (it is what ships); this direct
-            // path is test / small-input standalone only.
-            var avgWeights = new double[nFeatures];
-            double avgBias = 0.0;
-            for (int f = 0; f < foldWeights.Count; f++)
-            {
-                double[] foldW = foldWeights[f];
-                for (int j = 0; j < nFeatures; j++)
-                    avgWeights[j] += foldW[j];
-                avgBias += foldBiases[f];
-            }
-            double nFoldsD = foldWeights.Count;
-            for (int j = 0; j < nFeatures; j++)
-                avgWeights[j] /= nFoldsD;
-            avgBias /= nFoldsD;
-
-            var contribSumTarget = new double[nFeatures];
-            var contribSumDecoy = new double[nFeatures];
-            long contribNTgt = 0, contribNDcy = 0;
+            // The Accumulator sums per-feature target/decoy means over the FULL
+            // standardized matrix and averages the per-fold weights into the
+            // model it decomposes -- a pure read of stdFeatures + foldWeights that
+            // never perturbs finalScores / q-values (serial in row/index order).
+            // The table characterizes the AVERAGED model -- the same object the
+            // production streaming path (ScorePopulationAndComputeFdr) actually
+            // scores with -- not the per-entry CV ensemble that produced
+            // finalScores on this test / small-input standalone path.
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
             for (int i = 0; i < n; i++)
-            {
-                if (labels[i])   // labels[i] == IsDecoy
-                {
-                    contribNDcy++;
-                    for (int j = 0; j < nFeatures; j++)
-                        contribSumDecoy[j] += stdFeatures[i, j];
-                }
-                else
-                {
-                    contribNTgt++;
-                    for (int j = 0; j < nFeatures; j++)
-                        contribSumTarget[j] += stdFeatures[i, j];
-                }
-            }
-            var contributions = new FeatureContributions(avgWeights, contribSumTarget, contribSumDecoy,
-                contribNTgt, contribNDcy, config.FeatureNames, config.FeatureLabels,
-                config.ReversedScore);
+                contribAcc.Add(stdFeatures, i, labels[i]);   // labels[i] == IsDecoy
+            var contributions = contribAcc.Build(foldWeights,
+                config.FeatureNames, config.FeatureLabels, config.ReversedScore);
             EmitFeatureContributions(contributions);
 
             // 9. Build results
@@ -733,8 +696,7 @@ namespace pwiz.OspreySharp.FDR
                 FoldBiases = foldBiases,
                 Standardizer = standardizer,
                 IterationsPerFold = iterationsPerFold,
-                AvgWeights = avgWeights,
-                AvgBias = avgBias
+                FeatureContributions = contributions
             };
         }
 
@@ -808,9 +770,7 @@ namespace pwiz.OspreySharp.FDR
             // population for the feature-contribution report below. Reporting only;
             // serial in row/index order (no PLINQ) so the printed numbers are stable
             // and this never perturbs finalScores.
-            var sumTarget = new double[nFeatures];
-            var sumDecoy = new double[nFeatures];
-            long nTgt = 0, nDcy = 0;
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
             for (int i = 0; i < n; i++)
             {
                 var entry = entries[i];
@@ -826,21 +786,10 @@ namespace pwiz.OspreySharp.FDR
                     score += avgWeights[j] * featureBuf[j];
                 finalScores[i] = score;
 
-                if (entry.IsDecoy)
-                {
-                    nDcy++;
-                    for (int j = 0; j < nFeatures; j++)
-                        sumDecoy[j] += featureBuf[j];
-                }
-                else
-                {
-                    nTgt++;
-                    for (int j = 0; j < nFeatures; j++)
-                        sumTarget[j] += featureBuf[j];
-                }
+                contribAcc.Add(featureBuf, entry.IsDecoy);
             }
 
-            var contributions = new FeatureContributions(avgWeights, sumTarget, sumDecoy, nTgt, nDcy,
+            var contributions = contribAcc.Build(trainResults.FoldWeights,
                 config.FeatureNames, config.FeatureLabels, config.ReversedScore);
             EmitFeatureContributions(contributions);
 
@@ -934,8 +883,7 @@ namespace pwiz.OspreySharp.FDR
                 FoldBiases = trainResults.FoldBiases,
                 Standardizer = standardizer,
                 IterationsPerFold = trainResults.IterationsPerFold,
-                AvgWeights = avgWeights,
-                AvgBias = avgBias
+                FeatureContributions = contributions
             };
         }
 
