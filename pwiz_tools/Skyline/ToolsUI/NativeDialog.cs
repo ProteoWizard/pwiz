@@ -175,7 +175,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "FileDialog:Open …".</summary>
         public string FormId => DialogTypeName + @":" + Title;
 
-        public ControlInfo[] GetControls() => GetChildren();
+        public ControlInfo[] GetControls() => GetControlInfos();
 
         // A native dialog has no caption-addressable buttons (matching "OK"/"Cancel" would not survive a
         // localized build). Confirm it with the accept action and dismiss it with Close (close_form) instead.

@@ -21,9 +21,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Windows.Automation;
-using Accessibility;
+using pwiz.Common.PInvoke;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -135,93 +134,10 @@ namespace pwiz.Skyline.ToolsUI
             var valuePattern = (ValuePattern)edit.GetCurrentPattern(ValuePattern.Pattern);
             valuePattern.SetValue(path);
 
-            InvokeDefaultButtonViaMsaa();
+            var defaultButton = Oleacc.GetDefaultPushButton(WindowHandle);
+            if (defaultButton == null)
+                throw new InvalidOperationException(@"No default push button found via MSAA in the file dialog.");
+            defaultButton.accDoDefaultAction(0); // 0 == CHILDID_SELF
         }
-
-        // MSAA constants (oleacc).
-        private const uint OBJID_CLIENT = 0xFFFFFFFC;
-        private const int CHILDID_SELF = 0;
-        private const int ROLE_SYSTEM_PUSHBUTTON = 0x2B;
-        private const int STATE_SYSTEM_DEFAULT = 0x100;
-        private const int MAX_MSAA_DEPTH = 12;
-
-        // Finds the default push button in the dialog's accessible tree and performs its default
-        // action. On failure, throws a diagnostic listing the push buttons MSAA could see.
-        private void InvokeDefaultButtonViaMsaa()
-        {
-            var iidAccessible = new Guid(@"618736E0-3C3D-11CF-810C-00AA00389B71");
-            int hr = AccessibleObjectFromWindow(WindowHandle, OBJID_CLIENT, ref iidAccessible, out var rootObj);
-            if (hr != 0 || !(rootObj is IAccessible root))
-                throw new InvalidOperationException(
-                    string.Format(@"AccessibleObjectFromWindow failed (hr=0x{0:X8}).", hr));
-
-            var pushButtons = new List<string>();
-            if (TryInvokeDefaultPushButton(root, 0, pushButtons))
-                return;
-            throw new InvalidOperationException(
-                string.Format(@"No default push button found via MSAA. Push buttons seen: {0}",
-                    string.Join(@"; ", pushButtons)));
-        }
-
-        private static bool TryInvokeDefaultPushButton(IAccessible container, int depth, List<string> pushButtons)
-        {
-            if (depth > MAX_MSAA_DEPTH)
-                return false;
-            int count;
-            try
-            {
-                count = container.accChildCount;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-            if (count <= 0)
-                return false;
-            var children = new object[count];
-            if (AccessibleChildren(container, 0, count, children, out var obtained) != 0)
-                return false;
-            for (int i = 0; i < obtained; i++)
-            {
-                var asAccessible = children[i] as IAccessible;
-                // A child is either a full IAccessible (query it with CHILDID_SELF) or a simple
-                // element identified by an integer id that is queried on its container.
-                var queryTarget = asAccessible ?? container;
-                object childId = asAccessible != null ? CHILDID_SELF : children[i];
-                if (IsDefaultPushButton(queryTarget, childId, pushButtons))
-                {
-                    queryTarget.accDoDefaultAction(childId);
-                    return true;
-                }
-                if (asAccessible != null && TryInvokeDefaultPushButton(asAccessible, depth + 1, pushButtons))
-                    return true;
-            }
-            return false;
-        }
-
-        private static bool IsDefaultPushButton(IAccessible acc, object childId, List<string> pushButtons)
-        {
-            try
-            {
-                if (Convert.ToInt32(acc.get_accRole(childId)) != ROLE_SYSTEM_PUSHBUTTON)
-                    return false;
-                int state = Convert.ToInt32(acc.get_accState(childId));
-                bool isDefault = (state & STATE_SYSTEM_DEFAULT) != 0;
-                pushButtons.Add(string.Format(@"'{0}' default={1}", acc.get_accName(childId), isDefault));
-                return isDefault;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
-
-        [DllImport(@"oleacc.dll")]
-        private static extern int AccessibleObjectFromWindow(IntPtr hwnd, uint id, ref Guid iid,
-            [MarshalAs(UnmanagedType.Interface)] out object ppvObject);
-
-        [DllImport(@"oleacc.dll")]
-        private static extern int AccessibleChildren(IAccessible paccContainer, int iChildStart, int cChildren,
-            [Out] object[] rgvarChildren, out int pcObtained);
     }
 }
