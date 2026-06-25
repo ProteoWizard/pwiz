@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.ML;
 
 namespace pwiz.OspreySharp.FDR
@@ -184,12 +185,9 @@ namespace pwiz.OspreySharp.FDR
             /// decompose it over the accumulated target/decoy sums.
             /// </summary>
             /// <param name="foldWeights">Per-fold standardized weight vectors.</param>
-            /// <param name="featureNames">Internal feature names, or null.</param>
-            /// <param name="featureLabels">Display labels, or null (falls back to name / index).</param>
-            /// <param name="reversedScore">Per-feature declared reversed-score flags, or null.</param>
+            /// <param name="featureInfos">Per-feature metadata (name / label / direction), or null.</param>
             public FeatureContributions Build(
-                IReadOnlyList<double[]> foldWeights,
-                string[] featureNames, string[] featureLabels, bool[] reversedScore)
+                IReadOnlyList<double[]> foldWeights, OspreyFeatureInfo[] featureInfos)
             {
                 int p = _sumTarget.Length;
                 int nFolds = foldWeights.Count;
@@ -204,7 +202,7 @@ namespace pwiz.OspreySharp.FDR
                 for (int j = 0; j < p; j++)
                     avgWeights[j] /= nFoldsD;
                 return new FeatureContributions(avgWeights, _sumTarget, _sumDecoy,
-                    _nTarget, _nDecoy, featureNames, featureLabels, reversedScore);
+                    _nTarget, _nDecoy, featureInfos);
             }
         }
 
@@ -235,9 +233,10 @@ namespace pwiz.OspreySharp.FDR
         /// <param name="sumDecoy">Per-feature sum of standardized decoy values.</param>
         /// <param name="nTarget">Number of targets accumulated into <paramref name="sumTarget"/>.</param>
         /// <param name="nDecoy">Number of decoys accumulated into <paramref name="sumDecoy"/>.</param>
-        /// <param name="featureNames">Internal feature names, or null.</param>
-        /// <param name="featureLabels">Display labels, or null (falls back to name / index).</param>
-        /// <param name="reversedScore">Per-feature declared reversed-score flags, or null.</param>
+        /// <param name="featureInfos">
+        /// Per-feature metadata (machine name, display label, reversed-score flag) in
+        /// canonical index order, or null to suppress names + the direction flag.
+        /// </param>
         /// <remarks>
         /// Internal: the public construction path from a trained model is
         /// <see cref="Accumulator.Build"/>, which owns the fold-averaging that
@@ -247,7 +246,7 @@ namespace pwiz.OspreySharp.FDR
         internal FeatureContributions(
             double[] avgWeights,
             double[] sumTarget, double[] sumDecoy, long nTarget, long nDecoy,
-            string[] featureNames, string[] featureLabels, bool[] reversedScore)
+            OspreyFeatureInfo[] featureInfos)
         {
             int p = avgWeights.Length;
             var weighted = new double[p];
@@ -271,15 +270,12 @@ namespace pwiz.OspreySharp.FDR
             for (int j = 0; j < p; j++)
             {
                 double pct = degenerate ? double.NaN : 100.0 * weighted[j] / composite;
-                bool reversed = reversedScore != null && j < reversedScore.Length && reversedScore[j];
-                bool wrongSign = reversedScore != null && j < reversedScore.Length &&
-                                 (reversedScore[j] ^ (avgWeights[j] < 0.0));
-                string name = (featureNames != null && j < featureNames.Length)
-                    ? featureNames[j]
-                    : null;
-                string label = (featureLabels != null && j < featureLabels.Length)
-                    ? featureLabels[j]
-                    : (featureNames != null && j < featureNames.Length ? featureNames[j] : string.Format("feature_{0}", j));
+                bool haveInfo = featureInfos != null && j < featureInfos.Length;
+                var info = haveInfo ? featureInfos[j] : default(OspreyFeatureInfo);
+                bool reversed = haveInfo && info.IsReversedScore;
+                bool wrongSign = haveInfo && (info.IsReversedScore ^ (avgWeights[j] < 0.0));
+                string name = info.Name;
+                string label = info.Label ?? info.Name ?? string.Format("feature_{0}", j);
                 features[j] = new FeatureContribution(j, name, label,
                     avgWeights[j], deltaMu[j], weighted[j], pct, reversed, wrongSign);
             }

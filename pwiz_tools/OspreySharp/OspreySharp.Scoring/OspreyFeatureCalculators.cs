@@ -21,6 +21,8 @@
  * limitations under the License.
  */
 
+using pwiz.OspreySharp.Core;
+
 namespace pwiz.OspreySharp.Scoring
 {
     /// <summary>
@@ -98,34 +100,34 @@ namespace pwiz.OspreySharp.Scoring
         }
 
         /// <summary>
-        /// The <see cref="IOspreyFeatureCalculator.IsReversedScore"/> flag for each
-        /// of the 21 PIN features, in parity-critical index order. The FDR layer
-        /// (which does not reference this assembly) takes this vector by value to
-        /// flag unexpected-direction coefficients in the feature-contribution table.
+        /// Projects the 21 calculators into a single <see cref="OspreyFeatureInfo"/>
+        /// vector in parity-critical PIN-index order, pairing each supplied machine
+        /// <paramref name="featureNames"/> entry with that calculator's
+        /// <see cref="IOspreyFeatureCalculator.DisplayName"/> label and
+        /// <see cref="IOspreyFeatureCalculator.IsReversedScore"/> direction. The FDR
+        /// layer (which does not reference this assembly) takes this single vector by
+        /// value -- replacing the former parallel name / label / reversed arrays --
+        /// to label and direction-flag the rows of the feature-contribution report.
+        /// The machine name stays the caller's parity-critical PIN column name;
+        /// label + direction are owned by each calculator (the single source of
+        /// truth, in lockstep with the index order).
         /// </summary>
-        public static bool[] GetReversedScoreFlags()
+        /// <param name="featureNames">
+        /// The parity-critical PIN feature names, one per feature in index order
+        /// (typically <c>ParquetScoreCache.PIN_FEATURE_NAMES</c>). Must have
+        /// <see cref="FeatureCount"/> entries.
+        /// </param>
+        public static OspreyFeatureInfo[] BuildFeatureInfos(string[] featureNames)
         {
-            var flags = new bool[FeatureCount];
+            if (featureNames == null || featureNames.Length != FeatureCount)
+                throw new System.ArgumentException(
+                    string.Format(@"BuildFeatureInfos expects {0} feature names", FeatureCount),
+                    nameof(featureNames));
+            var infos = new OspreyFeatureInfo[FeatureCount];
             for (int i = 0; i < FeatureCount; i++)
-                flags[i] = _calculators[i].IsReversedScore;
-            return flags;
-        }
-
-        /// <summary>
-        /// The human-friendly (Skyline-style)
-        /// <see cref="IOspreyFeatureCalculator.DisplayName"/> for each of the 21 PIN
-        /// features, in parity-critical index order. The FDR layer (which does not
-        /// reference this assembly) takes this vector by value to label the rows of
-        /// the post-training feature-contribution report. Display text only -- the
-        /// parity-gated columns continue to use the machine
-        /// <see cref="IOspreyFeatureCalculator.Name"/>.
-        /// </summary>
-        public static string[] GetFeatureLabels()
-        {
-            var labels = new string[FeatureCount];
-            for (int i = 0; i < FeatureCount; i++)
-                labels[i] = _calculators[i].DisplayName;
-            return labels;
+                infos[i] = new OspreyFeatureInfo(
+                    featureNames[i], _calculators[i].DisplayName, _calculators[i].IsReversedScore);
+            return infos;
         }
     }
 }

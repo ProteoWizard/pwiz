@@ -59,14 +59,12 @@ namespace pwiz.OspreySharp.FDR
         public static bool RunPercolatorFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
-            string[] featureNames,
+            OspreyFeatureInfo[] featureInfos,
             Action<string> logInfo,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass",
-            string[] featureLabels = null,
-            bool[] reversedScore = null)
+            string passLabel = @"First-pass")
         {
-            int numFeatures = featureNames.Length;
+            int numFeatures = featureInfos.Length;
 
             // Sort each file's entries by EntryId so the SVM working-set
             // selection sees a canonical order regardless of upstream operation
@@ -113,9 +111,7 @@ namespace pwiz.OspreySharp.FDR
                 TestFdr = config.RunFdr,
                 MaxIterations = 10,
                 NFolds = 3,
-                FeatureNames = featureNames,
-                FeatureLabels = featureLabels,
-                ReversedScore = reversedScore,
+                FeatureInfos = featureInfos,
                 Diagnostics = diagnostics
             };
 
@@ -362,7 +358,7 @@ namespace pwiz.OspreySharp.FDR
                 Seed = percConfig.Seed,
                 CValues = percConfig.CValues,
                 MaxTrainSize = percConfig.MaxTrainSize,
-                FeatureNames = percConfig.FeatureNames,
+                FeatureInfos = percConfig.FeatureInfos,
                 TrainOnly = true,
                 Diagnostics = percConfig.Diagnostics
             };

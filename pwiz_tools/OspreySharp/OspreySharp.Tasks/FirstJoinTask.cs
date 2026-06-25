@@ -1046,10 +1046,9 @@ namespace pwiz.OspreySharp.Tasks
             string passLabel = "First-pass")
         {
             bool aborted = PercolatorEngine.RunPercolatorFdr(
-                perFileEntries, config, ParquetScoreCache.PIN_FEATURE_NAMES,
-                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
-                OspreyFeatureCalculators.GetFeatureLabels(),
-                OspreyFeatureCalculators.GetReversedScoreFlags());
+                perFileEntries, config,
+                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
+                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left

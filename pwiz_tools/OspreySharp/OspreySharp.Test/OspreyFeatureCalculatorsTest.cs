@@ -402,17 +402,47 @@ namespace pwiz.OspreySharp.Test
         }
 
         /// <summary>
-        /// The per-feature expected-direction vector (Skyline's IsReversedScore) in
-        /// PIN index order. Hard-codes the oracle so a future calculator reorder, or a
-        /// flipped flag, fails loudly. Only the four lower-is-better penalty features
-        /// (abs mass error, abs RT deviation, median-polish residual ratio, and
-        /// median-polish residual correlation) are reversed; the signed-centered
-        /// idx 9/11 are false by convention (their target direction is ill-defined).
+        /// The single <see cref="OspreyFeatureInfo"/> vector that
+        /// <see cref="OspreyFeatureCalculators.BuildFeatureInfos"/> hands to the FDR
+        /// layer (replacing the former parallel label / reversed-score arrays). The
+        /// supplied machine names must pass through verbatim, and each calculator's
+        /// display label + reversed-score direction must match the hard-coded PIN-order
+        /// oracle so a future calculator reorder, an edited
+        /// <see cref="IOspreyFeatureCalculator.DisplayName"/>, or a flipped
+        /// <see cref="IOspreyFeatureCalculator.IsReversedScore"/> fails loudly. Only the
+        /// four lower-is-better penalty features (abs mass error, abs RT deviation,
+        /// median-polish residual ratio, and median-polish residual correlation) are
+        /// reversed; the signed-centered idx 9/11 are false by convention (their target
+        /// direction is ill-defined).
         /// </summary>
         [TestMethod]
-        public void TestGetReversedScoreFlags()
+        public void TestBuildFeatureInfos()
         {
-            var expected = new[]
+            var expectedLabels = new[]
+            {
+                "Fragment co-elution (sum)",            // 0  fragment_coelution_sum
+                "Fragment co-elution (max)",            // 1  fragment_coelution_max
+                "Co-eluting fragment count",            // 2  n_coeluting_fragments
+                "Peak apex intensity",                  // 3  peak_apex
+                "Peak area",                            // 4  peak_area
+                "Peak sharpness",                       // 5  peak_sharpness
+                "Cross-correlation (xcorr)",            // 6  xcorr
+                "Consecutive ion series",               // 7  consecutive_ions
+                "Explained intensity",                  // 8  explained_intensity
+                "Mass error (signed mean)",             // 9  mass_accuracy_deviation_mean
+                "Mass error (abs mean)",                // 10 abs_mass_accuracy_deviation_mean
+                "Retention time difference (signed)",   // 11 rt_deviation
+                "Retention time difference (abs)",      // 12 abs_rt_deviation
+                "MS1 precursor co-elution",             // 13 ms1_precursor_coelution
+                "MS1 isotope dot-product",              // 14 ms1_isotope_cosine
+                "Median-polish cosine",                 // 15 median_polish_cosine
+                "Median-polish residual ratio",         // 16 median_polish_residual_ratio
+                "SG-weighted xcorr",                    // 17 sg_weighted_xcorr
+                "SG-weighted cosine",                   // 18 sg_weighted_cosine
+                "Median-polish min fragment R2",        // 19 median_polish_min_fragment_r2
+                "Median-polish residual correlation",   // 20 median_polish_residual_correlation
+            };
+            var expectedReversed = new[]
             {
                 false, // 0  fragment_coelution_sum
                 false, // 1  fragment_coelution_max
@@ -437,65 +467,29 @@ namespace pwiz.OspreySharp.Test
                 true,  // 20 median_polish_residual_correlation (lower is better)
             };
 
-            var flags = OspreyFeatureCalculators.GetReversedScoreFlags();
-            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, flags.Length);
-            Assert.AreEqual(expected.Length, flags.Length);
-            for (int i = 0; i < expected.Length; i++)
-            {
-                Assert.AreEqual(expected[i], flags[i],
-                    string.Format("IsReversedScore[{0}] ({1}) mismatch",
-                        i, OspreyFeatureCalculators.Get(i).Name));
-                // The vector must agree with the SPI property on each calculator.
-                Assert.AreEqual(OspreyFeatureCalculators.Get(i).IsReversedScore, flags[i]);
-            }
-        }
+            // Synthetic machine names to verify pass-through (BuildFeatureInfos sources
+            // the name from the caller, not the calculator).
+            var names = new string[OspreyFeatureCalculators.FeatureCount];
+            for (int i = 0; i < names.Length; i++)
+                names[i] = string.Format("feat_{0}", i);
 
-        /// <summary>
-        /// The per-feature human-friendly (Skyline-style) display labels in PIN index
-        /// order. Hard-codes the oracle so a future calculator reorder, or an edited
-        /// <see cref="IOspreyFeatureCalculator.DisplayName"/>, fails loudly. The labels
-        /// are owned by each calculator class (single source of truth), surfaced as a
-        /// vector by <see cref="OspreyFeatureCalculators.GetFeatureLabels"/> for the
-        /// FDR layer's post-training contribution report.
-        /// </summary>
-        [TestMethod]
-        public void TestGetFeatureLabels()
-        {
-            var expected = new[]
+            var infos = OspreyFeatureCalculators.BuildFeatureInfos(names);
+            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, infos.Length);
+            Assert.AreEqual(expectedLabels.Length, infos.Length);
+            Assert.AreEqual(expectedReversed.Length, infos.Length);
+            for (int i = 0; i < infos.Length; i++)
             {
-                "Fragment co-elution (sum)",            // 0  fragment_coelution_sum
-                "Fragment co-elution (max)",            // 1  fragment_coelution_max
-                "Co-eluting fragment count",            // 2  n_coeluting_fragments
-                "Peak apex intensity",                  // 3  peak_apex
-                "Peak area",                            // 4  peak_area
-                "Peak sharpness",                       // 5  peak_sharpness
-                "Cross-correlation (xcorr)",            // 6  xcorr
-                "Consecutive ion series",               // 7  consecutive_ions
-                "Explained intensity",                  // 8  explained_intensity
-                "Mass error (signed mean)",             // 9  mass_accuracy_deviation_mean
-                "Mass error (abs mean)",                // 10 abs_mass_accuracy_deviation_mean
-                "Retention time difference (signed)",   // 11 rt_deviation
-                "Retention time difference (abs)",      // 12 abs_rt_deviation
-                "MS1 precursor co-elution",             // 13 ms1_precursor_coelution
-                "MS1 isotope dot-product",              // 14 ms1_isotope_cosine
-                "Median-polish cosine",                 // 15 median_polish_cosine
-                "Median-polish residual ratio",         // 16 median_polish_residual_ratio
-                "SG-weighted xcorr",                    // 17 sg_weighted_xcorr
-                "SG-weighted cosine",                   // 18 sg_weighted_cosine
-                "Median-polish min fragment R2",        // 19 median_polish_min_fragment_r2
-                "Median-polish residual correlation",   // 20 median_polish_residual_correlation
-            };
-
-            var labels = OspreyFeatureCalculators.GetFeatureLabels();
-            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, labels.Length);
-            Assert.AreEqual(expected.Length, labels.Length);
-            for (int i = 0; i < expected.Length; i++)
-            {
-                Assert.AreEqual(expected[i], labels[i],
+                Assert.AreEqual(names[i], infos[i].Name,
+                    string.Format("Name[{0}] pass-through mismatch", i));
+                Assert.AreEqual(expectedLabels[i], infos[i].Label,
                     string.Format("DisplayName[{0}] ({1}) mismatch",
                         i, OspreyFeatureCalculators.Get(i).Name));
-                // The vector must agree with the SPI property on each calculator.
-                Assert.AreEqual(OspreyFeatureCalculators.Get(i).DisplayName, labels[i]);
+                Assert.AreEqual(expectedReversed[i], infos[i].IsReversedScore,
+                    string.Format("IsReversedScore[{0}] ({1}) mismatch",
+                        i, OspreyFeatureCalculators.Get(i).Name));
+                // The vector must agree with the SPI properties on each calculator.
+                Assert.AreEqual(OspreyFeatureCalculators.Get(i).DisplayName, infos[i].Label);
+                Assert.AreEqual(OspreyFeatureCalculators.Get(i).IsReversedScore, infos[i].IsReversedScore);
             }
         }
 

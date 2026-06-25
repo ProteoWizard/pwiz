@@ -397,9 +397,12 @@ namespace pwiz.OspreySharp.Test
             var config = new PercolatorConfig
             {
                 MaxIterations = 3,
-                FeatureNames = new[] { "feat_a", "feat_b", "feat_c" },
-                FeatureLabels = new[] { "Feature A", "Feature B", "Feature C" },
-                ReversedScore = new[] { false, true, false }
+                FeatureInfos = new[]
+                {
+                    new OspreyFeatureInfo("feat_a", "Feature A", false),
+                    new OspreyFeatureInfo("feat_b", "Feature B", true),
+                    new OspreyFeatureInfo("feat_c", "Feature C", false)
+                }
             };
 
             string report;
@@ -447,7 +450,7 @@ namespace pwiz.OspreySharp.Test
             // row must agree with reversed XOR (coefficient < 0).
             for (int j = 0; j < 3; j++)
             {
-                bool expectedFlag = config.ReversedScore[j] ^ (features[j].Coefficient < 0.0);
+                bool expectedFlag = features[j].IsReversedScore ^ (features[j].Coefficient < 0.0);
                 Assert.AreEqual(expectedFlag, features[j].IsUnexpectedDirection,
                     string.Format("Feature {0} object flag mismatch (weight={1})",
                         (char)('A' + j), features[j].Coefficient));
@@ -500,12 +503,15 @@ namespace pwiz.OspreySharp.Test
                 sumTarget[j] = nTarget * (1.0 + j);   // target mean = 1 + j
                 sumDecoy[j] = nDecoy * (0.0 + j);     // decoy mean  = j  -> gap = 1
             }
-            var names = new[] { "feat_a", "feat_b", "feat_c" };
-            var labels = new[] { "Feature A", "Feature B", "Feature C" };
-            var reversed = new[] { false, true, false };
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_a", "Feature A", false),
+                new OspreyFeatureInfo("feat_b", "Feature B", true),
+                new OspreyFeatureInfo("feat_c", "Feature C", false)
+            };
 
             var contributions = new FeatureContributions(avgWeights, sumTarget, sumDecoy,
-                nTarget, nDecoy, names, labels, reversed);
+                nTarget, nDecoy, featureInfos);
 
             Assert.IsFalse(contributions.IsDegenerate);
             Assert.IsTrue(contributions.Composite > 0.0);
@@ -520,11 +526,11 @@ namespace pwiz.OspreySharp.Test
             {
                 var f = contributions.Features[j];
                 Assert.AreEqual(j, f.Index);
-                Assert.AreEqual(labels[j], f.Label);
+                Assert.AreEqual(featureInfos[j].Label, f.Label);
                 Assert.AreEqual(avgWeights[j], f.Coefficient);
                 Assert.AreEqual(1.0, f.TargetDecoyMeanGap, 1e-12);   // gap is 1 for every feature
                 Assert.AreEqual(avgWeights[j], f.Weighted, 1e-12);   // w_j * 1.0
-                bool expectedFlag = reversed[j] ^ (avgWeights[j] < 0.0);
+                bool expectedFlag = featureInfos[j].IsReversedScore ^ (avgWeights[j] < 0.0);
                 Assert.AreEqual(expectedFlag, f.IsUnexpectedDirection);
             }
 
