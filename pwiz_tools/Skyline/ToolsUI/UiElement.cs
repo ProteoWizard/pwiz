@@ -189,114 +189,61 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // get_actions / get_children apply to every element (not one capability kind), so they target the
-        // base UiElement type; they are reads (mustBeEnabled: false, returnsValue: true).
-        public static readonly UiAction GetActions = SimpleAction<UiElement>(
+        // base UiElement type; they are reads (mustBeEnabled: false, and SimpleFunction marks them as
+        // returning a value).
+        public static readonly UiAction GetActions = SimpleFunction<UiElement>(
             @"GetActions", e => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray(),
-            mustBeEnabled: false, returnsValue: true);
+            mustBeEnabled: false);
 
-        public static readonly UiAction GetChildren = SimpleAction<UiElement>(
-            @"GetChildren", e => e.GetControlInfos(), mustBeEnabled: false, returnsValue: true);
+        public static readonly UiAction GetChildren = SimpleFunction<UiElement>(
+            @"GetChildren", e => e.GetControlInfos(), mustBeEnabled: false);
 
         // A void action (click, value set, item check, ...) is posted fire-and-forget; only a value action
         // (get_value, get_grid_text) is run synchronously inside the dialog-watch -- see UiAction.ReturnsValue.
         public static readonly UiAction Click = SimpleAction<IClickableElement>(
-            @"Click", e =>
-            {
-                e.Click();
-                return null;
-            });
+            @"Click", e => { e.Click(); });
 
-        public static readonly UiAction GetValue = SimpleAction<UiElement>(
-            @"GetValue", e => UiElement.ConvertValue(e.Value), mustBeEnabled: false, returnsValue: true);
+        public static readonly UiAction GetValue = SimpleFunction<UiElement>(
+            @"GetValue", e => UiElement.ConvertValue(e.Value), mustBeEnabled: false);
 
         public static readonly UiAction SetValue = SimpleAction<UiElement, object>(
-            @"SetValue", (e, value) =>
-            {
-                e.SetValue(UiElement.ConvertValue(value));
-                return null;
-            });
+            @"SetValue", (e, value) => e.SetValue(UiElement.ConvertValue(value)));
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
-            @"CheckItem", (e, item) =>
-            {
-                e.SetItemChecked(item, true);
-                return null;
-            });
+            @"CheckItem", (e, item) => e.SetItemChecked(item, true));
 
         public static readonly UiAction UncheckItem = SimpleAction<ICheckItemsElement, string>(
-            @"UncheckItem", (e, item) =>
-            {
-                e.SetItemChecked(item, false);
-                return null;
-            });
+            @"UncheckItem", (e, item) => e.SetItemChecked(item, false));
 
         public static readonly UiAction SelectItem = SimpleAction<ISelectItemsElement, string>(
-            @"SelectItem", (e, item) =>
-            {
-                e.SetItemSelected(item, true);
-                return null;
-            });
+            @"SelectItem", (e, item) => e.SetItemSelected(item, true));
 
         public static readonly UiAction UnselectItem = SimpleAction<ISelectItemsElement, string>(
-            @"UnselectItem", (e, item) =>
-            {
-                e.SetItemSelected(item, false);
-                return null;
-            });
+            @"UnselectItem", (e, item) => e.SetItemSelected(item, false));
 
         public static readonly UiAction SetSelectedIndex = SimpleAction<ISelectItemsElement, object>(
-            @"SetSelectedIndex", (e, arg) =>
-            {
-                e.SetSelectedIndex(UiValue.ToInt(arg));
-                return null;
-            });
+            @"SetSelectedIndex", (e, arg) => e.SetSelectedIndex(UiValue.ToInt(arg)));
 
-        public static readonly UiAction GetGridText = SimpleAction<GridElement>(
-            @"GetGridText", e => e.GetGridText(), mustBeEnabled: false, returnsValue: true);
+        public static readonly UiAction GetGridText = SimpleFunction<GridElement>(
+            @"GetGridText", e => e.GetGridText(), mustBeEnabled: false);
 
         public static readonly UiAction SetGridText = SimpleAction<GridElement, string>(
-            @"SetGridText", (e, text) =>
-            {
-                e.SetGridText(text);
-                return null;
-            });
+            @"SetGridText", (e, text) => e.SetGridText(text));
 
         public static readonly UiAction SetCurrentCellAddress = SimpleAction<GridElement, object>(
-            @"SetCurrentCellAddress", (e, arg) =>
-            {
-                var cell = UiValue.ToColumnRow(arg);
-                e.SetCurrentCellAddress(cell[0], cell[1]);
-                return null;
-            });
+            @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddress(cell[0], cell[1]); });
 
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
-            @"Expand", (e, path) =>
-            {
-                e.Expand(path);
-                return null;
-            });
+            @"Expand", (e, path) => e.Expand(path));
 
         public static readonly UiAction Collapse = SimpleAction<IExpandCollapseElement, object>(
-            @"Collapse", (e, path) =>
-            {
-                e.Collapse(path);
-                return null;
-            });
+            @"Collapse", (e, path) => e.Collapse(path));
 
         public static readonly UiAction SelectTab = SimpleAction<ISelectTabElement, string>(
-            @"SelectTab", (e, tab) =>
-            {
-                e.SelectTab(tab);
-                return null;
-            });
+            @"SelectTab", (e, tab) => e.SelectTab(tab));
 
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
-        public static readonly UiAction Accept = SimpleAction<IFormElement>(
-            @"Accept", e =>
-            {
-                e.Accept();
-                return null;
-            });
+        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept());
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
@@ -314,15 +261,29 @@ namespace pwiz.Skyline.ToolsUI
                 string.Equals(action.Name, normalized, StringComparison.OrdinalIgnoreCase));
         }
 
-        public static UiAction SimpleAction<T>(string name, Func<T, object> action, bool mustBeEnabled = true, bool returnsValue = false)
+        public static UiAction SimpleFunction<T>(string name, Func<T, object> action, bool mustBeEnabled = true)
         {
-            return SimpleAction<T, object>(name, (element, arg) => action(element), mustBeEnabled, returnsValue);
+            return SimpleFunction<T, object>(name, (element, arg) => action(element), mustBeEnabled);
         }
 
-        public static UiAction SimpleAction<T, TArg>(string name, Func<T, TArg, object> action,
-            bool mustBeEnabled = true, bool returnsValue = false)
+        public static UiAction SimpleAction<T>(string name, Action<T> action, bool mustBeEnabled = true)
         {
-            return new SimpleActionImpl<T, TArg>(name, action, mustBeEnabled) { ReturnsValue = returnsValue };
+            var uiAction = SimpleAction<T, object>(name, (element, _) => action(element), mustBeEnabled);
+            return uiAction;
+        }
+
+        public static UiAction SimpleFunction<T, TArg>(string name, Func<T, TArg, object> action,
+            bool mustBeEnabled = true)
+        {
+            return new SimpleActionImpl<T, TArg>(name, action, mustBeEnabled) { ReturnsValue = true };
+        }
+        public static UiAction SimpleAction<T, TArg>(string name, Action<T, TArg> action, bool mustBeEnabled = true)
+        {
+            return new SimpleActionImpl<T, TArg>(name, (element, arg) =>
+            {
+                action(element, arg);
+                return null;
+            }, mustBeEnabled);
         }
 }
 
