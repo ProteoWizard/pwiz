@@ -52,7 +52,7 @@ namespace pwiz.OspreySharp.Core
     /// </summary>
     public sealed class ProgressReporter : IDisposable
     {
-        private readonly int _total;
+        private readonly long _total;
         private readonly string _indent;
         private readonly double _intervalSeconds;
         private readonly Stopwatch _stopwatch;
@@ -65,11 +65,14 @@ namespace pwiz.OspreySharp.Core
         /// units, printing the "&lt;activity&gt;..." heading immediately.
         /// </summary>
         /// <param name="activity">Heading text printed on construction (without the trailing "...").</param>
-        /// <param name="total">Total number of units; percent is reported as current/total.</param>
+        /// <param name="total">Total number of units; percent is reported as current/total. A
+        /// <see cref="long"/> so byte counts (mzML reads) and row counts (parquet writes) on
+        /// Astral-class data can exceed <see cref="int.MaxValue"/> without overflow; an
+        /// <see cref="int"/> argument widens implicitly.</param>
         /// <param name="indent">Leading whitespace for the heading so it lines up with the
         /// matching completion line; the percent lines are indented one level (2 spaces) deeper.</param>
         /// <param name="intervalSeconds">Minimum seconds between percent lines (timer throttle).</param>
-        public ProgressReporter(string activity, int total, string indent = "", double intervalSeconds = 1.0)
+        public ProgressReporter(string activity, long total, string indent = "", double intervalSeconds = 1.0)
         {
             _total = total;
             _indent = indent;
@@ -83,7 +86,7 @@ namespace pwiz.OspreySharp.Core
         /// parallel workers. Prints a throttled percent only when the percent advances and the
         /// report interval has elapsed.
         /// </summary>
-        public void Report(int current)
+        public void Report(long current)
         {
             lock (_lock)
             {
