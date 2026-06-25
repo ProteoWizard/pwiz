@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using JetBrains.Annotations;
@@ -64,6 +65,11 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A tab control whose tab can be selected by the tab's visible text.</summary>
     public interface ISelectTabElement { void SelectTab(string tabText); }
+
+    /// <summary>An element a paste (Ctrl+V) can be sent to, by raising the control's own key handler -- for
+    /// the tutorial steps that say to paste into a particular window. The element marshals to its UI thread,
+    /// so Paste may be called from the connector's worker thread.</summary>
+    public interface IPasteElement { void Paste(); }
 
     // ---- Actions --------------------------------------------------------------------------------
 
@@ -245,12 +251,16 @@ namespace pwiz.Skyline.ToolsUI
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
         public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept());
 
+        // Sends Ctrl+V to a control by raising its key handler -- for the tutorial steps that paste into a
+        // particular window.
+        public static readonly UiAction Paste = SimpleAction<IPasteElement>(@"Paste", e => e.Paste());
+
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, CheckItem, UncheckItem, SelectItem,
             UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
-            Collapse, SelectTab, Accept
+            Collapse, SelectTab, Accept, Paste
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.
@@ -742,7 +752,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>Base for an element backed by a WinForms <see cref="Control"/>. Every control is clickable
     /// (see <see cref="Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
     /// capability interface.</summary>
-    internal abstract class ControlElement : UiComponent, IClickableElement
+    internal abstract class ControlElement : UiComponent, IClickableElement, IPasteElement
     {
         protected ControlElement(Control control) { Control = control; }
 
@@ -800,6 +810,17 @@ namespace pwiz.Skyline.ToolsUI
                     @"The control '{0}' cannot be clicked: it is not a button. Set its value, or act on the button/menu item that triggers it.",
                     Label ?? NullIfEmpty(Name) ?? ElementType.Name));
             InvokeOnUiThread(button.PerformClick);
+        }
+
+        // Control.OnKeyDown is protected, so reach it by reflection to raise the control's own key handling.
+        private static readonly MethodInfo ON_KEY_DOWN =
+            typeof(Control).GetMethod(@"OnKeyDown", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        // Sends Ctrl+V to the control by raising its OnKeyDown, the way pressing the keys would -- the control
+        // pastes if it handles paste there. Runs on the UI thread.
+        public void Paste()
+        {
+            InvokeOnUiThread(() => ON_KEY_DOWN.Invoke(Control, new object[] { new KeyEventArgs(Keys.Control | Keys.V) }));
         }
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
