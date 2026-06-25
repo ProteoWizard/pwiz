@@ -99,11 +99,21 @@ namespace pwiz.OspreySharp.IO
             // 16 MB FileStream buffer amortizes per-Read overhead. Do NOT use
             // FileOptions.SequentialScan -- on Windows that hint discards
             // pages after read, defeating OS file cache reuse on repeat runs.
+            //
+            // The parse is byte-driven, so a ProgressStream over the FileStream
+            // reports a throttled percent against the file length -- on Astral
+            // this single read runs 40+ seconds and otherwise emits nothing.
+            // XmlReaderSettings.CloseInput defaults false, so the XmlReader does
+            // not close the FileStream; the ProgressStream does not own it
+            // either, so the FileStream is closed exactly once by its own using.
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
                 FileShare.Read, 16 * 1024 * 1024))
+            using (var progress = new ProgressReporter(
+                string.Format("Reading {0}", Path.GetFileName(path)), stream.Length, string.Empty, 2.0))
+            using (var progressStream = new ProgressStream(stream, progress))
             {
                 var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
-                using (var reader = XmlReader.Create(stream, settings))
+                using (var reader = XmlReader.Create(progressStream, settings))
                 {
                     while (reader.Read())
                     {
