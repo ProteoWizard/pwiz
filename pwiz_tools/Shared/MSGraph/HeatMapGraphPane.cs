@@ -126,6 +126,10 @@ namespace pwiz.MSGraph
 
             var usedIntensities = new HashSet<int>();
             foreach (var heatPoint in points) {
+                // HeatMapData cells only retain Z > 0 points, but guard defensively so a log
+                // scale never hits Math.Log(0) = -Infinity
+                if (heatPoint.Point.Z <= 0)
+                    continue;
                 // A log scale produces a better visual display.
                 double intensityValue = (logScale ? Math.Log(heatPoint.Point.Z) : heatPoint.Point.Z) * scale;
                 int intensity = Math.Max(0, Math.Min((int)intensityValue, curves.Length - 1));
