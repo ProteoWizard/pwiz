@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.Controls.Clustering;
@@ -303,11 +302,10 @@ namespace pwiz.Skyline.Controls.Databinding
         /// Returns all the grid's data (column headers followed by every row) as a tab-separated
         /// string, the same content as Copy All, showing a progress dialog if it takes a while.
         /// Returns null if cancelled -- by the user (the progress dialog's Cancel button) or by
-        /// <paramref name="cancellationToken"/>.
         /// </summary>
-        public string GetCopyText(CancellationToken cancellationToken)
+        public string GetCopyAllText()
         {
-            return BindingListSource.ViewContext.CopyToString(this, BindingListSource, cancellationToken);
+            return BindingListSource.ViewContext.GetCopyAllText(this, BindingListSource);
         }
 
         public DataGridViewColumn FindColumn(PropertyPath propertyPath)

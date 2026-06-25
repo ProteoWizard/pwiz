@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Attaches a handler to a plain DataGridView (one not backed by a BindingListSource) so a Ctrl-V
         /// there pastes tab-separated text into its editable cells, going right and down from the current
-        /// cell. Use <see cref="BoundDataGridViewPasteHandler.Attach"/> for a grid bound to a Skyline document.
+        /// cell.
         /// </summary>
         public static DataGridViewPasteHandler Attach(DataGridView dataGridView)
         {

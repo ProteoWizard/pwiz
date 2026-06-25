@@ -19,10 +19,12 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -39,28 +41,24 @@ namespace pwiz.Skyline.ToolsUI
     // through that interface's method. A control's element class declares the capabilities it has by
     // implementing these, instead of a per-element switch over an action enum.
 
-    /// <summary>An element a click acts on (a button, a field, a menu item, a native dialog button). The
-    /// element marshals its own gesture -- a posted BM_CLICK, a PerformClick on the UI thread, a native
-    /// Accept/Cancel -- so Click may be called from the connector's worker thread.</summary>
+    /// <summary>An element a click acts on (a button, a menu item, a custom clickable tile). The element
+    /// marshals its own gesture -- a posted BM_CLICK, a PerformClick on the UI thread -- so Click may be
+    /// called from the connector's worker thread.</summary>
     public interface IClickableElement { void Click(); }
-
-    /// <summary>An element whose value can be read (a text box, a combo box, a check state, a list of
-    /// checked items).</summary>
-    public interface IReadValueElement { string GetValue(); }
-
-    /// <summary>An element whose value can be set (a text box, a combo box, a check state, a file name).</summary>
-    public interface IWriteValueElement { void SetValue(string value); }
 
     /// <summary>An element whose items are checked/unchecked by their visible text (a CheckedListBox, a
     /// TreeView, a ListView, the pick-list pop-up).</summary>
     public interface ICheckItemsElement { void SetItemChecked(string item, bool isChecked); }
 
-    /// <summary>An element whose items are selected/unselected by their visible text (a list box, a tree,
-    /// a list view).</summary>
-    public interface ISelectItemsElement { void SetItemSelected(string item, bool isSelected); }
-
-    /// <summary>A list whose selection can be moved to a given index.</summary>
-    public interface ISelectIndexElement { void SetSelectedIndex(int index); }
+    /// <summary>An element whose items are selected by their visible text (select_item / unselect_item) or
+    /// by index (set_selected_index) -- a list box, a tree, a list view. Anything with a selected index also
+    /// has the concept of selecting items, so the two are one capability; setting the selected index clears
+    /// any other selection and selects only that one item.</summary>
+    public interface ISelectItemsElement
+    {
+        void SetItemSelected(string item, bool isSelected);
+        void SetSelectedIndex(int index);
+    }
 
     /// <summary>A tree whose nodes can be expanded/collapsed by a path (an array of child names/indexes).</summary>
     public interface IExpandCollapseElement { void Expand(object path); void Collapse(object path); }
@@ -168,9 +166,7 @@ namespace pwiz.Skyline.ToolsUI
         /// an element type) and whose Invoke is a single call <c>func(element, argument)</c> -- so an action
         /// needs no class of its own, just an entry below. The argument is handed to the func as
         /// <typeparamref name="TArg"/> (the JSON value is already a string or the raw object; an action that
-        /// wants an int or a cell parses it inside its func). <paramref name="mustBeEnabled"/> is false for a
-        /// pure read (it may also be inspected off-screen), which also passes <c>returnsValue: true</c> so the
-        /// dispatch waits for its result instead of posting it fire-and-forget.</summary>
+        /// wants an int or a cell parses it inside its func).</summary>
         private sealed class SimpleActionImpl<T, TArg> : UiAction
         {
             private readonly Func<T, TArg, object> _invoke;
@@ -201,7 +197,7 @@ namespace pwiz.Skyline.ToolsUI
             mustBeEnabled: false, returnsValue: true);
 
         public static readonly UiAction GetChildren = SimpleAction<UiElement>(
-            @"GetChildren", e => e.GetChildren(), mustBeEnabled: false, returnsValue: true);
+            @"GetChildren", e => e.GetControlInfos(), mustBeEnabled: false, returnsValue: true);
 
         // A void action (click, value set, item check, ...) is posted fire-and-forget; only a value action
         // (get_value, get_grid_text) is run synchronously inside the dialog-watch -- see UiAction.ReturnsValue.
@@ -212,13 +208,13 @@ namespace pwiz.Skyline.ToolsUI
                 return null;
             });
 
-        public static readonly UiAction GetValue = SimpleAction<IReadValueElement>(
-            @"GetValue", e => e.GetValue(), mustBeEnabled: false, returnsValue: true);
+        public static readonly UiAction GetValue = SimpleAction<UiElement>(
+            @"GetValue", e => e.Value, mustBeEnabled: false, returnsValue: true);
 
-        public static readonly UiAction SetValue = SimpleAction<IWriteValueElement, string>(
+        public static readonly UiAction SetValue = SimpleAction<UiElement, object>(
             @"SetValue", (e, value) =>
             {
-                e.SetValue(value);
+                e.SetValue(UiElement.ConvertValue(value));
                 return null;
             });
 
@@ -250,7 +246,7 @@ namespace pwiz.Skyline.ToolsUI
                 return null;
             });
 
-        public static readonly UiAction SetSelectedIndex = SimpleAction<ISelectIndexElement, object>(
+        public static readonly UiAction SetSelectedIndex = SimpleAction<ISelectItemsElement, object>(
             @"SetSelectedIndex", (e, arg) =>
             {
                 e.SetSelectedIndex(UiValue.ToInt(arg));
@@ -335,8 +331,9 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>
     /// A connector-facing view of one UI element on a form. Subclasses wrap a specific kind of control
     /// (or a ToolStrip item) and declare the actions they support by implementing the matching capability
-    /// interfaces (<see cref="IClickableElement"/>, <see cref="IWriteValueElement"/>, ...); each
-    /// <see cref="UiAction"/> targets one of those interfaces, so the verbs act polymorphically instead of
+    /// interfaces (<see cref="IClickableElement"/>, <see cref="ICheckItemsElement"/>, ...); each
+    /// <see cref="UiAction"/> targets one of those interfaces (or, for the universal verbs like get_value /
+    /// set_value, the <see cref="UiElement"/> base), so the verbs act polymorphically instead of
     /// switching on WinForms types. Each element also knows its own <see cref="Label"/> (the visible text
     /// that identifies it) and its <see cref="Children"/>, so matching and form enumeration are a single
     /// recursive walk.
@@ -421,8 +418,51 @@ namespace pwiz.Skyline.ToolsUI
             return form;
         }
 
-        /// <summary>The element's current value, for a value control (else null) -- informational.</summary>
-        public virtual string Value => null;
+        /// <summary>The element's current value -- null, or one of the three types <see cref="ConvertValue"/>
+        /// produces (a bool, a double, or a string). The default control has no value. Exposed as get_value
+        /// and echoed in each <see cref="ControlInfo"/>.</summary>
+        public virtual object Value => null;
+
+        /// <summary>Sets this element's value (exposed as set_value); the argument has been run through
+        /// <see cref="ConvertValue"/>, so it is a bool, a double, or a string. The default control has no
+        /// settable value and throws; a value control (a text box, a combo box, a check state, a grid cell)
+        /// overrides this.</summary>
+        public virtual void SetValue(object value) =>
+            throw new InvalidOperationException(LlmInstruction.Format(
+                @"Setting a value is not supported for this control."));
+
+        /// <summary>Coerces an arbitrary value to the only types a UiElement value may take: null stays null,
+        /// a bool stays a bool, any numeric type becomes a double, and everything else becomes its string
+        /// form. Applied wherever a raw value enters the value system (a grid cell read, a set_value
+        /// argument) so <see cref="Value"/> is always one of these three types.</summary>
+        public static object ConvertValue(object value)
+        {
+            switch (value)
+            {
+                case null: return null;
+                case bool b: return b;
+                case string s: return s;
+            }
+            if (value is IConvertible convertible)
+            {
+                switch (convertible.GetTypeCode())
+                {
+                    case TypeCode.Byte:
+                    case TypeCode.SByte:
+                    case TypeCode.Int16:
+                    case TypeCode.UInt16:
+                    case TypeCode.Int32:
+                    case TypeCode.UInt32:
+                    case TypeCode.Int64:
+                    case TypeCode.UInt64:
+                    case TypeCode.Single:
+                    case TypeCode.Double:
+                    case TypeCode.Decimal:
+                        return convertible.ToDouble(CultureInfo.InvariantCulture);
+                }
+            }
+            return value.ToString();
+        }
 
         /// <summary>Finds the one element this verb's <paramref name="text"/> names that supports
         /// <paramref name="action"/>: the single rule the by-text verbs (ClickFormButton, SetFormValue,
@@ -589,7 +629,7 @@ namespace pwiz.Skyline.ToolsUI
         /// acting. The form walk is one level at a time -- GetControls and the get_children action both
         /// return this; descend by calling GetChildren on a child. Each child's Index is its position among
         /// the siblings of its same Type, so adding a control of another Type never shifts it.</summary>
-        public virtual ControlInfo[] GetChildren()
+        public virtual ControlInfo[] GetControlInfos()
         {
             var indexByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var result = new List<ControlInfo>();
@@ -603,6 +643,7 @@ namespace pwiz.Skyline.ToolsUI
                     Name = NullIfEmpty(child.Name),
                     Enabled = child.IsEnabled,
                     Visible = child.IsVisible,
+                    Value = child.Value,
                 });
             }
             return result.ToArray();
@@ -712,7 +753,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A managed UI element that belongs to a form: a control (<see cref="ControlElement"/>) or a
     /// menu/toolbar item (<see cref="ToolStripItemElement"/>). Unlike the form-less base <see cref="UiElement"/>
-    /// (which marshals through the main window) or a native dialog element (<see cref="NativeElement"/>, which
+    /// (which marshals through the main window) or a native dialog element (<see cref="NativeDialog"/>, which
     /// runs inline), it knows its <see cref="FormElement"/>, so it both marshals and gates through that form: a
     /// form on its own thread (e.g. a BackgroundThreadLongWaitDlg) is driven through its own message loop, not
     /// the main window's, and a modal blocking the form stops the element being acted on.</summary>
@@ -818,7 +859,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (Control is IButtonControl && !string.IsNullOrEmpty(Control.Text))
                     return Control.Text;
                 var previous = Control.FindForm()?.GetNextControl(Control, false);
-                return previous is System.Windows.Forms.Label label ? label.Text : null;
+                return (previous as Label)?.Text;
             }
         }
 
@@ -1003,7 +1044,7 @@ namespace pwiz.Skyline.ToolsUI
             ControlInfo[] result = null;
             JsonUiService.RunWithDialogWatch(() =>
             {
-                result = InvokeOnUiThread(GetChildren);
+                result = InvokeOnUiThread(GetControlInfos);
                 return true;
             });
             return result;
@@ -1102,11 +1143,7 @@ namespace pwiz.Skyline.ToolsUI
         });
 
         /// <summary>Invokes a menu item on this form's main menu by its '>'-separated path (e.g. "File &gt;
-        /// Import &gt; Peptide Search"). The path is resolved through the element model -- the menu is a
-        /// <see cref="ToolStripElement"/> over <see cref="System.Windows.Forms.Form.MainMenuStrip"/>, and each
-        /// segment is found by <see cref="FindElement"/> matching its visible text -- opening each level's
-        /// dropdown so items built on demand are present, then the leaf's click is posted fire-and-forget so a
-        /// menu item that opens a modal does not block.</summary>
+        /// Import &gt; Peptide Search").</summary>
         public void InvokeMenuItem(string menuPath)
         {
             if (Form.MainMenuStrip == null)
@@ -1134,61 +1171,58 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A checkbox: clickable (toggles via its handler -- from ButtonElement) and value-settable
     /// (sets the checked state).</summary>
-    internal sealed class CheckBoxElement : ButtonElement, IReadValueElement, IWriteValueElement
+    internal sealed class CheckBoxElement : ButtonElement
     {
         private readonly CheckBox _checkBox;
         public CheckBoxElement(CheckBox checkBox) : base(checkBox) { _checkBox = checkBox; }
-        public override string Value => _checkBox.Checked.ToString();
-        public string GetValue() => Value;
-        public void SetValue(string value) => _checkBox.Checked = UiValue.ParseBool(value);
+        public override object Value => _checkBox.Checked;
+        public override void SetValue(object value) => _checkBox.Checked = UiValue.ParseBool(value);
     }
 
     /// <summary>A radio button: clicking/setting it checks it (WinForms unchecks its siblings).</summary>
-    internal sealed class RadioButtonElement : ButtonElement, IReadValueElement, IWriteValueElement
+    internal sealed class RadioButtonElement : ButtonElement
     {
         private readonly RadioButton _radioButton;
         public RadioButtonElement(RadioButton radioButton) : base(radioButton) { _radioButton = radioButton; }
-        public override string Value => _radioButton.Checked.ToString();
-        public string GetValue() => Value;
-        public void SetValue(string value) => _radioButton.Checked = UiValue.ParseBool(value);
+        public override object Value => _radioButton.Checked;
+        public override void SetValue(object value) => _radioButton.Checked = UiValue.ParseBool(value);
     }
 
     /// <summary>A text box -- a caption-less field named by its adjacent label.</summary>
-    internal sealed class TextBoxElement : ControlElement, IReadValueElement, IWriteValueElement
+    internal sealed class TextBoxElement : ControlElement
     {
         private readonly TextBoxBase _textBox;
         public TextBoxElement(TextBoxBase textBox) : base(textBox) { _textBox = textBox; }
-        public override string Value => _textBox.Text;
-        public string GetValue() => _textBox.Text;
+        public override object Value => _textBox.Text;
         // A multi-line box parses/lays out on CRLF (what Enter inserts), so normalize bare newlines.
-        public void SetValue(string value) =>
-            _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value) : value;
+        public override void SetValue(object value) =>
+            _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value?.ToString()) : value?.ToString();
     }
 
     /// <summary>A combo box -- value set by selecting the matching item.</summary>
-    internal sealed class ComboBoxElement : ControlElement, IReadValueElement, IWriteValueElement
+    internal sealed class ComboBoxElement : ControlElement
     {
         private readonly ComboBox _comboBox;
         public ComboBoxElement(ComboBox comboBox) : base(comboBox) { _comboBox = comboBox; }
-        public override string Value => _comboBox.GetItemText(_comboBox.SelectedItem);
-        public string GetValue() => Value;
-        public void SetValue(string value)
+        public override object Value => _comboBox.GetItemText(_comboBox.SelectedItem);
+        public override void SetValue(object value)
         {
-            int index = _comboBox.FindStringExact(value);
+            var text = value?.ToString();
+            int index = _comboBox.FindStringExact(text);
             if (index < 0)
                 throw new ArgumentException(LlmInstruction.Format(
-                    @"No item '{0}' in combo box {1}.", value, _comboBox.Name));
+                    @"No item '{0}' in combo box {1}.", text, _comboBox.Name));
             _comboBox.SelectedIndex = index;
         }
     }
 
     /// <summary>A ListControl -- a ListBox or CheckedListBox. Select an item by index
     /// (set_selected_index) or by its text (select_item / unselect_item).</summary>
-    internal class ListControlElement<T> : ControlElement<T>, ISelectIndexElement, ISelectItemsElement
+    internal class ListControlElement<T> : ControlElement<T>, ISelectItemsElement
         where T : ListControl
     {
         public ListControlElement(T control) : base(control) { }
-        public void SetSelectedIndex(int index) => Control.SelectedIndex = index;
+        public void SetSelectedIndex(int index) => ListItems.SetSelectedIndex(Control, index);
         public void SetItemSelected(string item, bool isSelected) =>
             ListItems.SetSelected(Control, item, isSelected);
     }
@@ -1197,12 +1231,11 @@ namespace pwiz.Skyline.ToolsUI
     /// (check_item / uncheck_item) or toggled the way a user does it -- set_selected_index to the item, then
     /// click, which toggles the selected item's check. Its value is the checked items' text, one per line.</summary>
     internal sealed class CheckedListBoxElement : ListControlElement<CheckedListBox>,
-        ICheckItemsElement, IReadValueElement
+        ICheckItemsElement
     {
         public CheckedListBoxElement(CheckedListBox control) : base(control) { }
-        public override string Value =>
+        public override object Value =>
             string.Join(Environment.NewLine, Control.CheckedItems.Cast<object>().Select(Control.GetItemText));
-        public string GetValue() => Value;
         public void SetItemChecked(string item, bool isChecked) =>
             ListItems.SetChecked(Control, item, isChecked);
         // A click toggles the checked state of the selected item, the way a user's click/space does (move to
@@ -1230,6 +1263,7 @@ namespace pwiz.Skyline.ToolsUI
             ListItems.SetChecked(Control, item, isChecked);
         public void SetItemSelected(string item, bool isSelected) =>
             ListItems.SetSelected(Control, item, isSelected);
+        public void SetSelectedIndex(int index) => ListItems.SetSelectedIndex(Control, index);
     }
 
     /// <summary>A TreeView. Besides checking/selecting a node by text, a node is expanded or collapsed
@@ -1330,12 +1364,12 @@ namespace pwiz.Skyline.ToolsUI
     /// items, plus the ListControl select actions). When PopupPickList is reworked to host a real
     /// CheckedListBox, this special case can go away.</summary>
     internal sealed class PopupPickListElement : ListControlElement<ListBox>,
-        ICheckItemsElement, IReadValueElement
+        ICheckItemsElement
     {
         public PopupPickListElement(ListBox control) : base(control) { }
         private PopupPickList PickList => (PopupPickList) Control.FindForm();
         public override Type ElementType => typeof(CheckedListBox);
-        public override string Value
+        public override object Value
         {
             get
             {
@@ -1345,7 +1379,6 @@ namespace pwiz.Skyline.ToolsUI
                     Enumerable.Range(0, names.Count).Where(pickList.GetItemChecked).Select(i => names[i]));
             }
         }
-        public string GetValue() => Value;
         public void SetItemChecked(string item, bool isChecked) =>
             PickList.SetItemChecked(FindPickListIndex(item), isChecked);
         // A click toggles the selected item's check, like a user's click/space (move to the item first with
@@ -1423,6 +1456,42 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        // Selects only the item at the given index, clearing any other selection -- what set_selected_index
+        // does. (A control with a real SelectedIndex would already clear others, but a multi-select list or a
+        // tree/list-view would not, so the selection is cleared explicitly.)
+        public static void SetSelectedIndex(Control control, int index)
+        {
+            switch (control)
+            {
+                case ListBox listBox: // CheckedListBox derives from ListBox
+                    RequireIndexInRange(index, listBox.Items.Count, listBox.Name);
+                    listBox.ClearSelected();
+                    listBox.SetSelected(index, true);
+                    break;
+                case TreeView treeView:
+                    RequireIndexInRange(index, treeView.Nodes.Count, treeView.Name);
+                    treeView.SelectedNode = treeView.Nodes[index];
+                    break;
+                case ListView listView:
+                    RequireIndexInRange(index, listView.Items.Count, listView.Name);
+                    listView.SelectedItems.Clear();
+                    var listViewItem = listView.Items[index];
+                    listViewItem.Selected = true;
+                    listViewItem.EnsureVisible();
+                    break;
+                default:
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Setting the selected index is supported for a ListBox, TreeView, or ListView, not {0}.", control.Name));
+            }
+        }
+
+        private static void RequireIndexInRange(int index, int count, string controlName)
+        {
+            if (index < 0 || index >= count)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Index {0} is out of range; {1} has {2} items.", index, controlName, count));
+        }
+
         // Index of the best-matching item (by display text) in a ListBox. Throws if none.
         private static int FindListItemIndex(ListBox listBox, string item)
         {
@@ -1474,7 +1543,7 @@ namespace pwiz.Skyline.ToolsUI
         // The index of the best text match among count items (by the connector's label matching), or -1: the
         // first item that matches the key strictly, else the first that matches loosely (a strict match wins
         // over a loose one, the same ranking FindElement uses).
-        internal static int BestMatch(int count, Func<int, string> textOf, string key)
+        internal static int BestMatch(int count, [InstantHandle] Func<int, string> textOf, string key)
         {
             for (int i = 0; i < count; i++)
                 if (UiElement.TextMatches(textOf(i), key, true))
@@ -1624,6 +1693,27 @@ namespace pwiz.Skyline.ToolsUI
         public GridElement(DataGridView dataGridView) : base(dataGridView) { _dataGridView = dataGridView; }
         public DataGridView DataGridView => _dataGridView;
 
+        // get_value / set_value act on the single current cell (the one set_current_cell_address moved to);
+        // the whole grid is read/written in bulk with get_grid_text / set_grid_text. The value is null when
+        // there is no current cell.
+        public override object Value
+        {
+            get
+            {
+                var cell = _dataGridView.CurrentCell;
+                return cell == null ? null : ConvertValue(cell.Value);
+            }
+        }
+
+        public override void SetValue(object value)
+        {
+            var cell = _dataGridView.CurrentCell;
+            if (cell == null)
+                throw new ArgumentException(new LlmInstruction(
+                    @"The grid has no current cell -- move to one first with set_current_cell_address."));
+            cell.Value = value;
+        }
+
         // A grid carries no caption, so it is addressed by its control Name -- the one place the connector
         // matches on a name rather than on visible text (an empty name picks the form's single grid, handled
         // by FindElement). The name match is the same whether strict or loose.
@@ -1721,7 +1811,7 @@ namespace pwiz.Skyline.ToolsUI
             var bindingListSource = BindingListSource;
             return bindingListSource == null
                 ? base.GetGridText() // not bound yet -- read the cells directly
-                : bindingListSource.ViewContext.CopyToString(DataGridView, bindingListSource, CancellationToken);
+                : bindingListSource.ViewContext.GetCopyAllText(DataGridView, bindingListSource);
         }
 
         public override void SetGridText(string text)
@@ -1780,12 +1870,17 @@ namespace pwiz.Skyline.ToolsUI
     // Small value helpers shared by the value elements.
     internal static class UiValue
     {
-        public static bool ParseBool(string value) =>
-            bool.TryParse(value, out var parsed) ? parsed : value == @"1";
+        public static bool ParseBool(object value)
+        {
+            if (value is bool b)
+                return b;
+            var text = value?.ToString();
+            return bool.TryParse(text, out var parsed) ? parsed : text == @"1";
+        }
 
         // Converts any bare CR or LF to CRLF -- the line ending a multi-line TextBox uses for Enter.
         public static string NormalizeNewlines(string value) =>
-            value == null ? null : System.Text.RegularExpressions.Regex.Replace(value, @"\r\n?|\n", "\r\n");
+            value == null ? null : Regex.Replace(value, @"\r\n?|\n", "\r\n");
 
         // The [column, row] a set_current_cell_address value carries: a two-element integer array. An
         // in-process caller passes new[] { column, row }; over the wire it is the JSON array [column, row]
@@ -1800,9 +1895,9 @@ namespace pwiz.Skyline.ToolsUI
                     return new[] { x, y };
             }
             // An array/list (int[], object[], or a Newtonsoft JArray -- all IEnumerable).
-            else if (value is System.Collections.IEnumerable sequence && !(value is string))
+            else if (value is System.Collections.IEnumerable sequence)
             {
-                var cell = new System.Collections.Generic.List<int>();
+                var cell = new List<int>();
                 foreach (var item in sequence)
                     cell.Add(ToInt(item));
                 if (cell.Count == 2)

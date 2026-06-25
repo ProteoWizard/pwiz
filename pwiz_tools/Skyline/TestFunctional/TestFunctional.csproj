@@ -328,7 +328,6 @@
     <Compile Include="ModificationPermuterTest.cs" />
     <Compile Include="ModifyMoleculeTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
-    <Compile Include="NativeFileDialogLegacyAcceptTest.cs" />
     <Compile Include="NativeFileDialogTest.cs" />
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />

@@ -21,7 +21,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
@@ -53,13 +52,7 @@ namespace pwiz.Common.DataBinding
         /// <summary>Exports all of the rows of data to a file.</summary>
         void ExportToFile(Control owner, BindingListSource bindingListSource, String filename, char separator);
         void CopyAll(Control owner, BindingListSource bindingListSource);
-        /// <summary>
-        /// Returns all of the data (column headers followed by every row) as a tab-separated string --
-        /// the same content <see cref="CopyAll"/> puts on the clipboard -- showing a progress dialog if
-        /// it takes a while. Returns null if cancelled, either by the user (the progress dialog's Cancel
-        /// button) or by <paramref name="cancellationToken"/>.
-        /// </summary>
-        string CopyToString(Control owner, BindingListSource bindingListSource, CancellationToken cancellationToken);
+        string GetCopyAllText(Control owner, BindingListSource bindingListSource);
         ViewSpec NewView(Control owner, ViewGroup viewGroup);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec, ViewGroup viewGroup);
         ViewLayoutList GetViewLayoutList(ViewName viewName);

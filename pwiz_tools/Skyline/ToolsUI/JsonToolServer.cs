@@ -464,7 +464,7 @@ namespace pwiz.Skyline.ToolsUI
             else
             {
                 groupsLabel = @"Proteins/Lists";
-                moleculesLabel = doc?.DocumentType == SrmDocument.DOCUMENT_TYPE.mixed
+                moleculesLabel = doc.DocumentType == SrmDocument.DOCUMENT_TYPE.mixed
                     ? @"Peptides/Molecules"
                     : @"Peptides";
             }

@@ -316,8 +316,8 @@ namespace SkylineTool
     /// discover what is on a form -- and how to address it -- without reading the source: <see cref="Path"/>
     /// is the locator to pass back (to PerformAction), and the rest reports the control's enabled/visible
     /// state. <see cref="Name"/> is the internal control name -- informational only, the connector does not
-    /// match on it. Use the "get_value" action for the control's current value and "get_actions" for the
-    /// actions it supports -- both are left off here (a value can be expensive to compute).
+    /// match on it. <see cref="Value"/> is the control's current value (null, a bool, a double, or a string)
+    /// the same as the "get_value" action would return; "get_actions" lists the actions it supports.
     /// </summary>
     public class ControlInfo
     {
@@ -325,6 +325,7 @@ namespace SkylineTool
         public string Name { get; set; }
         public bool Enabled { get; set; }
         public bool Visible { get; set; }
+        public object Value { get; set; }
     }
 
     /// <summary>
@@ -359,7 +360,7 @@ namespace SkylineTool
     /// </summary>
     public class UiElementPath
     {
-        public UiElementPath(UiElementPath parent, string text, int? index, string type = null)
+        public UiElementPath(UiElementPath parent, string text, int? index, string type)
         {
             Parent = parent;
             Text = text;

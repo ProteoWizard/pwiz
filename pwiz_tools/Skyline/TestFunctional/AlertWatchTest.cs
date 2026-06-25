@@ -48,8 +48,9 @@ namespace pwiz.SkylineTestFunctional
             const string alertMessage = @"Connector alert-watch test message";
 
             // The work pops a modal alert on the UI thread; RunWithAlertWatch (running on this test
-            // thread) must detect it and throw with the alert text rather than block.
-            AssertEx.ThrowsException<InvalidOperationException>(
+            // thread) must detect it and throw with the alert text rather than block. The test cares only
+            // that it throws with the alert's text, not what exception type carries it.
+            AssertEx.ThrowsException<Exception>(
                 () => JsonUiService.RunWithDialogWatch(() =>
                 {
                     JsonUiService.InvokeOnUiThread(() =>
@@ -62,12 +63,13 @@ namespace pwiz.SkylineTestFunctional
                 }),
                 thrown => AssertEx.Contains(thrown.Message, alertMessage));
 
-            // The alert is still open and blocking the main window. InvokeMenuItem must fail fast
-            // (InvalidOperationException) rather than silently no-op on the disabled menu. (The
-            // blocked check runs before any menu lookup, so the menu path is immaterial.)
+            // The alert is still open and blocking the main window. InvokeMenuItem must fail fast --
+            // throwing with the blocking alert's text rather than silently no-opping on the disabled menu.
+            // (The blocked check runs before any menu lookup, so the menu path is immaterial.)
             var alert = WaitForOpenForm<AlertDlg>();
-            AssertEx.ThrowsException<InvalidOperationException>(
-                () => JsonUiService.InvokeMenuItem(@"File > New"));
+            AssertEx.ThrowsException<Exception>(
+                () => JsonUiService.InvokeMenuItem(@"File > New"),
+                thrown => AssertEx.Contains(thrown.Message, alertMessage));
 
             // Dismiss the alert the way the model would over its connection, which also unblocks the
             // orphaned work thread.

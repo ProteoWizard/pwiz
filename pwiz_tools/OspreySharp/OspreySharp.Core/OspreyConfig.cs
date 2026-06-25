@@ -149,6 +149,38 @@ namespace pwiz.OspreySharp.Core
         /// </summary>
         public bool Diagnostics { get; set; }
 
+        /// <summary>
+        /// --timestamp: prefix each output line with [yyyy/MM/dd HH:mm:ss]. Runtime
+        /// output decoration only -- not part of any identity hash.
+        /// </summary>
+        public bool IsTimeStamped { get; set; }
+
+        /// <summary>
+        /// --memstamp: prefix each output line with managed and private memory (MB).
+        /// Pairs with <see cref="IsTimeStamped"/> for perfviz. Runtime-only.
+        /// </summary>
+        public bool IsMemStamped { get; set; }
+
+        /// <summary>
+        /// --log-file: redirect all output to this file instead of stderr. Null leaves
+        /// output on stderr. Runtime-only.
+        /// </summary>
+        public string LogFilePath { get; set; }
+
+        /// <summary>
+        /// --perf-stats: emit the machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for
+        /// the perf tools (Test-PerfGate.ps1, Measure-Pipeline.ps1). Off by default so the
+        /// human log stays clean. Runtime-only.
+        /// </summary>
+        public bool PerfStats { get; set; }
+
+        /// <summary>
+        /// --verbose: show implementer-grade detail that is hidden by default (e.g. the
+        /// per-fold Percolator training iterations, which the default log collapses to one
+        /// line per round). Runtime-only.
+        /// </summary>
+        public bool Verbose { get; set; }
+
         /// <summary>Inter-replicate peak reconciliation settings.</summary>
         public ReconciliationConfig Reconciliation { get; set; } = new ReconciliationConfig();
 
@@ -191,7 +223,7 @@ namespace pwiz.OspreySharp.Core
         /// <summary>
         /// Pipeline-membership flag (read by each task's <c>IsIncluded</c>):
         /// include only the per-file fan-out, not the join. Set by both
-        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescore</c>; the
+        /// <c>--task PerFileScoring</c> and <c>--task PerFileRescoring</c>; the
         /// concrete behavior depends on the input type. With <c>-i</c> mzML it
         /// is the Stage 1-4 worker — each input produces a
         /// <c>{stem}.scores.parquet</c> next to it, no FDR, no blib. With
@@ -213,14 +245,14 @@ namespace pwiz.OspreySharp.Core
         /// having written the boundary files
         /// (<c>&lt;stem&gt;.&lt;phase&gt;-pass.fdr_scores.bin</c> and
         /// <c>&lt;stem&gt;.reconciliation.json</c>) for each input file.
-        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstJoin</c>.
+        /// Skips Stage 6 + 7 + 8. Set by <c>--task FirstPassFDR</c>.
         /// </summary>
         public bool StopAfterStage5 { get; set; }
 
         /// <summary>
         /// HPC: when true, every <c>--input-scores</c> parquet must carry
         /// <c>osprey.reconciled = "true"</c> in its footer metadata. Set
-        /// by <c>--task MergeNode</c>; the post-Stage-6 (reconciled)
+        /// by <c>--task SecondPassFDR</c>; the post-Stage-6 (reconciled)
         /// entry point. Stages 1-6 are skipped: the pipeline loads
         /// reconciled scores + the <c>.{1st,2nd}-pass.fdr_scores.bin</c>
         /// sidecars, then runs Stages 7-8 (second-pass FDR overlay,

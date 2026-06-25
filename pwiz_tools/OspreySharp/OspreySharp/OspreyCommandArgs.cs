@@ -194,7 +194,7 @@ namespace pwiz.OspreySharp
         // --task is resolved + validated in Program.Main's pre-scan; the tokenizer here only
         // consumes its value (and rejects a missing one). Declared so it appears in help.
         public static readonly OspreyArgument ARG_TASK = new OspreyArgument(@"task",
-            new[] { @"PerFileScoring", @"FirstJoin", @"PerFileRescore", @"MergeNode" }, (c, p) => true);
+            new[] { @"PerFileScoring", @"FirstPassFDR", @"PerFileRescoring", @"SecondPassFDR" }, (c, p) => true);
         public static readonly OspreyArgument ARG_INPUT_SCORES = new OspreyArgument(@"input-scores",
             () => @"<paths|dir>", (c, p) => true) { Variadic = true, ProcessVariadic = (c, toks) =>
             {
@@ -246,6 +246,26 @@ namespace pwiz.OspreySharp
             new ArgumentGroup<OspreyCommandArgs>(() => @"Performance", true,
                 ARG_PARALLEL_FILES, ARG_THREADS);
 
+        // --- Logging ----------------------------------------------------------------------
+        // Per-line output decoration and redirection. --timestamp / --memstamp prefix each
+        // line written through Program._out (see CommandStatusWriter); --log-file redirects
+        // that writer to a file. The "[date]\t{managed}\t{total}\t{msg}" stamp format is
+        // consumed by ai/scripts/OspreySharp/perfviz.html.
+        public static readonly OspreyArgument ARG_TIMESTAMP = new OspreyArgument(@"timestamp",
+            (c, p) => c._config.IsTimeStamped = true);
+        public static readonly OspreyArgument ARG_MEMSTAMP = new OspreyArgument(@"memstamp",
+            (c, p) => c._config.IsMemStamped = true);
+        public static readonly OspreyArgument ARG_LOG_FILE = new OspreyArgument(@"log-file",
+            () => @"<path>", (c, p) => c._config.LogFilePath = p.Value);
+        public static readonly OspreyArgument ARG_PERF_STATS = new OspreyArgument(@"perf-stats",
+            (c, p) => c._config.PerfStats = true);
+        public static readonly OspreyArgument ARG_VERBOSE = new OspreyArgument(@"verbose",
+            (c, p) => c._config.Verbose = true);
+
+        private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_LOGGING =
+            new ArgumentGroup<OspreyCommandArgs>(() => @"Logging", true,
+                ARG_TIMESTAMP, ARG_MEMSTAMP, ARG_LOG_FILE, ARG_PERF_STATS, ARG_VERBOSE);
+
         // --- Diagnostics & Info -----------------------------------------------------------
         // -h/--help and -v/--version are terminal: the tokenizer renders help / prints the
         // version and exits 0. Their ProcessValue is never invoked. --help accepts an optional
@@ -275,6 +295,7 @@ namespace pwiz.OspreySharp
                     GROUP_DECOYS,
                     GROUP_PERFORMANCE,
                     GROUP_HPC,
+                    GROUP_LOGGING,
                     GROUP_INFO,
                     new ParaUsageBlock(@"EXAMPLES:"),
                     new ParaUsageBlock(@"  osprey -i sample.mzML -l library.tsv -o results.blib"),
@@ -357,7 +378,7 @@ namespace pwiz.OspreySharp
                     i++;
                     if (i >= args.Length || args[i].StartsWith(@"-"))
                         throw new ArgumentException(
-                            @"--task requires a task name (PerFileScoring, FirstJoin, PerFileRescore, or MergeNode).");
+                            @"--task requires a task name (PerFileScoring, FirstPassFDR, PerFileRescoring, or SecondPassFDR).");
                     i++;
                     continue;
                 }
@@ -645,6 +666,11 @@ namespace pwiz.OspreySharp
                 { @"input-scores", @"HPC: one or more .scores.parquet files, or a single directory (non-recursive). Mutex with --input." },
                 { @"parallel-files", @"Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. <N>: exactly N regardless of RAM/cores. Distinct from --threads." },
                 { @"threads", @"Per-file main-search threads (INNER; default: all cores), divided across files run concurrently by --parallel-files" },
+                { @"timestamp", @"Prefix each output line with [yyyy/MM/dd HH:mm:ss]" },
+                { @"memstamp", @"Prefix each output line with managed and private memory in MB (pair with --timestamp for perfviz)" },
+                { @"log-file", @"Write all output to this file instead of stderr" },
+                { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
+                { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },

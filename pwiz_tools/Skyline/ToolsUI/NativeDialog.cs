@@ -50,9 +50,10 @@ namespace pwiz.Skyline.ToolsUI
     /// <see cref="Create"/> chooses the subclass that matches a given dialog element.
     ///
     /// A dialog is a <see cref="UiElement"/>: it presents to the connector exactly like any other form (it
-    /// is listed by GetOpenForms and addressed by a path whose Text is its id), and its <see cref="Children"/>
-    /// are connector elements (buttons, a file-name field) that dispatch their actions to this automation
-    /// (Accept/Cancel/EnterPath) instead of to a WinForms control.
+    /// is listed by GetOpenForms and addressed by a path whose Text is its id). It is not introspected as a
+    /// set of child controls -- pretending the dialog exposes clickable buttons is more trouble than it is
+    /// worth -- so it is driven entirely at the form level: set_value enters the file name, the accept action
+    /// confirms it, and close_form cancels it.
     /// </summary>
     public abstract class NativeDialog : UiElement, IFormElement
     {
@@ -175,7 +176,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "FileDialog:Open …".</summary>
         public string FormId => DialogTypeName + @":" + Title;
 
-        public ControlInfo[] GetControls() => GetChildren();
+        public ControlInfo[] GetControls() => GetControlInfos();
 
         // A native dialog has no caption-addressable buttons (matching "OK"/"Cancel" would not survive a
         // localized build). Confirm it with the accept action and dismiss it with Close (close_form) instead.

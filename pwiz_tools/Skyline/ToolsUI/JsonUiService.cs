@@ -29,12 +29,10 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using Newtonsoft.Json.Linq;
 using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.ElementLocators;
@@ -139,7 +137,7 @@ namespace pwiz.Skyline.ToolsUI
         /// once and does not wait for or observe the result. Used for a void action (a click, a value set)
         /// so a gesture that opens a modal dialog does not block -- the modal is driven by later commands,
         /// the same way the main-menu-item path posts its click. Posted on the same (main-window) queue as
-        /// <see cref="InvokeOnUiThread(System.Action)"/>, so a later synchronous read sees this action's
+        /// <see cref="InvokeOnUiThread"/>, so a later synchronous read sees this action's
         /// effect (the queue is FIFO). The action is counted in <see cref="UnfinishedActionCount"/> from when
         /// it is posted until its delegate returns. Must be called off the UI thread.
         /// </summary>
@@ -306,22 +304,25 @@ namespace pwiz.Skyline.ToolsUI
         // and lets the model drive the dialog).
         private static bool ShouldKeepWaiting(IList<IntPtr> newModals, out string alertText)
         {
+            string localAlertText = null;
             var decision = InvokeOnUiThread(() =>
             {
+                var forms = FormUtil.OpenForms.Where(f => f.IsHandleCreated).ToDictionary(f => f.Handle);
                 foreach (var hwnd in newModals)
                 {
-                    var form = FormUtil.OpenForms.OfType<Form>()
-                        .FirstOrDefault(f => f.IsHandleCreated && f.Handle == hwnd);
+                    forms.TryGetValue(hwnd, out var form);
                     if (form is LongWaitDlg)
                         continue; // progress dialog -- not a blocker
                     if (form is CommonAlertDlg alert)
-                        return (keepWaiting: false, alertText: GetAlertText(alert));
-                    return (keepWaiting: false, alertText: (string) null); // native / other modal -- caller drives it
+                    {
+                        localAlertText = alert.DetailedMessage;
+                    }
+                    return false;
                 }
-                return (keepWaiting: true, alertText: (string) null);
+                return true;
             });
-            alertText = decision.alertText;
-            return decision.keepWaiting;
+            alertText = localAlertText;
+            return decision;
         }
 
         private static string GetAlertText(CommonAlertDlg alert)
@@ -609,7 +610,7 @@ namespace pwiz.Skyline.ToolsUI
             RunWithDialogWatch(() =>
             {
                 result = OnFormThread(formId, CancellationToken.None,
-                    formElement => formElement.FindElement(controlId, UiActions.GetValue).Value);
+                    formElement => formElement.FindElement(controlId, UiActions.GetValue).Value?.ToString());
                 return true;
             });
             return result;
