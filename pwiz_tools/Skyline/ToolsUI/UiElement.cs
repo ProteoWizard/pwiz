@@ -1653,12 +1653,15 @@ namespace pwiz.Skyline.ToolsUI
             return TextUtil.LineSeparate(lines);
         }
 
-        // Pastes starting at the current cell -- the anchor a user would have clicked. Move the current
-        // cell first with SetCurrentCellAddress; the text may be a multi-cell TSV block (it fills down/right).
+        // Pastes starting at the current cell -- the anchor a user would have clicked. Move the current cell
+        // first with SetCurrentCellAddress; the text may be a multi-cell TSV block (it fills down/right).
+        // DataGridViewPasteHandler sets each cell through the grid's editing control exactly as a user typing
+        // would, so a value entered in the new row is committed and the grid grows (a direct cell.Value set is
+        // not pushed through, leaving the row empty). A BoundGridElement overrides this to keep its document
+        // in sync; this base path is for a plain DataGridView (e.g. the List Designer property grid).
         public virtual void SetGridText(string text)
         {
-            var anchor = CurrentCellPoint();
-            PasteCellText(anchor.X, anchor.Y, text);
+            DataGridViewPasteHandler.PasteText(_dataGridView, text);
         }
 
         // Moves the current cell so the next SetGridText / context menu acts there. column is the
@@ -1690,57 +1693,6 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.OpenContextMenu(args.ContextMenuStrip);
         }
 
-        // The current cell as a point (X = visible-column index, Y = row index), or (0,0) when the grid has
-        // no current cell -- the anchor SetGridText pastes from.
-        private System.Drawing.Point CurrentCellPoint()
-        {
-            var cell = _dataGridView.CurrentCell;
-            if (cell == null)
-                return new System.Drawing.Point(0, 0);
-            int column = Array.FindIndex(VisibleColumns(), col => col.Index == cell.ColumnIndex);
-            return new System.Drawing.Point(Math.Max(0, column), cell.RowIndex);
-        }
-
-        // Pastes tab/newline-separated text into the grid by setting cell values from the anchor cell, the
-        // way a user typing cell-by-cell would. Skips read-only cells. Throws if the anchor (or a row a
-        // multi-row paste reaches) is out of range -- pasting cannot add rows beyond the grid's new row.
-        private void PasteCellText(int column, int row, string text)
-        {
-            var visibleColumns = VisibleColumns();
-            if (column < 0 || column >= visibleColumns.Length)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Column {0} is out of range; the grid has {1} visible columns.", column, visibleColumns.Length));
-            if (row < 0)
-                throw new ArgumentException(LlmInstruction.Format(@"Row {0} is out of range.", row));
-            var lines = SplitPasteLines(text);
-            for (int iLine = 0; iLine < lines.Length; iLine++)
-            {
-                int rowIndex = row + iLine;
-                if (rowIndex >= _dataGridView.Rows.Count)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"Row {0} is past the end of the grid ({1} rows).", rowIndex, _dataGridView.Rows.Count));
-                var cellValues = lines[iLine].Split('\t');
-                for (int iCol = 0; iCol < cellValues.Length && column + iCol < visibleColumns.Length; iCol++)
-                {
-                    var cell = _dataGridView.Rows[rowIndex].Cells[visibleColumns[column + iCol].Index];
-                    if (cell.ReadOnly)
-                        continue;
-                    // Go through the cell's edit lifecycle so the value is committed (and pushed to any data
-                    // source) the way ending a cell edit does. Setting CurrentCell enters the row, which for a
-                    // bound grid's new row triggers the data source's AddNew (see DataGridView.OnRowEnter);
-                    // NotifyCurrentCellDirty marks the programmatic change dirty so EndEdit actually pushes the
-                    // value through -- a direct cell.Value assignment alone does not, so the new row would
-                    // otherwise stay empty. A grid that validates whole rows still governs whether a
-                    // partially-filled new row is kept -- the same as for a user.
-                    _dataGridView.CurrentCell = cell;
-                    _dataGridView.BeginEdit(true);
-                    cell.Value = cellValues[iCol];
-                    _dataGridView.NotifyCurrentCellDirty(true);
-                    _dataGridView.EndEdit();
-                }
-            }
-        }
-
         // The visible columns of the grid in display order -- the columns a column index counts.
         private DataGridViewColumn[] VisibleColumns()
         {
@@ -1752,16 +1704,6 @@ namespace pwiz.Skyline.ToolsUI
         private static string CellDisplayText(DataGridViewCell cell)
         {
             return (cell.FormattedValue ?? cell.Value)?.ToString() ?? string.Empty;
-        }
-
-        // Splits pasted text into row lines, normalizing newlines and dropping a single trailing empty line
-        // (from text that ends with a newline).
-        private static string[] SplitPasteLines(string text)
-        {
-            var lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
-            if (lines.Length > 1 && lines[lines.Length - 1].Length == 0)
-                lines = lines.Take(lines.Length - 1).ToArray();
-            return lines;
         }
     }
 
@@ -1788,8 +1730,9 @@ namespace pwiz.Skyline.ToolsUI
             if (bindingListSource == null)
                 base.SetGridText(text);
             else
-                // Pastes at the current cell exactly as Ctrl-V would, keeping the bound document in sync.
-                DataGridViewPasteHandler.PasteText(DataGridView, bindingListSource, text);
+                // Pastes at the current cell exactly as Ctrl-V would, keeping the bound document in sync
+                // (one undoable batch-modify -- see BoundDataGridViewPasteHandler).
+                BoundDataGridViewPasteHandler.PasteText(DataGridView, bindingListSource, text);
         }
     }
 

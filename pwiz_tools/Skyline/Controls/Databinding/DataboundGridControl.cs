@@ -66,8 +66,8 @@ namespace pwiz.Skyline.Controls.Databinding
             InitializeComponent();
             // Owned by the designer container so it is disposed with the control (avoids a native leak)
             _cellEditToolTip = new ToolTip(components);
-            _boundDataGridViewPasteHandler = DataGridViewPasteHandler.Attach(DataGridView, bindingListSource);
-            DataGridViewPasteHandler.Attach(ReplicatePivotDataGridView, bindingListSource);
+            _boundDataGridViewPasteHandler = BoundDataGridViewPasteHandler.Attach(DataGridView, bindingListSource);
+            BoundDataGridViewPasteHandler.Attach(ReplicatePivotDataGridView, bindingListSource);
             replicatePivotDataGridView.CellValueChanged += replicatePivotDataGridView_CellValueChanged;
             NavBar.ClusterSplitButton.Visible = true;
             NavBar.ClusterSplitButton.DropDownItems.Add(new ToolStripMenuItem(DatabindingResources.DataboundGridControl_DataboundGridControl_Show_Heat_Map, null,
