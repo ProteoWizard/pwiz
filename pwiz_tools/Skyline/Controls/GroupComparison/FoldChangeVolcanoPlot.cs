@@ -407,6 +407,13 @@ namespace pwiz.Skyline.Controls.GroupComparison
             // Selected points keep the selection color but preserve the marker shape from the first
             // selected point's matching rule. Exactly one selected curve must always be added at
             // index 0 so that the cutoff-line insertion indices and MatchedPointsStartIndex stay valid.
+            //
+            // This is intentionally different from SummaryRelativeAbundanceGraphPane, which groups its
+            // selected points by resolved symbol (one selected curve per symbol). That pane has no cutoff
+            // lines and derives no fixed indices from the selected curve, so it is free to emit several.
+            // The volcano pane cannot: cutoff lines are inserted at offsets relative to a single selected
+            // curve at index 0, and MatchedPointsStartIndex assumes that one curve, so multiple selected
+            // curves would invalidate both. All selected points therefore share the first one's symbol here.
             var selectedSymbol = PointSymbol.Circle;
             if (selectedPoints.Count > 0)
             {

@@ -26,7 +26,6 @@ using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.GroupComparison;
 using ZedGraph;
 using Peptide = pwiz.Skyline.Model.Databinding.Entities.Peptide;
-// ReSharper disable PossibleMultipleEnumeration
 
 namespace pwiz.Skyline.Controls.Graphs
 {

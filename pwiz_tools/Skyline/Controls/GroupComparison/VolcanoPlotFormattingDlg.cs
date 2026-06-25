@@ -226,8 +226,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
                 return;
 
             cb.DrawItem -= SymbolCombo_DrawItem;
+            cb.SelectedIndexChanged -= SymbolCombo_SelectedIndexChanged;
             cb.DrawMode = DrawMode.Normal;
             cb.ItemHeight = cb.Font.Height;
+            cb.AccessibleName = null;
 
             if (((DataGridView) sender).CurrentCell?.ColumnIndex != _symbolCombo.Index)
                 return;
@@ -235,6 +237,10 @@ namespace pwiz.Skyline.Controls.GroupComparison
             cb.DrawMode = DrawMode.OwnerDrawFixed;
             cb.ItemHeight = _symbolDropdownFont.Height + 4;
             cb.DrawItem += SymbolCombo_DrawItem;
+            // The dropdown shows glyphs, which screen readers cannot announce meaningfully.
+            // Mirror the selected glyph with a readable accessible name and keep it in sync.
+            cb.SelectedIndexChanged += SymbolCombo_SelectedIndexChanged;
+            UpdateSymbolAccessibleName(cb);
         }
 
         private void SymbolCombo_DrawItem(object sender, DrawItemEventArgs e)
@@ -250,6 +256,63 @@ namespace pwiz.Skyline.Controls.GroupComparison
             TextRenderer.DrawText(e.Graphics, text, font, e.Bounds, e.ForeColor,
                 TextFormatFlags.Left | TextFormatFlags.VerticalCenter);
             e.DrawFocusRectangle();
+        }
+
+        private void SymbolCombo_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateSymbolAccessibleName((ComboBox)sender);
+        }
+
+        private static void UpdateSymbolAccessibleName(ComboBox cb)
+        {
+            cb.AccessibleName = GetSymbolAccessibleName(GetSelectedSymbol(cb));
+        }
+
+        private static PointSymbol? GetSelectedSymbol(ComboBox cb)
+        {
+            if (cb.SelectedItem is PointSymbolStringPair pair)
+                return pair.PointSymbol;
+            if (cb.SelectedValue is PointSymbol symbol)
+                return symbol;
+            return null;
+        }
+
+        private static string GetSymbolAccessibleName(PointSymbol? symbol)
+        {
+            if (symbol == null)
+                return GroupComparisonStrings.VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_None;
+
+            switch (symbol.Value)
+            {
+                case PointSymbol.Circle:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_Circle;
+                case PointSymbol.Square:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_Square;
+                case PointSymbol.Triangle:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_Triangle;
+                case PointSymbol.TriangleDown:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_TriangleDown;
+                case PointSymbol.Diamond:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_Diamond;
+                case PointSymbol.XCross:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_XCross;
+                case PointSymbol.Plus:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_Plus;
+                case PointSymbol.Star:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_Star;
+                case PointSymbol.OutlineCircle:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_OutlineCircle;
+                case PointSymbol.OutlineSquare:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_OutlineSquare;
+                case PointSymbol.OutlineTriangle:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_OutlineTriangle;
+                case PointSymbol.OutlineTriangleDown:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_OutlineTriangleDown;
+                case PointSymbol.OutlineDiamond:
+                    return GroupComparisonStrings.VolcanoPlotFormattingDlg_SymbolName_OutlineDiamond;
+                default:
+                    return string.Empty;
+            }
         }
 
         public void Select(IdentityPath identityPath)

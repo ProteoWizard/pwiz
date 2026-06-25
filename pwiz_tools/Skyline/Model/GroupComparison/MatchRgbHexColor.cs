@@ -156,8 +156,10 @@ namespace pwiz.Skyline.Model.GroupComparison
             set { if (!value) Color = Color.Empty; }
         }
 
-        // Shadow the base Color property to also notify UseColor when the empty/non-empty state changes.
-        public new Color Color
+        // Override the base Color property to also notify UseColor when the empty/non-empty state changes.
+        // Using override (not new) ensures base-class access -- the Hex/Rgb setters and any RgbHexColor
+        // reference -- routes through this setter so the UseColor notification is never bypassed.
+        public override Color Color
         {
             get { return base.Color; }
             set
