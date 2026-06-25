@@ -1072,7 +1072,7 @@ namespace pwiz.OspreySharp.Tasks
         {
             if (diag == null ||
                 !(diag.DumpStandardizer || diag.DumpPercInput ||
-                  diag.DumpSubsample || diag.DumpSvmWeights || diag.DumpFeatureContrib))
+                  diag.DumpSubsample || diag.DumpSvmWeights))
             {
                 return null;
             }
@@ -1085,8 +1085,7 @@ namespace pwiz.OspreySharp.Tasks
                 DumpSubsample = diag.DumpSubsample,
                 SubsampleOnly = diag.SubsampleOnly,
                 DumpSvmWeights = diag.DumpSvmWeights,
-                SvmWeightsOnly = diag.SvmWeightsOnly,
-                DumpFeatureContrib = diag.DumpFeatureContrib
+                SvmWeightsOnly = diag.SvmWeightsOnly
             };
         }
 

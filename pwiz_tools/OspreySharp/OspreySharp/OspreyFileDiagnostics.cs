@@ -189,13 +189,6 @@ namespace pwiz.OspreySharp
         public bool SvmWeightsOnly { get; } = IsOne(@"OSPREY_SVM_WEIGHTS_ONLY");
 
         /// <summary>
-        /// OSPREY_DUMP_FEATURE_CONTRIB: also write the machine-precision TSV form of
-        /// the post-training feature weight + percent-contribution table. The
-        /// human-readable table is always emitted regardless of this gate.
-        /// </summary>
-        public bool DumpFeatureContrib { get; } = IsOne(@"OSPREY_DUMP_FEATURE_CONTRIB");
-
-        /// <summary>
         /// OSPREY_DUMP_RESCORED: dump per-precursor state AFTER the
         /// per-file Stage 6 rescore loop completes (consensus +
         /// reconciliation overlay, plus gap-fill stubs once Phase 2
@@ -420,7 +413,7 @@ namespace pwiz.OspreySharp
             DumpLdaScores || LdaScoresOnly || DumpLoessInput || LoessInputOnly ||
             DumpPercolator || PercolatorOnly || DumpStandardizer || StandardizerOnly ||
             DumpPercInput || PercInputOnly || DumpSubsample || SubsampleOnly ||
-            DumpSvmWeights || SvmWeightsOnly || DumpFeatureContrib || DumpRescored || RescoredOnly ||
+            DumpSvmWeights || SvmWeightsOnly || DumpRescored || RescoredOnly ||
             DumpMpInputs || DumpPredictRt || DumpCwtPath || DumpConsensus ||
             ConsensusOnly || DumpMulticharge || MultichargeOnly || DumpRefit ||
             RefitOnly || DumpReconciliation || ReconciliationOnly || DumpCalibration ||

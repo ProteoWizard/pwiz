@@ -469,6 +469,66 @@ namespace pwiz.OspreySharp.Test
             Assert.IsTrue(avgTarget / nT > avgDecoy / nD);
         }
 
+        /// <summary>
+        /// The pure <see cref="FeatureContributions"/> calculation (no I/O): from a
+        /// small synthetic averaged model with a known target-decoy separation, the
+        /// per-feature percents must sum to ~100%, the composite must be
+        /// non-degenerate, and the unexpected-direction flag must obey Skyline's
+        /// weight-sign rule <c>IsReversedScore XOR (weight &lt; 0)</c> -- here a
+        /// hand-set reversed feature carrying a positive weight reports
+        /// <c>IsUnexpectedDirection == true</c>.
+        /// </summary>
+        [TestMethod]
+        public void TestFeatureContributions()
+        {
+            // 3 features, 4 targets / 4 decoys; targets sit one unit above decoys on
+            // every feature (clean positive separation -> composite > 0). Feature 1
+            // is declared reversed yet given a positive weight -> flagged unexpected.
+            var avgWeights = new[] { 2.0, 1.5, 0.5 };
+            int nFeatures = avgWeights.Length;
+            long nTarget = 4, nDecoy = 4;
+            var sumTarget = new double[nFeatures];
+            var sumDecoy = new double[nFeatures];
+            for (int j = 0; j < nFeatures; j++)
+            {
+                sumTarget[j] = nTarget * (1.0 + j);   // target mean = 1 + j
+                sumDecoy[j] = nDecoy * (0.0 + j);     // decoy mean  = j  -> gap = 1
+            }
+            var names = new[] { "feat_a", "feat_b", "feat_c" };
+            var labels = new[] { "Feature A", "Feature B", "Feature C" };
+            var reversed = new[] { false, true, false };
+
+            var contributions = new FeatureContributions(avgWeights, sumTarget, sumDecoy,
+                nTarget, nDecoy, names, labels, reversed);
+
+            Assert.IsFalse(contributions.IsDegenerate);
+            Assert.IsTrue(contributions.Composite > 0.0);
+            Assert.AreEqual(nFeatures, contributions.Features.Count);
+
+            // The per-feature percents sum to ~100% by linearity.
+            double totalPercent = contributions.Features.Sum(f => f.Percent);
+            Assert.AreEqual(100.0, totalPercent, 1e-9);
+
+            // Canonical feature-index order is preserved (not display-sorted).
+            for (int j = 0; j < nFeatures; j++)
+            {
+                var f = contributions.Features[j];
+                Assert.AreEqual(j, f.Index);
+                Assert.AreEqual(labels[j], f.Label);
+                Assert.AreEqual(avgWeights[j], f.Coefficient);
+                Assert.AreEqual(1.0, f.TargetDecoyMeanGap, 1e-12);   // gap is 1 for every feature
+                Assert.AreEqual(avgWeights[j], f.Weighted, 1e-12);   // w_j * 1.0
+                bool expectedFlag = reversed[j] ^ (avgWeights[j] < 0.0);
+                Assert.AreEqual(expectedFlag, f.IsUnexpectedDirection);
+            }
+
+            // Feature B is declared reversed but carries a positive weight -> unexpected.
+            Assert.IsTrue(contributions.Features[1].IsReversedScore);
+            Assert.IsTrue(contributions.Features[1].IsUnexpectedDirection);
+            Assert.IsFalse(contributions.Features[0].IsUnexpectedDirection);
+            Assert.IsFalse(contributions.Features[2].IsUnexpectedDirection);
+        }
+
         [TestMethod]
         public void TestFoldAssignmentPeptideGrouping()
         {

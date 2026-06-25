@@ -38,6 +38,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.ML;
 
@@ -705,10 +706,10 @@ namespace pwiz.OspreySharp.FDR
                         contribSumTarget[j] += stdFeatures[i, j];
                 }
             }
-            ComputeAndEmitFeatureContributions(avgWeights, contribSumTarget, contribSumDecoy,
+            var contributions = new FeatureContributions(avgWeights, contribSumTarget, contribSumDecoy,
                 contribNTgt, contribNDcy, config.FeatureNames, config.FeatureLabels,
-                config.ReversedScore,
-                config.Diagnostics != null && config.Diagnostics.DumpFeatureContrib);
+                config.ReversedScore);
+            EmitFeatureContributions(contributions);
 
             // 9. Build results
             var results = new List<PercolatorResult>(n);
@@ -840,9 +841,9 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
 
-            ComputeAndEmitFeatureContributions(avgWeights, sumTarget, sumDecoy, nTgt, nDcy,
-                config.FeatureNames, config.FeatureLabels, config.ReversedScore,
-                config.Diagnostics != null && config.Diagnostics.DumpFeatureContrib);
+            var contributions = new FeatureContributions(avgWeights, sumTarget, sumDecoy, nTgt, nDcy,
+                config.FeatureNames, config.FeatureLabels, config.ReversedScore);
+            EmitFeatureContributions(contributions);
 
             // PEP via global target-decoy competition. CompeteAll returns
             // winners sorted by score-descending (matches the direct-path
@@ -2466,117 +2467,33 @@ namespace pwiz.OspreySharp.FDR
         }
 
         /// <summary>
-        /// Skyline-style per-feature percent-contribution decomposition of the
-        /// trained linear model, emitted to <c>OspreyOutput.Out</c> after Stage 5
-        /// training. Ports TargetDecoyGenerator.GetPercentContribution: for each
-        /// feature
-        ///   contribution_j = w_j*(meanTarget_j - meanDecoy_j) / sum_k w_k*(meanTarget_k - meanDecoy_k)
-        /// so the percentages sum to 100% by linearity (the denominator is the sum of
-        /// the numerators). All means are over the STANDARDIZED feature space the SVM
-        /// scores in (the same space <paramref name="avgWeights"/> live in), so the
-        /// product w_j*deltaMu_j is space-invariant.
+        /// Presents the Skyline-style per-feature percent-contribution table of the
+        /// trained linear model to <c>OspreyOutput.Out</c> after Stage 5 training.
+        /// The decomposition itself lives in <see cref="FeatureContributions"/>; this
+        /// method is presentation only -- it prints the heading and column header,
+        /// then the per-feature rows sorted most-influential-first (absolute percent
+        /// descending, tie-broken by ascending feature index for determinism). When
+        /// the composite is degenerate the percentages are NaN, so the magnitude key
+        /// collapses to the index tie-break.
         ///
-        /// Pure reporting: a read of <paramref name="avgWeights"/> and the
-        /// accumulated target/decoy sums. It never mutates the model or the features
-        /// and must never move q-values. The signed percent is emitted as-is; the
-        /// unexpected-direction flag is Skyline's weight-sign test
-        /// <c>IsReversedScore XOR (weight &lt; 0)</c> (independent of the data).
+        /// Pure reporting: a read of <paramref name="contributions"/>. It never
+        /// mutates the model or the features and must never move q-values. The signed
+        /// percent is emitted as-is; the unexpected-direction flag is Skyline's
+        /// weight-sign test <c>IsReversedScore XOR (weight &lt; 0)</c>.
         /// </summary>
-        private static void ComputeAndEmitFeatureContributions(
-            double[] avgWeights,
-            double[] sumTarget, double[] sumDecoy, long nTarget, long nDecoy,
-            string[] featureNames, string[] featureLabels, bool[] reversedScore,
-            bool dumpTsv)
+        private static void EmitFeatureContributions(FeatureContributions contributions)
         {
-            int p = avgWeights.Length;
-            var deltaMu = new double[p];
-            var weighted = new double[p];
-            double composite = 0.0;
-            for (int j = 0; j < p; j++)
-            {
-                double mt = nTarget > 0 ? sumTarget[j] / nTarget : 0.0;
-                double md = nDecoy > 0 ? sumDecoy[j] / nDecoy : 0.0;
-                deltaMu[j] = mt - md;
-                weighted[j] = avgWeights[j] * deltaMu[j];
-                composite += weighted[j];   // == sum_k w_k*deltaMu_k == deltaMu_composite
-            }
-            // Targets should score above decoys, so composite > 0. Guard /0 for a
-            // degenerate model (percentages become NaN, which the report shows plainly).
-            bool ok = Math.Abs(composite) > 1e-12;
-
             OspreyOutput.Out.WriteLine(
                 "  Feature weight contributions (trained linear model, coefficients standardized):");
             OspreyOutput.Out.WriteLine("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "percent");
-            // Emit most-influential first: sort a row-index array by absolute
-            // contribution percent descending, tie-broken by ascending feature index
-            // for determinism. The underlying per-feature arrays stay in PIN-index
-            // order (the OSPREY_DUMP_FEATURE_CONTRIB TSV below relies on that); only
-            // the console rows are reordered. When composite is degenerate the
-            // percentages are NaN and |pct| sorting collapses to the index tie-break.
-            var emitOrder = new int[p];
-            for (int j = 0; j < p; j++)
-                emitOrder[j] = j;
-            Array.Sort(emitOrder, (a, b) => // Array.Sort OK: display-only console emit order; the index tie-break makes the comparator total (no ties), the per-feature arrays are read by index (not permuted), and the TSV stays index-ordered -- not parity-bearing
+            foreach (var f in contributions.Features
+                         .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
+                         .ThenBy(f => f.Index))
             {
-                double pa = ok ? Math.Abs(100.0 * weighted[a] / composite) : 0.0;
-                double pb = ok ? Math.Abs(100.0 * weighted[b] / composite) : 0.0;
-                int cmp = pb.CompareTo(pa);   // descending magnitude
-                return cmp != 0 ? cmp : a.CompareTo(b);
-            });
-            foreach (int j in emitOrder)
-            {
-                double pct = ok ? 100.0 * weighted[j] / composite : double.NaN;
-                bool wrongSign = reversedScore != null && j < reversedScore.Length &&
-                                 (reversedScore[j] ^ (avgWeights[j] < 0.0));
-                string label = (featureLabels != null && j < featureLabels.Length)
-                    ? featureLabels[j]
-                    : (featureNames != null && j < featureNames.Length ? featureNames[j] : string.Format("feature_{0}", j));
                 OspreyOutput.Out.WriteLine("    {0,-36} {1,12:F4} {2,8:F1}%{3}",
-                    label, avgWeights[j], pct, wrongSign ? "  (unexpected direction)" : string.Empty);
+                    f.Label, f.Coefficient, f.Percent,
+                    f.IsUnexpectedDirection ? "  (unexpected direction)" : string.Empty);
             }
-
-            if (dumpTsv)
-                WriteFeatureContributionsDump(avgWeights, deltaMu, weighted, composite,
-                    ok, featureNames, reversedScore);
-        }
-
-        /// <summary>
-        /// Optional machine-precision TSV form of the feature-contribution table
-        /// (gated by OSPREY_DUMP_FEATURE_CONTRIB), for cross-impl / cross-run diffing.
-        /// Mirrors the f64-roundtrip formatting of the Stage 5 dumps. Columns:
-        /// feature_idx, feature_name, coefficient, delta_mu, contribution_pct,
-        /// reversed, wrong_sign.
-        /// </summary>
-        private static void WriteFeatureContributionsDump(
-            double[] avgWeights, double[] deltaMu, double[] weighted, double composite,
-            bool ok, string[] featureNames, bool[] reversedScore)
-        {
-            const string path = @"cs_feature_contributions.tsv";
-            var inv = CultureInfo.InvariantCulture;
-            using (var sw = new StreamWriter(path))
-            {
-                sw.NewLine = "\n";
-                sw.WriteLine(@"feature_idx	feature_name	coefficient	delta_mu	contribution_pct	reversed	wrong_sign");
-                for (int j = 0; j < avgWeights.Length; j++)
-                {
-                    double pct = ok ? 100.0 * weighted[j] / composite : double.NaN;
-                    bool reversed = reversedScore != null && j < reversedScore.Length && reversedScore[j];
-                    bool wrongSign = reversedScore != null && j < reversedScore.Length &&
-                                     (reversedScore[j] ^ (avgWeights[j] < 0.0));
-                    string name = (featureNames != null && j < featureNames.Length)
-                        ? featureNames[j]
-                        : @"unknown";
-                    sw.Write(j.ToString(inv));
-                    sw.Write('\t'); sw.Write(name);
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(avgWeights[j]));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(deltaMu[j]));
-                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(pct));
-                    sw.Write('\t'); sw.Write(reversed ? @"true" : @"false");
-                    sw.Write('\t'); sw.WriteLine(wrongSign ? @"true" : @"false");
-                }
-            }
-            OspreyOutput.Out.WriteLine(@"Wrote feature contributions dump: {0} ({1} features)",
-                path, avgWeights.Length);
         }
 
         /// <summary>
