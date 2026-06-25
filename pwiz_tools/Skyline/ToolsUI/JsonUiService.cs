@@ -30,7 +30,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
@@ -98,9 +97,9 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         /// Marshals an action onto the UI thread. When a <paramref name="dispatcher"/> control with a live
         /// handle is given, it is used (so a form on its own thread is driven through its own message loop);
-        /// otherwise the main window, or -- before it exists -- the UI-thread synchronization context captured
-        /// at startup (see <see cref="Program.UiSynchronizationContext"/>), so the form-introspection verbs
-        /// work while only the StartPage is showing. Must be called off the UI thread.
+        /// otherwise <see cref="Program.InvokeOnUiThread"/> targets the main window, or -- before it exists --
+        /// the StartPage, so the form-introspection verbs work while only the StartPage is showing. Must be
+        /// called off the UI thread.
         /// </summary>
         private static void DispatchToUiThread(Action action, Control dispatcher = null)
         {
@@ -109,17 +108,7 @@ namespace pwiz.Skyline.ToolsUI
                 dispatcher.Invoke(action);
                 return;
             }
-            var mainWindow = Program.MainWindow;
-            if (mainWindow != null && !mainWindow.IsDisposed)
-            {
-                mainWindow.Invoke(action);
-                return;
-            }
-            var syncContext = Program.UiSynchronizationContext;
-            if (syncContext == null)
-                throw new InvalidOperationException(
-                    @"No UI thread is available to handle this request.");
-            syncContext.Send(_ => action(), null);
+            Program.InvokeOnUiThread(action);
         }
 
         private static int _unfinishedActionCount;
@@ -162,38 +151,22 @@ namespace pwiz.Skyline.ToolsUI
                 }
                 finally { Interlocked.Decrement(ref _unfinishedActionCount); }
             }
-            // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own
-            // BeginInvoke; otherwise the main window, or the startup sync context before it exists.
-            if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
+            try
             {
-                dispatcher.BeginInvoke((Action) Run);
-                return;
+                // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own
+                // BeginInvoke; otherwise Program.BeginInvokeOnUiThread targets the main window, or the
+                // StartPage before it exists (and throws if neither is up).
+                if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
+                    dispatcher.BeginInvoke((Action) Run);
+                else
+                    Program.BeginInvokeOnUiThread(Run);
             }
-            var mainWindow = Program.MainWindow;
-            if (mainWindow != null && !mainWindow.IsDisposed)
+            catch
             {
-                mainWindow.BeginInvoke((Action) Run);
-                return;
-            }
-            var syncContext = Program.UiSynchronizationContext;
-            if (syncContext == null)
-            {
-                // The action will never run, so it is not pending after all.
+                // Posting failed, so the action will never run and is not pending after all.
                 Interlocked.Decrement(ref _unfinishedActionCount);
-                throw new InvalidOperationException(
-                    @"No UI thread is available to handle this request.");
+                throw;
             }
-            syncContext.Post(_ => Run(), null);
-        }
-
-        /// <summary>
-        /// Whether there is a UI thread to marshal to -- either a live main window or the captured
-        /// synchronization context (the StartPage case, before the main window exists).
-        /// </summary>
-        private static bool HasUiDispatch()
-        {
-            var mainWindow = Program.MainWindow;
-            return (mainWindow != null && !mainWindow.IsDisposed) || Program.UiSynchronizationContext != null;
         }
 
         private const int DIALOG_POLL_INTERVAL_MILLIS = 100;
@@ -257,35 +230,27 @@ namespace pwiz.Skyline.ToolsUI
         // The message a blocking modal dialog shows, or null for a LongWaitDlg (a progress dialog that does not
         // block): a CommonAlertDlg's or ReportErrorDlg's text, or any other dialog's title -- a managed Form's
         // caption, or, for a native window (no managed form), its window title.
+        // The message a blocking modal dialog shows: a CommonFormEx's DetailedMessage (a CommonAlertDlg's
+        // composed text, or the ReportErrorDlg's exception message), else any other managed dialog's title,
+        // else (a native window with no managed form) its window title.
         private static string ModalDialogMessage(IntPtr hwnd, Form form)
         {
-            switch (form)
-            {
-                case LongWaitDlg _:
-                    return null; // progress dialog -- not a blocker
-                case CommonAlertDlg alert:
-                    return alert.DetailedMessage;
-                case ReportErrorDlg error:
-                    return error.Message;
-                case null:
-                    return GetWindowTitle(hwnd); // a native window -- report its title
-                default:
-                    return form.Text; // any other managed dialog -- its caption
-            }
+            return (form as CommonFormEx)?.DetailedMessage ?? form?.Text ?? GetWindowTitle(hwnd);
         }
 
-        // The message of the first of the given modal windows that is actually blocking (not a LongWaitDlg
-        // progress dialog), or null if none blocks. The shared core of BlockingAlertMessage (the form gate)
-        // and the dialog-watch. Reads the open forms, so it must run on the UI thread.
+        // The message of the first of the given modal windows that is actually blocking, or null if none
+        // blocks (every one is a LongWaitDlg, a progress dialog the work itself drives). The shared core of
+        // BlockingAlertMessage (the form gate) and the dialog-watch. Reads the open forms, so it must run on
+        // the UI thread.
         private static string FirstBlockingDialogMessage(IEnumerable<IntPtr> modalHandles)
         {
             var forms = FormUtil.OpenForms.Where(f => f.IsHandleCreated).ToDictionary(f => f.Handle);
             foreach (var hwnd in modalHandles)
             {
                 forms.TryGetValue(hwnd, out var form);
-                var message = ModalDialogMessage(hwnd, form);
-                if (message != null)
-                    return message;
+                if (form is LongWaitDlg)
+                    continue; // a progress dialog -- not a blocker; keep waiting
+                return ModalDialogMessage(hwnd, form);
             }
             return null;
         }
@@ -921,10 +886,6 @@ namespace pwiz.Skyline.ToolsUI
         public static string GetFormImage(string formId, string filePath)
         {
             ValidateFormIdFormat(formId);
-            // Guard against there being no desktop session before resolving the form, so a missing UI thread
-            // returns the "try again" message rather than failing to find the form.
-            if (!HasUiDispatch())
-                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             // ResolveForm throws "form not found" before any permission prompt, so a bad id never prompts.
             var form = ResolveForm(formId);
             string denial = CheckScreenCaptureAvailability();
@@ -944,8 +905,6 @@ namespace pwiz.Skyline.ToolsUI
         public static ImageBytesMetadata GetFormImageBytes(string formId)
         {
             ValidateFormIdFormat(formId);
-            if (!HasUiDispatch())
-                return new ImageBytesMetadata { Message = LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE };
             var form = ResolveForm(formId);
             string denial = CheckScreenCaptureAvailability();
             if (denial != null)
@@ -1013,16 +972,9 @@ namespace pwiz.Skyline.ToolsUI
         // for bad input (id format wrong, referenced form not found, wrong form
         // type) -- those are caller-contract violations and must reach the
         // caller regardless of environment.
-        //
-        // Note: when there is no UI dispatch yet we use LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE
-        // for all variants, including graphs. The wording is slightly off for
-        // graphs (which do not capture from the screen), but the user-facing
-        // intent ("try again momentarily") is correct.
         private static string CheckImageToolPreflight(string id, Action ensureExistsOnUi, bool requiresScreenCapture)
         {
             ValidateFormIdFormat(id);
-            if (!HasUiDispatch())
-                return LLM_MSG_SCREEN_CAPTURE_UNAVAILABLE;
             // Passing an Action binds InvokeOnUiThread to the void overload,
             // which preserves ArgumentException across the thread boundary.
             InvokeOnUiThread(ensureExistsOnUi);

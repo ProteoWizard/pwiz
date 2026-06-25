@@ -79,13 +79,6 @@ namespace pwiz.Skyline
 
         public static string MainToolServiceName { get; private set; }
 
-        /// <summary>
-        /// The WinForms synchronization context for the UI thread, captured at startup so that
-        /// background services (e.g. the JSON tool server) can marshal work to the UI thread even
-        /// before <see cref="MainWindow"/> exists -- for instance while the StartPage is showing.
-        /// </summary>
-        public static SynchronizationContext UiSynchronizationContext { get; private set; }
-
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
@@ -339,10 +332,10 @@ namespace pwiz.Skyline
                 }
                 SystemEvents.DisplaySettingsChanged += SystemEventsOnDisplaySettingsChanged;
 
-                // Capture the UI-thread synchronization context and start the tool service before
-                // the main window is created, so the JSON/MCP server can introspect and drive the
-                // StartPage too (the main window does not exist while the StartPage is showing).
-                CaptureUiSynchronizationContext();
+                // Start the tool service before the main window is created, so the JSON/MCP server can
+                // introspect and drive the StartPage too (the main window does not exist while the
+                // StartPage is showing). UI-thread marshaling goes through InvokeOnUiThread /
+                // BeginInvokeOnUiThread, which target whichever of those windows is currently up.
                 MainToolServiceName = Guid.NewGuid().ToString();
                 if (Settings.Default.EnableMcpAutoConnect)
                 {
@@ -591,20 +584,6 @@ namespace pwiz.Skyline
         // DocumentChangedEvent. The service can start before the main window exists (while the
         // StartPage is showing), so the subscription is deferred until the window is available.
         private static bool _toolServiceDocumentChangeSubscribed;
-
-        // Ensures a WinForms synchronization context exists on (and is captured for) the UI thread.
-        // Held in our own reference so it stays usable across the nested message loops WinForms runs
-        // (StartPage modal loop, then Application.Run), letting background services marshal to the UI
-        // thread before the main window is created.
-        private static void CaptureUiSynchronizationContext()
-        {
-            UiSynchronizationContext = SynchronizationContext.Current as WindowsFormsSynchronizationContext;
-            if (UiSynchronizationContext == null)
-            {
-                UiSynchronizationContext = new WindowsFormsSynchronizationContext();
-                SynchronizationContext.SetSynchronizationContext(UiSynchronizationContext);
-            }
-        }
 
         public static void StartToolService()
         {
@@ -912,6 +891,54 @@ namespace pwiz.Skyline
 
         public static SkylineWindow MainWindow { get; private set; }
         public static StartPage StartWindow { get; private set; }
+
+        /// <summary>
+        /// The window used to marshal work onto the UI thread: the main window once it exists, otherwise
+        /// the StartPage while it is showing. Null very early in startup before either has a usable handle.
+        /// Lets background services (e.g. the JSON/MCP tool server) drive the UI before the main window
+        /// exists. Safe to read from a background thread (only checks handle/disposed flags).
+        /// </summary>
+        private static Control UiThreadWindow
+        {
+            get
+            {
+                var mainWindow = MainWindow;
+                if (mainWindow != null && mainWindow.IsHandleCreated && !mainWindow.IsDisposed)
+                    return mainWindow;
+                var startWindow = StartWindow;
+                if (startWindow != null && startWindow.IsHandleCreated && !startWindow.IsDisposed)
+                    return startWindow;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> synchronously on the UI thread, marshaling through the main
+        /// window or, before it exists, the StartPage. If neither is up yet (very early startup), runs it
+        /// synchronously on the calling thread.
+        /// </summary>
+        public static void InvokeOnUiThread(Action action)
+        {
+            var window = UiThreadWindow;
+            if (window != null)
+                window.Invoke(action);
+            else
+                action();
+        }
+
+        /// <summary>
+        /// Posts <paramref name="action"/> to the UI thread fire-and-forget, through the main window or,
+        /// before it exists, the StartPage. If neither is up yet (very early startup), runs it on a
+        /// background thread so the caller still does not block.
+        /// </summary>
+        public static void BeginInvokeOnUiThread(Action action)
+        {
+            var window = UiThreadWindow;
+            if (window != null)
+                window.BeginInvoke(action);
+            else
+                CommonActionUtil.RunAsync(action);
+        }
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
         

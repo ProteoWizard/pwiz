@@ -111,7 +111,7 @@ namespace pwiz.Skyline.ToolsUI
         public DocumentLocation GetDocumentLocation()
         {
             DocumentLocation documentLocation = null;
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(new Action(() =>
             {
                 if (!Program.MainWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
                 {
@@ -136,7 +136,7 @@ namespace pwiz.Skyline.ToolsUI
         [Obsolete]
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(new Action(() =>
             {
                 if (documentLocation == null)
                     Program.MainWindow.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID));
@@ -151,14 +151,14 @@ namespace pwiz.Skyline.ToolsUI
         public string GetDocumentLocationName()
         {
             string name = null;
-            Program.MainWindow.Invoke(new Action(() => name = Program.MainWindow.SequenceTree.SelectedNode.Text));
+            Program.InvokeOnUiThread(new Action(() => name = Program.MainWindow.SequenceTree.SelectedNode.Text));
             return name;
         }
 
         public string GetReplicateName()
         {
             string name = null;
-            Program.MainWindow.Invoke(new Action(() => name = Program.MainWindow.SelectedGraphChromName));
+            Program.InvokeOnUiThread(new Action(() => name = Program.MainWindow.SelectedGraphChromName));
             return name;
         }
 
@@ -290,7 +290,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportFasta(string textFasta)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(new Action(() =>
             {
                 Program.MainWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
                     false, ToolsUIResources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(new Action(() =>
             {
                 Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
                     Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
@@ -316,7 +316,7 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             // CONSIDER: Add this Library Spec to Settings.Default.SpectralLibraryList?
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(new Action(() =>
             {
                 Program.MainWindow.ModifyDocument(ToolsUIResources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
@@ -382,7 +382,7 @@ namespace pwiz.Skyline.ToolsUI
                     catch (TimeoutException)
                     {
                         var error = @"No response from " + documentChangeSender.Value.Name; 
-                        Program.MainWindow.BeginInvoke(new Action(() =>
+                        Program.BeginInvokeOnUiThread(new Action(() =>
                         {
                             Program.MainWindow.ShowImmediateWindow();
                             Program.MainWindow.ImmediateWindow.WriteLine(error);
@@ -469,7 +469,7 @@ namespace pwiz.Skyline.ToolsUI
         public void DeleteElements(string[] elementLocatorStrings)
         {
             var elementLocators = elementLocatorStrings.Select(ElementLocator.Parse).ToList();
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(new Action(() =>
             {
                 DeleteElementsNow(elementLocators);
             }));
@@ -508,7 +508,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportProperties(string csvText)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(new Action(() =>
             {
                 Program.MainWindow.ImportAnnotations(new StringReader(csvText),
                     new MessageInfo(MessageType.imported_annotations, Program.MainWindow.Document.DocumentType,
@@ -518,7 +518,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportPeakBoundaries(string csvText)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(new Action(() =>
             {
                 lock (Program.MainWindow.GetDocumentChangeLock())
                 {
@@ -563,7 +563,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             ElementRef result = null;
             Exception exception = null;
-            Program.MainWindow.Invoke(new Action(() => 
+            Program.InvokeOnUiThread(new Action(() => 
             {
                 try
                 {
