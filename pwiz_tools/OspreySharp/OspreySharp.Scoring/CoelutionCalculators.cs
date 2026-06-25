@@ -108,6 +108,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "fragment_coelution_sum"; } }
 
+        public override string DisplayName { get { return "Fragment co-elution (sum)"; } }
+
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
@@ -121,6 +123,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "fragment_coelution_max"; } }
 
+        public override string DisplayName { get { return "Fragment co-elution (max)"; } }
+
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
@@ -133,6 +137,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class NCoelutingFragmentsCalc : DetailedOspreyFeatureCalculator
     {
         public override string Name { get { return "n_coeluting_fragments"; } }
+
+        public override string DisplayName { get { return "Co-eluting fragment count"; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 

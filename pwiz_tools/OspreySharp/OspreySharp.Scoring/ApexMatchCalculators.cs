@@ -147,6 +147,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "consecutive_ions"; } }
 
+        public override string DisplayName { get { return "Consecutive ion series"; } }
+
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
@@ -217,6 +219,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "explained_intensity"; } }
 
+        public override string DisplayName { get { return "Explained intensity"; } }
+
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
@@ -236,6 +240,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class MassAccuracyMeanCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "mass_accuracy_deviation_mean"; } }
+
+        public override string DisplayName { get { return "Mass error (signed mean)"; } }
 
         // SIGNED, centered near zero: neither tail is target-like (the magnitude
         // matters, not the sign), so the expected coefficient direction is ill-defined.
@@ -263,6 +269,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class AbsMassAccuracyMeanCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "abs_mass_accuracy_deviation_mean"; } }
+
+        public override string DisplayName { get { return "Mass error (abs mean)"; } }
 
         public override bool IsReversedScore { get { return true; } }   // lower is better
 

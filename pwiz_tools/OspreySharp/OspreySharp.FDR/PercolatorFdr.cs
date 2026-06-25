@@ -2507,7 +2507,23 @@ namespace pwiz.OspreySharp.FDR
             OspreyOutput.Out.WriteLine(
                 "  Feature weight contributions (trained linear model, coefficients standardized):");
             OspreyOutput.Out.WriteLine("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "percent");
+            // Emit most-influential first: sort a row-index array by absolute
+            // contribution percent descending, tie-broken by ascending feature index
+            // for determinism. The underlying per-feature arrays stay in PIN-index
+            // order (the OSPREY_DUMP_FEATURE_CONTRIB TSV below relies on that); only
+            // the console rows are reordered. When composite is degenerate the
+            // percentages are NaN and |pct| sorting collapses to the index tie-break.
+            var emitOrder = new int[p];
             for (int j = 0; j < p; j++)
+                emitOrder[j] = j;
+            Array.Sort(emitOrder, (a, b) => // Array.Sort OK: display-only console emit order; the index tie-break makes the comparator total (no ties), the per-feature arrays are read by index (not permuted), and the TSV stays index-ordered -- not parity-bearing
+            {
+                double pa = ok ? Math.Abs(100.0 * weighted[a] / composite) : 0.0;
+                double pb = ok ? Math.Abs(100.0 * weighted[b] / composite) : 0.0;
+                int cmp = pb.CompareTo(pa);   // descending magnitude
+                return cmp != 0 ? cmp : a.CompareTo(b);
+            });
+            foreach (int j in emitOrder)
             {
                 double pct = ok ? 100.0 * weighted[j] / composite : double.NaN;
                 bool wrongSign = reversedScore != null && j < reversedScore.Length &&

@@ -110,5 +110,22 @@ namespace pwiz.OspreySharp.Scoring
                 flags[i] = _calculators[i].IsReversedScore;
             return flags;
         }
+
+        /// <summary>
+        /// The human-friendly (Skyline-style)
+        /// <see cref="IOspreyFeatureCalculator.DisplayName"/> for each of the 21 PIN
+        /// features, in parity-critical index order. The FDR layer (which does not
+        /// reference this assembly) takes this vector by value to label the rows of
+        /// the post-training feature-contribution report. Display text only -- the
+        /// parity-gated columns continue to use the machine
+        /// <see cref="IOspreyFeatureCalculator.Name"/>.
+        /// </summary>
+        public static string[] GetFeatureLabels()
+        {
+            var labels = new string[FeatureCount];
+            for (int i = 0; i < FeatureCount; i++)
+                labels[i] = _calculators[i].DisplayName;
+            return labels;
+        }
     }
 }

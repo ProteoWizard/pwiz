@@ -450,6 +450,55 @@ namespace pwiz.OspreySharp.Test
             }
         }
 
+        /// <summary>
+        /// The per-feature human-friendly (Skyline-style) display labels in PIN index
+        /// order. Hard-codes the oracle so a future calculator reorder, or an edited
+        /// <see cref="IOspreyFeatureCalculator.DisplayName"/>, fails loudly. The labels
+        /// are owned by each calculator class (single source of truth), surfaced as a
+        /// vector by <see cref="OspreyFeatureCalculators.GetFeatureLabels"/> for the
+        /// FDR layer's post-training contribution report.
+        /// </summary>
+        [TestMethod]
+        public void TestGetFeatureLabels()
+        {
+            var expected = new[]
+            {
+                "Fragment co-elution (sum)",            // 0  fragment_coelution_sum
+                "Fragment co-elution (max)",            // 1  fragment_coelution_max
+                "Co-eluting fragment count",            // 2  n_coeluting_fragments
+                "Peak apex intensity",                  // 3  peak_apex
+                "Peak area",                            // 4  peak_area
+                "Peak sharpness",                       // 5  peak_sharpness
+                "Cross-correlation (xcorr)",            // 6  xcorr
+                "Consecutive ion series",               // 7  consecutive_ions
+                "Explained intensity",                  // 8  explained_intensity
+                "Mass error (signed mean)",             // 9  mass_accuracy_deviation_mean
+                "Mass error (abs mean)",                // 10 abs_mass_accuracy_deviation_mean
+                "Retention time difference (signed)",   // 11 rt_deviation
+                "Retention time difference (abs)",      // 12 abs_rt_deviation
+                "MS1 precursor co-elution",             // 13 ms1_precursor_coelution
+                "MS1 isotope dot-product",              // 14 ms1_isotope_cosine
+                "Median-polish cosine",                 // 15 median_polish_cosine
+                "Median-polish residual ratio",         // 16 median_polish_residual_ratio
+                "SG-weighted xcorr",                    // 17 sg_weighted_xcorr
+                "SG-weighted cosine",                   // 18 sg_weighted_cosine
+                "Median-polish min fragment R2",        // 19 median_polish_min_fragment_r2
+                "Median-polish residual correlation",   // 20 median_polish_residual_correlation
+            };
+
+            var labels = OspreyFeatureCalculators.GetFeatureLabels();
+            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, labels.Length);
+            Assert.AreEqual(expected.Length, labels.Length);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], labels[i],
+                    string.Format("DisplayName[{0}] ({1}) mismatch",
+                        i, OspreyFeatureCalculators.Get(i).Name));
+                // The vector must agree with the SPI property on each calculator.
+                Assert.AreEqual(OspreyFeatureCalculators.Get(i).DisplayName, labels[i]);
+            }
+        }
+
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
         {
             return new LibraryFragment

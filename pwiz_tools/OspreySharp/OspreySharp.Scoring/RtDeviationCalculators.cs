@@ -34,6 +34,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "rt_deviation"; } }
 
+        public override string DisplayName { get { return "Retention time difference (signed)"; } }
+
         // SIGNED, centered near zero: neither tail is target-like (the magnitude
         // matters, not the sign), so the expected coefficient direction is ill-defined.
         // Set false by convention; the contribution table's unexpected-direction flag is
@@ -50,6 +52,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class AbsRtDeviationCalc : SummaryOspreyFeatureCalculator
     {
         public override string Name { get { return "abs_rt_deviation"; } }
+
+        public override string DisplayName { get { return "Retention time difference (abs)"; } }
 
         public override bool IsReversedScore { get { return true; } }   // lower is better
 

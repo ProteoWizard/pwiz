@@ -54,6 +54,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "xcorr"; } }
 
+        public override string DisplayName { get { return "Cross-correlation (xcorr)"; } }
+
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
@@ -244,6 +246,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "sg_weighted_xcorr"; } }
 
+        public override string DisplayName { get { return "SG-weighted xcorr"; } }
+
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
@@ -263,6 +267,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class SgCosineCalc : ApexSpectraOspreyFeatureCalculator
     {
         public override string Name { get { return "sg_weighted_cosine"; } }
+
+        public override string DisplayName { get { return "SG-weighted cosine"; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 

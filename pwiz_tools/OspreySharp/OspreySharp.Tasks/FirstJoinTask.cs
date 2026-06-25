@@ -1048,7 +1048,7 @@ namespace pwiz.OspreySharp.Tasks
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config, ParquetScoreCache.PIN_FEATURE_NAMES,
                 ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
-                ParquetScoreCache.PIN_FEATURE_LABELS,
+                OspreyFeatureCalculators.GetFeatureLabels(),
                 OspreyFeatureCalculators.GetReversedScoreFlags());
             if (aborted)
             {

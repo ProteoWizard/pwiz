@@ -41,6 +41,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "ms1_precursor_coelution"; } }
 
+        public override string DisplayName { get { return "MS1 precursor co-elution"; } }
+
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
@@ -69,6 +71,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class Ms1IsotopeCosineCalc : DetailedOspreyFeatureCalculator
     {
         public override string Name { get { return "ms1_isotope_cosine"; } }
+
+        public override string DisplayName { get { return "MS1 isotope dot-product"; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 

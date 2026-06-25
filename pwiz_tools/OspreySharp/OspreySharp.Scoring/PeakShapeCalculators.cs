@@ -117,6 +117,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "peak_apex"; } }
 
+        public override string DisplayName { get { return "Peak apex intensity"; } }
+
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
@@ -134,6 +136,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class PeakAreaCalc : DetailedOspreyFeatureCalculator
     {
         public override string Name { get { return "peak_area"; } }
+
+        public override string DisplayName { get { return "Peak area"; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
@@ -164,6 +168,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class PeakSharpnessCalc : DetailedOspreyFeatureCalculator
     {
         public override string Name { get { return "peak_sharpness"; } }
+
+        public override string DisplayName { get { return "Peak sharpness"; } }
 
         public override bool IsReversedScore { get { return false; } }   // higher is better
 
