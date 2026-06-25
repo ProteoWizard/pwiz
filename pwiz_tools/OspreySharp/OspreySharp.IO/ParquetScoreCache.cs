@@ -989,7 +989,7 @@ namespace pwiz.OspreySharp.IO
 
         /// <summary>
         /// The path a post-Stage-6 reader (Stage 7 feature reload, resume /
-        /// <c>--task MergeNode</c>) should consume for a given original
+        /// <c>--task SecondPassFDR</c>) should consume for a given original
         /// <c>.scores.parquet</c> path: the reconciled sibling when it exists
         /// on disk, otherwise the original. This per-file selection is the
         /// read-side contract that makes the separate-reconciled-file design
@@ -1043,7 +1043,7 @@ namespace pwiz.OspreySharp.IO
 
         #endregion
 
-        #region Phase 3: --task FirstJoin group validation
+        #region Phase 3: --task FirstPassFDR group validation
 
         /// <summary>
         /// Read all key-value pairs from a parquet footer. Returns an empty
@@ -1150,7 +1150,7 @@ namespace pwiz.OspreySharp.IO
         /// Open each `.scores.parquet` in <paramref name="paths"/> and assert
         /// its footer metadata matches <paramref name="config"/>'s search and
         /// library hashes. Returns null on success or an error message naming
-        /// the offending file. Used at the start of --task FirstJoin mode.
+        /// the offending file. Used at the start of --task FirstPassFDR mode.
         /// </summary>
         public static string ValidateScoresParquetGroup(
             IEnumerable<string> paths,
@@ -1181,7 +1181,7 @@ namespace pwiz.OspreySharp.IO
                 if (err != null)
                     return err;
 
-                // --task MergeNode strict reconciled-input gate. Mirrors
+                // --task SecondPassFDR strict reconciled-input gate. Mirrors
                 // Rust pipeline.rs:3313-3344: every input parquet must
                 // carry osprey.reconciled = "true" so the operator
                 // cannot mix raw Stage 4 parquets into a Stages 7-8-only
@@ -1195,9 +1195,9 @@ namespace pwiz.OspreySharp.IO
                     if (!string.Equals(cachedReconciled, "true", StringComparison.Ordinal))
                     {
                         return string.Format(
-                            "--task MergeNode requires a reconciled (post-Stage-6) parquet, " +
+                            "--task SecondPassFDR requires a reconciled (post-Stage-6) parquet, " +
                             "but {0} has osprey.reconciled = '{1}'. Either it is a Stage 4 " +
-                            "(raw) parquet — run --task PerFileRescore to produce reconciled " +
+                            "(raw) parquet — run --task PerFileRescoring to produce reconciled " +
                             "parquets first — or run the full pipeline.",
                             path, cachedReconciled ?? "<unset>");
                     }

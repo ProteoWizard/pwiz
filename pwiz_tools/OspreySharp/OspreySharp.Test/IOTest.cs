@@ -1307,7 +1307,7 @@ namespace pwiz.OspreySharp.Test
         /// <summary>
         /// Verifies ReconciledPathFromScoresPath swaps the ".scores.parquet"
         /// suffix for ".scores-reconciled.parquet" and is idempotent on an
-        /// already-reconciled path (the --task MergeNode case where the input IS
+        /// already-reconciled path (the --task SecondPassFDR case where the input IS
         /// the reconciled file).
         /// </summary>
         [TestMethod]
@@ -1791,7 +1791,7 @@ namespace pwiz.OspreySharp.Test
 
         /// <summary>
         /// Caller may pass a SUPERSET of the sidecar's entries — a real
-        /// case for --task MergeNode stage 7 entry where the reconciled
+        /// case for --task SecondPassFDR stage 7 entry where the reconciled
         /// parquet has gap-fill stubs the 1st-pass sidecar (written
         /// pre-gap-fill) does not. Sidecar records overlay onto matching
         /// entry_ids; entries with no matching record keep their default
@@ -2757,7 +2757,7 @@ namespace pwiz.OspreySharp.Test
         /// <summary>
         /// Two tasks writing sidecars for the same output path must not
         /// trample each other. Naming includes the task name, so
-        /// PerFileScoring's sidecar and PerFileRescore's sidecar are
+        /// PerFileScoring's sidecar and PerFileRescoring's sidecar are
         /// distinct files on disk. This is the load-bearing property
         /// that lets PerFileRescore overwrite a parquet in place while
         /// PerFileScoring's "I produced this" record survives untouched.
@@ -2775,20 +2775,20 @@ namespace pwiz.OspreySharp.Test
 
                 TaskValiditySidecar.Write(output, "PerFileScoring", TASK_VERSION,
                     scoringKey, new string[0]);
-                TaskValiditySidecar.Write(output, "PerFileRescore", TASK_VERSION,
+                TaskValiditySidecar.Write(output, "PerFileRescoring", TASK_VERSION,
                     rescoreKey, new string[0]);
 
                 string scoringPath = TaskValiditySidecar.PathFor(output, "PerFileScoring");
-                string rescorePath = TaskValiditySidecar.PathFor(output, "PerFileRescore");
+                string rescorePath = TaskValiditySidecar.PathFor(output, "PerFileRescoring");
                 Assert.AreNotEqual(scoringPath, rescorePath);
                 Assert.IsTrue(File.Exists(scoringPath));
                 Assert.IsTrue(File.Exists(rescorePath));
 
                 // Each task's IsValid sees its own key, not the other's.
                 Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileScoring", scoringKey));
-                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileRescore", rescoreKey));
+                Assert.IsTrue(TaskValiditySidecar.IsValid(output, "PerFileRescoring", rescoreKey));
                 Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileScoring", rescoreKey));
-                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileRescore", scoringKey));
+                Assert.IsFalse(TaskValiditySidecar.IsValid(output, "PerFileRescoring", scoringKey));
             }
             finally
             {

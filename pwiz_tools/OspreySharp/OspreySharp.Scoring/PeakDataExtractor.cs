@@ -38,23 +38,16 @@ namespace pwiz.OspreySharp.Scoring
     /// This is the producer seam mirroring Skyline's results layer: the scorer
     /// (<see cref="CoelutionScorer"/>) composes an extractor and consumes its
     /// output, rather than interleaving data preparation with calculator dispatch.
-    /// All detection-side diagnostics (search-XIC dump, CWT-path row, [DIAG] trace)
+    /// All detection-side diagnostics (search-XIC dump, CWT-path row)
     /// live here with the logic they describe; the median-polish publish and the
     /// 21-calculator pass stay in the scorer.
     /// </summary>
     internal sealed class PeakDataExtractor
     {
-        // Diagnostic: log detailed trace for a specific peptide. Set this to a
-        // peptide modified sequence to dump its RT window, XICs, CWT peaks, and
-        // winning peak selection. Used for bisecting divergences with Rust.
-        private const string DIAG_PEPTIDE = "AAAAAAAAAAAAAAAGAGAGAK";
-
-        private readonly Action<string> _logInfo;
         private readonly IScoringDiagnostics _diagnostics;
 
-        public PeakDataExtractor(Action<string> logInfo, IScoringDiagnostics diagnostics)
+        public PeakDataExtractor(IScoringDiagnostics diagnostics)
         {
-            _logInfo = logInfo ?? (_ => { });
             _diagnostics = diagnostics;
         }
 
@@ -82,8 +75,6 @@ namespace pwiz.OspreySharp.Scoring
         {
             extracted = default;
             var config = context.Config;
-            bool diag = !candidate.IsDecoy && candidate.ModifiedSequence == DIAG_PEPTIDE
-                && candidate.Charge == 2;
             int nScans = windowSpectra.Count;
             if (nScans < 5)
                 return false;
@@ -108,45 +99,10 @@ namespace pwiz.OspreySharp.Scoring
                 : candidate.RetentionTime;
             double rtTolerance = globalRtTolerance;
 
-            if (diag)
-            {
-                _logInfo(string.Format(
-                    "[DIAG] {0} charge {1}: library_rt={2:F3}, expected_rt={3:F3}, tolerance={4:F3}",
-                    candidate.ModifiedSequence, candidate.Charge,
-                    candidate.RetentionTime, expectedRt, rtTolerance));
-                _logInfo(string.Format(
-                    "[DIAG] {0}: window m/z={1:F3}, fragments={2}, window_spectra={3}",
-                    candidate.ModifiedSequence, candidate.PrecursorMz,
-                    candidate.Fragments.Count, nScans));
-            }
-
             // Find scan range for XIC extraction. Extracted to FindScanRange
             // (override-bounds vs normal-search filter shapes).
             FindScanRange(overrideBounds, windowRts, nScans, expectedRt, rtTolerance,
                 out int startScan, out int endScan);
-
-            if (diag)
-            {
-                if (startScan >= 0 && endScan >= 0)
-                {
-                    _logInfo(string.Format(
-                        "[DIAG] {0}: scan range [{1}..{2}] RT [{3:F3}..{4:F3}] ({5} scans)",
-                        candidate.ModifiedSequence, startScan, endScan,
-                        windowRts[startScan], windowRts[endScan],
-                        endScan - startScan + 1));
-                    _logInfo(string.Format(
-                        "[DIAG] {0}: spectrum scan_numbers in range: first={1}, last={2}",
-                        candidate.ModifiedSequence,
-                        windowSpectra[startScan].ScanNumber,
-                        windowSpectra[endScan].ScanNumber));
-                }
-                else
-                {
-                    _logInfo(string.Format(
-                        "[DIAG] {0}: no scans in RT window around expected_rt={1:F3}",
-                        candidate.ModifiedSequence, expectedRt));
-                }
-            }
 
             if (startScan < 0 || endScan < 0 || endScan - startScan + 1 < 5)
                 return false;
@@ -215,23 +171,6 @@ namespace pwiz.OspreySharp.Scoring
             if (peaks == null)
                 return false;
 
-            if (diag)
-            {
-                _logInfo(string.Format(
-                    "[DIAG] {0}: xics extracted={1}, peaks={2}",
-                    candidate.ModifiedSequence, xics.Count, peaks.Count));
-                for (int i = 0; i < peaks.Count; i++)
-                {
-                    var p = peaks[i];
-                    int apexAbsIdx = startScan + p.ApexIndex;
-                    double apexRt = windowRts[apexAbsIdx];
-                    uint apexScanNum = windowSpectra[apexAbsIdx].ScanNumber;
-                    _logInfo(string.Format(
-                        "[DIAG] {0}: peak[{1}] apex_local={2} apex_rt={3:F3} scan#={4} range=[{5}..{6}]",
-                        candidate.ModifiedSequence, i, p.ApexIndex,
-                        apexRt, apexScanNum, p.StartIndex, p.EndIndex));
-                }
-            }
             if (peaks.Count == 0)
             {
                 if (!overrideBounds.HasValue)
@@ -349,12 +288,6 @@ namespace pwiz.OspreySharp.Scoring
 
                 double rankScore = coelutionScore * rtPenalty * intensityWeight;
 
-                if (diag)
-                {
-                    _logInfo(string.Format(
-                        "[DIAG] {0}: peak[{1}] pairwise_corr_mean={2:F4} rt_penalty={3:F4} int_weight={4:F2} rank={5:F4}",
-                        candidate.ModifiedSequence, pi, coelutionScore, rtPenalty, intensityWeight, rankScore));
-                }
                 // Tie-break via IEEE 754-2008 total order (matches Rust's
                 // f64::total_cmp used in run_search's scored_candidates
                 // sort). When intensityWeight is 0 (ref_xic intensity at
@@ -373,15 +306,6 @@ namespace pwiz.OspreySharp.Scoring
 
                 if (capturedPeaks != null)
                     capturedPeaks.Add((p, coelutionScore, rankScore));
-            }
-
-            if (diag && bestPeak != null)
-            {
-                int apexAbsIdx = startScan + bestPeak.ApexIndex;
-                _logInfo(string.Format(
-                    "[DIAG] {0}: WINNER peak[{1}] apex_rt={2:F3} scan#={3}",
-                    candidate.ModifiedSequence, bestPeakIdx,
-                    windowRts[apexAbsIdx], windowSpectra[apexAbsIdx].ScanNumber));
             }
 
             // Append peak boundaries to search XIC diagnostic dump

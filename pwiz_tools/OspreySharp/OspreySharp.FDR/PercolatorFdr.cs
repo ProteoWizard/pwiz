@@ -250,7 +250,7 @@ namespace pwiz.OspreySharp.FDR
             Matrix stdFeatures;
             var standardizer = FeatureStandardizer.FitTransform(features, out stdFeatures);
             swSetup.Stop();
-            Console.Error.WriteLine(
+            OspreyOutput.Out.WriteLine(
                 $"[TIMING]   Percolator setup + standardize: {swSetup.Elapsed.TotalSeconds:F1}s ({n} entries x {nFeatures} features)");
 
             // Stage 5 standardizer dump. Gated by the injected diagnostics config
@@ -305,7 +305,7 @@ namespace pwiz.OspreySharp.FDR
                     dedupDecoys++;
                 else dedupTargets++;
             }
-            Console.Error.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
+            OspreyOutput.Out.WriteLine("[COUNT]   Percolator best-per-precursor: {0} entries ({1} targets, {2} decoys) from {3} total",
                 bestPerPrecursor.Length, dedupTargets, dedupDecoys, n);
 
             int subN = trainSubset.Length;
@@ -316,7 +316,7 @@ namespace pwiz.OspreySharp.FDR
                     subDecoys++;
                 else subTargets++;
             }
-            Console.Error.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
+            OspreyOutput.Out.WriteLine("[COUNT]   Percolator subsample: {0} entries ({1} targets, {2} decoys) from {3} dedup",
                 subN, subTargets, subDecoys, bestPerPrecursor.Length);
 
             // Build subset-local arrays
@@ -384,7 +384,7 @@ namespace pwiz.OspreySharp.FDR
                                    bestFeatIdx < config.FeatureNames.Length)
                 ? config.FeatureNames[bestFeatIdx]
                 : string.Format("feature_{0}", bestFeatIdx);
-            Console.Error.WriteLine(
+            OspreyOutput.Out.WriteLine(
                 "[COUNT] Best initial feature: {0} ({1} targets at {2:F0}% FDR)",
                 bestFeatName, bestFeatPassing, trainFdr * 100.0);
 
@@ -432,7 +432,14 @@ namespace pwiz.OspreySharp.FDR
             // on HRAM Astral (vs Rust rayon's ~9x) even with the same
             // per-call cost. Explicit threads remove the ThreadPool
             // scheduling variable.
+            // Section sub-header (default human log): the actual (possibly subsampled)
+            // training-set size the per-iteration percent lines below are computed against.
+            // subN / subTargets are the post-subsample counts computed above.
+            OspreyOutput.Out.WriteLine("  {0}-fold cross-validation on {1} training entries ({2} targets)",
+                config.NFolds, subN, subTargets);
+
             var swTrain = Stopwatch.StartNew();
+            var trainProgress = new TrainProgressReporter(config.NFolds, config.MaxIterations, trainFdr);
             OspreyParallel.For(0, config.NFolds, config.NFolds, fold =>
             {
                 var swFold = Stopwatch.StartNew();
@@ -440,7 +447,7 @@ namespace pwiz.OspreySharp.FDR
                 foldModels[fold] = TrainFold(
                     subFeatures, subLabels, subEntryIds, subPeptides,
                     foldTrainIndices[fold], initialScores, config, trainFdr,
-                    svmScratchPool, out iters);
+                    svmScratchPool, fold, trainProgress, out iters);
                 foldIterations[fold] = iters;
                 swFold.Stop();
                 foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
@@ -449,10 +456,10 @@ namespace pwiz.OspreySharp.FDR
 
             for (int fold = 0; fold < config.NFolds; fold++)
             {
-                Console.Error.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
+                OspreyOutput.Out.WriteLine("[TIMING]   Percolator fold {0}/{1}: {2:F1}s ({3} iterations)",
                     fold + 1, config.NFolds, foldElapsed[fold], foldIterations[fold]);
             }
-            Console.Error.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
+            OspreyOutput.Out.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
 
             // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
@@ -831,6 +838,88 @@ namespace pwiz.OspreySharp.FDR
         // SVM fold training
         // ============================================================
 
+        /// <summary>
+        /// Serializes and collapses the per-cycle training progress emitted from inside the
+        /// parallel fold training (OspreyParallel.For below). The NFolds cross-validation folds
+        /// run on dedicated threads, each reporting one update per iteration in nondeterministic
+        /// completion order. This reporter buffers a given iteration's per-fold reports under a
+        /// lock and flushes them only once all folds have reported, so output is always ordered:
+        /// <list type="bullet">
+        /// <item>Default: one line reporting the percent of training targets passing at the train
+        /// FDR -- passing/total summed over folds, a ratio that cancels both the subsample scale
+        /// and the CV fold-overlap double-count, giving a scale-free convergence signal.</item>
+        /// <item>--verbose: each fold's line in fold order, with its own count, denominator, and
+        /// percent (so the ~2/3 per-fold training split is explicit, not assumed).</item>
+        /// </list>
+        /// Early-converging folds that stop before others simply leave that iteration's partial
+        /// buffer unflushed (the always-emitted result line carries the final count).
+        /// </summary>
+        private sealed class TrainProgressReporter
+        {
+            private sealed class FoldReport
+            {
+                public int Fold;
+                public int Passing;
+                public int Targets;
+            }
+
+            private readonly int _nFolds;
+            private readonly int _maxIterations;
+            private readonly double _trainFdr;
+            private readonly object _lock = new object();
+            private readonly Dictionary<int, List<FoldReport>> _rounds =
+                new Dictionary<int, List<FoldReport>>();
+
+            public TrainProgressReporter(int nFolds, int maxIterations, double trainFdr)
+            {
+                _nFolds = nFolds;
+                _maxIterations = maxIterations;
+                _trainFdr = trainFdr;
+            }
+
+            public void ReportIteration(int foldIndex, int iteration, int nPassing, int nTargets)
+            {
+                lock (_lock)
+                {
+                    List<FoldReport> reports;
+                    if (!_rounds.TryGetValue(iteration, out reports))
+                    {
+                        reports = new List<FoldReport>(_nFolds);
+                        _rounds[iteration] = reports;
+                    }
+                    reports.Add(new FoldReport { Fold = foldIndex, Passing = nPassing, Targets = nTargets });
+                    if (reports.Count < _nFolds)
+                        return;
+                    _rounds.Remove(iteration);
+
+                    if (OspreyOutput.Verbose)
+                    {
+                        reports.Sort((a, b) => a.Fold.CompareTo(b.Fold));
+                        foreach (var r in reports)
+                        {
+                            double foldPct = r.Targets > 0 ? 100.0 * r.Passing / r.Targets : 0.0;
+                            OspreyOutput.Out.WriteLine(
+                                "  Percolator fold {0}/{1}: iteration {2} of {3} ({4} of {5} targets, {6:F1}% at {7:P0} FDR)",
+                                r.Fold + 1, _nFolds, iteration + 1, _maxIterations,
+                                r.Passing, r.Targets, foldPct, _trainFdr);
+                        }
+                        return;
+                    }
+
+                    int sumPassing = 0, sumTargets = 0;
+                    foreach (var r in reports)
+                    {
+                        sumPassing += r.Passing;
+                        sumTargets += r.Targets;
+                    }
+                    double pct = sumTargets > 0 ? 100.0 * sumPassing / sumTargets : 0.0;
+                    OspreyOutput.Out.WriteLine(
+                        "  Percolator iteration {0} of {1} ({2:F1}% of training targets at {3:P0} FDR)",
+                        iteration + 1, _maxIterations, pct, _trainFdr);
+                }
+            }
+        }
+
         private static LinearSvmClassifier TrainFold(
             Matrix stdFeatures,
             bool[] labels,
@@ -841,6 +930,8 @@ namespace pwiz.OspreySharp.FDR
             PercolatorConfig config,
             double trainFdr,
             SvmTrainScratchPool svmScratchPool,
+            int foldIndex,
+            TrainProgressReporter progress,
             out int bestIteration)
         {
             int nFeatures = stdFeatures.Cols;
@@ -861,10 +952,13 @@ namespace pwiz.OspreySharp.FDR
 
             var trainLabels = new bool[trainIndices.Length];
             var trainEntryIds = new uint[trainIndices.Length];
+            int nTrainTargets = 0;
             for (int i = 0; i < trainIndices.Length; i++)
             {
                 trainLabels[i] = labels[trainIndices[i]];
                 trainEntryIds[i] = entryIds[trainIndices[i]];
+                if (!trainLabels[i])
+                    nTrainTargets++;
             }
 
             for (int iteration = 0; iteration < config.MaxIterations; iteration++)
@@ -952,6 +1046,14 @@ namespace pwiz.OspreySharp.FDR
 
                 // v. Count passing targets
                 int nPassing = CountPassing(newTrainScores, trainLabels, trainEntryIds, trainFdr, foldScratch);
+
+                // Per-cycle progress so the otherwise-silent SVM training (tens of
+                // seconds on Stellar/Astral-scale inputs) shows liveness, the way
+                // Skyline reports mProphet LDA refinement cycles. The reporter collapses
+                // the parallel folds' updates to one summed line per iteration by default
+                // (--verbose shows each fold). A determinate ProgressStatus does not fit:
+                // the loop stops on convergence (consecutiveNoImprove) before MaxIterations.
+                progress.ReportIteration(foldIndex, iteration, nPassing, nTrainTargets);
 
                 if (nPassing > bestPassing)
                 {
@@ -2206,7 +2308,7 @@ namespace pwiz.OspreySharp.FDR
                     sw.Write('\t'); sw.WriteLine(foldFor[i].ToString(inv));
                 }
             }
-            Console.Error.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
+            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 subsample dump: {0} ({1} rows)", path, n);
         }
 
         /// <summary>
@@ -2255,7 +2357,7 @@ namespace pwiz.OspreySharp.FDR
                     sw.Write('\t'); sw.WriteLine(iters.ToString(inv));
                 }
             }
-            Console.Error.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
+            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
         }
 
         /// <summary>
@@ -2289,7 +2391,7 @@ namespace pwiz.OspreySharp.FDR
                     sw.Write('\t'); sw.WriteLine(Diagnostics.FormatF64Roundtrip(stds[i]));
                 }
             }
-            Console.Error.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
+            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 standardizer dump: {0} ({1} features)", path, means.Length);
         }
 
         /// <summary>
@@ -2342,7 +2444,7 @@ namespace pwiz.OspreySharp.FDR
                     sw.WriteLine();
                 }
             }
-            Console.Error.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
+            OspreyOutput.Out.WriteLine(@"Wrote Stage 5 Percolator input dump: {0} ({1} rows)", path, entries.Count);
         }
 
         // ============================================================

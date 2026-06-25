@@ -339,7 +339,7 @@ namespace pwiz.OspreySharp.IO
         /// <see cref="TryRead(string,IList{FdrEntry},Pass)"/>, but the
         /// caller supplies an entry_id-keyed dictionary directly so we
         /// skip rereading the source parquet just to size-check the
-        /// sidecar. Used by --task MergeNode Stage 7 where the compacted
+        /// sidecar. Used by --task SecondPassFDR Stage 7 where the compacted
         /// entry list already covers every sidecar record we care about.
         /// </summary>
         public static bool TryReadOverlay(string path,
@@ -385,7 +385,7 @@ namespace pwiz.OspreySharp.IO
                 {
                     // Sidecar can carry entries not in the (possibly
                     // compacted) caller dict — that's expected for
-                    // --task MergeNode where compaction has already
+                    // --task SecondPassFDR where compaction has already
                     // dropped failing precursors. Skip silently.
                     continue;
                 }

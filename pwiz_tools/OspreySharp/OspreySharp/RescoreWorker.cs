@@ -26,7 +26,7 @@ using pwiz.OspreySharp.Core;
 namespace pwiz.OspreySharp
 {
     /// <summary>
-    /// Top-level entry point for the <c>--task PerFileRescore</c>
+    /// Top-level entry point for the <c>--task PerFileRescoring</c>
     /// per-file rescore worker. Mirrors <c>run_rescore</c> in
     /// <c>osprey/crates/osprey/src/rescore.rs</c>.
     ///

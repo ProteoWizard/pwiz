@@ -45,13 +45,13 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     internal sealed class MergeNodeTask : OspreyTask
     {
-        public override string Name => @"MergeNode";
+        public override string Name => @"SecondPassFDR";
 
         /// <summary>
         /// Computes Stage 7-8 (2nd-pass FDR + protein FDR + blib) in
-        /// straight-through, the --task MergeNode stage, and the --input-scores
-        /// full-pipeline. Excluded in --task PerFileScoring, --task FirstJoin,
-        /// and --task PerFileRescore (all of which stop before the merge node).
+        /// straight-through, the --task SecondPassFDR stage, and the --input-scores
+        /// full-pipeline. Excluded in --task PerFileScoring, --task FirstPassFDR,
+        /// and --task PerFileRescoring (all of which stop before the merge node).
         /// </summary>
         public override bool IsIncluded(PipelineContext ctx)
         {
@@ -145,9 +145,8 @@ namespace pwiz.OspreySharp.Tasks
                     swProtein.Elapsed.TotalSeconds));
             }
 
-            // Stage 9: Write output blib
+            // Write output blib
             ctx.LogInfo(string.Empty);
-            ctx.LogInfo(string.Format(@"Writing output to {0}...", config.OutputBlib));
             var swBlib = Stopwatch.StartNew();
             WriteBlibOutput(perFileEntries, fullLibrary, libraryById, config, ctx);
             swBlib.Stop();
@@ -237,7 +236,6 @@ namespace pwiz.OspreySharp.Tasks
                 "[COUNT] Stage 1 passing peptides: {0}", passingPeptides.Count));
             ctx.LogInfo(string.Format(
                 "[COUNT] Stage 2 passing precursors: {0}", passingPrecursors.Count));
-            ctx.LogInfo(string.Format("Writing {0} passing entries to blib", passingEntries.Count));
 
             if (passingEntries.Count == 0)
             {
@@ -267,8 +265,8 @@ namespace pwiz.OspreySharp.Tasks
             BlibOutputWriter.Write(config, perFileEntries, libraryById, bestByPrecursor,
                 bestExpPrecursorQ, sharedBounds, entriesByPrecursor);
 
-            ctx.LogInfo(string.Format("Wrote {0} spectra to {1}",
-                bestByPrecursor.Count, config.OutputBlib));
+            ctx.LogInfo(string.Format("Wrote {0} library spectra to {1} (from {2} passing entries)",
+                bestByPrecursor.Count, config.OutputBlib, passingEntries.Count));
         }
 
         // Stage 1 (peptide gate): the configured FdrLevel determines which
