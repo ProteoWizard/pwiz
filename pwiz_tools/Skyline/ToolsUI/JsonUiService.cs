@@ -19,7 +19,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
@@ -439,54 +438,11 @@ namespace pwiz.Skyline.ToolsUI
             new FormElement(Program.MainWindow).InvokeMenuItem(menuPath);
         }
 
-        // Fires a context menu's Opening (so items added on demand are present) and returns it, for a
-        // ControlElement that surfaces an already-built menu (its own ContextMenuStrip, the Targets-tree
-        // menu). The menu is owned elsewhere -- do not dispose it. Runs on the UI thread.
-        internal static ContextMenuStrip OpenContextMenu(ContextMenuStrip menu)
-        {
-            RaiseProtectedHandler(menu, @"OnOpening", new CancelEventArgs());
-            return menu;
-        }
-
-        // Builds a fresh context menu for a graph through its ContextMenuBuilder, or returns null when the
-        // control is not a graph. The graph can be addressed as its ZedGraphControl, or -- since a graph form
-        // is just its graph -- as the form itself. Runs on the UI thread.
-        internal static ContextMenuStrip TryBuildGraphContextMenu(Control control)
-        {
-            var zedGraph = control as ZedGraphControl
-                ?? (control as DockableFormEx != null ? TryGetZedGraphControl((DockableFormEx) control) : null);
-            if (zedGraph == null)
-                return null;
-            var graphMenu = new ContextMenuStrip();
-            PopulateGraphContextMenu(zedGraph, graphMenu);
-            return graphMenu;
-        }
-
-        // Raises a protected On&lt;Event&gt; method (e.g. DataGridView.OnCellContextMenuStripNeeded,
-        // ContextMenuStrip.OnOpening) by reflection, walking up to where it is declared, so the wired
-        // handlers run the way the real UI event would.
-        internal static void RaiseProtectedHandler(object target, string methodName, object eventArgs)
-        {
-            for (var type = target.GetType(); type != null; type = type.BaseType)
-            {
-                var method = type.GetMethod(methodName,
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly,
-                    null, new[] { eventArgs.GetType() }, null);
-                if (method != null)
-                {
-                    method.Invoke(target, new[] { eventArgs });
-                    return;
-                }
-            }
-            throw new ArgumentException(LlmInstruction.Format(
-                @"Could not raise {0} on {1}.", methodName, target.GetType().Name));
-        }
-
         // Populates a ContextMenuStrip the way right-clicking the graph would: it invokes the graph's
         // ContextMenuBuilder handlers (which add the Skyline-specific items) with a point at the
         // control's center, so the correct graph pane is chosen for a multi-pane graph. The event can
         // only be raised from inside ZedGraphControl, so its backing delegate is fetched by reflection.
-        private static void PopulateGraphContextMenu(ZedGraphControl zedGraph, ContextMenuStrip menuStrip)
+        internal static void PopulateGraphContextMenu(ZedGraphControl zedGraph, ContextMenuStrip menuStrip)
         {
             var field = typeof(ZedGraphControl).GetField(@"ContextMenuBuilder",
                 BindingFlags.Instance | BindingFlags.NonPublic);
@@ -1062,7 +1018,7 @@ namespace pwiz.Skyline.ToolsUI
             return form.GetType().Name + @":" + GetFormTitle(form);
         }
 
-        private static ZedGraphControl TryGetZedGraphControl(DockableFormEx form)
+        internal static ZedGraphControl TryGetZedGraphControl(DockableFormEx form)
         {
             // Use reflection to find any public property that returns ZedGraphControl,
             // so that new graph forms are automatically supported.

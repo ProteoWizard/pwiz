@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -812,15 +813,11 @@ namespace pwiz.Skyline.ToolsUI
             InvokeOnUiThread(button.PerformClick);
         }
 
-        // Control.OnKeyDown is protected, so reach it by reflection to raise the control's own key handling.
-        private static readonly MethodInfo ON_KEY_DOWN =
-            typeof(Control).GetMethod(@"OnKeyDown", BindingFlags.Instance | BindingFlags.NonPublic);
-
-        // Sends Ctrl+V to the control by raising its OnKeyDown, the way pressing the keys would -- the control
-        // pastes if it handles paste there. Runs on the UI thread.
+        // Sends Ctrl+V to the control by raising its protected OnKeyDown, the way pressing the keys would --
+        // the control pastes if it handles paste there. Runs on the UI thread.
         public void Paste()
         {
-            InvokeOnUiThread(() => ON_KEY_DOWN.Invoke(Control, new object[] { new KeyEventArgs(Keys.Control | Keys.V) }));
+            InvokeOnUiThread(() => RaiseProtectedHandler<Control>(Control, @"OnKeyDown", new KeyEventArgs(Keys.Control | Keys.V)));
         }
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
@@ -855,14 +852,51 @@ namespace pwiz.Skyline.ToolsUI
         public virtual ContextMenuStrip BuildContextMenu()
         {
             // A graph (this control is a ZedGraphControl, or a graph form is just its graph) builds a fresh menu.
-            var graphMenu = JsonUiService.TryBuildGraphContextMenu(Control);
+            var graphMenu = TryBuildGraphContextMenu(Control);
             if (graphMenu != null)
                 return graphMenu;
             // Otherwise the control's own ContextMenuStrip, with its Opening raised so on-demand items appear.
             if (Control.ContextMenuStrip != null)
-                return JsonUiService.OpenContextMenu(Control.ContextMenuStrip);
+                return OpenContextMenu(Control.ContextMenuStrip);
             throw new ArgumentException(LlmInstruction.Format(
                 @"{0} has no context menu.", Label ?? NullIfEmpty(Name) ?? ElementType.Name));
+        }
+
+        // Fires a context menu's Opening (so items added on demand are present) and returns it, for an element
+        // that surfaces an already-built menu (a control's own ContextMenuStrip, the Targets-tree menu). The
+        // menu is owned elsewhere -- do not dispose it. Runs on the UI thread.
+        internal static ContextMenuStrip OpenContextMenu(ContextMenuStrip menu)
+        {
+            RaiseProtectedHandler<ToolStripDropDown>(menu, @"OnOpening", new CancelEventArgs());
+            return menu;
+        }
+
+        // Builds a fresh context menu for a graph through its ContextMenuBuilder, or returns null when the
+        // control is not a graph. The graph can be addressed as its ZedGraphControl, or -- since a graph form
+        // is just its graph -- as the form itself. Runs on the UI thread.
+        internal static ContextMenuStrip TryBuildGraphContextMenu(Control control)
+        {
+            var zedGraph = control as ZedGraph.ZedGraphControl
+                ?? (control as DockableFormEx != null ? JsonUiService.TryGetZedGraphControl((DockableFormEx) control) : null);
+            if (zedGraph == null)
+                return null;
+            var graphMenu = new ContextMenuStrip();
+            JsonUiService.PopulateGraphContextMenu(zedGraph, graphMenu);
+            return graphMenu;
+        }
+
+        // Raises a protected On<Event> method (Control.OnKeyDown, ToolStripDropDown.OnOpening,
+        // DataGridView.OnCellContextMenuStripNeeded, ...) by reflection, so the wired handlers run the way the
+        // real UI event would. TDeclaring is the type that declares the method, given explicitly so there is no
+        // need to search the hierarchy for it; a virtual method still dispatches to the target's own override.
+        internal static void RaiseProtectedHandler<TDeclaring>(TDeclaring target, string methodName, object eventArgs)
+        {
+            var method = typeof(TDeclaring).GetMethod(methodName,
+                BindingFlags.Instance | BindingFlags.NonPublic, null, new[] { eventArgs.GetType() }, null);
+            if (method == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"Could not raise {0} on {1}.", methodName, typeof(TDeclaring).Name));
+            method.Invoke(target, new[] { eventArgs });
         }
     }
 
@@ -1251,7 +1285,7 @@ namespace pwiz.Skyline.ToolsUI
         // (select the node first). Any other TreeView falls back to the default.
         public override ContextMenuStrip BuildContextMenu() =>
             Control is SequenceTree
-                ? JsonUiService.OpenContextMenu(Program.MainWindow.ContextMenuTreeNode)
+                ? OpenContextMenu(Program.MainWindow.ContextMenuTreeNode)
                 : base.BuildContextMenu();
 
         // Resolves a tree path -- an array whose segments select a child at each level (an integer is the
@@ -1745,10 +1779,10 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(new LlmInstruction(
                     @"The grid has no current cell -- move to one first with set_current_cell_address."));
             var args = new DataGridViewCellContextMenuStripNeededEventArgs(cell.ColumnIndex, cell.RowIndex);
-            JsonUiService.RaiseProtectedHandler(_dataGridView, @"OnCellContextMenuStripNeeded", args);
+            RaiseProtectedHandler<DataGridView>(_dataGridView, @"OnCellContextMenuStripNeeded", args);
             if (args.ContextMenuStrip == null)
                 throw new ArgumentException(new LlmInstruction(@"The current cell has no context menu."));
-            return JsonUiService.OpenContextMenu(args.ContextMenuStrip);
+            return OpenContextMenu(args.ContextMenuStrip);
         }
 
         // The visible columns of the grid in display order -- the columns a column index counts.
