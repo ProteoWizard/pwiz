@@ -542,16 +542,17 @@ namespace pwiz.SkylineTestFunctional
                 formattingDlg.AddRow(ruleB);
             });
 
-            // The composed result must contain exactly three distinct matched curves; render-time
-            // defaults fill the traits no rule set (symbol -> Circle, color -> Gray):
-            //   (Cyan, Diamond) -> points matched by BOTH rules: color from A, symbol from B
-            //   (Cyan, Circle)  -> A-only points: A's color, default symbol
-            //   (Gray, Diamond) -> B-only points: default color, B's symbol
+            // The composed result must contain exactly three distinct matched curves with exact point
+            // counts; render-time defaults fill the traits no rule set (symbol -> Circle, color -> Gray).
+            // Rule A matches 3 peptides, rule B matches 3, sharing exactly one (AGSWQITMK):
+            //   (Cyan, Diamond), 1 -> the shared peptide: color from A, symbol from B
+            //   (Cyan, Circle),  2 -> A-only peptides: A's color, default symbol
+            //   (Gray, Diamond), 2 -> B-only peptides: default color, B's symbol
             AssertComposedCurves(volcanoPlot, new[]
             {
-                (Color.Cyan, PointSymbol.Diamond),
-                (Color.Cyan, PointSymbol.Circle),
-                (Color.Gray, PointSymbol.Diamond)
+                (Color.Cyan, PointSymbol.Diamond, 1),
+                (Color.Cyan, PointSymbol.Circle, 2),
+                (Color.Gray, PointSymbol.Diamond, 2)
             });
 
             OkDialog(formattingDlg, formattingDlg.CancelDialog);
@@ -566,10 +567,10 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // Asserts that the matched curves (those between the selected/cutoff curves and the trailing
-        // "other" curve) are exactly the expected set of (color, symbol) combinations, each non-empty.
+        // "other" curve) are exactly the expected set of (color, symbol, point count) combinations.
         // Unlike AssertVolcanoPlotCorrect this does not assume a one-to-one rule-to-curve mapping,
         // because composed points form curves that no single rule owns.
-        private void AssertComposedCurves(FoldChangeVolcanoPlot plot, (Color color, PointSymbol symbol)[] expected)
+        private void AssertComposedCurves(FoldChangeVolcanoPlot plot, (Color color, PointSymbol symbol, int count)[] expected)
         {
             RunUI(() =>
             {
@@ -589,7 +590,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     // Deconstruct into mutable locals so the Color.ToArgb() call is not made on a
                     // readonly struct member (which would copy on each invocation).
-                    var (expColor, expSymbol) = exp;
+                    var (expColor, expSymbol, expCount) = exp;
                     var expColorArgb = expColor.ToArgb();
                     var expSymbolType = DotPlotUtil.PointSymbolToSymbolType(expSymbol);
                     var curve = matchedCurves.FirstOrDefault(c =>
@@ -597,7 +598,8 @@ namespace pwiz.SkylineTestFunctional
                         c.Symbol.Type == expSymbolType);
                     Assert.IsNotNull(curve,
                         string.Format("Missing composed curve: color={0}, symbol={1}", expColor, expSymbol));
-                    Assert.IsTrue(curve.Points.Count > 0);
+                    Assert.AreEqual(expCount, curve.Points.Count,
+                        string.Format("Wrong point count for composed curve color={0}, symbol={1}", expColor, expSymbol));
                 }
             });
         }
