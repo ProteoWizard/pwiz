@@ -666,6 +666,13 @@ namespace pwiz.OspreySharp.FDR
             // target/decoy means over the FULL standardized matrix -- the same
             // population the model scores. Pure read of foldWeights + stdFeatures;
             // never perturbs finalScores / q-values. Serial in row/index order.
+            // NOTE: this direct path scores each entry with its held-out fold
+            // model (the cross-validation ensemble), so the table characterizes
+            // the AVERAGED model -- the same object the production streaming path
+            // (ScorePopulationAndComputeFdr) actually scores with -- not the
+            // per-entry CV ensemble that produced finalScores here. The averaged
+            // model is the right thing to report (it is what ships); this direct
+            // path is test / small-input standalone only.
             var avgWeights = new double[nFeatures];
             double avgBias = 0.0;
             for (int f = 0; f < foldWeights.Count; f++)
