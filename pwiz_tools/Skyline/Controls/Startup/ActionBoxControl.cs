@@ -51,11 +51,9 @@ namespace pwiz.Skyline.Controls.Startup
             set { if (labelCaption == null) base.Text = value; else Caption = value; }
         }
 
-        // IButtonControl: lets generic UI automation (e.g. the JSON tool service's ClickFormButton)
-        // drive these tiles like a button. PerformClick runs the same action a mouse click would.
-        public DialogResult DialogResult { get; set; }
+        DialogResult IButtonControl.DialogResult { get; set; }
 
-        public void NotifyDefault(bool value)
+        void IButtonControl.NotifyDefault(bool value)
         {
             // No default-button visual state for these tiles.
         }

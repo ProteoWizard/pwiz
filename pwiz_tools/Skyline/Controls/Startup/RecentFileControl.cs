@@ -36,9 +36,9 @@ namespace pwiz.Skyline.Controls.Startup
 
         // IButtonControl: lets generic UI automation (e.g. the JSON tool service's ClickFormButton)
         // drive a recent-file row like a button. PerformClick runs the same action a mouse click would.
-        public DialogResult DialogResult { get; set; }
+        DialogResult IButtonControl.DialogResult { get; set; }
 
-        public void NotifyDefault(bool value)
+        void IButtonControl.NotifyDefault(bool value)
         {
             // No default-button visual state for these rows.
         }
