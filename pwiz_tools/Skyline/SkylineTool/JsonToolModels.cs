@@ -314,17 +314,17 @@ namespace SkylineTool
     /// <summary>
     /// Information about one interactive control on a form, returned by GetControls. Lets a caller
     /// discover what is on a form -- and how to address it -- without reading the source: <see cref="Path"/>
-    /// is the locator to pass back (to PerformAction), and the rest reports the control's enabled/visible
-    /// state. <see cref="Name"/> is the internal control name -- informational only, the connector does not
-    /// match on it. <see cref="Value"/> is the control's current value (null, a bool, a double, or a string)
-    /// the same as the "get_value" action would return; "get_actions" lists the actions it supports.
+    /// is the locator to pass back (to PerformAction), and <see cref="Enabled"/> reports whether it can be
+    /// acted on. Hidden controls are not listed (a control on an unselected tab is omitted until the tab is
+    /// selected). <see cref="Name"/> is the internal control name -- informational only, the connector does
+    /// not match on it. <see cref="Value"/> is the control's current value (null, a bool, a double, or a
+    /// string) the same as the "get_value" action would return; "get_actions" lists the actions it supports.
     /// </summary>
     public class ControlInfo
     {
         public UiElementPath Path { get; set; }
         public string Name { get; set; }
         public bool Enabled { get; set; }
-        public bool Visible { get; set; }
         public object Value { get; set; }
     }
 

@@ -535,7 +535,8 @@ public static class SkylineTools
      Description("List the interactive controls on a form so you can discover what is there -- and how " +
         "to address it -- without reading source code. Returns tab-separated lines with each control's " +
         "Type, the visible Label that names it (its own caption, or the label beside a caption-less " +
-        "field), Enabled/Visible, and internal Name (informational). Use the 'get_value' action for a " +
+        "field), Enabled, and internal Name (informational). Hidden controls (e.g. on an unselected tab) " +
+        "are not listed -- select the tab first. Use the 'get_value' action for a " +
         "control's current value and 'get_actions' for the actions it supports. Address a control by its " +
         "Label (e.g. set_form_value with \"Ion match tolerance\"); a control with no Label is addressed by " +
         "its Type (e.g. \"TreeView\"). Get the formId from skyline_get_open_forms.")]
@@ -549,9 +550,9 @@ public static class SkylineTools
                 return $"No interactive controls found on {formId}.";
 
             var sb = new StringBuilder();
-            sb.AppendLine("Type\tLabel\tEnabled\tVisible\tName");
+            sb.AppendLine("Type\tLabel\tEnabled\tName");
             foreach (var c in controls)
-                sb.AppendLine($"{c.Path?.Type}\t{c.Path?.Text}\t{c.Enabled}\t{c.Visible}\t{c.Name}");
+                sb.AppendLine($"{c.Path?.Type}\t{c.Path?.Text}\t{c.Enabled}\t{c.Name}");
             return sb.ToString().TrimEnd();
         });
     }

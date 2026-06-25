@@ -613,7 +613,6 @@ namespace pwiz.Skyline.ToolsUI
                     Path = child.PathSegment(typeIndex),
                     Name = NullIfEmpty(child.Name),
                     Enabled = child.IsEnabled,
-                    Visible = child.IsVisible,
                     Value = ConvertValue(child.Value),
                 });
             }
@@ -762,12 +761,15 @@ namespace pwiz.Skyline.ToolsUI
         // The control's hosting form gates acting on it (a modal blocking the form, or a disabled ancestor).
         internal override Form OwningForm => Control.FindForm();
 
-        // Gate the form, then the control itself: Control.Enabled (unlike IsEnabled) ignores visibility, so a
-        // control hidden on an unselected flattened tab can still be acted on, and it reflects a disabled
-        // ancestor. The form gate already covered a disabled form, so check only the control here.
+        // Gate the form, then the control itself: a user cannot act on a control they cannot see or that is
+        // disabled, so reject a hidden control (e.g. on an unselected tab) or a disabled one. Control.Visible /
+        // Control.Enabled reflect a hidden/disabled ancestor too. The form gate already covered a disabled form.
         public override void VerifyInteractable()
         {
             VerifyFormInteractable(OwningForm);
+            if (!Control.Visible)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"Control '{0}' is not visible.", Label ?? NullIfEmpty(Name) ?? ElementType.Name));
             if (!Control.Enabled)
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Control '{0}' is disabled.", Control.Name));
@@ -965,6 +967,10 @@ namespace pwiz.Skyline.ToolsUI
         {
             foreach (Control control in container.Controls)
             {
+                // Skip a hidden control and everything under it -- e.g. the controls on an unselected tab page,
+                // which a user cannot see or act on either (Control.Visible reflects a hidden ancestor too).
+                if (!control.Visible)
+                    continue;
                 var element = FormElement.ElementFor(control);
                 if (element != null)
                     yield return element;
