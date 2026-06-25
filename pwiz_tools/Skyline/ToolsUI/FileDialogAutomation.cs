@@ -19,8 +19,6 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Windows.Forms;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -29,7 +27,7 @@ namespace pwiz.Skyline.ToolsUI
     /// Save (<see cref="SaveFileDialogAutomation"/>). Both are "#32770" dialogs that take a file name
     /// and then accept or cancel, but they expose their file-name field differently, so the
     /// path-entry gesture is abstract. They share the single "FileDialog" type name the MCP layer
-    /// uses to route SetFormValue / ClickFormButton to either dialog uniformly.
+    /// uses to route SetFormValue / accept to either dialog uniformly.
     /// </summary>
     public abstract class FileDialogAutomation : NativeDialog
     {
@@ -39,15 +37,6 @@ namespace pwiz.Skyline.ToolsUI
 
         public override string DialogTypeName => @"FileDialog";
 
-        // A file dialog presents three connector elements: an OK and a Cancel button (which accept/cancel
-        // it) and a file-name field (set_value enters the path). They dispatch to this automation.
-        public override IEnumerable<UiElement> Children => new UiElement[]
-        {
-            new NativeDialogButton(this, true, @"OK"),
-            new NativeDialogButton(this, false, @"Cancel"),
-            new NativeFileNameElement(this),
-        };
-
         /// <summary>
         /// Types the file name(s) into the dialog's file name field without accepting; call
         /// <see cref="NativeDialog.Accept"/> to open/save. The Open dialog accepts several
@@ -56,52 +45,9 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public abstract void EnterPath(string path);
 
-        // The connector's set_value on a file dialog (its controlId is ignored -- a file dialog has the one
-        // file-name field) types the path; click OK to commit.
+        // A file dialog is not introspected as a set of child controls; it is driven entirely at the form
+        // level -- set_value types the path (its controlId is ignored, a file dialog has the one file-name
+        // field) and the accept action commits it (close_form cancels).
         protected override void SetValueCore(string value) => EnterPath(value);
-    }
-
-    /// <summary>The OK or Cancel button of a native dialog. A click dispatches to the dialog's Accept or
-    /// Cancel (the gesture differs by dialog type), so the connector drives it like any form button.</summary>
-    internal sealed class NativeDialogButton : UiElement, IClickableElement
-    {
-        private readonly NativeDialog _dialog;
-        private readonly bool _accept;
-        private readonly string _label;
-
-        public NativeDialogButton(NativeDialog dialog, bool accept, string label)
-        {
-            _dialog = dialog;
-            _accept = accept;
-            _label = label;
-        }
-
-        public override string Name => string.Empty;
-        public override Type ElementType => typeof(Button);
-        public override string Label => _label;
-        public override bool IsEnabled => _dialog.IsEnabled;
-        public override bool IsVisible => true;
-        public void Click()
-        {
-            if (_accept)
-                _dialog.Accept();
-            else
-                _dialog.Cancel();
-        }
-    }
-
-    /// <summary>The file-name field of a native file dialog. set_value types the path(s) into it (without
-    /// accepting -- click OK to commit), dispatching to the dialog's EnterPath.</summary>
-    internal sealed class NativeFileNameElement : UiElement, IWriteValueElement
-    {
-        private readonly FileDialogAutomation _dialog;
-        public NativeFileNameElement(FileDialogAutomation dialog) { _dialog = dialog; }
-
-        public override string Name => string.Empty;
-        public override Type ElementType => typeof(TextBox);
-        public override string Label => @"File name";
-        public override bool IsEnabled => _dialog.IsEnabled;
-        public override bool IsVisible => true;
-        public void SetValue(string value) => _dialog.EnterPath(value);
     }
 }

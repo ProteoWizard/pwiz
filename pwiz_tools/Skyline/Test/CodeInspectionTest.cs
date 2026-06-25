@@ -40,7 +40,6 @@ using System.Xml.Linq;
 using AssortResources;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding.Controls.Editor;
-using pwiz.Common.PInvoke;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline;
@@ -605,13 +604,10 @@ namespace pwiz.SkylineTest
                 // {type, expected # of methods with DllImport attribute}
                 { typeof(Advapi32), 3 },
                 { typeof(Gdi32), 5 },
-                { typeof(Kernel32), 8 },
+                { typeof(Kernel32), 9 },
                 { typeof(Shell32), 1 },
                 { typeof(Shlwapi), 1 },
-                { typeof(User32), 35 },
-
-                // Lives in the pwiz.Common assembly rather than CommonUtil (depends on the Accessibility assembly)
-                { typeof(Oleacc), 2 },
+                { typeof(User32), 37 },
 
                 { typeof(DwmapiTest), 4 },
                 { typeof(Gdi32Test), 1 },
@@ -624,10 +620,6 @@ namespace pwiz.SkylineTest
             // add types from production code
             var types = typeof(User32).Assembly.GetTypes()
                 .Where(type => type.Namespace is "pwiz.Common.SystemUtil.PInvoke" && type.IsClass).ToList();
-
-            // add P/Invoke types from the pwiz.Common assembly (e.g. Oleacc, which needs the Accessibility assembly)
-            types.AddRange(typeof(Oleacc).Assembly.GetTypes()
-                .Where(type => type.Namespace is "pwiz.Common.PInvoke" && type.IsClass).ToList());
 
             // add types from test code
             types.AddRange(typeof(User32Test).Assembly.GetTypes()
@@ -1455,7 +1447,6 @@ namespace pwiz.SkylineTest
             return new[] {
                 // PInvoke API and associated check are allowed to use [DllImport]
                 @"SystemUtil\PInvoke",
-                @"Common\PInvoke",
                 @"TestRunnerLib\PInvoke",
                 @"Test\CodeInspectionTest.cs",
                 

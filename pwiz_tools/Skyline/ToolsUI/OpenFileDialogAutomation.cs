@@ -22,7 +22,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Automation;
-using pwiz.Common.PInvoke;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -115,29 +114,6 @@ namespace pwiz.Skyline.ToolsUI
         {
             var valuePattern = (ValuePattern)edit.GetCurrentPattern(ValuePattern.Pattern);
             valuePattern.SetValue(value);
-        }
-
-        // SPIKE (TODO-20260609_native_file_dialog_automation): does the screen-reader path work?
-        // Instead of posting an Enter keystroke, type the path and then "press" the dialog's default
-        // button (Open) the way a screen reader does on this DirectUI surface -- through MSAA
-        // (IAccessible.accDoDefaultAction). UI Automation's managed wrapper does not expose the
-        // LegacyIAccessible pattern, and InvokePattern.Invoke silently no-ops on this dialog, so we
-        // go straight to the IAccessible (oleacc) layer that NVDA/JAWS use for legacy surfaces.
-        public void EnterPathAndAcceptViaButton(string path)
-        {
-            BringToForeground();
-            var fileNameComboBox = WaitForElement(FILE_NAME_COMBO_ID);
-            var edit = fileNameComboBox.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit));
-            if (edit == null)
-                throw new InvalidOperationException(@"Could not find the file name edit control in the file dialog.");
-            var valuePattern = (ValuePattern)edit.GetCurrentPattern(ValuePattern.Pattern);
-            valuePattern.SetValue(path);
-
-            var defaultButton = Oleacc.GetDefaultPushButton(WindowHandle);
-            if (defaultButton == null)
-                throw new InvalidOperationException(@"No default push button found via MSAA in the file dialog.");
-            defaultButton.accDoDefaultAction(0); // 0 == CHILDID_SELF
         }
     }
 }
