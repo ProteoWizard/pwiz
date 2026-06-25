@@ -213,6 +213,41 @@ namespace SkylineAiConnector
             RemoveFromJsonConfig(GeminiCliConfigPath, MCP_SERVERS_KEY);
         }
 
+        // -- Antigravity --
+
+        private static string AntigravityConfigPath
+        {
+            get
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".gemini", "config", "mcp_config.json");
+            }
+        }
+
+        public static bool IsAntigravityInstalled()
+        {
+            string antigravityDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".gemini", "antigravity");
+            return Directory.Exists(antigravityDir) || File.Exists(AntigravityConfigPath);
+        }
+
+        public static bool IsRegisteredInAntigravity()
+        {
+            return IsRegisteredInJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY);
+        }
+
+        public static void AddToAntigravity()
+        {
+            AddToJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY, BuildServerEntry());
+        }
+
+        public static void RemoveFromAntigravity()
+        {
+            RemoveFromJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY);
+        }
+
         // -- VS Code (GitHub Copilot) --
 
         private static string VSCodeConfigPath
@@ -392,13 +427,24 @@ namespace SkylineAiConnector
 
         private static void EditJsonFile(string configPath, Action<JsonObject> edit)
         {
-            JsonObject root;
+            JsonObject root = null;
             if (File.Exists(configPath))
             {
-                string json = File.ReadAllText(configPath);
-                root = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
+                try
+                {
+                    string json = File.ReadAllText(configPath);
+                    if (!string.IsNullOrWhiteSpace(json))
+                    {
+                        root = JsonNode.Parse(json)?.AsObject();
+                    }
+                }
+                catch
+                {
+                    // Ignore parsing error and start with empty config
+                }
             }
-            else
+
+            if (root == null)
             {
                 root = new JsonObject();
             }
@@ -456,6 +502,7 @@ namespace SkylineAiConnector
             return (IsClaudeDesktopInstalled() && IsRegisteredInClaudeDesktop()) ||
                    (IsClaudeCodeInstalled() && IsRegisteredInClaudeCode()) ||
                    (IsGeminiCliInstalled() && IsRegisteredInGeminiCli()) ||
+                   (IsAntigravityInstalled() && IsRegisteredInAntigravity()) ||
                    (IsVSCodeInstalled() && IsRegisteredInVSCode()) ||
                    (IsCursorInstalled() && IsRegisteredInCursor());
         }
