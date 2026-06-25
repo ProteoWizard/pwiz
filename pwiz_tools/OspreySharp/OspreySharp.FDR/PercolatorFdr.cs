@@ -38,7 +38,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.ML;
 
@@ -2483,17 +2482,10 @@ namespace pwiz.OspreySharp.FDR
         /// </summary>
         private static void EmitFeatureContributions(FeatureContributions contributions)
         {
-            OspreyOutput.Out.WriteLine(
-                "  Feature weight contributions (trained linear model, coefficients standardized):");
-            OspreyOutput.Out.WriteLine("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "percent");
-            foreach (var f in contributions.Features
-                         .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
-                         .ThenBy(f => f.Index))
-            {
-                OspreyOutput.Out.WriteLine("    {0,-36} {1,12:F4} {2,8:F1}%{3}",
-                    f.Label, f.Coefficient, f.Percent,
-                    f.IsUnexpectedDirection ? "  (unexpected direction)" : string.Empty);
-            }
+            // Write line-by-line (rather than the multi-line ToString) so each row
+            // keeps its own --timestamp/--memstamp prefix in the log.
+            foreach (string line in contributions.ToReportLines())
+                OspreyOutput.Out.WriteLine(line);
         }
 
         /// <summary>

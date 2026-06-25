@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.OspreySharp.FDR
 {
@@ -184,6 +185,38 @@ namespace pwiz.OspreySharp.FDR
                     avgWeights[j], deltaMu[j], weighted[j], pct, reversed, wrongSign);
             }
             Features = features;
+        }
+
+        /// <summary>
+        /// The human-readable contribution table as a sequence of lines: a heading,
+        /// a column header, then one row per feature sorted most-influential-first
+        /// (|percent| descending, ties broken by feature index). Pure formatting --
+        /// no I/O; the presentation layer writes these lines wherever it logs (so each
+        /// line keeps its own log timestamp), and <see cref="ToString"/> joins them for
+        /// debugger / human display.
+        /// </summary>
+        public IEnumerable<string> ToReportLines()
+        {
+            yield return "  Feature weight contributions (trained linear model, coefficients standardized):";
+            yield return string.Format("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "percent");
+            foreach (var f in Features
+                .OrderByDescending(f => IsDegenerate ? 0.0 : Math.Abs(f.Percent))
+                .ThenBy(f => f.Index))
+            {
+                yield return string.Format("    {0,-36} {1,12:F4} {2,8:F1}%{3}",
+                    f.Label, f.Coefficient, f.Percent,
+                    f.IsUnexpectedDirection ? "  (unexpected direction)" : string.Empty);
+            }
+        }
+
+        /// <summary>
+        /// The contribution table (<see cref="ToReportLines"/>) as a single multi-line
+        /// string, so inspecting a <see cref="FeatureContributions"/> in a debugger shows
+        /// the full decomposition.
+        /// </summary>
+        public override string ToString()
+        {
+            return string.Join(Environment.NewLine, ToReportLines());
         }
     }
 }
