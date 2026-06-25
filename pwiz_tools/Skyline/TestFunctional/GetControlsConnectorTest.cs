@@ -58,9 +58,9 @@ namespace pwiz.SkylineTestFunctional
             var controls = JsonUiService.GetControls(dlgId);
             Assert.IsTrue(controls.Length > 0, @"GetControls returned nothing.");
 
-            // GetControls reports each control's (parentless) Path and state but not its actions -- those
-            // come from the get_actions action (Value likewise comes from get_value), so they are not
-            // computed up front. A discovered path is re-parented under the form to act on it.
+            // GetControls reports each control's (parentless) Path, state, and current Value, but not its
+            // actions -- those come from the get_actions action. A discovered path is re-parented under the
+            // form to act on it.
             UiElementPath Reparent(ControlInfo c) =>
                 new UiElementPath(formPath, c.Path.Text, c.Path.Index, c.Path.Type);
 

@@ -610,7 +610,7 @@ namespace pwiz.Skyline.ToolsUI
             RunWithDialogWatch(() =>
             {
                 result = OnFormThread(formId, CancellationToken.None,
-                    formElement => formElement.FindElement(controlId, UiActions.GetValue).Value);
+                    formElement => formElement.FindElement(controlId, UiActions.GetValue).Value?.ToString());
                 return true;
             });
             return result;
