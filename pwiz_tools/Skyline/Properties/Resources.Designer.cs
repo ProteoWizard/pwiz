@@ -3542,6 +3542,16 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap Edit_Item {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Item", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap Edit_Redo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);

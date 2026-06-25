@@ -49,7 +49,7 @@ namespace pwiz.OspreySharp.Tasks
     /// Phase A scope: this task is a thin orchestration wrapper that
     /// delegates to AnalysisPipeline's existing private (now
     /// <c>internal</c>) methods (LoadLibrary,
-    /// ProcessFile) plus the --task FirstJoin / --task MergeNode input
+    /// ProcessFile) plus the --task FirstPassFDR / --task SecondPassFDR input
     /// loading paths that share the same per-file collection layout.
     /// The inline Stage 1-4 block from <c>AnalysisPipeline.Run</c>
     /// moved here verbatim; the only changes are LogInfo / LogWarning
@@ -505,7 +505,7 @@ namespace pwiz.OspreySharp.Tasks
             }
 
             // --task PerFileScoring: stop here. Per-file `.scores.parquet` files are
-            // now on disk; a separate `--task FirstJoin` invocation (typically
+            // now on disk; a separate `--task FirstPassFDR` invocation (typically
             // on a merge node) will pick them up and run Stage 5+.
             if (ctx.Config.NoJoin)
             {
@@ -591,7 +591,7 @@ namespace pwiz.OspreySharp.Tasks
             List<LibraryEntry> decoys;
             if (config.ExpectReconciledInput)
             {
-                // --task MergeNode: decoy LibraryEntries are unused
+                // --task SecondPassFDR: decoy LibraryEntries are unused
                 // downstream. The reconciled parquet already carries
                 // both target and decoy FDR rows with their stage-1-4
                 // scores; Stage 5 is skipped, Stage 6 is skipped, and
@@ -815,7 +815,7 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         /// <summary>
-        /// --task FirstJoin: load per-file FdrEntry stubs + PIN features directly
+        /// --task FirstPassFDR: load per-file FdrEntry stubs + PIN features directly
         /// from each <c>.scores.parquet</c> listed via <c>--input-scores</c>
         /// (skips the per-file Stage 2-4 scoring; Stage 1 library load
         /// already ran in <see cref="Run"/>), plus a best-effort
@@ -833,7 +833,7 @@ namespace pwiz.OspreySharp.Tasks
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             PipelineContext ctx)
         {
-            // --task FirstJoin: load per-file FdrEntry stubs directly from
+            // --task FirstPassFDR: load per-file FdrEntry stubs directly from
             // each .scores.parquet listed via --input-scores. Skips the
             // per-file Stage 2-4 scoring (Stage 1 library load already ran
             // in Run). Also loads a best-effort calibration JSON sibling
@@ -1057,7 +1057,7 @@ namespace pwiz.OspreySharp.Tasks
         /// certified the outputs valid and there is NO rescore fallback) a
         /// failure is a genuine fault and logs an error instead -- no misleading
         /// "will rescore" messaging. Mirrors the load logic in the
-        /// <c>--task FirstJoin</c> branch above.
+        /// <c>--task FirstPassFDR</c> branch above.
         /// </summary>
         private static List<FdrEntry> TryLoadStubsAndCalibration(
             string scoresPath,
@@ -1170,7 +1170,7 @@ namespace pwiz.OspreySharp.Tasks
             List<MS1Spectrum> ms1Spectra;
             var swParse = Stopwatch.StartNew();
             LoadSpectra(inputFile, ctx.RunPlan.EffectiveFileParallelism > 1,
-                out spectra, out ms1Spectra, ctx);
+                out spectra, out ms1Spectra, out int unsortedCount, ctx);
             swParse.Stop();
 
             long inputBytes = 0;
@@ -1202,14 +1202,16 @@ namespace pwiz.OspreySharp.Tasks
                 return null;
             }
 
-            ctx.LogInfo(string.Format("Loaded {0} MS2 spectra and {1} MS1 spectra",
-                spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
-            ctx.LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
-                fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
-
             // Extract isolation windows from spectra
             var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
-            ctx.LogInfo(string.Format("Found {0} unique isolation windows", isolationWindows.Count));
+            ctx.LogInfo(string.Format(
+                "Loaded {0} MS1 and {1} MS/MS spectra with {2} unique isolation windows{3}",
+                ms1Spectra != null ? ms1Spectra.Count : 0, spectra.Count, isolationWindows.Count,
+                unsortedCount > 0
+                    ? string.Format(" ({0} had unsorted peaks, re-sorted; use --verbose for detail)", unsortedCount)
+                    : string.Empty));
+            ctx.LogInfo(string.Format("[COUNT] mzML spectra loaded [{0}]: {1} MS2 + {2} MS1",
+                fileName, spectra.Count, ms1Spectra != null ? ms1Spectra.Count : 0));
             ctx.LogInfo(string.Format("[COUNT] Isolation windows [{0}]: {1}",
                 fileName, isolationWindows.Count));
 
@@ -1250,13 +1252,13 @@ namespace pwiz.OspreySharp.Tasks
 
             // Persist the full FdrEntry results (with features) to
             // {stem}.scores.parquet so (a) Stage 6 reconciliation can lazy-load
-            // CWT candidates per file, and (b) a subsequent --task FirstJoin
+            // CWT candidates per file, and (b) a subsequent --task FirstPassFDR
             // invocation can pick them up without re-running Stages 1-4.
             // Same path convention as Rust (`scores_path_for_input`).
             // Snappy-compressed; cross-impl ZSTD/Snappy compatibility tracked
             // as a Phase 4 follow-up. The metadata dictionary is precomputed
             // in Run() against the original (un-mutated) outer config — see
-            // Run() for why. Skipped only in --task FirstJoin mode (no Stages 1-4
+            // Run() for why. Skipped only in --task FirstPassFDR mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
             if (parquetFooterMetadata != null)
             {
@@ -1548,8 +1550,10 @@ namespace pwiz.OspreySharp.Tasks
         /// only one disk scan runs at a time (see s_mzmlReadGate).
         /// </summary>
         private void LoadSpectra(string inputFile, bool serializeMzmlRead,
-            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra, PipelineContext ctx)
+            out List<Spectrum> ms2Spectra, out List<MS1Spectrum> ms1Spectra,
+            out int unsortedCount, PipelineContext ctx)
         {
+            unsortedCount = 0;
             // Check for binary spectra cache. Use the shared GetCachePath so the
             // write and the rescore read (PerFileRescoreTask) derive an identical
             // filename + directory (ArtifactPaths redirects the dir).
@@ -1577,8 +1581,9 @@ namespace pwiz.OspreySharp.Tasks
                 }
             }
 
-            // Parse mzML directly, optionally serialized across files.
-            ctx.LogInfo(string.Format("Parsing mzML: {0}", inputFile));
+            // Parse mzML directly, optionally serialized across files. The "Processing
+            // file N/M: <path>" banner already named the file; the consolidated
+            // "Loaded ... spectra with ... isolation windows" line is emitted by the caller.
             MzmlResult mzmlResult;
             if (serializeMzmlRead)
                 ScoringTaskShared.s_mzmlReadGate.Wait();
@@ -1593,8 +1598,7 @@ namespace pwiz.OspreySharp.Tasks
             }
             ms2Spectra = mzmlResult.Ms2Spectra;
             ms1Spectra = mzmlResult.Ms1Spectra;
-            ctx.LogInfo(string.Format("Loaded {0} MS2 + {1} MS1 spectra",
-                ms2Spectra.Count, ms1Spectra.Count));
+            unsortedCount = mzmlResult.UnsortedSpectrumCount;
 
             // Save to cache for next run
             try

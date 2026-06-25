@@ -24,8 +24,8 @@
               equals the straight-through blib at 1e-9. The build is its own
               oracle, so no baseline is needed.
       mode 3  HPC 4-task worker-chain self-consistency -- runs the distributed
-              --task pipeline (PerFileScoring -> FirstJoin -> PerFileRescore ->
-              MergeNode), each phase rehydrating the prior phase's on-disk
+              --task pipeline (PerFileScoring -> FirstPassFDR -> PerFileRescoring ->
+              SecondPassFDR), each phase rehydrating the prior phase's on-disk
               sidecars exactly as a multi-computer distribution would, and
               asserts the chain's final blib equals the straight-through blib at
               1e-9. Where mode 2 covers in-process straight-through resume, mode 3
@@ -298,8 +298,8 @@ function Compare-DirFingerprint {
 function Invoke-ResumeInvalidation {
     param([string]$WorkDir)
     Get-ChildItem -Path $WorkDir -File | Where-Object {
-        $_.Name -like '*.FirstJoin.osprey.task' -or
-        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.MergeNode.osprey.task'
+        $_.Name -like '*.FirstPassFDR.osprey.task' -or
+        $_.Name -eq 'output.blib' -or $_.Name -eq 'output.blib.SecondPassFDR.osprey.task'
     } | Remove-Item -Force
 }
 
@@ -374,7 +374,7 @@ function Invoke-HpcChain {
         New-Item -ItemType File -Path (Join-Path $ph2 "$s.mzML") -Force | Out-Null
     }
     Copy-LibraryInto -Library $Library -Dir $ph2
-    $a2 = @('--task', 'FirstJoin')
+    $a2 = @('--task', 'FirstPassFDR')
     foreach ($s in $stemList) { $a2 += @('--input-scores', "$s.scores.parquet") }
     $a2 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())
@@ -394,7 +394,7 @@ function Invoke-HpcChain {
         Copy-Item (Join-Path $ph2 "$s.1st-pass.fdr_scores.bin") (Join-Path $ph3 "$s.1st-pass.fdr_scores.bin")
         Copy-Item (Join-Path $ph2 "$s.reconciliation.json")     (Join-Path $ph3 "$s.reconciliation.json")
         Copy-LibraryInto -Library $Library -Dir $ph3
-        $a3 = @('--task', 'PerFileRescore', '--input-scores', "$s.scores.parquet",
+        $a3 = @('--task', 'PerFileRescoring', '--input-scores', "$s.scores.parquet",
                 '-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
                 '--protein-fdr', '0.01', '--threads', $Threads.ToString())
         Invoke-OspreyTaskRun -WorkDir $ph3 -CliArgs $a3 -LogName 'phase3.log'
@@ -436,7 +436,7 @@ function Invoke-HpcChain {
     # worker dirs are done.
     foreach ($d in $ph3Dirs.Values) { Remove-Scratch $d }
     Copy-LibraryInto -Library $Library -Dir $ph4
-    $a4 = @('--task', 'MergeNode')
+    $a4 = @('--task', 'SecondPassFDR')
     foreach ($s in $stemList) { $a4 += @('--input-scores', "$s.scores-reconciled.parquet") }
     $a4 += @('-l', $libName, '-o', 'output.blib', '--resolution', $Resolution,
              '--protein-fdr', '0.01', '--threads', $Threads.ToString())

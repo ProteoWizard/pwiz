@@ -221,6 +221,8 @@ namespace pwiz.OspreySharp.Tasks
         }
 
         public void LogInfo(string message) { _logInfo(message); }
+        /// <summary>Implementer-grade detail: emitted only under --verbose (same sink as LogInfo).</summary>
+        public void LogVerbose(string message) { if (OspreyOutput.Verbose) _logInfo(message); }
         public void LogWarning(string message) { _logWarning(message); }
         public void LogError(string message) { _logError(message); }
 

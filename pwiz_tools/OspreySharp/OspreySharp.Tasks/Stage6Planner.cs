@@ -118,7 +118,7 @@ namespace pwiz.OspreySharp.Tasks
             foreach (var kvp in perFileConsensusTargets)
                 totalMulticharge += kvp.Value.Count;
             _ctx.LogInfo(string.Format(
-                @"Stage 6 multi-charge consensus: {0} entries need re-scoring across {1} files",
+                @"Reconciliation multi-charge consensus: {0} entries need re-scoring across {1} files",
                 totalMulticharge, perFileEntries.Count));
 
             if (_ctx.Diagnostics?.DumpMulticharge ?? false)
@@ -190,7 +190,7 @@ namespace pwiz.OspreySharp.Tasks
                 else nTargets++;
             }
             _ctx.LogInfo(string.Format(
-                @"Stage 6 consensus: {0} target peptides, {1} decoy peptides",
+                @"Reconciliation consensus: {0} target peptides, {1} decoy peptides",
                 nTargets, nDecoys));
 
             // Skip the dump on empty consensus to match Rust's
@@ -225,7 +225,7 @@ namespace pwiz.OspreySharp.Tasks
                     refinedCalibrations[kvp.Key] = refined;
             }
             _ctx.LogInfo(string.Format(
-                @"Stage 6 refit: {0}/{1} files produced refined calibrations",
+                @"Reconciliation calibration refit: {0}/{1} files produced refined calibrations",
                 refinedCalibrations.Count, perFileEntries.Count));
 
             if (_ctx.Diagnostics?.DumpLoessFit ?? false)
@@ -284,17 +284,17 @@ namespace pwiz.OspreySharp.Tasks
                     perFileCalibrations,
                     config.Reconciliation.ConsensusFdr);
                 _ctx.LogInfo(string.Format(
-                    @"Stage 6 reconciliation: {0} per-(file, entry) actions planned",
+                    @"Reconciliation: {0} per-(file, entry) actions planned",
                     reconciliationActions.Count));
             }
             else if (consensus.Count == 0)
             {
-                _ctx.LogInfo(@"Stage 6 reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
+                _ctx.LogInfo(@"Reconciliation: skipped (empty consensus; single-file or no cross-file evidence)");
             }
             else
             {
                 _ctx.LogInfo(string.Format(
-                    @"Stage 6 reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
+                    @"Reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
                     perFileCwtCandidates.Count, perFileEntries.Count));
             }
 

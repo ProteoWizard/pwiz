@@ -70,7 +70,8 @@ namespace pwiz.OspreySharp.Scoring
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
-            ScoringContext context)
+            ScoringContext context,
+            string passLabel = null)
         {
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
@@ -173,7 +174,7 @@ namespace pwiz.OspreySharp.Scoring
                     config.RtCalibration.MinRtTolerance,
                     Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
-                _logInfo(string.Format(
+                if (OspreyOutput.Verbose) _logInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
                     rtToleranceGlobal, mad,
                     context.OriginalRtMad.HasValue ? " from .calibration.json" : " from cal stats"));
@@ -201,7 +202,7 @@ namespace pwiz.OspreySharp.Scoring
                     Unit = calUnit
                 };
                 string unitStr = calUnit == ToleranceUnit.Ppm ? "ppm" : "Th";
-                _logInfo(string.Format(
+                if (OspreyOutput.Verbose) _logInfo(string.Format(
                     "Coelution search using calibrated fragment tolerance: {0:F4} {1}",
                     calTol, unitStr));
 
@@ -211,7 +212,7 @@ namespace pwiz.OspreySharp.Scoring
                 // built, so no rebuild is needed here.)
                 config.FragmentTolerance = searchFragTol;
 
-                _logInfo(string.Format(
+                if (OspreyOutput.Verbose) _logInfo(string.Format(
                     "Applying MS2 calibration: mean error = {0:F4} {1} -> correcting by {2:+F4;-F4;0} {1}",
                     ms2Calibration.Mean, ms2Calibration.Unit, -ms2Calibration.Mean));
             }
@@ -258,41 +259,42 @@ namespace pwiz.OspreySharp.Scoring
             // Construct the per-window coelution scorer once. It captures the
             // log sink + the scoring-diagnostics sink (null when -d is off; the
             // scorer invokes it null-conditionally, so this is a no-op then).
-            var coelutionScorer = new CoelutionScorer(_logInfo, _diagnostics);
+            var coelutionScorer = new CoelutionScorer(_diagnostics);
 
-            Parallel.For(0, windowsToScore.Count, new ParallelOptions
+            using (var progress = new ProgressReporter(
+                string.Format("{0} isolation windows", passLabel ?? "Scoring"),
+                windowsToScore.Count, passLabel == null ? string.Empty : "  ", 2.0))
             {
-                MaxDegreeOfParallelism = config.NThreads
-            },
-            wIdx =>
-            {
-                var window = windowsToScore[wIdx];
-                var swWindow = Stopwatch.StartNew();
-                var windowEntries = coelutionScorer.ScoreWindow(
-                    window, fullLibrary, spectraByWindowKey, ms1Spectra,
-                    rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
-                    scorer, context);
-                swWindow.Stop();
-
-                windowTimings.Add(new WindowTiming
+                Parallel.For(0, windowsToScore.Count, new ParallelOptions
                 {
-                    CenterMz = window.Center,
-                    Seconds = swWindow.Elapsed.TotalSeconds,
-                    CandidateCount = windowEntries.Count
-                });
-
-                windowResults[wIdx] = windowEntries;
-
-                lock (lockObj)
+                    MaxDegreeOfParallelism = config.NThreads
+                },
+                wIdx =>
                 {
-                    windowsProcessed++;
-                    if (windowsProcessed % 10 == 0 || windowsProcessed == windowsToScore.Count)
+                    var window = windowsToScore[wIdx];
+                    var swWindow = Stopwatch.StartNew();
+                    var windowEntries = coelutionScorer.ScoreWindow(
+                        window, fullLibrary, spectraByWindowKey, ms1Spectra,
+                        rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
+                        scorer, context);
+                    swWindow.Stop();
+
+                    windowTimings.Add(new WindowTiming
                     {
-                        _logInfo(string.Format("  Scored {0}/{1} isolation windows",
-                            windowsProcessed, windowsToScore.Count));
+                        CenterMz = window.Center,
+                        Seconds = swWindow.Elapsed.TotalSeconds,
+                        CandidateCount = windowEntries.Count
+                    });
+
+                    windowResults[wIdx] = windowEntries;
+
+                    lock (lockObj)
+                    {
+                        windowsProcessed++;
+                        progress.Report(windowsProcessed);
                     }
-                }
-            });
+                });
+            }
 
             // Flatten in deterministic window-index order.
             for (int wIdx = 0; wIdx < windowResults.Length; wIdx++)
@@ -301,13 +303,6 @@ namespace pwiz.OspreySharp.Scoring
                     allEntries.AddRange(windowResults[wIdx]);
             }
 
-            if (context.XcorrScratchPool != null)
-            {
-                _logInfo(string.Format(
-                    "[POOL] scratch_allocs={0}, bins_allocs={1}",
-                    context.XcorrScratchPool.ScratchAllocCount,
-                    context.XcorrScratchPool.BinsAllocCount));
-            }
 
             // Summarize per-window timings.
             LogWindowTimingSummary(windowTimings);
