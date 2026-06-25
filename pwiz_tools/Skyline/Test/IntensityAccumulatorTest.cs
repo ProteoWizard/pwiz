@@ -43,7 +43,7 @@ namespace pwiz.SkylineTest
             TestIdotpGuardEmptyInputs();
             TestIdotpGuardMissingExpectedSignalRejection();
             TestIdotpGuardUnionsImKeysAcrossChannels();
-            TestIdotpGuardCogOverSurviversAveragesByIntensity();
+            TestIdotpGuardCogOverSurvivorsAveragesByIntensity();
         }
 
         // Summed extractor: ObservedIonMobility comes from COG of the IM histogram
@@ -174,7 +174,7 @@ namespace pwiz.SkylineTest
 
         // CogOverSurvivors: surviving bins are averaged by intensity, so the
         // heavier real-signal bins drag the result toward the actual peak.
-        private static void TestIdotpGuardCogOverSurviversAveragesByIntensity()
+        private static void TestIdotpGuardCogOverSurvivorsAveragesByIntensity()
         {
             var expected = new[] { 0.55f, 0.30f, 0.15f };
             // Three bins along the IM peak, all clearing 0.7:

@@ -192,9 +192,11 @@ namespace pwiz.Skyline.Model.Results
                 }
                 WriteScaledShortErrors(stream, timeIntensities.MassErrors);
             }
-            // Per-time-point observed IM values (absolute, raw IM units), written as
-            // floats. Stored after mass errors so older readers that only know about
-            // mass errors can skip past them via NumPoints * sizeof(float).
+            // Per-time-point observed IM values (absolute, raw IM units), written as floats
+            // after the mass-error section. Presence is gated by
+            // ChromGroupHeaderInfo.HasObservedIonMobilities (and, per transition, by the
+            // MissingObservedIonMobility flag - see ReadFromStream); a reader unaware of this
+            // section cannot simply skip it, it must honor those flags.
             foreach (var timeIntensities in TransitionTimeIntensities)
             {
                 if (timeIntensities.ObservedIonMobilities == null)
