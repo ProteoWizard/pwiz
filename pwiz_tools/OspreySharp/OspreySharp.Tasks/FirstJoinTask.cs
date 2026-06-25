@@ -30,6 +30,7 @@ using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR;
 using pwiz.OspreySharp.FDR.Reconciliation;
 using pwiz.OspreySharp.IO;
+using pwiz.OspreySharp.Scoring;
 
 namespace pwiz.OspreySharp.Tasks
 {
@@ -1046,7 +1047,9 @@ namespace pwiz.OspreySharp.Tasks
         {
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config, ParquetScoreCache.PIN_FEATURE_NAMES,
-                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
+                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
+                ParquetScoreCache.PIN_FEATURE_LABELS,
+                OspreyFeatureCalculators.GetReversedScoreFlags());
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left
@@ -1069,7 +1072,7 @@ namespace pwiz.OspreySharp.Tasks
         {
             if (diag == null ||
                 !(diag.DumpStandardizer || diag.DumpPercInput ||
-                  diag.DumpSubsample || diag.DumpSvmWeights))
+                  diag.DumpSubsample || diag.DumpSvmWeights || diag.DumpFeatureContrib))
             {
                 return null;
             }
@@ -1082,7 +1085,8 @@ namespace pwiz.OspreySharp.Tasks
                 DumpSubsample = diag.DumpSubsample,
                 SubsampleOnly = diag.SubsampleOnly,
                 DumpSvmWeights = diag.DumpSvmWeights,
-                SvmWeightsOnly = diag.SvmWeightsOnly
+                SvmWeightsOnly = diag.SvmWeightsOnly,
+                DumpFeatureContrib = diag.DumpFeatureContrib
             };
         }
 

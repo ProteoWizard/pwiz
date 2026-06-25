@@ -67,5 +67,14 @@ namespace pwiz.OspreySharp.FDR
 
         /// <summary>OSPREY_SVM_WEIGHTS_ONLY: abort after the SVM-weights dump.</summary>
         public bool SvmWeightsOnly { get; set; }
+
+        /// <summary>
+        /// OSPREY_DUMP_FEATURE_CONTRIB: also write the machine-precision TSV form of
+        /// the post-training feature weight + percent-contribution table. The
+        /// human-readable table is always emitted; this gate adds only the TSV. There
+        /// is no paired <c>*Only</c> flag -- the table is reporting on the completed
+        /// model, not a bisection short-circuit.
+        /// </summary>
+        public bool DumpFeatureContrib { get; set; }
     }
 }

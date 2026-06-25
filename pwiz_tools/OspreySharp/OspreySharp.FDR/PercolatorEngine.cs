@@ -62,7 +62,9 @@ namespace pwiz.OspreySharp.FDR
             string[] featureNames,
             Action<string> logInfo,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass")
+            string passLabel = @"First-pass",
+            string[] featureLabels = null,
+            bool[] reversedScore = null)
         {
             int numFeatures = featureNames.Length;
 
@@ -112,6 +114,8 @@ namespace pwiz.OspreySharp.FDR
                 MaxIterations = 10,
                 NFolds = 3,
                 FeatureNames = featureNames,
+                FeatureLabels = featureLabels,
+                ReversedScore = reversedScore,
                 Diagnostics = diagnostics
             };
 

@@ -96,5 +96,19 @@ namespace pwiz.OspreySharp.Scoring
         {
             return _calculators[featureIndex];
         }
+
+        /// <summary>
+        /// The <see cref="IOspreyFeatureCalculator.IsReversedScore"/> flag for each
+        /// of the 21 PIN features, in parity-critical index order. The FDR layer
+        /// (which does not reference this assembly) takes this vector by value to
+        /// flag unexpected-direction coefficients in the feature-contribution table.
+        /// </summary>
+        public static bool[] GetReversedScoreFlags()
+        {
+            var flags = new bool[FeatureCount];
+            for (int i = 0; i < FeatureCount; i++)
+                flags[i] = _calculators[i].IsReversedScore;
+            return flags;
+        }
     }
 }

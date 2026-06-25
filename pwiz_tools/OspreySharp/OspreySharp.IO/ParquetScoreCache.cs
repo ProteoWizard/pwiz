@@ -81,6 +81,45 @@ namespace pwiz.OspreySharp.IO
             "median_polish_residual_correlation",
         };
 
+        /// <summary>
+        /// Human-friendly (Skyline-style) display labels for the 21 PIN features,
+        /// in the same parity-critical index order as <see cref="PIN_FEATURE_NAMES"/>.
+        /// Used only by the post-training feature-contribution report; the parity-gated
+        /// columns continue to use <see cref="PIN_FEATURE_NAMES"/>.
+        /// </summary>
+        public static readonly string[] PIN_FEATURE_LABELS =
+        {
+            // Pairwise coelution (3)
+            "Fragment co-elution (sum)",
+            "Fragment co-elution (max)",
+            "Co-eluting fragment count",
+            // Peak shape (3)
+            "Peak apex intensity",
+            "Peak area",
+            "Peak sharpness",
+            // Spectral at apex (3)
+            "Cross-correlation (xcorr)",
+            "Consecutive ion series",
+            "Explained intensity",
+            // Mass accuracy (2)
+            "Mass error (signed mean)",
+            "Mass error (abs mean)",
+            // RT deviation (2)
+            "Retention time difference (signed)",
+            "Retention time difference (abs)",
+            // MS1 (2)
+            "MS1 precursor co-elution",
+            "MS1 isotope dot-product",
+            // Median polish (2)
+            "Median-polish cosine",
+            "Median-polish residual ratio",
+            // SG-weighted multi-scan (4)
+            "SG-weighted xcorr",
+            "SG-weighted cosine",
+            "Median-polish min fragment R2",
+            "Median-polish residual correlation",
+        };
+
         public const int NUM_PIN_FEATURES = 21;
 
         #endregion

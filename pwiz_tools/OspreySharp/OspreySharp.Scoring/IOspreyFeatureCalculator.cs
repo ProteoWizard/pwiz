@@ -48,6 +48,15 @@ namespace pwiz.OspreySharp.Scoring
         string Name { get; }
 
         /// <summary>
+        /// True if a LOWER raw value is target-like ("better"), false if a higher
+        /// value is better. Mirrors Skyline's <c>IPeakFeatureCalculator.IsReversedScore</c>.
+        /// Defines the EXPECTED sign of the trained coefficient; the feature
+        /// contribution table flags a feature as an unexpected direction when
+        /// <c>IsReversedScore XOR (weight &lt; 0)</c> is true.
+        /// </summary>
+        bool IsReversedScore { get; }
+
+        /// <summary>
         /// Compute this feature's value for one candidate peak.
         /// </summary>
         double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData);
@@ -62,6 +71,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public abstract string Name { get; }
 
+        public abstract bool IsReversedScore { get; }
+
         public abstract double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData);
     }
 
@@ -75,6 +86,8 @@ namespace pwiz.OspreySharp.Scoring
     public abstract class DetailedOspreyFeatureCalculator : IOspreyFeatureCalculator
     {
         public abstract string Name { get; }
+
+        public abstract bool IsReversedScore { get; }
 
         public double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
         {
@@ -97,6 +110,8 @@ namespace pwiz.OspreySharp.Scoring
     public abstract class ApexSpectrumOspreyFeatureCalculator : IOspreyFeatureCalculator
     {
         public abstract string Name { get; }
+
+        public abstract bool IsReversedScore { get; }
 
         public double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
         {
@@ -121,6 +136,8 @@ namespace pwiz.OspreySharp.Scoring
     public abstract class ApexSpectraOspreyFeatureCalculator : IOspreyFeatureCalculator
     {
         public abstract string Name { get; }
+
+        public abstract bool IsReversedScore { get; }
 
         public double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
         {

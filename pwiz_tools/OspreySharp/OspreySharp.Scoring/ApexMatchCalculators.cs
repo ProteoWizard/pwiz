@@ -147,6 +147,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "consecutive_ions"; } }
 
+        public override bool IsReversedScore { get { return false; } }   // higher is better
+
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             var candidate = peakData.Candidate;
@@ -215,6 +217,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "explained_intensity"; } }
 
+        public override bool IsReversedScore { get { return false; } }   // higher is better
+
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             var matchSet = ApexFragmentMatchSet.GetOrCompute(context, peakData);
@@ -232,6 +236,12 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class MassAccuracyMeanCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "mass_accuracy_deviation_mean"; } }
+
+        // SIGNED, centered near zero: neither tail is target-like (the magnitude
+        // matters, not the sign), so the expected coefficient direction is ill-defined.
+        // Set false by convention; the contribution table's unexpected-direction flag is
+        // not semantically meaningful here, and this feature's contribution is ~0% anyway.
+        public override bool IsReversedScore { get { return false; } }
 
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
@@ -253,6 +263,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class AbsMassAccuracyMeanCalc : ApexSpectrumOspreyFeatureCalculator
     {
         public override string Name { get { return "abs_mass_accuracy_deviation_mean"; } }
+
+        public override bool IsReversedScore { get { return true; } }   // lower is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {

@@ -34,6 +34,12 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "rt_deviation"; } }
 
+        // SIGNED, centered near zero: neither tail is target-like (the magnitude
+        // matters, not the sign), so the expected coefficient direction is ill-defined.
+        // Set false by convention; the contribution table's unexpected-direction flag is
+        // not semantically meaningful here, and this feature's contribution is ~0% anyway.
+        public override bool IsReversedScore { get { return false; } }
+
         public override double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
         {
             return peakData.ApexRetentionTime - peakData.ExpectedRt;
@@ -44,6 +50,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class AbsRtDeviationCalc : SummaryOspreyFeatureCalculator
     {
         public override string Name { get { return "abs_rt_deviation"; } }
+
+        public override bool IsReversedScore { get { return true; } }   // lower is better
 
         public override double Calculate(OspreyScoringContext context, IOspreySummaryPeakData peakData)
         {

@@ -401,6 +401,55 @@ namespace pwiz.OspreySharp.Test
             Assert.IsFalse(upper.TryGetApexOffsetSpectrum(1, out _, out _));
         }
 
+        /// <summary>
+        /// The per-feature expected-direction vector (Skyline's IsReversedScore) in
+        /// PIN index order. Hard-codes the oracle so a future calculator reorder, or a
+        /// flipped flag, fails loudly. Only the four lower-is-better penalty features
+        /// (abs mass error, abs RT deviation, median-polish residual ratio, and
+        /// median-polish residual correlation) are reversed; the signed-centered
+        /// idx 9/11 are false by convention (their target direction is ill-defined).
+        /// </summary>
+        [TestMethod]
+        public void TestGetReversedScoreFlags()
+        {
+            var expected = new[]
+            {
+                false, // 0  fragment_coelution_sum
+                false, // 1  fragment_coelution_max
+                false, // 2  n_coeluting_fragments
+                false, // 3  peak_apex
+                false, // 4  peak_area
+                false, // 5  peak_sharpness
+                false, // 6  xcorr
+                false, // 7  consecutive_ions
+                false, // 8  explained_intensity
+                false, // 9  mass_accuracy_deviation_mean (signed, centered -> false by convention)
+                true,  // 10 abs_mass_accuracy_deviation_mean (lower is better)
+                false, // 11 rt_deviation (signed, centered -> false by convention)
+                true,  // 12 abs_rt_deviation (lower is better)
+                false, // 13 ms1_precursor_coelution
+                false, // 14 ms1_isotope_cosine
+                false, // 15 median_polish_cosine
+                true,  // 16 median_polish_residual_ratio (lower is better)
+                false, // 17 sg_weighted_xcorr
+                false, // 18 sg_weighted_cosine
+                false, // 19 median_polish_min_fragment_r2
+                true,  // 20 median_polish_residual_correlation (lower is better)
+            };
+
+            var flags = OspreyFeatureCalculators.GetReversedScoreFlags();
+            Assert.AreEqual(OspreyFeatureCalculators.FeatureCount, flags.Length);
+            Assert.AreEqual(expected.Length, flags.Length);
+            for (int i = 0; i < expected.Length; i++)
+            {
+                Assert.AreEqual(expected[i], flags[i],
+                    string.Format("IsReversedScore[{0}] ({1}) mismatch",
+                        i, OspreyFeatureCalculators.Get(i).Name));
+                // The vector must agree with the SPI property on each calculator.
+                Assert.AreEqual(OspreyFeatureCalculators.Get(i).IsReversedScore, flags[i]);
+            }
+        }
+
         private static LibraryFragment Frag(double mz, IonType ionType, byte ordinal)
         {
             return new LibraryFragment

@@ -25,7 +25,10 @@
 // Ported from Rust test suite in osprey-fdr
 
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR;
@@ -356,6 +359,114 @@ namespace pwiz.OspreySharp.Test
             var config = new PercolatorConfig();
             var results = PercolatorFdr.RunPercolator(new List<PercolatorEntry>(), config);
             Assert.AreEqual(0, results.Entries.Count);
+        }
+
+        /// <summary>
+        /// The post-training feature weight + percent-contribution report: with a
+        /// clean target/decoy separation, the emitted percentages must sum to ~100%
+        /// (the mean-difference decomposition is exact by linearity), the surfaced
+        /// averaged weights must be populated, and the printed unexpected-direction
+        /// flag must obey Skyline's weight-sign rule
+        /// <c>IsReversedScore XOR (weight &lt; 0)</c>. A feature whose trained weight
+        /// disagrees with its declared direction gets the "(unexpected direction)"
+        /// suffix; reporting must never perturb the q-values.
+        /// </summary>
+        [TestMethod]
+        public void TestFeatureContributionReport()
+        {
+            // 3 features; targets clearly separate on all three. Feature 1 is
+            // declared reversed (lower-is-better) yet targets here have the HIGHER
+            // value -> the trained weight comes out positive, so
+            // reversed(true) XOR (w<0 == false) == true -> flagged unexpected.
+            var entries = new List<PercolatorEntry>();
+            for (int i = 0; i < 60; i++)
+            {
+                entries.Add(MakePercolatorEntry(
+                    string.Format("file1_{0}", i), "file1",
+                    string.Format("PEPTIDE{0}", i), 2, false, (uint)(i + 1),
+                    new[] { 4.0 + i * 0.02, 4.0 + i * 0.02, 4.0 + i * 0.02 }));
+            }
+            for (int i = 0; i < 60; i++)
+            {
+                entries.Add(MakePercolatorEntry(
+                    string.Format("file1_d{0}", i), "file1",
+                    string.Format("DECOY{0}", i), 2, true, (uint)(i + 1) | 0x80000000,
+                    new[] { 0.5 + i * 0.02, 0.5 + i * 0.02, 0.5 + i * 0.02 }));
+            }
+
+            var config = new PercolatorConfig
+            {
+                MaxIterations = 3,
+                FeatureNames = new[] { "feat_a", "feat_b", "feat_c" },
+                FeatureLabels = new[] { "Feature A", "Feature B", "Feature C" },
+                ReversedScore = new[] { false, true, false }
+            };
+
+            string report;
+            PercolatorResults results;
+            var savedOut = OspreyOutput.Out;
+            try
+            {
+                var capture = new StringWriter();
+                OspreyOutput.Out = capture;
+                results = PercolatorFdr.RunPercolator(entries, config);
+                report = capture.ToString();
+            }
+            finally
+            {
+                OspreyOutput.Out = savedOut;
+            }
+
+            // The averaged model is surfaced for the report.
+            Assert.IsNotNull(results.AvgWeights);
+            Assert.AreEqual(3, results.AvgWeights.Length);
+
+            // The human-readable block is present.
+            StringAssert.Contains(report,
+                "Feature weight contributions (trained linear model");
+
+            // Parse the percent column from the three feature rows. The table rows
+            // are "<4 spaces><label><coefficient F4><percent F1>%"; match on the
+            // coefficient-then-percent shape so the unrelated "{F1}% at {P0} FDR"
+            // training-progress lines (which have "(" / " at " around the percent)
+            // are not picked up.
+            var percents = new List<double>();
+            foreach (Match m in Regex.Matches(report,
+                         @"^    \S.*\s-?\d+\.\d{4}\s+(-?\d+\.\d)%",
+                         RegexOptions.Multiline))
+                percents.Add(double.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture));
+            Assert.AreEqual(3, percents.Count,
+                "expected exactly three percent rows in the contribution table");
+            double total = percents.Sum();
+            Assert.AreEqual(100.0, total, 0.2,
+                string.Format("contribution percentages should sum to ~100% (got {0})", total));
+
+            // The flag must match Skyline's weight-sign rule on the surfaced weights.
+            for (int j = 0; j < 3; j++)
+            {
+                bool expectedFlag = config.ReversedScore[j] ^ (results.AvgWeights[j] < 0.0);
+                bool rowFlagged = Regex.IsMatch(report,
+                    @"Feature " + (char)('A' + j) + @"\b.*\(unexpected direction\)");
+                Assert.AreEqual(expectedFlag, rowFlagged,
+                    string.Format("Feature {0} unexpected-direction flag mismatch (weight={1})",
+                        (char)('A' + j), results.AvgWeights[j]));
+            }
+
+            // Feature B (declared reversed, but targets are higher here) must be the
+            // flagged one: its trained weight is positive.
+            Assert.IsTrue(results.AvgWeights[1] > 0.0,
+                "fixture should drive a positive weight on the declared-reversed feature B");
+            StringAssert.Contains(report, "(unexpected direction)");
+
+            // Reporting did not disturb scoring: targets still outscore decoys.
+            double avgTarget = 0.0, avgDecoy = 0.0;
+            int nT = 0, nD = 0;
+            for (int i = 0; i < entries.Count; i++)
+            {
+                if (entries[i].IsDecoy) { avgDecoy += results.Entries[i].Score; nD++; }
+                else { avgTarget += results.Entries[i].Score; nT++; }
+            }
+            Assert.IsTrue(avgTarget / nT > avgDecoy / nD);
         }
 
         [TestMethod]

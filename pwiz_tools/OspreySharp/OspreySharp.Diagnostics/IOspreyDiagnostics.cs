@@ -74,6 +74,7 @@ namespace pwiz.OspreySharp
         bool SubsampleOnly { get; }
         bool DumpSvmWeights { get; }
         bool SvmWeightsOnly { get; }
+        bool DumpFeatureContrib { get; }
         bool DumpRescored { get; }
         bool RescoredOnly { get; }
         bool DumpMpInputs { get; }

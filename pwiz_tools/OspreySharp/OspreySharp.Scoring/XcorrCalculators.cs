@@ -54,6 +54,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "xcorr"; } }
 
+        public override bool IsReversedScore { get { return false; } }   // higher is better
+
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectrumPeakData peakData)
         {
             // Single apex-spectrum xcorr via the resolution strategy. The Spectrum
@@ -242,6 +244,8 @@ namespace pwiz.OspreySharp.Scoring
     {
         public override string Name { get { return "sg_weighted_xcorr"; } }
 
+        public override bool IsReversedScore { get { return false; } }   // higher is better
+
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {
             return SgWeightedSweep.GetOrCompute(context, peakData).SgXcorr;
@@ -259,6 +263,8 @@ namespace pwiz.OspreySharp.Scoring
     internal sealed class SgCosineCalc : ApexSpectraOspreyFeatureCalculator
     {
         public override string Name { get { return "sg_weighted_cosine"; } }
+
+        public override bool IsReversedScore { get { return false; } }   // higher is better
 
         protected override double Calculate(OspreyScoringContext context, IOspreyApexSpectraPeakData peakData)
         {

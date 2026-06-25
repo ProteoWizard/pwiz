@@ -73,6 +73,22 @@ namespace pwiz.OspreySharp.FDR
         public string[] FeatureNames { get; set; }
 
         /// <summary>
+        /// Optional human-friendly feature labels for the post-training
+        /// feature-contribution report (falls back to <see cref="FeatureNames"/>
+        /// when null). Display only -- never used for scoring.
+        /// </summary>
+        public string[] FeatureLabels { get; set; }
+
+        /// <summary>
+        /// Optional per-feature expected-direction flags (Skyline's
+        /// <c>IsReversedScore</c>), passed in from the Tasks layer because the FDR
+        /// project does not reference the Scoring assembly that owns the SPI. Used
+        /// only to flag unexpected-direction coefficients in the contribution table;
+        /// never used for scoring. Null suppresses the flag.
+        /// </summary>
+        public bool[] ReversedScore { get; set; }
+
+        /// <summary>
         /// If true, <see cref="PercolatorFdr.RunPercolator"/> trains the fold
         /// models + standardizer and returns early -- skips CV/averaged
         /// scoring of the input entries, PEP estimation, q-value
@@ -183,6 +199,17 @@ namespace pwiz.OspreySharp.FDR
 
         /// <summary>Bias terms from best model per fold.</summary>
         public List<double> FoldBiases { get; set; }
+
+        /// <summary>
+        /// The averaged (across-fold) standardized feature weight vector formed at
+        /// scoring time, or <c>null</c> when scoring did not run (e.g. the
+        /// <c>TrainOnly</c> early-return). Surfaced for the feature-contribution
+        /// report and tests; not used by scoring.
+        /// </summary>
+        public double[] AvgWeights { get; set; }
+
+        /// <summary>The averaged (across-fold) bias paired with <see cref="AvgWeights"/>.</summary>
+        public double AvgBias { get; set; }
 
         /// <summary>Feature standardizer used during training.</summary>
         public FeatureStandardizer Standardizer { get; set; }
@@ -633,6 +660,49 @@ namespace pwiz.OspreySharp.FDR
                     finalScores, labels, entryIds, peptides);
             }
 
+            // 8b. Feature weight + percent-contribution report (reporting only).
+            // Form the averaged model by averaging the per-fold weights (same
+            // arithmetic as the streaming path) and accumulate per-feature
+            // target/decoy means over the FULL standardized matrix -- the same
+            // population the model scores. Pure read of foldWeights + stdFeatures;
+            // never perturbs finalScores / q-values. Serial in row/index order.
+            var avgWeights = new double[nFeatures];
+            double avgBias = 0.0;
+            for (int f = 0; f < foldWeights.Count; f++)
+            {
+                double[] foldW = foldWeights[f];
+                for (int j = 0; j < nFeatures; j++)
+                    avgWeights[j] += foldW[j];
+                avgBias += foldBiases[f];
+            }
+            double nFoldsD = foldWeights.Count;
+            for (int j = 0; j < nFeatures; j++)
+                avgWeights[j] /= nFoldsD;
+            avgBias /= nFoldsD;
+
+            var contribSumTarget = new double[nFeatures];
+            var contribSumDecoy = new double[nFeatures];
+            long contribNTgt = 0, contribNDcy = 0;
+            for (int i = 0; i < n; i++)
+            {
+                if (labels[i])   // labels[i] == IsDecoy
+                {
+                    contribNDcy++;
+                    for (int j = 0; j < nFeatures; j++)
+                        contribSumDecoy[j] += stdFeatures[i, j];
+                }
+                else
+                {
+                    contribNTgt++;
+                    for (int j = 0; j < nFeatures; j++)
+                        contribSumTarget[j] += stdFeatures[i, j];
+                }
+            }
+            ComputeAndEmitFeatureContributions(avgWeights, contribSumTarget, contribSumDecoy,
+                contribNTgt, contribNDcy, config.FeatureNames, config.FeatureLabels,
+                config.ReversedScore,
+                config.Diagnostics != null && config.Diagnostics.DumpFeatureContrib);
+
             // 9. Build results
             var results = new List<PercolatorResult>(n);
             for (int i = 0; i < n; i++)
@@ -655,7 +725,9 @@ namespace pwiz.OspreySharp.FDR
                 FoldWeights = foldWeights,
                 FoldBiases = foldBiases,
                 Standardizer = standardizer,
-                IterationsPerFold = iterationsPerFold
+                IterationsPerFold = iterationsPerFold,
+                AvgWeights = avgWeights,
+                AvgBias = avgBias
             };
         }
 
@@ -725,6 +797,13 @@ namespace pwiz.OspreySharp.FDR
             var peptides = new string[n];
             var fileNames = new string[n];
             var featureBuf = new double[nFeatures];
+            // Accumulate per-feature target/decoy sums over the full standardized
+            // population for the feature-contribution report below. Reporting only;
+            // serial in row/index order (no PLINQ) so the printed numbers are stable
+            // and this never perturbs finalScores.
+            var sumTarget = new double[nFeatures];
+            var sumDecoy = new double[nFeatures];
+            long nTgt = 0, nDcy = 0;
             for (int i = 0; i < n; i++)
             {
                 var entry = entries[i];
@@ -739,7 +818,24 @@ namespace pwiz.OspreySharp.FDR
                 for (int j = 0; j < nFeatures; j++)
                     score += avgWeights[j] * featureBuf[j];
                 finalScores[i] = score;
+
+                if (entry.IsDecoy)
+                {
+                    nDcy++;
+                    for (int j = 0; j < nFeatures; j++)
+                        sumDecoy[j] += featureBuf[j];
+                }
+                else
+                {
+                    nTgt++;
+                    for (int j = 0; j < nFeatures; j++)
+                        sumTarget[j] += featureBuf[j];
+                }
             }
+
+            ComputeAndEmitFeatureContributions(avgWeights, sumTarget, sumDecoy, nTgt, nDcy,
+                config.FeatureNames, config.FeatureLabels, config.ReversedScore,
+                config.Diagnostics != null && config.Diagnostics.DumpFeatureContrib);
 
             // PEP via global target-decoy competition. CompeteAll returns
             // winners sorted by score-descending (matches the direct-path
@@ -830,7 +926,9 @@ namespace pwiz.OspreySharp.FDR
                 FoldWeights = trainResults.FoldWeights,
                 FoldBiases = trainResults.FoldBiases,
                 Standardizer = standardizer,
-                IterationsPerFold = trainResults.IterationsPerFold
+                IterationsPerFold = trainResults.IterationsPerFold,
+                AvgWeights = avgWeights,
+                AvgBias = avgBias
             };
         }
 
@@ -2358,6 +2456,104 @@ namespace pwiz.OspreySharp.FDR
                 }
             }
             OspreyOutput.Out.WriteLine(@"Wrote Stage 5 SVM weights dump: {0} ({1} folds)", path, foldModels.Length);
+        }
+
+        /// <summary>
+        /// Skyline-style per-feature percent-contribution decomposition of the
+        /// trained linear model, emitted to <c>OspreyOutput.Out</c> after Stage 5
+        /// training. Ports TargetDecoyGenerator.GetPercentContribution: for each
+        /// feature
+        ///   contribution_j = w_j*(meanTarget_j - meanDecoy_j) / sum_k w_k*(meanTarget_k - meanDecoy_k)
+        /// so the percentages sum to 100% by linearity (the denominator is the sum of
+        /// the numerators). All means are over the STANDARDIZED feature space the SVM
+        /// scores in (the same space <paramref name="avgWeights"/> live in), so the
+        /// product w_j*deltaMu_j is space-invariant.
+        ///
+        /// Pure reporting: a read of <paramref name="avgWeights"/> and the
+        /// accumulated target/decoy sums. It never mutates the model or the features
+        /// and must never move q-values. The signed percent is emitted as-is; the
+        /// unexpected-direction flag is Skyline's weight-sign test
+        /// <c>IsReversedScore XOR (weight &lt; 0)</c> (independent of the data).
+        /// </summary>
+        private static void ComputeAndEmitFeatureContributions(
+            double[] avgWeights,
+            double[] sumTarget, double[] sumDecoy, long nTarget, long nDecoy,
+            string[] featureNames, string[] featureLabels, bool[] reversedScore,
+            bool dumpTsv)
+        {
+            int p = avgWeights.Length;
+            var deltaMu = new double[p];
+            var weighted = new double[p];
+            double composite = 0.0;
+            for (int j = 0; j < p; j++)
+            {
+                double mt = nTarget > 0 ? sumTarget[j] / nTarget : 0.0;
+                double md = nDecoy > 0 ? sumDecoy[j] / nDecoy : 0.0;
+                deltaMu[j] = mt - md;
+                weighted[j] = avgWeights[j] * deltaMu[j];
+                composite += weighted[j];   // == sum_k w_k*deltaMu_k == deltaMu_composite
+            }
+            // Targets should score above decoys, so composite > 0. Guard /0 for a
+            // degenerate model (percentages become NaN, which the report shows plainly).
+            bool ok = Math.Abs(composite) > 1e-12;
+
+            OspreyOutput.Out.WriteLine(
+                "  Feature weight contributions (trained linear model, coefficients standardized):");
+            OspreyOutput.Out.WriteLine("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "percent");
+            for (int j = 0; j < p; j++)
+            {
+                double pct = ok ? 100.0 * weighted[j] / composite : double.NaN;
+                bool wrongSign = reversedScore != null && j < reversedScore.Length &&
+                                 (reversedScore[j] ^ (avgWeights[j] < 0.0));
+                string label = (featureLabels != null && j < featureLabels.Length)
+                    ? featureLabels[j]
+                    : (featureNames != null && j < featureNames.Length ? featureNames[j] : string.Format("feature_{0}", j));
+                OspreyOutput.Out.WriteLine("    {0,-36} {1,12:F4} {2,8:F1}%{3}",
+                    label, avgWeights[j], pct, wrongSign ? "  (unexpected direction)" : string.Empty);
+            }
+
+            if (dumpTsv)
+                WriteFeatureContributionsDump(avgWeights, deltaMu, weighted, composite,
+                    ok, featureNames, reversedScore);
+        }
+
+        /// <summary>
+        /// Optional machine-precision TSV form of the feature-contribution table
+        /// (gated by OSPREY_DUMP_FEATURE_CONTRIB), for cross-impl / cross-run diffing.
+        /// Mirrors the f64-roundtrip formatting of the Stage 5 dumps. Columns:
+        /// feature_idx, feature_name, coefficient, delta_mu, contribution_pct,
+        /// reversed, wrong_sign.
+        /// </summary>
+        private static void WriteFeatureContributionsDump(
+            double[] avgWeights, double[] deltaMu, double[] weighted, double composite,
+            bool ok, string[] featureNames, bool[] reversedScore)
+        {
+            const string path = @"cs_feature_contributions.tsv";
+            var inv = CultureInfo.InvariantCulture;
+            using (var sw = new StreamWriter(path))
+            {
+                sw.NewLine = "\n";
+                sw.WriteLine(@"feature_idx	feature_name	coefficient	delta_mu	contribution_pct	reversed	wrong_sign");
+                for (int j = 0; j < avgWeights.Length; j++)
+                {
+                    double pct = ok ? 100.0 * weighted[j] / composite : double.NaN;
+                    bool reversed = reversedScore != null && j < reversedScore.Length && reversedScore[j];
+                    bool wrongSign = reversedScore != null && j < reversedScore.Length &&
+                                     (reversedScore[j] ^ (avgWeights[j] < 0.0));
+                    string name = (featureNames != null && j < featureNames.Length)
+                        ? featureNames[j]
+                        : @"unknown";
+                    sw.Write(j.ToString(inv));
+                    sw.Write('\t'); sw.Write(name);
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(avgWeights[j]));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(deltaMu[j]));
+                    sw.Write('\t'); sw.Write(Diagnostics.FormatF64Roundtrip(pct));
+                    sw.Write('\t'); sw.Write(reversed ? @"true" : @"false");
+                    sw.Write('\t'); sw.WriteLine(wrongSign ? @"true" : @"false");
+                }
+            }
+            OspreyOutput.Out.WriteLine(@"Wrote feature contributions dump: {0} ({1} features)",
+                path, avgWeights.Length);
         }
 
         /// <summary>
