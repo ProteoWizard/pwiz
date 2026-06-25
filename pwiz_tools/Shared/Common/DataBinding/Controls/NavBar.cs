@@ -243,7 +243,15 @@ namespace pwiz.Common.DataBinding.Controls
                 }
                 contextMenu.Items.Add(new ToolStripMenuItem(Resources.NavBar_NavBarButtonViewsOnDropDownOpening_Manage_Views___, null, OnManageViews));
             }
+            // A fresh ContextMenuStrip is built every time this button opens; dispose the one it replaces.
+            // A ContextMenuStrip subscribes to the process-wide static SystemEvents, so an orphaned (never
+            // disposed) one stays rooted there and, through its items' handlers, holds this NavBar -- and the
+            // BindingListSource and document behind it -- alive. (The current DropDown is disposed with the
+            // button when the form closes; only the replaced ones would otherwise leak.)
+            var previousDropDown = navBarButtonViews.DropDown;
             navBarButtonViews.DropDown = contextMenu;
+            if (previousDropDown != null && previousDropDown != contextMenu)
+                previousDropDown.Dispose();
         }
 
         private ViewName GetViewName()

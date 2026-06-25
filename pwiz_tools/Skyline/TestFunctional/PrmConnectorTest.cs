@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -75,10 +76,11 @@ namespace pwiz.SkylineTestFunctional
             string addFilesId = WaitForNativeFileDialogId();
 
             // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,
-            // click Open".
+            // click Open". A native dialog has no caption-addressable buttons, so it is confirmed with the
+            // accept action (the connector's way to press its default button) rather than ClickFormButton.
             JsonUiService.SetFormValue(addFilesId, @"FileName",
                 OpenFileDialogAutomation.QuotePaths(new[] { file1, file2 }));
-            JsonUiService.ClickFormButton(addFilesId, @"Open");
+            JsonUiService.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"accept", null);
 
             // The wizard's search-file list now holds both files.
             WaitForConditionUI(() => wizard.BuildPepSearchLibControl.SearchFilenames.Length == 2);

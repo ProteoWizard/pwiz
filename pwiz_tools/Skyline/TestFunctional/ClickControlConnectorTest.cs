@@ -67,11 +67,13 @@ namespace pwiz.SkylineTestFunctional
             ClickTab();
 
             // Close the forms we opened and return to a fresh document so nothing holds the modified
-            // document (and its undo record) past teardown's leak check.
+            // document (and its undo record) past teardown's leak check. Toggling audit logging dirtied the
+            // document, so discard those changes rather than letting NewDocument raise the save prompt.
             RunUI(() =>
             {
                 SkylineWindow.ShowDocumentGrid(false);
                 auditLogForm.Close();
+                SkylineWindow.DiscardChanges = true;
                 SkylineWindow.NewDocument();
             });
         }
