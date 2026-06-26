@@ -114,11 +114,12 @@ namespace pwiz.SkylineTestTutorial
             var startPage = WaitForConnectorForm<StartPage>();
             PauseForScreenShot(startPage, "Start Page -- Import DIA Peptide Search"); // s-01
 
-            // Click the "Import DIA Peptide Search" tile. It first shows a "You must save this document before
-            // importing a peptide search" message (OK/Cancel); click OK to bring up the native Save As dialog,
-            // save as DIA_to_SRM_Tutorial.sky, and the wizard opens.
-            startPage.ClickButton("Import DIA Peptide Search");
-            WaitForConnectorForm<MultiButtonMsgDlg>().ClickButton("OK");
+            // Click the "Import DIA Peptide Search" tile (matched by its localized caption from the resx). It
+            // first shows a "You must save this document before importing a peptide search" message (OK/Cancel);
+            // Accept() presses its default (OK) button without keying on a localized caption, which brings up
+            // the native Save As dialog. Save as DIA_to_SRM_Tutorial.sky and the wizard opens.
+            startPage.ClickButton(StartupResources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search);
+            WaitForConnectorForm<MultiButtonMsgDlg>().Accept();
 
             var saveDlg = WaitForNativeFileDialog();
             saveDlg.SetValue("FileName", GetTestPath("DIA_to_SRM_Tutorial.sky"));
@@ -135,11 +136,14 @@ namespace pwiz.SkylineTestTutorial
         private void BuildLibraryAndExtractChromatograms(IFormElement wizard)
         {
             // Build Spectral Library page: choose "Use existing" (which reveals the library path box), then set
-            // the path to the EncyclopeDIA .elib. Wait out each posted action so the next sees its effect.
-            WaitForAction(() => wizard.ClickButton("Use existing"));
-            WaitForAction(() => wizard.SetValue("Path", GetTestPath("CSF_GPFLib_QRcombined.elib")));
+            // the path to the EncyclopeDIA .elib. Controls are addressed by their localized captions, pulled
+            // from the resources so the test works in any UI language. Wait out each posted action so the next
+            // sees its effect.
+            WaitForAction(() => wizard.ClickButton(GetLocalizedText<BuildPeptideSearchLibraryControl>("radioExistingLibrary")));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<BuildPeptideSearchLibraryControl>("lblLibraryPath"),
+                GetTestPath("CSF_GPFLib_QRcombined.elib")));
             PauseForScreenShot(wizard, "Build Spectral Library -- use existing library"); // s-02
-            WaitForAction(() => wizard.ClickButton("Next >"));
+            WaitForAction(() => wizard.ClickButton(GetLocalizedText<ImportPeptideSearchDlg>("btnNext")));
 
             // Extract Chromatograms page: nothing to add here (results are imported later), so just capture it.
             // Clicking Next here would prompt to continue without results; that is driven when Step 1.3+ is added.

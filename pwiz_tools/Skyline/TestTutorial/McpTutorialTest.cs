@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline;
@@ -113,6 +114,21 @@ namespace pwiz.SkylineTestTutorial
         protected void PauseForScreenShot(IFormElement form, string description = null)
         {
             SaveConnectorScreenShot(form.CaptureImage);
+        }
+
+        /// <summary>
+        /// The localized caption a control displays, read from its component's resources -- the same .resx the
+        /// form or user control is built from, for the current UI language -- normalized the same way the
+        /// connector normalizes a control's label (<see cref="UiElement.NormalizeLabel"/>: mnemonic '&amp;' and
+        /// trailing punctuation removed). This lets a test match a control (e.g. a wizard's "Next &gt;" button)
+        /// by the text the user actually sees, so it works in every language instead of hard-coding the English
+        /// caption -- and the normalization makes it match the label the connector reports exactly.
+        /// </summary>
+        /// <typeparam name="T">The Form or UserControl type whose resources declare the control.</typeparam>
+        /// <param name="controlName">The control's field name, e.g. "btnNext"; its "&lt;name&gt;.Text" entry is returned.</param>
+        protected static string GetLocalizedText<T>(string controlName) where T : ContainerControl
+        {
+            return UiElement.NormalizeLabel(new ComponentResourceManager(typeof(T)).GetString(controlName + @".Text"));
         }
     }
 }

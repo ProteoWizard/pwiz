@@ -771,7 +771,7 @@ namespace pwiz.Skyline.ToolsUI
         // Matching tolerates either form anyway. If trimming removes everything -- the whole caption is
         // punctuation, e.g. a "..." or ":" button -- keep the original so the control is still reported with a
         // label and stays addressable, rather than vanishing into an empty (null) name.
-        internal static string NormalizeLabel(string text)
+        public static string NormalizeLabel(string text)
         {
             if (string.IsNullOrEmpty(text))
                 return text;
