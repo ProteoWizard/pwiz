@@ -71,10 +71,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(namePath, @"get_value", null),
                 @"PerformAction get_value did not return the name box value.");
 
-            // get_actions: every control lists what it supports (a string[]).
-            var actions = (string[]) JsonUiService.PerformAction(namePath, @"get_actions", null);
+            // get_actions: every control lists what it supports (an ActionInfo[] -- name + description).
+            var actions = ((ActionInfo[]) JsonUiService.PerformAction(namePath, @"get_actions", null))
+                .Select(a => a.Name).ToArray();
             CollectionAssert.Contains(actions, @"set_value");
             CollectionAssert.Contains(actions, @"get_children");
+            Assert.IsTrue(((ActionInfo[]) JsonUiService.PerformAction(namePath, @"get_actions", null))
+                .All(a => !string.IsNullOrEmpty(a.Description)), @"Every reported action should have a description.");
 
             // get_children: returns the children as ControlInfo[], each Path with a null Parent (the caller
             // re-parents it to the element it queried).

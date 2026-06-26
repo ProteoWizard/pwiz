@@ -337,7 +337,8 @@ namespace SkylineTool
         /// <paramref name="path"/> (only the set properties are used -- see <see cref="UiElementPath"/>),
         /// then perform <paramref name="action"/> on it. The action determines the type expected for
         /// <paramref name="value"/> and the type returned. Every control supports "get_actions" (returns
-        /// <c>string[]</c> of the actions it supports) and "get_children" (returns <c>ControlInfo[]</c>);
+        /// <c>ActionInfo[]</c> -- each action's name, a description, and the value it takes) and
+        /// "get_children" (returns <c>ControlInfo[]</c>);
         /// other actions are "click" (returns null), "set_value" (takes a value -- a bool, double, or
         /// string -- and returns null), and "get_value" (returns the control's current value, which is
         /// null or one of those same three types). The typed verbs (e.g.

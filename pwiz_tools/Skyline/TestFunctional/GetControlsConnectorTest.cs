@@ -73,26 +73,27 @@ namespace pwiz.SkylineTestFunctional
             // names it, and get_actions reports that it can be value-set.
             var nameField = controls.FirstOrDefault(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
             Assert.IsNotNull(nameField, @"Expected a TextBox discoverable by the label 'Name'.");
-            CollectionAssert.Contains(
-                (string[]) JsonUiService.PerformAction(Reparent(nameField), @"get_actions", null), @"set_value");
+            CollectionAssert.Contains(ActionNames(Reparent(nameField)), @"set_value");
 
             // The Applies-to list is discoverable by its "Applies to" label and supports an item action.
             var appliesToList = controls.FirstOrDefault(c => c.Path.Type == @"CheckedListBox");
             Assert.IsNotNull(appliesToList, @"Expected the Applies-to CheckedListBox.");
             Assert.AreEqual(@"Applies to", appliesToList.Path.Text);
-            CollectionAssert.Contains(
-                (string[]) JsonUiService.PerformAction(Reparent(appliesToList), @"get_actions", null), @"check_item",
+            CollectionAssert.Contains(ActionNames(Reparent(appliesToList)), @"check_item",
                 @"The list should report the check_item action.");
 
             // The OK button is discoverable by its own caption and supports a click.
             var okButton = controls.FirstOrDefault(c => c.Path.Text == @"OK");
             Assert.IsNotNull(okButton, @"Expected an OK button discoverable by its caption.");
-            CollectionAssert.Contains(
-                (string[]) JsonUiService.PerformAction(Reparent(okButton), @"get_actions", null), @"click");
+            CollectionAssert.Contains(ActionNames(Reparent(okButton)), @"click");
 
             OkDialog(defineAnnotationDlg, () => defineAnnotationDlg.DialogResult = DialogResult.Cancel);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);
         }
+
+        // The snake_case names of the actions get_actions reports for the element at the given path.
+        private static string[] ActionNames(UiElementPath path) =>
+            ((ActionInfo[]) JsonUiService.PerformAction(path, @"get_actions", null)).Select(a => a.Name).ToArray();
     }
 }

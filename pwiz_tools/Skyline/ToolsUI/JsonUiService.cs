@@ -544,8 +544,9 @@ namespace pwiz.Skyline.ToolsUI
         /// The most general way to interact with a control, menu item, or list item (see
         /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="path"/> refers to,
         /// then perform <paramref name="action"/> on it. The action determines the value and return types:
-        /// "get_actions" -> string[]; "get_children" -> ControlInfo[] (parentless paths the caller
-        /// re-parents); "click" -> null; "set_value" (string value) -> null; "get_value" -> string.
+        /// "get_actions" -> ActionInfo[] (name + description + the value it takes); "get_children" ->
+        /// ControlInfo[] (parentless paths the caller re-parents); "click" -> null; "set_value" -> null;
+        /// "get_value" -> the value (null, bool, double, or string).
         /// </summary>
         public static object PerformAction(UiElementPath path, string action, object value)
         {

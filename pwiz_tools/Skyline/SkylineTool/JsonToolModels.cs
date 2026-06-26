@@ -329,6 +329,18 @@ namespace SkylineTool
     }
 
     /// <summary>
+    /// One action a control supports, returned by the "get_actions" action so a caller knows not just the
+    /// action's wire <see cref="Name"/> but what it does (<see cref="Description"/>) and what to pass for it
+    /// (<see cref="ValueDescription"/> -- null when the action takes no value).
+    /// </summary>
+    public class ActionInfo
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string ValueDescription { get; set; }
+    }
+
+    /// <summary>
     /// A document tree element with name and locator returned by GetLocations.
     /// </summary>
     public class LocationEntry

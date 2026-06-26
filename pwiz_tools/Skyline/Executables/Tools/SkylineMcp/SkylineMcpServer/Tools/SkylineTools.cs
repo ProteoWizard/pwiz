@@ -561,7 +561,8 @@ public static class SkylineTools
      Description("The most general way to interact with a control, menu item, or list item: locate it by " +
         "its Label (the visible text that names it) and/or its Type (for a caption-less control, e.g. " +
         "\"TreeView\") among the form's controls, then perform an action. Only the properties you set are " +
-        "used to match. Actions: 'get_actions' (lists the actions this control supports); 'get_children' " +
+        "used to match. Actions: 'get_actions' (lists the actions this control supports, each with a " +
+        "description and the value it takes -- call this first when unsure); 'get_children' " +
         "(lists child elements as JSON UiElementPaths -- each with a null parent, so to act on one set its " +
         "parent to the path of the element you listed); 'click'; 'set_value' (uses 'value'); 'get_value' " +
         "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +

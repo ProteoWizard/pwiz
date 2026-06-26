@@ -104,6 +104,31 @@ namespace pwiz.Skyline.ToolsUI
         public string Name { get; }
         public string SnakeCaseName { get; }
 
+        /// <summary>One line describing what the action does, surfaced by get_actions so a caller does not have
+        /// to guess.</summary>
+        public string Description { get; private set; }
+
+        /// <summary>What to pass as the action's value, or null when it takes none (also surfaced by
+        /// get_actions).</summary>
+        public string ValueDescription { get; private set; }
+
+        /// <summary>Sets the self-documentation (returns this so it chains onto a <see cref="UiActions"/>
+        /// definition).</summary>
+        public UiAction Describe(string description, string valueDescription = null)
+        {
+            Description = description;
+            ValueDescription = valueDescription;
+            return this;
+        }
+
+        /// <summary>This action as the <see cref="ActionInfo"/> get_actions reports.</summary>
+        public ActionInfo ToActionInfo() => new ActionInfo
+        {
+            Name = SnakeCaseName,
+            Description = Description,
+            ValueDescription = ValueDescription,
+        };
+
         /// <summary>Whether the element must be visible / enabled for the action to be performed -- the gates
         /// a user faces. A pure read (get_value, get_actions, get_children, get_grid_text) clears these, so a
         /// disabled or off-screen control can still be inspected; a mutation or click leaves them set.</summary>
@@ -200,66 +225,85 @@ namespace pwiz.Skyline.ToolsUI
         // base UiElement type; they are reads (mustBeEnabled: false, and SimpleFunction marks them as
         // returning a value).
         public static readonly UiAction GetActions = SimpleFunction<UiElement>(
-            @"GetActions", e => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray());
+                @"GetActions", e => e.SupportedActions.Select(a => a.ToActionInfo()).ToArray())
+            .Describe(@"List the actions this control supports, each with a description and the value it takes.");
 
         public static readonly UiAction GetChildren = SimpleFunction<UiElement>(
-            @"GetChildren", e => e.GetControlInfos());
+                @"GetChildren", e => e.GetControlInfos())
+            .Describe(@"List this element's child controls as paths you can re-parent and then act on.");
 
         // A void action (click, value set, item check, ...) is posted fire-and-forget; only a value action
         // (get_value, get_grid_text) is run synchronously inside the dialog-watch -- see UiAction.ReturnsValue.
         public static readonly UiAction Click = SimpleAction<IClickableElement>(
-            @"Click", e => { e.Click(); });
+                @"Click", e => { e.Click(); })
+            .Describe(@"Click this control (a button, menu/list item, checkbox, ...).");
 
         public static readonly UiAction GetValue = SimpleFunction<UiElement>(
-            @"GetValue", e => UiElement.ConvertValue(e.Value));
+                @"GetValue", e => UiElement.ConvertValue(e.Value))
+            .Describe(@"Get this control's current value (null, a bool, a number, or a string).");
 
         public static readonly UiAction SetValue = SimpleAction<UiElement, object>(
-            @"SetValue", (e, value) => e.SetValue(UiElement.ConvertValue(value)));
+                @"SetValue", (e, value) => e.SetValue(UiElement.ConvertValue(value)))
+            .Describe(@"Set this control's value.", @"the new value -- a bool, a number, or a string");
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
-            @"CheckItem", (e, item) => e.SetItemChecked(item, true));
+                @"CheckItem", (e, item) => e.SetItemChecked(item, true))
+            .Describe(@"Check the list/tree item with the given text.", @"the item's visible text");
 
         public static readonly UiAction UncheckItem = SimpleAction<ICheckItemsElement, string>(
-            @"UncheckItem", (e, item) => e.SetItemChecked(item, false));
+                @"UncheckItem", (e, item) => e.SetItemChecked(item, false))
+            .Describe(@"Uncheck the list/tree item with the given text.", @"the item's visible text");
 
         public static readonly UiAction SelectItem = SimpleAction<ISelectItemsElement, string>(
-            @"SelectItem", (e, item) => e.SetItemSelected(item, true));
+                @"SelectItem", (e, item) => e.SetItemSelected(item, true))
+            .Describe(@"Select the list/tree item with the given text.", @"the item's visible text");
 
         public static readonly UiAction UnselectItem = SimpleAction<ISelectItemsElement, string>(
-            @"UnselectItem", (e, item) => e.SetItemSelected(item, false));
+                @"UnselectItem", (e, item) => e.SetItemSelected(item, false))
+            .Describe(@"Deselect the list/tree item with the given text.", @"the item's visible text");
 
         public static readonly UiAction SetSelectedIndex = SimpleAction<ISelectItemsElement, object>(
-            @"SetSelectedIndex", (e, arg) => e.SetSelectedIndex(UiValue.ToInt(arg)));
+                @"SetSelectedIndex", (e, arg) => e.SetSelectedIndex(UiValue.ToInt(arg)))
+            .Describe(@"Select the list item at the given index (clears any other selection).", @"the zero-based index");
 
         public static readonly UiAction GetGridText = SimpleFunction<GridElement>(
-            @"GetGridText", e => e.GetGridText());
+                @"GetGridText", e => e.GetGridText())
+            .Describe(@"Get the whole grid as tab-separated text -- the column headers then every row.");
 
         public static readonly UiAction SetGridText = SimpleAction<GridElement, string>(
-            @"SetGridText", (e, text) => e.SetGridText(text));
+                @"SetGridText", (e, text) => e.SetGridText(text))
+            .Describe(@"Paste tab-separated text into the grid starting at the current cell.", @"the tab-separated text (it fills down and to the right)");
 
         public static readonly UiAction SetCurrentCellAddress = SimpleAction<GridElement, object>(
-            @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddress(cell[0], cell[1]); });
+                @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddress(cell[0], cell[1]); })
+            .Describe(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu).", @"a [column, row] array, e.g. [0, 1]");
 
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
-            @"Expand", (e, path) => e.Expand(path));
+                @"Expand", (e, path) => e.Expand(path))
+            .Describe(@"Expand a tree node by its path.", @"a path array of child names/indexes, e.g. [""Peptides"", 0]");
 
         public static readonly UiAction Collapse = SimpleAction<IExpandCollapseElement, object>(
-            @"Collapse", (e, path) => e.Collapse(path));
+                @"Collapse", (e, path) => e.Collapse(path))
+            .Describe(@"Collapse a tree node by its path.", @"a path array of child names/indexes, e.g. [""Peptides"", 0]");
 
         public static readonly UiAction SelectTab = SimpleAction<ISelectTabElement, string>(
-            @"SelectTab", (e, tab) => e.SelectTab(tab));
+                @"SelectTab", (e, tab) => e.SelectTab(tab))
+            .Describe(@"Select the tab with the given text.", @"the tab's visible text");
 
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
-        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept());
+        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept())
+            .Describe(@"Accept the dialog -- its default/OK button (cancel with close_form).");
 
         // Sends Ctrl+V to a control by raising its key handler -- for the tutorial steps that paste into a
         // particular window.
-        public static readonly UiAction Paste = SimpleAction<IPasteElement>(@"Paste", e => e.Paste());
+        public static readonly UiAction Paste = SimpleAction<IPasteElement>(@"Paste", e => e.Paste())
+            .Describe(@"Send Ctrl+V (paste) to this control.");
 
         // Renames the tree's selected node in place -- e.g. the MethodEdit tutorial's "Type 'Primary
         // Peptides' and press Enter" on a peptide group. Select the node first.
         public static readonly UiAction RenameNode = SimpleAction<IRenameNodeElement, string>(
-            @"RenameNode", (e, value) => e.RenameNode(value));
+                @"RenameNode", (e, value) => e.RenameNode(value))
+            .Describe(@"Rename the tree's selected node in place (select the node first).", @"the new name");
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
