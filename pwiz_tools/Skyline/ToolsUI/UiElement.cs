@@ -110,16 +110,17 @@ namespace pwiz.Skyline.ToolsUI
         public string SnakeCaseName { get; }
 
         /// <summary>One line describing what the action does, surfaced by get_actions so a caller does not have
-        /// to guess.</summary>
-        public string Description { get; private set; }
+        /// to guess. LLM-facing instruction text (see <see cref="LlmInstruction"/>), not for display to users.</summary>
+        public LlmInstruction Description { get; private set; }
 
         /// <summary>What to pass as the action's value, or null when it takes none (also surfaced by
-        /// get_actions).</summary>
-        public string ValueDescription { get; private set; }
+        /// get_actions). LLM-facing instruction text (see <see cref="LlmInstruction"/>).</summary>
+        public LlmInstruction ValueDescription { get; private set; }
 
         /// <summary>Sets the self-documentation (returns this so it chains onto a <see cref="UiActions"/>
-        /// definition).</summary>
-        public UiAction Describe(string description, string valueDescription = null)
+        /// definition). The descriptions are passed as <see cref="LlmInstruction"/> so that every unlocalized
+        /// LLM-facing string is greppable for a future localization pass.</summary>
+        public UiAction Describe(LlmInstruction description, LlmInstruction valueDescription = default)
         {
             Description = description;
             ValueDescription = valueDescription;
@@ -231,88 +232,88 @@ namespace pwiz.Skyline.ToolsUI
         // returning a value).
         public static readonly UiAction GetActions = SimpleFunction<UiElement>(
                 @"GetActions", e => e.SupportedActions.Select(a => a.ToActionInfo()).ToArray())
-            .Describe(@"List the actions this control supports, each with a description and the value it takes.");
+            .Describe(new LlmInstruction(@"List the actions this control supports, each with a description and the value it takes."));
 
         public static readonly UiAction GetChildren = SimpleFunction<UiElement>(
                 @"GetChildren", e => e.GetControlInfos())
-            .Describe(@"List this element's child controls; each one's path can be used directly in a later call.");
+            .Describe(new LlmInstruction(@"List this element's child controls; each one's path can be used directly in a later call."));
 
         // A void action (click, value set, item check, ...) is posted fire-and-forget; only a value action
         // (get_value, get_grid_text) is run synchronously inside the dialog-watch -- see UiAction.ReturnsValue.
         public static readonly UiAction Click = SimpleAction<IClickableElement>(
                 @"Click", e => { e.Click(); })
-            .Describe(@"Click this control (a button, menu/list item, checkbox, ...).");
+            .Describe(new LlmInstruction(@"Click this control (a button, menu/list item, checkbox, ...)."));
 
         public static readonly UiAction GetValue = SimpleFunction<UiElement>(
                 @"GetValue", e => UiElement.ConvertValue(e.Value))
-            .Describe(@"Get this control's current value (null, a bool, a number, or a string).");
+            .Describe(new LlmInstruction(@"Get this control's current value (null, a bool, a number, or a string)."));
 
         public static readonly UiAction SetValue = SimpleAction<UiElement, object>(
                 @"SetValue", (e, value) => e.SetValue(UiElement.ConvertValue(value)))
-            .Describe(@"Set this control's value.", @"the new value -- a bool, a number, or a string");
+            .Describe(new LlmInstruction(@"Set this control's value."), new LlmInstruction(@"the new value -- a bool, a number, or a string"));
 
         public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
                 @"CheckItem", (e, item) => e.SetItemChecked(item, true))
-            .Describe(@"Check the list/tree item with the given text.", @"the item's visible text");
+            .Describe(new LlmInstruction(@"Check the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
 
         public static readonly UiAction UncheckItem = SimpleAction<ICheckItemsElement, string>(
                 @"UncheckItem", (e, item) => e.SetItemChecked(item, false))
-            .Describe(@"Uncheck the list/tree item with the given text.", @"the item's visible text");
+            .Describe(new LlmInstruction(@"Uncheck the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
 
         public static readonly UiAction SelectItem = SimpleAction<ISelectItemsElement, string>(
                 @"SelectItem", (e, item) => e.SetItemSelected(item, true))
-            .Describe(@"Select the list/tree item with the given text.", @"the item's visible text");
+            .Describe(new LlmInstruction(@"Select the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
 
         public static readonly UiAction UnselectItem = SimpleAction<ISelectItemsElement, string>(
                 @"UnselectItem", (e, item) => e.SetItemSelected(item, false))
-            .Describe(@"Deselect the list/tree item with the given text.", @"the item's visible text");
+            .Describe(new LlmInstruction(@"Deselect the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
 
         public static readonly UiAction SetSelectedIndex = SimpleAction<ISelectItemsElement, object>(
                 @"SetSelectedIndex", (e, arg) => e.SetSelectedIndex(UiValue.ToInt(arg)))
-            .Describe(@"Select the list item at the given index (clears any other selection).", @"the zero-based index");
+            .Describe(new LlmInstruction(@"Select the list item at the given index (clears any other selection)."), new LlmInstruction(@"the zero-based index"));
 
         public static readonly UiAction GetGridText = SimpleFunction<GridElement>(
                 @"GetGridText", e => e.GetGridText())
-            .Describe(@"Get the whole grid as tab-separated text -- the column headers then every row.");
+            .Describe(new LlmInstruction(@"Get the whole grid as tab-separated text -- the column headers then every row."));
 
         public static readonly UiAction SetGridText = SimpleAction<GridElement, string>(
                 @"SetGridText", (e, text) => e.SetGridText(text))
-            .Describe(@"Paste tab-separated text into the grid starting at the current cell.", @"the tab-separated text (it fills down and to the right)");
+            .Describe(new LlmInstruction(@"Paste tab-separated text into the grid starting at the current cell."), new LlmInstruction(@"the tab-separated text (it fills down and to the right)"));
 
         public static readonly UiAction SetCurrentCellAddress = SimpleAction<GridElement, object>(
                 @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddress(cell[0], cell[1]); })
-            .Describe(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu).", @"a [column, row] array, e.g. [0, 1]");
+            .Describe(new LlmInstruction(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu)."), new LlmInstruction(@"a [column, row] array, e.g. [0, 1]"));
 
         public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
                 @"Expand", (e, path) => e.Expand(path))
-            .Describe(@"Expand a tree node by its path.", @"a path array of child names/indexes, e.g. [""Peptides"", 0]");
+            .Describe(new LlmInstruction(@"Expand a tree node by its path."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0]"));
 
         public static readonly UiAction Collapse = SimpleAction<IExpandCollapseElement, object>(
                 @"Collapse", (e, path) => e.Collapse(path))
-            .Describe(@"Collapse a tree node by its path.", @"a path array of child names/indexes, e.g. [""Peptides"", 0]");
+            .Describe(new LlmInstruction(@"Collapse a tree node by its path."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0]"));
 
         public static readonly UiAction SelectTab = SimpleAction<ISelectTabElement, string>(
                 @"SelectTab", (e, tab) => e.SelectTab(tab))
-            .Describe(@"Select the tab with the given text.", @"the tab's visible text");
+            .Describe(new LlmInstruction(@"Select the tab with the given text."), new LlmInstruction(@"the tab's visible text"));
 
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
         public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept())
-            .Describe(@"Accept the dialog -- its default/OK button (cancel with close_form).");
+            .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
         // for the tutorial paste steps, without touching the clipboard.
         public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste", (e, text) => e.Paste(text))
-            .Describe(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard.", @"the text to paste");
+            .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard."), new LlmInstruction(@"the text to paste"));
 
         // Selects everything in a control that can paste -- e.g. before a paste, to replace the contents.
         public static readonly UiAction SelectAll = SimpleAction<IClipboardElement>(@"SelectAll", e => e.SelectAll())
-            .Describe(@"Select all the content of this element (a text box, a grid, the Targets tree, or the main Skyline window) -- e.g. before paste, to replace it.");
+            .Describe(new LlmInstruction(@"Select all the content of this element (a text box, a grid, the Targets tree, or the main Skyline window) -- e.g. before paste, to replace it."));
 
         // Renames the tree's selected node in place -- e.g. the MethodEdit tutorial's "Type 'Primary
         // Peptides' and press Enter" on a peptide group. Select the node first.
         public static readonly UiAction RenameNode = SimpleAction<IRenameNodeElement, string>(
                 @"RenameNode", (e, value) => e.RenameNode(value))
-            .Describe(@"Rename the tree's selected node in place (select the node first).", @"the new name");
+            .Describe(new LlmInstruction(@"Rename the tree's selected node in place (select the node first)."), new LlmInstruction(@"the new name"));
 
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
