@@ -73,6 +73,11 @@ namespace pwiz.CommonFileDialogs
                 sourceTypeComboBox.SelectedIndex = 0;
             }
 
+            // The New Folder command is hidden by default; subclasses that support folder creation
+            // make it visible. Text is set here (not in the designer) so it stays localizable.
+            newFolderButton.Text = CommonFileDialogResources.BaseFileDialogNE_NewFolder;
+            newFolderButton.ToolTipText = CommonFileDialogResources.BaseFileDialogNE_NewFolder;
+
             // Create a new image list for the list view that is the default size (16x16)
             ImageList imageList = new ImageList{ColorDepth = ColorDepth.Depth32Bit};
             imageList.Images.AddRange(lookInImageList.Images.Cast<Image>().ToArray());
@@ -941,6 +946,84 @@ namespace pwiz.CommonFileDialogs
         }
 
         protected virtual void OnFileNameTyped() {}
+
+        private ListViewItem _newFolderItem;
+
+        private void newFolderButton_Click(object sender, EventArgs e)
+        {
+            BeginCreateNewFolder();
+        }
+
+        /// <summary>
+        /// Starts inline creation of a new folder: adds an editable placeholder item to the list and
+        /// puts it into label-edit mode. When the user commits the name,
+        /// <see cref="listView_AfterLabelEdit"/> calls the <see cref="CreateNewFolder"/> hook, which a
+        /// subclass overrides to create the folder on its backing store.
+        /// </summary>
+        protected void BeginCreateNewFolder()
+        {
+            if (_newFolderItem != null)
+                return;
+            listView.LabelEdit = true;
+            // Build the placeholder with all columns (name, type, size, date); other list handlers
+            // such as listView_ItemSelectionChanged read SubItems[1], so a name-only item would throw.
+            _newFolderItem = new ListViewItem(
+                new[] { CommonFileDialogResources.BaseFileDialogNE_BeginCreateNewFolder_New_folder, DataSourceUtil.FOLDER_TYPE, string.Empty, string.Empty },
+                (int) ImageIndex.Folder);
+            listView.Items.Add(_newFolderItem);
+            listView.SelectedItems.Clear();
+            _newFolderItem.Selected = true;
+            _newFolderItem.EnsureVisible();
+            _newFolderItem.BeginEdit();
+        }
+
+        private void listView_BeforeLabelEdit(object sender, LabelEditEventArgs e)
+        {
+            // Only the new-folder placeholder may be renamed; cancel edits started on any other item.
+            if (_newFolderItem == null || e.Item != _newFolderItem.Index)
+                e.CancelEdit = true;
+        }
+
+        private void listView_AfterLabelEdit(object sender, LabelEditEventArgs e)
+        {
+            if (_newFolderItem == null || e.Item != _newFolderItem.Index)
+                return;
+
+            var placeholder = _newFolderItem;
+            _newFolderItem = null;
+            listView.LabelEdit = false;
+
+            var folderName = e.Label?.Trim();
+            // The list is rebuilt from the backing store on success, so discard the inline edit
+            // result and remove the placeholder regardless of outcome.
+            e.CancelEdit = true;
+            listView.Items.Remove(placeholder);
+
+            if (!string.IsNullOrEmpty(folderName))
+            {
+                // Defer so the create work runs after the label-edit event completes, avoiding
+                // reentrancy on the list view.
+                BeginInvoke(new Action(() => CreateNewFolder(folderName)));
+            }
+        }
+
+        /// <summary>
+        /// Hook for creating a folder named <paramref name="folderName"/> under the current directory
+        /// on the dialog's backing store. The base implementation does nothing; subclasses that show
+        /// the New Folder button override this. Implementations are responsible for refreshing the
+        /// list (via <see cref="RefreshCurrentDirectory"/>) and reporting any errors.
+        /// </summary>
+        protected virtual void CreateNewFolder(string folderName)
+        {
+        }
+
+        /// <summary>
+        /// Repopulates the list view from the current directory, e.g. after a folder was created.
+        /// </summary>
+        protected void RefreshCurrentDirectory()
+        {
+            populateListViewFromDirectory(_currentDirectory);
+        }
 
         private void sourcePathTextBox_TextChanged(object sender, EventArgs e)
         {

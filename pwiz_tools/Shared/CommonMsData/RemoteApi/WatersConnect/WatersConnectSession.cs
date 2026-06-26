@@ -104,6 +104,26 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             return false;
         }
 
+        /// <summary>
+        /// Creates a new folder under the folder identified by <paramref name="parentFolderId"/> via
+        /// PUT /waters_connect/v2.0/folders/{parentFolderId}. Returns the HTTP status code so the caller
+        /// can give specific feedback (e.g. Forbidden when the user lacks folder-create permission).
+        /// On success the cached folder list is refreshed so the new folder resolves and appears in the
+        /// next listing. Does not throw on HTTP error - the status code is returned instead.
+        /// </summary>
+        public HttpStatusCode CreateFolder(string parentFolderId, string name, string description, out string responseBody)
+        {
+            var requestUri = new Uri(WatersConnectAccount.GetFoldersUrl() + RemoteUrl.PATH_SEPARATOR + parentFolderId);
+            var body = new JObject { [@"Name"] = name, [@"Description"] = description ?? string.Empty }.ToString();
+            var request = new HttpRequestMessage(HttpMethod.Put, requestUri) { Content = new StringContent(body) };
+            request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(@"application/json") { CharSet = @"utf-8" };
+            var response = _httpClient.SendAsync(request).Result;
+            responseBody = response.Content?.ReadAsStringAsync().Result;
+            if (response.StatusCode < HttpStatusCode.BadRequest)
+                RetryFetch(GetRootContentsUrl(), GetFolders); // refresh cached folder list so the new folder is visible
+            return response.StatusCode;
+        }
+
         protected void EnsureSuccess(HttpResponseMessage response)
         {
             if (response.StatusCode >= HttpStatusCode.BadRequest)

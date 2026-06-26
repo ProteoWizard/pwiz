@@ -23,6 +23,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Security.Authentication;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -214,6 +216,8 @@ namespace pwiz.SkylineTestFunctional
                 methodFileDlg.KeyPressHandler(Keys.Enter);
             });
             WaitForConditionUI(1000, () => methodFileDlg.ListViewItems.Count == 11, () => "Template selection dialog is not populated within allotted time.");
+            // FolderA is writable, so exercise creating a new folder here (success and permission-denied).
+            VerifyNewFolder(methodFileDlg);
             RunUI(() =>
             {
                 Assert.AreEqual(0, methodFileDlg.ListViewItems.Count(item => item.ImageIndex == (int)BaseFileDialogNE.ImageIndex.ReadOnlyFolder));
@@ -241,6 +245,48 @@ namespace pwiz.SkylineTestFunctional
                 uploadResultDlg.OkDialog();
             });
             WaitForClosedForm<ExportMethodDlg>();
+        }
+
+        /// <summary>
+        /// Exercises the New Folder feature on the save-method dialog while positioned in a writable
+        /// folder: the button is available, a successful create sends the right name and description,
+        /// and a Forbidden response surfaces a permission message. Leaves the dialog in its original
+        /// state (same folder, success handler restored) so the caller can continue.
+        /// </summary>
+        private void VerifyNewFolder(WatersConnectSaveMethodFileDialog methodFileDlg)
+        {
+            RunUI(() =>
+            {
+                Assert.IsTrue(methodFileDlg.NewFolderButtonVisible, "New Folder button should be visible on the save dialog.");
+                Assert.IsTrue(methodFileDlg.NewFolderButtonEnabled, "New Folder button should be enabled in a writable folder.");
+            });
+
+            // Success: the PUT carries the entered name and the generated description.
+            _createdFolderName = _createdFolderDescription = null;
+            RunUI(() => methodFileDlg.CreateNewFolderForTest("NewTestFolder"));
+            var account = (WatersConnectAccount) RemoteUrl.RemoteAccountStorage.GetRemoteAccounts().First();
+            RunUI(() =>
+            {
+                Assert.AreEqual("NewTestFolder", _createdFolderName);
+                Assert.AreEqual(
+                    string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_Created_by__0__using_Skyline, account.Username),
+                    _createdFolderDescription);
+            });
+
+            // Permission error: a Forbidden response surfaces an explanatory message.
+            _folderCreateForbidden = true;
+            try
+            {
+                var errorDlg = ShowDialog<MessageDlg>(() => methodFileDlg.CreateNewFolderForTest("NewTestFolder"));
+                Assert.IsTrue(errorDlg.Message.Contains(
+                        string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__, "NewTestFolder")),
+                    "Expected a permission-denied message. Actual: " + errorDlg.Message);
+                OkDialog(errorDlg, errorDlg.OkDialog);
+            }
+            finally
+            {
+                _folderCreateForbidden = false; // restore success behavior for the rest of the test
+            }
         }
 
         private void TestAuthenticationError(ExportMethodDlg exportMethodDlg)
@@ -328,13 +374,56 @@ namespace pwiz.SkylineTestFunctional
 #pragma warning restore CS0618 // Type or member is obsolete
         }
 
+        // Captures the most recent folder-creation (PUT) request body so tests can assert the payload.
+        private string _createdFolderName;
+        private string _createdFolderDescription;
+        // When set, the mock makes folder creation (PUT) return Forbidden. Read by the matcher
+        // predicate at request time, so toggling it flips behavior on the live handler instance
+        // (the dialog's session caches its HttpClient, so swapping handlers would not take effect).
+        private bool _folderCreateForbidden;
+
         private void SetRequestHandlers()
         {
             // Since we do not need to connect to the actual server a dummy account suffices
             Settings.Default.RemoteAccountList.Add(RemoteAccountType.WATERS_CONNECT.GetEmptyAccount());
 
-            var wcHandler = new MockHttpMessageHandler();  
+            InstallWcHandler();
+
+            var authHandler = new MockHttpMessageHandler();
+            authHandler.AddMatcher(new RequestMatcherFunction(req => true,  // req.RequestUri.ToString().IndexOf(@"/connect/token") >=0, 
+                req =>
+                {
+                    Trace.WriteLine(req.Content.ReadAsStringAsync().Result);
+                    return "{\"access_token\":\"qqq\",\"expires_in\":3,\"token_type\":\"Bearer\",\"scope\":\"webapi\"}";
+                }
+            ));
+            Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.AUTH_HANDLER_NAME, authHandler);
+        }
+
+        /// <summary>
+        /// Installs the waters_connect request handler. Folder creation (PUT) returns Forbidden while
+        /// <see cref="_folderCreateForbidden"/> is set, otherwise success; the flag is read per request
+        /// so tests can toggle it on the live handler.
+        /// </summary>
+        private void InstallWcHandler()
+        {
+            var wcHandler = new MockHttpMessageHandler();
             // ReSharper disable StringIndexOfIsCultureSpecific.1
+            // Folder creation (PUT). Both matchers must precede the folders-enumeration matcher below,
+            // which matches any URL containing the folders endpoint (including this PUT URL). The
+            // Forbidden matcher is first and only matches while the flag is set.
+            wcHandler.AddMatcher(new RequestMatcherString(
+                req => req.Method == HttpMethod.Put && _folderCreateForbidden && req.RequestUri.ToString().IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0,
+                "{\"message\" : \"Insufficient permissions\"}", HttpStatusCode.Forbidden));
+            wcHandler.AddMatcher(new RequestMatcherFunction(
+                req => req.Method == HttpMethod.Put && req.RequestUri.ToString().IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0,
+                req =>
+                {
+                    var body = JObject.Parse(req.Content.ReadAsStringAsync().Result);
+                    _createdFolderName = body["Name"]?.ToString();
+                    _createdFolderDescription = body["Description"]?.ToString();
+                    return "{\"id\" : \"00000000-0000-0000-0000-000000000abc\"}";
+                }));
             // Folders enumeration request
             wcHandler.AddMatcher(new RequestMatcherFile(
                 req => req.RequestUri.ToString().IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0,
@@ -357,19 +446,8 @@ namespace pwiz.SkylineTestFunctional
                     var description = jObject["description"]?.ToString() ?? string.Empty;
                     return string.Format(format, id, name, description);
                 }));
+            // ReSharper restore StringIndexOfIsCultureSpecific.1
             Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.HANDLER_NAME, wcHandler);
-
-
-            var authHandler = new MockHttpMessageHandler(); 
-            authHandler.AddMatcher(new RequestMatcherFunction(req => true,  // req.RequestUri.ToString().IndexOf(@"/connect/token") >=0, 
-                req =>
-                {
-                    Trace.WriteLine(req.Content.ReadAsStringAsync().Result);
-                    return "{\"access_token\":\"qqq\",\"expires_in\":3,\"token_type\":\"Bearer\",\"scope\":\"webapi\"}";
-                }
-            ));
-            Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.AUTH_HANDLER_NAME, authHandler);
-            // ReSharper enable StringIndexOfIsCultureSpecific.1
         }
 
         private void SetAuthenticationErrorHandler()
