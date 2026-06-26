@@ -21,6 +21,7 @@
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -109,8 +110,11 @@ namespace pwiz.SkylineTestTutorial
             // Proteomics interface, the way the protein icon in the corner indicates.
             Connector.SetUiMode("proteomic");
 
-            // Open the Start Page (File > Start). The document is unmodified, so this raises no save prompt.
-            Connector.InvokeMenuItem("File > Start");
+            // Open the Start Page (File > Start). The menu path is built from the localized, normalized
+            // menu-item captions (read from the SkylineWindow resources) so it matches in any UI language.
+            // The document is unmodified, so this raises no save prompt.
+            Connector.InvokeMenuItem(GetLocalizedText<SkylineWindow>("fileToolStripMenuItem") + @" > " +
+                                     GetLocalizedText<SkylineWindow>("startPageMenuItem"));
             var startPage = WaitForConnectorForm<StartPage>();
             PauseForScreenShot(startPage, "Start Page -- Import DIA Peptide Search"); // s-01
 
