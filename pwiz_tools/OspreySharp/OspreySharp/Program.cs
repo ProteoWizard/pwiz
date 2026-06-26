@@ -186,16 +186,11 @@ namespace pwiz.OspreySharp
                 // differently from per-file scoring.
                 bool fromInputScores = config.InputScores != null && config.InputScores.Count > 0;
 
-                // Non-fatal warning: --task PerFileScoring with --output
-                // supplied — that Stage 1-4 worker mode ignores --output. The
-                // rescore worker (--task PerFileRescoring, identified by
-                // --input-scores) requires --output, so the warning would be
-                // incorrect/confusing there.
-                if (config.NoJoin && !fromInputScores && !string.IsNullOrEmpty(config.OutputBlib))
-                {
-                    LogWarning("--task PerFileScoring: --output is ignored (no blib is written). " +
-                               "Per-file `.scores.parquet` files will be written next to each input mzML.");
-                }
+                // --task PerFileScoring ignores --output (it writes per-file
+                // .scores.parquet, not a blib), but that is expected single-task /
+                // HPC-worker behavior -- wrapper scripts routinely pass a placeholder
+                // --output -- so it is NOT warned about. The settings block below
+                // reports the real per-file parquet output for this task instead.
 
                 // Validate input files exist on disk (skip when consuming
                 // --input-scores, where there are no mzML inputs; --input-scores
@@ -224,7 +219,19 @@ namespace pwiz.OspreySharp
                 LogInfo(string.Format("Library: {0} ({1})",
                     config.LibrarySource?.Path ?? "(none)",
                     config.LibrarySource?.Format.ToString() ?? "?"));
-                LogInfo(string.Format("Output: {0}", config.OutputBlib));
+                // A --task run executes one HPC stage rather than the full pipeline;
+                // name it so the log says which single task ran (no --task = full
+                // pipeline, no line).
+                if (config.SelectedTask.HasValue)
+                    LogInfo(string.Format("Task: {0} (single-task run)",
+                        TaskCliName(config.SelectedTask.Value)));
+                // --task PerFileScoring writes per-file .scores.parquet next to each
+                // input mzML, not a blib -- report the real output rather than the
+                // ignored --output blib path. (PerFileRescoring still writes --output.)
+                if (config.NoJoin && !fromInputScores)
+                    LogInfo("Output: per-file .scores.parquet (next to each input mzML)");
+                else
+                    LogInfo(string.Format("Output: {0}", config.OutputBlib));
                 LogInfo(string.Format("Resolution: {0}", config.ResolutionMode));
                 LogInfo(string.Format("Fragment tolerance: {0} {1}",
                     config.FragmentTolerance.Tolerance,
@@ -308,6 +315,25 @@ namespace pwiz.OspreySharp
             return string.Format(
                 "--task: unknown task '{0}'. Valid tasks: PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR.",
                 taskName);
+        }
+
+        /// <summary>
+        /// The CLI <c>--task</c> name for an <see cref="HpcTask"/> -- the inverse of
+        /// <see cref="ResolveTask"/>, used to echo the selected task in the startup
+        /// settings block. The enum members and CLI spellings differ
+        /// (FirstJoin/FirstPassFDR, PerFileRescore/PerFileRescoring,
+        /// MergeNode/SecondPassFDR), so this maps back to what the user typed.
+        /// </summary>
+        private static string TaskCliName(HpcTask task)
+        {
+            switch (task)
+            {
+                case HpcTask.PerFileScoring: return "PerFileScoring";
+                case HpcTask.FirstJoin: return "FirstPassFDR";
+                case HpcTask.PerFileRescore: return "PerFileRescoring";
+                case HpcTask.MergeNode: return "SecondPassFDR";
+                default: return task.ToString();
+            }
         }
 
         /// <summary>
@@ -464,11 +490,20 @@ namespace pwiz.OspreySharp
 
         internal static void LogWarning(string message)
         {
-            _out.WriteLine("[WARN] {0}", message);
+            // Through OspreyOutput.Out (not _out directly) so a warning emitted
+            // while a file runs in a MultiProgressReporter per-file scope
+            // (--parallel-files) lands in that file's buffered block, in context,
+            // instead of interleaving with the live "[i] p%" aggregate line. Off
+            // the parallel path OspreyOutput.Out is the same CommandStatusWriter
+            // (wrapped for stat-filtering), so the output is unchanged.
+            OspreyOutput.Out.WriteLine("[WARN] {0}", message);
         }
 
         internal static void LogError(string message)
         {
+            // Errors go straight to the process writer (NOT the per-file buffer):
+            // surface immediately rather than waiting for the file's block to flush
+            // on completion, so a failing run reports the cause right away.
             _out.WriteLine("[ERROR] {0}", message);
         }
     }

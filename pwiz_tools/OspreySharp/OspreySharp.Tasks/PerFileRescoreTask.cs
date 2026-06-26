@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using pwiz.OspreySharp.Chromatography;
 using pwiz.OspreySharp.Core;
 using pwiz.OspreySharp.FDR;
@@ -94,6 +95,13 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     internal sealed class PerFileRescoreTask : OspreyTask
     {
+        // Equal-weight progress segments one file's Stage 6 rescore is divided into
+        // for the --parallel-files "[i] p%" aggregate line: reload spectra, re-score
+        // the subset, write the reconciled parquet. RescoreOneFile advances them via
+        // MultiProgressReporter.Current?.BeginSegment(); off the parallel path those
+        // are no-ops.
+        private const int RESCORE_FILE_SEGMENTS = 3;
+
         // Captured during Run so MergeNodeTask (downstream) can reach
         // the post-rescore version. Per the ownership-transfer semantics
         // of the pipeline: this task is the producer of the post-rescore
@@ -514,20 +522,62 @@ namespace pwiz.OspreySharp.Tasks
                 JoinFileStems = joinFileStems,
             };
 
+            int nTotalFiles = perFileEntries.Count;
+            // The Stage 6 rescore is the "second per-file fan-out": each file's rescore
+            // is independent (its own entry list + its own .scores-reconciled.parquet),
+            // and it reuses the same RunCoelutionScoring the Stage 1-4 fan-out already
+            // runs concurrently. So run files in parallel under the SAME
+            // EffectiveFileParallelism the scoring phase resolved (set on RunPlan by
+            // PerFileScoringTask). Output is byte-identical to the sequential loop --
+            // gated by regression.ps1 -- because the per-file work shares no mutable
+            // state. Per-file results land by index so the accumulation is order-free.
+            int parallelism = Math.Max(1, ctx.RunPlan.EffectiveFileParallelism);
+            var counts = new (int Rescored, int GapCwt, int GapForced)[nTotalFiles];
+
+            if (nTotalFiles == 1 || parallelism == 1)
+            {
+                for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
+                    counts[fileNum] = RescoreOneFile(
+                        fileNum, nTotalFiles,
+                        perFileEntries[fileNum].Key, perFileEntries[fileNum].Value,
+                        inputs, ctx);
+            }
+            else
+            {
+                // Legend mapping each aggregate-line slot to its file, then the
+                // concurrent rescore collapsed onto the throttled "[i] p%" line +
+                // per-file buffered blocks (same MultiProgressReporter as scoring).
+                ctx.LogInfo(string.Format(@"Re-scoring {0} files in parallel:", nTotalFiles));
+                for (int i = 0; i < nTotalFiles; i++)
+                {
+                    string key = perFileEntries[i].Key;
+                    string label =
+                        inputs.FileNameToIdx.TryGetValue(key, out int inputIdx)
+                        && inputIdx < inputs.Config.InputFiles.Count
+                            ? inputs.Config.InputFiles[inputIdx]
+                            : key;
+                    ctx.LogInfo(string.Format(@"  {0}. {1}", i + 1, label));
+                }
+                var multi = new MultiProgressReporter();
+                var parallelOpts = new ParallelOptions { MaxDegreeOfParallelism = parallelism };
+                Parallel.For(0, nTotalFiles, parallelOpts, fileNum =>
+                {
+                    using (multi.BeginFile(fileNum, RESCORE_FILE_SEGMENTS))
+                        counts[fileNum] = RescoreOneFile(
+                            fileNum, nTotalFiles,
+                            perFileEntries[fileNum].Key, perFileEntries[fileNum].Value,
+                            inputs, ctx);
+                });
+            }
+
             int totalRescored = 0;
             int totalGapCwt = 0;
             int totalGapForced = 0;
-            int nTotalFiles = perFileEntries.Count;
-
-            for (int fileNum = 0; fileNum < nTotalFiles; fileNum++)
+            foreach (var c in counts)
             {
-                var counts = RescoreOneFile(
-                    fileNum, nTotalFiles,
-                    perFileEntries[fileNum].Key, perFileEntries[fileNum].Value,
-                    inputs, ctx);
-                totalRescored += counts.Rescored;
-                totalGapCwt += counts.GapCwt;
-                totalGapForced += counts.GapForced;
+                totalRescored += c.Rescored;
+                totalGapCwt += c.GapCwt;
+                totalGapForced += c.GapForced;
             }
 
             return new RescoreStats
@@ -604,11 +654,21 @@ namespace pwiz.OspreySharp.Tasks
             // the per-file clone pattern in ProcessFile.
             var fileConfig = config.ShallowClone();
 
+            // Divide the inner main-search thread budget across concurrently rescored
+            // files so total demand stays near core count (mirrors ProcessFile under
+            // --parallel-files). The subset rescore is light, but this still avoids
+            // thread oversubscription when several files re-score at once.
+            if (ctx.RunPlan.EffectiveFileParallelism > 1)
+                fileConfig.NThreads = Math.Max(1, config.NThreads / ctx.RunPlan.EffectiveFileParallelism);
+
             // Build the per-file scoring subset: boundary_overrides keyed
             // by entry_id + the subset library RunCoelutionScoring scores.
             var (boundaryOverrides, subsetLibrary) =
                 BuildScoringSubset(combinedTargets, fdrEntries, fullLibrary);
 
+            // Segment 1/3 (read): reload this file's spectra -- the file's first
+            // progress slice on the --parallel-files "[i] p%" aggregate line.
+            MultiProgressReporter.Current?.BeginSegment();
             // Load spectra: prefer the .spectra.bin cache the original
             // Stage 1 wrote; fall back to mzML if the cache is missing
             // or unreadable.
@@ -655,6 +715,9 @@ namespace pwiz.OspreySharp.Tasks
             // the first-pass ProcessFile path).
             var isolationWindows = ScoringTaskShared.ExtractIsolationWindows(spectra);
 
+            // Segment 2/3 (score): the subset re-score; its "Re-scoring isolation
+            // windows" reporter feeds this slice (the bulk of the file's motion).
+            MultiProgressReporter.Current?.BeginSegment();
             // Re-score the subset.
             var swRescore = Stopwatch.StartNew();
             List<FdrEntry> rescored;
@@ -700,6 +763,8 @@ namespace pwiz.OspreySharp.Tasks
                 totalRescored += nGapCwt + nGapForced;
             }
 
+            // Segment 3/3 (write): the reconciled parquet write-back.
+            MultiProgressReporter.Current?.BeginSegment();
             // PHASE 3 -- reconciled parquet write-back + sidecar stamp.
             WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
 
