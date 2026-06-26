@@ -83,7 +83,7 @@ namespace pwiz.Skyline.ToolsUI
     /// SetFormValue, the grid verbs, and the generic perform_action all act through these). An action is a
     /// singleton object -- see <see cref="UiActions"/> for the set of them -- that knows its wire
     /// <see cref="SnakeCaseName"/>, the gates the connector must honor before performing it
-    /// (<see cref="MustBeVisible"/> / <see cref="MustBeEnabled"/> -- a user could not act on a control they
+    /// (<see cref="MustBeEnabled"/> -- a user could not act on a control they
     /// cannot see or that is disabled), and whether it <see cref="ReturnsValue"/> (a value action is run
     /// synchronously; a void action is posted fire-and-forget). It decides whether it
     /// <see cref="AppliesTo"/> an element (usually: the
@@ -107,7 +107,6 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Whether the element must be visible / enabled for the action to be performed -- the gates
         /// a user faces. A pure read (get_value, get_actions, get_children, get_grid_text) clears these, so a
         /// disabled or off-screen control can still be inspected; a mutation or click leaves them set.</summary>
-        public bool MustBeVisible { get; internal set; } = true;
         public bool MustBeEnabled { get; internal set; } = true;
 
         /// <summary>Whether the action produces a result the caller waits for (get_value, get_grid_text,
@@ -125,7 +124,6 @@ namespace pwiz.Skyline.ToolsUI
         /// passes the visible/enabled gates the action requires.</summary>
         public bool IsEnabled(UiElement element) =>
             AppliesTo(element)
-            && (!MustBeVisible || element.IsVisible)
             && (!MustBeEnabled || element.IsEnabled);
 
         /// <summary>Performs the action on the element, owning its gating and threading. When the action
@@ -180,12 +178,11 @@ namespace pwiz.Skyline.ToolsUI
         {
             private readonly Func<T, TArg, object> _invoke;
 
-            public SimpleActionImpl(string name, Func<T, TArg, object> invoke, bool mustBeEnabled = true) : base(name)
+            public SimpleActionImpl(string name, Func<T, TArg, object> invoke, bool mustBeEnabled) : base(name)
             {
                 _invoke = invoke;
                 // Visible and enabled gates move together: a read clears both, a mutation/click leaves both set.
                 MustBeEnabled = mustBeEnabled;
-                MustBeVisible = mustBeEnabled;
             }
 
             public override bool AppliesTo(UiElement element) => element is T;
@@ -203,11 +200,10 @@ namespace pwiz.Skyline.ToolsUI
         // base UiElement type; they are reads (mustBeEnabled: false, and SimpleFunction marks them as
         // returning a value).
         public static readonly UiAction GetActions = SimpleFunction<UiElement>(
-            @"GetActions", e => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray(),
-            mustBeEnabled: false);
+            @"GetActions", e => e.SupportedActions.Select(a => a.SnakeCaseName).ToArray());
 
         public static readonly UiAction GetChildren = SimpleFunction<UiElement>(
-            @"GetChildren", e => e.GetControlInfos(), mustBeEnabled: false);
+            @"GetChildren", e => e.GetControlInfos());
 
         // A void action (click, value set, item check, ...) is posted fire-and-forget; only a value action
         // (get_value, get_grid_text) is run synchronously inside the dialog-watch -- see UiAction.ReturnsValue.
@@ -215,7 +211,7 @@ namespace pwiz.Skyline.ToolsUI
             @"Click", e => { e.Click(); });
 
         public static readonly UiAction GetValue = SimpleFunction<UiElement>(
-            @"GetValue", e => UiElement.ConvertValue(e.Value), mustBeEnabled: false);
+            @"GetValue", e => UiElement.ConvertValue(e.Value));
 
         public static readonly UiAction SetValue = SimpleAction<UiElement, object>(
             @"SetValue", (e, value) => e.SetValue(UiElement.ConvertValue(value)));
@@ -236,7 +232,7 @@ namespace pwiz.Skyline.ToolsUI
             @"SetSelectedIndex", (e, arg) => e.SetSelectedIndex(UiValue.ToInt(arg)));
 
         public static readonly UiAction GetGridText = SimpleFunction<GridElement>(
-            @"GetGridText", e => e.GetGridText(), mustBeEnabled: false);
+            @"GetGridText", e => e.GetGridText());
 
         public static readonly UiAction SetGridText = SimpleAction<GridElement, string>(
             @"SetGridText", (e, text) => e.SetGridText(text));
@@ -281,29 +277,29 @@ namespace pwiz.Skyline.ToolsUI
                 string.Equals(action.Name, normalized, StringComparison.OrdinalIgnoreCase));
         }
 
-        public static UiAction SimpleFunction<T>(string name, Func<T, object> action, bool mustBeEnabled = true)
+        public static UiAction SimpleFunction<T>(string name, Func<T, object> action)
         {
-            return SimpleFunction<T, object>(name, (element, arg) => action(element), mustBeEnabled);
+            return SimpleFunction<T, object>(name, (element, arg) => action(element));
         }
 
-        public static UiAction SimpleAction<T>(string name, Action<T> action, bool mustBeEnabled = true)
+        public static UiAction SimpleAction<T>(string name, Action<T> action)
         {
-            var uiAction = SimpleAction<T, object>(name, (element, _) => action(element), mustBeEnabled);
+            var uiAction = SimpleAction<T, object>(name, (element, _) => action(element));
             return uiAction;
         }
 
         public static UiAction SimpleFunction<T, TArg>(string name, Func<T, TArg, object> action,
             bool mustBeEnabled = true)
         {
-            return new SimpleActionImpl<T, TArg>(name, action, mustBeEnabled) { ReturnsValue = true };
+            return new SimpleActionImpl<T, TArg>(name, action, mustBeEnabled) { ReturnsValue = true, MustBeEnabled = false};
         }
-        public static UiAction SimpleAction<T, TArg>(string name, Action<T, TArg> action, bool mustBeEnabled = true)
+        public static UiAction SimpleAction<T, TArg>(string name, Action<T, TArg> action)
         {
             return new SimpleActionImpl<T, TArg>(name, (element, arg) =>
             {
                 action(element, arg);
                 return null;
-            }, mustBeEnabled);
+            }, true);
         }
 }
 
