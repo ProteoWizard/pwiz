@@ -1441,12 +1441,19 @@ namespace pwiz.SkylineTestUtil
             get { return TestContext.TestName.Contains("Tutorial"); }
         }
 
+        /// <summary>
+        /// The folder under Documentation that holds this tutorial's screenshots. Published tutorials live in
+        /// "Tutorials"; a tutorial still under development overrides this to return "Tutorial-Drafts", and the
+        /// override is removed when the tutorial is published.
+        /// </summary>
+        protected virtual string TutorialDocumentationFolder => "Tutorials";
+
         protected string TutorialPath
         {
             get
             {
                 return IsTutorial
-                    ? TestContext.GetProjectDirectory($"Documentation\\Tutorials\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
+                    ? TestContext.GetProjectDirectory($"Documentation\\{TutorialDocumentationFolder}\\{CoverShotName}\\{GetFolderNameForLanguage(CultureInfo.CurrentCulture)}")
                     : null;
             }
         }
@@ -2145,6 +2152,25 @@ namespace pwiz.SkylineTestUtil
             Thread.Sleep(1500); // Wait for UI to settle down
             _shotManager.ActivateScreenshotForm(screenshotForm);
             _shotManager.TakeShot(screenshotForm, fullScreen, filePath, processShot);
+        }
+
+        /// <summary>
+        /// Saves a screenshot captured through the connector (IFormElement.CaptureImage) as the next numbered
+        /// tutorial screenshot (s-NN.png), advancing the screenshot counter. The image is taken (via the passed
+        /// delegate) only when recording screenshots; the counter advances either way so numbering stays stable.
+        /// This is the connector-driven counterpart to <see cref="PauseForScreenShot(string,int?,Func{Bitmap,Bitmap})"/>,
+        /// used by JsonTutorialTest so a tutorial can be captured through the JSON tool service rather than the
+        /// screen-grab path.
+        /// </summary>
+        protected void SaveConnectorScreenShot(Func<Bitmap> captureImage)
+        {
+            if (IsRecordingScreenShots)
+            {
+                _shotManager ??= new ScreenshotManager(SkylineWindow, TutorialPath);
+                using (var bitmap = captureImage())
+                    ScreenCapture.SaveToFile(_shotManager.ScreenshotDestFile(ScreenshotCounter), bitmap);
+            }
+            ScreenshotCounter++;
         }
 
         protected virtual Bitmap ProcessCoverShot(Bitmap bmp)
