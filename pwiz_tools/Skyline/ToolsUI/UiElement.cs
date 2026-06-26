@@ -72,6 +72,10 @@ namespace pwiz.Skyline.ToolsUI
     /// so Paste may be called from the connector's worker thread.</summary>
     public interface IPasteElement { void Paste(); }
 
+    /// <summary>A tree whose selected node can be renamed in place (the Targets tree -- e.g. renaming a
+    /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
+    public interface IRenameNodeElement { void RenameNode(string value); }
+
     // ---- Actions --------------------------------------------------------------------------------
 
     /// <summary>
@@ -256,12 +260,17 @@ namespace pwiz.Skyline.ToolsUI
         // particular window.
         public static readonly UiAction Paste = SimpleAction<IPasteElement>(@"Paste", e => e.Paste());
 
+        // Renames the tree's selected node in place -- e.g. the MethodEdit tutorial's "Type 'Primary
+        // Peptides' and press Enter" on a peptide group. Select the node first.
+        public static readonly UiAction RenameNode = SimpleAction<IRenameNodeElement, string>(
+            @"RenameNode", (e, value) => e.RenameNode(value));
+
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
             GetActions, GetChildren, Click, GetValue, SetValue, CheckItem, UncheckItem, SelectItem,
             UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
-            Collapse, SelectTab, Accept, Paste
+            Collapse, SelectTab, Accept, Paste, RenameNode
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.
@@ -819,7 +828,7 @@ namespace pwiz.Skyline.ToolsUI
         // the control pastes if it handles paste there. Runs on the UI thread.
         public void Paste()
         {
-            InvokeOnUiThread(() => RaiseProtectedHandler<Control>(Control, @"OnKeyDown", new KeyEventArgs(Keys.Control | Keys.V)));
+            InvokeOnUiThread(() => RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(Keys.Control | Keys.V)));
         }
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
@@ -1023,6 +1032,8 @@ namespace pwiz.Skyline.ToolsUI
                 // The Pick Children pop-up's owner-drawn ListBox presents as a CheckedListBox.
                 case ListBox listBox when listBox.FindForm() is PopupPickList: return new PopupPickListElement(listBox);
                 case ListBox listBox: return new ListControlElement<ListBox>(listBox);
+                // SequenceTree before TreeView -- it derives from TreeView, so its case must win.
+                case SequenceTree sequenceTree: return new SequenceTreeElement(sequenceTree);
                 case TreeView treeView: return new TreeViewElement(treeView);
                 case ListView listView: return new ItemContainerElement<ListView>(listView);
                 // The grid itself -- the inner grid of a DataboundGridControl (a BoundDataGridView, driven
@@ -1280,19 +1291,11 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A TreeView. Besides checking/selecting a node by text, a node is expanded or collapsed
     /// (expand/collapse) by a path: an array whose segments select a child at each level -- a string is the
     /// first child whose text matches it, an integer is the child at that index.</summary>
-    internal sealed class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement
+    internal class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement
     {
         public TreeViewElement(TreeView control) : base(control) { }
         public void Expand(object path) => ResolveTreePath(path).Expand();
         public void Collapse(object path) => ResolveTreePath(path).Collapse();
-
-        // The Targets tree's node menu is shown manually, so it lives on the main window rather than on the
-        // tree's own ContextMenuStrip; raise its Opening so item enablement reflects the current selection
-        // (select the node first). Any other TreeView falls back to the default.
-        public override ContextMenuStrip BuildContextMenu() =>
-            Control is SequenceTree
-                ? OpenContextMenu(Program.MainWindow.ContextMenuTreeNode)
-                : base.BuildContextMenu();
 
         // Resolves a tree path -- an array whose segments select a child at each level (an integer is the
         // child at that index; a string is the first child whose text matches it) -- to its TreeNode,
@@ -1365,6 +1368,30 @@ namespace pwiz.Skyline.ToolsUI
                     return token.Type == JTokenType.Integer ? (object) (int) token : token.Value<string>();
                 default: return segment as string;
             }
+        }
+    }
+
+    /// <summary>The Targets tree (a <see cref="SequenceTree"/>): a TreeView with the document-owned node
+    /// context menu and an in-place node rename a plain TreeView does not have.</summary>
+    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement
+    {
+        public SequenceTreeElement(SequenceTree control) : base(control) { }
+
+        private SequenceTree SequenceTree => (SequenceTree) Control;
+
+        // The Targets tree's node menu is shown manually, so it lives on the main window rather than on the
+        // tree's own ContextMenuStrip; raise its Opening so item enablement reflects the current selection
+        // (select the node first).
+        public override ContextMenuStrip BuildContextMenu() =>
+            OpenContextMenu(Program.MainWindow.ContextMenuTreeNode);
+
+        // Renames the selected node in place the way a user typing into its label and pressing Enter would:
+        // begin the in-place edit, set the text, commit it. Select the node first.
+        public void RenameNode(string value)
+        {
+            SequenceTree.BeginEdit(false);
+            SequenceTree.StatementCompletionEditBox.TextBox.Text = value;
+            SequenceTree.CommitEditBox(false);
         }
     }
 
@@ -1785,7 +1812,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(new LlmInstruction(
                     @"The grid has no current cell -- move to one first with set_current_cell_address."));
             var args = new DataGridViewCellContextMenuStripNeededEventArgs(cell.ColumnIndex, cell.RowIndex);
-            RaiseProtectedHandler<DataGridView>(_dataGridView, @"OnCellContextMenuStripNeeded", args);
+            RaiseProtectedHandler(_dataGridView, @"OnCellContextMenuStripNeeded", args);
             if (args.ContextMenuStrip == null)
                 throw new ArgumentException(new LlmInstruction(@"The current cell has no context menu."));
             return OpenContextMenu(args.ContextMenuStrip);
