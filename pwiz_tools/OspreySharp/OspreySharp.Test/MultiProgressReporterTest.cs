@@ -76,7 +76,7 @@ namespace pwiz.OspreySharp.Test
             var multi = new MultiProgressReporter(0.0);
             var percents = new List<int>();
             string fileBlock;
-            using (var file = multi.BeginFile(0, @"fileA", 4))
+            using (var file = multi.BeginFile(0, 4))
             {
                 // Segment 1/4 (read): a reporter inside the scope feeds the slice.
                 file.BeginSegment();
@@ -138,9 +138,9 @@ namespace pwiz.OspreySharp.Test
             OspreyOutput.Out = capture;
 
             var multi = new MultiProgressReporter(0.0);
-            var fileA = multi.BeginFile(0, @"fileA", 4);
+            var fileA = multi.BeginFile(0, 4);
             OspreyOutput.Out.WriteLine(@"AAA narrative line");   // -> fileA buffer
-            var fileB = multi.BeginFile(1, @"fileB", 4);
+            var fileB = multi.BeginFile(1, 4);
             OspreyOutput.Out.WriteLine(@"BBB narrative line");   // -> fileB buffer
 
             fileA.BeginSegment();

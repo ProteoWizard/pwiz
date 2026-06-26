@@ -562,7 +562,7 @@ namespace pwiz.OspreySharp.Tasks
                 var parallelOpts = new ParallelOptions { MaxDegreeOfParallelism = parallelism };
                 Parallel.For(0, nTotalFiles, parallelOpts, fileNum =>
                 {
-                    using (multi.BeginFile(fileNum, perFileEntries[fileNum].Key, RESCORE_FILE_SEGMENTS))
+                    using (multi.BeginFile(fileNum, RESCORE_FILE_SEGMENTS))
                         counts[fileNum] = RescoreOneFile(
                             fileNum, nTotalFiles,
                             perFileEntries[fileNum].Key, perFileEntries[fileNum].Value,

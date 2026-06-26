@@ -135,10 +135,10 @@ namespace pwiz.OspreySharp.Core
         /// equal-weight phases the file's percent is divided into. Returns a handle
         /// whose disposal flushes the file's buffered block and drops its slot.
         /// </summary>
-        public FileScope BeginFile(int index, string displayName, int segmentCount)
+        public FileScope BeginFile(int index, int segmentCount)
         {
             var buffer = new StringWriter();
-            var slot = new FileSlot(index, displayName);
+            var slot = new FileSlot(index);
             var scope = new FileScope(this, slot, buffer, segmentCount);
             lock (_renderLock)
             {
@@ -217,17 +217,16 @@ namespace pwiz.OspreySharp.Core
         }
 
         /// <summary>One concurrently-processing file's aggregate-line state: its
-        /// display index and current composite percent.</summary>
+        /// 0-based slot index (shown as <c>[index+1]</c>) and current composite
+        /// percent.</summary>
         internal sealed class FileSlot
         {
-            internal FileSlot(int index, string displayName)
+            internal FileSlot(int index)
             {
                 Index = index;
-                DisplayName = displayName;
             }
 
             internal int Index { get; }
-            internal string DisplayName { get; }
             internal int Percent { get; set; }
         }
 
@@ -245,7 +244,6 @@ namespace pwiz.OspreySharp.Core
             private readonly StringWriter _buffer;
             private readonly TextWriter _syncBuffer;
             private readonly int _segmentCount;
-            private readonly object _segmentLock = new object();
             // Segments fully behind the cursor (each contributes its full slice).
             private int _completedSegments;
             private SegmentSink _currentSegmentSink;
@@ -280,15 +278,15 @@ namespace pwiz.OspreySharp.Core
             // The cookie that restores the prior OspreyOutput.Out on dispose.
             internal IDisposable OutCookie { get; set; }
 
-            // Snapshot of the buffered narrative, read once on completion after the
-            // file's work (and its inner threads) have finished writing.
+            // Snapshot of the buffered narrative. No lock by design: this runs only
+            // from CompleteFile -> FileScope.Dispose, i.e. AFTER the file's `using`
+            // body and its inner scoring Parallel.For have fully joined, so no
+            // narrative writer is live to race the read. Safety is from that
+            // lifecycle, not a lock -- a future change that flushed a block mid-file
+            // would have to synchronize on the _syncBuffer monitor the writers use.
             internal string BufferContents
             {
-                get
-                {
-                    lock (_segmentLock)
-                        return _buffer.ToString();
-                }
+                get { return _buffer.ToString(); }
             }
 
             /// <summary>
@@ -300,12 +298,14 @@ namespace pwiz.OspreySharp.Core
             /// </summary>
             public void BeginSegment()
             {
-                lock (_segmentLock)
-                {
-                    if (_currentSegmentSink != null && _completedSegments < _segmentCount)
-                        _completedSegments++;
-                    _currentSegmentSink = new SegmentSink(this, _completedSegments);
-                }
+                // No lock: a file's segments are advanced only from its own single
+                // phase thread (ProcessFile / RescoreOneFile call this sequentially at
+                // phase boundaries). The inner scoring Parallel.For never calls this --
+                // it drives the captured SegmentSink, whose cross-thread report path is
+                // synchronized by the owner's render lock.
+                if (_currentSegmentSink != null && _completedSegments < _segmentCount)
+                    _completedSegments++;
+                _currentSegmentSink = new SegmentSink(this, _completedSegments);
                 UpdateFilePercent(_completedSegments, 0);
             }
 

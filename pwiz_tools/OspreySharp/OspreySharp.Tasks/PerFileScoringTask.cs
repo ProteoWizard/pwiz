@@ -275,7 +275,7 @@ namespace pwiz.OspreySharp.Tasks
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    using (multi.BeginFile(fileIdx, fileName, PROCESS_FILE_SEGMENTS))
+                    using (multi.BeginFile(fileIdx, PROCESS_FILE_SEGMENTS))
                     {
                         var fileResult = ScoreOrLoadForFile(
                             inputFile, fileName, fileIdx, config.InputFiles.Count,
