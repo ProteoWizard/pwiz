@@ -64,6 +64,12 @@ namespace pwiz.OspreySharp.Tasks
     /// </summary>
     internal sealed class PerFileScoringTask : OspreyTask
     {
+        // Equal-weight progress segments one input file's work is divided into for
+        // the --parallel-files "[i] p%" aggregate line: read spectra, calibrate RT/
+        // mass, score, write the scores parquet. ProcessFile advances them through
+        // MultiProgressReporter.BeginSegment at each phase boundary; off the parallel
+        // path those calls are no-ops.
+        private const int PROCESS_FILE_SEGMENTS = 4;
 
         public override string Name => @"PerFileScoring";
 
@@ -251,16 +257,33 @@ namespace pwiz.OspreySharp.Tasks
                 };
                 string validityKey = ValidityKey(ctx);
                 var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
+                // Legend mapping each aggregate-line slot to its input file, printed once
+                // before the concurrent "[i] p%" line starts -- mirrors Skyline's numbered
+                // file list above its multi-file import progress, so a reader can tell which
+                // file each [i] is. Uses the same [i] token as the aggregate line.
+                ctx.LogInfo(string.Format(@"Scoring {0} files in parallel:", config.InputFiles.Count));
+                for (int legendIdx = 0; legendIdx < config.InputFiles.Count; legendIdx++)
+                    ctx.LogInfo(string.Format(@"  {0}. {1}", legendIdx + 1, config.InputFiles[legendIdx]));
+
+                // Collapse the concurrent per-file progress onto a single throttled
+                // "[i] p%" aggregate line, and buffer each file's narrative so its
+                // block flushes contiguously on completion rather than interleaving
+                // with the other files' lines. Each file is one BeginFile scope; the
+                // PROCESS_FILE_SEGMENTS phases inside ProcessFile drive its percent.
+                var multi = new MultiProgressReporter();
                 Parallel.For(0, config.InputFiles.Count, parallelOpts, fileIdx =>
                 {
                     string inputFile = config.InputFiles[fileIdx];
                     string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    var fileResult = ScoreOrLoadForFile(
-                        inputFile, fileName, fileIdx, config.InputFiles.Count,
-                        fullLibrary, config, parquetFooterMetadata,
-                        perFileCalibrations, validityKey, ctx);
-                    if (fileResult != null)
-                        fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
+                    using (multi.BeginFile(fileIdx, fileName, PROCESS_FILE_SEGMENTS))
+                    {
+                        var fileResult = ScoreOrLoadForFile(
+                            inputFile, fileName, fileIdx, config.InputFiles.Count,
+                            fullLibrary, config, parquetFooterMetadata,
+                            perFileCalibrations, validityKey, ctx);
+                        if (fileResult != null)
+                            fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
+                    }
                 });
                 // Collect in original order
                 for (int i = 0; i < config.InputFiles.Count; i++)
@@ -1030,8 +1053,7 @@ namespace pwiz.OspreySharp.Tasks
                 // load failed -- fall through and rescore the file.
             }
 
-            ctx.LogInfo(string.Empty);
-            ctx.LogInfo(string.Format(@"===== Processing file {0}/{1}: {2} =====",
+            ctx.LogInfo(string.Format(@"Scoring file {0}/{1}: {2}",
                 fileIdx + 1, totalFiles, inputFile));
             // Clear stale sidecar so a mid-ProcessFile crash leaves no
             // false-positive sidecar on the next invocation.
@@ -1166,6 +1188,9 @@ namespace pwiz.OspreySharp.Tasks
             var context = new ScoringContext(config, fileName);
 
             // Load spectra (from mzML or .spectra.bin cache)
+            // Segment 1/4 (read): the mzML/cache read reporter inside LoadSpectra
+            // feeds this file's first progress slice under --parallel-files.
+            MultiProgressReporter.Current?.BeginSegment();
             List<Spectrum> spectra;
             List<MS1Spectrum> ms1Spectra;
             var swParse = Stopwatch.StartNew();
@@ -1217,6 +1242,9 @@ namespace pwiz.OspreySharp.Tasks
 
             // Resolve the per-file calibration (load a cached/Rust JSON or
             // compute via Calibrator) and persist the calibration JSON.
+            // Segment 2/4 (calibrate): no inner reporter today, so this slice
+            // carries the file forward as a step when scoring begins.
+            MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
                 inputFile, fileName, fullLibrary, spectra, ms1Spectra,
                 context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal, ctx);
@@ -1240,6 +1268,10 @@ namespace pwiz.OspreySharp.Tasks
             // Run coelution scoring, then drop double-counted features and
             // deduplicate target/decoy pairs per base_id. Extracted to
             // ScoreAndDeduplicate so ProcessFile reads as a sequencer.
+            // Segment 3/4 (score): the inner isolation-window Parallel.For reporter
+            // in ScoringPipeline feeds this slice -- the long phase that shows the
+            // bulk of a file's motion on the aggregate line.
+            MultiProgressReporter.Current?.BeginSegment();
             var scoredEntries = ScoreAndDeduplicate(
                 fullLibrary, spectra, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
@@ -1260,6 +1292,9 @@ namespace pwiz.OspreySharp.Tasks
             // in Run() against the original (un-mutated) outer config — see
             // Run() for why. Skipped only in --task FirstPassFDR mode (no Stages 1-4
             // ran here, so there is nothing fresh to persist).
+            // Segment 4/4 (write): the parquet build/write reporters in
+            // ParquetScoreCache feed this final slice.
+            MultiProgressReporter.Current?.BeginSegment();
             if (parquetFooterMetadata != null)
             {
                 string parquetPath = ParquetScoreCache.GetScoresPath(inputFile);
