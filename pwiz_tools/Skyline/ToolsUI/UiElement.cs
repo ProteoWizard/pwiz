@@ -288,10 +288,9 @@ namespace pwiz.Skyline.ToolsUI
             return uiAction;
         }
 
-        public static UiAction SimpleFunction<T, TArg>(string name, Func<T, TArg, object> action,
-            bool mustBeEnabled = true)
+        public static UiAction SimpleFunction<T, TArg>(string name, Func<T, TArg, object> action)
         {
-            return new SimpleActionImpl<T, TArg>(name, action, mustBeEnabled) { ReturnsValue = true, MustBeEnabled = false};
+            return new SimpleActionImpl<T, TArg>(name, action, false) { ReturnsValue = true };
         }
         public static UiAction SimpleAction<T, TArg>(string name, Action<T, TArg> action)
         {

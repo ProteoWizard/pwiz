@@ -29,8 +29,8 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Verifies the connector can get past a native Windows message box (the kind the common Save dialog
-    /// raises to confirm replacing an existing file). It is enumerated as a native MessageBox form, its
-    /// prompt and Yes/No buttons are listed by <see cref="NativeMessageBox.GetControls"/>, and clicking a
+    /// raises to confirm replacing an existing file). It is enumerated as a generic native dialog, its
+    /// prompt and Yes/No buttons are listed by <see cref="NativeDialog.GetControls"/>, and clicking a
     /// button by its caption dismisses the box with that result.
     /// </summary>
     [TestClass]
@@ -52,11 +52,11 @@ namespace pwiz.SkylineTestFunctional
                     "Yeast.protdb already exists.\nDo you want to replace it?",
                     "Confirm Save As", MessageBoxButtons.YesNo)));
 
-            var messageBox = NativeDialog.WaitForDialog<NativeMessageBox>();
+            var messageBox = NativeDialog.WaitForDialog<NativeDialog>();
 
-            // The connector enumerates it as a native MessageBox form.
+            // The connector enumerates it as a generic native dialog.
             var nativeForm = JsonUiService.GetOpenForms().Single(form => form.IsNative);
-            Assert.AreEqual(@"MessageBox", nativeForm.Type);
+            Assert.AreEqual(@"Dialog", nativeForm.Type);
 
             // get_controls lists the prompt text and the Yes / No buttons.
             var labels = messageBox.GetControls().Select(control => control.Path.Text).ToArray();

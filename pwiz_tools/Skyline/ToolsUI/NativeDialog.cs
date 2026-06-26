@@ -54,13 +54,14 @@ namespace pwiz.Skyline.ToolsUI
     /// <see cref="Create"/> chooses the subclass that matches a given dialog element.
     ///
     /// A dialog is a <see cref="UiElement"/>: it presents to the connector exactly like any other form (it
-    /// is listed by GetOpenForms and addressed by a path whose Text is its id). A file dialog is not
-    /// introspected as a set of child controls -- it is driven at the form level: set_value enters the file
-    /// name, the accept action confirms it, and close_form cancels it. A message box
-    /// (<see cref="NativeMessageBox"/>) is the exception: its choices are real named buttons, so it lists
-    /// them and clicks one by caption.
+    /// is listed by GetOpenForms and addressed by a path whose Text is its id). This base class is concrete
+    /// and drives any "#32770" generically: it lists the dialog's text and push buttons, clicks a button by
+    /// its caption, accepts by pressing the default button, and cancels with close_form (WM_CLOSE) -- enough
+    /// for a message box (e.g. the Save dialog's "replace it?" confirm) or any other Windows dialog. The
+    /// file dialogs (<see cref="NativeFileDialog"/>) specialize it with the file-name field: set_value types
+    /// a path and the accept gesture differs by surface.
     /// </summary>
-    public abstract class NativeDialog : UiElement, IFormElement
+    public class NativeDialog : UiElement, IFormElement
     {
         protected const string DIALOG_CLASS_NAME = @"#32770"; // Win32 dialog window class
         private const int DEFAULT_TIMEOUT_MILLIS = 30 * 1000;
@@ -81,10 +82,10 @@ namespace pwiz.Skyline.ToolsUI
         public int MillisTimeout { get; set; } = DEFAULT_TIMEOUT_MILLIS;
 
         /// <summary>
-        /// Short identifier for the kind of dialog (e.g. "FileDialog"), for callers that classify
-        /// dialogs without knowing the concrete subclass.
+        /// Short identifier for the kind of dialog ("FileDialog" for the file dialogs, otherwise the
+        /// generic "Dialog"), for callers that classify dialogs without knowing the concrete subclass.
         /// </summary>
-        public abstract string DialogTypeName { get; }
+        public virtual string DialogTypeName => @"Dialog";
 
         /// <summary>The dialog window's caption.</summary>
         public string Title => DialogElement.Current.Name;
@@ -101,8 +102,9 @@ namespace pwiz.Skyline.ToolsUI
             _dialogElement ?? (_dialogElement = AutomationElement.FromHandle(WindowHandle));
 
         /// <summary>
-        /// Returns the automation wrapper for the given native dialog element, choosing the
-        /// subclass that matches the dialog, or null if no subclass handles it.
+        /// Returns the automation wrapper for the given native dialog element: a file-dialog subclass when
+        /// it is one, otherwise a generic <see cref="NativeDialog"/>. Null only when the element is not a
+        /// "#32770" dialog (or its handle is gone).
         /// </summary>
         public static NativeDialog Create(AutomationElement dialog)
         {
@@ -126,11 +128,10 @@ namespace pwiz.Skyline.ToolsUI
             // two never both match.
             if (NativeSaveFileDialog.IsSaveFileDialog(dialog))
                 return new NativeSaveFileDialog(handle);
-            // After the file dialogs: any other "#32770" with buttons is a message box (e.g. the Save
-            // dialog's "replace it?" confirm), so the connector can read it and click a button.
-            if (NativeMessageBox.IsMessageBox(dialog))
-                return new NativeMessageBox(handle);
-            return null;
+            // Any other "#32770" (a message box such as the Save dialog's "replace it?" confirm, or any
+            // other Windows dialog) is driven generically by the base class -- it lists the buttons and
+            // clicks one by caption.
+            return new NativeDialog(handle);
         }
 
         /// <summary>
@@ -172,10 +173,14 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Accepts the dialog -- the equivalent of clicking its default/OK button. Implemented per
-        /// dialog type because the accept gesture differs by surface.
+        /// Accepts the dialog -- the equivalent of clicking its default/OK button. The generic dialog
+        /// presses Enter (which activates the default button); the file dialogs override this with the
+        /// gesture their surface needs.
         /// </summary>
-        public abstract void Accept();
+        public virtual void Accept()
+        {
+            PressEnter(DialogElement);
+        }
 
         // ---- IFormElement: drive the dialog the way JsonUiService drives any form -------------------
         // Everything runs on the calling (pipe) thread: the dialog runs its own modal loop on the UI thread,
@@ -187,14 +192,42 @@ namespace pwiz.Skyline.ToolsUI
 
         public ControlInfo[] GetControls() => GetControlInfos();
 
-        // A file dialog has no caption-addressable buttons (matching "OK"/"Cancel" would not survive a
-        // localized build). Confirm it with the accept action and dismiss it with Close (close_form) instead.
-        // A message box overrides this -- its choices ARE named buttons (see NativeMessageBox).
+        // The dialog's text and its push buttons, so a caller can read the prompt and see which choices it
+        // offers. The buttons are clicked by caption (ClickFormButton) or with the accept/close actions; the
+        // text rows are informational. (A file dialog's modern controls are DirectUI and mostly not direct
+        // children, so this is typically empty for one -- it is driven by set_value + accept instead.)
+        public override ControlInfo[] GetControlInfos()
+        {
+            var result = new List<ControlInfo>();
+            foreach (var text in FindChildren(ControlType.Text))
+            {
+                var content = text.Current.Name;
+                if (!string.IsNullOrEmpty(content))
+                    result.Add(new ControlInfo { Path = new UiElementPath(null, content, null, @"Text") });
+            }
+            foreach (var button in FindChildren(ControlType.Button))
+                result.Add(new ControlInfo
+                {
+                    Path = new UiElementPath(null, button.Current.Name, null, @"Button"),
+                    Enabled = button.Current.IsEnabled,
+                });
+            return result.ToArray();
+        }
+
+        // Clicks the dialog's button whose caption matches -- e.g. how the connector gets past a confirm box
+        // ("Yes"). Posts BM_CLICK (does not send it): the click may dismiss the dialog and unwind a nested
+        // modal loop, so a synchronous send could wedge the caller (see NativeSaveFileDialog.Accept). Caption
+        // matching is case- and '&'-mnemonic-insensitive; the caller reads the localized caption from
+        // get_controls.
         public virtual void ClickButton(string button)
         {
-            throw new ArgumentException(LlmInstruction.Format(
-                @"The native dialog '{0}' has no named buttons. Use the accept action to confirm it, or close_form to cancel it.",
-                FormId));
+            var buttons = FindChildren(ControlType.Button).ToList();
+            var match = buttons.FirstOrDefault(b => CaptionMatches(b.Current.Name, button));
+            if (match == null)
+                throw new ArgumentException(LlmInstruction.Format(
+                    @"The dialog '{0}' has no button '{1}'. Its buttons are: {2}.",
+                    FormId, button, string.Join(@", ", buttons.Select(b => b.Current.Name))));
+            User32.PostMessageA(new IntPtr(match.Current.NativeWindowHandle), User32.WinMessageType.BM_CLICK, 0, 0);
         }
 
         // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base
@@ -333,5 +366,31 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
+        // The dialog's direct children of the given control type (its buttons, its text). A message box's
+        // buttons and text are direct children of the "#32770"; a modern file dialog's are DirectUI and
+        // nested, so this returns few or none for one.
+        private IEnumerable<AutomationElement> FindChildren(ControlType controlType)
+        {
+            try
+            {
+                return DialogElement.FindAll(TreeScope.Children,
+                    new PropertyCondition(AutomationElement.ControlTypeProperty, controlType)).Cast<AutomationElement>();
+            }
+            catch (ElementNotAvailableException)
+            {
+                return Enumerable.Empty<AutomationElement>();
+            }
+        }
+
+        // A button caption matches the requested text ignoring case and the '&' mnemonic marker.
+        private static bool CaptionMatches(string actual, string requested)
+        {
+            return string.Equals(StripMnemonic(actual), StripMnemonic(requested), StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string StripMnemonic(string text)
+        {
+            return (text ?? string.Empty).Replace(@"&", string.Empty).Trim();
+        }
     }
 }
