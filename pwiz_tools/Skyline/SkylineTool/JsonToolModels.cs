@@ -380,6 +380,21 @@ namespace SkylineTool
             Type = type;
         }
 
+        public UiElementPath ChangeParent(UiElementPath parent)
+        {
+            return new UiElementPath(parent, Text, Index, Type);
+        }
+
+        public UiElementPath GetRoot()
+        {
+            var path = this;
+            while (path.Parent != null)
+            {
+                path = path.Parent;
+            }
+            return path;
+        }
+        
         private UiElementPath()
         {
         }

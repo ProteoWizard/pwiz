@@ -563,8 +563,8 @@ public static class SkylineTools
         "\"TreeView\") among the form's controls, then perform an action. Only the properties you set are " +
         "used to match. Actions: 'get_actions' (lists the actions this control supports, each with a " +
         "description and the value it takes -- call this first when unsure); 'get_children' " +
-        "(lists child elements as JSON UiElementPaths -- each with a null parent, so to act on one set its " +
-        "parent to the path of the element you listed); 'click'; 'set_value' (uses 'value'); 'get_value' " +
+        "(lists child elements as JSON UiElementPaths -- each already parented onto the element you listed, " +
+        "so pass one straight back as 'path'); 'click'; 'set_value' (uses 'value'); 'get_value' " +
         "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +
         "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path); " +
         "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
@@ -582,7 +582,7 @@ public static class SkylineTools
         [Description("Visible label that names the control (optional)")] string label = null,
         [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
         [Description("Value for set_value/set_grid_text, a [column, row] array for set_current_cell_address, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
-        [Description("A full UiElementPath as JSON (e.g. one from get_children re-parented, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
+        [Description("A full UiElementPath as JSON (e.g. one straight from get_children, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
     {
         return Invoke(connection =>
         {

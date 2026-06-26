@@ -248,7 +248,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
         {
-            var element = JsonUiService.RequireAction(JsonUiService.ResolvePathFrom(path, this), action);
+            var element = JsonUiService.RequireAction(JsonUiService.ResolvePath(path, this), action);
             return action.Invoke(element, value);
         }
 

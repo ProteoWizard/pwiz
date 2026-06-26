@@ -545,19 +545,21 @@ namespace pwiz.Skyline.ToolsUI
         /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="path"/> refers to,
         /// then perform <paramref name="action"/> on it. The action determines the value and return types:
         /// "get_actions" -> ActionInfo[] (name + description + the value it takes); "get_children" ->
-        /// ControlInfo[] (parentless paths the caller re-parents); "click" -> null; "set_value" -> null;
-        /// "get_value" -> the value (null, bool, double, or string).
+        /// ControlInfo[] (each Path already parented onto this element, so it can be used as-is); "click" ->
+        /// null; "set_value" -> null; "get_value" -> the value (null, bool, double, or string).
         /// </summary>
         public static object PerformAction(UiElementPath path, string action, object value)
         {
+            if (path == null)
+                throw new ArgumentException(new LlmInstruction(@"A path is required."));
             var uiAction = UiActions.ByName(action) ?? throw new ArgumentException(LlmInstruction.Format(
                 @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
             // The path's root names a form; resolve it (managed or native) and let it perform the action in its
             // own thread context (a managed form on the UI thread inside the dialog-watch; a native dialog on
             // this calling thread). get_actions/get_children are ordinary reads -- the action's Invoke returns
-            // the element's SupportedActions / GetChildren(), whose child paths are parentless (the caller
-            // knows the parent it asked about).
-            return ResolveForm(RootFormText(path)).PerformAction(path, uiAction, value);
+            // the element's SupportedActions / GetChildren(), whose child paths are parented onto the resolved
+            // element (its Path was recorded in ResolvePath) so the caller can use them directly.
+            return ResolveForm(path.GetRoot().Text).PerformAction(path, uiAction, value);
         }
 
         // Runs a resolved action, which gates and marshals itself (see UiAction.Invoke): a void action posts
@@ -585,40 +587,32 @@ namespace pwiz.Skyline.ToolsUI
             return element;
         }
 
-        // The form id at the root of a path -- the Text of its deepest (Parent-less) segment, or null.
-        private static string RootFormText(UiElementPath path)
-        {
-            while (path?.Parent != null)
-                path = path.Parent;
-            return path?.Text;
-        }
-
-        // Resolves a UiElementPath against an already-resolved root form (the FormElement or NativeDialog the
-        // verb is acting on), so the path's root segment maps to that form and the rest walks into it.
-        internal static UiElement ResolvePathFrom(UiElementPath path, UiElement root) =>
-            ResolvePath(path, _ => root);
-
-        // Resolves a UiElementPath to the single element it refers to. The path is matched segment by
-        // segment: each segment names a child of the element its Parent resolves to, by Index (its position
-        // in the parent's child list), Text (its visible label), and/or Type -- every property that is set
-        // must match. The chain bottoms out at a form, resolved by <paramref name="rootResolver"/> (a
-        // WinForms form, or a native dialog) from its id.
-        private static UiElement ResolvePath(UiElementPath path, Func<string, UiElement> rootResolver)
+        // Resolves a UiElementPath to the single element it refers to, given the already-resolved
+        // <paramref name="root"/> form (the FormElement or NativeDialog the path's root segment names -- the
+        // caller resolves it from that segment's Text, e.g. with path.GetRoot()). Each non-root segment names
+        // a child of the element its Parent resolves to, by Index (its position in the parent's child list),
+        // Text (its visible label), and/or Type -- every property that is set must match.
+        internal static UiElement ResolvePath(UiElementPath path, UiElement root)
         {
             if (path == null)
                 throw new ArgumentException(new LlmInstruction(@"A path is required."));
 
-            // The root of a path (no Parent) names a form: its Text is the form id from GetOpenForms (its
-            // Type is "Form"). Everything else is a child of the element its Parent resolves to -- the parent
-            // resolves the chain, then GetChild picks the element this segment names.
+            UiElement element;
             if (path.Parent == null)
             {
-                if (string.IsNullOrEmpty(path.Text))
-                    throw new ArgumentException(new LlmInstruction(
-                        @"The root of a path must name a form: Text set to the form id from skyline_get_open_forms (Type 'Form')."));
-                return rootResolver(path.Text);
+                // The root segment names a form (the caller resolved it), so its Type must be "Form" or unset.
+                if (!string.IsNullOrEmpty(path.Type) && !string.Equals(path.Type, @"Form", StringComparison.OrdinalIgnoreCase))
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"The root of a path must be a form (Type 'Form' or unset), not '{0}'.", path.Type));
+                element = root;
             }
-            return ResolvePath(path.Parent, rootResolver).GetChild(path);
+            else
+            {
+                element = ResolvePath(path.Parent, root).GetChild(path);
+            }
+            // Record the resolved element's own path, so its get_children parents the controls it lists.
+            element.Path = path;
+            return element;
         }
 
         // Level 3: Complete UI operations - Graphs
@@ -701,10 +695,15 @@ namespace pwiz.Skyline.ToolsUI
         public static IFormElement ResolveForm(string formId)
         {
             ValidateFormIdFormat(formId);
+            // The form is the root of its path; record it so get_controls parents the controls onto it.
+            var formPath = new UiElementPath(null, formId, null, @"Form");
             foreach (var dialog in NativeDialog.GetOpenDialogs())
                 if (dialog.FormId == formId)
+                {
+                    dialog.Path = formPath;
                     return dialog;
-            return InvokeOnUiThread(() => new FormElement(FindFormById(formId)));
+                }
+            return InvokeOnUiThread(() => (IFormElement) new FormElement(FindFormById(formId)) { Path = formPath });
         }
 
         // Resolves the managed form named by formId and runs func against it on that form's own UI thread --

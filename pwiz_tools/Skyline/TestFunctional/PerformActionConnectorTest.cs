@@ -79,12 +79,12 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(((ActionInfo[]) JsonUiService.PerformAction(namePath, @"get_actions", null))
                 .All(a => !string.IsNullOrEmpty(a.Description)), @"Every reported action should have a description.");
 
-            // get_children: returns the children as ControlInfo[], each Path with a null Parent (the caller
-            // re-parents it to the element it queried).
+            // get_children: returns the children as ControlInfo[], each Path already parented onto the
+            // element it was queried on (the form here), so it can be used directly.
             var formChildren = (ControlInfo[]) JsonUiService.PerformAction(formPath, @"get_children", null);
             Assert.IsTrue(formChildren.Length > 0, @"Expected the form to report child controls.");
-            Assert.IsTrue(formChildren.All(c => c.Path.Parent == null),
-                @"Each child returned by get_children should have a null Parent.");
+            Assert.IsTrue(formChildren.All(c => c.Path.Parent != null && c.Path.Parent.Text == dlgId),
+                @"Each child returned by get_children should be parented onto the form.");
 
             // A path with no selectors set resolves to its Parent itself -- so addressing a control
             // under a Form parent with nothing else (the way the MCP tool sends a form-only target)
@@ -94,15 +94,14 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(formChildren.Length, childrenViaParent.Length,
                 @"get_children with no selectors under a Form should resolve to the form itself.");
 
-            // Round-trip: the (parentless) Path GetControls returns resolves the same control once it is
-            // re-parented under the form, and Name is echoed.
+            // Round-trip: the Path GetControls returns is already parented onto the form, so it resolves the
+            // same control as-is (no re-parenting), and Name is echoed.
             var nameInfo = Program.MainJsonToolServer.GetControls(dlgId)
                 .First(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
-            Assert.IsNull(nameInfo.Path.Parent, @"GetControls should return a parentless path.");
+            Assert.IsNotNull(nameInfo.Path.Parent, @"GetControls should return a path parented onto the form.");
             Assert.IsFalse(string.IsNullOrEmpty(nameInfo.Name), @"Expected GetControls to echo the control Name.");
-            var reparented = new UiElementPath(formPath, nameInfo.Path.Text, nameInfo.Path.Index, nameInfo.Path.Type);
-            Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(reparented, @"get_value", null),
-                @"PerformAction did not resolve the control by the re-parented Path GetControls returned.");
+            Assert.AreEqual(@"MyAnnotation", (string) JsonUiService.PerformAction(nameInfo.Path, @"get_value", null),
+                @"PerformAction did not resolve the control by the Path GetControls returned.");
 
             // An unsupported action on a control reports a clear error rather than acting.
             AssertEx.ThrowsException<System.Exception>(() =>

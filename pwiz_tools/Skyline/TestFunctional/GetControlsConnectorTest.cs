@@ -59,33 +59,32 @@ namespace pwiz.SkylineTestFunctional
             string dlgId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
 
-            var formPath = new UiElementPath(null, dlgId, null, @"Form");
             var controls = Program.MainJsonToolServer.GetControls(dlgId);
             Assert.IsTrue(controls.Length > 0, @"GetControls returned nothing.");
 
-            // GetControls reports each control's (parentless) Path, state, and current Value, but not its
-            // actions -- those come from the get_actions action. A discovered path is re-parented under the
-            // form to act on it.
-            UiElementPath Reparent(ControlInfo c) =>
-                new UiElementPath(formPath, c.Path.Text, c.Path.Index, c.Path.Type);
+            // GetControls reports each control's Path -- already parented onto the form, so it can be passed
+            // straight back to act on the control (no re-parenting) -- plus its state and current Value, but
+            // not its actions (those come from the get_actions action).
+            Assert.IsTrue(controls.All(c => c.Path.Parent != null && c.Path.Parent.Text == dlgId),
+                @"Each control's Path should be parented onto the form.");
 
             // The name field has no caption of its own -- it is discoverable by the "Name" label that
             // names it, and get_actions reports that it can be value-set.
             var nameField = controls.FirstOrDefault(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
             Assert.IsNotNull(nameField, @"Expected a TextBox discoverable by the label 'Name'.");
-            CollectionAssert.Contains(ActionNames(Reparent(nameField)), @"set_value");
+            CollectionAssert.Contains(ActionNames(nameField.Path), @"set_value");
 
             // The Applies-to list is discoverable by its "Applies to" label and supports an item action.
             var appliesToList = controls.FirstOrDefault(c => c.Path.Type == @"CheckedListBox");
             Assert.IsNotNull(appliesToList, @"Expected the Applies-to CheckedListBox.");
             Assert.AreEqual(@"Applies to", appliesToList.Path.Text);
-            CollectionAssert.Contains(ActionNames(Reparent(appliesToList)), @"check_item",
+            CollectionAssert.Contains(ActionNames(appliesToList.Path), @"check_item",
                 @"The list should report the check_item action.");
 
             // The OK button is discoverable by its own caption and supports a click.
             var okButton = controls.FirstOrDefault(c => c.Path.Text == @"OK");
             Assert.IsNotNull(okButton, @"Expected an OK button discoverable by its caption.");
-            CollectionAssert.Contains(ActionNames(Reparent(okButton)), @"click");
+            CollectionAssert.Contains(ActionNames(okButton.Path), @"click");
 
             OkDialog(defineAnnotationDlg, () => defineAnnotationDlg.DialogResult = DialogResult.Cancel);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
