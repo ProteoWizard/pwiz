@@ -363,8 +363,8 @@ namespace pwiz.Skyline.ToolsUI
     /// <see cref="UiAction"/> targets one of those interfaces (or, for the universal verbs like get_value /
     /// set_value, the <see cref="UiElement"/> base), so the verbs act polymorphically instead of
     /// switching on WinForms types. Each element also knows its own <see cref="Label"/> (the visible text
-    /// that identifies it) and its <see cref="Children"/>, so matching and form enumeration are a single
-    /// recursive walk.
+    /// that identifies it) and its children (<see cref="EnumerateChildren"/>), so matching and form
+    /// enumeration are a single recursive walk.
     ///
     /// Most elements wrap a WinForms <see cref="Control"/> (see <see cref="ControlElement"/>), but the base
     /// is public and control-agnostic so a non-WinForms surface can present itself the same way -- a native
@@ -392,7 +392,6 @@ namespace pwiz.Skyline.ToolsUI
         public virtual string Label => null;
 
         public abstract bool IsEnabled { get; }
-        public abstract bool IsVisible { get; }
 
         /// <summary>The managed form this element belongs to, whose modal-block / enabled state gates acting on
         /// the element (see <see cref="VerifyInteractable"/>). Null for an element with no managed form of its
@@ -523,13 +522,13 @@ namespace pwiz.Skyline.ToolsUI
                     @"Nothing here supports the action '{0}'.", action.SnakeCaseName));
             if (candidates.Count == 1)
                 return candidates[0];
-            // Several support it: take the single interactable (visible + enabled) one, so a hidden sibling
-            // never makes "the form's single grid/control" ambiguous -- e.g. the Document Grid's
-            // DataboundGridControl hosts a bound grid AND a collapsed replicate-pivot grid; only the bound one
-            // is visible. If more than one is still interactable, the caller must name one.
-            var interactable = candidates.Where(IsInteractable).ToList();
-            if (interactable.Count == 1)
-                return interactable[0];
+            // Several support it: take the single enabled one, so a disabled sibling never makes "the form's
+            // single grid/control" ambiguous (a hidden sibling was already dropped when the elements were
+            // built -- we only build an element for a control that was visible). If more than one is still
+            // enabled, the caller must name one.
+            var enabled = candidates.Where(c => c.IsEnabled).ToList();
+            if (enabled.Count == 1)
+                return enabled[0];
             throw new ArgumentException(LlmInstruction.Format(
                 @"More than one control supports the action '{0}'; pass a label or name to choose one (see skyline_get_controls).",
                 action.SnakeCaseName));
@@ -545,9 +544,9 @@ namespace pwiz.Skyline.ToolsUI
             return BestMatch(candidates, text, true) ?? BestMatch(candidates, text, false);
         }
 
-        // The best of the candidates whose text matches at the given strictness: prefer an interactable
-        // (visible + enabled) one so a hidden duplicate never shadows the control the user sees. Returns
-        // null when none matches at this strictness (the caller then falls back to a looser match).
+        // The best of the candidates whose text matches at the given strictness: prefer an enabled one so a
+        // disabled duplicate never shadows the control the user can act on. Returns null when none matches at
+        // this strictness (the caller then falls back to a looser match).
         private static UiElement BestMatch(IEnumerable<UiElement> candidates, string text, bool strict)
         {
             UiElement best = null;
@@ -555,13 +554,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (!element.MatchesText(text, strict))
                     continue;
-                if (best == null || (!IsInteractable(best) && IsInteractable(element)))
+                if (best == null || (!best.IsEnabled && element.IsEnabled))
                     best = element;
             }
             return best;
         }
-
-        private static bool IsInteractable(UiElement element) => element.IsVisible && element.IsEnabled;
 
         /// <summary>Whether this element's visible text identifies it to the requested <paramref name="text"/>:
         /// the centralized text match used both to resolve a path segment (<see cref="GetChild"/>) and to find
@@ -620,19 +617,18 @@ namespace pwiz.Skyline.ToolsUI
         /// order -- the candidates a path segment's Type (optionally pinned by Index) selects from.</summary>
         public virtual IEnumerable<UiElement> GetChildren(string typeName)
         {
-            return Children.Where(child => child.MatchesType(typeName));
+            return EnumerateChildren().Where(child => child.MatchesType(typeName));
         }
 
-        /// <summary>The elements nested inside this one, for the recursive form walk.</summary>
-        public virtual IEnumerable<UiElement> Children => Enumerable.Empty<UiElement>();
+        /// <summary>The elements nested inside this one, for the recursive form walk. A method, not a property,
+        /// because enumerating may have side effects: a menu item opens (and recloses) its dropdown so items
+        /// built on demand are present before they are listed (see <see cref="ToolStripItemElement"/>).</summary>
+        public virtual IEnumerable<UiElement> EnumerateChildren() => Enumerable.Empty<UiElement>();
 
         /// <summary>This element and every element under it, depth-first.</summary>
         public IEnumerable<UiElement> SelfAndDescendants()
         {
-            yield return this;
-            foreach (var child in Children)
-            foreach (var descendant in child.SelfAndDescendants())
-                yield return descendant;
+            return EnumerateChildren().SelectMany(child => child.SelfAndDescendants()).Prepend(this);
         }
 
         // --- UI-thread marshaling ----------------------------------------------------------------------
@@ -669,7 +665,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             var indexByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var result = new List<ControlInfo>();
-            foreach (var child in Children)
+            foreach (var child in EnumerateChildren())
             {
                 indexByType.TryGetValue(child.ElementType.Name, out var typeIndex);
                 indexByType[child.ElementType.Name] = typeIndex + 1;
@@ -708,7 +704,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (path.Index.HasValue)
                     throw new ArgumentException(new LlmInstruction(
                         @"A path Index requires a Type: it is the index among the children of that exact Type."));
-                candidates = Children.ToList();
+                candidates = EnumerateChildren().ToList();
             }
 
             // An Index pins the index-th child of that Type; Text, if also set, must match it.
@@ -737,15 +733,15 @@ namespace pwiz.Skyline.ToolsUI
                 @"No control found matching the path. Use skyline_get_controls to list the controls."));
         }
 
-        // The first interactable (visible + enabled) element, or -- when none is interactable -- the first
-        // one (so a legitimately disabled target still resolves). Null only for an empty sequence. Lets a
-        // Type/Text match prefer the control the user sees over a hidden duplicate.
+        // The first enabled element, or -- when none is enabled -- the first one (so a legitimately disabled
+        // target still resolves). Null only for an empty sequence. Lets a Type/Text match prefer the control
+        // the user can act on over a disabled duplicate.
         private static UiElement PreferInteractable(IEnumerable<UiElement> elements)
         {
             UiElement first = null;
             foreach (var element in elements)
             {
-                if (IsInteractable(element))
+                if (element.IsEnabled)
                     return element;
                 if (first == null)
                     first = element;
@@ -823,18 +819,33 @@ namespace pwiz.Skyline.ToolsUI
 
         public Control Control { get; }
 
-        // The control's hosting form gates acting on it (a modal blocking the form, or a disabled ancestor).
-        internal override Form OwningForm => Control.FindForm();
+        // The control's hosting form gates acting on it (a modal blocking the form, or a disabled ancestor). A
+        // control hosted in a menu dropdown belongs to the form that owns the menu -- its own FindForm is the
+        // transient popup, or null while the dropdown is closed -- so gate it through that form instead.
+        internal override Form OwningForm => IsHostedInMenu ? FormElement?.Form : Control.FindForm();
 
-        // Gate the form, then the control itself: a user cannot act on a control they cannot see or that is
-        // disabled, so reject a hidden control (e.g. on an unselected tab) or a disabled one. Control.Visible /
-        // Control.Enabled reflect a hidden/disabled ancestor too. The form gate already covered a disabled form.
+        // A control hosted inside a menu dropdown -- e.g. the ion-type buttons in View > Libraries > Ion Types,
+        // hosted via a ToolStripControlHost. Its own FindForm is the transient popup (or null while the dropdown
+        // is closed), so it is gated through the form that owns the menu instead. A ToolStripDropDown in its
+        // parent chain marks it.
+        private bool IsHostedInMenu
+        {
+            get
+            {
+                for (var parent = Control.Parent; parent != null; parent = parent.Parent)
+                    if (parent is ToolStripDropDown)
+                        return true;
+                return false;
+            }
+        }
+
+        // Gate the form, then the control itself: a user cannot act on a disabled control, so reject one.
+        // Control.Enabled reflects a disabled ancestor too. The form gate already covered a disabled form.
+        // Visibility is not checked: we only ever build an element for a control that was visible, and a control
+        // that goes hidden mid-action (e.g. a menu whose dropdown has closed) should still be acted on.
         public override void VerifyInteractable()
         {
             VerifyFormInteractable(OwningForm);
-            if (!Control.Visible)
-                throw new InvalidOperationException(LlmInstruction.Format(
-                    @"Control '{0}' is not visible.", Label ?? NullIfEmpty(Name) ?? ElementType.Name));
             if (!Control.Enabled)
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Control '{0}' is disabled.", Control.Name));
@@ -843,26 +854,10 @@ namespace pwiz.Skyline.ToolsUI
         public override string Name => Control.Name;
         public override Type ElementType => Control.GetType();
 
-        public override bool IsEnabled
-        {
-            get
-            {
-                if (!IsVisible)
-                {
-                    return false;
-                }
-                if (true != Control.FindForm()?.Enabled)
-                {
-                    return false;
-                }
-
-                return Control.Enabled;
-            }
-        }
-        public override bool IsVisible => Control.Visible;
+        public override bool IsEnabled => true == OwningForm?.Enabled && Control.Enabled;
 
         // Most controls have no children -- a button, a text box, a list. Only a ContainerElement (a Form
-        // or UserControl) owns children; the inherited (empty) Children is correct for everything else.
+        // or UserControl) owns children; the inherited (empty) EnumerateChildren is correct for everything else.
 
         // A control is clicked through its IButtonControl handler -- a real button, or a custom tile such as
         // a StartPage action box or recent-file row, whose clickable surface is covered by child labels and
@@ -1009,7 +1004,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         public ContainerElement(Control control) : base(control) { }
 
-        public override IEnumerable<UiElement> Children => FlattenChildren(Control);
+        public override IEnumerable<UiElement> EnumerateChildren() => FlattenChildren(Control);
 
         // This container's child elements for the form walk, FLATTENED. A control the form recognizes as an
         // element (FormElement.ElementFor) is yielded as that element -- and tagged with the same FormElement:
@@ -1687,7 +1682,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly ToolStrip _toolStrip;
         public ToolStripElement(ToolStrip toolStrip) : base(toolStrip) { _toolStrip = toolStrip; }
-        public override IEnumerable<UiElement> Children =>
+        public override IEnumerable<UiElement> EnumerateChildren() =>
             _toolStrip.Items.Cast<ToolStripItem>().Select(item => (UiElement) new ToolStripItemElement(item, FormElement));
 
         /// <summary>Resolves a '>'-separated menu/toolbar path (e.g. "Reports &gt; Replicates") to its leaf
@@ -1768,25 +1763,50 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => _item is ToolStripControlHost ? null
             : string.IsNullOrEmpty(_item.Text) ? _item.ToolTipText : _item.Text;
         public override bool IsEnabled => _item.Enabled;
-        // Available, not Visible: an item on a context menu that was built but never shown reports
-        // Visible=false (its strip is not displayed), yet it is a legitimate, actionable item.
-        public override bool IsVisible => _item.Available;
-        // A ToolStripControlHost hosts a real control (e.g. the Audit Log "Enable audit logging" checkbox);
-        // expose it so the verbs reach it as the control it is. Otherwise descend into dropdown items.
-        public override IEnumerable<UiElement> Children
+        private List<UiElement> _children;
+
+        // A ToolStripControlHost hosts a real control: a single control the form recognizes (e.g. the Audit
+        // Log "Enable audit logging" checkbox) is exposed as that control; a host whose control is a
+        // transparent container (e.g. the Ion Types panel of ion-type checkbox-buttons) is flattened to its
+        // children -- the way the form walk flattens a panel. A dropdown menu item is opened first, so items
+        // built on demand (the Ion Types panel, the Document Grid's Reports list) are present before they are
+        // listed, then reclosed; its hosted-control items are flattened the same way, so the real control(s)
+        // surface as direct children rather than the ToolStripControlHost wrapper. Opening/closing the dropdown
+        // is the side effect that makes this EnumerateChildren() (a method), not a property; the result is
+        // cached so that side effect happens only once however often the children are enumerated.
+        public override IEnumerable<UiElement> EnumerateChildren() => _children ??= BuildChildren();
+
+        private List<UiElement> BuildChildren()
         {
-            get
+            var children = new List<UiElement>();
+            if (_item is ToolStripControlHost host && host.Control != null)
             {
-                if (_item is ToolStripControlHost host && host.Control != null)
-                {
-                    var hosted = FormElement.ElementFor(host.Control);
-                    if (hosted != null)
-                        yield return hosted;
-                }
-                if (_item is ToolStripDropDownItem dropDownItem)
-                    foreach (ToolStripItem child in dropDownItem.DropDownItems)
-                        yield return new ToolStripItemElement(child, FormElement);
+                var hosted = FormElement.ElementFor(host.Control);
+                if (hosted != null)
+                    children.Add(hosted);
+                else
+                    children.AddRange(new ContainerElement(host.Control) { FormElement = FormElement }.EnumerateChildren());
             }
+            if (_item is ToolStripDropDownItem dropDownItem)
+            {
+                ShowDropDown();
+                try
+                {
+                    foreach (ToolStripItem child in dropDownItem.DropDownItems)
+                    {
+                        var childElement = new ToolStripItemElement(child, FormElement);
+                        if (child is ToolStripControlHost)
+                            children.AddRange(childElement.EnumerateChildren());
+                        else
+                            children.Add(childElement);
+                    }
+                }
+                finally
+                {
+                    HideDropDown();
+                }
+            }
+            return children;
         }
         // Marshaling through, and gating by, this item's form are inherited from UiComponent.
 
@@ -1956,8 +1976,7 @@ namespace pwiz.Skyline.ToolsUI
         public override string Name => string.Empty;
         public override Type ElementType => typeof(ContextMenuStrip);
         public override bool IsEnabled => _owner.IsEnabled;
-        public override bool IsVisible => _owner.IsVisible;
-        public override IEnumerable<UiElement> Children =>
+        public override IEnumerable<UiElement> EnumerateChildren() =>
             _owner.BuildContextMenu().Items.Cast<ToolStripItem>()
                 .Select(item => (UiElement) new ToolStripItemElement(item, _owner.FormElement));
     }
@@ -1969,7 +1988,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         public TabElement(TabControl control) : base(control) { }
         // The tab contents are flattened to the form, so the TabControl itself has no children.
-        public override IEnumerable<UiElement> Children => Enumerable.Empty<UiElement>();
+        public override IEnumerable<UiElement> EnumerateChildren() => Enumerable.Empty<UiElement>();
         public void SelectTab(string tabText) =>
             InvokeOnUiThread(() =>
             {

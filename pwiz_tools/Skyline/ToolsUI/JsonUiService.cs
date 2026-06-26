@@ -629,6 +629,15 @@ namespace pwiz.Skyline.ToolsUI
                 // of its dialogs appear there).
                 if (skylineWindow != null)
                 {
+                    // The main window itself, so its id (and thus its menus/toolbars) is discoverable.
+                    formInfos.Add(new FormInfo
+                    {
+                        Type = skylineWindow.GetType().Name,
+                        Title = GetFormTitle(skylineWindow),
+                        HasGraph = false,
+                        DockState = @"Main",
+                        Id = GetFormId(skylineWindow),
+                    });
                     foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                     {
                         dockedForms.Add(form);
@@ -1000,6 +1009,12 @@ namespace pwiz.Skyline.ToolsUI
             string title = formId.Substring(colonIndex + 1);
 
             var skylineWindow = Program.MainWindow;
+
+            // The main Skyline window itself -- it is not in DockPanel.Contents, but it owns the main menu
+            // and toolbars, so it must be resolvable to walk/drive them (e.g. View > Libraries > Ion Types).
+            if (skylineWindow != null
+                && skylineWindow.GetType().Name == typeName && GetFormTitle(skylineWindow) == title)
+                return skylineWindow;
 
             // Search docked forms (none while the StartPage is showing -- no main window yet)
             if (skylineWindow != null)

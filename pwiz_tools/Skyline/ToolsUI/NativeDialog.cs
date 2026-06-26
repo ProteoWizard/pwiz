@@ -96,7 +96,6 @@ namespace pwiz.Skyline.ToolsUI
         public override string Name => string.Empty;
         public override Type ElementType => GetType();
         public override bool IsEnabled => User32.IsWindowEnabled(WindowHandle);
-        public override bool IsVisible => true;
 
         protected AutomationElement DialogElement =>
             _dialogElement ?? (_dialogElement = AutomationElement.FromHandle(WindowHandle));
