@@ -49,8 +49,8 @@ namespace pwiz.SkylineTestFunctional
             var result = DialogResult.None;
             SkylineWindow.BeginInvoke((Action)(() =>
                 result = MessageBox.Show(SkylineWindow, // Purposely using MessageBox here
-                    "Yeast.protdb already exists.\nDo you want to replace it?",
-                    "Confirm Save As", MessageBoxButtons.YesNo)));
+                    @"Yeast.protdb already exists.\nDo you want to replace it?",
+                    @"Confirm Save As", MessageBoxButtons.YesNo)));
 
             var messageBox = NativeDialog.WaitForDialog<NativeDialog>();
 

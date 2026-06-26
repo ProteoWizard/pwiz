@@ -461,6 +461,7 @@
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
     <Compile Include="ClickCheckedListConnectorTest.cs" />
     <Compile Include="ClickControlConnectorTest.cs" />
+    <Compile Include="ClipboardConnectorTest.cs" />
     <Compile Include="ContextMenuConnectorTest.cs" />
     <Compile Include="GetControlsConnectorTest.cs" />
     <Compile Include="GridCellConnectorTest.cs" />

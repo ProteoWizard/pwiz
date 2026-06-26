@@ -67,10 +67,15 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A tab control whose tab can be selected by the tab's visible text.</summary>
     public interface ISelectTabElement { void SelectTab(string tabText); }
 
-    /// <summary>An element a paste (Ctrl+V) can be sent to, by raising the control's own key handler -- for
-    /// the tutorial steps that say to paste into a particular window. The element marshals to its UI thread,
-    /// so Paste may be called from the connector's worker thread.</summary>
-    public interface IPasteElement { void Paste(); }
+    /// <summary>An element the connector can drive the clipboard gestures on: paste text into (without going
+    /// through the clipboard, which an MCP client may not be able to touch -- for the tutorial steps that say
+    /// to paste into Skyline) and select all (e.g. before a paste, to replace the contents). Only the elements
+    /// that actually do these implement it: a text box, a grid, the Targets tree, and the main Skyline window.</summary>
+    public interface IClipboardElement
+    {
+        void Paste(string text);
+        void SelectAll();
+    }
 
     /// <summary>A tree whose selected node can be renamed in place (the Targets tree -- e.g. renaming a
     /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
@@ -294,10 +299,14 @@ namespace pwiz.Skyline.ToolsUI
         public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept())
             .Describe(@"Accept the dialog -- its default/OK button (cancel with close_form).");
 
-        // Sends Ctrl+V to a control by raising its key handler -- for the tutorial steps that paste into a
-        // particular window.
-        public static readonly UiAction Paste = SimpleAction<IPasteElement>(@"Paste", e => e.Paste())
-            .Describe(@"Send Ctrl+V (paste) to this control.");
+        // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
+        // for the tutorial paste steps, without touching the clipboard.
+        public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste", (e, text) => e.Paste(text))
+            .Describe(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard.", @"the text to paste");
+
+        // Selects everything in a control that can paste -- e.g. before a paste, to replace the contents.
+        public static readonly UiAction SelectAll = SimpleAction<IClipboardElement>(@"SelectAll", e => e.SelectAll())
+            .Describe(@"Select all the content of this element (a text box, a grid, the Targets tree, or the main Skyline window) -- e.g. before paste, to replace it.");
 
         // Renames the tree's selected node in place -- e.g. the MethodEdit tutorial's "Type 'Primary
         // Peptides' and press Enter" on a peptide group. Select the node first.
@@ -310,7 +319,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             GetActions, GetChildren, Click, GetValue, SetValue, CheckItem, UncheckItem, SelectItem,
             UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
-            Collapse, SelectTab, Accept, Paste, RenameNode
+            Collapse, SelectTab, Accept, Paste, SelectAll, RenameNode
         };
 
         // The action with the given wire name, matched case- and underscore-insensitively, or null.
@@ -807,7 +816,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>Base for an element backed by a WinForms <see cref="Control"/>. Every control is clickable
     /// (see <see cref="Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
     /// capability interface.</summary>
-    internal abstract class ControlElement : UiComponent, IClickableElement, IPasteElement
+    internal abstract class ControlElement : UiComponent, IClickableElement
     {
         protected ControlElement(Control control) { Control = control; }
 
@@ -868,13 +877,6 @@ namespace pwiz.Skyline.ToolsUI
                     @"The control '{0}' cannot be clicked: it is not a button. Set its value, or act on the button/menu item that triggers it.",
                     Label ?? NullIfEmpty(Name) ?? ElementType.Name));
             InvokeOnUiThread(button.PerformClick);
-        }
-
-        // Sends Ctrl+V to the control by raising its protected OnKeyDown, the way pressing the keys would --
-        // the control pastes if it handles paste there. Runs on the UI thread.
-        public void Paste()
-        {
-            InvokeOnUiThread(() => RaiseProtectedHandler(Control, @"OnKeyDown", new KeyEventArgs(Keys.Control | Keys.V)));
         }
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
@@ -1043,13 +1045,27 @@ namespace pwiz.Skyline.ToolsUI
     /// a managed formId to this and call its methods, which marshal to the UI thread (and watch for a dialog
     /// a mutation pops) so the connector drives a form the same way whether or not it is native. It is the
     /// factory (<see cref="ElementFor"/>) for the elements in its tree, tagging each with itself.</summary>
-    internal sealed class FormElement : ContainerElement, IFormElement
+    internal sealed class FormElement : ContainerElement, IFormElement, IClipboardElement
     {
         public FormElement(Form form) : base(form)
         {
             FormElement = this;
         }
         internal Form Form => (Form) Control;
+
+        // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
+        // other form has no window-level clipboard gesture, so refuse it with a clear message.
+        public void Paste(string text) => RequireSkylineWindow().Paste(text);
+
+        public void SelectAll() => RequireSkylineWindow().SelectAll();
+
+        private SkylineWindow RequireSkylineWindow()
+        {
+            if (Form is SkylineWindow skylineWindow)
+                return skylineWindow;
+            throw new ArgumentException(LlmInstruction.Format(
+                @"This is only supported for the main Skyline window, not '{0}'.", FormId));
+        }
 
         /// <summary>Builds the <see cref="UiElement"/> for a control in this form's tree, choosing the
         /// subclass by the control's kind and tagging it with this form. Returns null for a control that is
@@ -1257,7 +1273,7 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A text box -- a caption-less field named by its adjacent label.</summary>
-    internal sealed class TextBoxElement : ControlElement
+    internal sealed class TextBoxElement : ControlElement, IClipboardElement
     {
         private readonly TextBoxBase _textBox;
         public TextBoxElement(TextBoxBase textBox) : base(textBox) { _textBox = textBox; }
@@ -1265,6 +1281,13 @@ namespace pwiz.Skyline.ToolsUI
         // A multi-line box parses/lays out on CRLF (what Enter inserts), so normalize bare newlines.
         public override void SetValue(object value) =>
             _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value?.ToString()) : value?.ToString();
+
+        // Paste replaces the current selection (or inserts at the caret) with the text via SelectedText, the
+        // way Ctrl+V would but without the clipboard.
+        public void Paste(string text) =>
+            _textBox.SelectedText = _textBox.Multiline ? UiValue.NormalizeNewlines(text) : text;
+
+        public void SelectAll() => _textBox.SelectAll();
     }
 
     /// <summary>A combo box -- value set by selecting the matching item.</summary>
@@ -1419,11 +1442,17 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>The Targets tree (a <see cref="SequenceTree"/>): a TreeView with the document-owned node
     /// context menu and an in-place node rename a plain TreeView does not have.</summary>
-    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement
+    internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement, IClipboardElement
     {
         public SequenceTreeElement(SequenceTree control) : base(control) { }
 
         private SequenceTree SequenceTree => (SequenceTree) Control;
+
+        // Pasting into the Targets tree pastes into the document (a transition list, peptides, or FASTA) --
+        // the same as Ctrl+V with the tree focused -- without the clipboard.
+        public void Paste(string text) => Program.MainWindow.Paste(text);
+
+        public void SelectAll() => Program.MainWindow.SelectAll();
 
         // The Targets tree's node menu is shown manually, so it lives on the main window rather than on the
         // tree's own ContextMenuStrip; raise its Opening so item enablement reflects the current selection
@@ -1771,10 +1800,15 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A grid -- the DataGridView a caller reads as TSV or sets a cell on, by direct cell access.
     /// A bound grid (the inner grid of a DataboundGridControl, e.g. the Document Grid) is a
     /// <see cref="BoundGridElement"/> that overrides the read/write with the rich copy/paste path.</summary>
-    internal class GridElement : ControlElement
+    internal class GridElement : ControlElement, IClipboardElement
     {
         private readonly DataGridView _dataGridView;
         public GridElement(DataGridView dataGridView) : base(dataGridView) { _dataGridView = dataGridView; }
+
+        // Pasting into a grid is the same as set_grid_text: tab-separated text filled from the current cell.
+        public void Paste(string text) => SetGridText(text);
+
+        public void SelectAll() => _dataGridView.SelectAll();
         public DataGridView DataGridView => _dataGridView;
 
         // get_value / set_value act on the single current cell (the one set_current_cell_address moved to);
