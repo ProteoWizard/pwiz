@@ -146,7 +146,9 @@ namespace pwiz.SkylineTestTutorial
             WaitForAction(() => wizard.ClickButton(GetLocalizedText<ImportPeptideSearchDlg>("btnNext")));
 
             // Extract Chromatograms page: nothing to add here (results are imported later), so just capture it.
-            // Clicking Next here would prompt to continue without results; that is driven when Step 1.3+ is added.
+            // Clicking Next loaded the library and swaps this page in asynchronously, so wait for it before the
+            // screenshot. Clicking Next here would prompt to continue without results; that is driven in Step 1.3+.
+            WaitForControl(wizard, nameof(ImportResultsDIAControl));
             PauseForScreenShot(wizard, "Extract Chromatograms"); // s-03
         }
     }

@@ -92,6 +92,17 @@ namespace pwiz.SkylineTestTutorial
         }
 
         /// <summary>
+        /// Waits until the form shows a control of the given type -- e.g. a wizard page's UserControl that swaps
+        /// in after a transition (clicking "Next" can advance the page asynchronously). A screenshot taken right
+        /// after then captures the settled page rather than a mid-transition frame. Uses the connector's
+        /// GetControls, which lists only the controls currently shown (a not-yet-displayed page is not listed).
+        /// </summary>
+        protected void WaitForControl(IFormElement form, string controlType)
+        {
+            WaitForCondition(() => form.GetControls().Any(control => control.Path.Type == controlType));
+        }
+
+        /// <summary>
         /// Performs a connector action that is NOT expected to open a modal dialog, then waits for the posted
         /// (fire-and-forget) action to finish -- i.e. until <see cref="IJsonToolService.UnfinishedActionCount"/>
         /// returns to the value it had before. The count is incremented synchronously as the action is posted

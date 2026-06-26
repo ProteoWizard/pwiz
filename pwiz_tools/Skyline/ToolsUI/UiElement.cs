@@ -24,6 +24,7 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
@@ -1214,13 +1215,38 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.ExecuteAction(action, element, value);
         }
 
+        // How long to wait (ms), and how often to re-check, for the form to reach the foreground before
+        // grabbing the screen. The wait stops as soon as the form is in front; the cap just bounds a refused
+        // activation.
+        private const int ACTIVATE_POLL_MILLIS = 25;
+        private const int ACTIVATE_SETTLE_MAX_MILLIS = 500;
+
         // Activates the form and captures it (redacting any sensitive regions), as a right-click "capture
-        // screenshot" would. Runs on the UI thread.
-        public System.Drawing.Bitmap CaptureImage() => InvokeOnUiThread(() =>
+        // screenshot" would. Called off the UI thread (the connector pipe thread, or a test thread). Bringing
+        // the window to the front is processed by the UI thread's message loop, so the activation and the
+        // capture are two separate UI-thread trips: in between, this off-UI caller releases the UI thread and
+        // polls until the form's top-level window is actually the foreground window -- stopping the moment it
+        // is, or after the cap if activation was refused. Capturing before the form is on top would leave any
+        // window still over it to be redacted (a cyan block) by CaptureAndRedact.
+        public System.Drawing.Bitmap CaptureImage()
         {
-            ScreenCapture.ActivateForm(Form);
-            return ScreenCapture.CaptureAndRedact(ScreenCapture.GetWindowRectangle(Form), Form);
-        });
+            var topLevelHandle = InvokeOnUiThread(() =>
+            {
+                ScreenCapture.ActivateForm(Form);
+                return (pwiz.Common.SystemUtil.FormUtil.FindTopLevelOwner(Form) ?? (Control) Form).Handle;
+            });
+            for (int waited = 0;
+                 waited < ACTIVATE_SETTLE_MAX_MILLIS && User32.GetForegroundWindow() != topLevelHandle;
+                 waited += ACTIVATE_POLL_MILLIS)
+                Thread.Sleep(ACTIVATE_POLL_MILLIS);
+            return InvokeOnUiThread(() =>
+            {
+                // Flush any pending repaint so the screen grab reflects the form's current state rather than a
+                // stale frame (e.g. a wizard page captured mid-transition still showing the previous page).
+                Form.Update();
+                return ScreenCapture.CaptureAndRedact(ScreenCapture.GetWindowRectangle(Form), Form);
+            });
+        }
 
         /// <summary>Invokes a menu item on this form's main menu by its '>'-separated path (e.g. "File &gt;
         /// Import &gt; Peptide Search").</summary>
