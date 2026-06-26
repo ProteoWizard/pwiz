@@ -54,10 +54,11 @@ namespace pwiz.Skyline.ToolsUI
     /// <see cref="Create"/> chooses the subclass that matches a given dialog element.
     ///
     /// A dialog is a <see cref="UiElement"/>: it presents to the connector exactly like any other form (it
-    /// is listed by GetOpenForms and addressed by a path whose Text is its id). It is not introspected as a
-    /// set of child controls -- pretending the dialog exposes clickable buttons is more trouble than it is
-    /// worth -- so it is driven entirely at the form level: set_value enters the file name, the accept action
-    /// confirms it, and close_form cancels it.
+    /// is listed by GetOpenForms and addressed by a path whose Text is its id). A file dialog is not
+    /// introspected as a set of child controls -- it is driven at the form level: set_value enters the file
+    /// name, the accept action confirms it, and close_form cancels it. A message box
+    /// (<see cref="NativeMessageBox"/>) is the exception: its choices are real named buttons, so it lists
+    /// them and clicks one by caption.
     /// </summary>
     public abstract class NativeDialog : UiElement, IFormElement
     {
@@ -125,6 +126,10 @@ namespace pwiz.Skyline.ToolsUI
             // two never both match.
             if (NativeSaveFileDialog.IsSaveFileDialog(dialog))
                 return new NativeSaveFileDialog(handle);
+            // After the file dialogs: any other "#32770" with buttons is a message box (e.g. the Save
+            // dialog's "replace it?" confirm), so the connector can read it and click a button.
+            if (NativeMessageBox.IsMessageBox(dialog))
+                return new NativeMessageBox(handle);
             return null;
         }
 
@@ -182,9 +187,10 @@ namespace pwiz.Skyline.ToolsUI
 
         public ControlInfo[] GetControls() => GetControlInfos();
 
-        // A native dialog has no caption-addressable buttons (matching "OK"/"Cancel" would not survive a
+        // A file dialog has no caption-addressable buttons (matching "OK"/"Cancel" would not survive a
         // localized build). Confirm it with the accept action and dismiss it with Close (close_form) instead.
-        public void ClickButton(string button)
+        // A message box overrides this -- its choices ARE named buttons (see NativeMessageBox).
+        public virtual void ClickButton(string button)
         {
             throw new ArgumentException(LlmInstruction.Format(
                 @"The native dialog '{0}' has no named buttons. Use the accept action to confirm it, or close_form to cancel it.",

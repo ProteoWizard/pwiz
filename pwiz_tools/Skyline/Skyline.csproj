@@ -1407,6 +1407,7 @@
     <Compile Include="ToolsUI\NativeDialog.cs" />
     <Compile Include="ToolsUI\NativeOpenFileDialog.cs" />
     <Compile Include="ToolsUI\NativeSaveFileDialog.cs" />
+    <Compile Include="ToolsUI\NativeMessageBox.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />
     <Compile Include="Util\DocumentCancellationToken.cs" />
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
