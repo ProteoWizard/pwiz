@@ -52,11 +52,25 @@ namespace pwiz.OspreySharp.Core
     /// </summary>
     public sealed class ProgressReporter : IDisposable
     {
+        /// <summary>
+        /// Throttle interval for the large I/O steps (mzML read, parquet writes). Wider
+        /// than the compute loops' cadence because on HRAM/Astral-class data these steps
+        /// run for tens of seconds and a 2s cadence emits a long string of percent lines;
+        /// 5s still reassures a watching user the run is alive without cluttering the log.
+        /// </summary>
+        public const double IO_INTERVAL_SECONDS = 5.0;
+
         private readonly long _total;
         private readonly string _indent;
         private readonly double _intervalSeconds;
         private readonly Stopwatch _stopwatch;
         private readonly object _lock = new object();
+        // Non-null only inside a MultiProgressReporter per-file scope (--parallel-files):
+        // captured at construction so this reporter feeds the file's active segment
+        // instead of printing "<pct>%" lines. The aggregate "[i] p%" line shows the
+        // motion; the heading still buffers into the file's narrative block. Null on
+        // the common sequential / single-file paths -- inline percent printing then.
+        private readonly IProgressSink _sink;
         private int _lastPercent = -1;
         private double _lastReportSeconds;
 
@@ -77,6 +91,7 @@ namespace pwiz.OspreySharp.Core
             _total = total;
             _indent = indent;
             _intervalSeconds = intervalSeconds;
+            _sink = MultiProgressReporter.CurrentSink;
             _stopwatch = Stopwatch.StartNew();
             OspreyOutput.Out.WriteLine("{0}{1}...", indent, activity);
         }
@@ -91,6 +106,19 @@ namespace pwiz.OspreySharp.Core
             lock (_lock)
             {
                 int percent = _total > 0 ? (int)(100L * current / _total) : 100;
+                if (_sink != null)
+                {
+                    // Multi-file mode: feed the file's active segment (which maps it
+                    // into the "[i] p%" aggregate line) rather than printing a percent
+                    // line. The MultiProgressReporter owns the display throttle, so we
+                    // forward every advance; the segment sink is monotonic.
+                    if (percent > _lastPercent)
+                    {
+                        _lastPercent = percent;
+                        _sink.Report(percent);
+                    }
+                    return;
+                }
                 double now = _stopwatch.Elapsed.TotalSeconds;
                 if (percent > _lastPercent && now - _lastReportSeconds >= _intervalSeconds)
                 {
@@ -106,6 +134,13 @@ namespace pwiz.OspreySharp.Core
         {
             lock (_lock)
             {
+                if (_sink != null)
+                {
+                    // Bank this segment at 100% so the file percent reaches the
+                    // segment boundary even on a sub-second phase; no percent line.
+                    _sink.Report(100);
+                    return;
+                }
                 if (_lastPercent < 100)
                     OspreyOutput.Out.WriteLine("{0}  100%", _indent);
             }

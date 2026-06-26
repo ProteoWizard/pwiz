@@ -109,7 +109,8 @@ namespace pwiz.OspreySharp.IO
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read,
                 FileShare.Read, 16 * 1024 * 1024))
             using (var progress = new ProgressReporter(
-                string.Format("Reading {0}", Path.GetFileName(path)), stream.Length, string.Empty, 2.0))
+                string.Format("Reading {0}", Path.GetFileName(path)), stream.Length, string.Empty,
+                ProgressReporter.IO_INTERVAL_SECONDS))
             using (var progressStream = new ProgressStream(stream, progress))
             {
                 var settings = new XmlReaderSettings { DtdProcessing = DtdProcessing.Ignore };
