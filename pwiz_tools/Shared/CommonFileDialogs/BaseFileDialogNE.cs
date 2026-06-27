@@ -74,7 +74,8 @@ namespace pwiz.CommonFileDialogs
             }
 
             // The New Folder command is hidden by default; subclasses that support folder creation
-            // make it visible. Text is set here (not in the designer) so it stays localizable.
+            // make it visible (and may give it an icon). Text is set here (not in the designer) so it
+            // stays localizable and serves as the tooltip / accessible name.
             newFolderButton.Text = CommonFileDialogResources.BaseFileDialogNE_NewFolder;
             newFolderButton.ToolTipText = CommonFileDialogResources.BaseFileDialogNE_NewFolder;
 

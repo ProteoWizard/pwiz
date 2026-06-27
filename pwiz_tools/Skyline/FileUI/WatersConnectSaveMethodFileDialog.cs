@@ -3,11 +3,12 @@ using System.Drawing;
 using System.Linq;
 using System.Net;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Util.Extensions;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -25,6 +26,8 @@ namespace pwiz.Skyline.FileUI
             Text = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, InstrumentType);
             actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
             newFolderButton.Visible = true;
+            newFolderButton.Image = Resources.AddFolder;
+            newFolderButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
         }
         protected override void DoMainAction()
         {
@@ -173,7 +176,8 @@ namespace pwiz.Skyline.FileUI
             if (!wcSession.TryGetFolderByUrl(currentDir, out parentFolder) || !parentFolder.CanWrite)
             {
                 MessageDlg.Show(this,
-                    FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_folders_in_this_location_);
+                    FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_folders_in_this_location_,
+                    false, MessageIcons.Error);
                 return false;
             }
 
@@ -209,7 +213,10 @@ namespace pwiz.Skyline.FileUI
                     break;
             }
 
-            MessageDlg.Show(this, string.IsNullOrEmpty(responseBody) ? message : TextUtil.LineSeparate(message, responseBody));
+            if (string.IsNullOrEmpty(responseBody))
+                MessageDlg.Show(this, message, false, MessageIcons.Error);
+            else
+                MessageDlg.ShowWithDetails(this, message, responseBody, MessageIcons.Error);
         }
 
         #region Test support

@@ -86,7 +86,17 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("AbstractSpectrumGraphItem_GetLabel_rank__0__", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap AddFolder {
+            get {
+                object obj = ResourceManager.GetObject("AddFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
