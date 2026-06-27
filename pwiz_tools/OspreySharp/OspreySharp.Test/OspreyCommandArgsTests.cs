@@ -227,22 +227,15 @@ namespace pwiz.OspreySharp.Test
             StringAssert.Contains(html, @"</html>");
         }
 
-        // Set the OSPREY_RECORD_USAGE_HTML=1 environment variable and run this test to regenerate
-        // Documentation/Help/en/CommandLine.html after an intentional change to the arguments or the
-        // generated-help prose; with it unset the test verifies the committed copy. Mirrors Skyline's
-        // HelpDocumentationContentTest record-mode pattern (a property, not a const, so the verify
-        // branch is never compiled out as unreachable).
-        private static bool RecordUsageHtml =>
-            Environment.GetEnvironmentVariable(@"OSPREY_RECORD_USAGE_HTML") == @"1";
-
         /// <summary>
         /// The published command-line usage page is generated from the argument declarations, so it
-        /// can never silently drift from the code. This regenerates it and diffs it against the
-        /// committed copy under <c>Documentation/Help/en/CommandLine.html</c> (the same model as
-        /// Skyline's <c>TestCommandLineHelpDocumentation</c>). When the arguments or the generated
-        /// intro / HPC-example prose change, run once with the <c>OSPREY_RECORD_USAGE_HTML=1</c>
-        /// environment variable set to overwrite the committed file, then unset it. The per-language
-        /// folder leaves room for ja / zh-CHS once the descriptions are moved to a .resx.
+        /// can never silently drift from the code. This regenerates it and compares it
+        /// (line-ending agnostic) against the committed copy under
+        /// <c>Documentation/Help/en/CommandLine.html</c>. The test is self-updating: when they
+        /// differ it overwrites the committed file with the freshly generated content and then
+        /// fails, so the fix is simply to review and commit the regenerated file. (CI fails the same
+        /// way, flagging an argument or generated-prose change that was not regenerated.) The
+        /// per-language folder leaves room for ja / zh-CHS once the descriptions move to a .resx.
         /// </summary>
         [TestMethod]
         public void TestCommandLineHelpDocumentation()
@@ -251,25 +244,24 @@ namespace pwiz.OspreySharp.Test
             string committedPath = Path.Combine(FindOspreySharpSourceRoot(),
                 @"Documentation", @"Help", @"en", @"CommandLine.html");
 
-            if (RecordUsageHtml)
-            {
-                string committedDir = Path.GetDirectoryName(committedPath);
-                if (!string.IsNullOrEmpty(committedDir))
-                    Directory.CreateDirectory(committedDir);
-                File.WriteAllText(committedPath, generated);
-                Assert.Inconclusive(@"OSPREY_RECORD_USAGE_HTML is set: wrote {0}. Unset it and rerun to verify.",
-                    committedPath);
+            // Compare EOL-agnostically: GenerateUsageHtml builds with Environment.NewLine, which
+            // differs between the Windows (net472) and Linux (net8.0) test runs, and git may rewrite
+            // the file's line endings on checkout. A content (not byte) match is what we care about,
+            // and it keeps a pure EOL difference from triggering a spurious rewrite.
+            string committed = File.Exists(committedPath) ? File.ReadAllText(committedPath) : null;
+            if (committed != null && NormalizeEol(committed) == NormalizeEol(generated))
                 return;
-            }
 
-            Assert.IsTrue(File.Exists(committedPath), string.Format(
-                @"Missing generated usage doc: {0}. Run with OSPREY_RECORD_USAGE_HTML=1 to create it.",
-                committedPath));
-            // Compare EOL-agnostically: GenerateUsageHtml builds with Environment.NewLine, which differs
-            // between the Windows (net472) and Linux (net8.0) test runs, and git may rewrite the file's
-            // line endings on checkout. A content (not byte) match is what we care about.
-            Assert.AreEqual(NormalizeEol(generated), NormalizeEol(File.ReadAllText(committedPath)),
-                @"Documentation/Help/en/CommandLine.html is out of date. Rerun with OSPREY_RECORD_USAGE_HTML=1 set to regenerate it.");
+            // Out of date (or missing): self-heal by writing the regenerated page, then fail so the
+            // developer reviews and commits it. Re-running after the commit passes.
+            string committedDir = Path.GetDirectoryName(committedPath);
+            if (!string.IsNullOrEmpty(committedDir))
+                Directory.CreateDirectory(committedDir);
+            File.WriteAllText(committedPath, generated);
+            Assert.Fail(committed == null
+                    ? @"Generated usage doc did not exist; wrote {0}. Review and commit it."
+                    : @"Documentation/Help/en/CommandLine.html was out of date; regenerated it at {0}. Review and commit the change.",
+                committedPath);
         }
 
         private static string NormalizeEol(string s)
