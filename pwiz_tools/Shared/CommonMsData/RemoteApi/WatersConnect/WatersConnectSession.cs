@@ -131,7 +131,13 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             }
             responseBody = response.Content?.ReadAsStringAsync().Result;
             if (response.StatusCode < HttpStatusCode.BadRequest)
-                RetryFetch(GetRootContentsUrl(), GetFolders); // refresh cached folder list so the new folder is visible
+            {
+                // Invalidate the cached folder list and refetch so the new folder becomes visible.
+                // RetryFetch alone is a no-op while a successful response is already cached (which it
+                // is once the dialog has listed the parent), so the cache must be cleared first.
+                ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetRootContentsUrl());
+                RetryFetch(GetRootContentsUrl(), GetFolders);
+            }
             return response.StatusCode;
         }
 

@@ -471,6 +471,12 @@ namespace pwiz.CommonFileDialogs
             _abortPopulateList = false;
             listView.Cursor = Cursors.Default;
             _waitingForData = false;
+            // Cancel any in-progress New Folder inline edit: clearing the list orphans its placeholder.
+            if (_newFolderItem != null)
+            {
+                _newFolderItem = null;
+                listView.LabelEdit = false;
+            }
             listView.Items.Clear();
 
             var listSourceInfo = new List<SourceInfo>();
@@ -987,7 +993,8 @@ namespace pwiz.CommonFileDialogs
 
         private void listView_AfterLabelEdit(object sender, LabelEditEventArgs e)
         {
-            if (_newFolderItem == null || e.Item != _newFolderItem.Index)
+            // Ignore if the placeholder was cancelled or removed (e.g. a repopulate cleared the list).
+            if (_newFolderItem == null || _newFolderItem.Index < 0 || e.Item != _newFolderItem.Index)
                 return;
 
             var placeholder = _newFolderItem;

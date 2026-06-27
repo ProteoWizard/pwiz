@@ -147,7 +147,9 @@ namespace pwiz.Skyline.FileUI
             if (!TryGetWritableParent(out var session, out var parentFolder, out var description))
                 return;
 
-            var statusCode = default(HttpStatusCode);
+            // Seed with a non-success status so a cancelled wait (work never assigned it) is not
+            // mistaken for success.
+            var statusCode = HttpStatusCode.ServiceUnavailable;
             string responseBody = null;
             using (var waitDlg = new LongWaitDlg())
             {

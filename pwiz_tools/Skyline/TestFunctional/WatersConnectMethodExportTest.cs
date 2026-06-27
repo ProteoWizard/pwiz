@@ -216,8 +216,6 @@ namespace pwiz.SkylineTestFunctional
                 methodFileDlg.KeyPressHandler(Keys.Enter);
             });
             WaitForConditionUI(1000, () => methodFileDlg.ListViewItems.Count == 11, () => "Template selection dialog is not populated within allotted time.");
-            // FolderA is writable, so exercise creating a new folder here (success and permission-denied).
-            VerifyNewFolder(methodFileDlg);
             RunUI(() =>
             {
                 Assert.AreEqual(0, methodFileDlg.ListViewItems.Count(item => item.ImageIndex == (int)BaseFileDialogNE.ImageIndex.ReadOnlyFolder));
@@ -231,6 +229,9 @@ namespace pwiz.SkylineTestFunctional
             var fileExistsDialog = ShowDialog<MessageDlg>(() => methodFileDlg.KeyPressHandler(Keys.Enter), 1000);
             Assert.IsNotNull(fileExistsDialog);
             OkDialog(fileExistsDialog, fileExistsDialog.OkDialog);
+            // FolderA is writable: exercise creating a new folder here (success + permission-denied).
+            // Done after the original-state assertions above so the created folder does not perturb them.
+            VerifyNewFolder(methodFileDlg);
             RunUI(() =>
             {
                 methodFileDlg.ListViewItems[0].Selected = false;
@@ -272,6 +273,13 @@ namespace pwiz.SkylineTestFunctional
                     string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_Created_by__0__using_Skyline, account.Username),
                     _createdFolderDescription);
             });
+
+            // The created folder must show up in the refreshed listing so the user can navigate into it.
+            WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == "NewTestFolder"),
+                () => "The new folder did not appear in the list after creation.");
+            RunUI(() => Assert.AreEqual((int) BaseFileDialogNE.ImageIndex.ReadWriteFolder,
+                methodFileDlg.ListViewItems.First(i => i.Text == "NewTestFolder").ImageIndex,
+                "The new folder should be listed as a writable folder."));
 
             // Permission error: a Forbidden response surfaces an explanatory message.
             _folderCreateForbidden = true;
@@ -380,6 +388,9 @@ namespace pwiz.SkylineTestFunctional
         // predicate at request time, so toggling it flips behavior on the live handler instance
         // (the dialog's session caches its HttpClient, so swapping handlers would not take effect).
         private bool _folderCreateForbidden;
+        // Folders created via a successful PUT (parent folder GUID -> new folder name). The folders
+        // enumeration response injects these as children so a refreshed list shows the new folder.
+        private readonly List<KeyValuePair<string, string>> _createdFolders = new List<KeyValuePair<string, string>>();
 
         private void SetRequestHandlers()
         {
@@ -421,12 +432,36 @@ namespace pwiz.SkylineTestFunctional
                     var body = JObject.Parse(req.Content.ReadAsStringAsync().Result);
                     _createdFolderName = body["Name"]?.ToString();
                     _createdFolderDescription = body["Description"]?.ToString();
+                    var parentId = req.RequestUri.Segments.Last().TrimEnd('/'); // .../folders/{parentGuid}
+                    _createdFolders.Add(new KeyValuePair<string, string>(parentId, _createdFolderName));
                     return "{\"id\" : \"00000000-0000-0000-0000-000000000abc\"}";
                 }));
-            // Folders enumeration request
-            wcHandler.AddMatcher(new RequestMatcherFile(
+            // Folders enumeration request: serve the static hierarchy with any created folders injected
+            // as children of their parent, so a refreshed listing reflects a successful create.
+            wcHandler.AddMatcher(new RequestMatcherFunction(
                 req => req.RequestUri.ToString().IndexOf(WatersConnectAccount.GET_FOLDERS) >= 0,
-                TestFilesDir.GetTestPath("MockHttpData\\WCFolders.json")));
+                req =>
+                {
+                    var root = JObject.Parse(File.ReadAllText(TestFilesDir.GetTestPath("MockHttpData\\WCFolders.json")));
+                    foreach (var created in _createdFolders)
+                    {
+                        var parent = FindFolderNode(root, created.Key);
+                        if (!(parent?["children"] is JArray children))
+                            continue;
+                        if (children.Any(c => (string) c["name"] == created.Value))
+                            continue;
+                        children.Add(new JObject
+                        {
+                            ["name"] = created.Value,
+                            ["description"] = string.Empty,
+                            ["path"] = (string) parent["path"] + "/" + created.Value,
+                            ["id"] = "00000000-0000-0000-0000-000000000abc",
+                            ["accessType"] = new JObject { ["read"] = true, ["write"] = true },
+                            ["children"] = new JArray()
+                        });
+                    }
+                    return root.ToString();
+                }));
             // Methods enumeration request
             wcHandler.AddMatcher(new RequestMatcherFile(
                 req => req.RequestUri.ToString().IndexOf(WatersConnectSessionAcquisitionMethod.GET_METHODS_ENDPOINT) >= 0,
@@ -447,6 +482,23 @@ namespace pwiz.SkylineTestFunctional
                 }));
             // ReSharper restore StringIndexOfIsCultureSpecific.1
             Program.HttpMessageHandlerFactory.CreateReplaceHandler(WatersConnectAccount.HANDLER_NAME, wcHandler);
+        }
+
+        // Depth-first search of the folder hierarchy for the node with the given id.
+        private static JObject FindFolderNode(JObject node, string id)
+        {
+            if ((string) node["id"] == id)
+                return node;
+            if (node["children"] is JArray children)
+            {
+                foreach (var child in children.OfType<JObject>())
+                {
+                    var found = FindFolderNode(child, id);
+                    if (found != null)
+                        return found;
+                }
+            }
+            return null;
         }
 
         private void SetAuthenticationErrorHandler()
