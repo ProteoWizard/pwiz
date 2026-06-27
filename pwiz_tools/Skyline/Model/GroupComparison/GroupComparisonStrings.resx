@@ -441,4 +441,13 @@
   <data name="EditGroupComparisonDlg_GroupComparisonDef_Group_comparisons_at_the_protein_level_using_calibrated_values_is_not_yet_supported_in_Skyline_" xml:space="preserve">
     <value>Group comparisons at the protein level using calibrated values is not yet supported in Skyline.</value>
   </data>
+  <data name="VolcanoPlotFormattingDlg_Delete_rule" xml:space="preserve">
+    <value>Delete rule</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_Move_rule_up" xml:space="preserve">
+    <value>Move rule up</value>
+  </data>
+  <data name="VolcanoPlotFormattingDlg_Move_rule_down" xml:space="preserve">
+    <value>Move rule down</value>
+  </data>
 </root>

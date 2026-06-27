@@ -567,7 +567,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 unmatchedPoints.AddRange(_graphData.PointPairList);
             }
             var unmatchedOtherPoints = new PointPairList(); // points that matched no rule
-            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
+            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int lastRuleIndex)>();
             foreach (var point in unmatchedPoints)
             {
                 var pointData = (GraphPointData)point.Tag;
@@ -581,12 +581,14 @@ namespace pwiz.Skyline.Controls.Graphs
                         resolved.Value.symbol ?? PointSymbol.Circle,
                         resolved.Value.size ?? PointSize.normal,
                         resolved.Value.labeled,
-                        resolved.Value.firstRuleIndex));
+                        resolved.Value.lastRuleIndex));
             }
 
+            // Order ascending by the lowest contributing rule index in each group so that points
+            // governed by higher-priority (later/lower-in-the-list) rules are drawn on top.
             foreach (var group in pointFormats
                 .GroupBy(pf => (pf.color, pf.symbol, pf.size, pf.labeled))
-                .OrderBy(g => g.Min(pf => pf.firstRuleIndex)))
+                .OrderBy(g => g.Min(pf => pf.lastRuleIndex)))
             {
                 var fmt = group.Key;
                 AddPoints(new PointPairList(group.Select(pf => pf.point).ToList()),

@@ -23,6 +23,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding.Controls.Editor;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.GroupComparison;
@@ -177,6 +178,16 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             SetExpressionMinimumWidth();
             layoutLabelsBox.Checked = Settings.Default.GroupComparisonAvoidLabelOverlap;
+
+            // Tooltips/accessible names for the delete/reorder toolbar (image-only buttons).
+            btnDeleteRule.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Delete_rule;
+            btnMoveRuleUp.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Move_rule_up;
+            btnMoveRuleDown.Text = GroupComparisonStrings.VolcanoPlotFormattingDlg_Move_rule_down;
+
+            var grid = regexColorRowGrid1.DataGridView;
+            grid.SelectionChanged += regexColorRowGrid1_SelectionChanged;
+            grid.CurrentCellChanged += regexColorRowGrid1_SelectionChanged;
+            UpdateRuleButtons();
         }
 
         public class PointSizeStringPair
@@ -357,6 +368,131 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
 
             _updateGraph(ResultList);
+            UpdateRuleButtons();
+        }
+
+        private void regexColorRowGrid1_SelectionChanged(object sender, EventArgs e)
+        {
+            UpdateRuleButtons();
+        }
+
+        /// <summary>
+        /// Row indexes of the rules that are currently selected in the grid, excluding the
+        /// trailing "new row" placeholder (which is not backed by an entry in <see cref="_bindingList"/>).
+        /// </summary>
+        private IEnumerable<int> GetSelectedRuleRowIndexes()
+        {
+            var grid = regexColorRowGrid1.DataGridView;
+            var ruleCount = _bindingList.Count;
+            return grid.SelectedCells.Cast<DataGridViewCell>().Select(cell => cell.RowIndex)
+                .Where(rowIndex => rowIndex >= 0 && rowIndex < ruleCount)
+                .Distinct()
+                .OrderBy(rowIndex => rowIndex)
+                .ToList();
+        }
+
+        private void UpdateRuleButtons()
+        {
+            var selectedIndexes = GetSelectedRuleRowIndexes().ToList();
+            btnDeleteRule.Enabled = selectedIndexes.Count > 0;
+            btnMoveRuleUp.Enabled = ListViewHelper.IsMoveEnabled(_bindingList.Count, selectedIndexes, true);
+            btnMoveRuleDown.Enabled = ListViewHelper.IsMoveEnabled(_bindingList.Count, selectedIndexes, false);
+        }
+
+        private void btnDeleteRule_Click(object sender, EventArgs e)
+        {
+            var selectedIndexes = GetSelectedRuleRowIndexes().ToHashSet();
+            if (selectedIndexes.Count == 0)
+                return;
+
+            CommitCellChanges();
+            var remaining = _bindingList.Where((row, index) => !selectedIndexes.Contains(index)).ToList();
+            ReplaceRules(remaining);
+
+            // Keep a sensible selection on the row that now occupies the first deleted slot.
+            var firstDeleted = selectedIndexes.Min();
+            SelectRule(Math.Min(firstDeleted, _bindingList.Count - 1));
+        }
+
+        private void btnMoveRuleUp_Click(object sender, EventArgs e)
+        {
+            MoveSelectedRules(true);
+        }
+
+        private void btnMoveRuleDown_Click(object sender, EventArgs e)
+        {
+            MoveSelectedRules(false);
+        }
+
+        private void MoveSelectedRules(bool upwards)
+        {
+            var selectedIndexes = GetSelectedRuleRowIndexes().ToList();
+            if (!ListViewHelper.IsMoveEnabled(_bindingList.Count, selectedIndexes, upwards))
+                return;
+
+            CommitCellChanges();
+            var reordered = ListViewHelper.MoveItems(_bindingList.ToList(), selectedIndexes, upwards);
+            ReplaceRules(reordered);
+
+            var newSelection = ListViewHelper.MoveSelectedIndexes(_bindingList.Count, selectedIndexes, upwards).ToList();
+            SelectRules(newSelection);
+        }
+
+        /// <summary>
+        /// Replaces the contents of <see cref="_bindingList"/> in place, raising a single reset so the
+        /// grid and the live preview (<see cref="_bindingList_ListChanged"/> -&gt; <see cref="_updateGraph"/>)
+        /// refresh once.
+        /// </summary>
+        private void ReplaceRules(IList<MatchRgbHexColor> rules)
+        {
+            regexColorRowGrid1.DataGridView.CancelEdit();
+            _bindingList.RaiseListChangedEvents = false;
+            try
+            {
+                _bindingList.Clear();
+                foreach (var rule in rules)
+                    _bindingList.Add(rule);
+            }
+            finally
+            {
+                _bindingList.RaiseListChangedEvents = true;
+            }
+            _bindingList.ResetBindings();
+        }
+
+        private void SelectRule(int rowIndex)
+        {
+            SelectRules(new[] { rowIndex });
+        }
+
+        private void SelectRules(IEnumerable<int> rowIndexes)
+        {
+            var grid = regexColorRowGrid1.DataGridView;
+            grid.ClearSelection();
+            var columnIndex = FirstVisibleColumnIndex(grid);
+            var currentSet = false;
+            foreach (var rowIndex in rowIndexes)
+            {
+                if (rowIndex < 0 || rowIndex >= grid.RowCount)
+                    continue;
+                foreach (DataGridViewCell cell in grid.Rows[rowIndex].Cells)
+                {
+                    if (cell.Visible)
+                        cell.Selected = true;
+                }
+                if (!currentSet && columnIndex >= 0)
+                {
+                    grid.CurrentCell = grid.Rows[rowIndex].Cells[columnIndex];
+                    currentSet = true;
+                }
+            }
+            UpdateRuleButtons();
+        }
+
+        private static int FirstVisibleColumnIndex(DataGridView grid)
+        {
+            var column = grid.Columns.GetFirstColumn(DataGridViewElementStates.Visible);
+            return column?.Index ?? -1;
         }
 
         private void regexColorRowGrid1_OnCellClick(object sender, DataGridViewCellEventArgs e)
@@ -532,6 +668,34 @@ namespace pwiz.Skyline.Controls.GroupComparison
         }
 
         private bool IsLastRowEmpty => Equals(_bindingList.LastOrDefault(), MatchRgbHexColor.EMPTY);
+
+        #region Functional test support for the delete/reorder toolbar
+
+        public void SelectRuleRow(int rowIndex)
+        {
+            SelectRule(rowIndex);
+        }
+
+        public void ClickDeleteRule()
+        {
+            btnDeleteRule.PerformClick();
+        }
+
+        public void ClickMoveRuleUp()
+        {
+            btnMoveRuleUp.PerformClick();
+        }
+
+        public void ClickMoveRuleDown()
+        {
+            btnMoveRuleDown.PerformClick();
+        }
+
+        public bool DeleteRuleEnabled => btnDeleteRule.Enabled;
+        public bool MoveRuleUpEnabled => btnMoveRuleUp.Enabled;
+        public bool MoveRuleDownEnabled => btnMoveRuleDown.Enabled;
+
+        #endregion
 
         public PointSymbol? GetRowPointSymbol(int rowIndex)
         {

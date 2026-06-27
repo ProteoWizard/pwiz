@@ -983,5 +983,32 @@ namespace pwiz.Skyline.Model.GroupComparison {
                 return ResourceManager.GetString("VolcanoPlotFormattingDlg_VolcanoPlotFormattingDlg_X_Small", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Delete rule.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_Delete_rule {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_Delete_rule", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move rule up.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_Move_rule_up {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_Move_rule_up", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Move rule down.
+        /// </summary>
+        internal static string VolcanoPlotFormattingDlg_Move_rule_down {
+            get {
+                return ResourceManager.GetString("VolcanoPlotFormattingDlg_Move_rule_down", resourceCulture);
+            }
+        }
     }
 }

@@ -321,6 +321,8 @@ namespace pwiz.SkylineTestFunctional
                 SetVolcanoPlotPerProtein(volcanoPlot, false);
             WaitForVolcanoPlotPointCount(grid, 125);
             VerifyTraitComposition(volcanoPlot);
+            VerifyLastMatchWins(volcanoPlot);
+            VerifyRuleToolbar(volcanoPlot);
 
             // Restore per-protein scope, which TestMatchExpressionListDlg below relies on (it expects
             // protein-level match counts).
@@ -556,6 +558,105 @@ namespace pwiz.SkylineTestFunctional
             });
 
             OkDialog(formattingDlg, formattingDlg.CancelDialog);
+        }
+
+        /// <summary>
+        /// Verifies the last-match-wins precedence: when two overlapping rules both set the same trait
+        /// (color), the rule lower in the list overrides the earlier one (CSS-cascade model). Both rules
+        /// match the same peptides, so the resulting curve must take the second rule's color.
+        /// </summary>
+        private void VerifyLastMatchWins(FoldChangeVolcanoPlot volcanoPlot)
+        {
+            // Both rules match the same two peptides and both set only color. The first sets Cyan, the
+            // second Magenta; with last-match-wins the composed curve must be Magenta.
+            var ruleFirst = MakeRule(Color.Cyan, null, null, "VFWIEVALFWR|SDFQVPCQYSQQLK");
+            var ruleSecond = MakeRule(Color.Magenta, null, null, "VFWIEVALFWR|SDFQVPCQYSQQLK");
+
+            var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+            RunUI(() =>
+            {
+                formattingDlg.AddRow(ruleFirst);
+                formattingDlg.AddRow(ruleSecond);
+            });
+
+            // A single matched curve in the later rule's color (Magenta), default symbol (Circle), 2 points.
+            AssertComposedCurves(volcanoPlot, new[]
+            {
+                (Color.Magenta, PointSymbol.Circle, 2)
+            });
+
+            OkDialog(formattingDlg, formattingDlg.CancelDialog);
+        }
+
+        /// <summary>
+        /// Drives the delete/reorder toolbar on the rules grid: verifies button enablement at the list
+        /// boundaries, that move up/down reorders the binding list, and that delete removes the selected
+        /// rule. Order/removal are asserted by reference against the rules that were added.
+        /// </summary>
+        private void VerifyRuleToolbar(FoldChangeVolcanoPlot volcanoPlot)
+        {
+            var ruleA = MakeRule(Color.Red, null, null, "AAA");
+            var ruleB = MakeRule(Color.Green, null, null, "BBB");
+            var ruleC = MakeRule(Color.Blue, null, null, "CCC");
+
+            var formattingDlg = ShowDialog<VolcanoPlotFormattingDlg>(volcanoPlot.ShowFormattingDialog);
+            RunUI(() =>
+            {
+                formattingDlg.AddRow(ruleA);
+                formattingDlg.AddRow(ruleB);
+                formattingDlg.AddRow(ruleC);
+            });
+            AssertRuleOrder(formattingDlg, ruleA, ruleB, ruleC);
+
+            // Button enablement at the boundaries: the top row cannot move up, the bottom row cannot move down.
+            RunUI(() =>
+            {
+                formattingDlg.SelectRuleRow(0);
+                Assert.IsFalse(formattingDlg.MoveRuleUpEnabled);
+                Assert.IsTrue(formattingDlg.MoveRuleDownEnabled);
+                Assert.IsTrue(formattingDlg.DeleteRuleEnabled);
+
+                formattingDlg.SelectRuleRow(2);
+                Assert.IsTrue(formattingDlg.MoveRuleUpEnabled);
+                Assert.IsFalse(formattingDlg.MoveRuleDownEnabled);
+            });
+
+            // Move the first rule down: A, B, C -> B, A, C
+            RunUI(() =>
+            {
+                formattingDlg.SelectRuleRow(0);
+                formattingDlg.ClickMoveRuleDown();
+            });
+            AssertRuleOrder(formattingDlg, ruleB, ruleA, ruleC);
+
+            // Move the last rule up: B, A, C -> B, C, A
+            RunUI(() =>
+            {
+                formattingDlg.SelectRuleRow(2);
+                formattingDlg.ClickMoveRuleUp();
+            });
+            AssertRuleOrder(formattingDlg, ruleB, ruleC, ruleA);
+
+            // Delete the middle rule: B, C, A -> B, A
+            RunUI(() =>
+            {
+                formattingDlg.SelectRuleRow(1);
+                formattingDlg.ClickDeleteRule();
+            });
+            AssertRuleOrder(formattingDlg, ruleB, ruleA);
+
+            OkDialog(formattingDlg, formattingDlg.CancelDialog);
+        }
+
+        private void AssertRuleOrder(VolcanoPlotFormattingDlg formattingDlg, params MatchRgbHexColor[] expected)
+        {
+            RunUI(() =>
+            {
+                var actual = formattingDlg.ResultList;
+                Assert.AreEqual(expected.Length, actual.Count, "Unexpected number of rules");
+                for (var i = 0; i < expected.Length; i++)
+                    Assert.AreSame(expected[i], actual[i], string.Format("Rule at index {0} is not the expected rule", i));
+            });
         }
 
         private static MatchRgbHexColor MakeRule(Color color, PointSymbol? symbol, PointSize? size, string regex)

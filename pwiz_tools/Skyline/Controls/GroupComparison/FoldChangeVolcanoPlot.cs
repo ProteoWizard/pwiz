@@ -400,8 +400,9 @@ namespace pwiz.Skyline.Controls.GroupComparison
 
             // The order matters here, selected points should be highest in the zorder, followed by matched points and other(unmatched) points
             // Resolve formatting traits per-point independently using DotPlotUtil.ResolvePointFormat.
-            // Each trait (color, symbol, size, labeled=true) is set by the first matching rule that
-            // explicitly provides it — separate rules can control different traits independently.
+            // Each trait (color, symbol, size, labeled=true) is set by the last matching rule that
+            // explicitly provides it — separate rules can control different traits independently, and
+            // a rule lower in the list overrides an earlier one (CSS-cascade model).
             var colorRows = GroupComparisonDef.ColorRows.Where(r => r.MatchExpression != null).ToList();
 
             // Selected points keep the selection color but preserve the marker shape from the first
@@ -424,7 +425,7 @@ namespace pwiz.Skyline.Controls.GroupComparison
             }
             AddPoints(selectedPoints, Color.Red, DotPlotUtil.PointSizeToFloat(PointSize.large), true, selectedSymbol, true);
             var unmatchedOtherPoints = new PointPairList();
-            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int firstRuleIndex)>();
+            var pointFormats = new List<(PointPair point, Color color, PointSymbol symbol, PointSize size, bool labeled, int lastRuleIndex)>();
             foreach (var point in otherPoints)
             {
                 var foldChangeRow = (FoldChangeRow)point.Tag;
@@ -439,12 +440,14 @@ namespace pwiz.Skyline.Controls.GroupComparison
                         resolved.Value.symbol ?? PointSymbol.Circle,
                         resolved.Value.size ?? PointSize.small,
                         resolved.Value.labeled,
-                        resolved.Value.firstRuleIndex));
+                        resolved.Value.lastRuleIndex));
             }
 
+            // Order ascending by the lowest contributing rule index in each group so that points
+            // governed by higher-priority (later/lower-in-the-list) rules are drawn on top.
             foreach (var group in pointFormats
                 .GroupBy(pf => (pf.color, pf.symbol, pf.size, pf.labeled))
-                .OrderBy(g => g.Min(pf => pf.firstRuleIndex)))
+                .OrderBy(g => g.Min(pf => pf.lastRuleIndex)))
             {
                 var fmt = group.Key;
                 AddPoints(new PointPairList(group.Select(pf => pf.point).ToList()),

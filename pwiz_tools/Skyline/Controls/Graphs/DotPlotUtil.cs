@@ -227,20 +227,21 @@ namespace pwiz.Skyline.Controls.Graphs
 
         /// <summary>
         /// Resolves per-trait formatting for a single data point by scanning the ordered rule list.
-        /// Each trait (color, symbol, size, labeled=true) is set by the first matching rule that
-        /// explicitly provides that trait. <c>Labeled=false</c> is treated as "not set" so a later
-        /// rule can still enable labeling.
+        /// Each trait (color, symbol, size) is set by the <em>last</em> matching rule that explicitly
+        /// provides that trait, so a rule lower in the list overrides an earlier one (CSS-cascade model).
+        /// <c>Labeled</c> is an order-independent OR: any matching rule with <c>Labeled=true</c> enables
+        /// labeling, and a later rule's <c>Labeled=false</c> cannot turn it back off.
         /// Returns <c>null</c> when no rule contributes any trait — the caller should add the point
         /// to the default "other" collection rather than a matched curve.
         /// </summary>
-        public static (Color? color, PointSymbol? symbol, PointSize? size, bool labeled, int firstRuleIndex)?
+        public static (Color? color, PointSymbol? symbol, PointSize? size, bool labeled, int lastRuleIndex)?
             ResolvePointFormat(IList<MatchRgbHexColor> colorRows, Func<MatchRgbHexColor, bool> matches)
         {
             Color? resolvedColor = null;
             PointSymbol? resolvedSymbol = null;
             PointSize? resolvedSize = null;
             var resolvedLabeled = false;
-            var firstRuleIndex = -1;
+            var lastRuleIndex = -1;
 
             for (var i = 0; i < colorRows.Count; i++)
             {
@@ -249,26 +250,23 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 var contributed = false;
-                if (resolvedColor == null && rule.Color != Color.Empty)
+                if (rule.Color != Color.Empty)
                     { resolvedColor = rule.Color; contributed = true; }
-                if (resolvedSymbol == null && rule.PointSymbol.HasValue)
+                if (rule.PointSymbol.HasValue)
                     { resolvedSymbol = rule.PointSymbol; contributed = true; }
-                if (resolvedSize == null && rule.PointSize.HasValue)
+                if (rule.PointSize.HasValue)
                     { resolvedSize = rule.PointSize; contributed = true; }
-                if (!resolvedLabeled && rule.Labeled)
+                if (rule.Labeled)
                     { resolvedLabeled = true; contributed = true; }
 
-                if (contributed && firstRuleIndex < 0)
-                    firstRuleIndex = i;
-
-                if (resolvedColor != null && resolvedSymbol != null && resolvedSize != null && resolvedLabeled)
-                    break;
+                if (contributed)
+                    lastRuleIndex = i;
             }
 
-            if (firstRuleIndex < 0)
+            if (lastRuleIndex < 0)
                 return null;
 
-            return (resolvedColor, resolvedSymbol, resolvedSize, resolvedLabeled, firstRuleIndex);
+            return (resolvedColor, resolvedSymbol, resolvedSize, resolvedLabeled, lastRuleIndex);
         }
     }
 }
