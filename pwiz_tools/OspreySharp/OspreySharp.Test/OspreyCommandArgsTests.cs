@@ -269,7 +269,7 @@ namespace pwiz.OspreySharp.Test
             // between the Windows (net472) and Linux (net8.0) test runs, and git may rewrite the file's
             // line endings on checkout. A content (not byte) match is what we care about.
             Assert.AreEqual(NormalizeEol(generated), NormalizeEol(File.ReadAllText(committedPath)),
-                @"Documentation/Help/en/CommandLine.html is out of date. Set RECORD_USAGE_HTML true and rerun to regenerate it.");
+                @"Documentation/Help/en/CommandLine.html is out of date. Rerun with OSPREY_RECORD_USAGE_HTML=1 set to regenerate it.");
         }
 
         private static string NormalizeEol(string s)
