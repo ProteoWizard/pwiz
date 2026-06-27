@@ -21,7 +21,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.CommandLine;
@@ -223,6 +225,77 @@ namespace pwiz.OspreySharp.Test
             StringAssert.Contains(html, @"<html>");
             StringAssert.Contains(html, @"<table>");
             StringAssert.Contains(html, @"</html>");
+        }
+
+        // Set the OSPREY_RECORD_USAGE_HTML=1 environment variable and run this test to regenerate
+        // Documentation/Help/en/CommandLine.html after an intentional change to the arguments or the
+        // generated-help prose; with it unset the test verifies the committed copy. Mirrors Skyline's
+        // HelpDocumentationContentTest record-mode pattern (a property, not a const, so the verify
+        // branch is never compiled out as unreachable).
+        private static bool RecordUsageHtml =>
+            Environment.GetEnvironmentVariable(@"OSPREY_RECORD_USAGE_HTML") == @"1";
+
+        /// <summary>
+        /// The published command-line usage page is generated from the argument declarations, so it
+        /// can never silently drift from the code. This regenerates it and diffs it against the
+        /// committed copy under <c>Documentation/Help/en/CommandLine.html</c> (the same model as
+        /// Skyline's <c>TestCommandLineHelpDocumentation</c>). When the arguments or the generated
+        /// intro / HPC-example prose change, run once with the <c>OSPREY_RECORD_USAGE_HTML=1</c>
+        /// environment variable set to overwrite the committed file, then unset it. The per-language
+        /// folder leaves room for ja / zh-CHS once the descriptions are moved to a .resx.
+        /// </summary>
+        [TestMethod]
+        public void TestCommandLineHelpDocumentation()
+        {
+            string generated = OspreyCommandArgs.GenerateUsageHtml();
+            string committedPath = Path.Combine(FindOspreySharpSourceRoot(),
+                @"Documentation", @"Help", @"en", @"CommandLine.html");
+
+            if (RecordUsageHtml)
+            {
+                string committedDir = Path.GetDirectoryName(committedPath);
+                if (!string.IsNullOrEmpty(committedDir))
+                    Directory.CreateDirectory(committedDir);
+                File.WriteAllText(committedPath, generated);
+                Assert.Inconclusive(@"OSPREY_RECORD_USAGE_HTML is set: wrote {0}. Unset it and rerun to verify.",
+                    committedPath);
+                return;
+            }
+
+            Assert.IsTrue(File.Exists(committedPath), string.Format(
+                @"Missing generated usage doc: {0}. Run with OSPREY_RECORD_USAGE_HTML=1 to create it.",
+                committedPath));
+            // Compare EOL-agnostically: GenerateUsageHtml builds with Environment.NewLine, which differs
+            // between the Windows (net472) and Linux (net8.0) test runs, and git may rewrite the file's
+            // line endings on checkout. A content (not byte) match is what we care about.
+            Assert.AreEqual(NormalizeEol(generated), NormalizeEol(File.ReadAllText(committedPath)),
+                @"Documentation/Help/en/CommandLine.html is out of date. Set RECORD_USAGE_HTML true and rerun to regenerate it.");
+        }
+
+        private static string NormalizeEol(string s)
+        {
+            return s.Replace("\r\n", "\n").Replace("\r", "\n");
+        }
+
+        /// <summary>
+        /// Walk up from the test assembly to the OspreySharp source root (the
+        /// <c>OspreySharp.sln</c>-bearing directory). Mirrors CodeInspectionTest.
+        /// </summary>
+        private static string FindOspreySharpSourceRoot()
+        {
+            string dir = Path.GetDirectoryName(typeof(OspreyCommandArgsTests).Assembly.Location);
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (Directory.Exists(Path.Combine(dir, @"OspreySharp")) &&
+                    Directory.Exists(Path.Combine(dir, @"OspreySharp.Test")) &&
+                    File.Exists(Path.Combine(dir, @"OspreySharp.sln")))
+                {
+                    return dir;
+                }
+                dir = Path.GetDirectoryName(dir);
+            }
+            throw new InvalidOperationException(
+                @"Could not locate OspreySharp source root from test assembly location.");
         }
     }
 }
