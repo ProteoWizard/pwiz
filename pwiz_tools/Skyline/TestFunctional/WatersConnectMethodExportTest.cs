@@ -278,9 +278,8 @@ namespace pwiz.SkylineTestFunctional
             try
             {
                 var errorDlg = ShowDialog<MessageDlg>(() => methodFileDlg.CreateNewFolderForTest("NewTestFolder"));
-                Assert.IsTrue(errorDlg.Message.Contains(
-                        string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__, "NewTestFolder")),
-                    "Expected a permission-denied message. Actual: " + errorDlg.Message);
+                AssertEx.Contains(errorDlg.Message,
+                    string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__, "NewTestFolder"));
                 OkDialog(errorDlg, errorDlg.OkDialog);
             }
             finally

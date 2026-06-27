@@ -117,7 +117,18 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             var body = new JObject { [@"Name"] = name, [@"Description"] = description ?? string.Empty }.ToString();
             var request = new HttpRequestMessage(HttpMethod.Put, requestUri) { Content = new StringContent(body) };
             request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(@"application/json") { CharSet = @"utf-8" };
-            var response = _httpClient.SendAsync(request).Result;
+            HttpResponseMessage response;
+            try
+            {
+                response = _httpClient.SendAsync(request).Result;
+            }
+            catch (Exception e)
+            {
+                // Network/TLS/DNS failures must not escape as an unhandled exception from the wait
+                // dialog: return a failure status and surface the detail through responseBody.
+                responseBody = ((e as AggregateException)?.Flatten().InnerException ?? e).Message;
+                return HttpStatusCode.ServiceUnavailable;
+            }
             responseBody = response.Content?.ReadAsStringAsync().Result;
             if (response.StatusCode < HttpStatusCode.BadRequest)
                 RetryFetch(GetRootContentsUrl(), GetFolders); // refresh cached folder list so the new folder is visible
