@@ -87,11 +87,11 @@ namespace pwiz.SkylineTestTutorial
             BuildLibraryAndExtractChromatograms(wizard);    // s-02, s-03
             ConfigureTransitionAndFullScanSettings(wizard); // s-04, s-05, s-06
             ImportFastaAndAssociateProteins(wizard);        // s-07, s-08, s-09
+            ImportPrtcDocument();                           // s-10
 
             // TODO(connector tutorial): the remaining steps are filled in incrementally, each driven through
             // the IJsonToolService and each ending in a PauseForScreenShot whose number matches the s-NN.png
             // referenced by the HTML. The remaining mapping is:
-            //   1.8     Import Document (PRTC) ......................... s-10
             //   1.9     Import Results (multi-injection GPF DIA) ....... s-11
             //   Step 2  CV Histogram + Refine > Advanced ............... s-12 .. s-15
             //   Step 3  Accept Proteins + ranked-intensity refine ..... s-16 .. s-19
@@ -122,8 +122,7 @@ namespace pwiz.SkylineTestTutorial
             // Open the Start Page (File > Start). The menu path is built from the localized, normalized
             // menu-item captions (read from the SkylineWindow resources) so it matches in any UI language.
             // The document is unmodified, so this raises no save prompt.
-            Connector.InvokeMenuItem(GetLocalizedText<SkylineWindow>("fileToolStripMenuItem") + @" > " +
-                                     GetLocalizedText<SkylineWindow>("startPageMenuItem"));
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "startPageMenuItem"));
             var startPage = WaitForConnectorForm<StartPage>();
             PauseForScreenShot(startPage, "Start Page -- Import DIA Peptide Search"); // s-01
 
@@ -273,6 +272,25 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => !Connector.GetOpenForms().Any(f => f.Type == nameof(ImportPeptideSearchDlg)));
             WaitForDocumentLoaded();
             PauseForScreenShot(WaitForConnectorForm<SkylineWindow>(), "Targets populated"); // s-09
+        }
+
+        /// <summary>
+        /// Step 1.8: add the PRTC indexed retention-time standards (which were not in the spectral library) by
+        /// importing them from an existing document (File &gt; Import &gt; Document), so they are extracted along
+        /// with everything else. Capture the populated Targets view (s-10) and save.
+        /// </summary>
+        private void ImportPrtcDocument()
+        {
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>(
+                "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem"));
+            var importDlg = WaitForNativeFileDialog();
+            importDlg.SetValue("FileName", GetTestPath("PRTC.sky"));
+            importDlg.Accept();
+            WaitForDocumentLoaded();
+            PauseForScreenShot(WaitForConnectorForm<SkylineWindow>(), "Targets with PRTC added"); // s-10
+
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem"));
+            WaitForDocumentLoaded();
         }
 
         // NOTE on localization of combo boxes: the connector's ComboBox.SetValue matches an item by its exact

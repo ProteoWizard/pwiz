@@ -175,5 +175,17 @@ namespace pwiz.SkylineTestTutorial
         {
             return UiElement.NormalizeLabel(new ComponentResourceManager(typeof(T)).GetString(controlName + @".Text"));
         }
+
+        /// <summary>
+        /// Builds a localized, normalized menu path (e.g. "File &gt; Import &gt; Document") for
+        /// <see cref="IJsonToolService.InvokeMenuItem"/> from the menu items' field names. Every segment is read
+        /// from type <typeparamref name="T"/>'s resources -- the class that declares the menu items: a menu
+        /// class such as ViewMenu/EditMenu/RefineMenu, or SkylineWindow for the File and Settings menus. The
+        /// connector matches each segment by its visible caption, so this works in every UI language.
+        /// </summary>
+        protected static string MenuPath<T>(params string[] controlNames) where T : ContainerControl
+        {
+            return string.Join(@" > ", controlNames.Select(GetLocalizedText<T>));
+        }
     }
 }
