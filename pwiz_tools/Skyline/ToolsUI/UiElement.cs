@@ -1233,7 +1233,7 @@ namespace pwiz.Skyline.ToolsUI
             var topLevelHandle = InvokeOnUiThread(() =>
             {
                 ScreenCapture.ActivateForm(Form);
-                return (pwiz.Common.SystemUtil.FormUtil.FindTopLevelOwner(Form) ?? (Control) Form).Handle;
+                return (Common.SystemUtil.FormUtil.FindTopLevelOwner(Form) ?? Form).Handle;
             });
             for (int waited = 0;
                  waited < ACTIVATE_SETTLE_MAX_MILLIS && User32.GetForegroundWindow() != topLevelHandle;

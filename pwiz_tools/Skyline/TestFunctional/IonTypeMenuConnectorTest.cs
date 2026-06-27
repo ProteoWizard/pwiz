@@ -20,7 +20,6 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;

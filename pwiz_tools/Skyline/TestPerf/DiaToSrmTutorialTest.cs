@@ -26,12 +26,14 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.AuditLog;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
+using pwiz.SkylineTestUtil;
 using SkylineTool;
 
-namespace pwiz.SkylineTestTutorial
+namespace TestPerf
 {
     /// <summary>
     /// Tutorial test for "Using DIA Data to Create SRM Methods" (Skyline Webinar 22). It performs every
@@ -61,14 +63,14 @@ namespace pwiz.SkylineTestTutorial
             CoverShotName = "DIAtoSRM";
 
             // The framework downloads each ZIP to a persistent local cache and reuses it across runs. The DIA
-            // library files are large (~3 GB each); the gas-phase fractionated mzML runs they contain are
-            // needed to extract chromatograms in Step 1.9.
+            // library zips (~3 GB each) hold the gas-phase fractionated mzML runs that Step 1.9 imports; they
+            // are commented out for now because that import step (ImportGpfDiaResults) is disabled below.
             TestFilesZipPaths = new[]
             {
                 @"https://skyline.ms/webinars/Webinar22.zip",
-                @"https://skyline.ms/webinars/Webinar22_dia_libA.zip",
-                @"https://skyline.ms/webinars/Webinar22_dia_libB.zip",
-                @"https://skyline.ms/webinars/Webinar22_dia_libC.zip",
+                // @"https://skyline.ms/webinars/Webinar22_dia_libA.zip",
+                // @"https://skyline.ms/webinars/Webinar22_dia_libB.zip",
+                // @"https://skyline.ms/webinars/Webinar22_dia_libC.zip",
             };
 
             RunFunctionalTest();
@@ -89,10 +91,15 @@ namespace pwiz.SkylineTestTutorial
             ImportFastaAndAssociateProteins(wizard);        // s-07, s-08, s-09
             ImportPrtcDocument();                           // s-10
 
+            // s-11 (ImportGpfDiaResults) is implemented and its connector flow -- including the new native
+            // folder browser -- has been verified locally, but importing the ~36 GB of gas-phase fractionated
+            // runs is too slow/heavy to keep enabled here yet. Re-enable it (and the DIA library zips above)
+            // once the heavy import is validated end-to-end.
+            // ImportGpfDiaResults();                        // s-11
+
             // TODO(connector tutorial): the remaining steps are filled in incrementally, each driven through
             // the IJsonToolService and each ending in a PauseForScreenShot whose number matches the s-NN.png
             // referenced by the HTML. The remaining mapping is:
-            //   1.9     Import Results (multi-injection GPF DIA) ....... s-11
             //   Step 2  CV Histogram + Refine > Advanced ............... s-12 .. s-15
             //   Step 3  Accept Proteins + ranked-intensity refine ..... s-16 .. s-19
             //   Step 4  iRT calculator + scheduling + export .......... s-20 .. s-31
@@ -291,6 +298,75 @@ namespace pwiz.SkylineTestTutorial
 
             Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem"));
             WaitForDocumentLoaded();
+        }
+
+        /// <summary>
+        /// Step 1.9: import the gas-phase fractionated DIA runs as multi-injection replicates -- one replicate
+        /// per LibA/LibB/LibC subfolder, each with its six m/z-range injections -- declining decoys and keeping
+        /// the full folder names (s-11), then extract the chromatograms. This is the heavy data step; it is why
+        /// the test lives in TestPerf and only runs with perftests on.
+        /// </summary>
+        private void ImportGpfDiaResults()
+        {
+            var mzmlFolder = AssembleMzmlReplicateFolder();
+
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>(
+                "fileToolStripMenuItem", "importToolStripMenuItem", "importResultsMenuItem"));
+            // Some documents first get a "no decoys -- add them?" prompt; it is conditional, so handle it only
+            // if it appears (decline with No) before the Import Results dialog -- wait for whichever shows first.
+            WaitForCondition(() => Connector.GetOpenForms().Any(f =>
+                Equals(f.Type, nameof(MultiButtonMsgDlg)) || Equals(f.Type, nameof(ImportResultsDlg))));
+            var decoyPrompt = Connector.GetOpenForms().FirstOrDefault(f => Equals(f.Type, nameof(MultiButtonMsgDlg)));
+            if (decoyPrompt != null)
+                JsonUiService.ResolveForm(decoyPrompt.Id).ClickButton(UiElement.NormalizeLabel(MultiButtonMsgDlg.BUTTON_NO));
+
+            // Import Results: each subfolder of the chosen directory becomes a replicate whose data files are
+            // its injections. Choose that option (s-11), then OK opens the native folder browser.
+            var importResults = WaitForConnectorForm<ImportResultsDlg>();
+            WaitForAction(() => importResults.ClickButton(GetLocalizedText<ImportResultsDlg>("radioCreateMultipleMulti")));
+            PauseForScreenShot(importResults, "Import Results -- multi-injection replicates in directories"); // s-11
+            importResults.Accept();
+
+            // Pick the assembled mzmls folder in the native Browse-For-Folder dialog (its LibA/LibB/LibC
+            // subfolders are the replicates). The connector selects the folder by path; its controlId is ignored.
+            var folderDlg = WaitForNativeFolderDialog();
+            folderDlg.SetValue(@"Folder", mzmlFolder);
+            folderDlg.Accept();
+
+            // The replicate names share a common prefix; keep the full folder names (Do not remove), then OK.
+            var nameDlg = WaitForConnectorForm<ImportResultsNameDlg>();
+            WaitForAction(() => nameDlg.ClickButton(GetLocalizedText<ImportResultsNameDlg>("radioDontRemove")));
+            nameDlg.Accept();
+
+            // Extracting chromatograms from the gas-phase fractionated runs (18 ~2 GB mzML files) is slow.
+            WaitForDocumentLoaded(60 * 60 * 1000);
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem"));
+            WaitForDocumentLoaded();
+        }
+
+        /// <summary>
+        /// The three gas-phase-fractionated runs ship as three separate download zips (one replicate each), so
+        /// gather them under a single parent folder -- the layout the multi-injection import expects (each
+        /// subfolder a replicate). Copy the files (a directory junction is unreliable on some machines),
+        /// skipping any already copied so reruns are cheap. Returns the assembled parent folder.
+        /// </summary>
+        private string AssembleMzmlReplicateFolder()
+        {
+            var mzmlFolder = TestFilesDirs[0].GetTestPath(Path.Combine("Webinar22", "mzmls"));
+            for (int i = 0; i < 3; i++)
+            {
+                var lib = @"Lib" + (char)('A' + i);
+                var sourceDir = TestFilesDirs[i + 1].GetTestPath(Path.Combine("Webinar22", "mzml", lib));
+                var destDir = Path.Combine(mzmlFolder, lib);
+                Directory.CreateDirectory(destDir);
+                foreach (var sourceFile in Directory.GetFiles(sourceDir))
+                {
+                    var destFile = Path.Combine(destDir, Path.GetFileName(sourceFile));
+                    if (!File.Exists(destFile))
+                        File.Copy(sourceFile, destFile);
+                }
+            }
+            return mzmlFolder;
         }
 
         // NOTE on localization of combo boxes: the connector's ComboBox.SetValue matches an item by its exact

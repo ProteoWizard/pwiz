@@ -1405,6 +1405,7 @@
     <Compile Include="ToolsUI\UiElement.cs" />
     <Compile Include="ToolsUI\NativeFileDialog.cs" />
     <Compile Include="ToolsUI\NativeDialog.cs" />
+    <Compile Include="ToolsUI\NativeFolderBrowserDialog.cs" />
     <Compile Include="ToolsUI\NativeOpenFileDialog.cs" />
     <Compile Include="ToolsUI\NativeSaveFileDialog.cs" />
     <Compile Include="ToolsUI\ToolService.cs" />

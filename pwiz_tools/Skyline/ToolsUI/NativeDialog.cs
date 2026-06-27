@@ -127,6 +127,10 @@ namespace pwiz.Skyline.ToolsUI
             // two never both match.
             if (NativeSaveFileDialog.IsSaveFileDialog(dialog))
                 return new NativeSaveFileDialog(handle);
+            // The classic Browse-For-Folder dialog (a folder tree, no file-name combo) -- checked after the
+            // file dialogs, whose navigation pane also has a tree but which match first on their combo.
+            if (NativeFolderBrowserDialog.IsFolderBrowserDialog(dialog))
+                return new NativeFolderBrowserDialog(handle);
             // Any other "#32770" (a message box such as the Save dialog's "replace it?" confirm, or any
             // other Windows dialog) is driven generically by the base class -- it lists the buttons and
             // clicks one by caption.

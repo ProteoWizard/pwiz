@@ -25,10 +25,9 @@ using System.Windows.Forms;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
-using pwiz.SkylineTestUtil;
 using SkylineTool;
 
-namespace pwiz.SkylineTestTutorial
+namespace pwiz.SkylineTestUtil
 {
     /// <summary>
     /// Base class for tutorial tests that drive Skyline through the in-process <see cref="IJsonToolService"/>
@@ -83,6 +82,13 @@ namespace pwiz.SkylineTestTutorial
         /// </summary>
         protected IFormElement WaitForNativeFileDialog() =>
             ResolveWhenOpen(form => form.IsNative && form.Type == @"FileDialog");
+
+        /// <summary>
+        /// Waits for the native Browse-For-Folder dialog (enumerated by GetOpenForms with IsNative=true and
+        /// type "FolderDialog") and returns it as an IFormElement; SetValue selects a folder by its path.
+        /// </summary>
+        protected IFormElement WaitForNativeFolderDialog() =>
+            ResolveWhenOpen(form => form.IsNative && form.Type == @"FolderDialog");
 
         private IFormElement ResolveWhenOpen(Func<FormInfo, bool> predicate)
         {
