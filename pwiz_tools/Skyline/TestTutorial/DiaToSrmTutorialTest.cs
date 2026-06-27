@@ -24,7 +24,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Startup;
+using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.FileUI.PeptideSearch;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using SkylineTool;
 
@@ -81,23 +84,29 @@ namespace pwiz.SkylineTestTutorial
             StartToolService();
 
             var wizard = GettingStarted();
-            BuildLibraryAndExtractChromatograms(wizard); // s-02, s-03
+            BuildLibraryAndExtractChromatograms(wizard);    // s-02, s-03
+            ConfigureTransitionAndFullScanSettings(wizard); // s-04, s-05, s-06
+            ImportFastaAndAssociateProteins(wizard);        // s-07, s-08, s-09
 
-            // TODO(connector tutorial): the remaining wizard/steps are filled in incrementally, each driven
-            // through the IJsonToolService and each ending in a PauseForScreenShot whose number matches the
-            // s-NN.png referenced by the HTML. The remaining mapping is:
-            //   1.3-1.6 Modifications / Transition / Full-Scan / FASTA .. s-04 .. s-07
-            //   1.7     Associate Proteins ............................ s-08, s-09
+            // TODO(connector tutorial): the remaining steps are filled in incrementally, each driven through
+            // the IJsonToolService and each ending in a PauseForScreenShot whose number matches the s-NN.png
+            // referenced by the HTML. The remaining mapping is:
             //   1.8     Import Document (PRTC) ......................... s-10
             //   1.9     Import Results (multi-injection GPF DIA) ....... s-11
             //   Step 2  CV Histogram + Refine > Advanced ............... s-12 .. s-15
             //   Step 3  Accept Proteins + ranked-intensity refine ..... s-16 .. s-19
             //   Step 4  iRT calculator + scheduling + export .......... s-20 .. s-31
-
-            // WIP: end cleanly until the rest of the wizard is driven.
-            wizard.Close();
-            WaitForCondition(() => !Connector.GetOpenForms().Any(f => f.Type == nameof(ImportPeptideSearchDlg)));
         }
+
+        /// <summary>The wizard's Next button caption, localized and normalized so it matches in any language
+        /// (on the last page the wizard relabels this same button to "Finish" -- see <see cref="WizardFinishButton"/>).</summary>
+        private string WizardNextButton => GetLocalizedText<ImportPeptideSearchDlg>("btnNext");
+
+        /// <summary>The caption the wizard puts on its Next button on the last (Import FASTA) page. It is set in
+        /// code from a resource string (not the designer), so it is read from that string and normalized the
+        /// same way the connector normalizes a button label.</summary>
+        private static string WizardFinishButton =>
+            UiElement.NormalizeLabel(PeptideSearchResources.ImportPeptideSearchDlg_NextPage_Finish);
 
         /// <summary>
         /// "Getting Started": select the Proteomics interface, then open the Import DIA Peptide Search wizard
@@ -155,5 +164,123 @@ namespace pwiz.SkylineTestTutorial
             WaitForControl(wizard, nameof(ImportResultsDIAControl));
             PauseForScreenShot(wizard, "Extract Chromatograms"); // s-03
         }
+
+        /// <summary>
+        /// Steps 1.3-1.5: advance off the empty Extract Chromatograms page (confirming the "no results files"
+        /// prompt), pass through Add Modifications unchanged (s-04), set the Transition Settings the tutorial
+        /// prescribes (s-05), and the Full-Scan Settings (s-06).
+        /// </summary>
+        private void ConfigureTransitionAndFullScanSettings(IFormElement wizard)
+        {
+            // 1.2 -> advance past Extract Chromatograms. With no result files added, the wizard warns that it
+            // will create a template document with no imported results and asks whether to continue; the
+            // multi-injection GPF results are imported later (Step 1.9). Accept() presses the prompt's default
+            // (Yes) without keying on a localized caption.
+            wizard.ClickButton(WizardNextButton);
+            WaitForConnectorForm<MultiButtonMsgDlg>().Accept();
+
+            // 1.3 Add Modifications: no modifications were used in the search, so just move on.
+            WaitForControl(wizard, nameof(MatchModificationsControl));
+            PauseForScreenShot(wizard, "Add Modifications"); // s-04
+            WaitForAction(() => wizard.ClickButton(WizardNextButton));
+
+            // 1.4 Configure Transition Settings. Text fields (charges/types/m-z/tolerance/counts) are
+            // language-neutral and addressed by their localized labels; the two ion-range combo boxes are set
+            // by their (currently English) item text -- see the localization note at the bottom of this file.
+            WaitForControl(wizard, nameof(TransitionSettingsControl));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblPrecursorCharges"), "2, 3"));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCharges"), "1, 2"));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonTypes"), "y, b"));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label1"), "ion 3"));     // product ions from
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label2"), "last ion"));  // product ions to
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label3"), "50"));        // min m/z
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label6"), "2000"));      // max m/z
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblTolerance"), "0.005"));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCount"), "8"));    // pick N product ions
+            // The min-product-ions box sits between two unit labels; the connector pairs a caption-less field
+            // with the label before it in tab order, which here is "product ions" (lblIonCountUnits), not the
+            // "min product ions" suffix label that follows the box.
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCountUnits"), "3"));
+            PauseForScreenShot(wizard, "Configure Transition Settings"); // s-05
+            WaitForAction(() => wizard.ClickButton(WizardNextButton));
+
+            // 1.5 Configure Full-Scan Settings: the defining DIA choices are a Centroided product mass analyzer
+            // and the Results-only isolation scheme (set below). The mass-accuracy value and the "use only scans
+            // within N minutes of MS/MS IDs" retention-time filter are left at the DIA wizard's defaults: their
+            // fields are relabeled at runtime / have split unit labels, so they are not cleanly addressable by
+            // caption yet (a remaining item to wire up, possibly needing a connector tweak).
+            WaitForControl(wizard, nameof(FullScanSettingsControl));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<FullScanSettingsControl>("label22"), "Centroided"));        // product mass analyzer
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<FullScanSettingsControl>("labelIsolationScheme"), "Results only"));
+            PauseForScreenShot(wizard, "Configure Full-Scan Settings"); // s-06
+            WaitForAction(() => wizard.ClickButton(WizardNextButton));
+        }
+
+        /// <summary>
+        /// Step 1.6-1.7: on the Import FASTA page choose Trypsin with 0 missed cleavages and the human FASTA
+        /// (s-07), Finish, then configure the Associate Proteins dialog (s-08) and capture the populated Targets
+        /// view once the wizard builds the document (s-09).
+        /// </summary>
+        private void ImportFastaAndAssociateProteins(IFormElement wizard)
+        {
+            // 1.6 Import FASTA (required): Trypsin [KR | P] / 0 missed cleavages (enzyme names are settings, not
+            // localized), then browse to the human FASTA through the native Open dialog.
+            WaitForControl(wizard, nameof(ImportFastaControl));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<ImportFastaControl>("label3"), "Trypsin [KR | P]"));   // enzyme
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<ImportFastaControl>("label2"), "0"));                  // max missed cleavages
+            wizard.ClickButton(GetLocalizedText<ImportFastaControl>("browseFastaBtn"));
+            var fastaDlg = WaitForNativeFileDialog();
+            fastaDlg.SetValue("FileName", GetTestPath("uniprot_human_25apr2019.fasta"));
+            fastaDlg.Accept();
+            WaitForCondition(() => !Connector.GetOpenForms().Any(f => f.IsNative));
+            PauseForScreenShot(wizard, "Import FASTA"); // s-07
+
+            // Finish the wizard. Building peptides from the FASTA brings up the Associate Proteins dialog.
+            wizard.ClickButton(WizardFinishButton);
+
+            // 1.7 Associate Proteins: create protein groups first (which relabels the shared-peptides options to
+            // their grouped form), then drop shared (non-unique) peptides. The combo item text comes straight
+            // from the localized EnumNames resource, so it matches exactly in any language. Min peptides per
+            // protein stays at its default of 1 (the connector does not yet address the NumericUpDown holding it).
+            var associate = WaitForConnectorForm<AssociateProteinsDlg>();
+            // The checkbox and the shared-peptides combo have no caption the connector can match (each option's
+            // label is a plain Label shadowed by a "?" help link, and the checkbox's caption is a separate
+            // sibling). So identify them the way a connector client reading the tutorial would -- by their type
+            // and position rather than any internal control name -- and act on them through their structured
+            // Path: "Create protein groups" is the dialog's first checkbox, and there is only one combo box.
+            // Create protein groups first: this is the dialog's first checkbox. Checking it relabels the
+            // shared-peptides options to their grouped form and re-lays-out the dialog, so the combo's Path is
+            // looked up only afterward (a Path captured before would embed a now-stale label). Min peptides per
+            // protein stays at its default of 1.
+            var groupProteinsCheckBox = associate.GetControls().First(control => Equals(control.Path.Type, @"CheckBox")).Path;
+            WaitForAction(() => associate.PerformAction(groupProteinsCheckBox, UiActions.SetValue, "true"));
+            // Drop shared (non-unique) peptides via the dialog's only combo box; the value is the localized
+            // EnumNames resource, so it matches in any language. Address it by type and position only (clearing
+            // the path's Text) -- the way a client would target "the only combo box" -- because enabling
+            // grouping re-lays-out the dialog and changes the label the combo would otherwise be matched by.
+            var sharedPeptidesCombo = associate.GetControls()
+                .Single(control => Equals(control.Path.Type, @"ComboBox")).Path.ChangeText(null);
+            WaitForAction(() => associate.PerformAction(sharedPeptidesCombo, UiActions.SetValue,
+                EnumNames.SharedPeptidesGroup_Removed));
+            // Each option change recomputes the protein association on a background thread, during which the
+            // dialog disables its OK button (its first button); wait for that to finish -- so the screenshot
+            // shows the final result counts and Accept() actually closes the dialog -- then accept.
+            WaitForControlEnabled(associate, @"Button");
+            PauseForScreenShot(associate, "Associate Proteins"); // s-08
+            associate.Accept();
+
+            // The wizard closes and builds the document; capture the populated Targets view of the main window.
+            WaitForCondition(() => !Connector.GetOpenForms().Any(f => f.Type == nameof(ImportPeptideSearchDlg)));
+            WaitForDocumentLoaded();
+            PauseForScreenShot(WaitForConnectorForm<SkylineWindow>(), "Targets populated"); // s-09
+        }
+
+        // NOTE on localization of combo boxes: the connector's ComboBox.SetValue matches an item by its exact
+        // visible text (FindStringExact). Where a localized resource string for the item is available it is used
+        // (e.g. the shared-peptides option via EnumNames), but the ion-range, product-mass-analyzer and
+        // isolation-scheme values above are still English literals and would not match in ja/zh-CHS. The text
+        // fields, labels, menu paths and Next/Finish buttons are already localized. Making those last combo
+        // values language-neutral is the remaining multi-language gap for these steps (resolve by reading each
+        // item's localized text, or by teaching the connector to select a combo item by index).
     }
 }

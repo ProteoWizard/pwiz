@@ -385,6 +385,11 @@ namespace SkylineTool
             return new UiElementPath(parent, Text, Index, Type);
         }
 
+        public UiElementPath ChangeText(string text)
+        {
+            return new UiElementPath(Parent, text, Index, Type);
+        }
+
         public UiElementPath GetRoot()
         {
             var path = this;

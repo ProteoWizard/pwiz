@@ -99,7 +99,41 @@ namespace pwiz.SkylineTestTutorial
         /// </summary>
         protected void WaitForControl(IFormElement form, string controlType)
         {
-            WaitForCondition(() => form.GetControls().Any(control => control.Path.Type == controlType));
+            WaitForCondition(() =>
+            {
+                try
+                {
+                    return form.GetControls().Any(control => Equals(control.Path.Type, controlType));
+                }
+                catch (InvalidOperationException)
+                {
+                    // While the page is transitioning, the form can be briefly blocked by a transient dialog
+                    // (e.g. the long-wait progress dialog shown while a spectral library loads), which makes
+                    // GetControls throw. Treat that as "not ready yet" and keep polling until it clears.
+                    return false;
+                }
+            });
+        }
+
+        /// <summary>
+        /// Waits until the form's first control of the given type is enabled. A dialog that recomputes
+        /// something on a background thread (e.g. AssociateProteinsDlg re-running its parsimony analysis when an
+        /// option changes) disables its OK button while it works and re-enables it when the result is ready, so
+        /// a test must wait for that before accepting.
+        /// </summary>
+        protected void WaitForControlEnabled(IFormElement form, string controlType)
+        {
+            WaitForCondition(() =>
+            {
+                try
+                {
+                    return form.GetControls().FirstOrDefault(control => Equals(control.Path.Type, controlType))?.Enabled == true;
+                }
+                catch (InvalidOperationException)
+                {
+                    return false;
+                }
+            });
         }
 
         /// <summary>
