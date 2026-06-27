@@ -21,7 +21,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.CommandLine;
@@ -223,6 +225,69 @@ namespace pwiz.OspreySharp.Test
             StringAssert.Contains(html, @"<html>");
             StringAssert.Contains(html, @"<table>");
             StringAssert.Contains(html, @"</html>");
+        }
+
+        /// <summary>
+        /// The published command-line usage page is generated from the argument declarations, so it
+        /// can never silently drift from the code. This regenerates it and compares it
+        /// (line-ending agnostic) against the committed copy under
+        /// <c>Documentation/Help/en/CommandLine.html</c>. The test is self-updating: when they
+        /// differ it overwrites the committed file with the freshly generated content and then
+        /// fails, so the fix is simply to review and commit the regenerated file. (CI fails the same
+        /// way, flagging an argument or generated-prose change that was not regenerated.) The
+        /// per-language folder leaves room for ja / zh-CHS once the descriptions move to a .resx.
+        /// </summary>
+        [TestMethod]
+        public void TestCommandLineHelpDocumentation()
+        {
+            string generated = OspreyCommandArgs.GenerateUsageHtml();
+            string committedPath = Path.Combine(FindOspreySharpSourceRoot(),
+                @"Documentation", @"Help", @"en", @"CommandLine.html");
+
+            // Compare EOL-agnostically: GenerateUsageHtml builds with Environment.NewLine, which
+            // differs between the Windows (net472) and Linux (net8.0) test runs, and git may rewrite
+            // the file's line endings on checkout. A content (not byte) match is what we care about,
+            // and it keeps a pure EOL difference from triggering a spurious rewrite.
+            string committed = File.Exists(committedPath) ? File.ReadAllText(committedPath) : null;
+            if (committed != null && NormalizeEol(committed) == NormalizeEol(generated))
+                return;
+
+            // Out of date (or missing): self-heal by writing the regenerated page, then fail so the
+            // developer reviews and commits it. Re-running after the commit passes.
+            string committedDir = Path.GetDirectoryName(committedPath);
+            if (!string.IsNullOrEmpty(committedDir))
+                Directory.CreateDirectory(committedDir);
+            File.WriteAllText(committedPath, generated);
+            Assert.Fail(committed == null
+                    ? @"Generated usage doc did not exist; wrote {0}. Review and commit it."
+                    : @"Documentation/Help/en/CommandLine.html was out of date; regenerated it at {0}. Review and commit the change.",
+                committedPath);
+        }
+
+        private static string NormalizeEol(string s)
+        {
+            return s.Replace("\r\n", "\n").Replace("\r", "\n");
+        }
+
+        /// <summary>
+        /// Walk up from the test assembly to the OspreySharp source root (the
+        /// <c>OspreySharp.sln</c>-bearing directory). Mirrors CodeInspectionTest.
+        /// </summary>
+        private static string FindOspreySharpSourceRoot()
+        {
+            string dir = Path.GetDirectoryName(typeof(OspreyCommandArgsTests).Assembly.Location);
+            while (!string.IsNullOrEmpty(dir))
+            {
+                if (Directory.Exists(Path.Combine(dir, @"OspreySharp")) &&
+                    Directory.Exists(Path.Combine(dir, @"OspreySharp.Test")) &&
+                    File.Exists(Path.Combine(dir, @"OspreySharp.sln")))
+                {
+                    return dir;
+                }
+                dir = Path.GetDirectoryName(dir);
+            }
+            throw new InvalidOperationException(
+                @"Could not locate OspreySharp source root from test assembly location.");
         }
     }
 }

@@ -614,22 +614,85 @@ namespace pwiz.OspreySharp
             var sb = new StringBuilder();
             sb.AppendLine(@"<html><head>");
             sb.AppendLine(@"<meta charset=""utf-8"">");
+            sb.AppendLine(@"<title>OspreySharp command-line usage</title>");
+            sb.AppendLine(@"<meta name=""description"" content=""Command-line usage for OspreySharp, the C# (.NET 8) implementation of Mike MacCoss's Osprey peptide-centric DIA search tool: search and FDR arguments, protein inference, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR)."">");
             // Self-contained stylesheet (OspreySharp does not reference Skyline, so it cannot call
-            // DocumentationGenerator.GetStyleSheetHtml). The rules are copied from that Skyline
+            // DocumentationGenerator.GetStyleSheetHtml). The table rules are copied from that Skyline
             // stylesheet so OspreySharp's generated help matches Skyline's look (cell padding,
-            // header shading, section-title size).
+            // header shading, section-title size); the heading / pre / link rules are OspreySharp's
+            // own additions for the standalone web page (intro + worked HPC example below).
             sb.AppendLine(@"<style>");
-            sb.AppendLine(@"body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; }");
+            sb.AppendLine(@"body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; max-width: 70em; }");
+            sb.AppendLine(@"h1 { font-size: 1.6em; font-weight: 600; color: #000; margin: 0 0 .3em; }");
             sb.AppendLine(@".RowType { font-size: 1.769em; line-height: 1.3em; font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; color: #000; }");
             sb.AppendLine(@"table { border: 1px solid #bbb; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px; }");
             sb.AppendLine(@"th { background-color: #ededed; color: #636363; text-align: left; padding: 10px 8px; font-weight: bold; border: 1px solid #bbb; }");
             sb.AppendLine(@"td { color: #2a2a2a; vertical-align: top; padding: 10px 8px; border: 1px solid #bbb; }");
+            sb.AppendLine(@"pre { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; font-family: Consolas,'Courier New',monospace; font-size: .92em; white-space: pre-wrap; }");
+            sb.AppendLine(@"code { font-family: Consolas,'Courier New',monospace; }");
+            sb.AppendLine(@"a { color: #1565c0; }");
             sb.AppendLine(@"</style>");
             sb.AppendLine(@"</head><body>");
+            AppendUsageHtmlIntro(sb);
             foreach (var block in UsageBlocks)
                 sb.Append(block.ToHtmlString());
+            AppendUsageHtmlHpcExamples(sb);
             sb.Append(@"</body></html>");
             return sb.ToString();
+        }
+
+        // Hand-written intro prose for the standalone web page (not part of the terminal --help text,
+        // which stays a terse flag reference). Locked against drift by TestCommandLineHelpDocumentation,
+        // which regenerates this whole document and diffs it against the committed Documentation copy.
+        private static void AppendUsageHtmlIntro(StringBuilder sb)
+        {
+            sb.AppendLine(@"<h1>OspreySharp command-line usage</h1>");
+            sb.AppendLine(@"<p>OspreySharp is the C# (.NET 8) implementation of " +
+                @"<a href=""https://github.com/maccoss/osprey"">Osprey</a>, Mike MacCoss's peptide-centric " +
+                @"DIA search tool. It reads DIA mzML files plus a spectral library and writes a " +
+                @"BiblioSpecLite (<code>.blib</code>) library of FDR-controlled results that imports " +
+                @"directly into Skyline. It runs as a standalone executable on Windows and Linux.</p>");
+            sb.AppendLine(@"<p>For the pipeline overview, per-stage detail, and how the four distributed " +
+                @"HPC tasks split and join, see the workflow diagram: " +
+                @"<a href=""https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/OspreySharp/Osprey-workflow.html"">Osprey-workflow.html</a>. " +
+                @"The argument tables below are generated from the command-line declarations, so they " +
+                @"always match the build; run <code>OspreySharp --help</code> for the same reference as text.</p>");
+        }
+
+        // Worked distributed-execution example. Like the intro, this is web-page-only content held in
+        // sync with the code by TestCommandLineHelpDocumentation.
+        private static void AppendUsageHtmlHpcExamples(StringBuilder sb)
+        {
+            sb.AppendLine(@"<div class=""RowType"">Distributed execution (HPC)</div>");
+            sb.AppendLine(@"<p>Run with no <code>--task</code> for the whole pipeline in one process. For " +
+                @"distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out " +
+                @"boundaries into four single-task workers &mdash; one node = one <code>--task</code>: " +
+                @"<code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all " +
+                @"files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; " +
+                @"<code>SecondPassFDR</code> (merge node). Pass the same <code>--library</code> and search " +
+                @"options to every task; the parquet integrity check rejects inputs whose search/library " +
+                @"hash does not match.</p>");
+            sb.AppendLine(@"<pre>");
+            sb.AppendLine(@"# split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)");
+            sb.AppendLine(@"OspreySharp --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine();
+            sb.AppendLine(@"# join 1 - one process over ALL parquets (pass a directory so the order is deterministic)");
+            sb.AppendLine(@"OspreySharp --task FirstPassFDR --input-scores ./scores_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json");
+            sb.AppendLine();
+            sb.AppendLine(@"# split 2 - one process per file (parquet + its two sidecars co-located)");
+            sb.AppendLine(@"OspreySharp --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"#   writes: &lt;stem&gt;.scores-reconciled.parquet");
+            sb.AppendLine();
+            sb.AppendLine(@"# join 2 - one process over ALL reconciled parquets (writes out.blib)");
+            sb.AppendLine(@"OspreySharp --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01");
+            sb.AppendLine(@"</pre>");
+            sb.AppendLine(@"<p><code>--input-scores</code> takes a directory (globbed and sorted internally) " +
+                @"or an explicit file list (used in the order given). First-join reconciliation is " +
+                @"order-sensitive, so for the join tasks pass a directory or a deterministically sorted " +
+                @"list. The rehydration sidecars must travel with their parquet into each worker's " +
+                @"working directory. Let the scheduler do the fan-out (one file per split process) rather " +
+                @"than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>");
         }
 
         /// <summary>
