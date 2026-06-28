@@ -220,7 +220,7 @@ function Add-OspreyDocs {
     $staged = Join-Path $docOut 'CommandLine.html'
     $html = Get-Content $staged -Raw
     $html = [regex]::Replace($html, 'https?://raw\.githack\.com/ProteoWizard/pwiz/[^"'' ]*Osprey-workflow\.html', 'Osprey-workflow.html')
-    Set-Content -Path $staged -Value $html -NoNewline
+    Set-Content -Path $staged -Value $html -NoNewline -Encoding utf8
 
     Copy-Item (Join-Path $scriptRoot 'README.md') (Join-Path $StageDir 'README.md') -Force
     Copy-Item (Join-Path $repoRoot 'LICENSE') (Join-Path $StageDir 'LICENSE') -Force

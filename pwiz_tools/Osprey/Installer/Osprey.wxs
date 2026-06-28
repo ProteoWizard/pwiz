@@ -44,7 +44,9 @@
 
     <!-- Harvest the whole self-contained publish tree. The WiX v4+ Files
          element auto-creates one component per file, preserving the layout
-         under INSTALLFOLDER. -->
+         under INSTALLFOLDER. PublishDir is a Windows path with a backslash
+         glob; that is fine because the .msi is win-x64 only and package.ps1
+         always feeds New-OspreyMsi the win-x64 stage. -->
     <ComponentGroup Id="OspreyFiles" Directory="INSTALLFOLDER">
       <Files Include="$(PublishDir)\**" />
     </ComponentGroup>

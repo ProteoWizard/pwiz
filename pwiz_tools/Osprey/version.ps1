@@ -16,8 +16,12 @@
 
 function Get-OspreyVersion {
     param(
-        # Repo path used to read the committed date. Defaults to this script's folder.
-        [string]$RepoPath = (Split-Path -Parent $PSCommandPath)
+        # Repo path used to read the committed date. Mandatory by design: a
+        # dot-sourced function cannot reliably derive its own script directory
+        # at call time ($PSScriptRoot / $PSCommandPath resolve to the CALLER's
+        # scope, not version.ps1), so each caller (build.ps1 / package.ps1)
+        # passes its own $scriptRoot explicitly.
+        [Parameter(Mandatory = $true)] [string]$RepoPath
     )
 
     $OSPREY_YEAR = 26
