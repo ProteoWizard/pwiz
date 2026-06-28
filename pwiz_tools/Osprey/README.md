@@ -185,6 +185,36 @@ with MSBuild directly against `Osprey/Osprey.csproj`. The
 assembly name is `Osprey`, so the produced binary is `Osprey`
 (Linux) / `Osprey.exe` (Windows).
 
+## Redistribution (ZIP / .msi)
+
+`package.ps1` produces the canonical redistributable artifacts on top of the
+build above. Each is a self-contained `net8.0` publish (no system .NET needed),
+laid out under one versioned top-level folder so multiple versions coexist when
+unzipped side by side -- important for pinning an exact Osprey per HPC analysis.
+
+```powershell
+# Per-RID ZIPs into dist/ (win-x64 + linux-x64 by default)
+pwsh -File ./package.ps1
+
+# Windows ZIP + the per-machine .msi installer
+pwsh -File ./package.ps1 -Rid win-x64 -Msi
+```
+
+Artifacts (gitignored `dist/`):
+
+```
+Osprey-<version>-win-x64.zip      Osprey.exe + runtime DLLs + Documentation/ + README + LICENSE
+Osprey-<version>-linux-x64.zip    same layout, Linux self-contained
+Osprey-<version>-win-x64.msi      installs to C:\Program Files\Osprey (per-machine), adds PATH
+```
+
+The version is the Skyline scheme `YEAR.ORDINAL.BRANCH.DOY` shared with the
+build via `version.ps1`. The `.msi` is built with the WiX v5 dotnet tool (see
+`Installer/Osprey.wxs`); Authenticode signing is available behind `-Sign`
+(off by default -- see the script header for the `OSPREY_SIGN*` env vars). CI
+runs this via `tcpackage.bat`. This is the official artifact downstream tools
+(e.g. Carafe) should consume rather than building their own Osprey publish.
+
 ## Running against test data
 
 The reference test datasets are not in this repo. They live on the

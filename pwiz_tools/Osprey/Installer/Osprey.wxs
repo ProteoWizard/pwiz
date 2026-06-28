@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Osprey per-machine Windows installer (modern WiX v5 toolset).
+
+  Built by ../package.ps1 -Msi, which dotnet-publishes a self-contained
+  win-x64 Osprey and then invokes `wix build` passing:
+    -d PublishDir=<self-contained win-x64 publish folder>
+    -d ProductVersion=<YEAR.ORDINAL.DOY>           (MSI upgrade-significant)
+    -d InformationalVersion=<YEAR.ORDINAL.BRANCH.DOY>  (full Osprey version)
+    -d LicenseRtf=<generated License.rtf>
+
+  Requirements: the WiX v5 dotnet tool plus the matching v5 UI extension
+  (package.ps1 and the ai/.tmp TeamCity plan document the exact commands).
+  WiX v5 is the last release under the free MS-RL license (v6+ require the
+  paid Open Source Maintenance Fee), matching the project's existing WiX 3
+  Skyline installer policy of not taking on installer-tool license costs.
+
+  Installs to C:\Program Files\Osprey (per-machine), adds an Add/Remove
+  Programs entry, and puts the install dir on the system PATH so `osprey`
+  resolves in any shell. The UpgradeCode is fixed so each new version cleanly
+  replaces the prior per-machine install.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+
+  <Package
+      Name="Osprey"
+      Manufacturer="University of Washington"
+      Version="$(ProductVersion)"
+      UpgradeCode="7B0D9C2A-4E6F-4A1B-8C3D-2F5E6A7B8C9D"
+      Scope="perMachine"
+      Compressed="yes">
+
+    <SummaryInformation Description="Osprey $(InformationalVersion) - peptide-centric DIA search engine" />
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Osprey is already installed. Setup will now exit." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- C:\Program Files\Osprey -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Osprey" />
+    </StandardDirectory>
+
+    <!-- Harvest the whole self-contained publish tree. The WiX v4+ Files
+         element auto-creates one component per file, preserving the layout
+         under INSTALLFOLDER. -->
+    <ComponentGroup Id="OspreyFiles" Directory="INSTALLFOLDER">
+      <Files Include="$(PublishDir)\**" />
+    </ComponentGroup>
+
+    <!-- Put the install dir on the system PATH so `osprey` works everywhere. -->
+    <ComponentGroup Id="OspreyPath" Directory="INSTALLFOLDER">
+      <Component Id="OspreyPathEntry" Guid="A1C4E8D2-6F3B-4A90-B17E-2D5C9E0F4A66">
+        <Environment Id="OspreyPathEnv" Name="PATH" Value="[INSTALLFOLDER]"
+                     Part="last" Action="set" System="yes" Permanent="no" />
+        <RegistryValue Root="HKLM" Key="Software\University of Washington\Osprey"
+                       Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+
+    <Feature Id="Main" Title="Osprey" Level="1">
+      <ComponentGroupRef Id="OspreyFiles" />
+      <ComponentGroupRef Id="OspreyPath" />
+    </Feature>
+
+    <!-- Standard install-dir wizard with the license shown. -->
+    <ui:WixUI Id="WixUI_InstallDir" InstallDirectory="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(LicenseRtf)" />
+  </Package>
+</Wix>
