@@ -94,7 +94,7 @@ namespace pwiz.Common.CommandLine
         {
             get
             {
-                // Hosts that set a ShortName (e.g. OspreySharp's -i) get it shown alongside the
+                // Hosts that set a ShortName (e.g. Osprey's -i) get it shown alongside the
                 // long form: "-i, --input ...". Skyline leaves ShortName null, so this prefix is
                 // empty and the rendered text is unchanged.
                 var retValue = (ShortName != null ? @"-" + ShortName + @", " : string.Empty) + ArgumentText;
