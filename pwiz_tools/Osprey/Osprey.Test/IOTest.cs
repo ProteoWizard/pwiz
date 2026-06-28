@@ -849,6 +849,61 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryLoaderIgnoresStaleCache()
+        {
+            // IsCacheFresh guards against loading a .libcache that predates the
+            // source library (the library was rebuilt in place without clearing
+            // the cache). A stale cache would otherwise be loaded silently and
+            // yield the previous build, whose decoys/pairing no longer match the
+            // current run.
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_cache_fresh_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            string source = Path.Combine(dir, "lib.tsv");
+            string cache = Path.Combine(dir, "lib.tsv.libcache");
+            try
+            {
+                File.WriteAllText(source, "source");
+                File.WriteAllText(cache, "cache");
+
+                var t0 = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+                // Cache older than source -> stale -> not fresh.
+                File.SetLastWriteTimeUtc(source, t0.AddHours(1));
+                File.SetLastWriteTimeUtc(cache, t0);
+                Assert.IsFalse(LibraryLoader.IsCacheFresh(cache, source),
+                    "a cache older than its source must be treated as stale");
+
+                // Cache newer than source -> fresh.
+                File.SetLastWriteTimeUtc(cache, t0.AddHours(2));
+                Assert.IsTrue(LibraryLoader.IsCacheFresh(cache, source),
+                    "a cache newer than its source must be usable");
+
+                // Equal timestamps -> fresh (the comparison is >=).
+                File.SetLastWriteTimeUtc(source, t0);
+                File.SetLastWriteTimeUtc(cache, t0);
+                Assert.IsTrue(LibraryLoader.IsCacheFresh(cache, source),
+                    "a cache as new as its source must be usable");
+
+                // Missing cache -> not fresh (nothing to load).
+                File.Delete(cache);
+                Assert.IsFalse(LibraryLoader.IsCacheFresh(cache, source),
+                    "an absent cache cannot be fresh");
+
+                // Missing source -> trust the cache (it is the only copy).
+                File.WriteAllText(cache, "cache");
+                File.Delete(source);
+                Assert.IsTrue(LibraryLoader.IsCacheFresh(cache, source),
+                    "with no source to compare against, the cache is trusted");
+            }
+            finally
+            {
+                if (Directory.Exists(dir))
+                    Directory.Delete(dir, true);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheEmpty()
         {
             var entries = new List<LibraryEntry>();

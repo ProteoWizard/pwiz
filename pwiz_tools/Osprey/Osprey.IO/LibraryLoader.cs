@@ -62,8 +62,12 @@ namespace pwiz.Osprey.IO
                 ArtifactPaths.ResolveCacheDir(path),
                 Path.GetFileName(path) + ".libcache");
 
-            // Try loading from binary cache first
-            if (File.Exists(cachePath))
+            // Try loading from binary cache first, but only when it is at least
+            // as new as the source library. A cache older than its source is
+            // stale -- the library was rebuilt in place without clearing the
+            // cache -- and using it would silently load the PREVIOUS build,
+            // whose decoys and pairing no longer match the current manifest.
+            if (IsCacheFresh(cachePath, path))
             {
                 try
                 {
@@ -81,6 +85,13 @@ namespace pwiz.Osprey.IO
                     logWarning(string.Format(
                         "Failed to load library cache: {0}. Falling back to source.", ex.Message));
                 }
+            }
+            else if (File.Exists(cachePath))
+            {
+                logInfo(string.Format(
+                    "Library cache '{0}' is older than the source library; " +
+                    "ignoring the stale cache and rebuilding from source.",
+                    cachePath));
             }
 
             // Parse from source
@@ -124,6 +135,23 @@ namespace pwiz.Osprey.IO
             }
 
             return entries;
+        }
+
+        /// <summary>
+        /// True when the binary cache at <paramref name="cachePath"/> exists and is
+        /// at least as new as the source library at <paramref name="sourcePath"/>.
+        /// A cache older than its source is stale: the library was rebuilt in place,
+        /// so the cache holds the previous build and must be ignored. When the source
+        /// cannot be located the cache is trusted, since it is then the only copy
+        /// available (the historical behavior before this check existed).
+        /// </summary>
+        public static bool IsCacheFresh(string cachePath, string sourcePath)
+        {
+            if (!File.Exists(cachePath))
+                return false;
+            if (string.IsNullOrEmpty(sourcePath) || !File.Exists(sourcePath))
+                return true;
+            return File.GetLastWriteTimeUtc(cachePath) >= File.GetLastWriteTimeUtc(sourcePath);
         }
     }
 }
