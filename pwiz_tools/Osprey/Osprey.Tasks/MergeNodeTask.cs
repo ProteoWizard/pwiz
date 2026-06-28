@@ -152,6 +152,31 @@ namespace pwiz.Osprey.Tasks
             swBlib.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));
+
+            // FDRBench input TSV: the peptides we report - the final merged/rescored set written to
+            // the output - each with its final q-value and raw SVM discriminant, so FDRBench can
+            // evaluate the FDR/FDP of what Osprey actually outputs. (The blib writer only persists a
+            // 0.0 placeholder discriminant, so this is the only path to a usable FDRBench score.)
+            if (!string.IsNullOrEmpty(config.OutputFdrBench))
+            {
+                var swFdrBench = Stopwatch.StartNew();
+                var benchResult = FdrBenchInputWriter.WritePeptideInput(
+                    config.OutputFdrBench, perFileEntries, libraryById, config.FdrLevel, config.FdrBenchPerRun);
+                swFdrBench.Stop();
+                ctx.LogInfo(string.Format(@"Wrote FDRBench input ({0}) to {1}: {2} rows",
+                    config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
+                    config.OutputFdrBench, benchResult.Rows));
+                if (benchResult.MissingLibrary > 0)
+                    ctx.LogInfo(string.Format(
+                        @"{0} FDRBench rows had no library entry; protein column left blank",
+                        benchResult.MissingLibrary));
+                if (benchResult.TruncatedProtein > 0)
+                    ctx.LogInfo(string.Format(
+                        @"{0} FDRBench rows had oversize protein-ID lists; truncated with ';...+N_more'",
+                        benchResult.TruncatedProtein));
+                ctx.LogInfo(string.Format(@"[STAGE-WALL] fdrbench: {0:F1}s",
+                    swFdrBench.Elapsed.TotalSeconds));
+            }
             return true;
         }
 
