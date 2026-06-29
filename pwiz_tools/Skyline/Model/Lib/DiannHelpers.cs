@@ -537,9 +537,9 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// Create an append-mode, auto-flushed log file at `<--out dir>/diann-skyline-stdout.log`
+        /// Create an append-mode, auto-flushed log file at <c>{--out dir}/diann-skyline-stdout.log</c>
         /// so each DIA-NN stdout line lands on disk immediately. Returns null when no
-        /// `--out` argument is present (e.g. the predictor invocation uses `--out-lib`
+        /// <c>--out</c> argument is present (e.g. the predictor invocation uses <c>--out-lib</c>
         /// instead — that case falls back to writing next to that file).
         /// </summary>
         private static TextWriter TryOpenLiveLogWriter(string args)
@@ -800,7 +800,7 @@ namespace pwiz.Skyline.Model.Lib
         public int MaxVarMods { get; set; } = 2;
 
         /// <summary>
-        /// When true, <see cref="GeneratePredictedLibrary"/> short-circuits and returns
+        /// When true, <see cref="DiannHelpers.GeneratePredictedLibrary"/> short-circuits and returns
         /// the cached library path if a previously-generated library already exists in
         /// the output directory. Used by perf tests to avoid the ~20-min library-prediction
         /// step on every iteration; off by default so production runs always regenerate.

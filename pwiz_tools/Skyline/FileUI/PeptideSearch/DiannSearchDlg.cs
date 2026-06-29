@@ -100,8 +100,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             InitSettingsPresetControls();
         }
 
-        private System.Windows.Forms.ComboBox _cbSettingsPreset;
-        private System.Windows.Forms.Button _btnSavePreset;
+        private ComboBox _cbSettingsPreset;
+        private Button _btnSavePreset;
         private SettingsListComboDriver<SearchSettingsPreset> _settingsPresetDriver;
         private bool _suppressPresetEvent;
 
@@ -109,21 +109,21 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         {
             // Anchor the controls bottom-left of the dialog, in the same horizontal band
             // as the Back/Next/Cancel buttons.
-            var lbl = new System.Windows.Forms.Label
+            var lbl = new Label
             {
                 AutoSize = true,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
                 Location = new Point(12, btnBack.Top + 4),
                 Text = PeptideSearchResources.DiannSearchDlg_SettingsPreset_Label
             };
-            _cbSettingsPreset = new System.Windows.Forms.ComboBox
+            _cbSettingsPreset = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
                 Width = 220,
                 Location = new Point(lbl.Right + 6, btnBack.Top)
             };
-            _btnSavePreset = new System.Windows.Forms.Button
+            _btnSavePreset = new Button
             {
                 Text = PeptideSearchResources.DiannSearchDlg_SettingsPreset_Save,
                 Anchor = AnchorStyles.Bottom | AnchorStyles.Left,

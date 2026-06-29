@@ -82,8 +82,7 @@ namespace pwiz.Skyline.Model.DdaSearch
                 using (var reader = new StreamReader(filePath))
                 {
                     string line;
-                    int linesRead = 0;
-                    while ((line = reader.ReadLine()) != null && linesRead < 50)
+                    while ((line = reader.ReadLine()) != null)
                     {
                         var trimmed = line.Trim();
                         if (trimmed.Length == 0 || trimmed.StartsWith(@"#"))
