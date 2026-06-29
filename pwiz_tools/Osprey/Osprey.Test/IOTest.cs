@@ -898,8 +898,7 @@ namespace pwiz.Osprey.Test
             }
             finally
             {
-                if (Directory.Exists(dir))
-                    Directory.Delete(dir, true);
+                try { Directory.Delete(dir, true); } catch (IOException) { }
             }
         }
 
