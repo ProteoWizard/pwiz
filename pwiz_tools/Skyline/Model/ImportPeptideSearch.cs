@@ -429,7 +429,7 @@ namespace pwiz.Skyline.Model
                 if (spectrumSourceFile == null || (!overwrite && SpectrumSourceFiles[spectrumSourceFile].HasMatches))
                     continue;
 
-                if (Path.GetFileName(spectrumSourceFile).Equals(Path.GetFileName(potentialMatch)))
+                if (string.Equals(Path.GetFileName(spectrumSourceFile), Path.GetFileName(potentialMatch), StringComparison.OrdinalIgnoreCase))
                 {
                     if (overwrite || !SpectrumSourceFiles[spectrumSourceFile].HasExactMatch)
                     {
