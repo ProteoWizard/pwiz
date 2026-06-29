@@ -11,11 +11,8 @@ REM   * pwsh (PowerShell 7+) on PATH (project standard; no powershell.exe fallba
 REM   * Visual Studio Build Tools (MSBuild + vstest.console.exe)
 REM   * .NET 8 SDK
 REM   * JetBrains.dotCover.GlobalTools (dotnet tool install -g)
-REM   * wix v5 dotnet tool + matching v5 UI extension (for the .msi step):
-REM       dotnet tool install --global wix --version 5.0.2
-REM       wix extension add -g WixToolset.UI.wixext/5.0.2
-REM     WiX v5 is the last MS-RL-licensed release (v6+ require the paid OSMF EULA).
-REM     If wix is absent the package step fails the build (by design, like dotCover).
+REM   The wix v5 tool (for the .msi) is self-provisioned below if absent, so no
+REM   manual agent step is needed; this can be replaced by explicit provisioning.
 REM
 REM Outputs consumed by TeamCity:
 REM   * pwiz_tools/Osprey/TestResults/*.trx                  (vstest importData)
@@ -27,7 +24,18 @@ REM   publishArtifacts service messages are emitted by package.ps1 -TeamCity, so
 REM   no server-side artifact-path configuration is required.
 
 setlocal
+REM Make dotnet global tools (wix, etc.) resolvable in this build's environment.
+set "PATH=%PATH%;%USERPROFILE%\.dotnet\tools"
+
 pwsh -NoProfile -File "%~dp0build.ps1" -TeamCity -Coverage -Configuration Release -Framework net8.0
+if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+
+REM Bootstrap the wix v5 tool + matching v5 UI extension if the agent lacks them
+REM (idempotent: first build on a fresh agent installs, later builds skip). WiX v5
+REM is the last MS-RL-licensed release; v6+ require the paid OSMF EULA.
+where wix >nul 2>nul || dotnet tool install --global wix --version 5.0.2
+if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
+wix extension list -g 2>nul | findstr /i "WixToolset.UI.wixext" >nul || wix extension add -g WixToolset.UI.wixext/5.0.2
 if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
 
 pwsh -NoProfile -File "%~dp0package.ps1" -TeamCity -Rid win-x64 -Msi
