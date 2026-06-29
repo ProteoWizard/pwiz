@@ -3906,6 +3906,31 @@ namespace pwiz.Skyline.Controls.Graphs
             return table;
         }
 
+        /// <summary>
+        /// Stages the observed ion-mobility line tooltip (Measured IM / IM error %, plus Measured
+        /// CCS / CCS error % when the source supports IM-&gt;CCS conversion) as a visible, non-auto-
+        /// hiding tip for tutorial screenshots - the same content a user sees hovering the dotted
+        /// observed line on the heatmap. Returns false when there is no observed IM to show.
+        /// </summary>
+        public bool ShowObservedIonMobilityTooltipForScreenshot()
+        {
+            var pane = GraphPane;
+            var imFilter = _msDataFileScanHelper?.CurrentTransition?.IonMobilityInfo;
+            var observedIm = TryGetCurrentTargetChromInfo()?.ObservedIonMobility;
+            if (pane == null || imFilter == null || !imFilter.HasIonMobilityValue ||
+                !observedIm.HasValue || observedIm.Value <= 0)
+                return false;
+            // Anchor on the dotted observed-IM line: y is the IM value transformed to pixels,
+            // x a representative point across the chart.
+            var anchor = new PointF(pane.Chart.Rect.Left + pane.Chart.Rect.Width / 2f,
+                pane.YAxis.Scale.Transform(observedIm.Value));
+            var table = GetIonMobilityLineTooltipTable(anchor, pane);
+            if (table == null)
+                return false;
+            _cursorTip.ShowAt(new Point((int)anchor.X, (int)anchor.Y), table, true);
+            return true;
+        }
+
         // Heatmap/mobilogram Y-axis is ion mobility in the normal case, but precursor m/z for Waters SONAR data.
         private string GetHeatmapYAxisFormat() =>
             _msDataFileScanHelper.IsWatersSonarData ? Formats.Mz : Formats.IonMobility;
