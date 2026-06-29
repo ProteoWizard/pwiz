@@ -272,6 +272,34 @@ namespace TestRunner
         static int Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+
+            // Opt the test runner into the latest WinForms accessibility level by explicitly setting
+            // all four UseLegacyAccessibilityFeatures switches to false BEFORE any control is created.
+            // This is test-host only -- it does not change shipping Skyline behavior.
+            //
+            // Why: at this exe's framework-default accessibility behavior (it targets .NET 4.7.2),
+            // closing a window does not release some UI Automation accessible-object provider handles,
+            // so the post-test GC check reports SkylineWindow/SrmDocument as not collected. Determined
+            // empirically on the affected Windows Server 2022 agent by toggling these switches: the
+            // framework default leaks, all-false (latest level) is clean, and all-true (full legacy) is
+            // also clean -- i.e. it is the intermediate default level that leaks, not either extreme.
+            //
+            // These must be set EXPLICITLY: WinForms resolves the effective accessibility level from the
+            // four switches, applying target-framework defaults to any left unset, so leaving them unset
+            // is NOT the same as setting them false. (AppContext.TryGetSwitch also reports false for an
+            // unset switch, so the difference is not visible by reading the switch values back -- only by
+            // behavior.) Setting all four is intentional: it lands on the latest level regardless of where
+            // the framework default sits, and is harmless.
+            //
+            // Alternative: setting all four to TRUE (full legacy accessibility) was also observed to stop
+            // the leak, by disabling the modern UI Automation provider path entirely. That is a larger
+            // behavioral change, kept as a note in case the latest-level behavior regresses in a future
+            // framework.
+            AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures", false);
+            AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.2", false);
+            AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.3", false);
+            AppContext.SetSwitch("Switch.UseLegacyAccessibilityFeatures.4", false);
+
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
             Application.ThreadException += ThreadExceptionEventHandler;
 

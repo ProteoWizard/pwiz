@@ -575,4 +575,7 @@
   <data name="NavBar_RefreshUi__Truncated_from__0__" xml:space="preserve">
 	  <value>(Truncated from {0})</value>
   </data>
+  <data name="FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_" xml:space="preserve">
+	  <value>Invalid filter string: {0}</value>
+  </data>
 </root>

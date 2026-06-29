@@ -23,7 +23,7 @@ ArrangeGraphsGroupedDlg,TestManageResults
 AssociateProteinsDlg,TestAssociateProteins
 AuditLogForm,*
 AuditLogExtraInfoForm,TestAuditLogSaving
-BaseFileDialogNE,TestRetentionTimeAlignment
+SkylineFileDialogNE,TestRetentionTimeAlignment
 LongOperationRunner.BackgroundThreadLongWaitDlg,*
 BuildBackgroundProteomeDlg,TestBackgroundProteome
 BuildLibraryDlg.PropertiesPage,TestFullScanId

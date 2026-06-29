@@ -3542,6 +3542,16 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        public static System.Drawing.Bitmap Edit_Item {
+            get {
+                object obj = ResourceManager.GetObject("Edit_Item", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         public static System.Drawing.Bitmap Edit_Redo {
             get {
                 object obj = ResourceManager.GetObject("Edit_Redo", resourceCulture);
@@ -5427,6 +5437,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap IonMobilityHeatmap {
+            get {
+                object obj = ResourceManager.GetObject("IonMobilityHeatmap", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to will be deleted because the libraries they depend on have changed. Do you want to continue?.
         /// </summary>
         public static string IonMobilityLibraryList_AcceptList_will_be_deleted_because_the_libraries_they_depend_on_have_changed__Do_you_want_to_continue_ {
@@ -6141,6 +6161,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MissingFileDlg_ValidateFilePath_You_must_choose_a_file_with_the___0___filename_ex" +
                         "tension_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        public static System.Drawing.Bitmap Mobilogram {
+            get {
+                object obj = ResourceManager.GetObject("Mobilogram", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

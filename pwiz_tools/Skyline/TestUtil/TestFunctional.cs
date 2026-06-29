@@ -379,6 +379,14 @@ namespace pwiz.SkylineTestUtil
         protected virtual bool ShowStartPage {get { return false; }}
         protected virtual List<string> SetMru { get { return new List<string>(); } }
 
+        /// <summary>
+        /// Command-line arguments passed to <see cref="Program.Main"/> for this test
+        /// run. Default null -- behave like an unargumented Skyline.exe launch.
+        /// Override to exercise the Program.Main argument-parsing path (e.g. --opendoc,
+        /// --start-page=true|false).
+        /// </summary>
+        protected virtual string[] LaunchArgs => null;
+
         private static void SkylineInvoke(Action act)
         {
             var form = (SkylineWindow as FormEx) ?? FindOpenForm<StartPage>();
@@ -2316,7 +2324,7 @@ namespace pwiz.SkylineTestUtil
             var threadTest = new Thread(WaitForSkyline) { Name = @"Functional test thread" };
             LocalizationHelper.InitThread(threadTest);
             threadTest.Start();
-            Program.Main();
+            Program.Main(LaunchArgs);
             threadTest.Join();
 
             // Were all windows disposed?
@@ -2862,6 +2870,45 @@ namespace pwiz.SkylineTestUtil
                     CloseOpenForm(ownedForm, openForms);
                 }
 
+                if (formToClose.IsDisposed)
+                {
+                    // Already gone - skip the Close() call which would re-trigger WmClose and could
+                    // hit a SafeWaitHandle race during EventWaitHandle.Set in the modal-event path.
+                    return;
+                }
+
+                // ThreadExceptionDialog is a reentrant-modal form whose internal modal-event
+                // SafeWaitHandle has been observed to throw ObjectDisposedException during
+                // Form.Close -> WmClose -> EventWaitHandle.Set on perf-test teardown (see
+                // HangDetection.DismissThreadExceptionDialogs). Dismiss via DialogResult so
+                // WinForms uses the asynchronous PostMessage path, not synchronous SendMessage
+                // from this stack.
+                if (formToClose is ThreadExceptionDialog teDlg)
+                {
+                    // ReSharper disable LocalizableElement
+                    Console.WriteLine("\n\nDismissing open ThreadExceptionDialog during teardown\n"); // Not L10N
+                    // ReSharper restore LocalizableElement
+                    Program.AddTestException(new InvalidOperationException(
+                        @"ThreadExceptionDialog was open at end of test - earlier exception escaped Application.ThreadException handler"));
+                    RunUI(() =>
+                    {
+                        try
+                        {
+                            if (!teDlg.IsDisposed)
+                                teDlg.DialogResult = DialogResult.Cancel;
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Already gone - fine
+                        }
+                        catch (InvalidOperationException)
+                        {
+                            // Handle destroyed mid-close - fine
+                        }
+                    });
+                    return;
+                }
+
                 var messageDlg = formToClose as CommonAlertDlg;
                 // ReSharper disable LocalizableElement
                 if (messageDlg == null)
@@ -2874,11 +2921,20 @@ namespace pwiz.SkylineTestUtil
                 {
                     try
                     {
-                        formToClose.Close();
+                        if (!formToClose.IsDisposed)
+                            formToClose.Close();
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        // Race: form was disposed between IsDisposed check and Close
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Handle was destroyed mid-close
                     }
                     catch
                     {
-                        // Ignore exceptions
+                        // Ignore other exceptions
                     }
                 });
             }
