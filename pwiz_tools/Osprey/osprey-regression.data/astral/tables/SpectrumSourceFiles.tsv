@@ -1,0 +1,4 @@
+fileName	idFileName	cutoffScore	workflowType
+Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_49.mzML	SkylineAI_spectral_library.tsv	0.01	1
+Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_55.mzML	SkylineAI_spectral_library.tsv	0.01	1
+Ast-2024-12-05_HeLa_3mzDIA_6mIIT_400-900_60.mzML	SkylineAI_spectral_library.tsv	0.01	1

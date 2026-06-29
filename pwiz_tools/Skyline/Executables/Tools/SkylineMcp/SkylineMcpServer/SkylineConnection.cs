@@ -94,6 +94,7 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string[] GetSettingsListSelectedItems(string listType) { return CallClient(c => c.GetSettingsListSelectedItems(listType)); }
     public ReportDocTopicDetail GetReportDocTopic(string topicName, string dataSource = null) { return CallClient(c => c.GetReportDocTopic(topicName, dataSource)); }
     public void AddReportFromDefinition(ReportDefinition definition) { CallClientVoid(c => c.AddReportFromDefinition(definition)); }
+    public void ReorderElements(string[] elementLocators) { CallClientVoid(c => c.ReorderElements(elementLocators)); }
     public void InsertSmallMoleculeTransitionList(string textCsv) { CallClientVoid(c => c.InsertSmallMoleculeTransitionList(textCsv)); }
     public void ImportProperties(string csvText) { CallClientVoid(c => c.ImportProperties(csvText)); }
     public void SetReplicate(string replicateName) { CallClientVoid(c => c.SetReplicate(replicateName)); }
@@ -107,7 +108,9 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }
     public string GetGraphImage(string graphId, string filePath = null) { return CallClient(c => c.GetGraphImage(graphId, filePath)); }
+    public ImageBytesMetadata GetGraphImageBytes(string graphId) { return CallClient(c => c.GetGraphImageBytes(graphId)); }
     public string GetFormImage(string formId, string filePath = null) { return CallClient(c => c.GetFormImage(formId, filePath)); }
+    public ImageBytesMetadata GetFormImageBytes(string formId) { return CallClient(c => c.GetFormImageBytes(formId)); }
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
     public void SelectSettingsListItems(string listType, string[] itemNames) { CallClientVoid(c => c.SelectSettingsListItems(listType, itemNames)); }
     public void ImportFasta(string textFasta, string keepEmptyProteins = null) { CallClientVoid(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
@@ -117,9 +120,22 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public ReportMetadata ExportReportFromDefinition(ReportDefinition definition, string filePath, string culture) { return CallClient(c => c.ExportReportFromDefinition(definition, filePath, culture)); }
     public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorial(name, language, filePath)); }
     public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { CallClientVoid(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
+    public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en") { return CallClient(c => c.GetTutorialImageBytes(name, imageFilename, language)); }
 
     // 4-arg methods
     public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }
+
+    // 5-arg methods
+    public ReportRowsResult GetReportFromDefinitionRows(ReportDefinition definition, int offset, int count, bool includeMaxLength, string culture)
+    {
+        return CallClient(c => c.GetReportFromDefinitionRows(definition, offset, count, includeMaxLength, culture));
+    }
+
+    // 7-arg methods
+    public ReportRowsResult GetReportRows(string reportName, int offset, int count, string[] columns, ReportFilter[] filter, bool includeMaxLength, string culture)
+    {
+        return CallClient(c => c.GetReportRows(reportName, offset, count, columns, filter, includeMaxLength, culture));
+    }
 
     /// <summary>
     /// Delegates to the client and captures the diagnostic log.

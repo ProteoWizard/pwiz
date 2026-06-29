@@ -421,10 +421,10 @@
     <value>是否应从肽段的校准曲线计算中排除重复测定的结果。</value>
   </data>
   <data name="ExemplaryEndTime">
-    <value>来自得分最高的重复测定或库文件的峰归一化结束保留时间</value>
+    <value>得分最高的重复测定或库中文件的峰归一化的结束保留时间</value>
   </data>
   <data name="ExemplaryFilePath">
-    <value>得分最高的峰结果文件路径</value>
+    <value>得分最高的峰对应的结果文件路径</value>
   </data>
   <data name="ExemplaryLibraryName">
     <value>得分最高的峰库名称</value>
@@ -433,7 +433,7 @@
     <value>文档中任一重复测定或库中任一明确峰边界中得分最高的峰</value>
   </data>
   <data name="ExemplaryReplicateName">
-    <value>得分最高的峰重复测定名称</value>
+    <value>得分最高的峰重复测定的名称</value>
   </data>
   <data name="ExemplaryRetentionTime">
     <value>得分最高的峰顶点的归一化保留时间</value>
@@ -560,7 +560,7 @@
     <value>基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的结束时间</value>
   </data>
   <data name="ImputedPeak">
-    <value>基于保留时间校准将得分最高的重复测定映射至该重复测定时的峰边界</value>
+    <value>基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的边界</value>
   </data>
   <data name="ImputedStartTime">
     <value>基于保留时间校准将得分最高的重复测定映射至该重复测定时，峰的起始时间</value>
@@ -629,7 +629,7 @@
     <value>若是诱饵母离子，则成立。</value>
   </data>
   <data name="IsolationWindowWidth">
-    <value>母离子隔离时的质荷比窗口宽度。
+    <value>母离子隔离时质荷比的窗口宽度。
 如果隔离了多个母离子，则隔离窗口宽度为各母离子周围窗口宽度之和。</value>
   </data>
   <data name="IsotopeDistIndex">
@@ -778,7 +778,11 @@
     <value>此片段中所有中性丢失的逗号分隔清单</value>
   </data>
   <data name="LossFormulas">
-    <value>此片段中所有中性丢失的逗号分隔化学式列表，或者如果并非所有丢失都具有化学式，则为空</value>
+    <value>A comma separated list of the chemical formulas for all neutral losses from this fragment, or empty if not all losses have formulas</value>
+    <comment>Needs Review:English text changed
+Old English:A comma separated list of the chemical forumulas for all neutral losses from this fragment, or empty if not all losses have formulas
+Current English:A comma separated list of the chemical formulas for all neutral losses from this fragment, or empty if not all losses have formulas
+Old Localized:此片段中所有中性丢失的逗号分隔化学式列表，或者如果并非所有丢失都具有化学式，则为空</comment>
   </data>
   <data name="LossNeutralMass">
     <value>此片段中所有中性丢失的总质量。</value>
@@ -939,18 +943,18 @@
   <data name="MoleculeListAbundanceRaw">
     <value>一个表示分子列表丰度的数值。
 通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
-在缺失的数据影响到重复测定之间的比较时仍可获取。</value>
+在受缺失数据影响的重复测定之间的比较时仍有效。</value>
   </data>
   <data name="MoleculeListAbundanceStrict">
     <value>一个表示分子列表丰度的数值。
 通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
-在缺失的数据影响到重复测定之间的比较时不可获取。</value>
+在受缺失数据影响的重复测定之间的比较时无效。</value>
   </data>
   <data name="MoleculeListAbundanceTransitionAveraged">
-    <value>已废弃：请改用分子列表丰度原始值。</value>
+    <value>已过时：请改用分子列表丰度原始值。</value>
   </data>
   <data name="MoleculeListAbundanceTransitionSummed">
-    <value>已废弃：等于分子列表丰度原始值乘以转移次数。</value>
+    <value>已过时：等于分子列表丰度原始值乘以转移数。</value>
   </data>
   <data name="MoleculeListLocator">
     <value>文档内的分子列表特殊标识符。以“MoleculeGroup：”开头。</value>
@@ -1314,18 +1318,18 @@
   <data name="ProteinAbundanceRaw">
     <value>一个表示分子列表丰度的数值。
 通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
-在缺失的数据影响到重复测定之间的比较时仍可获取。</value>
+在受缺失数据影响的重复测定之间的比较时仍有效。</value>
   </data>
   <data name="ProteinAbundanceStrict">
     <value>一个表示分子列表丰度的数值。
 通常为转移峰面积之和，但根据分子定量设置中指定的归一化方法可能有所不同。
-在缺失的数据影响到重复测定之间的比较时不可获取。</value>
+在受缺失数据影响的重复测定之间的比较时无效。</value>
   </data>
   <data name="ProteinAbundanceTransitionAveraged">
-    <value>已废弃：请改用蛋白质丰度原始值。</value>
+    <value>已过时：请改用蛋白质丰度原始值。</value>
   </data>
   <data name="ProteinAbundanceTransitionSummed">
-    <value>已废弃：等于蛋白质丰度原始值乘以转移次数。</value>
+    <value>已过时：等于蛋白质丰度原始值乘以转移数。</value>
   </data>
   <data name="ProteinAccession">
     <value>蛋白质检索号</value>
@@ -1438,19 +1442,19 @@
     <value>用户给予的进行更改的原因</value>
   </data>
   <data name="ReintegratedEndTime">
-    <value>与训练好的峰得分模型重新合并时选定的峰结束保留时间</value>
+    <value>使用训练好的峰评分模型重新整合时，所选峰的最终保留时间</value>
   </data>
   <data name="ReintegratedPeak">
-    <value>与训练好的峰得分模型重新合并时选定的峰边界</value>
+    <value>使用训练好的峰评分模型重新整合时，所选峰的边界</value>
   </data>
   <data name="ReintegratedRetentionTime">
-    <value>与训练好的峰得分模型重新合并时选定的峰顶点保留时间</value>
+    <value>使用训练好的峰评分模型重新整合时，所选峰值顶点的保留时间</value>
   </data>
   <data name="ReintegratedScore">
-    <value>与训练好的峰得分模型重新合并时分配的峰得分</value>
+    <value>使用训练好的峰评分模型重新整合时，所选峰的得分</value>
   </data>
   <data name="ReintegratedStartTime">
-    <value>与训练好的峰得分模型重新合并时选定的峰起始保留时间</value>
+    <value>使用训练好的峰评分模型重新整合时，所选峰的起始保留时间</value>
   </data>
   <data name="Replicate">
     <value>重复测定</value>
