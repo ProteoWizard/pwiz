@@ -58,9 +58,15 @@ public sealed class Converter
         if (_config.Merge)
         {
             try { ConvertMerged(runIndexSet); return 1; }
+            catch (Pwiz.Util.Misc.EnumerationException ex)
+            {
+                _log.WriteLine($"error merging files (aborting): {ex.Message}");
+                _log.WriteLine("  To skip problematic spectra and write the remaining data, re-run with --continueOnError.");
+                return 0;
+            }
             catch (Exception ex)
             {
-                _log.WriteLine($"error converting merged output: {ex.Message}");
+                _log.WriteLine($"error merging files (aborting): {ex.Message}");
                 return 0;
             }
         }
@@ -73,9 +79,20 @@ public sealed class Converter
                 ConvertInputAllRuns(input, runIndexSet);
                 successCount++;
             }
+            catch (Pwiz.Util.Misc.EnumerationException ex)
+            {
+                // Per-spectrum/per-chromatogram fetch failure surfaced by the
+                // writer (cpp msconvert.cpp catch on pwiz::util::enumeration_error).
+                // This is the only failure mode where --continueOnError would let
+                // the conversion proceed, so print the hint here and only here.
+                _log.WriteLine($"error converting {input} (aborting conversion of this file): {ex.Message}");
+                _log.WriteLine("  To skip problematic spectra and write the remaining data, re-run with --continueOnError.");
+                if (_config.Verbose) _log.WriteLine(ex.ToString());
+                if (!_config.ContinueOnError) break;
+            }
             catch (Exception ex)
             {
-                _log.WriteLine($"error converting {input}: {ex.Message}");
+                _log.WriteLine($"error converting {input} (aborting conversion of this file): {ex.Message}");
                 if (_config.Verbose) _log.WriteLine(ex.ToString());
                 if (!_config.ContinueOnError) break;
             }
@@ -223,10 +240,30 @@ public sealed class Converter
             registry.AddListener(new ConsoleProgressListener(_log), iterationPeriod: 100);
         }
 
-        // MSDataFile.Write owns the gzip-stream wrapping + per-format writer dispatch; we've
-        // already adjusted the filename for the .gz suffix above so callers see the on-disk
-        // name in the log.
-        MSDataFile.Write(msd, outputFile, _config.WriteConfig, registry);
+        // Write to <outputFile>.partial, then rename. Mirrors cpp msconvert.cpp's
+        // writeAtomically — prevents an incomplete file from being mistaken for a
+        // valid conversion when the vendor library throws partway through (e.g.
+        // a corrupted scan that the reader can't centroid). MSDataFile.Write owns
+        // the gzip-stream wrapping + per-format writer dispatch; we've already
+        // adjusted the filename for the .gz suffix above so callers see the
+        // on-disk name in the log.
+        string partial = outputFile + ".partial";
+        // Clear any leftover .partial from a previous failed run; File.Move below
+        // wouldn't overwrite the final on Windows if the partial is around.
+        if (File.Exists(partial)) File.Delete(partial);
+        try
+        {
+            MSDataFile.Write(msd, partial, _config.WriteConfig, registry);
+        }
+        catch
+        {
+            // Best-effort cleanup; preserve original exception.
+            try { if (File.Exists(partial)) File.Delete(partial); } catch { }
+            throw;
+        }
+        // File.Move(overwrite: true) ≈ bfs::rename — atomic on the same volume,
+        // which is the case since .partial sits next to the final name.
+        File.Move(partial, outputFile, overwrite: true);
     }
 
     /// <summary>

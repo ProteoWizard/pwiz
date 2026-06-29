@@ -35,6 +35,11 @@ public sealed class MzMlbWriter
     /// <see cref="MzmlWriter"/>.</summary>
     public IterationListenerRegistry? IterationListenerRegistry { get; set; }
 
+    /// <summary>Forwarded to the inner <see cref="MzmlWriter"/> — when true,
+    /// per-spectrum/per-chromatogram fetch failures are logged and skipped
+    /// rather than aborting. See <see cref="MzmlWriter.ContinueOnError"/>.</summary>
+    public bool ContinueOnError { get; set; }
+
     /// <summary>Creates an mzMLb writer with the given binary-encoder config.
     /// The encoder config is mostly unused — mzMLb's binary arrays live in
     /// HDF5 datasets, not in the XML, so precision / compression / numpress
@@ -76,6 +81,7 @@ public sealed class MzMlbWriter
                 TrackSpectrumOffsets = true,
                 IterationListenerRegistry = IterationListenerRegistry,
                 ExternalBinarySink = conn,
+                ContinueOnError = ContinueOnError,
             };
             inner.Write(msd, stream);
 

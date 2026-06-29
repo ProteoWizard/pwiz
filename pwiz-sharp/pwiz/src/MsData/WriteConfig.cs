@@ -78,10 +78,12 @@ public sealed class WriteConfig
     /// Only consulted by the mzMLb writer.</summary>
     public int MzMLbCompressionLevel { get; set; } = 4;
 
-    /// <summary>When true, the writer should log + continue on a per-spectrum write error
-    /// rather than aborting. Matches cpp <c>WriteConfig::continueOnError</c>. pwiz-sharp's
-    /// writers don't all honor this yet — they stop on the first failed spectrum — but
-    /// callers (e.g. MSConvertGUI) can set it for forward compatibility.</summary>
+    /// <summary>When true, per-spectrum/per-chromatogram fetch failures during write are
+    /// logged and the bad item is skipped instead of aborting the conversion. When false
+    /// (default), the failure is wrapped in <see cref="Pwiz.Util.Misc.EnumerationException"/>
+    /// and rethrown so callers (e.g. msconvert) can show the user the hint to retry with the
+    /// flag. Honored by mzML / mzMLb writers; other format writers stop on the first
+    /// failure regardless. Matches cpp <c>WriteConfig::continueOnError</c>.</summary>
     public bool ContinueOnError { get; set; }
 
     /// <summary>Shallow copy with a cloned <see cref="EncoderConfig"/>; lets callers tweak

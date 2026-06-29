@@ -163,6 +163,7 @@ public static class MSDataFile
                 ChunkSize = (ulong)Math.Max(1, config.MzMLbChunkSize),
                 CompressionLevel = config.MzMLbCompressionLevel,
                 IterationListenerRegistry = ilr,
+                ContinueOnError = config.ContinueOnError,
             }.Write(msd, path);
             return;
         }
@@ -186,6 +187,7 @@ public static class MSDataFile
                 {
                     Indexed = config.Indexed,
                     IterationListenerRegistry = ilr,
+                    ContinueOnError = config.ContinueOnError,
                 }.Write(msd, output);
                 break;
             case WriteFormat.MzXml:

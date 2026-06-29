@@ -69,6 +69,20 @@ public sealed class MzmlWriter
     /// progress output and any future progress UI.</summary>
     public IterationListenerRegistry? IterationListenerRegistry { get; set; }
 
+    /// <summary>When true, a per-item failure (vendor SDK throws during
+    /// <c>SpectrumList.GetSpectrum</c> / <c>ChromatogramList.GetChromatogram</c>)
+    /// is logged and the bad spectrum/chromatogram is skipped instead of
+    /// aborting the write. When false (default), the per-item failure is wrapped
+    /// in <see cref="Pwiz.Util.Misc.EnumerationException"/> and rethrown so callers
+    /// (msconvert) can distinguish recoverable per-item failures from other
+    /// write errors. Mirrors cpp <c>WriteConfig::continueOnError</c> as consumed
+    /// by <c>pwiz/data/msdata/IO.cpp</c>.</summary>
+    public bool ContinueOnError { get; set; }
+
+    /// <summary>Sink for skipped-item diagnostics under <see cref="ContinueOnError"/>.
+    /// Defaults to <see cref="System.Console.Error"/> (matches cpp's <c>cerr</c>).</summary>
+    public System.IO.TextWriter SkipLog { get; set; } = System.Console.Error;
+
     /// <summary>
     /// Optional sink for external binary array data. When set, the writer
     /// routes each <c>BinaryDataArray</c> / <c>IntegerDataArray</c> through
@@ -510,7 +524,25 @@ public sealed class MzmlWriter
 
         for (int i = 0; i < list.Count; i++)
         {
-            var chrom = list.GetChromatogram(i, getBinaryData: true);
+            // Same per-item-fetch guard as the spectrum loop above. Matches cpp
+            // IO.cpp:3132-3149 chromatogram-write loop.
+            Chromatogram chrom;
+            try
+            {
+                chrom = list.GetChromatogram(i, getBinaryData: true);
+            }
+            catch (System.Exception ex)
+            {
+                if (ContinueOnError)
+                {
+                    string id;
+                    try { id = list.ChromatogramIdentity(i).Id; }
+                    catch { id = "?"; }
+                    SkipLog.WriteLine($"Skipping chromatogram {i} \"{id}\": {ex.Message}");
+                    continue;
+                }
+                throw new Pwiz.Util.Misc.EnumerationException(ex.Message, ex);
+            }
             WriteChromatogram(w, chrom);
         }
         w.WriteEndElement();
@@ -686,7 +718,31 @@ public sealed class MzmlWriter
         var registry = IterationListenerRegistry;
         for (int i = 0; i < count; i++)
         {
-            var spec = list.GetSpectrum(i, getBinaryData: true);
+            // Per-item fetch is the failure-prone step (vendor SDK throws during
+            // GetSpectrum, e.g. a corrupted scan that can't be centroided). cpp
+            // IO.cpp:3001-3017 wraps only the fetch; the actual write is not in
+            // the catch. ContinueOnError → log + skip; otherwise wrap as
+            // EnumerationException so msconvert can show the --continueOnError
+            // hint. Catches Exception because vendor SDKs throw arbitrary types
+            // (IOException, IndexOutOfRangeException, vendor-specific) with no
+            // shared base — same as cpp catching std::exception&.
+            Spectrum spec;
+            try
+            {
+                spec = list.GetSpectrum(i, getBinaryData: true);
+            }
+            catch (System.Exception ex)
+            {
+                if (ContinueOnError)
+                {
+                    string id;
+                    try { id = list.SpectrumIdentity(i).Id; }
+                    catch { id = "?"; }
+                    SkipLog.WriteLine($"Skipping spectrum {i} \"{id}\": {ex.Message}");
+                    continue;
+                }
+                throw new Pwiz.Util.Misc.EnumerationException(ex.Message, ex);
+            }
             WriteSpectrum(w, spec);
 
             // Broadcast progress before moving on. Throttling is handled by the registry's
