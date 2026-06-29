@@ -266,6 +266,12 @@
     <Compile Include="Alerts\ArdiaLoginDlg.Designer.cs">
       <DependentUpon>ArdiaLoginDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\DiannDownloadDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\DiannDownloadDlg.Designer.cs">
+      <DependentUpon>DiannDownloadDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\KeyValueGridDlg.cs" />
     <Compile Include="Alerts\MsFraggerDownloadDlg.cs">
       <SubType>Form</SubType>
@@ -632,6 +638,12 @@
     <Compile Include="FileUI\PeptideSearch\DDASearchControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
+    <Compile Include="FileUI\PeptideSearch\DiannSearchDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\DiannSearchDlg.Designer.cs">
+      <DependentUpon>DiannSearchDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -657,6 +669,8 @@
       <DependentUpon>ColumnCaptions.resx</DependentUpon>
     </Compile>
     <Compile Include="Model\DdaSearch\TideSearchEngine.cs" />
+    <Compile Include="Model\DdaSearch\SearchSettingsParamsFileParser.cs" />
+    <Compile Include="Model\DdaSearch\SearchSettingsPreset.cs" />
     <Compile Include="Model\DllFinder.cs" />
     <Compile Include="Model\DocSettings\AbsoluteQuantification\IFiguresOfMeritCalculator.cs" />
     <Compile Include="Model\Databinding\Entities\ColumnToolTips.Designer.cs">
@@ -924,6 +938,7 @@
     <Compile Include="Model\Irt\Regression.cs" />
     <Compile Include="Model\LegacyCrosslinkConverter.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeakAnnotations.cs" />
+    <Compile Include="Model\Lib\DiannHelpers.cs" />
     <Compile Include="Model\Lib\EncyclopeDiaHelpers.cs" />
     <Compile Include="Model\Lib\ExplicitPeakBounds.cs" />
     <Compile Include="Model\Lib\LibKeyIndex.cs" />
@@ -1385,6 +1400,9 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.cs">
       <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\WarnOnPresetChangeDlg.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="FileUI\PeptideSearch\SearchSettingsControl.Designer.cs">
       <DependentUpon>SearchSettingsControl.cs</DependentUpon>
@@ -1867,6 +1885,12 @@
     </Compile>
     <Compile Include="FileUI\PeptideSearch\MatchModificationsControl.Designer.cs">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\PresetNameDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PeptideSearch\PresetNameDlg.Designer.cs">
+      <DependentUpon>PresetNameDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.cs">
       <SubType>UserControl</SubType>
@@ -2597,6 +2621,9 @@
     <Compile Include="SettingsUI\EditListDlg.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="SettingsUI\ShareListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="SettingsUI\EditListDlg.Designer.cs">
       <DependentUpon>EditListDlg.cs</DependentUpon>
     </Compile>
@@ -2700,6 +2727,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingFileDlg.zh-CHS.resx">
       <DependentUpon>MissingFileDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\DiannDownloadDlg.resx">
+      <DependentUpon>DiannDownloadDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MsFraggerDownloadDlg.ja.resx">
       <DependentUpon>MsFraggerDownloadDlg.cs</DependentUpon>
@@ -3344,6 +3374,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\ConverterSettingsControl.zh-CHS.resx">
       <DependentUpon>ConverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\DiannSearchDlg.resx">
+      <DependentUpon>DiannSearchDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\EncyclopeDiaSearchDlg.ja.resx">
       <DependentUpon>EncyclopeDiaSearchDlg.cs</DependentUpon>
@@ -5041,6 +5075,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\MatchModificationsControl.resx">
       <DependentUpon>MatchModificationsControl.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PeptideSearch\PresetNameDlg.resx">
+      <DependentUpon>PresetNameDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\PeptideSearch\BuildPeptideSearchLibraryControl.resx">

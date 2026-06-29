@@ -27,6 +27,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DdaSearch;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
@@ -1223,6 +1224,46 @@ namespace pwiz.Skyline.Properties
         }
 
         [UserScopedSetting]
+        public SearchSettingsPresetList SearchSettingsPresets
+        {
+            get
+            {
+                var list = (SearchSettingsPresetList)this[@"SearchSettingsPresets"];
+                if (list == null)
+                {
+                    list = new SearchSettingsPresetList();
+                    list.AddDefaults();
+                    SearchSettingsPresets = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[@"SearchSettingsPresets"] = value;
+            }
+        }
+
+        [UserScopedSetting]
+        public DiannSearchSettingsPresetList DiannSearchSettingsPresets
+        {
+            get
+            {
+                var list = (DiannSearchSettingsPresetList)this[@"DiannSearchSettingsPresets"];
+                if (list == null)
+                {
+                    list = new DiannSearchSettingsPresetList();
+                    list.AddDefaults();
+                    DiannSearchSettingsPresets = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[@"DiannSearchSettingsPresets"] = value;
+            }
+        }
+
+        [UserScopedSetting]
         public RemoteAccountList RemoteAccountList
         {
             get 
@@ -1699,6 +1740,66 @@ namespace pwiz.Skyline.Properties
                 return this[toolType.ToString()].ExtraCommandlineArgs;
             return defaultArgs;
         }
+    }
+
+
+    public sealed class SearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>
+    {
+        public const string DEFAULT_PRESET_NAME = @"Default";
+        public const string DEFAULT_ENZYME_NAME = @"Trypsin";
+
+        public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)
+        {
+            yield return new SearchSettingsPreset(
+                DEFAULT_PRESET_NAME,
+                SearchEngine.MSAmanda,
+                new MzTolerance(0, MzTolerance.Units.ppm),
+                new MzTolerance(0, MzTolerance.Units.ppm),
+                maxVariableMods: 2,
+                fragmentIons: null,
+                ms2Analyzer: null,
+                cutoffScore: 0.01,
+                additionalSettingsXml: null,
+                enzymeName: DEFAULT_ENZYME_NAME,
+                maxMissedCleavages: 0);
+
+            // Engine-specific presets, sorted alphabetically. DIA-NN presets live in
+            // their own list (DiannSearchSettingsPresetList) so the peptide-search wizard
+            // and the DIA-NN search wizard each see only what's applicable.
+            foreach (var preset in CometSearchEngine.GetDefaultPresets()
+                         .Concat(MsFraggerSearchEngine.GetDefaultPresets())
+                         .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
+                yield return preset;
+        }
+
+        public override int ExcludeDefaults => GetDefaults(RevisionIndexCurrent).Count();
+
+        public override string Title => PropertiesResources.SearchSettingsPresetList_Title_Edit_Settings_Presets;
+        public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
+
+        public override Type SerialType => typeof(SearchSettingsPresetList);
+        public override ICollection<SearchSettingsPreset> CreateEmptyList() => new SearchSettingsPresetList();
+        public override string FileExtension => @".skysp";
+    }
+
+
+    public sealed class DiannSearchSettingsPresetList : SerializableSettingsList<SearchSettingsPreset>
+    {
+        public override IEnumerable<SearchSettingsPreset> GetDefaults(int revisionIndex)
+        {
+            foreach (var preset in DiannHelpers.GetDefaultPresets()
+                         .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase))
+                yield return preset;
+        }
+
+        public override int ExcludeDefaults => GetDefaults(RevisionIndexCurrent).Count();
+
+        public override string Title => PropertiesResources.SearchSettingsPresetList_Title_Edit_Settings_Presets;
+        public override string Label => PropertiesResources.SearchSettingsPresetList_Label_Settings_Presets;
+
+        public override Type SerialType => typeof(DiannSearchSettingsPresetList);
+        public override ICollection<SearchSettingsPreset> CreateEmptyList() => new DiannSearchSettingsPresetList();
+        public override string FileExtension => @".skysp";
     }
 
 
@@ -3661,6 +3762,8 @@ namespace pwiz.Skyline.Properties
             return new AnnotationDefList();
         }
 
+        public string FileExtension => @".xml";
+
         public bool SingleSelect => false;
 
         public string[] GetSelectedItems(SrmSettings settings) => GetKeys(settings.DataSettings.AnnotationDefs);
@@ -3823,6 +3926,8 @@ namespace pwiz.Skyline.Properties
         {
             return new ColorSchemeList();
         }
+
+        public string FileExtension => @".xml";
     }
 
     public abstract class SettingsListNotifying<TItem> : SettingsList<TItem>
@@ -3871,6 +3976,8 @@ namespace pwiz.Skyline.Properties
         public virtual Type DeserialType { get { return SerialType; } }
 
         public abstract ICollection<TItem> CreateEmptyList();
+
+        public virtual string FileExtension => @".xml";
 
         #endregion
 
