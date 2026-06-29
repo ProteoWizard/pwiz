@@ -12220,9 +12220,6 @@ public enum class CVID
     /// <summary>TOF/TOF: A tandem instrument that combines two time-of-flight mass analyzers in series, where the first selects precursor ions and the second analyzes fragment ions produced by collision-induced dissociation or post-source decay.</summary>
     MS_TOF_TOF = MS_tandem_time_of_flight_instrument,
 
-    /// <summary>TOF-TOF: A tandem instrument that combines two time-of-flight mass analyzers in series, where the first selects precursor ions and the second analyzes fragment ions produced by collision-induced dissociation or post-source decay.</summary>
-    MS_TOF_TOF = MS_tandem_time_of_flight_instrument,
-
     /// <summary>magnetic sector ion trap instrument: A hybrid instrument that combines a double-focusing magnetic sector analyzer for high-resolution precursor ion selection with an ion trap for MSn fragmentation analysis.</summary>
     MS_magnetic_sector_ion_trap_instrument = 1003947,
 
