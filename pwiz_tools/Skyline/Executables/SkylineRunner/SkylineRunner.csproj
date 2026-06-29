@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>pwiz.SkylineRunner</RootNamespace>
     <AssemblyName>SkylineDailyRunner</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ManifestCertificateThumbprint>B226686C5D57EC6D3C850F6DD0334C32C39A5AAC</ManifestCertificateThumbprint>
     <ManifestKeyFile>SkylineRunner_TemporaryKey.pfx</ManifestKeyFile>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <RootNamespace>SkylineAiConnector</RootNamespace>
     <AssemblyName>SkylineAiConnector</AssemblyName>
     <LangVersion>latest</LangVersion>
