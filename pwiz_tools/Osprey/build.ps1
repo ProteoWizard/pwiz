@@ -153,21 +153,12 @@ foreach ($f in $staleAsmInfo) {
 # --- Version (Skyline scheme YEAR.ORDINAL.BRANCH.DOY) -------------------
 # Mirrors pwiz_tools/Skyline/Jamfile.jam so a standalone dev/CI build stamps
 # the same versioning the Boost build does (rather than the Directory.Build.props
-# placeholder). YEAR/ORDINAL/BRANCH are the release-line constants; DOY is the
-# day-of-year of the git commit date (reproducible), offset by 365 per year past
-# YEAR. The stamped version becomes OspreyVersion.Current at runtime. The
+# placeholder). The stamped version becomes OspreyVersion.Current at runtime. The
 # regression harness pins OSPREY_VERSION_OVERRIDE on top of this for bit parity.
-$OSPREY_YEAR = 26
-$OSPREY_ORDINAL = 1
-$OSPREY_BRANCH = 1
-$gitDate = & git -C $scriptRoot log -1 --format=%cs HEAD 2>$null
-if ($LASTEXITCODE -eq 0 -and $gitDate -match '^\d{4}-\d{2}-\d{2}$') {
-    $verDate = [datetime]::ParseExact($gitDate.Trim(), 'yyyy-MM-dd', [cultureinfo]::InvariantCulture)
-} else {
-    $verDate = Get-Date
-}
-$doy = (([int]$verDate.ToString('yy')) - $OSPREY_YEAR) * 365 + $verDate.DayOfYear
-$ospreyVersion = "$OSPREY_YEAR.$OSPREY_ORDINAL.$OSPREY_BRANCH.$doy"
+# The formula lives in version.ps1 so build.ps1 (stamps the binary) and
+# package.ps1 (names the redistributable) can never disagree.
+. (Join-Path $scriptRoot 'version.ps1')
+$ospreyVersion = Get-OspreyVersion -RepoPath $scriptRoot
 
 # --- Build --------------------------------------------------------------
 Write-Progress-Tc "Building Osprey.sln ($Configuration|$platform) v$ospreyVersion"
