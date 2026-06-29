@@ -114,6 +114,7 @@ public class BlibBuilder : BlibMaker
         ".hk.bs.kro", // Hardklor result file postprocessed by BullseyeSharp
         ".mlb",
         ".speclib",
+        ".parquet",  // DIA-NN v2+ report-lib.parquet (cpp PR #4189)
         ".tsv",
         ".osw",
         ".mzTab",

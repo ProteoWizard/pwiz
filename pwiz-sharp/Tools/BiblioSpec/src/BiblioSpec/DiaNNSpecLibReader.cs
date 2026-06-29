@@ -96,10 +96,15 @@ public sealed class DiaNNSpecLibReader : BuildParser
     private readonly Library _specLib = new();
     private SQLiteCommand? _insertRtCmd;
     private IonMobilityType _ionMobilityType = IonMobilityType.None;
+    private int _missingFromSpeclibCount;
 
-    /// <summary>Returns true if <paramref name="path"/> ends with <c>.speclib</c> (case-insensitive).</summary>
+    /// <summary>Returns true if <paramref name="path"/> is a DIA-NN spectral library —
+    /// either the legacy binary <c>.speclib</c> or a <c>.parquet</c> file (DIA-NN v2+
+    /// <c>report-lib.parquet</c>, loaded directly via
+    /// <see cref="LoadSpecLibFromParquetAsync"/>). cpp parity: BlibBuild.cpp:199 (PR #4189).</summary>
     public static bool AcceptsExtension(string path) =>
-        path.EndsWith(".speclib", StringComparison.OrdinalIgnoreCase);
+        path.EndsWith(".speclib", StringComparison.OrdinalIgnoreCase)
+        || path.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Construct a DiaNNSpecLibReader bound to <paramref name="maker"/> and the speclib file at
@@ -180,10 +185,20 @@ public sealed class DiaNNSpecLibReader : BuildParser
     /// </summary>
     public override bool ParseFile()
     {
-        // --- 1) load the binary speclib ---------------------------------------------------
-        using (var stream = new FileStream(_specLibFile, FileMode.Open, FileAccess.Read, FileShare.Read))
-        using (var reader = new BinaryReader(stream))
+        // --- 1) load the spectral library -------------------------------------------------
+        // Prefer DIA-NN v2's report-lib.parquet over the binary .skyline.speclib sibling
+        // (or the user passes the parquet directly). Fall back to the binary path
+        // otherwise. cpp parity: DiaNNSpecLibReader.cpp:978-1004 (PR #4189).
+        string libParquetPath = FindLibParquet();
+        if (!string.IsNullOrEmpty(libParquetPath))
         {
+            Verbosity.Status($"Reading library entries from parquet {libParquetPath}.");
+            LoadSpecLibFromParquetAsync(libParquetPath).GetAwaiter().GetResult();
+        }
+        else
+        {
+            using var stream = new FileStream(_specLibFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var reader = new BinaryReader(stream);
             _specLib.Read(reader);
         }
         Verbosity.Status($"Read {_specLib.Entries.Count} entries from speclib.");
@@ -326,9 +341,13 @@ public sealed class DiaNNSpecLibReader : BuildParser
                 {
                     if (!_specLib.EntryByName.TryGetValue(precursorIdStr, out var entry))
                     {
-                        throw new BlibException(false,
-                            $"could not find precursorId '{precursorIdStr}' in speclib; is " +
-                            $"'{Path.GetFileName(diannReportFilepath)}' the correct report TSV file?");
+                        // cpp parity: DiaNNSpecLibReader.cpp:1313-1320 (PR #4189) — DIA-NN
+                        // may report precursors that are not in the spectral library (e.g.
+                        // identifications without a confident predicted spectrum). Skip
+                        // them rather than aborting; we validate at the end that *some*
+                        // report rows matched.
+                        ++_missingFromSpeclibCount;
+                        continue;
                     }
 
                     psm.Score = globalQValue;
@@ -339,6 +358,15 @@ public sealed class DiaNNSpecLibReader : BuildParser
                 }
             }
         }
+
+        // cpp parity: DiaNNSpecLibReader.cpp:1374-1380 (PR #4189) — warn on report rows
+        // skipped due to missing speclib entries, and refuse to commit if *no* row matched.
+        if (_missingFromSpeclibCount > 0)
+            Verbosity.Warn($"Skipped {_missingFromSpeclibCount} report rows whose precursors were not in the spectral library.");
+        if (Psms.Count == 0 && _missingFromSpeclibCount > 0)
+            throw new BlibException(false,
+                $"no report rows matched the spectral library; is '{Path.GetFileName(diannReportFilepath)}' " +
+                $"the correct report file for '{Path.GetFileName(_specLibFile)}'?");
 
         FilteredOutPsmCount = _specLib.Entries.Count - Psms.Count;
 
@@ -560,6 +588,168 @@ public sealed class DiaNNSpecLibReader : BuildParser
         return result;
     }
 
+    // --- report-lib.parquet (PR #4189) -------------------------------------------------
+
+    /// <summary>
+    /// Locate the DIA-NN v2+ <c>report-lib.parquet</c> companion when the input is a
+    /// <c>*-lib.parquet.skyline.speclib</c>, or treat the input itself as that file when
+    /// the user passes a <c>.parquet</c> directly. Returns empty when no parquet library
+    /// is in play (e.g. legacy <c>.skyline.speclib</c> with no parquet sibling), and the
+    /// caller falls back to the binary speclib reader. cpp parity:
+    /// <c>DiaNNSpecLibReader.cpp:981-1004</c>.
+    /// </summary>
+    private string FindLibParquet()
+    {
+        if (_specLibFile.EndsWith(".parquet", StringComparison.OrdinalIgnoreCase))
+            return File.Exists(_specLibFile) ? _specLibFile : string.Empty;
+
+        if (_specLibFile.EndsWith(".parquet.skyline.speclib", StringComparison.OrdinalIgnoreCase))
+        {
+            string candidate = _specLibFile.Substring(0, _specLibFile.Length - ".skyline.speclib".Length);
+            if (File.Exists(candidate)) return candidate;
+        }
+        return string.Empty;
+    }
+
+    /// <summary>
+    /// Populate <see cref="_specLib"/> from a DIA-NN v2+ <c>report-lib.parquet</c>
+    /// file (one row per fragment). Decoy rows are skipped; only target precursors are
+    /// loaded. cpp parity: <c>DiaNNSpecLibReader.cpp:loadSpecLibFromParquet</c>
+    /// (PR #4189).
+    /// </summary>
+    private async Task LoadSpecLibFromParquetAsync(string filepath)
+    {
+        using var stream = File.OpenRead(filepath);
+        using var reader = await Parquet.ParquetReader.CreateAsync(stream).ConfigureAwait(false);
+        var schema = reader.Schema;
+
+        var precursorIdField  = MustFindParquetField(schema, "Precursor.Id", filepath);
+        var modSeqField       = MustFindParquetField(schema, "Modified.Sequence", filepath);
+        var chargeField       = MustFindParquetField(schema, "Precursor.Charge", filepath);
+        var precursorMzField  = MustFindParquetField(schema, "Precursor.Mz", filepath);
+        var rtField           = MustFindParquetField(schema, "RT", filepath);
+        var imField           = MustFindParquetField(schema, "IM", filepath);
+        var qValueField       = MustFindParquetField(schema, "Q.Value", filepath);
+        var decoyField        = MustFindParquetField(schema, "Decoy", filepath);
+        var proteotypicField  = MustFindParquetField(schema, "Proteotypic", filepath);
+        var flagsField        = MustFindParquetField(schema, "Flags", filepath);
+        var productMzField    = MustFindParquetField(schema, "Product.Mz", filepath);
+        var relIntenField     = MustFindParquetField(schema, "Relative.Intensity", filepath);
+        // Fragment.{Type,Charge,Series.Number,Loss.Type} are read by cpp but discarded
+        // by the C# Product class — we only retain (mz, intensity) per fragment. Reading
+        // and ignoring keeps the schema check honest (the columns must be present).
+        var fragTypeField     = MustFindParquetField(schema, "Fragment.Type", filepath);
+        var fragChargeField   = MustFindParquetField(schema, "Fragment.Charge", filepath);
+        var fragSeriesField   = MustFindParquetField(schema, "Fragment.Series.Number", filepath);
+        var fragLossField     = MustFindParquetField(schema, "Fragment.Loss.Type", filepath);
+        _ = fragTypeField; _ = fragChargeField; _ = fragSeriesField; _ = fragLossField;
+
+        string lastPrecursorId = string.Empty;
+        Entry? currentEntry = null;
+
+        for (int rg = 0; rg < reader.RowGroupCount; rg++)
+        {
+            using var rgReader = reader.OpenRowGroupReader(rg);
+
+            string[] precursorId = await ReadStringColumn(rgReader, precursorIdField).ConfigureAwait(false);
+            string[] modSeq      = await ReadStringColumn(rgReader, modSeqField).ConfigureAwait(false);
+            long[]   charge      = await ReadLongColumn  (rgReader, chargeField).ConfigureAwait(false);
+            float[]  precMz      = await ReadFloatColumn (rgReader, precursorMzField).ConfigureAwait(false);
+            float[]  rt          = await ReadFloatColumn (rgReader, rtField).ConfigureAwait(false);
+            float[]  im          = await ReadFloatColumn (rgReader, imField).ConfigureAwait(false);
+            float[]  qvalue      = await ReadFloatColumn (rgReader, qValueField).ConfigureAwait(false);
+            long[]   decoy       = await ReadLongColumn  (rgReader, decoyField).ConfigureAwait(false);
+            long[]   proteotypic = await ReadLongColumn  (rgReader, proteotypicField).ConfigureAwait(false);
+            long[]   flags       = await ReadLongColumn  (rgReader, flagsField).ConfigureAwait(false);
+            float[]  productMz   = await ReadFloatColumn (rgReader, productMzField).ConfigureAwait(false);
+            float[]  relInten    = await ReadFloatColumn (rgReader, relIntenField).ConfigureAwait(false);
+
+            int n = precursorId.Length;
+            for (int i = 0; i < n; i++)
+            {
+                if (decoy[i] != 0) continue;
+
+                if (precursorId[i] != lastPrecursorId || currentEntry is null)
+                {
+                    int idx = _specLib.Entries.Count;
+                    currentEntry = new Entry { Name = precursorId[i] };
+                    currentEntry.Target.Index = idx;
+                    currentEntry.Target.Charge = (int)charge[i];
+                    currentEntry.Target.Length = modSeq[i]?.Length ?? 0;
+                    currentEntry.Target.Mz = precMz[i];
+                    currentEntry.Target.IRT = rt[i];
+                    currentEntry.Target.SRT = 0f;
+                    currentEntry.Target.IIM = im[i];
+                    currentEntry.Target.SIM = 0f;
+                    currentEntry.Target.LibQValue = qvalue[i];
+                    currentEntry.Proteotypic = (int)proteotypic[i];
+                    currentEntry.EntryFlags = (EntryFlags)(int)flags[i];
+                    _specLib.Entries.Add(currentEntry);
+                    _specLib.Precursors.Add(precursorId[i]);
+                    lastPrecursorId = precursorId[i];
+                }
+
+                currentEntry.Target.Fragments.Add(new Product
+                {
+                    Mz = productMz[i],
+                    Height = relInten[i],
+                });
+            }
+        }
+
+        // cpp parity: DiaNNSpecLibReader.cpp:loadSpecLibFromParquet finalisation —
+        // populate iRT range + EntryByName, then per-entry normalise+sort fragments
+        // (max=1 descending) to match the canonical .skyline.speclib layout.
+        _specLib.IRtMin = double.MaxValue;
+        _specLib.IRtMax = double.MinValue;
+        foreach (var e in _specLib.Entries)
+        {
+            _specLib.EntryByName[e.Name] = e;
+            if (e.Target.IRT < _specLib.IRtMin) _specLib.IRtMin = e.Target.IRT;
+            if (e.Target.IRT > _specLib.IRtMax) _specLib.IRtMax = e.Target.IRT;
+
+            var frags = e.Target.Fragments;
+            if (frags.Count > 0)
+            {
+                float maxInten = 0;
+                foreach (var f in frags) if (f.Height > maxInten) maxInten = f.Height;
+                if (maxInten > 0)
+                    foreach (var f in frags) f.Height /= maxInten;
+                // Stable sort by descending Height. List.Sort is unstable; use a stable
+                // ordering via OrderByDescending which preserves source order on ties.
+                var sorted = frags.OrderByDescending(f => f.Height).ToList();
+                frags.Clear();
+                frags.AddRange(sorted);
+            }
+        }
+        if (_specLib.Entries.Count == 0)
+        {
+            _specLib.IRtMin = 0.0;
+            _specLib.IRtMax = 0.0;
+        }
+    }
+
+    private static async Task<long[]> ReadLongColumn(Parquet.ParquetRowGroupReader rgReader, Parquet.Schema.DataField field)
+    {
+        var col = await rgReader.ReadColumnAsync(field).ConfigureAwait(false);
+        var arr = col.Data;
+        var result = new long[arr.Length];
+        for (int i = 0; i < arr.Length; i++)
+        {
+            var v = arr.GetValue(i);
+            result[i] = v switch
+            {
+                long l => l,
+                int n => n,
+                short s => s,
+                byte b => b,
+                null => 0L,
+                _ => Convert.ToInt64(v, CultureInfo.InvariantCulture),
+            };
+        }
+        return result;
+    }
+
     private string FindDiannReport(out string statsFilepath)
     {
         statsFilepath = string.Empty;
@@ -573,6 +763,10 @@ public sealed class DiaNNSpecLibReader : BuildParser
             diannReportFilepath = ReplaceLast(specLibFile, "-lib.parquet.skyline.speclib", ".parquet");
         if (diannReportFilepath == specLibFile)
             diannReportFilepath = ReplaceLast(specLibFile, "-lib.skyline.speclib", ".parquet");
+        // cpp parity: DiaNNSpecLibReader.cpp:1148 (PR #4189) — when the input is the
+        // report-lib.parquet itself, find the report sibling by trimming "-lib".
+        if (diannReportFilepath == specLibFile)
+            diannReportFilepath = ReplaceLast(specLibFile, "-lib.parquet", ".parquet");
 
         // cpp parity: DiaNNSpecLibReader.cpp:1021 — FragPipe special-case.
         string specLibFilename = Path.GetFileName(specLibFile);
