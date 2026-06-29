@@ -148,6 +148,24 @@ namespace pwiz.Skyline.ToolsUI
         /// commands -- the same way clicking a main-menu item already works.</summary>
         public bool ReturnsValue { get; internal set; }
 
+        /// <summary>Whether the action's backing public method already owns its UI-thread marshaling (and any
+        /// gating) -- so <see cref="Invoke"/> calls it directly on the caller's (pipe/test) thread instead of
+        /// gating and posting here. Set this for an action that just delegates to a public method that is also
+        /// called directly (e.g. <c>Accept</c> -> <see cref="FormElement.Accept"/>): the method, not the
+        /// action, is the single owner of the threading, so it behaves identically whether it is reached
+        /// through the action or called directly. The method is then responsible for its own
+        /// <see cref="UiElement.InvokeOnUiThread(System.Action)"/>/<see cref="UiElement.BeginInvokeOnUiThread"/>
+        /// -- both of which expect to be called off the UI thread, as they are here.</summary>
+        public bool SelfMarshaling { get; internal set; }
+
+        /// <summary>Marks the action as <see cref="SelfMarshaling"/> (chains onto a <see cref="UiActions"/>
+        /// definition like <see cref="Describe"/>).</summary>
+        public UiAction OwnsThreading()
+        {
+            SelfMarshaling = true;
+            return this;
+        }
+
         /// <summary>Whether this action is meaningful for the element -- usually whether the element is the
         /// kind the action targets (it implements the action's capability interface).</summary>
         public abstract bool AppliesTo(UiElement element);
@@ -167,6 +185,11 @@ namespace pwiz.Skyline.ToolsUI
         /// operation is <see cref="InvokeCore"/>.</summary>
         public object Invoke(UiElement element, object argument)
         {
+            // A self-marshaling action delegates to a public method that owns its own gating and threading
+            // (e.g. Accept -> FormElement.Accept): call it directly on this (off-UI) thread, so the method is
+            // the single owner and behaves the same whether reached through the action or called directly.
+            if (SelfMarshaling)
+                return InvokeCore(element, argument);
             if (MustBeEnabled)
                 element.InvokeOnUiThread(element.VerifyInteractable);
             if (ReturnsValue)
@@ -298,7 +321,10 @@ namespace pwiz.Skyline.ToolsUI
             .Describe(new LlmInstruction(@"Select the tab with the given text."), new LlmInstruction(@"the tab's visible text"));
 
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
+        // OwnsThreading: FormElement.Accept does its own gating and fire-and-forget posting (it is also called
+        // directly, e.g. by tests), so the action must not gate/post a second time on top of it.
         public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept())
+            .OwnsThreading()
             .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
@@ -1195,15 +1221,25 @@ namespace pwiz.Skyline.ToolsUI
         public void Close() => BeginInvokeOnUiThread(() => Form.Close());
 
         // Accepts the form by clicking its default button (the AcceptButton, what pressing Enter does), so the
-        // connector confirms a dialog without matching a localized "OK" caption. Runs on the UI thread via the
-        // Accept action's Invoke (which gates the form), so it does not marshal again here.
+        // connector confirms a dialog without matching a localized "OK" caption. This method owns its own
+        // gating and threading (it is called both directly -- e.g. by tests -- and through UiActions.Accept,
+        // which is marked OwnsThreading so it does not gate/post a second time): the form is gated and the
+        // button resolved synchronously on the UI thread (so a blocked form or one with no default button fails
+        // here, on the caller), then the click is POSTED fire-and-forget -- never run synchronously on the
+        // caller (a test/pipe thread): an accept that starts a long import or opens a modal must not block the
+        // caller, and its work must run on the UI thread, not the caller's. Must be called off the UI thread.
         public void Accept()
         {
-            var acceptButton = Form.AcceptButton;
-            if (acceptButton == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"The form '{0}' has no default (accept) button.", FormId));
-            acceptButton.PerformClick();
+            var acceptButton = InvokeOnUiThread(() =>
+            {
+                VerifyInteractable();
+                var button = Form.AcceptButton;
+                if (button == null)
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"The form '{0}' has no default (accept) button.", FormId));
+                return button;
+            });
+            BeginInvokeOnUiThread(() => acceptButton.PerformClick());
         }
 
         public object PerformAction(UiElementPath path, UiAction action, object value)

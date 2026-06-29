@@ -63,14 +63,13 @@ namespace TestPerf
             CoverShotName = "DIAtoSRM";
 
             // The framework downloads each ZIP to a persistent local cache and reuses it across runs. The DIA
-            // library zips (~3 GB each) hold the gas-phase fractionated mzML runs that Step 1.9 imports; they
-            // are commented out for now because that import step (ImportGpfDiaResults) is disabled below.
+            // library zips (~3 GB each) hold the gas-phase fractionated mzML runs that Step 1.9 imports.
             TestFilesZipPaths = new[]
             {
                 @"https://skyline.ms/webinars/Webinar22.zip",
-                // @"https://skyline.ms/webinars/Webinar22_dia_libA.zip",
-                // @"https://skyline.ms/webinars/Webinar22_dia_libB.zip",
-                // @"https://skyline.ms/webinars/Webinar22_dia_libC.zip",
+                @"https://skyline.ms/webinars/Webinar22_dia_libA.zip",
+                @"https://skyline.ms/webinars/Webinar22_dia_libB.zip",
+                @"https://skyline.ms/webinars/Webinar22_dia_libC.zip",
             };
 
             // The gas-phase fractionated runs are huge (~36 GB of .mzML); extract them once to a shared
@@ -97,12 +96,7 @@ namespace TestPerf
             ConfigureTransitionAndFullScanSettings(wizard); // s-04, s-05, s-06
             ImportFastaAndAssociateProteins(wizard);        // s-07, s-08, s-09
             ImportPrtcDocument();                           // s-10
-
-            // s-11 (ImportGpfDiaResults) is implemented and its connector flow -- including the new native
-            // folder browser -- has been verified locally, but importing the ~36 GB of gas-phase fractionated
-            // runs is too slow/heavy to keep enabled here yet. Re-enable it (and the DIA library zips above)
-            // once the heavy import is validated end-to-end.
-            // ImportGpfDiaResults();                        // s-11
+            ImportGpfDiaResults();                          // s-11
 
             // TODO(connector tutorial): the remaining steps are filled in incrementally, each driven through
             // the IJsonToolService and each ending in a PauseForScreenShot whose number matches the s-NN.png
@@ -363,14 +357,25 @@ namespace TestPerf
             for (int i = 0; i < 3; i++)
             {
                 var lib = @"Lib" + (char)('A' + i);
-                var sourceDir = TestFilesDirs[i + 1].GetTestPath(Path.Combine("Webinar22", "mzml", lib));
+                // The .mzML runs are persisted (TestFilesPersistent), so they live under the shared persistent
+                // dir, not the per-run extraction dir; GetTestPath only redirects file paths, not the directory.
+                var libFilesDir = TestFilesDirs[i + 1];
+                var sourceDir = Path.Combine(libFilesDir.PersistentFilesDir ?? libFilesDir.FullPath,
+                    @"Webinar22", @"mzml", lib);
                 var destDir = Path.Combine(mzmlFolder, lib);
                 Directory.CreateDirectory(destDir);
                 foreach (var sourceFile in Directory.GetFiles(sourceDir))
                 {
                     var destFile = Path.Combine(destDir, Path.GetFileName(sourceFile));
-                    if (!File.Exists(destFile))
-                        File.Copy(sourceFile, destFile);
+                    // Skip a file that is already fully copied (same size). Otherwise copy via a temp name and
+                    // move it into place, so an interrupted copy never leaves a partial file that a later run
+                    // would trust -- which would wedge the import reading a truncated mzML.
+                    if (File.Exists(destFile) && new FileInfo(destFile).Length == new FileInfo(sourceFile).Length)
+                        continue;
+                    var tempFile = destFile + @".copying";
+                    File.Copy(sourceFile, tempFile, true);
+                    File.Delete(destFile);
+                    File.Move(tempFile, destFile);
                 }
             }
             return mzmlFolder;
