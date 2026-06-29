@@ -473,6 +473,16 @@ namespace TestPerf // This would be in tutorial tests if it didn't require a mas
 
             PauseForFullScanGraphScreenShot("Full scan graph with IM filtering");
 
+            // Hover the dotted observed-ion-mobility line to reveal its tooltip: Measured ion
+            // mobility and IM error %, plus Measured CCS and CCS error % (Agilent single-field
+            // data carries a CCS calibration, so observed CCS is available here).
+            if (IsPauseForScreenShots)
+            {
+                var imFullScanGraph = FindOpenForm<GraphFullScan>();
+                RunUI(() => imFullScanGraph.ShowObservedIonMobilityTooltipForScreenshot());
+            }
+            PauseForFullScanGraphScreenShot("Full scan graph with observed ion mobility and CCS tooltip");
+
             // Note that if you were interested in lipids that are not present in the current spectral library, you can add to it manually or using LipidCreator. To access the LipidCreator plugin, do the following:
             //   • From the Tools menu, click Tool Store.
             if (IsPauseForScreenShots)
