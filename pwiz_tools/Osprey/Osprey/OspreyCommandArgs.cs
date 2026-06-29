@@ -506,6 +506,13 @@ namespace pwiz.Osprey
                     @"--decoys-in-library to actually enable library-decoy mode.");
             }
 
+            if (_config.FdrBenchPerRun && string.IsNullOrEmpty(_config.OutputFdrBench))
+            {
+                Program.LogWarning(
+                    @"--fdrbench-per-run is set without --fdrbench; no FDRBench input " +
+                    @"will be written. Pass --fdrbench <input.tsv> to enable FDRBench output.");
+            }
+
             return _config;
         }
 

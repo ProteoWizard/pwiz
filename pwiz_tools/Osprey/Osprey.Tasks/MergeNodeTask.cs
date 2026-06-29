@@ -168,7 +168,7 @@ namespace pwiz.Osprey.Tasks
                     config.OutputFdrBench, benchResult.Rows));
                 if (benchResult.MissingLibrary > 0)
                     ctx.LogInfo(string.Format(
-                        @"{0} FDRBench rows had no library entry; protein column left blank",
+                        @"{0} FDRBench rows had no library entry; peptide and protein columns left blank",
                         benchResult.MissingLibrary));
                 if (benchResult.TruncatedProtein > 0)
                     ctx.LogInfo(string.Format(

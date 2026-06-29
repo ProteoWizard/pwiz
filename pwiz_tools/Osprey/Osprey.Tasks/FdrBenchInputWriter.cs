@@ -145,7 +145,14 @@ namespace pwiz.Osprey.Tasks
                         }
                     }
 
-                    foreach (var row in best.Values)
+                    // Dictionary enumeration order is not guaranteed stable across runs / runtimes,
+                    // so sort by the dedup-key components (modified sequence, then charge) before
+                    // writing. The key is unique per surviving row, so this is a total order with no
+                    // ties -- deterministic, diff-friendly output. Ordinal compare avoids any
+                    // culture-dependent sequence ordering.
+                    foreach (var row in best.Values
+                        .OrderBy(r => r.Entry.ModifiedSequence, System.StringComparer.Ordinal)
+                        .ThenBy(r => r.Entry.Charge))
                     {
                         var lookup = ResolveLibrary(libraryById, row.Entry.EntryId, ref result);
                         writer.WriteLine(FormatRow(lookup.Peptide, row.Entry.ModifiedSequence,

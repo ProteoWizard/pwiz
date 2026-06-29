@@ -42,6 +42,8 @@ namespace pwiz.Osprey.Test
     {
         // Column indices in the peptide/precursor TSV.
         private const int COL_PEPTIDE = 0;
+        private const int COL_MOD_PEPTIDE = 1;
+        private const int COL_CHARGE = 2;
         private const int COL_SCORE = 4;
         private const int COL_PROTEIN = 5;
 
@@ -54,6 +56,7 @@ namespace pwiz.Osprey.Test
             PerRunEmitsRowPerObservation();
             ProteinColumnJoinsWithSemicolons();
             OversizeProteinListIsTruncated();
+            DedupOutputIsOrderedDeterministically();
         }
 
         private static void PrecursorDedupKeepsBestScore()
@@ -148,6 +151,36 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(protein.Length <= 4000, @"protein field stays under the 4000-char cap");
             Assert.IsTrue(protein.Contains(@";...+") && protein.EndsWith(@"_more"), @"truncation marker present");
             Assert.IsTrue(protein.StartsWith(@"sp|A00000000|PROT_0000"), @"first ID survives intact");
+        }
+
+        private static void DedupOutputIsOrderedDeterministically()
+        {
+            // Distinct precursors supplied deliberately out of sorted order and split across
+            // runs, so a Dictionary-iteration-order writer would emit them unsorted. The writer
+            // must sort by (modified sequence ordinal, charge), giving stable, diff-friendly TSV.
+            var lib = new List<LibraryEntry>
+            {
+                MakeLib(1, @"PEPTIDEK", @"PEPTIDEK", 2, @"P1"),
+                MakeLib(2, @"ANCHORR", @"ANCHORR", 3, @"P2"),
+                MakeLib(3, @"ANCHORR", @"ANCHORR", 2, @"P2"),
+                MakeLib(4, @"ELVISLIVESK", @"ELVISLIVESK", 2, @"P3"),
+            };
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                Run(@"run_b",
+                    MakeEntry(4, false, @"ELVISLIVESK", 2, 0.04, 0.04, 1.0),
+                    MakeEntry(1, false, @"PEPTIDEK", 2, 0.03, 0.03, 1.0)),
+                Run(@"run_a",
+                    MakeEntry(2, false, @"ANCHORR", 3, 0.02, 0.02, 1.0),
+                    MakeEntry(3, false, @"ANCHORR", 2, 0.01, 0.01, 1.0)),
+            };
+            var lines = RunWriter(perFile, lib, FdrLevel.Precursor, false);
+            var observed = lines.Skip(1)
+                .Select(l => l.Split('\t'))
+                .Select(c => c[COL_MOD_PEPTIDE] + @"/" + c[COL_CHARGE])
+                .ToList();
+            var expected = new List<string> { @"ANCHORR/2", @"ANCHORR/3", @"ELVISLIVESK/2", @"PEPTIDEK/2" };
+            CollectionAssert.AreEqual(expected, observed, @"rows must be sorted by (mod sequence, charge)");
         }
 
         private static FdrEntry MakeEntry(uint entryId, bool isDecoy, string modSeq, byte charge,
