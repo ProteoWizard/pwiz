@@ -51,7 +51,7 @@ namespace pwiz.Common.CommandLine
     /// application. Defaults keep PortableUtil a pure-BCL leaf usable on its own; a host
     /// overrides them at startup (Skyline does so in the CommandArgs static constructor).
     /// These are process-global, set once per process - not per parser instance - so a single
-    /// process is expected to host a single argument model (Skyline.exe and OspreySharp.exe are
+    /// process is expected to host a single argument model (Skyline.exe and Osprey.exe are
     /// separate processes). A future host that drives two argument models in one process would
     /// need to revisit this.
     /// </summary>
@@ -64,7 +64,7 @@ namespace pwiz.Common.CommandLine
         /// <summary>
         /// Separator rendered between an argument and its value example in usage help
         /// (e.g. <c>--name=&lt;value&gt;</c>). Defaults to <c>"="</c> for hosts whose grammar is
-        /// <c>--name=value</c> (Skyline); a host with space-separated values (OspreySharp) sets
+        /// <c>--name=value</c> (Skyline); a host with space-separated values (Osprey) sets
         /// it to a space so the generated help matches what its parser actually accepts.
         /// </summary>
         public static string ArgumentValueSeparator { get; set; } = "=";
