@@ -212,8 +212,14 @@
   <data name="SummarizationMethod_AVERAGING_Sum_of_transition_areas" xml:space="preserve">
     <value>Sum of transition areas</value>
   </data>
-  <data name="SummarizationMethod_MEDIANPOLISH_Tukey_s_Median_Polish" xml:space="preserve">
-    <value>Tukey's Median Polish</value>
+  <data name="SummarizationMethod_DEFAULT_FROM_SETTINGS_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="SummarizationMethod_LEGACY_MEDIANPOLISH_Legacy_Median_Polish" xml:space="preserve">
+    <value>Legacy Median Polish</value>
+  </data>
+  <data name="SummarizationMethod_MEDIANPOLISH_Median_Polish" xml:space="preserve">
+    <value>Median Polish</value>
   </data>
   <data name="FoldChangeBarGraph_GetTitle_Bar_Graph" xml:space="preserve">
     <value>Bar Graph</value>
@@ -361,6 +367,13 @@
   <data name="NormalizationMethod_EQUALIZE_MEDIANS_Median_Normalized__0_" xml:space="preserve">
     <value>Median Normalized {0}</value>
     <comment>Example: Median Normalized Peak Area</comment>
+  </data>
+  <data name="NormalizationMethod_RT_LOESS_RT_Loess" xml:space="preserve">
+    <value>RT Loess</value>
+  </data>
+  <data name="NormalizationMethod_RT_LOESS_RT_Loess_Normalized__0_" xml:space="preserve">
+    <value>RT Loess Normalized {0}</value>
+    <comment>Example: RT Loess Normalized Peak Area</comment>
   </data>
   <data name="EditGroupComparisonDlg_GetNormalizeOptionText_Batch_Calibration_Curve" xml:space="preserve">
     <value>Batch Calibration Curve</value>

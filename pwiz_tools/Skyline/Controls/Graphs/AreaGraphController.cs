@@ -60,6 +60,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaGraphDisplayType { bars, lines }
 
+    public enum MultiPeptideDisplay { Line, Cluster, Aggregate }
+
+    public enum RtLoessShowValue { Median, NormalizationFactor, NormalizedMedian }
+
     public sealed class AreaGraphController : GraphSummary.IControllerSplit
     {
         public static GraphTypeSummary GraphType
@@ -72,6 +76,36 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get { return Helpers.ParseEnum(Settings.Default.AreaGraphDisplayType, AreaGraphDisplayType.bars); }
             set { Settings.Default.AreaGraphDisplayType = value.ToString(); }
+        }
+
+        public static MultiPeptideDisplay AreaGraphMultiPeptideDisplay
+        {
+            get { return Helpers.ParseEnum(Settings.Default.AreaGraphMultiPeptideDisplay, MultiPeptideDisplay.Line); }
+            set { Settings.Default.AreaGraphMultiPeptideDisplay = value.ToString(); }
+        }
+
+        public static RtLoessShowValue RtLoessShowValue
+        {
+            get { return Helpers.ParseEnum(Settings.Default.RtLoessShowValue, RtLoessShowValue.Median); }
+            set { Settings.Default.RtLoessShowValue = value.ToString(); }
+        }
+
+        public static bool RtLoessShowLegend
+        {
+            get { return Settings.Default.RtLoessShowLegend; }
+            set { Settings.Default.RtLoessShowLegend = value; }
+        }
+
+        public static bool RtLoessShowPeptides
+        {
+            get { return Settings.Default.RtLoessShowPeptides; }
+            set { Settings.Default.RtLoessShowPeptides = value; }
+        }
+
+        public static bool RtLoessAdaptiveAlpha
+        {
+            get { return Settings.Default.RtLoessAdaptiveAlpha; }
+            set { Settings.Default.RtLoessAdaptiveAlpha = value; }
         }
 
         public static NormalizeOption AreaNormalizeOption
@@ -191,7 +225,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnResultsIndexChanged()
         {
             if (GraphSummary.GraphPanes.OfType<AreaReplicateGraphPane>().Any() /* || !Settings.Default.AreaAverageReplicates */ ||
-                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single
+                    || GraphSummary.GraphPanes.OfType<AreaRtLoessGraphPane>().Any())
                 GraphSummary.UpdateUI();
         }
 
@@ -233,6 +268,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 case GraphTypeSummary.histogram2d:
                     if (!(pane is AreaCVHistogram2DGraphPane))
                         GraphSummary.GraphPanes = new[] { new AreaCVHistogram2DGraphPane(GraphSummary)  };
+                    break;
+                case GraphTypeSummary.rt_loess:
+                    if (!(pane is AreaRtLoessGraphPane))
+                        GraphSummary.GraphPanes = new[] { new AreaRtLoessGraphPane(GraphSummary) };
                     break;
             }
 

@@ -38,9 +38,22 @@ namespace pwiz.Skyline.Menus
             this.areaAbundanceComparisonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaRtLoessContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowMedianMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowNormalizationFactorMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowNormalizedMedianMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.rtLoessShowLegendMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.rtLoessShowAdaptiveAlphaMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.graphTypeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.barAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lineAreaGraphDisplayTypeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.multiPeptideDisplayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lineMultiPeptideDisplayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clusterMultiPeptideDisplayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aggregateMultiPeptideDisplayMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaNormalizeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abundanceTargetsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.abundanceTargetsPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -91,7 +104,8 @@ namespace pwiz.Skyline.Menus
             this.areaRelativeAbundanceContextMenuItem,
             this.areaAbundanceComparisonContextMenuItem,
             this.areaCVHistogramContextMenuItem,
-            this.areaCVHistogram2DContextMenuItem});
+            this.areaCVHistogram2DContextMenuItem,
+            this.areaRtLoessContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
             resources.ApplyResources(this.areaGraphContextMenuItem, "areaGraphContextMenuItem");
             this.areaGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
@@ -132,8 +146,68 @@ namespace pwiz.Skyline.Menus
             resources.ApplyResources(this.areaCVHistogram2DContextMenuItem, "areaCVHistogram2DContextMenuItem");
             this.areaCVHistogram2DContextMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
             // 
-            // graphTypeToolStripMenuItem
+            // areaRtLoessContextMenuItem
             // 
+            this.areaRtLoessContextMenuItem.Name = "areaRtLoessContextMenuItem";
+            resources.ApplyResources(this.areaRtLoessContextMenuItem, "areaRtLoessContextMenuItem");
+            this.areaRtLoessContextMenuItem.Click += new System.EventHandler(this.areaRtLoessMenuItem_Click);
+            //
+            // rtLoessShowValueContextMenuItem
+            //
+            this.rtLoessShowValueContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.rtLoessShowMedianMenuItem,
+            this.rtLoessShowNormalizationFactorMenuItem,
+            this.rtLoessShowNormalizedMedianMenuItem,
+            this.rtLoessShowSeparator,
+            this.rtLoessShowLegendMenuItem,
+            this.rtLoessShowPeptidesMenuItem,
+            this.rtLoessShowAdaptiveAlphaMenuItem});
+            this.rtLoessShowValueContextMenuItem.Name = "rtLoessShowValueContextMenuItem";
+            resources.ApplyResources(this.rtLoessShowValueContextMenuItem, "rtLoessShowValueContextMenuItem");
+            //
+            // rtLoessShowMedianMenuItem
+            //
+            this.rtLoessShowMedianMenuItem.Name = "rtLoessShowMedianMenuItem";
+            resources.ApplyResources(this.rtLoessShowMedianMenuItem, "rtLoessShowMedianMenuItem");
+            this.rtLoessShowMedianMenuItem.Click += new System.EventHandler(this.rtLoessShowMedianMenuItem_Click);
+            //
+            // rtLoessShowNormalizationFactorMenuItem
+            //
+            this.rtLoessShowNormalizationFactorMenuItem.Name = "rtLoessShowNormalizationFactorMenuItem";
+            resources.ApplyResources(this.rtLoessShowNormalizationFactorMenuItem, "rtLoessShowNormalizationFactorMenuItem");
+            this.rtLoessShowNormalizationFactorMenuItem.Click += new System.EventHandler(this.rtLoessShowNormalizationFactorMenuItem_Click);
+            //
+            // rtLoessShowNormalizedMedianMenuItem
+            //
+            this.rtLoessShowNormalizedMedianMenuItem.Name = "rtLoessShowNormalizedMedianMenuItem";
+            resources.ApplyResources(this.rtLoessShowNormalizedMedianMenuItem, "rtLoessShowNormalizedMedianMenuItem");
+            this.rtLoessShowNormalizedMedianMenuItem.Click += new System.EventHandler(this.rtLoessShowNormalizedMedianMenuItem_Click);
+            //
+            // rtLoessShowSeparator
+            //
+            this.rtLoessShowSeparator.Name = "rtLoessShowSeparator";
+            resources.ApplyResources(this.rtLoessShowSeparator, "rtLoessShowSeparator");
+            //
+            // rtLoessShowLegendMenuItem
+            //
+            this.rtLoessShowLegendMenuItem.Name = "rtLoessShowLegendMenuItem";
+            resources.ApplyResources(this.rtLoessShowLegendMenuItem, "rtLoessShowLegendMenuItem");
+            this.rtLoessShowLegendMenuItem.Click += new System.EventHandler(this.rtLoessShowLegendMenuItem_Click);
+            //
+            // rtLoessShowPeptidesMenuItem
+            //
+            this.rtLoessShowPeptidesMenuItem.Name = "rtLoessShowPeptidesMenuItem";
+            resources.ApplyResources(this.rtLoessShowPeptidesMenuItem, "rtLoessShowPeptidesMenuItem");
+            this.rtLoessShowPeptidesMenuItem.Click += new System.EventHandler(this.rtLoessShowPeptidesMenuItem_Click);
+            //
+            // rtLoessShowAdaptiveAlphaMenuItem
+            //
+            this.rtLoessShowAdaptiveAlphaMenuItem.Name = "rtLoessShowAdaptiveAlphaMenuItem";
+            resources.ApplyResources(this.rtLoessShowAdaptiveAlphaMenuItem, "rtLoessShowAdaptiveAlphaMenuItem");
+            this.rtLoessShowAdaptiveAlphaMenuItem.Click += new System.EventHandler(this.rtLoessShowAdaptiveAlphaMenuItem_Click);
+            //
+            // graphTypeToolStripMenuItem
+            //
             this.graphTypeToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.barAreaGraphDisplayTypeMenuItem,
             this.lineAreaGraphDisplayTypeMenuItem});
@@ -147,15 +221,42 @@ namespace pwiz.Skyline.Menus
             this.barAreaGraphDisplayTypeMenuItem.Name = "barAreaGraphDisplayTypeMenuItem";
             resources.ApplyResources(this.barAreaGraphDisplayTypeMenuItem, "barAreaGraphDisplayTypeMenuItem");
             this.barAreaGraphDisplayTypeMenuItem.Click += new System.EventHandler(this.barAreaGraphTypeMenuItem_Click);
-            // 
+            //
             // lineAreaGraphDisplayTypeMenuItem
-            // 
+            //
             this.lineAreaGraphDisplayTypeMenuItem.Name = "lineAreaGraphDisplayTypeMenuItem";
             resources.ApplyResources(this.lineAreaGraphDisplayTypeMenuItem, "lineAreaGraphDisplayTypeMenuItem");
             this.lineAreaGraphDisplayTypeMenuItem.Click += new System.EventHandler(this.lineAreaGraphTypeMenuItem_Click);
-            // 
+            //
+            // multiPeptideDisplayMenuItem
+            //
+            this.multiPeptideDisplayMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.lineMultiPeptideDisplayMenuItem,
+            this.clusterMultiPeptideDisplayMenuItem,
+            this.aggregateMultiPeptideDisplayMenuItem});
+            this.multiPeptideDisplayMenuItem.Name = "multiPeptideDisplayMenuItem";
+            resources.ApplyResources(this.multiPeptideDisplayMenuItem, "multiPeptideDisplayMenuItem");
+            //
+            // lineMultiPeptideDisplayMenuItem
+            //
+            this.lineMultiPeptideDisplayMenuItem.Name = "lineMultiPeptideDisplayMenuItem";
+            resources.ApplyResources(this.lineMultiPeptideDisplayMenuItem, "lineMultiPeptideDisplayMenuItem");
+            this.lineMultiPeptideDisplayMenuItem.Click += new System.EventHandler(this.lineMultiPeptideDisplayMenuItem_Click);
+            //
+            // clusterMultiPeptideDisplayMenuItem
+            //
+            this.clusterMultiPeptideDisplayMenuItem.Name = "clusterMultiPeptideDisplayMenuItem";
+            resources.ApplyResources(this.clusterMultiPeptideDisplayMenuItem, "clusterMultiPeptideDisplayMenuItem");
+            this.clusterMultiPeptideDisplayMenuItem.Click += new System.EventHandler(this.clusterMultiPeptideDisplayMenuItem_Click);
+            //
+            // aggregateMultiPeptideDisplayMenuItem
+            //
+            this.aggregateMultiPeptideDisplayMenuItem.Name = "aggregateMultiPeptideDisplayMenuItem";
+            resources.ApplyResources(this.aggregateMultiPeptideDisplayMenuItem, "aggregateMultiPeptideDisplayMenuItem");
+            this.aggregateMultiPeptideDisplayMenuItem.Click += new System.EventHandler(this.aggregateMultiPeptideDisplayMenuItem_Click);
+            //
             // areaNormalizeContextMenuItem
-            // 
+            //
             this.areaNormalizeContextMenuItem.Name = "areaNormalizeContextMenuItem";
             resources.ApplyResources(this.areaNormalizeContextMenuItem, "areaNormalizeContextMenuItem");
             // 
@@ -396,6 +497,15 @@ namespace pwiz.Skyline.Menus
         #endregion
 
         private System.Windows.Forms.ContextMenuStrip contextMenuPeakAreas;
+        private System.Windows.Forms.ToolStripMenuItem areaRtLoessContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowValueContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowMedianMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizationFactorMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowNormalizedMedianMenuItem;
+        private System.Windows.Forms.ToolStripSeparator rtLoessShowSeparator;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowLegendMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowPeptidesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem rtLoessShowAdaptiveAlphaMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;
@@ -406,6 +516,10 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem graphTypeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem barAreaGraphDisplayTypeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem lineAreaGraphDisplayTypeMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem multiPeptideDisplayMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem lineMultiPeptideDisplayMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem clusterMultiPeptideDisplayMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aggregateMultiPeptideDisplayMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem abundanceTargetsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem abundanceTargetsProteinsMenuItem;

@@ -591,6 +591,7 @@ namespace pwiz.Skyline.Menus
             transformChromInterpolatedContextMenuItem.Checked = (transform == TransformChrom.interpolated);
             secondDerivativeContextMenuItem.Checked = (transform == TransformChrom.craw2d);
             smoothSGChromContextMenuItem.Checked = (transform == TransformChrom.savitzky_golay);
+            cwtContextMenuItem.Checked = (transform == TransformChrom.cwt);
         }
         private void transformChromNoneMenuItem_Click(object sender, EventArgs e)
         {
@@ -612,6 +613,11 @@ namespace pwiz.Skyline.Menus
         private void smoothSGChromMenuItem_Click(object sender, EventArgs e)
         {
             SkylineWindow.SetTransformChrom(TransformChrom.savitzky_golay);
+        }
+
+        private void cwtMenuItem_Click(object sender, EventArgs e)
+        {
+            SkylineWindow.SetTransformChrom(TransformChrom.cwt);
         }
         #endregion
         #region Auto Zoom

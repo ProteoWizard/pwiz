@@ -3016,6 +3016,36 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
+        public void SetAreaGraphMultiPeptideDisplay(MultiPeptideDisplay display)
+        {
+            AreaGraphController.AreaGraphMultiPeptideDisplay = display;
+            UpdatePeakAreaGraph();
+        }
+
+        public void SetRtLoessShowValue(RtLoessShowValue showValue)
+        {
+            AreaGraphController.RtLoessShowValue = showValue;
+            UpdatePeakAreaGraph();
+        }
+
+        public void SetRtLoessShowLegend(bool showLegend)
+        {
+            AreaGraphController.RtLoessShowLegend = showLegend;
+            UpdatePeakAreaGraph();
+        }
+
+        public void SetRtLoessShowPeptides(bool showPeptides)
+        {
+            AreaGraphController.RtLoessShowPeptides = showPeptides;
+            UpdatePeakAreaGraph();
+        }
+
+        public void SetRtLoessAdaptiveAlpha(bool adaptiveAlpha)
+        {
+            AreaGraphController.RtLoessAdaptiveAlpha = adaptiveAlpha;
+            UpdatePeakAreaGraph();
+        }
+
         public void SynchronizeSummaryZooming(GraphSummary graphSummary = null, ZoomState zoomState = null)
         {
             var activeGraphSummary = graphSummary ?? dockPanel.ActiveContent as GraphSummary;
@@ -3138,6 +3168,7 @@ namespace pwiz.Skyline
                 case GraphTypeSummary.peptide:
                 case GraphTypeSummary.histogram:
                 case GraphTypeSummary.histogram2d:
+                case GraphTypeSummary.rt_loess:
                     types = Settings.Default.AreaGraphTypes;
                     list = _listGraphPeakArea;
                     break;
@@ -3231,6 +3262,13 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.histogram2d);
             ShowGraphPeakArea(true, GraphTypeSummary.histogram2d);
+            UpdatePeakAreaGraph();
+        }
+
+        public void ShowPeakAreaRtLoessGraph()
+        {
+            Settings.Default.AreaGraphTypes.Insert(0, GraphTypeSummary.rt_loess);
+            ShowGraphPeakArea(true, GraphTypeSummary.rt_loess);
             UpdatePeakAreaGraph();
         }
 

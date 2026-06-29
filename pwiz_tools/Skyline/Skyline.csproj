@@ -463,6 +463,7 @@
     </Compile>
     <Compile Include="Controls\Graphs\AreaAbundanceComparisonGraphPane.cs" />
     <Compile Include="Controls\Graphs\AreaRelativeAbundanceGraphPane.cs" />
+    <Compile Include="Controls\Graphs\AreaRtLoessGraphPane.cs" />
     <Compile Include="Controls\Graphs\BoxPlotBarItem.cs" />
     <Compile Include="Controls\Graphs\DotPlotUtil.cs" />
     <Compile Include="Controls\Graphs\ExportMethodScheduleGraph.cs">
@@ -617,6 +618,8 @@
     <Compile Include="Model\Databinding\ReplicatePivotColumns.cs" />
     <Compile Include="Model\Databinding\DsvReportExporter.cs" />
     <Compile Include="Model\Databinding\ColumnResolver.cs" />
+    <Compile Include="Model\DocSettings\MedianPolishResult.cs" />
+    <Compile Include="Model\GroupComparison\MedianPolisher.cs" />
     <Compile Include="ToolsUI\ReportDefinitionReader.cs" />
     <Compile Include="Model\Databinding\RowFactories.cs" />
     <Compile Include="Model\DecoyGenerator.cs" />
@@ -2019,6 +2022,9 @@
     <Compile Include="Model\GroupComparison\NormalizationMethod.cs" />
     <Compile Include="Model\ExplicitTransitionGroupValues.cs" />
     <Compile Include="Model\GroupComparison\PeptideQuantifier.cs" />
+    <Compile Include="Model\GroupComparison\PolishedPeptideAbundances.cs" />
+    <Compile Include="Model\GroupComparison\ProteinQuantifier.cs" />
+    <Compile Include="Model\GroupComparison\RtLoessCurves.cs" />
     <Compile Include="Model\GroupComparison\SummarizationMethod.cs" />
     <Compile Include="Model\ImportAssayLibrary.cs" />
     <Compile Include="Model\ImportPeakBoundaries.cs" />
@@ -2562,6 +2568,7 @@
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
     <Compile Include="SettingsUI\SettingsListComboDriver.cs">
     </Compile>
+    <Compile Include="SettingsUI\SummarizationMethodOption.cs" />
     <Compile Include="Controls\SeqNode\SrmTreeNode.cs" />
     <Compile Include="FileUI\ExportMethodDlg.cs">
       <SubType>Form</SubType>

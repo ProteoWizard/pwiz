@@ -105,6 +105,7 @@ namespace pwiz.Skyline.Menus
             this.transformChromInterpolatedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.secondDerivativeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.smoothSGChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cwtMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomNoneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomBestPeakMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -126,6 +127,7 @@ namespace pwiz.Skyline.Menus
             this.areaAbundanceComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCVHistogram2DMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaRtLoessMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsPlotsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detectionsHistogramMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -672,7 +674,8 @@ namespace pwiz.Skyline.Menus
             this.transformChromNoneMenuItem,
             this.transformChromInterpolatedMenuItem,
             this.secondDerivativeMenuItem,
-            this.smoothSGChromMenuItem});
+            this.smoothSGChromMenuItem,
+            this.cwtMenuItem});
             resources.ApplyResources(this.transformChromMenuItem, "transformChromMenuItem");
             this.transformChromMenuItem.Name = "transformChromMenuItem";
             this.transformChromMenuItem.DropDownOpening += new System.EventHandler(this.transformChromMenuItem_DropDownOpening);
@@ -700,7 +703,13 @@ namespace pwiz.Skyline.Menus
             this.smoothSGChromMenuItem.Name = "smoothSGChromMenuItem";
             resources.ApplyResources(this.smoothSGChromMenuItem, "smoothSGChromMenuItem");
             this.smoothSGChromMenuItem.Click += new System.EventHandler(this.smoothSGChromMenuItem_Click);
-            // 
+            //
+            // cwtMenuItem
+            //
+            this.cwtMenuItem.Name = "cwtMenuItem";
+            resources.ApplyResources(this.cwtMenuItem, "cwtMenuItem");
+            this.cwtMenuItem.Click += new System.EventHandler(this.cwtMenuItem_Click);
+            //
             // autoZoomMenuItem
             // 
             this.autoZoomMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -805,7 +814,8 @@ namespace pwiz.Skyline.Menus
             this.areaRelativeAbundanceMenuItem,
             this.areaAbundanceComparisonMenuItem,
             this.areaCVHistogramMenuItem,
-            this.areaCVHistogram2DMenuItem});
+            this.areaCVHistogram2DMenuItem,
+            this.areaRtLoessMenuItem});
             resources.ApplyResources(this.peakAreasMenuItem, "peakAreasMenuItem");
             this.peakAreasMenuItem.Name = "peakAreasMenuItem";
             this.peakAreasMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
@@ -845,7 +855,13 @@ namespace pwiz.Skyline.Menus
             this.areaCVHistogram2DMenuItem.Name = "areaCVHistogram2DMenuItem";
             resources.ApplyResources(this.areaCVHistogram2DMenuItem, "areaCVHistogram2DMenuItem");
             this.areaCVHistogram2DMenuItem.Click += new System.EventHandler(this.areaCVHistogram2DToolStripMenuItem1_Click);
-            // 
+            //
+            // areaRtLoessMenuItem
+            //
+            this.areaRtLoessMenuItem.Name = "areaRtLoessMenuItem";
+            resources.ApplyResources(this.areaRtLoessMenuItem, "areaRtLoessMenuItem");
+            this.areaRtLoessMenuItem.Click += new System.EventHandler(this.areaRtLoessMenuItem_Click);
+            //
             // detectionsPlotsMenuItem
             // 
             this.detectionsPlotsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -1007,6 +1023,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem transformChromInterpolatedMenuItem;
         private System.Windows.Forms.ToolStripMenuItem secondDerivativeMenuItem;
         private System.Windows.Forms.ToolStripMenuItem smoothSGChromMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cwtMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomNoneMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomBestPeakMenuItem;
@@ -1028,6 +1045,7 @@ namespace pwiz.Skyline.Menus
         private System.Windows.Forms.ToolStripMenuItem areaAbundanceComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogramMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaCVHistogram2DMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaRtLoessMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsPlotsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsReplicateComparisonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detectionsHistogramMenuItem;
