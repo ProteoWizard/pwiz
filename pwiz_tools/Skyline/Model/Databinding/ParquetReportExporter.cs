@@ -40,11 +40,11 @@ namespace pwiz.Skyline.Model.Databinding
             var schema = new ParquetSchema(columns.Select(col => col.SchemaField).ToArray());
 
             // Parquet.Net 4.x uses an async-only API; the no-async/await rule
-            // means we synchronously bridge each Task. ConfigureAwait(false)
-            // avoids deadlock on a captured SynchronizationContext, and
-            // GetAwaiter().GetResult() unwraps the underlying exception
-            // instead of wrapping it in AggregateException.
-            using var writer = ParquetWriter.CreateAsync(schema, stream).ConfigureAwait(false).GetAwaiter().GetResult();
+            // means we synchronously bridge each Task. GetAwaiter().GetResult()
+            // rethrows the original exception instead of wrapping it in an
+            // AggregateException. This is only safe because the export runs off
+            // the UI thread (no captured SynchronizationContext to deadlock on).
+            using var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult();
             writer.CompressionMethod = CompressionMethod.Zstd;
             using var writeWorker = new QueueWorker<DataColumn[]>(
                 consume: (dataColumns, threadIndex) =>
@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Model.Databinding
                     using var groupWriter = writer.CreateRowGroup();
                     foreach (var dataColumn in dataColumns)
                     {
-                        groupWriter.WriteColumnAsync(dataColumn).ConfigureAwait(false).GetAwaiter().GetResult();
+                        groupWriter.WriteColumnAsync(dataColumn).GetAwaiter().GetResult();
                     }
                 });
             // Single writer thread, queue at most 1 chunk ahead
@@ -135,6 +135,15 @@ namespace pwiz.Skyline.Model.Databinding
             }, threadName:nameof(PopulateChunk));
         }
 
+        public static IEnumerable<string> MakeValidColumnNames(IEnumerable<string> columnNames)
+        {
+            var usedColumnNames = new HashSet<string>();
+            foreach (var name in columnNames)
+            {
+                yield return MakeUniqueColumnName(name, usedColumnNames);
+            }
+        }
+
         private string GetUniqueColumnName(PropertyDescriptor propertyDescriptor, HashSet<string> usedColumnNames)
         {
             // Get the display name from DisplayNameAttribute, or fall back to property name
@@ -144,9 +153,14 @@ namespace pwiz.Skyline.Model.Databinding
                 baseName = propertyDescriptor.Name;
             }
 
+            return MakeUniqueColumnName(baseName, usedColumnNames);
+        }
+
+        private static string MakeUniqueColumnName(string name, HashSet<string> usedColumnNames)
+        {
             // Sanitize the column name - replace illegal characters with underscores
             // Parquet column names should be valid identifiers (alphanumeric and underscore)
-            var sanitized = SanitizeColumnName(baseName);
+            var sanitized = SanitizeColumnName(name);
 
             // Ensure uniqueness by appending a number if needed
             string uniqueName = Helpers.GetUniqueName(sanitized, usedColumnNames);
@@ -154,7 +168,7 @@ namespace pwiz.Skyline.Model.Databinding
             return uniqueName;
         }
 
-        private string SanitizeColumnName(string name)
+        private static string SanitizeColumnName(string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -195,8 +209,8 @@ namespace pwiz.Skyline.Model.Databinding
                 PropertyDescriptor = propertyDescriptor;
                 var valueType = PropertyDescriptor.DataSchema.GetWrappedValueType(PropertyDescriptor.PropertyType);
 
-                // Check if this is a FormattableList<T>
-                ListElementType = GetFormattableListElementType(valueType);
+                // Check if this is a ListColumnValue<T>
+                ListElementType = GetListColumnValueStorageType(valueType);
                 if (ListElementType != null)
                 {
                     // This is a list column
@@ -287,8 +301,8 @@ namespace pwiz.Skyline.Model.Databinding
 
                 if (ListElementType != null)
                 {
-                    // Extract the list from FormattableList<T>
-                    value = ConvertListValue(value);
+                    // Extract the list from ListColumnValue<T>
+                    value = ConvertListColumnValue(value);
                 }
                 else 
                 {
@@ -297,15 +311,10 @@ namespace pwiz.Skyline.Model.Databinding
                 values.SetValue(value, rowIndex);
             }
 
-            private Array ConvertListValue(object formattableList)
+            private Array ConvertListColumnValue(object listColumnValue)
             {
-                // Get the underlying list via ToImmutableList() method
-                var toArrayMethod = formattableList.GetType().GetMethod(nameof(FormattableList<object>.ToArray));
-                if (toArrayMethod == null)
-                {
-                    return null;
-                }
-                Array array = (Array)toArrayMethod.Invoke(formattableList, null);
+                // Get the underlying list as an array
+                Array array = (listColumnValue as IListColumnValue)?.ToArray();
                 if (array == null)
                 {
                     return null;
@@ -328,15 +337,16 @@ namespace pwiz.Skyline.Model.Databinding
 
                 return convertedArray;
             }
-
-            private static Type GetFormattableListElementType(Type type)
+        }
+        private static Type GetListColumnValueStorageType(Type type)
+        {
+            var elementType = ListColumnValue.GetElementType(type);
+            if (elementType == null)
             {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(FormattableList<>))
-                {
-                    return DecideStorageType(type.GetGenericArguments()[0]);
-                }
                 return null;
             }
+
+            return DecideStorageType(elementType);
         }
 
         private static Dictionary<Type, Type> _storageTypes = new Dictionary<Type, Type>
@@ -455,7 +465,7 @@ namespace pwiz.Skyline.Model.Databinding
             {
                 return Marshal.SizeOf(columnType);
             }
-            if (columnType.IsGenericType && columnType.GetGenericTypeDefinition() == typeof(FormattableList<>))
+            if (GetListColumnValueStorageType(columnType) != null)
             {
                 return 64;
             }

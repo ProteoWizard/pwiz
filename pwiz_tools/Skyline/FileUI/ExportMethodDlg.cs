@@ -68,11 +68,16 @@ namespace pwiz.Skyline.FileUI
 
         private readonly ExportDlgProperties _exportProperties;
 
+        // Capture the initial culture-specific value the designer applied at load time
+        // so we can restore it after temporary overrides (URL preview / errors).
+        private readonly string _initialTemplateFileToolTip;
+
         private CancellationTokenSource _cancellationTokenSource;
 
         public ExportMethodDlg(SrmDocument document, ExportFileType fileType)
         {
             InitializeComponent();
+            _initialTemplateFileToolTip = helpTip.GetToolTip(textTemplateFile);
 
             _cancellationTokenSource = new CancellationTokenSource();
             _exportProperties = new ExportDlgProperties(this, _cancellationTokenSource.Token);
@@ -1966,8 +1971,7 @@ namespace pwiz.Skyline.FileUI
                     textTemplateFile.Text = string.Empty;
                     textTemplateFile.Tag = null;
                     // Reset the tooltip to the original text
-                    var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
-                    helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+                    ResetTemplateFileToolTip();
                 }
                 wcDecideBuckets.Visible = true;
                 // Shift radio buttons up if transitioning from 3-button to 4-button layout
@@ -1986,8 +1990,8 @@ namespace pwiz.Skyline.FileUI
                         : string.Empty;
                 textTemplateFile.Tag = null;
                 EnableTextTemplateFileField(true);
-                var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
-                helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+                // Reset the tooltip to the original text
+                ResetTemplateFileToolTip();
                 wcDecideBuckets.Visible = false;
                 // Shift radio buttons down if transitioning from 4-button to 3-button layout
                 if (inFourButtonLayout)
@@ -2021,6 +2025,12 @@ namespace pwiz.Skyline.FileUI
             CalcMethodCount();
 
             UpdateCovControls();
+        }
+
+        private void ResetTemplateFileToolTip()
+        {
+            // Restore the original localized tooltip
+            helpTip.SetToolTip(textTemplateFile, _initialTemplateFileToolTip);
         }
 
         private void EnableTextTemplateFileField(bool enable)
@@ -2446,8 +2456,7 @@ namespace pwiz.Skyline.FileUI
             //  Clear since not Waters Connect
             textTemplateFile.Tag = null;
             // Reset the tooltip to the original text
-            var resources = new ComponentResourceManager(typeof(ExportMethodDlg));
-            helpTip.SetToolTip(textTemplateFile, resources.GetString("textTemplateFile.ToolTip"));
+            ResetTemplateFileToolTip();
 
             string templateName = textTemplateFile.Text;
             if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) || Equals(InstrumentType, ExportInstrumentType.AGILENT_MASSHUNTER_12_METHOD) ||
@@ -2744,6 +2753,11 @@ namespace pwiz.Skyline.FileUI
         public TextBox TemplatePathField
         {
             get => textTemplateFile;
+        }
+
+        public string TemplateFileToolTip
+        {
+            get => helpTip.GetToolTip(textTemplateFile);
         }
 
         public int CalculationTime
