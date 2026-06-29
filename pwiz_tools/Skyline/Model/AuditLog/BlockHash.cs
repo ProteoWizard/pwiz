@@ -17,8 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace pwiz.Skyline.Model.AuditLog
 {
@@ -113,6 +115,9 @@ namespace pwiz.Skyline.Model.AuditLog
         private readonly SHA1CryptoServiceProvider _sha1;
         private readonly BlockHash _blockHash;
         private readonly bool _keepOpen;
+        private readonly BlockingCollection<byte[]> _hashQueue;
+        private readonly Thread _hashThread;
+        private Exception _hashException;
 
         public HashingStream(Stream inner, bool keepOpen)
         {
@@ -120,6 +125,9 @@ namespace pwiz.Skyline.Model.AuditLog
             _keepOpen = keepOpen;
             _sha1 = new SHA1CryptoServiceProvider();
             _blockHash = new BlockHash(_sha1);
+            _hashQueue = new BlockingCollection<byte[]>();
+            _hashThread = new Thread(HashWorker) { IsBackground = true };
+            _hashThread.Start();
         }
 
         public static Stream CreateWriteStream(string path)
@@ -139,7 +147,10 @@ namespace pwiz.Skyline.Model.AuditLog
             var bytesRead = _inner.Read(buffer, offset, count);
             if (bytesRead <= 0)
                 return bytesRead;
-            _blockHash.ProcessBytes(buffer, bytesRead);
+
+            var copy = new byte[bytesRead];
+            Array.Copy(buffer, offset, copy, 0, bytesRead);
+            _hashQueue.Add(copy);
 
             return bytesRead;
         }
@@ -148,24 +159,31 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             _inner.Write(buffer, offset, count);
 
-            _blockHash.ProcessBytes(buffer, count);
+            var copy = new byte[count];
+            Array.Copy(buffer, offset, copy, 0, count);
+            _hashQueue.Add(copy);
         }
 
 
-        public string Hash
+        public string GetHash()
         {
-            get { return BlockHash.SafeToBase64(HashBytes); }
+            return BlockHash.SafeToBase64(GetHashBytes());
         }
 
-        public byte[] HashBytes
+        public byte[] GetHashBytes()
         {
-            get { return _blockHash.HashBytes; }
+            WaitForHashThread();
+            return _blockHash.HashBytes;
         }
 
         public string Done()
         {
+            _hashQueue.CompleteAdding();
+            _hashThread.Join();
+            if (_hashException != null)
+                throw _hashException;
             _blockHash.FinalizeHashBytes();
-            return Hash;
+            return GetHash();
         }
 
         protected override void Dispose(bool disposing)
@@ -174,12 +192,39 @@ namespace pwiz.Skyline.Model.AuditLog
 
             if (disposing)
             {
+                if (!_hashQueue.IsAddingCompleted)
+                    _hashQueue.CompleteAdding();
+                _hashThread.Join();
+                _hashQueue.Dispose();
                 if (!_keepOpen)
                 {
                     _inner.Dispose();
                 }
                 _sha1.Dispose();
             }
+        }
+
+        private void HashWorker()
+        {
+            try
+            {
+                foreach (var bytes in _hashQueue.GetConsumingEnumerable())
+                {
+                    _blockHash.ProcessBytes(bytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                _hashException = ex;
+            }
+        }
+
+        private void WaitForHashThread()
+        {
+            if (_hashThread.IsAlive)
+                _hashThread.Join();
+            if (_hashException != null)
+                throw _hashException;
         }
 
         #region Unused wrappers
