@@ -4,4 +4,7 @@
 *.mzml binary
 *.mzxml binary
 
+# Vendor API archives are binary; never normalize line endings (would corrupt them)
+*.7z binary
+
 *.sh text eol=lf

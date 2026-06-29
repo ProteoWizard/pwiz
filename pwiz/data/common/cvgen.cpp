@@ -168,6 +168,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "/// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)\n"
           "enum PWIZ_API_DECL CVID\n{\n"
           "    CVID_Unknown = -1";
+    set<string> emittedEnumNames; // track emitted enum names to avoid redefinitions (e.g. synonyms that escape to the same name)
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     for(const Term& term : obo->terms)
     {
@@ -176,14 +177,20 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
         os << ",\n\n"
            << "    /// " << term.name << ": " << term.def << "\n"
            << "    " << eName << " = " << enumValue(term, enumMultiplierByPrefix[term.prefix]);
+        emittedEnumNames.insert(eName);
 
         if (term.prefix == "MS") // add synonyms for PSI-MS only
         {
             for(const string& synonym : term.exactSynonyms)
             {
                 auto synonym_enum_name = enumName(term.prefix, synonym, term.isObsolete);
-                if (eName == synonym_enum_name) // Should not happen, but just in case
-                    cerr << "Warning: synonym enum name collision for term id " << term.id << ": " << synonym << ": " << eName << endl;
+                // skip synonyms whose escaped enum name collides with an already-emitted name
+                // (e.g. a term with both "TOF/TOF" and "TOF-TOF" synonyms both escape to MS_TOF_TOF)
+                if (!emittedEnumNames.insert(synonym_enum_name).second)
+                {
+                    cerr << "Warning: skipping duplicate synonym enum name for term id " << term.id << ": " << synonym << ": " << synonym_enum_name << endl;
+                    continue;
+                }
                 os << ",\n\n"
                    << "    /// " << synonym << " (" << term.name << "): " << term.def << "\n"
                    << "    " << synonym_enum_name << " = " << eName;
