@@ -1256,6 +1256,10 @@ PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si)
                 // skip AA substitutions
                 if (possibleMod.specificities[0].classification == unimod::Classification::Substitution)
                     continue;
+                // skip fragment ion-type pseudo-modifications (e.g. "c-type-ion"), whose masses
+                // collide with real modifications (c-type-ion has the same -0.984 Da as Amidated)
+                if (bal::ends_with(possibleMod.name, "-type-ion"))
+                    continue;
                 mod.set(possibleMod.cvid);
             }
         }
@@ -1312,6 +1316,10 @@ PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si)
                 {
                     // skip AA substitutions
                     if (possibleMod.specificities[0].classification == unimod::Classification::Substitution)
+                        continue;
+                    // skip fragment ion-type pseudo-modifications (e.g. "c-type-ion"), whose masses
+                    // collide with real modifications (c-type-ion has the same -0.984 Da as Amidated)
+                    if (bal::ends_with(possibleMod.name, "-type-ion"))
                         continue;
                     mod.set(possibleMod.cvid);
                 }
