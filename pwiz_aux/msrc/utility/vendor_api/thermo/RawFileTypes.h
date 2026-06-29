@@ -140,6 +140,8 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Orbitrap_Astral,
     InstrumentModelType_Orbitrap_Astral_Zoom,
     InstrumentModelType_Orbitrap_Excedion_Pro,
+    InstrumentModelType_Orbitrap_Excedion,
+    InstrumentModelType_Orbitrap_Tribrid_Apex,
     InstrumentModelType_Q_Exactive_GC_Orbitrap,
     InstrumentModelType_ISQ_7000,
     InstrumentModelType_Velos_Pro,
@@ -283,9 +285,10 @@ const InstrumentNameToModelMapping nameToModelMapping[] =
     {"ORBITRAPEXPLORISGC", InstrumentModelType_Orbitrap_Exploris_GC, ContainsNoSpaces}, // predicted
     {"ORBITRAP EXPLORIS 480", InstrumentModelType_Orbitrap_Exploris_480, Exact},
     {"ORBITRAP EXCEDION PRO", InstrumentModelType_Orbitrap_Excedion_Pro, Contains},
-    {"ORBITRAP EXCEDION", InstrumentModelType_Orbitrap_Excedion_Pro, Contains},
+    {"ORBITRAP EXCEDION", InstrumentModelType_Orbitrap_Excedion, Contains},
     {"ORBITRAP GC", InstrumentModelType_Orbitrap_GC, Contains},
     {"ECLIPSE", InstrumentModelType_Orbitrap_Eclipse, Contains},
+    {"TRIBRID APEX", InstrumentModelType_Orbitrap_Tribrid_Apex, Contains},
     {"ASTRAL ZOOM", InstrumentModelType_Orbitrap_Astral_Zoom, Contains}, // predicted
     {"ASTRAL", InstrumentModelType_Orbitrap_Astral, Contains},
     {"MALDI LTQ ORBITRAP XL", InstrumentModelType_MALDI_LTQ_Orbitrap_XL, Exact},
@@ -394,6 +397,8 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Orbitrap_Astral:
         case InstrumentModelType_Orbitrap_Astral_Zoom:
         case InstrumentModelType_Orbitrap_Excedion_Pro:
+        case InstrumentModelType_Orbitrap_Excedion:
+        case InstrumentModelType_Orbitrap_Tribrid_Apex:
         case InstrumentModelType_Stellar:
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
@@ -527,6 +532,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Orbitrap_Exploris_480:
         case InstrumentModelType_Orbitrap_Exploris_GC:
         case InstrumentModelType_Orbitrap_Excedion_Pro:
+        case InstrumentModelType_Orbitrap_Excedion:
             return MassAnalyzerType_Orbitrap;
 
         case InstrumentModelType_LTQ_Orbitrap:
@@ -548,6 +554,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_IQ_X:
         case InstrumentModelType_Orbitrap_Eclipse:
+        case InstrumentModelType_Orbitrap_Tribrid_Apex:
         case InstrumentModelType_Orbitrap_GC:
         {
             switch (scanFilterType)
@@ -695,6 +702,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Orbitrap_Exploris_GC:
         case InstrumentModelType_Orbitrap_GC:
         case InstrumentModelType_Orbitrap_Excedion_Pro:
+        case InstrumentModelType_Orbitrap_Excedion:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             break;
 
@@ -716,6 +724,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Orbitrap_ID_X: // ditto
         case InstrumentModelType_Orbitrap_IQ_X: // ditto
         case InstrumentModelType_Orbitrap_Eclipse:
+        case InstrumentModelType_Orbitrap_Tribrid_Apex: // Tribrid: quadrupole (filter only), linear ion trap, and orbitrap
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
@@ -862,6 +871,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_Exploris_GC:
         case InstrumentModelType_Orbitrap_GC:
         case InstrumentModelType_Orbitrap_Excedion_Pro:
+        case InstrumentModelType_Orbitrap_Excedion:
             detectors.push_back(DetectorType_Inductive);
             break;
 
@@ -886,6 +896,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_Orbitrap_ID_X:
         case InstrumentModelType_Orbitrap_IQ_X:
         case InstrumentModelType_Orbitrap_Eclipse:
+        case InstrumentModelType_Orbitrap_Tribrid_Apex:
         case InstrumentModelType_Orbitrap_Astral:
         case InstrumentModelType_Orbitrap_Astral_Zoom:
             detectors.push_back(DetectorType_Inductive);
