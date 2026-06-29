@@ -73,6 +73,13 @@ namespace TestPerf
                 // @"https://skyline.ms/webinars/Webinar22_dia_libC.zip",
             };
 
+            // The gas-phase fractionated runs are huge (~36 GB of .mzML); extract them once to a shared
+            // persistent location and reuse them in place across runs rather than re-extracting every run.
+            // (Takes effect once the GPF library zips and the results-import step below are re-enabled. The
+            // .elib is deliberately not persisted -- loading it creates a .elibc cache beside it, which would
+            // trip the "persistent files were modified" check.)
+            TestFilesPersistent = new[] { @".mzML" };
+
             RunFunctionalTest();
         }
 
