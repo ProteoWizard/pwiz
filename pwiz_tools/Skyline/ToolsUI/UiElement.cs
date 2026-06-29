@@ -148,24 +148,6 @@ namespace pwiz.Skyline.ToolsUI
         /// commands -- the same way clicking a main-menu item already works.</summary>
         public bool ReturnsValue { get; internal set; }
 
-        /// <summary>Whether the action's backing public method already owns its UI-thread marshaling (and any
-        /// gating) -- so <see cref="Invoke"/> calls it directly on the caller's (pipe/test) thread instead of
-        /// gating and posting here. Set this for an action that just delegates to a public method that is also
-        /// called directly (e.g. <c>Accept</c> -> <see cref="FormElement.Accept"/>): the method, not the
-        /// action, is the single owner of the threading, so it behaves identically whether it is reached
-        /// through the action or called directly. The method is then responsible for its own
-        /// <see cref="UiElement.InvokeOnUiThread(System.Action)"/>/<see cref="UiElement.BeginInvokeOnUiThread"/>
-        /// -- both of which expect to be called off the UI thread, as they are here.</summary>
-        public bool SelfMarshaling { get; internal set; }
-
-        /// <summary>Marks the action as <see cref="SelfMarshaling"/> (chains onto a <see cref="UiActions"/>
-        /// definition like <see cref="Describe"/>).</summary>
-        public UiAction OwnsThreading()
-        {
-            SelfMarshaling = true;
-            return this;
-        }
-
         /// <summary>Whether this action is meaningful for the element -- usually whether the element is the
         /// kind the action targets (it implements the action's capability interface).</summary>
         public abstract bool AppliesTo(UiElement element);
@@ -176,31 +158,13 @@ namespace pwiz.Skyline.ToolsUI
             AppliesTo(element)
             && (!MustBeEnabled || element.IsEnabled);
 
-        /// <summary>Performs the action on the element, owning its gating and threading. When the action
-        /// requires interactability (a click or a mutation -- see <see cref="MustBeEnabled"/>) the element's
-        /// form and the element itself are gated first, synchronously on the element's UI thread, so a control
-        /// blocked by a modal or disabled fails here. Then a void action is posted to that UI thread
-        /// fire-and-forget (so a gesture that opens a modal does not block -- the modal is driven by later
-        /// commands), while a value action (a read) is run synchronously and its result returned. The actual
-        /// operation is <see cref="InvokeCore"/>.</summary>
-        public object Invoke(UiElement element, object argument)
-        {
-            // A self-marshaling action delegates to a public method that owns its own gating and threading
-            // (e.g. Accept -> FormElement.Accept): call it directly on this (off-UI) thread, so the method is
-            // the single owner and behaves the same whether reached through the action or called directly.
-            if (SelfMarshaling)
-                return InvokeCore(element, argument);
-            if (MustBeEnabled)
-                element.InvokeOnUiThread(element.VerifyInteractable);
-            if (ReturnsValue)
-                return element.InvokeOnUiThread(() => InvokeCore(element, argument));
-            element.BeginInvokeOnUiThread(() => InvokeCore(element, argument));
-            return null;
-        }
-
-        /// <summary>The action's actual operation on the element (the action determines the argument and result
-        /// types). Runs on the element's UI thread; gating and marshaling are handled by <see cref="Invoke"/>.</summary>
-        protected abstract object InvokeCore(UiElement element, object argument);
+        /// <summary>Performs the action on the element -- a call to the element's public method, on the caller's
+        /// (pipe/test) thread. The action layer does no marshaling or gating of its own: the backing method owns
+        /// that (a mutation/click gates the element and posts its change fire-and-forget via
+        /// <see cref="UiElement.PerformGesture"/>; a read runs synchronously on the UI thread and returns its
+        /// value), so it behaves the same whether reached through its action or called directly. Must be called
+        /// off the UI thread.</summary>
+        public abstract object Invoke(UiElement element, object argument);
     }
 
     /// <summary>
@@ -242,7 +206,7 @@ namespace pwiz.Skyline.ToolsUI
 
             public override bool AppliesTo(UiElement element) => element is T;
 
-            protected override object InvokeCore(UiElement element, object argument)
+            public override object Invoke(UiElement element, object argument)
             {
                 if (!(element is T typed))
                     throw new ArgumentException(LlmInstruction.Format(
@@ -262,8 +226,9 @@ namespace pwiz.Skyline.ToolsUI
                 @"GetChildren", e => e.GetControlInfos())
             .Describe(new LlmInstruction(@"List this element's child controls; each one's path can be used directly in a later call."));
 
-        // A void action (click, value set, item check, ...) is posted fire-and-forget; only a value action
-        // (get_value, get_grid_text) is run synchronously inside the dialog-watch -- see UiAction.ReturnsValue.
+        // A void action (click, value set, item check, ...) gates and posts its change fire-and-forget inside
+        // the element's method (see UiElement.PerformGesture); only a value action (get_value, get_grid_text)
+        // runs synchronously on the UI thread and returns a value -- see UiAction.ReturnsValue.
         public static readonly UiAction Click = SimpleAction<IClickableElement>(
                 @"Click", e => { e.Click(); })
             .Describe(new LlmInstruction(@"Click this control (a button, menu/list item, checkbox, ...)."));
@@ -321,10 +286,9 @@ namespace pwiz.Skyline.ToolsUI
             .Describe(new LlmInstruction(@"Select the tab with the given text."), new LlmInstruction(@"the tab's visible text"));
 
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
-        // OwnsThreading: FormElement.Accept does its own gating and fire-and-forget posting (it is also called
-        // directly, e.g. by tests), so the action must not gate/post a second time on top of it.
+        // Like every action, this calls straight through to the method (FormElement.Accept), which owns its own
+        // gating and fire-and-forget posting.
         public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept())
-            .OwnsThreading()
             .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
@@ -676,6 +640,18 @@ namespace pwiz.Skyline.ToolsUI
         /// <see cref="JsonUiService.UnfinishedActionCount"/> until it finishes).</summary>
         public virtual void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action);
 
+        /// <summary>The marshaling a mutating or clicking method owns (it used to be applied centrally by the
+        /// action layer): gate the element synchronously on its UI thread -- so a control blocked by a modal or
+        /// disabled fails here, on the caller -- and then post the change fire-and-forget, so a gesture that
+        /// opens a modal does not block the caller (the modal is driven by later commands). A read does not use
+        /// this: it needs no gate and returns a value, so it just calls <see cref="InvokeOnUiThread{T}"/>
+        /// directly. Must be called off the UI thread.</summary>
+        protected void PerformGesture(Action gesture)
+        {
+            InvokeOnUiThread(VerifyInteractable);
+            BeginInvokeOnUiThread(gesture);
+        }
+
         /// <summary>The actions this element supports, for discovery via GetActions / GetControls: every
         /// action that <see cref="UiAction.AppliesTo"/> this element (it is the kind the action targets).
         /// The capability is declared by the interfaces the element implements, not by an override here.</summary>
@@ -688,7 +664,7 @@ namespace pwiz.Skyline.ToolsUI
         /// walk is one level at a time -- GetControls and the get_children action both return this; descend by
         /// calling GetChildren on a child. Each child's Index is its position among the siblings of its same
         /// Type, so adding a control of another Type never shifts it.</summary>
-        public virtual ControlInfo[] GetControlInfos()
+        public virtual ControlInfo[] GetControlInfos() => InvokeOnUiThread(() =>
         {
             var indexByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var result = new List<ControlInfo>();
@@ -705,7 +681,7 @@ namespace pwiz.Skyline.ToolsUI
                 });
             }
             return result.ToArray();
-        }
+        });
 
         /// <summary>The single child the <paramref name="path"/>'s leaf segment names, with its Parent
         /// ignored (the caller has resolved the chain down to this element). A segment with no selector is
@@ -893,14 +869,14 @@ namespace pwiz.Skyline.ToolsUI
         // guessed point, which is fragile), so it reports that it cannot be clicked. A subclass with a more
         // direct gesture overrides Click: a button uses BM_CLICK (to bypass PerformClick's gates), a
         // ToolStripItem / native dialog button drives its own.
-        public virtual void Click()
+        public virtual void Click() => PerformGesture(() =>
         {
             if (!(Control is IButtonControl button))
                 throw new ArgumentException(LlmInstruction.Format(
                     @"The control '{0}' cannot be clicked: it is not a button. Set its value, or act on the button/menu item that triggers it.",
                     Label ?? NullIfEmpty(Name) ?? ElementType.Name));
-            InvokeOnUiThread(button.PerformClick);
-        }
+            button.PerformClick();
+        });
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
         // such as a StartPage ActionBoxControl, whose Text is its visible caption ("Blank Document"). A
@@ -1078,9 +1054,9 @@ namespace pwiz.Skyline.ToolsUI
 
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
         // other form has no window-level clipboard gesture, so refuse it with a clear message.
-        public void Paste(string text) => RequireSkylineWindow().Paste(text);
+        public void Paste(string text) => PerformGesture(() => RequireSkylineWindow().Paste(text));
 
-        public void SelectAll() => RequireSkylineWindow().SelectAll();
+        public void SelectAll() => PerformGesture(() => RequireSkylineWindow().SelectAll());
 
         private SkylineWindow RequireSkylineWindow()
         {
@@ -1145,20 +1121,21 @@ namespace pwiz.Skyline.ToolsUI
         public string FormId => JsonUiService.GetFormId(Form);
         public string Title => JsonUiService.GetFormTitle(Form);
 
-        // A value read: run synchronously inside the dialog-watch so it does not hang if a modal is up.
+        // A value read: run inside the dialog-watch so it does not hang if a modal is up (GetControlInfos does
+        // its own UI-thread marshaling).
         public ControlInfo[] GetControls()
         {
             ControlInfo[] result = null;
             JsonUiService.RunWithDialogWatch(() =>
             {
-                result = InvokeOnUiThread(GetControlInfos);
+                result = GetControlInfos();
                 return true;
             });
             return result;
         }
 
         // Clicks a button (or any clickable) on the form by its caption. Resolve the target synchronously on
-        // the UI thread (so a missing control fails here); the action's Invoke then gates the form and control
+        // the UI thread (so a missing control fails here); the element's Click then gates the form and control
         // and posts the click fire-and-forget so a click that opens a modal does not block. Each element knows
         // how to click itself (a button via BM_CLICK so an AutoCheck=false checkbox still toggles; a
         // menu/toolbar item or tile via PerformClick; a tab by selecting it).
@@ -1169,7 +1146,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Sets a control's value (or a grid cell) on the form. The target is resolved synchronously on the UI
-        // thread (so a missing control fails here); the action's Invoke then gates it and applies the value
+        // thread (so a missing control fails here); the element's set-value then gates it and applies the value
         // fire-and-forget -- so a setter that pops a validation or confirmation alert does not block. A grid
         // cell ("grid[column,row]") moves the current cell there and pastes, reusing the grid path so a
         // DataboundGridControl stays in sync; a field is matched by its own Label.
@@ -1307,8 +1284,8 @@ namespace pwiz.Skyline.ToolsUI
         // returns, which pins the worker and wedges the single-threaded JsonTool server behind the modal.
         // The main thread runs the posted click when it next pumps; the resulting dialog is then driven by
         // later commands, exactly like the asynchronous main-menu path.
-        public override void Click() =>
-            User32.PostMessageA(Control.Handle, User32.WinMessageType.BM_CLICK, 0, 0);
+        public override void Click() => PerformGesture(() =>
+            User32.PostMessageA(Control.Handle, User32.WinMessageType.BM_CLICK, 0, 0));
     }
 
     /// <summary>A checkbox: clickable (toggles via its handler -- from ButtonElement) and value-settable
@@ -1317,8 +1294,9 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly CheckBox _checkBox;
         public CheckBoxElement(CheckBox checkBox) : base(checkBox) { _checkBox = checkBox; }
-        public override object Value => _checkBox.Checked;
-        public override void SetValue(object value) => _checkBox.Checked = UiValue.ParseBool(value);
+        public override object Value => InvokeOnUiThread(() => (object) _checkBox.Checked);
+        public override void SetValue(object value) =>
+            PerformGesture(() => _checkBox.Checked = UiValue.ParseBool(value));
     }
 
     /// <summary>A radio button: clicking/setting it checks it (WinForms unchecks its siblings).</summary>
@@ -1326,8 +1304,9 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly RadioButton _radioButton;
         public RadioButtonElement(RadioButton radioButton) : base(radioButton) { _radioButton = radioButton; }
-        public override object Value => _radioButton.Checked;
-        public override void SetValue(object value) => _radioButton.Checked = UiValue.ParseBool(value);
+        public override object Value => InvokeOnUiThread(() => (object) _radioButton.Checked);
+        public override void SetValue(object value) =>
+            PerformGesture(() => _radioButton.Checked = UiValue.ParseBool(value));
     }
 
     /// <summary>A text box -- a caption-less field named by its adjacent label.</summary>
@@ -1335,17 +1314,17 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly TextBoxBase _textBox;
         public TextBoxElement(TextBoxBase textBox) : base(textBox) { _textBox = textBox; }
-        public override object Value => _textBox.Text;
+        public override object Value => InvokeOnUiThread(() => (object) _textBox.Text);
         // A multi-line box parses/lays out on CRLF (what Enter inserts), so normalize bare newlines.
-        public override void SetValue(object value) =>
-            _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value?.ToString()) : value?.ToString();
+        public override void SetValue(object value) => PerformGesture(() =>
+            _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value?.ToString()) : value?.ToString());
 
         // Paste replaces the current selection (or inserts at the caret) with the text via SelectedText, the
         // way Ctrl+V would but without the clipboard.
-        public void Paste(string text) =>
-            _textBox.SelectedText = _textBox.Multiline ? UiValue.NormalizeNewlines(text) : text;
+        public void Paste(string text) => PerformGesture(() =>
+            _textBox.SelectedText = _textBox.Multiline ? UiValue.NormalizeNewlines(text) : text);
 
-        public void SelectAll() => _textBox.SelectAll();
+        public void SelectAll() => PerformGesture(() => _textBox.SelectAll());
     }
 
     /// <summary>A combo box -- value set by selecting the matching item.</summary>
@@ -1353,8 +1332,8 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly ComboBox _comboBox;
         public ComboBoxElement(ComboBox comboBox) : base(comboBox) { _comboBox = comboBox; }
-        public override object Value => _comboBox.GetItemText(_comboBox.SelectedItem);
-        public override void SetValue(object value)
+        public override object Value => InvokeOnUiThread(() => (object) _comboBox.GetItemText(_comboBox.SelectedItem));
+        public override void SetValue(object value) => PerformGesture(() =>
         {
             var text = value?.ToString();
             int index = _comboBox.FindStringExact(text);
@@ -1362,7 +1341,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"No item '{0}' in combo box {1}.", text, _comboBox.Name));
             _comboBox.SelectedIndex = index;
-        }
+        });
     }
 
     /// <summary>A ListControl -- a ListBox or CheckedListBox. Select an item by index
@@ -1371,9 +1350,9 @@ namespace pwiz.Skyline.ToolsUI
         where T : ListControl
     {
         public ListControlElement(T control) : base(control) { }
-        public void SetSelectedIndex(int index) => ListItems.SetSelectedIndex(Control, index);
+        public void SetSelectedIndex(int index) => PerformGesture(() => ListItems.SetSelectedIndex(Control, index));
         public void SetItemSelected(string item, bool isSelected) =>
-            ListItems.SetSelected(Control, item, isSelected);
+            PerformGesture(() => ListItems.SetSelected(Control, item, isSelected));
     }
 
     /// <summary>A CheckedListBox. Besides the ListControl actions, an item is checked/unchecked by its text
@@ -1383,15 +1362,14 @@ namespace pwiz.Skyline.ToolsUI
         ICheckItemsElement
     {
         public CheckedListBoxElement(CheckedListBox control) : base(control) { }
-        public override object Value =>
-            string.Join(Environment.NewLine, Control.CheckedItems.Cast<object>().Select(Control.GetItemText));
+        public override object Value => InvokeOnUiThread(() => (object)
+            string.Join(Environment.NewLine, Control.CheckedItems.Cast<object>().Select(Control.GetItemText)));
         public void SetItemChecked(string item, bool isChecked) =>
-            ListItems.SetChecked(Control, item, isChecked);
+            PerformGesture(() => ListItems.SetChecked(Control, item, isChecked));
         // A click toggles the checked state of the selected item, the way a user's click/space does (move to
-        // the item first with set_selected_index). The click runs off the UI thread inside the dialog-watch,
-        // so marshal the toggle.
+        // the item first with set_selected_index).
         public override void Click() =>
-            InvokeOnUiThread(() =>
+            PerformGesture(() =>
             {
                 int index = Control.SelectedIndex;
                 if (index < 0)
@@ -1409,10 +1387,10 @@ namespace pwiz.Skyline.ToolsUI
     {
         public ItemContainerElement(T control) : base(control) { }
         public void SetItemChecked(string item, bool isChecked) =>
-            ListItems.SetChecked(Control, item, isChecked);
+            PerformGesture(() => ListItems.SetChecked(Control, item, isChecked));
         public void SetItemSelected(string item, bool isSelected) =>
-            ListItems.SetSelected(Control, item, isSelected);
-        public void SetSelectedIndex(int index) => ListItems.SetSelectedIndex(Control, index);
+            PerformGesture(() => ListItems.SetSelected(Control, item, isSelected));
+        public void SetSelectedIndex(int index) => PerformGesture(() => ListItems.SetSelectedIndex(Control, index));
     }
 
     /// <summary>A TreeView. Besides checking/selecting a node by text, a node is expanded or collapsed
@@ -1421,8 +1399,8 @@ namespace pwiz.Skyline.ToolsUI
     internal class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement
     {
         public TreeViewElement(TreeView control) : base(control) { }
-        public void Expand(object path) => ResolveTreePath(path).Expand();
-        public void Collapse(object path) => ResolveTreePath(path).Collapse();
+        public void Expand(object path) => PerformGesture(() => ResolveTreePath(path).Expand());
+        public void Collapse(object path) => PerformGesture(() => ResolveTreePath(path).Collapse());
 
         // Resolves a tree path -- an array whose segments select a child at each level (an integer is the
         // child at that index; a string is the first child whose text matches it) -- to its TreeNode,
@@ -1508,9 +1486,9 @@ namespace pwiz.Skyline.ToolsUI
 
         // Pasting into the Targets tree pastes into the document (a transition list, peptides, or FASTA) --
         // the same as Ctrl+V with the tree focused -- without the clipboard.
-        public void Paste(string text) => Program.MainWindow.Paste(text);
+        public void Paste(string text) => PerformGesture(() => Program.MainWindow.Paste(text));
 
-        public void SelectAll() => Program.MainWindow.SelectAll();
+        public void SelectAll() => PerformGesture(() => Program.MainWindow.SelectAll());
 
         // The Targets tree's node menu is shown manually, so it lives on the main window rather than on the
         // tree's own ContextMenuStrip; raise its Opening so item enablement reflects the current selection
@@ -1520,12 +1498,12 @@ namespace pwiz.Skyline.ToolsUI
 
         // Renames the selected node in place the way a user typing into its label and pressing Enter would:
         // begin the in-place edit, set the text, commit it. Select the node first.
-        public void RenameNode(string value)
+        public void RenameNode(string value) => PerformGesture(() =>
         {
             SequenceTree.BeginEdit(false);
             SequenceTree.StatementCompletionEditBox.TextBox.Text = value;
             SequenceTree.CommitEditBox(false);
-        }
+        });
     }
 
     /// <summary>The owner-drawn ListBox on the Pick Children pop-up. It is a plain ListBox whose checkbox is
@@ -1540,22 +1518,19 @@ namespace pwiz.Skyline.ToolsUI
         public PopupPickListElement(ListBox control) : base(control) { }
         private PopupPickList PickList => (PopupPickList) Control.FindForm();
         public override Type ElementType => typeof(CheckedListBox);
-        public override object Value
+        public override object Value => InvokeOnUiThread(() =>
         {
-            get
-            {
-                var pickList = PickList;
-                var names = pickList.ItemNames.ToList();
-                return string.Join(Environment.NewLine,
-                    Enumerable.Range(0, names.Count).Where(pickList.GetItemChecked).Select(i => names[i]));
-            }
-        }
+            var pickList = PickList;
+            var names = pickList.ItemNames.ToList();
+            return (object) string.Join(Environment.NewLine,
+                Enumerable.Range(0, names.Count).Where(pickList.GetItemChecked).Select(i => names[i]));
+        });
         public void SetItemChecked(string item, bool isChecked) =>
-            PickList.SetItemChecked(FindPickListIndex(item), isChecked);
+            PerformGesture(() => PickList.SetItemChecked(FindPickListIndex(item), isChecked));
         // A click toggles the selected item's check, like a user's click/space (move to the item first with
-        // set_selected_index). Runs off the UI thread inside the dialog-watch.
+        // set_selected_index).
         public override void Click() =>
-            InvokeOnUiThread(() =>
+            PerformGesture(() =>
             {
                 int index = Control.SelectedIndex;
                 if (index < 0)
@@ -1788,7 +1763,7 @@ namespace pwiz.Skyline.ToolsUI
             var leaf = InvokeOnUiThread(() => ResolveMenuItem(menuPath));
             if (leaf == null)
                 return false;
-            // Invoke gates the item's form (a modal blocking it) and the item itself, then posts the click.
+            // The item's Click gates its form (a modal blocking it) and the item itself, then posts the click.
             UiActions.Click.Invoke(leaf, null);
             return true;
         }
@@ -1872,7 +1847,7 @@ namespace pwiz.Skyline.ToolsUI
         }
         // Marshaling through, and gating by, this item's form are inherited from UiComponent.
 
-        public void Click() => InvokeOnUiThread(() => _item.PerformClick());
+        public void Click() => PerformGesture(() => _item.PerformClick());
 
         // Opens / closes this item's dropdown (a menu/toolbar dropdown item), so a menu walk can populate
         // items built on DropDownOpening before matching the next path segment. A no-op for a leaf item.
@@ -1889,18 +1864,19 @@ namespace pwiz.Skyline.ToolsUI
         public GridElement(DataGridView dataGridView) : base(dataGridView) { _dataGridView = dataGridView; }
 
         // Pasting into a grid is the same as set_grid_text: tab-separated text filled from the current cell.
+        // SetGridText owns the gating/marshaling, so this just delegates to it.
         public void Paste(string text) => SetGridText(text);
 
-        public void SelectAll() => _dataGridView.SelectAll();
+        public void SelectAll() => PerformGesture(() => _dataGridView.SelectAll());
         public DataGridView DataGridView => _dataGridView;
 
         // get_value / set_value act on the single current cell (the one set_current_cell_address moved to);
         // the whole grid is read/written in bulk with get_grid_text / set_grid_text. The value is null when
         // there is no current cell. This is the cell's raw underlying value; ConvertValue normalizes it for
         // the connector at the point it is exposed (get_value, ControlInfo), not here.
-        public override object Value => _dataGridView.CurrentCell?.Value;
+        public override object Value => InvokeOnUiThread(() => _dataGridView.CurrentCell?.Value);
 
-        public override void SetValue(object value)
+        public override void SetValue(object value) => PerformGesture(() =>
         {
             var cell = _dataGridView.CurrentCell;
             if (cell == null)
@@ -1912,7 +1888,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(new LlmInstruction(
                     @"The current cell is read-only, so its value cannot be set."));
             cell.Value = value;
-        }
+        });
 
         // A grid carries no caption, so it is addressed by its control Name -- the one place the connector
         // matches on a name rather than on visible text (an empty name picks the form's single grid, handled
@@ -1925,7 +1901,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // Reads a plain DataGridView as tab-separated text: the column headers followed by every data row
         // (each cell shown as the user sees it).
-        public virtual string GetGridText()
+        public virtual string GetGridText() => InvokeOnUiThread(() =>
         {
             var visibleColumns = VisibleColumns();
             var lines = new List<string>
@@ -1939,7 +1915,7 @@ namespace pwiz.Skyline.ToolsUI
                 lines.Add(TextUtil.ToEscapedTSV(visibleColumns.Select(col => CellDisplayText(gridRow.Cells[col.Index]))));
             }
             return TextUtil.LineSeparate(lines);
-        }
+        });
 
         // Pastes starting at the current cell -- the anchor a user would have clicked. Move the current cell
         // first with SetCurrentCellAddress; the text may be a multi-cell TSV block (it fills down/right).
@@ -1947,14 +1923,19 @@ namespace pwiz.Skyline.ToolsUI
         // would, so a value entered in the new row is committed and the grid grows (a direct cell.Value set is
         // not pushed through, leaving the row empty). A BoundGridElement overrides this to keep its document
         // in sync; this base path is for a plain DataGridView (e.g. the List Designer property grid).
-        public virtual void SetGridText(string text)
+        // SetGridText owns the gating + fire-and-forget post; the paste itself is SetGridTextCore (a bound grid
+        // overrides it), kept separate so a caller already inside the gesture (Paste) does not post a second
+        // time.
+        public void SetGridText(string text) => PerformGesture(() => SetGridTextCore(text));
+
+        protected virtual void SetGridTextCore(string text)
         {
             DataGridViewPasteHandler.PasteText(_dataGridView, text);
         }
 
         // Moves the current cell so the next SetGridText / context menu acts there. column is the
         // visible-column index, row is the row index (the same indices GetGridText's columns/rows use).
-        public void SetCurrentCellAddress(int column, int row)
+        public void SetCurrentCellAddress(int column, int row) => PerformGesture(() =>
         {
             var visibleColumns = VisibleColumns();
             if (column < 0 || column >= visibleColumns.Length)
@@ -1964,7 +1945,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Row {0} is out of range; the grid has {1} rows.", row, _dataGridView.Rows.Count));
             _dataGridView.CurrentCell = _dataGridView.Rows[row].Cells[visibleColumns[column].Index];
-        }
+        });
 
         // A grid's menu is the one for its current cell (move there first with SetCurrentCellAddress), built
         // by raising the cell's CellContextMenuStripNeeded -- not the grid's own ContextMenuStrip.
@@ -2004,19 +1985,19 @@ namespace pwiz.Skyline.ToolsUI
         public BoundGridElement(BoundDataGridView boundDataGridView) : base(boundDataGridView) { }
         private BindingListSource BindingListSource => DataGridView.DataSource as BindingListSource;
 
-        public override string GetGridText()
+        public override string GetGridText() => InvokeOnUiThread(() =>
         {
             var bindingListSource = BindingListSource;
             return bindingListSource == null
                 ? base.GetGridText() // not bound yet -- read the cells directly
                 : bindingListSource.ViewContext.GetCopyAllText(DataGridView, bindingListSource);
-        }
+        });
 
-        public override void SetGridText(string text)
+        protected override void SetGridTextCore(string text)
         {
             var bindingListSource = BindingListSource;
             if (bindingListSource == null)
-                base.SetGridText(text);
+                base.SetGridTextCore(text);
             else
                 // Pastes at the current cell exactly as Ctrl-V would, keeping the bound document in sync
                 // (one undoable batch-modify -- see BoundDataGridViewPasteHandler).
@@ -2052,7 +2033,7 @@ namespace pwiz.Skyline.ToolsUI
         // The tab contents are flattened to the form, so the TabControl itself has no children.
         public override IEnumerable<UiElement> EnumerateChildren() => Enumerable.Empty<UiElement>();
         public void SelectTab(string tabText) =>
-            InvokeOnUiThread(() =>
+            PerformGesture(() =>
             {
                 var tabs = Control.TabPages.Cast<TabPage>().ToList();
                 // The tab whose text matches strictly, else loosely (a strict match wins over a loose one).
