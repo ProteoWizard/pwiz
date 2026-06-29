@@ -928,6 +928,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             foreach (var searchType in searchOrder)
             {
                 var consecutiveFailures = 0;
+                var consecutiveTimeouts = 0;
                 var failureCount = 0;
                 var successCount = 0;
                 cancelled |= progressMonitor.IsCanceled;
@@ -991,6 +992,30 @@ namespace pwiz.ProteomeDatabase.Fasta
                         // Some error, we should just try again later so don't retry now
                         abort = true;
                         break;
+                    }
+                    else if (lookupResult == WebserviceLookupOutcome.timed_out)
+                    {
+                        // The web service is reachable but too slow. Unlike a missing network
+                        // (retry_later), waiting will not necessarily help, so don't retry forever:
+                        // leaving proteins pending makes the background loader reschedule without
+                        // limit and never reach a "done" state. Shrink the batch and try a few more
+                        // times; once we exceed the limit, give up and mark the remaining proteins as
+                        // timeout failures so the load can complete.
+                        if (++consecutiveTimeouts > MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS)
+                        {
+                            foreach (var ss in proteins.Where(p => p.GetProteinMetadata().NeedsSearch()))
+                            {
+                                ss.NoteSearchFailure(WebSearchFailureReason.timeout,
+                                    detail: @"Exceeded consecutive web service timeout limit.");
+                                ss.SetWebSearchCompleted(); // Stop retrying - we're done
+                                yield return ss;
+                            }
+                            abort = true;
+                            break;
+                        }
+                        _maxBatchSize[searchType] = Math.Max(1, _maxBatchSize[searchType] / 2);
+                        _batchsize[searchType] = Math.Max(1, _batchsize[searchType] / 2);
+                        continue;
                     }
                     else if (lookupResult == WebserviceLookupOutcome.cancelled)
                     {
@@ -1072,6 +1097,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
                     if (success)
                     {
+                        consecutiveTimeouts = 0; // Made progress, so this isn't a persistently-stalled service
                         if ((_successCountAtThisBatchsize[searchType] > batchsizeIncreaseThreshold) && (_batchsize[searchType] < idealBatchsize))
                         {
                             _batchsize[searchType] = Math.Min(idealBatchsize, _batchsize[searchType]*2);
@@ -1523,6 +1549,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public const string KNOWNGOOD_UNIPROT_SEARCH_TARGET = "Q08641";
         public const int KNOWNGOOD_UNIPROT_SEARCH_TARGET_SEQLEN = 628;
         public const int MAX_CONSECUTIVE_PROTEIN_METATDATA_LOOKUP_FAILURES = 20; // If we fail on several in a row, assume all are doomed to fail.
+        public const int MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS = 2; // After this many timeouts in a row, give up rather than retrying a slow service forever (each timeout already represents WebRetryCount attempts).
         private bool SimilarSearchTerms(string a, string b)
         {
             var searchA = a.ToUpperInvariant().Split('.')[0]; // xp_12345.6 -> XP_12345
@@ -1535,6 +1562,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             completed,
             url_too_long,
             retry_later,
+            timed_out,
             cancelled
         }
 
@@ -1563,10 +1591,11 @@ namespace pwiz.ProteomeDatabase.Fasta
                     break; // Cancelled
 
                 var iterationOutcome = ExecuteLookupIteration(proteins, searchType, searchTerms, responses, progressMonitor);
-                if (iterationOutcome == WebserviceLookupOutcome.retry_later)
+                if (iterationOutcome == WebserviceLookupOutcome.retry_later ||
+                    iterationOutcome == WebserviceLookupOutcome.timed_out)
                 {
                     if (retries == 0)
-                        return WebserviceLookupOutcome.retry_later;  // Just try again later
+                        return iterationOutcome;  // Out of retries - report whether it was a timeout or a transient error
                     Thread.Sleep(1000);
                     continue;
                 }
@@ -1628,7 +1657,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                 if (ex.StatusCode != HttpStatusCode.NotFound)
                 {
                     RecordFailure(proteins, failureReason, ex);
-                    return WebserviceLookupOutcome.retry_later;
+                    return failureReason == WebSearchFailureReason.timeout
+                        ? WebserviceLookupOutcome.timed_out
+                        : WebserviceLookupOutcome.retry_later;
                 }
 
                 failureException = ex;
@@ -1642,7 +1673,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             catch (TimeoutException ex)
             {
                 RecordFailure(proteins, WebSearchFailureReason.timeout, ex);
-                return WebserviceLookupOutcome.retry_later;
+                return WebserviceLookupOutcome.timed_out;
             }
             catch (Exception ex)
             {
