@@ -187,7 +187,19 @@ namespace pwiz.Skyline.Properties {
                 this["SequenceTreeExpandPeptides"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool SpectrumSequenceRulersEnabled {
+            get {
+                return ((bool)(this["SpectrumSequenceRulersEnabled"]));
+            }
+            set {
+                this["SpectrumSequenceRulersEnabled"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]

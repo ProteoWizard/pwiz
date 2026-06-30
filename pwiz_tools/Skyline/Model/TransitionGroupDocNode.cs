@@ -3393,11 +3393,11 @@ namespace pwiz.Skyline.Model
                             this, settings, mods, useFilter, TransitionGroup.MAX_MATCHED_MSMS_PEAKS);
                         foreach (var rmi in spectrumInfoR.PeaksRanked)
                         {
-                            var firstIon = rmi.MatchedIons.First();
+                            var firstIon = rmi.MatchedIonsSorted.First();
                             AddRmiToTransitionRanks(transitionRanks, firstIon, rmi);
                             if (!useFilter)
                             {
-                                foreach (var otherIon in rmi.MatchedIons.Skip(1))
+                                foreach (var otherIon in rmi.MatchedIonsSorted.Skip(1))
                                 {
                                     AddRmiToTransitionRanks(transitionRanks, otherIon, rmi);
                                 }

@@ -284,6 +284,7 @@
     <Compile Include="SpectrumFilterImportErrorTest.cs" />
     <Compile Include="SpectrumFilterTransitionListTest.cs" />
     <Compile Include="SpectrumRetentionTimeAlignmentTest.cs" />
+    <Compile Include="SpectrumSequenceRulerTest.cs" />
     <Compile Include="SurrogateCalibrationCurveTest.cs" />
     <Compile Include="TestPanoramaClient.cs" />
     <Compile Include="SkydFileModifiedTest.cs" />
