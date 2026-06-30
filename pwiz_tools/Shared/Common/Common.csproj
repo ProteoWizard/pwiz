@@ -65,10 +65,10 @@
       <HintPath>..\Lib\Sprache.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="System.Data.SQLite">
-      <HintPath>..\..\..\libraries\SQLite\$(PLATFORM)\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
+    <!-- Legacy used a $(PLATFORM)-substituted HintPath; SDK doesn't evaluate
+         $(PLATFORM) the same way. Use the NuGet package for both targets;
+         the package's bundled native handles the platform routing. -->
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" Condition="'$(TargetFramework)' == 'net472'" />
     <Reference Include="System.Web" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
@@ -83,7 +83,10 @@
     <PackageReference Include="NHibernate" Version="5.5.2" />
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
     <PackageReference Include="log4net" Version="2.0.17" />
-    <PackageReference Include="MathNet.Numerics" Version="5.0.0" />
+    <!-- MathNet 5.0 removed Control.LinearAlgebraProvider and the internal
+         Resources class. 4.15.x preserves the legacy API surface Skyline uses
+         while still targeting net6+. -->
+    <PackageReference Include="MathNet.Numerics" Version="4.15.0" />
     <PackageReference Include="Sprache" Version="2.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
   </ItemGroup>
