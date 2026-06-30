@@ -174,9 +174,15 @@ namespace pwiz.Osprey
                 }
             });
 
+        public static readonly OspreyArgument ARG_FDRBENCH = new OspreyArgument(@"fdrbench",
+            () => @"<input.tsv>", (c, p) => c._config.OutputFdrBench = p.Value);
+        public static readonly OspreyArgument ARG_FDRBENCH_PER_RUN = new OspreyArgument(@"fdrbench-per-run",
+            (c, p) => c._config.FdrBenchPerRun = true);
+
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => @"FDR & Protein Inference", true,
-                ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_PROTEIN_FDR, ARG_FDR_METHOD, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES);
+                ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_PROTEIN_FDR, ARG_FDR_METHOD, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
+                ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN);
 
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(@"decoys-in-library",
@@ -500,6 +506,13 @@ namespace pwiz.Osprey
                     @"--decoys-in-library to actually enable library-decoy mode.");
             }
 
+            if (_config.FdrBenchPerRun && string.IsNullOrEmpty(_config.OutputFdrBench))
+            {
+                Program.LogWarning(
+                    @"--fdrbench-per-run is set without --fdrbench; no FDRBench input " +
+                    @"will be written. Pass --fdrbench <input.tsv> to enable FDRBench output.");
+            }
+
             return _config;
         }
 
@@ -723,6 +736,8 @@ namespace pwiz.Osprey
                 { @"fdr-method", @"FDR method (default: percolator)" },
                 { @"fdr-level", @"FDR level (default: precursor)" },
                 { @"shared-peptides", @"Shared peptide handling (default: all)" },
+                { @"fdrbench", @"Write an FDRBench-compatible input TSV to this path. The level is taken from --fdr-level (peptide; precursor and both emit precursor-level). Includes every reported (compaction-surviving) target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as 'score', so FDRBench can compute true-FDR via entrapment counting without truncation at Osprey's threshold." },
+                { @"fdrbench-per-run", @"With --fdrbench: emit one row per (precursor, run) using run-level q-values (adds a 'run' column). Default is one row per precursor using experiment-level q-values." },
                 { @"decoys-in-library", @"Trust decoys already in the spectral library instead of generating reverse decoys. Hard error if none are recognised." },
                 { @"decoy-pairing-manifest", @"FDRBench 5-column pairing manifest (TSV), used with --decoys-in-library" },
                 { @"write-pin", @"Write PIN files for external tools" },
