@@ -996,25 +996,29 @@ namespace pwiz.ProteomeDatabase.Fasta
                     else if (lookupResult == WebserviceLookupOutcome.timed_out)
                     {
                         // The web service is reachable but too slow. Unlike a missing network
-                        // (retry_later), waiting will not necessarily help, so don't retry forever:
-                        // leaving proteins pending makes the background loader reschedule without
-                        // limit and never reach a "done" state. Shrink the batch and try a few more
-                        // times; once we exceed the limit, give up and mark the remaining proteins as
-                        // timeout failures so the load can complete.
+                        // (retry_later), waiting will not necessarily help, and leaving proteins
+                        // pending makes the background loader reschedule without limit and never
+                        // reach a "done" state. Shrink the batch and retry a few times (a smaller
+                        // request may come back in time); once we exceed the limit, give up on this
+                        // search type by marking its remaining proteins as timeout failures so the
+                        // load can complete. Other search types (different servers) are left to try.
                         if (++consecutiveTimeouts > MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS)
                         {
-                            foreach (var ss in proteins.Where(p => p.GetProteinMetadata().NeedsSearch()))
+                            foreach (var ss in searchlist)
                             {
-                                ss.NoteSearchFailure(WebSearchFailureReason.timeout,
-                                    detail: @"Exceeded consecutive web service timeout limit.");
-                                ss.SetWebSearchCompleted(); // Stop retrying - we're done
-                                yield return ss;
+                                if (ss.GetProteinMetadata().GetPendingSearchTerm().Length > 0)
+                                {
+                                    ss.NoteSearchFailure(WebSearchFailureReason.timeout,
+                                        detail: @"Exceeded consecutive web service timeout limit.");
+                                    ss.SetWebSearchCompleted(); // Stop retrying - give up on this one
+                                    yield return ss;
+                                }
                             }
-                            abort = true;
                             break;
                         }
                         _maxBatchSize[searchType] = Math.Max(1, _maxBatchSize[searchType] / 2);
                         _batchsize[searchType] = Math.Max(1, _batchsize[searchType] / 2);
+                        _successCountAtThisBatchsize[searchType] = 0; // Don't let pre-timeout successes ramp the batch size back up
                         continue;
                     }
                     else if (lookupResult == WebserviceLookupOutcome.cancelled)
@@ -1591,11 +1595,12 @@ namespace pwiz.ProteomeDatabase.Fasta
                     break; // Cancelled
 
                 var iterationOutcome = ExecuteLookupIteration(proteins, searchType, searchTerms, responses, progressMonitor);
-                if (iterationOutcome == WebserviceLookupOutcome.retry_later ||
-                    iterationOutcome == WebserviceLookupOutcome.timed_out)
+                if (iterationOutcome == WebserviceLookupOutcome.timed_out)
+                    return WebserviceLookupOutcome.timed_out;  // A slow service won't be helped by repeating the same request immediately; the caller retries with a smaller batch
+                if (iterationOutcome == WebserviceLookupOutcome.retry_later)
                 {
                     if (retries == 0)
-                        return iterationOutcome;  // Out of retries - report whether it was a timeout or a transient error
+                        return WebserviceLookupOutcome.retry_later;  // Just try again later
                     Thread.Sleep(1000);
                     continue;
                 }
