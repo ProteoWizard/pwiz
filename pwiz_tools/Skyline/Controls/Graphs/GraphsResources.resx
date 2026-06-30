@@ -561,12 +561,12 @@ Here are the last 3 errors:
     <value>Isolation Window</value>
   </data>
   <data name="GraphFullScan_ToolTip_ObservedAtPeakHeaderFormat" xml:space="preserve">
-    <value>Observed at Peak (RT={0})</value>
+    <value>Observed Ion Mobility at Peak (RT={0})</value>
     <comment>{0} = peak retention time. Header row for the observed-line tooltip; subsequent rows show IM and CCS values.</comment>
   </data>
   <data name="GraphFullScan_ToolTip_Ccs" xml:space="preserve">
     <value>CCS</value>
-    <comment>Compact column name used in the observed-line tooltip under the "Observed at Peak" header.</comment>
+    <comment>Compact column name used in the observed-line tooltip under the "Observed Ion Mobility at Peak" header.</comment>
   </data>
   <data name="GraphFullScan_ToolTip_ObservedValueWithErrorFormat" xml:space="preserve">
     <value>{0} ({1}% error)</value>
