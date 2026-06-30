@@ -101,6 +101,17 @@ using (var msd = new MsDataFileImpl(fixture))
     Check("QcTraceQuality.FlowRate constant", MsDataFileImpl.QcTraceQuality.FlowRate == "volumetric flow rate");
 }
 
+// Static-helper checks — used by TestData's CommandLineWiffTest + path-handling code.
+Check("SupportsMultipleSamples on .wiff", MsDataFileImpl.SupportsMultipleSamples("anything.wiff"));
+Check("SupportsMultipleSamples on .wiff2", MsDataFileImpl.SupportsMultipleSamples("anything.wiff2"));
+Check("SupportsMultipleSamples rejects .raw", !MsDataFileImpl.SupportsMultipleSamples("anything.raw"));
+Check("IsNegativeChargeIdNullable detects +", MsDataFileImpl.IsNegativeChargeIdNullable("+ foo") == false);
+Check("IsNegativeChargeIdNullable detects -", MsDataFileImpl.IsNegativeChargeIdNullable("- foo") == true);
+Check("IsNegativeChargeIdNullable absent for plain id", !MsDataFileImpl.IsNegativeChargeIdNullable("scan=1").HasValue);
+Check("IsSingleIonCurrentId detects SIM SIC prefix", MsDataFileImpl.IsSingleIonCurrentId("SIM SIC 400.1"));
+Check("GetNonUnicodePath round-trips ascii unchanged",
+    MsDataFileImpl.GetNonUnicodePath(fixture).Length > 0);
+
 Console.WriteLine();
 Console.WriteLine(failed == 0
     ? "ALL CHECKS PASSED"

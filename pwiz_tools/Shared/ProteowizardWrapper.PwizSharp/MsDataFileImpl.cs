@@ -453,6 +453,60 @@ public sealed class MsDataFileImpl : IDisposable
 
     // ===== Lifecycle =====
 
+    /// <summary>
+    /// True iff the format at <paramref name="path"/> can carry more than one
+    /// sample-acquisition in a single container (Sciex .wiff / .wiff2). Used by
+    /// CommandLineWiffTest to dispatch to a sample-iterating import.
+    /// </summary>
+    public static bool SupportsMultipleSamples(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        path = path.ToLowerInvariant();
+        return path.EndsWith(".wiff") || path.EndsWith(".wiff2");
+    }
+
+    /// <summary>Pure ID-string parser; cpp-equivalent SRM id-prefix detection.</summary>
+    public static bool? IsNegativeChargeIdNullable(string id)
+    {
+        if (id.StartsWith("+ ")) return false;
+        if (id.StartsWith("- ")) return true;
+        return null;
+    }
+
+    /// <summary>Pure ID-string parser; matches the cpp behavior verbatim.</summary>
+    public static bool IsSingleIonCurrentId(string id)
+    {
+        if (IsNegativeChargeIdNullable(id).HasValue) id = id[2..];
+        return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR);
+    }
+
+    /// <summary>
+    /// Convert a Unicode path to its Windows 8.3 short-name equivalent so legacy
+    /// processes that mis-handle Unicode can still find the file. Mirrors the
+    /// legacy wrapper's delegate to pwiz.CLI.util.FileSystem.GetNonUnicodePath
+    /// (which itself called Win32's GetShortPathName). When the OS can't supply
+    /// a short name (long-path, no 8.3 generation), the original path is
+    /// returned unchanged — matches legacy fall-through.
+    /// </summary>
+    public static string GetNonUnicodePath(string path)
+    {
+        if (string.IsNullOrEmpty(path) || !OperatingSystem.IsWindows()) return path;
+        const int MAX_PATH = 260;
+        var buf = new System.Text.StringBuilder(MAX_PATH);
+        uint result = GetShortPathName(path, buf, (uint)buf.Capacity);
+        if (result == 0) return path;
+        if (result > buf.Capacity)
+        {
+            buf = new System.Text.StringBuilder((int)result);
+            result = GetShortPathName(path, buf, (uint)buf.Capacity);
+            if (result == 0) return path;
+        }
+        return buf.ToString();
+    }
+
+    [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
+    private static extern uint GetShortPathName(string lpszLongPath, System.Text.StringBuilder lpszShortPath, uint cchBuffer);
+
     public static bool IsValidFile(string filepath)
     {
         if (string.IsNullOrEmpty(filepath) || !File.Exists(filepath)) return false;
