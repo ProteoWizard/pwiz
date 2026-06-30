@@ -1208,7 +1208,8 @@ namespace CommonTest
                 {
                     LookupTestMode.http404,
                     LookupTestMode.no_network,
-                    LookupTestMode.cancellation
+                    LookupTestMode.cancellation,
+                    LookupTestMode.timeout
                 };
 
                 foreach (var mode in failureModes)
@@ -1298,7 +1299,8 @@ namespace CommonTest
             normal,
             http404,
             no_network,
-            cancellation
+            cancellation,
+            timeout
         }
 
         private void ExecuteLookupScenario(bool useNetAccess, List<FastaHeaderParserTest> testList,
@@ -1325,6 +1327,7 @@ namespace CommonTest
                 LookupTestMode.http404 => HttpClientTestHelper.SimulateHttp404(),
                 LookupTestMode.no_network => HttpClientTestHelper.SimulateNoNetworkInterface(),
                 LookupTestMode.cancellation => HttpClientTestHelper.SimulateCancellation(),
+                LookupTestMode.timeout => HttpClientTestHelper.SimulateTimeout(),
                 _ => CreateNormalHelper()
             };
 
@@ -1467,6 +1470,23 @@ namespace CommonTest
                         StringAssert.EndsWith(failedProtein.FailureDetail, expectedSuffix);
                     }
                 }
+            }
+            else if (mode == LookupTestMode.timeout)
+            {
+                // A persistently slow web service must not leave proteins pending forever (which
+                // makes the background loader reschedule without limit and hang the UI). After
+                // exceeding the timeout limit the importer gives up and marks the unresolved
+                // proteins as timeout failures so the load can complete.
+                Assert.AreEqual(proteins.Count, results.Count);
+                // The proteins that resolved without a web search are untouched
+                Assert.AreEqual(noSearchNeededCount, proteins.Count(p =>
+                    p.Status == ProteinSearchInfo.SearchStatus.unsearched && p.GetProteinMetadata().NeedsSearch() == false));
+                // All searched proteins should have failed with a timeout reason
+                var failedProteins = proteins.Where(p => p.Status == ProteinSearchInfo.SearchStatus.failure).ToList();
+                Assert.AreEqual(searchCount, failedProteins.Count);
+                Assert.IsTrue(failedProteins.All(p => p.FailureReason == WebSearchFailureReason.timeout));
+                // Nothing should still be waiting to be searched - the load has terminated
+                Assert.AreEqual(0, proteins.Count(p => p.GetProteinMetadata().NeedsSearch()));
             }
             else
             {
