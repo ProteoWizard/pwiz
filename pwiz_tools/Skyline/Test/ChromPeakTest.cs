@@ -19,12 +19,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
@@ -33,6 +36,37 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class ChromPeakTest : AbstractUnitTest
     {
+        [TestMethod]
+        public void TestObservedIonMobilityCcsErrorPrecision()
+        {
+            // Regression: the observed-vs-target IM/CCS percent error was formatted with the
+            // ppm-grade Formats.MASS_ERROR ("0.#"), which rounds sub-0.05% differences to "0" -
+            // so a real gap (observed IM 33.79 vs target 33.805) read as "0% error" even though
+            // the observed and target values plainly differ. It now uses Formats.PercentError
+            // ("0.##") so small differences stay visible.
+            var culture = CultureInfo.CurrentCulture;
+            string zeroPct = (0.0).ToString(Formats.PercentError, culture);
+
+            const double observedIm = 33.79, targetIm = 33.805;
+            double imPct = 100.0 * (observedIm - targetIm) / targetIm; // ~ -0.044%
+            string imPctText = imPct.ToString(Formats.PercentError, culture);
+            Assert.AreNotEqual(zeroPct, imPctText); // the format itself must not round this away
+
+            // The shared formatter (observed-line tooltip + properties pane) must surface it.
+            string imFormatted = ObservedValueFormatter.FormatWithPercentError(observedIm, targetIm, Formats.IonMobility);
+            StringAssert.Contains(imFormatted, imPctText);
+
+            // CCS gap (260.88 vs 261) likewise renders a nonzero error.
+            const double observedCcs = 260.88, targetCcs = 261;
+            double ccsPct = 100.0 * (observedCcs - targetCcs) / targetCcs;
+            string ccsFormatted = ObservedValueFormatter.FormatWithPercentError(observedCcs, targetCcs, Formats.CCS);
+            StringAssert.Contains(ccsFormatted, ccsPct.ToString(Formats.PercentError, culture));
+
+            // A zero target (IM-only data, no CCS ground truth) renders the value alone, no error.
+            string noTarget = ObservedValueFormatter.FormatWithPercentError(observedIm, 0, Formats.IonMobility);
+            Assert.AreEqual(observedIm.ToString(Formats.IonMobility, culture), noTarget);
+        }
+
         [TestMethod]
         public void TestChromPeakIntegration()
         {

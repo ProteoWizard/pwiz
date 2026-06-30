@@ -3518,7 +3518,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 table.AddHeaderRow(headerText, rt);
 
                 table.AddDetailRow(unitsLabel,
-                    FormatValueWithError(observedIm.Value, targetIm, Formats.IonMobility), rt);
+                    ObservedValueFormatter.FormatWithPercentError(observedIm.Value, targetIm, Formats.IonMobility), rt);
 
                 // CCS row when the active reader supports IM->CCS conversion and we have the
                 // precursor's charge. The % error is observed CCS vs the CCS we were told to
@@ -3536,23 +3536,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         double targetCcsForError = imFilter.CollisionalCrossSectionSqA.GetValueOrDefault();
                         table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Ccs,
-                            FormatValueWithError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
+                            ObservedValueFormatter.FormatWithPercentError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
                     }
                 }
             }
             return table;
-        }
-
-        // Formats a value optionally with its percent error vs target on the same line:
-        //   "{value} (error {pct}%)" when target != 0; "{value}" otherwise.
-        private static string FormatValueWithError(double value, double target, string valueFormat)
-        {
-            string valueText = value.ToString(valueFormat);
-            if (target == 0)
-                return valueText;
-            double pct = 100.0 * (value - target) / target;
-            return string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
-                valueText, pct.ToString(Formats.MASS_ERROR));
         }
 
         private int? TryGetCurrentPrecursorCharge()
@@ -3583,7 +3571,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var observedIm = chromInfo.ObservedIonMobility.Value;
                 string unitsLabel = IonMobilityValue.GetUnitsString(_msDataFileScanHelper.IonMobilityUnits);
-                string valueText = FormatValueWithError(observedIm,
+                string valueText = ObservedValueFormatter.FormatWithPercentError(observedIm,
                     targetIm.GetValueOrDefault(), Formats.IonMobility);
                 props.ObservedIonMobility = TextUtil.SpaceSeparate(valueText, unitsLabel);
 
@@ -3595,7 +3583,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromInfo.ObservedCcs.HasValue && chromInfo.ObservedCcs.Value > 0)
                 {
                     double targetCcsForError = chromInfo.IonMobility?.CollisionalCrossSectionSqA ?? 0;
-                    props.ObservedCCS = FormatValueWithError(chromInfo.ObservedCcs.Value, targetCcsForError, Formats.CCS);
+                    props.ObservedCCS = ObservedValueFormatter.FormatWithPercentError(chromInfo.ObservedCcs.Value, targetCcsForError, Formats.CCS);
                 }
             }
         }
@@ -4140,5 +4128,30 @@ namespace pwiz.Skyline.Controls.Graphs
         public double RetentionTime { get; private set; }
         public Identity TransitionId { get; private set; }
         public int? OptStep { get; }
+    }
+
+    /// <summary>
+    /// Formats an observed value alongside its percent error vs a target (e.g. observed
+    /// ion mobility or CCS vs the library/explicit value), as shown in the Full Scan
+    /// observed-IM line tooltip and the properties pane. Extracted from
+    /// <see cref="GraphFullScan"/> so the formatting is unit-testable without the UI.
+    /// </summary>
+    public static class ObservedValueFormatter
+    {
+        /// <summary>
+        /// Returns "{value} ({pct}% error)" when <paramref name="target"/> is non-zero, or just
+        /// "{value}" when there is no target to compare against. The percent error uses
+        /// <see cref="Formats.PercentError"/> (2 decimals) so a small but real difference stays
+        /// visible rather than rounding to "0".
+        /// </summary>
+        public static string FormatWithPercentError(double value, double target, string valueFormat)
+        {
+            string valueText = value.ToString(valueFormat);
+            if (target == 0)
+                return valueText;
+            double pct = 100.0 * (value - target) / target;
+            return string.Format(GraphsResources.GraphFullScan_ToolTip_ObservedValueWithErrorFormat,
+                valueText, pct.ToString(Formats.PercentError));
+        }
     }
 }
