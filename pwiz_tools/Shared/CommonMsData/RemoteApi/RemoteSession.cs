@@ -22,8 +22,10 @@ using System.Net.Http;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData.RemoteApi.Ardia;
+#if NET472
 using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
+#endif
 
 namespace pwiz.CommonMsData.RemoteApi
 {
@@ -246,8 +248,10 @@ namespace pwiz.CommonMsData.RemoteApi
         {
             return remoteAccount switch
             {
+#if NET472
                 UnifiAccount unifiAccount => new UnifiSession(unifiAccount),
                 WatersConnectAccount wcAccount => new WatersConnectSession(wcAccount),
+#endif
                 ArdiaAccount ardiaAccount => new ArdiaSession(ardiaAccount),
                 _ => throw new ArgumentException(nameof(remoteAccount))
             };

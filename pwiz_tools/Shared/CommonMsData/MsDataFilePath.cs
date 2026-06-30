@@ -21,8 +21,10 @@ using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.CommonMsData.RemoteApi.Ardia;
+#if NET472
 using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
+#endif
 
 namespace pwiz.CommonMsData
 {
@@ -76,18 +78,22 @@ namespace pwiz.CommonMsData
             {
                 return null;
             }
+#if NET472
             if (url.StartsWith(UnifiUrl.UrlPrefix))
             {
                 return new UnifiUrl(url);
             }
+#endif
             if (url.StartsWith(ArdiaUrl.UrlPrefix))
             {
                 return new ArdiaUrl(url);
             }
+#if NET472
             if (url.StartsWith(WatersConnectUrl.UrlPrefix))
             {
                 return new WatersConnectUrl(url);
             }
+#endif
 
             return MsDataFilePath.ParseUri(url);
         }

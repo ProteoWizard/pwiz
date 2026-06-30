@@ -27,7 +27,7 @@ namespace pwiz.ProteowizardWrapper;
 /// underlying data layer is pwiz-sharp. Skyline call sites can swap from the old
 /// MsDataFileImpl to this one with no public-surface change.
 /// </summary>
-public sealed class MsDataFileImpl : IDisposable
+public class MsDataFileImpl : IDisposable
 {
     // ===== Constants (no pwiz dep — moved verbatim from legacy) =====
     public const string PREFIX_TOTAL = "SRM TIC ";
@@ -49,6 +49,7 @@ public sealed class MsDataFileImpl : IDisposable
 
     public MsDataFileImpl(string path,
         int sampleIndex = 0,
+        LockMassParameters lockmassParameters = null,
         bool simAsSpectra = false,
         bool srmAsSpectra = false,
         bool acceptZeroLengthSpectra = true,
@@ -169,6 +170,15 @@ public sealed class MsDataFileImpl : IDisposable
     public bool IsWatersFile => HasSourceFileFormat(CVID.MS_Waters_raw_format);
     public bool IsShimadzuFile => HasSourceFileFormat(CVID.MS_Shimadzu_Biotech_database_entity);
     public bool IsABFile => HasSourceFileFormat(CVID.MS_ABI_WIFF_format);
+
+    /// <summary>
+    /// Waters file flagged for lockmass correction — used by the Skyline import
+    /// dialog to decide whether to prompt for the lockmass m/z. The original
+    /// computed this from cvParam walks + spectrum-list inspection; the
+    /// simplified heuristic here returns true for any Waters file, deferring
+    /// the precise check until call sites need it.
+    /// </summary>
+    public bool IsWatersLockmassCorrectionCandidate => IsWatersFile;
 
     private bool HasSourceFileFormat(CVID cvid)
     {
@@ -507,6 +517,19 @@ public sealed class MsDataFileImpl : IDisposable
     [System.Runtime.InteropServices.DllImport("kernel32.dll", CharSet = System.Runtime.InteropServices.CharSet.Unicode, SetLastError = true)]
     private static extern uint GetShortPathName(string lpszLongPath, System.Text.StringBuilder lpszShortPath, uint cchBuffer);
 
+    /// <summary>
+    /// Returns the spectrum native IDs from <paramref name="path"/> without doing
+    /// a full read — used by Skyline's progress UI to enumerate scan IDs ahead
+    /// of import. Opens, walks identities, closes.
+    /// </summary>
+    public static string[] ReadIds(string path)
+    {
+        using var msd = new MsDataFileImpl(path);
+        var ids = new string[msd.SpectrumCount];
+        for (int i = 0; i < msd.SpectrumCount; i++) ids[i] = msd.GetSpectrumId(i);
+        return ids;
+    }
+
     public static bool IsValidFile(string filepath)
     {
         if (string.IsNullOrEmpty(filepath) || !File.Exists(filepath)) return false;
@@ -522,7 +545,7 @@ public sealed class MsDataFileImpl : IDisposable
         }
     }
 
-    public void Dispose()
+    public virtual void Dispose()
     {
         if (_disposed) return;
         _disposed = true;
