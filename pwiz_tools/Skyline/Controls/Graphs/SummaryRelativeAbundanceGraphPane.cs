@@ -584,8 +584,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         resolved.Value.lastRuleIndex));
             }
 
-            // Order ascending by the lowest contributing rule index in each group so that points
-            // governed by higher-priority (later/lower-in-the-list) rules are drawn on top.
+            // Order matched curves by their lowest contributing rule index so they appear in
+            // rule-list order (earlier rules first). Note ZedGraph paints lower curve indices on top,
+            // so when points of different rules overlap the earlier rule's marker is drawn over the later.
             foreach (var group in pointFormats
                 .GroupBy(pf => (pf.color, pf.symbol, pf.size, pf.labeled))
                 .OrderBy(g => g.Min(pf => pf.lastRuleIndex)))
