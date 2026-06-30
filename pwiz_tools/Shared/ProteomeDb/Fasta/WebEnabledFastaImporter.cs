@@ -1002,7 +1002,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         // request may come back in time); once we exceed the limit, give up on this
                         // search type by marking its remaining proteins as timeout failures so the
                         // load can complete. Other search types (different servers) are left to try.
-                        if (++consecutiveTimeouts > MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS)
+                        if (++consecutiveTimeouts >= MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS)
                         {
                             foreach (var ss in searchlist)
                             {
@@ -1553,7 +1553,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public const string KNOWNGOOD_UNIPROT_SEARCH_TARGET = "Q08641";
         public const int KNOWNGOOD_UNIPROT_SEARCH_TARGET_SEQLEN = 628;
         public const int MAX_CONSECUTIVE_PROTEIN_METATDATA_LOOKUP_FAILURES = 20; // If we fail on several in a row, assume all are doomed to fail.
-        public const int MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS = 2; // After this many timeouts in a row, give up rather than retrying a slow service forever (each timeout already represents WebRetryCount attempts).
+        public const int MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS = 2; // Give up on a search type after this many consecutive single-request timeouts (the batch is shrunk between tries) rather than retrying a slow service forever.
         private bool SimilarSearchTerms(string a, string b)
         {
             var searchA = a.ToUpperInvariant().Split('.')[0]; // xp_12345.6 -> XP_12345
