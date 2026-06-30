@@ -23,7 +23,9 @@ using System.Linq;
 using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
+#if NET472
 using MathNet.Numerics.Properties;
+#endif
 
 namespace pwiz.Common.DataAnalysis.Matrices
 {
@@ -143,12 +145,21 @@ namespace pwiz.Common.DataAnalysis.Matrices
                 var minmn = Math.Min(rowsR, columnsR);
                 if (tau.Length < minmn)
                 {
+#if NET472
                     throw new ArgumentException(string.Format(Resources.ArrayTooSmall, "min(m,n)"), nameof(tau));
+#else
+                    // MathNet.Numerics.Properties.Resources is internal in 5.0 — substitute the literal.
+                    throw new ArgumentException("The array argument must have a length of at least min(m,n).", nameof(tau));
+#endif
                 }
 
                 if (q.GetLength(0) != r.GetLength(0) || q.GetLength(1) != r.GetLength(0))
                 {
+#if NET472
                     throw new ArgumentException(string.Format(Resources.ArgumentArrayWrongLength, "rowsR * rowsR"), nameof(q));
+#else
+                    throw new ArgumentException("The array argument must have a length of rowsR * rowsR.", nameof(q));
+#endif
                 }
                 for (int i = 0; i < r.GetLength(0); i++)
                 {

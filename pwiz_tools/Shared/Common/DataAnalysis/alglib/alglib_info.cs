@@ -17,6 +17,12 @@ A copy of the GNU General Public License is available at
 http://www.fsf.org/licensing/licenses
 >>> END OF LICENSE >>>
 *************************************************************************/
+// On net8 the SDK supplies AssemblyCompany / AssemblyProduct /
+// AssemblyInformationalVersion from the csproj's <Company> / <Product> /
+// <Version> properties. The bundled ALGLIB attributes only apply on net472
+// for legacy parity — on net8 we use the host project's identity.
+#if NET472
 [assembly:System.Reflection.AssemblyCompanyAttribute("ALGLIB Project")]
 [assembly:System.Reflection.AssemblyProductAttribute("ALGLIB for C# (managed)")]
 [assembly:System.Reflection.AssemblyInformationalVersionAttribute("3.16.0.0")]
+#endif

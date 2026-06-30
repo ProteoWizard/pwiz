@@ -15,10 +15,19 @@
     <AssemblyName>pwiz.Common</AssemblyName>
     <UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifiers>win;win-x64;win-x86</RuntimeIdentifiers>
+    <!-- net472 keeps using Properties/AssemblyInfo.cs (legacy parity); net8 lets the
+         SDK generate the company/product/title/copyright attributes from project
+         metadata. AssemblyInfo.cs gates those lines with #if NET472. -->
     <Company>University of Washington</Company>
-    <Copyright>Copyright (c) University of Washington 2026</Copyright>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Product>Common</Product>
+    <AssemblyTitle>Common</AssemblyTitle>
+    <Copyright>Copyright © University of Washington 2009-2011</Copyright>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <!-- Old NETStandard.Library 1.6 (transitive via NHibernate→Antlr3.Runtime) requests
+         old versions of System.* meta-packages that net8 supersedes at runtime; the
+         NU1605 "downgrade" is benign here. Suppress only on net8 — net472 doesn't hit
+         the issue because it has its own BCL story. -->
+    <NoWarn>$(NoWarn);NU1605</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -68,6 +77,9 @@
     <!-- net8 replacements. NHibernate 5.5+ supports net6+. log4net 2.x is net6+
          compatible. MathNet, Sprache, System.Data.SQLite.Core all multi-target
          to net6+. -->
+    <!-- NHibernate 5.5's transitive Antlr3.Runtime 3.5.1 pulls in NETStandard.Library 1.6
+         which forces NU1605 package downgrades on net8. Use the modern 5.5.x line that
+         drops the Antlr3.Runtime dep, OR upgrade Antlr to a net-compatible version. -->
     <PackageReference Include="NHibernate" Version="5.5.2" />
     <PackageReference Include="Iesi.Collections" Version="4.0.5" />
     <PackageReference Include="log4net" Version="2.0.17" />
