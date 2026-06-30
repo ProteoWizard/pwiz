@@ -163,6 +163,11 @@ rule vendor-api-usage-requirements ( properties * )
                 result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.RawFileReader.dll ;
                 #result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.MassPrecisionEstimator.dll ;
                 #result += <assembly>$(API_PATH)/ThermoFisher.CommonCore.BackgroundSubtraction.dll ;
+                # RawFileReader 5.1.0.27 depends on System.Memory (and its deps); declare them as assemblies so they
+                # are deployed and BindingRedirectGenerator emits binding redirects for native consumers (e.g. msconvert under Wine)
+                result += <assembly>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/System.Memory.dll ;
+                result += <assembly>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/System.Buffers.dll ;
+                result += <assembly>$(PWIZ_ROOT_PATH)/pwiz_tools/Shared/Lib/System.Numerics.Vectors.dll ;
                 result += <assembly-dependency>$(API_PATH)/EULA.RawFileReader ;
                 result += <cxxflags>/wd4564 ; # warning C4564: method 'x' defines unsupported default parameter 'y'
             }
