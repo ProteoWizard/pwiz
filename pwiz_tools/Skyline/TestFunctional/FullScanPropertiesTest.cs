@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.ComponentModel;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
@@ -49,13 +51,34 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             ClickChromatogram(31.1123047521535, 43338.2577592845, PaneKey.PRODUCTS);
             var graphFullScan = WaitForOpenForm<GraphFullScan>();
+            FullScanProperties spectrumProperties = null;
             RunUI(()=>
             {
                 graphFullScan.ShowPropertiesSheet = true;
                 graphFullScan.SetShowAnnotations(true);
                 graphFullScan.SetShowAnnotations(false);
-                graphFullScan.ShowPropertiesSheet = false;
+                spectrumProperties = graphFullScan.MsGraphExtension.PropertiesSheet.SelectedObject as FullScanProperties;
             });
+            VerifyRawMetadata(spectrumProperties);
+            RunUI(() => graphFullScan.ShowPropertiesSheet = false);
+        }
+
+        /// <summary>
+        /// The full-scan viewer surfaces mzML CV/user parameters that Skyline does not interpret
+        /// into its own fields. S_3.mzML carries several at the spectrum/scan level; verify a couple
+        /// show up, keyed by their (translation-stable) CV accessions rather than display names.
+        /// </summary>
+        private static void VerifyRawMetadata(FullScanProperties spectrumProperties)
+        {
+            Assert.IsNotNull(spectrumProperties);
+            Assert.IsNotNull(spectrumProperties.RawMetadata);
+            var rawAccessions = spectrumProperties.RawMetadata.GetProperties()
+                .Cast<PropertyDescriptor>().Select(propertyDescriptor => propertyDescriptor.Description).ToList();
+            CollectionAssert.Contains(rawAccessions, @"MS:1000505"); // base peak intensity
+            CollectionAssert.Contains(rawAccessions, @"MS:1000512"); // filter string
+            // Interpreted terms must NOT be duplicated into the raw bag.
+            CollectionAssert.DoesNotContain(rawAccessions, @"MS:1000285"); // total ion current
+            CollectionAssert.DoesNotContain(rawAccessions, @"MS:1000511"); // ms level
         }
     }
 }

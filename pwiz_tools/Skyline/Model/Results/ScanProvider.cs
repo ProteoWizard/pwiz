@@ -307,6 +307,9 @@ namespace pwiz.Skyline.Model.Results
                         };
                     dataFile = DataFilePath.OpenMsDataFile(openMsDataFileParams);
                 }
+                // The full-scan viewer shows the uninterpreted mzML CV/user parameters of the
+                // displayed scan, so have the reader collect them (the bulk import path does not).
+                dataFile.CaptureOtherParams = true;
                 if (centroidedMs1 == null && centroidedMs2 == null)
                     _dataFile = dataFile;
                 _dataFileCentroidedMap.Add(centroidedMapKey, dataFile);

@@ -743,7 +743,25 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("PrecursorMz", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Raw metadata.
+        /// </summary>
+        internal static string RawMetadata {
+            get {
+                return ResourceManager.GetString("RawMetadata", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} parameters.
+        /// </summary>
+        internal static string RawMetadataSummary {
+            get {
+                return ResourceManager.GetString("RawMetadataSummary", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Ratio Dot Product.
         /// </summary>
