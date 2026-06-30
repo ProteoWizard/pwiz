@@ -1444,6 +1444,17 @@ namespace pwiz.SkylineTestFunctional
             var preset = Settings.Default.SearchSettingsPresets.FirstOrDefault(p => p.Name == presetName);
             Assert.IsNotNull(preset, $"Preset '{presetName}' should exist in settings");
 
+            // The DDA search just imported results, which kicks off background retention-time
+            // alignment (ResultFileAlignments). ShowRunPeptideSearchDlg refuses to open until
+            // Document.IsLoaded, and that alignment can still be settling on the committed
+            // document here: the earlier WaitForDocumentLoaded() only checks DocumentUI, which
+            // can report loaded before the committed Document finishes aligning. Wait on the
+            // committed Document so reopening the wizard doesn't intermittently hit the
+            // "document must be fully loaded" error on slower/contended nightly agents.
+            WaitForConditionUI(() => SkylineWindow.Document.IsLoaded,
+                () => TextUtil.LineSeparate("Document not loaded before reopening Run Peptide Search wizard:",
+                    TextUtil.LineSeparate(SkylineWindow.Document.NonLoadedStateDescriptions)));
+
             var importPeptideSearchDlg2 = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             RunUI(() =>
