@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- MzMlbConnectionTests builds tiny HDF5 fixtures via HDF.PInvoke; pinning
+         buffers with `fixed` requires unsafe. Compiles to IL — no platform
+         implications. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MsData\MsData.csproj" />
+  </ItemGroup>
+
+  <!-- Tiny cpp-msconvert-generated example fixtures used by the *CppWritten* identify /
+       read tests (Mz5IdentifyTests, MzMlbCppFixtureTests). Copied to bin so the tests
+       don't have to walk up the source tree or shell out to a live msconvert binary.
+       The source files live under pwiz-sharp/example_data/, mirroring the existing
+       sibling cpp example_data/ directory at the repo root. -->
+  <ItemGroup>
+    <None Include="$(PwizExampleDataPath)\tiny.pwiz.1.1.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>example_data\%(Filename)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+
+</Project>
