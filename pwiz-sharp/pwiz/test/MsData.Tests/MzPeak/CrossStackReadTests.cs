@@ -25,6 +25,7 @@ public class CrossStackReadTests
 
     private static string Small => Path.Combine(FixtureDir, "mzpeaknet_small.mzpeak");
     private static string HasUv => Path.Combine(FixtureDir, "mzpeaknet_has_uv.mzpeak");
+    private static string SmallChunked => Path.Combine(FixtureDir, "mzpeaknet_small_chunked.mzpeak");
 
     [TestMethod]
     public void Small_ProfileAndCentroidSpectra_ReadWithCorrectValues()
@@ -86,6 +87,59 @@ public class CrossStackReadTests
         Assert.IsNotNull(last);
         Assert.AreEqual(96, last!.Mz.Length);
         Assert.AreEqual(210.0, last.Mz[0], 1e-4);
+    }
+
+    [TestMethod]
+    public void Chunked_DecodesToMzPeakNetValues()
+    {
+        // mzpeaknet_small_chunked.mzpeak holds the same source data as mzpeaknet_small.mzpeak but in
+        // the chunked buffer format: one row per m/z chunk, delta-encoded, with seam nulls filled from
+        // the spectrum's mz_delta_model polynomial. The expected values below were captured from
+        // mzPeak.NET's own reader of THIS file, so they verify our chunk decoder + model null-fill +
+        // null-zero intensity bit-exactly (tolerance covers only last-ULP formatting).
+        using var chunked = new MzPeakReader(SmallChunked);
+        Assert.AreEqual(48, chunked.SpectrumCount);
+
+        var d0 = chunked.GetSpectrumData(0);
+        Assert.IsNotNull(d0);
+        Assert.AreEqual(13589, d0!.Mz.Length);
+        Assert.AreEqual(202.60657495520474, d0.Mz[0], 1e-9);
+        Assert.AreEqual(202.60682348271374, d0.Mz[1], 1e-9);
+        Assert.AreEqual(202.60831465813325, d0.Mz[7], 1e-9, "interpolated (model-filled) m/z");
+        Assert.AreEqual(1999.8404377599534, d0.Mz[13588], 1e-9);
+        Assert.AreEqual(0f, d0.Intensity[0]);
+        Assert.AreEqual(1938.1174f, d0.Intensity[1], 1e-3f);
+        Assert.AreEqual(0f, d0.Intensity[7], "null intensity reads back as zero");
+
+        var d21 = chunked.GetSpectrumData(21);
+        Assert.IsNotNull(d21);
+        Assert.AreEqual(11771, d21!.Mz.Length);
+        // A fill point where the chunked encoding diverges from the row-per-point one (per-chunk vs
+        // whole-spectrum local-median spacing) — we still match mzPeak.NET's chunked value exactly.
+        Assert.AreEqual(800.4670743815769, d21.Mz[7221], 1e-9);
+    }
+
+    [TestMethod]
+    public void Chunked_HasSamePerSpectrumLengthsAsRowPerPoint()
+    {
+        // The two encodings carry the same points (they differ only in floating value at interpolated
+        // seams), so every spectrum must have the same length and the same total point count.
+        using var point = new MzPeakReader(Small);
+        using var chunked = new MzPeakReader(SmallChunked);
+
+        Assert.AreEqual(point.SpectrumCount, chunked.SpectrumCount);
+        long totalPoints = 0;
+        for (int i = 0; i < point.SpectrumCount; i++)
+        {
+            var p = point.GetSpectrumData(i);
+            var c = chunked.GetSpectrumData(i);
+            Assert.AreEqual(p is null, c is null, $"data presence differs at spectrum {i}");
+            if (p is null) continue;
+            Assert.AreEqual(p.Mz.Length, c!.Mz.Length, $"m/z length differs at spectrum {i}");
+            Assert.AreEqual(p.Intensity.Length, c.Intensity.Length, $"intensity length differs at spectrum {i}");
+            totalPoints += p.Mz.Length;
+        }
+        Assert.AreEqual(243054L, totalPoints);
     }
 
     [TestMethod]

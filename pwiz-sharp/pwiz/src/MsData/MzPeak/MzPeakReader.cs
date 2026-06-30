@@ -296,8 +296,8 @@ public sealed class MzPeakReader : IDisposable
     // Phase 3 — binary data. Eager-load the point-layout files, bucket by spectrum_index,
     // Binary data is read lazily, one row group at a time, with an LRU cache (see LazyPointLayout) —
     // open stays cheap and memory is bounded to a few row groups instead of the whole file.
-    private readonly LazyPointLayout _dataLayer;  // spectra_data.parquet (canonical)
-    private readonly LazyPointLayout _peaksLayer; // spectra_peaks.parquet (supplementary)
+    private readonly IPointLayout _dataLayer;  // spectra_data.parquet (canonical)
+    private readonly IPointLayout _peaksLayer; // spectra_peaks.parquet (supplementary)
 
     // UV/DAD wavelength spectra. mzPeak.NET stores these in dedicated wavelength_spectra_* entries
     // (the value array is wavelength, not m/z) rather than inline in spectra_metadata. When present
@@ -323,7 +323,17 @@ public sealed class MzPeakReader : IDisposable
     private readonly string?[]?[] _chromParamsUnit;
     private readonly string?[]?[] _chromParamsType;
     private readonly string?[] _chromAuxArraysJson;
-    private readonly LazyPointLayout _chromData;
+    private readonly IPointLayout _chromData;
+
+    /// <summary>A per-parent binary point layer (spectra/chromatogram data or peaks). Two on-disk
+    /// shapes implement this: the canonical row-per-point <see cref="LazyPointLayout"/> and the
+    /// chunked <see cref="ChunkedPointLayout"/> (mzPeak.NET's compressed variant). The optional
+    /// <c>spacingModel</c> is the parent's mz_delta_model polynomial, used only by the chunked layer
+    /// to fill delta-encoding seam nulls.</summary>
+    private interface IPointLayout : IDisposable
+    {
+        (double[] Value, float[] Intensity)? Get(long parentIndex, double[]? spacingModel = null);
+    }
 
     /// <summary>Chromatogram metadata + data.</summary>
     public sealed record ChromatogramDescription(
@@ -500,8 +510,8 @@ public sealed class MzPeakReader : IDisposable
         }
 
         // Phase 3 — open the lazy point-layout readers (reads only the row-group range KV).
-        _dataLayer = new LazyPointLayout(OpenParquet("spectra_data.parquet"));
-        _peaksLayer = new LazyPointLayout(OpenParquet("spectra_peaks.parquet"));
+        _dataLayer = OpenPointLayout("spectra_data.parquet");
+        _peaksLayer = OpenPointLayout("spectra_peaks.parquet");
 
         // Phase 4a — file-level metadata is lazily parsed from the same parquet
         // file's KV (the writer puts it there once per file). Snapshot the KV now
@@ -554,7 +564,7 @@ public sealed class MzPeakReader : IDisposable
             _chromParamsType = Array.Empty<string?[]?>();
             _chromAuxArraysJson = Array.Empty<string?>();
         }
-        _chromData = new LazyPointLayout(OpenParquet("chromatograms_data.parquet"));
+        _chromData = OpenPointLayout("chromatograms_data.parquet");
 
         // UV/DAD wavelength spectra live in separate parquet entries (mzPeak.NET). Load them as a
         // secondary spectrum table appended after the MS spectra.
@@ -578,6 +588,65 @@ public sealed class MzPeakReader : IDisposable
 
     private bool HasEntry(string name) =>
         _archive?.HasEntry(name) ?? File.Exists(System.IO.Path.Combine(_tempDir!, name));
+
+    /// <summary>Open a binary point-layout entry, selecting the chunked decoder when the data uses the
+    /// chunked buffer format and the canonical row-per-point reader otherwise. A missing entry yields
+    /// an empty layout that returns null for every lookup.</summary>
+    private IPointLayout OpenPointLayout(string name) => MakePointLayout(OpenParquet(name));
+
+    private static IPointLayout MakePointLayout(ParquetFileReader? reader)
+    {
+        if (reader is null) return new LazyPointLayout(null);
+        return ChunkedPointLayout.IsChunked(reader)
+            ? new ChunkedPointLayout(reader)
+            : new LazyPointLayout(reader);
+    }
+
+    /// <summary>Each row group's [min,max] for an integer parent-index column, preferring the (free)
+    /// Parquet column-chunk statistics and only reading the column when a group has no usable stats.
+    /// Empty/unreadable groups get (-1,-1). Ranges may overlap; callers merge all covering groups.</summary>
+    private static (long First, long Last)[] DeriveRangesFromColumn(ParquetFileReader reader, int idxCol)
+    {
+        int groups = reader.FileMetaData.NumRowGroups;
+        var derived = new List<(long, long)>(groups);
+        for (int g = 0; g < groups; g++)
+        {
+            using var rgr = reader.RowGroup(g);
+            int rows = checked((int)rgr.MetaData.NumRows);
+            if (rows == 0) { derived.Add((-1, -1)); continue; }
+
+            using var cc = rgr.MetaData.GetColumnChunkMetaData(idxCol);
+            if (TryStatsRange(cc.Statistics, out long smin, out long smax))
+            {
+                derived.Add((smin, smax));
+                continue;
+            }
+
+            var idx = new ulong?[rows];
+            using (var c = rgr.Column(idxCol).LogicalReader<ulong?>()) c.ReadBatch(idx.AsSpan());
+            long min = long.MaxValue, max = long.MinValue;
+            foreach (var u in idx) if (u is { } v) { if ((long)v < min) min = (long)v; if ((long)v > max) max = (long)v; }
+            derived.Add(min <= max ? (min, max) : (-1, -1));
+        }
+        return derived.ToArray();
+    }
+
+    /// <summary>Extract a row group's [min,max] for an index column from Parquet statistics, if set.
+    /// Index columns are integers; the concrete <c>Statistics&lt;T&gt;</c> varies by physical width and
+    /// signedness, so match each. Returns false when stats are absent (caller reads the column).</summary>
+    private static bool TryStatsRange(Statistics? stats, out long min, out long max)
+    {
+        min = 0; max = 0;
+        if (stats is null || !stats.HasMinMax) return false;
+        switch (stats)
+        {
+            case Statistics<int> s: min = s.Min; max = s.Max; return true;
+            case Statistics<long> s: min = s.Min; max = s.Max; return true;
+            case Statistics<uint> s: min = s.Min; max = s.Max; return true;
+            case Statistics<ulong> s: min = (long)s.Min; max = (long)s.Max; return true;
+            default: return false;
+        }
+    }
 
     /// <summary>Get a chromatogram description by row index.</summary>
     public ChromatogramDescription GetChromatogramDescription(int rowIndex)
@@ -930,13 +999,25 @@ public sealed class MzPeakReader : IDisposable
         // position for pwiz-written files but need not for cross-stack / filtered lists — so look up
         // by the stored index, not the row position.
         long key = SpectrumDataKey(spectrumIndex);
-        if (_dataLayer.Get(key) is { } d) return new BinaryArrays(d.Value, d.Intensity);
-        if (_peaksLayer.Get(key) is { } p) return new BinaryArrays(p.Value, p.Intensity);
+        var model = GetSpacingModel(spectrumIndex);
+        if (_dataLayer.Get(key, model) is { } d) return new BinaryArrays(d.Value, d.Intensity);
+        if (_peaksLayer.Get(key, model) is { } p) return new BinaryArrays(p.Value, p.Intensity);
         return null;
     }
 
     private long SpectrumDataKey(int spectrumIndex) =>
         (long)(_index[_primaryRowOfSpectrum[spectrumIndex]] ?? (ulong)spectrumIndex);
+
+    /// <summary>The spectrum's mz_delta_model polynomial coefficients (for chunked-layout seam filling),
+    /// or null when the spectrum has no model. Forces the metadata group load that holds the column.</summary>
+    private double[]? GetSpacingModel(int spectrumIndex)
+    {
+        int row = _primaryRowOfSpectrum[spectrumIndex];
+        EnsureGroupLoaded(GroupOfRow(row));
+        if (_mzDeltaModel[row] is not { } coefs) return null;
+        var dense = coefs.Where(c => c.HasValue).Select(c => c!.Value).ToArray();
+        return dense.Length > 0 ? dense : null;
+    }
 
     /// <summary>
     /// Returns the supplementary centroid-peak layer for a spectrum (typically only
@@ -949,7 +1030,8 @@ public sealed class MzPeakReader : IDisposable
             throw new ArgumentOutOfRangeException(nameof(spectrumIndex));
         // Wavelength spectra have no supplementary peaks layer.
         if (spectrumIndex >= _msSpectrumCount) return null;
-        if (_peaksLayer.Get(SpectrumDataKey(spectrumIndex)) is { } p) return new BinaryArrays(p.Value, p.Intensity);
+        if (_peaksLayer.Get(SpectrumDataKey(spectrumIndex), GetSpacingModel(spectrumIndex)) is { } p)
+            return new BinaryArrays(p.Value, p.Intensity);
         return null;
     }
 
@@ -987,11 +1069,23 @@ public sealed class MzPeakReader : IDisposable
             var dotPath = col.Path.ToDotString();
             map[dotPath] = i;
 
-            // Also register the path with any trailing list-element decoration stripped,
-            // so callers that look up the Arrow-style path get the same column when the
-            // file was written by ParquetSharp (which appends `.list.item`). Real mzPeak
-            // files use `.list.element` already embedded mid-path; their leaf path has
-            // no trailing decoration, so this branch is a no-op for them.
+            // List-group leaves carry a `.list.item` (ParquetSharp/Arrow) or `.list.element` (real
+            // mzPeak) decoration, mid-path for nested structs (e.g. parameters) and trailing for scalar
+            // lists (e.g. mz_delta_model). Different writers pick different spellings, so register both
+            // forms — our callers always look up the `.list.element` spelling.
+            if (dotPath.Contains(".list.item", StringComparison.Ordinal))
+            {
+                var alt = dotPath.Replace(".list.item", ".list.element");
+                if (!map.ContainsKey(alt)) map[alt] = i;
+            }
+            else if (dotPath.Contains(".list.element", StringComparison.Ordinal))
+            {
+                var alt = dotPath.Replace(".list.element", ".list.item");
+                if (!map.ContainsKey(alt)) map[alt] = i;
+            }
+
+            // Also register the path with any trailing list-element decoration stripped, so callers
+            // that look up the bare path get the same column.
             var stripped = ListItemTrailerRegex.Replace(dotPath, "");
             if (!map.ContainsKey(stripped)) map[stripped] = i;
 
@@ -1236,7 +1330,7 @@ public sealed class MzPeakReader : IDisposable
         private readonly double?[]?[] _scValFloat;
         private readonly bool?[]?[] _scValBool;
 
-        private readonly LazyPointLayout _data;
+        private readonly IPointLayout _data;
 
         public WavelengthSpectra(ParquetFileReader meta, ParquetFileReader? data)
         {
@@ -1315,7 +1409,7 @@ public sealed class MzPeakReader : IDisposable
                     CopyInto(_scType, ReadNullableStringList(rg, cols, "scan.parameters.list.element.type", len), o);
                 }
             }
-            _data = new LazyPointLayout(data);
+            _data = MakePointLayout(data);
         }
 
         public string GetId(int i) => _id[i] ?? string.Empty;
@@ -1398,7 +1492,7 @@ public sealed class MzPeakReader : IDisposable
     /// row groups instead of the whole file. Reads are guarded by a lock so concurrent callers are
     /// safe; the underlying parquet reader stays open until <see cref="Dispose"/>.
     /// </summary>
-    private sealed class LazyPointLayout : IDisposable
+    private sealed class LazyPointLayout : IPointLayout
     {
         // Must match MzPeakWriter.PointRowGroupRangesKey.
         private const string PointRowGroupRangesKey = "point_row_group_ranges";
@@ -1438,54 +1532,14 @@ public sealed class MzPeakReader : IDisposable
             else if (_colIdx >= 0)
             {
                 // Files without the range KV (single-row-group pwiz files, and cross-stack files such
-                // as mzPeak.NET). Derive each row group's parent-index [min,max] range. Prefer the
-                // Parquet column-chunk statistics (free — already in the footer); only fall back to
-                // reading the index column when a group has no usable stats. Unlike the KV path these
-                // ranges can OVERLAP (a foreign writer may split a spectrum's points across groups), so
-                // Get() merges every group whose range covers the key rather than taking the first.
-                int groups = _reader.FileMetaData.NumRowGroups;
-                var derived = new List<(long, long)>(groups);
-                for (int g = 0; g < groups; g++)
-                {
-                    using var rgr = _reader.RowGroup(g);
-                    int rows = checked((int)rgr.MetaData.NumRows);
-                    if (rows == 0) { derived.Add((-1, -1)); continue; }
-
-                    using var cc = rgr.MetaData.GetColumnChunkMetaData(_colIdx);
-                    if (TryStatsRange(cc.Statistics, out long smin, out long smax))
-                    {
-                        derived.Add((smin, smax));
-                        continue;
-                    }
-
-                    var idx = new ulong?[rows];
-                    using (var c = rgr.Column(_colIdx).LogicalReader<ulong?>()) c.ReadBatch(idx.AsSpan());
-                    long min = long.MaxValue, max = long.MinValue;
-                    foreach (var u in idx) if (u is { } v) { if ((long)v < min) min = (long)v; if ((long)v > max) max = (long)v; }
-                    derived.Add(min <= max ? (min, max) : (-1, -1));
-                }
-                _ranges = derived.ToArray();
+                // as mzPeak.NET) derive each row group's parent-index [min,max] range. These can
+                // OVERLAP (a foreign writer may split a parent across groups), so Get() merges every
+                // group whose range covers the key rather than taking the first.
+                _ranges = DeriveRangesFromColumn(_reader, _colIdx);
             }
         }
 
-        /// <summary>Extract a row group's [min,max] for the index column from Parquet statistics, if set.
-        /// Index columns are integers; the concrete <c>Statistics&lt;T&gt;</c> varies by physical width and
-        /// signedness, so match each. Returns false when stats are absent (caller reads the column).</summary>
-        private static bool TryStatsRange(Statistics? stats, out long min, out long max)
-        {
-            min = 0; max = 0;
-            if (stats is null || !stats.HasMinMax) return false;
-            switch (stats)
-            {
-                case Statistics<int> s: min = s.Min; max = s.Max; return true;
-                case Statistics<long> s: min = s.Min; max = s.Max; return true;
-                case Statistics<uint> s: min = s.Min; max = s.Max; return true;
-                case Statistics<ulong> s: min = (long)s.Min; max = (long)s.Max; return true;
-                default: return false;
-            }
-        }
-
-        public (double[] Value, float[] Intensity)? Get(long parentIndex)
+        public (double[] Value, float[] Intensity)? Get(long parentIndex, double[]? spacingModel = null)
         {
             if (_reader is null || _colIdx < 0 || _colVal < 0 || _colInt < 0) return null;
 
@@ -1505,7 +1559,19 @@ public sealed class MzPeakReader : IDisposable
                     else { value = Concat(value, v.Value); intensity = Concat(intensity!, v.Intensity); }
                 }
             }
-            return value is null ? null : (value, intensity!);
+            if (value is null) return null;
+
+            // mzPeak.NET stores the value axis with null gaps (the NullInterpolate transform) to be
+            // reconstructed from the spectrum's spacing model; null reads back as NaN here. Fill those
+            // from the model exactly as the chunked layout does, so both encodings agree.
+            if (spacingModel is not null && Array.Exists(value, double.IsNaN))
+            {
+                var nullable = new double?[value.Length];
+                for (int i = 0; i < value.Length; i++)
+                    nullable[i] = double.IsNaN(value[i]) ? (double?)null : value[i];
+                value = MzPeakChunkCodec.FillNullsWithModel(nullable, spacingModel);
+            }
+            return (value, intensity!);
         }
 
         private static T[] Concat<T>(T[] a, T[] b)
@@ -1563,8 +1629,10 @@ public sealed class MzPeakReader : IDisposable
                 long s = (long)u;
                 var (vv, ii) = outv[s];
                 int c = cursor[s]++;
+                // A null value-axis point is a gap to be interpolated from the spacing model (done in
+                // Get); mark it NaN until then. A null intensity is zero (the NullZero transform).
                 vv[c] = val[r] ?? double.NaN;
-                ii[c] = inten[r] ?? float.NaN;
+                ii[c] = inten[r] ?? 0f;
             }
             return outv;
         }
@@ -1597,5 +1665,135 @@ public sealed class MzPeakReader : IDisposable
         }
 
         public void Dispose() => _reader?.Dispose();
+    }
+
+    /// <summary>
+    /// Reads the mzPeak "chunked" point layout (mzPeak.NET's compressed variant): one parquet row per
+    /// m/z chunk — <c>spectrum_index</c>, <c>mz_chunk_start</c>, a delta/no-compression encoded
+    /// <c>mz_chunk_values</c> list, a <c>chunk_encoding</c> CURIE, and a parallel <c>intensity</c> list.
+    /// Like <see cref="LazyPointLayout"/> it reads one row group at a time with an LRU cache; per group
+    /// it buckets the raw chunks by spectrum index, decoding+concatenating them (and filling any
+    /// delta-seam nulls from the per-spectrum spacing model) on demand in <see cref="Get"/>.
+    /// </summary>
+    private sealed class ChunkedPointLayout : IPointLayout
+    {
+        private const int MaxCachedGroups = 3;
+
+        private readonly record struct Chunk(double Start, double?[] Mz, string? Encoding, float?[] Intensity);
+
+        private readonly ParquetFileReader _reader;
+        private readonly (long First, long Last)[] _ranges;
+        private readonly int _colIdx, _colStart, _colValues, _colEncoding, _colIntensity;
+        private readonly object _lock = new();
+        private readonly Dictionary<int, Dictionary<long, List<Chunk>>> _cache = new();
+        private readonly LinkedList<int> _lru = new();
+
+        /// <summary>True when the data parquet uses the chunked layout (it carries a chunk_encoding column).</summary>
+        public static bool IsChunked(ParquetFileReader reader)
+        {
+            var schema = reader.FileMetaData.Schema;
+            for (int i = 0; i < schema.NumColumns; i++)
+                if (schema.Column(i).Path.ToDotString().Contains("chunk_encoding", StringComparison.Ordinal))
+                    return true;
+            return false;
+        }
+
+        public ChunkedPointLayout(ParquetFileReader reader)
+        {
+            _reader = reader;
+            _colIdx = _colStart = _colValues = _colEncoding = _colIntensity = -1;
+            var schema = _reader.FileMetaData.Schema;
+            for (int i = 0; i < schema.NumColumns; i++)
+            {
+                var p = schema.Column(i).Path.ToDotString();
+                if (p.Contains("spectrum_index", StringComparison.Ordinal)) _colIdx = i;
+                else if (p.Contains("chunk_start", StringComparison.Ordinal)) _colStart = i;
+                else if (p.Contains("chunk_encoding", StringComparison.Ordinal)) _colEncoding = i;
+                else if (p.Contains("chunk_values", StringComparison.Ordinal)) _colValues = i;
+                else if (p.Contains("intensity", StringComparison.Ordinal)) _colIntensity = i;
+            }
+            _ranges = _colIdx >= 0 ? DeriveRangesFromColumn(_reader, _colIdx) : Array.Empty<(long, long)>();
+        }
+
+        public (double[] Value, float[] Intensity)? Get(long parentIndex, double[]? spacingModel = null)
+        {
+            if (_colIdx < 0 || _colStart < 0 || _colValues < 0 || _colEncoding < 0 || _colIntensity < 0) return null;
+
+            var mz = new List<double>();
+            var intensity = new List<float>();
+            bool found = false;
+            for (int i = 0; i < _ranges.Length; i++)
+            {
+                if (parentIndex < _ranges[i].First || parentIndex > _ranges[i].Last) continue;
+                lock (_lock)
+                {
+                    var group = EnsureLoaded(i);
+                    if (!group.TryGetValue(parentIndex, out var chunks)) continue;
+                    found = true;
+                    foreach (var chunk in chunks)
+                    {
+                        var decoded = MzPeakChunkCodec.DecodeMz(chunk.Encoding, chunk.Start, chunk.Mz);
+                        bool hasNull = false;
+                        foreach (var v in decoded) if (v is null) { hasNull = true; break; }
+                        mz.AddRange(hasNull && spacingModel is not null
+                            ? MzPeakChunkCodec.FillNullsWithModel(decoded, spacingModel)
+                            : MzPeakChunkCodec.ToDense(decoded));
+                        intensity.AddRange(MzPeakChunkCodec.IntensityToDense(chunk.Intensity));
+                    }
+                }
+            }
+            return found ? (mz.ToArray(), intensity.ToArray()) : null;
+        }
+
+        private Dictionary<long, List<Chunk>> EnsureLoaded(int rgIdx)
+        {
+            if (_cache.TryGetValue(rgIdx, out var cached))
+            {
+                _lru.Remove(rgIdx);
+                _lru.AddFirst(rgIdx);
+                return cached;
+            }
+            var group = LoadGroup(rgIdx);
+            _cache[rgIdx] = group;
+            _lru.AddFirst(rgIdx);
+            while (_lru.Count > MaxCachedGroups)
+            {
+                int evict = _lru.Last!.Value;
+                _lru.RemoveLast();
+                _cache.Remove(evict);
+            }
+            return group;
+        }
+
+        private Dictionary<long, List<Chunk>> LoadGroup(int rgIdx)
+        {
+            using var rg = _reader.RowGroup(rgIdx);
+            int n = checked((int)rg.MetaData.NumRows);
+
+            if (!TryRead<ulong, ulong>(rg, _colIdx, n, v => v, out var sidx)
+                && !TryRead<long, ulong>(rg, _colIdx, n, v => (ulong)v, out sidx))
+                throw UnsupportedColumnType(rg, _colIdx, "chunk spectrum_index", typeof(ulong));
+
+            var start = new double?[n];
+            using (var c = rg.Column(_colStart).LogicalReader<double?>()) c.ReadBatch(start.AsSpan());
+            var encoding = new string?[n];
+            using (var c = rg.Column(_colEncoding).LogicalReader<string?>()) c.ReadBatch(encoding.AsSpan());
+            var values = new double?[n][];
+            using (var c = rg.Column(_colValues).LogicalReader<double?[]>()) c.ReadBatch(values.AsSpan());
+            var intensity = new float?[n][];
+            using (var c = rg.Column(_colIntensity).LogicalReader<float?[]>()) c.ReadBatch(intensity.AsSpan());
+
+            var bucket = new Dictionary<long, List<Chunk>>();
+            for (int r = 0; r < n; r++)
+            {
+                // A null start marks an unused row (mzPeak.NET skips it).
+                if (sidx[r] is not { } s || start[r] is not { } st) continue;
+                if (!bucket.TryGetValue((long)s, out var list)) bucket[(long)s] = list = new List<Chunk>();
+                list.Add(new Chunk(st, values[r] ?? Array.Empty<double?>(), encoding[r], intensity[r] ?? Array.Empty<float?>()));
+            }
+            return bucket;
+        }
+
+        public void Dispose() => _reader.Dispose();
     }
 }

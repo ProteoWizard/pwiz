@@ -34,7 +34,23 @@ public class MzPeakReaderAdapterTests
     [ClassCleanup]
     public static void ClassCleanup()
     {
-        if (File.Exists(s_fixturePath)) File.Delete(s_fixturePath);
+        if (!File.Exists(s_fixturePath)) return;
+        // The shared fixture is held open by MzPeakArchive for any test that
+        // leaks its MSData (every `using var msd = ...` above releases it).
+        // Belt-and-braces: force a finalizer pass + brief retry so teardown
+        // doesn't fail when a future test forgets the `using`.
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            try { File.Delete(s_fixturePath); return; }
+            catch (IOException)
+            {
+                System.GC.Collect();
+                System.GC.WaitForPendingFinalizers();
+                System.Threading.Thread.Sleep(50);
+            }
+        }
+        // Last attempt — let the exception propagate so a real leak surfaces.
+        File.Delete(s_fixturePath);
     }
 
     [TestMethod]
@@ -69,7 +85,7 @@ public class MzPeakReaderAdapterTests
     [TestMethod]
     public void Read_PopulatesSpectrumList()
     {
-        var msd = new MSData();
+        using var msd = new MSData();
         new MzPeakReaderAdapter().Read(s_fixturePath, msd);
 
         Assert.IsNotNull(msd.Run.SpectrumList);
@@ -81,7 +97,7 @@ public class MzPeakReaderAdapterTests
     [TestMethod]
     public void Read_PopulatesChromatogramList()
     {
-        var msd = new MSData();
+        using var msd = new MSData();
         new MzPeakReaderAdapter().Read(s_fixturePath, msd);
 
         Assert.IsNotNull(msd.Run.ChromatogramList);
@@ -92,7 +108,7 @@ public class MzPeakReaderAdapterTests
     [TestMethod]
     public void Read_ProfileSpectrum_HasMsLevelAndProfileCv()
     {
-        var msd = new MSData();
+        using var msd = new MSData();
         new MzPeakReaderAdapter().Read(s_fixturePath, msd);
         var s = msd.Run.SpectrumList!.GetSpectrum(0, getBinaryData: false);
 
@@ -106,7 +122,7 @@ public class MzPeakReaderAdapterTests
     [TestMethod]
     public void Read_Ms2Spectrum_ExposesBothPrecursors()
     {
-        var msd = new MSData();
+        using var msd = new MSData();
         new MzPeakReaderAdapter().Read(s_fixturePath, msd);
         var s = msd.Run.SpectrumList!.GetSpectrum(1, getBinaryData: false);
 
@@ -129,7 +145,7 @@ public class MzPeakReaderAdapterTests
     [TestMethod]
     public void Read_ScanInfo_ScanStartTimeAndScanWindows()
     {
-        var msd = new MSData();
+        using var msd = new MSData();
         new MzPeakReaderAdapter().Read(s_fixturePath, msd);
         var s = msd.Run.SpectrumList!.GetSpectrum(0, getBinaryData: false);
 
@@ -145,7 +161,7 @@ public class MzPeakReaderAdapterTests
     [TestMethod]
     public void Read_BinaryData_RoundTripsMZIntensity()
     {
-        var msd = new MSData();
+        using var msd = new MSData();
         new MzPeakReaderAdapter().Read(s_fixturePath, msd);
         var s = msd.Run.SpectrumList!.GetSpectrum(0, getBinaryData: true);
 
@@ -162,7 +178,7 @@ public class MzPeakReaderAdapterTests
     [TestMethod]
     public void Read_MetadataOnly_SkipsBinaryData()
     {
-        var msd = new MSData();
+        using var msd = new MSData();
         new MzPeakReaderAdapter().Read(s_fixturePath, msd);
         var s = msd.Run.SpectrumList!.GetSpectrum(0, getBinaryData: false);
 
@@ -176,7 +192,7 @@ public class MzPeakReaderAdapterTests
     [TestMethod]
     public void Read_FillInCommonMetadata_AppendsSourceFile()
     {
-        var msd = new MSData();
+        using var msd = new MSData();
         new MzPeakReaderAdapter().Read(s_fixturePath, msd);
 
         // FillInCommonMetadata always appends one source-file entry pointing
