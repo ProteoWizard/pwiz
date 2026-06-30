@@ -29,7 +29,7 @@ namespace pwiz.Common.SystemUtil
     /// sink, optionally prefixing each line with a timestamp and/or a managed/private
     /// memory stamp, and tracking whether any error message has been written.
     ///
-    /// Lives in PortableUtil (pure BCL, no .resx) so both Skyline and OspreySharp can
+    /// Lives in PortableUtil (pure BCL, no .resx) so both Skyline and Osprey can
     /// share it. The only host-specific input is error-line detection: a host that
     /// localizes its "Error:" prefix assigns <see cref="IsErrorMessage"/>.
     /// </summary>
