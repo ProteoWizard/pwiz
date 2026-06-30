@@ -356,6 +356,7 @@ public sealed class Converter
         WriteFormat.MzXml => ".mzXML",
         WriteFormat.Mz5 => ".mz5",
         WriteFormat.MzMLb => ".mzMLb",
+        WriteFormat.MzPeak => ".mzpeak",
         WriteFormat.Mgf => ".mgf",
         WriteFormat.Text => ".txt",
         WriteFormat.Ms1 => ".ms1",

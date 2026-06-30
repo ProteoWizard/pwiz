@@ -168,6 +168,13 @@ public static class MSDataFile
             return;
         }
 
+        // mzPeak is also path-bound: a ZIP archive of Parquet tables built via random file I/O.
+        if (config.Format == WriteFormat.MzPeak)
+        {
+            Pwiz.Data.MsData.MzPeak.WriterMzPeak.Write(msd, path);
+            return;
+        }
+
         using Stream output = OpenOutputStream(path, config.Gzip);
         Write(msd, output, config, ilr);
     }

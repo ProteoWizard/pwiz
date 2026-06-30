@@ -440,6 +440,15 @@ public static class VendorReaderTestHarness
             RunMzmlbRoundTrip(msd, config, encoderConfig, diffPrecision: 1.0);
         }
 
+        // 9. mzPeak round-trip: Parquet-archive format under active development in this
+        // branch. Same shape as the mzMLb round-trip — write the in-memory MSData, read
+        // it back through the adapter, diff at the spectrum-data level. Tolerance matches
+        // mzMLb (1.0 abs) because mzPeak narrows intensity to float32 too.
+        if (config.TestMzPeakRoundTrip && msd.Run.SpectrumList is not null)
+        {
+            RunMzPeakRoundTrip(msd, diffPrecision: 1.0);
+        }
+
         // mz5 round-trip removed — there's no in-process mz5 writer (the C# port is
         // read-only), and the previous workaround (write mzML, shell out to cpp
         // msconvert.exe --mz5, read the mz5 back) made pwiz-sharp's CI results depend
@@ -484,13 +493,92 @@ public static class VendorReaderTestHarness
             new Pwiz.Data.MsData.MzMlb.MzMlbWriter(encoderConfig).Write(msd, tmp);
             var roundtripped = new MSData();
             new Pwiz.Data.MsData.Readers.MzMlbReaderAdapter().Read(tmp, roundtripped);
-            string report = MSDataDiff.DescribeSpectraDataOnly(msd, roundtripped, diffPrecision);
+            string report = DescribeRoundTripFull(msd, roundtripped, diffPrecision);
             if (report.Length > 0)
                 throw new InvalidOperationException("mzMLb round-trip diff:\n" + report);
         }
         finally
         {
             try { File.Delete(tmp); } catch { }
+        }
+    }
+
+    /// <summary>
+    /// Full-metadata round-trip diff for the lossless binary formats (mzMLb, mzPeak), which are
+    /// meant to be mzML-complete. Unlike <see cref="MSDataDiff.DescribeSpectraDataOnly"/> this
+    /// compares the whole document (file description, instrument configurations, data processing,
+    /// per-spectrum scan/precursor metadata, chromatograms). <paramref name="precision"/> is the
+    /// absolute tolerance that accommodates the format's float32 intensity narrowing.
+    /// </summary>
+    private static string DescribeRoundTripFull(MSData original, MSData roundtripped, double precision)
+        => MSDataDiff.DescribeRoundTrip(original, roundtripped, precision);
+
+    /// <summary>
+    /// One mzPeak write+read cycle. Writes <paramref name="msd"/> via
+    /// <see cref="Pwiz.Data.MsData.MzPeak.WriterMzPeak"/> to a temp <c>.mzpeak</c> path,
+    /// reads it back with <see cref="Pwiz.Data.MsData.Readers.MzPeakReaderAdapter"/>,
+    /// and diffs the spectrum data at the requested precision.
+    /// </summary>
+    private static void RunMzPeakRoundTrip(MSData msd, double diffPrecision)
+    {
+        string tmp = Path.Combine(
+            Path.GetTempPath(),
+            $"harness-mzpeak-{Guid.NewGuid():N}.mzpeak");
+        try
+        {
+            Pwiz.Data.MsData.MzPeak.WriterMzPeak.Write(msd, tmp);
+            var roundtripped = new MSData();
+            new Pwiz.Data.MsData.Readers.MzPeakReaderAdapter().Read(tmp, roundtripped);
+            string report = DescribeRoundTripFull(msd, roundtripped, diffPrecision);
+            if (report.Length > 0)
+                throw new InvalidOperationException("mzPeak round-trip diff:\n" + report);
+
+            // Cross-stack verify: when MZPEAK_VERIFY_NET_SCRIPT points at a
+            // dotnet-script .csx that opens the file with mzPeak.NET, invoke
+            // it as a subprocess and fail this round-trip on non-zero exit.
+            // Gated on the env var so the in-process round-trip can still run
+            // on machines without dotnet-script installed.
+            VerifyMzPeakDotNet(tmp);
+        }
+        finally
+        {
+            try { File.Delete(tmp); } catch { }
+        }
+    }
+
+    private static void VerifyMzPeakDotNet(string mzpeakPath)
+    {
+        string? scriptPath = Environment.GetEnvironmentVariable("MZPEAK_VERIFY_NET_SCRIPT");
+        if (string.IsNullOrEmpty(scriptPath)) return;
+
+        var psi = new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "dotnet",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+        };
+        psi.ArgumentList.Add("script");
+        psi.ArgumentList.Add(scriptPath);
+        psi.ArgumentList.Add("--");
+        psi.ArgumentList.Add(mzpeakPath);
+
+        using var proc = System.Diagnostics.Process.Start(psi)
+            ?? throw new InvalidOperationException("could not start dotnet script process");
+        string stdout = proc.StandardOutput.ReadToEnd();
+        string stderr = proc.StandardError.ReadToEnd();
+        proc.WaitForExit();
+        if (proc.ExitCode != 0)
+        {
+            // On failure, copy the .mzpeak aside so we can re-run the verifier
+            // manually. The original path lives under %TEMP% and is deleted by
+            // the surrounding finally, so without this we'd lose the artifact.
+            string saved = Path.Combine(Path.GetTempPath(), $"mzpeak-failed-{Path.GetFileName(mzpeakPath)}");
+            try { File.Copy(mzpeakPath, saved, overwrite: true); } catch { }
+            throw new InvalidOperationException(
+                $"mzPeak.NET cross-stack verify failed (exit {proc.ExitCode}):\n"
+                + $"saved bad file to: {saved}\n"
+                + stdout + stderr);
         }
     }
 
@@ -621,7 +709,12 @@ public static class VendorReaderTestHarness
         {
             var spec = sl.GetSpectrum(i, getBinaryData: true);
             if (!MgfSerializer.IsMgfWritable(spec)) continue;
-            spec.Index = filtered.Spectra.Count;
+            // NOTE: do NOT mutate spec.Index here. Some source lists (e.g. the SpectrumListSimple
+            // produced by the IndexRange path) hand back the SAME spectrum instances the original
+            // MSData holds, so re-indexing them would corrupt the original's indices — which then
+            // surfaces in the later full-metadata mzMLb/mzPeak round-trips as a spurious
+            // "index: A vs B" diff. MGF doesn't use Spectrum.Index, and the MGF round-trip diff is
+            // position-based, so leaving the original index intact is correct.
             filtered.Spectra.Add(spec);
         }
         copy.Run.SpectrumList = filtered;
