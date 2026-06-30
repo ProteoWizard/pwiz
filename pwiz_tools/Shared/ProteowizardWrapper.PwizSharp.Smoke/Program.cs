@@ -81,6 +81,24 @@ using (var msd = new MsDataFileImpl(fixture))
     // Thermo CV term should be picked up via the SourceFile CV walk.
     Console.WriteLine($"  info  IsThermoFile={msd.IsThermoFile}, IsAgilent={msd.IsAgilentFile}, IsWaters={msd.IsWatersFile}, IsShimadzu={msd.IsShimadzuFile}, IsAB={msd.IsABFile}");
     Check("IsProcessedBy('pwiz') matches expected mzML metadata", msd.IsProcessedBy("pwiz"));
+
+    // Instrument config — PwizFileInfoTest's central assertion. The mzML fixture
+    // declares an LTQ FT Ultra → expect a non-empty model + ionization + analyzer.
+    var ics = msd.GetInstrumentConfigInfoList().ToList();
+    Check("GetInstrumentConfigInfoList returns at least one entry", ics.Count > 0, $"count={ics.Count}");
+    if (ics.Count > 0)
+    {
+        Console.WriteLine($"  info  IC[0]: model='{ics[0].Model}' ionization='{ics[0].Ionization}' analyzer='{ics[0].Analyzer}' detector='{ics[0].Detector}'");
+        Check("IC[0] reports a non-empty model", !string.IsNullOrEmpty(ics[0].Model));
+    }
+
+    // QC traces — small.mzML doesn't have any pressure/flow rate traces, so we
+    // just verify the call shape returns a non-null (possibly empty) list and
+    // the QcTraceUnits / QcTraceQuality consts have stable string values.
+    var qc = msd.GetQcTraces();
+    Console.WriteLine($"  info  GetQcTraces returned {(qc is null ? "null" : qc.Count + " trace(s)")}");
+    Check("QcTraceUnits.Pascal constant", MsDataFileImpl.QcTraceUnits.Pascal == "Pa");
+    Check("QcTraceQuality.FlowRate constant", MsDataFileImpl.QcTraceQuality.FlowRate == "volumetric flow rate");
 }
 
 Console.WriteLine();

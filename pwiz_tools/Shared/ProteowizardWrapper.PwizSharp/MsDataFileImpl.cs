@@ -109,6 +109,59 @@ public sealed class MsDataFileImpl : IDisposable
         return false;
     }
 
+    /// <summary>
+    /// Walks the file's InstrumentConfiguration list and returns one record per IC,
+    /// surfacing the model + ionization + analyzer + detector CV-child names that
+    /// PwizFileInfoTest asserts on.
+    /// </summary>
+    public IEnumerable<MsInstrumentConfigInfo> GetInstrumentConfigInfoList()
+    {
+        foreach (var ic in _msd.InstrumentConfigurations)
+            yield return CreateMsInstrumentConfigInfo(ic);
+    }
+
+    private static MsInstrumentConfigInfo CreateMsInstrumentConfigInfo(Pwiz.Data.MsData.Instruments.InstrumentConfiguration ic)
+    {
+        // Instrument MODEL — the CV-child of `MS_instrument_model` is the vendor-specific
+        // model term (e.g. "4000 QTRAP", "Q Exactive HF").
+        string model = ic.CvParamChild(CVID.MS_instrument_model) is { Cvid: var modelCvid } && modelCvid != CVID.CVID_Unknown
+            ? CvLookup.CvTermInfo(modelCvid).Name
+            : string.Empty;
+
+        // Walk components — pwiz's IC has source / analyzer / detector entries with their
+        // own CV-child queries. Per-vendor instruments report any of these as empty.
+        string ionization = string.Empty;
+        string analyzer = string.Empty;
+        string detector = string.Empty;
+        foreach (var comp in ic.ComponentList)
+        {
+            switch (comp.Type)
+            {
+                case Pwiz.Data.MsData.Instruments.ComponentType.Source:
+                    var src = comp.CvParamChild(CVID.MS_ionization_type);
+                    if (src.Cvid != CVID.CVID_Unknown) ionization = CvLookup.CvTermInfo(src.Cvid).Name;
+                    break;
+                case Pwiz.Data.MsData.Instruments.ComponentType.Analyzer:
+                    var an = comp.CvParamChild(CVID.MS_mass_analyzer_type);
+                    if (an.Cvid != CVID.CVID_Unknown)
+                    {
+                        // Append (legacy did the same) — multi-analyzer instruments (e.g.
+                        // "quadrupole/quadrupole/axial ejection linear ion trap") are
+                        // a "/"-joined string of every CV-child term.
+                        var name = CvLookup.CvTermInfo(an.Cvid).Name;
+                        analyzer = string.IsNullOrEmpty(analyzer) ? name : analyzer + "/" + name;
+                    }
+                    break;
+                case Pwiz.Data.MsData.Instruments.ComponentType.Detector:
+                    var det = comp.CvParamChild(CVID.MS_detector_type);
+                    if (det.Cvid != CVID.CVID_Unknown) detector = CvLookup.CvTermInfo(det.Cvid).Name;
+                    break;
+            }
+        }
+
+        return new MsInstrumentConfigInfo(model, ionization, analyzer, detector);
+    }
+
     // ===== Vendor detection (CV-param sniffs on FileDescription.SourceFiles[0]) =====
 
     public bool IsThermoFile => HasSourceFileFormat(CVID.MS_Thermo_RAW_format);
@@ -234,6 +287,159 @@ public sealed class MsDataFileImpl : IDisposable
         {
             intensityArray = new float[i.Data.Count];
             for (int k = 0; k < i.Data.Count; k++) intensityArray[k] = (float)i.Data[k];
+        }
+    }
+
+    // ===== QC traces =====
+
+    /// <summary>
+    /// Returns the file's QC chromatograms (pressure / flow rate / temperature / etc.).
+    /// Skips the standard ion-current chromatograms (TIC, BPC, SIM, SRM). Returns null
+    /// when the file has no chromatograms at all (matches legacy null-vs-empty convention).
+    /// </summary>
+    public List<QcTrace>? GetQcTraces()
+    {
+        var list = _msd.Run.ChromatogramList;
+        if (list is null || list.Count == 0) return null;
+
+        var result = new List<QcTrace>();
+        for (int i = 0; i < list.Count; i++)
+        {
+            // Cheap metadata-only probe to filter out ion-current chromatograms; the
+            // pwiz-sharp lazy list lets us avoid pulling binary arrays for ones we'll skip.
+            var meta = list.GetChromatogram(i, getBinaryData: false);
+            if (meta.HasCVParamChild(CVID.MS_ion_current_chromatogram))
+                continue;
+
+            var full = list.GetChromatogram(i, getBinaryData: true);
+            result.Add(new QcTrace(full));
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// QC-trace measurement-quality tags. The strings match the legacy wrapper
+    /// (and Skyline UI labels) verbatim so the cross-stack swap is a no-op for
+    /// any test or dialog that compares string-equal.
+    /// </summary>
+    public abstract class QcTraceQuality
+    {
+        public const string Pressure = "pressure";
+        public const string FlowRate = "volumetric flow rate";
+        public const string Temperature = "temperature";
+    }
+
+    /// <summary>Display-string constants for QC-trace intensity units.</summary>
+    public abstract class QcTraceUnits
+    {
+        public const string Intensity = "intensity";
+        public const string Pascal = "Pa";
+        public const string PoundsPerSquareInch = "psi";
+        public const string MicrolitersPerMinute = "uL/min";
+        public const string DegreeC = "°C";
+        public const string DegreeF = "°F";
+        public const string Percent = "%";
+        public const string Unknown = "unknown";
+    }
+
+    /// <summary>One QC trace built off a chromatogram's (time, intensity) arrays + CV-typed metadata.</summary>
+    public sealed class QcTrace
+    {
+        internal QcTrace(Chromatogram c)
+        {
+            Name = c.Id;
+            Index = c.Index;
+
+            // Quality: pick from chromatogram-type CV child (pressure / flow rate /
+            // temperature / etc.). For anything else fall back to the raw name —
+            // generalised chromatograms can be just-about-anything.
+            var typeParam = c.CvParamChild(CVID.MS_chromatogram_type);
+            var chromatogramType = typeParam.Cvid;
+            MeasuredQuality = chromatogramType switch
+            {
+                CVID.MS_pressure_chromatogram => QcTraceQuality.Pressure,
+                CVID.MS_flow_rate_chromatogram => QcTraceQuality.FlowRate,
+                CVID.MS_temperature_chromatogram => QcTraceQuality.Temperature,
+                _ => Name,
+            };
+
+            // Units: try the intensity-array CV term first, then a UserParam fallback.
+            string? unitsString = null;
+            var unitsCvid = CVID.CVID_Unknown;
+            var intensityArr = c.GetIntensityArray();
+            if (intensityArr is not null)
+            {
+                var arrTypeParam = intensityArr.CvParamChild(CVID.MS_intensity_array);
+                unitsCvid = arrTypeParam.Units;
+                if (unitsCvid != CVID.CVID_Unknown)
+                    unitsString = CvLookup.CvTermInfo(unitsCvid).Name;
+            }
+
+            if (unitsCvid is CVID.MS_number_of_detector_counts or CVID.CVID_Unknown)
+            {
+                var userUnits = c.UserParam("units");
+                if (userUnits is not null) unitsString = userUnits.Value;
+                if (string.IsNullOrEmpty(unitsString) || unitsCvid == CVID.MS_number_of_detector_counts)
+                    unitsString = QcTraceUnits.Intensity;
+            }
+            unitsString = unitsCvid switch
+            {
+                CVID.UO_percent => QcTraceUnits.Percent,
+                CVID.UO_pounds_per_square_inch => QcTraceUnits.PoundsPerSquareInch,
+                CVID.UO_pascal => QcTraceUnits.Pascal,
+                CVID.UO_microliters_per_minute => QcTraceUnits.MicrolitersPerMinute,
+                CVID.UO_degree_Celsius => QcTraceUnits.DegreeC,
+                CVID.UO_degree_Fahrenheit => QcTraceUnits.DegreeF,
+                _ => unitsString,
+            };
+            IntensityUnits = string.IsNullOrEmpty(unitsString) ? QcTraceUnits.Unknown : unitsString;
+
+            var timeArr = c.GetTimeArray();
+            Times = timeArr is null ? Array.Empty<double>() : timeArr.Data.ToArray();
+            Intensities = intensityArr is null ? Array.Empty<double>() : intensityArr.Data.ToArray();
+        }
+
+        public string Name { get; }
+        public int Index { get; }
+        public double[] Times { get; }
+        public double[] Intensities { get; }
+        public string MeasuredQuality { get; }
+        public string IntensityUnits { get; }
+
+        /// <summary>
+        /// Formatted display string like "Pressure (psi)" or "Temperature (°C)". When
+        /// the intensity is generic "intensity" the units are returned alone.
+        /// </summary>
+        public string TypeWithUnits()
+        {
+            string CapitalizeFirst(string str)
+            {
+                if (string.IsNullOrEmpty(str)) return str;
+                if (str.Length == 1) return str.ToUpper();
+                return char.ToUpper(str[0]) + str[1..];
+            }
+
+            var type = MeasuredQuality;
+            var units = IntensityUnits;
+
+            if (!string.IsNullOrEmpty(units) && !units.Equals("unknown", StringComparison.OrdinalIgnoreCase))
+            {
+                // Strip embedded "(...)" / "[...]" trailing units from the quality string
+                // before we re-append the canonical units.
+                if (type.EndsWith(")"))
+                {
+                    int openParen = type.LastIndexOf('(');
+                    if (openParen > 0) type = type[..openParen].TrimEnd();
+                }
+                else if (type.EndsWith("]"))
+                {
+                    int openBracket = type.LastIndexOf('[');
+                    if (openBracket > 0) type = type[..openBracket].TrimEnd();
+                }
+                if (units == QcTraceUnits.Intensity) return CapitalizeFirst(units);
+                return $"{CapitalizeFirst(type)} ({units})";
+            }
+            return CapitalizeFirst(type);
         }
     }
 
