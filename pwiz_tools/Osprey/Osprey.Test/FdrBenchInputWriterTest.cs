@@ -57,6 +57,9 @@ namespace pwiz.Osprey.Test
             ProteinColumnJoinsWithSemicolons();
             OversizeProteinListIsTruncated();
             DedupOutputIsOrderedDeterministically();
+            MissingLibraryEntryEmitsBlankRowAndCounts();
+            EmptyProteinListYieldsBlankProtein();
+            SingleOversizeProteinIdHardTruncated();
         }
 
         private static void PrecursorDedupKeepsBestScore()
@@ -183,6 +186,57 @@ namespace pwiz.Osprey.Test
             CollectionAssert.AreEqual(expected, observed, @"rows must be sorted by (mod sequence, charge)");
         }
 
+        private static void MissingLibraryEntryEmitsBlankRowAndCounts()
+        {
+            // An entry whose base id (EntryId & BASE_ID_MASK) is absent from the library still emits a
+            // row -- with blank peptide and protein -- and increments Result.MissingLibrary, the counter
+            // that drives the MergeNodeTask operator warning. mod_peptide still comes from the entry.
+            var lib = new List<LibraryEntry> { MakeLib(1, @"PEPTIDE", @"PEPTIDE", 2, @"P1") };
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                Run(@"run_a", MakeEntry(999, false, @"MISSINGK", 2, 0.01, 0.01, 2.0)),
+            };
+            var lines = RunWriter(perFile, lib, FdrLevel.Precursor, false, out var result);
+            Assert.AreEqual(2, lines.Count, @"header + 1 row");
+            var cols = lines[1].Split('\t');
+            Assert.AreEqual(string.Empty, cols[COL_PEPTIDE], @"peptide blank when the library entry is missing");
+            Assert.AreEqual(string.Empty, cols[COL_PROTEIN], @"protein blank when the library entry is missing");
+            Assert.AreEqual(@"MISSINGK", cols[COL_MOD_PEPTIDE], @"mod_peptide still comes from the entry");
+            Assert.AreEqual(1, result.MissingLibrary, @"missing-library counter incremented");
+        }
+
+        private static void EmptyProteinListYieldsBlankProtein()
+        {
+            // A library entry with no protein IDs yields an empty protein field (no error, no "null").
+            var lib = new List<LibraryEntry> { MakeLib(1, @"PEPTIDE", @"PEPTIDE", 2) };
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                Run(@"run_a", MakeEntry(1, false, @"PEPTIDE", 2, 0.01, 0.01, 3.0)),
+            };
+            var lines = RunWriter(perFile, lib, FdrLevel.Precursor, false);
+            Assert.AreEqual(string.Empty, lines[1].Split('\t')[COL_PROTEIN],
+                @"empty protein-ID list yields a blank protein field");
+        }
+
+        private static void SingleOversizeProteinIdHardTruncated()
+        {
+            // A single protein ID longer than the 4000-char budget hits the kept == 0 hard-truncate
+            // path: the ID is cut to fit and the ...+N_more marker is appended (Rust covers this as
+            // format_protein_field_handles_oversize_single_id), incrementing Result.TruncatedProtein.
+            string hugeId = new string('X', 5000);
+            var lib = new List<LibraryEntry> { MakeLib(1, @"PEPTIDE", @"PEPTIDE", 2, hugeId) };
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                Run(@"run_a", MakeEntry(1, false, @"PEPTIDE", 2, 0.01, 0.01, 3.0)),
+            };
+            var lines = RunWriter(perFile, lib, FdrLevel.Precursor, false, out var result);
+            string protein = lines[1].Split('\t')[COL_PROTEIN];
+            Assert.IsTrue(protein.Length <= 4000, @"hard-truncated field stays under the 4000-char cap");
+            Assert.IsTrue(protein.StartsWith(@"XXXX"), @"the single oversize ID is cut to fit, not dropped");
+            Assert.IsTrue(protein.EndsWith(@"_more"), @"truncation marker appended");
+            Assert.AreEqual(1, result.TruncatedProtein, @"truncated-protein counter incremented");
+        }
+
         private static FdrEntry MakeEntry(uint entryId, bool isDecoy, string modSeq, byte charge,
             double runQPrecursor, double expQPrecursor, double score)
         {
@@ -221,11 +275,17 @@ namespace pwiz.Osprey.Test
         private static List<string> RunWriter(List<KeyValuePair<string, List<FdrEntry>>> perFile,
             List<LibraryEntry> lib, FdrLevel level, bool perRun)
         {
+            return RunWriter(perFile, lib, level, perRun, out _);
+        }
+
+        private static List<string> RunWriter(List<KeyValuePair<string, List<FdrEntry>>> perFile,
+            List<LibraryEntry> lib, FdrLevel level, bool perRun, out FdrBenchInputWriter.Result result)
+        {
             var byId = lib.ToDictionary(e => e.Id, e => e);
             string path = Path.Combine(Path.GetTempPath(), @"fdrbench_test_" + Guid.NewGuid().ToString(@"N") + @".tsv");
             try
             {
-                FdrBenchInputWriter.WritePeptideInput(path, perFile, byId, level, perRun);
+                result = FdrBenchInputWriter.WritePeptideInput(path, perFile, byId, level, perRun);
                 return File.ReadAllLines(path).ToList();
             }
             finally

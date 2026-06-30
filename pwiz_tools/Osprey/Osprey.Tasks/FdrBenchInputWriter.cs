@@ -31,10 +31,11 @@ namespace pwiz.Osprey.Tasks
 {
     /// <summary>
     /// Writes an FDRBench (https://github.com/Noble-Lab/FDRBench) peptide / precursor
-    /// level input TSV. Emits every non-decoy target Osprey scored (regardless of
-    /// q-value) with the raw SVM discriminant (<see cref="FdrEntry.Score"/>) as the
-    /// <c>score</c> column, so FDRBench can compute true-FDR via entrapment counting
-    /// across the full ranking without truncation at Osprey's q-value threshold.
+    /// level input TSV. Emits every non-decoy reported (compaction-surviving) target,
+    /// i.e. the peptides actually written to the output, regardless of q-value, with the
+    /// raw SVM discriminant (<see cref="FdrEntry.Score"/>) as the <c>score</c> column, so
+    /// FDRBench can compute true-FDR via entrapment counting across the reported ranking
+    /// without truncation at Osprey's q-value threshold.
     ///
     /// Entrapment sequences (marked by <c>_p_target</c> in protein accessions) are
     /// targets in Osprey's world and pass through unchanged; decoys are excluded.

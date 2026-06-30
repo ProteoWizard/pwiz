@@ -736,7 +736,7 @@ namespace pwiz.Osprey
                 { @"fdr-method", @"FDR method (default: percolator)" },
                 { @"fdr-level", @"FDR level (default: precursor)" },
                 { @"shared-peptides", @"Shared peptide handling (default: all)" },
-                { @"fdrbench", @"Write an FDRBench-compatible input TSV to this path. The level is taken from --fdr-level (peptide; precursor and both emit precursor-level). Includes every scored target (regardless of q-value) with the raw SVM discriminant as 'score', so FDRBench can compute true-FDR via entrapment counting without truncation at Osprey's threshold." },
+                { @"fdrbench", @"Write an FDRBench-compatible input TSV to this path. The level is taken from --fdr-level (peptide; precursor and both emit precursor-level). Includes every reported (compaction-surviving) target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as 'score', so FDRBench can compute true-FDR via entrapment counting without truncation at Osprey's threshold." },
                 { @"fdrbench-per-run", @"With --fdrbench: emit one row per (precursor, run) using run-level q-values (adds a 'run' column). Default is one row per precursor using experiment-level q-values." },
                 { @"decoys-in-library", @"Trust decoys already in the spectral library instead of generating reverse decoys. Hard error if none are recognised." },
                 { @"decoy-pairing-manifest", @"FDRBench 5-column pairing manifest (TSV), used with --decoys-in-library" },
