@@ -28,7 +28,9 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.CommonMsData.RemoteApi;
+#if NET472
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
+#endif
 
 
 namespace pwiz.CommonFileDialogs
@@ -224,6 +226,7 @@ namespace pwiz.CommonFileDialogs
                     }
                     catch (AuthenticationException x)
                     {   // If invalid account
+#if NET472
                         var errorType = WatersConnectAccount.HandleAuthenticationException(x, out var msg);
                         // Show error message
                         var message = CommonTextUtil.LineSeparate(
@@ -238,6 +241,12 @@ namespace pwiz.CommonFileDialogs
                         ShowErrorMessage(Visible ? this : GetFallbackDialogOwner(), message);
                         // and populate it with the root remote URL
                         CurrentDirectory = RemoteUrl.EMPTY;
+#else
+                        // WatersConnect-specific auth dispatch is net472-only (IdentityModel 7
+                        // port pending). On net8 surface the exception so callers see a clear
+                        // failure mode instead of silently swallowing it.
+                        throw new System.NotSupportedException("WatersConnect remote auth not yet available on net8.", x);
+#endif
                     }
                 }
             }
@@ -261,6 +270,7 @@ namespace pwiz.CommonFileDialogs
                     {
                         // If there is exactly one account, then skip the level that
                         // lists the accounts to choose from unless this is an invalid WatersConnect account.
+#if NET472
                         if (ShouldCheckMethodDevelopmentSupport)
                         {
                             var wca = _remoteAccounts[0] as WatersConnectAccount;
@@ -271,6 +281,10 @@ namespace pwiz.CommonFileDialogs
                         }
                         else
                             value = GetRootUrl(_remoteAccounts.First());
+#else
+                        // WatersConnect check is net472-only; assume the account is usable on net8.
+                        value = GetRootUrl(_remoteAccounts.First());
+#endif
                     }
                 }
                 if (value != null)
