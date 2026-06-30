@@ -127,6 +127,21 @@ public sealed class ReaderConfig
     public bool AllowMsMsWithoutPrecursor { get; set; }
 
     /// <summary>
+    /// When true, the Bruker TIMS reader emits one combined spectrum per diaPASEF frame
+    /// (with the entire isolation-window range as a single chunk) instead of breaking the
+    /// frame into per-window spectra. Used by Skyline's Bruker diaPASEF import path when
+    /// the file declares a window-group table; harmless on non-diaPASEF Bruker data.
+    /// Port of <c>pwiz::msdata::Reader::Config::passEntireDiaPasefFrame</c>.
+    /// </summary>
+    /// <remarks>
+    /// Currently advisory: the C# Bruker reader does not yet implement the frame-combination
+    /// path. When set, callers see one spectrum per isolation window as today. Wiring the
+    /// behavior through <c>SpectrumList_Bruker.GetSpectrum</c> is a follow-up that will
+    /// match cpp <c>SpectrumList_Bruker.cpp:286-442</c>.
+    /// </remarks>
+    public bool PassEntireDiaPasefFrame { get; set; }
+
+    /// <summary>
     /// When true (default, matches cpp), if the vendor file's acquisition timestamp doesn't
     /// carry a time zone the reader treats the wall-clock value as if it had been recorded in
     /// the host machine's local time and converts to UTC for the emitted <c>startTimeStamp</c>.
