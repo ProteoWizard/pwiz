@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+
+    <!-- Tests poke the byte* signatures directly. -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="MSTest.TestAdapter" Version="3.6.1" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MsData.NativeAot\MsData.NativeAot.csproj" />
+  </ItemGroup>
+
+  <!-- Stage the tiny mzML fixture into the test output so the tests can walk up
+       from AppContext.BaseDirectory and find it. Same convention as MsData.Tests. -->
+  <ItemGroup>
+    <None Include="$(PwizExampleDataPath)\tiny.pwiz.1.1.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>example_data\%(Filename)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+
+</Project>
