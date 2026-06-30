@@ -3506,7 +3506,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 // Three-row layout:
-                //   Observed at Peak (RT=15.3)              [bold, larger, full-width header]
+                //   Observed Ion Mobility at Peak (RT=15.3) [bold, larger, full-width header]
                 //   1/K0           0.949 (-0.21% error)
                 //   CCS            331.8 (-0.18% error)
                 // AddHeaderRow renders as a single full-width cell that doesn't
