@@ -256,6 +256,7 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void VerifyNewFolder(WatersConnectSaveMethodFileDialog methodFileDlg)
         {
+            const string newFolderName = "NewTestFolder";
             RunUI(() =>
             {
                 Assert.IsTrue(methodFileDlg.NewFolderButtonVisible, "New Folder button should be visible on the save dialog.");
@@ -264,30 +265,30 @@ namespace pwiz.SkylineTestFunctional
 
             // Success: the PUT carries the entered name and the generated description.
             _createdFolderName = _createdFolderDescription = null;
-            RunUI(() => methodFileDlg.CreateNewFolderForTest("NewTestFolder"));
+            RunUI(() => methodFileDlg.CreateNewFolderForTest(newFolderName));
             var account = (WatersConnectAccount) RemoteUrl.RemoteAccountStorage.GetRemoteAccounts().First();
             RunUI(() =>
             {
-                Assert.AreEqual("NewTestFolder", _createdFolderName);
+                Assert.AreEqual(newFolderName, _createdFolderName);
                 Assert.AreEqual(
                     string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_Created_by__0__using_Skyline, account.Username),
                     _createdFolderDescription);
             });
 
             // The created folder must show up in the refreshed listing so the user can navigate into it.
-            WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == "NewTestFolder"),
+            WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == newFolderName),
                 () => "The new folder did not appear in the list after creation.");
             RunUI(() => Assert.AreEqual((int) BaseFileDialogNE.ImageIndex.ReadWriteFolder,
-                methodFileDlg.ListViewItems.First(i => i.Text == "NewTestFolder").ImageIndex,
+                methodFileDlg.ListViewItems.First(i => i.Text == newFolderName).ImageIndex,
                 "The new folder should be listed as a writable folder."));
 
             // Permission error: a Forbidden response surfaces an explanatory message.
             _folderCreateForbidden = true;
             try
             {
-                var errorDlg = ShowDialog<MessageDlg>(() => methodFileDlg.CreateNewFolderForTest("NewTestFolder"));
+                var errorDlg = ShowDialog<MessageDlg>(() => methodFileDlg.CreateNewFolderForTest(newFolderName));
                 AssertEx.Contains(errorDlg.Message,
-                    string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__, "NewTestFolder"));
+                    string.Format(FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__, newFolderName));
                 OkDialog(errorDlg, errorDlg.OkDialog);
             }
             finally
