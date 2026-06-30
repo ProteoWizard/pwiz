@@ -191,5 +191,17 @@ namespace pwiz.CommonFileDialogs {
                 return ResourceManager.GetString("OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources", resourceCulture);
             }
         }
+
+        public static string BaseFileDialogNE_NewFolder {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_NewFolder", resourceCulture);
+            }
+        }
+
+        public static string BaseFileDialogNE_BeginCreateNewFolder_New_folder {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_BeginCreateNewFolder_New_folder", resourceCulture);
+            }
+        }
     }
 }

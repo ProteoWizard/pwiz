@@ -1,10 +1,14 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using System.Net;
 using System.Windows.Forms;
+using pwiz.Common.GUI;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -21,6 +25,9 @@ namespace pwiz.Skyline.FileUI
         {
             Text = string.Format(FileUIResources.ExportMethodDlg_OkDialog_Export__0__Method, InstrumentType);
             actionButton.Text = FileUIResources.WatersConnectSaveMethodFileDialog_SaveButtonText;
+            newFolderButton.Visible = true;
+            newFolderButton.Image = Resources.AddFolder;
+            newFolderButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
         }
         protected override void DoMainAction()
         {
@@ -30,6 +37,15 @@ namespace pwiz.Skyline.FileUI
         protected override void OnCurrentDirectoryChange()
         {
             base.OnCurrentDirectoryChange();
+            SetButtonQue();
+        }
+
+        protected override void ListViewPostprocessing()
+        {
+            base.ListViewPostprocessing();
+            // Re-evaluate the button after the list (re)populates: when the dialog first opens, the
+            // folder data may not have loaded yet on the initial OnCurrentDirectoryChange, so the
+            // writability check could not run until the async fetch completed and repopulated the list.
             SetButtonQue();
         }
 
@@ -51,6 +67,11 @@ namespace pwiz.Skyline.FileUI
             {
                 canWrite = folder.CanWrite;
             }
+
+            // A new folder can only be created inside an existing writable folder. canWrite is true only
+            // when the current folder resolved (its data has loaded) and is writable, which is exactly
+            // when CreateNewFolder can succeed.
+            newFolderButton.Enabled = canWrite;
 
             switch (fileStatus)
             {
@@ -115,7 +136,109 @@ namespace pwiz.Skyline.FileUI
             MethodName = methodName.Trim();
             return true;
         }
-    }
 
-    
+        /// <summary>
+        /// Creates a new waters_connect folder under the current directory via the Folders API and,
+        /// on success, refreshes the list so it appears. The network call runs inside a wait dialog;
+        /// permission and naming errors are reported to the user.
+        /// </summary>
+        protected override void CreateNewFolder(string folderName)
+        {
+            if (!TryGetWritableParent(out var session, out var parentFolder, out var description))
+                return;
+
+            // Seed with a non-success status so a cancelled wait (work never assigned it) is not
+            // mistaken for success.
+            var statusCode = HttpStatusCode.ServiceUnavailable;
+            string responseBody = null;
+            using (var waitDlg = new LongWaitDlg())
+            {
+                waitDlg.Text = FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_Creating_folder;
+                waitDlg.PerformWork(this, 1000,
+                    () => statusCode = session.CreateFolder(parentFolder.Id, folderName, description, out responseBody));
+            }
+
+            HandleCreateFolderResult(folderName, statusCode, responseBody);
+        }
+
+        /// <summary>
+        /// Resolves the current directory to a writable folder and builds the folder description.
+        /// Shows a message and returns false if the current location is not a writable folder.
+        /// </summary>
+        private bool TryGetWritableParent(out WatersConnectSession session, out WatersConnectFolderObject parentFolder, out string description)
+        {
+            session = null;
+            parentFolder = null;
+            description = null;
+
+            var currentDir = CurrentDirectory as WatersConnectUrl;
+            if (!(RemoteSession is WatersConnectSession wcSession) || currentDir == null)
+                return false;
+
+            if (!wcSession.TryGetFolderByUrl(currentDir, out parentFolder) || !parentFolder.CanWrite)
+            {
+                MessageDlg.Show(this,
+                    FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_folders_in_this_location_,
+                    false, MessageIcons.Error);
+                return false;
+            }
+
+            session = wcSession;
+            description = string.Format(
+                FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_Created_by__0__using_Skyline,
+                wcSession.WatersConnectAccount.Username);
+            return true;
+        }
+
+        private void HandleCreateFolderResult(string folderName, HttpStatusCode statusCode, string responseBody)
+        {
+            if (statusCode < HttpStatusCode.BadRequest)
+            {
+                RefreshCurrentDirectory();
+                return;
+            }
+
+            string message;
+            switch (statusCode)
+            {
+                case HttpStatusCode.Forbidden:
+                    message = string.Format(
+                        FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_You_do_not_have_permission_to_create_the_folder__0__, folderName);
+                    break;
+                case HttpStatusCode.Conflict:
+                    message = string.Format(
+                        FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_A_folder_named__0__already_exists_, folderName);
+                    break;
+                default:
+                    message = string.Format(
+                        FileUIResources.WatersConnectSaveMethodFileDialog_CreateNewFolder_Could_not_create_the_folder__0__, folderName);
+                    break;
+            }
+
+            if (string.IsNullOrEmpty(responseBody))
+                MessageDlg.Show(this, message, false, MessageIcons.Error);
+            else
+                MessageDlg.ShowWithDetails(this, message, responseBody, MessageIcons.Error);
+        }
+
+        #region Test support
+
+        public bool NewFolderButtonVisible => newFolderButton.Visible;
+        public bool NewFolderButtonEnabled => newFolderButton.Enabled;
+
+        /// <summary>
+        /// Runs the folder creation synchronously (without the wait dialog) so functional tests can
+        /// drive it directly. Exercises the same parent resolution, API call, and result handling as
+        /// <see cref="CreateNewFolder"/>.
+        /// </summary>
+        public void CreateNewFolderForTest(string folderName)
+        {
+            if (!TryGetWritableParent(out var session, out var parentFolder, out var description))
+                return;
+            var statusCode = session.CreateFolder(parentFolder.Id, folderName, description, out var responseBody);
+            HandleCreateFolderResult(folderName, statusCode, responseBody);
+        }
+
+        #endregion
+    }
 }
