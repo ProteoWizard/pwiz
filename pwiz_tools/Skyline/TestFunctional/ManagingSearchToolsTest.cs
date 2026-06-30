@@ -182,7 +182,7 @@ namespace pwiz.SkylineTestFunctional
 
             var TestSettings = new DdaSearchTest.DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.MSFragger,
+                SearchEngine = SearchEngine.MSFragger,
                 FragmentIons = "b,y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(50, MzTolerance.Units.ppm),
