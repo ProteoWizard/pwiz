@@ -69,8 +69,10 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 var node = FindParametersNode(graphFullScan);
-                Assert.IsNotNull(node, @"Raw Metadata parameters node not found");
-                Assert.IsFalse(node.Expanded, @"Raw Metadata parameters node was expected to start collapsed");
+                Assert.IsNotNull(node, @"Raw Metadata node not found");
+                Assert.AreEqual(FullScanPropertiesRes.Description_RawMetadata, node.PropertyDescriptor?.Description,
+                    @"Raw Metadata node is missing its help text");
+                Assert.IsFalse(node.Expanded, @"Raw Metadata node was expected to start collapsed");
                 node.Expanded = true;
             });
             RunUI(() => graphFullScan.ChangeScan(1));

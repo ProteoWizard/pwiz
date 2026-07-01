@@ -27,14 +27,13 @@ namespace pwiz.Skyline.Model
 {
     /// <summary>
     /// Expandable holder for a scan's uninterpreted mzML CV/user parameters
-    /// (<see cref="SpectrumMetadataTerm"/>). It appears as an expandable node in the full-scan
-    /// properties sidebar (under its own "Raw Metadata" category); each term becomes a read-only
-    /// child row whose value carries its unit and whose help text is the controlled-vocabulary
-    /// definition. The term set is per-scan and not known at compile time, so this implements
-    /// <see cref="ICustomTypeDescriptor"/> rather than exposing fixed properties. Using a single
-    /// expandable node (rather than injecting the terms as top-level properties) is deliberate: the
-    /// WinForms PropertyGrid corrupts its expand/collapse state restore when custom descriptors form
-    /// a dynamic top-level category.
+    /// (<see cref="SpectrumMetadataTerm"/>). It appears as an expandable "Raw Metadata" node in the
+    /// full-scan properties sidebar; each term becomes a read-only child row whose value carries its
+    /// unit and whose help text is the controlled-vocabulary definition. The term set is per-scan and
+    /// not known at compile time, so this implements <see cref="ICustomTypeDescriptor"/> rather than
+    /// exposing fixed properties. Using a single expandable node (rather than injecting the terms as
+    /// top-level properties) is deliberate: the WinForms PropertyGrid corrupts its expand/collapse
+    /// state restore when custom descriptors form a dynamic top-level category.
     /// </summary>
     public class RawMetadataInfo : ICustomTypeDescriptor
     {

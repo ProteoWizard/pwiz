@@ -130,11 +130,11 @@
   <data name="PrecursorMz" xml:space="preserve">
     <value>Precursor m/z</value>
   </data>
-  <data name="Category_RawMetadata" xml:space="preserve">
+  <data name="RawMetadata" xml:space="preserve">
     <value>Raw Metadata</value>
   </data>
-  <data name="RawMetadata" xml:space="preserve">
-    <value>Parameters</value>
+  <data name="Description_RawMetadata" xml:space="preserve">
+    <value>Parameters the data file reports that Skyline does not interpret into its own fields.</value>
   </data>
   <data name="Description_PrecursorMz" xml:space="preserve">
     <value>Precursor m/z of the selected MS/MS spectrum.</value>

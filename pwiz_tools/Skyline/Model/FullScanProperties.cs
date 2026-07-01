@@ -190,13 +190,13 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// The displayed scan's uninterpreted mzML CV/user parameters, shown as an expandable node in
-        /// its own top-level "Raw Metadata" category. Null when the scan reports none. Excluded from
-        /// the property-sheet comparison/serialization (its terms are file-specific and are covered by
-        /// their own test); this only affects comparison, not what the grid displays.
+        /// The displayed scan's uninterpreted mzML CV/user parameters, shown as an expandable
+        /// "Raw Metadata" node (in the Acquisition category) whose children are the terms. Null when
+        /// the scan reports none. Excluded from the property-sheet comparison/serialization (its terms
+        /// are file-specific and covered by their own test); this only affects comparison, not display.
         /// </summary>
         [UseToCompare(false)]
-        [Category("RawMetadata")]
+        [Category("AcquisitionInfo")]
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public RawMetadataInfo RawMetadata { get; set; }
     }
