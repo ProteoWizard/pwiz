@@ -84,6 +84,9 @@ namespace pwiz.Skyline.Controls.Graphs
         // Cached master-pane client rect for the duration of a splitter drag — avoids
         // a CreateGraphics + CalcClientRect call on every MouseMove. Cleared on MouseUp.
         private RectangleF? _dragMasterClientRect;
+        // Cached minimum mobilogram pane width (px) needed to fit its X-axis title;
+        // depends only on font/title, not data, so computed once. See GetMinMobilogramPaneWidth.
+        private float? _minMobilogramPaneWidth;
         private bool IsStickPlotVisible => _stickSpectrumPane != null;
         private bool IsMobilogramPaneVisible => _mobilogramPane != null;
         private double _maxMz;
@@ -336,6 +339,50 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
+        /// Minimum width (px) the mobilogram pane needs so its centered X-axis ("Intensity")
+        /// title isn't clipped: the measured title text plus the same left margin and Y-axis
+        /// reserve the chart is inset by (see <see cref="AlignMobilogramChartToHeatmap"/>).
+        /// Cached — depends on the font and title, not the data.
+        /// </summary>
+        private float GetMinMobilogramPaneWidth()
+        {
+            if (_minMobilogramPaneWidth.HasValue)
+                return _minMobilogramPaneWidth.Value;
+            if (_mobilogramPane == null)
+                return 0;
+            using (var g = graphControl.CreateGraphics())
+            {
+                float scale = _mobilogramPane.CalcScaleFactor();
+                // ZedGraph centers the X-axis title under the chart and may append a magnitude
+                // suffix (e.g. " (10^5)"); allow for it so the title never overflows the chart.
+                string sample = _mobilogramPane.XAxis.Title.Text + @" (10^00)";
+                float titleW = _mobilogramPane.XAxis.Title.FontSpec.MeasureString(g, sample, scale).Width;
+                _minMobilogramPaneWidth = titleW + _mobilogramPane.Margin.Left +
+                                          _mobilogramPane.YAxis.MinSpace + _mobilogramPane.Margin.Right;
+            }
+            return _minMobilogramPaneWidth.Value;
+        }
+
+        /// <summary>
+        /// The heatmap (right) column's share of the width, capped so the mobilogram (left)
+        /// keeps at least <see cref="GetMinMobilogramPaneWidth"/> for its X-axis title — the
+        /// "dynamic" floor that keeps the title from being clipped at narrow widths. All
+        /// layout paths read this (not <see cref="ColumnFraction"/> directly) so the floored
+        /// width and the re-pin check agree, avoiding a repaint loop. Never shrinks the
+        /// heatmap below <see cref="MIN_COL_FRACTION"/> (graceful in very narrow windows).
+        /// </summary>
+        private float EffectiveColumnFraction(float totalWidth)
+        {
+            float frac = ColumnFraction;
+            if (totalWidth > 0 && _mobilogramPane != null)
+            {
+                float maxRightFrac = 1f - GetMinMobilogramPaneWidth() / totalWidth;
+                frac = Math.Min(frac, Math.Max(MIN_COL_FRACTION, maxRightFrac));
+            }
+            return frac;
+        }
+
+        /// <summary>
         /// After MasterPane.DoLayout, override the per-pane Rects so the right column
         /// (stick + heatmap) occupies <see cref="ColumnFraction"/> of the total width
         /// and the left column (spacer + mobilogram) occupies the remainder. Likewise,
@@ -358,7 +405,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (totalW <= 0 || totalH <= 0)
                 return;
 
-            float rightFrac = ColumnFraction;
+            float rightFrac = EffectiveColumnFraction(totalW);
             float topFrac = RowFraction;
             float rightW = totalW * rightFrac;
             float leftW = totalW - rightW;
@@ -443,7 +490,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var mpRect = GetMasterPaneClientRect();
             if (mpRect.Width <= 0 || mpRect.Height <= 0)
                 return;
-            float rightFrac = ColumnFraction;
+            float rightFrac = EffectiveColumnFraction(mpRect.Width);
             float rightW = mpRect.Width * rightFrac;
             float leftW = mpRect.Width - rightW;
             _mobilogramPane.Rect = new RectangleF(mpRect.X, mpRect.Y, leftW, mpRect.Height);
@@ -464,7 +511,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var mpRect = GetMasterPaneClientRect(paintGraphics);
             if (mpRect.Width > 0 && mpRect.Height > 0)
             {
-                float expectedHeatmapW = mpRect.Width * ColumnFraction;
+                float expectedHeatmapW = mpRect.Width * EffectiveColumnFraction(mpRect.Width);
                 if (IsStickPlotVisible)
                 {
                     float expectedTopH = mpRect.Height * RowFraction;
@@ -3484,13 +3531,16 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var rt = _cursorTip.RenderTools;
             var table = new TableDesc();
-            string unitsLabel = IonMobilityValue.GetUnitsString(_msDataFileScanHelper.IonMobilityUnits);
+            // Label the ion-mobility row with the same axis-style label the heatmap Y-axis uses
+            // (e.g. "Drift Time (ms)", "1/K0 (Vs/cm^2)") rather than the bare units string, so the
+            // tooltip matches the rest of the Full Scan view.
+            string imAxisLabel = IonMobilityFilter.IonMobilityUnitsL10NString(_msDataFileScanHelper.IonMobilityUnits);
             if (useTarget)
             {
-                // "Ion Mobility Filter" header, then unit-keyed rows for IM, CCS, and
+                // "Ion Mobility Filter" header, then labeled rows for IM, CCS, and
                 // (when available) the isolation window for this scan.
                 table.AddHeaderRow(GraphsResources.GraphFullScan_ToolTip_IonMobilityFilterHeader, rt);
-                table.AddDetailRow(unitsLabel, targetIm.ToString(Formats.IonMobility), rt);
+                table.AddDetailRow(imAxisLabel, targetIm.ToString(Formats.IonMobility), rt);
                 if (imFilter.CollisionalCrossSectionSqA.HasValue && imFilter.CollisionalCrossSectionSqA.Value != 0)
                 {
                     table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Ccs,
@@ -3506,9 +3556,9 @@ namespace pwiz.Skyline.Controls.Graphs
             else
             {
                 // Three-row layout:
-                //   Observed Ion Mobility at Peak (RT=15.3) [bold, larger, full-width header]
-                //   1/K0           0.949 (-0.21% error)
-                //   CCS            331.8 (-0.18% error)
+                //   Observed at Peak (RT=15.3)              [bold, larger, full-width header]
+                //   1/K0 (Vs/cm^2)   0.949 (-0.21% error)
+                //   CCS              331.8 (-0.18% error)
                 // AddHeaderRow renders as a single full-width cell that doesn't
                 // participate in the per-column width calculation, so the long
                 // header text doesn't push the data rows' value column to the right.
@@ -3517,7 +3567,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     currentChromInfo.RetentionTime.ToString(Formats.RETENTION_TIME));
                 table.AddHeaderRow(headerText, rt);
 
-                table.AddDetailRow(unitsLabel,
+                table.AddDetailRow(imAxisLabel,
                     ObservedValueFormatter.FormatWithPercentError(observedIm.Value, targetIm, Formats.IonMobility), rt);
 
                 // CCS row when the active reader supports IM->CCS conversion and we have the
