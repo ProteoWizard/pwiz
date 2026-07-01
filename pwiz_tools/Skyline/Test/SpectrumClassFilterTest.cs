@@ -194,6 +194,15 @@ namespace pwiz.SkylineTest
             Assert.IsNull(SpectrumClassFilter.ValidateFilterString(filterString),
                 @"CV filter string should validate: " + filterString);
 
+            // The capture gate: a filter that references a CV column reports it (so extraction knows to
+            // capture the otherwise-dropped terms); a filter without one, and the empty filter, do not.
+            Assert.IsTrue(filter.ReferencesCvColumns());
+            Assert.IsFalse(new SpectrumClassFilter(new FilterClause(new[]
+            {
+                new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterOperations.OP_EQUALS, 1)
+            })).ReferencesCvColumns());
+            Assert.IsFalse(default(SpectrumClassFilter).ReferencesCvColumns());
+
             // A unit-less term (e.g. a vendor userParam) encodes and reconstructs too.
             var userParamColumn = SpectrumClassColumn.CvParam(@"vendorSetting", @"vendorSetting", null, false);
             var userParamReconstructed = SpectrumClassColumn.FindColumn(userParamColumn.PropertyPath);

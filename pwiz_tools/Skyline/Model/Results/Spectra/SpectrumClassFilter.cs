@@ -283,6 +283,28 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     text, columnDisplay)));
         }
 
+        /// <summary>
+        /// True if any spec filters on a dynamic mzML CV/user-parameter column. Chromatogram
+        /// extraction only captures the (otherwise-dropped) CV terms onto each spectrum when this is
+        /// true, so the capture cost is paid only for documents that actually filter on them.
+        /// </summary>
+        public bool ReferencesCvColumns()
+        {
+            foreach (var clause in Clauses)
+            {
+                foreach (var filterSpec in clause.FilterSpecs)
+                {
+                    var column = SpectrumClassColumn.FindColumn(filterSpec.ColumnId);
+                    if (column != null && SpectrumClassColumn.IsCvParamColumn(column))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
         public override string ToString()
         {
             return GetAbbreviatedText();
