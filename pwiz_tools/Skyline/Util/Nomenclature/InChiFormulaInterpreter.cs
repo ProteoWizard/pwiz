@@ -20,10 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Util.Nomenclature
@@ -78,7 +75,7 @@ namespace pwiz.Skyline.Util.Nomenclature
             }
 
             // Sum element counts across dot-separated components, honoring integer multipliers.
-            var elementCounts = new Dictionary<string, int>();
+            var elements = new ElementCounts();
             foreach (var component in formulaLayer.Split('.'))
             {
                 var match = REGEX_COMPONENT.Match(component);
@@ -89,20 +86,17 @@ namespace pwiz.Skyline.Util.Nomenclature
                 var multiplier = match.Groups[1].Value.Length == 0
                     ? 1
                     : int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
-                foreach (var pair in Molecule.ParseToDictionary(match.Groups[2].Value))
-                {
-                    AddCount(elementCounts, pair.Key, multiplier * pair.Value);
-                }
+                elements.AddFormula(match.Groups[2].Value, multiplier);
             }
 
             // Apply the mobile-proton "/p" layer (protons added to, or removed from, the formula).
             var protonDelta = ProtonDelta(layers);
             if (protonDelta != 0)
             {
-                AddCount(elementCounts, BioMassCalc.H, protonDelta);
+                elements.Add(BioMassCalc.H, protonDelta);
             }
 
-            var formula = ToHillFormula(elementCounts);
+            var formula = elements.ToHillFormula();
             if (string.IsNullOrEmpty(formula))
             {
                 throw new InvalidDataException(text);
@@ -134,20 +128,6 @@ namespace pwiz.Skyline.Util.Nomenclature
             return 0;
         }
 
-        private static void AddCount(IDictionary<string, int> counts, string element, int delta)
-        {
-            counts.TryGetValue(element, out var existing);
-            var updated = existing + delta;
-            if (updated == 0)
-            {
-                counts.Remove(element);
-            }
-            else
-            {
-                counts[element] = updated;
-            }
-        }
-
         private static int ProtonDelta(IEnumerable<string> layers)
         {
             var delta = 0;
@@ -165,34 +145,6 @@ namespace pwiz.Skyline.Util.Nomenclature
                 }
             }
             return delta;
-        }
-
-        private static string ToHillFormula(IDictionary<string, int> counts)
-        {
-            // Hill order: carbon first, hydrogen second, then remaining elements alphabetically.
-            var sb = new StringBuilder();
-            AppendElement(sb, counts, BioMassCalc.C);
-            AppendElement(sb, counts, BioMassCalc.H);
-            foreach (var element in counts.Keys
-                         .Where(e => !Equals(e, BioMassCalc.C) && !Equals(e, BioMassCalc.H))
-                         .OrderBy(e => e, StringComparer.Ordinal))
-            {
-                AppendElement(sb, counts, element);
-            }
-            return sb.ToString();
-        }
-
-        private static void AppendElement(StringBuilder sb, IDictionary<string, int> counts, string element)
-        {
-            if (!counts.TryGetValue(element, out var count) || count == 0)
-            {
-                return;
-            }
-            sb.Append(element);
-            if (count != 1)
-            {
-                sb.Append(count.ToString(CultureInfo.InvariantCulture));
-            }
         }
     }
 }

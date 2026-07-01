@@ -32,7 +32,8 @@ namespace pwiz.Skyline.Util.Nomenclature
     {
         private static readonly INomenclatureInterpreter[] INTERPRETERS =
         {
-            new InChiFormulaInterpreter()
+            new InChiFormulaInterpreter(),
+            new GlycanCompositionInterpreter()
         };
 
         /// <summary>
