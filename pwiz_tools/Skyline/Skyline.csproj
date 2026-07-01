@@ -1403,6 +1403,9 @@
     <Compile Include="Util\Extensions\MassTypeLocalizationExtension.cs" />
     <Compile Include="Util\FormGroup.cs" />
     <Compile Include="Util\HillSystemOrdering.cs" />
+    <Compile Include="Util\Nomenclature\INomenclatureInterpreter.cs" />
+    <Compile Include="Util\Nomenclature\InChiFormulaInterpreter.cs" />
+    <Compile Include="Util\Nomenclature\NomenclatureRegistry.cs" />
     <Compile Include="Util\ParsedMolecule.cs" />
     <Compile Include="Util\PersistentString.cs" />
     <Compile Include="Util\TraceWarningListener.cs" />

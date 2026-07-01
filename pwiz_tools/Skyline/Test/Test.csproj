@@ -227,6 +227,7 @@
     <Compile Include="CrosslinkModTest.cs" />
     <Compile Include="CrosslinkSequenceParserTest.cs" />
     <Compile Include="CustomMoleculeTest.cs" />
+    <Compile Include="NomenclatureTest.cs" />
     <Compile Include="DecoysTest.cs" />
     <Compile Include="DigestionTest.cs" />
     <Compile Include="DocLoadLibraryTest.cs" />
