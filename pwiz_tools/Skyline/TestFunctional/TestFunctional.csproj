@@ -161,6 +161,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AccessServerTest.cs" />
+    <Compile Include="AlertWatchTest.cs" />
     <Compile Include="AddAllPeptidesWithModificationsTest.cs" />
     <Compile Include="AddIrtStandardsTest.cs" />
     <Compile Include="AddMixedLibraryTest.cs" />
@@ -326,6 +327,8 @@
     <Compile Include="ModificationPermuterTest.cs" />
     <Compile Include="ModifyMoleculeTest.cs" />
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
+    <Compile Include="NativeFileDialogTest.cs" />
+    <Compile Include="NativeMessageBoxTest.cs" />
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
     <Compile Include="NormalizeToCalibrationCurveTest.cs" />
@@ -456,6 +459,22 @@
     <Compile Include="ProfileImport.cs" />
     <Compile Include="ProfileMemory.cs" />
     <Compile Include="KoinaSkylineIntegrationTest.cs" />
+    <Compile Include="ClickCheckedListConnectorTest.cs" />
+    <Compile Include="ClickControlConnectorTest.cs" />
+    <Compile Include="ClipboardConnectorTest.cs" />
+    <Compile Include="ContextMenuConnectorTest.cs" />
+    <Compile Include="GetControlsConnectorTest.cs" />
+    <Compile Include="IonTypeMenuConnectorTest.cs" />
+    <Compile Include="GridCellConnectorTest.cs" />
+    <Compile Include="LazyMenuConnectorTest.cs" />
+    <Compile Include="PerformActionConnectorTest.cs" />
+    <Compile Include="PickChildrenConnectorTest.cs" />
+    <Compile Include="PivotListViewConnectorTest.cs" />
+    <Compile Include="PlainGridConnectorTest.cs" />
+    <Compile Include="SetFormValueConnectorTest.cs" />
+    <Compile Include="SetGridTextConnectorTest.cs" />
+    <Compile Include="SetItemConnectorTest.cs" />
+    <Compile Include="PrmConnectorTest.cs" />
     <Compile Include="ProteinMetadataFunctionalTest.cs" />
     <Compile Include="ProteinMetadataBackgroundLoaderTest.cs" />
     <Compile Include="PythonInstallerLegacyDlgTest.cs" />

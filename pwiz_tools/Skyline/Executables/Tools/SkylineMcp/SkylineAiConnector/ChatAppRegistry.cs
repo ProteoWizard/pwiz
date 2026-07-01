@@ -213,6 +213,41 @@ namespace SkylineAiConnector
             RemoveFromJsonConfig(GeminiCliConfigPath, MCP_SERVERS_KEY);
         }
 
+        // -- Antigravity --
+
+        private static string AntigravityConfigPath
+        {
+            get
+            {
+                return Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                    ".gemini", "config", "mcp_config.json");
+            }
+        }
+
+        public static bool IsAntigravityInstalled()
+        {
+            string antigravityDir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".gemini", "antigravity");
+            return Directory.Exists(antigravityDir) || File.Exists(AntigravityConfigPath);
+        }
+
+        public static bool IsRegisteredInAntigravity()
+        {
+            return IsRegisteredInJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY);
+        }
+
+        public static void AddToAntigravity()
+        {
+            AddToJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY, BuildServerEntry());
+        }
+
+        public static void RemoveFromAntigravity()
+        {
+            RemoveFromJsonConfig(AntigravityConfigPath, MCP_SERVERS_KEY);
+        }
+
         // -- VS Code (GitHub Copilot) --
 
         private static string VSCodeConfigPath
@@ -392,13 +427,26 @@ namespace SkylineAiConnector
 
         private static void EditJsonFile(string configPath, Action<JsonObject> edit)
         {
-            JsonObject root;
+            JsonObject root = null;
             if (File.Exists(configPath))
             {
-                string json = File.ReadAllText(configPath);
-                root = JsonNode.Parse(json)?.AsObject() ?? new JsonObject();
+                try
+                {
+                    string json = File.ReadAllText(configPath);
+                    if (!string.IsNullOrWhiteSpace(json))
+                    {
+                        root = JsonNode.Parse(json)?.AsObject();
+                    }
+                }
+                catch
+                {
+                    // The existing config is malformed. Back it up before we overwrite it with a fresh
+                    // config below, so the user can recover whatever was there if it mattered.
+                    TryBackupFile(configPath);
+                }
             }
-            else
+
+            if (root == null)
             {
                 root = new JsonObject();
             }
@@ -409,6 +457,20 @@ namespace SkylineAiConnector
             if (directory != null)
                 Directory.CreateDirectory(directory);
             File.WriteAllText(configPath, root.ToJsonString(WRITE_OPTIONS));
+        }
+
+        // Makes a best-effort copy of a file alongside the original (".bak") before it is overwritten.
+        // Any failure is ignored: the backup is a convenience, not something the caller depends on.
+        private static void TryBackupFile(string filePath)
+        {
+            try
+            {
+                File.Copy(filePath, filePath + ".bak", true);
+            }
+            catch
+            {
+                // Best effort -- if the backup cannot be written, proceed with the overwrite anyway.
+            }
         }
 
         private static JsonObject EnsureObject(JsonObject parent, string key)
@@ -456,6 +518,7 @@ namespace SkylineAiConnector
             return (IsClaudeDesktopInstalled() && IsRegisteredInClaudeDesktop()) ||
                    (IsClaudeCodeInstalled() && IsRegisteredInClaudeCode()) ||
                    (IsGeminiCliInstalled() && IsRegisteredInGeminiCli()) ||
+                   (IsAntigravityInstalled() && IsRegisteredInAntigravity()) ||
                    (IsVSCodeInstalled() && IsRegisteredInVSCode()) ||
                    (IsCursorInstalled() && IsRegisteredInCursor());
         }

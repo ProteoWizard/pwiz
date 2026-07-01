@@ -78,7 +78,7 @@ namespace pwiz.Skyline
         public static bool? StartPageOverride { get; private set; }
 
         public static string MainToolServiceName { get; private set; }
-        
+
         // Parameters for testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing (i.e. TestRunner).
         public static bool UnitTest { get; set; }                   // Set to true by AbstractUnitTest and AbstractFunctionalTest
@@ -331,6 +331,18 @@ namespace pwiz.Skyline
                     }
                 }
                 SystemEvents.DisplaySettingsChanged += SystemEventsOnDisplaySettingsChanged;
+
+                // Start the tool service before the main window is created, so the JSON/MCP server can
+                // introspect and drive the StartPage too (the main window does not exist while the
+                // StartPage is showing). UI-thread marshaling goes through InvokeOnUiThread /
+                // BeginInvokeOnUiThread, which target whichever of those windows is currently up.
+                MainToolServiceName = Guid.NewGuid().ToString();
+                if (Settings.Default.EnableMcpAutoConnect)
+                {
+                    StartToolService();
+                    MainJsonToolServer.WriteConnectionInfo();
+                }
+
                 // Careful, a throw out of the SkylineWindow constructor without this
                 // catch causes Skyline just to appear to silently never start.  Makes for
                 // some difficult debugging.
@@ -374,6 +386,10 @@ namespace pwiz.Skyline
                     ReportExceptionUI(x, new StackTrace(1, true));
                 }
 
+                // Now that the main window exists, let the tool service (which may have been
+                // started earlier, before the StartPage) push document-change notifications.
+                AttachToolServiceToMainWindow();
+
 //                ConcurrencyVisualizer.StartEvents(MainWindow);
 
                 // Position window offscreen for stress testing.
@@ -382,12 +398,6 @@ namespace pwiz.Skyline
                 if (!UnitTest)  // Covers Unit and Functional tests
                     SendAnalyticsHitAsync();
 
-                MainToolServiceName = Guid.NewGuid().ToString();
-                if (Settings.Default.EnableMcpAutoConnect)
-                {
-                    StartToolService();
-                    MainJsonToolServer.WriteConnectionInfo();
-                }
                 // NOTE: Nothing after Application.Run() reliably executes.
                 // SkylineWindow.OnHandleDestroyed calls Process.Kill() to avoid native
                 // vendor DLL errors. All shutdown cleanup must happen before that point.
@@ -570,17 +580,34 @@ namespace pwiz.Skyline
             return SendGa4AnalyticsHit(out _, useDebugUrl);
         }
 
+        // Whether the tool service is currently subscribed to the main window's
+        // DocumentChangedEvent. The service can start before the main window exists (while the
+        // StartPage is showing), so the subscription is deferred until the window is available.
+        private static bool _toolServiceDocumentChangeSubscribed;
+
         public static void StartToolService()
         {
             if (MainToolService == null)
             {
-                MainToolService = new ToolService(MainToolServiceName, MainWindow);
-                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
+                MainToolService = new ToolService(MainToolServiceName);
                 MainToolService.RunAsync();
 
                 MainJsonToolServer = new JsonToolServer(MainToolService, MainToolServiceName);
                 MainJsonToolServer.Start();
             }
+            AttachToolServiceToMainWindow();
+        }
+
+        // Subscribes the tool service to the main window's document-change event once the window
+        // exists. The service may be started before the window (while the StartPage is showing), so
+        // this is also called right after the window is created. No-op if the service has not been
+        // started, the window does not exist yet, or the subscription is already in place.
+        public static void AttachToolServiceToMainWindow()
+        {
+            if (MainToolService == null || _toolServiceDocumentChangeSubscribed || MainWindow == null)
+                return;
+            MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
+            _toolServiceDocumentChangeSubscribed = true;
         }
 
         public static void StopToolService()
@@ -593,7 +620,11 @@ namespace pwiz.Skyline
                     MainJsonToolServer = null;
                 }
 
-                MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                if (_toolServiceDocumentChangeSubscribed && MainWindow != null)
+                {
+                    MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
+                    _toolServiceDocumentChangeSubscribed = false;
+                }
                 MainToolService.Stop();
                 MainToolService = null;
             }
@@ -860,6 +891,54 @@ namespace pwiz.Skyline
 
         public static SkylineWindow MainWindow { get; private set; }
         public static StartPage StartWindow { get; private set; }
+
+        /// <summary>
+        /// The window used to marshal work onto the UI thread: the main window once it exists, otherwise
+        /// the StartPage while it is showing. Null very early in startup before either has a usable handle.
+        /// Lets background services (e.g. the JSON/MCP tool server) drive the UI before the main window
+        /// exists. Safe to read from a background thread (only checks handle/disposed flags).
+        /// </summary>
+        private static Control UiThreadWindow
+        {
+            get
+            {
+                var mainWindow = MainWindow;
+                if (mainWindow != null && mainWindow.IsHandleCreated && !mainWindow.IsDisposed)
+                    return mainWindow;
+                var startWindow = StartWindow;
+                if (startWindow != null && startWindow.IsHandleCreated && !startWindow.IsDisposed)
+                    return startWindow;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> synchronously on the UI thread, marshaling through the main
+        /// window or, before it exists, the StartPage. If neither is up yet (very early startup), runs it
+        /// synchronously on the calling thread.
+        /// </summary>
+        public static void InvokeOnUiThread(Action action)
+        {
+            var window = UiThreadWindow;
+            if (window != null)
+                window.Invoke(action);
+            else
+                action();
+        }
+
+        /// <summary>
+        /// Posts <paramref name="action"/> to the UI thread fire-and-forget, through the main window or,
+        /// before it exists, the StartPage. If neither is up yet (very early startup), runs it on a
+        /// background thread so the caller still does not block.
+        /// </summary>
+        public static void BeginInvokeOnUiThread(Action action)
+        {
+            var window = UiThreadWindow;
+            if (window != null)
+                window.BeginInvoke(action);
+            else
+                CommonActionUtil.RunAsync(action);
+        }
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
         

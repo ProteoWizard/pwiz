@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 47;
+        private const int EXPECTED_TOOL_COUNT = 58;
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -136,7 +136,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             Action<Process, JsonToolServer> scenario)
         {
             string testGuid = @"test-" + Guid.NewGuid();
-            var toolService = new ToolService(testGuid, SkylineWindow);
+            var toolService = new ToolService(testGuid);
             var server = new JsonToolServer(toolService, testGuid);
 
             string connectionFilePath = null;

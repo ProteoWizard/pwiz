@@ -82,7 +82,10 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public TutorialListItem[] GetAvailableTutorials() { return CallClient(c => c.GetAvailableTutorials()); }
     public ReportDocTopicSummary[] GetReportDocTopics(string dataSource = null) { return CallClient(c => c.GetReportDocTopics(dataSource)); }
     public string GetProcessId() { return CallClient(c => c.GetProcessId()); }
+    public int UnfinishedActionCount() { return CallClient(c => c.UnfinishedActionCount()); }
     public FormInfo[] GetOpenForms() { return CallClient(c => c.GetOpenForms()); }
+    public ControlInfo[] GetControls(string formId) { return CallClient(c => c.GetControls(formId)); }
+    public object PerformAction(UiElementPath path, string action, object value) { return CallClient(c => c.PerformAction(path, action, value)); }
     public string GetUiMode() { return CallClient(c => c.GetUiMode()); }
     public UndoRedoEntry[] GetUndoRedo() { return CallClient(c => c.GetUndoRedo()); }
 
@@ -102,8 +105,11 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void SetUndoRedoPosition(int index) { CallClientVoid(c => c.SetUndoRedoPosition(index)); }
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
+    public void InvokeMenuItem(string menuPath) { CallClientVoid(c => c.InvokeMenuItem(menuPath)); }
+    public void CloseForm(string formId) { CallClientVoid(c => c.CloseForm(formId)); }
 
     // 2-arg methods
+    public void ClickToolStripItem(string formId, string menuPath) { CallClientVoid(c => c.ClickToolStripItem(formId, menuPath)); }
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }
@@ -114,6 +120,8 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetSettingsListItem(string listType, string itemName) { return CallClient(c => c.GetSettingsListItem(listType, itemName)); }
     public void SelectSettingsListItems(string listType, string[] itemNames) { CallClientVoid(c => c.SelectSettingsListItems(listType, itemNames)); }
     public void ImportFasta(string textFasta, string keepEmptyProteins = null) { CallClientVoid(c => c.ImportFasta(textFasta, keepEmptyProteins)); }
+    public void ClickFormButton(string formId, string button) { CallClientVoid(c => c.ClickFormButton(formId, button)); }
+    public string GetGridText(string formId, string gridId) { return CallClient(c => c.GetGridText(formId, gridId)); }
 
     // 3-arg methods
     public ReportMetadata ExportReport(string reportName, string filePath, string culture) { return CallClient(c => c.ExportReport(reportName, filePath, culture)); }
@@ -121,6 +129,10 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public TutorialMetadata GetTutorial(string name, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorial(name, language, filePath)); }
     public void AddSettingsListItem(string listType, string itemXml, bool overwrite = false) { CallClientVoid(c => c.AddSettingsListItem(listType, itemXml, overwrite)); }
     public ImageBytesMetadata GetTutorialImageBytes(string name, string imageFilename, string language = "en") { return CallClient(c => c.GetTutorialImageBytes(name, imageFilename, language)); }
+    public void SetFormValue(string formId, string controlId, string value) { CallClientVoid(c => c.SetFormValue(formId, controlId, value)); }
+    public string GetFormValue(string formId, string controlId) { return CallClient(c => c.GetFormValue(formId, controlId)); }
+    public void SetGridText(string formId, string controlId, string text) { CallClientVoid(c => c.SetGridText(formId, controlId, text)); }
+    public void SetCurrentCellAddress(string formId, string controlId, int column, int row) { CallClientVoid(c => c.SetCurrentCellAddress(formId, controlId, column, row)); }
 
     // 4-arg methods
     public TutorialImageMetadata GetTutorialImage(string name, string imageFilename, string language = "en", string filePath = null) { return CallClient(c => c.GetTutorialImage(name, imageFilename, language, filePath)); }

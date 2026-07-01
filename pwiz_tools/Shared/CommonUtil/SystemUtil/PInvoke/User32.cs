@@ -66,7 +66,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
             // ReSharper disable InconsistentNaming IdentifierTypo
             PBM_SETSTATE = 0x0410,
             WM_SETREDRAW = 0x000B,
+            WM_SETTEXT = 0x000C,
             WM_PAINT = 0x000F,
+            WM_CLOSE = 0x0010,
             WM_ERASEBKGND = 0x0014,
             WM_SETCURSOR = 0x0020,
             WM_MOUSEACTIVATE = 0x0021,
@@ -77,11 +79,14 @@ namespace pwiz.Common.SystemUtil.PInvoke
             WM_TIMER = 0x0113,
             WM_HSCROLL = 0x0114,
             WM_VSCROLL = 0x0115,
+            WM_KEYDOWN = 0x0100,
+            WM_KEYUP = 0x0101,
             WM_CHANGEUISTATE = 0x0127,
             WM_MOUSEMOVE = 0x0200,
             WM_LBUTTONDOWN = 0x0201,
             WM_LBUTTONUP = 0x0202,
-            WM_MOUSELEAVE = 0x02A3
+            WM_MOUSELEAVE = 0x02A3,
+            BM_CLICK = 0x00F5
             // ReSharper restore InconsistentNaming IdentifierTypo
         }
 
@@ -195,8 +200,11 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]
-        public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen); 
-        
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDC(IntPtr hWnd);
 
@@ -225,6 +233,15 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern bool IsWindowVisible(IntPtr hwnd);
 
         [DllImport("user32.dll")]
+        public static extern bool IsWindowEnabled(IntPtr hwnd);
+
+        // uCmd values for GetWindow.
+        public const uint GW_OWNER = 4;
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        [DllImport("user32.dll")]
         public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);
 
         [DllImport("user32.dll", EntryPoint = "OpenClipboard", SetLastError = true)]
@@ -247,6 +264,9 @@ namespace pwiz.Common.SystemUtil.PInvoke
 
         [DllImport("user32.dll")]
         public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool SetCapture(IntPtr hWnd);

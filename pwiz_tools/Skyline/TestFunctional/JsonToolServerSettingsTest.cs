@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic));
 
             string testGuid = @"test-" + Guid.NewGuid();
-            var toolService = new ToolService(testGuid, SkylineWindow);
+            var toolService = new ToolService(testGuid);
             var server = new JsonToolServer(toolService, testGuid);
 
             TestSettingsLists(server);

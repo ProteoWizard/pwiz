@@ -252,7 +252,7 @@ namespace pwiz.Skyline.ToolsUI
                             if (requestBytes.Length == 0)
                                 break;
 
-                            string responseJson = HandleRequest(requestBytes);
+                            var responseJson = HandleRequest(requestBytes);
                             var responseBytes = Encoding.UTF8.GetBytes(responseJson);
                             pipe.Write(responseBytes, 0, responseBytes.Length);
                             pipe.Flush();
@@ -415,7 +415,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public DocumentStatus GetDocumentStatus()
         {
-            var doc = Program.MainWindow.Document;
+            var doc = Program.MainWindow?.Document;
+            if (doc == null)
+            {
+                return null;
+            }
             string docPath = _toolService.GetDocumentPath();
 
             string groupsLabel, moleculesLabel;
@@ -447,11 +451,17 @@ namespace pwiz.Skyline.ToolsUI
             };
         }
 
+        // The form whose UI-mode control is live: the main window, or -- before it exists -- the start
+        // page, which has its own UI-mode buttons. So get_ui_mode / set_ui_mode work while the start page
+        // is showing, not only once the main window is open.
+        private static FormEx ActiveModeUiForm => (FormEx) Program.MainWindow ?? Program.StartWindow;
+
         public string GetUiMode()
         {
-            // Access on UI thread since Program.ModeUI may read Settings.Default
+            // Read on the UI thread (the mode helper reads Settings.Default). Works whether the main
+            // window or the start page is showing -- read it from whichever is up.
             string mode = null;
-            Program.MainWindow.Invoke(new Action(() => mode = Program.ModeUI.ToString()));
+            Program.InvokeOnUiThread(() => mode = ActiveModeUiForm.ModeUI.ToString());
             return mode;
         }
 
@@ -463,14 +473,13 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Invalid UI mode '{0}'. Must be 'proteomic', 'small_molecules', or 'mixed'.", mode));
             }
-            Program.MainWindow.Invoke(new Action(() =>
-            {
-                Program.MainWindow.SetUIMode(docType);
-            }));
+            // Drive the UI-mode control on whichever window is showing (the start page has its own).
+            Program.InvokeOnUiThread(() => ActiveModeUiForm.SetUIMode(docType));
         }
 
         public UndoRedoEntry[] GetUndoRedo()
         {
+            JsonUiService.RequireMainWindow();
             // Capture undo/redo descriptions on the UI thread to avoid concurrent
             // enumeration of the UndoManager stacks which are not thread-safe.
             List<string> undoDescriptions = null;
@@ -499,6 +508,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void SetUndoRedoPosition(int index)
         {
+            JsonUiService.RequireMainWindow();
             if (index == 0)
                 return; // Already at current state
 
@@ -817,9 +827,69 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.SetReplicate(replicateName);
         }
 
+        public int UnfinishedActionCount()
+        {
+            return JsonUiService.UnfinishedActionCount;
+        }
+
         public FormInfo[] GetOpenForms()
         {
             return JsonUiService.GetOpenForms();
+        }
+
+        public ControlInfo[] GetControls(string formId)
+        {
+            return JsonUiService.ResolveForm(formId).GetControls();
+        }
+
+        public object PerformAction(UiElementPath path, string action, object value)
+        {
+            return JsonUiService.PerformAction(path, action, value);
+        }
+
+        public void InvokeMenuItem(string menuPath)
+        {
+            JsonUiService.InvokeMenuItem(menuPath);
+        }
+
+        public void ClickFormButton(string formId, string button)
+        {
+            JsonUiService.ResolveForm(formId).ClickButton(button);
+        }
+
+        public void ClickToolStripItem(string formId, string menuPath)
+        {
+            JsonUiService.ClickToolStripItem(formId, menuPath);
+        }
+
+        public void SetFormValue(string formId, string controlId, string value)
+        {
+            JsonUiService.ResolveForm(formId).SetValue(controlId, value);
+        }
+
+        public string GetFormValue(string formId, string controlId)
+        {
+            return JsonUiService.GetFormValue(formId, controlId);
+        }
+
+        public void SetGridText(string formId, string controlId, string text)
+        {
+            JsonUiService.SetGridText(formId, controlId, text);
+        }
+
+        public void SetCurrentCellAddress(string formId, string controlId, int column, int row)
+        {
+            JsonUiService.SetCurrentCellAddress(formId, controlId, column, row);
+        }
+
+        public string GetGridText(string formId, string gridId)
+        {
+            return JsonUiService.GetGridText(formId, gridId);
+        }
+
+        public void CloseForm(string formId)
+        {
+            JsonUiService.ResolveForm(formId).Close();
         }
 
         public string GetGraphData(string graphId, string filePath = null)
@@ -1760,6 +1830,19 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         private string RunCommandImpl(string[] args, bool silent)
+        {
+            // A command needs the main window -- its document, file path, and the SkylineWindow document
+            // operations -- which does not exist while only the start page is showing. Fail with a clear
+            // message instead of a NullReferenceException, and do not let the MCP run a command the user
+            // could not run yet.
+            JsonUiService.RequireMainWindow();
+            // Run on a background thread; if the command pops a blocking dialog, throw its message (the
+            // alert/error text, or any other dialog's title) instead of blocking on the modal.
+            // See JsonUiService.RunWithDialogWatch.
+            return JsonUiService.RunWithDialogWatch(() => RunCommandCore(args, silent));
+        }
+
+        private string RunCommandCore(string[] args, bool silent)
         {
             var capture = new StringWriter();
             string argsDisplay = string.Join(@" ", args);

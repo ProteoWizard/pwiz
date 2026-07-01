@@ -508,10 +508,13 @@ public static class SkylineTools
 
     [McpServerTool(Name = "skyline_get_open_forms"),
      Description("Enumerate all open forms in the Skyline window. Returns tab-separated lines " +
-        "with form type, title, whether it contains a ZedGraph graph, dock state, and a stable " +
-        "identifier in TypeName:Title format (e.g., 'GraphSummary:Peak Areas - Replicate Comparison'). " +
+        "with form type, title, whether it contains a ZedGraph graph, dock state, a stable " +
+        "identifier in TypeName:Title format (e.g., 'GraphSummary:Peak Areas - Replicate Comparison'), " +
+        "and whether the form is a native OS window. " +
         "Use the identifier with skyline_get_graph_data, skyline_get_graph_image, and skyline_get_form_image. " +
-        "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc., Dialog.")]
+        "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc., Dialog. " +
+        "IsNative=True marks native common dialogs such as the Open/Save file dialog (Type 'FileDialog'); " +
+        "skyline_get_form_image works for these too.")]
     public static string GetOpenForms()
     {
         return Invoke(connection =>
@@ -521,10 +524,223 @@ public static class SkylineTools
                 return "No forms are currently open in Skyline.";
 
             var sb = new StringBuilder();
-            sb.AppendLine("Type\tTitle\tHasGraph\tDockState\tId");
+            sb.AppendLine("Type\tTitle\tHasGraph\tDockState\tId\tIsNative");
             foreach (var form in forms)
-                sb.AppendLine($"{form.Type}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t{form.Id}");
+                sb.AppendLine($"{form.Type}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t{form.Id}\t{form.IsNative}");
             return sb.ToString().TrimEnd();
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_controls"),
+     Description("List the interactive controls on a form so you can discover what is there -- and how " +
+        "to address it -- without reading source code. Returns tab-separated lines with each control's " +
+        "Type, the visible Label that names it (its own caption, or the label beside a caption-less " +
+        "field), Enabled, and internal Name (informational). Hidden controls (e.g. on an unselected tab) " +
+        "are not listed -- select the tab first. Use the 'get_value' action for a " +
+        "control's current value and 'get_actions' for the actions it supports. Address a control by its " +
+        "Label (e.g. set_form_value with \"Ion match tolerance\"); a control with no Label is addressed by " +
+        "its Type (e.g. \"TreeView\"). Get the formId from skyline_get_open_forms.")]
+    public static string GetControls(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var controls = connection.GetControls(formId);
+            if (controls == null || controls.Length == 0)
+                return $"No interactive controls found on {formId}.";
+
+            var sb = new StringBuilder();
+            sb.AppendLine("Type\tLabel\tEnabled\tName");
+            foreach (var c in controls)
+                sb.AppendLine($"{c.Path?.Type}\t{c.Path?.Text}\t{c.Enabled}\t{c.Name}");
+            return sb.ToString().TrimEnd();
+        });
+    }
+
+    [McpServerTool(Name = "skyline_perform_action"),
+     Description("The most general way to interact with a control, menu item, or list item: locate it by " +
+        "its Label (the visible text that names it) and/or its Type (for a caption-less control, e.g. " +
+        "\"TreeView\") among the form's controls, then perform an action. Only the properties you set are " +
+        "used to match. Actions: 'get_actions' (lists the actions this control supports, each with a " +
+        "description and the value it takes -- call this first when unsure); 'get_children' " +
+        "(lists child elements as JSON UiElementPaths -- each already parented onto the element you listed, " +
+        "so pass one straight back as 'path'); 'click'; 'set_value' (uses 'value'); 'get_value' " +
+        "(returns the current value); 'check_item'/'uncheck_item'/'select_item'/'unselect_item' (a " +
+        "list/tree/list-view item by its text, value the item -- a TreeView node by a '>'-separated path); " +
+        "'set_selected_index' (a list, value the index); 'get_grid_text'/'set_grid_text' (a grid's text); " +
+        "'set_current_cell_address' (value a [column, row] array, e.g. [0, 1]); 'select_tab' (a TabControl, value the tab text); " +
+        "'expand'/'collapse' (a TreeView node, value a JSON array path whose segments are a child's text or " +
+        "its index, e.g. [\"Peptides\", 0]); 'paste' (value the text to paste into a text box, a grid, the " +
+        "Targets tree, or the main Skyline window -- without using the clipboard); 'select_all' (selects all " +
+        "of a paste-capable element's content, e.g. before paste to replace it); 'rename_node' (the Targets " +
+        "tree, value the new name for the selected node). " +
+        "For a control's right-click menu, pass path as the JSON {\"parent\": <the control's " +
+        "UiElementPath>, \"type\": \"ContextMenu\"}, then get_children to list its items or " +
+        "click to invoke one (for a grid, move to the cell first with skyline_set_current_cell_address). When " +
+        "path is given it is used as-is and label/type are ignored. Discover controls with " +
+        "skyline_get_controls; the typed tools (skyline_click_form_button, ...) remain for common cases.")]
+    public static string PerformAction(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string form,
+        [Description("Action: get_actions, get_children, click, set_value, get_value, check_item, uncheck_item, select_item, unselect_item, set_selected_index, get_grid_text, set_grid_text, set_current_cell_address, select_tab, expand, collapse, paste, select_all, rename_node")] string action,
+        [Description("Visible label that names the control (optional)")] string label = null,
+        [Description("Control type for a caption-less control, e.g. TreeView/ListView (optional)")] string type = null,
+        [Description("Value for set_value/set_grid_text, the text for paste/rename_node, a [column, row] array for set_current_cell_address, the tab text for select_tab, or a JSON array path for expand/collapse (optional)")] string value = null,
+        [Description("A full UiElementPath as JSON (e.g. one straight from get_children, or wrapped as a ContextMenu); overrides label/type when given (optional)")] string path = null)
+    {
+        return Invoke(connection =>
+        {
+            var target = string.IsNullOrEmpty(path)
+                ? new UiElementPath(new UiElementPath(null, form, null, "Form"), label, null, type)
+                : JsonSerializer.Deserialize<UiElementPath>(path,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            // The result is the action's return (raw JSON for arrays, a string for get_value, or empty).
+            var text = connection.PerformAction(target, action, value)?.ToString();
+            return string.IsNullOrEmpty(text) ? $"Performed '{action}'." : text;
+        });
+    }
+
+    [McpServerTool(Name = "skyline_invoke_menu_item"),
+     Description("Invoke a Skyline main-menu item by its visible path, e.g. " +
+        "'File > Import > Peptide Search'. Segments are separated by '>' and matched against each " +
+        "menu item's visible text (the mnemonic '&' and a trailing ellipsis are ignored) or its " +
+        "control name, case-insensitively. The click is posted asynchronously, so a menu item that " +
+        "opens a dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
+    public static string InvokeMenuItem(
+        [Description("Menu path with '>'-separated segments, e.g. 'File > Import > Peptide Search'")] string menuPath)
+    {
+        return Invoke(connection =>
+        {
+            connection.InvokeMenuItem(menuPath);
+            return $"Invoked menu item: {menuPath}";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_click_toolstrip_item"),
+     Description("Click an item on a form's toolbar / menu strip by its path, e.g. " +
+        "'Reports > Replicates' (the 'Reports' toolbar button, then 'Replicates' in its dropdown). " +
+        "Each level's dropdown is opened first so items built on demand -- which skyline_click_form_button " +
+        "cannot reach -- are present before matching. Segments are '>'-separated and matched by item " +
+        "name or visible text. Use for the Document Grid 'Reports' dropdown, the Pivot Editor dropdown, etc.")]
+    public static string ClickToolStripItem(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Toolbar/menu path with '>'-separated segments, e.g. 'Reports > Replicates'")] string menuPath)
+    {
+        return Invoke(connection =>
+        {
+            connection.ClickToolStripItem(formId, menuPath);
+            return $"Clicked toolbar item '{menuPath}' on {formId}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_click_form_button"),
+     Description("Click a control on an open form, matching it by control name or visible text: a " +
+        "button, a checkbox or radio button, a toolbar/menu item, an item in a checked-list box (its " +
+        "check is toggled), or any other control. For a native dialog (IsNative=True from " +
+        "skyline_get_open_forms) this accepts the dialog, or cancels it when the button names the " +
+        "Cancel/Close action. The click is posted asynchronously, so a button that opens another " +
+        "dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
+    public static string ClickFormButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control name or visible label, e.g. 'Add Files', 'OK', or a checkbox label")] string button)
+    {
+        return Invoke(connection =>
+        {
+            connection.ClickFormButton(formId, button);
+            return $"Clicked '{button}' on {formId}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_form_value"),
+     Description("Set the value of a control on an open form. For a native file dialog " +
+        "(Type 'FileDialog') the value is the file name(s) to open and controlId is ignored; select " +
+        "several files by quoting each path and separating with spaces, e.g. \"C:\\a.raw\" \"C:\\b.raw\". " +
+        "For a WinForms form it sets the text, the checked state ('true'/'false'), or the selected " +
+        "item of the control named by controlId; a matched label sets the field it labels. controlId " +
+        "may also be a grid cell locator 'grid[column,row]' (grid name optional) to set that cell.")]
+    public static string SetFormValue(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Control name, a grid cell locator 'grid[column,row]', or ignored for a native file dialog")] string controlId,
+        [Description("Value to set: text, 'true'/'false' for a checkbox, item text for a combo box, " +
+            "or space-separated quoted file paths for a native file dialog")] string value)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetFormValue(formId, controlId, value);
+            return $"Set value on {formId}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_form_value"),
+     Description("Get the current value of a control on an open form, found by its visible label: a text " +
+        "box's text, a combo box's selected item, a check/radio's checked state ('True'/'False'), or a " +
+        "CheckedListBox's checked items (their text, one per line). Pass null for controlId when the form " +
+        "has a single valued control.")]
+    public static string GetFormValue(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("The control's visible label, or null when the form has a single valued control")] string controlId)
+    {
+        return Invoke(connection => connection.GetFormValue(formId, controlId) ?? string.Empty);
+    }
+
+    [McpServerTool(Name = "skyline_set_grid_text"),
+     Description("Paste tab-separated values into a grid on a form, starting at its current cell, the " +
+        "way typing/pasting there would. Move to the target cell first with skyline_set_current_cell_address. " +
+        "Use for the Document Grid and other data grids -- e.g. to fill annotation columns or a rules " +
+        "grid. The text may be a multi-cell block: separate cell values with tabs and rows with " +
+        "newlines (it fills down and to the right). Works for DataboundGridControl grids and plain " +
+        "DataGridView grids.")]
+    public static string SetGridText(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
+        [Description("Tab-separated (and newline-separated) values to paste at the current cell")] string text)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetGridText(formId, controlId, text);
+            return $"Pasted grid text on {formId}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_set_current_cell_address"),
+     Description("Move the current cell of a grid on a form, so the next skyline_set_grid_text pastes " +
+        "there, or a context menu (a path with Type 'ContextMenu' on the grid) opens for that " +
+        "cell. column and row are zero-based indices into the grid's visible columns and its rows -- " +
+        "the same indices skyline_get_grid_text reports.")]
+    public static string SetCurrentCellAddress(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Grid control name on the form, or null when the form has a single grid")] string controlId,
+        [Description("Zero-based column index (into the grid's visible columns)")] int column,
+        [Description("Zero-based row index")] int row)
+    {
+        return Invoke(connection =>
+        {
+            connection.SetCurrentCellAddress(formId, controlId, column, row);
+            return $"Moved to cell (column {column}, row {row}) on {formId}.";
+        });
+    }
+
+    [McpServerTool(Name = "skyline_get_grid_text"),
+     Description("Get all the data in a grid on a form as tab-separated text: the column headers " +
+        "followed by every row, columns separated by tabs and rows by newlines. Use for the Document " +
+        "Grid and other data grids. Works for DataboundGridControl grids and plain DataGridView grids.")]
+    public static string GetGridText(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("Grid control name on the form, or null when the form has a single grid")] string gridId)
+    {
+        return Invoke(connection => connection.GetGridText(formId, gridId));
+    }
+
+    [McpServerTool(Name = "skyline_close_form"),
+     Description("Close an open form: a dialog, a docked or floating tool window (e.g. the Document " +
+        "Grid or Audit Log), or a native file dialog (which is cancelled). Use skyline_get_open_forms " +
+        "to find the form identifier.")]
+    public static string CloseForm(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            connection.CloseForm(formId);
+            return $"Closed {formId}.";
         });
     }
 

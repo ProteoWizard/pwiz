@@ -57,11 +57,8 @@ namespace pwiz.Skyline.ToolsUI
         private  readonly Dictionary<string, DocumentChangeSender> _documentChangeSenders = 
             new Dictionary<string,DocumentChangeSender>();
 
-        private readonly SkylineWindow _skylineWindow;
-
-        public ToolService(string serviceName, SkylineWindow skylineWindow) : base(serviceName)
+        public ToolService(string serviceName) : base(serviceName)
         {
-            _skylineWindow = skylineWindow;
         }
 
         /// <summary>
@@ -114,21 +111,21 @@ namespace pwiz.Skyline.ToolsUI
         public DocumentLocation GetDocumentLocation()
         {
             DocumentLocation documentLocation = null;
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
-                if (!_skylineWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
+                if (!Program.MainWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
                 {
-                    documentLocation = new DocumentLocation(_skylineWindow.SequenceTree.SelectedPath.ToGlobalIndexList());
-                    if (_skylineWindow.Document.Settings.HasResults)
+                    documentLocation = new DocumentLocation(Program.MainWindow.SequenceTree.SelectedPath.ToGlobalIndexList());
+                    if (Program.MainWindow.Document.Settings.HasResults)
                     {
                         var chromatogramSet =
-                            _skylineWindow.Document.Settings.MeasuredResults.Chromatograms[
-                                _skylineWindow.SelectedResultsIndex];
+                            Program.MainWindow.Document.Settings.MeasuredResults.Chromatograms[
+                                Program.MainWindow.SelectedResultsIndex];
                         documentLocation = documentLocation.SetChromFileId(
                             chromatogramSet.MSDataFileInfos.First().FileId.GlobalIndex);
                     }
                 }
-            }));
+            });
             return documentLocation;
         }
 
@@ -139,7 +136,7 @@ namespace pwiz.Skyline.ToolsUI
         [Obsolete]
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 if (documentLocation == null)
                     Program.MainWindow.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID));
@@ -148,20 +145,20 @@ namespace pwiz.Skyline.ToolsUI
                     Bookmark bookmark = Bookmark.ToBookmark(documentLocation, Program.MainWindow.DocumentUI);
                     Program.MainWindow.NavigateToBookmark(bookmark);
                 }
-            }));
+            });
         }
 
         public string GetDocumentLocationName()
         {
             string name = null;
-            Program.MainWindow.Invoke(new Action(() => name = _skylineWindow.SequenceTree.SelectedNode.Text));
+            Program.InvokeOnUiThread(() => name = Program.MainWindow.SequenceTree.SelectedNode.Text);
             return name;
         }
 
         public string GetReplicateName()
         {
             string name = null;
-            Program.MainWindow.Invoke(new Action(() => name = _skylineWindow.SelectedGraphChromName));
+            Program.InvokeOnUiThread(() => name = Program.MainWindow.SelectedGraphChromName);
             return name;
         }
 
@@ -267,7 +264,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <returns>Path to document file.</returns>
         public string GetDocumentPath()
         {
-            return Program.MainWindow.DocumentFilePath;
+            return Program.MainWindow?.DocumentFilePath;
         }
 
         /// <summary>
@@ -293,20 +290,20 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportFasta(string textFasta)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
-                _skylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
+                Program.MainWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
                     false, ToolsUIResources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
-            }));
+            });
         }
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
-                _skylineWindow.InsertSmallMoleculeTransitionList(textCSV,
+                Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
                     Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            }));
+            });
         }
 
         public void AddSpectralLibrary(string libraryName, string libraryPath)
@@ -319,13 +316,13 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             // CONSIDER: Add this Library Spec to Settings.Default.SpectralLibraryList?
-            Program.MainWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
-                _skylineWindow.ModifyDocument(ToolsUIResources.LibrarySpec_Add_spectral_library, doc =>
+                Program.MainWindow.ModifyDocument(ToolsUIResources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
                         lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), AuditLogEntry.SettingsLogFunction);
                 Settings.Default.SpectralLibraryList.Add(librarySpec);
-            }));
+            });
         }
 
         private readonly object _documentChangeSendersLock = new object();
@@ -385,11 +382,11 @@ namespace pwiz.Skyline.ToolsUI
                     catch (TimeoutException)
                     {
                         var error = @"No response from " + documentChangeSender.Value.Name; 
-                        _skylineWindow.BeginInvoke(new Action(() =>
+                        Program.BeginInvokeOnUiThread(() =>
                         {
-                            _skylineWindow.ShowImmediateWindow();
-                            _skylineWindow.ImmediateWindow.WriteLine(error);
-                        }));
+                            Program.MainWindow.ShowImmediateWindow();
+                            Program.MainWindow.ImmediateWindow.WriteLine(error);
+                        });
                         if (!documentChangeSender.Value.CountTimeout(MAX_TIMEOUT_COUNT))
                         {
                             deadSenders.Add(documentChangeSender.Key);
@@ -472,17 +469,17 @@ namespace pwiz.Skyline.ToolsUI
         public void DeleteElements(string[] elementLocatorStrings)
         {
             var elementLocators = elementLocatorStrings.Select(ElementLocator.Parse).ToList();
-            _skylineWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
                 DeleteElementsNow(elementLocators);
-            }));
+            });
         }
 
         private void DeleteElementsNow(IEnumerable<ElementLocator> elementLocators)
         {
-            lock (_skylineWindow.GetDocumentChangeLock())
+            lock (Program.MainWindow.GetDocumentChangeLock())
             {
-                var originalDocument = _skylineWindow.Document;
+                var originalDocument = Program.MainWindow.Document;
                 var document = originalDocument;
                 var nodeRefs = new List<NodeRef>();
                 foreach (var elementLocator in elementLocators)
@@ -505,31 +502,31 @@ namespace pwiz.Skyline.ToolsUI
                     return;
                 }
 
-                DeleteNodesAction.DeleteIdentityPaths(_skylineWindow, identityPathsToDelete);
+                DeleteNodesAction.DeleteIdentityPaths(Program.MainWindow, identityPathsToDelete);
             }
         }
 
         public void ImportProperties(string csvText)
         {
-            _skylineWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
-                _skylineWindow.ImportAnnotations(new StringReader(csvText),
-                    new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType,
+                Program.MainWindow.ImportAnnotations(new StringReader(csvText),
+                    new MessageInfo(MessageType.imported_annotations, Program.MainWindow.Document.DocumentType,
                         ToolsUIResources.ToolService_ImportProperties_Import_Properties_from_external_tool));
-            }));
+            });
         }
 
         public void ImportPeakBoundaries(string csvText)
         {
-            _skylineWindow.Invoke(new Action(() =>
+            Program.InvokeOnUiThread(() =>
             {
-                lock (_skylineWindow.GetDocumentChangeLock())
+                lock (Program.MainWindow.GetDocumentChangeLock())
                 {
-                    var originalDocument = _skylineWindow.DocumentUI;
+                    var originalDocument = Program.MainWindow.DocumentUI;
                     var document = originalDocument;
                     using (var longWaitDlg = new LongWaitDlg())
                     {
-                        longWaitDlg.PerformWork(_skylineWindow, 1000, progressMonitor =>
+                        longWaitDlg.PerformWork(Program.MainWindow, 1000, progressMonitor =>
                         {
                             document = LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, () =>
                             {
@@ -543,7 +540,7 @@ namespace pwiz.Skyline.ToolsUI
                             throw new OperationCanceledException();
                         }
                     }
-                    _skylineWindow.ModifyDocument(
+                    Program.MainWindow.ModifyDocument(
                         ToolsUIResources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool,
                         doc =>
                         {
@@ -556,17 +553,17 @@ namespace pwiz.Skyline.ToolsUI
                             return document;
                         }, docPair =>
                             AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_peak_boundaries,
-                                _skylineWindow.DocumentUI.DocumentType,
+                                Program.MainWindow.DocumentUI.DocumentType,
                                 ToolsUIResources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool)));
                 }
-            }));
+            });
         }
 
         public string GetSelectedElementLocator(string elementType)
         {
             ElementRef result = null;
             Exception exception = null;
-            _skylineWindow.Invoke(new Action(() => 
+            Program.InvokeOnUiThread(() => 
             {
                 try
                 {
@@ -576,7 +573,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     exception = e;
                 }
-            }));
+            });
             if (exception != null)
             {
                 throw new TargetInvocationException(exception);
@@ -586,7 +583,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private ElementRef GetSelectedElementRefNow(string elementType)
         {
-            var document = _skylineWindow.DocumentUI;
+            var document = Program.MainWindow.DocumentUI;
 
             SrmDocument.Level nodeLevel;
             if (elementType == ReplicateRef.PROTOTYPE.ElementType)
@@ -597,7 +594,7 @@ namespace pwiz.Skyline.ToolsUI
                 }
 
                 return ReplicateRef.FromChromatogramSet(document.Settings.MeasuredResults
-                    .Chromatograms[_skylineWindow.ComboResults.SelectedIndex]);
+                    .Chromatograms[Program.MainWindow.ComboResults.SelectedIndex]);
             }
 
             if (elementType == TransitionRef.PROTOTYPE.ElementType)
@@ -621,7 +618,7 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(string.Format(ToolsUIResources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
             }
 
-            var selectedPath = _skylineWindow.SelectedPath;
+            var selectedPath = Program.MainWindow.SelectedPath;
             if (selectedPath.Length <= (int)nodeLevel)
             {
                 return null;

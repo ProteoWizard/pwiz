@@ -95,7 +95,11 @@ namespace SkylineTool
         public string[] GetSettingsListTypes() { return CallTyped<string[]>(nameof(GetSettingsListTypes)); }
         public TutorialListItem[] GetAvailableTutorials() { return CallTyped<TutorialListItem[]>(nameof(GetAvailableTutorials)); }
         public string GetProcessId() { return Call(nameof(GetProcessId)); }
+        public int UnfinishedActionCount() { return CallTyped<int>(nameof(UnfinishedActionCount)); }
         public FormInfo[] GetOpenForms() { return CallTyped<FormInfo[]>(nameof(GetOpenForms)); }
+        public ControlInfo[] GetControls(string formId) { return CallTyped<ControlInfo[]>(nameof(GetControls), formId); }
+        // Returns the result as raw JSON text (object/array) or a string; the caller interprets it by action.
+        public object PerformAction(UiElementPath path, string action, object value) { return Call(nameof(PerformAction), path, action, value); }
         public string GetUiMode() { return Call(nameof(GetUiMode)); }
         public UndoRedoEntry[] GetUndoRedo() { return CallTyped<UndoRedoEntry[]>(nameof(GetUndoRedo)); }
 
@@ -105,6 +109,17 @@ namespace SkylineTool
                 ? CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics))
                 : CallTyped<ReportDocTopicSummary[]>(nameof(GetReportDocTopics), dataSource);
         }
+
+        // UI interaction
+        public void InvokeMenuItem(string menuPath) { Call(nameof(InvokeMenuItem), menuPath); }
+        public void ClickFormButton(string formId, string button) { Call(nameof(ClickFormButton), formId, button); }
+        public void ClickToolStripItem(string formId, string menuPath) { Call(nameof(ClickToolStripItem), formId, menuPath); }
+        public void SetFormValue(string formId, string controlId, string value) { Call(nameof(SetFormValue), formId, controlId, value); }
+        public string GetFormValue(string formId, string controlId) { return Call(nameof(GetFormValue), formId, controlId); }
+        public void SetGridText(string formId, string controlId, string text) { Call(nameof(SetGridText), formId, controlId, text); }
+        public void SetCurrentCellAddress(string formId, string controlId, int column, int row) { Call(nameof(SetCurrentCellAddress), formId, controlId, column, row); }
+        public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
+        public void CloseForm(string formId) { Call(nameof(CloseForm), formId); }
 
         // 1-arg methods
         public string GetSelectedElementLocator(string elementType)

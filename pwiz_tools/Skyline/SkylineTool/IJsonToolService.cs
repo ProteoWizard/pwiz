@@ -310,9 +310,133 @@ namespace SkylineTool
         // --- UI state ---
 
         /// <summary>
+        /// Returns the number of fire-and-forget UI actions (a click, a value set posted by a verb such as
+        /// <see cref="ClickFormButton"/> or <see cref="SetFormValue"/>) that have been posted but have not
+        /// yet finished. An action that opens a modal dialog stays counted until that modal closes, so this
+        /// is usually equal to the number of modal dialogs those actions have raised and left open. Poll it
+        /// to wait until pending sets/clicks have actually been applied.
+        /// </summary>
+        int UnfinishedActionCount();
+
+        /// <summary>
         /// Returns information about all open forms, panels, and dialogs.
         /// </summary>
         FormInfo[] GetOpenForms();
+
+        /// <summary>
+        /// Lists the interactive controls on a form so a caller can discover what is there -- and how to
+        /// address it -- without reading the source. Each control reports its Name (informational), Type,
+        /// the visible Label that names it, current Value, enabled/visible state, and the actions it
+        /// supports. Match a control by its Label, or -- when it has none -- by its Type.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        ControlInfo[] GetControls(string formId);
+
+        /// <summary>
+        /// The most general way to interact with a control, menu item, or list item: locate it by the
+        /// <paramref name="path"/> (only the set properties are used -- see <see cref="UiElementPath"/>),
+        /// then perform <paramref name="action"/> on it. The action determines the type expected for
+        /// <paramref name="value"/> and the type returned. Every control supports "get_actions" (returns
+        /// <c>ActionInfo[]</c> -- each action's name, a description, and the value it takes) and
+        /// "get_children" (returns <c>ControlInfo[]</c>);
+        /// other actions are "click" (returns null), "set_value" (takes a value -- a bool, double, or
+        /// string -- and returns null), and "get_value" (returns the control's current value, which is
+        /// null or one of those same three types). The typed verbs (e.g.
+        /// <see cref="ClickFormButton"/>) remain for the common cases.
+        /// </summary>
+        object PerformAction(UiElementPath path, string action, object value);
+
+        /// <summary>
+        /// Invokes a main-menu item by its visible path, e.g. "File > Import > Peptide Search".
+        /// Each segment is matched against a menu item's text (mnemonic '&amp;' and trailing
+        /// ellipsis ignored) or its control name, case-insensitively. The click is posted
+        /// asynchronously, so an item that opens a modal dialog returns immediately; poll
+        /// <see cref="GetOpenForms"/> for the resulting form.
+        /// </summary>
+        /// <param name="menuPath">Menu path; segments separated by '>' (also '|' or '/').</param>
+        void InvokeMenuItem(string menuPath);
+
+        /// <summary>
+        /// Clicks a control on an open form, matching <paramref name="button"/> against the control's
+        /// name or visible text: a Button, a CheckBox or RadioButton, a custom IButtonControl (e.g. a
+        /// StartPage tile), a ToolStrip / menu / toolbar item, or any other control. For a native
+        /// dialog this accepts the dialog, or cancels it when <paramref name="button"/> names the
+        /// cancel/close action. The click is posted asynchronously when it may open a modal dialog.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="button">Control name or visible label.</param>
+        void ClickFormButton(string formId, string button);
+
+        /// <summary>
+        /// Clicks an item on a form's ToolStrip (toolbar / menu strip) by its path, e.g.
+        /// "Reports &gt; Replicates". Each level's dropdown is opened first so items built on demand
+        /// (not in the static menu, e.g. the Document Grid's report list) are present before matching.
+        /// Each segment is matched by item name or visible text, like <see cref="InvokeMenuItem"/>.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="menuPath">Toolbar/menu path; segments separated by '>' (also '|' or '/').</param>
+        void ClickToolStripItem(string formId, string menuPath);
+
+        /// <summary>
+        /// Sets the value of a control on an open form. For a native file dialog the value is the
+        /// file name(s) to open -- use <c>"a" "b"</c> quoting to select several -- and
+        /// <paramref name="controlId"/> is ignored. For a WinForms form it sets the text, checked
+        /// state, or selected item of the control named <paramref name="controlId"/> (a matched label
+        /// sets the field it labels). <paramref name="controlId"/> may also be a grid cell locator
+        /// "grid[column,row]" (grid name optional) to set that cell.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">Control name, a grid cell locator "grid[column,row]", or ignored for a native file dialog.</param>
+        /// <param name="value">Text, "true"/"false", or item text, per control kind.</param>
+        void SetFormValue(string formId, string controlId, string value);
+
+        /// <summary>
+        /// Returns the current value of a control on a form, found by its visible label: a text box's
+        /// text, a combo box's selected item, a check/radio's checked state, or a CheckedListBox's checked
+        /// items (their text, one per line).
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">The control's visible label, or null when the form has a single valued control.</param>
+        string GetFormValue(string formId, string controlId);
+
+        /// <summary>
+        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at its current
+        /// cell -- move there first with <see cref="SetCurrentCellAddress"/>. The text may be a multi-cell TSV
+        /// block (it fills down and to the right). Works for the Document Grid (and other
+        /// DataboundGridControl grids) and for a plain DataGridView.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
+        /// <param name="text">Tab-separated (and newline-separated) values to paste at the current cell.</param>
+        void SetGridText(string formId, string controlId, string text);
+
+        /// <summary>
+        /// Moves the current cell of a grid on a form (move there before pasting with
+        /// <see cref="SetGridText"/> or opening the cell's context menu). <paramref name="column"/> is the
+        /// visible-column index and <paramref name="row"/> is the row index -- the same indices the grid
+        /// reports columns and rows in.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
+        /// <param name="column">The target visible-column index.</param>
+        /// <param name="row">The target row index.</param>
+        void SetCurrentCellAddress(string formId, string controlId, int column, int row);
+
+        /// <summary>
+        /// Returns all the text in a grid on a form -- the column headers followed by every data row --
+        /// as tab-separated columns and newline-separated rows. Works for the Document Grid (and other
+        /// DataboundGridControl grids) and for a plain DataGridView.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="gridId">Grid control name, or null when the form has a single grid.</param>
+        string GetGridText(string formId, string gridId);
+
+        /// <summary>
+        /// Closes an open form: a dialog, a docked or floating tool window (e.g. the Document Grid or
+        /// Audit Log), or a native dialog (which is cancelled).
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        void CloseForm(string formId);
 
         /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
