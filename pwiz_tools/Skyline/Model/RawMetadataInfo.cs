@@ -60,31 +60,6 @@ namespace pwiz.Skyline.Model
             return string.Empty;
         }
 
-        // Value equality so FullScanProperties.IsSameAs treats two scans with identical raw metadata
-        // as unchanged and the property grid is not needlessly rebuilt (which would drop selection).
-        protected bool Equals(RawMetadataInfo other)
-        {
-            return _terms.SequenceEqual(other._terms);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((RawMetadataInfo) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            int hashCode = _terms.Count;
-            foreach (var term in _terms)
-            {
-                hashCode = (hashCode * 397) ^ (term != null ? term.GetHashCode() : 0);
-            }
-            return hashCode;
-        }
-
         public PropertyDescriptorCollection GetProperties()
         {
             return GetProperties(null);

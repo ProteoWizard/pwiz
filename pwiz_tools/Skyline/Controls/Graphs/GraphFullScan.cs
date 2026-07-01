@@ -956,6 +956,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
         public void ShowSpectrum(IScanProvider scanProvider, int transitionIndex, int scanIndex, int? optStep)
         {
+            if (scanProvider != null)
+            {
+                // The full-scan viewer displays the scan's uninterpreted mzML CV/user parameters.
+                scanProvider.CaptureOtherParams = true;
+            }
             _msDataFileScanHelper.UpdateScanProvider(scanProvider, transitionIndex, scanIndex, optStep);
             if (scanProvider != null)
             {

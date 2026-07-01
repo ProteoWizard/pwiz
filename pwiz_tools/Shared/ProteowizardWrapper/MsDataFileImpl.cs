@@ -1590,16 +1590,34 @@ namespace pwiz.ProteowizardWrapper
         private static List<SpectrumMetadataTerm> GetOtherParams(Spectrum spectrum)
         {
             var terms = new List<SpectrumMetadataTerm>();
+            // Keyed by accession/name only: a term is shown once (first value wins). Terms repeated
+            // across scan windows with differing values are vanishingly rare for the params walked here.
             var seen = new HashSet<string>();
-            AddCvParams(terms, seen, spectrum.cvParams);
-            AddUserParams(terms, seen, spectrum.userParams);
-            foreach (var scan in spectrum.scanList.scans)
+            using (var cvParams = spectrum.cvParams)
             {
-                AddCvParams(terms, seen, scan.cvParams);
-                AddUserParams(terms, seen, scan.userParams);
-                foreach (var window in scan.scanWindows)
+                AddCvParams(terms, seen, cvParams);
+            }
+            using (var userParams = spectrum.userParams)
+            {
+                AddUserParams(terms, seen, userParams);
+            }
+            using var scanList = spectrum.scanList;
+            using var scans = scanList.scans;
+            foreach (var scan in scans)
+            {
+                using (var scanCvParams = scan.cvParams)
                 {
-                    AddCvParams(terms, seen, window.cvParams);
+                    AddCvParams(terms, seen, scanCvParams);
+                }
+                using (var scanUserParams = scan.userParams)
+                {
+                    AddUserParams(terms, seen, scanUserParams);
+                }
+                using var scanWindows = scan.scanWindows;
+                foreach (var window in scanWindows)
+                {
+                    using var windowCvParams = window.cvParams;
+                    AddCvParams(terms, seen, windowCvParams);
                 }
             }
             return terms;

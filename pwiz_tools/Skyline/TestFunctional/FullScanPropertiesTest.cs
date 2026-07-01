@@ -53,7 +53,12 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             ClickChromatogram(31.1123047521535, 43338.2577592845, PaneKey.PRODUCTS);
             var graphFullScan = WaitForOpenForm<GraphFullScan>();
-            RunUI(() => graphFullScan.ShowPropertiesSheet = true);
+            RunUI(() =>
+            {
+                graphFullScan.ShowPropertiesSheet = true;
+                graphFullScan.SetShowAnnotations(true);
+                graphFullScan.SetShowAnnotations(false);
+            });
             WaitForGraphs();
             VerifyRawMetadata(graphFullScan);
             VerifyExpansionPersistsAcrossScans(graphFullScan);
