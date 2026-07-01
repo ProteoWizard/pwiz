@@ -191,8 +191,11 @@ namespace pwiz.Skyline.Model
 
         /// <summary>
         /// The displayed scan's uninterpreted mzML CV/user parameters, shown as an expandable node in
-        /// its own top-level "Raw Metadata" category. Null when the scan reports none.
+        /// its own top-level "Raw Metadata" category. Null when the scan reports none. Excluded from
+        /// the property-sheet comparison/serialization (its terms are file-specific and are covered by
+        /// their own test); this only affects comparison, not what the grid displays.
         /// </summary>
+        [UseToCompare(false)]
         [Category("RawMetadata")]
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public RawMetadataInfo RawMetadata { get; set; }
