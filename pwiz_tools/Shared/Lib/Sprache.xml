@@ -1,0 +1,1199 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Sprache</name>
+    </assembly>
+    <members>
+        <member name="T:Sprache.CommentParser">
+            <summary>
+            Constructs customizable comment parsers.
+            </summary>
+        </member>
+        <member name="P:Sprache.CommentParser.Single">
+            <summary>
+            Single-line comment header.
+            </summary>
+        </member>
+        <member name="P:Sprache.CommentParser.NewLine">
+            <summary>
+            Newline character preference.
+            </summary>
+        </member>
+        <member name="P:Sprache.CommentParser.MultiOpen">
+            <summary>
+            Multi-line comment opener.
+            </summary>
+        </member>
+        <member name="P:Sprache.CommentParser.MultiClose">
+            <summary>
+            Multi-line comment closer.
+            </summary>
+        </member>
+        <member name="M:Sprache.CommentParser.#ctor">
+            <summary>
+            Initializes a Comment with C-style headers and Windows newlines.
+            </summary>
+        </member>
+        <member name="M:Sprache.CommentParser.#ctor(System.String,System.String,System.String)">
+            <summary>
+            Initializes a Comment with custom multi-line headers and newline characters.
+            Single-line headers are made null, it is assumed they would not be used.
+            </summary>
+            <param name="multiOpen"></param>
+            <param name="multiClose"></param>
+            <param name="newLine"></param>
+        </member>
+        <member name="M:Sprache.CommentParser.#ctor(System.String,System.String,System.String,System.String)">
+            <summary>
+            Initializes a Comment with custom headers and newline characters.
+            </summary>
+            <param name="single"></param>
+            <param name="multiOpen"></param>
+            <param name="multiClose"></param>
+            <param name="newLine"></param>
+        </member>
+        <member name="P:Sprache.CommentParser.SingleLineComment">
+            <summary>
+            Parse a single-line comment.
+            </summary>
+        </member>
+        <member name="P:Sprache.CommentParser.MultiLineComment">
+            <summary>
+            Parse a multi-line comment.
+            </summary>
+        </member>
+        <member name="P:Sprache.CommentParser.AnyComment">
+            <summary>
+            Parse a comment.
+            </summary>
+        </member>
+        <member name="T:Sprache.IComment">
+            <summary>
+            Represents a customizable comment parser.
+            </summary>
+        </member>
+        <member name="P:Sprache.IComment.Single">
+            <summary>
+             Single-line comment header.
+            </summary>
+        </member>
+        <member name="P:Sprache.IComment.NewLine">
+            <summary>
+             Newline character preference.
+            </summary>
+        </member>
+        <member name="P:Sprache.IComment.MultiOpen">
+            <summary>
+             Multi-line comment opener.
+            </summary>
+        </member>
+        <member name="P:Sprache.IComment.MultiClose">
+            <summary>
+             Multi-line comment closer.
+            </summary>
+        </member>
+        <member name="P:Sprache.IComment.SingleLineComment">
+            <summary>
+             Parse a single-line comment.
+            </summary>
+        </member>
+        <member name="P:Sprache.IComment.MultiLineComment">
+            <summary>
+             Parse a multi-line comment.
+            </summary>
+        </member>
+        <member name="P:Sprache.IComment.AnyComment">
+            <summary>
+             Parse a comment.
+            </summary>
+        </member>
+        <member name="T:Sprache.ICommented`1">
+            <summary>
+            Represents a commented result with its leading and trailing comments.
+            </summary>
+            <typeparam name="T">Type of the matched result.</typeparam>
+        </member>
+        <member name="P:Sprache.ICommented`1.LeadingComments">
+            <summary>
+            Gets the leading comments.
+            </summary>
+        </member>
+        <member name="P:Sprache.ICommented`1.Value">
+            <summary>
+            Gets the resulting value.
+            </summary>
+        </member>
+        <member name="P:Sprache.ICommented`1.TrailingComments">
+            <summary>
+            Gets the trailing comments.
+            </summary>
+        </member>
+        <member name="T:Sprache.IInput">
+            <summary>
+            Represents an input for parsing.
+            </summary>
+        </member>
+        <member name="M:Sprache.IInput.Advance">
+            <summary>
+            Advances the input.
+            </summary>
+            <returns>A new <see cref="T:Sprache.IInput" /> that is advanced.</returns>
+            <exception cref="T:System.InvalidOperationException">The input is already at the end of the source.</exception>
+        </member>
+        <member name="P:Sprache.IInput.Source">
+            <summary>
+            Gets the whole source.
+            </summary>
+        </member>
+        <member name="P:Sprache.IInput.Current">
+            <summary>
+            Gets the current <see cref="T:System.Char" />.
+            </summary>
+        </member>
+        <member name="P:Sprache.IInput.AtEnd">
+            <summary>
+            Gets a value indicating whether the end of the source is reached.
+            </summary>
+        </member>
+        <member name="P:Sprache.IInput.Position">
+            <summary>
+            Gets the current positon.
+            </summary>
+        </member>
+        <member name="P:Sprache.IInput.Line">
+            <summary>
+            Gets the current line number.
+            </summary>
+        </member>
+        <member name="P:Sprache.IInput.Column">
+            <summary>
+            Gets the current column.
+            </summary>
+        </member>
+        <member name="P:Sprache.IInput.Memos">
+            <summary>
+            Memos used by this input
+            </summary>
+        </member>
+        <member name="T:Sprache.Input">
+            <summary>
+            Represents an input for parsing.
+            </summary>
+        </member>
+        <member name="P:Sprache.Input.Memos">
+            <summary>
+            Gets the list of memos assigned to the <see cref="T:Sprache.Input" /> instance.
+            </summary>
+        </member>
+        <member name="M:Sprache.Input.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sprache.Input" /> class.
+            </summary>
+            <param name="source">The source.</param>
+        </member>
+        <member name="M:Sprache.Input.Advance">
+            <summary>
+            Advances the input.
+            </summary>
+            <returns>A new <see cref="T:Sprache.IInput" /> that is advanced.</returns>
+            <exception cref="T:System.InvalidOperationException">The input is already at the end of the source.</exception>
+        </member>
+        <member name="P:Sprache.Input.Source">
+            <summary>
+            Gets the whole source.
+            </summary>
+        </member>
+        <member name="P:Sprache.Input.Current">
+            <summary>
+            Gets the current <see cref="T:System.Char" />.
+            </summary>
+        </member>
+        <member name="P:Sprache.Input.AtEnd">
+            <summary>
+            Gets a value indicating whether the end of the source is reached.
+            </summary>
+        </member>
+        <member name="P:Sprache.Input.Position">
+            <summary>
+            Gets the current positon.
+            </summary>
+        </member>
+        <member name="P:Sprache.Input.Line">
+            <summary>
+            Gets the current line number.
+            </summary>
+        </member>
+        <member name="P:Sprache.Input.Column">
+            <summary>
+            Gets the current column.
+            </summary>
+        </member>
+        <member name="M:Sprache.Input.ToString">
+            <summary>
+            Returns a string that represents the current object.
+            </summary>
+            <returns>
+            A string that represents the current object.
+            </returns>
+        </member>
+        <member name="M:Sprache.Input.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type.
+            </summary>
+            <returns>
+            A hash code for the current <see cref="T:Sprache.Input" />.
+            </returns>
+        </member>
+        <member name="M:Sprache.Input.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:Sprache.Input" />.
+            </summary>
+            <returns>
+            true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:Sprache.Input" />; otherwise, false.
+            </returns>
+            <param name="obj">The object to compare with the current object. </param>
+        </member>
+        <member name="M:Sprache.Input.Equals(Sprache.IInput)">
+            <summary>
+            Indicates whether the current <see cref="T:Sprache.Input" /> is equal to another object of the same type.
+            </summary>
+            <returns>
+            true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+            </returns>
+            <param name="other">An object to compare with this object.</param>
+        </member>
+        <member name="M:Sprache.Input.op_Equality(Sprache.Input,Sprache.Input)">
+            <summary>
+            Indicates whether the left <see cref="T:Sprache.Input" /> is equal to the right <see cref="T:Sprache.Input" />.
+            </summary>
+            <param name="left">The left <see cref="T:Sprache.Input" />.</param>
+            <param name="right">The right <see cref="T:Sprache.Input" />.</param>
+            <returns>true if both objects are equal.</returns>
+        </member>
+        <member name="M:Sprache.Input.op_Inequality(Sprache.Input,Sprache.Input)">
+            <summary>
+            Indicates whether the left <see cref="T:Sprache.Input" /> is not equal to the right <see cref="T:Sprache.Input" />.
+            </summary>
+            <param name="left">The left <see cref="T:Sprache.Input" />.</param>
+            <param name="right">The right <see cref="T:Sprache.Input" />.</param>
+            <returns>true if the objects are not equal.</returns>
+        </member>
+        <member name="T:Sprache.IPositionAware`1">
+            <summary>
+            An interface for objects that have a source <see cref="T:Sprache.Position"/>.
+            </summary>
+            <typeparam name="T">Type of the matched result.</typeparam>
+        </member>
+        <member name="M:Sprache.IPositionAware`1.SetPos(Sprache.Position,System.Int32)">
+            <summary>
+            Set the start <see cref="T:Sprache.Position"/> and the matched length.
+            </summary>
+            <param name="startPos">The start position</param>
+            <param name="length">The matched length.</param>
+            <returns>The matched result.</returns>
+        </member>
+        <member name="T:Sprache.IResult`1">
+            <summary>
+            Represents a parsing result.
+            </summary>
+            <typeparam name="T">The result type.</typeparam>
+        </member>
+        <member name="P:Sprache.IResult`1.Value">
+            <summary>
+            Gets the resulting value.
+            </summary>
+        </member>
+        <member name="P:Sprache.IResult`1.WasSuccessful">
+            <summary>
+            Gets a value indicating whether wether parsing was successful.
+            </summary>
+        </member>
+        <member name="P:Sprache.IResult`1.Message">
+            <summary>
+            Gets the error message.
+            </summary>
+        </member>
+        <member name="P:Sprache.IResult`1.Expectations">
+            <summary>
+            Gets the parser expectations in case of error.
+            </summary>
+        </member>
+        <member name="P:Sprache.IResult`1.Remainder">
+            <summary>
+            Gets the remainder of the input.
+            </summary>
+        </member>
+        <member name="T:Sprache.ITextSpan`1">
+            <summary>
+            Represents a text span of the matched result.
+            </summary>
+            <typeparam name="T">Type of the matched result.</typeparam>
+        </member>
+        <member name="P:Sprache.ITextSpan`1.Value">
+            <summary>
+            Gets the resulting value.
+            </summary>
+        </member>
+        <member name="P:Sprache.ITextSpan`1.Start">
+            <summary>
+            Gets the starting <see cref="T:Sprache.Position"/>.
+            </summary>
+        </member>
+        <member name="P:Sprache.ITextSpan`1.End">
+            <summary>
+            Gets the ending <see cref="T:Sprache.Position"/>.
+            </summary>
+        </member>
+        <member name="P:Sprache.ITextSpan`1.Length">
+            <summary>
+            Gets the length of the text span.
+            </summary>
+        </member>
+        <member name="T:Sprache.IOption`1">
+            <summary>
+            Represents an optional result.
+            </summary>
+            <typeparam name="T">The result type.</typeparam>
+        </member>
+        <member name="P:Sprache.IOption`1.IsEmpty">
+            <summary>
+            Gets a value indicating whether this instance is empty.
+            </summary>
+        </member>
+        <member name="P:Sprache.IOption`1.IsDefined">
+            <summary>
+            Gets a value indicating whether this instance is defined.
+            </summary>
+        </member>
+        <member name="M:Sprache.IOption`1.GetOrDefault">
+            <summary>
+            Gets the matched result or a default value.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.IOption`1.Get">
+            <summary>
+            Gets the matched result.
+            </summary>
+        </member>
+        <member name="T:Sprache.OptionExtensions">
+            <summary>
+            Extensions for <see cref="T:Sprache.IOption`1"/>.
+            </summary>
+        </member>
+        <member name="M:Sprache.OptionExtensions.GetOrElse``1(Sprache.IOption{``0},``0)">
+            <summary>
+            Gets the value or else returns a default value.
+            </summary>
+            <typeparam name="T">The result type.</typeparam>
+            <param name="option"></param>
+            <param name="defaultValue">The default value.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.OptionExtensions.Select``2(Sprache.IOption{``0},System.Func{``0,``1})">
+            <summary>
+            Maps a function over the value or else returns an empty option.
+            </summary>
+            <typeparam name="T">The input type.</typeparam>
+            <typeparam name="U">The output type.</typeparam>
+            <param name="option">The option containing the value to apply <paramref name="map" /> to.</param>
+            <param name="map">The function to apply to the value of <paramref name="option" />.</param>
+            <returns>An options result containing the result if there was an input value.</returns>
+        </member>
+        <member name="M:Sprache.OptionExtensions.SelectMany``3(Sprache.IOption{``0},System.Func{``0,Sprache.IOption{``1}},System.Func{``0,``1,``2})">
+            <summary>
+            Binds the value to a function with optional result and flattens the result to a single optional.
+            A result projection is applied aftherwards.
+            </summary>
+            <typeparam name="T">The input type.</typeparam>
+            <typeparam name="U">The output type of <paramref name="bind" />.</typeparam>
+            <typeparam name="V">The final output type.</typeparam>
+            <param name="option">The option containing the value to bind to.</param>
+            <param name="bind">The function that receives the input values and returns an optional value.</param>
+            <param name="project">The function that is projects the result of <paramref name="bind" />.</param>
+            <returns>An option result containing the result if there were was an input value and bind result.</returns>
+        </member>
+        <member name="M:Sprache.OptionExtensions.SelectMany``2(Sprache.IOption{``0},System.Func{``0,Sprache.IOption{``1}})">
+            <summary>
+            Binds the value to a function with optional result and flattens the result to a single optional.
+            </summary>
+            <typeparam name="T">The input type.</typeparam>
+            <typeparam name="U">The output type.</typeparam>
+            <param name="option">The option containing the value to bind to.</param>
+            <param name="bind">The function that receives the input values and returns an optional value.</param>
+            <returns>An option result containing the result if there were was an input value and bind result.</returns>
+        </member>
+        <member name="T:Sprache.Parse">
+            <summary>
+            Parsers and combinators.
+            </summary>
+        </member>
+        <member name="T:Sprache.Parse.TextSpan`1">
+            <summary>
+            Represents a text span of the matched result.
+            </summary>
+            <typeparam name="T">Type of the matched result.</typeparam>
+        </member>
+        <member name="M:Sprache.Parse.Span``1(Sprache.Parser{``0})">
+            <summary>
+            Constructs a parser that returns the <see cref="T:Sprache.ITextSpan`1"/> of the parsed value.
+            </summary>
+            <typeparam name="T">The result type of the given parser.</typeparam>
+            <param name="parser">The parser to wrap.</param>
+            <returns>A parser for the text span of the given parser.</returns>
+        </member>
+        <member name="T:Sprache.Parse.CommentedValue`1">
+            <summary>
+            Represents a commented result with its leading and trailing comments.
+            </summary>
+            <typeparam name="T">Type of the matched result.</typeparam>
+        </member>
+        <member name="M:Sprache.Parse.Commented``1(Sprache.Parser{``0},Sprache.IComment)">
+            <summary>
+            Constructs a parser that consumes a whitespace and all comments
+            parsed by the commentParser.AnyComment parser, but parses only one trailing
+            comment that starts exactly on the last line of the parsed value.
+            </summary>
+            <typeparam name="T">The result type of the given parser.</typeparam>
+            <param name="parser">The parser to wrap.</param>
+            <param name="commentParser">The comment parser.</param>
+            <returns>An extended Token() version of the given parser.</returns>
+        </member>
+        <member name="M:Sprache.Parse.Char(System.Predicate{System.Char},System.String)">
+            <summary>
+            TryParse a single character matching 'predicate'
+            </summary>
+            <param name="predicate"></param>
+            <param name="description"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.CharExcept(System.Predicate{System.Char},System.String)">
+            <summary>
+            Parse a single character except those matching <paramref name="predicate"/>.
+            </summary>
+            <param name="predicate">Characters not to match.</param>
+            <param name="description">Description of characters that don't match.</param>
+            <returns>A parser for characters except those matching <paramref name="predicate"/>.</returns>
+        </member>
+        <member name="M:Sprache.Parse.Char(System.Char)">
+            <summary>
+            Parse a single character c.
+            </summary>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Chars(System.Char[])">
+            <summary>
+            Parse a single character of any in c
+            </summary>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Chars(System.String)">
+            <summary>
+            Parse a single character of any in c
+            </summary>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.CharExcept(System.Char)">
+            <summary>
+            Parse a single character except c.
+            </summary>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.CharExcept(System.Collections.Generic.IEnumerable{System.Char})">
+            <summary>
+            Parses a single character except for those in the given parameters
+            </summary>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.CharExcept(System.String)">
+            <summary>
+            Parses a single character except for those in c
+            </summary>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.IgnoreCase(System.Char)">
+            <summary>
+            Parse a single character in a case-insensitive fashion.
+            </summary>
+            <param name="c"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.IgnoreCase(System.String)">
+            <summary>
+            Parse a string in a case-insensitive fashion.
+            </summary>
+            <param name="s"></param>
+            <returns></returns>
+        </member>
+        <member name="F:Sprache.Parse.AnyChar">
+            <summary>
+            Parse any character.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.WhiteSpace">
+            <summary>
+            Parse a whitespace.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.Digit">
+            <summary>
+            Parse a digit.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.Letter">
+            <summary>
+            Parse a letter.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.LetterOrDigit">
+            <summary>
+            Parse a letter or digit.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.Lower">
+            <summary>
+            Parse a lowercase letter.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.Upper">
+            <summary>
+            Parse an uppercase letter.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.Numeric">
+            <summary>
+            Parse a numeric character.
+            </summary>
+        </member>
+        <member name="M:Sprache.Parse.String(System.String)">
+            <summary>
+            Parse a string of characters.
+            </summary>
+            <param name="s"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Not``1(Sprache.Parser{``0})">
+            <summary>
+            Constructs a parser that will fail if the given parser succeeds,
+            and will succeed if the given parser fails. In any case, it won't
+            consume any input. It's like a negative look-ahead in regex.
+            </summary>
+            <typeparam name="T">The result type of the given parser</typeparam>
+            <param name="parser">The parser to wrap</param>
+            <returns>A parser that is the opposite of the given parser.</returns>
+        </member>
+        <member name="M:Sprache.Parse.Then``2(Sprache.Parser{``0},System.Func{``0,Sprache.Parser{``1}})">
+            <summary>
+            Parse first, and if successful, then parse second.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <param name="first"></param>
+            <param name="second"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Many``1(Sprache.Parser{``0})">
+            <summary>
+            Parse a stream of elements.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <returns></returns>
+            <remarks>Implemented imperatively to decrease stack usage.</remarks>
+        </member>
+        <member name="M:Sprache.Parse.XMany``1(Sprache.Parser{``0})">
+            <summary>
+            Parse a stream of elements, failing if any element is only partially parsed.
+            </summary>
+            <typeparam name="T">The type of element to parse.</typeparam>
+            <param name="parser">A parser that matches a single element.</param>
+            <returns>A <see cref="T:Sprache.Parser`1"/> that matches the sequence.</returns>
+            <remarks>
+            <para>
+            Using <seealso cref="M:Sprache.Parse.XMany``1(Sprache.Parser{``0})"/> may be preferable to <seealso cref="M:Sprache.Parse.Many``1(Sprache.Parser{``0})"/>
+            where the first character of each match identified by <paramref name="parser"/>
+            is sufficient to determine whether the entire match should succeed. The X*
+            methods typically give more helpful errors and are easier to debug than their
+            unqualified counterparts.
+            </para>
+            </remarks>
+            <seealso cref="M:Sprache.Parse.XOr``1(Sprache.Parser{``0},Sprache.Parser{``0})"/>
+        </member>
+        <member name="M:Sprache.Parse.AtLeastOnce``1(Sprache.Parser{``0})">
+            <summary>
+            TryParse a stream of elements with at least one item.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.XAtLeastOnce``1(Sprache.Parser{``0})">
+            <summary>
+            TryParse a stream of elements with at least one item. Except the first
+            item, all other items will be matched with the <code>XMany</code> operator.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.End``1(Sprache.Parser{``0})">
+            <summary>
+            Parse end-of-input.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Select``2(Sprache.Parser{``0},System.Func{``0,``1})">
+            <summary>
+            Take the result of parsing, and project it onto a different domain.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <param name="parser"></param>
+            <param name="convert"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Token``1(Sprache.Parser{``0})">
+            <summary>
+            Parse the token, embedded in any amount of whitespace characters.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Ref``1(System.Func{Sprache.Parser{``0}})">
+            <summary>
+            Refer to another parser indirectly. This allows circular compile-time dependency between parsers.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="reference"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Text(Sprache.Parser{System.Collections.Generic.IEnumerable{System.Char}})">
+            <summary>
+            Convert a stream of characters to a string.
+            </summary>
+            <param name="characters"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Or``1(Sprache.Parser{``0},Sprache.Parser{``0})">
+            <summary>
+            Parse first, if it succeeds, return first, otherwise try second.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="first"></param>
+            <param name="second"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Named``1(Sprache.Parser{``0},System.String)">
+            <summary>
+            Names part of the grammar for help with error messages.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <param name="name"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.XOr``1(Sprache.Parser{``0},Sprache.Parser{``0})">
+            <summary>
+            Parse first, if it succeeds, return first, otherwise try second.
+            Assumes that the first parsed character will determine the parser chosen (see Try).
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="first"></param>
+            <param name="second"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Once``1(Sprache.Parser{``0})">
+            <summary>
+            Parse a stream of elements containing only one item.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Concat``1(Sprache.Parser{System.Collections.Generic.IEnumerable{``0}},Sprache.Parser{System.Collections.Generic.IEnumerable{``0}})">
+            <summary>
+            Concatenate two streams of elements.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="first"></param>
+            <param name="second"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Return``1(``0)">
+            <summary>
+            Succeed immediately and return value.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Return``2(Sprache.Parser{``0},``1)">
+            <summary>
+            Version of Return with simpler inline syntax.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <param name="parser"></param>
+            <param name="value"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Except``2(Sprache.Parser{``0},Sprache.Parser{``1})">
+            <summary>
+            Attempt parsing only if the <paramref name="except"/> parser fails.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <param name="parser"></param>
+            <param name="except"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Until``2(Sprache.Parser{``0},Sprache.Parser{``1})">
+            <summary>
+            Parse a sequence of items until a terminator is reached.
+            Returns the sequence, discarding the terminator.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <param name="parser"></param>
+            <param name="until"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.Where``1(Sprache.Parser{``0},System.Func{``0,System.Boolean})">
+            <summary>
+            Succeed if the parsed value matches predicate.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <param name="predicate"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.SelectMany``3(Sprache.Parser{``0},System.Func{``0,Sprache.Parser{``1}},System.Func{``0,``1,``2})">
+            <summary>
+            Monadic combinator Then, adapted for Linq comprehension syntax.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <typeparam name="V"></typeparam>
+            <param name="parser"></param>
+            <param name="selector"></param>
+            <param name="projector"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.ChainOperator``2(Sprache.Parser{``1},Sprache.Parser{``0},System.Func{``1,``0,``0,``0})">
+            <summary>
+            Chain a left-associative operator.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="TOp"></typeparam>
+            <param name="op"></param>
+            <param name="operand"></param>
+            <param name="apply"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.XChainOperator``2(Sprache.Parser{``1},Sprache.Parser{``0},System.Func{``1,``0,``0,``0})">
+            <summary>
+            Chain a left-associative operator.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="TOp"></typeparam>
+            <param name="op"></param>
+            <param name="operand"></param>
+            <param name="apply"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.ChainRightOperator``2(Sprache.Parser{``1},Sprache.Parser{``0},System.Func{``1,``0,``0,``0})">
+            <summary>
+            Chain a right-associative operator.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="TOp"></typeparam>
+            <param name="op"></param>
+            <param name="operand"></param>
+            <param name="apply"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Sprache.Parse.XChainRightOperator``2(Sprache.Parser{``1},Sprache.Parser{``0},System.Func{``1,``0,``0,``0})">
+            <summary>
+            Chain a right-associative operator.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <typeparam name="TOp"></typeparam>
+            <param name="op"></param>
+            <param name="operand"></param>
+            <param name="apply"></param>
+            <returns></returns>
+        </member>
+        <member name="F:Sprache.Parse.Number">
+            <summary>
+            Parse a number.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.Decimal">
+            <summary>
+            Parse a decimal number using the current culture's separator character.
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.DecimalInvariant">
+            <summary>
+            Parse a decimal number with separator '.'.
+            </summary>
+        </member>
+        <member name="M:Sprache.Parse.Optional``1(Sprache.Parser{``0})">
+            <summary>
+            Construct a parser that indicates that the given parser
+            is optional. The returned parser will succeed on
+            any input no matter whether the given parser
+            succeeds or not.
+            </summary>
+            <typeparam name="T">The result type of the given parser.</typeparam>
+            <param name="parser">The parser to wrap.</param>
+            <returns>An optional version of the given parser.</returns>
+        </member>
+        <member name="M:Sprache.Parse.XOptional``1(Sprache.Parser{``0})">
+            <summary>
+            Constructs the eXclusive version of the Optional{T} parser.
+            </summary>
+            <typeparam name="T">The result type of the given parser</typeparam>
+            <param name="parser">The parser to wrap</param>
+            <returns>An eXclusive optional version of the given parser.</returns>
+            <seealso cref="M:Sprache.Parse.XOr``1(Sprache.Parser{``0},Sprache.Parser{``0})"/>
+        </member>
+        <member name="M:Sprache.Parse.Preview``1(Sprache.Parser{``0})">
+            <summary>
+            Construct a parser that indicates that the given parser is optional
+            and non-consuming. The returned parser will succeed on
+            any input no matter whether the given parser succeeds or not.
+            In any case, it won't consume any input, like a positive look-ahead in regex.
+            </summary>
+            <typeparam name="T">The result type of the given parser.</typeparam>
+            <param name="parser">The parser to wrap.</param>
+            <returns>A non-consuming version of the given parser.</returns>
+        </member>
+        <member name="M:Sprache.Parse.Positioned``1(Sprache.Parser{``0})">
+            <summary>
+            Construct a parser that will set the position to the position-aware
+            T on succsessful match.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="parser"></param>
+            <returns></returns>
+        </member>
+        <member name="F:Sprache.Parse.LineEnd">
+            <summary>
+            \n or \r\n
+            </summary>
+        </member>
+        <member name="F:Sprache.Parse.LineTerminator">
+            <summary>
+            line ending or end of input
+            </summary>
+        </member>
+        <member name="M:Sprache.Parse.Identifier(Sprache.Parser{System.Char},Sprache.Parser{System.Char})">
+            <summary>
+            Parser for identifier starting with <paramref name="firstLetterParser"/> and continuing with <paramref name="tailLetterParser"/>
+            </summary>
+        </member>
+        <member name="M:Sprache.Parse.Regex(System.String,System.String)">
+            <summary>
+            Construct a parser from the given regular expression.
+            </summary>
+            <param name="pattern">The regex expression.</param>
+            <param name="description">Description of characters that don't match.</param>
+            <returns>a parse of string</returns>
+        </member>
+        <member name="M:Sprache.Parse.Regex(System.Text.RegularExpressions.Regex,System.String)">
+            <summary>
+            Construct a parser from the given regular expression.
+            </summary>
+            <param name="regex">The regex expression.</param>
+            <param name="description">Description of characters that don't match.</param>
+            <returns>a parse of string</returns>
+        </member>
+        <member name="M:Sprache.Parse.RegexMatch(System.String,System.String)">
+            <summary>
+            Construct a parser from the given regular expression, returning a parser of
+            type <see cref="T:System.Text.RegularExpressions.Match"/>.
+            </summary>
+            <param name="pattern">The regex expression.</param>
+            <param name="description">Description of characters that don't match.</param>
+            <returns>A parser of regex match objects.</returns>
+        </member>
+        <member name="M:Sprache.Parse.RegexMatch(System.Text.RegularExpressions.Regex,System.String)">
+            <summary>
+            Construct a parser from the given regular expression, returning a parser of
+            type <see cref="T:System.Text.RegularExpressions.Match"/>.
+            </summary>
+            <param name="regex">The regex expression.</param>
+            <param name="description">Description of characters that don't match.</param>
+            <returns>A parser of regex match objects.</returns>
+        </member>
+        <member name="M:Sprache.Parse.OptimizeRegex(System.Text.RegularExpressions.Regex)">
+            <summary>
+            Optimize the regex by only matching successfully at the start of the input.
+            Do this by wrapping the whole regex in non-capturing parentheses preceded by
+             a `^'.
+            </summary>
+            <remarks>
+            This method is invoked via reflection in unit tests. If renamed, the tests
+            will need to be modified or they will fail.
+            </remarks>
+        </member>
+        <member name="M:Sprache.Parse.DelimitedBy``2(Sprache.Parser{``0},Sprache.Parser{``1})">
+            <summary>
+            
+            </summary>
+            <param name="parser"></param>
+            <param name="delimiter"></param>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Sprache.Parse.DelimitedBy``2(Sprache.Parser{``0},Sprache.Parser{``1},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            
+            </summary>
+            <param name="parser"></param>
+            <param name="delimiter"></param>
+            <param name="minimumCount"></param>
+            <param name="maximumCount"></param>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Sprache.Parse.XDelimitedBy``2(Sprache.Parser{``0},Sprache.Parser{``1})">
+            <summary>
+            Fails on the first itemParser failure, if it reads at least one character.
+            </summary>
+            <param name="itemParser"></param>
+            <param name="delimiter"></param>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Sprache.Parse.Repeat``1(Sprache.Parser{``0},System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="parser"></param>
+            <param name="count"></param>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Sprache.Parse.Repeat``1(Sprache.Parser{``0},System.Nullable{System.Int32},System.Nullable{System.Int32})">
+            <summary>
+            
+            </summary>
+            <param name="parser"></param>
+            <param name="minimumCount"></param>
+            <param name="maximumCount"></param>
+            <typeparam name="T"></typeparam>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Sprache.Parse.Contained``3(Sprache.Parser{``0},Sprache.Parser{``1},Sprache.Parser{``2})">
+            <summary>
+            
+            </summary>
+            <param name="parser"></param>
+            <param name="open"></param>
+            <param name="close"></param>
+            <typeparam name="T"></typeparam>
+            <typeparam name="U"></typeparam>
+            <typeparam name="V"></typeparam>
+            <returns></returns>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="T:Sprache.ParseException">
+            <summary>
+            Represents an error that occurs during parsing.
+            </summary>
+        </member>
+        <member name="M:Sprache.ParseException.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sprache.ParseException" /> class.
+            </summary>
+        </member>
+        <member name="M:Sprache.ParseException.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sprache.ParseException" /> class with a specified error message.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+        </member>
+        <member name="M:Sprache.ParseException.#ctor(System.String,Sprache.Position)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sprache.ParseException" /> class with a specified error message
+            and the position where the error occured.
+            </summary>
+            <param name="message">The message that describes the error.</param>
+            <param name="position">The position where the error occured.</param>
+        </member>
+        <member name="M:Sprache.ParseException.#ctor(System.String,System.Exception)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sprache.ParseException" /> class with a specified error message 
+            and a reference to the inner exception that is the cause of this exception.
+            </summary>
+            <param name="message">The error message that explains the reason for the exception.</param>
+            <param name="innerException">The exception that is the cause of the current exception, 
+            or a null reference (Nothing in Visual Basic) if no inner exception is specified.</param>
+        </member>
+        <member name="P:Sprache.ParseException.Position">
+            <summary>
+            Gets the position of the parsing failure if one is available; otherwise, null.
+            </summary>
+        </member>
+        <member name="T:Sprache.Parser`1">
+            <summary>
+            Represents a parser.
+            </summary>
+            <typeparam name="T">The type of the result.</typeparam>
+            <param name="input">The input to parse.</param>
+            <returns>The result of the parser.</returns>
+        </member>
+        <member name="T:Sprache.ParserExtensions">
+            <summary>
+            Contains some extension methods for <see cref="T:Sprache.Parser`1" />.
+            </summary>
+        </member>
+        <member name="M:Sprache.ParserExtensions.TryParse``1(Sprache.Parser{``0},System.String)">
+            <summary>
+            Tries to parse the input without throwing an exception.
+            </summary>
+            <typeparam name="T">The type of the result.</typeparam>
+            <param name="parser">The parser.</param>
+            <param name="input">The input.</param>
+            <returns>The result of the parser</returns>
+        </member>
+        <member name="M:Sprache.ParserExtensions.Parse``1(Sprache.Parser{``0},System.String)">
+            <summary>
+            Parses the specified input string.
+            </summary>
+            <typeparam name="T">The type of the result.</typeparam>
+            <param name="parser">The parser.</param>
+            <param name="input">The input.</param>
+            <returns>The result of the parser.</returns>
+            <exception cref="T:Sprache.ParseException">It contains the details of the parsing error.</exception>
+        </member>
+        <member name="T:Sprache.Position">
+            <summary>
+            Represents a position in the input.
+            </summary>
+        </member>
+        <member name="M:Sprache.Position.#ctor(System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Sprache.Position" /> class.
+            </summary>
+            <param name="pos">The position.</param>
+            <param name="line">The line number.</param>
+            <param name="column">The column.</param>
+        </member>
+        <member name="M:Sprache.Position.FromInput(Sprache.IInput)">
+            <summary>
+            Creates an new <see cref="T:Sprache.Position"/> instance from a given <see cref="T:Sprache.IInput"/> object.
+            </summary>
+            <param name="input">The current input.</param>
+            <returns>A new <see cref="T:Sprache.Position"/> instance.</returns>
+        </member>
+        <member name="P:Sprache.Position.Pos">
+            <summary>
+            Gets the current positon.
+            </summary>
+        </member>
+        <member name="P:Sprache.Position.Line">
+            <summary>
+            Gets the current line number.
+            </summary>
+        </member>
+        <member name="P:Sprache.Position.Column">
+            <summary>
+            Gets the current column.
+            </summary>
+        </member>
+        <member name="M:Sprache.Position.Equals(System.Object)">
+            <summary>
+            Determines whether the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:Sprache.Position" />.
+            </summary>
+            <returns>
+            true if the specified <see cref="T:System.Object"/> is equal to the current <see cref="T:Sprache.Position" />; otherwise, false.
+            </returns>
+            <param name="obj">The object to compare with the current object. </param>
+        </member>
+        <member name="M:Sprache.Position.Equals(Sprache.Position)">
+            <summary>
+            Indicates whether the current <see cref="T:Sprache.Position" /> is equal to another object of the same type.
+            </summary>
+            <returns>
+            true if the current object is equal to the <paramref name="other"/> parameter; otherwise, false.
+            </returns>
+            <param name="other">An object to compare with this object.</param>
+        </member>
+        <member name="M:Sprache.Position.op_Equality(Sprache.Position,Sprache.Position)">
+            <summary>
+            Indicates whether the left <see cref="T:Sprache.Position" /> is equal to the right <see cref="T:Sprache.Position" />.
+            </summary>
+            <param name="left">The left <see cref="T:Sprache.Position" />.</param>
+            <param name="right">The right <see cref="T:Sprache.Position" />.</param>
+            <returns>true if both objects are equal.</returns>
+        </member>
+        <member name="M:Sprache.Position.op_Inequality(Sprache.Position,Sprache.Position)">
+            <summary>
+            Indicates whether the left <see cref="T:Sprache.Position" /> is not equal to the right <see cref="T:Sprache.Position" />.
+            </summary>
+            <param name="left">The left <see cref="T:Sprache.Position" />.</param>
+            <param name="right">The right <see cref="T:Sprache.Position" />.</param>
+            <returns>true if the objects are not equal.</returns>
+        </member>
+        <member name="M:Sprache.Position.GetHashCode">
+            <summary>
+            Serves as a hash function for a particular type.
+            </summary>
+            <returns>
+            A hash code for the current <see cref="T:Sprache.Position" />.
+            </returns>
+        </member>
+        <member name="M:Sprache.Position.ToString">
+            <summary>
+            Returns a string that represents the current object.
+            </summary>
+            <returns>
+            A string that represents the current object.
+            </returns>
+        </member>
+        <member name="T:Sprache.Result">
+            <summary>
+            Contains helper functions to create <see cref="T:Sprache.IResult`1"/> instances.
+            </summary>
+        </member>
+        <member name="M:Sprache.Result.Success``1(``0,Sprache.IInput)">
+            <summary>
+            Creates a success result.
+            </summary>
+            <typeparam name="T">The type of the result (value).</typeparam>
+            <param name="value">The sucessfully parsed value.</param>
+            <param name="remainder">The remainder of the input.</param>
+            <returns>The new <see cref="T:Sprache.IResult`1"/>.</returns>
+        </member>
+        <member name="M:Sprache.Result.Failure``1(Sprache.IInput,System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            Creates a failure result.
+            </summary>
+            <typeparam name="T">The type of the result.</typeparam>
+            <param name="remainder">The remainder of the input.</param>
+            <param name="message">The error message.</param>
+            <param name="expectations">The parser expectations.</param>
+            <returns>The new <see cref="T:Sprache.IResult`1"/>.</returns>
+        </member>
+    </members>
+</doc>

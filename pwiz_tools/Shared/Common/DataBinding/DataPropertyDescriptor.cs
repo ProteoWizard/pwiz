@@ -59,5 +59,10 @@ namespace pwiz.Common.DataBinding
         {
             get { return null; }
         }
+
+        public virtual bool CanBeFiltered(IFilterOperation filterOperation)
+        {
+            return filterOperation.IsValidFor(DataSchema.GetFilterHandler(PropertyType));
+        }
     }
 }
