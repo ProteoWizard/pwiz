@@ -20,12 +20,14 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.CommonMsData;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -302,6 +304,49 @@ namespace pwiz.SkylineTest
                 ImportNoException(docResults, TextUtil.LineSeparate(headerRow, string.Join(csvSep, valuesBadCombo)));
 
                 // Note: Importing with all 7 columns is tested as part of MProphetResultsHandlerTest
+
+                // Replicate-name keying: a peak-boundary row may identify its result file by replicate name
+                // (here "13") instead of the on-disk file name ("Q_2012_0918_RJ_13.raw"), mirroring how custom
+                // reports key on ResultFile.Replicate.Name and decoupling the CSV from vendor file extensions.
+                // Chrom05.sky has single-file replicates "13" and "14" whose names differ from their file names.
+                if (!AsSmallMolecules)
+                {
+                    const string replicateName = "13";
+                    const string replicateFileName = "Q_2012_0918_RJ_13.raw";
+                    string apex = (26.5).ToString(cult), startTime = (26.17).ToString(cult),
+                        endTime = (26.92).ToString(cult), chargeStr = 2.ToString(cult);
+                    string headerByReplicate = string.Join(csvSep, "PeptideModifiedSequence", "ReplicateName",
+                        "Apex", "MinStartTime", "MaxEndTime", "PrecursorCharge");
+                    string rowByReplicate = string.Join(csvSep, "TPEVDDEALEK", replicateName, apex, startTime, endTime, chargeStr);
+
+                    var importerByReplicate = DoImport(docResults, TextUtil.LineSeparate(headerByReplicate, rowByReplicate));
+                    AssertEx.AreEqual(0, importerByReplicate.UnrecognizedFiles.Count);
+                    AssertEx.AreEqual(0, importerByReplicate.UnrecognizedChargeStates.Count);
+
+                    // Keying by replicate name yields the same document as keying by the on-disk file name
+                    string headerByFile = string.Join(csvSep, "PeptideModifiedSequence", "FileName",
+                        "Apex", "MinStartTime", "MaxEndTime", "PrecursorCharge");
+                    string rowByFile = string.Join(csvSep, "TPEVDDEALEK", replicateFileName, apex, startTime, endTime, chargeStr);
+                    var importerByFile = DoImport(docResults, TextUtil.LineSeparate(headerByFile, rowByFile));
+                    AssertEx.DocumentCloned(importerByFile.Document, importerByReplicate.Document);
+
+                    // A replicate name that resolves to a replicate holding more than one file cannot identify a
+                    // single file, so the import fails with an explanatory error rather than guessing. Synthesize
+                    // a multi-file replicate from single-file replicate "13" (ChangeSettingsNoDiff so no reload).
+                    var measuredResults = docResults.Settings.MeasuredResults;
+                    var singleFileSet = measuredResults.Chromatograms.First(c => Equals(c.Name, replicateName));
+                    var multiFileSet = singleFileSet.ChangeMSDataFileInfos(
+                        new List<ChromFileInfo>(singleFileSet.MSDataFileInfos)
+                            { new ChromFileInfo(new MsDataFilePath("Q_2012_0918_RJ_99.raw")) });
+                    var multiFileChromatograms = measuredResults.Chromatograms
+                        .Select(c => ReferenceEquals(c, singleFileSet) ? multiFileSet : c).ToList();
+                    var docMultiFile = docResults.ChangeSettingsNoDiff(
+                        docResults.Settings.ChangeMeasuredResults(new MeasuredResults(multiFileChromatograms)));
+                    AssertEx.AreEqual(2, docMultiFile.Settings.MeasuredResults.Chromatograms
+                        .First(c => Equals(c.Name, replicateName)).FileCount);
+                    ImportThrowsException(docMultiFile, TextUtil.LineSeparate(headerByReplicate, rowByReplicate),
+                        Resources.PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_);
+                }
 
                 if (AsSmallMolecules)
                 {

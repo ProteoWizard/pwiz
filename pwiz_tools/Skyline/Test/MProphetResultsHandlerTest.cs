@@ -111,6 +111,10 @@ namespace pwiz.SkylineTest
                 }
                 SaveMProphetFeatures(resultsHandler, mProphetActual, CultureInfo.CurrentCulture, calcs);
                 AssertEx.FileEquals(mProphetExpected, mProphetActual);
+                // ReplicateName is the last column (after the variable-length feature columns) so that adding
+                // it does not shift any existing column index for position-based downstream parsers.
+                // ReSharper disable once LocalizableElement
+                AssertEx.IsTrue(File.ReadLines(mProphetActual).First().EndsWith("ReplicateName"));
 
                 // 4. Export mProphet -> Import Peak Boundaries leads to same result as reintegrate
                 
