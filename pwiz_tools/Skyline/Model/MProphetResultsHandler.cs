@@ -49,6 +49,12 @@ namespace pwiz.Skyline.Model
 
         private const string Q_VALUE_ANNOTATION = "QValue"; // : for now, we are not localizing column headers
 
+        /// <summary>
+        /// Header for the replicate-name column in the exported mProphet feature file. Not localized (like the
+        /// other feature-file headers), and shared with the peak-boundary import side so the two cannot drift.
+        /// </summary>
+        public const string REPLICATE_NAME_COLUMN = "ReplicateName";
+
         public static string AnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + Q_VALUE_ANNOTATION; } }
 
         public static string MAnnotationName { get { return AnnotationDef.ANNOTATION_PREFIX + @"Score"; } }
@@ -252,8 +258,7 @@ namespace pwiz.Skyline.Model
             }
             // ReplicateName is intentionally the LAST column (after the variable-length feature columns)
             // so that adding it does not shift the index of any existing column for position-based parsers.
-            // ReSharper disable once LocalizableElement
-            WriteTrailingField(writer, @"ReplicateName", separator, first);
+            WriteTrailingField(writer, REPLICATE_NAME_COLUMN, separator, first);
             writer.WriteLine();
         }
 

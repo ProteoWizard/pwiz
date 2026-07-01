@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model
                                 new[] {"SampleName", ColumnCaptions.SampleName},
                                 new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
                                 new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
-                                new[] {"ReplicateName", ColumnCaptions.Replicate},
+                                new[] {MProphetResultsHandler.REPLICATE_NAME_COLUMN, ColumnCaptions.Replicate},
                             };
                             for (var field = 0; field < currentFieldNames.Length; field++)
                             {
@@ -631,15 +631,18 @@ namespace pwiz.Skyline.Model
         /// </summary>
         private ChromSetFileMatch FindReplicateFileMatch(string replicateName, long linesRead)
         {
-            var chromSet = Document.Settings.MeasuredResults.Chromatograms.FirstOrDefault(set => Equals(set.Name, replicateName));
-            if (chromSet == null)
-                return null;
-            if (chromSet.FileCount != 1)
+            if (!Document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out var chromSet, out _))
+                return null;    // No replicate by that name - the row is reported as unrecognized
+            if (chromSet.FileCount > 1)
             {
+                // A multi-file replicate (multi-file replicate / multi-sample .wiff) cannot be resolved to a
+                // single file from the replicate name alone, so fail rather than guess which file to adjust.
                 throw new IOException(string.Format(
                     Resources.PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_,
                     replicateName, linesRead));
             }
+            if (chromSet.FileCount == 0)
+                return null;    // Degenerate replicate with no files - reported as unrecognized
             var fileInfo = chromSet.MSDataFileInfos[0];
             return new ChromSetFileMatch(chromSet, fileInfo.FilePath, 0);
         }
