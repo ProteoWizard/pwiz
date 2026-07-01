@@ -157,4 +157,7 @@
   <data name="SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_" xml:space="preserve">
     <value>Error evaluating the spectrum filter: {0}</value>
   </data>
+  <data name="SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number" xml:space="preserve">
+    <value>The value '{0}' of spectrum property '{1}' is not a number.</value>
+  </data>
 </root>

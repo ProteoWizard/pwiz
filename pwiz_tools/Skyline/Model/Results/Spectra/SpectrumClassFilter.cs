@@ -125,8 +125,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
 
             var dataSchema = new DataSchema();
-            var predicates = Clauses
-                .Select(clause => clause.MakePredicate<SpectrumClass>(dataSchema)).ToList();
+            var predicates = Clauses.Select(clause => CompileClause(clause, dataSchema)).ToList();
             return x =>
             {
                 try
@@ -134,7 +133,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     var spectrumClass = new SpectrumClass(new SpectrumClassKey(SpectrumClassColumn.ALL, x));
                     foreach (var predicate in predicates)
                     {
-                        if (predicate(spectrumClass))
+                        if (predicate(spectrumClass, x))
                         {
                             return true;
                         }
@@ -154,6 +153,134 @@ namespace pwiz.Skyline.Model.Results.Spectra
                         exception.Message), exception);
                 }
             };
+        }
+
+        /// <summary>
+        /// Compiles one clause into a predicate over both projections. The interpreted spectrum
+        /// properties are evaluated against the <see cref="SpectrumClass"/> POCO as before; the dynamic
+        /// mzML CV/user-parameter properties, which the POCO cannot host, are evaluated directly against
+        /// <see cref="SpectrumMetadata"/>. A clause matches when every one of its specs matches (AND).
+        /// </summary>
+        private static Func<SpectrumClass, SpectrumMetadata, bool> CompileClause(FilterClause clause, DataSchema dataSchema)
+        {
+            var cvSpecs = new List<FilterSpec>();
+            var nonCvSpecs = new List<FilterSpec>();
+            foreach (var spec in clause.FilterSpecs)
+            {
+                var column = SpectrumClassColumn.FindColumn(spec.ColumnId);
+                if (column != null && SpectrumClassColumn.IsCvParamColumn(column))
+                {
+                    cvSpecs.Add(spec);
+                }
+                else
+                {
+                    nonCvSpecs.Add(spec);
+                }
+            }
+
+            // Non-CV specs keep resolving through the SpectrumClass POCO (and still throw for a genuinely
+            // unknown column, as before). An empty non-CV list is a vacuously-true match.
+            Predicate<SpectrumClass> nonCvPredicate = nonCvSpecs.Count == 0
+                ? null
+                : new FilterClause(nonCvSpecs).MakePredicate<SpectrumClass>(dataSchema);
+
+            var cvPredicates = cvSpecs.Select(spec => CompileCvSpec(spec, dataSchema)).ToList();
+
+            return (spectrumClass, metadata) =>
+            {
+                if (nonCvPredicate != null && !nonCvPredicate(spectrumClass))
+                {
+                    return false;
+                }
+
+                foreach (var cvPredicate in cvPredicates)
+                {
+                    if (!cvPredicate(metadata))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            };
+        }
+
+        /// <summary>
+        /// Compiles one CV/user-parameter spec into a predicate over <see cref="SpectrumMetadata"/>.
+        /// The value comes straight from <see cref="SpectrumMetadata.OtherParams"/> (bypassing the
+        /// <see cref="SpectrumClass"/> projection) and is coerced to the type the operator implies.
+        /// </summary>
+        private static Predicate<SpectrumMetadata> CompileCvSpec(FilterSpec spec, DataSchema dataSchema)
+        {
+            var column = SpectrumClassColumn.FindColumn(spec.ColumnId);
+            var type = DetermineCvOperandType(spec);
+            var rawPredicate = spec.Predicate.MakePredicate(dataSchema, type);
+            var columnDisplay = column.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            return metadata =>
+            {
+                var value = CoerceCvValue(column.GetValue(metadata), type, columnDisplay);
+                return rawPredicate(value);
+            };
+        }
+
+        /// <summary>
+        /// Decides whether a CV/user-parameter spec is a numeric or a string comparison. There is no
+        /// stored type for these terms (a value is numeric only if it parses as an invariant number), so
+        /// the operator and operand imply it: ordered comparisons are numeric; "contains"/"starts with"
+        /// are string; equals/not-equals are numeric only when the operand itself is a number.
+        /// </summary>
+        private static Type DetermineCvOperandType(FilterSpec spec)
+        {
+            var op = spec.Operation;
+            if (Equals(op, FilterOperations.OP_IS_GREATER_THAN) || Equals(op, FilterOperations.OP_IS_LESS_THAN) ||
+                Equals(op, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL) ||
+                Equals(op, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL))
+            {
+                return typeof(double);
+            }
+
+            if (Equals(op, FilterOperations.OP_EQUALS) || Equals(op, FilterOperations.OP_NOT_EQUALS))
+            {
+                var operand = spec.Predicate.InvariantOperandText;
+                if (operand != null &&
+                    double.TryParse(operand, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+                {
+                    return typeof(double);
+                }
+            }
+
+            return typeof(string);
+        }
+
+        /// <summary>
+        /// Coerces a term's raw text value to the comparison type. A missing (or value-less) term yields
+        /// null, which no comparison matches. A numeric comparison against a present, non-numeric value
+        /// throws with spectrum-filter context (user decision: hard-fail rather than silently skip), so
+        /// chromatogram extraction reports a clear error.
+        /// </summary>
+        private static object CoerceCvValue(object rawValue, Type type, string columnDisplay)
+        {
+            if (type != typeof(double))
+            {
+                return rawValue;
+            }
+
+            var text = rawValue as string;
+            if (string.IsNullOrEmpty(text))
+            {
+                return null;
+            }
+
+            if (double.TryParse(text, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
+            {
+                return number;
+            }
+
+            throw new InvalidDataException(string.Format(
+                SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                string.Format(
+                    SpectraResources.SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number,
+                    text, columnDisplay)));
         }
 
         public override string ToString()

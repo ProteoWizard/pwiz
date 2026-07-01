@@ -115,6 +115,15 @@ namespace pwiz.Skyline.Model.Results.Spectra {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The value &apos;{0}&apos; of spectrum property &apos;{1}&apos; is not a number..
+        /// </summary>
+        public static string SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Criteria which MS1 spectra must satisfy to be included in extracted chromatogram.
         /// </summary>
         public static string SpectrumClassFilter_Ms1FilterPage_Criteria_which_MS1_spectra_must_satisfy_to_be_included_in_extracted_chromatogram {

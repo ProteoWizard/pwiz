@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
@@ -122,7 +123,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public abstract void SetValue(SpectrumClass spectrumClass, object value);
 
-        public string GetLocalizedColumnName(CultureInfo cultureInfo)
+        public virtual string GetLocalizedColumnName(CultureInfo cultureInfo)
         {
             return ColumnCaptions.ResourceManager.GetString(ColumnName, cultureInfo) ?? ColumnName;
         }
@@ -145,7 +146,102 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public static SpectrumClassColumn FindColumn(PropertyPath propertyPath)
         {
-            return ALL.FirstOrDefault(col => Equals(propertyPath, col.PropertyPath));
+            var column = ALL.FirstOrDefault(col => Equals(propertyPath, col.PropertyPath));
+            if (column != null)
+            {
+                return column;
+            }
+
+            // A dynamic mzML CV/user-parameter column is not in ALL; reconstruct it from its
+            // encoded path so saved filters resolve (and validate) before any file is imported.
+            if (propertyPath.IsProperty && propertyPath.Parent.IsRoot &&
+                TryDecodeCvParamColumnName(propertyPath.Name, out var accession, out var unit))
+            {
+                return new CvParamColumn(accession, null, unit, false);
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Encoded-column-name prefix identifying a dynamic mzML CV/user-parameter column.
+        /// Letters only, so the whole encoded name is a single alphanumeric identifier that a
+        /// <see cref="PropertyPath"/> and the filter-string serializer round-trip without quoting.
+        /// </summary>
+        private const string CV_PARAM_PREFIX = @"cvparam";
+
+        // Separates accession from unit inside the encoded payload. A control character that never
+        // appears in a CV accession or unit name, so decoding can split on it unambiguously.
+        private const char CV_PARAM_SEPARATOR = '\u001F';
+
+        /// <summary>
+        /// Builds a dynamic column for the uninterpreted mzML CV/user parameter identified by
+        /// <paramref name="accession"/> and <paramref name="unit"/> (the "split by unit" identity).
+        /// <paramref name="name"/> is the friendly display name (from the term; null when the column
+        /// is reconstructed from a saved filter). <paramref name="isNumeric"/> drives the column type
+        /// offered in the filter editor; the extraction predicate infers numeric vs. string from the
+        /// operator and operand independently (see <see cref="SpectrumClassFilter"/>).
+        /// </summary>
+        public static SpectrumClassColumn CvParam(string accession, string name, string unit, bool isNumeric)
+        {
+            return new CvParamColumn(accession, name, unit, isNumeric);
+        }
+
+        /// <summary>
+        /// True if <paramref name="column"/> is a dynamic mzML CV/user-parameter column.
+        /// </summary>
+        public static bool IsCvParamColumn(SpectrumClassColumn column)
+        {
+            return column is CvParamColumn;
+        }
+
+        private static string EncodeCvParamColumnName(string accession, string unit)
+        {
+            var payload = Encoding.UTF8.GetBytes(accession + CV_PARAM_SEPARATOR + (unit ?? string.Empty));
+            var hex = new StringBuilder(CV_PARAM_PREFIX, CV_PARAM_PREFIX.Length + payload.Length * 2);
+            foreach (var b in payload)
+            {
+                hex.Append(b.ToString(@"x2", CultureInfo.InvariantCulture));
+            }
+            return hex.ToString();
+        }
+
+        private static bool TryDecodeCvParamColumnName(string columnName, out string accession, out string unit)
+        {
+            accession = null;
+            unit = null;
+            if (columnName == null || !columnName.StartsWith(CV_PARAM_PREFIX))
+            {
+                return false;
+            }
+
+            var hex = columnName.Substring(CV_PARAM_PREFIX.Length);
+            if (hex.Length == 0 || hex.Length % 2 != 0)
+            {
+                return false;
+            }
+
+            var bytes = new byte[hex.Length / 2];
+            for (int i = 0; i < bytes.Length; i++)
+            {
+                if (!byte.TryParse(hex.Substring(i * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture,
+                        out bytes[i]))
+                {
+                    return false;
+                }
+            }
+
+            var payload = Encoding.UTF8.GetString(bytes);
+            int sep = payload.IndexOf(CV_PARAM_SEPARATOR);
+            if (sep < 0)
+            {
+                return false;
+            }
+
+            accession = payload.Substring(0, sep);
+            var unitText = payload.Substring(sep + 1);
+            unit = unitText.Length == 0 ? null : unitText;
+            return true;
         }
 
         private static bool TypesMatch(Type propertyType, Type valueType)
@@ -246,6 +342,89 @@ namespace pwiz.Skyline.Model.Results.Spectra
             public override string GetAbbreviatedColumnName()
             {
                 return _getAbbreviatedColumName();
+            }
+        }
+
+        /// <summary>
+        /// A dynamic column for one uninterpreted mzML CV/user parameter, identified by
+        /// <see cref="Accession"/> and <see cref="Unit"/> (the "split by unit" identity). Unlike the
+        /// static columns it is not bound to a <see cref="SpectrumClass"/> property: it reads its value
+        /// straight from <see cref="SpectrumMetadata.OtherParams"/>. The spectrum-filter predicate reads
+        /// it via <see cref="GetValue(SpectrumMetadata)"/>; the <see cref="SpectrumClass"/> POCO
+        /// projection does not carry it, so the <see cref="SpectrumClass"/> accessors throw.
+        /// </summary>
+        private class CvParamColumn : SpectrumClassColumn
+        {
+            private readonly string _accession;
+            private readonly string _name;
+            private readonly string _unit;
+            private readonly bool _isNumeric;
+
+            public CvParamColumn(string accession, string name, string unit, bool isNumeric)
+            {
+                _accession = accession;
+                _name = name;
+                _unit = unit;
+                _isNumeric = isNumeric;
+                ColumnName = EncodeCvParamColumnName(accession, unit);
+            }
+
+            public string Accession
+            {
+                get { return _accession; }
+            }
+
+            public string Unit
+            {
+                get { return _unit; }
+            }
+
+            public override string ColumnName { get; }
+
+            public override Type ValueType
+            {
+                get { return _isNumeric ? typeof(double) : typeof(string); }
+            }
+
+            public override object GetValue(SpectrumMetadata spectrumMetadata)
+            {
+                foreach (var term in spectrumMetadata.OtherParams)
+                {
+                    if (Equals(term.Accession, _accession) &&
+                        Equals(term.Unit ?? string.Empty, _unit ?? string.Empty))
+                    {
+                        return term.Value;
+                    }
+                }
+                return null;
+            }
+
+            public override object GetValue(SpectrumClass spectrumClass)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override void SetValue(SpectrumClass spectrumClass, object value)
+            {
+                throw new NotSupportedException();
+            }
+
+            public override string GetLocalizedColumnName(CultureInfo cultureInfo)
+            {
+                var displayName = string.IsNullOrEmpty(_name) ? _accession : _name;
+                return string.IsNullOrEmpty(_unit)
+                    ? displayName
+                    : string.Format(CultureInfo.CurrentCulture, @"{0} ({1})", displayName, _unit);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is CvParamColumn other && Equals(ColumnName, other.ColumnName);
+            }
+
+            public override int GetHashCode()
+            {
+                return ColumnName.GetHashCode();
             }
         }
 

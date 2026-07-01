@@ -51,6 +51,8 @@ namespace pwiz.SkylineTest
             TestSpectrumClassFilterSerialization();
             TestTransitionGroupSpectrumClassFilter();
             TestRoundTripSpectrumFilters();
+            TestCvParamColumnRoundTrip();
+            TestCvParamFilterPredicate();
         }
 
         private void TestSpectrumPrecursorFilterOperand()
@@ -151,6 +153,108 @@ namespace pwiz.SkylineTest
                     string.Format(
                         MessageResources.ListFilterHandler_MatchesComparison_Cannot_compare_a_list_of__0__values_with_a_list_of__1__values_,
                         3, 2)));
+        }
+
+        private static SpectrumMetadata CvSpectrum(string id, string accession, string name, string value, string unit)
+        {
+            return new SpectrumMetadata(id, 1.0)
+                .ChangeOtherParams(new[] { new SpectrumMetadataTerm(accession, name, value, unit) });
+        }
+
+        private void TestCvParamColumnRoundTrip()
+        {
+            // A dynamic mzML CV column is not one of the static columns, but it must resolve from its
+            // encoded property path (so saved filters validate and reload before any file is imported),
+            // and it must survive the filter-string round-trip that persists to .sky and the cache.
+            const string accession = @"MS:1000505";
+            const string unit = @"number of detector counts";
+            var column = SpectrumClassColumn.CvParam(accession, @"base peak intensity", unit, true);
+
+            // The encoded column name is a single alphanumeric identifier (so PropertyPath and the
+            // filter-string serializer never have to quote it).
+            Assert.IsTrue(column.ColumnName.All(char.IsLetterOrDigit), @"CV column name must be alphanumeric: " + column.ColumnName);
+
+            // FindColumn reconstructs a CV column from the path alone (no backing data).
+            var reconstructed = SpectrumClassColumn.FindColumn(column.PropertyPath);
+            Assert.IsNotNull(reconstructed);
+            Assert.IsTrue(SpectrumClassColumn.IsCvParamColumn(reconstructed));
+            Assert.AreEqual(column.PropertyPath, reconstructed.PropertyPath);
+
+            // The path also round-trips through PropertyPath's own string form.
+            Assert.AreEqual(column.PropertyPath, PropertyPath.Parse(column.PropertyPath.ToString()));
+
+            // A filter built on the CV column round-trips through the filter-string form and validates.
+            var filter = new SpectrumClassFilter(new FilterClause(new[]
+            {
+                new FilterSpec(column.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"500"),
+                new FilterSpec(SpectrumClassColumn.MsLevel.PropertyPath, FilterOperations.OP_EQUALS, 1)
+            }));
+            var filterString = filter.ToFilterString();
+            Assert.AreEqual(filter, SpectrumClassFilter.ParseFilterString(filterString));
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString(filterString),
+                @"CV filter string should validate: " + filterString);
+
+            // A unit-less term (e.g. a vendor userParam) encodes and reconstructs too.
+            var userParamColumn = SpectrumClassColumn.CvParam(@"vendorSetting", @"vendorSetting", null, false);
+            var userParamReconstructed = SpectrumClassColumn.FindColumn(userParamColumn.PropertyPath);
+            Assert.IsNotNull(userParamReconstructed);
+            Assert.AreEqual(userParamColumn.PropertyPath, userParamReconstructed.PropertyPath);
+        }
+
+        private void TestCvParamFilterPredicate()
+        {
+            const string accession = @"MS:1000505";
+            const string name = @"base peak intensity";
+            const string unit = @"number of detector counts";
+            var numericColumn = SpectrumClassColumn.CvParam(accession, name, unit, true);
+
+            Predicate<SpectrumMetadata> Numeric(IFilterOperation op, string operand) =>
+                new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(numericColumn.PropertyPath, op, operand) }))
+                    .MakePredicate();
+
+            // Numeric comparison filters include/exclude by the parsed value; a spectrum lacking the term
+            // simply does not match (no value), it does not error.
+            var big = CvSpectrum(@"big", accession, name, @"1000", unit);
+            var small = CvSpectrum(@"small", accession, name, @"100", unit);
+            var absent = new SpectrumMetadata(@"absent", 1.0);
+            Assert.IsTrue(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(big));
+            Assert.IsFalse(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(small));
+            Assert.IsFalse(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(absent));
+            Assert.IsTrue(Numeric(FilterOperations.OP_IS_LESS_THAN, @"500")(small));
+            Assert.IsTrue(Numeric(FilterOperations.OP_EQUALS, @"1000")(big));
+            Assert.IsFalse(Numeric(FilterOperations.OP_EQUALS, @"999")(big));
+
+            // A numeric filter that meets a present but non-numeric value hard-fails with filter context
+            // (user decision), so chromatogram extraction reports a clear error rather than skipping it.
+            // The predicate reconstructs the column from the persisted filter path, which carries the
+            // accession and unit but not the friendly name (that is resolved from imported data on the
+            // interactive surfaces), so the error names the property by accession and unit.
+            var nonNumeric = CvSpectrum(@"bad", accession, name, @"not a number", unit);
+            var columnDisplay = string.Format(CultureInfo.CurrentCulture, @"{0} ({1})", accession, unit);
+            AssertEx.ThrowsException<InvalidDataException>(
+                () => Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(nonNumeric),
+                string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
+                    string.Format(
+                        SpectraResources.SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number,
+                        @"not a number", columnDisplay)));
+
+            // A string term filters with equals/contains; "split by unit" means a different unit is a
+            // different property, so a filter on one unit does not match a term carrying another.
+            var stringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", null, false);
+            Predicate<SpectrumMetadata> StringFilter(IFilterOperation op, string operand) =>
+                new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(stringColumn.PropertyPath, op, operand) }))
+                    .MakePredicate();
+            var thermo = CvSpectrum(@"thermo", @"MS:1000512", @"filter string", @"FTMS + p ESI Full ms", null);
+            Assert.IsTrue(StringFilter(FilterOperations.OP_CONTAINS, @"ESI")(thermo));
+            Assert.IsFalse(StringFilter(FilterOperations.OP_CONTAINS, @"CID")(thermo));
+            Assert.IsTrue(StringFilter(FilterOperations.OP_EQUALS, @"FTMS + p ESI Full ms")(thermo));
+
+            // The same accession with a different unit is a different column and must not match.
+            var otherUnit = SpectrumClassColumn.CvParam(accession, name, @"percent of base peak", true);
+            Assert.IsFalse(
+                new SpectrumClassFilter(new FilterClause(new[]
+                        { new FilterSpec(otherUnit.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"500") }))
+                    .MakePredicate()(big));
         }
 
         private void TestSpectrumClassFilterSerialization()
