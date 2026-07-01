@@ -153,11 +153,14 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));
 
-            // FDRBench input TSV: the peptides we report - the final merged/rescored set written to
-            // the output - each with its final q-value and raw SVM discriminant, so FDRBench can
-            // evaluate the FDR/FDP of what Osprey actually outputs. (The blib writer only persists a
-            // 0.0 placeholder discriminant, so this is the only path to a usable FDRBench score.)
-            if (!string.IsNullOrEmpty(config.OutputFdrBench))
+            // FDRBench input TSV (pass 2): the peptides we report - the final merged/rescored set
+            // written to the output - each with its final second-pass q-value and raw SVM
+            // discriminant, so FDRBench can evaluate the FDR/FDP of what Osprey actually outputs.
+            // (The blib writer only persists a 0.0 placeholder discriminant, so this is the only
+            // path to a usable FDRBench score.) Pass 1 (the full pre-compaction first-pass pool)
+            // is emitted earlier, in FirstJoinTask before compaction; the two are mutually
+            // exclusive per run (--fdrbench-pass).
+            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 2)
             {
                 var swFdrBench = Stopwatch.StartNew();
                 var benchResult = FdrBenchInputWriter.WritePeptideInput(

@@ -261,6 +261,16 @@ namespace pwiz.Osprey.Tasks
                 return false;
             }
 
+            // FDRBench input TSV (pass 1): emit the full pre-compaction first-pass
+            // pool -- every scored non-decoy target, regardless of q-value, with its
+            // first-pass run + experiment q-values and raw SVM discriminant -- BEFORE
+            // compaction drops the non-surviving entries. Mirrors Rust
+            // pipeline.rs write_fdrbench_peptide_input (emitted after first-pass
+            // protein FDR, before the compaction HashSet is built). Pass 2 (the
+            // post-compaction reported set) is emitted from MergeNodeTask; the two
+            // are mutually exclusive per run (--fdrbench-pass).
+            WriteFdrBenchPass1IfRequested(perFileEntries, config, ctx);
+
             // Compaction: drop entries whose base_id (entry_id with the
             // decoy bit masked off) does not pass either the peptide-q
             // or protein-q gate. Target and paired decoy share base_id
@@ -493,6 +503,45 @@ namespace pwiz.Osprey.Tasks
             }
             ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
                 passingTargets));
+        }
+
+        /// <summary>
+        /// Write the pass-1 FDRBench input TSV from the pre-compaction first-pass
+        /// pool when <c>--fdrbench</c> is set with <c>--fdrbench-pass 1</c>. Emits
+        /// every scored non-decoy target (regardless of q-value) with its
+        /// first-pass run + experiment q-values and raw SVM discriminant -- the
+        /// assumption the second-pass reported set rests on. No-op for the default
+        /// pass-2 (emitted post-compaction by <see cref="MergeNodeTask"/>) and when
+        /// no FDRBench output was requested. Called on the straight-through Run
+        /// path only: the pre-compaction pool exists solely here, mirroring Rust
+        /// osprey, which emits at the same point in its single pipeline.
+        /// </summary>
+        private void WriteFdrBenchPass1IfRequested(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            if (string.IsNullOrEmpty(config.OutputFdrBench) || config.FdrBenchPass != 1)
+                return;
+
+            var libraryById = ctx.Get<LibraryById>().Value;
+            var swFdrBench = Stopwatch.StartNew();
+            var benchResult = FdrBenchInputWriter.WritePeptideInput(
+                config.OutputFdrBench, perFileEntries, libraryById, config.FdrLevel, config.FdrBenchPerRun);
+            swFdrBench.Stop();
+            ctx.LogInfo(string.Format(@"Wrote FDRBench input (pass 1, {0}) to {1}: {2} rows",
+                config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
+                config.OutputFdrBench, benchResult.Rows));
+            if (benchResult.MissingLibrary > 0)
+                ctx.LogInfo(string.Format(
+                    @"{0} FDRBench rows had no library entry; peptide and protein columns left blank",
+                    benchResult.MissingLibrary));
+            if (benchResult.TruncatedProtein > 0)
+                ctx.LogInfo(string.Format(
+                    @"{0} FDRBench rows had oversize protein-ID lists; truncated with ';...+N_more'",
+                    benchResult.TruncatedProtein));
+            ctx.LogInfo(string.Format(@"[STAGE-WALL] fdrbench-pass1: {0:F1}s",
+                swFdrBench.Elapsed.TotalSeconds));
         }
 
         /// <summary>

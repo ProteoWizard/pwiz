@@ -60,6 +60,18 @@ namespace pwiz.Osprey.Core
         public bool FdrBenchPerRun { get; set; }
 
         /// <summary>
+        /// With <see cref="OutputFdrBench"/>: which FDR pass the emitted rows and q-values
+        /// come from. <c>2</c> (default) is the post-compaction, second-pass survivors written
+        /// to the blib output -- the FDR of what Osprey actually reports. <c>1</c> is the
+        /// full pre-compaction first-pass pool (every scored target, regardless of q-value)
+        /// with its first-pass q-values, mirroring Rust osprey's
+        /// <c>write_fdrbench_peptide_input</c> -- the assumption the second-pass output rests
+        /// on. Pass 1 is emitted from the first-join stage before compaction; pass 2 from the
+        /// merge node after rescoring.
+        /// </summary>
+        public int FdrBenchPass { get; set; } = 2;
+
+        /// <summary>
         /// Optional base directory for all per-file <em>derived</em> artifacts
         /// (<c>.scores.parquet</c>, <c>.calibration.json</c>,
         /// <c>.scores-reconciled.parquet</c>, the FDR sidecars, and

@@ -178,11 +178,13 @@ namespace pwiz.Osprey
             () => @"<input.tsv>", (c, p) => c._config.OutputFdrBench = p.Value);
         public static readonly OspreyArgument ARG_FDRBENCH_PER_RUN = new OspreyArgument(@"fdrbench-per-run",
             (c, p) => c._config.FdrBenchPerRun = true);
+        public static readonly OspreyArgument ARG_FDRBENCH_PASS = new OspreyArgument(@"fdrbench-pass",
+            new[] { @"1", @"2" }, (c, p) => c._config.FdrBenchPass = ParseFdrBenchPass(p.Value));
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => @"FDR & Protein Inference", true,
                 ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_PROTEIN_FDR, ARG_FDR_METHOD, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
-                ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN);
+                ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
         public static readonly OspreyArgument ARG_DECOYS_IN_LIBRARY = new OspreyArgument(@"decoys-in-library",
@@ -515,6 +517,13 @@ namespace pwiz.Osprey
                     @"will be written. Pass --fdrbench <input.tsv> to enable FDRBench output.");
             }
 
+            if (_config.FdrBenchPass != 2 && string.IsNullOrEmpty(_config.OutputFdrBench))
+            {
+                Program.LogWarning(
+                    @"--fdrbench-pass is set without --fdrbench; no FDRBench input " +
+                    @"will be written. Pass --fdrbench <input.tsv> to enable FDRBench output.");
+            }
+
             return _config;
         }
 
@@ -572,6 +581,16 @@ namespace pwiz.Osprey
                     @"Invalid value '{0}' for {1}", value, flagName));
             }
             return result;
+        }
+
+        private static int ParseFdrBenchPass(string value)
+        {
+            if (string.Equals(value, @"1", StringComparison.Ordinal))
+                return 1;
+            if (string.Equals(value, @"2", StringComparison.Ordinal))
+                return 2;
+            throw new ArgumentException(string.Format(
+                @"Invalid value '{0}' for --fdrbench-pass (expected 1 or 2)", value));
         }
 
         // --- Help rendering (generated from the declarations; cannot drift) ---------------
@@ -740,6 +759,7 @@ namespace pwiz.Osprey
                 { @"shared-peptides", @"Shared peptide handling (default: all)" },
                 { @"fdrbench", @"Write an FDRBench-compatible input TSV to this path. The level is taken from --fdr-level (peptide; precursor and both emit precursor-level). Includes every reported (compaction-surviving) target, i.e. the peptides actually written to the output, regardless of q-value, with the raw SVM discriminant as 'score', so FDRBench can compute true-FDR via entrapment counting without truncation at Osprey's threshold." },
                 { @"fdrbench-per-run", @"With --fdrbench: emit one row per (precursor, run) using run-level q-values (adds a 'run' column). Default is one row per precursor using experiment-level q-values." },
+                { @"fdrbench-pass", @"With --fdrbench: which FDR pass to emit. 2 (default) = the post-compaction second-pass survivors written to the blib (the FDR of what Osprey reports). 1 = the full pre-compaction first-pass pool (every scored target, regardless of q) with first-pass q-values, matching Rust osprey's write_fdrbench_peptide_input (the assumption the second-pass output rests on)." },
                 { @"decoys-in-library", @"Trust decoys already in the spectral library instead of generating reverse decoys. Hard error if none are recognised." },
                 { @"decoy-pairing-manifest", @"FDRBench 5-column pairing manifest (TSV), used with --decoys-in-library" },
                 { @"write-pin", @"Write PIN files for external tools" },
