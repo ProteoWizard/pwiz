@@ -1649,7 +1649,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // avoid control refresh if there are no changes
             if (graphControlExtension.PropertiesSheet.SelectedObject == null || graphControlExtension.PropertiesSheet.SelectedObject is FullScanProperties currentProps && !currentProps.IsSameAs(spectrumProperties))
-                graphControlExtension.PropertiesSheet.SelectedObject = spectrumProperties;
+                graphControlExtension.SetSelectedObjectPreservingExpansion(spectrumProperties);
         }
 
         private Dictionary<ReferenceValue<Identity>, double> GetPeakIntensities(

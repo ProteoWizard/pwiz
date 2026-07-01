@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model
                 res.SourceOffsetVoltage = spectrum.Metadata.SourceOffsetVoltage.ToString(Formats.OPT_PARAMETER, CultureInfo.CurrentCulture);
             }
 
-            var rawMetadata = new RawMetadataProperties(spectrum.Metadata.OtherParams);
+            var rawMetadata = new RawMetadataInfo(spectrum.Metadata.OtherParams);
             if (rawMetadata.Any)
             {
                 res.RawMetadata = rawMetadata;
@@ -174,7 +174,6 @@ namespace pwiz.Skyline.Model
         [Category("AcquisitionInfo")] public string Polarity { get; set; }
         [Category("AcquisitionInfo")] public string WindowGroup { get; set; } // For Bruker PASEF
         [Category("AcquisitionInfo")] public string SourceOffsetVoltage { get; set; }
-        [Category("AcquisitionInfo")] public RawMetadataProperties RawMetadata { get; set; }
         [Category("MatchInfo")] public string dotp { get; set; }
         [Category("MatchInfo")] public string idotp { get; set; }
         [Category("MatchInfo")] public string rdotp { get; set; }
@@ -189,5 +188,13 @@ namespace pwiz.Skyline.Model
                 FileName = Path.GetFileName(fileName);
             }
         }
+
+        /// <summary>
+        /// The displayed scan's uninterpreted mzML CV/user parameters, shown as an expandable node in
+        /// its own top-level "Raw Metadata" category. Null when the scan reports none.
+        /// </summary>
+        [Category("RawMetadata")]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public RawMetadataInfo RawMetadata { get; set; }
     }
 }

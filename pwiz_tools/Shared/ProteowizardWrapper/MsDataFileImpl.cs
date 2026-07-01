@@ -1613,14 +1613,14 @@ namespace pwiz.ProteowizardWrapper
                 {
                     continue;
                 }
-                string accession = CV.cvTermInfo(param.cvid).id;
-                if (!seen.Add(accession))
+                var termInfo = CV.cvTermInfo(param.cvid);
+                if (!seen.Add(termInfo.id))
                 {
                     continue;
                 }
                 string value = param.value == null ? string.Empty : param.value.ToString();
-                string unit = string.IsNullOrEmpty(param.unitsName) ? null : param.unitsName;
-                terms.Add(new SpectrumMetadataTerm(accession, param.name, value, unit));
+                string unit = param.units == CVID.CVID_Unknown ? null : param.unitsName;
+                terms.Add(new SpectrumMetadataTerm(termInfo.id, param.name, value, unit, CleanDefinition(termInfo.def)));
             }
         }
 
@@ -1640,6 +1640,33 @@ namespace pwiz.ProteowizardWrapper
                 string unit = param.units == CVID.CVID_Unknown ? null : CV.cvTermInfo(param.units).name;
                 terms.Add(new SpectrumMetadataTerm(param.name, param.name, value, unit));
             }
+        }
+
+        /// <summary>
+        /// Extracts the human-readable definition from a controlled-vocabulary term's OBO
+        /// definition, which is stored as: "definition text" [xref, ...]. Returns just the
+        /// quoted text, or null when there is no usable definition.
+        /// </summary>
+        private static string CleanDefinition(string definition)
+        {
+            if (string.IsNullOrEmpty(definition))
+            {
+                return null;
+            }
+            definition = definition.Trim();
+            int firstQuote = definition.IndexOf('"');
+            int lastQuote = definition.LastIndexOf('"');
+            if (firstQuote >= 0 && lastQuote > firstQuote)
+            {
+                return definition.Substring(firstQuote + 1, lastQuote - firstQuote - 1);
+            }
+            // No surrounding quotes: drop any trailing bracketed reference list.
+            int bracket = definition.LastIndexOf('[');
+            if (bracket > 0)
+            {
+                definition = definition.Substring(0, bracket).Trim();
+            }
+            return definition.Length == 0 ? null : definition;
         }
 
         public bool HasSrmSpectra

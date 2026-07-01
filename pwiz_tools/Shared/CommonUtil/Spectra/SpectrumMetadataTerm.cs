@@ -27,12 +27,13 @@ namespace pwiz.Common.Spectra
     /// </summary>
     public class SpectrumMetadataTerm
     {
-        public SpectrumMetadataTerm(string accession, string name, string value, string unit)
+        public SpectrumMetadataTerm(string accession, string name, string value, string unit, string definition = null)
         {
             Accession = accession;
             Name = name;
             Value = value;
             Unit = unit;
+            Definition = definition;
         }
 
         /// <summary>
@@ -59,10 +60,17 @@ namespace pwiz.Common.Spectra
         /// </summary>
         public string Unit { get; }
 
+        /// <summary>
+        /// The controlled-vocabulary definition of the term (e.g. "The intensity of the
+        /// greatest peak in the mass spectrum."), shown as explanatory help text. Null for
+        /// user params, which have no ontology definition.
+        /// </summary>
+        public string Definition { get; }
+
         protected bool Equals(SpectrumMetadataTerm other)
         {
             return Accession == other.Accession && Name == other.Name &&
-                   Value == other.Value && Unit == other.Unit;
+                   Value == other.Value && Unit == other.Unit && Definition == other.Definition;
         }
 
         public override bool Equals(object obj)
@@ -81,6 +89,7 @@ namespace pwiz.Common.Spectra
                 hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Value != null ? Value.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Unit != null ? Unit.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Definition != null ? Definition.GetHashCode() : 0);
                 return hashCode;
             }
         }

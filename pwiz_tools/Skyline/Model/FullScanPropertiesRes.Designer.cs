@@ -113,7 +113,16 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("Category_PrecursorInfo", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Metadata.
+        /// </summary>
+        internal static string Category_RawMetadata {
+            get {
+                return ResourceManager.GetString("Category_RawMetadata", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to CCS.
         /// </summary>
@@ -745,20 +754,11 @@ namespace pwiz.Skyline.Model {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Raw metadata.
+        ///   Looks up a localized string similar to Parameters.
         /// </summary>
         internal static string RawMetadata {
             get {
                 return ResourceManager.GetString("RawMetadata", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to {0} parameters.
-        /// </summary>
-        internal static string RawMetadataSummary {
-            get {
-                return ResourceManager.GetString("RawMetadataSummary", resourceCulture);
             }
         }
 

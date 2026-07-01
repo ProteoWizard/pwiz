@@ -130,11 +130,11 @@
   <data name="PrecursorMz" xml:space="preserve">
     <value>Precursor m/z</value>
   </data>
-  <data name="RawMetadata" xml:space="preserve">
-    <value>Raw metadata</value>
+  <data name="Category_RawMetadata" xml:space="preserve">
+    <value>Raw Metadata</value>
   </data>
-  <data name="RawMetadataSummary" xml:space="preserve">
-    <value>{0} parameters</value>
+  <data name="RawMetadata" xml:space="preserve">
+    <value>Parameters</value>
   </data>
   <data name="Description_PrecursorMz" xml:space="preserve">
     <value>Precursor m/z of the selected MS/MS spectrum.</value>
