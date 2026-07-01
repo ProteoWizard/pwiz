@@ -1492,7 +1492,7 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Observed Ion Mobility at Peak (RT={0}).
+        ///   Looks up a localized string similar to Observed at Peak (RT={0}).
         /// </summary>
         public static string GraphFullScan_ToolTip_ObservedAtPeakHeaderFormat {
             get {
