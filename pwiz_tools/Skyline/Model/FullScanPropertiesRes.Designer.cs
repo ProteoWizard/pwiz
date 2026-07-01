@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("Category_PrecursorInfo", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to CCS.
         /// </summary>
@@ -428,7 +428,16 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("Description_PrecursorMz", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Parameters the data file reports that Skyline does not interpret into its own fields..
+        /// </summary>
+        internal static string Description_RawMetadata {
+            get {
+                return ResourceManager.GetString("Description_RawMetadata", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Measure of similarity between labeled and non-labeled spectra..
         /// </summary>
@@ -743,7 +752,16 @@ namespace pwiz.Skyline.Model {
                 return ResourceManager.GetString("PrecursorMz", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Raw Metadata.
+        /// </summary>
+        internal static string RawMetadata {
+            get {
+                return ResourceManager.GetString("RawMetadata", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Ratio Dot Product.
         /// </summary>

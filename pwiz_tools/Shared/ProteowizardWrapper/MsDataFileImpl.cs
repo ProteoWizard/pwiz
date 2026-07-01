@@ -644,6 +644,14 @@ namespace pwiz.ProteowizardWrapper
             get { return _config.passEntireDiaPasefFrame; }
         }
 
+        /// <summary>
+        /// When true, <see cref="GetSpectrum(int)"/> collects the spectrum's uninterpreted
+        /// mzML CV/user parameters into <see cref="SpectrumMetadata.OtherParams"/> for display.
+        /// Off by default so the bulk import/extraction path pays neither the per-spectrum
+        /// cost nor the retained memory; the full-scan viewer turns it on for the one scan it shows.
+        /// </summary>
+        public bool CaptureOtherParams { get; set; }
+
         public bool HasDeclaredMSnSpectra
         {
             get { return _msDataFile.fileDescription.fileContent.hasCVParam(CVID.MS_MSn_spectrum); }
@@ -1354,6 +1362,10 @@ namespace pwiz.ProteowizardWrapper
                 ScanDescription = GetScanDescription(spectrum),
                 Metadata = GetSpectrumMetadata(spectrum)
             };
+            if (CaptureOtherParams && msDataSpectrum.Metadata != null)
+            {
+                msDataSpectrum.Metadata = msDataSpectrum.Metadata.ChangeOtherParams(GetOtherParams(spectrum));
+            }
             using var spectrumScanList = spectrum.scanList;
             using var scans = spectrumScanList.scans;
             if (IonMobilityUnits == eIonMobilityUnits.inverse_K0_Vsec_per_cm2)
@@ -1531,6 +1543,148 @@ namespace pwiz.ProteowizardWrapper
             metadata = metadata.ChangeSourceOffsetVoltage(GetSourceOffsetVoltage(spectrum));
             metadata = metadata.ChangeConstantNeutralLoss(GetConstantNeutralLoss(spectrum));
             return metadata;
+        }
+
+        // CVIDs that GetSpectrumMetadata (and the GetSpectrum helpers) already interpret
+        // into typed fields, so they are left out of the catch-all OtherParams bag to avoid
+        // showing the same information twice.
+        private static readonly HashSet<CVID> INTERPRETED_CVIDS = new HashSet<CVID>
+        {
+            CVID.MS_ms_level,
+            CVID.MS_scan_start_time,
+            CVID.MS_total_ion_current,
+            CVID.MS_ion_injection_time,
+            CVID.MS_offset_voltage,
+            CVID.MS_preset_scan_configuration,
+            CVID.MS_scan_window_lower_limit,
+            CVID.MS_scan_window_upper_limit,
+            CVID.MS_positive_scan,
+            CVID.MS_negative_scan,
+            CVID.MS_centroid_spectrum,
+            CVID.MS_profile_spectrum,
+            CVID.MS_ion_mobility_drift_time,
+            CVID.MS_inverse_reduced_ion_mobility,
+            CVID.MS_FAIMS_compensation_voltage,
+            CVID.MS_analyzer_scan_offset,
+            CVID.MS_constant_neutral_gain_spectrum
+        };
+
+        // User-param names that other parts of the reader already interpret.
+        private static readonly HashSet<string> INTERPRETED_USER_PARAMS = new HashSet<string>
+        {
+            @"scan description",
+            @"drift time",
+            @"windowGroup",
+            @"WindowGroup",
+            @"ion mobility lower limit",
+            @"ion mobility upper limit",
+            CENTROIDED_MIN_MAX
+        };
+
+        /// <summary>
+        /// Collects the spectrum's CV and user parameters that Skyline does not otherwise
+        /// interpret, so the full-scan viewer can show them. Walks the spectrum, its scans,
+        /// and their scan windows; instrument-configuration parameters (analyzer, detector,
+        /// etc.) are interpreted elsewhere and intentionally not included here.
+        /// </summary>
+        private static List<SpectrumMetadataTerm> GetOtherParams(Spectrum spectrum)
+        {
+            var terms = new List<SpectrumMetadataTerm>();
+            // Keyed by accession/name only: a term is shown once (first value wins). Terms repeated
+            // across scan windows with differing values are vanishingly rare for the params walked here.
+            var seen = new HashSet<string>();
+            using (var cvParams = spectrum.cvParams)
+            {
+                AddCvParams(terms, seen, cvParams);
+            }
+            using (var userParams = spectrum.userParams)
+            {
+                AddUserParams(terms, seen, userParams);
+            }
+            using var scanList = spectrum.scanList;
+            using var scans = scanList.scans;
+            foreach (var scan in scans)
+            {
+                using (var scanCvParams = scan.cvParams)
+                {
+                    AddCvParams(terms, seen, scanCvParams);
+                }
+                using (var scanUserParams = scan.userParams)
+                {
+                    AddUserParams(terms, seen, scanUserParams);
+                }
+                using var scanWindows = scan.scanWindows;
+                foreach (var window in scanWindows)
+                {
+                    using var windowCvParams = window.cvParams;
+                    AddCvParams(terms, seen, windowCvParams);
+                }
+            }
+            return terms;
+        }
+
+        private static void AddCvParams(List<SpectrumMetadataTerm> terms, HashSet<string> seen, CVParamList cvParams)
+        {
+            foreach (CVParam param in cvParams)
+            {
+                if (param.empty() || INTERPRETED_CVIDS.Contains(param.cvid))
+                {
+                    continue;
+                }
+                var termInfo = CV.cvTermInfo(param.cvid);
+                if (!seen.Add(termInfo.id))
+                {
+                    continue;
+                }
+                string value = param.value == null ? string.Empty : param.value.ToString();
+                string unit = param.units == CVID.CVID_Unknown ? null : param.unitsName;
+                terms.Add(new SpectrumMetadataTerm(termInfo.id, param.name, value, unit, CleanDefinition(termInfo.def)));
+            }
+        }
+
+        private static void AddUserParams(List<SpectrumMetadataTerm> terms, HashSet<string> seen, UserParamList userParams)
+        {
+            foreach (UserParam param in userParams)
+            {
+                if (param.empty() || INTERPRETED_USER_PARAMS.Contains(param.name))
+                {
+                    continue;
+                }
+                if (!seen.Add(param.name))
+                {
+                    continue;
+                }
+                string value = param.value == null ? string.Empty : param.value.ToString();
+                string unit = param.units == CVID.CVID_Unknown ? null : CV.cvTermInfo(param.units).name;
+                terms.Add(new SpectrumMetadataTerm(param.name, param.name, value, unit));
+            }
+        }
+
+        /// <summary>
+        /// Extracts the human-readable definition from a controlled-vocabulary term's OBO
+        /// definition, which is stored as: "definition text" [xref, ...]. Returns just the
+        /// quoted text, or null when there is no usable definition.
+        /// </summary>
+        private static string CleanDefinition(string definition)
+        {
+            if (string.IsNullOrEmpty(definition))
+            {
+                return null;
+            }
+            definition = definition.Trim();
+            int firstQuote = definition.IndexOf('"');
+            int lastQuote = definition.LastIndexOf('"');
+            if (firstQuote >= 0 && lastQuote > firstQuote)
+            {
+                return definition.Substring(firstQuote + 1, lastQuote - firstQuote - 1);
+            }
+            // No surrounding quotes: drop any trailing bracketed reference list.
+            int bracket = definition.LastIndexOf('[');
+            if (bracket > 0)
+            {
+                definition = definition.Substring(0, bracket).Trim();
+            }
+            return definition.Length == 0 ? null : definition;
         }
 
         public bool HasSrmSpectra

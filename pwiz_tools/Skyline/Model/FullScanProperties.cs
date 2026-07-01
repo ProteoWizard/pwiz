@@ -137,6 +137,12 @@ namespace pwiz.Skyline.Model
             {
                 res.SourceOffsetVoltage = spectrum.Metadata.SourceOffsetVoltage.ToString(Formats.OPT_PARAMETER, CultureInfo.CurrentCulture);
             }
+
+            var rawMetadata = new RawMetadataInfo(spectrum.Metadata.OtherParams);
+            if (rawMetadata.Any)
+            {
+                res.RawMetadata = rawMetadata;
+            }
             return res;
         }
         [Category("FileInfo")] public string FileName { get; set; }
@@ -182,5 +188,16 @@ namespace pwiz.Skyline.Model
                 FileName = Path.GetFileName(fileName);
             }
         }
+
+        /// <summary>
+        /// The displayed scan's uninterpreted mzML CV/user parameters, shown as an expandable
+        /// "Raw Metadata" node (in the Acquisition category) whose children are the terms. Null when
+        /// the scan reports none. Excluded from the property-sheet comparison/serialization (its terms
+        /// are file-specific and covered by their own test); this only affects comparison, not display.
+        /// </summary>
+        [UseToCompare(false)]
+        [Category("AcquisitionInfo")]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public RawMetadataInfo RawMetadata { get; set; }
     }
 }
