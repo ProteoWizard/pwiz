@@ -108,17 +108,39 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public enum Field { modified_peptide, filename, apex_time, start_time, end_time, charge, is_decoy, sample_name, q_value, score }
+        // replicate_name is appended last so the integer value of every existing Field is unchanged
+        public enum Field { modified_peptide, filename, apex_time, start_time, end_time, charge, is_decoy, sample_name, q_value, score, replicate_name }
 
         public static readonly int[] REQUIRED_FIELDS =
             {
-                (int) Field.modified_peptide, 
-                (int) Field.filename, 
+                (int) Field.modified_peptide,
+                (int) Field.filename,
                 (int) Field.start_time,
                 (int) Field.end_time
             };
 
         public static int[] REQUIRED_NO_CHROM { get { return REQUIRED_FIELDS.Take(2).ToArray(); }}
+
+        /// <summary>
+        /// File-identity columns: a peak-boundary row is matched to a result file by its on-disk file name
+        /// or, alternatively, by its (vendor-independent) replicate name. At least one of these columns must
+        /// be present in the file, but filename is no longer individually required (see <see cref="RequiredFieldsForImport"/>).
+        /// </summary>
+        public static readonly int[] FILE_ID_FIELDS =
+            {
+                (int) Field.filename,
+                (int) Field.replicate_name
+            };
+
+        /// <summary>
+        /// Required columns for <see cref="Import(string,IProgressMonitor,long,bool,bool)"/>. File identity is
+        /// validated separately via <see cref="FILE_ID_FIELDS"/> (filename OR replicate name), so filename is
+        /// dropped from the always-required set, allowing a file to key purely on replicate name.
+        /// </summary>
+        private static int[] RequiredFieldsForImport(bool changePeaks)
+        {
+            return (changePeaks ? REQUIRED_FIELDS : REQUIRED_NO_CHROM).Where(f => f != (int) Field.filename).ToArray();
+        }
 
         // ReSharper disable LocalizableElement
 
@@ -204,6 +226,7 @@ namespace pwiz.Skyline.Model
                                 new[] {"SampleName", ColumnCaptions.SampleName},
                                 new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
                                 new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
+                                new[] {MProphetResultsHandler.REPLICATE_NAME_COLUMN, ColumnCaptions.Replicate},
                             };
                             for (var field = 0; field < currentFieldNames.Length; field++)
                             {
@@ -298,7 +321,7 @@ namespace pwiz.Skyline.Model
             var peakTimes = new List<double>();
             string line = reader.ReadLine();
             int[] fieldIndices;
-            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, REQUIRED_FIELDS, out fieldIndices, out _);
+            char correctSeparator = ReadFirstLine(line, FIELD_NAMES, RequiredFieldsForImport(true), FILE_ID_FIELDS, out fieldIndices, out _);
             // Find the first 50 peak times that are not #N/A, if any is larger than the maxRT, then times are in seconds
             while (peakTimes.Count < 50)
             {
@@ -336,7 +359,7 @@ namespace pwiz.Skyline.Model
             var docNew = (SrmDocument) Document.ChangeIgnoreChangingChildren(true);
             var docReference = docNew;
             var sequenceToNode = MakeSequenceDictionary(Document);
-            var fileNameToFileMatch = new Dictionary<Tuple<string, string>, ChromSetFileMatch>();
+            var fileNameToFileMatch = new Dictionary<Tuple<string, string, bool>, ChromSetFileMatch>();
             var trackAdjustedResults = new HashSet<ResultsKey>();
             var modMatcher = new ModificationMatcher();
             var canonicalSequenceDict = new Dictionary<string, string>();
@@ -351,9 +374,10 @@ namespace pwiz.Skyline.Model
             linesRead++;
             int[] fieldIndices;
             int fieldsTotal;
-            // If we aren't changing peaks, allow start and end time to be missing
-            var requiredFields = changePeaks ? REQUIRED_FIELDS : REQUIRED_NO_CHROM;
-            char correctSeparator = ReadFirstLine(line, allFieldNames, requiredFields, out fieldIndices, out fieldsTotal);
+            // If we aren't changing peaks, allow start and end time to be missing. File identity (filename or
+            // replicate name) is required via FILE_ID_FIELDS rather than as an always-required column.
+            var requiredFields = RequiredFieldsForImport(changePeaks);
+            char correctSeparator = ReadFirstLine(line, allFieldNames, requiredFields, FILE_ID_FIELDS, out fieldIndices, out fieldsTotal);
 
             // Determine whether the input list is proteomic or small molecule
             var header = new DataFields(fieldIndices, line.ParseDsvFields(correctSeparator), allFieldNames);
@@ -382,6 +406,11 @@ namespace pwiz.Skyline.Model
                 }
                 string modifiedPeptideString = dataFields.GetField(Field.modified_peptide);
                 string fileName = dataFields.GetField(Field.filename);
+                string replicateName = dataFields.GetField(Field.replicate_name);
+                // FileName takes precedence; the replicate name is used to identify the file only when no
+                // file name is given for this row, so files keyed on FileName behave exactly as before.
+                bool useReplicate = string.IsNullOrEmpty(fileName) && !string.IsNullOrEmpty(replicateName);
+                string fileIdentity = useReplicate ? replicateName : fileName;
                 bool isDecoy = dataFields.IsDecoy(linesRead);
                 IList<IdentityPath> pepPaths;
 
@@ -476,35 +505,42 @@ namespace pwiz.Skyline.Model
                     startTime = null;
                 }
 
-                Tuple<string, string> fileKey = Tuple.Create(fileName, sampleName);
-                // Add filename to second dictionary if not yet encountered
+                var fileKey = Tuple.Create(fileIdentity, sampleName, useReplicate);
+                // Add file identity to second dictionary if not yet encountered
                 ChromSetFileMatch fileMatch;
                 if (!fileNameToFileMatch.TryGetValue(fileKey, out fileMatch) && Document.Settings.HasResults)
                 {
-                    var dataFileUri = MsDataFileUri.Parse(fileName);
-                    if (sampleName != null && dataFileUri is MsDataFilePath msDataFilePath)
+                    if (useReplicate)
                     {
-                        var uriWithSample = new MsDataFilePath(msDataFilePath.FilePath, sampleName, msDataFilePath.SampleIndex, msDataFilePath.LockMassParameters);
-                        fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(uriWithSample);
-                        if (fileMatch == null)
-                        {
-                            var bareFileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
-                            if (bareFileMatch != null)
-                            {
-                                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__, sampleName, linesRead, fileName));
-                            }
-                        }
+                        fileMatch = FindReplicateFileMatch(replicateName, linesRead);
                     }
                     else
                     {
-                        fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
+                        var dataFileUri = MsDataFileUri.Parse(fileName);
+                        if (sampleName != null && dataFileUri is MsDataFilePath msDataFilePath)
+                        {
+                            var uriWithSample = new MsDataFilePath(msDataFilePath.FilePath, sampleName, msDataFilePath.SampleIndex, msDataFilePath.LockMassParameters);
+                            fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(uriWithSample);
+                            if (fileMatch == null)
+                            {
+                                var bareFileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
+                                if (bareFileMatch != null)
+                                {
+                                    throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__, sampleName, linesRead, fileName));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            fileMatch = Document.Settings.MeasuredResults.FindMatchingMSDataFile(dataFileUri);
+                        }
                     }
 
                     fileNameToFileMatch.Add(fileKey, fileMatch);
                 }
                 if (fileMatch == null)
                 {
-                    UnrecognizedFiles.Add(fileName);
+                    UnrecognizedFiles.Add(fileIdentity);
                     continue;
                 }
                 var chromSet = fileMatch.Chromatograms;
@@ -574,7 +610,7 @@ namespace pwiz.Skyline.Model
                 }
                 if (!foundSample)
                 {
-                    UnrecognizedChargeStates.Add(new UnrecognizedChargeState(charge, fileName, modifiedPeptideString));
+                    UnrecognizedChargeStates.Add(new UnrecognizedChargeState(charge, fileIdentity, modifiedPeptideString));
                 }
             }
             // Remove peaks from the document that weren't in the file.
@@ -584,6 +620,31 @@ namespace pwiz.Skyline.Model
             if (!ReferenceEquals(docNew, docReference))
                 Document = (SrmDocument) Document.ChangeIgnoreChangingChildren(false).ChangeChildrenChecked(docNew.Children);
             return Document;
+        }
+
+        /// <summary>
+        /// Resolves a replicate name to a single result file, for peak-boundary rows that key on the
+        /// (vendor-independent) replicate name instead of the on-disk file name. Returns null when no
+        /// replicate matches the name (the row is then reported as unrecognized). Throws when the replicate
+        /// holds more than one file, since the replicate name alone is ambiguous in that case - the user must
+        /// fall back to a FileName (and optionally SampleName) column to identify a single file.
+        /// </summary>
+        private ChromSetFileMatch FindReplicateFileMatch(string replicateName, long linesRead)
+        {
+            if (!Document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out var chromSet, out _))
+                return null;    // No replicate by that name - the row is reported as unrecognized
+            if (chromSet.FileCount > 1)
+            {
+                // A multi-file replicate (multi-file replicate / multi-sample .wiff) cannot be resolved to a
+                // single file from the replicate name alone, so fail rather than guess which file to adjust.
+                throw new IOException(string.Format(
+                    Resources.PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_,
+                    replicateName, linesRead));
+            }
+            if (chromSet.FileCount == 0)
+                return null;    // Degenerate replicate with no files - reported as unrecognized
+            var fileInfo = chromSet.MSDataFileInfos[0];
+            return new ChromSetFileMatch(chromSet, fileInfo.FilePath, 0);
         }
 
         /// <summary>
@@ -707,26 +768,32 @@ namespace pwiz.Skyline.Model
             return docNew;
         }
 
-        private static char ReadFirstLine(string line, IList<string[]> allFieldNames, ICollection<int> requiredFields, out int[] fieldIndices, out int fieldsTotal)
+        private static char ReadFirstLine(string line, IList<string[]> allFieldNames, ICollection<int> requiredFields,
+            ICollection<int> anyOfFields, out int[] fieldIndices, out int fieldsTotal)
         {
 
             if (line == null)
             {
                 throw new IOException(Resources.PeakBoundaryImporter_Import_Failed_to_read_the_first_line_of_the_file);
             }
-            char? correctSeparator = DetermineCorrectSeparator(line, allFieldNames, requiredFields, out fieldIndices, out fieldsTotal);
+            char? correctSeparator = DetermineCorrectSeparator(line, allFieldNames, requiredFields, out fieldIndices, out fieldsTotal, anyOfFields);
             if (correctSeparator == null)
             {
-                string fieldNames = string.Empty;
+                var missingFields = new List<string>();
                 // Keep ReSharper from complaining
-                if (fieldIndices != null)
+                var indices = fieldIndices; // out parameter cannot be captured in a lambda
+                if (indices != null)
                 {
-                    string[] missingFields = fieldIndices.Select((index, i) => new Tuple<int, int>(index, i))
+                    missingFields.AddRange(indices.Select((index, i) => new Tuple<int, int>(index, i))
                         .Where(t => t.Item1 == -1 && requiredFields.Contains(t.Item2))
-                        .Select(t => allFieldNames[t.Item2][0]).ToArray();
-                    fieldNames = string.Join(@", ", missingFields);
+                        .Select(t => allFieldNames[t.Item2][0]));
+                    // When none of the file-identity columns (filename / replicate name) is present, point the
+                    // user at FileName as the missing header rather than reporting an empty list.
+                    if (anyOfFields != null && !anyOfFields.Any(i => i < indices.Length && indices[i] != -1))
+                        missingFields.Add(allFieldNames[(int) Field.filename][0]);
                 }
-                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line, fieldNames));
+                throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line,
+                    string.Join(@", ", missingFields)));
             }
             return correctSeparator.Value;
         }
@@ -735,7 +802,8 @@ namespace pwiz.Skyline.Model
                                                        IList<string[]> fieldNames,
                                                        ICollection<int> requiredFields,
                                                        out int[] fieldIndices,
-                                                       out int fieldsTotal)
+                                                       out int fieldsTotal,
+                                                       ICollection<int> anyOfFields = null)
         {
             // Try TSV,CSV,and SPACE as possible delimiters for the file
             var separators = new[]
@@ -770,8 +838,11 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 int requiredFieldsFound = fieldsForSeparator.Where((index, i) => index != -1 && requiredFields.Contains(i)).Count();
+                // At least one of the "any of" columns (e.g. filename OR replicate name) must also be present
+                bool anyOfFound = anyOfFields == null ||
+                                  anyOfFields.Any(i => i < fieldsForSeparator.Length && fieldsForSeparator[i] != -1);
 
-                if (requiredFieldsFound == requiredFields.Count)
+                if (requiredFieldsFound == requiredFields.Count && anyOfFound)
                 {
                     fieldIndices = fieldsForSeparator;
                     fieldsTotal = headerFields.Length;
