@@ -742,6 +742,62 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestPlanLibraryDecoyReconciledByBaseId()
+        {
+            // Library-supplied decoy (Carafe / FDRBench manifest): its modified
+            // sequence is a raw scrambled sequence with NO "DECOY_" prefix, but
+            // it shares the passing target's base_id (EntryId & 0x7FFFFFFF, with
+            // the decoy's high bit set). The planner must pair it by base_id, not
+            // by stripping a DECOY_ prefix from the modseq -- the pre-fix prefix
+            // strip skipped such decoys entirely (0 actions), leaving second-pass
+            // FDR trained on asymmetric target/decoy pools. Mirrors Rust
+            // test_plan_reconciliation_includes_library_decoy_via_base_id.
+            var cal = IdentityCalibration();
+            var cals = new Dictionary<string, RTCalibration> { { @"f1", cal } };
+
+            const uint baseId = 7u;
+
+            var consensus = new[]
+            {
+                new PeptideConsensusRT
+                {
+                    ModifiedSequence = @"PEPTIDEK", IsDecoy = false,
+                    ConsensusLibraryRt = 10.0, MedianPeakWidth = 0.6,
+                    NRunsDetected = 3, ApexLibraryRtMad = 0.02,
+                },
+                new PeptideConsensusRT
+                {
+                    ModifiedSequence = @"EDITPEPK", IsDecoy = true, // no DECOY_ prefix
+                    ConsensusLibraryRt = 10.0, MedianPeakWidth = 0.6,
+                    NRunsDetected = 3, ApexLibraryRtMad = 0.02,
+                },
+            };
+
+            var target = MakeEntry(@"PEPTIDEK", apexRt: 10.0, score: 3.0,
+                isDecoy: false, precursorQ: 0.0, peptideQ: 0.0, entryId: baseId);
+            var libraryDecoy = MakeEntry(@"EDITPEPK", apexRt: 25.0, score: -1.0,
+                isDecoy: true, precursorQ: 1.0, peptideQ: 1.0, entryId: baseId | 0x80000000u);
+
+            var perFile = new List<KeyValuePair<string, IReadOnlyList<FdrEntry>>>
+            {
+                Pair(@"f1", new[] { target, libraryDecoy }),
+            };
+
+            var actions = ReconciliationPlanner.Plan(
+                consensus, perFile,
+                new Dictionary<string, IReadOnlyList<IReadOnlyList<CwtCandidate>>>(),
+                cals, cals, experimentFdr: 0.01);
+
+            // Target at 10.0 is already at consensus -> Keep (absent). The library
+            // decoy at 25.0 is far off consensus 10.0 and, paired to the passing
+            // target by base_id, must be reconciled (ForcedIntegration, no CWT).
+            Assert.AreEqual(1, actions.Count);
+            Assert.IsTrue(actions.ContainsKey((@"f1", 1)));
+            Assert.IsInstanceOfType(
+                actions[(@"f1", 1)], typeof(ReconcileAction.ForcedIntegration));
+        }
+
+        [TestMethod]
         public void TestPlanNonConsensusPeptideSkipped()
         {
             var cal = IdentityCalibration();
@@ -1101,11 +1157,11 @@ namespace pwiz.Osprey.Test
 
         private static FdrEntry MakeEntry(
             string modifiedSequence, double apexRt, double score,
-            bool isDecoy, double precursorQ, double peptideQ)
+            bool isDecoy, double precursorQ, double peptideQ, uint entryId = 1)
         {
             return new FdrEntry
             {
-                EntryId = 1,
+                EntryId = entryId,
                 IsDecoy = isDecoy,
                 Charge = 2,
                 ApexRt = apexRt,
