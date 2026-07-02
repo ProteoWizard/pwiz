@@ -32,6 +32,14 @@
     <Compile Remove="Forms\**" />
     <EmbeddedResource Remove="Forms\**" />
     <None Remove="Forms\**" />
+    <!-- NHibernate mapping XML. SessionFactoryFactory.ConfigureMappings loads
+         DataModel/mapping.xml via assembly.GetManifestResourceStream - the file
+         must be embedded, not just deployed. SDK default glob picks up .resx
+         but not .xml, so list it explicitly. -->
+    <EmbeddedResource Include="DataModel\mapping.xml" />
+    <!-- IPI->UniProt map loaded via GetManifestResourceStream in IpiToUniprotMap.cs;
+         SDK default globs don't embed .zip. -->
+    <EmbeddedResource Include="Fasta\IpiToUniprotMap.zip" />
   </ItemGroup>
 
   <ItemGroup>

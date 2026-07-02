@@ -25,7 +25,17 @@ namespace pwiz.BiblioSpec
 {
     public class BlibFilter
     {
-        public const string EXE_BLIB_FILTER = "BlibFilter";
+        // Resolve BlibFilter.exe next to the caller's assembly. See BlibBuild.ResolveBlibBuildPath
+        // for the rationale - .NET 8's Process.Start doesn't search the current directory.
+        public static readonly string EXE_BLIB_FILTER = ResolveBlibFilterPath();
+
+        private static string ResolveBlibFilterPath()
+        {
+            string baseDir = System.AppContext.BaseDirectory;
+            string exeName = System.OperatingSystem.IsWindows() ? "BlibFilter.exe" : "BlibFilter";
+            string candidate = System.IO.Path.Combine(baseDir, exeName);
+            return System.IO.File.Exists(candidate) ? candidate : "BlibFilter";
+        }
         public bool Filter(string sourceFile, string destinationFile, IProgressMonitor progressMonitor, ref IProgressStatus status)
         {
             // ReSharper disable LocalizableElement

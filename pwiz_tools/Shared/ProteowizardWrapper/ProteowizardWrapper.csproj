@@ -67,6 +67,18 @@
     <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Analysis\Analysis.csproj" />
     <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Common\Common.csproj" />
     <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Util\Util.csproj" />
+    <!-- Vendor readers: pwiz-sharp's ReaderList.Default only has mzML/mzMLb/mzXML/MGF/MSn/BTDX.
+         Reference the vendor projects so their Reader_X classes can be added to
+         ReaderList.AdditionalReaders at MsDataFileImpl static-ctor time (see
+         MsDataFileImpl.cs). Without these, Thermo/Waters/Sciex/etc. files fail
+         with "No registered reader recognized the file". -->
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Thermo\Thermo.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Waters\Waters.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Sciex\Sciex.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Shimadzu\Shimadzu.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Agilent\Agilent.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\Bruker\Bruker.csproj" />
+    <ProjectReference Include="..\..\..\pwiz-sharp\pwiz\src\Vendor\UIMF\UIMF.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -79,9 +91,13 @@
     <Compile Remove="MsDataFileImpl.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
     <Compile Remove="MsDataFileInfo.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
     <Compile Remove="IterationListenerToMonitor.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
-    <Compile Remove="DiaUmpire.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" />
+    <!-- DiaUmpire.cs now compiles on net8 too: the pwiz.CLI dependency was only two
+         enum-discriminator values, replaced with plain literals. The wrapper's job
+         (write msconvert-compatible .params + parse DIA-Umpire userParams back out of mzML)
+         doesn't touch the engine - msconvert runs DIA-Umpire out of process. -->
     <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileImpl.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" Link="MsDataFileImpl.cs" />
-    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsInstrumentConfigInfo.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" Link="MsInstrumentConfigInfo.cs" />
+    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileImpl.Vendors.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" Link="MsDataFileImpl.Vendors.cs" />
+    <Compile Include="..\ProteowizardWrapper.PwizSharp\MsDataFileInfo.cs" Condition="'$(TargetFramework)' == 'net8.0-windows'" Link="MsDataFileInfo.cs" />
   </ItemGroup>
 
 </Project>

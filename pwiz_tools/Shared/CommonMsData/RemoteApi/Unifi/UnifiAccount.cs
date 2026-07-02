@@ -127,9 +127,18 @@ namespace pwiz.CommonMsData.RemoteApi.Unifi
 
         public TokenResponse Authenticate()
         {
-            var tokenClient = new TokenClient(IdentityServer + IdentityConnectEndpoint, ClientId,
-                ClientSecret, new HttpClientHandler());
-            return tokenClient.RequestResourceOwnerPasswordAsync(Username, Password, ClientScope).Result;
+            // IdentityModel 7: TokenClient/TokenClientOptions were removed. Use the
+            // HttpClient.RequestPasswordTokenAsync extension with PasswordTokenRequest.
+            using var httpClient = new HttpClient(new HttpClientHandler());
+            return httpClient.RequestPasswordTokenAsync(new PasswordTokenRequest
+            {
+                Address = IdentityServer + IdentityConnectEndpoint,
+                ClientId = ClientId,
+                ClientSecret = ClientSecret,
+                UserName = Username,
+                Password = Password,
+                Scope = ClientScope
+            }).Result;
         }
 
         public IEnumerable<UnifiFolderObject> GetFolders()

@@ -51,15 +51,4 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <!-- UNIFI / WatersConnect remote-API files use IdentityModel 4.x's TokenClient
-         API (with 4-arg ctor + RequestResourceOwnerPasswordAsync) which was
-         rewritten in IdentityModel 7. Port deferred — TestData tests don't
-         exercise these remote-auth paths. -->
-    <Compile Remove="RemoteApi\Unifi\**" />
-    <Compile Remove="RemoteApi\WatersConnect\**" />
-    <EmbeddedResource Remove="RemoteApi\Unifi\**" />
-    <EmbeddedResource Remove="RemoteApi\WatersConnect\**" />
-  </ItemGroup>
-
 </Project>

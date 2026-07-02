@@ -18,27 +18,19 @@
  */
 using pwiz.Common.Collections;
 using pwiz.CommonMsData.RemoteApi.Ardia;
-#if NET472
 using pwiz.CommonMsData.RemoteApi.Unifi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
-#endif
 
 namespace pwiz.CommonMsData.RemoteApi
 {
     public abstract class RemoteAccountType
     {
-#if NET472
         public static readonly RemoteAccountType UNIFI = new Unifi();
-#endif
         public static readonly RemoteAccountType ARDIA = new Ardia();
-#if NET472
         public static readonly RemoteAccountType WATERS_CONNECT = new WatersConnect();
-#endif
         public static readonly ImmutableList<RemoteAccountType> ALL = ImmutableList.ValueOf(new[] {
             ARDIA,
-#if NET472
             UNIFI, WATERS_CONNECT,
-#endif
         });
 
         public abstract string Name { get;  }
@@ -50,7 +42,6 @@ namespace pwiz.CommonMsData.RemoteApi
             return Label;
         }
 
-#if NET472
         private class Unifi : RemoteAccountType
         {
             public override RemoteUrl GetEmptyUrl()
@@ -73,7 +64,6 @@ namespace pwiz.CommonMsData.RemoteApi
                 return new UnifiAccount(@"https://democonnect.waters.com:48505", null, null);
             }
         }
-#endif
 
         private class Ardia : RemoteAccountType
         {
@@ -92,7 +82,6 @@ namespace pwiz.CommonMsData.RemoteApi
             }
         }
 
-#if NET472
         private class WatersConnect : RemoteAccountType
         {
             public override RemoteUrl GetEmptyUrl()
@@ -115,6 +104,5 @@ namespace pwiz.CommonMsData.RemoteApi
                 return WatersConnectAccount.DEFAULT;
             }
         }
-#endif
     }
 }
