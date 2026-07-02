@@ -213,7 +213,7 @@ namespace pwiz.Osprey
                 }
 
                 // Log startup info
-                LogInfo(string.Format("Osprey v{0}", OspreyVersion.Current));
+                LogInfo(string.Format("Osprey v{0}", OspreyVersion.DisplayVersion));
                 LogInfo(string.Format("Command: {0}", string.Join(" ", args)));
                 LogInfo(string.Format("Input files: {0}", config.InputFiles.Count));
                 LogInfo(string.Format("Library: {0} ({1})",

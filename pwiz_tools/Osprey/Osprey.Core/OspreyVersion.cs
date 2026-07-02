@@ -19,6 +19,9 @@
  */
 
 using System;
+using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace pwiz.Osprey.Core
 {
@@ -58,6 +61,33 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string Current = ResolveVersion();
 
+        /// <summary>
+        /// The full informational version stamped by the build:
+        /// <c>YEAR.ORDINAL.BRANCH.DOY-&lt;shorthash&gt;[-dirty]</c>. Mirrors the
+        /// Skyline <c>AssemblyInformationalVersion</c> scheme (see
+        /// pwiz_tools/Skyline/Util/Install.cs) so a binary is always traceable to
+        /// its source commit -- the defect that made a build-vs-build FDRBench
+        /// attribution impossible (TODO-osprey_version_git_hash.md). The hash is
+        /// stamped on every build path by pwiz_tools/Osprey/Directory.Build.targets;
+        /// falls back to the bare numeric <see cref="Current"/> for a non-git build
+        /// or under the bit-parity <c>OSPREY_VERSION_OVERRIDE</c>.
+        /// </summary>
+        public static readonly string InformationalVersion = ResolveInformationalVersion();
+
+        /// <summary>
+        /// Git short hash parsed from <see cref="InformationalVersion"/> (empty for
+        /// a non-git build). Follows the Skyline split convention: the token after
+        /// the numeric version, without any trailing <c>-dirty</c> marker.
+        /// </summary>
+        public static string GitHash => ExtractGitHash(InformationalVersion);
+
+        /// <summary>
+        /// Human-facing version, Skyline-style <c>26.1.1.182 (b2373f9f9c)</c> (or
+        /// <c>... (b2373f9f9c-dirty)</c>); the plain numeric version when no hash
+        /// is stamped. Used by <c>--version</c> and the startup log.
+        /// </summary>
+        public static string DisplayVersion => FormatDisplay(InformationalVersion);
+
         private static string ResolveVersion()
         {
             string overrideValue = Environment.GetEnvironmentVariable(@"OSPREY_VERSION_OVERRIDE");
@@ -67,6 +97,55 @@ namespace pwiz.Osprey.Core
             // stamped by the build; Version.ToString() renders all four components.
             var version = typeof(OspreyVersion).Assembly.GetName().Version;
             return version != null ? version.ToString() : @"0.0.0.0";
+        }
+
+        private static string ResolveInformationalVersion()
+        {
+            // Honor the bit-parity pin so --version and provenance stay
+            // deterministic under the regression harness (the override string
+            // carries no hash; DisplayVersion then renders it as-is).
+            string overrideValue = Environment.GetEnvironmentVariable(@"OSPREY_VERSION_OVERRIDE");
+            if (!string.IsNullOrEmpty(overrideValue))
+                return overrideValue;
+            var attr = typeof(OspreyVersion).Assembly
+                .GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)
+                .OfType<AssemblyInformationalVersionAttribute>().FirstOrDefault();
+            string info = attr?.InformationalVersion;
+            if (string.IsNullOrEmpty(info))
+                return Current;
+            // Defensive: strip any SDK-appended source-revision metadata ("+<sha>").
+            // We stamp the hash ourselves as a "-<hash>" suffix and disable the SDK
+            // append (IncludeSourceRevisionInInformationalVersion=false).
+            int plus = info.IndexOf('+');
+            return plus >= 0 ? info.Substring(0, plus) : info;
+        }
+
+        /// <summary>
+        /// Extracts the git short hash from an informational version such as
+        /// <c>26.1.1.182-b2373f9f9c</c> or <c>26.1.1.182-b2373f9f9c-dirty</c>.
+        /// Returns the empty string for a bare numeric version (no hash stamped).
+        /// </summary>
+        internal static string ExtractGitHash(string informational)
+        {
+            if (string.IsNullOrEmpty(informational))
+                return string.Empty;
+            // "26.1.1.182-b2373f9f9c[-dirty]".Split('-') -> the hash is element [1]
+            // (Skyline Install.GitHash convention); a trailing "dirty" is element [2].
+            var parts = informational.Split('-');
+            return parts.Length > 1 ? parts[1] : string.Empty;
+        }
+
+        /// <summary>
+        /// Renders an informational version Skyline-style: the numeric version
+        /// followed by the hash (and any <c>-dirty</c> marker) in parentheses.
+        /// A bare numeric version is returned unchanged.
+        /// </summary>
+        internal static string FormatDisplay(string informational)
+        {
+            if (string.IsNullOrEmpty(informational))
+                return informational;
+            // "26.1.1.182-b2373f9f9c[-dirty]" -> "26.1.1.182 (b2373f9f9c[-dirty])"
+            return Regex.Replace(informational, @"^(\d+\.\d+\.\d+\.\d+)-(.+)$", @"$1 ($2)");
         }
     }
 }
