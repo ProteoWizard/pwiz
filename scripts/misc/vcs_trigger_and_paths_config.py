@@ -49,7 +49,12 @@ targets['SkylineRelease'] = \
 #    ,"bt87": "Skyline master and PRs (Windows x86 debug)"
 #}
 #targets['Skyline'] = merge(targets['SkylineRelease'], targets['SkylineDebug'])
-targets['Skyline'] = targets['SkylineRelease']
+
+# On the .NET 8 port branch, Skyline builds and tests run via pwiz_tools/Skyline/build.bat
+# (dotnet restore + build + test; CodeInspection now runs inside Test.csproj), not the old
+# cpp/MSVC "bt209" config. Point plain Skyline triggers at the net8 build config instead.
+targets['SkylineWindowsNet'] = {'master': {"ProteoWizard_SkylineWindowsNet": "Skyline Windows .NET"}}
+targets['Skyline'] = targets['SkylineWindowsNet']
 
 targets['SkylineWithTestConnected'] = \
 {
