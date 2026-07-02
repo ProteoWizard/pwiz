@@ -27,8 +27,8 @@ using pwiz.Osprey.Core;
 namespace pwiz.Osprey.Test
 {
     /// <summary>
-    /// Tests for <see cref="OspreyVersion"/> git-hash version stamping
-    /// (TODO-osprey_version_git_hash.md). The Skyline-style informational
+    /// Tests for <see cref="OspreyVersion"/> git-hash version stamping. The
+    /// Skyline-style informational
     /// version (<c>YEAR.ORDINAL.BRANCH.DOY-&lt;hash&gt;[-dirty]</c>) parses and
     /// renders correctly, and an in-checkout build stamps a real commit hash and
     /// a nonzero commit day-of-year so every Osprey binary is traceable to its

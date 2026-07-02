@@ -67,7 +67,7 @@ namespace pwiz.Osprey.Core
         /// Skyline <c>AssemblyInformationalVersion</c> scheme (see
         /// pwiz_tools/Skyline/Util/Install.cs) so a binary is always traceable to
         /// its source commit -- the defect that made a build-vs-build FDRBench
-        /// attribution impossible (TODO-osprey_version_git_hash.md). The hash is
+        /// attribution impossible. The hash is
         /// stamped on every build path by pwiz_tools/Osprey/Directory.Build.targets;
         /// falls back to the bare numeric <see cref="Current"/> for a non-git build
         /// or under the bit-parity <c>OSPREY_VERSION_OVERRIDE</c>.

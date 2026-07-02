@@ -74,7 +74,9 @@ function Get-OspreyInformationalVersion {
     # Untracked files (build artifacts, .tmp scratch) are ignored -- only tracked
     # modifications change what compiles.
     $dirty = & git -C $RepoPath status --porcelain --untracked-files=no 2>$null
-    $suffix = if ([string]::IsNullOrWhiteSpace($dirty)) { '' } else { '-dirty' }
+    # A git-status failure (nonzero exit) leaves the tree state unknown; mark
+    # -dirty rather than let an unverifiable tree masquerade as a clean commit.
+    $suffix = if ($LASTEXITCODE -eq 0 -and [string]::IsNullOrWhiteSpace($dirty)) { '' } else { '-dirty' }
 
     return "$numeric-$shortHash$suffix"
 }

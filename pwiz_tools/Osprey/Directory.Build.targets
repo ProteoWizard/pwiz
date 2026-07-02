@@ -37,8 +37,8 @@
        a Carafe/redistribution `dotnet publish` all bypass those scripts and
        would otherwise ship the Directory.Build.props placeholder
        (26.1.1.0: DOY 0, no hash): an untraceable binary, the exact defect that
-       made a build-vs-build FDRBench attribution impossible (see
-       TODO-osprey_version_git_hash.md). This target runs stamp-version.ps1, which
+       made a build-vs-build FDRBench attribution impossible. This target runs
+       stamp-version.ps1, which
        dot-sources version.ps1 (the single source of the YEAR.ORDINAL.BRANCH.DOY +
        hash formula shared with build.ps1 / package.ps1), and sets:
 
@@ -64,7 +64,7 @@
       <Output TaskParameter="ConsoleOutput" PropertyName="_OspreyStamp" />
       <Output TaskParameter="ExitCode" PropertyName="_OspreyStampExit" />
     </Exec>
-    <PropertyGroup Condition="'$(_OspreyStampExit)' == '0' and '$(_OspreyStamp)' != ''">
+    <PropertyGroup Condition="'$(_OspreyStampExit)' == '0' and '$(_OspreyStamp.Trim())' != ''">
       <InformationalVersion>$(_OspreyStamp.Trim())</InformationalVersion>
       <Version Condition="'$(Version)' == '' or '$(Version)' == '26.1.1.0'">$(InformationalVersion.Split('-')[0])</Version>
     </PropertyGroup>
