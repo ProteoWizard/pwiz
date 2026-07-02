@@ -86,9 +86,25 @@ public sealed class Reader_Thermo : IReader
 
         // Delegate spectrum-list access to a lazy-reading SpectrumList_Thermo.
         // The .raw file stays open for the lifetime of the list.
-        var raw = new ThermoRawFile(filename);
+        ThermoRawFile raw;
+        try
+        {
+            raw = new ThermoRawFile(filename);
+        }
+        catch
+        {
+            // ThermoRawFile ctor throws on corrupt/incomplete .raw and holds no
+            // native handle in that case; nothing to release.
+            throw;
+        }
 
         // Walk scan filters for the ms-level sniff — fast (doesn't decode peaks).
+        // If the sniff or any downstream metadata build throws (corrupt file, missing
+        // scan filters, etc.), dispose the ThermoRawFile so its native SDK handle is
+        // released. Skyline's error-path tests (`bad_file.raw`) rely on this - otherwise
+        // the next test's cleanup fails with "file locked by another process".
+        try
+        {
         for (int scan = raw.FirstScan; scan <= raw.LastScan; scan++)
         {
             int ms = (int)raw.Raw.GetFilterForScanNumber(scan).MSOrder;
@@ -133,12 +149,11 @@ public sealed class Reader_Thermo : IReader
             result.Run.DefaultInstrumentConfiguration = result.InstrumentConfigurations[0];
         bool simAsSpectra = config?.SimAsSpectra ?? false;
         bool srmAsSpectra = config?.SrmAsSpectra ?? false;
-        var list = new SpectrumList_Thermo(raw, ownsRaw: true,
+        result.Run.SpectrumList = new SpectrumList_Thermo(raw, ownsRaw: true,
             result.Run.DefaultInstrumentConfiguration, icByAnalyzer, simAsSpectra, srmAsSpectra, pdaIc)
         {
             Dp = dpThermo,
         };
-        result.Run.SpectrumList = list;
         var chromList = new ChromatogramList_Thermo(raw, simAsSpectra, srmAsSpectra) { Dp = dpThermo };
         result.Run.ChromatogramList = chromList;
         // Advertise SIM/SRM chromatograms in fileContent when emitted (matches cpp's reference
@@ -147,6 +162,15 @@ public sealed class Reader_Thermo : IReader
             result.FileDescription.FileContent.Set(CVID.MS_selected_ion_monitoring_chromatogram);
         if (chromList.HasSrmChromatograms)
             result.FileDescription.FileContent.Set(CVID.MS_selected_reaction_monitoring_chromatogram);
+        // Ownership transferred to the SpectrumList/ChromatogramList - outer catch not needed.
+        }
+        catch
+        {
+            // If we're here mid-init, raw was never handed off. Release the native SDK
+            // handle so the file lock drops. Skyline's error-path tests rely on this.
+            raw?.Dispose();
+            throw;
+        }
 #endif
     }
 

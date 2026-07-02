@@ -33,6 +33,19 @@ public sealed class UserParam : IEquatable<UserParam>
         Units = units;
     }
 
+    // Implicit conversions matching pwiz.CLI's UserParamValue casts. See CVParam for rationale.
+    public static implicit operator double(UserParam p) =>
+        string.IsNullOrEmpty(p.Value) ? 0.0 : double.Parse(p.Value, CultureInfo.InvariantCulture);
+    public static implicit operator double?(UserParam p) =>
+        string.IsNullOrEmpty(p.Value) ? null : double.Parse(p.Value, CultureInfo.InvariantCulture);
+    public static implicit operator int(UserParam p) =>
+        string.IsNullOrEmpty(p.Value) ? 0 : int.Parse(p.Value, CultureInfo.InvariantCulture);
+    public static implicit operator float(UserParam p) =>
+        string.IsNullOrEmpty(p.Value) ? 0f : float.Parse(p.Value, CultureInfo.InvariantCulture);
+    public static implicit operator bool(UserParam p) =>
+        p.Value == "true" || p.Value == "1";
+    public static implicit operator string(UserParam p) => p?.Value ?? string.Empty;
+
     /// <summary>Returns the <see cref="Value"/> parsed as <typeparamref name="T"/>.</summary>
     public T ValueAs<T>()
     {

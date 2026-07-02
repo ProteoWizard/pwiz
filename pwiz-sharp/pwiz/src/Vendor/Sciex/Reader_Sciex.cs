@@ -24,7 +24,7 @@ namespace Pwiz.Vendor.Sciex;
 /// multi-sample wiffs, instrument-model translation table beyond a generic
 /// <c>MS_SCIEX_instrument_model</c> term.
 /// </remarks>
-public sealed class Reader_Sciex : IReader
+public sealed class Reader_Sciex : IReader, IMultiSampleReader
 {
     /// <inheritdoc/>
     public string TypeName => "Sciex";
@@ -40,6 +40,19 @@ public sealed class Reader_Sciex : IReader
     {
         ArgumentNullException.ThrowIfNull(filename);
         return IsWiffFile(filename) && File.Exists(filename) ? CvType : CVID.CVID_Unknown;
+    }
+
+    /// <inheritdoc/>
+    public string[] EnumerateSampleNames(string filename)
+    {
+        ArgumentNullException.ThrowIfNull(filename);
+#if NO_VENDOR_SUPPORT
+        throw new VendorSupportNotEnabledException(
+            "Sciex WIFF sample enumeration requires the vendor SDK.");
+#else
+        // Wiff2 uses the same sample-info API surface (unified provider).
+        return WiffFile.EnumerateSampleNames(filename);
+#endif
     }
 
     /// <inheritdoc/>

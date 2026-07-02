@@ -54,6 +54,49 @@ public sealed class ReaderList : IReader
         return CVID.CVID_Unknown;
     }
 
+    /// <summary>
+    /// Returns file extensions grouped by CV type (vendor). One entry per registered reader,
+    /// keyed by the reader's <see cref="IReader.CvType"/>. Ports pwiz.CLI's getFileExtensionsByType
+    /// so Skyline's file-open dialog can show separate vendor entries.
+    /// </summary>
+    public IReadOnlyDictionary<string, IList<string>> FileExtensionsByType()
+    {
+        var result = new Dictionary<string, IList<string>>();
+        foreach (var r in _readers)
+        {
+            var key = r.TypeName;
+            if (!result.ContainsKey(key))
+                result[key] = new List<string>(r.FileExtensions);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Fast id-only read: opens the file, iterates its spectrum list, and yields native
+    /// spectrum ids without loading binary payload. Ports pwiz.CLI's ReaderList.readIds.
+    /// </summary>
+    public string[] ReadIds(string filename)
+    {
+        ArgumentNullException.ThrowIfNull(filename);
+
+        // Multi-sample containers (Sciex WIFF, Shimadzu multi-run .lcd, etc.) enumerate
+        // sample names - Skyline uses these to discover the sample list without doing a
+        // full per-sample open. Non-multi-sample readers fall through to spectrum-id
+        // enumeration on sample 0.
+        var reader = IdentifyReader(filename, null);
+        if (reader is IMultiSampleReader multi)
+            return multi.EnumerateSampleNames(filename);
+
+        using var msd = new MSData();
+        Read(filename, msd);
+        var sl = msd.Run.SpectrumList;
+        if (sl is null) return System.Array.Empty<string>();
+        var ids = new string[sl.Count];
+        for (int i = 0; i < sl.Count; i++)
+            ids[i] = sl.SpectrumIdentity(i).Id;
+        return ids;
+    }
+
     /// <summary>Returns the first reader that identifies the file, or null.</summary>
     public IReader? IdentifyReader(string filename, string? head)
     {
@@ -61,6 +104,20 @@ public sealed class ReaderList : IReader
         foreach (var r in _readers)
             if (r.Identify(filename, head) != CVID.CVID_Unknown) return r;
         return null;
+    }
+
+    /// <summary>
+    /// Legacy pwiz.CLI 4-arg Read overload: pass sampleIndex separately from config.
+    /// The sampleIndex is folded into <c>config.RunIndex</c> before dispatching.
+    /// </summary>
+    public void Read(string filename, MSData result, int sampleIndex, ReaderConfig? config = null)
+    {
+        // Mutation is intentional: Skyline creates a fresh ReaderConfig per
+        // MsDataFileImpl ctor and calls Read once, so overwriting RunIndex has no
+        // cross-call leakage. Cloning risked dropping fields not enumerated here.
+        var effective = config ?? new ReaderConfig();
+        effective.RunIndex = sampleIndex;
+        Read(filename, result, effective);
     }
 
     /// <inheritdoc/>

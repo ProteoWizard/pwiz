@@ -1,5 +1,19 @@
 <Project>
 
+  <!-- git-commit-date -> version pieces (Jam-free generate-version replacement). -->
+  <Import Project="$(MSBuildThisFileDirectory)build\PwizVersion.targets" />
+
+  <!-- Compose pwiz-sharp's version (major.minor.{YY}{DDD}) from the git date and
+       stamp it before the SDK reads Version for assembly-info generation. -->
+  <Target Name="SetPwizSharpVersion"
+          DependsOnTargets="ComputePwizBuildVersion"
+          BeforeTargets="GetAssemblyVersion">
+    <PropertyGroup>
+      <Version>$(PwizSharpVersionMajor).$(PwizSharpVersionMinor).$(PwizVersionYear2)$(PwizVersionDayOfYear)</Version>
+      <InformationalVersion>$(Version)-$(PwizVersionGitHash) ($(_BuildKindSuffix))</InformationalVersion>
+    </PropertyGroup>
+  </Target>
+
   <!-- Test-only PackageReferences, gated on $(IsTestProject). The project's own
        SDK sets IsTestProject=true via the Microsoft.NET.Test.Sdk reference; by
        the time Directory.Build.targets is imported (AFTER the project), that

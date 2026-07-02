@@ -103,6 +103,43 @@ internal sealed class WiffFile : AbstractWiffFile
         catch { return (Array.Empty<double>(), Array.Empty<double>()); }
     }
 
+    /// <summary>
+    /// Fast sample-name enumeration for a WIFF file - opens the file with a lightweight
+    /// AnalystWiffDataProvider (no per-sample MS open), reads sample metadata, closes.
+    /// Consumed by <see cref="Reader_Sciex.EnumerateSampleNames(string)"/> to answer
+    /// <c>ReaderList.ReadIds</c> on multi-sample WIFF files.
+    /// </summary>
+    public static string[] EnumerateSampleNames(string wiffPath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(wiffPath);
+        if (!File.Exists(wiffPath)) throw new FileNotFoundException("WIFF not found", wiffPath);
+        // AnalystWiffDataProvider holds native SDK resources that keep the .wiff file
+        // locked. It exposes .Close() (not IDisposable) to release those. Also force
+        // a GC + finalizer pass - the Sciex SDK sometimes enqueues finalizers rather
+        // than closing the file synchronously (see WiffFile.Dispose comments).
+        // NOTE: Both Batch.GetSampleNames() and GetBasicSampleInfos().SampleName return
+        // comma-containing strings on the current Clearcore2 SDK version (e.g.
+        // "rfp9,after,h,1") where legacy pwiz.CLI returned underscore-containing
+        // strings ("rfp9_after_h_1"). This is a Sciex-SDK-version difference we can't
+        // paper over from here without corrupting WIFFs whose sample names legitimately
+        // contain commas. GetBasicSampleInfos is chosen because its single-sample
+        // behavior matches what Skyline expects when the WIFF has one sample.
+        var provider = new AnalystWiffDataProvider();
+        var names = new List<string>();
+        try
+        {
+            foreach (var info in provider.GetBasicSampleInfos(wiffPath))
+                names.Add(info.SampleName ?? string.Empty);
+        }
+        finally
+        {
+            try { provider.Close(); } catch { /* best-effort */ }
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+        }
+        return names.ToArray();
+    }
+
     public WiffFile(string wiffPath, int sampleIndex0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(wiffPath);

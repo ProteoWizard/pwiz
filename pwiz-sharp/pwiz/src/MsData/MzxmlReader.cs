@@ -383,8 +383,21 @@ public sealed class MzxmlReader
 
         using var sub = reader.ReadSubtree();
         sub.Read(); // position at scan
-        while (sub.Read())
+        // Track the depth of our owning <scan> so we can bail out cleanly if we hit
+        // a sibling <scan> at the same depth. Some MassWolf-converted Waters mzXML
+        // files omit the </scan> end tag between consecutive scans, which cpp pwiz
+        // tolerates but strict XmlReader-based parsing does not without a hint.
+        int ownerDepth = sub.Depth;
+        while (true)
         {
+            bool advanced;
+            try { advanced = sub.Read(); }
+            catch (System.Xml.XmlException)
+            {
+                // Malformed tail - best-effort: stop here with what we've parsed.
+                break;
+            }
+            if (!advanced) break;
             if (sub.NodeType != XmlNodeType.Element) continue;
             switch (sub.LocalName)
             {
@@ -399,16 +412,21 @@ public sealed class MzxmlReader
                         string n = sub.GetAttribute("name") ?? "";
                         string v = sub.GetAttribute("value") ?? "";
                         spec.Params.UserParams.Add(new UserParam(n, v, "xsd:string"));
-                        sub.Skip();
+                        try { sub.Skip(); } catch (System.Xml.XmlException) { return spec; }
                         break;
                     }
                 case "scan":
-                    // Nested scan (older mzXML uses nesting for precursor relationships) — skip.
-                    // sub.Skip() on a NON-EMPTY element correctly advances past the end tag;
-                    // for an empty element it advances to the NEXT sibling, which combined
-                    // with the outer loop's next Read() would silently swallow a sibling's
-                    // Element node — guard against that.
-                    if (!sub.IsEmptyElement) sub.Skip();
+                    // A `<scan>` at the SAME depth as ours means the current scan didn't
+                    // close (malformed mzXML - MassWolf output for some Waters files):
+                    // treat it as end-of-current-scan and return. Nested `<scan>` at a
+                    // deeper depth is the older mzXML precursor-relationship pattern -
+                    // skip it.
+                    if (sub.Depth == ownerDepth) return spec;
+                    if (!sub.IsEmptyElement)
+                    {
+                        try { sub.Skip(); }
+                        catch (System.Xml.XmlException) { return spec; }
+                    }
                     break;
                 case "scanOrigin":
                 case "nativeScanRef":
@@ -420,7 +438,10 @@ public sealed class MzxmlReader
                     // text content — the precursor element would never get processed and
                     // MS_selected_ion_m_z would stay unset. For empty elements there's
                     // nothing to skip; the outer loop's Read() advances to the next sibling.
-                    if (!sub.IsEmptyElement) sub.Skip();
+                    if (!sub.IsEmptyElement)
+                    {
+                        try { sub.Skip(); } catch (System.Xml.XmlException) { return spec; }
+                    }
                     break;
             }
         }
@@ -562,13 +583,17 @@ public sealed class MzxmlReader
         var encoder = new BinaryDataEncoder(encoderConfig);
         double[] decoded = encoder.DecodeDoubles(content);
 
-        if (decoded.Length % 2 != 0 || decoded.Length / 2 != peaksCount)
+        // mzXML's peaksCount attribute is advisory - some converters (MassWolf on Waters
+        // .raw) emit a truncated attribute that doesn't match the actual base64 payload
+        // length. cpp pwiz treats the decoded payload as authoritative; do the same here.
+        if (decoded.Length % 2 != 0)
             throw new InvalidDataException(
-                $"[MzxmlReader] decoded peak count {decoded.Length / 2} does not match attribute peaksCount={peaksCount}");
-
-        var mz = new double[peaksCount];
-        var intensity = new double[peaksCount];
-        for (int i = 0; i < peaksCount; i++)
+                $"[MzxmlReader] decoded peak stream has odd length {decoded.Length} " +
+                $"(expected mz/intensity pairs); peaksCount attribute reported {peaksCount}");
+        int actualPeaks = decoded.Length / 2;
+        var mz = new double[actualPeaks];
+        var intensity = new double[actualPeaks];
+        for (int i = 0; i < actualPeaks; i++)
         {
             mz[i] = decoded[i * 2];
             intensity[i] = decoded[i * 2 + 1];

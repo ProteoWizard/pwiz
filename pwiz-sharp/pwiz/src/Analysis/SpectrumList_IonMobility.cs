@@ -110,6 +110,14 @@ public sealed class SpectrumList_IonMobility : SpectrumListWrapper
         return sonar.SonarMzToBinRange(precursorMz, tolerance);
     }
 
+    /// <summary>Legacy pwiz.CLI 4-arg overload - writes start/end bins to out params.</summary>
+    public void SonarMzToBinRange(double precursorMz, double tolerance, out int low, out int high)
+    {
+        var (s, e) = SonarMzToBinRange(precursorMz, tolerance);
+        low = s;
+        high = e;
+    }
+
     /// <summary>Waters SONAR helper: returns the nominal m/z filter value of
     /// <paramref name="bin"/>.</summary>
     /// <exception cref="InvalidOperationException">The wrapped list is not Waters SONAR.</exception>
@@ -119,6 +127,12 @@ public sealed class SpectrumList_IonMobility : SpectrumListWrapper
             throw new InvalidOperationException(
                 "[SpectrumList_IonMobility.SonarBinToPrecursorMz] only works on Waters SONAR data.");
         return sonar.SonarBinToPrecursorMz(bin);
+    }
+
+    /// <summary>Legacy pwiz.CLI 2-arg overload - writes mz to out param.</summary>
+    public void SonarBinToPrecursorMz(int bin, out double result)
+    {
+        result = SonarBinToPrecursorMz(bin);
     }
 
     // mzML re-read fallback: scan the first ~5 spectra for IM CV params and binary-
@@ -131,7 +145,10 @@ public sealed class SpectrumList_IonMobility : SpectrumListWrapper
         int n = System.Math.Min(5, inner.Count);
         for (int i = 0; i < n; i++)
         {
-            var spectrum = inner.GetSpectrum(i, getBinaryData: true);
+            // Probe only reads cvParams (IM units) - binary data isn't needed. Passing
+            // getBinaryData=true forces a wrapping PeakPicker to run its detector, which
+            // fails on VendorOnlyPeakDetector-wrapped lists.
+            var spectrum = inner.GetSpectrum(i, getBinaryData: false);
             if (spectrum is null) continue;
 
             // Per-scan IM CV params. Spectrum exposes ParamContainer helpers directly via

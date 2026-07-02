@@ -194,8 +194,44 @@ public sealed class ReaderConfig
     /// </remarks>
     public int RunIndex { get; set; }
 
+    /// <summary>
+    /// When true, Waters SONAR data reports the drift-time array as SONAR bin numbers
+    /// rather than actual drift times. Advisory; the C# Waters reader doesn't yet emit
+    /// SONAR-specific arrays. Round-tripped for Skyline's pwiz.CLI-parity Config.
+    /// </summary>
+    public bool ReportSonarBins { get; set; }
+
+    /// <summary>
+    /// When true, Bruker isolation-window arrays are included in the emitted spectra.
+    /// Default false: Skyline infers isolation from WindowGroup/IM cvParams. Round-tripped.
+    /// </summary>
+    public bool IncludeIsolationArrays { get; set; }
+
+    /// <summary>
+    /// When true (Waters lockmass), spectra flagged as calibration/lockmass are omitted
+    /// from the output. Advisory; readers apply the filter downstream.
+    /// </summary>
+    public bool CalibrationSpectraAreOmitted { get; set; }
+
     /// <summary>Default configuration.</summary>
     public static ReaderConfig Default { get; } = new();
+}
+
+/// <summary>
+/// Optional capability interface for vendor readers that support enumerating multiple
+/// runs/samples within a single container file (Sciex .wiff, Shimadzu .lcd, etc.).
+/// <see cref="Pwiz.Data.MsData.Readers.ReaderList.ReadIds"/> dispatches to this interface
+/// when the identified reader implements it, returning sample-level identifiers instead
+/// of spectrum ids.
+/// </summary>
+public interface IMultiSampleReader
+{
+    /// <summary>
+    /// Enumerates the sample names available inside <paramref name="filename"/>.
+    /// One entry per sample; index into this array is the <c>sampleIndex</c> parameter
+    /// consumed by <see cref="Readers.ReaderList.Read(string, MSData, int, ReaderConfig?)"/>.
+    /// </summary>
+    string[] EnumerateSampleNames(string filename);
 }
 
 /// <summary>

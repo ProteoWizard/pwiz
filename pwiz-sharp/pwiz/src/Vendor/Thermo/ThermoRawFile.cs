@@ -61,27 +61,45 @@ public sealed class ThermoRawFile : IDisposable
         Filename = filename;
 
         _manager = RawFileReaderAdapter.ThreadedFileFactory(filename);
-        _raw = _manager.CreateThreadAccessor();
-        _raw.IncludeReferenceAndExceptionData = true;
-
-        if (Raw.IsError)
-            throw new InvalidDataException($"Thermo RAW file reports IsError: {filename}");
-        if (Raw.InAcquisition)
-            throw new InvalidDataException($"Thermo RAW file is still being acquired: {filename}");
-        if (Raw.GetInstrumentCountOfType(Device.MS) == 0)
-            throw new InvalidDataException($"Thermo RAW file has no MS controllers: {filename}");
-
-        Raw.SelectInstrument(Device.MS, 1);
-
-        var hdr = Raw.RunHeaderEx;
-        FirstScan = hdr.FirstSpectrum;
-        LastScan = hdr.LastSpectrum;
-        RunId = Path.GetFileNameWithoutExtension(filename);
         try
         {
-            CreationDate = Raw.FileHeader.CreationDate.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
+            _raw = _manager.CreateThreadAccessor();
+            _raw.IncludeReferenceAndExceptionData = true;
+
+            if (Raw.IsError)
+                throw new InvalidDataException($"Thermo RAW file reports IsError: {filename}");
+            if (Raw.InAcquisition)
+                throw new InvalidDataException($"Thermo RAW file is still being acquired: {filename}");
+            if (Raw.GetInstrumentCountOfType(Device.MS) == 0)
+                throw new InvalidDataException($"Thermo RAW file has no MS controllers: {filename}");
+
+            Raw.SelectInstrument(Device.MS, 1);
+
+            var hdr = Raw.RunHeaderEx;
+            FirstScan = hdr.FirstSpectrum;
+            LastScan = hdr.LastSpectrum;
+            RunId = Path.GetFileNameWithoutExtension(filename);
+            try
+            {
+                CreationDate = Raw.FileHeader.CreationDate.ToString("yyyy-MM-ddTHH:mm:ssZ", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            catch { CreationDate = string.Empty; }
         }
-        catch { CreationDate = string.Empty; }
+        catch
+        {
+            // ThreadedFileFactory opens the .raw file lazily on first access; if any
+            // downstream probe fails (corrupt file, no MS controllers, etc.) release the
+            // manager so the OS file lock drops. Otherwise Skyline's bad-file test-cleanup
+            // fails with "process cannot access the file because it is being used by
+            // another process".
+            if (_raw is IDisposable rd) try { rd.Dispose(); } catch { }
+            if (_manager is IDisposable md) try { md.Dispose(); } catch { }
+            _raw = null;
+            _manager = null;
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            throw;
+        }
     }
 
     /// <summary>SDK <c>RetentionTimeFromScanNumber</c> in minutes for a 1-based scan number.</summary>

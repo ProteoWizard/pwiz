@@ -85,13 +85,23 @@
     <Authors>ProteoWizard Contributors</Authors>
   </PropertyGroup>
 
-  <!-- Tag the assembly version like cpp's generate-version.jam: "(automated build)" for CI
-       runs with the automated flag, "(developer build)" for local builds. build.bat sets
-       AutomatedBuild=true when its automated flag is passed. -->
+  <!-- Assembly version, Jam-free. Scheme mirrors pwiz cpp's generate-version.jam:
+       major.minor.{YY}{DDD}, where {YY}{DDD} is the two-digit year and 3-digit
+       day-of-year of the git commit date. The actual date-stamped value is set by
+       SetPwizSharpVersion in Directory.Build.targets (which reads the git date via
+       build\PwizVersion.targets); the placeholder below (DDD sentinel 000) is what a
+       design-time/eval-only build sees before that target runs.
+       "(automated build)" for CI (build.bat sets AutomatedBuild=true), else
+       "(developer build)". -->
   <PropertyGroup>
     <_BuildKindSuffix Condition="'$(AutomatedBuild)' == 'true'">automated build</_BuildKindSuffix>
     <_BuildKindSuffix Condition="'$(AutomatedBuild)' != 'true'">developer build</_BuildKindSuffix>
-    <InformationalVersion Condition="'$(InformationalVersion)' == ''">0.1.0 ($(_BuildKindSuffix))</InformationalVersion>
+    <PwizSharpVersionMajor>4</PwizSharpVersionMajor>
+    <PwizSharpVersionMinor>0</PwizSharpVersionMinor>
+    <Version Condition="'$(Version)' == ''">$(PwizSharpVersionMajor).$(PwizSharpVersionMinor).0</Version>
+    <!-- We append the short git hash to InformationalVersion ourselves (Jam-style
+         "-<hash>"); suppress the SDK's automatic "+<full sha>" so it isn't doubled. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
 </Project>

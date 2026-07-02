@@ -138,6 +138,12 @@ public static class MSDataFile
     }
 
     /// <summary>
+    /// Legacy pwiz.CLI 2-arg convenience overload - writes with default mzML config.
+    /// </summary>
+    public static void Write(MSData msd, string path)
+        => Write(msd, path, new WriteConfig(), null);
+
+    /// <summary>
     /// Writes <paramref name="msd"/> to <paramref name="path"/> in the format selected by
     /// <paramref name="config"/>. Mirrors cpp <c>MSDataFile::write(MSData&amp;, path, WriteConfig, ...)</c>.
     /// Throws <see cref="NotImplementedException"/> for formats that don't have a pwiz-sharp

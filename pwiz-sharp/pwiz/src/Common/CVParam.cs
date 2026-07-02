@@ -60,6 +60,34 @@ public sealed class CVParam : IEquatable<CVParam>
     public CVParam(CVID cvid, bool value, CVID units = CVID.CVID_Unknown)
         : this(cvid, value ? "true" : "false", units) { }
 
+    // ==================== Implicit conversions ====================
+    // These mirror pwiz.CLI's CVParamValue implicit casts so ported code that
+    // reads a numeric CV param via `double x = cvParam.Value` (rather than
+    // `.ValueAs<double>()`) compiles. Parsing follows the same rules as ValueAs<T>.
+
+    /// <summary>Parses <see cref="Value"/> as double, invariant culture.</summary>
+    public static implicit operator double(CVParam p) =>
+        string.IsNullOrEmpty(p.Value) ? 0.0 : double.Parse(p.Value, CultureInfo.InvariantCulture);
+
+    /// <summary>Parses <see cref="Value"/> as double?, returning null on empty.</summary>
+    public static implicit operator double?(CVParam p) =>
+        string.IsNullOrEmpty(p.Value) ? null : double.Parse(p.Value, CultureInfo.InvariantCulture);
+
+    /// <summary>Parses <see cref="Value"/> as int, invariant culture.</summary>
+    public static implicit operator int(CVParam p) =>
+        string.IsNullOrEmpty(p.Value) ? 0 : int.Parse(p.Value, CultureInfo.InvariantCulture);
+
+    /// <summary>Parses <see cref="Value"/> as float, invariant culture.</summary>
+    public static implicit operator float(CVParam p) =>
+        string.IsNullOrEmpty(p.Value) ? 0f : float.Parse(p.Value, CultureInfo.InvariantCulture);
+
+    /// <summary>Parses <see cref="Value"/> as bool ("true"/"1" → true).</summary>
+    public static implicit operator bool(CVParam p) =>
+        p.Value == "true" || p.Value == "1";
+
+    /// <summary>Returns the raw string <see cref="Value"/>.</summary>
+    public static implicit operator string(CVParam p) => p?.Value ?? string.Empty;
+
     /// <summary>Returns the <see cref="Value"/> parsed as <typeparamref name="T"/>.</summary>
     public T ValueAs<T>()
     {

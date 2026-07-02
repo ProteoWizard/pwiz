@@ -197,6 +197,10 @@ public class ChromatogramIdentity
 }
 
 /// <summary>A single chromatogram. Port of pwiz::msdata::Chromatogram.</summary>
+/// <summary>Legacy pwiz.CLI helper: List of <see cref="TimeIntensityPair"/> populated by
+/// <see cref="Chromatogram.GetTimeIntensityPairs(ref TimeIntensityPairList)"/>.</summary>
+public sealed class TimeIntensityPairList : List<TimeIntensityPair> { }
+
 public sealed class Chromatogram : ChromatogramIdentity
 {
     /// <summary>ParamContainer for this chromatogram.</summary>
@@ -238,6 +242,17 @@ public sealed class Chromatogram : ChromatogramIdentity
 
     /// <summary>Returns the intensity binary array (<see cref="CVID.MS_intensity_array"/>), or null.</summary>
     public BinaryDataArray? GetIntensityArray() => GetArrayByCvid(CVID.MS_intensity_array);
+
+    /// <summary>
+    /// Legacy pwiz.CLI overload: fills the caller-provided list (passed by ref) with
+    /// (time, intensity) pairs. Port of pwiz.CLI's
+    /// <c>Chromatogram::getTimeIntensityPairs(TimeIntensityPairList&amp;)</c>.
+    /// </summary>
+    public void GetTimeIntensityPairs(ref TimeIntensityPairList pairList)
+    {
+        pairList ??= new TimeIntensityPairList();
+        GetTimeIntensityPairs((List<TimeIntensityPair>)pairList);
+    }
 
     /// <summary>Returns the first binary array tagged with <paramref name="arrayType"/>, or null.</summary>
     public BinaryDataArray? GetArrayByCvid(CVID arrayType)

@@ -41,6 +41,33 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     public override DataProcessing DataProcessing => _dp;
 
     /// <summary>
+    /// Static check: does the given spectrum list come from a vendor reader that supports
+    /// native centroid extraction (so `preferVendorPeakPicking` can meaningfully switch)?
+    /// Port of pwiz.CLI's <c>SpectrumList_PeakPicker::supportsVendorPeakPicking</c>. Returns
+    /// true for Thermo/Waters/Sciex/Agilent/Bruker/Shimadzu reader-backed lists.
+    /// </summary>
+    public static bool SupportsVendorPeakPicking(ISpectrumList sl)
+    {
+        // Walk through any decorator by type-name inspection - SpectrumListWrapper.Inner is
+        // protected so we can't unwrap directly from outside. Reader-backed lists are named
+        // Pwiz.Vendor.<Name>.SpectrumList_<Name>; decorators wrap them once each.
+        var typeName = sl?.GetType().FullName ?? "";
+        return typeName.StartsWith("Pwiz.Vendor.", System.StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Path-based overload: identifies which vendor reader would handle the file and
+    /// returns true when that reader is one of the vendor SDKs. Port of pwiz.CLI's
+    /// <c>SpectrumList_PeakPicker::supportsVendorPeakPicking(path)</c>.
+    /// </summary>
+    public static bool SupportsVendorPeakPicking(string path)
+    {
+        var reader = Pwiz.Data.MsData.Readers.ReaderList.Default.IdentifyReader(path, null);
+        var typeName = reader?.GetType().FullName ?? "";
+        return typeName.StartsWith("Pwiz.Vendor.", System.StringComparison.Ordinal);
+    }
+
+    /// <summary>
     /// Creates a peak picker with <paramref name="algorithm"/> as the fallback when the
     /// vendor reader doesn't expose a centroid feed.
     /// </summary>
@@ -48,6 +75,29 @@ public sealed class SpectrumList_PeakPicker : SpectrumListWrapper
     /// <param name="algorithm">Fallback detector; may be null to require vendor centroiding.</param>
     /// <param name="preferVendorPeakPicking">When true, defer to vendor centroid if available.</param>
     /// <param name="msLevelsToPeakPick">Only spectra with MS level in this set are picked.</param>
+    /// <summary>
+    /// Legacy pwiz.CLI convenience overload - msLevelsToPeakPick as a comma-separated
+    /// string ("1", "1,2", etc.). Parses into <see cref="IntegerSet"/>.
+    /// </summary>
+    public SpectrumList_PeakPicker(
+        ISpectrumList inner,
+        IPeakDetector? algorithm,
+        bool preferVendorPeakPicking,
+        string msLevelsToPeakPick)
+        : this(inner, algorithm, preferVendorPeakPicking, ParseIntegerSet(msLevelsToPeakPick)) { }
+
+    private static readonly char[] s_separators = { ',', ' ' };
+
+    private static IntegerSet ParseIntegerSet(string spec)
+    {
+        var set = new IntegerSet();
+        foreach (var part in spec.Split(s_separators, System.StringSplitOptions.RemoveEmptyEntries))
+        {
+            if (int.TryParse(part, out int n)) set.Insert(n);
+        }
+        return set;
+    }
+
     public SpectrumList_PeakPicker(
         ISpectrumList inner,
         IPeakDetector? algorithm,
