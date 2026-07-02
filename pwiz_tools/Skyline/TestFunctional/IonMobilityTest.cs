@@ -868,6 +868,13 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
             doc = WaitForDocumentLoaded();
+
+            // After reimport with IM filtering active, transitions extracted with
+            // an IM window should carry observed IM. Observed CCS will not be
+            // populated here: the IM-to-CCS conversion is a vendor-proprietary
+            // black box, and open formats like mz5 (and mzML) don't expose it.
+            AssertExtractedObservedIonMobilityAndCcsPopulated(doc);
+
             var progress = new SilentProgressMonitor();
             var exported = testFilesDir.GetTestPath("export.blib");
             new SpectralLibraryExporter(SkylineWindow.Document, SkylineWindow.DocumentFilePath)
@@ -917,6 +924,45 @@ namespace pwiz.SkylineTestFunctional
 
             OkDialog(driftTimePredictorDoomedDlg, driftTimePredictorDoomedDlg.CancelDialog);
             OkDialog(transitionSettingsDlg, transitionSettingsDlg.OkDialog);
+        }
+
+        private static void AssertExtractedObservedIonMobilityAndCcsPopulated(SrmDocument doc)
+        {
+            int withObservedIm = 0;
+            int withObservedCcs = 0;
+            int withImInfo = 0;
+            foreach (var transitionGroup in doc.MoleculeTransitionGroups)
+            {
+                foreach (var transition in transitionGroup.Transitions)
+                {
+                    foreach (var chromInfo in transition.Results.SelectMany(r => r))
+                    {
+                        if (chromInfo.IonMobility != null && chromInfo.IonMobility.HasIonMobilityValue)
+                            withImInfo++;
+                        if (chromInfo.ObservedIonMobility.HasValue)
+                        {
+                            withObservedIm++;
+                            // A scale-0 encode (e.g. when the per-time-point IM scale is sourced
+                            // from a missing CCS converter rather than the data reader's IM units)
+                            // silently decodes to NaN. Assert a finite, physically plausible
+                            // (positive) value, not just HasValue — NaN.HasValue is true and would
+                            // otherwise slip through this check.
+                            var observedIm = chromInfo.ObservedIonMobility.Value;
+                            AssertEx.IsTrue(!double.IsNaN(observedIm) && observedIm > 0,
+                                string.Format(@"Observed ion mobility should be finite and positive, got {0}", observedIm));
+                        }
+                        if (chromInfo.ObservedCcs.HasValue)
+                            withObservedCcs++;
+                    }
+                }
+            }
+            // Observed IM should always populate when IM filtering is active, since it
+            // is just the intensity-weighted centroid of raw spectrum IM values.
+            AssertEx.IsTrue(withImInfo > 0, @"Expected transitions with IM info after IM-filtered reimport");
+            AssertEx.IsTrue(withObservedIm > 0, @"Expected at least one transition with ObservedIonMobility after IM extraction");
+            // ObservedCcs depends on the source file's IM-to-CCS conversion, which is
+            // a vendor-proprietary black box. Open formats (mzML, mz5) don't expose it,
+            // so we don't assert presence of ObservedCcs here.
         }
     }
 }
