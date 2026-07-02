@@ -36,8 +36,6 @@ namespace pwiz.Osprey.FDR.Reconciliation
     /// </summary>
     public static class ReconciliationPlanner
     {
-        private const string DECOY_PREFIX = @"DECOY_";
-
         // Minimum RT tolerance floor (minutes) accommodates scan-resolution rounding.
         private const double MIN_RT_TOLERANCE = 0.1;
 
@@ -119,13 +117,18 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 }
             }
 
-            // Passing precursors: (base_sequence, charge) where any of the
+            // Passing precursors keyed on (base_id, charge) where any of the
             // four q-values passes at experimentFdr. Rationale at
-            // reconciliation.rs:516-528 — blib admits a precursor if ANY
-            // level passes, so reconciliation must include them in every
-            // file to keep per-file boundaries self-consistent. Decoys are
-            // picked up by the paired-decoy logic below.
-            var passingPrecursors = new HashSet<(string, byte)>();
+            // reconciliation.rs:560-576 — blib admits a precursor if ANY level
+            // passes, so reconciliation must include them in every file to keep
+            // per-file boundaries self-consistent. We key on
+            // base_id = EntryId & 0x7FFFFFFF (plus charge) rather than
+            // modified_sequence so paired decoys are recognised regardless of
+            // whether their modified_sequence carries a DECOY_ prefix: a target
+            // and its library-supplied decoy (Carafe / FDRBench manifest) share
+            // the same base_id by construction. Mirrors Rust plan_reconciliation
+            // and the base_id linkage already used by ConsensusRts.Compute.
+            var passingBaseIds = new HashSet<(uint, byte)>();
             foreach (var fileKvp in perFileEntries)
             {
                 foreach (var entry in fileKvp.Value)
@@ -136,7 +139,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                         Math.Min(entry.RunPrecursorQvalue, entry.RunPeptideQvalue),
                         Math.Min(entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue));
                     if (bestQ <= experimentFdr)
-                        passingPrecursors.Add((entry.ModifiedSequence, entry.Charge));
+                        passingBaseIds.Add((entry.EntryId & 0x7FFFFFFFu, entry.Charge));
                 }
             }
 
@@ -198,12 +201,12 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     if (!consensusMap.TryGetValue(key, out var consensusEntry))
                         continue;
 
-                    // Only reconcile precursors that passed experiment-FDR
-                    // (or paired decoys). base_sequence strips DECOY_.
-                    string baseSeq = entry.ModifiedSequence.StartsWith(DECOY_PREFIX, StringComparison.Ordinal)
-                        ? entry.ModifiedSequence.Substring(DECOY_PREFIX.Length)
-                        : entry.ModifiedSequence;
-                    if (!passingPrecursors.Contains((baseSeq, entry.Charge)))
+                    // Only reconcile precursors that passed experiment-FDR (or
+                    // their paired decoys). Pair by base_id (EntryId & 0x7FFFFFFF)
+                    // so a library-supplied decoy whose modified_sequence has no
+                    // DECOY_ prefix is still recognised -- see the passingBaseIds
+                    // rationale above.
+                    if (!passingBaseIds.Contains((entry.EntryId & 0x7FFFFFFFu, entry.Charge)))
                         continue;
 
                     double expectedRt = cal.Predict(consensusEntry.ConsensusLibraryRt);

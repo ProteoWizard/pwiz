@@ -124,6 +124,63 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Reconciliation must pair a target with its decoy by base_id (the
+        /// entry_id low 31 bits), never by stripping a "DECOY_" prefix from the
+        /// modified sequence. Prefix-stripping silently misses library-supplied
+        /// decoys (Carafe / FDRBench manifest) whose modseq carries no prefix, so
+        /// they are dropped from reconciliation and bias second-pass FDR optimistic
+        /// (osprey 0abe0ff). Guard: no "DECOY_" string literal may appear in the
+        /// reconciliation code (comments describing the rationale are fine). If a
+        /// literal is ever genuinely required, add an inline exemption comment
+        /// beginning "// DECOY_ pairing OK:" on the same line.
+        /// </summary>
+        [TestMethod]
+        public void TestReconciliationPairsDecoysByBaseIdNotPrefix()
+        {
+            string sourceRoot = FindOspreySourceRoot();
+            var violations = new List<string>();
+            // A DECOY_ string literal in code (e.g. "DECOY_" or @"DECOY_") is the
+            // fingerprint of prefix-based pairing; the base_id path never needs it.
+            var pattern = new Regex("\"DECOY_");
+            const string exemptionTag = "// DECOY_ pairing OK:";
+            const string reconDir = "Osprey.FDR/Reconciliation/";
+
+            foreach (var file in EnumerateProductionCsFiles(sourceRoot))
+            {
+                string rel = RelativePath(sourceRoot, file).Replace('\\', '/');
+                if (rel.IndexOf(reconDir, StringComparison.OrdinalIgnoreCase) < 0)
+                    continue;
+
+                string[] lines;
+                try { lines = File.ReadAllLines(file); }
+                catch (IOException) { continue; }
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    string line = lines[i];
+                    // Only inspect the code part -- comments legitimately mention
+                    // "DECOY_" to explain why base_id pairing is used instead.
+                    int commentIdx = IndexOfLineComment(line);
+                    string codePart = commentIdx >= 0 ? line.Substring(0, commentIdx) : line;
+                    if (!pattern.IsMatch(codePart))
+                        continue;
+                    if (line.Contains(exemptionTag))
+                        continue;
+                    string rel2 = rel;
+                    violations.Add(string.Format("{0}:{1}: {2}", rel2, i + 1, line.TrimEnd()));
+                }
+            }
+
+            Assert.AreEqual(0, violations.Count,
+                "Reconciliation code must pair decoys by base_id (entry_id & 0x7FFFFFFF), not by " +
+                "stripping a \"DECOY_\" prefix from the modified sequence. Prefix-stripping misses " +
+                "library-supplied decoys (no prefix) and biases second-pass FDR optimistic " +
+                "(osprey 0abe0ff). Remove the \"DECOY_\" literal and pair by base_id, or -- if it is " +
+                "truly needed -- add an inline '// DECOY_ pairing OK: <reason>' on the same line.\n" +
+                string.Join("\n", violations));
+        }
+
+        /// <summary>
         /// Find the Osprey source root by walking up from the test
         /// assembly location until we see an Osprey.sln-bearing dir.
         /// </summary>
