@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestRunnerLib
 {
+#if NET472
     public class TestRunnerContext : TestContext
     {
         private readonly Dictionary<string, string> _dictionary;
@@ -74,6 +75,7 @@ namespace TestRunnerLib
             get { throw new NotImplementedException(); }
         }
     }
+#endif
 
     /// <summary>
     /// Test method attribute which specifies a test will be skipped until the given date.

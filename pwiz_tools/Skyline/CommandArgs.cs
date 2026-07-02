@@ -86,7 +86,8 @@ namespace pwiz.Skyline
 
         public static bool IsRemoteUrl(string pathOrUrl)
         {
-            return pathOrUrl.StartsWith(ArdiaUrl.UrlPrefix) || pathOrUrl.StartsWith(UnifiUrl.UrlPrefix);
+            return pathOrUrl.StartsWith(ArdiaUrl.UrlPrefix)
+                   || pathOrUrl.StartsWith(UnifiUrl.UrlPrefix);
         }
 
         public static readonly Func<string> PATH_TO_DOCUMENT = () => GetPathToFile(SrmDocument.EXT);

@@ -30,7 +30,11 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+#if NET472
 using pwiz.CLI.Bruker.PrmScheduling;
+#else
+using Pwiz.Vendor.Bruker.PrmScheduling;
+#endif
 using pwiz.Common.Chemistry;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -4674,7 +4678,8 @@ namespace pwiz.Skyline.Model
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
-            if (MethodType == ExportMethodType.Standard && !(this is WatersConnectMethodExporter))
+            if (MethodType == ExportMethodType.Standard
+                && !(this is WatersConnectMethodExporter))
             {
                 RTWindow = RunLength;   // Store for later use
                 writer.Write((RunLength / 2).ToString(CultureInfo));

@@ -1567,7 +1567,7 @@ namespace pwiz.Skyline.Model.AuditLog
         {
             var bytes = BitConverter.GetBytes(TimeStampUTC.ToFileTime() / TimeSpan.TicksPerSecond); // We only serialize to hour:min:sec precision, lose the ticks so we can roundtrip
             if (!BitConverter.IsLittleEndian)
-                return bytes.Reverse().ToArray(); // For crossplatform stability
+                return Enumerable.Reverse(bytes).ToArray(); // For crossplatform stability
             return bytes;
         }
     }

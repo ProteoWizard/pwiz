@@ -1,357 +1,91 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- TestUtil - Skyline test support library (base classes + helpers).
+       Multi-target net472 + net8.0-windows to match Skyline.csproj.
+       No [TestClass] entries here; consumers (TestData, Test, etc.) supply
+       the test adapter. MSTest.TestFramework is still needed for the
+       Assert / TestContext types referenced by AbstractUnitTest, AssertEx. -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net472;net8.0-windows</TargetFrameworks>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>pwiz.SkylineTestUtil</RootNamespace>
     <AssemblyName>TestUtil</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <OldToolsVersion>3.5</OldToolsVersion>
-    <UpgradeBackupLocation />
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-    <TargetFrameworkProfile />
+    <UseWindowsForms>true</UseWindowsForms>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\x86\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
-    <OutputPath>..\bin\x86\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin\x64\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
-    <OutputPath>..\bin\x64\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="Accessibility">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+    <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="3.2.0" />
+  </ItemGroup>
+
+  <!-- SDK glob picks up code + .resx by default, but Skyline_*.xsd schema files,
+       .view report layouts, and .skyr report definitions are loaded at test time
+       via GetManifestResourceStream - must be embedded explicitly. Without these
+       XmlValidationTest, LocalizedResourcesTest, TestCurrentXmlFormat, and
+       CheckReportCompatibility fail with "resource not found in assembly". -->
+  <ItemGroup>
+    <EmbeddedResource Include="Schemas\**\*.xsd" />
+    <EmbeddedResource Include="minimal.sky.view" />
+    <EmbeddedResource Include="CheckReportCompatibility.skyr" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj" />
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj" />
+    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj" />
+    <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj" />
+    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj" />
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
+    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj" />
+    <ProjectReference Include="..\Skyline.csproj" />
+    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="Accessibility" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="DigitalRune.Windows.Docking"><HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath></Reference>
+    <Reference Include="Excel.4.5"><HintPath>..\..\Shared\Lib\ExcelDataReader\Excel.4.5.dll</HintPath></Reference>
+    <Reference Include="DotNetZip"><HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath></Reference>
+    <Reference Include="Google.Protobuf"><HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath></Reference>
+    <Reference Include="Grpc.Core"><HintPath>..\..\Shared\Lib\Grpc.Core.dll</HintPath></Reference>
+    <Reference Include="Grpc.Core.Api"><HintPath>..\..\Shared\Lib\Grpc.Core.Api.dll</HintPath></Reference>
+    <Reference Include="JetBrains.Annotations"><HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath></Reference>
+    <Reference Include="log4net"><HintPath>..\..\Shared\Lib\log4net.dll</HintPath></Reference>
+    <Reference Include="Microsoft.Diagnostics.Runtime"><HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath></Reference>
+    <Reference Include="Newtonsoft.Json"><HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="System.Data.SQLite"><HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath></Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <!-- KoinaTestUtil talks to Grpc.Core's Channel type; Koina is a cut feature
+         on net8 (matches Skyline.csproj's KoinaUIHelpers cut). -->
+    <Compile Remove="KoinaTestUtil.cs" />
+    <PackageReference Include="Google.Protobuf" Version="3.27.3" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.66.0" />
+    <PackageReference Include="DotNetZip" Version="1.16.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
+    <PackageReference Include="log4net" Version="2.0.17" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <Reference Include="Microsoft.Diagnostics.Runtime">
+      <HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
     </Reference>
     <Reference Include="Excel.4.5">
       <HintPath>..\..\Shared\Lib\ExcelDataReader\Excel.4.5.dll</HintPath>
     </Reference>
-    <Reference Include="DotNetZip">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\DotNetZip\DotNetZip.dll</HintPath>
+    <Reference Include="DigitalRune.Windows.Docking">
+      <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
-    <Reference Include="Google.Protobuf, Version=3.7.0.0, Culture=neutral, PublicKeyToken=a7d26565bac4d604, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\Google.Protobuf.dll</HintPath>
-    </Reference>
-    <Reference Include="Grpc.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\Grpc.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Grpc.Core.Api, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d754f35622e28bad, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\bin\x64\Release\Grpc.Core.Api.dll</HintPath>
-    </Reference>
-    <Reference Include="JetBrains.Annotations, Version=2018.2.1.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\JetBrains.Annotations.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.Diagnostics.Runtime">
-      <HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Newtonsoft.Json, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.105.2, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\libraries\SQLite\$(Platform)\System.Data.SQLite.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Windows.Forms">
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="System.Xml.Linq">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data.DataSetExtensions">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="AbstractFunctionalTestEx.cs" />
-    <Compile Include="AbstractUnitTestEx.cs" />
-    <Compile Include="AlphaColorPickerButton.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="AssertEx.cs" />
-    <Compile Include="AsSmallMoleculeTestUtil.cs" />
-    <Compile Include="AuditLogUtil.cs" />
-    <Compile Include="CheckDocumentState.cs" />
-    <Compile Include="CheckReportCompatibility.cs" />
-    <Compile Include="CompareDocuments.cs" />
-    <Compile Include="DllFinderTestUtil.cs" />
-    <Compile Include="ExampleText.cs" />
-    <Compile Include="ExtensionTestContext.cs" />
-    <Compile Include="GitFileHelper.cs" />
-    <Compile Include="HangDetection.cs" />
-    <Compile Include="HttpClientTestHelper.cs" />
-    <Compile Include="KoinaTestUtil.cs" />
-    <Compile Include="MockHttpMessageHandler.cs" />
-    <Compile Include="MultiFormActivator.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\TestUtilSettings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>TestUtilSettings.settings</DependentUpon>
-    </Compile>
-    <Compile Include="ScreenshotInfo.cs" />
-    <Compile Include="ScreenshotPreviewForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="ScreenshotPreviewForm.Designer.cs">
-      <DependentUpon>ScreenshotPreviewForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="FormSeen.cs" />
-    <Compile Include="GridTester.cs" />
-    <Compile Include="InstallTestUtil.cs" />
-    <Compile Include="LongWaitDialogCanceler.cs" />
-    <Compile Include="MemoryStreamManager.cs" />
-    <Compile Include="MovedDirectory.cs" />
-    <Compile Include="PauseAndContinueForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PauseAndContinueForm.Designer.cs">
-      <DependentUpon>PauseAndContinueForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="PeakMatcherTestUtil.cs" />
-    <Compile Include="ProcessKiller.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ResultsUtil.cs" />
-    <Compile Include="ScopedAction.cs" />
-    <Compile Include="AbstractUnitTest.cs" />
-    <Compile Include="Schemas\SchemaDocuments.cs" />
-    <Compile Include="ScreenshotManager.cs" />
-    <Compile Include="ScreenshotProcessingExtensions.cs" />
-    <Compile Include="SpectralLibraryTestUtil.cs" />
-    <Compile Include="StackTraceLogger.cs" />
-    <Compile Include="TestDocumentContainer.cs" />
-    <Compile Include="TestFilesDir.cs" />
-    <Compile Include="TestFunctional.cs" />
-    <Compile Include="TypeInspector.cs" />
-    <Compile Include="ArdiaTestUtil.cs" />
-    <Compile Include="WatersConnectTestUtil.cs" />
-    <Compile Include="UnifiTestUtil.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\Shared\CommonFileDialogs\CommonFileDialogs.csproj">
-      <Project>{B8E3F4A1-7C2D-4E5F-9A1B-3C6D8E0F2A4B}</Project>
-      <Name>CommonFileDialogs</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\CommonMsData\CommonMsData.csproj">
-      <Project>{86f8e7f5-a3ed-4519-9ad9-bf9abd6dd69f}</Project>
-      <Name>CommonMsData</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\Common\Common.csproj">
-      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\CommonUtil\CommonUtil.csproj">
-      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
-      <Name>CommonUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\PortableUtil\PortableUtil.csproj">
-      <Project>{97ECF0B4-0AAA-4593-ADE0-9E8740973AC2}</Project>
-      <Name>PortableUtil</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
-      <Project>{26cfd1ff-f4f7-4f66-b5b4-e686bdb9b34e}</Project>
-      <Name>MSGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
-      <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
-      <Name>ProteomeDb</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
-      <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
-      <Name>ProteowizardWrapper</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Shared\zedgraph\ZedGraph.csproj">
-      <Project>{B99650EE-AF46-47B4-A4A9-212ADE7809B7}</Project>
-      <Name>ZedGraph</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Skyline.csproj">
-      <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
-      <Name>Skyline</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\TestRunnerLib\TestRunnerLib.csproj">
-      <Project>{E3F0E34F-F9E6-4360-996F-E2054E4FA1AE}</Project>
-      <Name>TestRunnerLib</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
-      <Visible>False</Visible>
-      <ProductName>Windows Installer 3.1</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="minimal.sky.view" />
-    <EmbeddedResource Include="PauseAndContinueForm.resx">
-      <DependentUpon>PauseAndContinueForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="ScreenshotPreviewForm.resx">
-      <DependentUpon>ScreenshotPreviewForm.cs</DependentUpon>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="CheckReportCompatibility.skyr" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Schemas\*.xsd" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Schemas\AuditLog\Skyl_0.xsd">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Schemas\AuditLog\Skyl_4.21.xsd">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\DiskFailure.png" />
-    <None Include="Resources\larrow-cur.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-    <None Include="Properties\TestUtilSettings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>TestUtilSettings.Designer.cs</LastGenOutput>
-    </None>
-    <None Include="Resources\camera.ico" />
-    <None Include="Resources\save.png" />
-    <None Include="Resources\refresh.png" />
-    <None Include="Resources\pause.png" />
-    <None Include="Resources\continue.png" />
-    <None Include="Resources\progress.gif" />
-    <None Include="Resources\save_and_continue.png" />
-    <None Include="Resources\webdestination.png" />
-    <None Include="Resources\autosizeoptimize.png" />
-    <None Include="Resources\blank.png" />
-    <None Include="Resources\imagebutton.png" />
-    <None Include="Resources\textbutton.png" />
-    <None Include="Resources\websource.png" />
-    <None Include="Resources\noscreenshot.png" />
-    <None Include="Resources\hand-cur.bmp" />
-    <None Include="Resources\gitsource.png" />
-    <None Include="Resources\fileunchanged.png" />
-    <None Include="Resources\filechanged.png" />
-    <None Include="Resources\fileunknown.png" />
-    <None Include="Resources\undo.png" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>

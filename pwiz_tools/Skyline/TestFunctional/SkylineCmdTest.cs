@@ -129,10 +129,16 @@ namespace pwiz.SkylineTestFunctional
             {
                 output = ioException.Message;
             }
-            // Make sure the error message says it tries loading "Skyline.exe" and "Skyline-daily.exe" from the
-            // same directory as SkylineCmd.exe
+            // Make sure the error message says it tries loading the Skyline managed assembly from
+            // the same directory as SkylineCmd.exe. On net8 that is the .dll (the .exe is a native
+            // apphost that Assembly.LoadFrom can't load); on net472 it is the .exe.
+#if NET472
             StringAssert.Contains(output, "Skyline.exe");
             StringAssert.Contains(output, "Skyline-daily.exe"); // Keep -daily
+#else
+            StringAssert.Contains(output, "Skyline.dll");
+            StringAssert.Contains(output, "Skyline-daily.dll"); // Keep -daily
+#endif
             StringAssert.Contains(output, tempPath);
         }
 

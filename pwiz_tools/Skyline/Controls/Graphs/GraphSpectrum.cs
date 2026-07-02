@@ -574,6 +574,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var enableCE = false;
             // Update CE toolbar
+#if NET472
             if (UsingKoina)
             {
                 var ces = Enumerable.Range(KoinaConstants.MIN_NCE, KoinaConstants.MAX_NCE - KoinaConstants.MIN_NCE + 1).ToArray();
@@ -597,6 +598,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 ComboHelper.AutoSizeDropDown(comboCE);
             }
+#endif
 
             comboCE.Visible = enableCE;
             ceLabel.Visible = enableCE;
@@ -907,10 +909,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new PeptidePrecursorPair(sel.NodePep, sel.NodeTranGroup);
             }
 
+#if NET472
             public static explicit operator KoinaIntensityModel.PeptidePrecursorNCE(SpectrumNodeSelection sel)
             {
                 return new KoinaIntensityModel.PeptidePrecursorNCE(sel.NodePep, sel.NodeTranGroup);
             }
+#endif
 
             public TreeNodeMS SelectedTreeNode { get; }
             public PeptideGroupDocNode NodePepGroup { get; }
@@ -924,10 +928,13 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+#if NET472
         private KoinaHelpers.KoinaRequest _koinaRequest;
+#endif
 
         private SpectrumDisplayInfo UpdateKoinaPrediction(SpectrumNodeSelection selection, IsotopeLabelType labelType, out Exception ex)
         {
+#if NET472
             var settings = DocumentUI.Settings;
             var nce = Settings.Default.KoinaNCE;
 
@@ -972,6 +979,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 ex = x;
                 return null;
             }
+#else
+            ex = null;
+            return null;
+#endif
         }
 
         private SpectrumGraphItem MakeGraphItem(SpectrumDisplayInfo spectrum, SpectrumNodeSelection selection, SrmSettings settings, SpectrumPeaksInfo spectrumPeaksOverride = null)

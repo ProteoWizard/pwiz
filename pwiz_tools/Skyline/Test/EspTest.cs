@@ -50,7 +50,8 @@ namespace pwiz.SkylineTest
                                                  },
                                              CultureInfo.InvariantCulture);
                 string features = sb.ToString();
-                AssertEx.FieldsEqual(TEST_FEATURES, features, (int) EspFeatureDb.FeatureDef.count);
+                // allowForNumericPrecisionDifferences absorbs net8 vs net472 float ToString() digits.
+                AssertEx.FieldsEqual(TEST_FEATURES, features, (int) EspFeatureDb.FeatureDef.count, true);
             }
         }
 

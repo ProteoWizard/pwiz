@@ -19,7 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+#if NET472
 using System.Deployment.Application;
+#endif
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -205,8 +207,12 @@ namespace pwiz.Skyline
 
             DocumentUIChangedEvent += AutoTrainCompleted;
 
+#if NET472
             checkForUpdatesMenuItem.Visible =
                 checkForUpdatesSeparator.Visible = ApplicationDeployment.IsNetworkDeployed;
+#else
+            checkForUpdatesMenuItem.Visible = checkForUpdatesSeparator.Visible = false;
+#endif
 
             // Begin ToolStore check for updates to currently installed tools, if any
             if (ToolStoreUtil.UpdatableTools(Settings.Default.ToolList).Any())
@@ -261,8 +267,10 @@ namespace pwiz.Skyline
             // Load any file the user may have double-clicked on to run this application
             if (args == null || args.Length == 0)
             {
+#if NET472
                 var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
                 args = (activationArgs != null ? activationArgs.ActivationData : null);
+#endif
             }
             if (args != null && args.Length != 0)
             {
@@ -4667,8 +4675,15 @@ namespace pwiz.Skyline
             var node = Document.Peptides.FirstOrDefault(p => p.ModifiedTarget.Equals(target));
             if (node == null)
                 return null;
+#if NET472
             return KoinaRetentionTimeModel.Instance?.PredictSingle(KoinaPredictionClient.Current, Document.Settings,
                 node, CancellationToken.None)[node];
+#else
+            // Koina port compiles on net8 (see Model/Koina/**), but this call
+            // stays behind the gate until <Compile Remove="Model\Koina\**"> is
+            // dropped from Skyline.csproj - remove both together.
+            return null;
+#endif
         }
 
         public Func<HttpClient> UserLogin(RemoteAccount account)

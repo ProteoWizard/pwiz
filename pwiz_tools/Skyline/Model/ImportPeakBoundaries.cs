@@ -205,17 +205,17 @@ namespace pwiz.Skyline.Model
                                 new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
                                 new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
                             };
-                            for (var field = 0; field < currentFieldNames.Length; field++)
+                            for (var fieldIdx = 0; fieldIdx < currentFieldNames.Length; fieldIdx++)
                             {
-                                if (field == allFieldNames.Count)
+                                if (fieldIdx == allFieldNames.Count)
                                 {
-                                    allFieldNames.Add(currentFieldNames[field]);
+                                    allFieldNames.Add(currentFieldNames[fieldIdx]);
                                 }
                                 else
                                 {
-                                    var seen = allFieldNames[field];
-                                    var newNames = currentFieldNames[field].Where(header => !seen.Contains(header));
-                                    allFieldNames[field] = allFieldNames[field].Concat(newNames).ToArray();
+                                    var seen = allFieldNames[fieldIdx];
+                                    var newNames = currentFieldNames[fieldIdx].Where(header => !seen.Contains(header));
+                                    allFieldNames[fieldIdx] = allFieldNames[fieldIdx].Concat(newNames).ToArray();
                                 }
                             }
                         }

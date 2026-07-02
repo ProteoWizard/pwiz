@@ -175,7 +175,9 @@ namespace TestRunnerLib
             for (int retry = 0; retry < GC_RETRY_COUNT; retry++)
             {
                 Thread.Sleep(GC_RETRY_SLEEP_MS);
+#if NET472
                 RunTests.MemoryManagement.FlushMemory();
+#endif
                 leakMessage = CheckForLeaks();
                 if (leakMessage == null)
                     return null;
@@ -183,12 +185,14 @@ namespace TestRunnerLib
 
             // Phase 3: Still leaking after retries - pin survivors and report
             PinSurvivors();
+#if NET472
             if (MemoryProfiler.IsReady)
             {
                 var snapshotName = testName + @"_GC_LEAK";
                 log("\n# GC leak detected - taking dotMemory snapshot: {0}\n", new object[] { snapshotName });
                 MemoryProfiler.Snapshot(snapshotName);
             }
+#endif
             return leakMessage;
         }
 

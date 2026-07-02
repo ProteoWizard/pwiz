@@ -33,6 +33,7 @@ using pwiz.Common.GUI;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData.RemoteApi;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
+// stubs provided in Model/RemoteApiStubs.net8.cs for net8
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -2625,6 +2626,7 @@ namespace pwiz.Skyline.FileUI
 
         public void ShowSchedulingGraph()
         {
+#if NET472
             var brukerTemplate = Equals(InstrumentType, ExportInstrumentType.BRUKER_TIMSTOF)
                 ? textTemplateFile.Text
                 : null;
@@ -2667,6 +2669,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 dlg.ShowDialog(this);
             }
+#endif
         }
 
         #region Functional Test Support

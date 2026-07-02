@@ -2537,7 +2537,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var calc in defaultCalculators)
                     Remove(calc);
-                foreach (var calc in defaultCalculators.Reverse())
+                foreach (var calc in Enumerable.Reverse(defaultCalculators))
                     Insert(0, calc);
             }
         }
@@ -2698,7 +2698,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var library in defaultLibraries)
                     Remove(library);
-                foreach (var library in defaultLibraries.Reverse())
+                foreach (var library in Enumerable.Reverse(defaultLibraries))
                     Insert(0, library);
             }
         }
@@ -2754,7 +2754,7 @@ namespace pwiz.Skyline.Properties
             {
                 foreach (var scoringModel in defaultScoringModels)
                     Remove(scoringModel);
-                foreach (var scoringModel in defaultScoringModels.Reverse())
+                foreach (var scoringModel in Enumerable.Reverse(defaultScoringModels))
                     Insert(0, scoringModel);
             }
         }

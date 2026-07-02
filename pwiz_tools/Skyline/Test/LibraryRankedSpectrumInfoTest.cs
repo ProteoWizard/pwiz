@@ -98,7 +98,7 @@ namespace pwiz.SkylineTest
             };
 
             // Add each of those calculated m/z's to the spectrum in reverse order with increasing intensity value
-            foreach (var expectedIon in expectedIons.Reverse())
+            foreach (var expectedIon in Enumerable.Reverse(expectedIons))
             {
                 mzIntensities.Add(new SpectrumPeaksInfo.MI
                 {

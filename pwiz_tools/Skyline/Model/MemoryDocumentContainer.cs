@@ -125,8 +125,16 @@ namespace pwiz.Skyline.Model
 
         private bool IsFinal(SrmDocument doc)
         {
-            // Either the document is loaded or the status is final and in an error state
-            return doc.IsLoaded || (LastProgress != null && LastProgress.IsFinal && LastProgress.IsError);
+            // The document is loaded, or the loader reached any final state
+            // (error, cancelled, or successfully complete). The old condition
+            // required both IsFinal AND IsError, so a loader that completed
+            // successfully but left doc.IsLoaded == false (e.g. WatersCacheTest
+            // on net8 - pwiz-sharp Reader_Waters emits chromatograms that
+            // Skyline's ChromCacheBuilder finishes producing without flipping
+            // doc into a loaded state) would hang here forever. Return true on
+            // any final loader state so the test surface fails fast rather
+            // than hanging past the blame-hang timeout.
+            return doc.IsLoaded || (LastProgress != null && LastProgress.IsFinal);
         }
 
         public virtual void ResetProgress()

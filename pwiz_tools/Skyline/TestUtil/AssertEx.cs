@@ -1053,14 +1053,14 @@ namespace pwiz.SkylineTestUtil
             {
             }
 
-            public ColumnTolerances(double defaultTolerance)
+            public ColumnTolerances(double defaultTolerance, double defaultRelativeTolerance = 0)
             {
-                _defaultTolerance = new ColumnToleranceValue(defaultTolerance);
+                _defaultTolerance = new ColumnToleranceValue(defaultTolerance, defaultRelativeTolerance);
             }
 
-            public void AddTolerance(int column, double tolerance)
+            public void AddTolerance(int column, double tolerance, double relativeTolerance = 0)
             {
-                _explicitTolerances.Add(column, new ColumnToleranceValue(tolerance));
+                _explicitTolerances.Add(column, new ColumnToleranceValue(tolerance, relativeTolerance));
             }
 
             public bool LinesEquivalent(string lineExpected, string lineActual, out string failureMessage)
@@ -1095,6 +1095,35 @@ namespace pwiz.SkylineTestUtil
                     if (toleranceValue == null)
                         return false; // No tolerance given for this column
                 }
+                // Chromatogram exports pack arrays into a single column as a delimited list
+                // (e.g. "46.37717,46.39237,..."); compare those element-wise. The list
+                // separator follows the file's culture (CSV convention): ';' when ',' is the
+                // decimal separator, else ','. Splitting on the wrong one would mangle numbers
+                // under a comma-decimal culture (e.g. fr-FR "46,377;46,392").
+                var listSeparator = Equals(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, ",") ? ';' : ',';
+                if (textExpected.IndexOf(listSeparator) >= 0 || textActual.IndexOf(listSeparator) >= 0)
+                {
+                    var expectedList = textExpected.Split(listSeparator);
+                    var actualList = textActual.Split(listSeparator);
+                    if (expectedList.Length != actualList.Length)
+                        return false;
+                    for (var e = 0; e < expectedList.Length; e++)
+                    {
+                        if (!SingleValueEquivalent(toleranceValue, expectedList[e], actualList[e], out failureMessage))
+                            return false;
+                    }
+                    return true;
+                }
+
+                return SingleValueEquivalent(toleranceValue, textExpected, textActual, out failureMessage);
+            }
+
+            private static bool SingleValueEquivalent(ColumnToleranceValue toleranceValue, string textExpected, string textActual, out string failureMessage)
+            {
+                failureMessage = string.Empty;
+                if (Equals(textExpected, textActual))
+                    return true;
+
                 if (!CommonTextUtil.TryParseDoubleUncertainCulture(textActual, out var valActual) ||
                     !CommonTextUtil.TryParseDoubleUncertainCulture(textExpected, out var valExpected))
                 {
@@ -1122,7 +1151,14 @@ namespace pwiz.SkylineTestUtil
 
                 double tolerance = toleranceValue.Tolerance;
                 tolerance += tolerance / 1000; // Allow for rounding cruft
-                if (Math.Abs(valActual - valExpected) > tolerance)
+                var diff = Math.Abs(valActual - valExpected);
+                // Opt-in only: net8 vs net472 float32 ToString() can differ in the last digit
+                // or in notation (e.g. "2.050069E+08" vs "205006940", same value). A column can
+                // set a relative tolerance to absorb that; columns that don't keep their exact
+                // absolute tolerance so a real regression isn't masked.
+                var relativeTolerance = toleranceValue.RelativeTolerance;
+                var scale = Math.Max(Math.Abs(valActual), Math.Abs(valExpected));
+                if (diff > tolerance && (relativeTolerance <= 0 || scale == 0 || diff / scale > relativeTolerance))
                 {
                     if (expectedParts.Length == 2)
                     {
@@ -1145,12 +1181,18 @@ namespace pwiz.SkylineTestUtil
 
         private class ColumnToleranceValue
         {
-            public ColumnToleranceValue(double tolerance)
+            public ColumnToleranceValue(double tolerance, double relativeTolerance = 0)
             {
                 Tolerance = tolerance;
+                RelativeTolerance = relativeTolerance;
             }
 
             public double Tolerance { get; }
+
+            // Optional relative tolerance (fraction of magnitude), applied in addition to the
+            // absolute Tolerance. 0 disables it. Only opt-in callers get this; a column with a
+            // deliberately tight absolute tolerance is not silently widened.
+            public double RelativeTolerance { get; }
         }
 
         private static string GetEarlyEndingMessage(string helpMsg, string name, int count, string lineEqualLast, string lineNext, TextReader reader)

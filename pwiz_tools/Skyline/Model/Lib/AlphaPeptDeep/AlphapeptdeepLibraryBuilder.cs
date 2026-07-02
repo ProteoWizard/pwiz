@@ -394,7 +394,9 @@ namespace pwiz.Skyline.Model.Lib.AlphaPeptDeep
             {
                 valueToAdd = 0; // CONSIDER: Zero is a valid value for a normalized-RT
             }
-            line.Add(valueToAdd.ToString(CultureInfo.InvariantCulture));
+            // Pin to G15 so net8's shortest-round-trip double formatting matches
+            // net472's implicit G15 default (keeps the transformed .tsv byte-identical).
+            line.Add(valueToAdd.ToString(@"G15", CultureInfo.InvariantCulture));
         }
 
         public void ImportSpectralLibrary(IProgressMonitor progress, ref IProgressStatus progressStatus)

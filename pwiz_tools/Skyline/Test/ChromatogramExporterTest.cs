@@ -94,8 +94,13 @@ namespace pwiz.SkylineTest
                 SaveChrom(docResults, fileActual2, FILE_NAMES_2.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_2, SOURCES_2);
                 SaveChrom(docResults, fileActualAll, FILE_NAMES_ALL.ToList(), LocalizationHelper.CurrentCulture, EXTRACTOR_ALL, SOURCES_ALL);
 
-                var columnTolerances = new AssertEx.ColumnTolerances();
-                columnTolerances.AddTolerance(3, 0.0001); // Allow a little wiggle in mz column since we tweak the calculation with Adduct work
+                // Columns opt into a small relative tolerance so net8 vs net472 float ToString()
+                // digit/notation differences (numerically identical values) are absorbed. This is
+                // scoped to this test; other ColumnTolerances callers keep their exact tolerances.
+                var columnTolerances = new AssertEx.ColumnTolerances(0.001, 1e-6);
+                // mz column: tighter absolute wiggle for the Adduct-calc tweak, plus the same
+                // relative floor since net8 float formatting also perturbs the last mz digit.
+                columnTolerances.AddTolerance(3, 0.0001, 1e-6);
 
                 AssertEx.FileEquals(fileExpected1, fileActual1, columnTolerances);
                 AssertEx.FileEquals(fileExpected2, fileActual2, columnTolerances);

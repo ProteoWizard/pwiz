@@ -19,7 +19,9 @@
 
 using System;
 using System.ComponentModel;
+#if NET472
 using System.Deployment.Application;
+#endif
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -36,7 +38,11 @@ namespace pwiz.Skyline
     {
         private static bool _checkedAtStartup;
 
+#if NET472
         public static IDeployment _appDeployment = new AppDeploymentWrapper();
+#else
+        public static IDeployment _appDeployment = new NullDeployment();
+#endif
 
         public static IDeployment AppDeployment
         {
@@ -110,6 +116,7 @@ namespace pwiz.Skyline
 
         private void updateCheck_Complete(object sender, RunWorkerCompletedEventArgs e)
         {
+#if NET472
             var exTrust = e.Result as TrustNotGrantedException;
             if (exTrust != null)
             {
@@ -117,6 +124,7 @@ namespace pwiz.Skyline
                     AppDeployment.OpenInstallLink(ParentWindow);
                 return;
             }
+#endif
             var ex = e.Result as Exception;
             if (ex != null)
             {
@@ -313,6 +321,21 @@ namespace pwiz.Skyline
             public Exception Error { get; private set; }
         }
 
+#if !NET472
+        private sealed class NullDeployment : IDeployment
+        {
+            public bool IsNetworkDeployed => false;
+            public Version CurrentVersion => null;
+            public UpdateCheckDetails CheckForDetailedUpdate() => new UpdateCheckDetails(false, null, null);
+            public void UpdateAsync(Action<UpdateProgress> updateProgress, Action<UpdateCompletedDetails> updateComplete) { }
+            public void UpdateAsyncCancel() { }
+            public void Restart() { Application.Restart(); }
+            public Version GetVersionFromUpdateLocation() => null;
+            public void OpenInstallLink(Control parentWindow) { }
+        }
+#endif
+
+#if NET472
         private sealed class AppDeploymentWrapper : IDeployment
         {
             private readonly ApplicationDeployment _applicationDeployment;
@@ -406,5 +429,6 @@ namespace pwiz.Skyline
                 WebHelpers.OpenSkylineShortLink(parentWindow, shorNameInstall);
             }
         }
+#endif
     }
 }

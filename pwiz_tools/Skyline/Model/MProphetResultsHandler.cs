@@ -303,10 +303,13 @@ namespace pwiz.Skyline.Model
                 Convert.ToString(features.Id, cultureInfo),
                 Convert.ToString(features.Id.Run, cultureInfo),
                 fileName,
+                // Retention times are float - use ToFieldString to pin the format to G7
+                // so the CSV round-trips identically across net472 and net8+ (net6 changed
+                // Single.ToString() default from G7 to G9).
                 // CONSIDER: This impacts memory consumption for large-scale DIA, and it is not clear anyone uses these
-                Convert.ToString(peakGroupFeatures.RetentionTime, cultureInfo),
-                Convert.ToString(peakGroupFeatures.StartTime, cultureInfo),
-                Convert.ToString(peakGroupFeatures.EndTime, cultureInfo),
+                ToFieldString(peakGroupFeatures.RetentionTime, cultureInfo),
+                ToFieldString(peakGroupFeatures.StartTime, cultureInfo),
+                ToFieldString(peakGroupFeatures.EndTime, cultureInfo),
                 features.Id.RawUnmodifiedTextId, // Unmodified sequence, or custom ion name
                 features.Id.RawTextId, // Modified sequence, or custom ion name
                 features.Id.NodePepGroup.Name,
@@ -334,7 +337,11 @@ namespace pwiz.Skyline.Model
 
         private static string ToFieldString(float f, IFormatProvider cultureInfo)
         {
-            return float.IsNaN(f) ? TextUtil.EXCEL_NA : Convert.ToString(f, cultureInfo);
+            // Pin to G7 (7 significant digits - the round-trippable precision for
+            // Single). On net472 this was the default float.ToString() behavior; on
+            // net6+ the default switched to G9 which yields extra digits (e.g. 2.1748452
+            // instead of 2.174845) and breaks ExportMProphet golden diffs.
+            return float.IsNaN(f) ? TextUtil.EXCEL_NA : f.ToString(@"G7", cultureInfo);
         }
 
         public ReintegrateDlgSettings GetReintegrateDlgSettings()

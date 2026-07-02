@@ -2700,7 +2700,9 @@ namespace pwiz.SkylineTestUtil
             EndTest();
 
             Settings.Default.Reset();
+#if NET472
             MsDataFileImpl.PerfUtilFactory.Reset();
+#endif
         }
 
         private void RunTest()

@@ -236,6 +236,7 @@ namespace pwiz.Skyline
 
                 return EXIT_CODE_SUCCESS;
             }
+#if NET472
             // The way Skyline command-line interface is run for an installation
             else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
@@ -249,6 +250,7 @@ namespace pwiz.Skyline
                 Process.GetCurrentProcess().Kill();
                 return EXIT_CODE_SUCCESS;
             }
+#endif
 
             try
             {
@@ -336,10 +338,15 @@ namespace pwiz.Skyline
                 // some difficult debugging.
                 try
                 {
+#if NET472
                     var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
                     bool activationDataPresent = activationArgs != null &&
                                                  activationArgs.ActivationData != null &&
                                                  activationArgs.ActivationData.Length != 0;
+#else
+                    object activationArgs = null;
+                    bool activationDataPresent = false;
+#endif
                     // Activation data and --opendoc always go straight to MainWindow.
                     // Otherwise, --start-page=true|false overrides the user preference,
                     // and without the flag the existing ShowStartupForm setting wins.
