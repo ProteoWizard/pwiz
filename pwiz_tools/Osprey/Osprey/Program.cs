@@ -197,6 +197,17 @@ namespace pwiz.Osprey
                 // paths were already validated by ResolveInputScores during parsing).
                 if (!fromInputScores)
                 {
+                    // Expand any -i wildcard patterns (e.g. *.mzML) so they work in shells that do
+                    // not glob for native programs (PowerShell, cmd). No-op for explicit paths.
+                    try
+                    {
+                        config.InputFiles = ExpandInputGlobs(config.InputFiles);
+                    }
+                    catch (ArgumentException ex)
+                    {
+                        LogError(ex.Message);
+                        return 1;
+                    }
                     foreach (string inputFile in config.InputFiles)
                     {
                         if (!File.Exists(inputFile))
@@ -481,6 +492,53 @@ namespace pwiz.Osprey
                     throw new ArgumentException(string.Format("--input-scores path not found: {0}", p));
             }
             return paths;
+        }
+
+        /// <summary>
+        /// Expand any wildcard patterns in the <c>-i</c> input list. A token containing
+        /// <c>*</c> or <c>?</c> is globbed against its directory (the current directory when the
+        /// token has no directory part), e.g. <c>*.mzML</c> or <c>raw\*.mzML</c>; matches are
+        /// sorted ordinally for a deterministic run order. Tokens with no wildcard pass through
+        /// unchanged (their existence is validated by the caller). This lets <c>-i *.mzML</c> work
+        /// in shells that do NOT expand globs for native programs (PowerShell, cmd), matching the
+        /// bash behavior the docs assume.
+        ///
+        /// Throws <see cref="ArgumentException"/> when a wildcard pattern matches no files, so a
+        /// typo fails loudly instead of silently running on nothing. Internal so Osprey.Test can
+        /// exercise it.
+        /// </summary>
+        internal static List<string> ExpandInputGlobs(IReadOnlyList<string> inputs)
+        {
+            var result = new List<string>();
+            foreach (string token in inputs)
+            {
+                if (token.IndexOfAny(new[] { '*', '?' }) < 0)
+                {
+                    result.Add(token);
+                    continue;
+                }
+                string dir = Path.GetDirectoryName(token);
+                string pattern = Path.GetFileName(token);
+                string searchDir = string.IsNullOrEmpty(dir) ? Directory.GetCurrentDirectory() : dir;
+                string[] matches;
+                try
+                {
+                    matches = Directory.GetFiles(searchDir, pattern);
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    matches = Array.Empty<string>();
+                }
+                if (matches.Length == 0)
+                {
+                    throw new ArgumentException(string.Format(
+                        "No input files matched pattern: {0}", token));
+                }
+                // Directory.GetFiles order is filesystem-dependent; sort for a deterministic run order.
+                Array.Sort(matches, StringComparer.Ordinal); // Array.Sort OK: unique file paths from GetFiles, no ties
+                result.AddRange(matches);
+            }
+            return result;
         }
 
         internal static void LogInfo(string message)

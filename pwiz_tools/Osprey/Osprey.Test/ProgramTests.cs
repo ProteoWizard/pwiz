@@ -673,6 +673,96 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        // --- ExpandInputGlobs (-i wildcard expansion) ---------------------
+
+        [TestMethod]
+        public void TestExpandGlobExplicitFilesPassThrough()
+        {
+            string dir = NewTempDir();
+            try
+            {
+                string a = Path.Combine(dir, "a.mzML");
+                string b = Path.Combine(dir, "b.mzML");
+                File.WriteAllText(a, string.Empty);
+                File.WriteAllText(b, string.Empty);
+                // No wildcard: tokens pass through unchanged, in order (existence is the caller's job).
+                var resolved = Program.ExpandInputGlobs(new List<string> { a, b });
+                CollectionAssert.AreEqual(new List<string> { a, b }, resolved);
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        [TestMethod]
+        public void TestExpandGlobMatchesAndSorts()
+        {
+            string dir = NewTempDir();
+            try
+            {
+                File.WriteAllText(Path.Combine(dir, "z.mzML"), string.Empty);
+                File.WriteAllText(Path.Combine(dir, "a.mzML"), string.Empty);
+                File.WriteAllText(Path.Combine(dir, "m.mzML"), string.Empty);
+                File.WriteAllText(Path.Combine(dir, "notes.txt"), string.Empty);
+                var resolved = Program.ExpandInputGlobs(new List<string> { Path.Combine(dir, "*.mzML") });
+                Assert.AreEqual(3, resolved.Count, "only the .mzML files match; the .txt is excluded");
+                Assert.AreEqual("a.mzML", Path.GetFileName(resolved[0]));
+                Assert.AreEqual("m.mzML", Path.GetFileName(resolved[1]));
+                Assert.AreEqual("z.mzML", Path.GetFileName(resolved[2]));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        [TestMethod]
+        public void TestExpandGlobNoMatchErrors()
+        {
+            string dir = NewTempDir();
+            try
+            {
+                File.WriteAllText(Path.Combine(dir, "present.raw"), string.Empty);
+                try
+                {
+                    Program.ExpandInputGlobs(new List<string> { Path.Combine(dir, "*.mzML") });
+                    Assert.Fail("Expected ArgumentException when a pattern matches nothing");
+                }
+                catch (ArgumentException ex)
+                {
+                    StringAssert.Contains(ex.Message, "matched");
+                }
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
+        [TestMethod]
+        public void TestExpandGlobMixesGlobAndExplicit()
+        {
+            string dir = NewTempDir();
+            try
+            {
+                string exp = Path.Combine(dir, "explicit.mzML");
+                File.WriteAllText(exp, string.Empty);
+                File.WriteAllText(Path.Combine(dir, "g1.mzML"), string.Empty);
+                File.WriteAllText(Path.Combine(dir, "g2.mzML"), string.Empty);
+                // Explicit token keeps its position; the glob expands (sorted) after it.
+                var resolved = Program.ExpandInputGlobs(new List<string> { exp, Path.Combine(dir, "g*.mzML") });
+                Assert.AreEqual(3, resolved.Count);
+                Assert.AreEqual(exp, resolved[0], "explicit token stays first");
+                Assert.AreEqual("g1.mzML", Path.GetFileName(resolved[1]));
+                Assert.AreEqual("g2.mzML", Path.GetFileName(resolved[2]));
+            }
+            finally
+            {
+                Directory.Delete(dir, true);
+            }
+        }
+
         // --- OspreyConfig defaults ----------------------------------------
 
         [TestMethod]
