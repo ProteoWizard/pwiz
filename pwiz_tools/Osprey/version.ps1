@@ -60,6 +60,10 @@ function Get-OspreyInformationalVersion {
 
     $numeric = Get-OspreyVersion -RepoPath $RepoPath
 
+    # --short=10 is a MINIMUM width: git lengthens the abbreviation when 10 chars
+    # would be ambiguous in a given clone, so the hash LENGTH (not identity) can
+    # differ across machines. It still resolves to the same commit; the numeric
+    # version (the parquet-cache key) is fully deterministic regardless.
     $shortHash = & git -C $RepoPath rev-parse --short=10 HEAD 2>$null
     if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($shortHash)) {
         return $numeric   # not a git checkout (e.g. an extracted source tree)

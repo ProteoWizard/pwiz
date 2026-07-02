@@ -12,4 +12,7 @@
     binary the release scripts produce.
 #>
 . (Join-Path $PSScriptRoot 'version.ps1')
-Write-Output (Get-OspreyInformationalVersion -RepoPath $PSScriptRoot)
+# Emit exactly ONE line: the Directory.Build.targets Exec captures all stdout via
+# ConsoleToMSBuild, so guard against a future edit to version.ps1 leaking a stray
+# line onto the pipeline (Select-Object -Last 1 keeps only the version string).
+Get-OspreyInformationalVersion -RepoPath $PSScriptRoot | Select-Object -Last 1
