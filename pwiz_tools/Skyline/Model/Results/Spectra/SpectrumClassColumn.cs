@@ -195,6 +195,94 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return column is CvParamColumn;
         }
 
+        /// <summary>
+        /// Builds the dynamic CV/user-parameter columns present across the given spectra: one per
+        /// distinct (accession, unit) pair (the "split by unit" identity). A column is typed numeric
+        /// when every value seen for it parses as an invariant number and at least one value was seen,
+        /// else string (the runtime type inference the design calls for, since these terms carry no
+        /// declared type). The friendly name comes from the term. Ordered by display name for the UI.
+        /// </summary>
+        public static IList<SpectrumClassColumn> DiscoverCvColumns(IEnumerable<SpectrumMetadata> spectra)
+        {
+            var discovered = new Dictionary<Tuple<string, string>, CvColumnDiscovery>();
+            foreach (var spectrum in spectra)
+            {
+                foreach (var term in spectrum.OtherParams)
+                {
+                    var key = Tuple.Create(term.Accession, term.Unit ?? string.Empty);
+                    if (!discovered.TryGetValue(key, out var info))
+                    {
+                        info = new CvColumnDiscovery(term.Accession, term.Unit);
+                        discovered.Add(key, info);
+                    }
+                    info.Add(term);
+                }
+            }
+
+            return discovered.Values
+                .Select(info => (SpectrumClassColumn)new CvParamColumn(info.Accession, info.Name, info.Unit, info.IsNumeric))
+                .OrderBy(column => column.GetLocalizedColumnName(CultureInfo.CurrentCulture), StringComparer.CurrentCulture)
+                .ToList();
+        }
+
+        /// <summary>
+        /// The dynamic CV/user-parameter columns discovered from a document's imported results (the
+        /// per-file metadata persisted in the chromatogram cache). Empty when nothing has been imported.
+        /// </summary>
+        public static IList<SpectrumClassColumn> DiscoverCvColumns(SrmDocument document)
+        {
+            var measuredResults = document.Settings.MeasuredResults;
+            if (measuredResults == null)
+            {
+                return Array.Empty<SpectrumClassColumn>();
+            }
+
+            var spectra = measuredResults.Chromatograms.SelectMany(chromatogramSet => chromatogramSet.MSDataFilePaths)
+                .Distinct()
+                .Select(path => measuredResults.GetResultFileMetaData(path))
+                .Where(metadata => metadata != null)
+                .SelectMany(metadata => metadata.SpectrumMetadatas);
+            return DiscoverCvColumns(spectra);
+        }
+
+        /// <summary>
+        /// Accumulates, across the spectra that carry one (accession, unit) term, its friendly name and
+        /// whether every value seen parses as a number (so the discovered column can be typed).
+        /// </summary>
+        private class CvColumnDiscovery
+        {
+            private bool _sawValue;
+            private bool _allNumeric = true;
+
+            public CvColumnDiscovery(string accession, string unit)
+            {
+                Accession = accession;
+                Unit = unit;
+            }
+
+            public string Accession { get; }
+            public string Unit { get; }
+            public string Name { get; private set; }
+            public bool IsNumeric => _sawValue && _allNumeric;
+
+            public void Add(SpectrumMetadataTerm term)
+            {
+                if (string.IsNullOrEmpty(Name) && !string.IsNullOrEmpty(term.Name))
+                {
+                    Name = term.Name;
+                }
+
+                if (!string.IsNullOrEmpty(term.Value))
+                {
+                    _sawValue = true;
+                    if (!double.TryParse(term.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out _))
+                    {
+                        _allNumeric = false;
+                    }
+                }
+            }
+        }
+
         private static string EncodeCvParamColumnName(string accession, string unit)
         {
             var payload = Encoding.UTF8.GetBytes(accession + CV_PARAM_SEPARATOR + (unit ?? string.Empty));

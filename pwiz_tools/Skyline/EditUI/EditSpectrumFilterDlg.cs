@@ -37,12 +37,25 @@ namespace pwiz.Skyline.EditUI
         private FilterPages _filterPages;
         private FilterPages _originalFilterPages;
         private ColumnDescriptor _rootColumn;
-        private Dictionary<string, ColumnDescriptor> _propertyColumns = new Dictionary<string, ColumnDescriptor>();
+        private Dictionary<string, FilterColumn> _propertyColumns = new Dictionary<string, FilterColumn>();
+        private IList<SpectrumClassColumn> _extraColumns;
         private bool _updating;
 
         public EditSpectrumFilterDlg(ColumnDescriptor rootColumn, FilterPages filterPages)
+            : this(rootColumn, filterPages, null)
+        {
+        }
+
+        /// <summary>
+        /// <paramref name="extraColumns"/> are dynamic columns (the discovered mzML CV/user parameters)
+        /// that are not properties of the databound row type, so they cannot be resolved from
+        /// <paramref name="rootColumn"/>; the dialog offers them alongside the resolvable columns.
+        /// </summary>
+        public EditSpectrumFilterDlg(ColumnDescriptor rootColumn, FilterPages filterPages,
+            IEnumerable<SpectrumClassColumn> extraColumns)
         {
             InitializeComponent();
+            _extraColumns = extraColumns?.ToArray() ?? Array.Empty<SpectrumClassColumn>();
             _rootColumn = rootColumn;
             _rowList = new List<Row>();
             _rowBindingList = new BindingList<Row>(_rowList);
@@ -178,6 +191,38 @@ namespace pwiz.Skyline.EditUI
             public void SetProperty(SpectrumClassColumn spectrumClassColumn)
             {
                 Property = spectrumClassColumn.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            }
+        }
+
+        /// <summary>
+        /// A filterable column the dialog offers, reduced to what the dialog needs (caption, path, type).
+        /// Backed either by a <see cref="ColumnDescriptor"/> (a property of the databound row type) or by
+        /// a dynamic <see cref="SpectrumClassColumn"/> (a discovered mzML CV/user parameter, which has no
+        /// such property).
+        /// </summary>
+        private class FilterColumn
+        {
+            public FilterColumn(PropertyPath propertyPath, Type propertyType, string caption)
+            {
+                PropertyPath = propertyPath;
+                PropertyType = propertyType;
+                Caption = caption;
+            }
+
+            public PropertyPath PropertyPath { get; }
+            public Type PropertyType { get; }
+            public string Caption { get; }
+
+            public static FilterColumn FromColumnDescriptor(ColumnDescriptor columnDescriptor)
+            {
+                return new FilterColumn(columnDescriptor.PropertyPath, columnDescriptor.PropertyType,
+                    columnDescriptor.GetColumnCaption(ColumnCaptionType.localized));
+            }
+
+            public static FilterColumn FromSpectrumClassColumn(SpectrumClassColumn column)
+            {
+                return new FilterColumn(column.PropertyPath, column.ValueType,
+                    column.GetLocalizedColumnName(CultureInfo.CurrentCulture));
             }
         }
 
@@ -350,6 +395,16 @@ namespace pwiz.Skyline.EditUI
             return true;
         }
 
+        private void AddFilterColumn(FilterColumn filterColumn)
+        {
+            if (_propertyColumns.ContainsKey(filterColumn.Caption))
+            {
+                return;
+            }
+            _propertyColumns.Add(filterColumn.Caption, filterColumn);
+            propertyColumn.Items.Add(filterColumn.Caption);
+        }
+
         private void DisplayCurrentPage()
         {
             var currentPage = FilterPages.Pages.ElementAtOrDefault(CurrentPageIndex) ?? SpectrumClassFilter.GenericFilterPage;
@@ -358,12 +413,16 @@ namespace pwiz.Skyline.EditUI
             foreach (var column in currentPage.AvailableColumns)
             {
                 var columnDescriptor = GetColumnDescriptor(column);
-                string caption = columnDescriptor.GetColumnCaption(ColumnCaptionType.localized);
-                if (!_propertyColumns.ContainsKey(caption))
+                if (columnDescriptor != null)
                 {
-                    _propertyColumns.Add(caption, columnDescriptor);
-                    propertyColumn.Items.Add(caption);
+                    AddFilterColumn(FilterColumn.FromColumnDescriptor(columnDescriptor));
                 }
+            }
+            // The discovered mzML CV/user-parameter columns are not properties of the databound row
+            // type, so they are offered here rather than through currentPage.AvailableColumns.
+            foreach (var extraColumn in _extraColumns)
+            {
+                AddFilterColumn(FilterColumn.FromSpectrumClassColumn(extraColumn));
             }
 
             if (tabClauses.SelectedIndex != CurrentPageIndex)

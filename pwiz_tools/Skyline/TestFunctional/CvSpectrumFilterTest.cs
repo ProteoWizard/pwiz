@@ -16,10 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.SkylineTestUtil;
@@ -94,6 +96,44 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(unfilteredPoints, cv50Points + cv70Points);
             // A numeric CV filter admitting every base peak intensity matches all spectra.
             Assert.AreEqual(unfilteredPoints, Points(filterBpiAll));
+
+            VerifyEditorOffersCvColumns();
+        }
+
+        /// <summary>
+        /// The filter editor discovers the imported CV terms (persisted in the cache) and offers them as
+        /// filterable columns, and a filter created on one through the dialog is applied to the document.
+        /// </summary>
+        private void VerifyEditorOffersCvColumns()
+        {
+            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity",
+                @"number of detector counts", true);
+            var filterStringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", null, false);
+
+            var discovered = SpectrumClassColumn.DiscoverCvColumns(SkylineWindow.Document);
+            Assert.IsTrue(discovered.Any(c => Equals(c.PropertyPath, bpiColumn.PropertyPath)),
+                @"base peak intensity column not discovered");
+            Assert.IsTrue(discovered.Any(c => Equals(c.PropertyPath, filterStringColumn.PropertyPath)),
+                @"filter string column not discovered");
+
+            RunUI(() => SkylineWindow.SelectedPath =
+                SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.TransitionGroups, 0));
+            RunDlg<EditSpectrumFilterDlg>(SkylineWindow.EditMenu.EditSpectrumFilter, dlg =>
+            {
+                dlg.CreateCopy = true;
+                var row = dlg.RowBindingList.AddNew();
+                Assert.IsNotNull(row);
+                // The discovered CV column is offered under its friendly name; select it by that caption.
+                row.Property = filterStringColumn.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+                row.SetOperation(FilterOperations.OP_CONTAINS);
+                row.SetValue(@"cv=-70");
+                dlg.OkDialog();
+            });
+
+            var expected = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(filterStringColumn.PropertyPath, FilterOperations.OP_CONTAINS, @"cv=-70") }));
+            Assert.IsTrue(SkylineWindow.Document.MoleculeTransitionGroups.Any(tg => Equals(tg.SpectrumClassFilter, expected)),
+                @"the CV filter created through the editor was not applied to any transition group");
         }
 
         private static SpectrumClassFilter StringCvFilter(string containsText)

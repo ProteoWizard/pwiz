@@ -53,6 +53,7 @@ namespace pwiz.SkylineTest
             TestRoundTripSpectrumFilters();
             TestCvParamColumnRoundTrip();
             TestCvParamFilterPredicate();
+            TestDiscoverCvColumns();
         }
 
         private void TestSpectrumPrecursorFilterOperand()
@@ -264,6 +265,39 @@ namespace pwiz.SkylineTest
                 new SpectrumClassFilter(new FilterClause(new[]
                         { new FilterSpec(otherUnit.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"500") }))
                     .MakePredicate()(big));
+        }
+
+        private void TestDiscoverCvColumns()
+        {
+            SpectrumMetadata Spectrum(string id, params SpectrumMetadataTerm[] terms) =>
+                new SpectrumMetadata(id, 1.0).ChangeOtherParams(terms);
+
+            const string counts = @"number of detector counts";
+            var specA = Spectrum(@"a",
+                new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity", @"500", counts),
+                new SpectrumMetadataTerm(@"MS:1000512", @"filter string", @"FTMS + p NSI", null));
+            var specB = Spectrum(@"b",
+                new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity", @"600", counts),
+                new SpectrumMetadataTerm(@"MS:1000900", @"custom", @"5", @"ea"));
+            // The same (accession, unit) with a non-numeric value makes that column string-typed.
+            var specC = Spectrum(@"c", new SpectrumMetadataTerm(@"MS:1000900", @"custom", @"abc", @"ea"));
+
+            var columns = SpectrumClassColumn.DiscoverCvColumns(new[] { specA, specB, specC });
+            Assert.AreEqual(3, columns.Count);
+            Assert.IsTrue(columns.All(SpectrumClassColumn.IsCvParamColumn));
+
+            SpectrumClassColumn Find(string accession, string unit) =>
+                columns.Single(c => Equals(c.PropertyPath, SpectrumClassColumn.CvParam(accession, null, unit, false).PropertyPath));
+
+            // Every value seen for base peak intensity parses as a number, so it is numeric.
+            var bpi = Find(@"MS:1000505", counts);
+            Assert.AreEqual(typeof(double), bpi.ValueType);
+            var bpiName = bpi.GetLocalizedColumnName(CultureInfo.CurrentCulture);
+            Assert.IsTrue(bpiName.Contains(@"base peak intensity") && bpiName.Contains(counts), bpiName);
+
+            // The filter string (no numeric value) and the mixed-value custom term are string-typed.
+            Assert.AreEqual(typeof(string), Find(@"MS:1000512", null).ValueType);
+            Assert.AreEqual(typeof(string), Find(@"MS:1000900", @"ea").ValueType);
         }
 
         private void TestSpectrumClassFilterSerialization()
