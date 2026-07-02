@@ -2473,14 +2473,13 @@ namespace pwiz.Osprey.Test
         /// AnalysisPipeline's "First-pass compaction" block.
         ///
         /// Compaction predicate is the UNION of (a) the local-FDR
-        /// predicate (peptide_q OR protein_q pass) AND (b) every
-        /// base_id that has a reconciliation action emitted by the
-        /// planner. The planner runs cross-file consensus rescue
-        /// (ConsensusRts.Compute), so an entry whose own file fails
-        /// local first-pass FDR can still be a reconciliation target
-        /// when its peptide passes FDR in a sibling file. Without the
-        /// union, the local-FDR-only predicate drops those entries and
-        /// their planner actions are silently dropped too -- the
+        /// predicate (peptide_q pass) AND (b) every base_id that has a
+        /// reconciliation action emitted by the planner. The planner runs
+        /// cross-file consensus rescue (ConsensusRts.Compute), so an entry
+        /// whose own file fails local first-pass FDR can still be a
+        /// reconciliation target when its peptide passes FDR in a sibling
+        /// file. Without the union, the local-FDR-only predicate drops those
+        /// entries and their planner actions are silently dropped too -- the
         /// reconciled .scores.parquet ends up with stale Stage 4 apex_rt
         /// / bounds for the rescued entries and the blib output diverges
         /// from the in-memory straight-through pipeline.
@@ -2490,12 +2489,15 @@ namespace pwiz.Osprey.Test
         ///   idx 1: decoy  id=0x80000001, base=1 (retained via target's base_id)
         ///   idx 2: target id=2, peptide_q=0.5  (FAIL local; PLANNER ACTION at (f,2))
         ///   idx 3: decoy  id=0x80000002, base=2 (retained via target's base_id from action)
-        ///   idx 4: target id=3, peptide_q=0.5, protein_q=0.005 (PASS via protein-rescue)
+        ///   idx 4: target id=3, peptide_q=0.5  (FAIL local; PLANNER ACTION at (f,4))
         ///
-        /// With ProteinFdr=0.01 AND the planner-action union:
-        ///   local-FDR pass: base_ids {1, 3}
+        /// With the planner-action union:
+        ///   local-FDR pass: base_ids {1}
         ///   planner action targets: base_ids {1, 2, 3}
         ///   UNION: base_ids {1, 2, 3} — all 5 entries survive compaction.
+        ///
+        /// (The former protein-FDR rescue is gone; id=3 now survives purely
+        /// via its planner action, exercising the union path, not a rescue.)
         ///
         /// Reconciliation actions are seeded at:
         ///   (f, 0) on id=1  → remains at (f, 0) (no compaction shift)
@@ -2514,7 +2516,7 @@ namespace pwiz.Osprey.Test
                     MakeFdrEntryWithProteinQ(0x80000001u,  runPeptideQ: 0.5,   runProteinQ: 1.0),
                     MakeFdrEntryWithProteinQ(2u,           runPeptideQ: 0.5,   runProteinQ: 1.0),
                     MakeFdrEntryWithProteinQ(0x80000002u,  runPeptideQ: 0.5,   runProteinQ: 1.0),
-                    MakeFdrEntryWithProteinQ(3u,           runPeptideQ: 0.5,   runProteinQ: 0.005),
+                    MakeFdrEntryWithProteinQ(3u,           runPeptideQ: 0.5,   runProteinQ: 1.0),
                 }),
             };
 
@@ -2566,14 +2568,18 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// With ProteinFdr=null (--protein-fdr not passed), the
-        /// protein-rescue branch is skipped entirely. An entry that
-        /// would have been retained via protein rescue (peptide_q
-        /// fails, protein_q passes) gets compacted away, taking any
-        /// action keyed to it with it.
+        /// Rescue lock-out at compaction: a peptide that FAILS peptide FDR
+        /// but whose parent protein PASSES protein FDR (protein_q=0.005) is
+        /// dropped, even with --protein-fdr 0.01 set. The former protein
+        /// rescue is gone
+        /// (TODO-20260701_osprey_separate_protein_reporting_from_rescue.md),
+        /// so a passing protein q-value no longer keeps a failing peptide in
+        /// the compacted set. (Formerly
+        /// TestRescoreCompactionWithoutProteinFdrSkipsRescue, which only
+        /// exercised the ProteinFdr=null path.)
         /// </summary>
         [TestMethod]
-        public void TestRescoreCompactionWithoutProteinFdrSkipsRescue()
+        public void TestRescoreCompactionProteinPassNoLongerRescues()
         {
             const string fileName = "f1";
             var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
@@ -2593,34 +2599,34 @@ namespace pwiz.Osprey.Test
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
             };
 
+            // --protein-fdr IS set: exactly the case that used to trigger the rescue.
             var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
             {
                 RunFdr = 0.01,
-                ProteinFdr = null,
+                ProteinFdr = 0.01,
             });
 
-            // Only entry 1 passes; entry 2 dropped (no protein rescue).
+            // Only entry 1 (passing peptide) survives; entry 2's passing
+            // protein no longer rescues its failing peptide.
             Assert.AreEqual(1, stats.EntriesAfter);
             Assert.AreEqual(1, stats.FirstPassBaseIds);
             Assert.AreEqual(1u, inputs.PerFileEntries[0].Value[0].EntryId);
         }
 
         /// <summary>
-        /// Decoys are excluded from the predicate by design: a passing
-        /// target retains its paired decoy automatically via the
-        /// base_id retain step. If decoys WERE allowed in the
-        /// predicate, a decoy peptide whose paired-target's protein
-        /// passes protein-FDR would self-rescue via the protein-rescue
-        /// clause, inflating the base_id set beyond what the
-        /// in-process pipeline produces (AnalysisPipeline.cs:517 has
-        /// the matching `if (entry.IsDecoy) continue;` filter; Rust
+        /// Decoys are excluded from the predicate by design: only TARGETS
+        /// seed base_ids, and a passing target retains its paired decoy via
+        /// the base_id retain step. If decoys WERE allowed into the
+        /// predicate, a lone decoy that passes the peptide gate would seed
+        /// its own base_id and inflate the set beyond what the in-process
+        /// pipeline produces (AnalysisPipeline.cs's CompactFirstPass has the
+        /// matching `if (entry.IsDecoy) continue;` filter; Rust
         /// rescore.rs:457 has the matching `!e.is_decoy &&`).
         ///
-        /// Test layout: a single decoy with a passing protein_q AND a
-        /// failing peptide_q. Without the decoy filter, the decoy's
-        /// base_id would land in firstPassBaseIds via protein-rescue.
-        /// With the filter, the decoy is skipped — and since no target
-        /// shares its base_id, no entries survive at all.
+        /// Test layout: a single decoy that PASSES the peptide gate with no
+        /// paired target. Without the decoy filter its base_id would land in
+        /// firstPassBaseIds; with the filter the decoy is skipped, and since
+        /// no target shares its base_id, no entries survive at all.
         /// </summary>
         [TestMethod]
         public void TestRescoreCompactionSkipsDecoysInPredicate()
@@ -2630,8 +2636,8 @@ namespace pwiz.Osprey.Test
             {
                 new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>
                 {
-                    // Lone decoy with a passing protein_q. No paired target.
-                    MakeFdrEntryWithProteinQ(0x80000007u, runPeptideQ: 0.5, runProteinQ: 0.005),
+                    // Lone decoy that PASSES the peptide gate. No paired target.
+                    MakeFdrEntryWithProteinQ(0x80000007u, runPeptideQ: 0.005, runProteinQ: 1.0),
                 }),
             };
 
