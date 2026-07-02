@@ -53,13 +53,6 @@ namespace pwiz.Osprey.FDR.Reconciliation
         /// <param name="consensusFdr">
         /// FDR threshold for selecting consensus peptides (typically 0.01).
         /// </param>
-        /// <param name="proteinFdrThreshold">
-        /// If &gt; 0, rescue borderline peptides whose first-pass protein
-        /// q-value is &lt;= this threshold. Lets peptides from strong proteins
-        /// contribute to consensus RT computation even if their own peptide
-        /// q-value is borderline. Typically set to <c>config.ProteinFdr</c>.
-        /// Pass 0.0 to disable.
-        /// </param>
         /// <param name="invPredictTrace">
         /// If non-null, populated with one <see cref="InvPredictRecord"/> per
         /// detection contributing to a consensus computation, capturing the
@@ -71,7 +64,6 @@ namespace pwiz.Osprey.FDR.Reconciliation
             IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
             double consensusFdr,
-            double proteinFdrThreshold,
             IList<InvPredictRecord> invPredictTrace = null)
         {
             if (perFileEntries == null)
@@ -79,8 +71,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
             if (perFileCalibrations == null)
                 throw new ArgumentNullException(nameof(perFileCalibrations));
 
-            // 1. Collect target peptides passing the run-level hard gate
-            //    (or rescued by protein FDR for peptide-level borderline cases).
+            // 1. Collect target peptides passing the run-level hard gate.
             //    We also record the set of qualifying target *base_ids* so that
             //    paired decoys can be identified by base_id linkage
             //    (entry_id & 0x7FFFFFFF) rather than by stripping a "DECOY_"
@@ -96,7 +87,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
             {
                 foreach (var entry in kvp.Value)
                 {
-                    if (Qualifies(entry, consensusFdr, proteinFdrThreshold))
+                    if (Qualifies(entry, consensusFdr))
                     {
                         targetPeptides.Add(entry.ModifiedSequence);
                         targetBaseIds.Add(entry.EntryId & 0x7FFFFFFFu);
@@ -130,7 +121,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     bool include = entry.IsDecoy
                         ? decoyPeptides.Contains(entry.ModifiedSequence)
                         : targetPeptides.Contains(entry.ModifiedSequence) &&
-                          Qualifies(entry, consensusFdr, proteinFdrThreshold);
+                          Qualifies(entry, consensusFdr);
                     if (!include)
                         continue;
 
@@ -237,14 +228,17 @@ namespace pwiz.Osprey.FDR.Reconciliation
             return consensus;
         }
 
-        private static bool Qualifies(FdrEntry entry, double consensusFdr, double proteinFdrThreshold)
+        private static bool Qualifies(FdrEntry entry, double consensusFdr)
         {
             if (entry.IsDecoy)
                 return false;
             if (entry.RunPrecursorQvalue > consensusFdr)
                 return false;
-            return entry.RunPeptideQvalue <= consensusFdr ||
-                   (proteinFdrThreshold > 0.0 && entry.RunProteinQvalue <= proteinFdrThreshold);
+            // Peptide-level gate only. The former protein-FDR rescue
+            // (entry.RunProteinQvalue <= proteinFdrThreshold) was removed as
+            // anti-conservative; see
+            // TODO-20260701_osprey_separate_protein_reporting_from_rescue.md.
+            return entry.RunPeptideQvalue <= consensusFdr;
         }
 
         private static bool IsFinite(double d)

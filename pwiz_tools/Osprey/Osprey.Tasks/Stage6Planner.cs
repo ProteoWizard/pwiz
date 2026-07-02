@@ -173,7 +173,6 @@ namespace pwiz.Osprey.Tasks
                     ? ConsensusRts.Compute(
                         perFileForRecon, perFileCalibrations,
                         config.Reconciliation.ConsensusFdr,
-                        config.ProteinFdr ?? 0.0,
                         invPredictTrace)
                     : Array.Empty<PeptideConsensusRT>();
 

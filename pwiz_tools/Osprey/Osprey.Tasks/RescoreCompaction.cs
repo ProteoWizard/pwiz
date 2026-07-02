@@ -95,15 +95,18 @@ namespace pwiz.Osprey.Tasks
         /// <see cref="RescoreInputs.ReconciliationActions"/> with
         /// post-compaction <c>vec_idx</c> values.
         ///
-        /// Predicate (mirrors Rust <c>rescore::run_rescore</c>'s
-        /// compaction block): an entry's <c>base_id</c> is retained if
-        /// EITHER <c>RunPeptideQvalue ≤ peptideGate</c> OR
-        /// (<c>--protein-fdr</c> set AND <c>RunProteinQvalue ≤ proteinGate</c>).
-        /// <paramref name="config"/>'s <see cref="OspreyConfig.RunFdr"/>
-        /// supplies the peptide gate (matches the in-process flow's
-        /// <c>peptideGate = config.RunFdr</c> at the same step), and
-        /// <see cref="OspreyConfig.ProteinFdr"/> the protein-rescue
-        /// gate (skipped entirely when null).
+        /// Predicate: an entry's <c>base_id</c> is retained if
+        /// <c>RunPeptideQvalue ≤ peptideGate</c>. <paramref name="config"/>'s
+        /// <see cref="OspreyConfig.RunFdr"/> supplies the peptide gate (matches
+        /// the in-process CompactFirstPass at the same step).
+        ///
+        /// The former protein-FDR "rescue" clause (retain a peptide that failed
+        /// peptide FDR when its parent protein passed <c>--protein-fdr</c>) was
+        /// removed as anti-conservative -- a DELIBERATE divergence from Rust's
+        /// <c>rescore::run_rescore</c>, which still carries the clause; the
+        /// entrapment oracle justifies dropping it (see
+        /// TODO-20260701_osprey_separate_protein_reporting_from_rescue.md). The
+        /// peptide gate still matches Rust.
         /// </summary>
         public static Stats Apply(RescoreInputs inputs, OspreyConfig config)
         {
@@ -111,20 +114,14 @@ namespace pwiz.Osprey.Tasks
             if (config == null) throw new ArgumentNullException(nameof(config));
 
             double peptideGate = config.RunFdr;
-            double? proteinGate = config.ProteinFdr;
 
             // 1. Build the passing base_id set across all files.
             //    Decoys are excluded from the predicate by design: target/decoy
             //    pairs share the same `base_id`, so a passing TARGET retains
             //    its paired decoy automatically via the base_id retain step
-            //    below. Including decoys in the predicate would let a decoy
-            //    peptide whose parent protein passes protein-FDR rescue
-            //    itself via the protein-rescue clause, inflating the base_id
-            //    set beyond what the in-process pipeline's compaction
-            //    produces (AnalysisPipeline.cs:517 has the matching
-            //    `if (entry.IsDecoy) continue;` filter, and
-            //    `pipeline.rs:3879` and `rescore.rs:457` on the Rust side
-            //    have the matching `!e.is_decoy &&` predicate).
+            //    below (AnalysisPipeline.cs's CompactFirstPass has the matching
+            //    `if (entry.IsDecoy) continue;` filter, and `pipeline.rs:3879` /
+            //    `rescore.rs:457` on the Rust side the matching `!e.is_decoy &&`).
             var firstPassBaseIds = new HashSet<uint>();
             int entriesBefore = 0;
             foreach (var kvp in inputs.PerFileEntries)
@@ -134,8 +131,7 @@ namespace pwiz.Osprey.Tasks
                 {
                     if (e.IsDecoy)
                         continue;
-                    if (e.RunPeptideQvalue <= peptideGate ||
-                        (proteinGate.HasValue && e.RunProteinQvalue <= proteinGate.Value))
+                    if (e.RunPeptideQvalue <= peptideGate)
                     {
                         firstPassBaseIds.Add(e.EntryId & BASE_ID_MASK);
                     }

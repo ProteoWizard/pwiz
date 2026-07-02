@@ -91,8 +91,7 @@ namespace pwiz.Osprey.Test
             var result = ConsensusRts.Compute(
                 new List<KeyValuePair<string, IReadOnlyList<FdrEntry>>>(),
                 new Dictionary<string, RTCalibration>(),
-                consensusFdr: 0.01,
-                proteinFdrThreshold: 0.0);
+                consensusFdr: 0.01);
 
             Assert.AreEqual(0, result.Count);
         }
@@ -117,7 +116,7 @@ namespace pwiz.Osprey.Test
                 Pair(@"f3", PassingTarget(@"PEPTIDE1", apexRt: 9.9,  score: 3.0)),
             };
 
-            var consensus = ConsensusRts.Compute(perFile, cals, 0.01, 0.0);
+            var consensus = ConsensusRts.Compute(perFile, cals, 0.01);
 
             Assert.AreEqual(1, consensus.Count);
             var entry = consensus[0];
@@ -150,7 +149,7 @@ namespace pwiz.Osprey.Test
                 Pair(@"f3", Decoy(@"DECOY_PEPTIDE1", apexRt: 15.0, score: -1.0)),
             };
 
-            var consensus = ConsensusRts.Compute(perFile, cals, 0.01, 0.0);
+            var consensus = ConsensusRts.Compute(perFile, cals, 0.01);
 
             Assert.AreEqual(2, consensus.Count);
             Assert.IsFalse(consensus[0].IsDecoy);
@@ -192,7 +191,7 @@ namespace pwiz.Osprey.Test
                 Pair(@"f3", new[] { libraryDecoy }),
             };
 
-            var consensus = ConsensusRts.Compute(perFile, cals, 0.01, 0.0);
+            var consensus = ConsensusRts.Compute(perFile, cals, 0.01);
 
             Assert.AreEqual(2, consensus.Count,
                 @"target + its no-prefix library decoy (paired by base_id) should both be in consensus");
@@ -204,20 +203,23 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestComputeRejectsLowPrecursorQvalueDespiteProteinRescue()
+        public void TestComputeProteinEvidenceCannotRescueFailingPeptide()
         {
-            // Mirrors Rust test_consensus_rejects_low_precursor_q_despite_protein_rescue.
-            // Hard precursor-q gate must reject a target even when its protein
-            // q-value would otherwise rescue it. Consensus is driven by the
-            // detection's own apex_rt, so poor precursor-level evidence cannot
-            // be rescued by protein-level aggregate evidence.
+            // Regression lock for the removed protein-FDR rescue
+            // (TODO-20260701_osprey_separate_protein_reporting_from_rescue.md):
+            // a target that fails BOTH the precursor and peptide q-value gates is
+            // rejected even though its parent protein q-value (0.001) would have
+            // triggered the old rescue. Consensus is driven by the detection's own
+            // evidence, not protein-level aggregate evidence. (Formerly
+            // TestComputeRejectsLowPrecursorQvalueDespiteProteinRescue, which
+            // passed proteinFdrThreshold: 0.01; that parameter no longer exists.)
             var cal = IdentityCalibration();
             var cals = new Dictionary<string, RTCalibration>
             {
                 { @"f1", cal }, { @"f2", cal }
             };
 
-            var weakPrecursor = new FdrEntry
+            var strongProteinFailingPeptide = new FdrEntry
             {
                 EntryId = 1,
                 IsDecoy = false,
@@ -229,32 +231,34 @@ namespace pwiz.Osprey.Test
                 Score = 3.0,
                 RunPrecursorQvalue = 0.20,  // fails hard gate
                 RunPeptideQvalue = 0.02,    // fails peptide too
-                RunProteinQvalue = 0.001,   // would rescue if allowed
+                RunProteinQvalue = 0.001,   // strong protein: would have rescued
                 ModifiedSequence = @"PEPTIDE1",
             };
             var goodTarget = PassingTarget(@"PEPTIDE2", apexRt: 20.0, score: 3.0);
 
             var perFile = new List<KeyValuePair<string, IReadOnlyList<FdrEntry>>>
             {
-                Pair(@"f1", new[] { weakPrecursor }),
+                Pair(@"f1", new[] { strongProteinFailingPeptide }),
                 Pair(@"f2", goodTarget),
             };
 
-            var consensus = ConsensusRts.Compute(
-                perFile, cals,
-                consensusFdr: 0.01,
-                proteinFdrThreshold: 0.01);
+            var consensus = ConsensusRts.Compute(perFile, cals, consensusFdr: 0.01);
 
-            Assert.AreEqual(1, consensus.Count);
+            Assert.AreEqual(1, consensus.Count,
+                @"a failing peptide must NOT be rescued by a strong parent protein");
             Assert.AreEqual(@"PEPTIDE2", consensus[0].ModifiedSequence);
         }
 
         [TestMethod]
-        public void TestComputeProteinRescueUpgradesBorderlinePeptideQvalue()
+        public void TestComputeBorderlinePeptideNotRescuedByProtein()
         {
-            // Precursor-q passes the hard gate, peptide-q is borderline but
-            // fails consensus_fdr, protein-q passes protein threshold →
-            // detection should be included.
+            // Regression lock for the removed protein-FDR rescue
+            // (TODO-20260701_osprey_separate_protein_reporting_from_rescue.md):
+            // a detection whose precursor-q passes the hard gate but whose
+            // peptide-q FAILS consensus_fdr is NOT admitted, even though its
+            // protein-q (0.005) would have triggered the old rescue. (Formerly
+            // TestComputeProteinRescueUpgradesBorderlinePeptideQvalue, which
+            // asserted the rescue admitted it.)
             var cal = IdentityCalibration();
             var cals = new Dictionary<string, RTCalibration> { { @"f1", cal } };
 
@@ -269,8 +273,8 @@ namespace pwiz.Osprey.Test
                 CoelutionSum = 1.0,
                 Score = 3.0,
                 RunPrecursorQvalue = 0.005, // passes hard gate
-                RunPeptideQvalue = 0.05,    // fails borderline
-                RunProteinQvalue = 0.005,   // rescues
+                RunPeptideQvalue = 0.05,    // fails borderline peptide gate
+                RunProteinQvalue = 0.005,   // passing protein: would have rescued
                 ModifiedSequence = @"PEPTIDE1",
             };
 
@@ -279,20 +283,10 @@ namespace pwiz.Osprey.Test
                 Pair(@"f1", new[] { borderline }),
             };
 
-            var consensus = ConsensusRts.Compute(
-                perFile, cals,
-                consensusFdr: 0.01,
-                proteinFdrThreshold: 0.01);
+            var consensus = ConsensusRts.Compute(perFile, cals, consensusFdr: 0.01);
 
-            Assert.AreEqual(1, consensus.Count);
-            Assert.AreEqual(@"PEPTIDE1", consensus[0].ModifiedSequence);
-
-            // Repeat with protein rescue disabled — same detection must be rejected.
-            var consensusNoRescue = ConsensusRts.Compute(
-                perFile, cals,
-                consensusFdr: 0.01,
-                proteinFdrThreshold: 0.0);
-            Assert.AreEqual(0, consensusNoRescue.Count);
+            Assert.AreEqual(0, consensus.Count,
+                @"borderline peptide (peptide-q > consensus_fdr) must NOT be rescued by a passing protein");
         }
 
         [TestMethod]
@@ -316,7 +310,7 @@ namespace pwiz.Osprey.Test
                 Pair(@"f3", PassingTarget(@"PEPTIDE1", apexRt: 20.0, score: -4.0)),
             };
 
-            var consensus = ConsensusRts.Compute(perFile, cals, 0.01, 0.0);
+            var consensus = ConsensusRts.Compute(perFile, cals, 0.01);
 
             Assert.AreEqual(1, consensus.Count);
             Assert.AreEqual(10.0, consensus[0].ConsensusLibraryRt, TOLERANCE);
@@ -352,7 +346,7 @@ namespace pwiz.Osprey.Test
                 Pair(@"f2", good),
             };
 
-            var consensus = ConsensusRts.Compute(perFile, cals, 0.01, 0.0);
+            var consensus = ConsensusRts.Compute(perFile, cals, 0.01);
 
             Assert.AreEqual(1, consensus.Count);
             Assert.AreEqual(1, consensus[0].NRunsDetected);
@@ -374,7 +368,7 @@ namespace pwiz.Osprey.Test
                 Pair(@"f2", PassingTarget(@"PEPTIDE1", apexRt: 11.0, score: 3.0)),
             };
 
-            var consensus = ConsensusRts.Compute(perFile, cals, 0.01, 0.0);
+            var consensus = ConsensusRts.Compute(perFile, cals, 0.01);
             Assert.AreEqual(1, consensus.Count);
             Assert.AreEqual(2, consensus[0].NRunsDetected);
             Assert.IsFalse(consensus[0].ApexLibraryRtMad.HasValue);
@@ -399,7 +393,7 @@ namespace pwiz.Osprey.Test
                 }),
             };
 
-            var consensus = ConsensusRts.Compute(perFile, cals, 0.01, 0.0);
+            var consensus = ConsensusRts.Compute(perFile, cals, 0.01);
 
             Assert.AreEqual(3, consensus.Count);
             Assert.AreEqual(@"ALPHA", consensus[0].ModifiedSequence);
@@ -425,7 +419,7 @@ namespace pwiz.Osprey.Test
                 Pair(@"f_no_cal", PassingTarget(@"PEPTIDE1", apexRt: 99.0, score: 3.0)),
             };
 
-            var consensus = ConsensusRts.Compute(perFile, cals, 0.01, 0.0);
+            var consensus = ConsensusRts.Compute(perFile, cals, 0.01);
             Assert.AreEqual(1, consensus.Count);
             Assert.AreEqual(1, consensus[0].NRunsDetected);
             Assert.AreEqual(10.0, consensus[0].ConsensusLibraryRt, TOLERANCE);

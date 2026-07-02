@@ -227,10 +227,15 @@ namespace pwiz.Osprey.Tasks
 
             // First-pass protein FDR: runs on the full pre-compaction
             // peptide pool so target and decoy proteins compete on a
-            // symmetric set. Sets RunProteinQvalue on every FdrEntry,
-            // which Stage 6 reconciliation reads via the protein-rescue
-            // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
-            // ("First-pass protein FDR").
+            // symmetric set. Sets RunProteinQvalue on every FdrEntry, which
+            // is persisted in the 1st-pass fdr_scores sidecars as provenance.
+            // NOTE: as of the protein-rescue removal
+            // (TODO-20260701_osprey_separate_protein_reporting_from_rescue.md)
+            // RunProteinQvalue no longer gates peptide survival (neither
+            // compaction nor ConsensusRts reconciliation), so this first-pass
+            // run is now provenance/reporting only; a future PR may drop it
+            // entirely after measuring the sidecar/golden impact. Mirrors Rust
+            // pipeline.rs:3029 ("First-pass protein FDR").
             if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
             {
                 ctx.LogInfo(string.Empty);
@@ -523,15 +528,21 @@ namespace pwiz.Osprey.Tasks
                 {
                     var firstPassBaseIds = new HashSet<uint>();
                     double peptideGate = config.RunFdr;
-                    double proteinGate = config.ProteinFdr ?? 0.0;
                     foreach (var kvp in perFileEntries)
                     {
                         foreach (var entry in kvp.Value)
                         {
                             if (entry.IsDecoy)
                                 continue;
-                            if (entry.RunPeptideQvalue <= peptideGate ||
-                                (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
+                            // Peptide/precursor survival only. The pass-2 protein
+                            // "rescue" (keeping a peptide that FAILED peptide FDR because
+                            // its parent protein PASSED protein FDR) was removed: the
+                            // entrapment oracle showed it admitted false IDs at 6.3x the
+                            // baseline rate (anti-conservative), and pass-2 reconciliation
+                            // can only move a marginal peak to a lower-scoring position,
+                            // so rescuing bad-scoring peptides gained nothing. See
+                            // TODO-20260701_osprey_separate_protein_reporting_from_rescue.md.
+                            if (entry.RunPeptideQvalue <= peptideGate)
                             {
                                 firstPassBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
                             }
