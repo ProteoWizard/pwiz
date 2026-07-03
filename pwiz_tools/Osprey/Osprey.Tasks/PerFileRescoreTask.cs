@@ -440,7 +440,7 @@ namespace pwiz.Osprey.Tasks
                     ProteinFdrEngine.RunFirstPass(
                         bundle.PerFileEntries, fullLibrary, ctx.Config, null);
                 }
-                var stats = RescoreCompaction.Apply(bundle, ctx.Config);
+                var stats = RescoreCompaction.Apply(bundle);
                 ctx.LogInfo(string.Format(
                     @"--task SecondPassFDR compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
                     stats.EntriesBefore, stats.EntriesAfter,

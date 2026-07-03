@@ -2006,6 +2006,7 @@ namespace pwiz.Osprey.Test
                 },
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
                 FileStems = new List<string> { "round_trip" },
+                FirstPassBaseIds = new[] { 3u, 100u, 101u, 200u, 201u },
                 GapFillTargets = new List<GapFillEntry>
                 {
                     new GapFillEntry
@@ -2293,6 +2294,7 @@ namespace pwiz.Osprey.Test
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
                     FileStems = new List<string> { stem },
+                    FirstPassBaseIds = new[] { 100u, 101u, 102u },
                     SearchHash = "abc123",
                     LibraryHash = "lib-h",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2429,6 +2431,7 @@ namespace pwiz.Osprey.Test
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
                     FileStems = new List<string> { stem },
+                    FirstPassBaseIds = new[] { 100u, 101u, 102u },
                     SearchHash = "x",
                     LibraryHash = "y",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2531,13 +2534,12 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = actions,
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+                // FirstJoin's authoritative join-wide set: only base_id 1 passed
+                // first-pass FDR. The planner-action union (below) pulls in 2 and 3.
+                GlobalFirstPassBaseIds = new HashSet<uint> { 1u },
             };
 
-            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
-            {
-                RunFdr = 0.01,
-                ProteinFdr = 0.01,
-            });
+            var stats = RescoreCompaction.Apply(inputs);
 
             // Compaction stats: planner-action union keeps base 2 alive.
             Assert.AreEqual(5, stats.EntriesBefore);
@@ -2591,13 +2593,12 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+                // FirstJoin built the passing set WITHOUT the protein rescue, so
+                // entry 2 (failing peptide, passing protein) is not in it.
+                GlobalFirstPassBaseIds = new HashSet<uint> { 1u },
             };
 
-            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
-            {
-                RunFdr = 0.01,
-                ProteinFdr = null,
-            });
+            var stats = RescoreCompaction.Apply(inputs);
 
             // Only entry 1 passes; entry 2 dropped (no protein rescue).
             Assert.AreEqual(1, stats.EntriesAfter);
@@ -2641,16 +2642,15 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+                // FirstJoin excludes decoys when building the set, so a lone decoy's
+                // base_id is never in it -> empty set here -> decoy dropped.
+                GlobalFirstPassBaseIds = new HashSet<uint>(),
             };
 
-            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
-            {
-                RunFdr = 0.01,
-                ProteinFdr = 0.01,
-            });
+            var stats = RescoreCompaction.Apply(inputs);
 
-            // Decoy is filtered before predicate; no base_ids passed; the
-            // entry is then dropped by the base_id retain step.
+            // Decoy's base_id is not in the global set; the base_id retain step
+            // drops it.
             Assert.AreEqual(0, stats.FirstPassBaseIds);
             Assert.AreEqual(0, stats.EntriesAfter);
             Assert.AreEqual(0, inputs.PerFileEntries[0].Value.Count);
