@@ -779,7 +779,7 @@ namespace pwiz.Osprey.Test
 
             try
             {
-                LibraryCache.SaveCache(tempPath, entries);
+                LibraryCache.SaveCache(tempPath, entries, "round-trip-hash");
                 var loaded = LibraryCache.LoadCache(tempPath);
 
                 Assert.IsNotNull(loaded);
@@ -849,52 +849,95 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
-        public void TestLibraryLoaderIgnoresStaleCache()
+        public void TestLibraryCacheIdentityHash()
         {
-            // IsCacheFresh guards against loading a .libcache that predates the
-            // source library (the library was rebuilt in place without clearing
-            // the cache). A stale cache would otherwise be loaded silently and
-            // yield the previous build, whose decoys/pairing no longer match the
-            // current run.
-            string dir = Path.Combine(Path.GetTempPath(),
-                "osprey_cache_fresh_" + Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(dir);
-            string source = Path.Combine(dir, "lib.tsv");
-            string cache = Path.Combine(dir, "lib.tsv.libcache");
+            // The .libcache stamps the source library's identity hash into its
+            // header (v2). A cache is reused only when the caller-supplied
+            // expected hash matches the stored one; a mismatch reports
+            // IdentityMismatch and does NOT read the entries (so a stale cache
+            // from a rebuilt-in-place library, whose decoys/pairing no longer
+            // match the current run, is rebuilt from source rather than loaded).
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(0),
+                MakeTestEntry(1)
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_identity_" + Guid.NewGuid().ToString("N") + ".libcache");
+
             try
             {
-                File.WriteAllText(source, "source");
-                File.WriteAllText(cache, "cache");
+                LibraryCache.SaveCache(tempPath, entries, "hash-A");
 
-                var t0 = new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                // Matching hash -> loaded with entries.
+                LibraryCache.LibraryCacheStatus status;
+                var loadedMatch = LibraryCache.LoadCache(tempPath, "hash-A", out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
+                Assert.IsNotNull(loadedMatch);
+                Assert.AreEqual(2, loadedMatch.Count);
 
-                // Cache older than source -> stale -> not fresh.
-                File.SetLastWriteTimeUtc(source, t0.AddHours(1));
-                File.SetLastWriteTimeUtc(cache, t0);
-                Assert.IsFalse(LibraryLoader.IsCacheFresh(cache, source),
-                    "a cache older than its source must be treated as stale");
+                // Different hash -> identity mismatch, no entries read.
+                var loadedMismatch = LibraryCache.LoadCache(tempPath, "hash-B", out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.IdentityMismatch, status);
+                Assert.IsNull(loadedMismatch);
 
-                // Cache newer than source -> fresh.
-                File.SetLastWriteTimeUtc(cache, t0.AddHours(2));
-                Assert.IsTrue(LibraryLoader.IsCacheFresh(cache, source),
-                    "a cache newer than its source must be usable");
+                // Null expected hash -> identity check skipped, entries loaded.
+                var loadedNoCheck = LibraryCache.LoadCache(tempPath, null, out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
+                Assert.IsNotNull(loadedNoCheck);
+                Assert.AreEqual(2, loadedNoCheck.Count);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
 
-                // Equal timestamps -> fresh (the comparison is >=).
-                File.SetLastWriteTimeUtc(source, t0);
-                File.SetLastWriteTimeUtc(cache, t0);
-                Assert.IsTrue(LibraryLoader.IsCacheFresh(cache, source),
-                    "a cache as new as its source must be usable");
+        [TestMethod]
+        public void TestLibraryCacheRealIdentityHash()
+        {
+            // End-to-end: stamp a cache with the REAL LibraryIdentityHash of a
+            // temp library file, then change the file's size and mtime and
+            // confirm the recomputed hash no longer matches the stored one, so
+            // the cache reports IdentityMismatch. This locks the size+mtime
+            // sensitivity of SearchIdentity.LibraryIdentityHash to the actual
+            // file, catching even a timestamp-preserving swap that the old
+            // mtime-ordering check would have missed.
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_cache_identity_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            string source = Path.Combine(dir, "lib.tsv");
+            string cachePath = Path.Combine(dir, "lib.tsv.libcache");
+            try
+            {
+                File.WriteAllText(source, "original library contents");
+                var config = new OspreyConfig { LibrarySource = LibrarySource.FromPath(source) };
+                string hashBefore = config.Identity.LibraryIdentityHash();
 
-                // Missing cache -> not fresh (nothing to load).
-                File.Delete(cache);
-                Assert.IsFalse(LibraryLoader.IsCacheFresh(cache, source),
-                    "an absent cache cannot be fresh");
+                var entries = new List<LibraryEntry> { MakeTestEntry(0) };
+                LibraryCache.SaveCache(cachePath, entries, hashBefore);
 
-                // Missing source -> trust the cache (it is the only copy).
-                File.WriteAllText(cache, "cache");
-                File.Delete(source);
-                Assert.IsTrue(LibraryLoader.IsCacheFresh(cache, source),
-                    "with no source to compare against, the cache is trusted");
+                // The cache is reused while the file identity is unchanged.
+                LibraryCache.LibraryCacheStatus status;
+                var loaded = LibraryCache.LoadCache(cachePath, hashBefore, out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
+                Assert.IsNotNull(loaded);
+                Assert.AreEqual(1, loaded.Count);
+
+                // Rebuild the library in place with a different size and mtime.
+                File.WriteAllText(source, "a rebuilt library with different contents and length");
+                File.SetLastWriteTimeUtc(source,
+                    File.GetLastWriteTimeUtc(source).AddHours(1));
+                string hashAfter = config.Identity.LibraryIdentityHash();
+                Assert.AreNotEqual(hashBefore, hashAfter,
+                    "changing the library's size and mtime must change its identity hash");
+
+                // The stale cache is now detected and rebuilt from source.
+                var stale = LibraryCache.LoadCache(cachePath, hashAfter, out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.IdentityMismatch, status);
+                Assert.IsNull(stale);
             }
             finally
             {
@@ -912,7 +955,7 @@ namespace pwiz.Osprey.Test
 
             try
             {
-                LibraryCache.SaveCache(tempPath, entries);
+                LibraryCache.SaveCache(tempPath, entries, "empty-hash");
                 var loaded = LibraryCache.LoadCache(tempPath);
 
                 Assert.IsNotNull(loaded);
