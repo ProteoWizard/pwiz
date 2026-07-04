@@ -162,7 +162,18 @@ namespace pwiz.Skyline.Controls.Spectra
                     }
                 }
 
-                columns.Add(new ColumnSpec(ppSpectrumClass.Concat(classColumn.PropertyPath)));
+                if (SpectrumClassColumn.IsCvParamColumn(classColumn))
+                {
+                    // A dynamic CV column has no SpectrumClass property; bind it as a lookup into the
+                    // SpectrumClass.CvValues dictionary, with the friendly name as the column caption.
+                    columns.Add(new ColumnSpec(ppSpectrumClass
+                            .Property(nameof(SpectrumClass.CvValues)).LookupByKey(classColumn.ColumnName))
+                        .SetCaption(classColumn.GetLocalizedColumnName(CultureInfo.CurrentCulture)));
+                }
+                else
+                {
+                    columns.Add(new ColumnSpec(ppSpectrumClass.Concat(classColumn.PropertyPath)));
+                }
             }
             columns.Add(new ColumnSpec(PropertyPath.Root.Property(nameof(SpectrumClassRow.Files)).DictionaryValues()));
             return new ViewSpec().SetName(SpectraResources.SpectraGridForm_GetDefaultViewSpec_Default).SetColumns(columns);
@@ -337,6 +348,50 @@ namespace pwiz.Skyline.Controls.Spectra
             }
         }
 
+        /// <summary>
+        /// Adds the dynamic mzML CV/user-parameter columns present in the document's imported metadata to
+        /// the column list (and its checkbox), so they can be shown in the grid. They start hidden
+        /// (opt-in). Existing check states are preserved across the rebuild.
+        /// </summary>
+        private void EnsureCvColumns(SrmDocument document)
+        {
+            var updated = ImmutableList.ValueOf(
+                SpectrumClassColumn.ALL.Concat(SpectrumClassColumn.DiscoverCvColumns(document)));
+            if (Equals(updated, _allSpectrumClassColumns))
+            {
+                return;
+            }
+
+            var checkStates = new Dictionary<SpectrumClassColumn, CheckState>();
+            for (int i = 0; i < _allSpectrumClassColumns.Count; i++)
+            {
+                checkStates[_allSpectrumClassColumns[i]] = checkedListBoxSpectrumClassColumns.GetItemCheckState(i);
+            }
+
+            _allSpectrumClassColumns = updated;
+            checkedListBoxSpectrumClassColumns.ItemCheck -= CheckedListBoxSpectrumClassColumns_OnItemCheck;
+            try
+            {
+                checkedListBoxSpectrumClassColumns.Items.Clear();
+                checkedListBoxSpectrumClassColumns.Items.AddRange(_allSpectrumClassColumns.ToArray());
+                for (int i = 0; i < _allSpectrumClassColumns.Count; i++)
+                {
+                    var column = _allSpectrumClassColumns[i];
+                    if (!checkStates.TryGetValue(column, out var state))
+                    {
+                        state = SpectrumClassColumn.IsCvParamColumn(column)
+                            ? CheckState.Unchecked
+                            : CheckState.Indeterminate;
+                    }
+                    checkedListBoxSpectrumClassColumns.SetItemCheckState(i, state);
+                }
+            }
+            finally
+            {
+                checkedListBoxSpectrumClassColumns.ItemCheck += CheckedListBoxSpectrumClassColumns_OnItemCheck;
+            }
+        }
+
         private void AddReplicatesWithMetadata(SrmDocument document)
         {
             if (!document.Settings.HasResults)
@@ -349,6 +404,8 @@ namespace pwiz.Skyline.Controls.Spectra
             {
                 return;
             }
+
+            EnsureCvColumns(document);
 
             foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
             {

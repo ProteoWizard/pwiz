@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using JetBrains.Annotations;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
@@ -43,6 +44,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
         }
+
+        /// <summary>
+        /// Values of the dynamic mzML CV/user-parameter columns for this class, keyed by the column's
+        /// encoded name. These columns are not fixed properties of this POCO (they are only known at
+        /// runtime), so they are carried here and read back by the dynamic column's
+        /// <see cref="SpectrumClassColumn.GetValue(SpectrumClass)"/>; the grid binds them as lookups into
+        /// this dictionary.
+        /// </summary>
+        public IDictionary<string, object> CvValues { get; } = new Dictionary<string, object>();
 
         [Format(Formats.Mz)]
         public SpectrumPrecursors Ms1Precursors
