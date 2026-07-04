@@ -513,7 +513,7 @@ namespace pwiz.Osprey.Tasks
                     // boundaries onto the wrong entries -- the exact
                     // failure the worker's hand-rolled compaction at
                     // RescoreCompaction.Apply was written to avoid.
-                    var stats = RescoreCompaction.Apply(bundle, config);
+                    var stats = RescoreCompaction.Apply(bundle);
                     ctx.LogInfo(string.Format(
                         @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
                         stats.EntriesBefore, stats.EntriesAfter,
@@ -811,6 +811,18 @@ namespace pwiz.Osprey.Tasks
                     joinFileStems.RemoveAt(i);
             }
 
+            // The join-wide first-pass passing base_id set. perFileEntries is
+            // already compacted here (a base_id passing peptide-q in ANY file is
+            // kept in ALL files), so the distinct base_ids remaining across all
+            // files ARE that set. Persisted per file (below) so an HPC
+            // PerFileRescore worker -- which only has its own file in memory --
+            // compacts to the same set the in-memory straight-through pipeline
+            // uses, instead of a per-file subset that drops cross-file entries.
+            var globalBaseIds = new HashSet<uint>();
+            foreach (var fEntry in perFileEntries)
+                foreach (var e in fEntry.Value)
+                    globalBaseIds.Add(e.EntryId & ScoringTaskShared.BASE_ID_MASK);
+
             int failures = 0;
             foreach (var kvp in perFileEntries)
             {
@@ -833,7 +845,7 @@ namespace pwiz.Osprey.Tasks
                 var reconFile = BuildReconciliationFile(
                     fileEntries, fileActions, fileGapFill,
                     refinedCalibrations.TryGetValue(fileName, out var fileCal) ? fileCal : null,
-                    searchHash, libraryHash, joinFileStems);
+                    searchHash, libraryHash, joinFileStems, globalBaseIds);
                 try
                 {
                     ReconciliationFile.Save(reconPath, reconFile);
@@ -913,7 +925,8 @@ namespace pwiz.Osprey.Tasks
             RTCalibration refinedCalibration,
             string searchHash,
             string libraryHash,
-            IReadOnlyList<string> joinFileStems)
+            IReadOnlyList<string> joinFileStems,
+            HashSet<uint> globalBaseIds)
         {
             var useCwt = new List<UseCwtPeakEntry>();
             var forced = new List<ForcedIntegrationEntry>();
@@ -990,9 +1003,15 @@ namespace pwiz.Osprey.Tasks
                 ? new List<string>(joinFileStems)
                 : new List<string>();
 
+            // Sorted ascending for deterministic, byte-parity output.
+            var baseIdArray = new uint[globalBaseIds.Count];
+            globalBaseIds.CopyTo(baseIdArray);
+            Array.Sort(baseIdArray); // Array.Sort OK: unique uint base_ids, single primitive array, no ties
+
             return new ReconciliationFile
             {
                 FileStems = fileStems,
+                FirstPassBaseIds = baseIdArray,
                 ForcedIntegrationActions = forced,
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
                 GapFillTargets = gap,

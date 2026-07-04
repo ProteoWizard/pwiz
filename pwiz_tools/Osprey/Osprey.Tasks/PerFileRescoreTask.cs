@@ -425,12 +425,16 @@ namespace pwiz.Osprey.Tasks
                 // post-rehydration detected_peptides set + best_peptide_scores
                 // (which differ from the original write-time inputs whenever any
                 // upstream rebuild has nudged peptide q-values or score values
-                // even at the ULP level). Without this matching recompute on the
-                // C# side, the protein-rescue branch of compaction below sees
-                // slightly stale RunProteinQvalue values and the post-compaction
-                // detected_peptides set diverges from Rust by ~19 peptides on
-                // Stellar Single (1 protein delta at Stage 7). Only runs when
-                // protein FDR is enabled. Mirrors Rust pipeline.rs:4292-4358.
+                // even at the ULP level). RescoreCompaction below now retains the
+                // persisted global first-pass base_id set and does NOT consult
+                // RunProteinQvalue, so this recompute no longer affects the
+                // compacted set; it is kept to hold RunProteinQvalue byte-consistent
+                // with the straight-through pipeline for the downstream 2nd-pass
+                // protein FDR and cross-impl parity (before recon-v3 read the
+                // persisted set, omitting it diverged the post-compaction set from
+                // Rust by ~19 peptides / 1 protein at Stage 7 on Stellar Single).
+                // Do not remove without re-checking the 2nd-pass protein-FDR path.
+                // Only runs when protein FDR is enabled. Mirrors Rust pipeline.rs:4292-4358.
                 if (ctx.Config.ProteinFdr.HasValue && bundle.PerFileEntries.Count > 0)
                 {
                     var fullLibrary = ctx.Get<FullLibrary>().Value;
@@ -440,7 +444,7 @@ namespace pwiz.Osprey.Tasks
                     ProteinFdrEngine.RunFirstPass(
                         bundle.PerFileEntries, fullLibrary, ctx.Config, null);
                 }
-                var stats = RescoreCompaction.Apply(bundle, ctx.Config);
+                var stats = RescoreCompaction.Apply(bundle);
                 ctx.LogInfo(string.Format(
                     @"--task SecondPassFDR compaction: {0} -> {1} entries ({2} passing base_ids; {3} action(s) dropped)",
                     stats.EntriesBefore, stats.EntriesAfter,
