@@ -199,7 +199,7 @@ namespace pwiz.Osprey.IO
             // promoted to the destination on Commit; on exception, the
             // using-block disposes FileSaver which deletes the temp
             // without touching the destination. See
-            // Osprey.IO.FileSaver for details.
+            // Osprey.Core.FileSaver for details.
             using (var saver = new FileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);
