@@ -1311,6 +1311,24 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Format(
                     "Wrote {0} scored entries to {1} ({2:F1}s)",
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+
+                // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
+                // the parquet above and are reloadable by ParquetIndex, so drop them from
+                // the retained buffer to bound memory -- all N files' entries are held at
+                // once for the join, and these arrays dominate. Features is reloaded before
+                // first-pass Percolator (FirstJoinTask); CWT / fragments / ref-XIC are
+                // reloaded from parquet in Stage 6 / 7. This brings the cold buffer to the
+                // same stub shape LoadFdrStubsFromParquet produces (see the FdrEntry field
+                // docs, which already document these as null on parquet-loaded stubs).
+                foreach (var entry in scoredEntries)
+                {
+                    entry.Features = null;
+                    entry.CwtCandidates = null;
+                    entry.FragmentMzs = null;
+                    entry.FragmentIntensities = null;
+                    entry.ReferenceXicRts = null;
+                    entry.ReferenceXicIntensities = null;
+                }
             }
 
             return scoredEntries;

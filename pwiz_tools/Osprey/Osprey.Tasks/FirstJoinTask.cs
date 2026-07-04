@@ -218,7 +218,40 @@ namespace pwiz.Osprey.Tasks
             }
 
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
-                string.Format(@"Stage 5 start: {0} files loaded, before first-pass FDR", perFileEntries.Count));
+                string.Format(@"Stage 5 start: {0} files loaded (stubs), before first-pass FDR", perFileEntries.Count));
+
+            // Phase 1 (issue #4355): PerFileScoring nulled each stub's PIN features right
+            // after writing its .scores.parquet to bound memory. Reload them here, by
+            // ParquetIndex from each file's parquet, so first-pass Percolator sees the full
+            // feature vectors; they are re-nulled again before Stage 6 (below). This is the
+            // same reload the second pass uses (Pass2FdrSidecar.MapFeaturesByParquetIndex),
+            // whose f64 roundtrip is regression-exact.
+            foreach (var kvp in perFileEntries)
+            {
+                if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoresPath))
+                    continue;
+                List<double[]> featRows;
+                try
+                {
+                    featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogWarning(string.Format(
+                        @"First-pass FDR: failed to reload PIN features from {0}: {1}",
+                        scoresPath, ex.Message));
+                    continue;
+                }
+                int nMapped = Pass2FdrSidecar.MapFeaturesByParquetIndex(kvp.Value, featRows);
+                if (nMapped < kvp.Value.Count)
+                {
+                    ctx.LogWarning(string.Format(
+                        @"First-pass FDR: '{0}' parquet has {1} feature rows but {2} entries reference it; {3} will run with null features.",
+                        kvp.Key, featRows.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
+                }
+            }
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after reloading first-pass features");
+
             var swFdr = Stopwatch.StartNew();
             RunFdr(perFileEntries, config, ctx);
             swFdr.Stop();
@@ -272,6 +305,15 @@ namespace pwiz.Osprey.Tasks
             // includes non-passing charge states that Rust has already
             // dropped, producing different rescore-target sets and
             // different per-file Vec positions.
+            // Phase 1 (issue #4355): re-null the first-pass features reloaded above so the
+            // "Features != null means this entry was rescored" sentinel that
+            // ReconciledParquetWriter.ApplyRescoredRows relies on stays valid going into
+            // Stage 6 (mirrors the resume-rehydrate re-null and
+            // PerFileScoringTask.HydrateRescoreBundleIfPresent). MergeNode reloads features
+            // from the reconciled parquet.
+            foreach (var kvp in perFileEntries)
+                foreach (var entry in kvp.Value)
+                    entry.Features = null;
             CompactFirstPass(perFileEntries, null, config, ctx);
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after Stage-5 CompactFirstPass");
 
