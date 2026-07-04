@@ -306,7 +306,7 @@ namespace pwiz.Osprey.Tasks
 
                 // Capture / validate file_stems across all envelopes.
                 // ReconciliationFile.Load already rejects any envelope whose
-                // format_version != CurrentFormatVersion (currently 2), so by
+                // format_version != CurrentFormatVersion (currently 3), so by
                 // the time we reach here `envelope.FileStems` must be the
                 // planner's full join file set -- a non-empty list, identical
                 // across every envelope produced by a single planner step.
