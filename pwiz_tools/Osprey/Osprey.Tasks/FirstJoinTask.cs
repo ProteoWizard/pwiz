@@ -217,11 +217,14 @@ namespace pwiz.Osprey.Tasks
                     config.FdrMethod));
             }
 
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
+                string.Format(@"Stage 5 start: {0} files loaded, before first-pass FDR", perFileEntries.Count));
             var swFdr = Stopwatch.StartNew();
             RunFdr(perFileEntries, config, ctx);
             swFdr.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
 
             LogFirstPassResultsAndDump(perFileEntries, config, ctx);
 
@@ -270,6 +273,7 @@ namespace pwiz.Osprey.Tasks
             // dropped, producing different rescore-target sets and
             // different per-file Vec positions.
             CompactFirstPass(perFileEntries, null, config, ctx);
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after Stage-5 CompactFirstPass");
 
             // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
             // (MergeNodeTask) owns its own 2nd-pass rehydrate -- it reloads (or

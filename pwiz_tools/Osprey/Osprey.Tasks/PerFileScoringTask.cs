@@ -245,6 +245,8 @@ namespace pwiz.Osprey.Tasks
                         perFileCalibrations, validityKey, ctx);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                    ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
+                        string.Format(@"scored file {0}/{1}", fileIdx + 1, config.InputFiles.Count));
                 }
             }
             else
