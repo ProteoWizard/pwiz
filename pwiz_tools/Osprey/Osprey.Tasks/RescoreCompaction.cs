@@ -132,9 +132,14 @@ namespace pwiz.Osprey.Tasks
             foreach (var kvp in inputs.PerFileEntries)
                 entriesBefore += kvp.Value.Count;
 
-            // Compact to exactly that set. Decoys need no separate predicate: a
-            // target and its paired decoy share a base_id, so a target in the set
-            // keeps its decoy via the base_id retain step below.
+            // Start from that set. Step 2 below additionally unions in the
+            // base_ids of cross-file reconciliation-action targets, so the
+            // retained set is the global first-pass set PLUS those action targets
+            // -- not the global set alone. Both the worker here and the in-memory
+            // straight-through pipeline apply that same union, so they stay
+            // identical. Decoys need no separate predicate: a target and its
+            // paired decoy share a base_id, so a target in the set keeps its
+            // decoy via the base_id retain step below.
             var firstPassBaseIds = new HashSet<uint>(inputs.GlobalFirstPassBaseIds);
 
             // 2. Snapshot pre-compaction (file, entry_id) -> action so

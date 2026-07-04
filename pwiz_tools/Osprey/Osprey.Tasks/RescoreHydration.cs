@@ -283,10 +283,26 @@ namespace pwiz.Osprey.Tasks
                 }
 
                 // Capture the join-wide passing base_id set from the envelope
-                // (v3 required field; identical in every file's envelope, so the
-                // first one wins). RescoreCompaction compacts to exactly this set.
+                // (v3 required field; identical in every file's envelope by
+                // construction). Validate that every sibling envelope agrees:
+                // a mismatch means the on-disk envelopes were produced by
+                // different planner steps (corrupted hand-off), and silently
+                // taking the first file's set would compact its siblings against
+                // the wrong base_ids. Mirrors the file_stems consistency check
+                // below.
+                var envelopeBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds);
                 if (globalBaseIds == null)
-                    globalBaseIds = new HashSet<uint>(envelope.FirstPassBaseIds);
+                {
+                    globalBaseIds = envelopeBaseIds;
+                }
+                else if (!globalBaseIds.SetEquals(envelopeBaseIds))
+                {
+                    throw new InvalidDataException(string.Format(
+                        "HydrateReconciliationOverlay: reconciliation.json {0} carries a " +
+                        "different first_pass_base_ids set than its siblings (planner " +
+                        "inconsistency): {1} vs {2} base_ids.",
+                        reconPath, globalBaseIds.Count, envelopeBaseIds.Count));
+                }
 
                 // Capture / validate file_stems across all envelopes.
                 // ReconciliationFile.Load already rejects any envelope whose

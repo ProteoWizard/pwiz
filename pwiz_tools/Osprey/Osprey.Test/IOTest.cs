@@ -2535,7 +2535,10 @@ namespace pwiz.Osprey.Test
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
                 // FirstJoin's authoritative join-wide set: only base_id 1 passed
-                // first-pass FDR. The planner-action union (below) pulls in 2 and 3.
+                // first-pass FDR. This test deliberately exercises the documented
+                // union semantics: RescoreCompaction retains that set PLUS the
+                // base_ids of reconciliation-action targets (below), pulling in 2
+                // and 3, so the retained set is {1, 2, 3} -- not {1} alone.
                 GlobalFirstPassBaseIds = new HashSet<uint> { 1u },
             };
 
