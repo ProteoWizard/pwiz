@@ -374,7 +374,7 @@ namespace pwiz.Osprey
                 }
                 if (ReferenceEquals(matched, ARG_VERSION))
                 {
-                    Console.WriteLine(@"Osprey v{0}", OspreyVersion.Current);
+                    Console.WriteLine(@"Osprey v{0}", OspreyVersion.DisplayVersion);
                     Environment.Exit(0);
                     return;
                 }

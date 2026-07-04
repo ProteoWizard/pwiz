@@ -26,6 +26,10 @@
          Assembly.GetName().Version, which OspreyVersion.Current reads as the
          logical osprey version. -->
     <Version>26.1.1.0</Version>
+    <!-- Directory.Build.targets stamps AssemblyInformationalVersion itself as
+         "<numeric>-<githash>[-dirty]"; keep the SDK from appending its own
+         "+<sha>" source-revision metadata so OspreyVersion parses one clean form. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <!-- Server GC on .NET 8 is driven by runtimeconfig.json auto-generated
          from these MSBuild properties. net472 ignores these and uses the
          app.config gcServer/gcConcurrent settings instead. -->
