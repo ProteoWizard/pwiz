@@ -946,6 +946,43 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheStaleVersionInvalid()
+        {
+            // A cache whose header carries an unsupported version -- e.g. a pre-v2
+            // cache left on disk from an older build -- reads as Invalid and is
+            // rebuilt; its body is never reinterpreted under the current layout.
+            // Poke the version field (the uint32 immediately after the 8-byte
+            // magic) down to v1 to simulate that, and confirm both the
+            // identity-checked and the no-check load report Invalid rather than
+            // misparsing the body.
+            var entries = new List<LibraryEntry> { MakeTestEntry(0) };
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_version_" + Guid.NewGuid().ToString("N") + ".libcache");
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "hash-A");
+
+                byte[] bytes = File.ReadAllBytes(tempPath);
+                BitConverter.GetBytes((uint)1).CopyTo(bytes, 8); // version at offset 8
+                File.WriteAllBytes(tempPath, bytes);
+
+                LibraryCache.LibraryCacheStatus status;
+                var loaded = LibraryCache.LoadCache(tempPath, "hash-A", out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Invalid, status);
+                Assert.IsNull(loaded);
+
+                // The version gate precedes the identity check, so the identity-
+                // agnostic overload is Invalid too, not silently accepted.
+                Assert.IsNull(LibraryCache.LoadCache(tempPath));
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheEmpty()
         {
             var entries = new List<LibraryEntry>();
