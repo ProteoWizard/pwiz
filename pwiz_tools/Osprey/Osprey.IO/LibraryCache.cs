@@ -46,74 +46,78 @@ namespace pwiz.Osprey.IO
         /// </summary>
         public static void SaveCache(string path, List<LibraryEntry> entries)
         {
-            using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
-            using (var w = new BinaryWriter(stream))
+            using (var saver = new FileSaver(path))
             {
-                w.Write(MAGIC);
-                w.Write(VERSION);
-                w.Write((ulong)entries.Count);
-
-                foreach (var entry in entries)
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var w = new BinaryWriter(stream))
                 {
-                    w.Write(entry.Id);
-                    WriteString(w, entry.Sequence);
-                    WriteString(w, entry.ModifiedSequence);
-                    w.Write(entry.Charge);
-                    w.Write(entry.PrecursorMz);
-                    w.Write(entry.RetentionTime);
-                    w.Write(entry.RtCalibrated ? (byte)1 : (byte)0);
-                    w.Write(entry.IsDecoy ? (byte)1 : (byte)0);
+                    w.Write(MAGIC);
+                    w.Write(VERSION);
+                    w.Write((ulong)entries.Count);
 
-                    // Modifications
-                    w.Write((uint)entry.Modifications.Count);
-                    foreach (var m in entry.Modifications)
+                    foreach (var entry in entries)
                     {
-                        w.Write((uint)m.Position);
-                        if (m.UnimodId.HasValue)
+                        w.Write(entry.Id);
+                        WriteString(w, entry.Sequence);
+                        WriteString(w, entry.ModifiedSequence);
+                        w.Write(entry.Charge);
+                        w.Write(entry.PrecursorMz);
+                        w.Write(entry.RetentionTime);
+                        w.Write(entry.RtCalibrated ? (byte)1 : (byte)0);
+                        w.Write(entry.IsDecoy ? (byte)1 : (byte)0);
+
+                        // Modifications
+                        w.Write((uint)entry.Modifications.Count);
+                        foreach (var m in entry.Modifications)
                         {
-                            w.Write((byte)1);
-                            w.Write((uint)m.UnimodId.Value);
+                            w.Write((uint)m.Position);
+                            if (m.UnimodId.HasValue)
+                            {
+                                w.Write((byte)1);
+                                w.Write((uint)m.UnimodId.Value);
+                            }
+                            else
+                            {
+                                w.Write((byte)0);
+                            }
+                            w.Write(m.MassDelta);
+                            if (m.Name != null)
+                            {
+                                w.Write((byte)1);
+                                WriteString(w, m.Name);
+                            }
+                            else
+                            {
+                                w.Write((byte)0);
+                            }
                         }
-                        else
+
+                        // Fragments
+                        w.Write((uint)entry.Fragments.Count);
+                        foreach (var frag in entry.Fragments)
                         {
-                            w.Write((byte)0);
+                            w.Write(frag.Mz);
+                            w.Write(frag.RelativeIntensity);
+                            w.Write(IonTypeToByte(frag.Annotation.IonType));
+                            w.Write(frag.Annotation.Ordinal);
+                            w.Write(frag.Annotation.Charge);
+                            WriteNeutralLoss(w, frag.Annotation.NeutralLoss);
                         }
-                        w.Write(m.MassDelta);
-                        if (m.Name != null)
-                        {
-                            w.Write((byte)1);
-                            WriteString(w, m.Name);
-                        }
-                        else
-                        {
-                            w.Write((byte)0);
-                        }
+
+                        // Protein IDs
+                        w.Write((uint)entry.ProteinIds.Count);
+                        foreach (string pid in entry.ProteinIds)
+                            WriteString(w, pid);
+
+                        // Gene names
+                        w.Write((uint)entry.GeneNames.Count);
+                        foreach (string gn in entry.GeneNames)
+                            WriteString(w, gn);
                     }
 
-                    // Fragments
-                    w.Write((uint)entry.Fragments.Count);
-                    foreach (var frag in entry.Fragments)
-                    {
-                        w.Write(frag.Mz);
-                        w.Write(frag.RelativeIntensity);
-                        w.Write(IonTypeToByte(frag.Annotation.IonType));
-                        w.Write(frag.Annotation.Ordinal);
-                        w.Write(frag.Annotation.Charge);
-                        WriteNeutralLoss(w, frag.Annotation.NeutralLoss);
-                    }
-
-                    // Protein IDs
-                    w.Write((uint)entry.ProteinIds.Count);
-                    foreach (string pid in entry.ProteinIds)
-                        WriteString(w, pid);
-
-                    // Gene names
-                    w.Write((uint)entry.GeneNames.Count);
-                    foreach (string gn in entry.GeneNames)
-                        WriteString(w, gn);
+                    w.Flush();
                 }
-
-                w.Flush();
+                saver.Commit();
             }
         }
 

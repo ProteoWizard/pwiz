@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
 {

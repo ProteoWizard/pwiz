@@ -60,25 +60,29 @@ namespace pwiz.Osprey.Tasks
             Dictionary<(string, byte), List<KeyValuePair<string, FdrEntry>>> entriesByPrecursor)
         {
             double fdrThreshold = config.RunFdr; // run-level threshold for ID-line semantics
-            using (var writer = new BlibWriter(config.OutputBlib))
+            using (var saver = new FileSaver(config.OutputBlib))
             {
-                writer.BeginBatch();
+                using (var writer = new BlibWriter(saver.SafeName))
+                {
+                    writer.BeginBatch();
 
-                var sourceFileIds = CreateSourceFiles(writer, config, perFileEntries, fdrThreshold);
+                    var sourceFileIds = CreateSourceFiles(writer, config, perFileEntries, fdrThreshold);
 
-                var blibEntries = bestByPrecursor.Values.ToList();
-                PrecompressSpectra(blibEntries, libraryById, config.NThreads,
-                    out byte[][] blibMzBlobs, out byte[][] blibIntBlobs, out int[] blibNumPeaks);
+                    var blibEntries = bestByPrecursor.Values.ToList();
+                    PrecompressSpectra(blibEntries, libraryById, config.NThreads,
+                        out byte[][] blibMzBlobs, out byte[][] blibIntBlobs, out int[] blibNumPeaks);
 
-                EmitSpectrumRows(writer, blibEntries, blibMzBlobs, blibIntBlobs, blibNumPeaks,
-                    sourceFileIds, libraryById, bestExpPrecursorQ, sharedBounds,
-                    entriesByPrecursor, perFileEntries.Count, fdrThreshold);
+                    EmitSpectrumRows(writer, blibEntries, blibMzBlobs, blibIntBlobs, blibNumPeaks,
+                        sourceFileIds, libraryById, bestExpPrecursorQ, sharedBounds,
+                        entriesByPrecursor, perFileEntries.Count, fdrThreshold);
 
-                writer.Commit();
+                    writer.Commit();
 
-                WriteMetadata(writer, config);
+                    WriteMetadata(writer, config);
 
-                writer.FinalizeDatabase();
+                    writer.FinalizeDatabase();
+                }
+                saver.Commit();
             }
         }
 

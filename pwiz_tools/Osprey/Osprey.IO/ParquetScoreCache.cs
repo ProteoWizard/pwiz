@@ -258,36 +258,34 @@ namespace pwiz.Osprey.IO
                 }
             }
 
-            // Write to a temp file first, then move to final path (safe NAS writes)
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                string.Format("osprey_{0}_{1}", System.Diagnostics.Process.GetCurrentProcess().Id,
-                    Path.GetFileName(path)));
-
-            using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-            using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
+            // Write to a sibling temp file first, then atomically rename into
+            // the final path (safe NAS writes): the temp lives in the SAME
+            // directory as the destination, so the promote is an in-volume
+            // rename rather than a cross-volume copy that could truncate.
+            using (var saver = new FileSaver(path))
             {
-                writer.CompressionMethod = CompressionMethod.Zstd;
-
-                // Set custom metadata if provided
-                if (metadata != null && metadata.Count > 0)
-                    writer.CustomMetadata = metadata;
-
-                using (var group = writer.CreateRowGroup())
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
                 {
-                    var columns = BuildRowGroupColumns(
-                        entryIds, isDecoys, sequences, modifiedSequences, charges,
-                        precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
-                        boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
-                        fragmentIntensities, refXicRts, refXicIntensities,
-                        featureFields, featureArrays);
-                    WriteRowGroupColumns(group, columns, n);
-                }
-            }
+                    writer.CompressionMethod = CompressionMethod.Zstd;
 
-            // Move temp to final destination
-            if (File.Exists(path))
-                File.Delete(path);
-            File.Move(tempPath, path);
+                    // Set custom metadata if provided
+                    if (metadata != null && metadata.Count > 0)
+                        writer.CustomMetadata = metadata;
+
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        var columns = BuildRowGroupColumns(
+                            entryIds, isDecoys, sequences, modifiedSequences, charges,
+                            precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
+                            boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
+                            fragmentIntensities, refXicRts, refXicIntensities,
+                            featureFields, featureArrays);
+                        WriteRowGroupColumns(group, columns, n);
+                    }
+                }
+                saver.Commit();
+            }
         }
 
         /// <summary>
@@ -452,32 +450,32 @@ namespace pwiz.Osprey.IO
                 }
             }
 
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                string.Format("osprey_{0}_{1}", System.Diagnostics.Process.GetCurrentProcess().Id,
-                    Path.GetFileName(path)));
-
-            using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-            using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
+            // Write to a sibling temp file first, then atomically rename into
+            // the final path (safe NAS writes): the temp lives in the SAME
+            // directory as the destination, so the promote is an in-volume
+            // rename rather than a cross-volume copy that could truncate.
+            using (var saver = new FileSaver(path))
             {
-                writer.CompressionMethod = CompressionMethod.Zstd;
-                if (metadata != null && metadata.Count > 0)
-                    writer.CustomMetadata = metadata;
-
-                using (var group = writer.CreateRowGroup())
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
                 {
-                    var columns = BuildRowGroupColumns(
-                        entryIds, isDecoys, sequences, modifiedSequences, charges,
-                        precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
-                        boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
-                        fragmentIntensities, refXicRts, refXicIntensities,
-                        featureFields, featureArrays);
-                    WriteRowGroupColumns(group, columns, n);
-                }
-            }
+                    writer.CompressionMethod = CompressionMethod.Zstd;
+                    if (metadata != null && metadata.Count > 0)
+                        writer.CustomMetadata = metadata;
 
-            if (File.Exists(path))
-                File.Delete(path);
-            File.Move(tempPath, path);
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        var columns = BuildRowGroupColumns(
+                            entryIds, isDecoys, sequences, modifiedSequences, charges,
+                            precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
+                            boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
+                            fragmentIntensities, refXicRts, refXicIntensities,
+                            featureFields, featureArrays);
+                        WriteRowGroupColumns(group, columns, n);
+                    }
+                }
+                saver.Commit();
+            }
         }
 
         /// <summary>
