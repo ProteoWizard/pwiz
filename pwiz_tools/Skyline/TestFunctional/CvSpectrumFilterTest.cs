@@ -106,9 +106,8 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         private void VerifyEditorOffersCvColumns()
         {
-            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity",
-                @"number of detector counts", true);
-            var filterStringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", null, false);
+            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
+            var filterStringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
 
             var discovered = SpectrumClassColumn.DiscoverCvColumns(SkylineWindow.Document);
             Assert.IsTrue(discovered.Any(c => Equals(c.PropertyPath, bpiColumn.PropertyPath)),
@@ -138,15 +137,14 @@ namespace pwiz.SkylineTestFunctional
 
         private static SpectrumClassFilter StringCvFilter(string containsText)
         {
-            var column = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", null, false);
+            var column = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
             return new SpectrumClassFilter(new FilterClause(new[]
                 { new FilterSpec(column.PropertyPath, FilterOperations.OP_CONTAINS, containsText) }));
         }
 
         private static SpectrumClassFilter NumericBpiFilter(IFilterOperation op, string operand)
         {
-            var column = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity",
-                @"number of detector counts", true);
+            var column = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
             return new SpectrumClassFilter(new FilterClause(new[]
                 { new FilterSpec(column.PropertyPath, op, operand) }));
         }

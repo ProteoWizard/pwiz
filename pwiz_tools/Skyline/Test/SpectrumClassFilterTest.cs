@@ -168,12 +168,12 @@ namespace pwiz.SkylineTest
             // encoded property path (so saved filters validate and reload before any file is imported),
             // and it must survive the filter-string round-trip that persists to .sky and the cache.
             const string accession = @"MS:1000505";
-            const string unit = @"number of detector counts";
-            var column = SpectrumClassColumn.CvParam(accession, @"base peak intensity", unit, true);
+            var column = SpectrumClassColumn.CvParam(accession, @"base peak intensity", true);
 
             // The encoded column name is a single alphanumeric identifier (so PropertyPath and the
-            // filter-string serializer never have to quote it).
+            // filter-string serializer never have to quote it), and readably encodes the CV accession.
             Assert.IsTrue(column.ColumnName.All(char.IsLetterOrDigit), @"CV column name must be alphanumeric: " + column.ColumnName);
+            Assert.AreEqual(@"cvidMS1000505", column.ColumnName);
 
             // FindColumn reconstructs a CV column from the path alone (no backing data).
             var reconstructed = SpectrumClassColumn.FindColumn(column.PropertyPath);
@@ -204,8 +204,9 @@ namespace pwiz.SkylineTest
             })).ReferencesCvColumns());
             Assert.IsFalse(default(SpectrumClassFilter).ReferencesCvColumns());
 
-            // A unit-less term (e.g. a vendor userParam) encodes and reconstructs too.
-            var userParamColumn = SpectrumClassColumn.CvParam(@"vendorSetting", @"vendorSetting", null, false);
+            // A vendor userParam (arbitrary name, no CVID) encodes via the hex scheme and reconstructs too.
+            var userParamColumn = SpectrumClassColumn.CvParam(@"vendorSetting", @"vendorSetting", false);
+            Assert.IsTrue(userParamColumn.ColumnName.StartsWith(@"cvup"));
             var userParamReconstructed = SpectrumClassColumn.FindColumn(userParamColumn.PropertyPath);
             Assert.IsNotNull(userParamReconstructed);
             Assert.AreEqual(userParamColumn.PropertyPath, userParamReconstructed.PropertyPath);
@@ -216,7 +217,7 @@ namespace pwiz.SkylineTest
             const string accession = @"MS:1000505";
             const string name = @"base peak intensity";
             const string unit = @"number of detector counts";
-            var numericColumn = SpectrumClassColumn.CvParam(accession, name, unit, true);
+            var numericColumn = SpectrumClassColumn.CvParam(accession, name, true);
 
             Predicate<SpectrumMetadata> Numeric(IFilterOperation op, string operand) =>
                 new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(numericColumn.PropertyPath, op, operand) }))
@@ -237,10 +238,10 @@ namespace pwiz.SkylineTest
             // A numeric filter that meets a present but non-numeric value hard-fails with filter context
             // (user decision), so chromatogram extraction reports a clear error rather than skipping it.
             // The predicate reconstructs the column from the persisted filter path, which carries the
-            // accession and unit but not the friendly name (that is resolved from imported data on the
-            // interactive surfaces), so the error names the property by accession and unit.
+            // accession but not the friendly name (that is resolved from imported data on the interactive
+            // surfaces), so the error names the property by its accession.
             var nonNumeric = CvSpectrum(@"bad", accession, name, @"not a number", unit);
-            var columnDisplay = string.Format(CultureInfo.CurrentCulture, @"{0} ({1})", accession, unit);
+            var columnDisplay = accession;
             AssertEx.ThrowsException<InvalidDataException>(
                 () => Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(nonNumeric),
                 string.Format(SpectraResources.SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_,
@@ -248,9 +249,9 @@ namespace pwiz.SkylineTest
                         SpectraResources.SpectrumClassFilter_CoerceCvValue_The_value___0___of_spectrum_property___1___is_not_a_number,
                         @"not a number", columnDisplay)));
 
-            // A string term filters with equals/contains; "split by unit" means a different unit is a
-            // different property, so a filter on one unit does not match a term carrying another.
-            var stringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", null, false);
+            // A string term filters with equals/contains. Identity is the accession; the term's unit is
+            // not part of it (units are unavailable from the ontology), so matching is unit-independent.
+            var stringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
             Predicate<SpectrumMetadata> StringFilter(IFilterOperation op, string operand) =>
                 new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(stringColumn.PropertyPath, op, operand) }))
                     .MakePredicate();
@@ -259,12 +260,10 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(StringFilter(FilterOperations.OP_CONTAINS, @"CID")(thermo));
             Assert.IsTrue(StringFilter(FilterOperations.OP_EQUALS, @"FTMS + p ESI Full ms")(thermo));
 
-            // The same accession with a different unit is a different column and must not match.
-            var otherUnit = SpectrumClassColumn.CvParam(accession, name, @"percent of base peak", true);
-            Assert.IsFalse(
-                new SpectrumClassFilter(new FilterClause(new[]
-                        { new FilterSpec(otherUnit.PropertyPath, FilterOperations.OP_IS_GREATER_THAN, @"500") }))
-                    .MakePredicate()(big));
+            // Identity is the accession alone: a column matches a term with the same accession regardless
+            // of the unit the term happens to carry.
+            var sameAccessionDifferentUnitTerm = CvSpectrum(@"pct", accession, name, @"1000", @"percent of base peak");
+            Assert.IsTrue(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(sameAccessionDifferentUnitTerm));
         }
 
         private void TestDiscoverCvColumns()
@@ -279,25 +278,26 @@ namespace pwiz.SkylineTest
             var specB = Spectrum(@"b",
                 new SpectrumMetadataTerm(@"MS:1000505", @"base peak intensity", @"600", counts),
                 new SpectrumMetadataTerm(@"MS:1000900", @"custom", @"5", @"ea"));
-            // The same (accession, unit) with a non-numeric value makes that column string-typed.
+            // The same accession with a non-numeric value makes that column string-typed.
             var specC = Spectrum(@"c", new SpectrumMetadataTerm(@"MS:1000900", @"custom", @"abc", @"ea"));
 
             var columns = SpectrumClassColumn.DiscoverCvColumns(new[] { specA, specB, specC });
             Assert.AreEqual(3, columns.Count);
             Assert.IsTrue(columns.All(SpectrumClassColumn.IsCvParamColumn));
 
-            SpectrumClassColumn Find(string accession, string unit) =>
-                columns.Single(c => Equals(c.PropertyPath, SpectrumClassColumn.CvParam(accession, null, unit, false).PropertyPath));
+            SpectrumClassColumn Find(string accession) =>
+                columns.Single(c => Equals(c.PropertyPath, SpectrumClassColumn.CvParam(accession, null, false).PropertyPath));
 
-            // Every value seen for base peak intensity parses as a number, so it is numeric.
-            var bpi = Find(@"MS:1000505", counts);
+            // Every value seen for base peak intensity parses as a number, so it is numeric, and it
+            // displays its friendly name with the accession as the cue.
+            var bpi = Find(@"MS:1000505");
             Assert.AreEqual(typeof(double), bpi.ValueType);
             var bpiName = bpi.GetLocalizedColumnName(CultureInfo.CurrentCulture);
-            Assert.IsTrue(bpiName.Contains(@"base peak intensity") && bpiName.Contains(counts), bpiName);
+            Assert.IsTrue(bpiName.Contains(@"base peak intensity") && bpiName.Contains(@"MS:1000505"), bpiName);
 
             // The filter string (no numeric value) and the mixed-value custom term are string-typed.
-            Assert.AreEqual(typeof(string), Find(@"MS:1000512", null).ValueType);
-            Assert.AreEqual(typeof(string), Find(@"MS:1000900", @"ea").ValueType);
+            Assert.AreEqual(typeof(string), Find(@"MS:1000512").ValueType);
+            Assert.AreEqual(typeof(string), Find(@"MS:1000900").ValueType);
         }
 
         private void TestSpectrumClassFilterSerialization()

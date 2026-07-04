@@ -155,36 +155,33 @@ namespace pwiz.Skyline.Model.Results.Spectra
             // A dynamic mzML CV/user-parameter column is not in ALL; reconstruct it from its
             // encoded path so saved filters resolve (and validate) before any file is imported.
             if (propertyPath.IsProperty && propertyPath.Parent.IsRoot &&
-                TryDecodeCvParamColumnName(propertyPath.Name, out var accession, out var unit))
+                TryDecodeCvParamColumnName(propertyPath.Name, out var accession))
             {
-                return new CvParamColumn(accession, null, unit, false);
+                return new CvParamColumn(accession, null, false);
             }
 
             return null;
         }
 
-        /// <summary>
-        /// Encoded-column-name prefix identifying a dynamic mzML CV/user-parameter column.
-        /// Letters only, so the whole encoded name is a single alphanumeric identifier that a
-        /// <see cref="PropertyPath"/> and the filter-string serializer round-trip without quoting.
-        /// </summary>
-        private const string CV_PARAM_PREFIX = @"cvparam";
-
-        // Separates accession from unit inside the encoded payload. A control character that never
-        // appears in a CV accession or unit name, so decoding can split on it unambiguously.
-        private const char CV_PARAM_SEPARATOR = '\u001F';
+        // Encoded-column-name prefixes identifying a dynamic mzML CV/user-parameter column. Both keep
+        // the whole encoded name a single alphanumeric identifier, so a PropertyPath and the
+        // filter-string serializer round-trip it without quoting. A controlled-vocabulary term
+        // ("MS:1000505") encodes readably as "cvid" + accession without the colon ("cvidMS1000505"); a
+        // vendor userParam (an arbitrary name, no CVID) encodes as "cvup" + the name's UTF-8 hex.
+        private const string CV_ID_PREFIX = @"cvid";
+        private const string CV_USERPARAM_PREFIX = @"cvup";
 
         /// <summary>
         /// Builds a dynamic column for the uninterpreted mzML CV/user parameter identified by
-        /// <paramref name="accession"/> and <paramref name="unit"/> (the "split by unit" identity).
-        /// <paramref name="name"/> is the friendly display name (from the term; null when the column
-        /// is reconstructed from a saved filter). <paramref name="isNumeric"/> drives the column type
-        /// offered in the filter editor; the extraction predicate infers numeric vs. string from the
-        /// operator and operand independently (see <see cref="SpectrumClassFilter"/>).
+        /// <paramref name="accession"/> (a CV accession such as "MS:1000505", or a userParam name).
+        /// <paramref name="name"/> is the friendly display name (null when the column is reconstructed
+        /// from a saved filter). <paramref name="isNumeric"/> drives the column type offered in the
+        /// filter editor; the extraction predicate infers numeric vs. string from the operator and
+        /// operand independently (see <see cref="SpectrumClassFilter"/>).
         /// </summary>
-        public static SpectrumClassColumn CvParam(string accession, string name, string unit, bool isNumeric)
+        public static SpectrumClassColumn CvParam(string accession, string name, bool isNumeric)
         {
-            return new CvParamColumn(accession, name, unit, isNumeric);
+            return new CvParamColumn(accession, name, isNumeric);
         }
 
         /// <summary>
@@ -197,30 +194,30 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         /// <summary>
         /// Builds the dynamic CV/user-parameter columns present across the given spectra: one per
-        /// distinct (accession, unit) pair (the "split by unit" identity). A column is typed numeric
-        /// when every value seen for it parses as an invariant number and at least one value was seen,
-        /// else string (the runtime type inference the design calls for, since these terms carry no
-        /// declared type). The friendly name comes from the term. Ordered by display name for the UI.
+        /// distinct accession (the term's CV accession or userParam name). A column is typed numeric when
+        /// every value seen for it parses as an invariant number and at least one value was seen, else
+        /// string (the runtime type inference the design calls for, since these terms carry no declared
+        /// type and no unit is available). The friendly name comes from the term. Ordered by display
+        /// name for the UI.
         /// </summary>
         public static IList<SpectrumClassColumn> DiscoverCvColumns(IEnumerable<SpectrumMetadata> spectra)
         {
-            var discovered = new Dictionary<Tuple<string, string>, CvColumnDiscovery>();
+            var discovered = new Dictionary<string, CvColumnDiscovery>();
             foreach (var spectrum in spectra)
             {
                 foreach (var term in spectrum.OtherParams)
                 {
-                    var key = Tuple.Create(term.Accession, term.Unit ?? string.Empty);
-                    if (!discovered.TryGetValue(key, out var info))
+                    if (!discovered.TryGetValue(term.Accession, out var info))
                     {
-                        info = new CvColumnDiscovery(term.Accession, term.Unit);
-                        discovered.Add(key, info);
+                        info = new CvColumnDiscovery(term.Accession);
+                        discovered.Add(term.Accession, info);
                     }
                     info.Add(term);
                 }
             }
 
             return discovered.Values
-                .Select(info => (SpectrumClassColumn)new CvParamColumn(info.Accession, info.Name, info.Unit, info.IsNumeric))
+                .Select(info => (SpectrumClassColumn)new CvParamColumn(info.Accession, info.Name, info.IsNumeric))
                 .OrderBy(column => column.GetLocalizedColumnName(CultureInfo.CurrentCulture), StringComparer.CurrentCulture)
                 .ToList();
         }
@@ -246,22 +243,20 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
-        /// Accumulates, across the spectra that carry one (accession, unit) term, its friendly name and
-        /// whether every value seen parses as a number (so the discovered column can be typed).
+        /// Accumulates, across the spectra that carry one term (keyed by accession), its friendly name
+        /// and whether every value seen parses as a number (so the discovered column can be typed).
         /// </summary>
         private class CvColumnDiscovery
         {
             private bool _sawValue;
             private bool _allNumeric = true;
 
-            public CvColumnDiscovery(string accession, string unit)
+            public CvColumnDiscovery(string accession)
             {
                 Accession = accession;
-                Unit = unit;
             }
 
             public string Accession { get; }
-            public string Unit { get; }
             public string Name { get; private set; }
             public bool IsNumeric => _sawValue && _allNumeric;
 
@@ -283,10 +278,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
         }
 
-        private static string EncodeCvParamColumnName(string accession, string unit)
+        private static string EncodeCvParamColumnName(string accession)
         {
-            var payload = Encoding.UTF8.GetBytes(accession + CV_PARAM_SEPARATOR + (unit ?? string.Empty));
-            var hex = new StringBuilder(CV_PARAM_PREFIX, CV_PARAM_PREFIX.Length + payload.Length * 2);
+            if (TrySplitCvid(accession, out var prefix, out var number))
+            {
+                return CV_ID_PREFIX + prefix + number;
+            }
+
+            var payload = Encoding.UTF8.GetBytes(accession);
+            var hex = new StringBuilder(CV_USERPARAM_PREFIX, CV_USERPARAM_PREFIX.Length + payload.Length * 2);
             foreach (var b in payload)
             {
                 hex.Append(b.ToString(@"x2", CultureInfo.InvariantCulture));
@@ -294,42 +294,74 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return hex.ToString();
         }
 
-        private static bool TryDecodeCvParamColumnName(string columnName, out string accession, out string unit)
+        private static bool TryDecodeCvParamColumnName(string columnName, out string accession)
         {
             accession = null;
-            unit = null;
-            if (columnName == null || !columnName.StartsWith(CV_PARAM_PREFIX))
+            if (columnName == null)
             {
                 return false;
             }
 
-            var hex = columnName.Substring(CV_PARAM_PREFIX.Length);
-            if (hex.Length == 0 || hex.Length % 2 != 0)
+            if (columnName.StartsWith(CV_ID_PREFIX))
             {
-                return false;
-            }
-
-            var bytes = new byte[hex.Length / 2];
-            for (int i = 0; i < bytes.Length; i++)
-            {
-                if (!byte.TryParse(hex.Substring(i * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture,
-                        out bytes[i]))
+                var rest = columnName.Substring(CV_ID_PREFIX.Length);
+                int split = 0;
+                while (split < rest.Length && char.IsLetter(rest[split]))
+                {
+                    split++;
+                }
+                if (split == 0 || split == rest.Length || !rest.Skip(split).All(char.IsDigit))
                 {
                     return false;
                 }
+                accession = rest.Substring(0, split) + @":" + rest.Substring(split);
+                return true;
             }
 
-            var payload = Encoding.UTF8.GetString(bytes);
-            int sep = payload.IndexOf(CV_PARAM_SEPARATOR);
-            if (sep < 0)
+            if (columnName.StartsWith(CV_USERPARAM_PREFIX))
+            {
+                var hex = columnName.Substring(CV_USERPARAM_PREFIX.Length);
+                if (hex.Length == 0 || hex.Length % 2 != 0)
+                {
+                    return false;
+                }
+                var bytes = new byte[hex.Length / 2];
+                for (int i = 0; i < bytes.Length; i++)
+                {
+                    if (!byte.TryParse(hex.Substring(i * 2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture,
+                            out bytes[i]))
+                    {
+                        return false;
+                    }
+                }
+                accession = Encoding.UTF8.GetString(bytes);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Splits a controlled-vocabulary accession ("MS:1000505") into its letter prefix ("MS") and
+        /// digit number ("1000505"). Returns false for anything that is not a CV accession (e.g. a vendor
+        /// userParam name), which the caller then encodes verbatim instead.
+        /// </summary>
+        private static bool TrySplitCvid(string accession, out string prefix, out string number)
+        {
+            prefix = null;
+            number = null;
+            if (string.IsNullOrEmpty(accession))
             {
                 return false;
             }
-
-            accession = payload.Substring(0, sep);
-            var unitText = payload.Substring(sep + 1);
-            unit = unitText.Length == 0 ? null : unitText;
-            return true;
+            int colon = accession.IndexOf(':');
+            if (colon <= 0 || colon == accession.Length - 1)
+            {
+                return false;
+            }
+            prefix = accession.Substring(0, colon);
+            number = accession.Substring(colon + 1);
+            return prefix.All(char.IsLetter) && number.All(char.IsDigit);
         }
 
         private static bool TypesMatch(Type propertyType, Type valueType)
@@ -445,26 +477,19 @@ namespace pwiz.Skyline.Model.Results.Spectra
         {
             private readonly string _accession;
             private readonly string _name;
-            private readonly string _unit;
             private readonly bool _isNumeric;
 
-            public CvParamColumn(string accession, string name, string unit, bool isNumeric)
+            public CvParamColumn(string accession, string name, bool isNumeric)
             {
                 _accession = accession;
                 _name = name;
-                _unit = unit;
                 _isNumeric = isNumeric;
-                ColumnName = EncodeCvParamColumnName(accession, unit);
+                ColumnName = EncodeCvParamColumnName(accession);
             }
 
             public string Accession
             {
                 get { return _accession; }
-            }
-
-            public string Unit
-            {
-                get { return _unit; }
             }
 
             public override string ColumnName { get; }
@@ -478,8 +503,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 foreach (var term in spectrumMetadata.OtherParams)
                 {
-                    if (Equals(term.Accession, _accession) &&
-                        Equals(term.Unit ?? string.Empty, _unit ?? string.Empty))
+                    if (Equals(term.Accession, _accession))
                     {
                         return term.Value;
                     }
@@ -499,10 +523,16 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
             public override string GetLocalizedColumnName(CultureInfo cultureInfo)
             {
-                var displayName = string.IsNullOrEmpty(_name) ? _accession : _name;
-                return string.IsNullOrEmpty(_unit)
-                    ? displayName
-                    : string.Format(CultureInfo.CurrentCulture, @"{0} ({1})", displayName, _unit);
+                if (string.IsNullOrEmpty(_name))
+                {
+                    return _accession;
+                }
+                // A controlled-vocabulary term shows its friendly name with the accession as the precise
+                // cue, e.g. "base peak intensity (MS:1000505)"; a userParam (name == accession) shows just
+                // its name.
+                return Equals(_name, _accession)
+                    ? _name
+                    : string.Format(CultureInfo.CurrentCulture, @"{0} ({1})", _name, _accession);
             }
 
             public override bool Equals(object obj)
