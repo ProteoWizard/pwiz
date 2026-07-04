@@ -501,12 +501,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
         }
 
         /// <summary>
-        /// A dynamic column for one uninterpreted mzML CV/user parameter, identified by
-        /// <see cref="Accession"/> and <see cref="Unit"/> (the "split by unit" identity). Unlike the
+        /// A dynamic column for one uninterpreted mzML CV/user parameter, identified by its
+        /// <see cref="Accession"/> (a CV accession such as "MS:1000505", or a userParam name). Unlike the
         /// static columns it is not bound to a <see cref="SpectrumClass"/> property: it reads its value
         /// straight from <see cref="SpectrumMetadata.OtherParams"/>. The spectrum-filter predicate reads
-        /// it via <see cref="GetValue(SpectrumMetadata)"/>; the <see cref="SpectrumClass"/> POCO
-        /// projection does not carry it, so the <see cref="SpectrumClass"/> accessors throw.
+        /// it via <see cref="GetValue(SpectrumMetadata)"/>; the <see cref="SpectrumClass"/> POCO has no
+        /// such property, so its value is carried in <see cref="SpectrumClass.CvValues"/> for the grid.
         /// </summary>
         private class CvParamColumn : SpectrumClassColumn
         {
