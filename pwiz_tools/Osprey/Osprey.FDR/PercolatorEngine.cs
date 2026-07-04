@@ -62,7 +62,8 @@ namespace pwiz.Osprey.FDR
             OspreyFeatureInfo[] featureInfos,
             Action<string> logInfo,
             PercolatorDiagnosticsConfig diagnostics = null,
-            string passLabel = @"First-pass")
+            string passLabel = @"First-pass",
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
         {
             int numFeatures = featureInfos.Length;
 
@@ -93,8 +94,12 @@ namespace pwiz.Osprey.FDR
             // Build the flat PercolatorEntry list (one per observation), preferring
             // each entry's stored 21-feature vector and falling back to a basic
             // vector for stubs. Extracted to PercolatorEntryBuilder.
+            // When a per-file feature loader is supplied (issue #4355 Phase 4) the
+            // stubs are built without resident feature vectors -- the score pass
+            // reloads them per file from parquet. Without a loader the entries must
+            // already carry their features (the 2nd-pass reload / resident path).
             var percEntries = PercolatorEntryBuilder.Build(
-                perFileEntries, numFeatures,
+                perFileEntries, numFeatures, streamFeatures: loadFileFeatures != null,
                 out int nWithFeatures, out int nWithoutFeatures,
                 out int nInputTargets, out int nInputDecoys);
 
@@ -134,10 +139,17 @@ namespace pwiz.Osprey.FDR
             if (percConfig.MaxTrainSize > 0 &&
                 percEntries.Count > percConfig.MaxTrainSize * 2)
             {
-                results = RunPercolatorStreaming(percEntries, percConfig, logInfo, passLabel);
+                results = RunPercolatorStreaming(
+                    percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
             }
             else
             {
+                // Direct path (<= MaxTrainSize * 2 entries). On the streaming build
+                // the stubs have no features yet; load every entry's vector up
+                // front (bounded by this branch's size) so RunPercolator sees real
+                // features. Without a loader the entries already carry them.
+                if (loadFileFeatures != null)
+                    PopulateFeaturesFromFiles(percEntries, loadFileFeatures, numFeatures);
                 results = PercolatorFdr.RunPercolator(percEntries, percConfig);
             }
 
@@ -300,13 +312,20 @@ namespace pwiz.Osprey.FDR
             List<PercolatorEntry> percEntries,
             PercolatorConfig percConfig,
             Action<string> logInfo,
-            string passLabel)
+            string passLabel,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
         {
             int n = percEntries.Count;
             int maxTrain = percConfig.MaxTrainSize;
 
             // Pull labels / entry IDs / peptides into flat arrays for the
-            // subset helpers.
+            // subset helpers. On the streaming build the stubs carry no feature
+            // vector, so best-per-precursor cannot read Features[0]; feed it the
+            // resident CoelutionSum scalar instead (byte-identical to Features[0]
+            // on the first pass -- CoelutionScorer assigns CoelutionSum from
+            // features[0]). Without a loader the entries carry features, so leave
+            // bestScores null and let the selection read Features[0] as before.
+            double[] bestScores = loadFileFeatures != null ? new double[n] : null;
             var labels = new bool[n];
             var entryIds = new uint[n];
             var peptides = new string[n];
@@ -315,6 +334,8 @@ namespace pwiz.Osprey.FDR
                 labels[i] = percEntries[i].IsDecoy;
                 entryIds[i] = percEntries[i].EntryId;
                 peptides[i] = percEntries[i].Peptide;
+                if (bestScores != null)
+                    bestScores[i] = percEntries[i].CoelutionSum;
             }
 
             // 1. Best-per-precursor dedup, then 2. peptide-grouped subsample when
@@ -324,7 +345,7 @@ namespace pwiz.Osprey.FDR
             int[] bestIdx;
             int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
                 labels, entryIds, peptides, percEntries, maxTrain, percConfig.Seed,
-                out bestIdx);
+                out bestIdx, bestScores);
             int dedupTargets = 0, dedupDecoys = 0;
             for (int i = 0; i < bestIdx.Length; i++)
             {
@@ -349,6 +370,30 @@ namespace pwiz.Osprey.FDR
             var subsetEntries = new List<PercolatorEntry>(trainSubsetGlobalIdx.Length);
             foreach (int i in trainSubsetGlobalIdx)
                 subsetEntries.Add(percEntries[i]);
+
+            // On the streaming build, load ONLY the subset's feature vectors
+            // (issue #4355 Phase 4) -- one file at a time, cloning each row so the
+            // subset entry owns it and the file's row list can be released -- so
+            // RunPercolator trains on real features without the full population's
+            // O(N) vectors ever being resident. subsetEntries are references into
+            // percEntries, so this also makes the vectors visible to the subset's
+            // held-out CV scoring inside RunPercolator.
+            if (loadFileFeatures != null)
+            {
+                var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
+                foreach (var kvp in subsetByFile)
+                {
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    foreach (int k in kvp.Value)
+                    {
+                        var entry = subsetEntries[k];
+                        entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
+                            rows, entry.ParquetIndex, entry.CoelutionSum,
+                            percConfig.FeatureInfos.Length).Clone();
+                    }
+                }
+            }
+
             var trainConfig = new PercolatorConfig
             {
                 TrainFdr = percConfig.TrainFdr,
@@ -370,8 +415,38 @@ namespace pwiz.Osprey.FDR
             if (trainResults.DiagnosticAbort)
                 return trainResults;
 
-            // 4. Apply averaged model to ALL entries and compute q-values.
-            return PercolatorFdr.ScorePopulationAndComputeFdr(percEntries, trainResults, percConfig);
+            // 4. Apply averaged model to ALL entries and compute q-values. The
+            //    score pass reloads features one file at a time via loadFileFeatures
+            //    (issue #4355 Phase 4), keeping only the scalar scores resident.
+            return PercolatorFdr.ScorePopulationAndComputeFdr(
+                percEntries, trainResults, percConfig, loadFileFeatures);
+        }
+
+        /// <summary>
+        /// Load every entry's 21-feature vector from its source file's parquet by
+        /// <see cref="PercolatorEntry.ParquetIndex"/>, one file at a time, and
+        /// assign it onto the stub. Used by the direct path (issue #4355 Phase 4)
+        /// where the population is bounded (&lt;= MaxTrainSize * 2) so holding all
+        /// vectors is acceptable, but they still must be reloaded because the
+        /// streaming build left them null. Mirrors the per-file reload the Tasks
+        /// layer previously performed before Percolator.
+        /// </summary>
+        private static void PopulateFeaturesFromFiles(
+            List<PercolatorEntry> percEntries,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            int numFeatures)
+        {
+            var indicesByFile = PercolatorFdr.GroupIndicesByFileName(percEntries);
+            foreach (var kvp in indicesByFile)
+            {
+                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                foreach (int i in kvp.Value)
+                {
+                    var entry = percEntries[i];
+                    entry.Features = PercolatorFdr.ResolveFeatureRow(
+                        rows, entry.ParquetIndex, entry.CoelutionSum, numFeatures);
+                }
+            }
         }
     }
 }

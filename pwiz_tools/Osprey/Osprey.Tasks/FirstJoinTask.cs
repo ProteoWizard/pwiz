@@ -220,40 +220,26 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
                 string.Format(@"Stage 5 start: {0} files loaded (stubs), before first-pass FDR", perFileEntries.Count));
 
-            // Phase 1 (issue #4355): PerFileScoring nulled each stub's PIN features right
-            // after writing its .scores.parquet to bound memory. Reload them here, by
-            // ParquetIndex from each file's parquet, so first-pass Percolator sees the full
-            // feature vectors; they are re-nulled again before Stage 6 (below). This is the
-            // same reload the second pass uses (Pass2FdrSidecar.MapFeaturesByParquetIndex),
-            // whose f64 roundtrip is regression-exact.
-            foreach (var kvp in perFileEntries)
+            // Phase 4 (issue #4355): first-pass Percolator reloads each entry's PIN
+            // features on demand -- one file at a time, from that file's
+            // .scores.parquet by ParquetIndex -- keeping only scalar scores
+            // resident instead of holding all N files' 21-feature vectors at once
+            // (which OOM'd 80-file joins; the Phase-1 bulk reload that used to sit
+            // here did exactly that). The FDR engine drives the reload through this
+            // delegate, so Osprey.FDR takes no Osprey.IO dependency. The f64 parquet
+            // roundtrip is regression-exact (the same reload the second pass uses
+            // via Pass2FdrSidecar.MapFeaturesByParquetIndex). A file with no mapped
+            // parquet path yields an empty row set, so its entries fall back to
+            // basic features -- matching the pre-streaming builder's fallback.
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = fileName =>
             {
-                if (!perFileParquetPaths.TryGetValue(kvp.Key, out string scoresPath))
-                    continue;
-                List<double[]> featRows;
-                try
-                {
-                    featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
-                }
-                catch (Exception ex)
-                {
-                    ctx.LogWarning(string.Format(
-                        @"First-pass FDR: failed to reload PIN features from {0}: {1}",
-                        scoresPath, ex.Message));
-                    continue;
-                }
-                int nMapped = Pass2FdrSidecar.MapFeaturesByParquetIndex(kvp.Value, featRows);
-                if (nMapped < kvp.Value.Count)
-                {
-                    ctx.LogWarning(string.Format(
-                        @"First-pass FDR: '{0}' parquet has {1} feature rows but {2} entries reference it; {3} will run with null features.",
-                        kvp.Key, featRows.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
-                }
-            }
-            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after reloading first-pass features");
+                if (perFileParquetPaths.TryGetValue(fileName, out string scoresPath))
+                    return ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                return Array.Empty<double[]>();
+            };
 
             var swFdr = Stopwatch.StartNew();
-            RunFdr(perFileEntries, config, ctx);
+            RunFdr(perFileEntries, config, ctx, loadFileFeatures);
             swFdr.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
@@ -305,12 +291,16 @@ namespace pwiz.Osprey.Tasks
             // includes non-passing charge states that Rust has already
             // dropped, producing different rescore-target sets and
             // different per-file Vec positions.
-            // Phase 1 (issue #4355): re-null the first-pass features reloaded above so the
+            // Phase 4 (issue #4355): the first-pass score pass now streams features
+            // per file and never assigns them onto these FdrEntry stubs, so on the
+            // straight-through path they are already null here. But the
+            // --input-scores / per-file-resume stub loaders DO populate
+            // FdrEntry.Features when hydrating, so null them defensively to keep the
             // "Features != null means this entry was rescored" sentinel that
-            // ReconciledParquetWriter.ApplyRescoredRows relies on stays valid going into
+            // ReconciledParquetWriter.ApplyRescoredRows relies on valid going into
             // Stage 6 (mirrors the resume-rehydrate re-null and
-            // PerFileScoringTask.HydrateRescoreBundleIfPresent). MergeNode reloads features
-            // from the reconciled parquet.
+            // PerFileScoringTask.HydrateRescoreBundleIfPresent). MergeNode reloads
+            // features from the reconciled parquet.
             foreach (var kvp in perFileEntries)
                 foreach (var entry in kvp.Value)
                     entry.Features = null;
@@ -1055,12 +1045,13 @@ namespace pwiz.Osprey.Tasks
         private void RunFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
         {
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
-                    RunPercolatorFdr(perFileEntries, config, ctx);
+                    RunPercolatorFdr(perFileEntries, config, ctx, loadFileFeatures: loadFileFeatures);
                     break;
 
                 case FdrMethod.Simple:
@@ -1089,12 +1080,18 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx,
-            string passLabel = "First-pass")
+            string passLabel = "First-pass",
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
         {
+            // loadFileFeatures is supplied by the first-pass caller (FirstJoinTask.Run)
+            // so the engine streams PIN features per file from parquet (issue #4355
+            // Phase 4). The 2nd-pass caller (Pass2FdrSidecar) leaves it null and
+            // pre-reloads features onto the stubs, so the engine reads them resident.
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
-                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
+                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
+                loadFileFeatures);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left

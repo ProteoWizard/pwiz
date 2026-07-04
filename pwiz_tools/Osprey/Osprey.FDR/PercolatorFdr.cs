@@ -140,7 +140,28 @@ namespace pwiz.Osprey.FDR
         /// <summary>Entry ID for target-decoy pairing (high bit = decoy).</summary>
         public uint EntryId { get; set; }
 
-        /// <summary>Raw feature values.</summary>
+        /// <summary>
+        /// Row index of this observation within its source file's
+        /// <c>.scores.parquet</c>. Lets the streaming score pass reload the
+        /// 21-feature vector on demand (issue #4355 Phase 4) instead of holding
+        /// every entry's <see cref="Features"/> resident for the whole join.
+        /// <c>uint.MaxValue</c> marks an appended entry (e.g. Stage 6 gap-fill)
+        /// that has no original parquet row.
+        /// </summary>
+        public uint ParquetIndex { get; set; }
+
+        /// <summary>
+        /// The <c>fragment_coelution_sum</c> feature (PIN feature 0), carried as a
+        /// resident scalar so best-per-precursor selection can rank observations
+        /// without holding the full <see cref="Features"/> vector. Equal to
+        /// <c>Features[0]</c> byte-for-byte on the first pass (both come from the
+        /// same parquet column / <c>CoelutionScorer</c> assignment).
+        /// </summary>
+        public double CoelutionSum { get; set; }
+
+        /// <summary>Raw feature values. Null on streaming-path stubs (issue #4355
+        /// Phase 4), where the vector is loaded per file from parquet at score
+        /// time by <see cref="ParquetIndex"/>.</summary>
         public double[] Features { get; set; }
     }
 
@@ -711,7 +732,8 @@ namespace pwiz.Osprey.FDR
         public static PercolatorResults ScorePopulationAndComputeFdr(
             IList<PercolatorEntry> entries,
             PercolatorResults trainResults,
-            PercolatorConfig config)
+            PercolatorConfig config,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
         {
             int n = entries.Count;
             if (n == 0)
@@ -726,11 +748,14 @@ namespace pwiz.Osprey.FDR
                 };
             }
 
-            int nFeatures = entries[0].Features.Length;
             int nModels = trainResults.FoldWeights.Count;
             if (nModels == 0)
                 throw new InvalidOperationException(
                     @"ScorePopulationAndComputeFdr: trainResults contains no fold models");
+            // Feature width comes from the trained model, not from entries[0]:
+            // on the streaming path (issue #4355 Phase 4) the stubs carry no
+            // resident Features vector to measure.
+            int nFeatures = trainResults.FoldWeights[0].Length;
 
             // Average fold weights + biases. Matches Rust streaming:
             //   avg_weights[j] = mean_f(fold_weights[f][j])
@@ -764,22 +789,65 @@ namespace pwiz.Osprey.FDR
             // serial in row/index order (no PLINQ) so the printed numbers are stable
             // and this never perturbs finalScores.
             var contribAcc = new FeatureContributions.Accumulator(nFeatures);
-            for (int i = 0; i < n; i++)
+            if (loadFileFeatures == null)
             {
-                var entry = entries[i];
-                labels[i] = entry.IsDecoy;
-                entryIds[i] = entry.EntryId;
-                peptides[i] = entry.Peptide;
-                fileNames[i] = entry.FileName;
+                // Resident-feature path: each stub already carries its vector
+                // (the 2nd-pass reload, or any caller that pre-populates
+                // Features). Read it in place. Unchanged from the original loop.
+                for (int i = 0; i < n; i++)
+                {
+                    var entry = entries[i];
+                    labels[i] = entry.IsDecoy;
+                    entryIds[i] = entry.EntryId;
+                    peptides[i] = entry.Peptide;
+                    fileNames[i] = entry.FileName;
 
-                Array.Copy(entry.Features, 0, featureBuf, 0, nFeatures);
-                standardizer.TransformSlice(featureBuf);
-                double score = avgBias;
-                for (int j = 0; j < nFeatures; j++)
-                    score += avgWeights[j] * featureBuf[j];
-                finalScores[i] = score;
+                    Array.Copy(entry.Features, 0, featureBuf, 0, nFeatures);
+                    standardizer.TransformSlice(featureBuf);
+                    double score = avgBias;
+                    for (int j = 0; j < nFeatures; j++)
+                        score += avgWeights[j] * featureBuf[j];
+                    finalScores[i] = score;
 
-                contribAcc.Add(featureBuf, entry.IsDecoy);
+                    contribAcc.Add(featureBuf, entry.IsDecoy);
+                }
+            }
+            else
+            {
+                // Streaming score pass (issue #4355 Phase 4): the stubs carry no
+                // feature vector. Fill the scalar arrays first, then reload
+                // features one file at a time -- never holding more than a single
+                // file's rows resident. The per-entry math (bias first, then the
+                // averaged-weight dot product in feature order) is identical to
+                // the resident path above; only the feature SOURCE moves off the
+                // O(N) buffer, so finalScores are byte-for-byte the same.
+                for (int i = 0; i < n; i++)
+                {
+                    var entry = entries[i];
+                    labels[i] = entry.IsDecoy;
+                    entryIds[i] = entry.EntryId;
+                    peptides[i] = entry.Peptide;
+                    fileNames[i] = entry.FileName;
+                }
+                var indicesByFile = GroupIndicesByFileName(entries);
+                foreach (var kvp in indicesByFile)
+                {
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    foreach (int i in kvp.Value)
+                    {
+                        var entry = entries[i];
+                        double[] featRow = ResolveFeatureRow(
+                            rows, entry.ParquetIndex, entry.CoelutionSum, nFeatures);
+                        Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+                        standardizer.TransformSlice(featureBuf);
+                        double score = avgBias;
+                        for (int j = 0; j < nFeatures; j++)
+                            score += avgWeights[j] * featureBuf[j];
+                        finalScores[i] = score;
+
+                        contribAcc.Add(featureBuf, entry.IsDecoy);
+                    }
+                }
             }
 
             var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
@@ -877,6 +945,50 @@ namespace pwiz.Osprey.FDR
                 IterationsPerFold = trainResults.IterationsPerFold,
                 FeatureContributions = contributions
             };
+        }
+
+        /// <summary>
+        /// Bucket entry indices by source file name, preserving first-seen file
+        /// order. The streaming feature loads (issue #4355 Phase 4) iterate these
+        /// buckets so <c>loadFileFeatures</c> is called exactly once per file and
+        /// only one file's rows are held resident at a time.
+        /// </summary>
+        internal static Dictionary<string, List<int>> GroupIndicesByFileName(
+            IList<PercolatorEntry> entries)
+        {
+            var byFile = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+            for (int i = 0; i < entries.Count; i++)
+            {
+                string file = entries[i].FileName;
+                List<int> list;
+                if (!byFile.TryGetValue(file, out list))
+                {
+                    list = new List<int>();
+                    byFile[file] = list;
+                }
+                list.Add(i);
+            }
+            return byFile;
+        }
+
+        /// <summary>
+        /// Resolve one entry's 21-feature vector from a file's freshly loaded
+        /// parquet rows by <see cref="PercolatorEntry.ParquetIndex"/>. Falls back
+        /// to the basic feature vector (built from the resident coelution_sum) when
+        /// the index is out of range -- the same fallback the pre-streaming
+        /// <c>PercolatorEntryBuilder</c> applied to entries without a loadable row
+        /// (e.g. a stub/parquet mismatch, or a <c>uint.MaxValue</c> appended
+        /// entry). The returned array is the live parquet row (not a copy); callers
+        /// that retain it beyond the current file's scope must clone.
+        /// </summary>
+        internal static double[] ResolveFeatureRow(
+            IReadOnlyList<double[]> rows, uint parquetIndex, double coelutionSum,
+            int numFeatures)
+        {
+            int idx = (int)parquetIndex;
+            if (rows != null && idx >= 0 && idx < rows.Count)
+                return rows[idx];
+            return PercolatorEntryBuilder.BuildBasicFeatures(coelutionSum, numFeatures);
         }
 
         // ============================================================
@@ -2140,9 +2252,9 @@ namespace pwiz.Osprey.FDR
         internal static int[] BuildTrainingSubset(
             bool[] labels, uint[] entryIds, string[] peptides,
             IList<PercolatorEntry> entries, int maxTrainSize, ulong seed,
-            out int[] bestPerPrecursor)
+            out int[] bestPerPrecursor, double[] bestScores = null)
         {
-            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries);
+            bestPerPrecursor = SelectBestPerPrecursor(labels, entryIds, entries, bestScores);
             if (maxTrainSize <= 0 || bestPerPrecursor.Length <= maxTrainSize)
                 return bestPerPrecursor;
 
@@ -2175,9 +2287,18 @@ namespace pwiz.Osprey.FDR
         ///
         /// Score for ranking is taken from PercolatorEntry.Features[0], which is
         /// coelution_sum (matches Rust's selection criterion in pipeline.rs).
+        ///
+        /// When <paramref name="bestScores"/> is supplied (issue #4355 Phase 4
+        /// streaming path, where the stubs carry no resident feature vector) the
+        /// per-entry ranking value is read from that array instead of
+        /// <c>Features[0]</c>. The two are byte-identical on the first pass
+        /// (<c>bestScores[i]</c> is the entry's <c>CoelutionSum</c>, which
+        /// <c>CoelutionScorer</c> assigns from <c>features[0]</c>), so the selected
+        /// subset is unchanged; only the value's source moves off the O(N) vector.
         /// </summary>
         public static int[] SelectBestPerPrecursor(
-            bool[] labels, uint[] entryIds, IList<PercolatorEntry> entries)
+            bool[] labels, uint[] entryIds, IList<PercolatorEntry> entries,
+            double[] bestScores = null)
         {
             int n = labels.Length;
             // Map base_id to best target index, separately for targets and decoys
@@ -2187,13 +2308,15 @@ namespace pwiz.Osprey.FDR
             for (int i = 0; i < n; i++)
             {
                 uint baseId = entryIds[i] & BASE_ID_MASK;
-                double score = entries[i].Features[0];
+                double score = bestScores != null ? bestScores[i] : entries[i].Features[0];
 
                 Dictionary<uint, int> map = labels[i] ? bestDecoy : bestTarget;
                 int existing;
                 if (map.TryGetValue(baseId, out existing))
                 {
-                    if (score > entries[existing].Features[0])
+                    double existingScore = bestScores != null
+                        ? bestScores[existing] : entries[existing].Features[0];
+                    if (score > existingScore)
                         map[baseId] = i;
                 }
                 else
