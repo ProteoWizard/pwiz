@@ -1585,7 +1585,10 @@ namespace pwiz.ProteowizardWrapper
 
         // Roots under which the PSI-MS controlled vocabulary groups the per-spectrum and per-scan
         // cvParams. A term belongs in the spectrum-filter catalog when it (transitively) is_a one of
-        // these and is neither obsolete nor already interpreted into one of Skyline's typed fields.
+        // these and is a leaf (not itself a parent - see below), is not obsolete, and is not already
+        // interpreted into one of Skyline's typed fields. Every such leaf term is something the filter
+        // can act on (numeric or string terms by value, flag terms by presence), so all are offered;
+        // only the ontology's grouping/category nodes are excluded.
         private static readonly HashSet<CVID> SPECTRUM_LEVEL_CV_ROOTS = new HashSet<CVID>
         {
             CVID.MS_spectrum_property,   // MS:1003058
@@ -1610,11 +1613,23 @@ namespace pwiz.ProteowizardWrapper
                 return _spectrumCvTermCatalog;
             }
 
+            // A term that is a parent of some other term is a grouping/category node in the ontology
+            // ("spectrum property", "scan attribute", "spectrum aggregation type", ...), not a measurable
+            // per-spectrum value, so only leaf terms are offered.
+            var parentTerms = new HashSet<CVID>();
+            foreach (var cvid in CV.cvids())
+            {
+                foreach (CVID parent in CV.cvTermInfo(cvid).parentsIsA)
+                {
+                    parentTerms.Add(parent);
+                }
+            }
+
             var isSpectrumLevel = new Dictionary<CVID, bool>();
             var catalog = new List<SpectrumMetadataTerm>();
             foreach (var cvid in CV.cvids())
             {
-                if (INTERPRETED_CVIDS.Contains(cvid))
+                if (INTERPRETED_CVIDS.Contains(cvid) || parentTerms.Contains(cvid))
                 {
                     continue;
                 }

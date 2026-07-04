@@ -55,6 +55,11 @@ namespace pwiz.Skyline.EditUI
             IEnumerable<SpectrumClassColumn> extraColumns)
         {
             InitializeComponent();
+            // The property column holds friendly CV term names (e.g. "base peak intensity (MS:1000505)"),
+            // which are longer than the operand values, so give it the larger share of the width.
+            propertyColumn.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            propertyColumn.FillWeight = 2;
+            valueColumn.FillWeight = 1;
             _extraColumns = extraColumns?.ToArray() ?? Array.Empty<SpectrumClassColumn>();
             _rootColumn = rootColumn;
             _rowList = new List<Row>();

@@ -142,6 +142,10 @@ namespace pwiz.SkylineTestFunctional
             var ticColumn = SpectrumClassColumn.CvParam(@"MS:1000285", @"total ion current", false);
             Assert.IsFalse(catalog.Any(c => Equals(c.PropertyPath, ticColumn.PropertyPath)),
                 @"catalog should exclude the interpreted total ion current term");
+            // Grouping/category terms (parents in the ontology) are not offered - only leaf terms.
+            var spectrumAttribute = SpectrumClassColumn.CvParam(@"MS:1000499", @"spectrum attribute", false);
+            Assert.IsFalse(catalog.Any(c => Equals(c.PropertyPath, spectrumAttribute.PropertyPath)),
+                @"catalog should exclude the grouping term spectrum attribute");
 
             var discovered = SpectrumClassColumn.DiscoverCvColumns(SkylineWindow.Document);
             Assert.IsTrue(discovered.Any(c => Equals(c.PropertyPath, bpiColumn.PropertyPath)),
