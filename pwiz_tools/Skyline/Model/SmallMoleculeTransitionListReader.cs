@@ -33,6 +33,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -421,14 +422,34 @@ namespace pwiz.Skyline.Model
                 {
                     bool tranGroupFound = false;
                     var pepPath = new IdentityPath(pathPepGroup, pep.Id);
+                    SpectrumClassFilter rowSpectrumFilter;
+                    try
+                    {
+                        rowSpectrumFilter = ReadSpectrumClassFilter(row);
+                    }
+                    catch (Exception e) when (IsParserException(e))
+                    {
+                        // This path (adding to an existing molecule group) has no surrounding
+                        // IsParserException guard, so report the bad filter text as a row error here.
+                        ShowTransitionError(new PasteError
+                        {
+                            Column = INDEX_SPECTRUM_FILTER,
+                            Line = row.Index,
+                            Message = e.Message
+                        });
+                        return true; // Error
+                    }
                     foreach (var tranGroup in pep.TransitionGroups)
                     {
                         var pathGroup = new IdentityPath(pepPath, tranGroup.Id);
                         if (precursor.SignedMz.CompareTolerant(tranGroup.PrecursorMz, MzMatchTolerance) == 0)
                         {
-                            // Special case for mz-only, charge-only transitions - may need to derive an isotope mass
+                            // Special case for mz-only molecules with no declared label - may need to derive an
+                            // isotope mass so a heavier sibling matches its existing precursor. This applies to any
+                            // unlabeled adduct (e.g. [M-H], [M+H]), not just charge-only ones, mirroring the
+                            // derivation done when the precursor group is first created in GetMoleculeTransitionGroup.
                             var labeledAdduct = adduct;
-                            if (adduct.IsChargeOnly && !tranGroup.CustomMolecule.HasChemicalFormula)
+                            if (!adduct.HasIsotopeLabels && !pep.CustomMolecule.HasChemicalFormula)
                             {
                                 var mzCalc = adduct.ApplyToMass(pep.CustomMolecule.MonoisotopicMass);
                                 if (!Equals(precursorMonoMz, mzCalc.Value))
@@ -445,6 +466,11 @@ namespace pwiz.Skyline.Model
                             }
 
                             if (!labeledAdduct.SameEffect(tranGroup.PrecursorAdduct)) // Similar m/z, but isotope envelope might vary e.g. M2C13-H vs M1C131N15-H
+                            {
+                                continue;
+                            }
+
+                            if (!Equals(rowSpectrumFilter, tranGroup.SpectrumClassFilter))
                             {
                                 continue;
                             }
@@ -818,6 +844,11 @@ namespace pwiz.Skyline.Model
         private int INDEX_DECLUSTERING_POTENTIAL
         {
             get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.declusteringPotential); }
+        }
+
+        private int INDEX_SPECTRUM_FILTER
+        {
+            get { return ColumnIndex(SmallMoleculeTransitionListColumnHeaders.spectrumFilter); }
         }
 
         public static int? ValidateFormulaWithMzAndAdduct(double tolerance, bool useMonoIsotopicMass, ref string moleculeFormula, ref Adduct adduct, 
@@ -2337,6 +2368,7 @@ namespace pwiz.Skyline.Model
             string errmsg;
             try
             {
+                TransitionGroupDocNode tranGroupNode;
                 var fragmentCount = FragmentCount;
                 if (fragmentCount <= 1)
                 {
@@ -2344,32 +2376,41 @@ namespace pwiz.Skyline.Model
                     var tran = GetMoleculeTransition(document, row, pep, group, moleculeInfo.ExplicitTransitionGroupValues);
                     if (tran == null)
                         return null;
-                    return new TransitionGroupDocNode(group, annotations, document.Settings, null,
+                    tranGroupNode = new TransitionGroupDocNode(group, annotations, document.Settings, null,
                         null, moleculeInfo.ExplicitTransitionGroupValues, null, new[] { tran }, false);
                 }
-
-                // Multiple fragments per line: when any fragment-oriented column type (Product m/z,
-                // Product Formula, Product Name, etc.) is assigned to more than one column, each
-                // repeat defines a separate fragment (transition). Loop over all fragment indices,
-                // reading product values from the corresponding columns.
-                var transitions = new List<TransitionDocNode>();
-                for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
+                else
                 {
-                    var tran = GetMoleculeTransitionForFragment(document, row, pep, group,
-                        moleculeInfo.ExplicitTransitionGroupValues, fragmentIndex);
-                    if (tran == null && fragmentIndex == 0)
-                        return null; // First fragment must succeed
-                    if (tran != null)
+                    // Multiple fragments per line: when any fragment-oriented column type (Product m/z,
+                    // Product Formula, Product Name, etc.) is assigned to more than one column, each
+                    // repeat defines a separate fragment (transition). Loop over all fragment indices,
+                    // reading product values from the corresponding columns.
+                    var transitions = new List<TransitionDocNode>();
+                    for (int fragmentIndex = 0; fragmentIndex < fragmentCount; fragmentIndex++)
                     {
-                        if (IsDuplicateFragmentOnLine(transitions, tran, row, fragmentIndex))
-                            return null; // Reported as a row error, surfaced via "Check For Errors"
-                        transitions.Add(tran);
+                        var tran = GetMoleculeTransitionForFragment(document, row, pep, group,
+                            moleculeInfo.ExplicitTransitionGroupValues, fragmentIndex);
+                        if (tran == null && fragmentIndex == 0)
+                            return null; // First fragment must succeed
+                        if (tran != null)
+                        {
+                            if (IsDuplicateFragmentOnLine(transitions, tran, row, fragmentIndex))
+                                return null; // Reported as a row error, surfaced via "Check For Errors"
+                            transitions.Add(tran);
+                        }
                     }
+                    if (transitions.Count == 0)
+                        return null;
+                    tranGroupNode = new TransitionGroupDocNode(group, annotations, document.Settings, null,
+                        null, moleculeInfo.ExplicitTransitionGroupValues, null, transitions.ToArray(), false);
                 }
-                if (transitions.Count == 0)
-                    return null;
-                return new TransitionGroupDocNode(group, annotations, document.Settings, null,
-                    null, moleculeInfo.ExplicitTransitionGroupValues, null, transitions.ToArray(), false);
+
+                var spectrumFilter = ReadSpectrumClassFilter(row);
+                if (!spectrumFilter.IsEmpty)
+                {
+                    tranGroupNode = tranGroupNode.ChangeSpectrumClassFilter(spectrumFilter);
+                }
+                return tranGroupNode;
             }
             catch (Exception x) when (IsParserException(x))
             {
@@ -2382,6 +2423,21 @@ namespace pwiz.Skyline.Model
                 Message = errmsg
             });
             return null;
+        }
+
+        private SpectrumClassFilter ReadSpectrumClassFilter(Row row)
+        {
+            var filterString = GetCellTrimmed(row, INDEX_SPECTRUM_FILTER);
+            if (string.IsNullOrEmpty(filterString))
+                return default;
+            // Surface unparseable or unknown-property filter text as a row import error rather than
+            // letting ParseFilterString throw a FormatException that escapes the IsParserException
+            // guards and crashes the import. ValidateFilterString also flags unknown spectrum
+            // properties, which the lenient parser would otherwise accept.
+            var error = SpectrumClassFilter.ValidateFilterString(filterString);
+            if (error != null)
+                throw new InvalidDataException(error);
+            return SpectrumClassFilter.ParseFilterString(filterString);
         }
 
         private bool FragmentColumnsIdenticalToPrecursorColumns(ParsedIonInfo precursor, ParsedIonInfo fragment)
@@ -2834,6 +2890,8 @@ namespace pwiz.Skyline.Model
         public const string idKEGG = "KEGG";
         public const string ignoreColumn = "IgnoreColumn"; // We want to be able to recognize these columns to avoid throwing an error and then we ignore them
 
+        public const string spectrumFilter = "SpectrumFilter";
+
         public const string iRT = "IRT"; // For assay library use
         public const string libraryIntensity = "LibraryIntensity"; // For assay library use
 
@@ -2882,6 +2940,7 @@ namespace pwiz.Skyline.Model
                 idSMILES,
                 idKEGG,
                 neutralLossProduct,
+                spectrumFilter,
                 ignoreColumn, // Does not contain useful data, can be more than one in a list
                 imPrecursor_invK0, // Ion mobility with implied units 1/K0
             });
@@ -3014,6 +3073,7 @@ namespace pwiz.Skyline.Model
                     Tuple.Create(idKEGG, idKEGG),
                     Tuple.Create(neutralLossProduct, Resources.PasteDlg_UpdateMoleculeType_Product_Neutral_Loss),
                     Tuple.Create(libraryIntensity, ModelResources.PasteDlg_UpdateMoleculeType_Library_Intensity),
+                    Tuple.Create(spectrumFilter, spectrumFilter),
                     Tuple.Create(ignoreColumn, Resources.ImportTransitionListColumnSelectDlg_PopulateComboBoxes_Ignore_Column),
                     // ReSharper restore StringLiteralTypo
                 })

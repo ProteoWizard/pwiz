@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>pwiz.Osprey.Tasks</RootNamespace>
+    <AssemblyName>Osprey.Tasks</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Osprey" />
+    <InternalsVisibleTo Include="Osprey.Test" />
+  </ItemGroup>
+
+  <!-- ProfilerHooks (the main-search MeasureProfiler bracket) lives in the
+       Tasks layer, alongside the scoring task bodies a developer brackets when
+       profiling; this package reference backs it. -->
+  <ItemGroup>
+    <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
+  </ItemGroup>
+
+  <!-- Tasks is the pipeline layer: the task bodies (scoring, calibration,
+       first-join, merge, per-file rescore) call into every domain library.
+       Diagnostics carries IOspreyDiagnostics, which PipelineContext exposes so
+       tasks emit dumps through the context instead of the exe-only static
+       facade. Nothing below Tasks references Tasks, so this stays acyclic. -->
+  <ItemGroup>
+    <ProjectReference Include="..\Osprey.Core\Osprey.Core.csproj" />
+    <ProjectReference Include="..\Osprey.Diagnostics\Osprey.Diagnostics.csproj" />
+    <ProjectReference Include="..\Osprey.IO\Osprey.IO.csproj" />
+    <ProjectReference Include="..\Osprey.ML\Osprey.ML.csproj" />
+    <ProjectReference Include="..\Osprey.Chromatography\Osprey.Chromatography.csproj" />
+    <ProjectReference Include="..\Osprey.Scoring\Osprey.Scoring.csproj" />
+    <ProjectReference Include="..\Osprey.FDR\Osprey.FDR.csproj" />
+  </ItemGroup>
+
+</Project>
