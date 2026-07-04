@@ -27,6 +27,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Util;
 
@@ -240,6 +241,40 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 .Where(metadata => metadata != null)
                 .SelectMany(metadata => metadata.SpectrumMetadatas);
             return DiscoverCvColumns(spectra);
+        }
+
+        /// <summary>
+        /// The catalog of uninterpreted mzML CV terms that can appear on a spectrum, as dynamic columns,
+        /// so the filter editor can offer them before any data is imported. Typeless: the editor offers
+        /// every operator and the predicate infers numeric vs. string from the operator and operand.
+        /// </summary>
+        public static IList<SpectrumClassColumn> GetCvColumnCatalog()
+        {
+            return MsDataFileImpl.GetSpectrumCvTermCatalog()
+                .Select(term => (SpectrumClassColumn)new CvParamColumn(term.Accession, term.Name, false))
+                .ToList();
+        }
+
+        /// <summary>
+        /// The CV/user-parameter columns to offer in the filter editor for <paramref name="document"/>:
+        /// the ontology catalog (always available) plus any discovered from imported data (vendor
+        /// userParams, and CV terms typed from their observed values, which take precedence over the
+        /// typeless catalog entry with the same accession).
+        /// </summary>
+        public static IList<SpectrumClassColumn> GetEditorCvColumns(SrmDocument document)
+        {
+            var byColumnName = new Dictionary<string, SpectrumClassColumn>();
+            foreach (var column in GetCvColumnCatalog())
+            {
+                byColumnName[column.ColumnName] = column;
+            }
+            foreach (var column in DiscoverCvColumns(document))
+            {
+                byColumnName[column.ColumnName] = column;
+            }
+            return byColumnName.Values
+                .OrderBy(column => column.GetLocalizedColumnName(CultureInfo.CurrentCulture), StringComparer.CurrentCulture)
+                .ToList();
         }
 
         /// <summary>

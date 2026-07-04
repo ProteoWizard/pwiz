@@ -109,6 +109,15 @@ namespace pwiz.SkylineTestFunctional
             var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
             var filterStringColumn = SpectrumClassColumn.CvParam(@"MS:1000512", @"filter string", false);
 
+            // The ontology catalog offers the standard spectrum CV terms with no import at all, and
+            // excludes terms Skyline already interprets into typed fields (e.g. total ion current).
+            var catalog = SpectrumClassColumn.GetCvColumnCatalog();
+            Assert.IsTrue(catalog.Any(c => Equals(c.PropertyPath, bpiColumn.PropertyPath)), @"catalog missing base peak intensity");
+            Assert.IsTrue(catalog.Any(c => Equals(c.PropertyPath, filterStringColumn.PropertyPath)), @"catalog missing filter string");
+            var ticColumn = SpectrumClassColumn.CvParam(@"MS:1000285", @"total ion current", false);
+            Assert.IsFalse(catalog.Any(c => Equals(c.PropertyPath, ticColumn.PropertyPath)),
+                @"catalog should exclude the interpreted total ion current term");
+
             var discovered = SpectrumClassColumn.DiscoverCvColumns(SkylineWindow.Document);
             Assert.IsTrue(discovered.Any(c => Equals(c.PropertyPath, bpiColumn.PropertyPath)),
                 @"base peak intensity column not discovered");

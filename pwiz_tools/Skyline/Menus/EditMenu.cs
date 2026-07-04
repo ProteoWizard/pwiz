@@ -1856,7 +1856,7 @@ namespace pwiz.Skyline.Menus
             var rootColumn = ColumnDescriptor.RootColumn(skylineDataSchema, typeof(SpectrumClass));
             using var autoComplete = new SpectrumFilterAutoComplete(SkylineWindow);
             using var dlg = new EditSpectrumFilterDlg(rootColumn, filterPages,
-                SpectrumClassColumn.DiscoverCvColumns(document));
+                SpectrumClassColumn.GetEditorCvColumns(document));
             dlg.AutoComplete = autoComplete;
             if (filterPagesSet.Count != 1)
             {
