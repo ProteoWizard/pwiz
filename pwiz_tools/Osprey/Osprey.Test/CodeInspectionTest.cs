@@ -86,10 +86,11 @@ namespace pwiz.Osprey.Test
         {
             string sourceRoot = FindOspreySourceRoot();
             var violations = new List<string>();
-            // \b\w+\.Sort\s*\( catches Array.Sort AND List<T>.Sort (both introsort,
+            // \b\w+\s*\??\.Sort\s*\( catches Array.Sort AND List<T>.Sort (both introsort,
             // both unstable), across all overloads: (), (Comparison<T>), (IComparer<T>),
-            // (T[]), (T[],T[]), (T[],Comparison<T>), etc.
-            var pattern = new Regex(@"\b\w+\.Sort\s*\(");
+            // (T[]), (T[],T[]), (T[],Comparison<T>), etc. The optional \?? also catches a
+            // null-conditional receiver (foo?.Sort(...)) so a future one can't slip the guard.
+            var pattern = new Regex(@"\b\w+\s*\??\.Sort\s*\(");
             const string exemptionTag = "// Array.Sort OK:";
 
             foreach (var file in EnumerateProductionCsFiles(sourceRoot))
