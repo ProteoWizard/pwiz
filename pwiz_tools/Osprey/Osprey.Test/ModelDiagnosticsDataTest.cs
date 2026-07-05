@@ -67,10 +67,11 @@ namespace pwiz.Osprey.Test
                 pair[seq] = (uint)i;
             }
             // P_a (score 5) is paired to an UNobserved target (index 100) -> wins.
-            // P_b (score 3) is paired to T0 (score 8) -> does not win.
-            entries.Add(Entry(20, false, 5.0, 0.01, "Pa", 2));
+            // P_b (score 3) is paired to T0 (score 8) -> does not win. Both have q
+            // within the target q range (0.001..0.004) so both count at the top.
+            entries.Add(Entry(20, false, 5.0, 0.002, "Pa", 2));
             map["Pa"] = EntrapmentClass.PTarget; pair["Pa"] = 100;
-            entries.Add(Entry(21, false, 3.0, 0.01, "Pb", 2));
+            entries.Add(Entry(21, false, 3.0, 0.003, "Pb", 2));
             map["Pb"] = EntrapmentClass.PTarget; pair["Pb"] = 0;
             // Balance the manifest to r = 1 (4 targets, 4 p_targets).
             map["Pu1"] = EntrapmentClass.PTarget;
@@ -103,10 +104,10 @@ namespace pwiz.Osprey.Test
                 entries.Add(Entry((uint)(100 + i), false, 8 - i, 0.001 * (i + 1), seq, 2));
                 map[seq] = EntrapmentClass.Target;
             }
-            // Both entrapment hits score above the lowest-scoring target, so at
-            // the final accepted target n_p = 2.
-            AddEntrap(entries, map, 200, 5.5, "P0");
-            AddEntrap(entries, map, 201, 1.5, "P1");
+            // Both entrapment have q within the target q range (0.001..0.008), so
+            // at the highest target q both are counted (n_p = 2).
+            AddEntrap(entries, map, 200, 5.5, 0.003, "P0");
+            AddEntrap(entries, map, 201, 1.5, 0.005, "P1");
             // The entrapment DB ratio r is defined by the manifest composition,
             // not the observed hits. A real entrapment library is balanced
             // (equal target and p_target peptides), so add unobserved p_target
@@ -122,9 +123,8 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(fdp.MatchesFdrBench);
             Assert.AreEqual(1.0, fdp.EntrapmentRatio, 1e-9);
 
-            // At the final accepted target, n_t = 8, n_p = 2 (both entrapment
-            // ranked above the last target). combined = 2*2/(8+2) = 0.4,
-            // lower = 2/(8+2) = 0.2.
+            // At the highest target q (0.008), n_t = 8, n_p = 2 (both entrapment
+            // q <= 0.008). combined = 2*2/(8+2) = 0.4, lower = 2/(8+2) = 0.2.
             int last = fdp.Combined.Length - 1;
             Assert.AreEqual(8, fdp.NTargetAccepted[last]);
             Assert.AreEqual(0.40, fdp.Combined[last], 1e-9);
@@ -266,9 +266,9 @@ namespace pwiz.Osprey.Test
         // ----- helpers -----
 
         private static void AddEntrap(List<FdrEntry> entries,
-            Dictionary<string, EntrapmentClass> map, uint id, double score, string seq)
+            Dictionary<string, EntrapmentClass> map, uint id, double score, double q, string seq)
         {
-            entries.Add(Entry(id, false, score, 0.01, seq, 2));
+            entries.Add(Entry(id, false, score, q, seq, 2));
             map[seq] = EntrapmentClass.PTarget;
         }
 

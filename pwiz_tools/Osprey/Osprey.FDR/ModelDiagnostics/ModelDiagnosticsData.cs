@@ -258,15 +258,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     bool hasPair = pairIndexBySequence != null && e.ModifiedSequence != null &&
                         pairIndexBySequence.TryGetValue(BareSequence(e.ModifiedSequence), out pairIdx);
                     string key = e.ModifiedSequence + "|" + e.Charge;
-                    if (!best.TryGetValue(key, out var prev) || e.Score > prev.Score)
+                    if (!best.TryGetValue(key, out var cur))
                     {
-                        best[key] = new Prec
+                        cur = new Prec
                         {
                             Score = e.Score,
                             // Precursor-level q at both scopes -- the axes the
                             // FDR-calibration views plot. Experiment scope is
                             // what --fdrbench emits (and thus reproduces its
-                            // plots); run scope is the per-run picture.
+                            // plots); run scope is the per-run picture. Each
+                            // precursor takes its BEST (min) q across observations,
+                            // matching FdrBenchInputWriter's dedup, while Score
+                            // stays the max (for density / the score histogram).
                             QRunPrecursor = e.RunPrecursorQvalue,
                             QExpPrecursor = e.ExperimentPrecursorQvalue,
                             IsDecoy = e.IsDecoy,
@@ -275,6 +278,22 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             HasPair = hasPair,
                         };
                     }
+                    else
+                    {
+                        if (e.Score > cur.Score)
+                        {
+                            cur.Score = e.Score;
+                            cur.IsDecoy = e.IsDecoy;
+                            cur.Class = cls;
+                            cur.PairIndex = pairIdx;
+                            cur.HasPair = hasPair;
+                        }
+                        if (e.RunPrecursorQvalue < cur.QRunPrecursor)
+                            cur.QRunPrecursor = e.RunPrecursorQvalue;
+                        if (e.ExperimentPrecursorQvalue < cur.QExpPrecursor)
+                            cur.QExpPrecursor = e.ExperimentPrecursorQvalue;
+                    }
+                    best[key] = cur;
                 }
                 data.PerFile.Add(new FileSummaryRow { File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys });
             }
@@ -582,19 +601,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         private static FdpView BuildFdpView(List<Prec> precs, double r,
             Func<Prec, double> qSel, string label, int pass, string scope, bool matchesFdrBench)
         {
-            var ranked = precs
-                .Where(p => !p.IsDecoy &&
-                            (p.Class == EntrapmentClass.Target || p.Class == EntrapmentClass.PTarget))
-                .OrderByDescending(p => p.Score)
-                .ToList();
-            if (ranked.Count == 0)
-                return null;
-
-            // For the paired estimator: the best observed target score per
-            // pair_index. An entrapment hit "wins its pair" (n_p_s_t) when it
-            // outscores its paired target, or when that target went unobserved.
+            // FDRBench thresholds each class by ITS OWN q-value: at q <= t,
+            // n_t = targets with q <= t and n_p = entrapment with q <= t. So sort
+            // each class by q and sweep t up through the target q-values. (Ranking
+            // by score and tallying entrapment interspersed undercounts entrapment
+            // whose own q clears the threshold at a lower score -- verified against
+            // fdrbench: q-threshold counting reproduces fdp.csv, score-ranking does
+            // not.) For the paired estimator, an entrapment "wins its pair"
+            // (n_p_s_t) when it outscores its paired target, or that target went
+            // unobserved.
             var pairTargetScore = new Dictionary<uint, double>();
-            bool anyPair = false;
             foreach (var p in precs)
             {
                 if (p.Class == EntrapmentClass.Target && p.HasPair)
@@ -602,44 +618,54 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     if (!pairTargetScore.TryGetValue(p.PairIndex, out double s) || p.Score > s)
                         pairTargetScore[p.PairIndex] = p.Score;
                 }
-                if (p.Class == EntrapmentClass.PTarget && p.HasPair)
-                    anyPair = true;
             }
 
-            int nT = 0, nE = 0, nPst = 0;
+            var targetQ = new List<double>();
+            var entrap = new List<KeyValuePair<double, bool>>();  // (q, wonItsPair)
+            foreach (var p in precs)
+            {
+                if (p.IsDecoy)
+                    continue;
+                if (p.Class == EntrapmentClass.Target)
+                {
+                    targetQ.Add(qSel(p));
+                }
+                else if (p.Class == EntrapmentClass.PTarget)
+                {
+                    bool won = p.HasPair &&
+                        (!pairTargetScore.TryGetValue(p.PairIndex, out double ts) || p.Score > ts);
+                    entrap.Add(new KeyValuePair<double, bool>(qSel(p), won));
+                }
+            }
+            if (targetQ.Count == 0)
+                return null;
+            bool anyPair = entrap.Count > 0 && pairTargetScore.Count > 0;
+            targetQ.Sort();
+            entrap.Sort((a, b) => a.Key.CompareTo(b.Key));
+
             var qs = new List<double>();
             var lb = new List<double>();
             var comb = new List<double>();
             var paired = new List<double>();
             var ntAcc = new List<int>();
 
-            // q-values increase as the score descends; take the running max so the
-            // x-axis is monotone non-decreasing (a proper q-value axis).
-            double runQ = 0;
-            foreach (var p in ranked)
+            int ei = 0, nE = 0, nPst = 0;
+            for (int i = 0; i < targetQ.Count; i++)
             {
-                if (p.Class == EntrapmentClass.PTarget)
+                double t = targetQ[i];
+                while (ei < entrap.Count && entrap[ei].Key <= t)
                 {
                     nE++;
-                    // n_p_s_t: this entrapment outscored its paired target (or the
-                    // target was never observed). Accumulated as the threshold
-                    // descends, exactly like FDRBench's running count.
-                    if (p.HasPair)
-                    {
-                        bool targetSeen = pairTargetScore.TryGetValue(p.PairIndex, out double ts);
-                        if (!targetSeen || p.Score > ts)
-                            nPst++;
-                    }
-                    continue; // entrapment hits move the FDP, not the yield point
+                    if (entrap[ei].Value) nPst++;
+                    ei++;
                 }
-                nT++;
-                runQ = Math.Max(runQ, qSel(p));
+                int nT = i + 1;
                 // FDRBench estimators, verified against fdrbench fdp.csv:
                 //   combined    = (1 + 1/r) * n_p / (n_t + n_p)
                 //   lower_bound = n_p / (r * (n_t + n_p))
                 //   paired      = (n_p + n_p_s_t) / (n_t + n_p)
                 double denom = nT + nE;
-                qs.Add(runQ);
+                qs.Add(t);
                 lb.Add(nE / (r * denom));
                 comb.Add((1.0 + 1.0 / r) * nE / denom);
                 paired.Add((nE + nPst) / denom);
