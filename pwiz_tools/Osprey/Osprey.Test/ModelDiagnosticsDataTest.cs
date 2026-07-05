@@ -19,6 +19,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
@@ -76,14 +77,15 @@ namespace pwiz.Osprey.Test
             map["Pu2"] = EntrapmentClass.PTarget;
 
             var data = ModelDiagnosticsData.Build(Wrap(entries), null, map, pair, 0.01, "peptide");
-            Assert.IsNotNull(data.Fdp.Paired);
-            int last = data.Fdp.Paired.Length - 1;
+            var fdp = data.FdpViews.Single(v => v.Scope == "experiment");
+            Assert.IsNotNull(fdp.Paired);
+            int last = fdp.Paired.Length - 1;
             // At the last target: n_t = 4, n_p = 2, n_p_s_t = 1 (only P_a won).
             // paired = (2 + 1) / (4 + 2) = 0.5; lower = 2 / 6.
-            Assert.AreEqual(0.5, data.Fdp.Paired[last], 1e-9);
-            Assert.AreEqual(2.0 / 6.0, data.Fdp.LowerBound[last], 1e-9);
+            Assert.AreEqual(0.5, fdp.Paired[last], 1e-9);
+            Assert.AreEqual(2.0 / 6.0, fdp.LowerBound[last], 1e-9);
             // Paired sits at or above lower-bound once an entrapment wins its pair.
-            Assert.IsTrue(data.Fdp.Paired[last] >= data.Fdp.LowerBound[last]);
+            Assert.IsTrue(fdp.Paired[last] >= fdp.LowerBound[last]);
         }
 
         // combined = (1 + 1/r) * n_p / (n_t + n_p); lower = n_p / (r*(n_t+n_p)).
@@ -114,19 +116,22 @@ namespace pwiz.Osprey.Test
 
             var data = ModelDiagnosticsData.Build(Wrap(entries), null, map, null, 0.01, "peptide");
             Assert.IsTrue(data.HasEntrapment);
-            Assert.IsNotNull(data.Fdp);
-            Assert.AreEqual(1.0, data.Fdp.EntrapmentRatio, 1e-9);
+            Assert.IsNotNull(data.FdpViews);
+            // Two pass-1 views: experiment-wide (FDRBench-matching) + per-run.
+            var fdp = data.FdpViews.Single(v => v.Scope == "experiment");
+            Assert.IsTrue(fdp.MatchesFdrBench);
+            Assert.AreEqual(1.0, fdp.EntrapmentRatio, 1e-9);
 
             // At the final accepted target, n_t = 8, n_p = 2 (both entrapment
             // ranked above the last target). combined = 2*2/(8+2) = 0.4,
             // lower = 2/(8+2) = 0.2.
-            int last = data.Fdp.Combined.Length - 1;
-            Assert.AreEqual(8, data.Fdp.NTargetAccepted[last]);
-            Assert.AreEqual(0.40, data.Fdp.Combined[last], 1e-9);
-            Assert.AreEqual(0.20, data.Fdp.LowerBound[last], 1e-9);
+            int last = fdp.Combined.Length - 1;
+            Assert.AreEqual(8, fdp.NTargetAccepted[last]);
+            Assert.AreEqual(0.40, fdp.Combined[last], 1e-9);
+            Assert.AreEqual(0.20, fdp.LowerBound[last], 1e-9);
             // combined is exactly twice lower-bound everywhere at r = 1.
-            for (int i = 0; i < data.Fdp.Combined.Length; i++)
-                Assert.AreEqual(2.0 * data.Fdp.LowerBound[i], data.Fdp.Combined[i], 1e-9);
+            for (int i = 0; i < fdp.Combined.Length; i++)
+                Assert.AreEqual(2.0 * fdp.LowerBound[i], fdp.Combined[i], 1e-9);
         }
 
         private static void TestClassCountsAndDegrade()
@@ -150,10 +155,10 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(1, data.NPDecoy);
             Assert.IsTrue(data.HasEntrapment);
 
-            // No manifest -> degrade to the is_decoy-only split; no FDP tab.
+            // No manifest -> degrade to the is_decoy-only split; no FDP views.
             var degraded = ModelDiagnosticsData.Build(Wrap(entries), null, null, null, 0.01, "peptide");
             Assert.IsFalse(degraded.HasEntrapment);
-            Assert.IsNull(degraded.Fdp);
+            Assert.IsNull(degraded.FdpViews);
             Assert.AreEqual(2, degraded.NTarget);  // TA + PA both is_decoy=false
             Assert.AreEqual(2, degraded.NDecoy);
         }
@@ -275,6 +280,9 @@ namespace pwiz.Osprey.Test
                 IsDecoy = decoy,
                 Score = score,
                 RunPeptideQvalue = q,
+                // The FDR-calibration views use precursor-level q; set both scopes.
+                RunPrecursorQvalue = q,
+                ExperimentPrecursorQvalue = q,
                 ModifiedSequence = seq,
                 Charge = charge,
             };

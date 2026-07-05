@@ -83,7 +83,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public bool ModelDegenerate { get; set; }
         public List<FeatureRow> Model { get; set; }
         public ScoreHistogram Scores { get; set; }
-        public FdpCurve Fdp { get; set; }
+        /// <summary>
+        /// The FDR-calibration views the report offers. Each pairs an Osprey
+        /// q-value axis (run- vs experiment-scope precursor q, at pass 1 or 2)
+        /// with the entrapment FDP estimators. The experiment-scope views
+        /// reproduce the FDRBench <c>--fdrbench</c> plots (FDRBench passes Osprey's
+        /// own q through); the run-scope views are the per-run picture FDRBench
+        /// does not show.
+        /// </summary>
+        public List<FdpView> FdpViews { get; set; }
         public WinFractionData WinFraction { get; set; }
         public List<FileSummaryRow> PerFile { get; set; }
         public IdYieldData IdYield { get; set; }
@@ -120,18 +128,25 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         }
 
         /// <summary>
-        /// Entrapment FDP vs q-value calibration, best-per-precursor, sorted by
-        /// ascending threshold. Two q axes: <see cref="QReported"/> is Osprey's
-        /// own Percolator peptide q (the "should I trust Osprey's q" view) and
-        /// <see cref="QCompetition"/> is a target-decoy competition q recomputed
-        /// from the score the FDRBench way (the axis that reproduces FDRBench's
-        /// fdp.csv). The three FDP estimators mirror FDRBench.
+        /// One FDR-calibration curve: an Osprey q-value axis vs the entrapment
+        /// FDP estimators (lower-bound / paired / combined), best-per-precursor,
+        /// walked down the score ranking. The q axis is either run- or
+        /// experiment-scope precursor q, at pass 1 (pre-compaction) or pass 2
+        /// (final reported pool).
         /// </summary>
-        public sealed class FdpCurve
+        public sealed class FdpView
         {
+            /// <summary>Display label, e.g. "Pass 1 - experiment-wide".</summary>
+            public string Label { get; set; }
+            /// <summary>1 = pre-compaction, 2 = final reported pool.</summary>
+            public int Pass { get; set; }
+            /// <summary>"run" or "experiment".</summary>
+            public string Scope { get; set; }
+            /// <summary>True for the experiment-scope views that reproduce FDRBench's fdp.csv.</summary>
+            public bool MatchesFdrBench { get; set; }
             public double EntrapmentRatio { get; set; }
-            public double[] QReported { get; set; }
-            public double[] QCompetition { get; set; }
+            /// <summary>The Osprey q-value axis (run- or experiment-scope precursor q).</summary>
+            public double[] Q { get; set; }
             public double[] LowerBound { get; set; }
             public double[] Combined { get; set; }
             /// <summary>FDRBench paired estimator, or null when no pair_index was supplied.</summary>
@@ -179,7 +194,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         private struct Prec
         {
             public double Score;
-            public double QReported;
+            public double QRunPrecursor;
+            public double QExpPrecursor;
             public bool IsDecoy;
             public EntrapmentClass Class;
             public uint PairIndex;
@@ -247,7 +263,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         best[key] = new Prec
                         {
                             Score = e.Score,
-                            QReported = e.RunPeptideQvalue,
+                            // Precursor-level q at both scopes -- the axes the
+                            // FDR-calibration views plot. Experiment scope is
+                            // what --fdrbench emits (and thus reproduces its
+                            // plots); run scope is the per-run picture.
+                            QRunPrecursor = e.RunPrecursorQvalue,
+                            QExpPrecursor = e.ExperimentPrecursorQvalue,
                             IsDecoy = e.IsDecoy,
                             Class = cls,
                             PairIndex = pairIdx,
@@ -309,9 +330,23 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // ---- paired decoy-win fraction ----
             data.WinFraction = BuildWinFraction(perFileEntries, classBySequence, haveManifest);
 
-            // ---- entrapment FDP calibration ----
+            // ---- entrapment FDP calibration (all q-scope views) ----
             if (data.HasEntrapment)
-                data.Fdp = BuildFdp(precs, classBySequence);
+            {
+                double r = ComputeEntrapmentRatio(classBySequence);
+                if (r <= 0) r = 1.0;
+                data.FdpViews = new List<FdpView>();
+                // Pass 1 (pre-compaction, this Stage-5 pool). Experiment-scope is
+                // the axis --fdrbench emits, so it reproduces the FDRBench plot;
+                // run-scope is the per-run view FDRBench does not show. Pass 2
+                // (final reported pool) is added by the end-of-run writer.
+                var expView = BuildFdpView(precs, r, p => p.QExpPrecursor,
+                    @"Pass 1 - experiment-wide", 1, @"experiment", true);
+                if (expView != null) data.FdpViews.Add(expView);
+                var runView = BuildFdpView(precs, r, p => p.QRunPrecursor,
+                    @"Pass 1 - per-run", 1, @"run", false);
+                if (runView != null) data.FdpViews.Add(runView);
+            }
 
             return data;
         }
@@ -397,7 +432,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // threshold sweeps [0, 0.1]. Uses a fixed grid so the JSON is small.
             var qs = precs.Where(p => !p.IsDecoy && p.Class != EntrapmentClass.PTarget
                                        && p.Class != EntrapmentClass.PDecoy)
-                          .Select(p => p.QReported).OrderBy(q => q).ToArray();
+                          .Select(p => p.QExpPrecursor).OrderBy(q => q).ToArray();
             const int steps = 100;
             var grid = new double[steps];
             var counts = new int[steps];
@@ -538,16 +573,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return tot > 0 ? (double)win / tot : double.NaN;
         }
 
-        private static FdpCurve BuildFdp(List<Prec> precs,
-            IReadOnlyDictionary<string, EntrapmentClass> classBySequence)
+        // Build one calibration view: entrapment FDP estimators vs the selected
+        // Osprey q-value axis, best-per-precursor, walked down the score ranking.
+        // Reproduces FDRBench's fdp.csv when qSel is the experiment-precursor q
+        // (which is what --fdrbench emits and FDRBench merely passes through), and
+        // gives the per-run picture when qSel is the run-precursor q. r =
+        // entrapment DB size / target DB size, from the manifest.
+        private static FdpView BuildFdpView(List<Prec> precs, double r,
+            Func<Prec, double> qSel, string label, int pass, string scope, bool matchesFdrBench)
         {
-            // Accepted real targets + entrapment targets, ranked by descending
-            // score (the FDRBench ranking). At each rank we know the running
-            // target/entrapment counts and can emit the FDP estimators plus both
-            // q axes. r = entrapment DB size / target DB size, from the manifest.
-            double r = ComputeEntrapmentRatio(classBySequence);
-            if (r <= 0) r = 1.0;
-
             var ranked = precs
                 .Where(p => !p.IsDecoy &&
                             (p.Class == EntrapmentClass.Target || p.Class == EntrapmentClass.PTarget))
@@ -555,10 +589,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 .ToList();
             if (ranked.Count == 0)
                 return null;
-
-            // Competition q (FDRBench-style) needs decoys in the ranking too, so
-            // recompute it on the full target+decoy+entrapment score order.
-            var compQ = CompetitionQByScore(precs);
 
             // For the paired estimator: the best observed target score per
             // pair_index. An entrapment hit "wins its pair" (n_p_s_t) when it
@@ -577,16 +607,15 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             }
 
             int nT = 0, nE = 0, nPst = 0;
-            var qRep = new List<double>();
-            var qComp = new List<double>();
+            var qs = new List<double>();
             var lb = new List<double>();
             var comb = new List<double>();
             var paired = new List<double>();
             var ntAcc = new List<int>();
 
-            // Running reported-q is the min over accepted (monotone); we emit one
-            // point whenever the target count advances, thinning long tails.
-            double runRepQ = 0;
+            // q-values increase as the score descends; take the running max so the
+            // x-axis is monotone non-decreasing (a proper q-value axis).
+            double runQ = 0;
             foreach (var p in ranked)
             {
                 if (p.Class == EntrapmentClass.PTarget)
@@ -604,25 +633,27 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     continue; // entrapment hits move the FDP, not the yield point
                 }
                 nT++;
-                runRepQ = Math.Max(runRepQ, p.QReported);
+                runQ = Math.Max(runQ, qSel(p));
                 // FDRBench estimators, verified against fdrbench fdp.csv:
                 //   combined    = (1 + 1/r) * n_p / (n_t + n_p)
                 //   lower_bound = n_p / (r * (n_t + n_p))
                 //   paired      = (n_p + n_p_s_t) / (n_t + n_p)
                 double denom = nT + nE;
-                qRep.Add(runRepQ);
-                qComp.Add(compQ.TryGetValue(p.Score, out var cq) ? cq : double.NaN);
+                qs.Add(runQ);
                 lb.Add(nE / (r * denom));
                 comb.Add((1.0 + 1.0 / r) * nE / denom);
                 paired.Add((nE + nPst) / denom);
                 ntAcc.Add(nT);
             }
 
-            return new FdpCurve
+            return new FdpView
             {
+                Label = label,
+                Pass = pass,
+                Scope = scope,
+                MatchesFdrBench = matchesFdrBench,
                 EntrapmentRatio = r,
-                QReported = Thin(qRep),
-                QCompetition = Thin(qComp),
+                Q = Thin(qs),
                 LowerBound = Thin(lb),
                 Combined = Thin(comb),
                 Paired = anyPair ? Thin(paired) : null,
@@ -640,33 +671,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 else if (v == EntrapmentClass.PTarget) nP++;
             }
             return nT > 0 ? (double)nP / nT : 1.0;
-        }
-
-        // Standard target-decoy competition q from the score, monotonized from
-        // the bottom (mirrors the FDRBench score:1 q-value). Returns score->q.
-        private static Dictionary<double, double> CompetitionQByScore(List<Prec> precs)
-        {
-            var ranked = precs
-                .Where(p => p.Class != EntrapmentClass.PDecoy && p.Class != EntrapmentClass.PTarget)
-                .OrderByDescending(p => p.Score)
-                .ToList();
-            var fdr = new double[ranked.Count];
-            int nt = 0, nd = 0;
-            for (int i = 0; i < ranked.Count; i++)
-            {
-                if (ranked[i].IsDecoy) nd++; else nt++;
-                fdr[i] = nt > 0 ? (double)nd / nt : 1.0;
-            }
-            // Monotone q: running min from the tail up.
-            var q = new Dictionary<double, double>();
-            double running = 1.0;
-            for (int i = ranked.Count - 1; i >= 0; i--)
-            {
-                running = Math.Min(running, fdr[i]);
-                if (!ranked[i].IsDecoy)
-                    q[ranked[i].Score] = running;
-            }
-            return q;
         }
 
         // Strip modification annotations (e.g. "C[UniMod:4]" -> "C") so a

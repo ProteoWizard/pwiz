@@ -74,6 +74,11 @@ svg{display:block;max-width:100%;height:auto;font:11px ui-monospace,Menlo,Consol
 .tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;
   border-radius:7px;font-size:11.5px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap;
   font-family:ui-monospace,Menlo,Consolas,monospace;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.vbtns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.vbtns button{background:var(--panel);border:1px solid var(--line);color:var(--muted);font:inherit;
+  font-size:12.5px;font-weight:550;padding:6px 13px;border-radius:8px;cursor:pointer;box-shadow:var(--shadow)}
+.vbtns button:hover{color:var(--ink)}
+.vbtns button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:4px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
 .kpi .v{font-size:22px;font-weight:660;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
@@ -124,10 +129,13 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
 
 <section class="tab" data-tab="fdr">
   <div class="card" id="fdpCard">
-    <h2>FDR calibration &mdash; reported q vs true FDP</h2>
-    <p class="desc">Entrapment-measured true false-discovery proportion versus Osprey's reported q-value.
-      A perfectly calibrated q sits on the dashed <code>y = x</code> line. This is the FDRBench measurement,
-      computed in-process from the pairing manifest &mdash; no external FDRBench run required.</p>
+    <h2>FDR calibration &mdash; Osprey q vs true FDP</h2>
+    <p class="desc">Entrapment-measured true false-discovery proportion versus Osprey's own q-value, computed
+      in-process from the pairing manifest &mdash; no FDRBench install. Pick a q-axis: the
+      <b>experiment-wide</b> views reproduce the FDRBench <code>--fdrbench</code> plots exactly (FDRBench just
+      counts entrapment on the q Osprey emits); the <b>per-run</b> views are a picture FDRBench can't show.
+      Each view has a [0,&nbsp;2%] zoom (FDP axis auto-scaled) and a full-extent panel.</p>
+    <div class="vbtns" id="fdpViewSel"></div>
     <div class="kpis" id="fdpKpis"></div>
     <div class="legend" id="fdpLegend"></div>
     <div class="chartbox" id="fdpChart"></div>
@@ -301,49 +309,68 @@ function classHist(hostId,legId,normalize){
 classHist("scoreChart","scoreLegend",false);
 classHist("densChart","densLegend",true);
 
-// ---------- FDR calibration ----------
-if(D.hasEntrapment && D.fdp){
-  const f=D.fdp;
-  const zoom=0.05;
-  const W=680,Hh=340,box={l:56,t:14,w:W-74,h:Hh-58};
-  const host=document.getElementById("fdpChart");
-  const series=[{k:"lower",name:"lower-bound FDP",color:COL.ptarget,v:f.lowerBound},
-                {k:"combined",name:"combined FDP",color:COL.target,v:f.combined}];
-  if(f.paired) series.push({k:"paired",name:"paired FDP",color:COL.pdecoy,v:f.paired});
+// ---------- FDR calibration (multiple q-scope / pass views) ----------
+if(D.fdpViews && D.fdpViews.length){
+  const views=D.fdpViews; let vi=0;
+  const host=document.getElementById("fdpChart"), sel=document.getElementById("fdpViewSel");
+  const series=[{k:"lower",name:"lower-bound FDP",color:COL.ptarget,key:"lowerBound"},
+                {k:"combined",name:"combined FDP",color:COL.target,key:"combined"},
+                {k:"paired",name:"paired FDP",color:COL.pdecoy,key:"paired"}];
   const off={lower:false,combined:false,paired:false};
-  let useZoom=true;
-  function drawFdp(){
-    host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
-    const xmax=useZoom?zoom:Math.max(zoom,...f.qReported);
-    const sc=axes(s,box,[0,xmax],[0,xmax],{xlab:"Osprey reported q-value",ylab:"true FDP (entrapment)",
-      xfmt:v=>pct(v,0),yfmt:v=>pct(v,0)});
-    E(s,"line",{x1:sc.x(0),y1:sc.y(0),x2:sc.x(xmax),y2:sc.y(xmax),stroke:COL.muted,"stroke-dasharray":"4 4","stroke-width":1});
-    E(s,"line",{x1:sc.x(D.runFdr),y1:box.t,x2:sc.x(D.runFdr),y2:box.t+box.h,stroke:COL.muted,"stroke-dasharray":"2 3","stroke-width":1,opacity:.7});
-    series.forEach(se=>{if(off[se.k])return;let path="";let started=false;
-      for(let i=0;i<f.qReported.length;i++){const qq=f.qReported[i];if(qq>xmax*1.02)break;
-        const X=sc.x(qq),Y=sc.y(Math.min(se.v[i],xmax));path+=(started?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1)+" ";started=true;}
-      E(s,"path",{d:path,fill:"none",stroke:se.color,"stroke-width":1.9});});
+  const opIdx=(f,q)=>Math.max(0,Math.min(lowerB(f.q,q)-1,f.q.length-1));
+  function drawPanel(parent,f,xmax,title){
+    const W=560,Hh=330,box={l:62,t:28,w:W-80,h:Hh-66};
+    const s=svg(W,Hh);parent.appendChild(s);
+    // FDP axis auto-scaled to the in-window curve (non-proportional zoom, so a
+    // gendecoy-style FDP well above q stays on-pane).
+    let ymax=xmax;
+    series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;
+      for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax)break;if(a[i]>ymax)ymax=a[i];}});
+    ymax=Math.min(1.0,ymax*1.08);
+    E(s,"text",{x:box.l+box.w/2,y:16,"text-anchor":"middle",class:"axtitle"}).textContent=title+"  (FDP axis to "+pct(ymax,1)+")";
+    const sc=axes(s,box,[0,xmax],[0,ymax],{xlab:"Osprey q-value",ylab:"estimated true FDP",xfmt:v=>pct(v,v<0.05?1:0),yfmt:v=>pct(v,1)});
+    const dx=Math.min(xmax,ymax);
+    E(s,"line",{x1:sc.x(0),y1:sc.y(0),x2:sc.x(dx),y2:sc.y(dx),stroke:COL.muted,"stroke-dasharray":"5 4","stroke-width":1});
+    E(s,"line",{x1:sc.x(D.runFdr),y1:box.t,x2:sc.x(D.runFdr),y2:box.t+box.h,stroke:COL.muted,"stroke-dasharray":"2 3",opacity:.55});
+    series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;
+      let path="",started=false;const pts=[];
+      for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax*1.001)break;const X=sc.x(f.q[i]),Y=sc.y(Math.min(a[i],ymax));
+        path+=(started?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1)+" ";started=true;pts.push([X,Y]);}
+      E(s,"path",{d:path,fill:"none",stroke:se.color,"stroke-width":1.5});
+      const step=Math.max(1,Math.floor(pts.length/55));
+      for(let k=0;k<pts.length;k+=step)E(s,"circle",{cx:pts[k][0],cy:pts[k][1],r:2.2,fill:"none",stroke:se.color,"stroke-width":0.9});
+    });
     const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
-    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const px=(ev.clientX-rb.left)/rb.width*W;
-      const qv=(px-box.l)/box.w*xmax;let i=lowerB(f.qReported,qv);i=Math.min(i,f.qReported.length-1);
-      let html="<b>q = "+pct(f.qReported[i],2)+"</b> · "+fmt(f.nTargetAccepted[i],0)+" targets";
-      series.forEach(se=>{if(off[se.k])return;html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+pct(se.v[i],2);});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const q=((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*xmax;
+      let i=Math.min(lowerB(f.q,q),f.q.length-1);
+      let html="<b>q = "+pct(f.q[i],2)+"</b> · "+fmt(f.nTargetAccepted[i],0)+" targets";
+      series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+pct(a[i],2);});
       showTip(ev,html);});
     ov.addEventListener("mouseleave",hideTip);
   }
-  legend(document.getElementById("fdpLegend"),
-    series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;drawFdp();}})).concat(
-    [{name:"toggle zoom",color:COL.muted,line:true,toggle:()=>{useZoom=!useZoom;drawFdp();}}]));
-  drawFdp();
-  // operating point KPIs
-  const iOp=Math.min(lowerB(f.qReported,D.runFdr),f.qReported.length-1);
-  const kp=document.getElementById("fdpKpis");
-  kpi(kp,"reported q",pct(D.runFdr,0),"");
-  kpi(kp,"true combined FDP",pct(f.combined[iOp],2),cls(f.combined[iOp],D.runFdr));
-  kpi(kp,"true lower-bound FDP",pct(f.lowerBound[iOp],2),cls(f.lowerBound[iOp],D.runFdr));
-  kpi(kp,"targets accepted",fmt(f.nTargetAccepted[iOp],0),"");
-  document.getElementById("fdpNote").innerHTML="Entrapment DB ratio r = "+fmt(f.entrapmentRatio,2)+
-    ". Combined FDP above the reported q means the reported q is anti-conservative at that threshold.";
+  function render(){
+    const f=views[vi];host.innerHTML="";
+    const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+    const maxq=f.q[f.q.length-1]||1;
+    drawPanel(H(wrap,"div",{}),f,0.02,"zoom  q in [0, 2%]");
+    drawPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent");
+    const i1=opIdx(f,0.01);const kp=document.getElementById("fdpKpis");kp.innerHTML="";
+    kpi(kp,"discoveries @1% q",fmt(f.nTargetAccepted[i1],0),"");
+    kpi(kp,"combined FDP @1% q",pct(f.combined[i1],2),cls(f.combined[i1],0.01));
+    if(f.paired)kpi(kp,"paired FDP @1% q",pct(f.paired[i1],2),cls(f.paired[i1],0.01));
+    kpi(kp,"lower-bound @1% q",pct(f.lowerBound[i1],2),"");
+    kpi(kp,"max q",pct(maxq,1),"");
+    document.getElementById("fdpNote").innerHTML=
+      (f.matchesFdrBench
+        ? "<b>Reproduces the FDRBench plot</b> — x is Osprey's <b>experiment-wide precursor</b> q, the exact value <code>--fdrbench</code> hands to FDRBench (which only counts entrapment on it). No FDRBench install needed. "
+        : "<b>Per-run view</b> (new) — x is Osprey's <b>per-run precursor</b> q; FDRBench collapses runs so it can't show this. ")
+      + "The dashed line is y=x (perfect calibration); the curve above it means the reported q is anti-conservative there. Entrapment DB ratio r = "+fmt(f.entrapmentRatio,2)+".";
+  }
+  sel.innerHTML="";
+  views.forEach((v,k)=>{const b=H(sel,"button",{class:"vbtn"+(k===0?" on":"")},v.label+(v.matchesFdrBench?"  (= FDRBench)":""));
+    b.onclick=()=>{vi=k;sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");render();};});
+  legend(document.getElementById("fdpLegend"),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;render();}})));
+  render();
 }
 function cls(v,q){return v==null?"":(v<=q*1.15?"good":v<=q*1.6?"warn":"bad");}
 
