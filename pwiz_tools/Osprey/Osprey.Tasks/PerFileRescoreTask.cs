@@ -1263,7 +1263,10 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static void SortFileEntriesCanonical(List<FdrEntry> fileEntries)
         {
-            fileEntries.Sort((a, b) =>
+            // Array.Sort OK: the terminal key is ParquetIndex, which is unique per row
+            // (the row's position in the parquet), so the comparator never returns 0 and
+            // the unstable-sort tie path is unreachable.
+            fileEntries.Sort((a, b) => // Array.Sort OK: (see above) terminal key ParquetIndex is unique per row, comparator never ties
             {
                 int c = a.EntryId.CompareTo(b.EntryId);
                 if (c != 0) return c;

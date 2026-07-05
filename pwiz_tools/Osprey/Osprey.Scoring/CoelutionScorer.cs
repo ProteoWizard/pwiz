@@ -90,8 +90,10 @@ namespace pwiz.Osprey.Scoring
                 return entries;
             }
 
-            // Sort spectra by RT for XIC extraction
-            windowSpectra.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
+            // Sort spectra by RT for XIC extraction. Stable OrderBy (not List.Sort)
+            // so that if two spectra ever share an identical RT their scan order is
+            // preserved, matching Rust's stable slice::sort_by (tie hazard #4362).
+            windowSpectra = windowSpectra.OrderBy(s => s.RetentionTime).ToList();
 
             // Find candidate library entries whose precursor m/z falls in this window.
             // No minimum fragment count filter - matches Rust which scores all entries.

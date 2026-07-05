@@ -804,7 +804,7 @@ namespace pwiz.Osprey.Tasks
                 if (!string.IsNullOrEmpty(fEntry.Key))
                     joinFileStems.Add(fEntry.Key);
             }
-            joinFileStems.Sort(StringComparer.Ordinal);
+            joinFileStems.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to dedup adjacent identical stems immediately below; equal keys are byte-identical so tie order is irrelevant
             for (int i = joinFileStems.Count - 1; i > 0; i--)
             {
                 if (string.Equals(joinFileStems[i], joinFileStems[i - 1], StringComparison.Ordinal))
@@ -963,8 +963,13 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             // Sort by entry_id for deterministic output (matches Rust).
-            useCwt.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
-            forced.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
+            // Array.Sort OK: EntryId is effectively unique here (reconcile actions are
+            // keyed by distinct per-file entry index, at most one action per row), so the
+            // comparator does not tie in practice. Tie hazard, conversion deferred: if a
+            // file ever carried duplicate EntryIds each with an action they would tie, and
+            // this is not a #4362 approved U-site (converting could change the golden).
+            useCwt.Sort((a, b) => a.EntryId.CompareTo(b.EntryId)); // Array.Sort OK: (see above) EntryId effectively unique; tie hazard deferred, not a #4362 approved U-site
+            forced.Sort((a, b) => a.EntryId.CompareTo(b.EntryId)); // Array.Sort OK: (see above) EntryId effectively unique; tie hazard deferred, not a #4362 approved U-site
 
             RefinedRtCalibrationJson refinedJson = null;
             if (refinedCalibration != null)

@@ -226,7 +226,9 @@ namespace pwiz.Osprey.FDR.Reconciliation
 
             // 5. Sort for deterministic output: decoys after targets, then by
             //    modified_sequence (ordinal).
-            consensus.Sort((a, b) =>
+            // Array.Sort OK: one consensus entry per (IsDecoy, ModifiedSequence), so the
+            // (IsDecoy, ModifiedSequence) key is unique and the comparator never returns 0.
+            consensus.Sort((a, b) => // Array.Sort OK: (see above) (IsDecoy, ModifiedSequence) is unique, comparator never ties
             {
                 int cmp = a.IsDecoy.CompareTo(b.IsDecoy);
                 if (cmp != 0)

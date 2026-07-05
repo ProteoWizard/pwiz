@@ -58,29 +58,38 @@ namespace pwiz.Osprey.Test
         };
 
         /// <summary>
-        /// .NET <c>Array.Sort</c> uses introsort, which is UNSTABLE and reorders
-        /// equal-keyed elements unpredictably. Rust's <c>slice::sort_by</c> is
-        /// stable, so cross-impl scoring code that ties on a key (e.g. two
-        /// centroids at the same m/z, two peptides at the same RT, two CWT
-        /// candidates with the same coelution score) diverges on the
-        /// post-sort tie-ordering and silently produces different downstream
-        /// values. The substituted, stable pattern is:
+        /// Both .NET <c>Array.Sort</c> and <c>List&lt;T&gt;.Sort</c> use introsort,
+        /// which is UNSTABLE and reorders equal-keyed elements unpredictably. Rust's
+        /// <c>slice::sort_by</c> is stable, so cross-impl scoring code that ties on a
+        /// key (e.g. two centroids at the same m/z, two peptides at the same RT, two
+        /// CWT candidates with the same coelution score) diverges on the post-sort
+        /// tie-ordering and silently produces different downstream values. The
+        /// canonical incident was <c>ProteinFdr</c>'s <c>winners.Sort(...)</c> with a
+        /// HashMap-iteration-order tiebreak: invisible until upstream calibration drift
+        /// let ties fire, then silently parity-divergent. The substituted, stable
+        /// pattern is either <c>OrderBy(...).ThenBy(...).ToList()</c> (LINQ, stable) or
+        /// an explicit index permutation:
         /// <code>
         /// int[] order = Enumerable.Range(0, n).OrderBy(i => key[i]).ToArray();
         /// // then permute parallel arrays through `order`
         /// </code>
-        /// For sorting a single primitive array purely to find a median or
-        /// percentile (no parallel data, no downstream tie-sensitive use),
-        /// add an inline exemption comment on the same line:
-        /// <c>Array.Sort(values); // Array.Sort OK: median of single primitive array</c>.
+        /// For a call whose comparator can never return 0 (a unique/total-order key),
+        /// or whose output ordering is never inspected downstream, or a single primitive
+        /// array sorted purely for a median/percentile, add an inline exemption comment
+        /// on the same line, stating WHY it is tie-safe:
+        /// <c>values.Sort(); // Array.Sort OK: median of single primitive array</c>.
+        /// The tag is <c>// Array.Sort OK:</c> for BOTH <c>Array.Sort</c> and
+        /// <c>List&lt;T&gt;.Sort</c> exemptions, so one grep finds every one.
         /// </summary>
         [TestMethod]
         public void TestNoUnstableArraySort()
         {
             string sourceRoot = FindOspreySourceRoot();
             var violations = new List<string>();
-            // \bArray\.Sort\s*\( catches all overloads: (T[]), (T[],T[]), (T[],Comparison<T>), etc.
-            var pattern = new Regex(@"\bArray\.Sort\s*\(");
+            // \b\w+\.Sort\s*\( catches Array.Sort AND List<T>.Sort (both introsort,
+            // both unstable), across all overloads: (), (Comparison<T>), (IComparer<T>),
+            // (T[]), (T[],T[]), (T[],Comparison<T>), etc.
+            var pattern = new Regex(@"\b\w+\.Sort\s*\(");
             const string exemptionTag = "// Array.Sort OK:";
 
             foreach (var file in EnumerateProductionCsFiles(sourceRoot))
@@ -106,7 +115,8 @@ namespace pwiz.Osprey.Test
                     string rel = RelativePath(sourceRoot, file)
                         .Replace('\\', '/');
                     violations.Add(string.Format(
-                        "{0}:{1}: forbidden Array.Sort. Replace with stable Enumerable.Range(0, n).OrderBy(...) " +
+                        "{0}:{1}: forbidden Array.Sort/List<T>.Sort. Replace with stable OrderBy(...).ThenBy(...) " +
+                        "(or Enumerable.Range(0, n).OrderBy(...) for parallel arrays), " +
                         "or add an inline exemption comment '{2} <reason>' on the same line. Source: {3}",
                         rel, i + 1, exemptionTag, line.TrimEnd()));
                 }

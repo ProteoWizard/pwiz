@@ -358,7 +358,7 @@ namespace pwiz.Osprey.Scoring
             {
                 var sortedRts = new List<double>(spectra.Count);
                 foreach (var s in spectra) sortedRts.Add(s.RetentionTime);
-                sortedRts.Sort();
+                sortedRts.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to dedup and take the median spacing; tie order is irrelevant
                 // Dedup adjacent identicals
                 int writeIdx = 0;
                 for (int i = 0; i < sortedRts.Count; i++)
@@ -378,7 +378,7 @@ namespace pwiz.Osprey.Scoring
                     var intervals = new List<double>(sortedRts.Count - 1);
                     for (int i = 1; i < sortedRts.Count; i++)
                         intervals.Add(sortedRts[i] - sortedRts[i - 1]);
-                    intervals.Sort();
+                    intervals.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to take the median interval; tie order is irrelevant
                     rtNeighborhood = 5.0 * intervals[intervals.Count / 2];
                 }
             }
@@ -574,7 +574,9 @@ namespace pwiz.Osprey.Scoring
             // un-sorted order), so an unsorted dedup output cascades into
             // SVM working-set divergence and ~190-precursor / ~270-peptide
             // first-pass FDR drift on Stellar Single.
-            deduped.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
+            // Array.Sort OK: entries are deduplicated by pair so each EntryId is unique;
+            // the comparator never returns 0 and the unstable-sort tie path is unreachable.
+            deduped.Sort((a, b) => a.EntryId.CompareTo(b.EntryId)); // Array.Sort OK: (see above) EntryId is unique per deduped entry, so the comparator never ties
 
             int removed = entries.Count - deduped.Count;
             if (removed > 0)

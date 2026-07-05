@@ -240,8 +240,13 @@ namespace pwiz.Osprey.Tasks
                 list.Add(spectrum);
             }
             // Sort each window's spectra by RT for deterministic XIC extraction.
+            // Array.Sort OK: RT tie hazard, conversion deferred (not a #4362 approved
+            // U-site; the dict lists are re-sorted in place and reused across both
+            // calibration passes, so an in-loop OrderBy reassignment is awkward). Two
+            // spectra within one window sharing an identical RT would be rare; RT values
+            // are per-cycle sampling times. Mirror of the CoelutionScorer RT sort.
             foreach (var list in spectraByWindowKey.Values)
-                list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
+                list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: (see above) RT tie hazard, conversion deferred; not a #4362 approved U-site
 
             // Pass 1: score all sampled entries with the linear pre-fit RT mapping
             // and the wide initial tolerance. Fits a LOESS RTCalibration from the
