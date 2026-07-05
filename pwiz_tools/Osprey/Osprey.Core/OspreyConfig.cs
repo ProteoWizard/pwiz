@@ -165,6 +165,18 @@ namespace pwiz.Osprey.Core
         public bool Diagnostics { get; set; }
 
         /// <summary>
+        /// --model-diagnostics: emit a single self-contained interactive HTML
+        /// report of the trained scoring model + FDR calibration (feature
+        /// contributions, target/decoy/entrapment score densities, q-value to
+        /// FDP calibration, paired decoy-win fraction) when first-pass FDR
+        /// completes. A user-facing deliverable, distinct from the -d bisection
+        /// dumps; opt-in and off the default output path (writes only its own
+        /// HTML file), so it does not affect any other output. Runtime toggle
+        /// only -- intentionally NOT part of any identity hash.
+        /// </summary>
+        public bool ModelDiagnostics { get; set; }
+
+        /// <summary>
         /// --timestamp: prefix each output line with [yyyy/MM/dd HH:mm:ss]. Runtime
         /// output decoration only -- not part of any identity hash.
         /// </summary>

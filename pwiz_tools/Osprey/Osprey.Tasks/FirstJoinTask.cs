@@ -31,6 +31,7 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -218,12 +219,12 @@ namespace pwiz.Osprey.Tasks
             }
 
             var swFdr = Stopwatch.StartNew();
-            RunFdr(perFileEntries, config, ctx);
+            var featureContributions = RunFdr(perFileEntries, config, ctx);
             swFdr.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
 
-            LogFirstPassResultsAndDump(perFileEntries, config, ctx);
+            LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
 
             // First-pass protein FDR: runs on the full pre-compaction
             // peptide pool so target and decoy proteins compete on a
@@ -446,7 +447,8 @@ namespace pwiz.Osprey.Tasks
         private void LogFirstPassResultsAndDump(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            FeatureContributions contributions = null)
         {
             LogFirstPassResults(perFileEntries, config, ctx);
 
@@ -454,6 +456,14 @@ namespace pwiz.Osprey.Tasks
                 ctx.Diagnostics?.WriteStage5PercolatorDump(perFileEntries);
             if (ctx.Diagnostics?.PercolatorOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
+
+            // --model-diagnostics: emit the self-contained interactive HTML
+            // report from the just-scored, pre-compaction first-pass entries
+            // (decoys + entrapment still present) and the trained model. Opt-in
+            // and off the default output path, so it can't affect any other
+            // output; a failure is logged and swallowed inside Write.
+            if (config.ModelDiagnostics)
+                ModelDiagnosticsReport.Write(perFileEntries, contributions, config, ctx.LogInfo);
         }
 
         /// <summary>
@@ -1025,7 +1035,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Run FDR control using the configured method.
         /// </summary>
-        private void RunFdr(
+        private FeatureContributions RunFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx)
@@ -1033,19 +1043,18 @@ namespace pwiz.Osprey.Tasks
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
-                    RunPercolatorFdr(perFileEntries, config, ctx);
-                    break;
+                    return RunPercolatorFdr(perFileEntries, config, ctx);
 
                 case FdrMethod.Simple:
                     PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
-                    break;
+                    return null;
 
                 default:
                     ctx.LogWarning(string.Format(
                         "FDR method {0} not yet supported, falling back to simple",
                         config.FdrMethod));
                     PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
-                    break;
+                    return null;
             }
         }
 
@@ -1058,7 +1067,7 @@ namespace pwiz.Osprey.Tasks
         /// workers wrote reconciled .scores.parquet but no
         /// .2nd-pass.fdr_scores.bin sidecars; mirrors Rust pipeline.rs:4394-4468).
         /// </summary>
-        internal static void RunPercolatorFdr(
+        internal static FeatureContributions RunPercolatorFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx,
@@ -1067,7 +1076,8 @@ namespace pwiz.Osprey.Tasks
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
-                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
+                ctx.LogInfo, out var contributions,
+                BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left
@@ -1077,6 +1087,9 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
                 Environment.Exit(0);
             }
+            // The trained model's feature contributions, for the --model-diagnostics
+            // report. Null on the Simple/second-pass paths that don't produce one.
+            return contributions;
         }
 
         /// <summary>

@@ -61,9 +61,11 @@ namespace pwiz.Osprey.FDR
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             Action<string> logInfo,
+            out FeatureContributions contributions,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass")
         {
+            contributions = null;
             int numFeatures = featureInfos.Length;
 
             // Sort each file's entries by EntryId so the SVM working-set
@@ -140,6 +142,11 @@ namespace pwiz.Osprey.FDR
             {
                 results = PercolatorFdr.RunPercolator(percEntries, percConfig);
             }
+
+            // Surface the trained model's feature contributions to the caller
+            // (the --model-diagnostics report reads them). Computed already; this
+            // is a pure hand-off, no behavior change on any production path.
+            contributions = results.FeatureContributions;
 
             // A diagnostic-only (*Only) dump fired inside the engine; it left the
             // run as a pure no-op and signalled here. Stop without scoring the

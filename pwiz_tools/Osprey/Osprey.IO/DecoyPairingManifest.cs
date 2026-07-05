@@ -107,6 +107,19 @@ namespace pwiz.Osprey.IO
         public bool IsEmpty { get { return _seqToInfo.Count == 0; } }
 
         /// <summary>
+        /// Enumerate the manifest's per-sequence classification (sequence -&gt;
+        /// target / decoy / p_target / p_decoy). Read-only view used by the
+        /// model-diagnostics report to classify each precursor by its
+        /// modified sequence; pairing/library-rewrite consumers use
+        /// <see cref="ApplyToLibrary"/> instead.
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, PeptideKind>> Kinds()
+        {
+            foreach (var kv in _seqToInfo)
+                yield return new KeyValuePair<string, PeptideKind>(kv.Key, kv.Value.Kind);
+        }
+
+        /// <summary>
         /// Parse a FDRBench-style pairing manifest from disk. Expected
         /// header (tab-separated, in any column order, but the three
         /// required columns must all be present):

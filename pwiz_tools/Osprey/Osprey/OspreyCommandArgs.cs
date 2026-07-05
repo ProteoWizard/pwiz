@@ -278,6 +278,8 @@ namespace pwiz.Osprey
         // format/section value (ascii | unicode | sections | html | <Section>).
         public static readonly OspreyArgument ARG_DIAGNOSTICS = new OspreyArgument(@"diagnostics",
             (c, p) => c._config.Diagnostics = true) { ShortName = @"d" };
+        public static readonly OspreyArgument ARG_MODEL_DIAGNOSTICS = new OspreyArgument(@"model-diagnostics",
+            (c, p) => c._config.ModelDiagnostics = true);
         public static readonly OspreyArgument ARG_HELP = new OspreyArgument(@"help",
             (c, p) => true) { ShortName = @"h" };
         public static readonly OspreyArgument ARG_VERSION = new OspreyArgument(@"version",
@@ -285,7 +287,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_INFO =
             new ArgumentGroup<OspreyCommandArgs>(() => @"Diagnostics & Info", true,
-                ARG_DIAGNOSTICS, ARG_HELP, ARG_VERSION);
+                ARG_DIAGNOSTICS, ARG_MODEL_DIAGNOSTICS, ARG_HELP, ARG_VERSION);
 
         public static IEnumerable<IUsageBlock> UsageBlocks
         {
@@ -751,6 +753,7 @@ namespace pwiz.Osprey
                 { @"perf-stats", @"Emit machine-parseable [COUNT]/[TIMING]/[STAGE-WALL] lines for perf tools (off by default)" },
                 { @"verbose", @"Show implementer-grade detail (e.g. per-fold Percolator iterations) hidden by default" },
                 { @"diagnostics", @"Write cross-impl bisection dumps (OSPREY_DUMP_* bundle)" },
+                { @"model-diagnostics", @"Write a self-contained interactive HTML report of the trained scoring model and FDR calibration" },
                 { @"help", @"Show this help message ([ascii|unicode|sections|html|<Section>])" },
                 { @"version", @"Show version" },
             };
