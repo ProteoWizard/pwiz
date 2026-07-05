@@ -89,10 +89,13 @@ namespace pwiz.Osprey.Tasks
                 windows.Add(spectrum.IsolationWindow);
             }
 
-            // Sort by center m/z. Array.Sort OK: windows were deduplicated above on
-            // the rounded center key (Round(Center*10)), so every retained window has
-            // a distinct center differing by >= 0.05; the comparator never returns 0.
-            windows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: (see above) dedup on rounded center key makes every Center distinct, comparator never ties
+            // Sort by center m/z. Array.Sort OK: windows were deduplicated above on the
+            // rounded center key (Round(Center*10)); because that key is a function of
+            // Center, two windows sharing a Center share a key and one is dropped, so
+            // every retained window has a distinct Center and the comparator never
+            // returns 0. (This guarantees distinct Centers, not any minimum spacing --
+            // centers on either side of a rounding boundary can be arbitrarily close.)
+            windows.Sort((a, b) => a.Center.CompareTo(b.Center)); // Array.Sort OK: (see above) dedup on the rounded center key leaves distinct Centers, so the comparator never ties
             return windows;
         }
 

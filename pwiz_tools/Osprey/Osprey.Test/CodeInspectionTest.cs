@@ -82,7 +82,7 @@ namespace pwiz.Osprey.Test
         /// <c>List&lt;T&gt;.Sort</c> exemptions, so one grep finds every one.
         /// </summary>
         [TestMethod]
-        public void TestNoUnstableArraySort()
+        public void TestNoUnstableSort()
         {
             string sourceRoot = FindOspreySourceRoot();
             var violations = new List<string>();
@@ -124,13 +124,15 @@ namespace pwiz.Osprey.Test
             }
 
             Assert.AreEqual(0, violations.Count,
-                "Unstable Array.Sort uses found in production code. .NET Array.Sort is introsort " +
-                "(UNSTABLE) and reorders ties differently from Rust's stable slice::sort_by, " +
-                "silently breaking cross-impl parity in scoring code. Use " +
-                "`Enumerable.Range(0, n).OrderBy(i => key[i]).ToArray()` and permute parallel " +
-                "arrays through that order. If sorting a single primitive array for a median or " +
-                "percentile (no parallel data, no tie-sensitive downstream use), add an inline " +
-                "comment '// Array.Sort OK: <reason>' on the same line.\n" +
+                "Unstable Array.Sort / List<T>.Sort uses found in production code. Both .NET " +
+                "Array.Sort and List<T>.Sort are introsort (UNSTABLE) and reorder ties " +
+                "differently from Rust's stable slice::sort_by, silently breaking cross-impl " +
+                "parity in scoring code. For a single list, use `OrderBy(...).ThenBy(...).ToList()` " +
+                "(stable) or give the comparator a unique secondary key so it never returns 0; " +
+                "for parallel arrays, permute through " +
+                "`Enumerable.Range(0, n).OrderBy(i => key[i]).ToArray()`. If sorting a single " +
+                "primitive array for a median or percentile (no tie-sensitive downstream use), " +
+                "add an inline comment '// Array.Sort OK: <reason>' on the same line.\n" +
                 string.Join("\n", violations));
         }
 
