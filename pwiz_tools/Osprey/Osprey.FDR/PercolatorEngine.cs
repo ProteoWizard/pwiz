@@ -110,8 +110,9 @@ namespace pwiz.Osprey.FDR
                 "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
                 passLabel, nWithFeatures, nWithoutFeatures));
 
+            var percConfig = BuildFirstPassPercolatorConfig(config, featureInfos, diagnostics);
             PercolatorResults results = DispatchSvm(
-                percEntries, config, featureInfos, logInfo, diagnostics, passLabel, loadFileFeatures);
+                percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
 
             // A diagnostic-only (*Only) dump fired inside the engine; it left the
             // run as a pure no-op and signalled here. Stop without scoring the
@@ -222,26 +223,59 @@ namespace pwiz.Osprey.FDR
                 });
             }
 
-            var percEntries = PercolatorEntryBuilder.BuildFromProjection(
-                projections.PerFile, peptideById, numFeatures,
-                streamFeatures: loadFileFeatures != null,
-                out int nWithFeatures, out int nWithoutFeatures,
-                out int nInputTargets, out int nInputDecoys);
+            var percConfig = BuildFirstPassPercolatorConfig(config, featureInfos, diagnostics);
+            int n = projections.TotalRows;
 
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
-                passLabel, percEntries.Count, nInputTargets, nInputDecoys, numFeatures));
-            logInfo(string.Format(
-                "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
-                passLabel, nWithFeatures, nWithoutFeatures));
+            // Streaming vs direct decided up front from the projection row count with
+            // the SAME percConfig (hence the same MaxTrainSize * 2 threshold)
+            // DispatchSvm applies -- so the projection selects the identical SVM path
+            // the FdrEntry buffer would for this population (risk #5).
+            if (percConfig.MaxTrainSize > 0 && n > percConfig.MaxTrainSize * 2)
+            {
+                // Projection-native streaming (issue #4355 step (b) increment iii):
+                // score + compete run over the projection rows and the q-values are
+                // written straight back onto them, so NEITHER a full-population
+                // PercolatorEntry list NOR a PercolatorResult list is ever resident
+                // across the peak -- only the flat working arrays the parity-locked
+                // math needs. This is the collapse that takes the 82-file first-pass
+                // peak off the ~230 B/entry transient stack.
+                LogProjectionInputCounts(
+                    projections, numFeatures, loadFileFeatures, logInfo, passLabel);
+                logInfo(string.Format("Running {0} Percolator on {1} entries...",
+                    passLabel, n));
+                bool streamingAbort = RunFirstPassStreamingIntoProjection(
+                    projections.PerFile, peptideById, percConfig, logInfo, passLabel,
+                    loadFileFeatures);
+                if (streamingAbort)
+                    return true;
+            }
+            else
+            {
+                // Direct path (bounded population, e.g. Stellar): byte-identical to
+                // increment (ii). The transient PercolatorEntry + PercolatorResult
+                // stack is acceptable here because the population is small; the memory
+                // win targets the streaming peak above.
+                var percEntries = PercolatorEntryBuilder.BuildFromProjection(
+                    projections.PerFile, peptideById, numFeatures,
+                    streamFeatures: loadFileFeatures != null,
+                    out int nWithFeatures, out int nWithoutFeatures,
+                    out int nInputTargets, out int nInputDecoys);
 
-            PercolatorResults results = DispatchSvm(
-                percEntries, config, featureInfos, logInfo, diagnostics, passLabel, loadFileFeatures);
+                logInfo(string.Format(
+                    "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
+                    passLabel, percEntries.Count, nInputTargets, nInputDecoys, numFeatures));
+                logInfo(string.Format(
+                    "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
+                    passLabel, nWithFeatures, nWithoutFeatures));
 
-            if (results.DiagnosticAbort)
-                return true;
+                PercolatorResults results = DispatchSvm(
+                    percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
 
-            ApplyPercolatorResultsToProjection(projections.PerFile, results);
+                if (results.DiagnosticAbort)
+                    return true;
+
+                ApplyPercolatorResultsToProjection(projections.PerFile, results);
+            }
 
             // FDR result logging, reading the projection rows. Identical values to
             // the legacy loops (same EntryId/IsDecoy/q-values), so identical [COUNT]
@@ -299,23 +333,21 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Shared SVM dispatch for the legacy and projection first-pass paths: build
-        /// the <see cref="PercolatorConfig"/>, log the "Running..." header, and pick
-        /// the streaming vs direct path off the same <c>MaxTrainSize * 2</c>
-        /// threshold. Pure code motion out of <c>RunPercolatorFdr</c> so both
-        /// buffer shapes drive the identical, parity-locked SVM core -- the projection
-        /// path cannot silently diverge in dispatch, standardizer, or subsample.
+        /// Build the first-pass <see cref="PercolatorConfig"/> shared by the legacy
+        /// <see cref="FdrEntry"/> path and the projection path. Centralized (issue
+        /// #4355 step (b) increment iii) so the streaming-vs-direct threshold
+        /// (<c>MaxTrainSize * 2</c>) and every SVM knob are IDENTICAL whether the
+        /// dispatch runs off a <see cref="PercolatorEntry"/> list or is decided up
+        /// front from the projection row count -- the two buffer shapes cannot select
+        /// a different SVM path for the same population. <c>MaxTrainSize</c> is left at
+        /// the <see cref="PercolatorConfig"/> default (300000).
         /// </summary>
-        private static PercolatorResults DispatchSvm(
-            List<PercolatorEntry> percEntries,
+        private static PercolatorConfig BuildFirstPassPercolatorConfig(
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
-            Action<string> logInfo,
-            PercolatorDiagnosticsConfig diagnostics,
-            string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+            PercolatorDiagnosticsConfig diagnostics)
         {
-            var percConfig = new PercolatorConfig
+            return new PercolatorConfig
             {
                 TrainFdr = config.RunFdr,
                 TestFdr = config.RunFdr,
@@ -324,7 +356,24 @@ namespace pwiz.Osprey.FDR
                 FeatureInfos = featureInfos,
                 Diagnostics = diagnostics
             };
+        }
 
+        /// <summary>
+        /// Shared SVM dispatch for the legacy and projection first-pass paths: log the
+        /// "Running..." header and pick the streaming vs direct path off the same
+        /// <c>MaxTrainSize * 2</c> threshold. Pure code motion out of
+        /// <c>RunPercolatorFdr</c> so both buffer shapes drive the identical,
+        /// parity-locked SVM core -- the projection path cannot silently diverge in
+        /// dispatch, standardizer, or subsample. The <see cref="PercolatorConfig"/> is
+        /// built by <see cref="BuildFirstPassPercolatorConfig"/> and passed in.
+        /// </summary>
+        private static PercolatorResults DispatchSvm(
+            List<PercolatorEntry> percEntries,
+            PercolatorConfig percConfig,
+            Action<string> logInfo,
+            string passLabel,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+        {
             // Section header (full input population). The cross-validation fold count and the
             // actual training-subset size are reported by RunPercolator once the subsample is
             // built, just above the per-iteration percent lines.
@@ -352,7 +401,7 @@ namespace pwiz.Osprey.FDR
             // front (bounded by this branch's size) so RunPercolator sees real
             // features. Without a loader the entries already carry them.
             if (loadFileFeatures != null)
-                PopulateFeaturesFromFiles(percEntries, loadFileFeatures, featureInfos.Length);
+                PopulateFeaturesFromFiles(percEntries, loadFileFeatures, percConfig.FeatureInfos.Length);
             return PercolatorFdr.RunPercolator(percEntries, percConfig);
         }
 
@@ -508,8 +557,13 @@ namespace pwiz.Osprey.FDR
         /// and <see cref="PercolatorFdr.SubsampleByPeptideGroup"/> -- the
         /// same helpers the direct path calls internally, so both paths
         /// select identical 300K subsets when given identical input.
+        ///
+        /// Internal (not private) so <c>FdrTest</c> can drive it head-to-head against
+        /// <see cref="RunFirstPassStreamingIntoProjection"/> on a fixture forced past
+        /// the streaming threshold, proving the two buffer shapes yield identical
+        /// Score + q-values (issue #4355 step (b) increment iii, gate 1).
         /// </summary>
-        private static PercolatorResults RunPercolatorStreaming(
+        internal static PercolatorResults RunPercolatorStreaming(
             List<PercolatorEntry> percEntries,
             PercolatorConfig percConfig,
             Action<string> logInfo,
@@ -621,6 +675,237 @@ namespace pwiz.Osprey.FDR
             //    (issue #4355 Phase 4), keeping only the scalar scores resident.
             return PercolatorFdr.ScorePopulationAndComputeFdr(
                 percEntries, trainResults, percConfig, loadFileFeatures);
+        }
+
+        /// <summary>
+        /// Emit the two "[COUNT] ... Percolator input / features computed" lines for
+        /// the streaming projection path directly from the projection rows (issue
+        /// #4355 step (b) increment iii), reproducing the counts
+        /// <see cref="PercolatorEntryBuilder.BuildFromProjection"/> returns without
+        /// building the full-population <see cref="PercolatorEntry"/> list -- so the
+        /// log is byte-identical to the direct path's while the streaming path never
+        /// materializes that list. <c>nWithFeatures</c> counts rows with a real
+        /// parquet row (<c>ParquetIndex != uint.MaxValue</c>) on the streaming build,
+        /// matching the builder's fallback bookkeeping.
+        /// </summary>
+        private static void LogProjectionInputCounts(
+            FdrProjectionSet projections, int numFeatures,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            Action<string> logInfo, string passLabel)
+        {
+            bool streamFeatures = loadFileFeatures != null;
+            int n = 0, nInputTargets = 0, nInputDecoys = 0;
+            int nWithFeatures = 0, nWithoutFeatures = 0;
+            foreach (var kvp in projections.PerFile)
+            {
+                foreach (var proj in kvp.Value)
+                {
+                    n++;
+                    if (proj.IsDecoy)
+                        nInputDecoys++;
+                    else nInputTargets++;
+
+                    if (streamFeatures)
+                    {
+                        if (proj.ParquetIndex != uint.MaxValue)
+                            nWithFeatures++;
+                        else
+                            nWithoutFeatures++;
+                    }
+                    else nWithoutFeatures++;
+                }
+            }
+
+            logInfo(string.Format(
+                "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
+                passLabel, n, nInputTargets, nInputDecoys, numFeatures));
+            logInfo(string.Format(
+                "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
+                passLabel, nWithFeatures, nWithoutFeatures));
+        }
+
+        /// <summary>
+        /// Projection-native streaming first-pass Percolator (issue #4355 step (b)
+        /// increment iii): the memory-collapsing counterpart of
+        /// <see cref="RunPercolatorStreaming"/>. It runs the SAME four-phase streaming
+        /// flow (best-per-precursor dedup -> peptide-grouped subsample -> train fold
+        /// models + standardizer on the subset -> apply the averaged model to the full
+        /// population and compute q-values) but WITHOUT ever materializing a
+        /// full-population <see cref="PercolatorEntry"/> list or a
+        /// <see cref="PercolatorResult"/> list:
+        /// <list type="bullet">
+        /// <item>the training-subset selection reads flat <c>labels</c> /
+        /// <c>entryIds</c> / <c>peptides</c> / <c>bestScores</c> (= CoelutionSum)
+        /// arrays built once from the projection -- <see cref="PercolatorEntry"/>
+        /// objects are built ONLY for the &lt;= MaxTrainSize subset;</item>
+        /// <item>the score + competition pass runs over the projection rows and writes
+        /// the Score + five q-values straight back onto them via
+        /// <see cref="PercolatorFdr.ScoreProjectionAndComputeFdrInPlace"/>, reusing the
+        /// same flat identity arrays.</item>
+        /// </list>
+        /// Every parity-locked primitive (<see cref="PercolatorFdr.BuildTrainingSubset"/>,
+        /// <see cref="PercolatorFdr.RunPercolator"/> on the subset, and the shared
+        /// competition/q-value math) is called UNCHANGED, so the trained model and the
+        /// resulting q-values are byte-identical to the <see cref="PercolatorEntry"/>
+        /// streaming path on the same input order. Returns <c>true</c> on a
+        /// diagnostic-only train abort (same contract as the <c>RunPercolatorFdr</c>
+        /// projection overload).
+        /// </summary>
+        internal static bool RunFirstPassStreamingIntoProjection(
+            List<KeyValuePair<string, List<FdrProjection>>> perFile,
+            string[] peptideById,
+            PercolatorConfig percConfig,
+            Action<string> logInfo,
+            string passLabel,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+        {
+            if (loadFileFeatures == null)
+                throw new InvalidOperationException(
+                    @"RunFirstPassStreamingIntoProjection requires a per-file feature " +
+                    @"loader: the projection carries no resident feature vectors.");
+
+            // Per-file start offsets in nested (file, row) order == the order
+            // BuildFromProjection emits, so a global index maps back to one projection
+            // row (used to build the subset entries below).
+            int nFiles = perFile.Count;
+            var fileStart = new int[nFiles + 1];
+            int n = 0;
+            for (int f = 0; f < nFiles; f++)
+            {
+                fileStart[f] = n;
+                n += perFile[f].Value.Count;
+            }
+            fileStart[nFiles] = n;
+
+            int maxTrain = percConfig.MaxTrainSize;
+
+            // Flat identity + best-score arrays from the projection, built ONCE:
+            // labels/entryIds/peptides/fileNames drive BOTH the subset selection here
+            // and the score/compete pass below. bestScores (= CoelutionSum) ranks
+            // best-per-precursor before any Score exists (risk #2), byte-identical to
+            // Features[0] on the first pass.
+            var labels = new bool[n];
+            var entryIds = new uint[n];
+            var peptides = new string[n];
+            var fileNames = new string[n];
+            var bestScores = new double[n];
+            int gi = 0;
+            for (int f = 0; f < nFiles; f++)
+            {
+                string fileName = perFile[f].Key;
+                var rows = perFile[f].Value;
+                for (int r = 0; r < rows.Count; r++)
+                {
+                    var proj = rows[r];
+                    labels[gi] = proj.IsDecoy;
+                    entryIds[gi] = proj.EntryId;
+                    peptides[gi] = peptideById[proj.PeptideId];
+                    fileNames[gi] = fileName;
+                    bestScores[gi] = proj.CoelutionSum;
+                    gi++;
+                }
+            }
+
+            // 1. best-per-precursor dedup + 2. peptide-grouped subsample. bestScores is
+            //    supplied, so SelectBestPerPrecursor never dereferences the entries arg
+            //    -- passing an empty list is exactly what lets this path avoid the
+            //    full-N PercolatorEntry buffer the FdrEntry streaming path allocates.
+            int[] bestIdx;
+            int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
+                labels, entryIds, peptides, Array.Empty<PercolatorEntry>(), maxTrain,
+                percConfig.Seed, out bestIdx, bestScores);
+
+            int dedupTargets = 0, dedupDecoys = 0;
+            for (int i = 0; i < bestIdx.Length; i++)
+            {
+                if (labels[bestIdx[i]]) dedupDecoys++;
+                else dedupTargets++;
+            }
+            logInfo(string.Format(
+                "[COUNT] {0} Percolator streaming best-per-precursor: {1} entries ({2} targets, {3} decoys) from {4} total",
+                passLabel, bestIdx.Length, dedupTargets, dedupDecoys, n));
+
+            int subTargets = 0, subDecoys = 0;
+            for (int i = 0; i < trainSubsetGlobalIdx.Length; i++)
+            {
+                if (labels[trainSubsetGlobalIdx[i]]) subDecoys++;
+                else subTargets++;
+            }
+            logInfo(string.Format(
+                "[COUNT] {0} Percolator streaming subsample: {1} entries ({2} targets, {3} decoys)",
+                passLabel, trainSubsetGlobalIdx.Length, subTargets, subDecoys));
+
+            // 3. Build the subset PercolatorEntry list from the projection rows at the
+            //    (ascending) subset indices, then load ONLY the subset's feature
+            //    vectors one file at a time -- bounded by MaxTrainSize, so the full
+            //    population's vectors are never resident. Mirrors RunPercolatorStreaming.
+            var subsetEntries = new List<PercolatorEntry>(trainSubsetGlobalIdx.Length);
+            int fcur = 0;
+            foreach (int si in trainSubsetGlobalIdx)
+            {
+                while (fcur + 1 < fileStart.Length && si >= fileStart[fcur + 1])
+                    fcur++;
+                var proj = perFile[fcur].Value[si - fileStart[fcur]];
+                subsetEntries.Add(new PercolatorEntry
+                {
+                    FileName = perFile[fcur].Key,
+                    Peptide = peptideById[proj.PeptideId],
+                    Charge = proj.Charge,
+                    IsDecoy = proj.IsDecoy,
+                    EntryId = proj.EntryId,
+                    ParquetIndex = proj.ParquetIndex,
+                    CoelutionSum = proj.CoelutionSum,
+                    Features = null
+                });
+            }
+
+            var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
+            foreach (var kvp in subsetByFile)
+            {
+                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                foreach (int k in kvp.Value)
+                {
+                    var entry = subsetEntries[k];
+                    entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
+                        rows, entry.ParquetIndex, entry.CoelutionSum,
+                        percConfig.FeatureInfos.Length).Clone();
+                }
+            }
+
+            var trainConfig = new PercolatorConfig
+            {
+                TrainFdr = percConfig.TrainFdr,
+                TestFdr = percConfig.TestFdr,
+                MaxIterations = percConfig.MaxIterations,
+                NFolds = percConfig.NFolds,
+                Seed = percConfig.Seed,
+                CValues = percConfig.CValues,
+                MaxTrainSize = percConfig.MaxTrainSize,
+                FeatureInfos = percConfig.FeatureInfos,
+                TrainOnly = true,
+                Diagnostics = percConfig.Diagnostics
+            };
+            PercolatorResults trainResults = PercolatorFdr.RunPercolator(subsetEntries, trainConfig);
+
+            if (trainResults.DiagnosticAbort)
+                return true;
+
+            // Release the subset-only working sets before the score pass so only the
+            // flat per-observation arrays + the projection remain resident across the
+            // peak (bestIdx can be O(N/2) on a 1:1 target/decoy population).
+            bestScores = null;
+            bestIdx = null;
+            trainSubsetGlobalIdx = null;
+            subsetEntries = null;
+            subsetByFile = null;
+
+            // 4. Score ALL rows + run the competition/q-values, writing the results
+            //    straight onto the projection rows (no PercolatorResult list). Reuses
+            //    the flat identity arrays already built above.
+            PercolatorFdr.ScoreProjectionAndComputeFdrInPlace(
+                perFile, labels, entryIds, peptides, fileNames, trainResults, percConfig,
+                loadFileFeatures);
+            return false;
         }
 
         /// <summary>

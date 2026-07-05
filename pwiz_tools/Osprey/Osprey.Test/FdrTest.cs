@@ -706,6 +706,91 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Issue #4355 step (b) increment iii (the transient-SVM-stack collapse, gate
+        /// 1): the projection-native STREAMING score+compete path
+        /// (<see cref="PercolatorEngine.RunFirstPassStreamingIntoProjection"/>) must
+        /// produce byte-identical Score + five q-values to the legacy
+        /// <see cref="PercolatorEntry"/> streaming path
+        /// (<see cref="PercolatorEngine.RunPercolatorStreaming"/> + the index-zip
+        /// write-back) on the same fixture, same per-file feature loader, and same
+        /// input order -- proving the collapse changed only WHERE THE DATA LIVES, not
+        /// the parity-locked SVM training, subsample, standardizer, PEP ordering, or
+        /// q-value math. Production only reaches the streaming path above
+        /// MaxTrainSize * 2 (Astral scale); this test forces it with a small
+        /// MaxTrainSize so the highest-risk path is covered by a fast unit test rather
+        /// than only the Astral TeamCity leg. The Stellar-scale DIRECT projection path
+        /// is covered by <see cref="TestProjectionRunPercolatorFdrMatchesFdrEntry"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestProjectionStreamingMatchesFdrEntryStreaming()
+        {
+            const int nFeat = 3;
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_a", "Feature A", false),
+                new OspreyFeatureInfo("feat_b", "Feature B", false),
+                new OspreyFeatureInfo("feat_c", "Feature C", false)
+            };
+
+            // Identical fixtures for the two paths (deterministic builder); each is
+            // fed to its path in the SAME fixture order (no sort), so a positional
+            // compare stands in for a keyed one and isolates the score/compete
+            // equivalence from the (separately tested) canonical sort.
+            var fdrStubs = BuildProjectionEquivFixture(nFeat, out var featuresA);
+            var fdrStubs2 = BuildProjectionEquivFixture(nFeat, out var featuresB);
+            var projSet = FdrProjectionSet.BuildFromEntries(fdrStubs2);
+
+            // MaxTrainSize = 60 forces the streaming dispatch (160 entries > 120) AND
+            // an actual peptide-grouped subsample (160 dedup > 60), exercising the
+            // full streaming flow (dedup -> subsample -> train-on-subset -> score-all).
+            var percConfig = new PercolatorConfig
+            {
+                MaxIterations = 10,
+                NFolds = 3,
+                Seed = 42,
+                TrainFdr = 0.01,
+                TestFdr = 0.01,
+                MaxTrainSize = 60,
+                FeatureInfos = featureInfos
+            };
+
+            // Legacy PercolatorEntry streaming path (the byte-identity oracle).
+            var percEntries = PercolatorEntryBuilder.Build(
+                fdrStubs, nFeat, streamFeatures: true,
+                out int nWith, out int nWithout, out int nTargets, out int nDecoys);
+            Assert.AreEqual(160, percEntries.Count);
+            Assert.AreEqual(80, nTargets);
+            Assert.AreEqual(80, nDecoys);
+            PercolatorResults streamingResults = PercolatorEngine.RunPercolatorStreaming(
+                percEntries, percConfig, s => { }, "First-pass", f => featuresA[f]);
+            PercolatorEngine.ApplyPercolatorResults(fdrStubs, streamingResults);
+
+            // Projection-native streaming path (the change under test).
+            bool abort = PercolatorEngine.RunFirstPassStreamingIntoProjection(
+                projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
+                f => featuresB[f]);
+            Assert.IsFalse(abort);
+
+            Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
+            for (int f = 0; f < fdrStubs.Count; f++)
+            {
+                var stubList = fdrStubs[f].Value;
+                var projList = projSet.PerFile[f].Value;
+                Assert.AreEqual(stubList.Count, projList.Count);
+                for (int i = 0; i < stubList.Count; i++)
+                {
+                    Assert.AreEqual(stubList[i].EntryId, projList[i].EntryId);
+                    Assert.AreEqual(stubList[i].Score, projList[i].Score, 0.0);
+                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, projList[i].RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].RunPeptideQvalue, projList[i].RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, projList[i].ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, projList[i].ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].Pep, projList[i].Pep, 0.0);
+                }
+            }
+        }
+
+        /// <summary>
         /// Paired target/decoy fixture for the projection equivalence test: 2 files x
         /// 40 pairs, well-separated target (high) vs decoy (low) features so the SVM
         /// trains cleanly. Each row carries ParquetIndex = its within-file row index,

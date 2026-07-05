@@ -846,6 +846,77 @@ namespace pwiz.Osprey.FDR
             var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
             EmitFeatureContributions(contributions);
 
+            // Competition + PEP + per-run / experiment q-values over the flat score
+            // arrays. Extracted verbatim into ComputeStreamingCompetitionQvalues
+            // (issue #4355 step (b) increment iii) so the projection-native score
+            // pass (ScoreProjectionAndComputeFdrInPlace) drives the byte-identical
+            // math from a single source of truth instead of a divergent copy -- the
+            // parity-locked ordering (base_id-sorted PEP, per-file q-value grouping)
+            // therefore cannot drift between the two buffer shapes.
+            double[] peps, runPrecursorQvalues, runPeptideQvalues,
+                     expPrecursorQvalues, expPeptideQvalues;
+            ComputeStreamingCompetitionQvalues(
+                finalScores, labels, entryIds, peptides, fileNames,
+                out peps, out runPrecursorQvalues, out runPeptideQvalues,
+                out expPrecursorQvalues, out expPeptideQvalues);
+
+            var results = new List<PercolatorResult>(n);
+            for (int i = 0; i < n; i++)
+            {
+                results.Add(new PercolatorResult
+                {
+                    Score = finalScores[i],
+                    RunPrecursorQvalue = runPrecursorQvalues[i],
+                    RunPeptideQvalue = runPeptideQvalues[i],
+                    ExperimentPrecursorQvalue = expPrecursorQvalues[i],
+                    ExperimentPeptideQvalue = expPeptideQvalues[i],
+                    Pep = peps[i]
+                });
+            }
+
+            return new PercolatorResults
+            {
+                Entries = results,
+                FoldWeights = trainResults.FoldWeights,
+                FoldBiases = trainResults.FoldBiases,
+                Standardizer = standardizer,
+                IterationsPerFold = trainResults.IterationsPerFold,
+                FeatureContributions = contributions
+            };
+        }
+
+        /// <summary>
+        /// The streaming competition + PEP + per-run / experiment q-value math, over
+        /// the flat per-observation arrays that both the <see cref="PercolatorEntry"/>
+        /// score pass (<see cref="ScorePopulationAndComputeFdr"/>) and the
+        /// projection-native score pass
+        /// (<see cref="ScoreProjectionAndComputeFdrInPlace"/>) produce. Extracted as a
+        /// single source of truth (issue #4355 step (b) increment iii) so the two
+        /// buffer shapes cannot drift on the byte-parity-locked ordering. UNCHANGED
+        /// math relative to the pre-extraction inline block:
+        /// <list type="bullet">
+        /// <item>PEP is fed to <see cref="PepEstimator.FitDefault"/> in
+        /// <c>base_id</c>-ascending order (risk #6): the KDE sum is non-associative,
+        /// so the winner arrays are reordered by <c>entryIds &amp; BASE_ID_MASK</c>
+        /// before the fit; the score-sorted arrays stay intact for the q-value
+        /// calls.</item>
+        /// <item>Per-run q-values group by <paramref name="fileNames"/>; experiment
+        /// q-values take the single-file shortcut (clone the per-run arrays) exactly
+        /// as the direct path does.</item>
+        /// </list>
+        /// The five outputs are returned as parallel arrays (index-aligned to the
+        /// inputs); the caller either packs them into <see cref="PercolatorResult"/>s
+        /// or writes them straight onto the projection rows.
+        /// </summary>
+        private static void ComputeStreamingCompetitionQvalues(
+            double[] finalScores, bool[] labels, uint[] entryIds,
+            string[] peptides, string[] fileNames,
+            out double[] peps, out double[] runPrecursorQvalues,
+            out double[] runPeptideQvalues, out double[] expPrecursorQvalues,
+            out double[] expPeptideQvalues)
+        {
+            int n = finalScores.Length;
+
             // PEP via global target-decoy competition. CompeteAll returns
             // winners sorted by score-descending (matches the direct-path
             // Percolator flow and is what ComputeConservativeQvalues needs
@@ -883,24 +954,22 @@ namespace pwiz.Osprey.FDR
             }
 
             var pepEstimator = PepEstimator.FitDefault(pepScores, pepIsDecoy);
-            var peps = new double[n];
+            peps = new double[n];
             for (int i = 0; i < n; i++)
                 peps[i] = 1.0;
             foreach (int idx in winnerIndices)
                 peps[idx] = pepEstimator.PosteriorError(finalScores[idx]);
 
             // Per-run precursor + peptide q-values (each file independently).
-            var runPrecursorQvalues = ComputePerRunPrecursorQvalues(
+            runPrecursorQvalues = ComputePerRunPrecursorQvalues(
                 finalScores, labels, entryIds, fileNames);
-            var runPeptideQvalues = ComputePerRunPeptideQvalues(
+            runPeptideQvalues = ComputePerRunPeptideQvalues(
                 finalScores, labels, entryIds, fileNames, peptides);
 
             // Experiment-level q-values: single-file shortcut matches
             // direct-path semantics.
             var uniqueFiles = new HashSet<string>(fileNames);
             bool isSingleFile = uniqueFiles.Count <= 1;
-            double[] expPrecursorQvalues;
-            double[] expPeptideQvalues;
             if (isSingleFile)
             {
                 expPrecursorQvalues = (double[])runPrecursorQvalues.Clone();
@@ -913,30 +982,125 @@ namespace pwiz.Osprey.FDR
                 expPeptideQvalues = ComputeExperimentPeptideQvalues(
                     finalScores, labels, entryIds, peptides);
             }
+        }
 
-            var results = new List<PercolatorResult>(n);
-            for (int i = 0; i < n; i++)
+        /// <summary>
+        /// Projection-native counterpart of <see cref="ScorePopulationAndComputeFdr"/>
+        /// (issue #4355 step (b) increment iii): apply the trained averaged model to
+        /// every projection row by streaming its file's parquet features, then run the
+        /// competition + q-value math and write the Score + five q-values STRAIGHT
+        /// BACK onto the <see cref="FdrProjection"/> rows -- collapsing the transient
+        /// SVM stack that <see cref="ScorePopulationAndComputeFdr"/> holds resident
+        /// (the full-population <see cref="PercolatorEntry"/> list AND the
+        /// <see cref="PercolatorResult"/> list) into the flat working arrays the
+        /// parity-locked math already needs. Only WHERE THE DATA LIVES changes: the
+        /// per-entry scoring loop (bias first, then the averaged-weight dot product in
+        /// feature order) and the q-value math
+        /// (<see cref="ComputeStreamingCompetitionQvalues"/>) are byte-for-byte those
+        /// of the <see cref="PercolatorEntry"/> path.
+        ///
+        /// The caller passes the flat <paramref name="labels"/> / <paramref name="entryIds"/>
+        /// / <paramref name="peptides"/> / <paramref name="fileNames"/> arrays it
+        /// already built (in nested file/row order) for training-subset selection, so
+        /// they are not rebuilt here; this method walks <paramref name="perFile"/> in
+        /// that SAME nested order to compute <c>finalScores</c> and to zip the results
+        /// back, keeping every index aligned. The feature-contribution accumulation
+        /// runs in per-file order identical to the <see cref="PercolatorEntry"/>
+        /// streaming loop (<c>GroupIndicesByFileName</c> preserves first-seen file
+        /// order == <paramref name="perFile"/> order), so the reported contributions
+        /// are bit-identical too.
+        /// </summary>
+        internal static void ScoreProjectionAndComputeFdrInPlace(
+            List<KeyValuePair<string, List<FdrProjection>>> perFile,
+            bool[] labels, uint[] entryIds, string[] peptides, string[] fileNames,
+            PercolatorResults trainResults, PercolatorConfig config,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+        {
+            if (loadFileFeatures == null)
+                throw new InvalidOperationException(
+                    @"ScoreProjectionAndComputeFdrInPlace requires a per-file feature loader: " +
+                    @"the projection carries no resident feature vectors.");
+
+            int n = labels.Length;
+            int nModels = trainResults.FoldWeights.Count;
+            if (nModels == 0)
+                throw new InvalidOperationException(
+                    @"ScoreProjectionAndComputeFdrInPlace: trainResults contains no fold models");
+            int nFeatures = trainResults.FoldWeights[0].Length;
+
+            // Average fold weights + biases (identical to ScorePopulationAndComputeFdr).
+            var avgWeights = new double[nFeatures];
+            double avgBias = 0.0;
+            for (int f = 0; f < nModels; f++)
             {
-                results.Add(new PercolatorResult
+                double[] foldW = trainResults.FoldWeights[f];
+                for (int j = 0; j < nFeatures; j++)
+                    avgWeights[j] += foldW[j];
+                avgBias += trainResults.FoldBiases[f];
+            }
+            double nModelsD = nModels;
+            for (int j = 0; j < nFeatures; j++)
+                avgWeights[j] /= nModelsD;
+            avgBias /= nModelsD;
+
+            var standardizer = trainResults.Standardizer;
+            var finalScores = new double[n];
+            var featureBuf = new double[nFeatures];
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
+
+            // Streaming score pass over the projection, one file at a time. The
+            // per-entry math and the per-file iteration order match the
+            // PercolatorEntry streaming loop exactly, so finalScores + the
+            // contribution sums are byte-for-byte identical.
+            int gi = 0;
+            foreach (var kvp in perFile)
+            {
+                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                var projRows = kvp.Value;
+                for (int r = 0; r < projRows.Count; r++)
                 {
-                    Score = finalScores[i],
-                    RunPrecursorQvalue = runPrecursorQvalues[i],
-                    RunPeptideQvalue = runPeptideQvalues[i],
-                    ExperimentPrecursorQvalue = expPrecursorQvalues[i],
-                    ExperimentPeptideQvalue = expPeptideQvalues[i],
-                    Pep = peps[i]
-                });
+                    var proj = projRows[r];
+                    double[] featRow = ResolveFeatureRow(
+                        rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
+                    Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+                    standardizer.TransformSlice(featureBuf);
+                    double score = avgBias;
+                    for (int j = 0; j < nFeatures; j++)
+                        score += avgWeights[j] * featureBuf[j];
+                    finalScores[gi] = score;
+
+                    contribAcc.Add(featureBuf, proj.IsDecoy);
+                    gi++;
+                }
             }
 
-            return new PercolatorResults
+            var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
+            EmitFeatureContributions(contributions);
+
+            double[] peps, runPrecursorQvalues, runPeptideQvalues,
+                     expPrecursorQvalues, expPeptideQvalues;
+            ComputeStreamingCompetitionQvalues(
+                finalScores, labels, entryIds, peptides, fileNames,
+                out peps, out runPrecursorQvalues, out runPeptideQvalues,
+                out expPrecursorQvalues, out expPeptideQvalues);
+
+            // Zip the results straight onto the projection rows (no PercolatorResult
+            // list). FdrProjection is a readonly struct, so each row is replaced via
+            // WithPercolatorResults; RunProteinQvalue is left for the later first-pass
+            // protein FDR. Same nested (file, row) walk as the scoring loop, so index
+            // wgi stays aligned to finalScores / the q-value arrays.
+            int wgi = 0;
+            foreach (var kvp in perFile)
             {
-                Entries = results,
-                FoldWeights = trainResults.FoldWeights,
-                FoldBiases = trainResults.FoldBiases,
-                Standardizer = standardizer,
-                IterationsPerFold = trainResults.IterationsPerFold,
-                FeatureContributions = contributions
-            };
+                var projRows = kvp.Value;
+                for (int r = 0; r < projRows.Count; r++)
+                {
+                    projRows[r] = projRows[r].WithPercolatorResults(
+                        finalScores[wgi], runPrecursorQvalues[wgi], runPeptideQvalues[wgi],
+                        expPrecursorQvalues[wgi], expPeptideQvalues[wgi], peps[wgi]);
+                    wgi++;
+                }
+            }
         }
 
         /// <summary>
