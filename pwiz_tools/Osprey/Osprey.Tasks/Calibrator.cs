@@ -121,12 +121,21 @@ namespace pwiz.Osprey.Tasks
             ScoringContext context,
             out MzCalibrationResult ms1Calibration,
             out MzCalibrationResult ms2Calibration,
-            out int numSampledPrecursors)
+            out int numSampledPrecursors,
+            out double initialRtTolerance)
         {
             var config = context.Config;
             // Default to 0 so early returns / exception paths leave the
             // metadata caller in a known state. Overwritten on success.
             numSampledPrecursors = 0;
+            // The wide pre-calibration RT tolerance (the "before" number in the
+            // console summary's before-vs-after RT window). Defaults to 0 to keep the
+            // out-parameter assigned on any early exit before the initial tolerance is
+            // computed below; every return path that runs past that point carries the
+            // computed value (the no-target return happens after it is set, and the
+            // caller ignores it then since RunCalibration returns null and emits no
+            // summary).
+            initialRtTolerance = 0.0;
             _ctx.LogInfo("Running RT calibration...");
 
             // Calculate library and mzML RT ranges
@@ -176,6 +185,7 @@ namespace pwiz.Osprey.Tasks
 
             double toleranceFraction = rangesSimilar ? 0.2 : 0.5;
             double initialTolerance = mzmlRtRange * toleranceFraction;
+            initialRtTolerance = initialTolerance;
 
             _ctx.LogVerbose(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
 
