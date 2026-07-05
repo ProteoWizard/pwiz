@@ -54,10 +54,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             try
             {
-                var classBySeq = LoadClassMap(config, logInfo);
+                Dictionary<string, EntrapmentClass> classBySeq;
+                Dictionary<string, uint> pairBySeq;
+                LoadManifestMaps(config, logInfo, out classBySeq, out pairBySeq);
 
                 var data = ModelDiagnosticsData.Build(
-                    perFileEntries, contributions, classBySeq,
+                    perFileEntries, contributions, classBySeq, pairBySeq,
                     config.RunFdr, config.FdrLevel.ToString());
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
                     @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
@@ -87,26 +89,33 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             }
         }
 
-        private static Dictionary<string, EntrapmentClass> LoadClassMap(
-            OspreyConfig config, Action<string> logInfo)
+        private static void LoadManifestMaps(
+            OspreyConfig config, Action<string> logInfo,
+            out Dictionary<string, EntrapmentClass> classBySeq,
+            out Dictionary<string, uint> pairBySeq)
         {
+            classBySeq = null;
+            pairBySeq = null;
             string path = config.DecoyPairingManifestPath;
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                return null;
+                return;
             try
             {
                 var manifest = DecoyPairingManifest.FromTsv(path);
-                var map = new Dictionary<string, EntrapmentClass>(StringComparer.Ordinal);
+                classBySeq = new Dictionary<string, EntrapmentClass>(StringComparer.Ordinal);
                 foreach (var kv in manifest.Kinds())
-                    map[kv.Key] = MapKind(kv.Value);
-                return map;
+                    classBySeq[kv.Key] = MapKind(kv.Value);
+                pairBySeq = new Dictionary<string, uint>(StringComparer.Ordinal);
+                foreach (var kv in manifest.PairIndices())
+                    pairBySeq[kv.Key] = kv.Value;
             }
             catch (Exception ex)
             {
                 logInfo(string.Format(
                     @"[MODEL-DIAGNOSTICS] could not read pairing manifest ({0}); degrading to target/decoy only",
                     ex.Message));
-                return null;
+                classBySeq = null;
+                pairBySeq = null;
             }
         }
 

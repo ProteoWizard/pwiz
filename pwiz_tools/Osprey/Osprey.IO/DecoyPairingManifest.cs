@@ -120,6 +120,19 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Enumerate the manifest's per-sequence <c>peptide_pair_index</c>
+        /// (sequence -&gt; pair index). Within a pair index the target and its
+        /// entrapment (p_target) share the value, which the model-diagnostics
+        /// paired-FDP estimator uses to compare an entrapment hit against its
+        /// paired target's score.
+        /// </summary>
+        public IEnumerable<KeyValuePair<string, uint>> PairIndices()
+        {
+            foreach (var kv in _seqToInfo)
+                yield return new KeyValuePair<string, uint>(kv.Key, kv.Value.PairIndex);
+        }
+
+        /// <summary>
         /// Parse a FDRBench-style pairing manifest from disk. Expected
         /// header (tab-separated, in any column order, but the three
         /// required columns must all be present):

@@ -134,6 +134,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public double[] QCompetition { get; set; }
             public double[] LowerBound { get; set; }
             public double[] Combined { get; set; }
+            /// <summary>FDRBench paired estimator, or null when no pair_index was supplied.</summary>
+            public double[] Paired { get; set; }
             public int[] NTargetAccepted { get; set; }
         }
 
@@ -180,6 +182,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public double QReported;
             public bool IsDecoy;
             public EntrapmentClass Class;
+            public uint PairIndex;
+            public bool HasPair;
         }
 
         /// <summary>
@@ -188,8 +192,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <param name="perFileEntries">Per-file first-pass FdrEntry lists, scored and q-valued, pre-compaction.</param>
         /// <param name="contributions">The trained model's feature contributions (may be null for non-Percolator FDR).</param>
         /// <param name="classBySequence">
-        /// modified_sequence -> entrapment class from the pairing manifest, or
+        /// bare sequence -> entrapment class from the pairing manifest, or
         /// null/empty to degrade to the is_decoy-only Target/Decoy split.
+        /// </param>
+        /// <param name="pairIndexBySequence">
+        /// bare sequence -> peptide_pair_index from the manifest (target and its
+        /// entrapment share a value), for the paired-FDP estimator. May be null.
         /// </param>
         /// <param name="runFdr">The configured run-level FDR (for the summary counts).</param>
         /// <param name="fdrLevel">Display name of the FDR level used.</param>
@@ -197,6 +205,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
             IReadOnlyDictionary<string, EntrapmentClass> classBySequence,
+            IReadOnlyDictionary<string, uint> pairIndexBySequence,
             double runFdr,
             string fdrLevel)
         {
@@ -229,6 +238,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
                     EntrapmentClass cls = Classify(e, classBySequence, haveManifest,
                         ref nWithClass, ref nWithoutClass);
+                    uint pairIdx = 0;
+                    bool hasPair = pairIndexBySequence != null && e.ModifiedSequence != null &&
+                        pairIndexBySequence.TryGetValue(BareSequence(e.ModifiedSequence), out pairIdx);
                     string key = e.ModifiedSequence + "|" + e.Charge;
                     if (!best.TryGetValue(key, out var prev) || e.Score > prev.Score)
                     {
@@ -238,6 +250,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             QReported = e.RunPeptideQvalue,
                             IsDecoy = e.IsDecoy,
                             Class = cls,
+                            PairIndex = pairIdx,
+                            HasPair = hasPair,
                         };
                     }
                 }
@@ -546,11 +560,28 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // recompute it on the full target+decoy+entrapment score order.
             var compQ = CompetitionQByScore(precs);
 
-            int nT = 0, nE = 0;
+            // For the paired estimator: the best observed target score per
+            // pair_index. An entrapment hit "wins its pair" (n_p_s_t) when it
+            // outscores its paired target, or when that target went unobserved.
+            var pairTargetScore = new Dictionary<uint, double>();
+            bool anyPair = false;
+            foreach (var p in precs)
+            {
+                if (p.Class == EntrapmentClass.Target && p.HasPair)
+                {
+                    if (!pairTargetScore.TryGetValue(p.PairIndex, out double s) || p.Score > s)
+                        pairTargetScore[p.PairIndex] = p.Score;
+                }
+                if (p.Class == EntrapmentClass.PTarget && p.HasPair)
+                    anyPair = true;
+            }
+
+            int nT = 0, nE = 0, nPst = 0;
             var qRep = new List<double>();
             var qComp = new List<double>();
             var lb = new List<double>();
             var comb = new List<double>();
+            var paired = new List<double>();
             var ntAcc = new List<int>();
 
             // Running reported-q is the min over accepted (monotone); we emit one
@@ -561,23 +592,29 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 if (p.Class == EntrapmentClass.PTarget)
                 {
                     nE++;
+                    // n_p_s_t: this entrapment outscored its paired target (or the
+                    // target was never observed). Accumulated as the threshold
+                    // descends, exactly like FDRBench's running count.
+                    if (p.HasPair)
+                    {
+                        bool targetSeen = pairTargetScore.TryGetValue(p.PairIndex, out double ts);
+                        if (!targetSeen || p.Score > ts)
+                            nPst++;
+                    }
                     continue; // entrapment hits move the FDP, not the yield point
                 }
                 nT++;
                 runRepQ = Math.Max(runRepQ, p.QReported);
-                // FDRBench estimators, verified byte-for-byte against fdrbench
-                // fdp.csv: combined = (1 + 1/r) * n_p / (n_t + n_p),
-                // lower_bound = n_p / (r * (n_t + n_p)). The paired estimator
-                // (n_p + n_p_s_t)/(n_t + n_p) additionally needs the
-                // target<->entrapment pair_index to count entrapment-over-target
-                // wins; deferred to a follow-up that loads pair_index.
+                // FDRBench estimators, verified against fdrbench fdp.csv:
+                //   combined    = (1 + 1/r) * n_p / (n_t + n_p)
+                //   lower_bound = n_p / (r * (n_t + n_p))
+                //   paired      = (n_p + n_p_s_t) / (n_t + n_p)
                 double denom = nT + nE;
-                double lower = nE / (r * denom);
-                double combined = (1.0 + 1.0 / r) * nE / denom;
                 qRep.Add(runRepQ);
                 qComp.Add(compQ.TryGetValue(p.Score, out var cq) ? cq : double.NaN);
-                lb.Add(lower);
-                comb.Add(combined);
+                lb.Add(nE / (r * denom));
+                comb.Add((1.0 + 1.0 / r) * nE / denom);
+                paired.Add((nE + nPst) / denom);
                 ntAcc.Add(nT);
             }
 
@@ -588,6 +625,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 QCompetition = Thin(qComp),
                 LowerBound = Thin(lb),
                 Combined = Thin(comb),
+                Paired = anyPair ? Thin(paired) : null,
                 NTargetAccepted = Thin(ntAcc),
             };
         }
