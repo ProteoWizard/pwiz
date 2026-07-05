@@ -38,13 +38,41 @@ namespace pwiz.Osprey.IO
         /// <summary>Magic bytes at the start of every cache file.</summary>
         private static readonly byte[] MAGIC = Encoding.ASCII.GetBytes("OSPRLBR\0");
 
-        /// <summary>Current cache format version.</summary>
-        private const uint VERSION = 1;
+        /// <summary>
+        /// Current cache format version. v2 stamps the source library's
+        /// identity hash (<see cref="pwiz.Osprey.Core.SearchIdentity.LibraryIdentityHash"/>)
+        /// into the header immediately after the version, so a cache built from
+        /// a different build of the same library path is detected and rebuilt.
+        /// v1 had no identity and a different header layout, so it reads as
+        /// <see cref="LibraryCacheStatus.Invalid"/> and is rebuilt once.
+        /// </summary>
+        private const uint VERSION = 2;
 
         /// <summary>
-        /// Save library entries to a binary cache file.
+        /// Outcome of a <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
+        /// attempt.
         /// </summary>
-        public static void SaveCache(string path, List<LibraryEntry> entries)
+        public enum LibraryCacheStatus
+        {
+            /// <summary>Cache was valid and its entries were read.</summary>
+            Loaded,
+            /// <summary>
+            /// Cache was structurally valid but was built from a different
+            /// version of the source library (stored identity hash mismatch).
+            /// Its entries were NOT read, so the caller should rebuild.
+            /// </summary>
+            IdentityMismatch,
+            /// <summary>
+            /// Cache was unreadable: bad magic bytes or an unsupported version.
+            /// </summary>
+            Invalid
+        }
+
+        /// <summary>
+        /// Save library entries to a binary cache file, stamping the source
+        /// library's identity hash into the header.
+        /// </summary>
+        public static void SaveCache(string path, List<LibraryEntry> entries, string libraryHash)
         {
             using (var saver = new FileSaver(path))
             {
@@ -53,6 +81,7 @@ namespace pwiz.Osprey.IO
                 {
                     w.Write(MAGIC);
                     w.Write(VERSION);
+                    WriteString(w, libraryHash ?? string.Empty);
                     w.Write((ulong)entries.Count);
 
                     foreach (var entry in entries)
@@ -122,10 +151,30 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
-        /// Load library entries from a binary cache file.
+        /// Load library entries from a binary cache file, identity-agnostic.
         /// Returns null if the file is invalid or has an unsupported version.
+        /// Thin overload of <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
+        /// with no expected identity hash (used by round-trip tests and the
+        /// source-missing fallback, where the cache is the only copy available).
         /// </summary>
         public static List<LibraryEntry> LoadCache(string path)
+        {
+            return LoadCache(path, null, out _);
+        }
+
+        /// <summary>
+        /// Load library entries from a binary cache file, validating the source
+        /// library's identity hash against <paramref name="expectedLibraryHash"/>.
+        /// On bad magic or an unsupported version, returns null with
+        /// <paramref name="status"/> = <see cref="LibraryCacheStatus.Invalid"/>.
+        /// When <paramref name="expectedLibraryHash"/> is non-empty and the
+        /// stored hash differs, returns null with
+        /// <see cref="LibraryCacheStatus.IdentityMismatch"/> WITHOUT reading the
+        /// entries (skips a multi-GB read on a stale cache). Otherwise reads the
+        /// entries and returns <see cref="LibraryCacheStatus.Loaded"/>.
+        /// </summary>
+        public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
+            out LibraryCacheStatus status)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(stream))
@@ -133,11 +182,29 @@ namespace pwiz.Osprey.IO
                 // Validate magic
                 byte[] magic = r.ReadBytes(8);
                 if (magic.Length != 8 || !BytesEqual(magic, MAGIC))
+                {
+                    status = LibraryCacheStatus.Invalid;
                     return null;
+                }
 
                 uint version = r.ReadUInt32();
                 if (version != VERSION)
+                {
+                    status = LibraryCacheStatus.Invalid;
                     return null;
+                }
+
+                // Identity hash stamped at write time (v2). When the caller
+                // supplies a non-empty expected hash and it disagrees, the cache
+                // was built from a different version of the source library at
+                // this path -- treat it as stale and skip reading the entries.
+                string storedLibraryHash = ReadString(r);
+                if (!string.IsNullOrEmpty(expectedLibraryHash) &&
+                    !string.Equals(storedLibraryHash, expectedLibraryHash, StringComparison.Ordinal))
+                {
+                    status = LibraryCacheStatus.IdentityMismatch;
+                    return null;
+                }
 
                 ulong count = r.ReadUInt64();
                 var entries = new List<LibraryEntry>((int)count);
@@ -224,6 +291,7 @@ namespace pwiz.Osprey.IO
                     entries.Add(entry);
                 }
 
+                status = LibraryCacheStatus.Loaded;
                 return entries;
             }
         }
