@@ -177,20 +177,63 @@ namespace pwiz.Osprey.IO
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (entries == null) throw new ArgumentNullException(nameof(entries));
 
+            WriteInternal(path, entries.Count, pass, bw =>
+            {
+                foreach (var e in entries)
+                {
+                    WriteRecord(bw, e.EntryId, e.Score,
+                        e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue,
+                        e.Pep, e.RunProteinQvalue);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Projection-buffer counterpart of
+        /// <see cref="Write(string, IReadOnlyList{FdrEntry}, Pass)"/> (issue #4355
+        /// step (b) increment ii): write the per-file sidecar directly from the thin
+        /// <see cref="FdrProjection"/> rows. Under Option A every field the record
+        /// carries (EntryId + SVM score + the six q-values + PEP) is resident on the
+        /// projection, so this is a single-phase write producing byte-identical
+        /// 60-byte records in the same per-file (parquet) order (risk #8). Header +
+        /// record layout are single-sourced with the FdrEntry overload via
+        /// <see cref="WriteInternal"/> / <see cref="WriteRecord"/>.
+        /// </summary>
+        public static void Write(string path, IReadOnlyList<FdrProjection> projections, Pass pass)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (projections == null) throw new ArgumentNullException(nameof(projections));
+
+            WriteInternal(path, projections.Count, pass, bw =>
+            {
+                foreach (var p in projections)
+                {
+                    WriteRecord(bw, p.EntryId, p.Score,
+                        p.RunPrecursorQvalue, p.RunPeptideQvalue,
+                        p.ExperimentPrecursorQvalue, p.ExperimentPeptideQvalue,
+                        p.Pep, p.RunProteinQvalue);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Shared header + atomic-write scaffold for both <c>Write</c>
+        /// overloads. The caller supplies the body writer, which emits exactly
+        /// <paramref name="entryCount"/> 60-byte records via
+        /// <see cref="WriteRecord"/>. Atomic write via FileSaver: write to a unique
+        /// sibling temp file and promote it to the destination on Commit; on
+        /// exception the FileSaver disposes and deletes the temp without touching
+        /// the destination. The FileStream is disposed before Commit so the file is
+        /// unlocked when File.Move runs.
+        /// </summary>
+        private static void WriteInternal(
+            string path, int entryCount, Pass pass, Action<BinaryWriter> writeBody)
+        {
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            // Atomic write via FileSaver: write to a unique sibling
-            // temp file (allocated by Path.GetRandomFileName +
-            // FileStream.CreateNew, so parallel writers retry past
-            // any astronomically-rare name collision) and promote it
-            // to the destination on Commit. On exception, the
-            // using-block disposes FileSaver which deletes the temp
-            // without touching the destination. The FileStream is
-            // disposed in an inner block before Commit so the file is
-            // unlocked when File.Move runs (FileShare.None would
-            // otherwise block the move).
             using (var saver = new FileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
@@ -201,24 +244,34 @@ namespace pwiz.Osprey.IO
                     bw.Write(FormatVersion);                          // [8]
                     bw.Write((byte)pass);                             // [9]
                     bw.Write(new byte[6]);                            // [10..16] reserved
-                    bw.Write((ulong)entries.Count);                   // [16..24]
+                    bw.Write((ulong)entryCount);                      // [16..24]
                     bw.Write(new byte[8]);                            // [24..32] reserved
 
-                    // Body: 60 bytes per entry (entry_id + 7 f64s)
-                    foreach (var e in entries)
-                    {
-                        bw.Write(e.EntryId);                          // [0..4]
-                        bw.Write(e.Score);                            // [4..12]
-                        bw.Write(e.RunPrecursorQvalue);               // [12..20]
-                        bw.Write(e.RunPeptideQvalue);                 // [20..28]
-                        bw.Write(e.ExperimentPrecursorQvalue);        // [28..36]
-                        bw.Write(e.ExperimentPeptideQvalue);          // [36..44]
-                        bw.Write(e.Pep);                              // [44..52]
-                        bw.Write(e.RunProteinQvalue);                 // [52..60]
-                    }
+                    writeBody(bw);
                 }
                 saver.Commit();
             }
+        }
+
+        /// <summary>
+        /// Write one 60-byte record (entry_id + 7 f64s, little-endian) in the exact
+        /// v3 field order. Single-sourced so the FdrEntry and FdrProjection write
+        /// paths cannot drift on byte layout.
+        /// </summary>
+        private static void WriteRecord(
+            BinaryWriter bw, uint entryId, double score,
+            double runPrecursorQvalue, double runPeptideQvalue,
+            double experimentPrecursorQvalue, double experimentPeptideQvalue,
+            double pep, double runProteinQvalue)
+        {
+            bw.Write(entryId);                          // [0..4]
+            bw.Write(score);                            // [4..12]
+            bw.Write(runPrecursorQvalue);               // [12..20]
+            bw.Write(runPeptideQvalue);                 // [20..28]
+            bw.Write(experimentPrecursorQvalue);        // [28..36]
+            bw.Write(experimentPeptideQvalue);          // [36..44]
+            bw.Write(pep);                              // [44..52]
+            bw.Write(runProteinQvalue);                 // [52..60]
         }
 
         /// <summary>

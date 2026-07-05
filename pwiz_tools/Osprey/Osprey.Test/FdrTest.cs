@@ -24,6 +24,7 @@
 // Tests for Osprey.FDR module
 // Ported from Rust test suite in osprey-fdr
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -466,6 +467,303 @@ namespace pwiz.Osprey.Test
             PercolatorEngine.ApplyPercolatorResults(indexZipStubs, streamingResults);
             ApplyLegacyPsmIdWriteback(psmIdMapStubs, streamingResults);
             AssertWritebackEqual(indexZipStubs, psmIdMapStubs);
+        }
+
+        /// <summary>
+        /// Byte-identity risk #1 (issue #4355 step (b) increment ii, the single
+        /// highest risk): <see cref="FdrProjectionSet.BuildFromEntries"/> must assign
+        /// <see cref="FdrProjection.PeptideId"/> in <see cref="StringComparison.Ordinal"/>
+        /// order of the DISTINCT modified sequences, so grouping/sorting by peptide_id
+        /// reproduces the ordinal string ordering the training subsample
+        /// (<c>SubsampleByPeptideGroup</c>) depends on. Uses mixed-case sequences so a
+        /// case-insensitive comparer would produce a different (wrong) order,
+        /// pinning that the assignment is case-sensitive Ordinal.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrProjectionPeptideIdOrdinalInvariant()
+        {
+            // Insertion order deliberately NOT ordinal, with duplicates across files.
+            // Ordinal order of the distinct set is: "AAA" < "B" < "b" < "peptide"
+            // (uppercase 'B'=66 sorts before lowercase 'b'=98, before 'p'=112).
+            var seqs = new[] { "peptide", "B", "AAA", "b", "AAA", "peptide" };
+            var fileA = new List<FdrEntry>();
+            for (int i = 0; i < seqs.Length; i++)
+            {
+                fileA.Add(new FdrEntry
+                {
+                    EntryId = (uint)(i + 1),
+                    ModifiedSequence = seqs[i],
+                    Charge = 2,
+                    IsDecoy = false
+                });
+            }
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>("fileA", fileA)
+            };
+
+            var set = FdrProjectionSet.BuildFromEntries(perFile);
+
+            // Distinct table is strictly Ordinal-ascending and matches the expected order.
+            CollectionAssert.AreEqual(
+                new[] { "AAA", "B", "b", "peptide" }, set.PeptideById);
+            for (int i = 1; i < set.PeptideById.Length; i++)
+            {
+                Assert.IsTrue(
+                    string.CompareOrdinal(set.PeptideById[i - 1], set.PeptideById[i]) < 0,
+                    "PeptideById must be strictly Ordinal-ascending and de-duplicated");
+            }
+
+            // Each row's peptide_id resolves back to its own modified sequence, and the
+            // id ordering reproduces the ordinal string ordering (id_a < id_b iff
+            // Ordinal(seq_a, seq_b) < 0) -- the invariant the subsample relies on.
+            var rows = set.PerFile[0].Value;
+            Assert.AreEqual(fileA.Count, rows.Count);
+            for (int i = 0; i < rows.Count; i++)
+                Assert.AreEqual(seqs[i], set.PeptideById[rows[i].PeptideId]);
+            for (int a = 0; a < rows.Count; a++)
+            {
+                for (int b = 0; b < rows.Count; b++)
+                {
+                    int idCmp = rows[a].PeptideId.CompareTo(rows[b].PeptideId);
+                    int ordCmp = string.CompareOrdinal(seqs[a], seqs[b]);
+                    Assert.AreEqual(Math.Sign(ordCmp), Math.Sign(idCmp),
+                        string.Format("peptide_id order must track Ordinal for '{0}' vs '{1}'",
+                            seqs[a], seqs[b]));
+                }
+            }
+        }
+
+        /// <summary>
+        /// The projection must round-trip every field it carries (issue #4355 step
+        /// (b) increment ii): the identity/drive slice AND the seven FDR outputs
+        /// (Option A keeps the q-values + PEP resident). Builds an FdrEntry with a
+        /// distinct non-default value in every projected field and asserts the
+        /// FdrProjection row reproduces each one, that the interned peptide table
+        /// resolves the sequence, and that the file index is set.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrProjectionRoundTripsFields()
+        {
+            var e = new FdrEntry
+            {
+                EntryId = 0x8000002Au,
+                ParquetIndex = 77u,
+                IsDecoy = true,
+                Charge = 4,
+                CoelutionSum = 123.456,
+                Score = -2.5,
+                RunPrecursorQvalue = 0.011,
+                RunPeptideQvalue = 0.022,
+                RunProteinQvalue = 0.033,
+                ExperimentPrecursorQvalue = 0.044,
+                ExperimentPeptideQvalue = 0.055,
+                Pep = 0.066,
+                ModifiedSequence = "PEPTIDER"
+            };
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>("only", new List<FdrEntry> { e })
+            };
+
+            var set = FdrProjectionSet.BuildFromEntries(perFile);
+            var p = set.PerFile[0].Value[0];
+
+            Assert.AreEqual(e.EntryId, p.EntryId);
+            Assert.AreEqual(e.ParquetIndex, p.ParquetIndex);
+            Assert.AreEqual(e.IsDecoy, p.IsDecoy);
+            Assert.AreEqual(e.Charge, p.Charge);
+            Assert.AreEqual(e.CoelutionSum, p.CoelutionSum, 0.0);
+            Assert.AreEqual(e.Score, p.Score, 0.0);
+            Assert.AreEqual(e.RunPrecursorQvalue, p.RunPrecursorQvalue, 0.0);
+            Assert.AreEqual(e.RunPeptideQvalue, p.RunPeptideQvalue, 0.0);
+            Assert.AreEqual(e.RunProteinQvalue, p.RunProteinQvalue, 0.0);
+            Assert.AreEqual(e.ExperimentPrecursorQvalue, p.ExperimentPrecursorQvalue, 0.0);
+            Assert.AreEqual(e.ExperimentPeptideQvalue, p.ExperimentPeptideQvalue, 0.0);
+            Assert.AreEqual(e.Pep, p.Pep, 0.0);
+            Assert.AreEqual(0, p.FileIdx);
+            Assert.AreEqual(e.ModifiedSequence, set.PeptideById[p.PeptideId]);
+
+            // The With* replacements overlay only their fields, preserving the rest.
+            var scored = p.WithPercolatorResults(9.0, 0.1, 0.2, 0.3, 0.4, 0.5);
+            Assert.AreEqual(9.0, scored.Score, 0.0);
+            Assert.AreEqual(0.2, scored.RunPeptideQvalue, 0.0);
+            Assert.AreEqual(e.RunProteinQvalue, scored.RunProteinQvalue, 0.0); // untouched
+            Assert.AreEqual(e.EntryId, scored.EntryId);
+            var reprot = scored.WithRunProteinQvalue(0.77);
+            Assert.AreEqual(0.77, reprot.RunProteinQvalue, 0.0);
+            Assert.AreEqual(9.0, reprot.Score, 0.0); // preserved
+        }
+
+        /// <summary>
+        /// The projection index-zip write-back
+        /// (<see cref="PercolatorEngine.ApplyPercolatorResultsToProjection"/>) must
+        /// place the same Score + five q-values onto each row as the FdrEntry
+        /// write-back places on the corresponding stub, given identical
+        /// index-aligned results. This is the q-value source the 1st-pass sidecar
+        /// (hence the survivor reload) reads, so a divergence here would move the
+        /// reloaded survivor buffer off the legacy oracle.
+        /// </summary>
+        [TestMethod]
+        public void TestApplyPercolatorResultsToProjectionMatchesFdrEntry()
+        {
+            var fdrStubs = BuildWritebackFixture();
+            var projSet = FdrProjectionSet.BuildFromEntries(BuildWritebackFixture());
+
+            var results = new PercolatorResults { Entries = new List<PercolatorResult>() };
+            int seq = 0;
+            foreach (var kvp in fdrStubs)
+            {
+                for (int i = 0; i < kvp.Value.Count; i++)
+                {
+                    results.Entries.Add(new PercolatorResult
+                    {
+                        Score = 100.0 + seq,
+                        RunPrecursorQvalue = 0.100 + seq * 0.001,
+                        RunPeptideQvalue = 0.200 + seq * 0.001,
+                        ExperimentPrecursorQvalue = 0.300 + seq * 0.001,
+                        ExperimentPeptideQvalue = 0.400 + seq * 0.001,
+                        Pep = 0.500 + seq * 0.001
+                    });
+                    seq++;
+                }
+            }
+
+            PercolatorEngine.ApplyPercolatorResults(fdrStubs, results);
+            PercolatorEngine.ApplyPercolatorResultsToProjection(projSet.PerFile, results);
+
+            Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
+            for (int f = 0; f < fdrStubs.Count; f++)
+            {
+                var stubList = fdrStubs[f].Value;
+                var projList = projSet.PerFile[f].Value;
+                Assert.AreEqual(stubList.Count, projList.Count);
+                for (int i = 0; i < stubList.Count; i++)
+                {
+                    Assert.AreEqual(stubList[i].Score, projList[i].Score, 0.0);
+                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, projList[i].RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].RunPeptideQvalue, projList[i].RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, projList[i].ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, projList[i].ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].Pep, projList[i].Pep, 0.0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// End-to-end first-pass Percolator equivalence (the survivor-reload
+        /// equivalence at the unit level): running the projection RunPercolatorFdr
+        /// overload must produce byte-identical Score + q-values to the legacy
+        /// FdrEntry overload on the same fixture and the same per-file feature
+        /// loader. Both drive the identical, untouched SVM core; only the resident
+        /// buffer differs. Because the SVM q-values are what the 1st-pass sidecar
+        /// records and the survivor reload overlays, this equivalence is exactly the
+        /// property the reload preserves.
+        /// </summary>
+        [TestMethod]
+        public void TestProjectionRunPercolatorFdrMatchesFdrEntry()
+        {
+            const int nFeat = 3;
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_a", "Feature A", false),
+                new OspreyFeatureInfo("feat_b", "Feature B", false),
+                new OspreyFeatureInfo("feat_c", "Feature C", false)
+            };
+            var config = new OspreyConfig(); // RunFdr 0.01, Percolator, Precursor
+
+            var fdrStubs = BuildProjectionEquivFixture(nFeat, out var featuresA);
+            var fdrStubs2 = BuildProjectionEquivFixture(nFeat, out var featuresB);
+            var projSet = FdrProjectionSet.BuildFromEntries(fdrStubs2);
+
+            PercolatorEngine.RunPercolatorFdr(
+                fdrStubs, config, featureInfos, s => { }, null, "First-pass",
+                f => featuresA[f]);
+            PercolatorEngine.RunPercolatorFdr(
+                projSet, config, featureInfos, s => { }, null, "First-pass",
+                f => featuresB[f]);
+
+            // Both buffers are canonically sorted by EntryId inside RunPercolatorFdr;
+            // EntryId is unique in the fixture, so position i corresponds to the same
+            // entry in both, letting a positional compare stand in for a keyed one.
+            Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
+            for (int f = 0; f < fdrStubs.Count; f++)
+            {
+                var stubList = fdrStubs[f].Value;
+                var projList = projSet.PerFile[f].Value;
+                Assert.AreEqual(stubList.Count, projList.Count);
+                for (int i = 0; i < stubList.Count; i++)
+                {
+                    Assert.AreEqual(stubList[i].EntryId, projList[i].EntryId);
+                    Assert.AreEqual(stubList[i].Score, projList[i].Score, 0.0);
+                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, projList[i].RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].RunPeptideQvalue, projList[i].RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, projList[i].ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, projList[i].ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].Pep, projList[i].Pep, 0.0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Paired target/decoy fixture for the projection equivalence test: 2 files x
+        /// 40 pairs, well-separated target (high) vs decoy (low) features so the SVM
+        /// trains cleanly. Each row carries ParquetIndex = its within-file row index,
+        /// CoelutionSum = features[0], and the per-file feature rows are returned via
+        /// <paramref name="featuresByFile"/> so the streaming loader resolves each row
+        /// by ParquetIndex -- the exact per-file reload shape the production path uses.
+        /// </summary>
+        private static List<KeyValuePair<string, List<FdrEntry>>> BuildProjectionEquivFixture(
+            int nFeat, out Dictionary<string, List<double[]>> featuresByFile)
+        {
+            featuresByFile = new Dictionary<string, List<double[]>>();
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>();
+            uint idCounter = 0;
+            int scan = 0;
+            for (int file = 0; file < 2; file++)
+            {
+                string fileName = string.Format("file{0}", file);
+                var list = new List<FdrEntry>();
+                var featureRows = new List<double[]>();
+                for (int i = 0; i < 40; i++)
+                {
+                    idCounter++;
+                    var targetFeatures = new double[nFeat];
+                    var decoyFeatures = new double[nFeat];
+                    for (int j = 0; j < nFeat; j++)
+                    {
+                        targetFeatures[j] = 4.0 + (file * 40 + i) * 0.03 + j * 0.1;
+                        decoyFeatures[j] = 0.5 + (file * 40 + i) * 0.02 + j * 0.1;
+                    }
+
+                    list.Add(new FdrEntry
+                    {
+                        EntryId = idCounter,
+                        ParquetIndex = (uint)featureRows.Count,
+                        ModifiedSequence = string.Format("PEPTIDE{0}", file * 40 + i),
+                        Charge = 2,
+                        ScanNumber = (uint)(++scan),
+                        IsDecoy = false,
+                        CoelutionSum = targetFeatures[0]
+                    });
+                    featureRows.Add(targetFeatures);
+
+                    list.Add(new FdrEntry
+                    {
+                        EntryId = idCounter | 0x80000000u,
+                        ParquetIndex = (uint)featureRows.Count,
+                        ModifiedSequence = string.Format("DECOY{0}", file * 40 + i),
+                        Charge = 2,
+                        ScanNumber = (uint)(++scan),
+                        IsDecoy = true,
+                        CoelutionSum = decoyFeatures[0]
+                    });
+                    featureRows.Add(decoyFeatures);
+                }
+                perFile.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, list));
+                featuresByFile[fileName] = featureRows;
+            }
+            return perFile;
         }
 
         /// <summary>

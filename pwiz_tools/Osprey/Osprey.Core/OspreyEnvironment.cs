@@ -111,6 +111,21 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string CrossImplReconciliationOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
+        /// <summary>
+        /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
+        /// first-pass FDR peak through the thin <see cref="FdrProjection"/> struct
+        /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
+        /// resident across first-pass Percolator + protein FDR + the sidecar write
+        /// + compaction. When set, <c>FirstJoinTask</c> materializes the projection
+        /// from the cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs
+        /// before the SVM peak, and reloads full <see cref="FdrEntry"/> survivors
+        /// from parquet + the just-written 1st-pass sidecar after compaction. Unset
+        /// (or "0") keeps the legacy <see cref="FdrEntry"/>-buffer path, which is the
+        /// byte-identity oracle. A settable property (not a readonly field) so unit
+        /// tests can A/B both paths and a red gate can flip it back on one build.
+        /// </summary>
+        public static bool UseFdrProjection { get; set; } = IsSetAndNotZero(@"OSPREY_FDR_PROJECTION");
+
         private static int ParseIntOrZero(string name)
         {
             string v = Environment.GetEnvironmentVariable(name);
@@ -128,6 +143,12 @@ namespace pwiz.Osprey.Core
         private static bool IsNotZero(string name)
         {
             return Environment.GetEnvironmentVariable(name) != @"0";
+        }
+
+        private static bool IsSetAndNotZero(string name)
+        {
+            string v = Environment.GetEnvironmentVariable(name);
+            return !string.IsNullOrEmpty(v) && v != @"0";
         }
     }
 }
