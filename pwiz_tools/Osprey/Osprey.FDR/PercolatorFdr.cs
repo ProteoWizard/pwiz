@@ -122,9 +122,6 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public class PercolatorEntry
     {
-        /// <summary>Unique precursor ID (e.g., "filename_libidx").</summary>
-        public string Id { get; set; }
-
         /// <summary>Source file name (for per-run FDR).</summary>
         public string FileName { get; set; }
 
@@ -170,9 +167,6 @@ namespace pwiz.Osprey.FDR
     /// </summary>
     public class PercolatorResult
     {
-        /// <summary>Unique precursor ID (matches PercolatorEntry.Id).</summary>
-        public string Id { get; set; }
-
         /// <summary>SVM decision function score.</summary>
         public double Score { get; set; }
 
@@ -693,7 +687,6 @@ namespace pwiz.Osprey.FDR
             {
                 results.Add(new PercolatorResult
                 {
-                    Id = entries[i].Id,
                     Score = finalScores[i],
                     RunPrecursorQvalue = runPrecursorQvalues[i],
                     RunPeptideQvalue = runPeptideQvalues[i],
@@ -926,7 +919,6 @@ namespace pwiz.Osprey.FDR
             {
                 results.Add(new PercolatorResult
                 {
-                    Id = entries[i].Id,
                     Score = finalScores[i],
                     RunPrecursorQvalue = runPrecursorQvalues[i],
                     RunPeptideQvalue = runPeptideQvalues[i],

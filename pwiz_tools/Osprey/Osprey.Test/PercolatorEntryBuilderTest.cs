@@ -41,7 +41,7 @@ namespace pwiz.Osprey.Test
         /// Build must: keep a well-formed 21-feature vector by reference, fall back
         /// to the basic vector when Features is null OR the wrong length, count
         /// targets / decoys and with- / without-feature entries correctly, preserve
-        /// input order, and compose the 4-component PSM id.
+        /// input order, and map the FdrEntry fields onto each PercolatorEntry.
         /// </summary>
         [TestMethod]
         public void TestBuildFeatureFallbackAndCounts()
@@ -99,8 +99,9 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(nFeat, result[2].Features.Length);
             Assert.AreEqual(2.0, result[2].Features[0]);
 
-            // Field mapping + 4-component PSM id (file_modseq_charge_scan).
-            Assert.AreEqual("fileA_PEPTIDEK_2_100", result[0].Id);
+            // Field mapping onto the flat PercolatorEntry. No psm_id string is
+            // built any more (issue #4355 step (b)); the score write-back zips
+            // results onto the stubs by position instead of re-joining by key.
             Assert.AreEqual("fileA", result[0].FileName);
             Assert.AreEqual("PEPTIDEK", result[0].Peptide);
             Assert.AreEqual(2, result[0].Charge);

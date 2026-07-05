@@ -159,34 +159,10 @@ namespace pwiz.Osprey.FDR
             if (results.DiagnosticAbort)
                 return true;
 
-            // Map results back to FdrEntry stubs
-            var resultMap = new Dictionary<string, PercolatorResult>();
-            foreach (var result in results.Entries)
-                resultMap[result.Id] = result;
+            // Zip the SVM results back onto the FdrEntry stubs by position
+            // (replaces the former psm_id-keyed resultMap re-join).
+            ApplyPercolatorResults(perFileEntries, results);
 
-            foreach (var kvp in perFileEntries)
-            {
-                string fileName = kvp.Key;
-                foreach (var fdrEntry in kvp.Value)
-                {
-                    // 4-component psm_id matches the construction in
-                    // the loop above so each FdrEntry pulls back its
-                    // own PercolatorResult. Mirrors Rust direct path.
-                    string id = string.Format("{0}_{1}_{2}_{3}",
-                        fileName, fdrEntry.ModifiedSequence,
-                        fdrEntry.Charge, fdrEntry.ScanNumber);
-                    PercolatorResult result;
-                    if (resultMap.TryGetValue(id, out result))
-                    {
-                        fdrEntry.Score = result.Score;
-                        fdrEntry.RunPrecursorQvalue = result.RunPrecursorQvalue;
-                        fdrEntry.RunPeptideQvalue = result.RunPeptideQvalue;
-                        fdrEntry.ExperimentPrecursorQvalue = result.ExperimentPrecursorQvalue;
-                        fdrEntry.ExperimentPeptideQvalue = result.ExperimentPeptideQvalue;
-                        fdrEntry.Pep = result.Pep;
-                    }
-                }
-            }
             // Log FDR results
             int nTargetPassing = 0;
             int nDecoyPassing = 0;
@@ -281,6 +257,54 @@ namespace pwiz.Osprey.FDR
                         entry.ExperimentPeptideQvalue = result.FdrAtThreshold;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Zip Percolator results back onto the <see cref="FdrEntry"/> stubs by
+        /// position. <see cref="PercolatorEntryBuilder.Build"/> emits exactly one
+        /// <see cref="PercolatorEntry"/> per stub in nested (file, entry) order,
+        /// and both SVM paths return <see cref="PercolatorResults.Entries"/>
+        /// index-aligned to that input (the direct and streaming result assembly
+        /// in <see cref="PercolatorFdr"/>). Walking <paramref name="perFileEntries"/>
+        /// in that same nested order therefore pairs each stub with its own result,
+        /// which is why the former psm_id string + resultMap re-join was pure
+        /// redundancy (issue #4355 step (b)): it re-joined by a key that position
+        /// already determines. Row order is a single source of truth -- the buffer
+        /// is built once, sorted once (in <see cref="RunPercolatorFdr"/>), and not
+        /// mutated between the build and this write-back. Mirrors the Rust direct
+        /// path, which likewise zips by index.
+        /// </summary>
+        internal static void ApplyPercolatorResults(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            PercolatorResults results)
+        {
+            var resultEntries = results.Entries;
+            int resultIndex = 0;
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var fdrEntry in kvp.Value)
+                {
+                    var result = resultEntries[resultIndex++];
+                    fdrEntry.Score = result.Score;
+                    fdrEntry.RunPrecursorQvalue = result.RunPrecursorQvalue;
+                    fdrEntry.RunPeptideQvalue = result.RunPeptideQvalue;
+                    fdrEntry.ExperimentPrecursorQvalue = result.ExperimentPrecursorQvalue;
+                    fdrEntry.ExperimentPeptideQvalue = result.ExperimentPeptideQvalue;
+                    fdrEntry.Pep = result.Pep;
+                }
+            }
+
+            // Guard the index-alignment invariant the zip depends on: the builder
+            // emitted exactly one result per stub. A count mismatch would silently
+            // misbind scores to the wrong entries, so fail loudly -- this is
+            // byte-identity-critical first-pass FDR output.
+            if (resultIndex != resultEntries.Count)
+            {
+                throw new InvalidOperationException(string.Format(
+                    "Percolator result count ({0}) does not match FdrEntry stub count ({1}); " +
+                    "the index-zip write-back requires them to be equal.",
+                    resultEntries.Count, resultIndex));
             }
         }
 

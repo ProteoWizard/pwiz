@@ -101,23 +101,18 @@ namespace pwiz.Osprey.FDR
                         nInputDecoys++;
                     else nInputTargets++;
 
-                    // PSM Id must uniquely identify each observation so the
-                    // result -> FdrEntry write-back can score every row
-                    // independently. EntryId alone is NOT unique within a
-                    // file: a single base_id with multiple scan-time
-                    // observations (different scan numbers, same charge,
-                    // same modified_sequence) shares one EntryId. Using
-                    // "{fileName}_{EntryId}" collided those rows in
-                    // resultMap, leaving the last-inserted score
-                    // overwriting every same-EntryId observation's
-                    // FdrEntry.Score and producing 176-185 score
-                    // divergences per file vs. Rust's 4-component psm_id.
-                    // Mirrors osprey-fdr/src/percolator.rs:5978-5980.
+                    // One PercolatorEntry per FdrEntry, emitted in this nested
+                    // (file, entry) order. Both SVM paths return results
+                    // index-aligned to this input, so the score / q-value
+                    // write-back zips them back onto the stubs by position
+                    // (PercolatorEngine.ApplyPercolatorResults) instead of
+                    // re-joining through a per-row psm_id string + resultMap.
+                    // The former "{file}_{modseq}_{charge}_{scan}" psm_id is
+                    // therefore no longer built here (it allocated one string
+                    // per observation). Mirrors the Rust direct path, which
+                    // likewise zips by index (osprey-fdr/src/percolator.rs:5978-5980).
                     percEntries.Add(new PercolatorEntry
                     {
-                        Id = string.Format("{0}_{1}_{2}_{3}",
-                            fileName, fdrEntry.ModifiedSequence,
-                            fdrEntry.Charge, fdrEntry.ScanNumber),
                         FileName = fileName,
                         Peptide = fdrEntry.ModifiedSequence,
                         Charge = fdrEntry.Charge,

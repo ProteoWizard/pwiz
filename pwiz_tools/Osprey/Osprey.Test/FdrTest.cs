@@ -306,8 +306,7 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < 20; i++)
             {
                 entries.Add(MakePercolatorEntry(
-                    string.Format("file1_{0}", i), "file1",
-                    string.Format("PEPTIDE{0}", i), 2, false, (uint)(i + 1),
+                    "file1", string.Format("PEPTIDE{0}", i), 2, false, (uint)(i + 1),
                     new[] { 4.0 + i * 0.1, 5.0 - i * 0.05 }));
             }
 
@@ -315,8 +314,7 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < 20; i++)
             {
                 entries.Add(MakePercolatorEntry(
-                    string.Format("file1_d{0}", i), "file1",
-                    string.Format("DECOY{0}", i), 2, true, (uint)(i + 1) | 0x80000000,
+                    "file1", string.Format("DECOY{0}", i), 2, true, (uint)(i + 1) | 0x80000000,
                     new[] { 0.5 + i * 0.05, 1.0 + i * 0.02 }));
             }
 
@@ -362,6 +360,115 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The index-zip result write-back
+        /// (<see cref="PercolatorEngine.ApplyPercolatorResults"/>) must place each
+        /// PercolatorResult onto its own FdrEntry stub, byte-identical to the
+        /// psm_id-keyed resultMap re-join it replaced (issue #4355 step (b)). Both
+        /// SVM paths return results index-aligned to the PercolatorEntry input, which
+        /// the builder emits one-per-stub in nested (file, entry) order, so the
+        /// write-back is a pure positional zip. This drives synthetic index-aligned
+        /// results through both strategies on a multi-file fixture and asserts
+        /// identical Score + five q-values. The write-back is oblivious to which SVM
+        /// path produced the results, so this single order-agnostic check covers the
+        /// direct and streaming result orderings alike.
+        /// </summary>
+        [TestMethod]
+        public void TestApplyPercolatorResultsIndexZipMatchesPsmIdMap()
+        {
+            var indexZipStubs = BuildWritebackFixture();
+            var psmIdMapStubs = BuildWritebackFixture();
+
+            // Synthetic per-stub results, index-aligned to the nested (file, entry)
+            // walk -- the exact contract PercolatorFdr's direct and streaming result
+            // assembly guarantee. Distinct values per row so any misbinding surfaces.
+            var results = new PercolatorResults { Entries = new List<PercolatorResult>() };
+            int seq = 0;
+            foreach (var kvp in indexZipStubs)
+            {
+                for (int i = 0; i < kvp.Value.Count; i++)
+                {
+                    results.Entries.Add(new PercolatorResult
+                    {
+                        Score = 100.0 + seq,
+                        RunPrecursorQvalue = 0.100 + seq * 0.001,
+                        RunPeptideQvalue = 0.200 + seq * 0.001,
+                        ExperimentPrecursorQvalue = 0.300 + seq * 0.001,
+                        ExperimentPeptideQvalue = 0.400 + seq * 0.001,
+                        Pep = 0.500 + seq * 0.001
+                    });
+                    seq++;
+                }
+            }
+
+            // Production write-back: the positional index zip under test.
+            PercolatorEngine.ApplyPercolatorResults(indexZipStubs, results);
+
+            // Oracle: the removed psm_id map re-join, reconstructed on an independent
+            // copy of the same fixture and the same results.
+            ApplyLegacyPsmIdWriteback(psmIdMapStubs, results);
+
+            // Every stub must carry identical Score + q-values under both strategies.
+            AssertWritebackEqual(indexZipStubs, psmIdMapStubs);
+        }
+
+        /// <summary>
+        /// Streaming-path coverage for the index-zip write-back (issue #4355 step
+        /// (b), risk #5). The direct Percolator path (which Stellar exercises) and
+        /// the streaming path (which the >600K-entry / many-file production workload
+        /// uses) build their result lists in separate loops; the write-back's
+        /// correctness rests on BOTH returning results index-aligned to the flat
+        /// PercolatorEntry input. This drives the REAL streaming assembler
+        /// (<see cref="PercolatorFdr.ScorePopulationAndComputeFdr"/>, the loop the
+        /// design cites for the streaming path) end-to-end on a small paired
+        /// target/decoy fixture, then applies the index zip and the removed psm_id
+        /// map to those real streaming-produced results and asserts identical Score
+        /// + five q-values. Driving it with resident features exercises the exact
+        /// streaming result-assembly order; only the feature source (per-file reload
+        /// vs resident) differs at scale, never the row order.
+        /// </summary>
+        [TestMethod]
+        public void TestApplyPercolatorResultsStreamingOrderIndexZipMatchesPsmIdMap()
+        {
+            const int nFeat = 3;
+            var featureInfos = new[]
+            {
+                new OspreyFeatureInfo("feat_a", "Feature A", false),
+                new OspreyFeatureInfo("feat_b", "Feature B", false),
+                new OspreyFeatureInfo("feat_c", "Feature C", false)
+            };
+
+            var indexZipStubs = BuildStreamingWritebackFixture(nFeat);
+            var psmIdMapStubs = BuildStreamingWritebackFixture(nFeat);
+
+            // Flat PercolatorEntry list in the nested (file, entry) order the write-
+            // back walks. All rows carry a resident nFeat-vector.
+            var built = PercolatorEntryBuilder.Build(
+                indexZipStubs, nFeat, streamFeatures: false,
+                out int nWith, out int nWithout, out int nTargets, out int nDecoys);
+            Assert.AreEqual(120, built.Count);
+            Assert.AreEqual(120, nWith);
+            Assert.AreEqual(0, nWithout);
+            Assert.AreEqual(60, nTargets);
+            Assert.AreEqual(60, nDecoys);
+
+            // Train a model, then score the whole population through the streaming
+            // assembler (this is the path the direct branch does NOT take).
+            var config = new PercolatorConfig { MaxIterations = 3, FeatureInfos = featureInfos };
+            PercolatorResults trainResults = PercolatorFdr.RunPercolator(built, config);
+            PercolatorResults streamingResults =
+                PercolatorFdr.ScorePopulationAndComputeFdr(built, trainResults, config);
+
+            // The streaming assembler must return one result per entry, in order.
+            Assert.AreEqual(built.Count, streamingResults.Entries.Count);
+
+            // Index zip (production) vs the removed psm_id map (oracle), both applied
+            // to these real streaming-assembled results.
+            PercolatorEngine.ApplyPercolatorResults(indexZipStubs, streamingResults);
+            ApplyLegacyPsmIdWriteback(psmIdMapStubs, streamingResults);
+            AssertWritebackEqual(indexZipStubs, psmIdMapStubs);
+        }
+
+        /// <summary>
         /// The post-training feature weight + percent-contribution report: with a
         /// clean target/decoy separation, the emitted percentages must sum to ~100%
         /// (the mean-difference decomposition is exact by linearity), the surfaced
@@ -382,15 +489,13 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < 60; i++)
             {
                 entries.Add(MakePercolatorEntry(
-                    string.Format("file1_{0}", i), "file1",
-                    string.Format("PEPTIDE{0}", i), 2, false, (uint)(i + 1),
+                    "file1", string.Format("PEPTIDE{0}", i), 2, false, (uint)(i + 1),
                     new[] { 4.0 + i * 0.02, 4.0 + i * 0.02, 4.0 + i * 0.02 }));
             }
             for (int i = 0; i < 60; i++)
             {
                 entries.Add(MakePercolatorEntry(
-                    string.Format("file1_d{0}", i), "file1",
-                    string.Format("DECOY{0}", i), 2, true, (uint)(i + 1) | 0x80000000,
+                    "file1", string.Format("DECOY{0}", i), 2, true, (uint)(i + 1) | 0x80000000,
                     new[] { 0.5 + i * 0.02, 0.5 + i * 0.02, 0.5 + i * 0.02 }));
             }
 
@@ -895,12 +1000,11 @@ namespace pwiz.Osprey.Test
         }
 
         private static PercolatorEntry MakePercolatorEntry(
-            string id, string file, string peptide, byte charge,
+            string file, string peptide, byte charge,
             bool isDecoy, uint entryId, double[] features)
         {
             return new PercolatorEntry
             {
-                Id = id,
                 FileName = file,
                 Peptide = peptide,
                 Charge = charge,
@@ -908,6 +1012,166 @@ namespace pwiz.Osprey.Test
                 EntryId = entryId,
                 Features = features
             };
+        }
+
+        /// <summary>
+        /// Two files of FdrEntry stubs with distinct (modified_sequence, charge,
+        /// scan_number) per row so the legacy 4-component psm_id is collision-free --
+        /// the regime the removed resultMap re-join was correct in. Scores / q-values
+        /// start at their FdrEntry defaults so the write-back is what changes them.
+        /// </summary>
+        private static List<KeyValuePair<string, List<FdrEntry>>> BuildWritebackFixture()
+        {
+            var fileA = new List<FdrEntry>();
+            for (int i = 0; i < 4; i++)
+            {
+                fileA.Add(new FdrEntry
+                {
+                    EntryId = (uint)(i + 1),
+                    ModifiedSequence = string.Format("PEPTIDE{0}", i),
+                    Charge = 2,
+                    ScanNumber = (uint)(1000 + i),
+                    IsDecoy = false
+                });
+            }
+            var fileB = new List<FdrEntry>();
+            for (int i = 0; i < 3; i++)
+            {
+                fileB.Add(new FdrEntry
+                {
+                    EntryId = (uint)(i + 1) | 0x80000000,
+                    ModifiedSequence = string.Format("DECOY{0}", i),
+                    Charge = 3,
+                    ScanNumber = (uint)(2000 + i),
+                    IsDecoy = true
+                });
+            }
+            return new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>("fileA", fileA),
+                new KeyValuePair<string, List<FdrEntry>>("fileB", fileB)
+            };
+        }
+
+        /// <summary>
+        /// Two files of paired target/decoy FdrEntry stubs (30 pairs each) carrying
+        /// resident <paramref name="nFeat"/>-vectors, so the flat PercolatorEntry
+        /// list can be trained and scored through the real streaming assembler. A
+        /// global per-row index keeps (modified_sequence, scan_number) distinct so
+        /// the legacy psm_id is collision-free; well-separated target (high) vs decoy
+        /// (low) features give distinct per-entry scores so a misaligned write-back
+        /// would surface as a mismatch.
+        /// </summary>
+        private static List<KeyValuePair<string, List<FdrEntry>>> BuildStreamingWritebackFixture(int nFeat)
+        {
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>();
+            int scan = 0;
+            for (int file = 0; file < 2; file++)
+            {
+                var list = new List<FdrEntry>();
+                for (int i = 0; i < 30; i++)
+                {
+                    int idx = file * 30 + i;
+                    var targetFeatures = new double[nFeat];
+                    var decoyFeatures = new double[nFeat];
+                    for (int j = 0; j < nFeat; j++)
+                    {
+                        targetFeatures[j] = 4.0 + idx * 0.02;
+                        decoyFeatures[j] = 0.5 + idx * 0.02;
+                    }
+                    list.Add(new FdrEntry
+                    {
+                        EntryId = (uint)(idx + 1),
+                        ModifiedSequence = string.Format("PEPTIDE{0}", idx),
+                        Charge = 2,
+                        ScanNumber = (uint)(++scan),
+                        IsDecoy = false,
+                        CoelutionSum = targetFeatures[0],
+                        Features = targetFeatures
+                    });
+                    list.Add(new FdrEntry
+                    {
+                        EntryId = (uint)(idx + 1) | 0x80000000,
+                        ModifiedSequence = string.Format("DECOY{0}", idx),
+                        Charge = 2,
+                        ScanNumber = (uint)(++scan),
+                        IsDecoy = true,
+                        CoelutionSum = decoyFeatures[0],
+                        Features = decoyFeatures
+                    });
+                }
+                perFile.Add(new KeyValuePair<string, List<FdrEntry>>(
+                    string.Format("file{0}", file), list));
+            }
+            return perFile;
+        }
+
+        /// <summary>
+        /// Replicates the psm_id-keyed resultMap write-back removed in issue #4355
+        /// step (b): build a "{file}_{modseq}_{charge}_{scan}" -> result map (results
+        /// are index-aligned to the nested walk, so entry k keys on result k) then
+        /// re-join each stub by that key. The oracle the positional index zip must
+        /// match on a collision-free fixture.
+        /// </summary>
+        private static void ApplyLegacyPsmIdWriteback(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            PercolatorResults results)
+        {
+            var resultMap = new Dictionary<string, PercolatorResult>();
+            int k = 0;
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    string id = LegacyPsmId(kvp.Key, e);
+                    Assert.IsFalse(resultMap.ContainsKey(id),
+                        string.Format("fixture psm_id {0} is not unique", id));
+                    resultMap[id] = results.Entries[k++];
+                }
+            }
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    PercolatorResult r = resultMap[LegacyPsmId(kvp.Key, e)];
+                    e.Score = r.Score;
+                    e.RunPrecursorQvalue = r.RunPrecursorQvalue;
+                    e.RunPeptideQvalue = r.RunPeptideQvalue;
+                    e.ExperimentPrecursorQvalue = r.ExperimentPrecursorQvalue;
+                    e.ExperimentPeptideQvalue = r.ExperimentPeptideQvalue;
+                    e.Pep = r.Pep;
+                }
+            }
+        }
+
+        private static string LegacyPsmId(string fileName, FdrEntry e)
+        {
+            return string.Format("{0}_{1}_{2}_{3}",
+                fileName, e.ModifiedSequence, e.Charge, e.ScanNumber);
+        }
+
+        private static void AssertWritebackEqual(
+            List<KeyValuePair<string, List<FdrEntry>>> actual,
+            List<KeyValuePair<string, List<FdrEntry>>> expected)
+        {
+            Assert.AreEqual(expected.Count, actual.Count);
+            for (int f = 0; f < expected.Count; f++)
+            {
+                var expList = expected[f].Value;
+                var actList = actual[f].Value;
+                Assert.AreEqual(expList.Count, actList.Count);
+                for (int i = 0; i < expList.Count; i++)
+                {
+                    FdrEntry exp = expList[i];
+                    FdrEntry act = actList[i];
+                    Assert.AreEqual(exp.Score, act.Score, 0.0);
+                    Assert.AreEqual(exp.RunPrecursorQvalue, act.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(exp.RunPeptideQvalue, act.RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(exp.ExperimentPrecursorQvalue, act.ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(exp.ExperimentPeptideQvalue, act.ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(exp.Pep, act.Pep, 0.0);
+                }
+            }
         }
 
         private static LibraryEntry MakeLibEntry(
