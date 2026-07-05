@@ -67,9 +67,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         {
             var asm = typeof(ModelDiagnosticsHtml).Assembly;
             string name = FindResourceName(asm, TemplateResource);
-            if (name == null)
+            Stream stream = name == null ? null : asm.GetManifestResourceStream(name);
+            if (stream == null)
                 throw new InvalidOperationException(@"embedded model-diagnostics template resource not found");
-            using (var stream = asm.GetManifestResourceStream(name))
+            using (stream)
             using (var reader = new StreamReader(stream))
                 return reader.ReadToEnd();
         }

@@ -308,9 +308,8 @@ if(D.hasEntrapment && D.fdp){
   const W=680,Hh=340,box={l:56,t:14,w:W-74,h:Hh-58};
   const host=document.getElementById("fdpChart");
   const series=[{k:"lower",name:"lower-bound FDP",color:COL.ptarget,v:f.lowerBound},
-                {k:"combined",name:"combined FDP",color:COL.target,v:f.combined},
-                {k:"paired",name:"paired FDP",color:COL.pdecoy,v:f.paired}];
-  const off={lower:false,combined:false,paired:true};
+                {k:"combined",name:"combined FDP",color:COL.target,v:f.combined}];
+  const off={lower:false,combined:false};
   let useZoom=true;
   function drawFdp(){
     host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);

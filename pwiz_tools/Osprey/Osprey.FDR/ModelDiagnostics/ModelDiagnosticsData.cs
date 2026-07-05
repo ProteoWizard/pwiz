@@ -133,7 +133,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public double[] QReported { get; set; }
             public double[] QCompetition { get; set; }
             public double[] LowerBound { get; set; }
-            public double[] Paired { get; set; }
             public double[] Combined { get; set; }
             public int[] NTargetAccepted { get; set; }
         }
@@ -532,7 +531,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // score (the FDRBench ranking). At each rank we know the running
             // target/entrapment counts and can emit the FDP estimators plus both
             // q axes. r = entrapment DB size / target DB size, from the manifest.
-            double r = EntrapmentRatio(classBySequence);
+            double r = ComputeEntrapmentRatio(classBySequence);
             if (r <= 0) r = 1.0;
 
             var ranked = precs
@@ -551,7 +550,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var qRep = new List<double>();
             var qComp = new List<double>();
             var lb = new List<double>();
-            var paired = new List<double>();
             var comb = new List<double>();
             var ntAcc = new List<int>();
 
@@ -567,17 +565,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
                 nT++;
                 runRepQ = Math.Max(runRepQ, p.QReported);
+                // FDRBench estimators, verified byte-for-byte against fdrbench
+                // fdp.csv: combined = (1 + 1/r) * n_p / (n_t + n_p),
+                // lower_bound = n_p / (r * (n_t + n_p)). The paired estimator
+                // (n_p + n_p_s_t)/(n_t + n_p) additionally needs the
+                // target<->entrapment pair_index to count entrapment-over-target
+                // wins; deferred to a follow-up that loads pair_index.
                 double denom = nT + nE;
                 double lower = nE / (r * denom);
                 double combined = (1.0 + 1.0 / r) * nE / denom;
-                // Paired estimator placeholder == combined until calibrated
-                // against FDRBench fdp.csv (tracked in the TODO). Kept as its own
-                // series so the calibration only touches this line.
-                double pairedFdp = combined;
                 qRep.Add(runRepQ);
                 qComp.Add(compQ.TryGetValue(p.Score, out var cq) ? cq : double.NaN);
                 lb.Add(lower);
-                paired.Add(pairedFdp);
                 comb.Add(combined);
                 ntAcc.Add(nT);
             }
@@ -588,13 +587,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 QReported = Thin(qRep),
                 QCompetition = Thin(qComp),
                 LowerBound = Thin(lb),
-                Paired = Thin(paired),
                 Combined = Thin(comb),
                 NTargetAccepted = Thin(ntAcc),
             };
         }
 
-        private static double EntrapmentRatio(IReadOnlyDictionary<string, EntrapmentClass> classBySequence)
+        private static double ComputeEntrapmentRatio(IReadOnlyDictionary<string, EntrapmentClass> classBySequence)
         {
             if (classBySequence == null) return 1.0;
             int nT = 0, nP = 0;
