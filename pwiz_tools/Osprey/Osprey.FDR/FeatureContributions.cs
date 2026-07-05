@@ -301,7 +301,7 @@ namespace pwiz.Osprey.FDR
             // model view. The raw standardized coefficient is kept alongside for the
             // Compare-Peaks-style read of how the composite score was built.
             yield return "  Model sanity check -- feature share of target-decoy separation (trained linear model, coefficients standardized):";
-            yield return string.Format("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "share");
+            yield return string.Format("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "share (%)");
             foreach (var f in Features
                 .OrderByDescending(f => IsDegenerate ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))

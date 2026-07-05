@@ -129,8 +129,12 @@ namespace pwiz.Osprey.Tasks
             // metadata caller in a known state. Overwritten on success.
             numSampledPrecursors = 0;
             // The wide pre-calibration RT tolerance (the "before" number in the
-            // console summary's before-vs-after RT window). Set once initialTolerance
-            // is computed below; 0 on the no-target early return.
+            // console summary's before-vs-after RT window). Defaults to 0 to keep the
+            // out-parameter assigned on any early exit before the initial tolerance is
+            // computed below; every return path that runs past that point carries the
+            // computed value (the no-target return happens after it is set, and the
+            // caller ignores it then since RunCalibration returns null and emits no
+            // summary).
             initialRtTolerance = 0.0;
             _ctx.LogInfo("Running RT calibration...");
 
