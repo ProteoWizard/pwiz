@@ -957,7 +957,7 @@ namespace pwiz.Osprey.FDR
 
                     if (OspreyOutput.Verbose)
                     {
-                        reports.Sort((a, b) => a.Fold.CompareTo(b.Fold));
+                        reports.Sort((a, b) => a.Fold.CompareTo(b.Fold)); // Array.Sort OK: Verbose diagnostic print only (not parity-sensitive); one report per fold so Fold is unique anyway
                         foreach (var r in reports)
                         {
                             double foldPct = r.Targets > 0 ? 100.0 * r.Passing / r.Targets : 0.0;
@@ -1242,8 +1242,10 @@ namespace pwiz.Osprey.FDR
                     winners.Add(Tuple.Create(kvp.Value.Key, kvp.Value.Value, true, kvp.Key));
             }
 
-            // Sort by score desc, then base_id asc for deterministic tiebreaking
-            winners.Sort((a, b) =>
+            // Sort by score desc, then base_id asc for deterministic tiebreaking.
+            // Array.Sort OK: the secondary key Item4 is the unique base_id, so the
+            // comparator never returns 0 and the unstable-sort tie path is unreachable.
+            winners.Sort((a, b) => // Array.Sort OK: (see above) secondary key Item4 is unique base_id, comparator never ties
             {
                 int cmp = b.Item2.CompareTo(a.Item2);
                 if (cmp != 0)
@@ -1784,7 +1786,7 @@ namespace pwiz.Osprey.FDR
                     if (labels[idx])
                         decoyScores.Add(finalScores[idx]);
                 }
-                decoyScores.Sort();
+                decoyScores.Sort(); // Array.Sort OK: median of single primitive list, no parallel data; tie order irrelevant
 
                 double medianDecoy = decoyScores.Count > 0
                     ? decoyScores[decoyScores.Count / 2]
@@ -2083,7 +2085,7 @@ namespace pwiz.Osprey.FDR
             var result = new List<int>(best.Count);
             foreach (var kvp in best)
                 result.Add(kvp.Value.Key);
-            result.Sort();
+            result.Sort(); // Array.Sort OK: best-per-peptide entry indices are distinct ints, so no ties; single primitive array anyway
             return result.ToArray();
         }
 
@@ -2135,7 +2137,7 @@ namespace pwiz.Osprey.FDR
 
             // 4. Sort for deterministic assignment, round-robin assign folds
             var sortedKeys = new List<string>(peptideGroups.Keys);
-            sortedKeys.Sort(StringComparer.Ordinal);
+            sortedKeys.Sort(StringComparer.Ordinal); // Array.Sort OK: keys are distinct peptide-group dictionary keys, so the comparator never ties
 
             var foldAssignments = new int[labels.Length];
             for (int i = 0; i < sortedKeys.Count; i++)
@@ -2284,7 +2286,7 @@ namespace pwiz.Osprey.FDR
 
             // Sort deterministically and shuffle with Fisher-Yates
             var groups = new List<KeyValuePair<string, List<int>>>(peptideGroups);
-            groups.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
+            groups.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal)); // Array.Sort OK: Keys are distinct peptide-group dictionary keys, so the comparator never ties (the following Fisher-Yates shuffle then randomizes deterministically)
 
             ulong rngState = seed;
             for (int i = groups.Count - 1; i >= 1; i--)
@@ -2307,7 +2309,7 @@ namespace pwiz.Osprey.FDR
                 selected.AddRange(group.Value);
             }
 
-            selected.Sort();
+            selected.Sort(); // Array.Sort OK: selected holds distinct entry indices, so no ties; single primitive array anyway
             return selected.ToArray();
         }
 

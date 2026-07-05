@@ -252,7 +252,7 @@ namespace pwiz.Osprey.FDR
             foreach (var kvp in proteinToPeptides)
             {
                 var sortedPeptides = new List<string>(kvp.Value);
-                sortedPeptides.Sort(StringComparer.Ordinal);
+                sortedPeptides.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical "|"-joined set key; equal peptide strings are byte-identical so tie order does not change the key
                 string key = string.Join("|", sortedPeptides);
 
                 List<string> accessions;
@@ -278,7 +278,14 @@ namespace pwiz.Osprey.FDR
                 var peptideSet = new HashSet<string>(kvp.Key.Split('|'), StringComparer.Ordinal);
                 groups.Add(new KeyValuePair<HashSet<string>, List<string>>(peptideSet, kvp.Value));
             }
-            groups.Sort((a, b) => b.Key.Count.CompareTo(a.Key.Count));
+            // Array.Sort OK: subset elimination below only removes a group when its count is
+            // STRICTLY less than a retained group's, so equal-count groups never eliminate one
+            // another and the retained SET is invariant under tie order. Tie hazard, conversion
+            // deferred: equal-count groups' relative order still sets their GroupId assignment
+            // in Step 4, which is the same GroupId-order class as the #4362 canonical incident.
+            // Left byte-identical here; the parsimony rewrite (#4357) is the right place to pin
+            // a stable secondary key. Not a #4362 approved U-site.
+            groups.Sort((a, b) => b.Key.Count.CompareTo(a.Key.Count)); // Array.Sort OK: (see above) retained SET is tie-invariant; GroupId-order tie hazard deferred to #4357
 
             // Step 3: Subset elimination — rarest-peptide candidate scan (issue #4357).
             //
@@ -596,7 +603,7 @@ namespace pwiz.Osprey.FDR
                 // joined with semicolons (matches the Rust port and the
                 // Stage 7 diagnostic dump).
                 var sortedAccs = new List<string>(group.Accessions);
-                sortedAccs.Sort(StringComparer.Ordinal);
+                sortedAccs.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical ";"-joined sortKey; equal accession strings are byte-identical so tie order does not change the key
                 string sortKey = string.Join(";", sortedAccs);
 
                 bool hasT = targetScore.TryGetValue(group.Id, out double t);

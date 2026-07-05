@@ -178,8 +178,13 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
-            // Sort winners by score descending (highest scores first)
-            winners.Sort((a, b) => b.Score.CompareTo(a.Score));
+            // Sort winners by score descending (highest scores first).
+            // Array.Sort OK: tie hazard, conversion deferred. Distinct base_ids can carry
+            // equal scores and the cumulative target/decoy FDR walk below is order-sensitive
+            // at a tie, so this is a genuine parity hazard vs Rust's stable sort. Not a #4362
+            // approved U-site; converting to a stable/keyed sort must go through the
+            // regression golden, so it is deferred to a follow-up rather than shipped here.
+            winners.Sort((a, b) => b.Score.CompareTo(a.Score)); // Array.Sort OK: (see above) tie hazard, conversion deferred -- not a #4362 approved U-site
 
             // First pass: walk down and find MAX cumulative_targets at any position where FDR <= threshold
             int nTargetWins = 0;

@@ -109,7 +109,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 }
                 else
                 {
-                    peptideMads.Sort();
+                    peptideMads.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant
                     int mid = peptideMads.Count / 2;
                     globalWithinPeptideMadLib = peptideMads.Count % 2 == 0
                         ? 0.5 * (peptideMads[mid - 1] + peptideMads[mid])
@@ -317,7 +317,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 return all[all.Length / 2];
             }
 
-            clipped.Sort();
+            clipped.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant
             return clipped[clipped.Count / 2];
         }
     }

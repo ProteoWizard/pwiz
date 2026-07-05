@@ -106,7 +106,7 @@ namespace pwiz.Osprey.FDR
             const string path = @"cs_best_peptide_scores.tsv";
             var inv = CultureInfo.InvariantCulture;
             var keys = new List<string>(best.Keys);
-            keys.Sort(StringComparer.Ordinal);
+            keys.Sort(StringComparer.Ordinal); // Array.Sort OK: diagnostic dump only (not parity-sensitive); keys are unique dictionary keys so the comparator never ties anyway
             using (var sw = new StreamWriter(path))
             {
                 sw.WriteLine("modified_sequence\tscore\tis_decoy\tbest_qvalue");
