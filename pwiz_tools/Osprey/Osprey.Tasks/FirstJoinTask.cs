@@ -531,10 +531,18 @@ namespace pwiz.Osprey.Tasks
             var swFdrBench = Stopwatch.StartNew();
             var benchResult = FdrBenchInputWriter.WritePeptideInput(
                 config.OutputFdrBench, perFileEntries, libraryById, config.FdrLevel, config.FdrBenchPerRun);
+            // Emit the pairing manifest from the same library so FDRBench classifies
+            // every reported peptide and drops nothing. Feed FDRBench -pep with this,
+            // not an externally-generated manifest that may not cover the library.
+            string manifestPath = config.OutputFdrBench + @".pairing.tsv";
+            int manifestRows = FdrBenchInputWriter.WritePairingManifest(
+                manifestPath, libraryById, config.DecoyPairingManifestPath);
             swFdrBench.Stop();
             ctx.LogInfo(string.Format(@"Wrote FDRBench input (pass 1, {0}) to {1}: {2} rows",
                 config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
                 config.OutputFdrBench, benchResult.Rows));
+            ctx.LogInfo(string.Format(@"Wrote FDRBench pairing manifest (from the searched library) to {0}: {1} peptides",
+                manifestPath, manifestRows));
             if (benchResult.MissingLibrary > 0)
                 ctx.LogInfo(string.Format(
                     @"{0} FDRBench rows had no library entry; peptide and protein columns left blank",

@@ -26,6 +26,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -167,6 +168,98 @@ namespace pwiz.Osprey.Tasks
                 saver.Commit();
             }
             return result;
+        }
+
+        /// <summary>
+        /// Write a complete FDRBench pairing manifest derived from the searched
+        /// library -- the single source of truth for the run. Emits one row per
+        /// distinct non-decoy peptide (target / p_target), classified from its own
+        /// protein accessions, so FDRBench can classify every peptide the library
+        /// contains and drops nothing (no <c>remove_invalid_peptides</c>).
+        ///
+        /// FDRBench's peptide-level classifier reads only non-decoy rows, and the
+        /// input TSV excludes decoys, so decoy rows are unnecessary here. The
+        /// entrapment-to-target pairing (for the paired estimator) is taken from
+        /// the optional external manifest where it covers a sequence; peptides it
+        /// does not cover get a fresh unique pair index (unpaired -- still counted
+        /// by the combined / lower-bound estimators).
+        /// </summary>
+        /// <param name="path">Destination manifest TSV path.</param>
+        /// <param name="libraryById">The searched library, indexed by id.</param>
+        /// <param name="externalManifestPath">Optional external pairing manifest for pair indices; may be null/absent.</param>
+        /// <returns>Number of peptide rows written.</returns>
+        public static int WritePairingManifest(
+            string path,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            string externalManifestPath)
+        {
+            // Pair indices for covered sequences, and the next free index for the rest.
+            var seqPair = new Dictionary<string, uint>(System.StringComparer.Ordinal);
+            uint nextPair = 0;
+            if (!string.IsNullOrEmpty(externalManifestPath) && File.Exists(externalManifestPath))
+            {
+                try
+                {
+                    var ext = DecoyPairingManifest.FromTsv(externalManifestPath);
+                    foreach (var kv in ext.PairIndices())
+                    {
+                        seqPair[kv.Key] = kv.Value;
+                        if (kv.Value >= nextPair)
+                            nextPair = kv.Value + 1;
+                    }
+                }
+                catch
+                {
+                    // No external manifest usable: every peptide gets a fresh index.
+                    seqPair.Clear();
+                    nextPair = 0;
+                }
+            }
+
+            // Distinct non-decoy peptides, in deterministic sequence order.
+            var rows = new SortedDictionary<string, LibraryEntry>(System.StringComparer.Ordinal);
+            foreach (var lib in libraryById.Values)
+            {
+                if (lib == null || lib.Sequence == null)
+                    continue;
+                if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                    continue;
+                if (!rows.ContainsKey(lib.Sequence))
+                    rows[lib.Sequence] = lib;
+            }
+
+            string dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+            int written = 0;
+            using (var saver = new FileSaver(path))
+            {
+                using (var writer = new StreamWriter(saver.SafeName, false))
+                {
+                    writer.NewLine = "\n";
+                    writer.WriteLine("sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index");
+                    foreach (var kv in rows)
+                    {
+                        var lib = kv.Value;
+                        bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
+                        uint pair;
+                        if (!seqPair.TryGetValue(lib.Sequence, out pair))
+                            pair = nextPair++;
+                        string protein = FormatProteinField(lib.ProteinIds, out _);
+                        writer.WriteLine(string.Join("\t", new[]
+                        {
+                            lib.Sequence,
+                            "No",
+                            protein,
+                            entrap ? "p_target" : "target",
+                            pair.ToString(CultureInfo.InvariantCulture)
+                        }));
+                        written++;
+                    }
+                }
+                saver.Commit();
+            }
+            return written;
         }
 
         /// <summary>Format one TSV row; <paramref name="runName"/> null omits the trailing run column.</summary>

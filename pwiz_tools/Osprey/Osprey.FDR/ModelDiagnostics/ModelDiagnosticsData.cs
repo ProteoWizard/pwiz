@@ -405,14 +405,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 return cls == EntrapmentClass.PTarget
                     ? EntrapmentClass.PDecoy : EntrapmentClass.Decoy;
             }
-            nWithoutClass++;
             if (!haveManifest)
                 return e.IsDecoy ? EntrapmentClass.Decoy : EntrapmentClass.Target;
-            // Manifest present but this base-id's library sequence is not in it:
-            // FDRBench removes such rows as invalid peptides. A non-decoy becomes
-            // Unknown so it is excluded from the entrapment FDP (reproducing that
-            // removal); decoys never reach the FDP anyway.
-            return e.IsDecoy ? EntrapmentClass.Decoy : EntrapmentClass.Unknown;
+            // Base-id not in the classification map. A decoy is still definitely a
+            // decoy (e.g. an unpaired decoy-side entry whose target-side base-id
+            // isn't present) -- classify and don't count it as unclassified.
+            if (e.IsDecoy)
+                return EntrapmentClass.Decoy;
+            // A non-decoy we genuinely cannot class as target vs entrapment: exclude
+            // it from the entrapment FDP (Unknown) and count it, so a real coverage
+            // gap surfaces. With library-derived classification this should be 0.
+            nWithoutClass++;
+            return EntrapmentClass.Unknown;
         }
 
         private static ScoreHistogram BuildScoreHistogram(List<Prec> precs)
