@@ -158,10 +158,10 @@ namespace pwiz.Osprey.Tasks
                         // perFileParquetPaths map holds original paths.
                         string effectiveParquetPath =
                             ParquetScoreCache.EffectiveScoresPathFromScoresPath(parquetPath);
-                        List<double[]> featRows;
+                        Dictionary<(uint, byte, uint), double[]> featByIdentity;
                         try
                         {
-                            featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(effectiveParquetPath);
+                            featByIdentity = LoadReconciledFeaturesByIdentity(effectiveParquetPath);
                         }
                         catch (Exception ex)
                         {
@@ -170,21 +170,21 @@ namespace pwiz.Osprey.Tasks
                                 effectiveParquetPath, ex.Message));
                             continue;
                         }
-                        int nMapped = MapFeaturesByParquetIndex(kvp.Value, featRows);
-                        // An entry whose ParquetIndex lies past the loaded row count
-                        // is a stub/parquet mismatch (e.g., the first-join parquet
-                        // was regenerated with fewer rows than the in-memory FDR
-                        // stubs reference). Such entries silently keep their stale
+                        int nMapped = MapFeaturesByIdentity(kvp.Value, featByIdentity);
+                        // An entry whose identity is absent from the reconciled
+                        // parquet is a stub/parquet mismatch (e.g., the first-join
+                        // parquet was regenerated with fewer rows than the in-memory
+                        // FDR stubs reference). Such entries silently keep their stale
                         // Features and corrupt 2nd-pass FDR; warn so the mismatch
                         // is visible.
                         if (nMapped < kvp.Value.Count)
                         {
                             ctx.LogWarning(string.Format(
-                                "Second-pass FDR: file '{0}' parquet has {1} feature rows " +
+                                "Second-pass FDR: file '{0}' reconciled parquet has {1} feature rows " +
                                 "but {2} FDR entries reference it; {3} entries will run with " +
                                 "stale/null features. Stub/parquet mismatch -- check first-join " +
                                 "output integrity.",
-                                kvp.Key, featRows.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
+                                kvp.Key, featByIdentity.Count, kvp.Value.Count, kvp.Value.Count - nMapped));
                         }
                         nReloaded += nMapped;
                     }
@@ -389,25 +389,53 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Overlay re-scored PIN features onto <paramref name="entries"/> by
-        /// each entry's <see cref="FdrEntry.ParquetIndex"/>, skipping any entry
-        /// whose index is out of range for <paramref name="featRows"/> (a
-        /// stub/parquet mismatch -- e.g. the first-join parquet was regenerated
-        /// with fewer rows than the in-memory FDR stubs reference). Returns the
-        /// number of entries whose <see cref="FdrEntry.Features"/> were assigned;
-        /// the caller compares it against the entry count to detect and report a
-        /// mismatch. Pure: no I/O, no logging.
+        /// Load the reconciled parquet's 21-PIN feature rows keyed by each row's
+        /// stable identity (entry_id, charge, scan_number). The Stage 6 reconciled
+        /// parquet is re-sorted and re-indexed by <c>ParquetScoreCache.WriteScoresParquet</c>
+        /// -- the appended gap-fill rows interleave into the (entry_id, charge,
+        /// scan_number) sort order -- so a post-compaction stub's
+        /// <see cref="FdrEntry.ParquetIndex"/> (assigned against the ORIGINAL Stage
+        /// 4 parquet, or carried on the in-memory buffer through rescore) no longer
+        /// addresses that stub's own row in the reconciled parquet. Identity is
+        /// invariant across the reindex, so <see cref="MapFeaturesByIdentity"/>
+        /// keys on it. Reads the lean stub columns + the PIN feature columns (no
+        /// heavy fragment/XIC/CWT blobs), one file at a time, so the reload stays
+        /// within the issue #4355 memory bound. (issue #4355)
         /// </summary>
-        internal static int MapFeaturesByParquetIndex(
-            IReadOnlyList<FdrEntry> entries, IReadOnlyList<double[]> featRows)
+        internal static Dictionary<(uint, byte, uint), double[]> LoadReconciledFeaturesByIdentity(
+            string reconciledPath)
+        {
+            var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(reconciledPath);
+            var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(reconciledPath);
+            int n = Math.Min(stubs.Count, featRows.Count);
+            var map = new Dictionary<(uint, byte, uint), double[]>(n);
+            for (int i = 0; i < n; i++)
+                map[(stubs[i].EntryId, stubs[i].Charge, stubs[i].ScanNumber)] = featRows[i];
+            return map;
+        }
+
+        /// <summary>
+        /// Overlay re-scored PIN features onto <paramref name="entries"/> by each
+        /// entry's stable identity (entry_id, charge, scan_number), skipping any
+        /// entry whose identity is absent from <paramref name="featByIdentity"/> (a
+        /// stub/parquet mismatch). Returns the number of entries whose
+        /// <see cref="FdrEntry.Features"/> were assigned; the caller compares it
+        /// against the entry count to detect and report a mismatch. Identity (not
+        /// <see cref="FdrEntry.ParquetIndex"/>) is used because the reconciled
+        /// parquet is re-indexed relative to the compacted stubs -- see
+        /// <see cref="LoadReconciledFeaturesByIdentity"/>. Pure: no I/O, no logging.
+        /// </summary>
+        internal static int MapFeaturesByIdentity(
+            IReadOnlyList<FdrEntry> entries,
+            IReadOnlyDictionary<(uint, byte, uint), double[]> featByIdentity)
         {
             int nMapped = 0;
             foreach (var entry in entries)
             {
-                int idx = (int)entry.ParquetIndex;
-                if (idx >= 0 && idx < featRows.Count)
+                if (featByIdentity.TryGetValue(
+                        (entry.EntryId, entry.Charge, entry.ScanNumber), out double[] features))
                 {
-                    entry.Features = featRows[idx];
+                    entry.Features = features;
                     nMapped++;
                 }
             }

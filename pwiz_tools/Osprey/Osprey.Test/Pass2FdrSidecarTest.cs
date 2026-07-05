@@ -31,7 +31,7 @@ namespace pwiz.Osprey.Test
     /// <summary>
     /// Unit tests for <see cref="Pass2FdrSidecar"/>, the merge-node 2nd-pass FDR
     /// sidecar step extracted from MergeNodeTask.Run. Covers the pure
-    /// <see cref="Pass2FdrSidecar.MapFeaturesByParquetIndex"/> seam (the
+    /// <see cref="Pass2FdrSidecar.MapFeaturesByIdentity"/> seam (the
     /// reconciled-feature overlay) that previously rode only the nightly
     /// regression. The reload/percolator/sidecar-IO orchestration itself stays
     /// parity-locked and is characterized by regression.ps1, not here.
@@ -40,45 +40,52 @@ namespace pwiz.Osprey.Test
     public class Pass2FdrSidecarTest
     {
         /// <summary>
-        /// MapFeaturesByParquetIndex must: assign each entry's Features from the
-        /// feature row at its ParquetIndex (by reference), skip any entry whose
-        /// index is out of range (leaving its Features untouched so the caller's
-        /// nMapped &lt; count check fires), and return the count actually mapped.
+        /// MapFeaturesByIdentity must: assign each entry's Features from the
+        /// feature row whose stable identity (entry_id, charge, scan_number)
+        /// matches -- NOT its ParquetIndex, which is stale relative to the
+        /// re-indexed reconciled parquet (issue #4355) -- skip any entry whose
+        /// identity is absent from the map (leaving its Features untouched so the
+        /// caller's nMapped &lt; count check fires), and return the count mapped.
         /// </summary>
         [TestMethod]
-        public void TestMapFeaturesByParquetIndex()
+        public void TestMapFeaturesByIdentity()
         {
-            var row0 = new[] { 0.0, 0.1 };
-            var row1 = new[] { 1.0, 1.1 };
-            var row2 = new[] { 2.0, 2.1 };
-            var featRows = new List<double[]> { row0, row1, row2 };
+            var rowA = new[] { 0.0, 0.1 };
+            var rowB = new[] { 1.0, 1.1 };
+            var featByIdentity = new Dictionary<(uint, byte, uint), double[]>
+            {
+                { (10u, 2, 100u), rowA },
+                { (20u, 3, 200u), rowB },
+            };
 
-            // Two in-range entries (indices 2 and 0), one past the end (a
-            // stub/parquet mismatch) that must be skipped with its stale Features
-            // left intact.
+            // matchA carries a deliberately WRONG ParquetIndex (999): identity, not
+            // the index, must select its features -- the exact reconciled-parquet
+            // reindex case that regressed 2nd-pass FDR. matchB matches too; noMatch
+            // has an identity absent from the map and must keep its stale features.
             var stale = new[] { 9.0 };
-            var inRangeHigh = new FdrEntry { EntryId = 1, ParquetIndex = 2, Features = null };
-            var inRangeLow = new FdrEntry { EntryId = 2, ParquetIndex = 0, Features = null };
-            var outOfRange = new FdrEntry { EntryId = 3, ParquetIndex = 3, Features = stale };
-            var entries = new List<FdrEntry> { inRangeHigh, inRangeLow, outOfRange };
+            var matchA = new FdrEntry { EntryId = 10, Charge = 2, ScanNumber = 100, ParquetIndex = 999, Features = null };
+            var matchB = new FdrEntry { EntryId = 20, Charge = 3, ScanNumber = 200, ParquetIndex = 0, Features = null };
+            var noMatch = new FdrEntry { EntryId = 30, Charge = 2, ScanNumber = 300, ParquetIndex = 1, Features = stale };
+            var entries = new List<FdrEntry> { matchA, matchB, noMatch };
 
-            int nMapped = Pass2FdrSidecar.MapFeaturesByParquetIndex(entries, featRows);
+            int nMapped = Pass2FdrSidecar.MapFeaturesByIdentity(entries, featByIdentity);
 
-            // Only the two in-range entries are mapped; the caller detects the
-            // mismatch via nMapped (2) < entries.Count (3).
+            // Only the two identity-matched entries are mapped; the caller detects
+            // the mismatch via nMapped (2) < entries.Count (3).
             Assert.AreEqual(2, nMapped);
 
-            // Features are assigned by index, by reference (same array instance).
-            Assert.AreSame(row2, inRangeHigh.Features);
-            Assert.AreSame(row0, inRangeLow.Features);
+            // Features are assigned by identity, by reference (same array instance),
+            // ignoring the stale ParquetIndex.
+            Assert.AreSame(rowA, matchA.Features);
+            Assert.AreSame(rowB, matchB.Features);
 
-            // The out-of-range entry keeps its original (stale) features untouched.
-            Assert.AreSame(stale, outOfRange.Features);
+            // The unmatched entry keeps its original (stale) features untouched.
+            Assert.AreSame(stale, noMatch.Features);
 
-            // Empty feature rows map nothing and never throw.
-            var loneEntry = new FdrEntry { EntryId = 4, ParquetIndex = 0, Features = stale };
-            int nMappedEmpty = Pass2FdrSidecar.MapFeaturesByParquetIndex(
-                new List<FdrEntry> { loneEntry }, new List<double[]>());
+            // Empty map maps nothing and never throws.
+            var loneEntry = new FdrEntry { EntryId = 40, Charge = 1, ScanNumber = 400, Features = stale };
+            int nMappedEmpty = Pass2FdrSidecar.MapFeaturesByIdentity(
+                new List<FdrEntry> { loneEntry }, new Dictionary<(uint, byte, uint), double[]>());
             Assert.AreEqual(0, nMappedEmpty);
             Assert.AreSame(stale, loneEntry.Features);
         }
