@@ -183,6 +183,15 @@ namespace pwiz.Osprey.Tasks
             // reconciliation can lazily load CWT candidates per file via
             // ParquetScoreCache.LoadCwtCandidatesFromParquet.
             var perFileParquetPaths = new Dictionary<string, string>();
+            // Decouple scoring from the join (issue #4355): during the scoring
+            // loop below we record ONLY each scored file's name, in the order
+            // scoring produces it, and defer materializing its FdrEntry stubs
+            // until after the loop -- reloading them from the just-written
+            // .scores.parquet. Retaining every file's stub buffer while the
+            // ~20 GB per-file scoring transient is live is what OOMs a large
+            // straight-through run; deferring holds the scoring peak to
+            // library + one file's transient (flat in file count).
+            var scoredFileNames = new List<string>();
 
             int nFiles = config.InputFiles.Count;
 
@@ -225,7 +234,7 @@ namespace pwiz.Osprey.Tasks
                     fullLibrary, config, parquetFooterMetadata,
                     perFileCalibrations, validityKey, ctx);
                 if (fileResult != null)
-                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                    scoredFileNames.Add(fileName);
             }
             else if (effectiveParallelism == 1)
             {
@@ -244,7 +253,7 @@ namespace pwiz.Osprey.Tasks
                         fullLibrary, config, parquetFooterMetadata,
                         perFileCalibrations, validityKey, ctx);
                     if (fileResult != null)
-                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                        scoredFileNames.Add(fileName);
                     ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
                         string.Format(@"scored file {0}/{1}", fileIdx + 1, config.InputFiles.Count));
                 }
@@ -258,7 +267,7 @@ namespace pwiz.Osprey.Tasks
                     MaxDegreeOfParallelism = effectiveParallelism
                 };
                 string validityKey = ValidityKey(ctx);
-                var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
+                var fileResults = new ConcurrentDictionary<int, string>();
                 // Legend mapping each aggregate-line slot to its input file, printed once
                 // before the concurrent "[i] p%" line starts -- mirrors Skyline's numbered
                 // file list above its multi-file import progress, so a reader can tell which
@@ -284,14 +293,14 @@ namespace pwiz.Osprey.Tasks
                             fullLibrary, config, parquetFooterMetadata,
                             perFileCalibrations, validityKey, ctx);
                         if (fileResult != null)
-                            fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
+                            fileResults[fileIdx] = fileName;
                     }
                 });
                 // Collect in original order
                 for (int i = 0; i < config.InputFiles.Count; i++)
                 {
-                    if (fileResults.TryGetValue(i, out KeyValuePair<string, List<FdrEntry>> result))
-                        perFileEntries.Add(result);
+                    if (fileResults.TryGetValue(i, out string scoredName))
+                        scoredFileNames.Add(scoredName);
                 }
             }
             swAllFiles.Stop();
@@ -306,6 +315,31 @@ namespace pwiz.Osprey.Tasks
             {
                 string fileName = Path.GetFileNameWithoutExtension(inputFile);
                 perFileParquetPaths[fileName] = ParquetScoreCache.GetScoresPath(inputFile);
+            }
+
+            // Now that every per-file scoring transient has been released,
+            // rematerialize the cold FdrEntry stubs the join needs by reloading
+            // them from each scored file's just-written .scores.parquet, in the
+            // same order scoring produced (issue #4355). Only the scalar stub
+            // fields are read back -- no PIN features / CWT / fragment arrays --
+            // which is exactly the cold shape the straight-through path already
+            // left here after ProcessFile spilled every file's full results and
+            // nulled those arrays (FirstJoin streams features back per file). The
+            // live per-file RTCalibration objects in perFileCalibrations are NOT
+            // reloaded: they are not stored in .scores.parquet, so they must stay
+            // the live objects harvested during scoring.
+            foreach (string fileName in scoredFileNames)
+            {
+                string parquetPath = perFileParquetPaths[fileName];
+                // A scored file always has a parquet here; the sole exception is
+                // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
+                // returns an empty result without writing one. Skip that case so
+                // the run still stops cleanly at the "no scored entries" gate
+                // below rather than throwing on a missing file.
+                if (!File.Exists(parquetPath))
+                    continue;
+                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                    fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
             }
 
             int totalScored = 0;
