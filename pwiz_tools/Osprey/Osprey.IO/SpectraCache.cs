@@ -82,42 +82,46 @@ namespace pwiz.Osprey.IO
 
             ComputeSourceFingerprint(sourcePath, out long sourceSize, out long sourceMtimeMs);
 
-            using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
-            using (var w = new BinaryWriter(fs))
+            using (var saver = new FileSaver(path))
             {
-                // Header
-                w.Write(MAGIC);
-                w.Write(VERSION);
-                w.Write((ulong)sourceSize);
-                w.Write(sourceMtimeMs);
-                w.Write((uint)ms2Spectra.Count);
-                w.Write((uint)ms1Spectra.Count);
-
-                // MS2 spectra
-                foreach (var s in ms2Spectra)
+                using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var w = new BinaryWriter(fs))
                 {
-                    w.Write(s.ScanNumber);
-                    w.Write(s.RetentionTime);
-                    w.Write(s.PrecursorMz);
-                    w.Write(s.IsolationWindow.Center);
-                    w.Write(s.IsolationWindow.LowerOffset);
-                    w.Write(s.IsolationWindow.UpperOffset);
-                    w.Write((uint)s.Mzs.Length);
-                    WriteDoubleArray(w, s.Mzs);
-                    WriteFloatArray(w, s.Intensities);
-                }
+                    // Header
+                    w.Write(MAGIC);
+                    w.Write(VERSION);
+                    w.Write((ulong)sourceSize);
+                    w.Write(sourceMtimeMs);
+                    w.Write((uint)ms2Spectra.Count);
+                    w.Write((uint)ms1Spectra.Count);
 
-                // MS1 spectra
-                foreach (var s in ms1Spectra)
-                {
-                    w.Write(s.ScanNumber);
-                    w.Write(s.RetentionTime);
-                    w.Write((uint)s.Mzs.Length);
-                    WriteDoubleArray(w, s.Mzs);
-                    WriteFloatArray(w, s.Intensities);
-                }
+                    // MS2 spectra
+                    foreach (var s in ms2Spectra)
+                    {
+                        w.Write(s.ScanNumber);
+                        w.Write(s.RetentionTime);
+                        w.Write(s.PrecursorMz);
+                        w.Write(s.IsolationWindow.Center);
+                        w.Write(s.IsolationWindow.LowerOffset);
+                        w.Write(s.IsolationWindow.UpperOffset);
+                        w.Write((uint)s.Mzs.Length);
+                        WriteDoubleArray(w, s.Mzs);
+                        WriteFloatArray(w, s.Intensities);
+                    }
 
-                w.Flush();
+                    // MS1 spectra
+                    foreach (var s in ms1Spectra)
+                    {
+                        w.Write(s.ScanNumber);
+                        w.Write(s.RetentionTime);
+                        w.Write((uint)s.Mzs.Length);
+                        WriteDoubleArray(w, s.Mzs);
+                        WriteFloatArray(w, s.Intensities);
+                    }
+
+                    w.Flush();
+                }
+                saver.Commit();
             }
         }
 
