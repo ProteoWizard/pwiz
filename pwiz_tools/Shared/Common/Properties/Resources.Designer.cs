@@ -853,7 +853,25 @@ namespace pwiz.Common.Properties {
                 return ResourceManager.GetString("FilterOperations_Is_Not_Blank", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Is Declared.
+        /// </summary>
+        public static string FilterOperations_Is_Declared {
+            get {
+                return ResourceManager.GetString("FilterOperations_Is_Declared", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Is Not Declared.
+        /// </summary>
+        public static string FilterOperations_Is_Not_Declared {
+            get {
+                return ResourceManager.GetString("FilterOperations_Is_Not_Declared", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Starts With.
         /// </summary>

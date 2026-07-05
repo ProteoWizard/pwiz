@@ -53,6 +53,8 @@ namespace pwiz.SkylineTest
             TestRoundTripSpectrumFilters();
             TestCvParamColumnRoundTrip();
             TestCvParamFilterPredicate();
+            TestCvParamDeclaredFilter();
+            TestDeclaredOperatorScoping();
             TestDiscoverCvColumns();
         }
 
@@ -264,6 +266,87 @@ namespace pwiz.SkylineTest
             // of the unit the term happens to carry.
             var sameAccessionDifferentUnitTerm = CvSpectrum(@"pct", accession, name, @"1000", @"percent of base peak");
             Assert.IsTrue(Numeric(FilterOperations.OP_IS_GREATER_THAN, @"500")(sameAccessionDifferentUnitTerm));
+        }
+
+        private void TestCvParamDeclaredFilter()
+        {
+            // "Is Declared"/"Is Not Declared" test only whether a CV/user term is present in the spectrum,
+            // independent of any value it carries. This is the only way to match a value-less flag term
+            // (e.g. "zoom scan"), which captures with an empty value and so reads as blank under the value
+            // operators. Identity is the accession alone, as for the value operators.
+            const string accession = @"MS:1000497";
+            const string name = @"zoom scan";
+            var flagColumn = SpectrumClassColumn.CvParam(accession, name, false);
+
+            Predicate<SpectrumMetadata> Declared(IFilterOperation op) =>
+                new SpectrumClassFilter(new FilterClause(new[] { new FilterSpec(flagColumn.PropertyPath, op, (string)null) }))
+                    .MakePredicate();
+
+            // A value-less flag term captures with an empty (non-null) value: it is Declared.
+            var flagPresent = CvSpectrum(@"flag", accession, name, string.Empty, null);
+            // A value-bearing term of the same accession is likewise Declared.
+            var valued = CvSpectrum(@"valued", accession, name, @"1", null);
+            // A spectrum lacking the term entirely is not Declared.
+            var absent = new SpectrumMetadata(@"absent", 1.0);
+
+            Assert.IsTrue(Declared(FilterOperations.OP_IS_DECLARED)(flagPresent));
+            Assert.IsTrue(Declared(FilterOperations.OP_IS_DECLARED)(valued));
+            Assert.IsFalse(Declared(FilterOperations.OP_IS_DECLARED)(absent));
+
+            Assert.IsFalse(Declared(FilterOperations.OP_IS_NOT_DECLARED)(flagPresent));
+            Assert.IsFalse(Declared(FilterOperations.OP_IS_NOT_DECLARED)(valued));
+            Assert.IsTrue(Declared(FilterOperations.OP_IS_NOT_DECLARED)(absent));
+
+            // The distinction from Is Not Blank, which is exactly why Declared exists: a present flag has
+            // an empty value, so Is Not Blank reports it as absent, whereas Is Declared matches it.
+            Predicate<SpectrumMetadata> NotBlank() =>
+                new SpectrumClassFilter(new FilterClause(new[]
+                    { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_IS_NOT_BLANK, (string)null) })).MakePredicate();
+            Assert.IsFalse(NotBlank()(flagPresent),
+                @"a present flag has an empty value, so Is Not Blank does not match it (Is Declared does)");
+
+            // A Declared filter references a CV column, so it triggers term capture during extraction, and
+            // its persisted filter string validates and re-parses to a predicate that behaves identically.
+            var filter = new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(flagColumn.PropertyPath, FilterOperations.OP_IS_DECLARED, (string)null) }));
+            Assert.IsTrue(filter.ReferencesCvColumns());
+            var filterString = filter.ToFilterString();
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString(filterString),
+                @"Declared filter string should validate: " + filterString);
+            var roundTripped = SpectrumClassFilter.ParseFilterString(filterString).MakePredicate();
+            Assert.IsTrue(roundTripped(flagPresent));
+            Assert.IsFalse(roundTripped(absent));
+        }
+
+        private void TestDeclaredOperatorScoping()
+        {
+            // The Declared operators are registered - so they serialize by symbol and the spectrum-filter
+            // editor, which lists every operation, offers them for the CV columns.
+            var ops = FilterOperations.ListOperations();
+            Assert.IsTrue(ops.Contains(FilterOperations.OP_IS_DECLARED));
+            Assert.IsTrue(ops.Contains(FilterOperations.OP_IS_NOT_DECLARED));
+            Assert.AreSame(FilterOperations.OP_IS_DECLARED,
+                FilterOperations.GetOperationBySymbol(FilterOperations.OP_IS_DECLARED.OpSymbol));
+            Assert.AreSame(FilterOperations.OP_IS_NOT_DECLARED,
+                FilterOperations.GetOperationBySymbol(FilterOperations.OP_IS_NOT_DECLARED.OpSymbol));
+
+            // ...but they are gated OUT of the general report/quick filters, which honor IsValidFor. For an
+            // ordinary column a presence test is redundant with Is Blank/Has Any Value, so IsValidFor is
+            // false for every filter handler. This scoping (false everywhere, plus the spectrum editor's
+            // ungated list) is what confines them to spectrum filtering; if it regresses they leak into
+            // every filter UI in the application.
+            var dataSchema = new DataSchema();
+            foreach (var type in new[] { typeof(string), typeof(double) })
+            {
+                var handler = dataSchema.GetFilterHandler(type);
+                Assert.IsFalse(FilterOperations.OP_IS_DECLARED.IsValidFor(handler),
+                    @"Is Declared must not be offered in report/quick filters for " + type);
+                Assert.IsFalse(FilterOperations.OP_IS_NOT_DECLARED.IsValidFor(handler),
+                    @"Is Not Declared must not be offered in report/quick filters for " + type);
+            }
+            // Sanity: an ordinary unary operator IS valid for such a column, so the assertions above
+            // reflect the Declared ops' own gating rather than a handler that rejects everything.
+            Assert.IsTrue(FilterOperations.OP_IS_NOT_BLANK.IsValidFor(dataSchema.GetFilterHandler(typeof(string))));
         }
 
         private void TestDiscoverCvColumns()

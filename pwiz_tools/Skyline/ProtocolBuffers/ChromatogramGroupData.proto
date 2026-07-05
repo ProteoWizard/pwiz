@@ -96,6 +96,8 @@ message ChromatogramGroupIdsProto {
 		FILTER_OP_NOT_CONTAINS = 10;
 		FITLER_OP_STARTS_WITH = 11;
 		FILTER_OP_NOT_STARTS_WITH = 12;
+		FILTER_OP_IS_DECLARED = 13;
+		FILTER_OP_IS_NOT_DECLARED = 14;
 	}
 	message AccessionNumber {
 		int32 typeName = 1;

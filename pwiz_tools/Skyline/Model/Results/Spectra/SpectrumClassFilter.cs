@@ -213,6 +213,18 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private static Predicate<SpectrumMetadata> CompileCvSpec(FilterSpec spec, DataSchema dataSchema)
         {
             var column = SpectrumClassColumn.FindColumn(spec.ColumnId);
+
+            // "Is Declared"/"Is Not Declared" test only for the term's presence: a value-less flag term
+            // captures with an empty (non-null) value, so presence is exactly GetValue() != null, while a
+            // spectrum lacking the term yields null. This bypasses the value-coercion path below, which a
+            // present flag's empty value could not survive as "present".
+            var op = spec.Operation;
+            if (Equals(op, FilterOperations.OP_IS_DECLARED) || Equals(op, FilterOperations.OP_IS_NOT_DECLARED))
+            {
+                bool declaredWanted = Equals(op, FilterOperations.OP_IS_DECLARED);
+                return metadata => (column.GetValue(metadata) != null) == declaredWanted;
+            }
+
             var type = DetermineCvOperandType(spec);
             var rawPredicate = spec.Predicate.MakePredicate(dataSchema, type);
             var columnDisplay = column.GetLocalizedColumnName(CultureInfo.CurrentCulture);

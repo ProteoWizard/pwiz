@@ -64,19 +64,29 @@ namespace pwiz.SkylineTestFunctional
             var filterCv70 = StringCvFilter(@"cv=-70");
             var filterBpiAll = NumericBpiFilter(FilterOperations.OP_IS_GREATER_THAN, @"0");
 
+            // "Is Declared"/"Is Not Declared" test only for a term's presence. The filter string term
+            // (MS:1000512) is present on every MS1 spectrum, so Is Declared on it matches them all; the
+            // zoom scan term (MS:1000497) is present on none of this data, so Is Not Declared on it also
+            // matches them all. Both therefore reproduce the unfiltered chromatogram, exercising the
+            // presence predicate through the real extraction pipeline (including term capture).
+            var filterDeclared = DeclaredCvFilter(@"MS:1000512", @"filter string", FilterOperations.OP_IS_DECLARED);
+            var filterNotDeclared = DeclaredCvFilter(@"MS:1000497", @"zoom scan", FilterOperations.OP_IS_NOT_DECLARED);
+
             RunUI(() =>
             {
                 SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterCv50, true);
                 SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterCv70, true);
                 SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterBpiAll, true);
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterDeclared, true);
+                SkylineWindow.EditMenu.ChangeSpectrumFilter(new[] { precursorPath }, filterNotDeclared, true);
             });
-            Assert.AreEqual(4, SkylineWindow.Document.MoleculeTransitionGroupCount);
+            Assert.AreEqual(6, SkylineWindow.Document.MoleculeTransitionGroupCount);
 
             ImportResultsFile(TestFilesDir.GetTestPath("Ms1SpectrumFilterTest.mzML"));
 
             var document = SkylineWindow.Document;
             var peptideDocNode = document.Molecules.First();
-            Assert.AreEqual(4, peptideDocNode.TransitionGroupCount);
+            Assert.AreEqual(6, peptideDocNode.TransitionGroupCount);
 
             int Points(SpectrumClassFilter filter)
             {
@@ -98,6 +108,11 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(unfilteredPoints, cv50Points + cv70Points);
             // A numeric CV filter admitting every base peak intensity matches all spectra.
             Assert.AreEqual(unfilteredPoints, Points(filterBpiAll));
+            // Presence filters resolved through extraction: Is Declared on the always-present filter string
+            // term, and Is Not Declared on the never-present zoom scan term, each match every MS1 spectrum,
+            // so both reproduce the unfiltered chromatogram.
+            Assert.AreEqual(unfilteredPoints, Points(filterDeclared));
+            Assert.AreEqual(unfilteredPoints, Points(filterNotDeclared));
 
             VerifyEditorOffersCvColumns();
             VerifyGridShowsCvColumns();
@@ -185,6 +200,13 @@ namespace pwiz.SkylineTestFunctional
             var column = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
             return new SpectrumClassFilter(new FilterClause(new[]
                 { new FilterSpec(column.PropertyPath, op, operand) }));
+        }
+
+        private static SpectrumClassFilter DeclaredCvFilter(string accession, string name, IFilterOperation op)
+        {
+            var column = SpectrumClassColumn.CvParam(accession, name, false);
+            return new SpectrumClassFilter(new FilterClause(new[]
+                { new FilterSpec(column.PropertyPath, op, (string)null) }));
         }
     }
 }
