@@ -169,10 +169,11 @@ namespace pwiz.Osprey.Scoring
                 // best-peak picks per Stellar file.
                 double mad = context.OriginalRtMad ?? rtCalibration.Stats().MAD;
                 double robustSd = mad * 1.4826;
-                double rtToleranceMad = robustSd * 3.0;
-                rtToleranceGlobal = Math.Max(
-                    config.RtCalibration.MinRtTolerance,
-                    Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
+                // Shared definition of the final search-window half-width so the
+                // scoring path, the persisted calibration JSON, and the console
+                // calibration summary all report the same number (issue #4364).
+                rtToleranceGlobal = RTCalibration.SearchWindowHalfWidth(
+                    mad, config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
                 if (OspreyOutput.Verbose) _logInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",

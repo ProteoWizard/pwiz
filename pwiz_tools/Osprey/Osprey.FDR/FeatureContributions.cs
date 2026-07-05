@@ -292,8 +292,16 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         public IEnumerable<string> ToReportLines()
         {
-            yield return "  Feature weight contributions (trained linear model, coefficients standardized):";
-            yield return string.Format("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "percent");
+            // Framed as a model sanity check, NOT feature importance: the percent is
+            // each feature's share of the target-decoy separation (a mean-difference
+            // decomposition), not a ranking of predictive value. A near-zero share on
+            // a score expected to matter (e.g. library dot-product, RT difference), or
+            // a large share weighted opposite its expected direction, is a flag to
+            // investigate the library / calibration -- the analog of Skyline's mProphet
+            // model view. The raw standardized coefficient is kept alongside for the
+            // Compare-Peaks-style read of how the composite score was built.
+            yield return "  Model sanity check -- feature share of target-decoy separation (trained linear model, coefficients standardized):";
+            yield return string.Format("    {0,-36} {1,12} {2,9}", "feature", "coefficient", "share");
             foreach (var f in Features
                 .OrderByDescending(f => IsDegenerate ? 0.0 : Math.Abs(f.Percent))
                 .ThenBy(f => f.Index))

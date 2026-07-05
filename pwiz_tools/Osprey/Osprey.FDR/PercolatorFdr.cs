@@ -419,6 +419,10 @@ namespace pwiz.Osprey.FDR
             var foldModels = new LinearSvmClassifier[config.NFolds];
             var foldIterations = new int[config.NFolds];
             var foldElapsed = new double[config.NFolds];
+            // Selected SVM cost C per fold (chosen by inner CV over config.CValues,
+            // the log-scale sweep grid). Reported on the default console after
+            // training so the coefficients above have context (issue #4364).
+            var foldBestC = new double[config.NFolds];
 
             // Pre-compute training indices for each fold (cheap, single-threaded).
             var foldTrainIndices = new int[config.NFolds][];
@@ -462,11 +466,13 @@ namespace pwiz.Osprey.FDR
             {
                 var swFold = Stopwatch.StartNew();
                 int iters;
+                double foldC;
                 foldModels[fold] = TrainFold(
                     subFeatures, subLabels, subEntryIds, subPeptides,
                     foldTrainIndices[fold], initialScores, config, trainFdr,
-                    svmScratchPool, fold, trainProgress, out iters);
+                    svmScratchPool, fold, trainProgress, out iters, out foldC);
                 foldIterations[fold] = iters;
+                foldBestC[fold] = foldC;
                 swFold.Stop();
                 foldElapsed[fold] = swFold.Elapsed.TotalSeconds;
             });
@@ -479,6 +485,18 @@ namespace pwiz.Osprey.FDR
             }
             OspreyOutput.Out.WriteLine("[TIMING]   Percolator train all folds (parallel): {0:F1}s",
                 swTrain.Elapsed.TotalSeconds);
+
+            // Selected SVM regularization C per fold, on the default console (issue
+            // #4364): C controls the SVM margin, so the trained coefficients above are
+            // only interpretable with it. C is chosen per fold by inner cross-validation
+            // from a log-scale sweep grid; report the grid and each fold's pick.
+            OspreyOutput.Out.WriteLine("  SVM regularization C (swept over {0}, chosen by cross-validation per fold):",
+                FormatCGrid(config.CValues));
+            for (int fold = 0; fold < config.NFolds; fold++)
+            {
+                OspreyOutput.Out.WriteLine("    fold {0}/{1}: C = {2}",
+                    fold + 1, config.NFolds, FormatC(foldBestC[fold]));
+            }
 
             // Stage 5 SVM-internals dump. Gated by OSPREY_DUMP_SVM_WEIGHTS;
             // a *Only request returns the abort sentinel. Captures per-fold
@@ -977,10 +995,17 @@ namespace pwiz.Osprey.FDR
             SvmTrainScratchPool svmScratchPool,
             int foldIndex,
             TrainProgressReporter progress,
-            out int bestIteration)
+            out int bestIteration,
+            out double bestC)
         {
             int nFeatures = stdFeatures.Cols;
             var currentScores = (double[])initialScores.Clone();
+            // The C (SVM cost / margin) of the winning iteration's model. Tracked
+            // alongside bestModel so Stage 5 can report the selected regularization
+            // on the default console (issue #4364): C is swept in log steps per
+            // GridSearchC and chosen by inner CV each iteration, so the fold's C is
+            // whichever iteration's model became bestModel below.
+            bestC = 1.0;
 
             // Rent one scratch for this outer fold's sequential Train calls
             // (the final per-iteration Train at the bottom of the loop). The
@@ -1061,14 +1086,14 @@ namespace pwiz.Osprey.FDR
                 var svmFoldAssignments = CreateStratifiedFoldsByPeptide(
                     svmLabels, svmPeptides, svmEntryIds, config.NFolds);
 
-                double bestC = GridSearchC(
+                double bestC1 = GridSearchC(
                     svmFeatures, svmLabels, svmEntryIds,
                     config.CValues, svmFoldAssignments, config.NFolds,
                     config.Seed, trainFdr, svmScratchPool);
 
                 // iii. Train SVM with best C
                 var model = LinearSvmClassifier.Train(
-                    svmFeatures, svmLabels, bestC, config.Seed, foldScratch);
+                    svmFeatures, svmLabels, bestC1, config.Seed, foldScratch);
 
                 // iv. Score ALL training set entries with new model
                 // trainFeatures is live just for the DecisionFunction call;
@@ -1105,6 +1130,7 @@ namespace pwiz.Osprey.FDR
                     bestModel = model;
                     bestPassing = nPassing;
                     bestIteration = iteration + 1;
+                    bestC = bestC1;
                     consecutiveNoImprove = 0;
                 }
                 else
@@ -2406,12 +2432,41 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Format a single SVM cost C for the console using the invariant culture
+        /// (a numeric value, not localizable text), with the general "R" round-trip
+        /// so grid values like 0.001 / 100 print exactly rather than as 1E-03.
+        /// </summary>
+        private static string FormatC(double c)
+        {
+            return c.ToString("R", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>
+        /// Format the log-scale C sweep grid as "{a, b, c}" for the console header.
+        /// </summary>
+        private static string FormatCGrid(double[] cValues)
+        {
+            if (cValues == null || cValues.Length == 0)
+                return "{}";
+            var parts = new string[cValues.Length];
+            for (int i = 0; i < cValues.Length; i++)
+                parts[i] = FormatC(cValues[i]);
+            return "{" + string.Join(", ", parts) + "}";
+        }
+
+        /// <summary>
         /// Writes the feature-contribution table (<see cref="FeatureContributions.ToReportLines"/>)
         /// to <c>OspreyOutput.Out</c> after Stage 5 training -- one row per line so each
         /// keeps its own log timestamp prefix. Pure reporting; never moves q-values.
+        /// Gated behind <c>--verbose</c> (<see cref="OspreyOutput.Verbose"/>): the table is
+        /// a model sanity check for implementers, not default-console output (per issue
+        /// #4364 -- the raw coefficients aren't comparable on magnitude alone and the L2
+        /// SVM splits signal across correlated scores, so it should not be emphasized).
         /// </summary>
         private static void EmitFeatureContributions(FeatureContributions contributions)
         {
+            if (!OspreyOutput.Verbose)
+                return;
             foreach (string line in contributions.ToReportLines())
                 OspreyOutput.Out.WriteLine(line);
         }
