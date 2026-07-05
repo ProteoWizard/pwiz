@@ -473,7 +473,10 @@ namespace pwiz.Osprey.Tasks
             // and off the default output path, so it can't affect any other
             // output; a failure is logged and swallowed inside Write.
             if (config.ModelDiagnostics)
-                ModelDiagnosticsReport.Write(perFileEntries, contributions, config, ctx.LogInfo);
+            {
+                var libraryById = ctx.Get<LibraryById>().Value;
+                ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, config, ctx.LogInfo);
+            }
         }
 
         /// <summary>

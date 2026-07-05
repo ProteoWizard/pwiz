@@ -49,18 +49,21 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         public static void Write(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
             Action<string> logInfo)
         {
             try
             {
-                Dictionary<string, EntrapmentClass> classBySeq;
-                Dictionary<string, uint> pairBySeq;
-                LoadManifestMaps(config, logInfo, out classBySeq, out pairBySeq);
+                Dictionary<uint, EntrapmentClass> classByBaseId;
+                Dictionary<uint, uint> pairByBaseId;
+                double entrapmentRatio;
+                LoadManifestMaps(config, libraryById, logInfo,
+                    out classByBaseId, out pairByBaseId, out entrapmentRatio);
 
                 var data = ModelDiagnosticsData.Build(
-                    perFileEntries, contributions, classBySeq, pairBySeq,
-                    config.RunFdr, config.FdrLevel.ToString());
+                    perFileEntries, contributions, classByBaseId, pairByBaseId,
+                    entrapmentRatio, config.RunFdr, config.FdrLevel.ToString());
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
                     @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                 data.OspreyVersion = OspreyVersion.DisplayVersion;
@@ -89,35 +92,84 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             }
         }
 
+        /// <summary>
+        /// Build the FDRBench-equivalent classification keyed by library base-id.
+        /// FDRBench identifies each precursor by the library sequence its base-id
+        /// resolves to, then looks that sequence up in the pairing manifest
+        /// (dropping the row when it is absent). We reproduce that key exactly:
+        /// for every target-side library entry (decoys share their target's
+        /// base-id and are handled downstream) whose sequence the manifest
+        /// classifies as target / p_target, map its base-id to that class and its
+        /// pair index. A base-id absent from the result is FDRBench-"invalid".
+        /// <paramref name="entrapmentRatio"/> is the manifest p_target/target
+        /// count ratio r (1.0 for a balanced library / no manifest).
+        /// </summary>
         private static void LoadManifestMaps(
-            OspreyConfig config, Action<string> logInfo,
-            out Dictionary<string, EntrapmentClass> classBySeq,
-            out Dictionary<string, uint> pairBySeq)
+            OspreyConfig config,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            Action<string> logInfo,
+            out Dictionary<uint, EntrapmentClass> classByBaseId,
+            out Dictionary<uint, uint> pairByBaseId,
+            out double entrapmentRatio)
         {
-            classBySeq = null;
-            pairBySeq = null;
+            classByBaseId = null;
+            pairByBaseId = null;
+            entrapmentRatio = 1.0;
             string path = config.DecoyPairingManifestPath;
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            if (string.IsNullOrEmpty(path) || !File.Exists(path) || libraryById == null)
                 return;
             try
             {
                 var manifest = DecoyPairingManifest.FromTsv(path);
-                classBySeq = new Dictionary<string, EntrapmentClass>(StringComparer.Ordinal);
+
+                // sequence -> (kind, pairIndex) for the target-side kinds only.
+                // FDRBench's get_peptide_type skips decoy rows, so decoy /
+                // p_decoy sequences never enter the classification map.
+                var seqKind = new Dictionary<string, EntrapmentClass>(StringComparer.Ordinal);
                 foreach (var kv in manifest.Kinds())
-                    classBySeq[kv.Key] = MapKind(kv.Value);
-                pairBySeq = new Dictionary<string, uint>(StringComparer.Ordinal);
+                {
+                    if (kv.Value == PeptideKind.Target || kv.Value == PeptideKind.PTarget)
+                        seqKind[kv.Key] = MapKind(kv.Value);
+                }
+                var seqPair = new Dictionary<string, uint>(StringComparer.Ordinal);
                 foreach (var kv in manifest.PairIndices())
-                    pairBySeq[kv.Key] = kv.Value;
+                    seqPair[kv.Key] = kv.Value;
+
+                int nTarget = 0, nPTarget = 0;
+                classByBaseId = new Dictionary<uint, EntrapmentClass>();
+                pairByBaseId = new Dictionary<uint, uint>();
+                foreach (var kv in libraryById)
+                {
+                    // Target-side entries only (high decoy bit clear). A decoy's
+                    // base-id already equals its target's, which is covered here.
+                    if ((kv.Key & BASE_ID_MASK) != kv.Key)
+                        continue;
+                    var lib = kv.Value;
+                    if (lib == null || lib.Sequence == null)
+                        continue;
+                    if (!seqKind.TryGetValue(lib.Sequence, out var cls))
+                        continue;
+                    classByBaseId[kv.Key] = cls;
+                    if (cls == EntrapmentClass.PTarget) nPTarget++; else nTarget++;
+                    if (seqPair.TryGetValue(lib.Sequence, out uint pairIdx))
+                        pairByBaseId[kv.Key] = pairIdx;
+                }
+                if (nTarget > 0)
+                    entrapmentRatio = (double)nPTarget / nTarget;
             }
             catch (Exception ex)
             {
                 logInfo(string.Format(
                     @"[MODEL-DIAGNOSTICS] could not read pairing manifest ({0}); degrading to target/decoy only",
                     ex.Message));
-                classBySeq = null;
-                pairBySeq = null;
+                classByBaseId = null;
+                pairByBaseId = null;
+                entrapmentRatio = 1.0;
             }
         }
+
+        /// <summary>Mask clearing the decoy high bit to get the shared target/decoy base-id.</summary>
+        private const uint BASE_ID_MASK = 0x7FFFFFFF;
 
         private static EntrapmentClass MapKind(PeptideKind kind)
         {

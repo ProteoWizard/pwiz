@@ -46,46 +46,46 @@ namespace pwiz.Osprey.Test
             TestClassCountsAndDegrade();
             TestWinFractionCoinVsSignal();
             TestFeatureTableContributions();
-            TestModifiedSequenceMatchesManifest();
+            TestBaseIdClassificationAndInvalidDrop();
         }
 
-        // paired = (n_p + n_p_s_t) / (n_t + n_p), where n_p_s_t counts accepted
-        // entrapment hits that outscore their paired target (shared pair_index)
-        // or whose paired target went unobserved. Matches FDRBench's paired_fdp.
+        // paired = (n_p + vt) / (n_t + n_p), vt = n_p_s_t + 2*n_p_t_s (FDRBench
+        // FDPCalcKFold, k = 1). n_p_s_t counts accepted entrapment whose paired
+        // target (same pair_index + charge) is NOT accepted or absent; n_p_t_s
+        // counts accepted entrapment whose paired target IS accepted and which
+        // ranks at or above that target. Matches FDRBench's paired_fdp.
         private static void TestPairedEstimator()
         {
             var entries = new List<FdrEntry>();
-            var map = new Dictionary<string, EntrapmentClass>();
-            var pair = new Dictionary<string, uint>();
-            // 4 real targets, scores 8/6/4/2, pair_index 0..3.
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            var pair = new Dictionary<uint, uint>();
+            // 4 real targets, scores 8/6/4/2, pair_index 0..3, base-ids 10..13.
             double[] tscores = { 8, 6, 4, 2 };
             for (int i = 0; i < 4; i++)
             {
-                string seq = "T" + i;
-                entries.Add(Entry((uint)(10 + i), false, tscores[i], 0.001 * (i + 1), seq, 2));
-                map[seq] = EntrapmentClass.Target;
-                pair[seq] = (uint)i;
+                entries.Add(Entry((uint)(10 + i), false, tscores[i], 0.001 * (i + 1), "T" + i, 2));
+                cls[(uint)(10 + i)] = EntrapmentClass.Target;
+                pair[(uint)(10 + i)] = (uint)i;
             }
-            // P_a (score 5) is paired to an UNobserved target (index 100) -> wins.
-            // P_b (score 3) is paired to T0 (score 8) -> does not win. Both have q
-            // within the target q range (0.001..0.004) so both count at the top.
+            // P_a (score 5) is paired to an UNobserved target (index 100) -> ranks
+            // above (absent) target, contributes n_p_s_t. P_b (score 3) is paired
+            // to T0 (pair_index 0, q 0.001) but has a WORSE q (0.003) so ranks
+            // below its accepted target -> contributes nothing. Both entrapment q
+            // fall within the target q range (0.001..0.004) so both count at top.
             entries.Add(Entry(20, false, 5.0, 0.002, "Pa", 2));
-            map["Pa"] = EntrapmentClass.PTarget; pair["Pa"] = 100;
+            cls[20] = EntrapmentClass.PTarget; pair[20] = 100;
             entries.Add(Entry(21, false, 3.0, 0.003, "Pb", 2));
-            map["Pb"] = EntrapmentClass.PTarget; pair["Pb"] = 0;
-            // Balance the manifest to r = 1 (4 targets, 4 p_targets).
-            map["Pu1"] = EntrapmentClass.PTarget;
-            map["Pu2"] = EntrapmentClass.PTarget;
+            cls[21] = EntrapmentClass.PTarget; pair[21] = 0;
 
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, map, pair, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, pair, 1.0, 0.01, "peptide");
             var fdp = data.FdpViews.Single(v => v.Scope == "experiment");
             Assert.IsNotNull(fdp.Paired);
             int last = fdp.Paired.Length - 1;
-            // At the last target: n_t = 4, n_p = 2, n_p_s_t = 1 (only P_a won).
+            // At the last target: n_t = 4, n_p = 2, vt = 1 (only P_a, n_p_s_t = 1).
             // paired = (2 + 1) / (4 + 2) = 0.5; lower = 2 / 6.
             Assert.AreEqual(0.5, fdp.Paired[last], 1e-9);
             Assert.AreEqual(2.0 / 6.0, fdp.LowerBound[last], 1e-9);
-            // Paired sits at or above lower-bound once an entrapment wins its pair.
+            // Paired sits at or above lower-bound once an entrapment ranks above its pair.
             Assert.IsTrue(fdp.Paired[last] >= fdp.LowerBound[last]);
         }
 
@@ -97,25 +97,20 @@ namespace pwiz.Osprey.Test
         {
             // 8 real targets (scores 8..1), 2 entrapment (scores 5.5, 0.5).
             var entries = new List<FdrEntry>();
-            var map = new Dictionary<string, EntrapmentClass>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
             for (int i = 0; i < 8; i++)
             {
-                string seq = "T" + i;
-                entries.Add(Entry((uint)(100 + i), false, 8 - i, 0.001 * (i + 1), seq, 2));
-                map[seq] = EntrapmentClass.Target;
+                entries.Add(Entry((uint)(100 + i), false, 8 - i, 0.001 * (i + 1), "T" + i, 2));
+                cls[(uint)(100 + i)] = EntrapmentClass.Target;
             }
             // Both entrapment have q within the target q range (0.001..0.008), so
             // at the highest target q both are counted (n_p = 2).
-            AddEntrap(entries, map, 200, 5.5, 0.003, "P0");
-            AddEntrap(entries, map, 201, 1.5, 0.005, "P1");
+            AddEntrap(entries, cls, 200, 5.5, 0.003, "P0");
+            AddEntrap(entries, cls, 201, 1.5, 0.005, "P1");
             // The entrapment DB ratio r is defined by the manifest composition,
-            // not the observed hits. A real entrapment library is balanced
-            // (equal target and p_target peptides), so add unobserved p_target
-            // keys to make r = 1 -- the case the estimator asserts below.
-            for (int i = 2; i < 8; i++)
-                map["Punseen" + i] = EntrapmentClass.PTarget;
-
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, map, null, 0.01, "peptide");
+            // not the observed hits: a balanced library gives r = 1, passed in
+            // explicitly -- the case the estimator asserts below.
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
             Assert.IsTrue(data.HasEntrapment);
             Assert.IsNotNull(data.FdpViews);
             // Two pass-1 views: experiment-wide (FDRBench-matching) + per-run.
@@ -136,6 +131,9 @@ namespace pwiz.Osprey.Test
 
         private static void TestClassCountsAndDegrade()
         {
+            // A target/decoy pair (base-id 1) and an entrapment/p_decoy pair
+            // (base-id 2). Decoys share their target's base-id and inherit the
+            // partition: base-id 1 decoy -> Decoy, base-id 2 decoy -> PDecoy.
             var entries = new List<FdrEntry>
             {
                 Entry(1, false, 5, 0.001, "TA", 2),
@@ -143,12 +141,11 @@ namespace pwiz.Osprey.Test
                 Entry(2, false, 4, 0.002, "PA", 2),
                 Entry(2 | DECOY_BIT, true, 0.5, 0.6, "PDA", 2),
             };
-            var map = new Dictionary<string, EntrapmentClass>
+            var cls = new Dictionary<uint, EntrapmentClass>
             {
-                { "TA", EntrapmentClass.Target }, { "DA", EntrapmentClass.Decoy },
-                { "PA", EntrapmentClass.PTarget }, { "PDA", EntrapmentClass.PDecoy },
+                { 1u, EntrapmentClass.Target }, { 2u, EntrapmentClass.PTarget },
             };
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, map, null, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
             Assert.AreEqual(1, data.NTarget);
             Assert.AreEqual(1, data.NDecoy);
             Assert.AreEqual(1, data.NPTarget);
@@ -156,7 +153,7 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(data.HasEntrapment);
 
             // No manifest -> degrade to the is_decoy-only split; no FDP views.
-            var degraded = ModelDiagnosticsData.Build(Wrap(entries), null, null, null, 0.01, "peptide");
+            var degraded = ModelDiagnosticsData.Build(Wrap(entries), null, null, null, 1.0, 0.01, "peptide");
             Assert.IsFalse(degraded.HasEntrapment);
             Assert.IsNull(degraded.FdpViews);
             Assert.AreEqual(2, degraded.NTarget);  // TA + PA both is_decoy=false
@@ -168,25 +165,21 @@ namespace pwiz.Osprey.Test
             // Real pairs: target always outscores its decoy (decoy never wins).
             // Entrapment pairs: alternating winner -> ~50% decoy-win coin.
             var entries = new List<FdrEntry>();
-            var map = new Dictionary<string, EntrapmentClass>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
             for (int i = 0; i < 200; i++)
             {
-                string t = "RT" + i, d = "RD" + i;
-                entries.Add(Entry((uint)(1000 + i), false, 5.0, 0.001, t, 2));
-                entries.Add(Entry((uint)(1000 + i) | DECOY_BIT, true, 1.0, 0.5, d, 2));
-                map[t] = EntrapmentClass.Target;
-                map[d] = EntrapmentClass.Decoy;
+                entries.Add(Entry((uint)(1000 + i), false, 5.0, 0.001, "RT" + i, 2));
+                entries.Add(Entry((uint)(1000 + i) | DECOY_BIT, true, 1.0, 0.5, "RD" + i, 2));
+                cls[(uint)(1000 + i)] = EntrapmentClass.Target;
             }
             for (int i = 0; i < 200; i++)
             {
-                string p = "EP" + i, pd = "EPD" + i;
                 bool decoyWins = (i % 2 == 0);
-                entries.Add(Entry((uint)(5000 + i), false, decoyWins ? 3.0 : 3.4, 0.01, p, 2));
-                entries.Add(Entry((uint)(5000 + i) | DECOY_BIT, true, decoyWins ? 3.4 : 3.0, 0.5, pd, 2));
-                map[p] = EntrapmentClass.PTarget;
-                map[pd] = EntrapmentClass.PDecoy;
+                entries.Add(Entry((uint)(5000 + i), false, decoyWins ? 3.0 : 3.4, 0.01, "EP" + i, 2));
+                entries.Add(Entry((uint)(5000 + i) | DECOY_BIT, true, decoyWins ? 3.4 : 3.0, 0.5, "EPD" + i, 2));
+                cls[(uint)(5000 + i)] = EntrapmentClass.PTarget;
             }
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, map, null, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
             var wf = data.WinFraction;
             Assert.IsNotNull(wf);
             Assert.IsTrue(wf.HasEntrapment);
@@ -232,7 +225,7 @@ namespace pwiz.Osprey.Test
                 Entry(1, false, 5, 0.001, "TA", 2),
                 Entry(1 | DECOY_BIT, true, 1, 0.5, "DA", 2),
             };
-            var data = ModelDiagnosticsData.Build(Wrap(entries), contrib, null, null, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), contrib, null, null, 1.0, 0.01, "peptide");
             Assert.AreEqual(2, data.Model.Count);
             // Sorted most-influential-first: |200%| before |-100%|.
             Assert.AreEqual("Feature Zero", data.Model[0].Label);
@@ -243,33 +236,39 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(data.Model[1].Unexpected);
         }
 
-        private static void TestModifiedSequenceMatchesManifest()
+        // Classification is keyed by the library base-id (EntryId with the decoy
+        // high bit cleared) -- exactly the key FDRBench's input writer resolves
+        // and looks up in the manifest -- and is independent of the modified
+        // sequence. A non-decoy whose base-id is absent from the manifest is
+        // FDRBench-"invalid": it becomes Unknown and is excluded from the class
+        // counts and the entrapment FDP, reproducing remove_invalid_peptides.
+        private static void TestBaseIdClassificationAndInvalidDrop()
         {
-            // Manifest is keyed by the bare sequence; the entry carries a
-            // modified sequence. Classification must strip the modification.
             var entries = new List<FdrEntry>
             {
+                // base-id 1 -> PTarget (regardless of the modified sequence text)
                 Entry(1, false, 5, 0.001, "PEPTC[UniMod:4]IDEK", 2),
                 Entry(1 | DECOY_BIT, true, 1, 0.5, "KEDITC[UniMod:4]PEP", 2),
+                // base-id 7 is absent from the manifest -> invalid -> Unknown
+                Entry(7, false, 4, 0.002, "SOMEUNPAIREDK", 2),
             };
-            var map = new Dictionary<string, EntrapmentClass>
-            {
-                { "PEPTCIDEK", EntrapmentClass.PTarget },
-                { "KEDITCPEP", EntrapmentClass.PDecoy },
-            };
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, map, null, 0.01, "peptide");
-            Assert.AreEqual(0, data.NUnclassified);
+            var cls = new Dictionary<uint, EntrapmentClass> { { 1u, EntrapmentClass.PTarget } };
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
             Assert.AreEqual(1, data.NPTarget);
             Assert.AreEqual(1, data.NPDecoy);
+            // The unmatched non-decoy is dropped, NOT counted as a target.
+            Assert.AreEqual(0, data.NTarget);
+            Assert.AreEqual(2, data.NClassifiedFromManifest); // base-id 1 (target + decoy sides)
+            Assert.AreEqual(1, data.NUnclassified);           // base-id 7
         }
 
         // ----- helpers -----
 
         private static void AddEntrap(List<FdrEntry> entries,
-            Dictionary<string, EntrapmentClass> map, uint id, double score, double q, string seq)
+            Dictionary<uint, EntrapmentClass> cls, uint id, double score, double q, string seq)
         {
             entries.Add(Entry(id, false, score, q, seq, 2));
-            map[seq] = EntrapmentClass.PTarget;
+            cls[id] = EntrapmentClass.PTarget;
         }
 
         private static FdrEntry Entry(uint id, bool decoy, double score, double q, string seq, byte charge)

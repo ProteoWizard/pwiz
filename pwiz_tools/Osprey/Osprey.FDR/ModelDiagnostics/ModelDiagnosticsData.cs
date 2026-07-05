@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.FDR.ModelDiagnostics
@@ -199,6 +198,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public bool IsDecoy;
             public EntrapmentClass Class;
             public uint PairIndex;
+            public byte Charge;
             public bool HasPair;
         }
 
@@ -207,21 +207,33 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// </summary>
         /// <param name="perFileEntries">Per-file first-pass FdrEntry lists, scored and q-valued, pre-compaction.</param>
         /// <param name="contributions">The trained model's feature contributions (may be null for non-Percolator FDR).</param>
-        /// <param name="classBySequence">
-        /// bare sequence -> entrapment class from the pairing manifest, or
-        /// null/empty to degrade to the is_decoy-only Target/Decoy split.
+        /// <param name="classByBaseId">
+        /// library base-id (<c>EntryId &amp; 0x7FFFFFFF</c>) -> target-side
+        /// entrapment class (Target / PTarget), resolved from the library
+        /// sequence exactly as FDRBench's input writer does. This is the
+        /// authoritative FDRBench classification key: a precursor whose base-id
+        /// is absent is "invalid" (its library sequence is not in the pairing
+        /// manifest) and is excluded from the entrapment FDP, reproducing
+        /// FDRBench's <c>remove_invalid_peptides</c> step. Null/empty degrades to
+        /// the is_decoy-only Target/Decoy split.
         /// </param>
-        /// <param name="pairIndexBySequence">
-        /// bare sequence -> peptide_pair_index from the manifest (target and its
-        /// entrapment share a value), for the paired-FDP estimator. May be null.
+        /// <param name="pairByBaseId">
+        /// library base-id -> peptide_pair_index from the manifest (a target and
+        /// its entrapment share a value), for the paired-FDP estimator. May be null.
+        /// </param>
+        /// <param name="entrapmentRatio">
+        /// Entrapment-to-target database ratio r (p_target count / target count
+        /// from the manifest). 1.0 for a balanced library or when no manifest is
+        /// present -- FDRBench's 1-fold estimators use r = 1.
         /// </param>
         /// <param name="runFdr">The configured run-level FDR (for the summary counts).</param>
         /// <param name="fdrLevel">Display name of the FDR level used.</param>
         public static ModelDiagnosticsData Build(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
-            IReadOnlyDictionary<string, EntrapmentClass> classBySequence,
-            IReadOnlyDictionary<string, uint> pairIndexBySequence,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            IReadOnlyDictionary<uint, uint> pairByBaseId,
+            double entrapmentRatio,
             double runFdr,
             string fdrLevel)
         {
@@ -234,7 +246,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 PerFile = new List<FileSummaryRow>(),
             };
 
-            bool haveManifest = classBySequence != null && classBySequence.Count > 0;
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
 
             // ---- best-per-precursor reduction (max score per modseq+charge) ----
             // Keyed within a file by (modseq,charge); a precursor seen in several
@@ -252,11 +264,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     else if (e.IsDecoy && e.RunPeptideQvalue <= runFdr)
                         fileDecoys++;
 
-                    EntrapmentClass cls = Classify(e, classBySequence, haveManifest,
+                    uint baseId = e.EntryId & BASE_ID_MASK;
+                    EntrapmentClass cls = Classify(e, baseId, classByBaseId, haveManifest,
                         ref nWithClass, ref nWithoutClass);
                     uint pairIdx = 0;
-                    bool hasPair = pairIndexBySequence != null && e.ModifiedSequence != null &&
-                        pairIndexBySequence.TryGetValue(BareSequence(e.ModifiedSequence), out pairIdx);
+                    bool hasPair = pairByBaseId != null &&
+                        pairByBaseId.TryGetValue(baseId, out pairIdx);
                     string key = e.ModifiedSequence + "|" + e.Charge;
                     if (!best.TryGetValue(key, out var cur))
                     {
@@ -275,6 +288,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                             IsDecoy = e.IsDecoy,
                             Class = cls,
                             PairIndex = pairIdx,
+                            Charge = e.Charge,
                             HasPair = hasPair,
                         };
                     }
@@ -347,13 +361,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             data.IdYield = BuildIdYield(precs);
 
             // ---- paired decoy-win fraction ----
-            data.WinFraction = BuildWinFraction(perFileEntries, classBySequence, haveManifest);
+            data.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
 
             // ---- entrapment FDP calibration (all q-scope views) ----
             if (data.HasEntrapment)
             {
-                double r = ComputeEntrapmentRatio(classBySequence);
-                if (r <= 0) r = 1.0;
+                double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
                 data.FdpViews = new List<FdpView>();
                 // Pass 1 (pre-compaction, this Stage-5 pool). Experiment-scope is
                 // the axis --fdrbench emits, so it reproduces the FDRBench plot;
@@ -370,18 +383,36 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return data;
         }
 
-        private static EntrapmentClass Classify(FdrEntry e,
-            IReadOnlyDictionary<string, EntrapmentClass> classBySequence, bool haveManifest,
+        // Mask clearing the decoy high bit from an EntryId to get the shared
+        // target/decoy library base-id (same convention as FdrBenchInputWriter).
+        private const uint BASE_ID_MASK = 0x7FFFFFFF;
+
+        private static EntrapmentClass Classify(FdrEntry e, uint baseId,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest,
             ref int nWithClass, ref int nWithoutClass)
         {
-            if (haveManifest && e.ModifiedSequence != null &&
-                classBySequence.TryGetValue(BareSequence(e.ModifiedSequence), out var cls))
+            // FDRBench classifies each row by the library sequence its base-id
+            // resolves to (a decoy shares its target's base-id), then looks that
+            // sequence up in the pairing manifest. classByBaseId holds
+            // Target / PTarget for every base-id whose library sequence the
+            // manifest classifies as target / p_target.
+            if (haveManifest && classByBaseId.TryGetValue(baseId, out var cls))
             {
                 nWithClass++;
-                return cls;
+                if (!e.IsDecoy)
+                    return cls;                    // Target or PTarget
+                // Decoy side inherits its target's partition.
+                return cls == EntrapmentClass.PTarget
+                    ? EntrapmentClass.PDecoy : EntrapmentClass.Decoy;
             }
             nWithoutClass++;
-            return e.IsDecoy ? EntrapmentClass.Decoy : EntrapmentClass.Target;
+            if (!haveManifest)
+                return e.IsDecoy ? EntrapmentClass.Decoy : EntrapmentClass.Target;
+            // Manifest present but this base-id's library sequence is not in it:
+            // FDRBench removes such rows as invalid peptides. A non-decoy becomes
+            // Unknown so it is excluded from the entrapment FDP (reproducing that
+            // removal); decoys never reach the FDP anyway.
+            return e.IsDecoy ? EntrapmentClass.Decoy : EntrapmentClass.Unknown;
         }
 
         private static ScoreHistogram BuildScoreHistogram(List<Prec> precs)
@@ -466,10 +497,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
         private static WinFractionData BuildWinFraction(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, EntrapmentClass> classBySequence, bool haveManifest)
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest)
         {
             // base_id -> best target-side score, target-side class, best decoy-side score
-            const uint BASE_ID_MASK = 0x7FFFFFFF;
             var bt = new Dictionary<uint, double[]>();      // [tScore, dScore]
             var tClass = new Dictionary<uint, EntrapmentClass>();
             foreach (var kvp in perFileEntries)
@@ -491,8 +521,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         if (e.Score > slot[0])
                         {
                             slot[0] = e.Score;
-                            tClass[bid] = haveManifest && e.ModifiedSequence != null &&
-                                          classBySequence.TryGetValue(BareSequence(e.ModifiedSequence), out var c)
+                            tClass[bid] = haveManifest &&
+                                          classByBaseId.TryGetValue(bid, out var c)
                                 ? c : EntrapmentClass.Target;
                         }
                     }
@@ -607,21 +637,42 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // by score and tallying entrapment interspersed undercounts entrapment
             // whose own q clears the threshold at a lower score -- verified against
             // fdrbench: q-threshold counting reproduces fdp.csv, score-ranking does
-            // not.) For the paired estimator, an entrapment "wins its pair"
-            // (n_p_s_t) when it outscores its paired target, or that target went
-            // unobserved.
-            var pairTargetScore = new Dictionary<uint, double>();
+            // not.)
+            //
+            // Paired estimator (FDRBench FDPCalcKFold, k = 1):
+            //   paired = (n_p + vt) / (n_t + n_p),  vt = n_p_s_t + 2 * n_p_t_s
+            //   n_p_s_t = entrapment accepted, its paired target NOT accepted (or absent)
+            //   n_p_t_s = entrapment accepted, paired target accepted, entrapment
+            //             ranked at or above that target
+            // where "ranked at or above" means the entrapment sorts first under the
+            // (q asc, then score desc) order FDRBench ranks on:
+            //   rankAbove = q_e < q_t  ||  (q_e == q_t && score_e >= score_t)
+            // The target of a pair is matched by (pair_index, charge) -- the same
+            // (paired-target-sequence, charge) key FDRBench pairs on. Each paired
+            // entrapment that ranks above its target contributes +1 to vt once
+            // t >= q_e (target not yet accepted -> n_p_s_t) and a further +1 once
+            // t >= q_t (target accepted -> n_p_t_s, total 2); an entrapment ranked
+            // below its accepted target contributes 0. This lets a single ascending
+            // sweep accumulate vt from two event streams (eventsA at q_e, eventsB
+            // at q_t).
+            var pairTarget = new Dictionary<long, double[]>();   // (pairIndex,charge) -> [qTgt, scoreTgt]
             foreach (var p in precs)
             {
-                if (p.Class == EntrapmentClass.Target && p.HasPair)
+                if (p.IsDecoy || p.Class != EntrapmentClass.Target || !p.HasPair)
+                    continue;
+                long key = PairKey(p.PairIndex, p.Charge);
+                double q = qSel(p);
+                if (!pairTarget.TryGetValue(key, out var slot)
+                    || q < slot[0] || (q == slot[0] && p.Score > slot[1]))
                 {
-                    if (!pairTargetScore.TryGetValue(p.PairIndex, out double s) || p.Score > s)
-                        pairTargetScore[p.PairIndex] = p.Score;
+                    pairTarget[key] = new[] { q, p.Score };
                 }
             }
 
             var targetQ = new List<double>();
-            var entrap = new List<KeyValuePair<double, bool>>();  // (q, wonItsPair)
+            var entrapQ = new List<double>();     // all entrapment q (for n_p)
+            var eventsA = new List<double>();     // +1 at q_e  (entrapment accepted, ranks above target)
+            var eventsB = new List<double>();     // +1 at q_t  (paired target then also accepted)
             foreach (var p in precs)
             {
                 if (p.IsDecoy)
@@ -632,16 +683,30 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
                 else if (p.Class == EntrapmentClass.PTarget)
                 {
-                    bool won = p.HasPair &&
-                        (!pairTargetScore.TryGetValue(p.PairIndex, out double ts) || p.Score > ts);
-                    entrap.Add(new KeyValuePair<double, bool>(qSel(p), won));
+                    double qe = qSel(p);
+                    entrapQ.Add(qe);
+                    if (!p.HasPair)
+                        continue;
+                    double[] tgt;
+                    bool haveTgt = pairTarget.TryGetValue(PairKey(p.PairIndex, p.Charge), out tgt);
+                    // rankAbove: entrapment sorts at or before its target. An absent
+                    // target (never observed) is always "below" -> rankAbove holds.
+                    bool rankAbove = !haveTgt || qe < tgt[0] || (qe == tgt[0] && p.Score >= tgt[1]);
+                    if (rankAbove)
+                    {
+                        eventsA.Add(qe);
+                        if (haveTgt)
+                            eventsB.Add(tgt[0]);
+                    }
                 }
             }
             if (targetQ.Count == 0)
                 return null;
-            bool anyPair = entrap.Count > 0 && pairTargetScore.Count > 0;
+            bool anyPair = eventsA.Count > 0;
             targetQ.Sort();
-            entrap.Sort((a, b) => a.Key.CompareTo(b.Key));
+            entrapQ.Sort();
+            eventsA.Sort();
+            eventsB.Sort();
 
             var qs = new List<double>();
             var lb = new List<double>();
@@ -649,29 +714,31 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var paired = new List<double>();
             var ntAcc = new List<int>();
 
-            int ei = 0, nE = 0, nPst = 0;
+            int ei = 0, ai = 0, bi = 0, nE = 0;
             for (int i = 0; i < targetQ.Count; i++)
             {
                 double t = targetQ[i];
-                while (ei < entrap.Count && entrap[ei].Key <= t)
-                {
-                    nE++;
-                    if (entrap[ei].Value) nPst++;
-                    ei++;
-                }
+                while (ei < entrapQ.Count && entrapQ[ei] <= t) { nE++; ei++; }
+                while (ai < eventsA.Count && eventsA[ai] <= t) ai++;
+                while (bi < eventsB.Count && eventsB[bi] <= t) bi++;
                 int nT = i + 1;
-                // FDRBench estimators, verified against fdrbench fdp.csv:
+                int vt = ai + bi;   // n_p_s_t + 2 * n_p_t_s
+                // FDRBench 1-fold estimators, verified against fdrbench fdp.csv:
                 //   combined    = (1 + 1/r) * n_p / (n_t + n_p)
                 //   lower_bound = n_p / (r * (n_t + n_p))
-                //   paired      = (n_p + n_p_s_t) / (n_t + n_p)
+                //   paired      = (n_p + vt) / (n_t + n_p)
                 double denom = nT + nE;
                 qs.Add(t);
                 lb.Add(nE / (r * denom));
                 comb.Add((1.0 + 1.0 / r) * nE / denom);
-                paired.Add((nE + nPst) / denom);
+                paired.Add((nE + vt) / denom);
                 ntAcc.Add(nT);
             }
 
+            // q-aware thinning: keep the [0, 2%] calibration zoom window dense
+            // (so the plotted curve and the 1%-q metrics stay faithful to the
+            // per-precursor FDRBench values) and subsample only the long tail.
+            var idx = ThinFdpIndices(qs);
             return new FdpView
             {
                 Label = label,
@@ -679,43 +746,21 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 Scope = scope,
                 MatchesFdrBench = matchesFdrBench,
                 EntrapmentRatio = r,
-                Q = Thin(qs),
-                LowerBound = Thin(lb),
-                Combined = Thin(comb),
-                Paired = anyPair ? Thin(paired) : null,
-                NTargetAccepted = Thin(ntAcc),
+                Q = Pick(qs, idx),
+                LowerBound = Pick(lb, idx),
+                Combined = Pick(comb, idx),
+                Paired = anyPair ? Pick(paired, idx) : null,
+                NTargetAccepted = Pick(ntAcc, idx),
             };
         }
 
-        private static double ComputeEntrapmentRatio(IReadOnlyDictionary<string, EntrapmentClass> classBySequence)
+        // Pack an entrapment pair index (target and its p_target share it) with a
+        // charge into a single key, so an entrapment precursor pairs only with a
+        // target of the SAME charge -- FDRBench's (paired-target-sequence, charge)
+        // pairing key. Charge fits in a byte, so shift the pair index up 8 bits.
+        private static long PairKey(uint pairIndex, byte charge)
         {
-            if (classBySequence == null) return 1.0;
-            int nT = 0, nP = 0;
-            foreach (var v in classBySequence.Values)
-            {
-                if (v == EntrapmentClass.Target) nT++;
-                else if (v == EntrapmentClass.PTarget) nP++;
-            }
-            return nT > 0 ? (double)nP / nT : 1.0;
-        }
-
-        // Strip modification annotations (e.g. "C[UniMod:4]" -> "C") so a
-        // modified precursor's sequence matches the pairing manifest, which is
-        // keyed by the bare peptide sequence. Handles nested/successive
-        // brackets and leaves an unmodified sequence untouched (no allocation).
-        private static string BareSequence(string modSeq)
-        {
-            if (string.IsNullOrEmpty(modSeq) || modSeq.IndexOf('[') < 0)
-                return modSeq;
-            var sb = new StringBuilder(modSeq.Length);
-            int depth = 0;
-            foreach (char c in modSeq)
-            {
-                if (c == '[') depth++;
-                else if (c == ']') { if (depth > 0) depth--; }
-                else if (depth == 0) sb.Append(c);
-            }
-            return sb.ToString();
+            return ((long)pairIndex << 8) | charge;
         }
 
         // ----- small numeric helpers -----
@@ -755,31 +800,59 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return lo;
         }
 
-        // Thin a monotone-ish series to at most ~400 points for a compact JSON.
-        private static double[] Thin(List<double> xs)
+        // Select a subset of a series by explicit index list (companion to
+        // ThinFdpIndices, which chooses the indices once so every FDP series is
+        // thinned to the same points).
+        private static double[] Pick(List<double> xs, int[] idx)
         {
-            return ThinIndices(xs.Count).Select(i => xs[i]).ToArray();
+            var r = new double[idx.Length];
+            for (int i = 0; i < idx.Length; i++) r[i] = xs[idx[i]];
+            return r;
         }
 
-        private static int[] Thin(List<int> xs)
+        private static int[] Pick(List<int> xs, int[] idx)
         {
-            return ThinIndices(xs.Count).Select(i => xs[i]).ToArray();
+            var r = new int[idx.Length];
+            for (int i = 0; i < idx.Length; i++) r[i] = xs[idx[i]];
+            return r;
         }
 
-        private static IEnumerable<int> ThinIndices(int count)
+        // Choose which points of an ascending-q FDP curve to keep for a compact,
+        // faithful JSON. The [0, 2%] calibration zoom window is kept dense (up to
+        // ~350 points) so the plotted curve and the 1%-q metrics match the
+        // per-precursor FDRBench values; the long tail out to the max q is
+        // subsampled (~120 points) for the full-extent panel. Indices are chosen
+        // from the q values so every series (q / lower / combined / paired / n_t)
+        // is thinned identically.
+        private static int[] ThinFdpIndices(List<double> qs)
         {
-            const int cap = 400;
+            int n = qs.Count;
+            if (n == 0) return new int[0];
+            const double zoomMax = 0.02;
+            const int lowCap = 350, highCap = 120;
+            int split = 0;
+            while (split < n && qs[split] <= zoomMax) split++;
+            var keep = new SortedSet<int>();
+            AddUniform(keep, 0, split, lowCap);   // dense across the zoom window
+            AddUniform(keep, split, n, highCap);  // sparse across the tail
+            keep.Add(n - 1);                       // always the final point
+            var arr = new int[keep.Count];
+            keep.CopyTo(arr);
+            return arr;
+        }
+
+        // Add up to cap indices spread uniformly across [lo, hi).
+        private static void AddUniform(SortedSet<int> keep, int lo, int hi, int cap)
+        {
+            int count = hi - lo;
+            if (count <= 0) return;
             if (count <= cap)
             {
-                for (int i = 0; i < count; i++) yield return i;
-                yield break;
+                for (int i = lo; i < hi; i++) keep.Add(i);
+                return;
             }
-            var seen = new HashSet<int>();
             for (int k = 0; k < cap; k++)
-            {
-                int i = (int)((long)k * (count - 1) / (cap - 1));
-                if (seen.Add(i)) yield return i;
-            }
+                keep.Add(lo + (int)((long)k * (count - 1) / (cap - 1)));
         }
     }
 }
