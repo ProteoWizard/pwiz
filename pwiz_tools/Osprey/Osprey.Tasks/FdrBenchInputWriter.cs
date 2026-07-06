@@ -26,7 +26,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using pwiz.Osprey.Core;
-using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -86,12 +85,14 @@ namespace pwiz.Osprey.Tasks
         /// <param name="fdrLevel">Drives which q-value field is emitted and the dedup key.
         /// <see cref="FdrLevel.Both"/> collapses to precursor-level for output.</param>
         /// <param name="perRun">If true, emit one row per (precursor, file); else dedup across runs.</param>
+        /// <param name="skipEntrapmentSeqs">Entrapment sequences to exclude (unmatched orphans); null to write all.</param>
         public static Result WritePeptideInput(
             string path,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             FdrLevel fdrLevel,
-            bool perRun)
+            bool perRun,
+            ICollection<string> skipEntrapmentSeqs = null)
         {
             // Protein and Both collapse to precursor-level for this peptide-level writer.
             FdrLevel effectiveLevel = fdrLevel == FdrLevel.Peptide ? FdrLevel.Peptide : FdrLevel.Precursor;
@@ -120,6 +121,8 @@ namespace pwiz.Osprey.Tasks
                                 if (entry.IsDecoy)
                                     continue;
                                 var lookup = ResolveLibrary(libraryById, entry.EntryId, ref result);
+                                if (skipEntrapmentSeqs != null && skipEntrapmentSeqs.Contains(lookup.Peptide))
+                                    continue; // excluded orphan entrapment (kept consistent with the manifest)
                                 double q = entry.EffectiveRunQvalue(effectiveLevel);
                                 writer.WriteLine(FormatRow(lookup.Peptide, entry.ModifiedSequence,
                                     entry.Charge, q, entry.Score, lookup.Protein, runName));
@@ -159,6 +162,8 @@ namespace pwiz.Osprey.Tasks
                             .ThenBy(r => r.Entry.Charge))
                         {
                             var lookup = ResolveLibrary(libraryById, row.Entry.EntryId, ref result);
+                            if (skipEntrapmentSeqs != null && skipEntrapmentSeqs.Contains(lookup.Peptide))
+                                continue; // excluded orphan entrapment (kept consistent with the manifest)
                             writer.WriteLine(FormatRow(lookup.Peptide, row.Entry.ModifiedSequence,
                                 row.Entry.Charge, row.QValue, row.Entry.Score, lookup.Protein, null));
                             result.Rows++;
@@ -171,58 +176,40 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Write a complete FDRBench pairing manifest derived from the searched
+        /// Write a corrected FDRBench pairing manifest derived from the searched
         /// library -- the single source of truth for the run. Emits one row per
-        /// distinct non-decoy peptide (target / p_target), classified from its own
-        /// protein accessions, so FDRBench can classify every peptide the library
-        /// contains and drops nothing (no <c>remove_invalid_peptides</c>).
+        /// distinct non-decoy peptide (target / p_target) classified from its own
+        /// protein accessions, so FDRBench can classify every reported peptide and
+        /// drops nothing (no <c>remove_invalid_peptides</c>).
         ///
-        /// FDRBench's peptide-level classifier reads only non-decoy rows, and the
-        /// input TSV excludes decoys, so decoy rows are unnecessary here. The
-        /// entrapment-to-target pairing (for the paired estimator) is taken from
-        /// the optional external manifest where it covers a sequence; peptides it
-        /// does not cover get a fresh unique pair index (unpaired -- still counted
-        /// by the combined / lower-bound estimators).
+        /// Pairing comes from <paramref name="pairing"/>: the external manifest where
+        /// it covers a sequence, reconstructed from the library accessions for the
+        /// extras. Entrapment peptides with no target twin
+        /// (<see cref="EntrapmentPairing.ExcludedEntrapment"/> -- N-terminal-Met-clip
+        /// artifacts) are absent from the pairing and are NOT emitted, so the manifest
+        /// has no unpaired entrapment and stock FDRBench's paired estimator does not
+        /// crash. FDRBench reads only non-decoy rows and the input TSV excludes
+        /// decoys, so decoy rows are unnecessary.
         /// </summary>
         /// <param name="path">Destination manifest TSV path.</param>
         /// <param name="libraryById">The searched library, indexed by id.</param>
-        /// <param name="externalManifestPath">Optional external pairing manifest for pair indices; may be null/absent.</param>
+        /// <param name="pairing">The reconciled pairing (see <see cref="EntrapmentPairing.Build"/>).</param>
         /// <returns>Number of peptide rows written.</returns>
         public static int WritePairingManifest(
             string path,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
-            string externalManifestPath)
+            EntrapmentPairing pairing)
         {
-            // Pair indices for covered sequences, and the next free index for the rest.
-            var seqPair = new Dictionary<string, uint>(System.StringComparer.Ordinal);
-            uint nextPair = 0;
-            if (!string.IsNullOrEmpty(externalManifestPath) && File.Exists(externalManifestPath))
-            {
-                try
-                {
-                    var ext = DecoyPairingManifest.FromTsv(externalManifestPath);
-                    foreach (var kv in ext.PairIndices())
-                    {
-                        seqPair[kv.Key] = kv.Value;
-                        if (kv.Value >= nextPair)
-                            nextPair = kv.Value + 1;
-                    }
-                }
-                catch
-                {
-                    // No external manifest usable: every peptide gets a fresh index.
-                    seqPair.Clear();
-                    nextPair = 0;
-                }
-            }
-
-            // Distinct non-decoy peptides, in deterministic sequence order.
+            // Distinct non-decoy peptides that have a pair index, in sequence order.
+            // A peptide absent from PairIndexBySeq is an excluded orphan entrapment.
             var rows = new SortedDictionary<string, LibraryEntry>(System.StringComparer.Ordinal);
             foreach (var lib in libraryById.Values)
             {
                 if (lib == null || lib.Sequence == null)
                     continue;
                 if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                    continue;
+                if (!pairing.PairIndexBySeq.ContainsKey(lib.Sequence))
                     continue;
                 if (!rows.ContainsKey(lib.Sequence))
                     rows[lib.Sequence] = lib;
@@ -242,9 +229,7 @@ namespace pwiz.Osprey.Tasks
                     {
                         var lib = kv.Value;
                         bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
-                        uint pair;
-                        if (!seqPair.TryGetValue(lib.Sequence, out pair))
-                            pair = nextPair++;
+                        uint pair = pairing.PairIndexBySeq[lib.Sequence];
                         string protein = FormatProteinField(lib.ProteinIds, out _);
                         writer.WriteLine(string.Join("\t", new[]
                         {

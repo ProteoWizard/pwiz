@@ -69,12 +69,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 data.OspreyVersion = OspreyVersion.DisplayVersion;
                 data.OutputName = OutputStem(config);
 
-                if (data.NUnclassified > 0)
-                {
-                    logInfo(string.Format(
-                        @"[MODEL-DIAGNOSTICS] {0} non-decoy precursors could not be classified as target vs entrapment and are excluded from the FDP (expected 0 with library classification)",
-                        data.NUnclassified));
-                }
+                // Unmatched entrapment excluded from the FDP is reported by
+                // EntrapmentPairing.LogSummary during classification; no separate
+                // NUnclassified warning needed (it counts the same intended drops).
 
                 string html = ModelDiagnosticsHtml.Render(data);
                 string outPath = ResolveReportPath(config);
@@ -94,22 +91,17 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>
         /// Build the entrapment classification keyed by library base-id, from the
-        /// library Osprey actually searched -- the single source of truth. Each
+        /// library Osprey actually searched -- the single source of truth, reconciled
+        /// against the external manifest by <see cref="EntrapmentPairing"/>. Each
         /// target-side entry is classed target / p_target from its own protein
-        /// accessions (a <c>_p_target</c> marker means entrapment); decoys share
-        /// their target's base-id and are resolved downstream from the entry's
-        /// is_decoy flag. Because every searched peptide is classified, nothing is
-        /// dropped -- unlike keying off an external manifest that may not cover the
-        /// whole library.
+        /// accessions (a <c>_p_target</c> marker means entrapment); decoys share their
+        /// target's base-id and are resolved downstream from the is_decoy flag.
         ///
-        /// The entrapment-to-target PAIRING (for the paired FDP estimator) still
-        /// comes from the optional external manifest, because the per-peptide
-        /// pairing token is stripped from library accessions during protein
-        /// parsimony; peptides the manifest does not cover simply go unpaired
-        /// (they still count in the combined / lower-bound estimators). When a
-        /// manifest is supplied, its per-sequence class is cross-checked against
-        /// the library and any disagreement or shortfall is logged -- the
-        /// consistency assertion the two-tool generation pipeline lacks.
+        /// Unmatched entrapment (N-terminal-Met-clip artifacts with no target twin)
+        /// are excluded here exactly as they are from the emitted FDRBench manifest and
+        /// input TSV, so the HTML FDP and FDRBench see the same peptides. Pairing (for
+        /// the paired estimator) is the reconciled pairing -- the external manifest for
+        /// covered peptides, reconstructed from the library accessions for the extras.
         ///
         /// <paramref name="entrapmentRatio"/> is the library p_target/target count
         /// ratio r (1.0 for a balanced 1-fold entrapment library).
@@ -128,23 +120,30 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (libraryById == null)
                 return;
 
+            var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+
             int nTarget = 0, nPTarget = 0;
             classByBaseId = new Dictionary<uint, EntrapmentClass>();
             pairByBaseId = new Dictionary<uint, uint>();
             foreach (var kv in libraryById)
             {
                 var lib = kv.Value;
-                if (lib == null)
+                if (lib == null || lib.Sequence == null)
                     continue;
-                // Skip decoy-side entries: their base-id equals their target's,
-                // which the target-side entry below already classifies. Detect
-                // from the accession (authoritative) rather than the is_decoy flag.
+                // Skip decoy-side entries: their base-id equals their target's, which
+                // the target-side entry below classifies (accession is authoritative).
                 if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                    continue;
+                // Exclude unmatched entrapment so the HTML FDP counts the same peptides
+                // the emitted manifest gives FDRBench.
+                if (pairing.ExcludedEntrapment.Contains(lib.Sequence))
                     continue;
                 uint baseId = kv.Key & BASE_ID_MASK;
                 bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
                 classByBaseId[baseId] = entrap ? EntrapmentClass.PTarget : EntrapmentClass.Target;
                 if (entrap) nPTarget++; else nTarget++;
+                if (pairing.PairIndexBySeq.TryGetValue(lib.Sequence, out uint pairIdx))
+                    pairByBaseId[baseId] = pairIdx;
             }
             if (classByBaseId.Count == 0)
             {
@@ -155,60 +154,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (nTarget > 0)
                 entrapmentRatio = (double)nPTarget / nTarget;
 
-            // Pairing + consistency cross-check from the optional external manifest.
-            string path = config.DecoyPairingManifestPath;
-            if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                return;
-            try
-            {
-                var manifest = DecoyPairingManifest.FromTsv(path);
-                var seqKind = new Dictionary<string, EntrapmentClass>(StringComparer.Ordinal);
-                foreach (var kv in manifest.Kinds())
-                {
-                    if (kv.Value == PeptideKind.Target || kv.Value == PeptideKind.PTarget)
-                        seqKind[kv.Key] = MapKind(kv.Value);
-                }
-                var seqPair = new Dictionary<string, uint>(StringComparer.Ordinal);
-                foreach (var kv in manifest.PairIndices())
-                    seqPair[kv.Key] = kv.Value;
-
-                int notInManifest = 0, disagree = 0;
-                foreach (var kv in libraryById)
-                {
-                    var lib = kv.Value;
-                    if (lib == null || lib.Sequence == null ||
-                        EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
-                        continue;
-                    uint baseId = kv.Key & BASE_ID_MASK;
-                    if (seqPair.TryGetValue(lib.Sequence, out uint pairIdx))
-                        pairByBaseId[baseId] = pairIdx;
-                    if (seqKind.TryGetValue(lib.Sequence, out var manCls))
-                    {
-                        if (classByBaseId.TryGetValue(baseId, out var libCls) && libCls != manCls)
-                            disagree++;
-                    }
-                    else
-                    {
-                        notInManifest++;
-                    }
-                }
-                if (notInManifest > 0 || disagree > 0)
-                {
-                    logInfo(string.Format(
-                        @"[MODEL-DIAGNOSTICS] pairing manifest is not consistent with the searched library: " +
-                        @"{0} target/entrapment peptides absent from the manifest, {1} classified differently. " +
-                        @"Classifying from the library (authoritative); the manifest supplies pairing only.",
-                        notInManifest, disagree));
-                }
-            }
-            catch (Exception ex)
-            {
-                logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] could not read pairing manifest for pairing/cross-check ({0}); " +
-                    @"proceeding with library classification, no paired estimator",
-                    ex.Message));
-                pairByBaseId = new Dictionary<uint, uint>();
-            }
+            pairing.LogSummary(logInfo);
         }
 
         /// <summary>Mask clearing the decoy high bit to get the shared target/decoy base-id.</summary>
