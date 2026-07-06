@@ -27,7 +27,6 @@ using Newtonsoft.Json.Serialization;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
-using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks.ModelDiagnostics
 {
@@ -192,7 +191,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string dir = Path.GetDirectoryName(outPath);
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
-            File.WriteAllText(outPath, html);
+            // Atomic write (temp + rename) so an interrupted run can't leave a truncated report.
+            using (var saver = new FileSaver(outPath))
+            {
+                File.WriteAllText(saver.SafeName, html);
+                saver.Commit();
+            }
             return outPath;
         }
 
@@ -202,7 +206,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             string dir = Path.GetDirectoryName(path);
             if (!string.IsNullOrEmpty(dir))
                 Directory.CreateDirectory(dir);
-            File.WriteAllText(path, JsonConvert.SerializeObject(data, SidecarSettings));
+            // Atomic write: MergeNode consumes this sidecar, so a partial write must
+            // never surface as a corrupt pass-1 data model.
+            using (var saver = new FileSaver(path))
+            {
+                File.WriteAllText(saver.SafeName, JsonConvert.SerializeObject(data, SidecarSettings));
+                saver.Commit();
+            }
         }
 
         private static ModelDiagnosticsData ReadDataSidecar(string path)
@@ -289,18 +299,6 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         /// <summary>Mask clearing the decoy high bit to get the shared target/decoy base-id.</summary>
         private const uint BASE_ID_MASK = 0x7FFFFFFF;
-
-        private static EntrapmentClass MapKind(PeptideKind kind)
-        {
-            switch (kind)
-            {
-                case PeptideKind.Target: return EntrapmentClass.Target;
-                case PeptideKind.Decoy: return EntrapmentClass.Decoy;
-                case PeptideKind.PTarget: return EntrapmentClass.PTarget;
-                case PeptideKind.PDecoy: return EntrapmentClass.PDecoy;
-                default: return EntrapmentClass.Unknown;
-            }
-        }
 
         private static string OutputStem(OspreyConfig config)
         {

@@ -266,9 +266,15 @@ function hideTip(){tip.style.opacity=0;}
 
 // ---------- header ----------
 document.getElementById("hSub").textContent = D.outputName? "· "+D.outputName : "";
-document.getElementById("hMeta").innerHTML =
-  "<b>"+(D.fileCount||0)+"</b> file"+(D.fileCount===1?"":"s")+" · <b>"+(D.featureCount||0)+"</b> features · run FDR <b>"+pct(D.runFdr,0)+"</b>"+
-  "<br>Osprey <b>"+esc(D.ospreyVersion||"")+"</b> · "+esc(D.generatedUtc||"");
+(function(){  // Build the meta line from DOM nodes (textContent) rather than innerHTML,
+  // so version / date strings are never reinterpreted as HTML (CodeQL-safe).
+  const m=document.getElementById("hMeta"),t=s=>document.createTextNode(s);
+  const l1=H(m,"div",{});
+  H(l1,"b",{},String(D.fileCount||0)); l1.appendChild(t(" file"+(D.fileCount===1?"":"s")+" · "));
+  H(l1,"b",{},String(D.featureCount||0)); l1.appendChild(t(" features · run FDR ")); H(l1,"b",{},pct(D.runFdr,0));
+  const l2=H(m,"div",{});
+  l2.appendChild(t("Osprey ")); H(l2,"b",{},D.ospreyVersion||""); l2.appendChild(t(" · "+(D.generatedUtc||"")));
+})();
 function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
 (function(){const c=document.getElementById("chips");
   const rows=[["tgt","targets",D.nTarget],["dec","decoys",D.nDecoy]];
