@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <metadata name="ModeUIExtender.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="toolStripLabel1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>61, 22</value>
+  </data>
+  <data name="toolStripLabel1.Text" xml:space="preserve">
+    <value>谱图：</value>
+  </data>
+  <data name="comboSpectrum.Size" type="System.Drawing.Size, System.Drawing">
+    <value>121, 28</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="graphControlExtension.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="graphControlExtension.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 25</value>
+  </data>
+  <data name="graphControlExtension.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>7, 6, 7, 6</value>
+  </data>
+  <data name="graphControlExtension.Size" type="System.Drawing.Size, System.Drawing">
+    <value>642, 452</value>
+  </data>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="graphControlExtension.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="&gt;&gt;graphControlExtension.Name" xml:space="preserve">
+    <value>graphControlExtension</value>
+  </data>
+  <data name="&gt;&gt;graphControlExtension.Type" xml:space="preserve">
+    <value>pwiz.Skyline.SettingsUI.MsGraphExtension, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;graphControlExtension.Parent" xml:space="preserve">
+    <value>GraphPanel</value>
+  </data>
+  <data name="&gt;&gt;graphControlExtension.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <metadata name="toolBar.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>160, 17</value>
+  </metadata>
+  <data name="toolStripLabel2.Size" type="System.Drawing.Size, System.Drawing">
+    <value>61, 22</value>
+  </data>
+  <data name="toolStripLabel2.Text" xml:space="preserve">
+    <value>扫描类型：</value>
+  </data>
+  <data name="comboBoxScanType.Items" xml:space="preserve">
+    <value>MS/MS</value>
+  </data>
+  <data name="comboBoxScanType.Items1" xml:space="preserve">
+    <value>Sim</value>
+  </data>
+  <data name="comboBoxScanType.Items2" xml:space="preserve">
+    <value>MS1</value>
+  </data>
+  <data name="comboBoxScanType.MaxDropDownItems" type="System.Int32, mscorlib">
+    <value>15</value>
+  </data>
+  <data name="comboBoxScanType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>100, 25</value>
+  </data>
+  <data name="rightButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="rightButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="rightButton.ToolTipText" xml:space="preserve">
+    <value>下一个扫描</value>
+  </data>
+  <data name="leftButton.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="leftButton.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="leftButton.ToolTipText" xml:space="preserve">
+    <value>上一个扫描</value>
+  </data>
+  <data name="magnifyBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="magnifyBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="magnifyBtn.ToolTipText" xml:space="preserve">
+    <value>缩放至选择</value>
+  </data>
+  <data name="spectrumBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="spectrumBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="spectrumBtn.ToolTipText" xml:space="preserve">
+    <value>Show Summed Spectrum</value>
+    <comment>Needs Review:English text changed
+Old English:Show 2D Spectrum
+Current English:Show Summed Spectrum
+Old Localized:显示二维谱图</comment>
+  </data>
+  <data name="filterBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="filterBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="filterBtn.ToolTipText" xml:space="preserve">
+    <value>过滤离子迁移</value>
+  </data>
+  <data name="mobilogramBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="mobilogramBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="heatmapBtn.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="heatmapBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="lblScanId.Size" type="System.Drawing.Size, System.Drawing">
+    <value>13, 22</value>
+  </data>
+  <data name="lblScanId.Text" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="btnIsolationWindow.Image" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8
+        YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIDSURBVDhPpZLrS5NhGMb3j4SWh0oRQVExD4gonkDpg4hG
+        YKxG6WBogkMZKgPNCEVJFBGdGETEvgwyO9DJE5syZw3PIlPEE9pgBCLZ5XvdMB8Ew8gXbl54nuf63dd9
+        0OGSnwCahxbPRNPAPMw9Xpg6ZmF46kZZ0xSKzJPIrhpDWsVnpBhGkKx3nAX8Pv7z1zg8OoY/cITdn4fw
+        bf/C0kYAN3Ma/w3gWfZL5kzTKBxjWyK2DftwI9tyMYCZKXbNHaD91bLYJrDXsYbrWfUKwJrPE9M2M1Oc
+        VzOOpHI7Jr376Hi9ogHqFIANO0/MmmmbmSmm9a8ze+I4MrNWAdjtoJgWcx+PSzg166yZZ8xM8XvXDix9
+        c4jIqFYAjoriBV9AhEPv1mH/sonogha0afbZMMZz+yreTGyhpusHwtNNCsA5U1zS4BLxzJIfg299qO32
+        Ir7UJtZfftyATqeT+8o2D8JSjQrAJblrncYL7ZJ2+bfaFnC/1S1NjL3diRat7qrO7wLRP3HjWsojBeCo
+        mDEo5mNjuweFGvjWg2EBhCbpkW78htSHHwRyNdmgAFzPEee2iFkzayy2OLXzT4gr6UdUnlXrullsxxQ+
+        kx0g8BTA3aZlButjSTyjODq/WcQcW/B/Je4OQhLvKQDnzN1mp0nnkvAhR8VuMzNrpm1mpjgkoVwB/v8D
+        TgDQASA1MVpwzwAAAABJRU5ErkJggg==
+</value>
+  </data>
+  <data name="btnIsolationWindow.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="btnIsolationWindow.Size" type="System.Drawing.Size, System.Drawing">
+    <value>101, 22</value>
+  </data>
+  <data name="btnIsolationWindow.Text" xml:space="preserve">
+    <value>分离窗口</value>
+  </data>
+  <data name="btnIsolationWindow.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>TopLeft</value>
+  </data>
+  <data name="btnIsolationWindow.ToolTipText" xml:space="preserve">
+    <value>分离窗口</value>
+  </data>
+  <data name="btnIsolationWindow.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
+  <data name="toolStripButtonShowAnnotations.ImageTransparentColor" type="System.Drawing.Color, System.Drawing">
+    <value>Magenta</value>
+  </data>
+  <data name="toolStripButtonShowAnnotations.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="toolStripButtonShowAnnotations.Text" xml:space="preserve">
+    <value>toolStripButton1</value>
+  </data>
+  <data name="toolStripButtonShowAnnotations.ToolTipText" xml:space="preserve">
+    <value>显示峰注释。</value>
+  </data>
+  <data name="toolStripLabelPeakType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>62, 22</value>
+  </data>
+  <data name="toolStripLabelPeakType.Text" xml:space="preserve">
+    <value>峰类型：</value>
+  </data>
+  <data name="comboBoxPeakType.Items" xml:space="preserve">
+    <value>Centroided</value>
+  </data>
+  <data name="comboBoxPeakType.Items1" xml:space="preserve">
+    <value>Profile</value>
+  </data>
+  <data name="comboBoxPeakType.Size" type="System.Drawing.Size, System.Drawing">
+    <value>92, 25</value>
+  </data>
+  <data name="comboBoxPeakType.ToolTipText" xml:space="preserve">
+    <value>选择要在谱图窗口中显示的峰类型。
+默认为用于色谱图提取的峰类型。</value>
+  </data>
+  <data name="toolBar.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="toolBar.Size" type="System.Drawing.Size, System.Drawing">
+    <value>642, 25</value>
+  </data>
+  <data name="toolBar.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;toolBar.Name" xml:space="preserve">
+    <value>toolBar</value>
+  </data>
+  <data name="&gt;&gt;toolBar.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolBar.Parent" xml:space="preserve">
+    <value>GraphPanel</value>
+  </data>
+  <data name="&gt;&gt;toolBar.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="GraphPanel.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="GraphPanel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="GraphPanel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
+  <data name="GraphPanel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>642, 477</value>
+  </data>
+  <data name="GraphPanel.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="&gt;&gt;GraphPanel.Name" xml:space="preserve">
+    <value>GraphPanel</value>
+  </data>
+  <data name="&gt;&gt;GraphPanel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Panel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;GraphPanel.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;GraphPanel.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>251, 17</value>
+  </metadata>
+  <data name="showScanNumberContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="showScanNumberContextMenuItem.Text" xml:space="preserve">
+    <value>显示扫描编号</value>
+  </data>
+  <data name="showCollisionEnergyContextMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="showCollisionEnergyContextMenuItem.Text" xml:space="preserve">
+    <value>显示碰撞能量</value>
+  </data>
+  <data name="showIonTypesRanksToolStripMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>191, 22</value>
+  </data>
+  <data name="showIonTypesRanksToolStripMenuItem.Text" xml:space="preserve">
+    <value>显示峰注释</value>
+  </data>
+  <data name="contextMenuStrip1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>192, 54</value>
+  </data>
+  <data name="propertyBtn.Size" type="System.Drawing.Size, System.Drawing">
+    <value>23, 22</value>
+  </data>
+  <data name="propertyBtn.ToolTipText" xml:space="preserve">
+    <value>显示/隐藏属性表</value>
+  </data>
+  <data name="&gt;&gt;contextMenuStrip1.Name" xml:space="preserve">
+    <value>contextMenuStrip1</value>
+  </data>
+  <data name="&gt;&gt;contextMenuStrip1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ContextMenuStrip, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.AutoScroll" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
+    <value>642, 477</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>4, 4, 4, 4</value>
+  </data>
+  <data name="$this.TabText" xml:space="preserve">
+    <value>全扫描</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Name" xml:space="preserve">
+    <value>ModeUIExtender</value>
+  </data>
+  <data name="&gt;&gt;ModeUIExtender.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.Helpers+ModeUIExtender, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+  <data name="&gt;&gt;toolStripLabel1.Name" xml:space="preserve">
+    <value>toolStripLabel1</value>
+  </data>
+  <data name="&gt;&gt;toolStripLabel1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboSpectrum.Name" xml:space="preserve">
+    <value>comboSpectrum</value>
+  </data>
+  <data name="&gt;&gt;comboSpectrum.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripLabel2.Name" xml:space="preserve">
+    <value>toolStripLabel2</value>
+  </data>
+  <data name="&gt;&gt;toolStripLabel2.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxScanType.Name" xml:space="preserve">
+    <value>comboBoxScanType</value>
+  </data>
+  <data name="&gt;&gt;comboBoxScanType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;rightButton.Name" xml:space="preserve">
+    <value>rightButton</value>
+  </data>
+  <data name="&gt;&gt;rightButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;leftButton.Name" xml:space="preserve">
+    <value>leftButton</value>
+  </data>
+  <data name="&gt;&gt;leftButton.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;magnifyBtn.Name" xml:space="preserve">
+    <value>magnifyBtn</value>
+  </data>
+  <data name="&gt;&gt;magnifyBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;spectrumBtn.Name" xml:space="preserve">
+    <value>spectrumBtn</value>
+  </data>
+  <data name="&gt;&gt;spectrumBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;filterBtn.Name" xml:space="preserve">
+    <value>filterBtn</value>
+  </data>
+  <data name="&gt;&gt;filterBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;mobilogramBtn.Name" xml:space="preserve">
+    <value>mobilogramBtn</value>
+  </data>
+  <data name="&gt;&gt;mobilogramBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;heatmapBtn.Name" xml:space="preserve">
+    <value>heatmapBtn</value>
+  </data>
+  <data name="&gt;&gt;heatmapBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;lblScanId.Name" xml:space="preserve">
+    <value>lblScanId</value>
+  </data>
+  <data name="&gt;&gt;lblScanId.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;btnIsolationWindow.Name" xml:space="preserve">
+    <value>btnIsolationWindow</value>
+  </data>
+  <data name="&gt;&gt;btnIsolationWindow.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonShowAnnotations.Name" xml:space="preserve">
+    <value>toolStripButtonShowAnnotations</value>
+  </data>
+  <data name="&gt;&gt;toolStripButtonShowAnnotations.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;toolStripLabelPeakType.Name" xml:space="preserve">
+    <value>toolStripLabelPeakType</value>
+  </data>
+  <data name="&gt;&gt;toolStripLabelPeakType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripLabel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeakType.Name" xml:space="preserve">
+    <value>comboBoxPeakType</value>
+  </data>
+  <data name="&gt;&gt;comboBoxPeakType.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showScanNumberContextMenuItem.Name" xml:space="preserve">
+    <value>showScanNumberContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showScanNumberContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showIonTypesRanksToolStripMenuItem.Name" xml:space="preserve">
+    <value>showIonTypesRanksToolStripMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showIonTypesRanksToolStripMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="toolStripSeparator1.Size" type="System.Drawing.Size, System.Drawing">
+    <value>188, 6</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Name" xml:space="preserve">
+    <value>toolStripSeparator1</value>
+  </data>
+  <data name="&gt;&gt;toolStripSeparator1.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;showCollisionEnergyContextMenuItem.Name" xml:space="preserve">
+    <value>showCollisionEnergyContextMenuItem</value>
+  </data>
+  <data name="&gt;&gt;showCollisionEnergyContextMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;propertyBtn.Name" xml:space="preserve">
+    <value>propertyBtn</value>
+  </data>
+  <data name="&gt;&gt;propertyBtn.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripButton, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>GraphFullScan</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>pwiz.Skyline.Util.DockableFormEx, Skyline, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null</value>
+  </data>
+</root>
