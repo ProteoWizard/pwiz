@@ -185,8 +185,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public double[] Q { get; set; }
             public double[] LowerBound { get; set; }
             public double[] Combined { get; set; }
-            /// <summary>FDRBench paired estimator, or null when no pair_index was supplied.</summary>
+            /// <summary>FDRBench paired estimator, or null when no pair_index was supplied
+            /// OR when the entrapment library is not ~1:1 (see <see cref="PairedSuppressedPartial"/>).</summary>
             public double[] Paired { get; set; }
+            /// <summary>True when the paired estimator was suppressed because the entrapment
+            /// library is not ~1:1 (r != 1). The paired estimator is a 1-fold method
+            /// (FDRBench / Wen et al. 2025): it is only valid when every target has exactly
+            /// one entrapment twin. Combined and lower-bound remain valid at any ratio.</summary>
+            public bool PairedSuppressedPartial { get; set; }
             public int[] NTargetAccepted { get; set; }
         }
 
@@ -785,6 +791,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return tot > 0 ? (double)win / tot : double.NaN;
         }
 
+        // The paired estimator (FDRBench / Wen et al. 2025) is a strictly 1-fold
+        // method: it is only valid when every target carries exactly one entrapment
+        // twin (r = 1). Beyond this tolerance the paired curve is suppressed; combined
+        // and lower-bound carry the r term and stay valid at any ratio (e.g. a routine
+        // 10% entrapment overlay, r = 0.1).
+        private const double PairedRatioTolerance = 0.05;
+
         // Build one calibration view: entrapment FDP estimators vs the selected
         // Osprey q-value axis, best-per-precursor, walked down the score ranking.
         // Reproduces FDRBench's fdp.csv when qSel is the experiment-precursor q
@@ -906,6 +919,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // (so the plotted curve and the 1%-q metrics stay faithful to the
             // per-precursor FDRBench values) and subsample only the long tail.
             var idx = ThinFdpIndices(qs);
+            // The paired estimator is 1-fold only; suppress it for partial (r != 1)
+            // entrapment libraries so a nonsensical paired curve is never shown. The
+            // template surfaces PairedSuppressedPartial as a note.
+            bool pairedOk = anyPair && Math.Abs(r - 1.0) <= PairedRatioTolerance;
             return new FdpView
             {
                 Label = label,
@@ -916,7 +933,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 Q = Pick(qs, idx),
                 LowerBound = Pick(lb, idx),
                 Combined = Pick(comb, idx),
-                Paired = anyPair ? Pick(paired, idx) : null,
+                Paired = pairedOk ? Pick(paired, idx) : null,
+                PairedSuppressedPartial = anyPair && !pairedOk,
                 NTargetAccepted = Pick(ntAcc, idx),
             };
         }
