@@ -866,10 +866,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (targetQ.Count == 0)
                 return null;
             bool anyPair = eventsA.Count > 0;
-            targetQ.Sort();
-            entrapQ.Sort();
-            eventsA.Sort();
-            eventsB.Sort();
+            // These are ascending sorts of primitive q-value doubles that are swept with
+            // <= below: the value is the entire sort key, so ties are bit-identical and
+            // their order cannot change any count. Stability is irrelevant here (and this
+            // is C#-only diagnostics, off the cross-impl parity path).
+            targetQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            entrapQ.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            eventsA.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
+            eventsB.Sort(); // Array.Sort OK: primitive q doubles, value is whole key, tie order immaterial to the <= sweep
 
             var qs = new List<double>();
             var lb = new List<double>();
