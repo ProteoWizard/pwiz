@@ -651,14 +651,31 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// End-to-end first-pass Percolator equivalence (the survivor-reload
-        /// equivalence at the unit level): running the projection RunPercolatorFdr
-        /// overload must produce byte-identical Score + q-values to the legacy
-        /// FdrEntry overload on the same fixture and the same per-file feature
-        /// loader. Both drive the identical, untouched SVM core; only the resident
-        /// buffer differs. Because the SVM q-values are what the 1st-pass sidecar
-        /// records and the survivor reload overlays, this equivalence is exactly the
-        /// property the reload preserves.
+        /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
+        /// equivalence at the unit level): the projection
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
+        /// overload must produce byte-identical Score + q-values to the FdrEntry
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{string,System.Collections.Generic.List{FdrEntry}}},OspreyConfig,OspreyFeatureInfo[],System.Action{string},PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
+        /// overload -- the flag-off byte-identity ORACLE -- on the same input, at the
+        /// shared production config (default MaxTrainSize, so both overloads take their
+        /// DIRECT dispatch: train RunPercolator on the full population with the Stage 5
+        /// standardizer fit on ALL entries). This is the exact equivalence the 2nd-pass
+        /// survivor reload preserves.
+        ///
+        /// The fixture deliberately gives each precursor MULTIPLE observations (several
+        /// scans per base_id) so best-per-precursor dedup collapses the training pool to
+        /// a strict SUBSET of the population. That is the property that makes the
+        /// direct-vs-streaming DISPATCH observable (issue #4374): the direct path fits
+        /// the standardizer on all observations, the streaming path fits it on the
+        /// best-per-precursor subset only, so the two produce DIFFERENT scores on this
+        /// fixture. If the projection overload ever silently reverts to always-streaming
+        /// (dropping the below-threshold direct fork), it fits the standardizer on the
+        /// subset while the FdrEntry oracle keeps fitting it on the full population, and
+        /// every Score/q-value here diverges -- turning this test red. A single-
+        /// observation fixture (where dedup is a no-op and streaming == direct) would NOT
+        /// catch that regression; multi-observation is load-bearing.
+        /// (<see cref="TestProjectionStreamingMatchesFdrEntryStreaming"/> covers the
+        /// subsample-forced streaming primitive above the threshold.)
         /// </summary>
         [TestMethod]
         public void TestProjectionRunPercolatorFdrMatchesFdrEntry()
@@ -672,53 +689,68 @@ namespace pwiz.Osprey.Test
             };
             var config = new OspreyConfig(); // RunFdr 0.01, Percolator, Precursor
 
-            var fdrStubs = BuildProjectionEquivFixture(nFeat, out var featuresA);
-            var fdrStubs2 = BuildProjectionEquivFixture(nFeat, out var featuresB);
+            // Multi-observation fixture: best-per-precursor dedup is non-trivial, so the
+            // DIRECT path (standardizer on all) and the STREAMING path (standardizer on
+            // the deduped subset) give different results -- the property that lets this
+            // test gate the below-threshold direct dispatch.
+            var fdrStubs = BuildMultiObservationEquivFixture(nFeat, out var featuresA);
+            var fdrStubs2 = BuildMultiObservationEquivFixture(nFeat, out var featuresB);
             var projSet = FdrProjectionSet.BuildFromEntries(fdrStubs2);
 
+            // FdrEntry oracle overload: at the default MaxTrainSize this dispatches to
+            // the direct RunPercolator (standardizer fit on the full population).
             PercolatorEngine.RunPercolatorFdr(
                 fdrStubs, config, featureInfos, s => { }, null, "First-pass",
                 f => featuresA[f]);
+            // Projection overload under test: must take the SAME direct dispatch and
+            // therefore match the oracle byte-for-byte.
             PercolatorEngine.RunPercolatorFdr(
                 projSet, config, featureInfos, s => { }, null, "First-pass",
                 f => featuresB[f]);
 
-            // Both buffers are canonically sorted by EntryId inside RunPercolatorFdr;
-            // EntryId is unique in the fixture, so position i corresponds to the same
-            // entry in both, letting a positional compare stand in for a keyed one.
-            Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
+            // Both overloads sort their buffers, so compare keyed -- EntryId repeats
+            // across a precursor's observations, so key by (fileIdx, ParquetIndex),
+            // which is unique per observation and shared identically by both buffers
+            // (the projection's null resolver copies the stub's ParquetIndex).
+            var refByKey = new Dictionary<(int, uint), FdrEntry>();
             for (int f = 0; f < fdrStubs.Count; f++)
             {
-                var stubList = fdrStubs[f].Value;
-                var projList = projSet.PerFile[f].Value;
-                Assert.AreEqual(stubList.Count, projList.Count);
-                for (int i = 0; i < stubList.Count; i++)
+                foreach (var e in fdrStubs[f].Value)
+                    refByKey[(f, e.ParquetIndex)] = e;
+            }
+            int compared = 0;
+            for (int f = 0; f < projSet.PerFile.Count; f++)
+            {
+                foreach (var proj in projSet.PerFile[f].Value)
                 {
-                    Assert.AreEqual(stubList[i].EntryId, projList[i].EntryId);
-                    Assert.AreEqual(stubList[i].Score, projList[i].Score, 0.0);
-                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, projList[i].RunPrecursorQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].RunPeptideQvalue, projList[i].RunPeptideQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, projList[i].ExperimentPrecursorQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, projList[i].ExperimentPeptideQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].Pep, projList[i].Pep, 0.0);
+                    Assert.IsTrue(refByKey.TryGetValue((f, proj.ParquetIndex), out FdrEntry e),
+                        "every projection row must have its FdrEntry reference");
+                    Assert.AreEqual(e.EntryId, proj.EntryId);
+                    Assert.AreEqual(e.Score, proj.Score, 0.0);
+                    Assert.AreEqual(e.RunPrecursorQvalue, proj.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(e.RunPeptideQvalue, proj.RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(e.ExperimentPrecursorQvalue, proj.ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(e.ExperimentPeptideQvalue, proj.ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(e.Pep, proj.Pep, 0.0);
+                    compared++;
                 }
             }
+            Assert.AreEqual(refByKey.Count, compared);
         }
 
         /// <summary>
         /// Issue #4355 step (b) increment iii (the transient-SVM-stack collapse, gate
         /// 1): the projection-native STREAMING score+compete path
-        /// (<see cref="PercolatorEngine.RunFirstPassStreamingIntoProjection"/>) must
+        /// (<see cref="PercolatorEngine.RunStreamingIntoProjection"/>) must
         /// produce byte-identical Score + five q-values to the legacy
         /// <see cref="PercolatorEntry"/> streaming path
         /// (<see cref="PercolatorEngine.RunPercolatorStreaming"/> + the index-zip
         /// write-back) on the same fixture, same per-file feature loader, and same
         /// input order -- proving the collapse changed only WHERE THE DATA LIVES, not
         /// the parity-locked SVM training, subsample, standardizer, PEP ordering, or
-        /// q-value math. Production only reaches the streaming path above
-        /// MaxTrainSize * 2 (Astral scale); this test forces it with a small
-        /// MaxTrainSize so the highest-risk path is covered by a fast unit test rather
-        /// than only the Astral TeamCity leg. The Stellar-scale DIRECT projection path
+        /// q-value math. This test forces an actual peptide-grouped subsample with a
+        /// small MaxTrainSize; the end-to-end always-streaming projection overload (issue
+        /// #4374 removed the direct-vs-streaming dispatch, so it streams at every scale)
         /// is covered by <see cref="TestProjectionRunPercolatorFdrMatchesFdrEntry"/>.
         /// </summary>
         [TestMethod]
@@ -766,7 +798,7 @@ namespace pwiz.Osprey.Test
             PercolatorEngine.ApplyPercolatorResults(fdrStubs, streamingResults);
 
             // Projection-native streaming path (the change under test).
-            bool abort = PercolatorEngine.RunFirstPassStreamingIntoProjection(
+            bool abort = PercolatorEngine.RunStreamingIntoProjection(
                 projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
                 f => featuresB[f]);
             Assert.IsFalse(abort);
@@ -844,6 +876,87 @@ namespace pwiz.Osprey.Test
                         CoelutionSum = decoyFeatures[0]
                     });
                     featureRows.Add(decoyFeatures);
+                }
+                perFile.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, list));
+                featuresByFile[fileName] = featureRows;
+            }
+            return perFile;
+        }
+
+        /// <summary>
+        /// Paired target/decoy fixture with MULTIPLE observations per precursor for the
+        /// direct-dispatch equivalence gate (<see cref="TestProjectionRunPercolatorFdrMatchesFdrEntry"/>):
+        /// 2 files x 20 precursors x 3 scans each, well-separated target (high) vs decoy
+        /// (low) features. Every observation of a precursor shares the precursor's
+        /// EntryId (so <c>SelectBestPerPrecursor</c> collapses the 3 scans to 1) but
+        /// carries DISTINCT feature values (each scan offsets by <c>k</c>), so the Stage 5
+        /// standardizer's mean/std over ALL 240 observations differs measurably from over
+        /// the 80-row best-per-precursor subset. That difference is what makes the direct
+        /// path (standardizer on all) and the streaming path (standardizer on the subset)
+        /// produce different results -- the property the equivalence test relies on to
+        /// detect a projection overload that skips its below-threshold direct dispatch.
+        /// Rows for a precursor are appended consecutively with increasing scan AND
+        /// increasing ParquetIndex, so within each (EntryId, Charge) group the projection
+        /// sort (EntryId, Charge, ParquetIndex) yields the identical order the FdrEntry
+        /// sort (EntryId, Charge, ScanNumber, ParquetIndex) does. CoelutionSum =
+        /// features[0], the value best-per-precursor ranks on (highest scan kept).
+        /// </summary>
+        private static List<KeyValuePair<string, List<FdrEntry>>> BuildMultiObservationEquivFixture(
+            int nFeat, out Dictionary<string, List<double[]>> featuresByFile)
+        {
+            const int filesCount = 2;
+            const int precursorsPerFile = 20;
+            const int obsPerPrecursor = 3;
+            featuresByFile = new Dictionary<string, List<double[]>>();
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>();
+            uint scan = 0;
+            for (int file = 0; file < filesCount; file++)
+            {
+                string fileName = string.Format("file{0}", file);
+                var list = new List<FdrEntry>();
+                var featureRows = new List<double[]>();
+                for (int p = 0; p < precursorsPerFile; p++)
+                {
+                    // EntryId unique per (file, precursor); the decoy bit distinguishes
+                    // the target/decoy base_id, exactly as the production stubs do.
+                    uint targetId = (uint)(file * 1000 + p + 1);
+                    uint decoyId = targetId | 0x80000000u;
+                    string pepSeq = string.Format("PEPTIDE{0}_{1}", file, p);
+                    string decoySeq = string.Format("DECOY{0}_{1}", file, p);
+                    for (int k = 0; k < obsPerPrecursor; k++)
+                    {
+                        var targetFeatures = new double[nFeat];
+                        var decoyFeatures = new double[nFeat];
+                        for (int j = 0; j < nFeat; j++)
+                        {
+                            targetFeatures[j] = 4.0 + p * 0.05 + k * 0.7 + j * 0.1;
+                            decoyFeatures[j] = 0.5 + p * 0.04 + k * 0.6 + j * 0.1;
+                        }
+
+                        list.Add(new FdrEntry
+                        {
+                            EntryId = targetId,
+                            ParquetIndex = (uint)featureRows.Count,
+                            ModifiedSequence = pepSeq,
+                            Charge = 2,
+                            ScanNumber = ++scan,
+                            IsDecoy = false,
+                            CoelutionSum = targetFeatures[0]
+                        });
+                        featureRows.Add(targetFeatures);
+
+                        list.Add(new FdrEntry
+                        {
+                            EntryId = decoyId,
+                            ParquetIndex = (uint)featureRows.Count,
+                            ModifiedSequence = decoySeq,
+                            Charge = 2,
+                            ScanNumber = ++scan,
+                            IsDecoy = true,
+                            CoelutionSum = decoyFeatures[0]
+                        });
+                        featureRows.Add(decoyFeatures);
+                    }
                 }
                 perFile.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, list));
                 featuresByFile[fileName] = featureRows;

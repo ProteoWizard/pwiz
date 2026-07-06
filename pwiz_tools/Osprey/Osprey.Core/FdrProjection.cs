@@ -231,9 +231,28 @@ namespace pwiz.Osprey.Core
         /// round-trip of an already-scored buffer preserves them; on the
         /// straight-through path they are the not-yet-scored defaults (Score 0,
         /// q-values / PEP 1.0) that first-pass Percolator then fills.
+        ///
+        /// <paramref name="parquetRowResolver"/> selects how each row's
+        /// <see cref="FdrProjection.ParquetIndex"/> is resolved -- the ONLY axis on
+        /// which the 1st and 2nd pass differ (issue #4374):
+        /// <list type="bullet">
+        /// <item><c>null</c> (1st pass): <c>ParquetIndex = entry.ParquetIndex</c>, the
+        /// stub's own position in its ORIGINAL <c>.scores.parquet</c> -- unchanged.</item>
+        /// <item>non-<c>null</c> (2nd pass): the resolver maps each file name to that
+        /// file's RECONCILED-parquet <c>(entry_id, charge, scan) -&gt; row</c> table
+        /// (built by <c>Pass2FdrSidecar.BuildReconciledIdentityToRow</c>), and
+        /// <c>ParquetIndex</c> is set to <c>row</c> for the entry's identity, or
+        /// <see cref="uint.MaxValue"/> when the identity is absent (-&gt; basic-feature
+        /// fallback in the streaming score pass). Baking the reconciled row makes the
+        /// streamed feature lookup byte-identical to the resident identity binding AND
+        /// keeps the scan-omitted projection sort valid, because the reconciled parquet
+        /// is written <c>(entry_id, charge, scan)</c>-sorted so the row is
+        /// scan-monotonic within a <c>(entry_id, charge)</c> group.</item>
+        /// </list>
         /// </summary>
         public static FdrProjectionSet BuildFromEntries(
-            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            Func<string, IReadOnlyDictionary<(uint, byte, uint), uint>> parquetRowResolver = null)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
 
@@ -264,12 +283,26 @@ namespace pwiz.Osprey.Core
             ushort fileIdx = 0;
             foreach (var kvp in perFileEntries)
             {
+                // 2nd pass (resolver supplied): resolve this file's
+                // (entry_id, charge, scan) -> reconciled-parquet row map ONCE, one
+                // file at a time so no more than one file's map is resident. 1st pass
+                // (resolver null): the map stays null and the stub's own ParquetIndex
+                // (its original-parquet position) is carried through unchanged.
+                IReadOnlyDictionary<(uint, byte, uint), uint> rowByIdentity =
+                    parquetRowResolver?.Invoke(kvp.Key);
+
                 var rows = new List<FdrProjection>(kvp.Value.Count);
                 foreach (var e in kvp.Value)
                 {
                     int peptideId = idByPeptide[e.ModifiedSequence ?? string.Empty];
+                    uint parquetIndex;
+                    if (rowByIdentity == null)
+                        parquetIndex = e.ParquetIndex;
+                    else if (!rowByIdentity.TryGetValue(
+                                 (e.EntryId, e.Charge, e.ScanNumber), out parquetIndex))
+                        parquetIndex = uint.MaxValue;
                     rows.Add(new FdrProjection(
-                        e.EntryId, e.ParquetIndex, peptideId, fileIdx, e.Charge, e.IsDecoy,
+                        e.EntryId, parquetIndex, peptideId, fileIdx, e.Charge, e.IsDecoy,
                         e.CoelutionSum, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue,
                         e.RunProteinQvalue, e.ExperimentPrecursorQvalue,
                         e.ExperimentPeptideQvalue, e.Pep));

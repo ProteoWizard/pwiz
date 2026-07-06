@@ -1333,6 +1333,136 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Issue #4374 risk #2 (the highest-value new test): the 2nd-pass projection
+        /// bakes each survivor's <c>ParquetIndex</c> from
+        /// <see cref="Pass2FdrSidecar.BuildReconciledIdentityToRow"/>, then the streaming
+        /// score pass reads the feature row at that index. This must resolve the EXACT
+        /// vector the resident 2nd pass binds via
+        /// <see cref="Pass2FdrSidecar.LoadReconciledFeaturesByIdentity"/> +
+        /// <c>MapFeaturesByIdentity</c>. Writes a reconciled-parquet fixture whose rows
+        /// arrive in NON-sorted identity order plus a gap-fill-style row that interleaves
+        /// into the <c>(entry_id, charge, scan_number)</c> sort, each carrying a DISTINCT
+        /// 21-feature vector, then asserts:
+        /// <list type="bullet">
+        /// <item><c>featRows[rowMap[identity]] == featByIdentity[identity]</c> for every
+        /// identity (risk #2) -- so the streamed feature lookup is byte-identical to the
+        /// resident identity binding; distinct vectors make a mis-mapping observable;</item>
+        /// <item>within each <c>(entry_id, charge)</c> group the baked row increases with
+        /// scan (risk #3) -- what keeps the scan-omitted projection sort
+        /// <c>(EntryId, Charge, ParquetIndex)</c> equal to the legacy
+        /// <c>(EntryId, Charge, ScanNumber, ParquetIndex)</c> order.</item>
+        /// </list>
+        /// </summary>
+        [TestMethod]
+        public void TestBuildReconciledIdentityToRowMatchesFeatureBinding()
+        {
+            string path = Path.GetTempFileName() + ".parquet";
+            try
+            {
+                // Deliberately unsorted, with two charges of entry 100 and a second
+                // (later-scan) row for entry 101 that interleaves into the reconciled
+                // (entry_id, charge, scan_number) sort -- a gap-fill-style append.
+                var entryIds = new uint[] { 101, 100, 100, 101, 100 };
+                var charges = new byte[] { 2, 3, 2, 2, 2 };
+                var scans = new uint[] { 2200, 1500, 1100, 1200, 1300 };
+
+                var entries = new List<CoelutionScoredEntry>();
+                for (int i = 0; i < entryIds.Length; i++)
+                {
+                    entries.Add(new CoelutionScoredEntry
+                    {
+                        EntryId = entryIds[i],
+                        IsDecoy = false,
+                        Sequence = "PEPTIDE",
+                        ModifiedSequence = "PEPTIDE",
+                        Charge = charges[i],
+                        ScanNumber = scans[i],
+                        FileName = "recon.mzML",
+                        PeakBounds = new XICPeakBounds { StartRt = 4.0, EndRt = 5.0 },
+                        // Distinct feature vector per row so a wrong identity->row map
+                        // surfaces as a value mismatch, not a silent pass.
+                        Features = new CoelutionFeatureSet
+                        {
+                            CoelutionSum = 10.0 + i,
+                            CoelutionMax = 20.0 + i,
+                            NCoelutingFragments = (byte)(3 + i),
+                            PeakApex = 100.0 + i,
+                            PeakArea = 200.0 + i,
+                            PeakSharpness = 0.3 + i,
+                            Xcorr = 50.0 + i,
+                            ConsecutiveIons = (byte)(1 + i),
+                            ExplainedIntensity = 0.50 + i * 0.01,
+                            MassAccuracyMean = -0.5 - i,
+                            AbsMassAccuracyMean = 0.5 + i,
+                            RtDeviation = 0.1 + i,
+                            AbsRtDeviation = 0.1 + i,
+                            Ms1PrecursorCoelution = 0.80 + i * 0.01,
+                            Ms1IsotopeCosine = 0.90 + i * 0.01,
+                            MedianPolishCosine = 0.88 + i * 0.001,
+                            MedianPolishResidualRatio = 0.15 + i * 0.001,
+                            SgWeightedXcorr = 2.3 + i,
+                            SgWeightedCosine = 0.87 + i * 0.001,
+                            MedianPolishMinFragmentR2 = 0.70 + i * 0.001,
+                            MedianPolishResidualCorrelation = 0.30 + i * 0.001,
+                        },
+                    });
+                }
+
+                // WriteScoresParquet re-sorts (entry_id, charge, scan_number) and assigns
+                // ParquetIndex = row -- exactly the reconciled write path.
+                ParquetScoreCache.WriteScoresParquet(path, entries, null);
+
+                var rowMap = Pass2FdrSidecar.BuildReconciledIdentityToRow(path);
+                var featByIdentity = Pass2FdrSidecar.LoadReconciledFeaturesByIdentity(path);
+                var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
+
+                Assert.AreEqual(entryIds.Length, rowMap.Count);
+                Assert.AreEqual(entryIds.Length, featByIdentity.Count);
+                Assert.AreEqual(entryIds.Length, featRows.Count);
+
+                // Risk #2: the baked row addresses the identity's own feature vector, so
+                // the streamed lookup equals the resident identity binding byte-for-byte.
+                foreach (var kvp in featByIdentity)
+                {
+                    Assert.IsTrue(rowMap.TryGetValue(kvp.Key, out uint row),
+                        "every bound identity must resolve to a reconciled row");
+                    Assert.IsTrue((int)row < featRows.Count, "baked row in range");
+                    CollectionAssert.AreEqual(kvp.Value, featRows[(int)row],
+                        "the baked row must address the identity's own feature vector");
+                }
+
+                // Risk #3: within each (entry_id, charge) group the reconciled row is
+                // scan-monotonic -- what validates the scan-omitted projection sort.
+                var groups = new Dictionary<(uint, byte), List<(uint scan, uint row)>>();
+                for (int i = 0; i < entryIds.Length; i++)
+                {
+                    uint row = rowMap[(entryIds[i], charges[i], scans[i])];
+                    var key = (entryIds[i], charges[i]);
+                    if (!groups.TryGetValue(key, out var list))
+                    {
+                        list = new List<(uint, uint)>();
+                        groups[key] = list;
+                    }
+                    list.Add((scans[i], row));
+                }
+                foreach (var kv in groups)
+                {
+                    var list = kv.Value;
+                    list.Sort((a, b) => a.scan.CompareTo(b.scan));
+                    for (int k = 1; k < list.Count; k++)
+                    {
+                        Assert.IsTrue(list[k].row > list[k - 1].row,
+                            "reconciled row must increase with scan within a (entry_id, charge) group");
+                    }
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        /// <summary>
         /// Verifies GetScoresPath returns the expected path.
         /// </summary>
         [TestMethod]

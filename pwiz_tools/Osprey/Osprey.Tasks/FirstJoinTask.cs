@@ -1125,6 +1125,37 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Projection-buffer counterpart of the <see cref="FdrEntry"/>
+        /// <see cref="RunPercolatorFdr(System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{string,System.Collections.Generic.List{FdrEntry}}},OspreyConfig,PipelineContext,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
+        /// facade: run Percolator FDR over the thin <see cref="FdrProjectionSet"/>
+        /// buffer, supplying the PIN feature names + the Stage 5 diagnostics config and
+        /// owning the diagnostic-only process exit. Used by the projection 1st-pass
+        /// span and the projection 2nd-pass path (<see cref="Pass2FdrSidecar"/>, issue
+        /// #4374). The projection engine ALWAYS streams, so a per-file feature loader
+        /// is mandatory.
+        /// </summary>
+        internal static void RunPercolatorFdr(
+            FdrProjectionSet projections,
+            OspreyConfig config,
+            PipelineContext ctx,
+            string passLabel,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+        {
+            bool aborted = PercolatorEngine.RunPercolatorFdr(
+                projections, config,
+                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
+                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
+                loadFileFeatures);
+            if (aborted)
+            {
+                // A diagnostic-only (*Only) Stage 5 dump fired; mirror the FdrEntry
+                // facade -- the Tasks layer owns the process exit.
+                ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
+                Environment.Exit(0);
+            }
+        }
+
+        /// <summary>
         /// Translate the run's <see cref="IOspreyDiagnostics"/> Stage 5 Percolator
         /// gate flags into the small <see cref="PercolatorDiagnosticsConfig"/> the
         /// FDR engine accepts. Returns <c>null</c> when diagnostics are off or no

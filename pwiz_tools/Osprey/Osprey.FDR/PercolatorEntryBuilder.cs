@@ -140,7 +140,10 @@ namespace pwiz.Osprey.FDR
         /// strings; <c>FileName</c> is the per-file group key. Emits entries in the
         /// same nested (file, entry) order as <see cref="Build"/> so the index-zip
         /// write-back (<c>PercolatorEngine.ApplyPercolatorResultsToProjection</c>)
-        /// pairs each result with its projection row.
+        /// pairs each result with its projection row. Used by the direct
+        /// (below-threshold) projection dispatch for both the 1st and 2nd pass --
+        /// the fork that keeps a below-threshold population byte-identical to the
+        /// FdrEntry oracle's direct <c>RunPercolator</c> (issue #4374).
         /// </summary>
         internal static List<PercolatorEntry> BuildFromProjection(
             List<KeyValuePair<string, List<FdrProjection>>> perFileProjections,

@@ -110,7 +110,7 @@ namespace pwiz.Osprey.FDR
                 "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
                 passLabel, nWithFeatures, nWithoutFeatures));
 
-            var percConfig = BuildFirstPassPercolatorConfig(config, featureInfos, diagnostics);
+            var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             PercolatorResults results = DispatchSvm(
                 percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
 
@@ -223,27 +223,49 @@ namespace pwiz.Osprey.FDR
                 });
             }
 
-            var percConfig = BuildFirstPassPercolatorConfig(config, featureInfos, diagnostics);
+            // The projection path always STREAMS its features per file (for both the
+            // 1st and 2nd pass), so a per-file feature loader is mandatory -- the
+            // 1st-pass caller (FirstJoinTask) and the 2nd-pass caller (Pass2FdrSidecar)
+            // both supply one. A null loader reaching here is a bug, not a cue to fall
+            // back to a resident build (that is the flag-off FdrEntry oracle's job).
+            if (loadFileFeatures == null)
+                throw new InvalidOperationException(
+                    @"The projection RunPercolatorFdr overload always streams features " +
+                    @"per file; a per-file feature loader is required. A null loader here " +
+                    @"is a bug -- the resident build is the flag-off FdrEntry path.");
+
+            var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             int n = projections.TotalRows;
 
             // Streaming vs direct decided up front from the projection row count with
-            // the SAME percConfig (hence the same MaxTrainSize * 2 threshold)
-            // DispatchSvm applies -- so the projection selects the identical SVM path
-            // the FdrEntry buffer would for this population (risk #5).
+            // the SAME percConfig (hence the SAME MaxTrainSize * 2 threshold) the
+            // FdrEntry oracle's DispatchSvm applies -- so the projection selects the
+            // IDENTICAL SVM path (and the identical standardizer-fit population) the
+            // FdrEntry buffer would for this population (issue #4374 byte-identity;
+            // risk #5). This dispatch is byte-identity-critical, NOT cosmetic: the
+            // direct path (RunPercolator on the full population) fits the Stage 5
+            // standardizer on ALL entries, whereas the streaming path fits it on the
+            // best-per-precursor subsample only. Rust and the flag-off oracle switch
+            // between the two at this threshold, so a below-threshold population (e.g.
+            // the Stellar 2nd pass, ~393k < 600k) MUST take the direct path to stay
+            // byte-identical; forcing it to always-stream refits the standardizer on a
+            // different population and diverges every downstream score/q-value.
             if (percConfig.MaxTrainSize > 0 && n > percConfig.MaxTrainSize * 2)
             {
                 // Projection-native streaming (issue #4355 step (b) increment iii):
-                // score + compete run over the projection rows and the q-values are
-                // written straight back onto them, so NEITHER a full-population
-                // PercolatorEntry list NOR a PercolatorResult list is ever resident
-                // across the peak -- only the flat working arrays the parity-locked
-                // math needs. This is the collapse that takes the 82-file first-pass
-                // peak off the ~230 B/entry transient stack.
+                // the score + compete pass runs over the projection rows and the
+                // q-values are written straight back onto them, so NEITHER a
+                // full-population PercolatorEntry list NOR a PercolatorResult list is
+                // ever resident across the peak -- only the flat working arrays the
+                // parity-locked math needs. This is the collapse that takes the
+                // Astral-scale (1st and 2nd pass) peak off the ~230 B/entry transient
+                // stack -- the #4374 memory win, applied where the population is large
+                // enough to matter.
                 LogProjectionInputCounts(
                     projections, numFeatures, loadFileFeatures, logInfo, passLabel);
                 logInfo(string.Format("Running {0} Percolator on {1} entries...",
                     passLabel, n));
-                bool streamingAbort = RunFirstPassStreamingIntoProjection(
+                bool streamingAbort = RunStreamingIntoProjection(
                     projections.PerFile, peptideById, percConfig, logInfo, passLabel,
                     loadFileFeatures);
                 if (streamingAbort)
@@ -251,13 +273,20 @@ namespace pwiz.Osprey.FDR
             }
             else
             {
-                // Direct path (bounded population, e.g. Stellar): byte-identical to
-                // increment (ii). The transient PercolatorEntry + PercolatorResult
-                // stack is acceptable here because the population is small; the memory
-                // win targets the streaming peak above.
+                // Direct path (bounded population, e.g. Stellar 1st and 2nd pass):
+                // byte-identical to the FdrEntry oracle's direct RunPercolator. The
+                // transient PercolatorEntry + PercolatorResult stack is acceptable here
+                // because the population is small; the streaming memory win targets the
+                // above-threshold peak. Features are still streamed per file (never
+                // reloaded resident onto the survivor buffer) -- DispatchSvm's direct
+                // branch calls PopulateFeaturesFromFiles(loadFileFeatures), so the
+                // 2nd-pass memory win over the resident reload holds even here.
+                // streamFeatures is unconditionally true (loadFileFeatures is
+                // guaranteed non-null above): the rows are built feature-less here and
+                // resolved per file at score time.
                 var percEntries = PercolatorEntryBuilder.BuildFromProjection(
                     projections.PerFile, peptideById, numFeatures,
-                    streamFeatures: loadFileFeatures != null,
+                    streamFeatures: true,
                     out int nWithFeatures, out int nWithoutFeatures,
                     out int nInputTargets, out int nInputDecoys);
 
@@ -342,7 +371,7 @@ namespace pwiz.Osprey.FDR
         /// a different SVM path for the same population. <c>MaxTrainSize</c> is left at
         /// the <see cref="PercolatorConfig"/> default (300000).
         /// </summary>
-        private static PercolatorConfig BuildFirstPassPercolatorConfig(
+        private static PercolatorConfig BuildProjectionPercolatorConfig(
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             PercolatorDiagnosticsConfig diagnostics)
@@ -365,7 +394,7 @@ namespace pwiz.Osprey.FDR
         /// <c>RunPercolatorFdr</c> so both buffer shapes drive the identical,
         /// parity-locked SVM core -- the projection path cannot silently diverge in
         /// dispatch, standardizer, or subsample. The <see cref="PercolatorConfig"/> is
-        /// built by <see cref="BuildFirstPassPercolatorConfig"/> and passed in.
+        /// built by <see cref="BuildProjectionPercolatorConfig"/> and passed in.
         /// </summary>
         private static PercolatorResults DispatchSvm(
             List<PercolatorEntry> percEntries,
@@ -559,7 +588,7 @@ namespace pwiz.Osprey.FDR
         /// select identical 300K subsets when given identical input.
         ///
         /// Internal (not private) so <c>FdrTest</c> can drive it head-to-head against
-        /// <see cref="RunFirstPassStreamingIntoProjection"/> on a fixture forced past
+        /// <see cref="RunStreamingIntoProjection"/> on a fixture forced past
         /// the streaming threshold, proving the two buffer shapes yield identical
         /// Score + q-values (issue #4355 step (b) increment iii, gate 1).
         /// </summary>
@@ -680,13 +709,12 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Emit the two "[COUNT] ... Percolator input / features computed" lines for
         /// the streaming projection path directly from the projection rows (issue
-        /// #4355 step (b) increment iii), reproducing the counts
-        /// <see cref="PercolatorEntryBuilder.BuildFromProjection"/> returns without
-        /// building the full-population <see cref="PercolatorEntry"/> list -- so the
-        /// log is byte-identical to the direct path's while the streaming path never
-        /// materializes that list. <c>nWithFeatures</c> counts rows with a real
-        /// parquet row (<c>ParquetIndex != uint.MaxValue</c>) on the streaming build,
-        /// matching the builder's fallback bookkeeping.
+        /// #4355 step (b) increment iii), reproducing the same per-file input counts
+        /// without building a full-population <see cref="PercolatorEntry"/> list -- so
+        /// the streaming path logs identical counts while never materializing that
+        /// list. <c>nWithFeatures</c> counts rows with a real parquet row
+        /// (<c>ParquetIndex != uint.MaxValue</c>) on the streaming build, matching the
+        /// feature-resolver's fallback bookkeeping.
         /// </summary>
         private static void LogProjectionInputCounts(
             FdrProjectionSet projections, int numFeatures,
@@ -751,7 +779,7 @@ namespace pwiz.Osprey.FDR
         /// diagnostic-only train abort (same contract as the <c>RunPercolatorFdr</c>
         /// projection overload).
         /// </summary>
-        internal static bool RunFirstPassStreamingIntoProjection(
+        internal static bool RunStreamingIntoProjection(
             List<KeyValuePair<string, List<FdrProjection>>> perFile,
             string[] peptideById,
             PercolatorConfig percConfig,
@@ -761,12 +789,11 @@ namespace pwiz.Osprey.FDR
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
-                    @"RunFirstPassStreamingIntoProjection requires a per-file feature " +
+                    @"RunStreamingIntoProjection requires a per-file feature " +
                     @"loader: the projection carries no resident feature vectors.");
 
-            // Per-file start offsets in nested (file, row) order == the order
-            // BuildFromProjection emits, so a global index maps back to one projection
-            // row (used to build the subset entries below).
+            // Per-file start offsets in nested (file, row) order, so a global index
+            // maps back to one projection row (used to build the subset entries below).
             int nFiles = perFile.Count;
             var fileStart = new int[nFiles + 1];
             int n = 0;
@@ -776,6 +803,15 @@ namespace pwiz.Osprey.FDR
                 n += perFile[f].Value.Count;
             }
             fileStart[nFiles] = n;
+
+            // Distinctive path marker (issue #4374): unambiguous proof this population
+            // was ingested through the projection-native streaming path -- neither the
+            // removed direct fork nor the resident FdrEntry path emits it. Under the
+            // projection flag BOTH the 1st and 2nd pass must show this line, at every
+            // scale (the direct-vs-streaming dispatch is gone).
+            logInfo(string.Format(
+                @"[PATH] {0} projection streaming ingest (RunStreamingIntoProjection): {1} rows",
+                passLabel, n));
 
             int maxTrain = percConfig.MaxTrainSize;
 
