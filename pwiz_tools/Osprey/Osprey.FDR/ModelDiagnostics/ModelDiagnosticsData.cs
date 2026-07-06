@@ -195,6 +195,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public string File { get; set; }
             public int Targets { get; set; }
             public int Decoys { get; set; }
+            /// <summary>Entrapment (p_target) precursors passing the run FDR in this file, when a manifest is present.</summary>
+            public int Entrapment { get; set; }
         }
 
         /// <summary>Cumulative accepted-target count vs q-value threshold (the yield curve).</summary>
@@ -269,17 +271,32 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             // Per-file passing summary at the run-level peptide FDR (kept separate
             // from the reduction so the same reduction serves pass 1 and pass 2).
+            // Non-decoy passing entries split into real targets vs entrapment
+            // (p_target) by the library base-id class, so the table mirrors the
+            // top-line target / decoy / entrapment breakdown.
             foreach (var kvp in perFileEntries)
             {
-                int fileTargets = 0, fileDecoys = 0;
+                int fileTargets = 0, fileDecoys = 0, fileEntrap = 0;
                 foreach (var e in kvp.Value)
                 {
-                    if (!e.IsDecoy && e.RunPeptideQvalue <= runFdr)
-                        fileTargets++;
-                    else if (e.IsDecoy && e.RunPeptideQvalue <= runFdr)
+                    if (e.RunPeptideQvalue > runFdr)
+                        continue;
+                    if (e.IsDecoy)
+                    {
                         fileDecoys++;
+                        continue;
+                    }
+                    uint baseId = e.EntryId & BASE_ID_MASK;
+                    if (haveManifest && classByBaseId.TryGetValue(baseId, out var cls)
+                        && cls == EntrapmentClass.PTarget)
+                        fileEntrap++;
+                    else
+                        fileTargets++;
                 }
-                data.PerFile.Add(new FileSummaryRow { File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys });
+                data.PerFile.Add(new FileSummaryRow
+                {
+                    File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys, Entrapment = fileEntrap,
+                });
             }
             foreach (var p in precs)
             {
@@ -317,10 +334,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         DeltaMu = f.TargetDecoyMeanGap,
                         Weighted = f.Weighted,
                         Reversed = f.IsReversedScore,
-                        // Skyline reds the row on negative percent contribution
-                        // (the feature pulls decoys up in the composite), which
-                        // is IsUnexpectedDirection when the composite is positive.
-                        Unexpected = !contributions.IsDegenerate && f.Percent < 0,
+                        // Red row = the trained coefficient's sign is opposite the
+                        // feature's expected direction (Skyline's weight-sign test:
+                        // IsReversedScore XOR coefficient < 0). E.g. a negative weight
+                        // on MS1 isotope dot-product, where a higher idotp should be
+                        // better -- the feature is behaving against expectation, often
+                        // because a correlated feature captured the signal first.
+                        Unexpected = !contributions.IsDegenerate && f.IsUnexpectedDirection,
                         // Per-feature target/decoy histograms (index-keyed to the
                         // trained model; null when not collected).
                         TargetHist = targetHist != null && f.Index < targetHist.Count ? targetHist[f.Index] : null,

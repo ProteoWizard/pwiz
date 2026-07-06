@@ -60,6 +60,19 @@ tr.neg td{color:var(--bad)}
 tr.clk{cursor:pointer} tr.clk:hover td{background:var(--grid)}
 tr.sel td{background:color-mix(in srgb,var(--accent) 15%,transparent)}
 #scoreBack{cursor:pointer;color:var(--accent);text-decoration:none} #scoreBack:hover{text-decoration:underline}
+.cardhdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);font:inherit;font-size:11.5px;
+  font-weight:600;padding:4px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;flex:none}
+.iconbtn:hover{color:var(--accent);border-color:var(--accent)}
+.collapsewrap{position:relative}
+.collapsewrap.collapsed{max-height:330px;overflow:hidden}
+.collapsewrap.collapsed::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46px;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,var(--panel))}
+.print-only{display:none}
+.featgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+@media(max-width:820px){.featgrid{grid-template-columns:1fr}}
+.featcell h3{font-size:12.5px;margin:6px 0 0;font-weight:600}
+.featcell .fm{color:var(--muted);font-size:11px;margin:0 0 2px}
 .bar{position:relative}
 .bar>i{position:absolute;left:0;top:50%;transform:translateY(-50%);height:14px;border-radius:3px;
   background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,transparent));opacity:.20}
@@ -95,8 +108,9 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
   font-weight:550;padding:6px 12px;border-radius:8px;cursor:pointer;box-shadow:var(--shadow);white-space:nowrap}
 .printbtn:hover{color:var(--accent);border-color:var(--accent)}
 /* Print / Save-as-PDF: stack every tab, one section per page, ink-friendly light
-   palette regardless of the on-screen theme. Charts are already in the DOM for all
-   tabs, so forcing them visible prints them; the FDR tab prints its selected view. */
+   palette regardless of the on-screen theme. The interactive single-view charts
+   (one FDR view, one feature distribution) are swapped for print-only blocks that
+   render ALL 4 FDR views and ALL per-feature distributions, so the PDF is complete. */
 @media print{
   :root{
     --bg:#fff;--panel:#fff;--ink:#111820;--muted:#41505f;--line:#c9ced4;--grid:#eceff2;
@@ -104,17 +118,24 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     --target:#2563eb;--decoy:#ef4444;--ptarget:#16a34a;--pdecoy:#d97706;
     --good:#15803d;--bad:#b91c1c;--warn:#b45309;
   }
-  @page{margin:12mm}
+  @page{margin:11mm}
   html,body{background:#fff}
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .wrap{max-width:none;padding:0 4px}
-  nav,.printbtn,.tip,.vbtns,#scoreBack{display:none!important}
+  nav,.printbtn,.tip,.vbtns,#scoreBack,.iconbtn{display:none!important}
   header{page-break-after:avoid}
   .tab{display:block!important;page-break-before:always;break-before:page}
   .tab:first-of-type{page-break-before:avoid;break-before:avoid}
   .card{break-inside:avoid;box-shadow:none}
   .chartbox{overflow:visible!important}
   svg{max-width:100%}
+  .print-only{display:block!important}
+  /* Expand the collapsed feature table and drop the fade so the PDF shows every row. */
+  .collapsewrap.collapsed{max-height:none!important;overflow:visible!important}
+  .collapsewrap.collapsed::after{display:none!important}
+  /* Hide the single interactive FDR view (the print-only block shows all four). */
+  #fdpChart,#fdpKpis,#fdpLegend,#fdpNote{display:none!important}
+  .featcell{break-inside:avoid}
 }
 </style>
 </head>
@@ -132,11 +153,17 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
 
 <section class="tab" data-tab="model">
   <div class="card">
-    <h2>Trained scoring model &mdash; feature contributions</h2>
+    <div class="cardhdr">
+      <h2>Trained scoring model &mdash; feature contributions</h2>
+      <button class="iconbtn" id="modelToggle" title="Toggle between a best-fit height and the full table">Show all &#9662;</button>
+    </div>
     <p class="desc">The averaged cross-validated linear (Percolator/SVM) model, decomposed Skyline-style
       into each feature's percent contribution to the composite target&ndash;decoy separation.
-      Rows with a <b>negative</b> percent contribution (the feature pulls decoys up) are shown in red.</p>
-    <div id="modelTable"></div>
+      Rows in <b style="color:var(--bad)">red</b> have a trained coefficient whose sign is opposite the
+      feature's expected direction &mdash; e.g. a negative weight on MS1 isotope dot-product, where a higher
+      idotp should indicate a better match. It flags a feature behaving against expectation, often because a
+      correlated feature captured that signal first.</p>
+    <div id="modelWrap" class="collapsewrap collapsed"><div id="modelTable"></div></div>
   </div>
   <div class="card">
     <h2 id="scoreHdr">Composite score distribution <a id="scoreBack" href="#" style="display:none;font-size:12px;font-weight:500">&larr; back to composite</a></h2>
@@ -145,6 +172,12 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       <span id="scoreTip"><b>Click any feature row above</b> to see that individual score's target/decoy distribution (the mProphet "Feature Scores" view).</span></p>
     <div class="legend" id="scoreLegend"></div>
     <div class="chartbox" id="scoreChart"></div>
+  </div>
+  <div class="card print-only" id="featPrintCard">
+    <h2>Per-feature score distributions</h2>
+    <p class="desc">Each feature's standardized target vs decoy distribution (the interactive report shows one at
+      a time on click; printed here in full).</p>
+    <div id="featPrintAll" class="featgrid"></div>
   </div>
 </section>
 
@@ -172,6 +205,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="legend" id="fdpLegend"></div>
     <div class="chartbox" id="fdpChart"></div>
     <p class="note" id="fdpNote"></p>
+    <div class="print-only" id="fdpPrintAll"></div>
   </div>
   <div class="card">
     <h2>Identification yield</h2>
@@ -280,7 +314,7 @@ const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
   const rows=D.model||[];const host=document.getElementById("modelTable");
   const maxP=Math.max(1,...rows.map(r=>Math.abs(r.percent)||0));
   const t=H(host,"table",{});const thead=H(t,"thead",{});const htr=H(thead,"tr",{});
-  [["Feature","l"],["Coefficient",""],["Contribution",""],["Δμ (T−D)",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  [["Feature","l"],["Coefficient",""],["Contribution",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
   const tb=H(t,"tbody",{});
   const clickable=r=>HAS_FEATHIST && r.targetHist;
   rows.forEach(r=>{const tr=H(tb,"tr",{class:(r.unexpected?"neg ":"")+(clickable(r)?"clk":"")});
@@ -289,11 +323,31 @@ const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
     const td=H(tr,"td",{class:"num bar"});
     H(td,"i",{style:"width:"+(Math.abs(r.percent)/maxP*100).toFixed(1)+"%"});
     H(td,"span",{},pct(r.percent/100,1));
-    H(tr,"td",{class:"num"},fmt(r.deltaMu,3));
     if(clickable(r))tr.onclick=()=>selectFeature(r,tr);
   });
   if(D.modelDegenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
   if(!HAS_FEATHIST){const tip=document.getElementById("scoreTip");if(tip)tip.style.display="none";}
+
+  // Collapse/expand: default to a best-fit height so the score plot below stays
+  // visible without scrolling; the toggle reveals the full table.
+  const wrap=document.getElementById("modelWrap"), btn=document.getElementById("modelToggle");
+  function syncToggle(){btn.innerHTML=wrap.classList.contains("collapsed")?"Show all &#9662;":"Best fit &#9652;";}
+  if(wrap.scrollHeight<=wrap.clientHeight+4){btn.style.display="none";wrap.classList.remove("collapsed");}
+  btn.onclick=()=>{wrap.classList.toggle("collapsed");syncToggle();};
+  syncToggle();
+
+  // Print-only: render every feature's distribution so the PDF shows them all.
+  const fpc=document.getElementById("featPrintCard");
+  if(HAS_FEATHIST){
+    const grid=document.getElementById("featPrintAll");
+    rows.filter(r=>r.targetHist).forEach(r=>{
+      const cell=H(grid,"div",{class:"featcell"});
+      H(cell,"h3",{},r.label);
+      H(cell,"div",{class:"fm",html:"coefficient "+fmt(r.coefficient,4)+" &middot; contribution "+pct(r.percent/100,1)+
+        (r.unexpected?" &middot; <b style='color:var(--bad)'>unexpected direction</b>":"")});
+      drawFeatureSvg(H(cell,"div",{class:"chartbox"}),r,470,210);
+    });
+  } else if(fpc){ fpc.style.display="none"; }
 })();
 
 // ---------- Model: composite <-> per-feature distribution swap ----------
@@ -307,9 +361,32 @@ function selectFeature(r,tr){
   document.getElementById("scoreDesc").innerHTML=
     "Standardized "+esc(r.label)+" value for target vs decoy precursors (the space the model scores in), "+
     "the Osprey analog of Skyline's mProphet \"Feature Scores\" view. Coefficient "+fmt(r.coefficient,4)+
-    " · contribution "+pct(r.percent/100,1)+" · &Delta;&mu; (T&minus;D) "+fmt(r.deltaMu,3)+".";
+    " · contribution "+pct(r.percent/100,1)+(r.unexpected?" · <b style='color:var(--bad)'>unexpected direction</b>":"")+".";
   document.getElementById("scoreBack").style.display="";
   featureHist("scoreChart","scoreLegend",r);
+}
+
+// Static (non-interactive) per-feature target/decoy distribution, for the print
+// grid that renders all features. Same shape as featureHist without legend/hover.
+function drawFeatureSvg(container,r,W,Hh){
+  const edges=D.featureHistEdges,nb=edges.length-1;
+  const series=[{color:COL.target,v:r.targetHist||[]},{color:COL.decoy,v:r.decoyHist||[]}];
+  const width=(i)=>edges[i+1]-edges[i];
+  const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;return s.v.map((c,i)=>c/tot/width(i));});
+  const box={l:42,t:10,w:W-56,h:Hh-40};
+  let ymax=0;dens.forEach(d=>d.forEach(v=>ymax=Math.max(ymax,v)));ymax=(ymax||1)*1.08;
+  const s=svg(W,Hh);container.appendChild(s);
+  const sc=axes(s,box,[edges[0],edges[nb]],[0,ymax],{xlab:"standardized score",yfmt:v=>(+v.toFixed(2))});
+  series.forEach((se,si)=>{const d=dens[si];
+    let up="M"+sc.x(edges[0]).toFixed(1)+" "+sc.y(0).toFixed(1)+" ";
+    for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+      up+="L"+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+    up+="L"+sc.x(edges[nb]).toFixed(1)+" "+sc.y(0).toFixed(1)+"Z";
+    E(s,"path",{d:up,fill:se.color,opacity:.16,stroke:"none"});
+    let ln="";for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+      ln+=(i?"L":"M")+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+    E(s,"path",{d:ln,fill:"none",stroke:se.color,"stroke-width":1.5});
+  });
 }
 function showComposite(){
   document.querySelectorAll("#modelTable tr.sel").forEach(x=>x.classList.remove("sel"));
@@ -373,7 +450,7 @@ function classHist(hostId,legId,normalize){
   const width=(i)=>edges[i+1]-edges[i];
   const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;
     return s.v.map((c,i)=>normalize?c/tot/width(i):c);});
-  const off={};series.forEach(s=>off[s.k]=false);
+  const off={};series.forEach(s=>off[s.k]=false);off.decoynorm=false;
   const W=680,Hh=330,box={l:52,t:14,w:W-70,h:Hh-58};
   let ymax=0;dens.forEach((d,si)=>{if(!off[series[si].k])d.forEach(v=>ymax=Math.max(ymax,v))});ymax*=1.08||1;
   const xd=[edges[0],edges[nb]];
@@ -383,7 +460,7 @@ function classHist(hostId,legId,normalize){
     ymax=0;dens.forEach((d,si)=>{if(!off[series[si].k])d.forEach(v=>ymax=Math.max(ymax,v))});ymax=(ymax||1)*1.08;
     const sc=axes(s,box,xd,[0,ymax],{xlab:"composite score",ylab:normalize?"density":"precursors",yfmt:v=>normalize?(+v.toFixed(2)):trim(v)});
     // decoy normal overlay
-    if(normalize===false && H0.decoyStd>0){
+    if(normalize===false && H0.decoyStd>0 && !off.decoynorm){
       const dTot=H0.decoy.reduce((a,b)=>a+b,0);const bw=(xd[1]-xd[0])/nb;
       let path="";for(let i=0;i<=120;i++){const xx=xd[0]+(xd[1]-xd[0])*i/120;
         const g=Math.exp(-0.5*Math.pow((xx-H0.decoyMean)/H0.decoyStd,2))/(H0.decoyStd*Math.sqrt(2*Math.PI));
@@ -405,7 +482,7 @@ function classHist(hostId,legId,normalize){
     ov.addEventListener("mouseleave",hideTip);
   }
   legend(document.getElementById(legId),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;draw();}}))
-    .concat(normalize===false&&H0.decoyStd>0?[{name:"decoy normal",color:COL.decoy,line:true}]:[]));
+    .concat(normalize===false&&H0.decoyStd>0?[{name:"decoy normal",color:COL.decoy,line:true,toggle:o=>{off.decoynorm=o;draw();}}]:[]));
   draw();
 }
 classHist("scoreChart","scoreLegend",false);
@@ -479,6 +556,21 @@ if(D.fdpViews && D.fdpViews.length){
     b.onclick=()=>{vi=k;sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");render();};});
   legend(document.getElementById("fdpLegend"),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;render();}})));
   render();
+  // Print-only: render ALL views so the PDF captures every FDR plot, not just the
+  // one selected on screen. Reuses drawPanel; a per-view title + 1%-q summary line.
+  const pall=document.getElementById("fdpPrintAll");
+  views.forEach(f=>{
+    const blk=H(pall,"div",{style:"margin-bottom:16px"});
+    H(blk,"h3",{style:"font-size:13px;margin:0 0 3px;font-weight:600"},f.label+(f.matchesFdrBench?"  (= FDRBench)":""));
+    const i1=opIdx(f,0.01);
+    H(blk,"div",{style:"color:var(--muted);font-size:11px;margin-bottom:4px",
+      html:"discoveries @1% q "+fmt(f.nTargetAccepted[i1],0)+" &middot; combined "+pct(f.combined[i1],2)+
+        (f.paired?" &middot; paired "+pct(f.paired[i1],2):"")+" &middot; lower "+pct(f.lowerBound[i1],2)});
+    const wrap2=H(blk,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+    const maxq=f.q[f.q.length-1]||1;
+    drawPanel(H(wrap2,"div",{}),f,0.02,"zoom  q in [0, 2%]");
+    drawPanel(H(wrap2,"div",{}),f,Math.max(0.02,maxq),"full extent");
+  });
 }
 function cls(v,q){return v==null?"":(v<=q*1.15?"good":v<=q*1.6?"warn":"bad");}
 
@@ -495,26 +587,31 @@ if(D.idYield){const y=D.idYield;const W=680,Hh=300,box={l:60,t:14,w:W-78,h:Hh-56
 // ---------- competition: win fraction ----------
 if(D.winFraction && D.winFraction.binCenters){
   const w=D.winFraction;const W=680,Hh=340,box={l:52,t:14,w:W-70,h:Hh-58};
-  const host=document.getElementById("wfChart");const s=svg(W,Hh);host.appendChild(s);
+  const host=document.getElementById("wfChart");
   const xd=[w.binCenters[0],w.binCenters[w.binCenters.length-1]];
-  const sc=axes(s,box,xd,[0,0.75],{xlab:"winner score  max(target,decoy)",ylab:"decoy-win fraction",yfmt:v=>pct(v,0)});
-  E(s,"line",{x1:box.l,y1:sc.y(0.5),x2:box.l+box.w,y2:sc.y(0.5),stroke:COL.muted,"stroke-dasharray":"4 4","stroke-width":1});
-  E(s,"text",{class:"axtitle",x:box.l+box.w-4,y:sc.y(0.5)-4,"text-anchor":"end"}).textContent="fair coin 50%";
-  function band(frac,ci,color){let up="",dn="";let started=false;const pts=[];
-    for(let i=0;i<frac.length;i++){if(frac[i]==null||isNaN(frac[i]))continue;pts.push(i);}
-    pts.forEach((i,k)=>{up+=(k?"L":"M")+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(Math.min(0.75,frac[i]+ci[i])).toFixed(1)+" ";});
-    for(let k=pts.length-1;k>=0;k--){const i=pts[k];up+="L"+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(Math.max(0,frac[i]-ci[i])).toFixed(1)+" ";}
-    if(pts.length)E(s,"path",{d:up+"Z",fill:color,opacity:.13,stroke:"none"});
-    let ln="";pts.forEach((i,k)=>{ln+=(k?"L":"M")+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(frac[i]).toFixed(1)+" ";});
-    E(s,"path",{d:ln,fill:"none",stroke:color,"stroke-width":2});
-    pts.forEach(i=>{E(s,"circle",{cx:sc.x(w.binCenters[i]),cy:sc.y(frac[i]),r:2.4,fill:color});});
+  const off={real:false,ent:false};
+  function draw(){
+    host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
+    const sc=axes(s,box,xd,[0,0.75],{xlab:"winner score  max(target,decoy)",ylab:"decoy-win fraction",yfmt:v=>pct(v,0)});
+    E(s,"line",{x1:box.l,y1:sc.y(0.5),x2:box.l+box.w,y2:sc.y(0.5),stroke:COL.muted,"stroke-dasharray":"4 4","stroke-width":1});
+    E(s,"text",{class:"axtitle",x:box.l+box.w-4,y:sc.y(0.5)-4,"text-anchor":"end"}).textContent="fair coin 50%";
+    function band(frac,ci,color){let up="";const pts=[];
+      for(let i=0;i<frac.length;i++){if(frac[i]==null||isNaN(frac[i]))continue;pts.push(i);}
+      pts.forEach((i,k)=>{up+=(k?"L":"M")+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(Math.min(0.75,frac[i]+ci[i])).toFixed(1)+" ";});
+      for(let k=pts.length-1;k>=0;k--){const i=pts[k];up+="L"+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(Math.max(0,frac[i]-ci[i])).toFixed(1)+" ";}
+      if(pts.length)E(s,"path",{d:up+"Z",fill:color,opacity:.13,stroke:"none"});
+      let ln="";pts.forEach((i,k)=>{ln+=(k?"L":"M")+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(frac[i]).toFixed(1)+" ";});
+      E(s,"path",{d:ln,fill:"none",stroke:color,"stroke-width":2});
+      pts.forEach(i=>{E(s,"circle",{cx:sc.x(w.binCenters[i]),cy:sc.y(frac[i]),r:2.4,fill:color});});
+    }
+    if(!off.real)band(w.realFraction,w.realCi,COL.target);
+    if(w.hasEntrapment&&!off.ent)band(w.entFraction,w.entCi,COL.ptarget);
   }
-  band(w.realFraction,w.realCi,COL.target);
-  if(w.hasEntrapment)band(w.entFraction,w.entCi,COL.ptarget);
-  const items=[{name:"real pairs (T vs D)",color:COL.target}];
-  if(w.hasEntrapment)items.push({name:"entrapment pairs (P vs Pd)",color:COL.ptarget});
+  const items=[{name:"real pairs (T vs D)",color:COL.target,toggle:o=>{off.real=o;draw();}}];
+  if(w.hasEntrapment)items.push({name:"entrapment pairs (P vs Pd)",color:COL.ptarget,toggle:o=>{off.ent=o;draw();}});
   items.push({name:"fair coin 50%",color:COL.muted,line:true});
   legend(document.getElementById("wfLegend"),items);
+  draw();
   document.getElementById("wfNote").innerHTML="Low-score null band ["+trim(w.nullBandLo)+", "+trim(w.nullBandHi)+"]:  real "+
     pct(w.nullBandReal,1)+(w.hasEntrapment?"  ·  entrapment "+pct(w.nullBandEnt,1):"")+
     ". An entrapment coin near 50% is the honest ruler; real pairs below it are native signal winning.";
@@ -528,17 +625,28 @@ if(D.winFraction && D.winFraction.binCenters){
   kpi(k,"features",fmt(D.featureCount,0),"");
   const rows=D.perFile||[];const host=document.getElementById("fileTable");
   const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
-  [["File","l"],["Targets",""],["Decoys",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const cols=[["File","l"],["Targets",""]];
+  if(D.hasEntrapment)cols.push(["Entrapment",""]);
+  cols.push(["Decoys",""]);
+  cols.forEach(h=>H(htr,"th",{class:h[1]},h[0]));
   const tb=H(t,"tbody",{});rows.forEach(r=>{const tr=H(tb,"tr",{});
-    H(tr,"td",{class:"l"},r.file);H(tr,"td",{class:"num"},fmt(r.targets,0));H(tr,"td",{class:"num"},fmt(r.decoys,0));});
+    H(tr,"td",{class:"l"},r.file);
+    H(tr,"td",{class:"num"},fmt(r.targets,0));
+    if(D.hasEntrapment)H(tr,"td",{class:"num"},fmt(r.entrapment,0));
+    H(tr,"td",{class:"num"},fmt(r.decoys,0));});
 })();
 
 function kpi(host,label,val,c){const d=H(host,"div",{class:"kpi"});H(d,"div",{class:"v "+(c||"")},val);H(d,"div",{class:"k"},label);}
 function lowerB(a,v){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m]<v)lo=m+1;else hi=m;}return lo;}
 
-// Print / Save-as-PDF: the @media print stylesheet stacks every tab (their charts
-// are already rendered in the DOM) and forces the light palette, so one print pass
-// captures the whole report. The FDR tab prints whichever view is selected.
+// Print / Save-as-PDF: the @media print stylesheet stacks every tab, forces the
+// light palette, expands the feature table, and swaps the single interactive FDR
+// view + feature chart for print-only blocks that render ALL 4 FDR views and ALL
+// per-feature distributions -- so the PDF is the complete report. Reset the Model
+// chart to the composite first so its top panel is deterministic.
+window.addEventListener("beforeprint",()=>{
+  if(document.getElementById("scoreBack").style.display!=="none")showComposite();
+});
 document.getElementById("printBtn").onclick=()=>window.print();
 document.getElementById("foot").innerHTML="Generated by Osprey <code>--model-diagnostics</code> · self-contained · "+esc(D.generatedUtc||"");
 window.addEventListener("mousemove",e=>{if(tip.style.opacity==1)moveTip(e);});
