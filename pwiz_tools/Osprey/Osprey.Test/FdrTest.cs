@@ -535,6 +535,91 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Memory-regression guard (issue #4355 struct-shrink S0/S1). FdrProjection is the
+        /// resident peak buffer over the whole pre-compaction population, so its width
+        /// multiplies by ~189M rows at 400 files -- the entire (iv) memory win depends on it
+        /// staying the lean 8-field SVM buffer (identity/drive + CoelutionSum + Score), with
+        /// the six q-value OUTPUTS split off into the per-pass IFdrOutputSink. Re-adding a
+        /// q-value (or any) field here stays byte-identical -- every FDR gate passes -- but
+        /// SILENTLY regresses the resident buffer back toward 80 B. This fails loudly instead:
+        /// if it fires, route the new output through the sink, not onto the struct.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrProjectionStructStaysLean()
+        {
+            var fieldNames = typeof(FdrProjection)
+                .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                .Select(f => f.Name)
+                .OrderBy(n => n, StringComparer.Ordinal)
+                .ToArray();
+            CollectionAssert.AreEqual(
+                new[] { "Charge", "CoelutionSum", "EntryId", "FileIdx", "IsDecoy", "ParquetIndex", "PeptideId", "Score" },
+                fieldNames,
+                "FdrProjection's fields changed -- a q-value OUTPUT field was likely re-added onto the " +
+                "resident peak buffer. That stays byte-identical but regresses the memory win toward 80 B. " +
+                "Route new outputs through the IFdrOutputSink (FdrProjectionOutput.cs), not the struct (#4355 S0/S1).");
+        }
+
+        /// <summary>
+        /// Memory-regression guard (issue #4355 increment B). The 1st pass builds the
+        /// projection with <c>releaseStubs:true</c> so each file's FdrEntry stub list is
+        /// cleared the instant its rows are built -- the full projection never coexists with
+        /// the full stub buffer (kills the "projection built" spike). Asserts the release
+        /// actually happens (input lists emptied) AND is byte-neutral: the projection is
+        /// field-identical whether built with <c>releaseStubs</c> true or false.
+        /// </summary>
+        [TestMethod]
+        public void TestBuildFromEntriesReleaseStubsClearsInputAndIsByteNeutral()
+        {
+            List<KeyValuePair<string, List<FdrEntry>>> MakeInput() =>
+                new List<KeyValuePair<string, List<FdrEntry>>>
+                {
+                    new KeyValuePair<string, List<FdrEntry>>("fileA", new List<FdrEntry>
+                    {
+                        new FdrEntry { EntryId = 1u, ParquetIndex = 0u, ModifiedSequence = "PEPTIDE",
+                            Charge = 2, IsDecoy = false, CoelutionSum = 1.5, Score = 0.1 },
+                        new FdrEntry { EntryId = 2u, ParquetIndex = 1u, ModifiedSequence = "AAA",
+                            Charge = 3, IsDecoy = true, CoelutionSum = 2.5, Score = 0.2 },
+                    }),
+                    new KeyValuePair<string, List<FdrEntry>>("fileB", new List<FdrEntry>
+                    {
+                        new FdrEntry { EntryId = 3u, ParquetIndex = 0u, ModifiedSequence = "PEPTIDE",
+                            Charge = 2, IsDecoy = false, CoelutionSum = 3.5, Score = 0.3 },
+                    }),
+                };
+
+            var keep = MakeInput();
+            var released = MakeInput();
+            var setKeep = FdrProjectionSet.BuildFromEntries(keep, releaseStubs: false);
+            var setReleased = FdrProjectionSet.BuildFromEntries(released, releaseStubs: true);
+
+            Assert.IsTrue(keep.TrueForAll(kvp => kvp.Value.Count > 0),
+                "releaseStubs:false must NOT clear the input stubs");
+            Assert.IsTrue(released.TrueForAll(kvp => kvp.Value.Count == 0),
+                "releaseStubs:true must clear every file's FdrEntry stub list (issue #4355 B).");
+
+            CollectionAssert.AreEqual(setKeep.PeptideById, setReleased.PeptideById);
+            Assert.AreEqual(setKeep.PerFile.Count, setReleased.PerFile.Count);
+            for (int f = 0; f < setKeep.PerFile.Count; f++)
+            {
+                var rk = setKeep.PerFile[f].Value;
+                var rr = setReleased.PerFile[f].Value;
+                Assert.AreEqual(rk.Count, rr.Count);
+                for (int i = 0; i < rk.Count; i++)
+                {
+                    Assert.AreEqual(rk[i].EntryId, rr[i].EntryId);
+                    Assert.AreEqual(rk[i].ParquetIndex, rr[i].ParquetIndex);
+                    Assert.AreEqual(rk[i].PeptideId, rr[i].PeptideId);
+                    Assert.AreEqual(rk[i].FileIdx, rr[i].FileIdx);
+                    Assert.AreEqual(rk[i].Charge, rr[i].Charge);
+                    Assert.AreEqual(rk[i].IsDecoy, rr[i].IsDecoy);
+                    Assert.AreEqual(rk[i].CoelutionSum, rr[i].CoelutionSum, 0.0);
+                    Assert.AreEqual(rk[i].Score, rr[i].Score, 0.0);
+                }
+            }
+        }
+
+        /// <summary>
         /// The lean projection must round-trip every field it still carries (issue
         /// #4355 struct-shrink S0): the identity/drive slice + CoelutionSum + Score.
         /// The six q-value OUTPUTS no longer live on the struct (they flow through the
