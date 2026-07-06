@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.RegularExpressions;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.IO;
 
@@ -97,53 +96,67 @@ namespace pwiz.Osprey.Tasks
             }
         }
 
-        // Library accession -> shared quartet key: strip the decoy_/_p_target markers,
-        // keep <accession>_pep<NNNNN>. Null when the token is absent.
-        private static readonly Regex PepTokenRegex = new Regex(
-            @"\|([A-Za-z0-9]+)_pep(\d+)\|", RegexOptions.Compiled);
-
-        private static string ReconstructPairKey(IReadOnlyList<string> proteinIds)
-        {
-            if (proteinIds == null || proteinIds.Count == 0 || proteinIds[0] == null)
-                return null;
-            string p = proteinIds[0].Replace(@"decoy_", string.Empty).Replace(@"_p_target", string.Empty);
-            var m = PepTokenRegex.Match(p);
-            return m.Success ? m.Groups[1].Value + "_" + m.Groups[2].Value : null;
-        }
-
-        private struct ExtraInfo
-        {
-            public string PairKey;
-            public bool IsEntrapment;
-        }
+        // N-terminal methionine, prepended to reverse a Met clip.
+        private const string MetPrefix = @"M";
 
         /// <summary>
-        /// Build the reconciled pairing. <paramref name="externalManifestPath"/> may be
-        /// null/absent; then every peptide is treated as an extra and paired purely
-        /// from the library accessions.
+        /// Build the reconciled pairing, anchored on the external manifest.
+        /// <paramref name="externalManifestPath"/> may be null/absent; then there is
+        /// no manifest to reconcile against and every library peptide is kept unpaired.
+        ///
+        /// A library peptide the manifest does NOT contain is a Met-clip form: its
+        /// <c>M</c>-prefixed sequence is a manifest peptide (verified 100% on real
+        /// data). Its pair is the Met-clip of the manifest partner: a clipped
+        /// entrapment pairs with the clip of its manifest target, which exists only
+        /// when that target itself starts with M. When it cannot (target has no
+        /// N-terminal M, or its clipped form was not predicted into the library), the
+        /// clipped entrapment is inherently unpaired -- the artifact we drop. A
+        /// library extra whose M-prefixed form is NOT a manifest peptide is not a
+        /// Met-clip form; such an entrapment is surfaced as unexplained.
         /// </summary>
         public static EntrapmentPairing Build(
             IReadOnlyDictionary<uint, LibraryEntry> libraryById, string externalManifestPath)
         {
             var pairIndexBySeq = new Dictionary<string, uint>(StringComparer.Ordinal);
-            var manifestSeqs = new HashSet<string>(StringComparer.Ordinal);
+            var manifestKind = new Dictionary<string, PeptideKind>(StringComparer.Ordinal);
+            var manifestPairIdx = new Dictionary<string, uint>(StringComparer.Ordinal);
+            var targetByPairIdx = new Dictionary<uint, string>();
             uint maxIdx = 0;
             if (!string.IsNullOrEmpty(externalManifestPath) && File.Exists(externalManifestPath))
             {
                 var manifest = DecoyPairingManifest.FromTsv(externalManifestPath);
+                foreach (var kv in manifest.Kinds())
+                    manifestKind[kv.Key] = kv.Value;
                 foreach (var kv in manifest.PairIndices())
                 {
-                    pairIndexBySeq[kv.Key] = kv.Value;   // covered sequences
+                    manifestPairIdx[kv.Key] = kv.Value;
                     if (kv.Value > maxIdx) maxIdx = kv.Value;
                 }
-                foreach (var kv in manifest.Kinds())
-                    manifestSeqs.Add(kv.Key);
+                foreach (var kv in manifestKind)
+                {
+                    if (kv.Value == PeptideKind.Target && manifestPairIdx.TryGetValue(kv.Key, out uint idx))
+                        targetByPairIdx[idx] = kv.Key;
+                }
+            }
+            // Clip-quartet indices live above the manifest's range so they never
+            // collide with it or with each other (one per original pair index).
+            bool haveManifest = manifestKind.Count > 0;
+            uint clipBase = maxIdx + 1;
+            uint nextStandalone = clipBase + maxIdx + 1;
+
+            // Library non-decoy sequences, for the "is the clipped-target in the library?" test.
+            var libSeqs = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var lib in libraryById.Values)
+            {
+                if (lib != null && lib.Sequence != null &&
+                    !EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                    libSeqs.Add(lib.Sequence);
             }
 
-            // Collect the extras (library peptides the manifest does not cover), keyed
-            // by their reconstructed quartet key, and note which keys have a target.
-            var extras = new Dictionary<string, ExtraInfo>(StringComparer.Ordinal);
-            var keyHasTarget = new HashSet<string>(StringComparer.Ordinal);
+            var excluded = new HashSet<string>(StringComparer.Ordinal);
+            var unexplained = new List<string>();
+            int metClip = 0;
+            var seen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var lib in libraryById.Values)
             {
                 if (lib == null || lib.Sequence == null)
@@ -151,52 +164,71 @@ namespace pwiz.Osprey.Tasks
                 if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
                     continue;
                 string seq = lib.Sequence;
-                if (manifestSeqs.Contains(seq) || extras.ContainsKey(seq))
+                if (!seen.Add(seq))
                     continue;
-                string pk = ReconstructPairKey(lib.ProteinIds);
-                bool ent = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
-                extras[seq] = new ExtraInfo { PairKey = pk, IsEntrapment = ent };
-                if (pk != null && !ent)
-                    keyHasTarget.Add(pk);
-            }
 
-            // Assign a fresh, non-colliding pair index per distinct extra quartet key
-            // (a matched target/entrapment pair shares it). Drop unmatched entrapment.
-            var keyToIndex = new Dictionary<string, uint>(StringComparer.Ordinal);
-            var excluded = new HashSet<string>(StringComparer.Ordinal);
-            var unexplained = new List<string>();
-            int metClip = 0;
-            uint nextIdx = maxIdx + 1;
-            foreach (var kvp in extras)
-            {
-                string seq = kvp.Key;
-                ExtraInfo info = kvp.Value;
-                if (info.IsEntrapment && (info.PairKey == null || !keyHasTarget.Contains(info.PairKey)))
+                // Covered by the manifest: use its pairing directly.
+                if (manifestPairIdx.TryGetValue(seq, out uint mi))
                 {
-                    // Unmatched entrapment: exclude it. If it is the known N-terminal-Met
-                    // clip artifact (its M-prefixed form is a manifest peptide) drop it
-                    // quietly; otherwise keep it in the unexplained list to surface.
-                    excluded.Add(seq);
-                    if (manifestSeqs.Contains("M" + seq))
-                        metClip++;
-                    else
-                        unexplained.Add(seq);
+                    pairIndexBySeq[seq] = mi;
                     continue;
                 }
-                if (info.PairKey != null)
+
+                // With no manifest there is nothing to reconcile against: keep every
+                // peptide, exclude none (Met-clip artifacts are undetectable).
+                if (!haveManifest)
                 {
-                    if (!keyToIndex.TryGetValue(info.PairKey, out uint idx))
+                    pairIndexBySeq[seq] = nextStandalone++;
+                    continue;
+                }
+
+                bool ent = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
+                // Extra: it should be a Met-clip form of a manifest peptide.
+                if (!manifestKind.TryGetValue(MetPrefix + seq, out var mkind))
+                {
+                    if (ent)
                     {
-                        idx = nextIdx++;
-                        keyToIndex[info.PairKey] = idx;
+                        // Not a Met-clip form and unpaired -> surface, don't silently drop.
+                        excluded.Add(seq);
+                        unexplained.Add(seq);
                     }
-                    pairIndexBySeq[seq] = idx;
+                    else
+                    {
+                        pairIndexBySeq[seq] = nextStandalone++; // extra target: only adds to n_t
+                    }
+                    continue;
+                }
+
+                uint origIdx = manifestPairIdx[MetPrefix + seq];
+                if (ent)
+                {
+                    // Clipped entrapment. Its only valid pair is the clip of the manifest
+                    // target at this pair index, which exists only if that target starts
+                    // with M and its clipped form was predicted into the library.
+                    string t = targetByPairIdx.TryGetValue(origIdx, out var tt) ? tt : null;
+                    // The clipped target must itself be an EXTRA in the library: only
+                    // then does it land on the shared clip index. If its sequence is a
+                    // manifest peptide (covered), it keeps that manifest index instead,
+                    // leaving this entrapment unpaired -- so it is still an orphan.
+                    string clippedTarget = t != null && t.StartsWith(MetPrefix, StringComparison.Ordinal)
+                        ? t.Substring(1) : null;
+                    bool clippedTargetExists = clippedTarget != null
+                        && libSeqs.Contains(clippedTarget) && !manifestKind.ContainsKey(clippedTarget);
+                    if (!clippedTargetExists)
+                    {
+                        excluded.Add(seq);   // the understood Met-clip orphan entrapment
+                        metClip++;
+                    }
+                    else
+                    {
+                        pairIndexBySeq[seq] = clipBase + origIdx;
+                    }
                 }
                 else
                 {
-                    // A target with no reconstructable key: give it a standalone index
-                    // (a target needs no pair; it only counts toward n_t).
-                    pairIndexBySeq[seq] = nextIdx++;
+                    // Clipped target: keep it in the clip-quartet index (shares it with
+                    // its clipped entrapment, which resolves to the same origIdx).
+                    pairIndexBySeq[seq] = clipBase + origIdx;
                 }
             }
 
