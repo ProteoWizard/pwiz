@@ -247,7 +247,7 @@ namespace TestRunner
             "?;/?;-?;help;skylinetester;debug;results;" +
             "test;skip;filter;form;" +
             "loop=0;repeat=1;pause=0;startingshot=1;random=off;offscreen=on;multi=1;wait=off;internet=off;originalurls=off;" +
-            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;" +
+            "parallelmode=off;workercount=0;waitforworkers=off;keepworkerlogs=off;checkdocker=on;workername;queuehost;workerport;workertimeout;alwaysupcltpassword;skipsystemheaps=off;" +
             "coverage=off;dotcoverexe=jetbrains.dotcover.commandlinetools\\2023.3.3\\tools\\dotCover.exe;" +
             "maxsecondspertest=-1;" +
             "demo=off;showformnames=off;status=off;buildcheck=0;" +
@@ -305,8 +305,26 @@ namespace TestRunner
 
             _testRunStartTime = DateTime.UtcNow;
 
+            // Let .NET 8 tool apphosts that tests spawn (BlibBuild.exe, BlibFilter.exe, SkylineCmd.exe, ...)
+            // resolve the runtime. This process itself runs via the staged dotnet.exe muxer, which self-locates
+            // its runtime with no env var; but a bare apphost launched via ProcessRunner does not use the muxer --
+            // it looks for DOTNET_ROOT, a global install, or a co-located hostfxr.dll. In the Docker worker the
+            // image has no global .NET and the AlwaysUp .\TestUser service session does not inherit `docker run -e`
+            // vars, so without this the apphost dies with 0x80008083 "Failed to resolve hostfxr.dll", hanging or
+            // failing every library-build/tool test and taking its worker down. Setting DOTNET_ROOT in THIS
+            // process's environment is inherited by the child processes it spawns (which read the process env,
+            // not the service session), sidestepping that limitation.
+            SetDotNetRootForChildApphosts();
+
             // Parse command line args and initialize default values.
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
+
+            // The coordinator passes skipsystemheaps=on to Docker workers so they don't run the
+            // segment-heap-unsafe GetProcessHeapSizes walk (a fatal AccessViolation in a container on
+            // net8). It must arrive as a command-line arg, not an env var: AlwaysUp runs the worker as
+            // a service whose session does not inherit `docker run -e` variables.
+            if (commandLineArgs.ArgAsBool("skipsystemheaps"))
+                RunTests.SkipSystemHeaps = true;
 
             switch (commandLineArgs.SearchArgs("?;/?;-?;help;report"))
             {
@@ -712,7 +730,7 @@ namespace TestRunner
                 var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
                 string workerName = $"docker_check{GetTestRunTimeStamp()}";
                 string testRunnerExe = GetTestRunnerExe();
-                string dockerArgs = $"run --name {workerName} --rm -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} help\"";
+                string dockerArgs = $"run --name {workerName} --rm -v \"{pwizRoot}\":c:\\pwiz {GetDockerEnvArgs()}{RunTests.DOCKER_IMAGE_NAME} \"{testRunnerExe} {GetTestRunnerTargetArg()}help\"";
                 Console.WriteLine("Checking that Docker always_up_runner container can run.");
                 string checkOutput = RunTests.RunCommand("docker", dockerArgs, "Error checking whether always_up_runner can start");
                 if (checkOutput.Contains("StartService FAILED"))
@@ -770,7 +788,7 @@ namespace TestRunner
                 testRunnerLog = @$"log=""{pwizRoot}\TestRunner-{workerName}.log""";
 
             // here paths are in host space
-            var testRunnerExe = Assembly.GetExecutingAssembly().Location;
+            var testRunnerExe = GetHostTestRunnerExe();
             var testRunnerArgs = $"parallelmode=client showheader=0 results=\"{pwizRoot}\\TestResults_host\" {testRunnerLog}";
             if (commandLineArgs.ArgAsBool("coverage"))
             {
@@ -810,21 +828,23 @@ namespace TestRunner
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
             var testRunnerExe = GetTestRunnerExe();
-            var testRunnerCmd = $@" parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog} workerport={workerPort} workername={workerName}";
+            var testRunnerCmd = $@" parallelmode=client showheader=0 skipsystemheaps=on results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog} workerport={workerPort} workername={workerName}";
             
             if (commandLineArgs.ArgAsBool("coverage"))
             {
                 var dotCoverExe = commandLineArgs.ArgAsString("dotcoverexe"); // use relative path
+                // On net8 testRunnerExe is dotnet.exe (the muxer); the TestRunner.dll it runs is the
+                // first target argument after the "--" separator.
                 testRunnerCmd =
-                    $@"c:\pwiz\{dotCoverExe} cover {dotCoverFilters} /Output=c:\pwiz\coverage-{workerName}.dcvr /ReturnTargetExitCode /AnalyzeTargetArguments=false /TargetExecutable={testRunnerExe} -- " +
+                    $@"c:\pwiz\{dotCoverExe} cover {dotCoverFilters} /Output=c:\pwiz\coverage-{workerName}.dcvr /ReturnTargetExitCode /AnalyzeTargetArguments=false /TargetExecutable={testRunnerExe} -- {GetTestRunnerTargetArg()}" +
                     testRunnerCmd;
                 coverageSnapshots.Add($"coverage-{workerName}.dcvr");
             }
             else
-                testRunnerCmd = testRunnerExe + " " + testRunnerCmd;
+                testRunnerCmd = testRunnerExe + " " + GetTestRunnerTargetArg() + testRunnerCmd.TrimStart();
             testRunnerCmd = AddPassThroughArguments(commandLineArgs, testRunnerCmd);
 
-            string dockerArgs = $"run --name {workerName} --rm -m {workerBytes}b -v \"{PathEx.GetDownloadsPath()}\":c:\\downloads -v \"{pwizRoot}\":c:\\pwiz {RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd}\" {dockerRunRedirect}";
+            string dockerArgs = $"run --name {workerName} --rm -m {workerBytes}b -v \"{PathEx.GetDownloadsPath()}\":c:\\downloads -v \"{pwizRoot}\":c:\\pwiz {GetDockerEnvArgs()}{RunTests.DOCKER_IMAGE_NAME} \"{testRunnerCmd}\" {dockerRunRedirect}";
             Console.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             log?.WriteLine($"Launching {workerName}: docker {dockerArgs}");
             workerNames = (workerNames ?? "") + $"{workerName} ";
@@ -857,17 +877,88 @@ namespace TestRunner
             return testRunnerCmd;
         }
 
+        // The runnable TestRunner executable on the host. On net472 Assembly.Location is the .exe
+        // already; on net8 it's the managed TestRunner.dll and the runnable apphost is the sibling
+        // .exe, which is what Process.Start / the Docker worker command must reference.
+        private static string GetHostTestRunnerExe()
+        {
+            var location = Assembly.GetExecutingAssembly().Location;
+            if (location.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+            {
+                var exe = Path.ChangeExtension(location, ".exe");
+                if (File.Exists(exe))
+                    return exe;
+            }
+            return location;
+        }
+
+        // Container-space path of the staged TestRunner.exe. The container mounts pwizRoot at c:\pwiz,
+        // so any host path under pwizRoot becomes c:\pwiz\<relative>. The old code anchored on
+        // "pwiz_tools\Skyline\bin", which the net8 SDK per-project bin layout (pwiz_tools\Skyline\
+        // <Project>\bin\... or a staged bin dir) no longer matches.
+        private static string GetContainerTestRunnerExe()
+        {
+            var testRunnerExe = GetHostTestRunnerExe();
+            var pwizRoot = Path.GetDirectoryName(Path.GetDirectoryName(GetSkylineDirectory().FullName));
+            return pwizRoot != null && testRunnerExe.StartsWith(pwizRoot + Path.DirectorySeparatorChar, StringComparison.CurrentCultureIgnoreCase)
+                ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(pwizRoot.Length).TrimStart('\\', '/'))
+                : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
+        }
+
+        // Point DOTNET_ROOT at the portable runtime staged next to this assembly (<staged>\dotnet, which
+        // ships hostfxr under dotnet\host\fxr\<ver>) so bare apphosts this process spawns can resolve it.
+        // No-op when DOTNET_ROOT is already set (respect an explicit runtime) or when the staged runtime is
+        // absent (net472, or an unstaged dev bin layout where a global .NET install is used instead).
+        private static void SetDotNetRootForChildApphosts()
+        {
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"DOTNET_ROOT")))
+                return;
+            var stagedRuntime = Path.Combine(AppContext.BaseDirectory, @"dotnet");
+            if (File.Exists(Path.Combine(stagedRuntime, @"dotnet.exe")) &&
+                Directory.Exists(Path.Combine(stagedRuntime, @"host", @"fxr")))
+            {
+                Environment.SetEnvironmentVariable(@"DOTNET_ROOT", stagedRuntime);
+            }
+        }
+
+        // The executable the Docker worker launches. On net8 the image has no .NET installed and the
+        // apphost can't be pointed at the staged runtime via DOTNET_ROOT: AlwaysUp runs the worker as
+        // a Windows service (account .\TestUser) whose session does not inherit `docker run -e` vars,
+        // so the apphost fails with "You must install .NET / Failed to resolve hostfxr.dll". Instead
+        // launch via the staged dotnet.exe muxer, which self-locates its runtime from its own folder
+        // (<staged>\dotnet) with no environment variable at all. net472 launches the apphost directly.
         private static string GetTestRunnerExe()
         {
-            // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
-            var testRunnerExe = Assembly.GetExecutingAssembly().Location;
-            int iRelative = testRunnerExe.IndexOf(@"pwiz_tools\Skyline\bin", StringComparison.CurrentCultureIgnoreCase);
-            testRunnerExe = iRelative != -1
-                ? Path.Combine(@"c:\pwiz", testRunnerExe.Substring(iRelative))
-                : @"c:\pwiz\pwiz_tools\Skyline\bin\x64\Release\TestRunner.exe";
-            // N.B. TestResults_<n> could technically just be TestResults since each VM has its own drive, but it makes for a more readable log and
-            // is also used in pwiz_tools\Skyline\TestRunnerLib\RunTests.cs to determine the test client ID
-            return testRunnerExe;
+#if NET472
+            return GetContainerTestRunnerExe();
+#else
+            // Container paths under c:\pwiz\...\staging-net8\ contain no spaces, so no quoting needed.
+            return Path.GetDirectoryName(GetContainerTestRunnerExe()) + @"\dotnet\dotnet.exe";
+#endif
+        }
+
+        // The managed target that must follow GetTestRunnerExe() on net8 (the DLL the muxer runs),
+        // with a trailing space; empty on net472 where the apphost itself is the program.
+        private static string GetTestRunnerTargetArg()
+        {
+#if NET472
+            return string.Empty;
+#else
+            return Path.ChangeExtension(GetContainerTestRunnerExe(), ".dll") + " ";
+#endif
+        }
+
+        // Environment fragment spliced into `docker run` for the Docker workers.
+        //
+        // SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS: skip the GetProcessHeapSizes system-heap walk in the
+        // container. HeapWalk/HeapLock fault against the segment heap that Windows Server containers
+        // enable by default; on net8 that native AccessViolation is a fatal, non-catchable fast-fail.
+        // The committed-heap number it produces is display-only (leak pass/fail uses private bytes),
+        // so container workers simply omit it. (The net8 runtime itself is supplied by the staged
+        // dotnet.exe muxer - see GetTestRunnerExe - not by an environment variable.)
+        private static string GetDockerEnvArgs()
+        {
+            return "-e SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS=1 ";
         }
 
         private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker,

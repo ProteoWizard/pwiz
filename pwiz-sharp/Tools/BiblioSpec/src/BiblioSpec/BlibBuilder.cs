@@ -7,6 +7,7 @@
 // The per-file reader dispatch inside BuildLibrary() throws NotImplementedException for
 // every input type until the concrete reader subclasses are ported (Phase 2 stage 3).
 
+using System.Data.SQLite;
 using System.Globalization;
 using System.Text;
 
@@ -711,6 +712,49 @@ public class BlibBuilder : BlibMaker
     }
 
     /// <summary>
+    /// cpp <c>BlibHandler::getScoreTypes</c> (BlibBuild.cpp:49-72). Opens the .blib read-only (never the
+    /// output BlibMaker.Db, which isn't open in score-lookup mode) and returns the distinct score types it
+    /// was built from. Mirrors cpp: skip UNKNOWN rows, and fall back to a single UNKNOWN when the library
+    /// records none (or predates the ScoreTypes table), so the probe always yields a valid, non-erroring row.
+    /// </summary>
+    private IList<PsmScoreType> GetBlibScoreTypes(int iLib)
+    {
+        var path = _inputFiles[iLib];
+        VerifyFileExists(path);
+
+        var scoreTypes = new List<PsmScoreType>();
+        try
+        {
+            using (var db = SqliteRoutine.Open(path, readOnly: true))
+            using (var cmd = db.CreateCommand())
+            {
+                cmd.CommandText =
+                    "SELECT DISTINCT(ScoreTypes.scoreType) FROM RefSpectra " +
+                    "JOIN ScoreTypes ON RefSpectra.scoreType = ScoreTypes.id";
+                using (var reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        var scoreType = BlibUtils.StringToScoreType(reader[0]?.ToString() ?? string.Empty);
+                        if (scoreType != PsmScoreType.UnknownScoreType)
+                            scoreTypes.Add(scoreType);
+                    }
+                }
+            }
+        }
+        catch (SQLiteException)
+        {
+            // Older/consensus .blibs may lack a ScoreTypes table; treat as no known score type
+            // rather than erroring (which would re-hang Skyline's Build Spectral Library page).
+            scoreTypes.Clear();
+        }
+
+        if (scoreTypes.Count == 0)
+            scoreTypes.Add(PsmScoreType.UnknownScoreType);
+        return scoreTypes;
+    }
+
+    /// <summary>
     /// Score-lookup-mode-only: emit a single <c>UNKNOWN\tNOT_A_PROBABILITY_VALUE</c> row to
     /// stdout. Called from <see cref="BuildLibrary"/>'s per-file catch arms so every filename
     /// header we already wrote is followed by at least one score-types row, even when the
@@ -795,11 +839,18 @@ public class BlibBuilder : BlibMaker
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(resultFile);
 
-        // cpp parity: BlibBuild.cpp:158 — .blib is special-cased to call transferLibrary.
-        // (Not a reader instantiation; it copies rows from another library.)
+        // cpp parity: BlibBuild.cpp:158 — .blib uses a BlibHandler reader. In build mode it
+        // transfers the library's rows (needs the output Db open); in score-lookup mode it reports
+        // the .blib's OWN score types via BlibHandler::getScoreTypes (BlibBuild.cpp:49-72). Score
+        // lookup must NOT transfer: the output Db is never opened in that mode, so TransferLibrary
+        // would throw "Db not open. Call OpenDb first." — which the C# port previously did for every
+        // .blib, erroring the score-type probe and hanging Skyline's Build Spectral Library page.
         if (HasExtensionCi(resultFile, ".blib"))
         {
-            TransferLibrary(fileIndex);
+            if (IsScoreLookupMode)
+                WriteScoreTypes(GetBlibScoreTypes(fileIndex));
+            else
+                TransferLibrary(fileIndex);
             return;
         }
 
