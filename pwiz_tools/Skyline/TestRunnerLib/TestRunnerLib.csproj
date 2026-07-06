@@ -45,10 +45,6 @@
          library from `dotnet test`. TestDiagnostics.dll isn't available on
          net8, and MSTest 3.x's TestContext has a different abstract shape
          than the legacy VS UnitTestFramework, so drop the driver types. -->
-    <Compile Remove="RunTests.cs" />
-    <Compile Remove="MemoryProfiler.cs" />
-    <Compile Remove="MiniDump.cs" />
-    <Compile Remove="InvokeSkyline.cs" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
     <PackageReference Include="log4net" Version="2.0.17" />

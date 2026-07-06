@@ -67,9 +67,6 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
-    <!-- KoinaTestUtil talks to Grpc.Core's Channel type; Koina is a cut feature
-         on net8 (matches Skyline.csproj's KoinaUIHelpers cut). -->
-    <Compile Remove="KoinaTestUtil.cs" />
     <PackageReference Include="Google.Protobuf" Version="3.27.3" />
     <PackageReference Include="Grpc.Net.Client" Version="2.66.0" />
     <PackageReference Include="DotNetZip" Version="1.16.0" />

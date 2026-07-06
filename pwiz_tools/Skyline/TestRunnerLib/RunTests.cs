@@ -165,9 +165,17 @@ namespace TestRunnerLib
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
+        // Skip the system-heap walk (GetProcessHeapSizes) for a Docker worker: HeapWalk/HeapLock fault
+        // against the segment heap Windows Server containers enable by default, which is a fatal,
+        // non-catchable AccessViolation on net8. The number is display-only. The coordinator turns this
+        // on via the skipsystemheaps command-line arg (an env var would not reach the AlwaysUp service
+        // that runs the worker); the env var is honored too for a directly-launched container process.
+        public static bool SkipSystemHeaps { get; set; } =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS"));
+
         public bool ReportSystemHeaps
         {
-            get { return !RunPerfTests; }   // 12-hour perf runs get much slower with system heap reporting
+            get { return !RunPerfTests && !SkipSystemHeaps; }   // 12-hour perf runs get much slower with system heap reporting
         }
 
         public static bool WriteMiniDumps
@@ -455,7 +463,11 @@ namespace TestRunnerLib
                     Log("# Heaps " + string.Join("\t", heapCounts.Select(s => s.ToString())) + Environment.NewLine);
                 }
                 
-                // Report handle counts if requested (useful for debugging handle leaks)
+                // Report handle counts if requested (useful for debugging handle leaks).
+                // The per-type handle enumeration comes from the C++/CLI TestDiagnostics.dll
+                // (HandleEnumeratorWrapper), which is net472-only. On net8 a pure-C# P/Invoke
+                // reimplementation would be needed; skip per-type handle reporting for now.
+#if NET472
                 if (ReportHandles)
                 {
                     var handleInfos = HandleEnumeratorWrapper.GetHandleInfos();
@@ -473,6 +485,7 @@ namespace TestRunnerLib
 
                     Log("# Handles " + string.Join("\t", sortedHandleCounts.Select(c => c.Type + ": " + c.Count)) + Environment.NewLine);
                 }
+#endif
                 // CRT leak checking removed - was disabled (required special debug pwiz_cli_data.dll build)
 
                 if (heapOutput && ReportSystemHeaps)
@@ -1321,7 +1334,12 @@ namespace TestRunnerLib
 
         public static IEnumerable<TestInfo> GetTestInfos(string testDll)
         {
-            var assembly = LoadFromAssembly.Try(GetAssemblyPath(testDll));
+            var dllPath = GetAssemblyPath(testDll);
+            // Not every test project is necessarily deployed next to TestRunner (each net8 SDK
+            // project builds to its own bin). A test DLL that isn't present simply has no tests.
+            if (!File.Exists(dllPath))
+                yield break;
+            var assembly = LoadFromAssembly.Try(dllPath);
             var types = assembly.GetTypes();
 
             foreach (var type in types)
