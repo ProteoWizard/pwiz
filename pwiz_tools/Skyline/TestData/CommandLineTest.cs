@@ -4022,7 +4022,7 @@ namespace pwiz.SkylineTestData
         {
             TestSkylineRunnerErrorDetection(null);
             TestSkylineRunnerErrorDetection(new CultureInfo("ja"));
-            TestSkylineRunnerErrorDetection(new CultureInfo("zh-CHS"));
+            TestSkylineRunnerErrorDetection(new CultureInfo("zh-Hans"));
         }
 
         private void TestSkylineRunnerErrorDetection(CultureInfo ci)

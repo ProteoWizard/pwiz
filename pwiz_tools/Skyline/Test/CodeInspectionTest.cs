@@ -378,7 +378,7 @@ namespace pwiz.SkylineTest
                         // Now work through the other supported L10N languages, verifying that the L10N string is also properly marked as an error hint.
                         // That is, either starts with localized Skyline.Properties.Resources.CommandStatusWriter_WriteLine_Error_, or starts with
                         // the english language string constant CommandStatusWriter.ERROR_MESSAGE_HINT (i.e. hasn't been localized yet).
-                        foreach (var culture in new[] {@"zh-CHS", @"ja"}) 
+                        foreach (var culture in new[] {@"zh-Hans", @"ja"}) 
                         {
                             var tryCulture = new CultureInfo(culture);
                             Thread.CurrentThread.CurrentCulture = Thread.CurrentThread.CurrentUICulture = tryCulture;

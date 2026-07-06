@@ -42,8 +42,17 @@ namespace pwiz.ProteomeDatabase.Util
                 DatabaseResource databaseResource;
                 if (_dbResources != null && _dbResources.TryGetValue(path, out databaseResource))
                 {
-                    databaseResource.AddRef();
-                    return databaseResource;
+                    // A prior ProteomeDb.CloseDbConnection() may have closed this shared factory to
+                    // release the protDB file handle (e.g. so a temp file could be renamed and then
+                    // reopened). A closed NHibernate session factory can no longer open sessions, so
+                    // drop the stale resource and recreate a fresh one below rather than hand back a
+                    // factory that throws ObjectDisposedException on OpenSession.
+                    if (!databaseResource.SessionFactory.IsClosed)
+                    {
+                        databaseResource.AddRef();
+                        return databaseResource;
+                    }
+                    _dbResources.Remove(path);
                 }
                 databaseResource = new DatabaseResource(path);
                 if (null == _dbResources)
