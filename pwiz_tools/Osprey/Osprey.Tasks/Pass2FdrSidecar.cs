@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
@@ -55,7 +56,14 @@ namespace pwiz.Osprey.Tasks
         /// <paramref name="taskValidityKey"/> are the owning task's identity,
         /// stamped into each inline per-file validity sidecar.
         /// </summary>
-        internal static void ComputeAndPersist(
+        /// <returns>
+        /// The second-pass Percolator model's <see cref="FeatureContributions"/> when
+        /// this call actually retrained (feature histograms included if
+        /// <c>--model-diagnostics</c>), for the model-diagnostics pass-2 model view;
+        /// null when the 2nd-pass scores were rehydrated from sidecars (no retrain) or
+        /// the method is not Percolator.
+        /// </returns>
+        internal static FeatureContributions ComputeAndPersist(
             PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -63,6 +71,7 @@ namespace pwiz.Osprey.Tasks
             string taskValidityKey)
         {
             var config = ctx.Config;
+            FeatureContributions pass2Contributions = null;
 
             // When the projection 2nd-pass compute ran (flag on), this holds the scored
             // FdrProjectionSet -- non-null is the flag that the StreamingSink already
@@ -133,7 +142,13 @@ namespace pwiz.Osprey.Tasks
                         "them here from the reconciled features (reused distributed-run code path).",
                         missingPass2, totalFiles));
                     var swPass2 = Stopwatch.StartNew();
-                    if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator)
+                    // --model-diagnostics needs the resident 2nd-pass model: its feature
+                    // contributions feed the pass-2 model view, and the projection 2nd pass
+                    // streams through a sink and produces none. Route --model-diagnostics to
+                    // the resident path so ComputePass2Resident can return the model. Off the
+                    // default output path, so byte-identity is unaffected (#4377).
+                    if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
+                        !config.ModelDiagnostics)
                     {
                         // Projection 2nd pass (issue #4374 + #4355 struct-shrink S0 / C1):
                         // stream the reconciled PIN features through the SAME projection
@@ -220,7 +235,7 @@ namespace pwiz.Osprey.Tasks
                         // Resident 2nd pass (flag off): the byte-identity oracle. Reload
                         // every survivor's PIN features resident, then run the resident
                         // Percolator over the full FdrEntry survivor buffer.
-                        ComputePass2Resident(ctx, perFileEntries, perFileParquetPaths, config);
+                        pass2Contributions = ComputePass2Resident(ctx, perFileEntries, perFileParquetPaths, config);
                     }
                     swPass2.Stop();
                     ctx.LogInfo(string.Format(
@@ -400,6 +415,8 @@ namespace pwiz.Osprey.Tasks
                         filesReloaded, filesReloaded + filesMissing));
                 }
             }
+
+            return pass2Contributions;
         }
 
         /// <summary>
@@ -411,7 +428,7 @@ namespace pwiz.Osprey.Tasks
         /// scores it in place. Pure code motion out of <see cref="ComputeAndPersist"/>
         /// -- behavior (and therefore the 2nd-pass sidecars) is unchanged.
         /// </summary>
-        private static void ComputePass2Resident(
+        private static FeatureContributions ComputePass2Resident(
             PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -496,9 +513,12 @@ namespace pwiz.Osprey.Tasks
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
-                    FirstJoinTask.RunPercolatorFdr(
+                    // Capture the 2nd-pass model for the --model-diagnostics pass-2 model
+                    // view (retrained on the post-reconciliation pool, #4377). Capturing
+                    // the return value does not change what RunPercolatorFdr does, so the
+                    // resident 2nd-pass scores stay byte-identical.
+                    return FirstJoinTask.RunPercolatorFdr(
                         perFileEntries, config, ctx, "Second-pass");
-                    break;
                 // Simple / Mokapot 2nd-pass paths intentionally
                 // not implemented yet -- the in-process pipeline's
                 // FirstJoinTask.RunFdr already covers Simple, and
@@ -510,7 +530,7 @@ namespace pwiz.Osprey.Tasks
                         "Second-pass FDR: {0} is not supported in MergeNodeTask; " +
                         "skipping (protein FDR will run on first-pass scores)",
                         config.FdrMethod));
-                    break;
+                    return null;
             }
         }
 

@@ -810,7 +810,7 @@ namespace pwiz.Osprey.Test
             // FdrEntry oracle overload: at the default MaxTrainSize this dispatches to
             // the direct RunPercolator (standardizer fit on the full population).
             PercolatorEngine.RunPercolatorFdr(
-                fdrStubs, config, featureInfos, s => { }, null, "First-pass",
+                fdrStubs, config, featureInfos, s => { }, out _, null, "First-pass",
                 f => featuresA[f]);
             // Projection overload under test: must take the SAME direct dispatch and
             // therefore match the oracle byte-for-byte. The lean struct takes Score; the

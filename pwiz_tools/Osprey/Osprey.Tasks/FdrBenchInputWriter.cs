@@ -85,12 +85,14 @@ namespace pwiz.Osprey.Tasks
         /// <param name="fdrLevel">Drives which q-value field is emitted and the dedup key.
         /// <see cref="FdrLevel.Both"/> collapses to precursor-level for output.</param>
         /// <param name="perRun">If true, emit one row per (precursor, file); else dedup across runs.</param>
+        /// <param name="skipEntrapmentSeqs">Entrapment sequences to exclude (unmatched orphans); null to write all.</param>
         public static Result WritePeptideInput(
             string path,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             FdrLevel fdrLevel,
-            bool perRun)
+            bool perRun,
+            ICollection<string> skipEntrapmentSeqs = null)
         {
             // Protein and Both collapse to precursor-level for this peptide-level writer.
             FdrLevel effectiveLevel = fdrLevel == FdrLevel.Peptide ? FdrLevel.Peptide : FdrLevel.Precursor;
@@ -119,6 +121,8 @@ namespace pwiz.Osprey.Tasks
                                 if (entry.IsDecoy)
                                     continue;
                                 var lookup = ResolveLibrary(libraryById, entry.EntryId, ref result);
+                                if (skipEntrapmentSeqs != null && skipEntrapmentSeqs.Contains(lookup.Peptide))
+                                    continue; // excluded orphan entrapment (kept consistent with the manifest)
                                 double q = entry.EffectiveRunQvalue(effectiveLevel);
                                 writer.WriteLine(FormatRow(lookup.Peptide, entry.ModifiedSequence,
                                     entry.Charge, q, entry.Score, lookup.Protein, runName));
@@ -158,6 +162,8 @@ namespace pwiz.Osprey.Tasks
                             .ThenBy(r => r.Entry.Charge))
                         {
                             var lookup = ResolveLibrary(libraryById, row.Entry.EntryId, ref result);
+                            if (skipEntrapmentSeqs != null && skipEntrapmentSeqs.Contains(lookup.Peptide))
+                                continue; // excluded orphan entrapment (kept consistent with the manifest)
                             writer.WriteLine(FormatRow(lookup.Peptide, row.Entry.ModifiedSequence,
                                 row.Entry.Charge, row.QValue, row.Entry.Score, lookup.Protein, null));
                             result.Rows++;
@@ -167,6 +173,78 @@ namespace pwiz.Osprey.Tasks
                 saver.Commit();
             }
             return result;
+        }
+
+        /// <summary>
+        /// Write a corrected FDRBench pairing manifest derived from the searched
+        /// library -- the single source of truth for the run. Emits one row per
+        /// distinct non-decoy peptide (target / p_target) classified from its own
+        /// protein accessions, so FDRBench can classify every reported peptide and
+        /// drops nothing (no <c>remove_invalid_peptides</c>).
+        ///
+        /// Pairing comes from <paramref name="pairing"/>: the external manifest where
+        /// it covers a sequence, reconstructed from the library accessions for the
+        /// extras. Entrapment peptides with no target twin
+        /// (<see cref="EntrapmentPairing.ExcludedEntrapment"/> -- N-terminal-Met-clip
+        /// artifacts) are absent from the pairing and are NOT emitted, so the manifest
+        /// has no unpaired entrapment and stock FDRBench's paired estimator does not
+        /// crash. FDRBench reads only non-decoy rows and the input TSV excludes
+        /// decoys, so decoy rows are unnecessary.
+        /// </summary>
+        /// <param name="path">Destination manifest TSV path.</param>
+        /// <param name="libraryById">The searched library, indexed by id.</param>
+        /// <param name="pairing">The reconciled pairing (see <see cref="EntrapmentPairing.Build"/>).</param>
+        /// <returns>Number of peptide rows written.</returns>
+        public static int WritePairingManifest(
+            string path,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            EntrapmentPairing pairing)
+        {
+            // Distinct non-decoy peptides that have a pair index, in sequence order.
+            // A peptide absent from PairIndexBySeq is an excluded orphan entrapment.
+            var rows = new SortedDictionary<string, LibraryEntry>(System.StringComparer.Ordinal);
+            foreach (var lib in libraryById.Values)
+            {
+                if (lib == null || lib.Sequence == null)
+                    continue;
+                if (EntrapmentLibraryClassifier.IsDecoySide(lib.ProteinIds))
+                    continue;
+                if (!pairing.PairIndexBySeq.ContainsKey(lib.Sequence))
+                    continue;
+                if (!rows.ContainsKey(lib.Sequence))
+                    rows[lib.Sequence] = lib;
+            }
+
+            string dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+            int written = 0;
+            using (var saver = new FileSaver(path))
+            {
+                using (var writer = new StreamWriter(saver.SafeName, false))
+                {
+                    writer.NewLine = "\n";
+                    writer.WriteLine("sequence\tdecoy\tproteins\tpeptide_type\tpeptide_pair_index");
+                    foreach (var kv in rows)
+                    {
+                        var lib = kv.Value;
+                        bool entrap = EntrapmentLibraryClassifier.IsEntrapment(lib.ProteinIds);
+                        uint pair = pairing.PairIndexBySeq[lib.Sequence];
+                        string protein = FormatProteinField(lib.ProteinIds, out _);
+                        writer.WriteLine(string.Join("\t", new[]
+                        {
+                            lib.Sequence,
+                            "No",
+                            protein,
+                            entrap ? "p_target" : "target",
+                            pair.ToString(CultureInfo.InvariantCulture)
+                        }));
+                        written++;
+                    }
+                }
+                saver.Commit();
+            }
+            return written;
         }
 
         /// <summary>Format one TSV row; <paramref name="runName"/> null omits the trailing run column.</summary>
