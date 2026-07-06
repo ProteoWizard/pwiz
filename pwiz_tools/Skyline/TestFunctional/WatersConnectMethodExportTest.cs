@@ -232,6 +232,7 @@ namespace pwiz.SkylineTestFunctional
             // FolderA is writable: exercise creating a new folder here (success + permission-denied).
             // Done after the original-state assertions above so the created folder does not perturb them.
             VerifyNewFolder(methodFileDlg);
+            VerifyRefresh(methodFileDlg);
             RunUI(() =>
             {
                 methodFileDlg.ListViewItems[0].Selected = false;
@@ -295,6 +296,34 @@ namespace pwiz.SkylineTestFunctional
             {
                 _folderCreateForbidden = false; // restore success behavior for the rest of the test
             }
+        }
+
+        /// <summary>
+        /// Exercises the Refresh command on the save-method dialog: a folder that appears on the server
+        /// after the current listing was cached shows up only once Refresh re-fetches the directory.
+        /// Guards the cache invalidation - without it, RefreshFromServer would repopulate from the cached
+        /// response and the new folder would never appear. Runs immediately after
+        /// <see cref="VerifyNewFolder"/> so it can reuse the folder just created into as the parent.
+        /// </summary>
+        private void VerifyRefresh(WatersConnectSaveMethodFileDialog methodFileDlg)
+        {
+            const string serverFolderName = "RefreshedFolder";
+            RunUI(() => Assert.IsTrue(methodFileDlg.RefreshButtonVisible, "Refresh button should be visible on the save dialog."));
+
+            // Simulate a folder created on the server outside Skyline after the listing was cached, in the
+            // same parent VerifyNewFolder just used. The cached listing must not show it yet.
+            RunUI(() =>
+            {
+                var parentFolderId = _createdFolders.Last().Key;
+                _createdFolders.Add(new KeyValuePair<string, string>(parentFolderId, serverFolderName));
+                Assert.IsFalse(methodFileDlg.ListViewItems.Any(i => i.Text == serverFolderName),
+                    "The server-side folder should not appear in the cached listing before refreshing.");
+            });
+
+            // Refresh invalidates the cached listing and re-fetches, so the new folder now appears.
+            RunUI(() => methodFileDlg.RefreshForTest());
+            WaitForConditionUI(5000, () => methodFileDlg.ListViewItems.Any(i => i.Text == serverFolderName),
+                () => "The server-side folder did not appear after refresh.");
         }
 
         private void TestAuthenticationError(ExportMethodDlg exportMethodDlg)

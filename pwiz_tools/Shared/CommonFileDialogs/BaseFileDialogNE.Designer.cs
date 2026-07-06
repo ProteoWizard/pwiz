@@ -49,6 +49,7 @@ namespace pwiz.CommonFileDialogs
             this.backButton = new System.Windows.Forms.ToolStripButton();
             this.upOneLevelButton = new System.Windows.Forms.ToolStripButton();
             this.newFolderButton = new System.Windows.Forms.ToolStripButton();
+            this.refreshButton = new System.Windows.Forms.ToolStripButton();
             this.viewsDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
             this.tilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -171,6 +172,7 @@ namespace pwiz.CommonFileDialogs
             this.backButton,
             this.upOneLevelButton,
             this.newFolderButton,
+            this.refreshButton,
             this.viewsDropDownButton});
             this.navToolStrip.Name = "navToolStrip";
             this.navToolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
@@ -198,6 +200,16 @@ namespace pwiz.CommonFileDialogs
             this.newFolderButton.Name = "newFolderButton";
             this.newFolderButton.Visible = false;
             this.newFolderButton.Click += new System.EventHandler(this.newFolderButton_Click);
+            //
+            // refreshButton
+            //
+            // Reusable "Refresh" command, hidden by default. A subclass that supports refreshing the
+            // listing sets Visible = true (and an icon) and overrides RefreshFromServer. Text/ToolTip
+            // are assigned from resources in the constructor so they stay localizable.
+            this.refreshButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.refreshButton.Name = "refreshButton";
+            this.refreshButton.Visible = false;
+            this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
             //
             // viewsDropDownButton
             //
@@ -377,6 +389,7 @@ namespace pwiz.CommonFileDialogs
         private System.Windows.Forms.ToolStripButton backButton;
         private System.Windows.Forms.ToolStripButton upOneLevelButton;
         protected System.Windows.Forms.ToolStripButton newFolderButton;
+        protected System.Windows.Forms.ToolStripButton refreshButton;
         private System.Windows.Forms.ToolStripDropDownButton viewsDropDownButton;
         private System.Windows.Forms.ToolStripMenuItem tilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem listToolStripMenuItem;

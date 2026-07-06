@@ -130,4 +130,7 @@
   <data name="BaseFileDialogNE_BeginCreateNewFolder_New_folder" xml:space="preserve">
     <value>New folder</value>
   </data>
+  <data name="BaseFileDialogNE_Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
 </root>

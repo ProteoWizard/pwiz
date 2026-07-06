@@ -305,6 +305,23 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 RetryFetch(GetInjectionsUrl(watersConnectUrl), GetFiles);
         }
 
+        /// <summary>
+        /// Discards the cached contents for <paramref name="remoteUrl"/> so the next listing re-fetches
+        /// from the server. Unlike <see cref="RetryFetchContents"/> (a no-op while a successful response
+        /// is cached), this forces a fresh fetch, letting the Refresh command pick up folders or methods
+        /// added on the server since the directory was last loaded. The cleared request types mirror
+        /// those fetched by <see cref="AsyncFetchContents"/> for the same directory.
+        /// </summary>
+        public void RefreshContents(RemoteUrl remoteUrl)
+        {
+            var watersConnectUrl = (WatersConnectUrl) remoteUrl;
+            ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetRootContentsUrl());
+            if (watersConnectUrl.Type == WatersConnectUrl.ItemType.folder)
+                ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetSampleSetsUrl(watersConnectUrl));
+            if (watersConnectUrl.Type == WatersConnectUrl.ItemType.sample_set)
+                ClearResultsFor<ImmutableList<WatersConnectFileObject>>(GetInjectionsUrl(watersConnectUrl));
+        }
+
         protected Uri GetRootContentsUrl()
         {
             return new Uri(WatersConnectAccount.GetFoldersUrl());

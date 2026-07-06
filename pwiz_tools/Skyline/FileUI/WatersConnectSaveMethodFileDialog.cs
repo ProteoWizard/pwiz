@@ -28,6 +28,20 @@ namespace pwiz.Skyline.FileUI
             newFolderButton.Visible = true;
             newFolderButton.Image = Resources.AddFolder;
             newFolderButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+            refreshButton.Visible = true;
+            refreshButton.Image = Resources.Refresh;
+            refreshButton.DisplayStyle = ToolStripItemDisplayStyle.Image;
+        }
+
+        /// <summary>
+        /// Re-fetches the current directory's listing from the server (rather than repopulating from the
+        /// cached response) so folders or methods added on the server since the dialog opened appear.
+        /// </summary>
+        protected override void RefreshFromServer()
+        {
+            if (RemoteSession is WatersConnectSession session && CurrentDirectory is WatersConnectUrl currentDir)
+                session.RefreshContents(currentDir);
+            RefreshCurrentDirectory();
         }
         protected override void DoMainAction()
         {
@@ -225,6 +239,15 @@ namespace pwiz.Skyline.FileUI
 
         public bool NewFolderButtonVisible => newFolderButton.Visible;
         public bool NewFolderButtonEnabled => newFolderButton.Enabled;
+        public bool RefreshButtonVisible => refreshButton.Visible;
+
+        /// <summary>
+        /// Drives the Refresh command directly for functional tests (same path as clicking the button).
+        /// </summary>
+        public void RefreshForTest()
+        {
+            RefreshFromServer();
+        }
 
         /// <summary>
         /// Runs the folder creation synchronously (without the wait dialog) so functional tests can

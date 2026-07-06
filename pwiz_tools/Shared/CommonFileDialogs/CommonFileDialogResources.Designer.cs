@@ -203,5 +203,11 @@ namespace pwiz.CommonFileDialogs {
                 return ResourceManager.GetString("BaseFileDialogNE_BeginCreateNewFolder_New_folder", resourceCulture);
             }
         }
+
+        public static string BaseFileDialogNE_Refresh {
+            get {
+                return ResourceManager.GetString("BaseFileDialogNE_Refresh", resourceCulture);
+            }
+        }
     }
 }

@@ -79,6 +79,11 @@ namespace pwiz.CommonFileDialogs
             newFolderButton.Text = CommonFileDialogResources.BaseFileDialogNE_NewFolder;
             newFolderButton.ToolTipText = CommonFileDialogResources.BaseFileDialogNE_NewFolder;
 
+            // The Refresh command is hidden by default; subclasses that support re-fetching the
+            // listing make it visible. Text is the accessible name and ToolTip is shown on hover.
+            refreshButton.Text = CommonFileDialogResources.BaseFileDialogNE_Refresh;
+            refreshButton.ToolTipText = CommonFileDialogResources.BaseFileDialogNE_Refresh;
+
             // Create a new image list for the list view that is the default size (16x16)
             ImageList imageList = new ImageList{ColorDepth = ColorDepth.Depth32Bit};
             imageList.Images.AddRange(lookInImageList.Images.Cast<Image>().ToArray());
@@ -1031,6 +1036,21 @@ namespace pwiz.CommonFileDialogs
         protected void RefreshCurrentDirectory()
         {
             populateListViewFromDirectory(_currentDirectory);
+        }
+
+        private void refreshButton_Click(object sender, EventArgs e)
+        {
+            RefreshFromServer();
+        }
+
+        /// <summary>
+        /// Hook invoked by the Refresh command. The base implementation repopulates the list from the
+        /// current directory. Subclasses backed by a remote store override this to invalidate their
+        /// cached listing first, so the refresh actually re-fetches from the server.
+        /// </summary>
+        protected virtual void RefreshFromServer()
+        {
+            RefreshCurrentDirectory();
         }
 
         private void sourcePathTextBox_TextChanged(object sender, EventArgs e)
