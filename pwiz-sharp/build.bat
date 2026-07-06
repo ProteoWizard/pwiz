@@ -7,7 +7,8 @@ REM # ProteoWizard_CoreWindowsNet config; runs locally too.
 REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
-REM #             [--require-vendor-support] [--automated] [--coverage]
+REM #             [--require-vendor-support] [--without-mascot]
+REM #             [--automated] [--coverage]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
@@ -21,6 +22,13 @@ REM #   --require-vendor-support
 REM #       Fail the build if vendor support isn't enabled. Use in CI to make
 REM #       sure --i-agree was passed, instead of silently building a stripped
 REM #       artifact.
+REM #
+REM #   --without-mascot
+REM #       Disable Mascot (.dat) support in BiblioSpec. msparser is bundled
+REM #       under libraries\msparser_3_1_0_x86_win64\, so Mascot support is ON
+REM #       by default — pass this flag to skip building the MascotShim native
+REM #       wrapper (e.g. on a contributor machine without CMake, or in a
+REM #       no-vendor release pipeline).
 REM #
 REM #   --automated
 REM #       Tag the assembly InformationalVersion with "(automated build)"
@@ -51,6 +59,7 @@ set IAGREE=0
 set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set COVERAGE=0
+set WITHOUT_MASCOT=0
 set ERROR_TEXT=
 
 REM # Parse args. First non-flag arg is the configuration (Debug|Release).
@@ -58,6 +67,7 @@ REM # Parse args. First non-flag arg is the configuration (Debug|Release).
 if "%~1"=="" goto endparse
 if /i "%~1"=="--i-agree-to-the-vendor-licenses" (set IAGREE=1) else ^
 if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
+if /i "%~1"=="--without-mascot" (set WITHOUT_MASCOT=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--coverage" (set COVERAGE=1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -85,6 +95,7 @@ if defined TEAMCITY_VERSION set COVERAGE=1
 set MSBUILD_PROPS=-p:Configuration=%CONFIG%
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
+if %WITHOUT_MASCOT%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:MascotSupport=false
 
 if %IAGREE%==1 (
     echo ##teamcity[message text='Vendor support: ENABLED']
@@ -182,6 +193,7 @@ if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
 set PS_FLAGS=-Configuration %CONFIG%
 if %IAGREE%==1 set PS_FLAGS=%PS_FLAGS% -IAgreeToVendorLicenses
 if %AUTOMATED%==1 set PS_FLAGS=%PS_FLAGS% -AutomatedBuild
+if %WITHOUT_MASCOT%==1 set PS_FLAGS=%PS_FLAGS% -WithoutMascot
 
 echo ##teamcity[progressMessage 'dotnet test (%CONFIG%)']
 

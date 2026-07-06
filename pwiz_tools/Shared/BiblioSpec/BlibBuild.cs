@@ -357,7 +357,29 @@ namespace pwiz.BiblioSpec
 
     public sealed class BlibBuild
     {
-        private const string EXE_BLIB_BUILD = "BlibBuild";
+        // pwiz-sharp's .NET 8 BlibBuild ships in BlibBuild-sharp/ next to Skyline.exe (so its
+        // bundled SQLite.Interop.dll doesn't lose to Skyline's older one). x86 Skyline still
+        // ships the cpp BlibBuild at the top level. Resolve once at first use: subfolder
+        // (sharp) takes precedence, fall back to PATH/working-dir probe of "BlibBuild".
+        private static readonly string EXE_BLIB_BUILD = ResolveBlibBuildExe();
+
+        private static string ResolveBlibBuildExe()
+        {
+            try
+            {
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                var sharp = Path.Combine(baseDir, "BlibBuild-sharp", "BlibBuild.exe");
+                if (File.Exists(sharp))
+                    return sharp;
+            }
+            catch
+            {
+                // BaseDirectory unavailable in some hosting scenarios — fall through.
+            }
+            // Legacy cpp BlibBuild path: PATH/cwd probe of "BlibBuild" (resolves to
+            // BlibBuild.exe in Skyline's bin/x86/ for the x86 build that still ships cpp).
+            return "BlibBuild";
+        }
         public const string EXT_SQLITE_JOURNAL = "-journal";
 
         private ReadOnlyCollection<string> _inputFiles;

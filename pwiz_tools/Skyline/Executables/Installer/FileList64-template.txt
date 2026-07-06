@@ -52,7 +52,9 @@ BaseError.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS T
 BaseTof.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 BiblioSpec.dll
 BiblioSpec.pdb
-BlibBuild.exe
+BlibBuild-sharp/BlibBuild.exe
+BlibBuild-sharp/SQLite.Interop.dll
+BlibBuild-sharp/modifications.xml
 BlibFilter.exe
 cdt.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)
 Clearcore2.Compression.dll (included automatically from ProteoWizard; DO NOT ADD TO THE WXS TEMPLATE!)

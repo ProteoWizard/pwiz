@@ -39,6 +39,9 @@
   <Fragment>
     <Feature Id="ProductFeature" Title="Skyline Application" Level="1">
       <ComponentGroupRef Id="SkylineComponents" />
+      <?if $(sys.BUILDARCH) = x64 ?>
+      <ComponentGroupRef Id="BlibBuildSharpComponents" />
+      <?endif?>
       <ComponentGroupRef Id="de_files"/>
       <ComponentGroupRef Id="es_files"/>
       <ComponentGroupRef Id="fr_files"/>
@@ -114,6 +117,11 @@
       <Directory Id="Microsoft.VC90.MFC_directory" Name="Microsoft.VC90.MFC"/>
       <Directory Id="Microsoft.VC90.CRT_directory" Name="Microsoft.VC90.CRT"/>
       <Directory Id="percolator_directory" Name="percolator"/>
+      <!-- x64 only: pwiz-sharp BlibBuild + its bundled SQLite.Interop + modifications.xml
+           live here (isolated from Skyline's older SQLite.Interop in INSTALLFOLDER). The
+           directory is declared on both platforms so the wxs validates, but the components
+           that fill it are guarded with <?if $(sys.BUILDARCH) = x64 ?> below. -->
+      <Directory Id="BlibBuild_sharp_directory" Name="BlibBuild-sharp"/>
     </DirectoryRef>
   </Fragment>
 
@@ -154,12 +162,20 @@
       <Component Id="BiblioSpec.pdb">
         <File Source="$(var.Skyline.TargetDir)/BiblioSpec.pdb" KeyPath="yes"/>
       </Component>
+      <?if $(sys.BUILDARCH) = x64 ?>
+      <!-- x64: pwiz-sharp .NET 8 BlibBuild ships under BlibBuild-sharp/ with its bundled
+           SQLite.Interop.dll + modifications.xml. The single-file bundle embeds the
+           runtimeconfig so there's no BlibBuild.exe.config. The Skyline-side BlibBuild
+           wrapper (pwiz_tools/Shared/BiblioSpec/BlibBuild.cs) resolves the .exe via
+           AppDomain.BaseDirectory/BlibBuild-sharp/BlibBuild.exe. -->
+      <?else?>
       <Component Id="BlibBuild.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibBuild.exe" KeyPath="yes"/>
       </Component>
       <Component Id="BlibBuild.exe.config">
         <File Source="$(var.Skyline.TargetDir)/BlibBuild.exe.config" KeyPath="yes"/>
       </Component>
+      <?endif?>
       <Component Id="BlibFilter.exe">
         <File Source="$(var.Skyline.TargetDir)/BlibFilter.exe" KeyPath="yes"/>
       </Component>
@@ -407,6 +423,23 @@
       </Component>
       __VENDOR_DLLS__
     </ComponentGroup>
+    <?if $(sys.BUILDARCH) = x64 ?>
+    <!-- x64 only: pwiz-sharp BlibBuild + companion native deps + modifications.xml. The
+         subfolder isolates BlibBuild's bundled SQLite.Interop.dll from Skyline's older
+         top-level one (which would otherwise win the native-dll-loader race because
+         System.Data.SQLite probes the executable's directory first). -->
+    <ComponentGroup Id="BlibBuildSharpComponents" Directory="BlibBuild_sharp_directory">
+      <Component Id="BlibBuildSharp_BlibBuild.exe">
+        <File Source="$(var.Skyline.TargetDir)/BlibBuild-sharp/BlibBuild.exe" KeyPath="yes"/>
+      </Component>
+      <Component Id="BlibBuildSharp_SQLite.Interop.dll">
+        <File Source="$(var.Skyline.TargetDir)/BlibBuild-sharp/SQLite.Interop.dll" KeyPath="yes"/>
+      </Component>
+      <Component Id="BlibBuildSharp_modifications.xml">
+        <File Source="$(var.Skyline.TargetDir)/BlibBuild-sharp/modifications.xml" KeyPath="yes"/>
+      </Component>
+    </ComponentGroup>
+    <?endif?>
     <ComponentGroup Id="de_files" Directory="de_directory">
       <Component Id="de_ZedGraph.resources.dll">
         <File Source="$(var.Skyline.TargetDir)/de/ZedGraph.resources.dll" Id="de_ZedGraph.resources.dll_file" KeyPath="yes"/>

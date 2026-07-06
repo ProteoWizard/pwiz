@@ -6661,19 +6661,38 @@
       <Link>msconvert.exe.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!-- x86 still uses the C++ BlibBuild; x64 now uses the pwiz-sharp port published as a
+         framework-dependent single-file .NET 8 exe. The publish runs from PublishBlibBuildSharp
+         (see target below) BEFORE this Content is enumerated. The single-file bundle embeds
+         its runtimeconfig, so no companion BlibBuild.exe.config is needed.
+
+         x64 BlibBuild + its companion SQLite.Interop.dll go in a BlibBuild-sharp/ subfolder
+         to isolate from Skyline's own SQLite.Interop.dll, which is a different (older) build
+         and would otherwise win the native-dll resolution race (System.Data.SQLite probes the
+         .exe's directory first; Skyline's bin/ takes precedence over the temp extraction dir).
+         Skyline's BlibBuild wrapper (pwiz_tools/Shared/BiblioSpec/BlibBuild.cs) is path-aware
+         and invokes BlibBuild-sharp\BlibBuild.exe on x64. -->
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibBuild.exe">
-      <Link>BlibBuild.exe</Link>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release\BlibBuild.exe">
+      <Link>BlibBuild-sharp\BlibBuild.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release\SQLite.Interop.dll">
+      <Link>BlibBuild-sharp\SQLite.Interop.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release\modifications.xml">
+      <Link>BlibBuild-sharp\modifications.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Condition="'$(Platform)' == 'x64'" Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release\unimod.xml">
+      <Link>BlibBuild-sharp\unimod.xml</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\Shared\BiblioSpec\obj\x86\BlibBuild.exe.config">
-      <Link>BlibBuild.exe.config</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Condition="'$(Platform)' == 'x64'" Include="..\Shared\BiblioSpec\obj\x64\BlibBuild.exe.config">
       <Link>BlibBuild.exe.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -7477,6 +7496,35 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="AfterPublish">
     <Exec Command="SignAfterPublishKey.bat &quot;$(ProjectDir)University of Washington (MacCoss Lab).crt&quot; &quot;$(ProjectDir)bin\$(Platform)\$(ConfigurationName)\app.publish&quot; $(TargetName)" />
+  </Target>
+
+  <!-- x64 Skyline pulls BlibBuild.exe from the pwiz-sharp port (a .NET 8 framework-dependent
+       single-file publish). Run the publish before MSBuild enumerates Content, so the file
+       exists when the <Content Include> further up resolves. Always Release, regardless of
+       Skyline's $(Configuration): the published .exe is a runtime tool, not a debug target.
+
+       Skipped on x86 (still uses cpp BlibBuild) and when the dest .exe is newer than the
+       BlibBuild source (Inputs/Outputs incremental check keeps no-op rebuilds cheap). -->
+  <!-- Outputs lists EVERY companion file we depend on, not just BlibBuild.exe. Without the
+       full list, MSBuild's incremental check considers the target up-to-date even when
+       SQLite.Interop.dll / modifications.xml / unimod.xml have been deleted from the publish
+       folder, the downstream <Content Include> copies silently fail (or skip), and the
+       deployed BlibBuild.exe is missing native deps it needs to run.
+
+       Inputs is scoped to ONLY the pwiz-sharp source tree, NOT Skyline's @(Compile)/@(None).
+       Skyline has thousands of .cs files; including @(Compile) caused every Skyline edit to
+       retrigger the 30s dotnet publish even when BlibBuild source was untouched. -->
+  <Target Name="PublishBlibBuildSharp"
+          BeforeTargets="BeforeBuild"
+          Condition="'$(Platform)' == 'x64'"
+          Inputs="$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\**\*.cs;$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\*.csproj;$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BiblioSpec\**\*.cs;$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BiblioSpec\*.csproj"
+          Outputs="$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release\BlibBuild.exe;$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release\SQLite.Interop.dll;$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release\modifications.xml;$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release\unimod.xml">
+    <Message Text="Publishing pwiz-sharp BlibBuild as Skyline's BlibBuild.exe..." Importance="high" />
+    <!-- Use -p:SelfContained=false (property form) NOT the equivalent CLI flag: the flag
+         form is mis-parsed inside the chained Exec command, leaving SelfContained at its
+         default (true), which silently produces a ~97MB bundle with the entire .NET 8
+         runtime embedded instead of the intended framework-dependent ~29MB single-file. -->
+    <Exec Command="dotnet publish &quot;$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\BlibBuild.csproj&quot; -c Release -r win-x64 -p:PublishSingleFile=true -p:SelfContained=false -p:MascotSupport=false -o &quot;$(MSBuildThisFileDirectory)..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\Publish\Release&quot;" />
   </Target>
   <PropertyGroup>
     <PreBuildEvent>$(ProjectDir)PreBuildEvents.bat</PreBuildEvent>

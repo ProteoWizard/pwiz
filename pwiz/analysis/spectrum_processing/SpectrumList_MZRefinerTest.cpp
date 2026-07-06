@@ -47,12 +47,19 @@ void verifyScanInfo(const Spectrum& spectrum, const double& epsilon, double base
 
     if (os_)
     {
+        // Use max double precision so we can capture cpp's exact refined values for the C# port
+        // to match against. (Default ostream precision is 6 sig figs, way too coarse.)
+        std::streamsize oldPrec = os_->precision();
+        os_->precision(17);
         *os_ << "[verifyScanInfo] " << spectrum.index << " " << spectrum.id << " "
              << basePeakMZ << " " << lowestObservedMZ << " " << highestObservedMZ << " "
              << mzArrayValue1 << " " << mzArrayValue2 << ": "
-             << spectrum.cvParam(MS_base_peak_m_z).value << " " << spectrum.cvParam(MS_lowest_observed_m_z).value << " "
-             << spectrum.cvParam(MS_highest_observed_m_z).value << " " << binaryData->data[mzArrayIndex1] << " "
+             << spectrum.cvParam(MS_base_peak_m_z).valueAs<double>() << " "
+             << spectrum.cvParam(MS_lowest_observed_m_z).valueAs<double>() << " "
+             << spectrum.cvParam(MS_highest_observed_m_z).valueAs<double>() << " "
+             << binaryData->data[mzArrayIndex1] << " "
              << binaryData->data[mzArrayIndex2] << endl;
+        os_->precision(oldPrec);
     }
 
     unit_assert_equal(spectrum.cvParam(MS_base_peak_m_z).valueAs<double>(), basePeakMZ, epsilon);
@@ -74,9 +81,13 @@ void verifyPrecursorInfo(const Spectrum& spectrum, const double& epsilon, double
 
     if (os_)
     {
+        std::streamsize oldPrec = os_->precision();
+        os_->precision(17);
         *os_ << "[verifyPrecursorInfo] " << spectrum.index << " " << spectrum.id << " "
             << precursorMZ << " " << isolationWindowTarget << ": "
-            << selectedIon.cvParam(MS_selected_ion_m_z).value << " " << isoWindow.cvParam(MS_isolation_window_target_m_z).value << endl;
+            << selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>() << " "
+            << isoWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>() << endl;
+        os_->precision(oldPrec);
     }
 
     unit_assert_equal(selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>(), precursorMZ, epsilon);
@@ -110,19 +121,57 @@ void testShift(const bfs::path& datadir)
 
     unit_assert(spectrumListMZRefined->size() == 610);
     if (os_) *os_ << "refined spectra:\n";
-    epsilon = 1e-2; // Increase the tolerance a little bit for the refined results (add some forgiveness with algorithm updates...)
-    verifyScanInfo(*msd.run.spectrumListPtr->spectrum(0, true), epsilon, 371.10060, 300.14388, 1568.55631, 30, 303.64715, 1200, 416.24951);
-    verifyScanInfo(*msd.run.spectrumListPtr->spectrum(224, true), epsilon, 558.30841, 301.05990, 1522.72962, 200, 407.26538, 1500, 724.33007);
-    verifyScanInfo(*msd.run.spectrumListPtr->spectrum(10, true), epsilon, 530.32928, 74.06059, 887.43126, 41, 188.11169, 93, 442.22961);
-    verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(10), epsilon, 530.26830, 530.27145);
-    verifyScanInfo(*msd.run.spectrumListPtr->spectrum(173, true), epsilon, 141.10200, 87.05566, 1187.53519, 63, 248.15885, 116, 887.45068);
-    verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(173), epsilon, 629.30333, 629.30172);
-    verifyScanInfo(*msd.run.spectrumListPtr->spectrum(346, true), epsilon, 848.46155, 116.00400, 1454.73795, 16, 185.16468, 95, 862.43371);
-    verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(346), epsilon, 840.45738, 840.45257);
-    verifyScanInfo(*msd.run.spectrumListPtr->spectrum(470, true), epsilon, 249.15926, 119.04927, 1402.77782, 23, 217.08172, 102, 1154.60229);
-    verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(470), epsilon, 838.96963, 838.97257);
-    verifyScanInfo(*msd.run.spectrumListPtr->spectrum(551, true), epsilon, 1048.55384, 155.08147, 1321.68186, 50, 368.19235, 104, 941.97253);
-    verifyPrecursorInfo(*msd.run.spectrumListPtr->spectrum(551), epsilon, 739.70141, 740.03206);
+    // Gold-standard refined values come from running cpp's m/z-dependent shift on this fixture
+    // — captured via the verbose output of the test itself with precision(17). Use 1e-5 Da to
+    // absorb any acceptable floating-point reordering in the median / smoothing / interpolation
+    // chain. The pwiz-sharp port must match these values to within the same tolerance.
+    // Note: call spectrumListMZRefined->spectrum(...) — the original test called
+    // msd.run.spectrumListPtr->spectrum(...) which is the un-refined source list, so the
+    // refinement was never actually exercised by the verify* assertions. Caught during the
+    // pwiz-sharp port.
+    epsilon = 1e-5;
+    verifyScanInfo(*spectrumListMZRefined->spectrum(0, true), epsilon, 371.1006001117666, 300.14388782681374, 1568.5563126956004, 30, 303.64716279528164, 1200, 416.24952163046731);
+    verifyScanInfo(*spectrumListMZRefined->spectrum(224, true), epsilon, 558.30841403178533, 301.0599059587318, 1522.7296272693961, 200, 407.26536629488913, 1500, 724.33010710071767);
+    verifyScanInfo(*spectrumListMZRefined->spectrum(10, true), epsilon, 530.33027936737869, 74.060736453505228, 887.43262784019601, 41, 188.11204462947168, 93, 442.23043669390097);
+    verifyPrecursorInfo(*spectrumListMZRefined->spectrum(10, true), epsilon, 530.26830278971977, 530.27145671623236);
+    verifyScanInfo(*spectrumListMZRefined->spectrum(173, true), epsilon, 141.1021310944723, 87.055741585444437, 1187.5356558403723, 63, 248.15906778591972, 116, 887.45113829379954);
+    verifyPrecursorInfo(*spectrumListMZRefined->spectrum(173, true), epsilon, 629.30333335222315, 629.30172822487316);
+    verifyScanInfo(*spectrumListMZRefined->spectrum(346, true), epsilon, 848.46212730691445, 116.00411836876587, 1454.738711017955, 16, 185.16487631408029, 95, 862.43431321316427);
+    verifyPrecursorInfo(*spectrumListMZRefined->spectrum(346, true), epsilon, 840.45738089107431, 840.45257911504211);
+    verifyScanInfo(*spectrumListMZRefined->spectrum(470, true), epsilon, 249.15954203160186, 119.04941028782407, 1402.7787367752446, 23, 217.0819699422467, 102, 1154.6030950289528);
+    verifyPrecursorInfo(*spectrumListMZRefined->spectrum(470, true), epsilon, 838.96963622848989, 838.97257622429117);
+    verifyScanInfo(*spectrumListMZRefined->spectrum(551, true), epsilon, 1048.5544004193118, 155.08163481495836, 1321.6825564384221, 50, 368.19272254561912, 104, 941.97306717821186);
+    verifyPrecursorInfo(*spectrumListMZRefined->spectrum(551, true), epsilon, 739.70141234258222, 740.03206232796811);
+
+    // For this fixture cpp's selection logic picks the m/z-binned shift (% improvement over
+    // global > 3% AND > scan-time-binned's % improvement). The C# port must reproduce this.
+    string chosenShift;
+    BOOST_FOREACH(const ProcessingMethod& pm, spectrumListMZRefined->dataProcessingPtr()->processingMethods)
+        BOOST_FOREACH(const UserParam& up, pm.userParams)
+            if (up.name == "Shift dependency") chosenShift = up.value;
+    unit_assert(chosenShift == "Using mass to charge dependency");
+
+    // Verify which shift type was chosen via the ProcessingMethod's "Shift dependency"
+    // UserParam. Print it during -v runs so the chosen path is visible in test output.
+    auto dp = spectrumListMZRefined->dataProcessingPtr();
+    unit_assert(dp.get() && !dp->processingMethods.empty());
+    string shiftDependency;
+    string globalMedianPpm;
+    string shiftRange;
+    BOOST_FOREACH(const ProcessingMethod& pm, dp->processingMethods)
+    {
+        BOOST_FOREACH(const UserParam& up, pm.userParams)
+        {
+            if (up.name == "Shift dependency") shiftDependency = up.value;
+            if (up.name == "Global Median Mass Measurement Error (PPM)") globalMedianPpm = up.value;
+            if (up.name == "Shift range") shiftRange = up.value;
+        }
+    }
+    if (os_)
+        *os_ << "[chosen shift] " << shiftDependency
+             << " | globalMedianPpm=" << globalMedianPpm
+             << " | shiftRange=" << shiftRange << endl;
+    unit_assert(!shiftDependency.empty());
 
     bfs::remove(datadir / "JD_06232014_sample4_C.mzRefinement.tsv");
 }

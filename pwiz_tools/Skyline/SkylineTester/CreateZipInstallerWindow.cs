@@ -122,7 +122,16 @@ namespace SkylineTester
 
                 else if ((String.Empty + Path.GetFileName(zipPath)).ToLower() == "bibliospec.zip")
                 {
-                    // Create a BiblioSpec distro
+                    // Create a BiblioSpec distro.
+                    //
+                    // BlibBuild.exe location depends on platform: x86 Skyline keeps it at the
+                    // root next to BlibFilter.exe (legacy cpp build); x64 Skyline publishes the
+                    // pwiz-sharp port into a BlibBuild-sharp/ subfolder so its bundled
+                    // SQLite.Interop.dll doesn't lose the native-dll-loader race against
+                    // Skyline's own (older) one. modifications.xml moves along with it. The
+                    // root-level entries below are kept as-is for x86 distros; the x64
+                    // subfolder files are added at the end with their relative path so a user
+                    // who unzips the distro can run BlibBuild-sharp\BlibBuild.exe directly.
                     var files = new List<string>
                     {
                         "BlibBuild.exe",
@@ -154,8 +163,26 @@ namespace SkylineTester
                     }
                     foreach (var file in files)
                     {
+                        // Silently skip root-level entries that don't exist on the current bin
+                        // layout (x64 lacks root-level BlibBuild.exe / BlibBuild.exe.config /
+                        // modifications.xml — see comment at the top of this branch).
+                        if (!File.Exists(file))
+                            continue;
                         Console.WriteLine(file);
                         zipFile.AddFile(file, string.Empty);
+                    }
+
+                    // x64-only: ship the pwiz-sharp BlibBuild from its BlibBuild-sharp/ subfolder
+                    // so the SQLite.Interop / modifications.xml stay together with the .exe in
+                    // the distro. Same files, same names — just nested one level deeper so the
+                    // bundled native-dep loader resolution stays well-formed.
+                    if (Directory.Exists("BlibBuild-sharp"))
+                    {
+                        foreach (var file in Directory.EnumerateFiles("BlibBuild-sharp"))
+                        {
+                            Console.WriteLine(file);
+                            zipFile.AddFile(file, "BlibBuild-sharp");
+                        }
                     }
                 }
 

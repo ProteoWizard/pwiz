@@ -854,6 +854,37 @@ void SpectrumList_ChargeFromIsotope::getParentIndices( const SpectrumPtr s, vect
     }
 }
 
+/// LRU-cached load of a parent MS1 spectrum. Every MSn in a DDA Top-N batch hits the same
+/// parentsBefore_+parentsAfter_ parents, so without this cache each MSn re-decodes the same
+/// parent N times from the underlying SpectrumList. Capacity 16 covers Top-30 DDA easily.
+SpectrumPtr SpectrumList_ChargeFromIsotope::getCachedParent(size_t index) const
+{
+    {
+        std::lock_guard<std::mutex> lock(parentCacheMutex_);
+        auto it = parentCacheMap_.find(index);
+        if (it != parentCacheMap_.end())
+        {
+            parentCacheList_.splice(parentCacheList_.begin(), parentCacheList_, it->second);
+            return it->second->second;
+        }
+    }
+    // Load outside the lock so concurrent loads of different keys don't serialize.
+    SpectrumPtr loaded = inner_->spectrum(index, true);
+    {
+        std::lock_guard<std::mutex> lock(parentCacheMutex_);
+        auto it = parentCacheMap_.find(index);
+        if (it != parentCacheMap_.end()) return it->second->second; // race
+        parentCacheList_.push_front(std::make_pair(index, loaded));
+        parentCacheMap_[index] = parentCacheList_.begin();
+        if (parentCacheList_.size() > parentCacheCapacity_)
+        {
+            parentCacheMap_.erase(parentCacheList_.back().first);
+            parentCacheList_.pop_back();
+        }
+    }
+    return loaded;
+}
+
 void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const vector <int> & parents,const double targetIsoMZ,const double lowerIsoWidth,const double upperIsoWidth,
                                                     vector< vector <double> > & mzs,vector< vector <double> > & intensities) const
 {
@@ -863,8 +894,10 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
     {
 
         vector< int > currentParent(1,parents[i]);
-        DetailLevel detailLevel = DetailLevel_FullMetadata;
-        SpectrumPtr sSurvey = inner_->spectrum(parents[i], detailLevel);
+        // Use the LRU cache instead of inner_->spectrum(..., FullMetadata) +
+        // inner_->spectrum(..., true) — those would re-decode the same parent for every
+        // MSn in a DDA batch. The cache returns full data; the centroid check still works.
+        SpectrumPtr sSurvey = getCachedParent(parents[i]);
         vector<CVParam>& cvParams = sSurvey->cvParams;
         vector<CVParam>::iterator itr;
         itr = std::find(cvParams.begin(), cvParams.end(), MS_centroid_spectrum);
@@ -872,9 +905,10 @@ void SpectrumList_ChargeFromIsotope::getParentPeaks(const SpectrumPtr s,const ve
         if ( itr != cvParams.end() ) // MS1 spectrum already centroided, just grab the peaks in the isolation window
         {
 
-            SpectrumPtr sPar = inner_->spectrum( parents[i], true );
-            BinaryData<double>& peakMZs = sPar->getMZArray()->data;
-            BinaryData<double>& peakIntensities = sPar->getIntensityArray()->data;
+            // Copy the binary arrays so the in-place erase loops below don't mutate the
+            // shared cached spectrum (which subsequent MSn would then see corrupted).
+            BinaryData<double> peakMZs = sSurvey->getMZArray()->data;
+            BinaryData<double> peakIntensities = sSurvey->getIntensityArray()->data;
             vector<int> elementsForDeletion;
 
             for (int j=0, jend = peakIntensities.size(); j < jend; ++j)
@@ -1018,12 +1052,13 @@ SpectrumListPtr SpectrumList_ChargeFromIsotope::instantiatePeakPicker( const vec
     shared_ptr<SpectrumListSimple> smallSpectrumList(new SpectrumListSimple);
 
     // parameters for re-sampling via linear interpolation
-    SpectrumPtr s = inner_->spectrum( indices[0], true);
+    SpectrumPtr s = getCachedParent(indices[0]);
     vector<double> summedIntensity;
     vector<double> summedMZ;
 
-    // Grab the binary data for the parent spectrum
-    SpectrumPtr sParent = inner_->spectrum( indices[0], true);
+    // Grab the binary data for the parent spectrum (already in s; reuse the cached load
+    // instead of re-decoding via inner_->spectrum a second time).
+    SpectrumPtr sParent = s;
     BinaryData<double>& parentMz = sParent->getMZArray()->data;
     BinaryData<double>& parentIntensity = sParent->getIntensityArray()->data;
 
