@@ -24,6 +24,7 @@ using System.Linq;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.SkylineTestUtil;
 
 namespace CommonTest.DataBinding
@@ -117,6 +118,91 @@ namespace CommonTest.DataBinding
         }
 
         [TestMethod]
+        public void TestPrecisionFilterOperations()
+        {
+            // Values around 3.14: precision filtering with "3.14" should match values in [3.135, 3.145)
+            var doubles = new[] { 3.13, 3.134, 3.1349, 3.135, 3.14, 3.144, 3.145, 3.15 };
+
+            // "equals 3.14" matches values within the widened (x10/9) equality tolerance of 3.14
+            // (~[3.1344, 3.1456]): 3.1349, 3.135, 3.14, 3.144, 3.145
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_EQUALS,3.14.ToString(CultureInfo.CurrentCulture), 5);
+
+            // "not equals 3.14" matches the values outside that tolerance: 3.13, 3.134, 3.15
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_NOT_EQUALS, 3.14.ToString(CultureInfo.CurrentCulture), 3);
+
+            // "> 3.14": 3.144, 3.145, 3.15
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_GREATER_THAN, 3.14.ToString(CultureInfo.CurrentCulture), 3);
+
+            // "> 3.14e0" means value > 3.145: 3.15
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_GREATER_THAN, 3.14.ToString("E2"), 1);
+
+
+            // ">= 3.14" uses the exact comparison tolerance (not the widened equality one): 3.135, 3.14, 3.144, 3.145, 3.15
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_GREATER_THAN_OR_EQUAL, 3.14.ToString(CultureInfo.CurrentCulture), 5);
+
+            // "< 3.14": 3.13, 3.134, 3.1349, 3.135
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_LESS_THAN, 3.14.ToString(CultureInfo.CurrentCulture), 4);
+
+            // "< 3.14e0" means value < 3.135: 3.13, 3.134, 3.1349
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_LESS_THAN, 3.14.ToString("E2"), 3);
+
+            // "<= 3.14" means value < 3.145: 3.13, 3.134, 3.1349, 3.135, 3.14, 3.144, 3.145
+            VerifyFilterCountStructs(doubles, FilterOperations.OP_IS_LESS_THAN_OR_EQUAL, 3.14.ToString(CultureInfo.CurrentCulture), 7);
+        }
+
+        [TestMethod]
+        public void TestListComparisonFilterOperations()
+        {
+            // A comparison or equality operator applied to a list-valued column (handled by
+            // ListFilterHandler over a numeric element handler) is evaluated element-wise: equal-length
+            // lists compare pairwise by index; a single element on either side is broadcast against the
+            // other; the criterion holds only if every element comparison holds. For comparison operators a
+            // non-broadcastable length mismatch throws (no meaningful answer); for equality it is simply
+            // not-equal.
+            var listHandler = new ListFilterHandler(NumericFilterHandler.INSTANCE);
+
+            bool Match(IFilterOperation op, double[] values, string operandText)
+            {
+                var columnValue = ListColumnValue.FromItems(values.Cast<object>());
+                var operand = listHandler.ParseOperand(op, CultureInfo.InvariantCulture, operandText);
+                return op.Matches(listHandler, columnValue, operand);
+            }
+
+            // 1 operand vs N values: every value must satisfy.
+            Assert.IsTrue(Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0 }, "15"));
+            Assert.IsFalse(Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0 }, "20"));
+            Assert.IsTrue(Match(FilterOperations.OP_IS_LESS_THAN, new[] { 17.0, 35.0 }, "40"));
+            Assert.IsFalse(Match(FilterOperations.OP_IS_LESS_THAN, new[] { 17.0, 35.0 }, "30"));
+
+            // N operands vs 1 value: the single value is broadcast against every operand.
+            Assert.IsTrue(Match(FilterOperations.OP_IS_LESS_THAN, new[] { 10.0 }, "15,20"));
+            Assert.IsFalse(Match(FilterOperations.OP_IS_LESS_THAN, new[] { 17.0 }, "15,20"));
+
+            // N vs N: pairwise by index.
+            Assert.IsTrue(Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0 }, "15,30"));
+            Assert.IsFalse(Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0 }, "15,40"));
+
+            // Differing lengths, neither broadcastable: an ordered comparison has no meaningful answer
+            // (unlike equality), so it throws rather than returning a misleading false.
+            AssertEx.ThrowsException<FormatException>(
+                () => Match(FilterOperations.OP_IS_GREATER_THAN, new[] { 17.0, 35.0, 50.0 }, "15,30"));
+
+            // Equality is element-wise and broadcasts a single element on either side, symmetric with the
+            // comparison operators above.
+            Assert.IsTrue(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 17.0 }, "17"));    // 1 operand vs N values
+            Assert.IsFalse(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 18.0 }, "17"));
+            Assert.IsTrue(Match(FilterOperations.OP_EQUALS, new[] { 17.0 }, "17,17"));       // N operands vs 1 value
+            Assert.IsFalse(Match(FilterOperations.OP_EQUALS, new[] { 17.0 }, "17,18"));
+            Assert.IsTrue(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 35.0 }, "17,35")); // pairwise
+            Assert.IsFalse(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 35.0 }, "17,36"));
+            Assert.IsTrue(Match(FilterOperations.OP_NOT_EQUALS, new[] { 17.0 }, "17,18"));   // != inverts the broadcast
+
+            // Unlike comparison, a non-broadcastable length mismatch for equality is not-equal, not an error.
+            Assert.IsFalse(Match(FilterOperations.OP_EQUALS, new[] { 17.0, 35.0, 50.0 }, "15,30"));
+            Assert.IsTrue(Match(FilterOperations.OP_NOT_EQUALS, new[] { 17.0, 35.0, 50.0 }, "15,30"));
+        }
+
+        [TestMethod]
         public void TestBoolFilterOperations()
         {
             var bools = new[]
@@ -145,12 +231,11 @@ namespace CommonTest.DataBinding
         private List<TItem> ApplyFilter<TItem>(IFilterOperation filterOperation, string operand, IEnumerable<TItem> items)
         {
             var dataSchema = new DataSchema(new DataSchemaLocalizer(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture));
-            var columnDescriptor = ColumnDescriptor.RootColumn(dataSchema, typeof(TItem));
             if (null != operand)
             {
-                Assert.IsNotNull(filterOperation.GetOperandType(columnDescriptor));
+                Assert.IsTrue(filterOperation.HasOperand());
             }
-            var filterPredicate = FilterPredicate.CreateFilterPredicate(dataSchema, typeof (TItem), filterOperation, operand);
+            var filterPredicate = FilterPredicate.Parse(dataSchema, typeof (TItem), filterOperation, operand);
             var predicate = filterPredicate.MakePredicate(dataSchema, typeof(TItem));
             return items.Where(item => predicate(item)).ToList();
         }

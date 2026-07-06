@@ -1975,7 +1975,27 @@ namespace pwiz.Skyline.Model {
                         "_RT__min_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to {0} &quot;{1}&quot;.
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_GetColumnDescription_NumberAndName__0____1__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The same fragment (product m/z {0}) is declared more than once on a single line of the transition list. See column {1}..
+        /// </summary>
+        public static string SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__product_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_list__See_column__1__ {
+            get {
+                return ResourceManager.GetString("SmallMoleculeTransitionListReader_IsDuplicateFragmentOnLine_The_same_fragment__pr" +
+                        "oduct_m_z__0___is_declared_more_than_once_on_a_single_line_of_the_transition_lis" +
+                        "t__See_column__1__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Missing ion mobility units.
         /// </summary>

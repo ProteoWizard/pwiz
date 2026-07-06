@@ -51,6 +51,7 @@ td {
 <tr><td><nobr>--save-settings</nobr></td><td>Causes settings changes to the global environment, e.g. added reports, libraries, enzymes, etc. to be saved to the program configuration file.</td></tr>
 <tr><td><nobr>--out</nobr>=path/to/file.sky</td><td>Same as save except writes to the specified file</td></tr>
 <tr><td><nobr>--save-as</nobr>=path/to/file.sky</td><td>Synonym for <nobr>--out</nobr>. Save to the specified file.</td></tr>
+<tr><td><nobr>--save-compact-format</nobr>=&lt;never | largefilesonly | always&gt;</td><td>Sets how transitions are written when the document is saved in this run: &#39;never&#39; writes individual transition elements, &#39;always&#39; writes a compact base64 blob, and &#39;largefilesonly&#39; uses the compact blob only for large documents. Applies only to this invocation and overrides the CompactFormatOption setting persisted in user.config; when this argument is omitted, that persisted setting (which defaults to &#39;largefilesonly&#39;) is used.</td></tr>
 <tr><td><nobr>--new</nobr>[=path/to/file.sky]</td><td>Create a new document using the current Skyline settings.</td></tr>
 <tr><td><nobr>--overwrite</nobr></td><td>Overwrite the filepath specified by <nobr>--new</nobr> if it already exists, instead of producing an error.</td></tr>
 <tr><td><nobr>--discard-changes</nobr></td><td>Allows <nobr>--new</nobr> or <nobr>--in</nobr> to proceed when the current document has unsaved changes. Without this flag, the command will fail with an error if there are unsaved changes.</td></tr>

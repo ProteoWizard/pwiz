@@ -143,7 +143,19 @@ namespace pwiz.Skyline.Model.Tools {
                 return ResourceManager.GetString("PythonInstaller_Failed_to_execute_command____0__", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to execute command: [{0}]
+        ///
+        ///Output:
+        ///{1}.
+        /// </summary>
+        public static string PythonInstaller_Failed_to_execute_command____0____Output____1__ {
+            get {
+                return ResourceManager.GetString("PythonInstaller_Failed_to_execute_command____0____Output____1__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Installing Packages.
         /// </summary>

@@ -541,6 +541,15 @@
   <data name="GraphFullScan_SetSpectraUI__peak_type_not_available" xml:space="preserve">
     <value>このデータファイルでは、{0}スペクトルは利用できません。代わりに{1}を表示しています。</value>
   </data>
+  <data name="GraphFullScan_ToolTip_mz" xml:space="preserve">
+    <value>m/z</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_Intensity" xml:space="preserve">
+    <value>強度</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_Transition" xml:space="preserve">
+    <value>トランジション</value>
+  </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
     <value>{0:0.0000}</value>
   </data>
@@ -548,7 +557,7 @@
     <value>スペクトルの読み込みに失敗しました。ライブラリが破損している可能性があります。</value>
   </data>
   <data name="GraphSpectrum_ToolTip_mz">
-    <value>観測されたm/z：</value>
+    <value>実測m/z：</value>
   </data>
   <data name="GraphSpectrum_ToolTip_Intensity">
     <value>強度：</value>
@@ -567,6 +576,12 @@
   </data>
   <data name="MassErrorHistogram2DGraphPane_Graph_Retention_Time" xml:space="preserve">
     <value>保持時間</value>
+  </data>
+  <data name="MassErrorHistogram2DGraphPane_ToolTip_Peptides" xml:space="preserve">
+    <value>ペプチド</value>
+  </data>
+  <data name="MassErrorHistogram2DGraphPane_ToolTip_Transitions" xml:space="preserve">
+    <value>トランジション</value>
   </data>
   <data name="MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable" xml:space="preserve">
     <value>質量誤差が利用不可</value>
@@ -597,6 +612,9 @@
   </data>
   <data name="PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_" xml:space="preserve">
     <value>{1}内の{0} CV</value>
+  </data>
+  <data name="MassErrorBinFinder_DisplayName_Peptides" xml:space="preserve">
+    <value>ペプチド</value>
   </data>
   <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
     <value>ペプチド</value>
@@ -724,6 +742,12 @@
   <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
     <value>相対的存在量</value>
   </data>
+  <data name="AreaAbundanceComparisonGraphPane_XAxis_Replicate" xml:space="preserve">
+    <value>繰り返し測定</value>
+  </data>
+  <data name="AreaAbundanceComparisonGraphPane_Outliers" xml:space="preserve">
+    <value>異常値</value>
+  </data>
   <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
     <value>タンパク質のランク</value>
   </data>
@@ -751,11 +775,14 @@
   <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
     <value>ランク</value>
   </data>
+  <data name="RelativeAbundanceGraph_ToolTip_Replicate_All" xml:space="preserve">
+    <value>すべて</value>
+  </data>
   <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
     <value>定量クロマトグラムがありません</value>
   </data>
   <data name="ToolTipImplementation_RenderTip_Calculated_Mass" xml:space="preserve">
-    <value>イオンm/z（演算後）</value>
+    <value>イオンm/z（計算値）</value>
   </data>
   <data name="GraphChromatogram_SetRetentionTimeIdIndicators_Libraries_are_still_loading" xml:space="preserve">
     <value>ライブラリはまだ読み込み中です</value>
@@ -767,6 +794,6 @@
     <value>計算中...</value>
   </data>
   <data name="GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate" xml:space="preserve">
-    <value>例示的な繰り返し測定</value>
+    <value>代表繰り返し測定</value>
   </data>
 </root>

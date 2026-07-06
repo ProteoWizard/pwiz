@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Model.Results.Spectra {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class SpectraResources {
@@ -104,7 +104,16 @@ namespace pwiz.Skyline.Model.Results.Spectra {
                 return ResourceManager.GetString("SpectrumClassFilter_GetText_All", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Error evaluating the spectrum filter: {0}.
+        /// </summary>
+        public static string SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_MakePredicate_Error_evaluating_the_spectrum_filter___0_", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Criteria which MS1 spectra must satisfy to be included in extracted chromatogram.
         /// </summary>
@@ -140,6 +149,24 @@ namespace pwiz.Skyline.Model.Results.Spectra {
         public static string SpectrumClassFilter_Ms2FilterPage_MS2_ {
             get {
                 return ResourceManager.GetString("SpectrumClassFilter_Ms2FilterPage_MS2_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown spectrum property &apos;{0}&apos;..
+        /// </summary>
+        public static string SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_ValidateFilterString_Unknown_spectrum_property___0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid spectrum filter: {0}. Use the form &apos;&lt;Property&gt; &lt;Operator&gt; &lt;Value&gt;&apos;, for example &apos;CollisionEnergy = 17&apos; (note the spaces), and combine criteria with &apos;and&apos; and &apos;or&apos;, for example &apos;MsLevel = 1 or (MsLevel &gt; 1 and CollisionEnergy = 17)&apos;..
+        /// </summary>
+        public static string SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format", resourceCulture);
             }
         }
     }

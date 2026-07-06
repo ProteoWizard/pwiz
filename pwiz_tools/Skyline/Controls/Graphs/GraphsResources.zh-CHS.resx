@@ -541,6 +541,15 @@
   <data name="GraphFullScan_SetSpectraUI__peak_type_not_available" xml:space="preserve">
     <value>{0} 谱图在此数据文件中不可用。改为显示 {1}。</value>
   </data>
+  <data name="GraphFullScan_ToolTip_mz" xml:space="preserve">
+    <value>质荷比</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_Intensity" xml:space="preserve">
+    <value>强度</value>
+  </data>
+  <data name="GraphFullScan_ToolTip_Transition" xml:space="preserve">
+    <value>离子对</value>
+  </data>
   <data name="GraphSpectrum_DoUpdate_dotp___0_0_0000_" xml:space="preserve">
     <value>{0:0.0000}</value>
   </data>
@@ -567,6 +576,12 @@
   </data>
   <data name="MassErrorHistogram2DGraphPane_Graph_Retention_Time" xml:space="preserve">
     <value>保留时间</value>
+  </data>
+  <data name="MassErrorHistogram2DGraphPane_ToolTip_Peptides" xml:space="preserve">
+    <value>肽段</value>
+  </data>
+  <data name="MassErrorHistogram2DGraphPane_ToolTip_Transitions" xml:space="preserve">
+    <value>离子对</value>
   </data>
   <data name="MassErrorHistogramGraphPane_AddLabels_Mass_Errors_Unavailable" xml:space="preserve">
     <value>质量误差不可用</value>
@@ -597,6 +612,9 @@
   </data>
   <data name="PeptideAnnotationPairFinder_GetDisplayText__0__CV_in__1_" xml:space="preserve">
     <value>{1} 内的 {0} CV</value>
+  </data>
+  <data name="MassErrorBinFinder_DisplayName_Peptides" xml:space="preserve">
+    <value>肽段</value>
   </data>
   <data name="PeptideRegressionTipProvider_RenderTip_Peptide" xml:space="preserve">
     <value>肽段</value>
@@ -724,6 +742,12 @@
   <data name="Extensions_CustomToString_Relative_Abundance" xml:space="preserve">
     <value>相对丰度</value>
   </data>
+  <data name="AreaAbundanceComparisonGraphPane_XAxis_Replicate" xml:space="preserve">
+    <value>重复测定</value>
+  </data>
+  <data name="AreaAbundanceComparisonGraphPane_Outliers" xml:space="preserve">
+    <value>异常值</value>
+  </data>
   <data name="SummaryIntensityGraphPane_SummaryIntensityGraphPane_Protein_Rank" xml:space="preserve">
     <value>蛋白质排名</value>
   </data>
@@ -751,6 +775,9 @@
   <data name="RelativeAbundanceGraph_ToolTip_Rank" xml:space="preserve">
     <value>排名</value>
   </data>
+  <data name="RelativeAbundanceGraph_ToolTip_Replicate_All" xml:space="preserve">
+    <value>全部</value>
+  </data>
   <data name="GraphChromatogram_UpdateUI_No_quantitative_chromatograms_found" xml:space="preserve">
     <value>未找到定量色谱图</value>
   </data>
@@ -767,6 +794,6 @@
     <value>正在计算…</value>
   </data>
   <data name="GraphChromatogram_ShowImputedPeakBounds_Exemplary_Replicate" xml:space="preserve">
-    <value>范例重复测定</value>
+    <value>重复测定示例</value>
   </data>
 </root>

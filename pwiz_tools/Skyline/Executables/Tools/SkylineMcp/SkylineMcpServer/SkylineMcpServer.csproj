@@ -29,4 +29,15 @@
     <Compile Include="..\..\..\..\SkylineTool\SkylineJsonToolClient.cs" Link="SkylineJsonToolClient.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="..\..\..\SkylineRunner\Binaries\SkylineRunner.exe">
+      <Link>SkylineRunner.exe</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\SkylineRunner\Binaries\SkylineDailyRunner.exe">
+      <Link>SkylineDailyRunner.exe</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>
