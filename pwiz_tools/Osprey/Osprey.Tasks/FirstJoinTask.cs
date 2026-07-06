@@ -1239,19 +1239,16 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures)
         {
-            // Build the projection, then release the FdrEntry stubs (and their
-            // per-row modseq strings) BEFORE the SVM peak. The interned peptide
-            // table keeps only the M distinct modified sequences. Clearing the
+            // Build the projection, releasing each file's FdrEntry stubs (and their
+            // per-row modseq strings) INCREMENTALLY as its rows are built
+            // (releaseStubs: true) -- the full projection never coexists with the full
+            // stub buffer, so the "projection built" spike is gone. The interned
+            // peptide table keeps only the M distinct modified sequences. Clearing the
             // hand-off ScoredEntries lists is safe: nothing downstream of this task
             // reads ScoredEntries on a compute path -- the survivor buffer is
             // published as CompactedEntries.
-            var projections = FdrProjectionSet.BuildFromEntries(perFileEntries);
+            var projections = FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
             int beforeCount = projections.TotalRows;
-            foreach (var kvp in perFileEntries)
-            {
-                kvp.Value.Clear();
-                kvp.Value.TrimExcess();
-            }
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, string.Format(
                 @"projection built: {0} rows, {1} distinct peptides; FdrEntry stubs released",
                 beforeCount, projections.PeptideById.Length));

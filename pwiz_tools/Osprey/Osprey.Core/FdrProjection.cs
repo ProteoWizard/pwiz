@@ -249,10 +249,19 @@ namespace pwiz.Osprey.Core
         /// is written <c>(entry_id, charge, scan)</c>-sorted so the row is
         /// scan-monotonic within a <c>(entry_id, charge)</c> group.</item>
         /// </list>
+        ///
+        /// <paramref name="releaseStubs"/> (1st pass only): when <c>true</c>, each
+        /// file's <see cref="FdrEntry"/> stub list is <c>Clear()/TrimExcess()</c>ed the
+        /// moment its projection rows are built, so the full projection never coexists
+        /// with the full stub buffer -- this removes the "projection built" memory spike
+        /// (issue #4355 step b (iv-b)). The global distinct-peptide id assignment runs
+        /// BEFORE any release, so the ordinal-id invariant is unaffected. The 2nd pass
+        /// leaves it <c>false</c>: its survivor buffer must stay resident for Stage 7/8.
         /// </summary>
         public static FdrProjectionSet BuildFromEntries(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            Func<string, IReadOnlyDictionary<(uint, byte, uint), uint>> parquetRowResolver = null)
+            Func<string, IReadOnlyDictionary<(uint, byte, uint), uint>> parquetRowResolver = null,
+            bool releaseStubs = false)
         {
             if (perFileEntries == null) throw new ArgumentNullException(nameof(perFileEntries));
 
@@ -309,6 +318,19 @@ namespace pwiz.Osprey.Core
                 }
                 perFile.Add(new KeyValuePair<string, List<FdrProjection>>(kvp.Key, rows));
                 fileIdx++;
+
+                // (iv-b) 1st-pass incremental stub release: drop this file's FdrEntry
+                // stubs (and their per-row modseq strings) the instant its projection
+                // rows exist, so the resident set is projection[0..f] + FdrEntry[f..N]
+                // and never the full projection AND full stub buffer at once. Peak is
+                // maximal at the first file (all stubs, ~no projection) and shrinks
+                // thereafter, so the "projection built" spike disappears. The distinct
+                // peptide ids were assigned globally above, so this does not touch them.
+                if (releaseStubs)
+                {
+                    kvp.Value.Clear();
+                    kvp.Value.TrimExcess();
+                }
             }
 
             return new FdrProjectionSet(perFile, peptideById);
