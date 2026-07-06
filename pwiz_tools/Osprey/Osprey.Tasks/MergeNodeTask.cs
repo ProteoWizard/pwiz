@@ -28,6 +28,7 @@ using System.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -189,6 +190,15 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Format(@"[STAGE-WALL] fdrbench: {0:F1}s",
                     swFdrBench.Elapsed.TotalSeconds));
             }
+
+            // --model-diagnostics: append the pass-2 (final reported pool) FDR
+            // calibration views to the page FirstJoinTask wrote for pass 1, from
+            // this post-compaction, second-pass-q-valued pool -- the same
+            // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
+            // off the default output path; a failure is logged and swallowed.
+            if (config.ModelDiagnostics)
+                ModelDiagnosticsReport.WritePass2AndFinalize(perFileEntries, libraryById, config, ctx.LogInfo);
+
             return true;
         }
 

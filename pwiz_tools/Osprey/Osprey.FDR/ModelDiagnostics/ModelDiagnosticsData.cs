@@ -81,6 +81,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public double ModelComposite { get; set; }
         public bool ModelDegenerate { get; set; }
         public List<FeatureRow> Model { get; set; }
+        /// <summary>
+        /// Shared bin edges for the per-feature standardized-value histograms
+        /// (<see cref="FeatureRow.TargetHist"/> / <see cref="FeatureRow.DecoyHist"/>),
+        /// or null when they were not collected. Drives the Skyline mProphet
+        /// "Feature Scores" per-feature distribution view.
+        /// </summary>
+        public double[] FeatureHistEdges { get; set; }
         public ScoreHistogram Scores { get; set; }
         /// <summary>
         /// The FDR-calibration views the report offers. Each pairs an Osprey
@@ -107,6 +114,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public bool Reversed { get; set; }
             /// <summary>Negative percent contribution: the feature pushes decoys up (Skyline reds this row).</summary>
             public bool Unexpected { get; set; }
+            /// <summary>
+            /// This feature's standardized-value histogram for target / decoy
+            /// precursors over <see cref="FeatureHistEdges"/> (null when not
+            /// collected). The per-feature analog of the composite-score view,
+            /// shown on demand when the row is selected.
+            /// </summary>
+            public int[] TargetHist { get; set; }
+            public int[] DecoyHist { get; set; }
         }
 
         /// <summary>
@@ -249,11 +264,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
 
             // ---- best-per-precursor reduction (max score per modseq+charge) ----
-            // Keyed within a file by (modseq,charge); a precursor seen in several
-            // files keeps its single best score across files, matching the way
-            // the sprint prototypes deduped the Stage-5 dump.
-            var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
-            int nWithClass = 0, nWithoutClass = 0;
+            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                out int nWithClass, out int nWithoutClass);
+
+            // Per-file passing summary at the run-level peptide FDR (kept separate
+            // from the reduction so the same reduction serves pass 1 and pass 2).
             foreach (var kvp in perFileEntries)
             {
                 int fileTargets = 0, fileDecoys = 0;
@@ -263,10 +278,150 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         fileTargets++;
                     else if (e.IsDecoy && e.RunPeptideQvalue <= runFdr)
                         fileDecoys++;
+                }
+                data.PerFile.Add(new FileSummaryRow { File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys });
+            }
+            foreach (var p in precs)
+            {
+                switch (p.Class)
+                {
+                    case EntrapmentClass.Target: data.NTarget++; break;
+                    case EntrapmentClass.Decoy: data.NDecoy++; break;
+                    case EntrapmentClass.PTarget: data.NPTarget++; break;
+                    case EntrapmentClass.PDecoy: data.NPDecoy++; break;
+                }
+            }
+            data.HasEntrapment = data.NPTarget > 0;
+            data.FeatureCount = contributions?.Features.Count ?? 0;
+            data.NClassifiedFromManifest = nWithClass;
+            data.NUnclassified = nWithoutClass;
 
+            // ---- model table ----
+            if (contributions != null)
+            {
+                data.ModelComposite = contributions.Composite;
+                data.ModelDegenerate = contributions.IsDegenerate;
+                data.FeatureHistEdges = contributions.HistogramEdges;
+                var targetHist = contributions.TargetHistograms;
+                var decoyHist = contributions.DecoyHistograms;
+                foreach (var f in contributions.Features
+                    .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
+                    .ThenBy(f => f.Index))
+                {
+                    data.Model.Add(new FeatureRow
+                    {
+                        Index = f.Index,
+                        Label = f.Label,
+                        Coefficient = f.Coefficient,
+                        Percent = f.Percent,
+                        DeltaMu = f.TargetDecoyMeanGap,
+                        Weighted = f.Weighted,
+                        Reversed = f.IsReversedScore,
+                        // Skyline reds the row on negative percent contribution
+                        // (the feature pulls decoys up in the composite), which
+                        // is IsUnexpectedDirection when the composite is positive.
+                        Unexpected = !contributions.IsDegenerate && f.Percent < 0,
+                        // Per-feature target/decoy histograms (index-keyed to the
+                        // trained model; null when not collected).
+                        TargetHist = targetHist != null && f.Index < targetHist.Count ? targetHist[f.Index] : null,
+                        DecoyHist = decoyHist != null && f.Index < decoyHist.Count ? decoyHist[f.Index] : null,
+                    });
+                }
+            }
+
+            // ---- score histogram + decoy normal fit ----
+            data.Scores = BuildScoreHistogram(precs);
+
+            // ---- id-yield curve (accepted targets vs q) ----
+            data.IdYield = BuildIdYield(precs);
+
+            // ---- paired decoy-win fraction ----
+            data.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
+
+            // ---- entrapment FDP calibration (all q-scope views) ----
+            // Pass 1 (pre-compaction, this Stage-5 pool). Pass 2 (the final
+            // reported pool) is appended later by the end-of-run writer
+            // (MergeNodeTask) via BuildPass2FdpViews over the same shared code.
+            if (data.HasEntrapment)
+            {
+                double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
+                data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
+            }
+
+            return data;
+        }
+
+        // Mask clearing the decoy high bit from an EntryId to get the shared
+        // target/decoy library base-id (same convention as FdrBenchInputWriter).
+        private const uint BASE_ID_MASK = 0x7FFFFFFF;
+
+        /// <summary>
+        /// Build the pass-2 FDP calibration views from the final reported
+        /// (post-compaction, second-pass q-valued) pool. Called by the end-of-run
+        /// writer (MergeNodeTask) with <c>RescoredEntries</c> -- the same pool the
+        /// pass-2 FDRBench TSV is written from -- so the HTML pass-2 curve and
+        /// stock FDRBench see the identical peptides and q-values. Returns an empty
+        /// list when the pool carries no entrapment (nothing to calibrate against).
+        /// The classification / pairing / ratio inputs come from the searched
+        /// library exactly as pass 1 does (see ModelDiagnosticsReport).
+        /// </summary>
+        public static List<FdpView> BuildPass2FdpViews(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            IReadOnlyDictionary<uint, uint> pairByBaseId,
+            double entrapmentRatio)
+        {
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                out _, out _);
+            bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
+            if (!hasEntrapment)
+                return new List<FdpView>();
+            double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
+            return BuildFdpViewsFromPrecs(precs, r, 2);
+        }
+
+        // Build the experiment- and run-scope FDP calibration views for one pass
+        // from an already-reduced best-per-precursor list. The experiment-scope
+        // view reproduces FDRBench (--fdrbench emits that q); the run-scope view is
+        // the per-run picture FDRBench cannot show. pass = 1 (pre-compaction) or
+        // 2 (final reported pool). Shared by pass 1 (Build) and pass 2
+        // (BuildPass2FdpViews) so the two passes are computed identically.
+        private static List<FdpView> BuildFdpViewsFromPrecs(List<Prec> precs, double r, int pass)
+        {
+            var views = new List<FdpView>();
+            var expView = BuildFdpView(precs, r, p => p.QExpPrecursor,
+                string.Format(@"Pass {0} - experiment-wide", pass), pass, @"experiment", true);
+            if (expView != null) views.Add(expView);
+            var runView = BuildFdpView(precs, r, p => p.QRunPrecursor,
+                string.Format(@"Pass {0} - per-run", pass), pass, @"run", false);
+            if (runView != null) views.Add(runView);
+            return views;
+        }
+
+        // Reduce per-file FDR entries to one best-per-precursor record each,
+        // keyed by (modified sequence, charge): a precursor seen in several files
+        // keeps its single best (max) score and its best (min) q at each scope,
+        // matching FdrBenchInputWriter's cross-file dedup. Shared by pass 1 (Build)
+        // and pass 2 (BuildPass2FdpViews). nWithClass / nWithoutClass report the
+        // manifest-classification health (a large nWithoutClass on an entrapment
+        // run signals a base-id key mismatch).
+        private static List<Prec> ReduceToPrecs(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            IReadOnlyDictionary<uint, uint> pairByBaseId,
+            bool haveManifest,
+            out int nWithClass, out int nWithoutClass)
+        {
+            var best = new Dictionary<string, Prec>(StringComparer.Ordinal);
+            int wc = 0, woc = 0;
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
                     uint baseId = e.EntryId & BASE_ID_MASK;
                     EntrapmentClass cls = Classify(e, baseId, classByBaseId, haveManifest,
-                        ref nWithClass, ref nWithoutClass);
+                        ref wc, ref woc);
                     uint pairIdx = 0;
                     bool hasPair = pairByBaseId != null &&
                         pairByBaseId.TryGetValue(baseId, out pairIdx);
@@ -277,12 +432,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                         {
                             Score = e.Score,
                             // Precursor-level q at both scopes -- the axes the
-                            // FDR-calibration views plot. Experiment scope is
-                            // what --fdrbench emits (and thus reproduces its
-                            // plots); run scope is the per-run picture. Each
-                            // precursor takes its BEST (min) q across observations,
-                            // matching FdrBenchInputWriter's dedup, while Score
-                            // stays the max (for density / the score histogram).
+                            // FDR-calibration views plot. Experiment scope is what
+                            // --fdrbench emits (and thus reproduces its plots); run
+                            // scope is the per-run picture. Each precursor takes its
+                            // BEST (min) q across observations, matching
+                            // FdrBenchInputWriter's dedup, while Score stays the max
+                            // (for density / the score histogram).
                             QRunPrecursor = e.RunPrecursorQvalue,
                             QExpPrecursor = e.ExperimentPrecursorQvalue,
                             IsDecoy = e.IsDecoy,
@@ -309,83 +464,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     }
                     best[key] = cur;
                 }
-                data.PerFile.Add(new FileSummaryRow { File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys });
             }
-
-            var precs = best.Values.ToList();
-            foreach (var p in precs)
-            {
-                switch (p.Class)
-                {
-                    case EntrapmentClass.Target: data.NTarget++; break;
-                    case EntrapmentClass.Decoy: data.NDecoy++; break;
-                    case EntrapmentClass.PTarget: data.NPTarget++; break;
-                    case EntrapmentClass.PDecoy: data.NPDecoy++; break;
-                }
-            }
-            data.HasEntrapment = data.NPTarget > 0;
-            data.FeatureCount = contributions?.Features.Count ?? 0;
-            data.NClassifiedFromManifest = nWithClass;
-            data.NUnclassified = nWithoutClass;
-
-            // ---- model table ----
-            if (contributions != null)
-            {
-                data.ModelComposite = contributions.Composite;
-                data.ModelDegenerate = contributions.IsDegenerate;
-                foreach (var f in contributions.Features
-                    .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
-                    .ThenBy(f => f.Index))
-                {
-                    data.Model.Add(new FeatureRow
-                    {
-                        Index = f.Index,
-                        Label = f.Label,
-                        Coefficient = f.Coefficient,
-                        Percent = f.Percent,
-                        DeltaMu = f.TargetDecoyMeanGap,
-                        Weighted = f.Weighted,
-                        Reversed = f.IsReversedScore,
-                        // Skyline reds the row on negative percent contribution
-                        // (the feature pulls decoys up in the composite), which
-                        // is IsUnexpectedDirection when the composite is positive.
-                        Unexpected = !contributions.IsDegenerate && f.Percent < 0,
-                    });
-                }
-            }
-
-            // ---- score histogram + decoy normal fit ----
-            data.Scores = BuildScoreHistogram(precs);
-
-            // ---- id-yield curve (accepted targets vs q) ----
-            data.IdYield = BuildIdYield(precs);
-
-            // ---- paired decoy-win fraction ----
-            data.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
-
-            // ---- entrapment FDP calibration (all q-scope views) ----
-            if (data.HasEntrapment)
-            {
-                double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
-                data.FdpViews = new List<FdpView>();
-                // Pass 1 (pre-compaction, this Stage-5 pool). Experiment-scope is
-                // the axis --fdrbench emits, so it reproduces the FDRBench plot;
-                // run-scope is the per-run view FDRBench does not show. Pass 2
-                // (final reported pool) is added by the end-of-run writer.
-                var expView = BuildFdpView(precs, r, p => p.QExpPrecursor,
-                    @"Pass 1 - experiment-wide", 1, @"experiment", true);
-                if (expView != null) data.FdpViews.Add(expView);
-                var runView = BuildFdpView(precs, r, p => p.QRunPrecursor,
-                    @"Pass 1 - per-run", 1, @"run", false);
-                if (runView != null) data.FdpViews.Add(runView);
-            }
-
-            return data;
+            nWithClass = wc; nWithoutClass = woc;
+            return best.Values.ToList();
         }
-
-        // Mask clearing the decoy high bit from an EntryId to get the shared
-        // target/decoy library base-id (same convention as FdrBenchInputWriter).
-        private const uint BASE_ID_MASK = 0x7FFFFFFF;
 
         private static EntrapmentClass Classify(FdrEntry e, uint baseId,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest,

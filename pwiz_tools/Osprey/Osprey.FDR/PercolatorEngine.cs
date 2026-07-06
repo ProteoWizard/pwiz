@@ -114,6 +114,9 @@ namespace pwiz.Osprey.FDR
                 MaxIterations = 10,
                 NFolds = 3,
                 FeatureInfos = featureInfos,
+                // Collect per-feature target/decoy score histograms only for the
+                // model-diagnostics report (off the production path otherwise).
+                CollectFeatureHistograms = config.ModelDiagnostics,
                 Diagnostics = diagnostics
             };
 

@@ -131,12 +131,36 @@ namespace pwiz.Osprey.FDR
             private readonly double[] _sumDecoy;
             private long _nTarget;
             private long _nDecoy;
+            // Optional per-feature standardized-value histograms (Skyline mProphet
+            // "Feature Scores" view), collected only for --model-diagnostics so the
+            // production scoring path pays nothing. _histTarget[j][b] / _histDecoy[j][b]
+            // over the shared fixed edges HistEdges(); null when not collecting.
+            private readonly int[][] _histTarget;
+            private readonly int[][] _histDecoy;
 
             /// <param name="featureCount">Number of features per entry.</param>
-            public Accumulator(int featureCount)
+            public Accumulator(int featureCount) : this(featureCount, false) { }
+
+            /// <param name="featureCount">Number of features per entry.</param>
+            /// <param name="collectHistograms">
+            /// When true, also bin each feature's standardized value by class into
+            /// per-feature target/decoy histograms (the model-diagnostics per-feature
+            /// distribution view). Off by default so the production path is unaffected.
+            /// </param>
+            public Accumulator(int featureCount, bool collectHistograms)
             {
                 _sumTarget = new double[featureCount];
                 _sumDecoy = new double[featureCount];
+                if (collectHistograms)
+                {
+                    _histTarget = new int[featureCount][];
+                    _histDecoy = new int[featureCount][];
+                    for (int j = 0; j < featureCount; j++)
+                    {
+                        _histTarget[j] = new int[HistBinCount];
+                        _histDecoy[j] = new int[HistBinCount];
+                    }
+                }
             }
 
             /// <summary>
@@ -157,6 +181,12 @@ namespace pwiz.Osprey.FDR
                     for (int j = 0; j < _sumTarget.Length; j++)
                         _sumTarget[j] += standardizedFeatures[j];
                 }
+                if (_histTarget != null)
+                {
+                    int[][] h = isDecoy ? _histDecoy : _histTarget;
+                    for (int j = 0; j < h.Length; j++)
+                        h[j][HistBin(standardizedFeatures[j])]++;
+                }
             }
 
             /// <summary>
@@ -176,6 +206,12 @@ namespace pwiz.Osprey.FDR
                     _nTarget++;
                     for (int j = 0; j < _sumTarget.Length; j++)
                         _sumTarget[j] += standardizedFeatures[row, j];
+                }
+                if (_histTarget != null)
+                {
+                    int[][] h = isDecoy ? _histDecoy : _histTarget;
+                    for (int j = 0; j < h.Length; j++)
+                        h[j][HistBin(standardizedFeatures[row, j])]++;
                 }
             }
 
@@ -202,8 +238,35 @@ namespace pwiz.Osprey.FDR
                 for (int j = 0; j < p; j++)
                     avgWeights[j] /= nFoldsD;
                 return new FeatureContributions(avgWeights, _sumTarget, _sumDecoy,
-                    _nTarget, _nDecoy, featureInfos);
+                    _nTarget, _nDecoy, featureInfos, _histTarget, _histDecoy);
             }
+        }
+
+        // ---- per-feature standardized-value histogram binning (diagnostics only) ----
+        // Fixed edges over standardized feature space (mean ~0, std ~1 by
+        // construction), wide enough to hold the discriminating tails; out-of-range
+        // values clamp into the end bins. Shared by every feature so the HTML can
+        // draw them on one axis.
+        private const int HistBinCount = 60;
+        private const double HistLo = -5.0;
+        private const double HistHi = 7.0;
+
+        private static int HistBin(double v)
+        {
+            double t = (v - HistLo) / (HistHi - HistLo);
+            int b = (int)(t * HistBinCount);
+            if (b < 0) return 0;
+            if (b >= HistBinCount) return HistBinCount - 1;
+            return b;
+        }
+
+        /// <summary>The shared bin edges (length HistBinCount+1) for the per-feature histograms.</summary>
+        public static double[] HistEdges()
+        {
+            var edges = new double[HistBinCount + 1];
+            for (int i = 0; i <= HistBinCount; i++)
+                edges[i] = HistLo + (HistHi - HistLo) * i / HistBinCount;
+            return edges;
         }
 
         /// <summary>
@@ -226,6 +289,24 @@ namespace pwiz.Osprey.FDR
         public bool IsDegenerate { get; }
 
         /// <summary>
+        /// Shared bin edges (length <c>HistBinCount+1</c>) for the per-feature
+        /// standardized-value histograms, or <c>null</c> when they were not
+        /// collected (the model-diagnostics-only path). See <see cref="HistEdges"/>.
+        /// </summary>
+        public double[] HistogramEdges { get; }
+
+        /// <summary>
+        /// Per-feature target-class standardized-value histograms in canonical
+        /// index order (each length <c>HistBinCount</c>), or <c>null</c> when not
+        /// collected. Pairs with <see cref="DecoyHistograms"/> and
+        /// <see cref="HistogramEdges"/> to draw the mProphet "Feature Scores" view.
+        /// </summary>
+        public IReadOnlyList<int[]> TargetHistograms { get; }
+
+        /// <summary>Per-feature decoy-class standardized-value histograms, or <c>null</c>.</summary>
+        public IReadOnlyList<int[]> DecoyHistograms { get; }
+
+        /// <summary>
         /// Decompose the trained linear model into per-feature contributions.
         /// </summary>
         /// <param name="avgWeights">Standardized averaged per-feature weights w_j.</param>
@@ -237,6 +318,11 @@ namespace pwiz.Osprey.FDR
         /// Per-feature metadata (machine name, display label, reversed-score flag) in
         /// canonical index order, or null to suppress names + the direction flag.
         /// </param>
+        /// <param name="targetHistograms">
+        /// Per-feature target-class standardized-value histograms (index-keyed, each
+        /// length <c>HistBinCount</c>), or null when not collected.
+        /// </param>
+        /// <param name="decoyHistograms">Per-feature decoy-class histograms, or null.</param>
         /// <remarks>
         /// Internal: the public construction path from a trained model is
         /// <see cref="Accumulator.Build"/>, which owns the fold-averaging that
@@ -246,8 +332,12 @@ namespace pwiz.Osprey.FDR
         internal FeatureContributions(
             double[] avgWeights,
             double[] sumTarget, double[] sumDecoy, long nTarget, long nDecoy,
-            OspreyFeatureInfo[] featureInfos)
+            OspreyFeatureInfo[] featureInfos,
+            int[][] targetHistograms = null, int[][] decoyHistograms = null)
         {
+            HistogramEdges = targetHistograms != null ? HistEdges() : null;
+            TargetHistograms = targetHistograms;
+            DecoyHistograms = decoyHistograms;
             int p = avgWeights.Length;
             var weighted = new double[p];
             var deltaMu = new double[p];

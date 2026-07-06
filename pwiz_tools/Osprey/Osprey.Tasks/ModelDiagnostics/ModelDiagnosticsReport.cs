@@ -22,6 +22,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -40,6 +42,29 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
     public static class ModelDiagnosticsReport
     {
         public const string HtmlSuffix = ".model-diagnostics.html";
+
+        /// <summary>
+        /// Sidecar carrying the fully-built pass-1 <see cref="ModelDiagnosticsData"/>
+        /// from FirstJoinTask (pre-compaction) forward to MergeNodeTask, where the
+        /// pass-2 (final reported pool) FDP views are appended and the page is
+        /// re-rendered. The pass-1 pool and trained model are gone by MergeNode, so
+        /// the data model is stashed on disk rather than recomputed; deleted once
+        /// consumed. A JSON round-trip (Newtonsoft, camelCase, NaN/Infinity as
+        /// literals) so it reloads into the same object graph the HTML embeds.
+        /// </summary>
+        private const string DataSidecarSuffix = ".model-diagnostics.data.json";
+
+        private static readonly JsonSerializerSettings SidecarSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            NullValueHandling = NullValueHandling.Include,
+            Formatting = Formatting.None,
+            // Symbol writes NaN / Infinity as bare literals that the reader parses
+            // back to double (empty win-fraction bins are NaN); a round-trip the
+            // HTML's String float handling would not survive.
+            FloatFormatHandling = FloatFormatHandling.Symbol,
+            FloatParseHandling = FloatParseHandling.Double,
+        };
 
         /// <summary>
         /// Build and write the report. Called from the Stage 5 boundary where the
@@ -73,12 +98,10 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // EntrapmentPairing.LogSummary during classification; no separate
                 // NUnclassified warning needed (it counts the same intended drops).
 
-                string html = ModelDiagnosticsHtml.Render(data);
-                string outPath = ResolveReportPath(config);
-                string dir = Path.GetDirectoryName(outPath);
-                if (!string.IsNullOrEmpty(dir))
-                    Directory.CreateDirectory(dir);
-                File.WriteAllText(outPath, html);
+                string outPath = RenderAndWrite(data, config);
+                // Stash the pass-1 data so MergeNodeTask can append the pass-2
+                // (final reported pool) FDP views and re-render one page with both.
+                WriteDataSidecar(data, config);
 
                 logInfo(string.Format(@"[MODEL-DIAGNOSTICS] wrote model diagnostics report: {0}", outPath));
             }
@@ -87,6 +110,98 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 // Never let a diagnostics-only artifact take down a real run.
                 logInfo(string.Format(@"[MODEL-DIAGNOSTICS] report generation failed: {0}", ex.Message));
             }
+        }
+
+        /// <summary>
+        /// End-of-run enrichment: reload the pass-1 data sidecar, compute the
+        /// pass-2 (final reported pool) FDP calibration views from the
+        /// post-compaction, second-pass-q-valued <paramref name="perFileEntries"/>
+        /// (MergeNodeTask's <c>RescoredEntries</c>), append them, and re-render the
+        /// page so its FDR-calibration view selector offers both passes. Uses the
+        /// same library-derived classification / pairing as pass 1, so the HTML
+        /// pass-2 curve matches stock FDRBench (<c>--fdrbench-pass 2</c>) by
+        /// construction. A no-op (with a log line) if the sidecar is absent -- the
+        /// pass-1 page FirstJoin already wrote then stands unchanged. Any failure is
+        /// logged and swallowed; a diagnostics artifact never aborts a real run.
+        /// </summary>
+        public static void WritePass2AndFinalize(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            OspreyConfig config,
+            Action<string> logInfo)
+        {
+            try
+            {
+                string sidecarPath = ResolveSidecarPath(config);
+                var data = ReadDataSidecar(sidecarPath);
+                if (data == null)
+                {
+                    logInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 views skipped (pass-1 page stands).");
+                    return;
+                }
+
+                Dictionary<uint, EntrapmentClass> classByBaseId;
+                Dictionary<uint, uint> pairByBaseId;
+                double entrapmentRatio;
+                BuildClassificationFromLibrary(config, libraryById, logInfo,
+                    out classByBaseId, out pairByBaseId, out entrapmentRatio);
+
+                var pass2Views = ModelDiagnosticsData.BuildPass2FdpViews(
+                    perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio);
+                if (pass2Views.Count == 0)
+                {
+                    logInfo(@"[MODEL-DIAGNOSTICS] reported pool carries no entrapment; pass-2 views not added.");
+                    return;
+                }
+
+                if (data.FdpViews == null)
+                    data.FdpViews = new List<ModelDiagnosticsData.FdpView>();
+                data.FdpViews.AddRange(pass2Views);
+
+                string outPath = RenderAndWrite(data, config);
+                TryDelete(sidecarPath);
+                logInfo(string.Format(
+                    @"[MODEL-DIAGNOSTICS] added pass-2 FDR calibration views; re-wrote report: {0}", outPath));
+            }
+            catch (Exception ex)
+            {
+                logInfo(string.Format(@"[MODEL-DIAGNOSTICS] pass-2 enrichment failed: {0}", ex.Message));
+            }
+        }
+
+        /// <summary>Render the data model to the self-contained HTML page and write it; returns the path.</summary>
+        private static string RenderAndWrite(ModelDiagnosticsData data, OspreyConfig config)
+        {
+            string html = ModelDiagnosticsHtml.Render(data);
+            string outPath = ResolveReportPath(config);
+            string dir = Path.GetDirectoryName(outPath);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+            File.WriteAllText(outPath, html);
+            return outPath;
+        }
+
+        private static void WriteDataSidecar(ModelDiagnosticsData data, OspreyConfig config)
+        {
+            string path = ResolveSidecarPath(config);
+            string dir = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+            File.WriteAllText(path, JsonConvert.SerializeObject(data, SidecarSettings));
+        }
+
+        private static ModelDiagnosticsData ReadDataSidecar(string path)
+        {
+            if (!File.Exists(path))
+                return null;
+            return JsonConvert.DeserializeObject<ModelDiagnosticsData>(
+                File.ReadAllText(path), SidecarSettings);
+        }
+
+        private static void TryDelete(string path)
+        {
+            try { if (File.Exists(path)) File.Delete(path); }
+            catch { /* leftover sidecar is harmless; FirstJoin rewrites it each run */ }
         }
 
         /// <summary>
@@ -181,12 +296,22 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
         private static string ResolveReportPath(OspreyConfig config)
         {
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + HtmlSuffix);
+        }
+
+        private static string ResolveSidecarPath(OspreyConfig config)
+        {
+            return Path.Combine(ResolveOutputDir(config), OutputStem(config) + DataSidecarSuffix);
+        }
+
+        private static string ResolveOutputDir(OspreyConfig config)
+        {
             string dir = config.OutputDir;
             if (string.IsNullOrEmpty(dir) && !string.IsNullOrEmpty(config.OutputBlib))
                 dir = Path.GetDirectoryName(Path.GetFullPath(config.OutputBlib));
             if (string.IsNullOrEmpty(dir))
                 dir = Directory.GetCurrentDirectory();
-            return Path.Combine(dir, OutputStem(config) + HtmlSuffix);
+            return dir;
         }
     }
 }

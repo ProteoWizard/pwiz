@@ -21,6 +21,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.ModelDiagnostics;
@@ -47,6 +49,128 @@ namespace pwiz.Osprey.Test
             TestWinFractionCoinVsSignal();
             TestFeatureTableContributions();
             TestBaseIdClassificationAndInvalidDrop();
+            TestPass2FdpViews();
+            TestSidecarRoundTrip();
+            TestFeatureHistograms();
+        }
+
+        // The per-feature standardized-value histograms (Skyline mProphet "Feature
+        // Scores" view) are collected only when asked, keyed by feature index, and
+        // separate the target mass above the decoy mass for a discriminating
+        // feature. Off by default so the production scoring path is untouched.
+        private static void TestFeatureHistograms()
+        {
+            var infos = new[]
+            {
+                new OspreyFeatureInfo("f0", "Feature Zero", false),
+                new OspreyFeatureInfo("f1", "Feature One", false),
+            };
+            var acc = new FeatureContributions.Accumulator(2, true);
+            for (int i = 0; i < 10; i++) acc.Add(new[] { 2.0, 0.5 }, false);   // targets high in f0
+            for (int i = 0; i < 10; i++) acc.Add(new[] { -1.0, 0.0 }, true);   // decoys low in f0
+            var c = acc.Build(new List<double[]> { new[] { 1.0, 1.0 } }, infos);
+
+            Assert.IsNotNull(c.HistogramEdges);
+            Assert.AreEqual(FeatureContributions.HistEdges().Length, c.HistogramEdges.Length);
+            Assert.IsNotNull(c.TargetHistograms);
+            Assert.AreEqual(2, c.TargetHistograms.Count);
+            Assert.AreEqual(10, c.TargetHistograms[0].Sum());
+            Assert.AreEqual(10, c.DecoyHistograms[0].Sum());
+            // Target mass sits in a higher bin than decoy mass for feature 0.
+            Assert.IsTrue(ArgMax(c.TargetHistograms[0]) > ArgMax(c.DecoyHistograms[0]));
+
+            // The report carries them through onto the model rows.
+            var entries = new List<FdrEntry> { Entry(1, false, 5, 0.001, "TA", 2), Entry(1 | DECOY_BIT, true, 1, 0.5, "DA", 2) };
+            var data = ModelDiagnosticsData.Build(Wrap(entries), c, null, null, 1.0, 0.01, "peptide");
+            Assert.IsNotNull(data.FeatureHistEdges);
+            Assert.IsTrue(data.Model.All(m => m.TargetHist != null && m.DecoyHist != null));
+
+            // Default accumulator collects nothing (production path unaffected).
+            var acc2 = new FeatureContributions.Accumulator(2);
+            acc2.Add(new[] { 1.0, 1.0 }, false);
+            var c2 = acc2.Build(new List<double[]> { new[] { 1.0, 1.0 } }, infos);
+            Assert.IsNull(c2.HistogramEdges);
+            Assert.IsNull(c2.TargetHistograms);
+        }
+
+        private static int ArgMax(int[] a)
+        {
+            int mi = 0;
+            for (int i = 1; i < a.Length; i++) if (a[i] > a[mi]) mi = i;
+            return mi;
+        }
+
+        // Pass-2 FDP views are computed from the final reported pool by the same
+        // shared estimator code as pass 1 (BuildFdpViewsFromPrecs), tagged Pass = 2
+        // so the HTML FDR view selector can offer both passes. Same class-counting
+        // and 1-fold estimator math as pass 1; an empty result when the reported
+        // pool carries no entrapment.
+        private static void TestPass2FdpViews()
+        {
+            var entries = new List<FdrEntry>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            for (int i = 0; i < 8; i++)
+            {
+                entries.Add(Entry((uint)(100 + i), false, 8 - i, 0.001 * (i + 1), "T" + i, 2));
+                cls[(uint)(100 + i)] = EntrapmentClass.Target;
+            }
+            AddEntrap(entries, cls, 200, 5.5, 0.003, "P0");
+            AddEntrap(entries, cls, 201, 1.5, 0.005, "P1");
+
+            var views = ModelDiagnosticsData.BuildPass2FdpViews(Wrap(entries), cls, null, 1.0);
+            Assert.AreEqual(2, views.Count);                     // experiment + per-run
+            Assert.IsTrue(views.All(v => v.Pass == 2));
+            var exp = views.Single(v => v.Scope == "experiment");
+            Assert.IsTrue(exp.MatchesFdrBench);
+            Assert.IsTrue(exp.Label.Contains("Pass 2"));
+            // Same FDP math as pass 1: n_t = 8, n_p = 2 -> combined 0.40, lower 0.20.
+            int last = exp.Combined.Length - 1;
+            Assert.AreEqual(8, exp.NTargetAccepted[last]);
+            Assert.AreEqual(0.40, exp.Combined[last], 1e-9);
+            Assert.AreEqual(0.20, exp.LowerBound[last], 1e-9);
+
+            // A reported pool with no entrapment -> no pass-2 views to add.
+            var noEntrap = ModelDiagnosticsData.BuildPass2FdpViews(
+                Wrap(new List<FdrEntry> { Entry(1, false, 5, 0.001, "T", 2) }),
+                new Dictionary<uint, EntrapmentClass> { { 1u, EntrapmentClass.Target } }, null, 1.0);
+            Assert.AreEqual(0, noEntrap.Count);
+        }
+
+        // The pass-1 data model must survive a Newtonsoft round-trip (camelCase +
+        // NaN/Infinity as bare literals): FirstJoin stashes it to a sidecar and
+        // MergeNode reloads it to append the pass-2 views. Mirrors the settings in
+        // ModelDiagnosticsReport.SidecarSettings -- the empty-bin NaN in the
+        // win-fraction curve is the round-trip's sharp edge.
+        private static void TestSidecarRoundTrip()
+        {
+            var entries = new List<FdrEntry>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            for (int i = 0; i < 8; i++)
+            {
+                entries.Add(Entry((uint)(100 + i), false, 8 - i, 0.001 * (i + 1), "T" + i, 2));
+                cls[(uint)(100 + i)] = EntrapmentClass.Target;
+            }
+            AddEntrap(entries, cls, 200, 5.5, 0.003, "P0");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
+
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                FloatFormatHandling = FloatFormatHandling.Symbol,
+                FloatParseHandling = FloatParseHandling.Double,
+            };
+            string json = JsonConvert.SerializeObject(data, settings);
+            var back = JsonConvert.DeserializeObject<ModelDiagnosticsData>(json, settings);
+
+            Assert.IsNotNull(back.FdpViews);
+            Assert.AreEqual(data.FdpViews.Count, back.FdpViews.Count);
+            var a = data.FdpViews.Single(v => v.Scope == "experiment");
+            var b = back.FdpViews.Single(v => v.Scope == "experiment");
+            Assert.AreEqual(a.Combined.Length, b.Combined.Length);
+            Assert.AreEqual(a.Combined[a.Combined.Length - 1],
+                b.Combined[b.Combined.Length - 1], 1e-12);
+            Assert.AreEqual(data.NPTarget, back.NPTarget);
+            Assert.IsNotNull(back.WinFraction);   // empty-bin NaN survived the round-trip
         }
 
         // paired = (n_p + vt) / (n_t + n_p), vt = n_p_s_t + 2*n_p_t_s (FDRBench

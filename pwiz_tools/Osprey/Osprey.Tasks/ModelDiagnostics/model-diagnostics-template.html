@@ -57,6 +57,9 @@ th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;
 th.l,td.l{text-align:left}
 td.num{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 tr.neg td{color:var(--bad)}
+tr.clk{cursor:pointer} tr.clk:hover td{background:var(--grid)}
+tr.sel td{background:color-mix(in srgb,var(--accent) 15%,transparent)}
+#scoreBack{cursor:pointer;color:var(--accent);text-decoration:none} #scoreBack:hover{text-decoration:underline}
 .bar{position:relative}
 .bar>i{position:absolute;left:0;top:50%;transform:translateY(-50%);height:14px;border-radius:3px;
   background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,transparent));opacity:.20}
@@ -88,13 +91,41 @@ svg{display:block;max-width:100%;height:auto;font:11px ui-monospace,Menlo,Consol
 .pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--grid);color:var(--muted);margin-left:6px}
 footer{color:var(--muted);font-size:11.5px;text-align:center;margin-top:26px}
 code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);padding:1px 5px;border-radius:5px}
+.printbtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);font:inherit;font-size:12px;
+  font-weight:550;padding:6px 12px;border-radius:8px;cursor:pointer;box-shadow:var(--shadow);white-space:nowrap}
+.printbtn:hover{color:var(--accent);border-color:var(--accent)}
+/* Print / Save-as-PDF: stack every tab, one section per page, ink-friendly light
+   palette regardless of the on-screen theme. Charts are already in the DOM for all
+   tabs, so forcing them visible prints them; the FDR tab prints its selected view. */
+@media print{
+  :root{
+    --bg:#fff;--panel:#fff;--ink:#111820;--muted:#41505f;--line:#c9ced4;--grid:#eceff2;
+    --hair:#9aa4b0;--accent:#4f46e5;--shadow:none;
+    --target:#2563eb;--decoy:#ef4444;--ptarget:#16a34a;--pdecoy:#d97706;
+    --good:#15803d;--bad:#b91c1c;--warn:#b45309;
+  }
+  @page{margin:12mm}
+  html,body{background:#fff}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .wrap{max-width:none;padding:0 4px}
+  nav,.printbtn,.tip,.vbtns,#scoreBack{display:none!important}
+  header{page-break-after:avoid}
+  .tab{display:block!important;page-break-before:always;break-before:page}
+  .tab:first-of-type{page-break-before:avoid;break-before:avoid}
+  .card{break-inside:avoid;box-shadow:none}
+  .chartbox{overflow:visible!important}
+  svg{max-width:100%}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
 <header>
   <h1>Osprey Model Diagnostics <span class="sub" id="hSub"></span></h1>
-  <div class="meta" id="hMeta"></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="meta" id="hMeta"></div>
+    <button id="printBtn" class="printbtn" title="Print or save the full report as a PDF (all tabs)">Save as PDF</button>
+  </div>
 </header>
 <div class="chips" id="chips"></div>
 <nav id="nav"></nav>
@@ -108,9 +139,10 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div id="modelTable"></div>
   </div>
   <div class="card">
-    <h2>Composite score distribution</h2>
-    <p class="desc">Best-per-precursor composite score for each class, with a normal curve fit to the
-      decoy scores &mdash; the Osprey analog of Skyline's mProphet "Model Scores" view, extended with entrapment.</p>
+    <h2 id="scoreHdr">Composite score distribution <a id="scoreBack" href="#" style="display:none;font-size:12px;font-weight:500">&larr; back to composite</a></h2>
+    <p class="desc" id="scoreDesc">Best-per-precursor composite score for each class, with a normal curve fit to the
+      decoy scores &mdash; the Osprey analog of Skyline's mProphet "Model Scores" view, extended with entrapment.
+      <span id="scoreTip"><b>Click any feature row above</b> to see that individual score's target/decoy distribution (the mProphet "Feature Scores" view).</span></p>
     <div class="legend" id="scoreLegend"></div>
     <div class="chartbox" id="scoreChart"></div>
   </div>
@@ -243,22 +275,92 @@ function legend(node,items){node.innerHTML="";items.forEach(it=>{const s=H(node,
   if(it.toggle){s.onclick=()=>{s.classList.toggle("off");it.toggle(s.classList.contains("off"));};}});}
 
 // ---------- Model: feature table ----------
+const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
 (function(){
   const rows=D.model||[];const host=document.getElementById("modelTable");
   const maxP=Math.max(1,...rows.map(r=>Math.abs(r.percent)||0));
   const t=H(host,"table",{});const thead=H(t,"thead",{});const htr=H(thead,"tr",{});
   [["Feature","l"],["Coefficient",""],["Contribution",""],["Δμ (T−D)",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
   const tb=H(t,"tbody",{});
-  rows.forEach(r=>{const tr=H(tb,"tr",r.unexpected?{class:"neg"}:{});
+  const clickable=r=>HAS_FEATHIST && r.targetHist;
+  rows.forEach(r=>{const tr=H(tb,"tr",{class:(r.unexpected?"neg ":"")+(clickable(r)?"clk":"")});
     H(tr,"td",{class:"l"},r.label);
     H(tr,"td",{class:"num"},fmt(r.coefficient,4));
     const td=H(tr,"td",{class:"num bar"});
     H(td,"i",{style:"width:"+(Math.abs(r.percent)/maxP*100).toFixed(1)+"%"});
     H(td,"span",{},pct(r.percent/100,1));
     H(tr,"td",{class:"num"},fmt(r.deltaMu,3));
+    if(clickable(r))tr.onclick=()=>selectFeature(r,tr);
   });
   if(D.modelDegenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
+  if(!HAS_FEATHIST){const tip=document.getElementById("scoreTip");if(tip)tip.style.display="none";}
 })();
+
+// ---------- Model: composite <-> per-feature distribution swap ----------
+// Clicking a feature row replaces the composite-score chart at the bottom of the
+// Model tab with that individual feature's target/decoy score distribution (the
+// Skyline mProphet "Feature Scores" view). "Back to composite" restores it.
+function selectFeature(r,tr){
+  document.querySelectorAll("#modelTable tr.sel").forEach(x=>x.classList.remove("sel"));
+  if(tr)tr.classList.add("sel");
+  document.getElementById("scoreHdr").childNodes[0].nodeValue="Feature score distribution: "+r.label+" ";
+  document.getElementById("scoreDesc").innerHTML=
+    "Standardized "+esc(r.label)+" value for target vs decoy precursors (the space the model scores in), "+
+    "the Osprey analog of Skyline's mProphet \"Feature Scores\" view. Coefficient "+fmt(r.coefficient,4)+
+    " · contribution "+pct(r.percent/100,1)+" · &Delta;&mu; (T&minus;D) "+fmt(r.deltaMu,3)+".";
+  document.getElementById("scoreBack").style.display="";
+  featureHist("scoreChart","scoreLegend",r);
+}
+function showComposite(){
+  document.querySelectorAll("#modelTable tr.sel").forEach(x=>x.classList.remove("sel"));
+  document.getElementById("scoreHdr").childNodes[0].nodeValue="Composite score distribution ";
+  document.getElementById("scoreDesc").innerHTML=
+    'Best-per-precursor composite score for each class, with a normal curve fit to the decoy scores '+
+    '&mdash; the Osprey analog of Skyline\'s mProphet "Model Scores" view, extended with entrapment. '+
+    '<span id="scoreTip"><b>Click any feature row above</b> to see that individual score\'s target/decoy '+
+    'distribution (the mProphet "Feature Scores" view).</span>';
+  document.getElementById("scoreBack").style.display="none";
+  classHist("scoreChart","scoreLegend",false);
+}
+document.getElementById("scoreBack").onclick=(e)=>{e.preventDefault();showComposite();};
+
+// Draw one feature's standardized target/decoy histogram over the shared edges,
+// styled to match the composite view (target blue, decoy red, filled step areas).
+function featureHist(hostId,legId,r){
+  const edges=D.featureHistEdges,nb=edges.length-1;
+  const series=[{k:"target",name:"target",color:COL.target,v:r.targetHist||[]},
+                {k:"decoy",name:"decoy",color:COL.decoy,v:r.decoyHist||[]}];
+  const off={target:false,decoy:false};
+  const width=(i)=>edges[i+1]-edges[i];
+  const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;return s.v.map((c,i)=>c/tot/width(i));});
+  const W=680,Hh=330,box={l:52,t:14,w:W-70,h:Hh-58};
+  const xd=[edges[0],edges[nb]];
+  const host=document.getElementById(hostId);
+  function draw(){
+    host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
+    let ymax=0;dens.forEach((d,si)=>{if(!off[series[si].k])d.forEach(v=>ymax=Math.max(ymax,v))});ymax=(ymax||1)*1.08;
+    const sc=axes(s,box,xd,[0,ymax],{xlab:"standardized "+r.label+" score",ylab:"density",yfmt:v=>(+v.toFixed(2))});
+    series.forEach((se,si)=>{if(off[se.k])return;const d=dens[si];
+      let up="M"+sc.x(edges[0]).toFixed(1)+" "+sc.y(0).toFixed(1)+" ";
+      for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+        up+="L"+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+      up+="L"+sc.x(edges[nb]).toFixed(1)+" "+sc.y(0).toFixed(1)+"Z";
+      E(s,"path",{d:up,fill:se.color,opacity:.16,stroke:"none"});
+      let ln="";for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+        ln+=(i?"L":"M")+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+      E(s,"path",{d:ln,fill:"none",stroke:se.color,"stroke-width":1.7,"stroke-linejoin":"round"});
+    });
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+      const px=(ev.clientX-rb.left)/rb.width*W;const bi=Math.min(nb-1,Math.max(0,Math.floor((px-box.l)/box.w*nb)));
+      let html="<b>score "+trim(edges[bi])+"…"+trim(edges[bi+1])+"</b>";
+      series.forEach(se=>{if(off[se.k])return;html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+fmt(se.v[bi],0);});
+      showTip(ev,html);});
+    ov.addEventListener("mouseleave",hideTip);
+  }
+  legend(document.getElementById(legId),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;draw();}})));
+  draw();
+}
 
 // ---------- shared class histogram builder ----------
 function classHist(hostId,legId,normalize){
@@ -434,6 +536,10 @@ if(D.winFraction && D.winFraction.binCenters){
 function kpi(host,label,val,c){const d=H(host,"div",{class:"kpi"});H(d,"div",{class:"v "+(c||"")},val);H(d,"div",{class:"k"},label);}
 function lowerB(a,v){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m]<v)lo=m+1;else hi=m;}return lo;}
 
+// Print / Save-as-PDF: the @media print stylesheet stacks every tab (their charts
+// are already rendered in the DOM) and forces the light palette, so one print pass
+// captures the whole report. The FDR tab prints whichever view is selected.
+document.getElementById("printBtn").onclick=()=>window.print();
 document.getElementById("foot").innerHTML="Generated by Osprey <code>--model-diagnostics</code> · self-contained · "+esc(D.generatedUtc||"");
 window.addEventListener("mousemove",e=>{if(tip.style.opacity==1)moveTip(e);});
 </script>
