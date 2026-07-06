@@ -315,11 +315,20 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
         public void RefreshContents(RemoteUrl remoteUrl)
         {
             var watersConnectUrl = (WatersConnectUrl) remoteUrl;
+            // Resolve the child URLs before clearing the root cache: GetSampleSetsUrl/GetInjectionsUrl
+            // can fall back to the cached root folder list to resolve a path-only URL, so clearing root
+            // first could make them return null and silently skip their own cache invalidation.
+            var sampleSetsUrl = watersConnectUrl.Type == WatersConnectUrl.ItemType.folder
+                ? GetSampleSetsUrl(watersConnectUrl)
+                : null;
+            var injectionsUrl = watersConnectUrl.Type == WatersConnectUrl.ItemType.sample_set
+                ? GetInjectionsUrl(watersConnectUrl)
+                : null;
             ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetRootContentsUrl());
-            if (watersConnectUrl.Type == WatersConnectUrl.ItemType.folder)
-                ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(GetSampleSetsUrl(watersConnectUrl));
-            if (watersConnectUrl.Type == WatersConnectUrl.ItemType.sample_set)
-                ClearResultsFor<ImmutableList<WatersConnectFileObject>>(GetInjectionsUrl(watersConnectUrl));
+            if (sampleSetsUrl != null)
+                ClearResultsFor<ImmutableList<WatersConnectFolderObject>>(sampleSetsUrl);
+            if (injectionsUrl != null)
+                ClearResultsFor<ImmutableList<WatersConnectFileObject>>(injectionsUrl);
         }
 
         protected Uri GetRootContentsUrl()
