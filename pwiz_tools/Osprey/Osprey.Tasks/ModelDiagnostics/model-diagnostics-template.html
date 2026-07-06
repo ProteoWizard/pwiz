@@ -165,6 +165,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       into each feature's percent contribution to the composite target&ndash;decoy separation.
       Rows in <b style="color:var(--bad)">red</b> have a trained coefficient whose sign is opposite the
       feature's expected direction (behaving against expectation).</p>
+    <div class="vbtns" id="modelPassSel" style="margin-bottom:12px"></div>
     <div id="modelWrap" class="collapsewrap collapsed"><div id="modelTable"></div></div>
   </div>
   <div class="card">
@@ -310,12 +311,31 @@ function legend(node,items){node.innerHTML="";items.forEach(it=>{const s=H(node,
   H(s,"i",{class:it.line?"ln":"",style:"background:"+it.color});H(s,"span",{},it.name);
   if(it.toggle){s.onclick=()=>{s.classList.toggle("off");it.toggle(s.classList.contains("off"));};}});}
 
-// ---------- Model: feature table ----------
+// ---------- Model: feature table (pass 1, + pass 2 when --protein-fdr retrained) ----------
 const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
-(function(){
-  const rows=D.model||[];const host=document.getElementById("modelTable");
+const MODEL_PASSES=[{pass:1,label:"1st pass",features:D.model||[],scores:D.scores,
+  degenerate:D.modelDegenerate,desc:"pre-compaction first-pass training set"}];
+if(D.modelPass2)MODEL_PASSES.push({pass:2,label:"2nd pass",features:D.modelPass2.features||[],
+  scores:D.modelPass2.scores,degenerate:D.modelPass2.degenerate,
+  desc:"post-reconciliation retrain on the reported pool (--protein-fdr)"});
+let CURP=MODEL_PASSES[0];
+if(!HAS_FEATHIST){const tip=document.getElementById("scoreTip");if(tip)tip.style.display="none";}
+
+// Pass selector — only shown when a second Percolator model exists.
+(function(){const sel=document.getElementById("modelPassSel");
+  if(MODEL_PASSES.length<2){sel.style.display="none";return;}
+  MODEL_PASSES.forEach((mp,k)=>{const b=H(sel,"button",{class:k===0?"on":""},
+    mp.label+(mp.pass===2?"  (≠ pass 1)":""));
+    b.onclick=()=>{sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");renderModel(mp);};});
+})();
+
+// (Re)render the Model tab for one pass: feature table, print grid, and the
+// composite chart below. Called on load and on a pass switch.
+function renderModel(mp){
+  CURP=mp;
+  const rows=mp.features||[];const host=document.getElementById("modelTable");host.innerHTML="";
   const maxP=Math.max(1,...rows.map(r=>Math.abs(r.percent)||0));
-  const t=H(host,"table",{});const thead=H(t,"thead",{});const htr=H(thead,"tr",{});
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
   [["Feature","l"],["Coefficient",""],["Contribution",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
   const tb=H(t,"tbody",{});
   const clickable=r=>HAS_FEATHIST && r.targetHist;
@@ -327,21 +347,24 @@ const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
     H(td,"span",{},pct(r.percent/100,1));
     if(clickable(r))tr.onclick=()=>selectFeature(r,tr);
   });
-  if(D.modelDegenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
-  if(!HAS_FEATHIST){const tip=document.getElementById("scoreTip");if(tip)tip.style.display="none";}
+  if(mp.degenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
+  if(!rows.length)H(host,"p",{class:"note"},"Model table unavailable — the first-pass model was not retrained on this run (resumed / rehydrated).");
 
-  // Collapse/expand: default to a best-fit height so the score plot below stays
-  // visible without scrolling; the toggle reveals the full table.
+  // Collapse/expand: best-fit height so the score plot below stays visible; toggle
+  // reveals the full table. Preserve the collapsed/expanded choice across passes.
   const wrap=document.getElementById("modelWrap"), btn=document.getElementById("modelToggle");
   function syncToggle(){btn.innerHTML=wrap.classList.contains("collapsed")?"Show all &#9662;":"Best fit &#9652;";}
-  if(wrap.scrollHeight<=wrap.clientHeight+4){btn.style.display="none";wrap.classList.remove("collapsed");}
+  if(wrap.classList.contains("collapsed") && wrap.scrollHeight<=wrap.clientHeight+4){
+    btn.style.display="none";wrap.classList.remove("collapsed");
+  } else { btn.style.display=""; }
   btn.onclick=()=>{wrap.classList.toggle("collapsed");syncToggle();};
   syncToggle();
 
-  // Print-only: render every feature's distribution so the PDF shows them all.
+  // Print-only: render every feature's distribution for THIS pass so the PDF shows them all.
   const fpc=document.getElementById("featPrintCard");
-  if(HAS_FEATHIST){
-    const grid=document.getElementById("featPrintAll");
+  if(HAS_FEATHIST && rows.some(r=>r.targetHist)){
+    const grid=document.getElementById("featPrintAll");grid.innerHTML="";
+    if(MODEL_PASSES.length>1)H(grid,"div",{style:"grid-column:1/-1;font-weight:600;font-size:12.5px",html:mp.label+" model"});
     rows.filter(r=>r.targetHist).forEach(r=>{
       const cell=H(grid,"div",{class:"featcell"});
       H(cell,"h3",{},r.label);
@@ -349,8 +372,11 @@ const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
         (r.unexpected?" &middot; <b style='color:var(--bad)'>unexpected direction</b>":"")});
       drawFeatureSvg(H(cell,"div",{class:"chartbox"}),r,470,235);
     });
+    if(fpc)fpc.style.display="";
   } else if(fpc){ fpc.style.display="none"; }
-})();
+
+  showComposite();   // reset the bottom chart to this pass's composite
+}
 
 // ---------- Model: composite <-> per-feature distribution swap ----------
 // Clicking a feature row replaces the composite-score chart at the bottom of the
@@ -393,14 +419,17 @@ function drawFeatureSvg(container,r,W,Hh){
 }
 function showComposite(){
   document.querySelectorAll("#modelTable tr.sel").forEach(x=>x.classList.remove("sel"));
-  document.getElementById("scoreHdr").childNodes[0].nodeValue="Composite score distribution ";
+  const multi=MODEL_PASSES.length>1;
+  document.getElementById("scoreHdr").childNodes[0].nodeValue=
+    (multi?CURP.label+" composite score distribution ":"Composite score distribution ");
   document.getElementById("scoreDesc").innerHTML=
-    'Best-per-precursor composite score for each class, with a normal curve fit to the decoy scores '+
-    '&mdash; the Osprey analog of Skyline\'s mProphet "Model Scores" view, extended with entrapment. '+
+    'Best-per-precursor composite score for each class'+(multi?" ("+CURP.desc+")":"")+
+    ', with a normal curve fit to the decoy scores &mdash; the Osprey analog of Skyline\'s mProphet '+
+    '"Model Scores" view, extended with entrapment. '+
     '<span id="scoreTip"><b>Click any feature row above</b> to see that individual score\'s target/decoy '+
     'distribution (the mProphet "Feature Scores" view).</span>';
   document.getElementById("scoreBack").style.display="none";
-  classHist("scoreChart","scoreLegend",false);
+  classHist(CURP.scores,"scoreChart","scoreLegend",false);
 }
 document.getElementById("scoreBack").onclick=(e)=>{e.preventDefault();showComposite();};
 
@@ -442,9 +471,9 @@ function featureHist(hostId,legId,r){
   draw();
 }
 
-// ---------- shared class histogram builder ----------
-function classHist(hostId,legId,normalize){
-  const H0=D.scores; if(!H0||!H0.binEdges||H0.binEdges.length<2){document.getElementById(hostId).textContent="No score data.";return;}
+// ---------- shared class histogram builder (H0 = the pass's ScoreHistogram) ----------
+function classHist(H0,hostId,legId,normalize){
+  if(!H0||!H0.binEdges||H0.binEdges.length<2){document.getElementById(hostId).textContent="No score data.";return;}
   const edges=H0.binEdges, nb=edges.length-1;
   const series=[{k:"target",name:"target",color:COL.target,v:H0.target},
                 {k:"decoy",name:"decoy",color:COL.decoy,v:H0.decoy}];
@@ -488,8 +517,8 @@ function classHist(hostId,legId,normalize){
     .concat(normalize===false&&H0.decoyStd>0?[{name:"decoy normal",color:COL.decoy,line:true,toggle:o=>{off.decoynorm=o;draw();}}]:[]));
   draw();
 }
-classHist("scoreChart","scoreLegend",false);
-classHist("densChart","densLegend",true);
+renderModel(MODEL_PASSES[0]);   // Model tab: table + composite for pass 1 (default)
+classHist(D.scores,"densChart","densLegend",true);   // Density tab: pass-1 composite density
 
 // ---------- FDR calibration (multiple q-scope / pass views) ----------
 if(D.fdpViews && D.fdpViews.length){

@@ -52,6 +52,45 @@ namespace pwiz.Osprey.Test
             TestPass2FdpViews();
             TestSidecarRoundTrip();
             TestFeatureHistograms();
+            TestModelPass2();
+        }
+
+        // The pass-2 model view (the --protein-fdr retrain) is built from the
+        // second-pass contributions + the reported pool: a feature table (same
+        // most-influential-first ordering + per-feature histograms as pass 1) and a
+        // composite score histogram. Null contributions -> null pass (single-pass run).
+        private static void TestModelPass2()
+        {
+            var infos = new[]
+            {
+                new OspreyFeatureInfo("f0", "Feature Zero", false),
+                new OspreyFeatureInfo("f1", "Feature One", false),
+            };
+            var acc = new FeatureContributions.Accumulator(2, true);
+            for (int i = 0; i < 10; i++) acc.Add(new[] { 2.0, 0.5 }, false);
+            for (int i = 0; i < 10; i++) acc.Add(new[] { -1.0, 0.0 }, true);
+            var contrib = acc.Build(new List<double[]> { new[] { 2.0, -1.0 } }, infos);
+
+            var entries = new List<FdrEntry>
+            {
+                Entry(1, false, 5, 0.001, "TA", 2),
+                Entry(1 | DECOY_BIT, true, 1, 0.5, "DA", 2),
+            };
+            var cls = new Dictionary<uint, EntrapmentClass> { { 1u, EntrapmentClass.Target } };
+
+            // deltaMu = (2-(-1), 0.5-0) = (3, 0.5); weighted = w*deltaMu = (6, -0.5);
+            // composite 5.5; percent f0 = 6/5.5 = 109.09%, f1 = -0.5/5.5 = -9.09% (unexpected: w<0).
+            var mp = ModelDiagnosticsData.BuildModelPass2(Wrap(entries), contrib, cls, null);
+            Assert.IsNotNull(mp);
+            Assert.AreEqual(2, mp.Features.Count);
+            Assert.AreEqual("Feature Zero", mp.Features[0].Label);   // sorted by |percent| desc
+            Assert.AreEqual(100.0 * 6.0 / 5.5, mp.Features[0].Percent, 1e-6);
+            Assert.IsTrue(mp.Features[1].Unexpected);                // f1 weight sign is unexpected
+            Assert.IsNotNull(mp.Features[0].TargetHist);             // histograms carried through
+            Assert.IsNotNull(mp.Scores);
+            Assert.IsTrue(mp.Scores.BinEdges.Length > 1);
+
+            Assert.IsNull(ModelDiagnosticsData.BuildModelPass2(Wrap(entries), null, cls, null));
         }
 
         // The per-feature standardized-value histograms (Skyline mProphet "Feature

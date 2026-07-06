@@ -124,6 +124,10 @@ namespace pwiz.Osprey.Tasks
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
+            // The 2nd-pass Percolator model (--protein-fdr retrain), captured for the
+            // model-diagnostics pass-2 model view; null on a single-pass run.
+            FeatureContributions pass2Contributions = null;
+
             // Stage 8: Protein FDR (optional)
             if (config.ProteinFdr.HasValue)
             {
@@ -132,7 +136,7 @@ namespace pwiz.Osprey.Tasks
                 // write .2nd-pass sidecars -> reload onto stubs) before run-wide
                 // protein FDR consumes the 2nd-pass q-values. Extracted to
                 // Pass2FdrSidecar so Run reads as a sequencer; behavior unchanged.
-                Pass2FdrSidecar.ComputeAndPersist(
+                pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
                     ctx, perFileEntries, perFileParquetPaths,
                     Name, ValidityKey(ctx));
 
@@ -197,7 +201,8 @@ namespace pwiz.Osprey.Tasks
             // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
             // off the default output path; a failure is logged and swallowed.
             if (config.ModelDiagnostics)
-                ModelDiagnosticsReport.WritePass2AndFinalize(perFileEntries, libraryById, config, ctx.LogInfo);
+                ModelDiagnosticsReport.WritePass2AndFinalize(
+                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo);
 
             return true;
         }

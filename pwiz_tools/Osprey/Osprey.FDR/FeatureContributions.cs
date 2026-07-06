@@ -185,7 +185,11 @@ namespace pwiz.Osprey.FDR
                 {
                     int[][] h = isDecoy ? _histDecoy : _histTarget;
                     for (int j = 0; j < h.Length; j++)
-                        h[j][HistBin(standardizedFeatures[j])]++;
+                    {
+                        double v = standardizedFeatures[j];
+                        if (!double.IsNaN(v))   // a NaN std value would pile into bin 0
+                            h[j][HistBin(v)]++;
+                    }
                 }
             }
 
@@ -211,7 +215,11 @@ namespace pwiz.Osprey.FDR
                 {
                     int[][] h = isDecoy ? _histDecoy : _histTarget;
                     for (int j = 0; j < h.Length; j++)
-                        h[j][HistBin(standardizedFeatures[row, j])]++;
+                    {
+                        double v = standardizedFeatures[row, j];
+                        if (!double.IsNaN(v))   // a NaN std value would pile into bin 0
+                            h[j][HistBin(v)]++;
+                    }
                 }
             }
 

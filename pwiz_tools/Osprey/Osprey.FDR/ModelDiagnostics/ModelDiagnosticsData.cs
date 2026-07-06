@@ -82,6 +82,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public bool ModelDegenerate { get; set; }
         public List<FeatureRow> Model { get; set; }
         /// <summary>
+        /// The second-pass model (feature table + composite score histogram),
+        /// present only when a run with <c>--protein-fdr</c> retrained Percolator on
+        /// the post-reconciliation pool. Null on a single-pass run. The Model tab
+        /// offers a Pass 1 / Pass 2 selector when this is present. Shares
+        /// <see cref="FeatureHistEdges"/> with pass 1 (same standardized bins).
+        /// </summary>
+        public ModelPass ModelPass2 { get; set; }
+        /// <summary>
         /// Shared bin edges for the per-feature standardized-value histograms
         /// (<see cref="FeatureRow.TargetHist"/> / <see cref="FeatureRow.DecoyHist"/>),
         /// or null when they were not collected. Drives the Skyline mProphet
@@ -101,6 +109,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public WinFractionData WinFraction { get; set; }
         public List<FileSummaryRow> PerFile { get; set; }
         public IdYieldData IdYield { get; set; }
+
+        /// <summary>
+        /// A trained model for one FDR pass: its feature-contribution table, the
+        /// composite target/decoy separation, and the best-per-precursor composite
+        /// score histogram over the pool it was trained on. Pass 1 lives in the
+        /// top-level fields; pass 2 (the <c>--protein-fdr</c> retrain) is this type.
+        /// </summary>
+        public sealed class ModelPass
+        {
+            public double Composite { get; set; }
+            public bool Degenerate { get; set; }
+            public List<FeatureRow> Features { get; set; }
+            public ScoreHistogram Scores { get; set; }
+        }
 
         /// <summary>One row of the trained-model feature-contribution table.</summary>
         public sealed class FeatureRow
@@ -313,40 +335,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             data.NClassifiedFromManifest = nWithClass;
             data.NUnclassified = nWithoutClass;
 
-            // ---- model table ----
+            // ---- model table (pass 1) ----
             if (contributions != null)
             {
                 data.ModelComposite = contributions.Composite;
                 data.ModelDegenerate = contributions.IsDegenerate;
                 data.FeatureHistEdges = contributions.HistogramEdges;
-                var targetHist = contributions.TargetHistograms;
-                var decoyHist = contributions.DecoyHistograms;
-                foreach (var f in contributions.Features
-                    .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
-                    .ThenBy(f => f.Index))
-                {
-                    data.Model.Add(new FeatureRow
-                    {
-                        Index = f.Index,
-                        Label = f.Label,
-                        Coefficient = f.Coefficient,
-                        Percent = f.Percent,
-                        DeltaMu = f.TargetDecoyMeanGap,
-                        Weighted = f.Weighted,
-                        Reversed = f.IsReversedScore,
-                        // Red row = the trained coefficient's sign is opposite the
-                        // feature's expected direction (Skyline's weight-sign test:
-                        // IsReversedScore XOR coefficient < 0). E.g. a negative weight
-                        // on MS1 isotope dot-product, where a higher idotp should be
-                        // better -- the feature is behaving against expectation, often
-                        // because a correlated feature captured the signal first.
-                        Unexpected = !contributions.IsDegenerate && f.IsUnexpectedDirection,
-                        // Per-feature target/decoy histograms (index-keyed to the
-                        // trained model; null when not collected).
-                        TargetHist = targetHist != null && f.Index < targetHist.Count ? targetHist[f.Index] : null,
-                        DecoyHist = decoyHist != null && f.Index < decoyHist.Count ? decoyHist[f.Index] : null,
-                    });
-                }
+                data.Model = BuildFeatureRows(contributions);
             }
 
             // ---- score histogram + decoy normal fit ----
@@ -374,6 +369,68 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // Mask clearing the decoy high bit from an EntryId to get the shared
         // target/decoy library base-id (same convention as FdrBenchInputWriter).
         private const uint BASE_ID_MASK = 0x7FFFFFFF;
+
+        // Build the feature-contribution table rows (most-influential first) from a
+        // trained model, carrying each feature's per-class histogram when collected.
+        // Shared by pass 1 (Build) and pass 2 (BuildModelPass2).
+        private static List<FeatureRow> BuildFeatureRows(FeatureContributions contributions)
+        {
+            var rows = new List<FeatureRow>();
+            var targetHist = contributions.TargetHistograms;
+            var decoyHist = contributions.DecoyHistograms;
+            foreach (var f in contributions.Features
+                .OrderByDescending(f => contributions.IsDegenerate ? 0.0 : Math.Abs(f.Percent))
+                .ThenBy(f => f.Index))
+            {
+                rows.Add(new FeatureRow
+                {
+                    Index = f.Index,
+                    Label = f.Label,
+                    Coefficient = f.Coefficient,
+                    Percent = f.Percent,
+                    DeltaMu = f.TargetDecoyMeanGap,
+                    Weighted = f.Weighted,
+                    Reversed = f.IsReversedScore,
+                    // Red row = the trained coefficient's sign is opposite the
+                    // feature's expected direction (IsReversedScore XOR coefficient < 0):
+                    // a feature behaving against expectation.
+                    Unexpected = !contributions.IsDegenerate && f.IsUnexpectedDirection,
+                    // Per-feature target/decoy histograms (index-keyed to the trained
+                    // model; null when not collected).
+                    TargetHist = targetHist != null && f.Index < targetHist.Count ? targetHist[f.Index] : null,
+                    DecoyHist = decoyHist != null && f.Index < decoyHist.Count ? decoyHist[f.Index] : null,
+                });
+            }
+            return rows;
+        }
+
+        /// <summary>
+        /// Build the pass-2 model view (feature table + composite score histogram)
+        /// from the second-pass Percolator model and the post-reconciliation pool.
+        /// Called by the end-of-run writer (MergeNodeTask) only when a
+        /// <c>--protein-fdr</c> run retrained Percolator on the reported pool, so both
+        /// models can be shown side by side. Returns null when no second-pass
+        /// contributions are available (single-pass run or a rehydrated resume).
+        /// </summary>
+        public static ModelPass BuildModelPass2(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            FeatureContributions contributions,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            IReadOnlyDictionary<uint, uint> pairByBaseId)
+        {
+            if (contributions == null)
+                return null;
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                out _, out _);
+            return new ModelPass
+            {
+                Composite = contributions.Composite,
+                Degenerate = contributions.IsDegenerate,
+                Features = BuildFeatureRows(contributions),
+                Scores = BuildScoreHistogram(precs),
+            };
+        }
 
         /// <summary>
         /// Build the pass-2 FDP calibration views from the final reported

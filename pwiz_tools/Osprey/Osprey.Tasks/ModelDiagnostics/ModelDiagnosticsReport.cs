@@ -89,6 +89,13 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 var data = ModelDiagnosticsData.Build(
                     perFileEntries, contributions, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel.ToString());
+                // On a resumed / rehydrated run the first-pass SVM is not retrained
+                // (q-values come from sidecars), so there is no trained model to show.
+                // Surface it rather than silently emitting a blank Model tab.
+                if (contributions == null)
+                    logInfo(@"[MODEL-DIAGNOSTICS] first-pass model not retrained on this run " +
+                            @"(resumed/rehydrated); the Model tab's feature table and per-feature " +
+                            @"distributions are unavailable. Clear the 1st-pass FDR sidecars to force a retrain.");
                 data.GeneratedUtc = DateTime.UtcNow.ToString(
                     @"yyyy-MM-dd HH:mm:ss 'UTC'", CultureInfo.InvariantCulture);
                 data.OspreyVersion = OspreyVersion.DisplayVersion;
@@ -126,6 +133,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
         /// </summary>
         public static void WritePass2AndFinalize(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            FeatureContributions pass2Contributions,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
             OspreyConfig config,
             Action<string> logInfo)
@@ -136,7 +144,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 var data = ReadDataSidecar(sidecarPath);
                 if (data == null)
                 {
-                    logInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 views skipped (pass-1 page stands).");
+                    logInfo(@"[MODEL-DIAGNOSTICS] pass-1 data sidecar not found; pass-2 enrichment skipped (pass-1 page stands).");
                     return;
                 }
 
@@ -146,22 +154,29 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 BuildClassificationFromLibrary(config, libraryById, logInfo,
                     out classByBaseId, out pairByBaseId, out entrapmentRatio);
 
+                // Pass-2 FDR calibration views from the reported pool (when it carries entrapment).
                 var pass2Views = ModelDiagnosticsData.BuildPass2FdpViews(
                     perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio);
-                if (pass2Views.Count == 0)
+                if (pass2Views.Count > 0)
                 {
-                    logInfo(@"[MODEL-DIAGNOSTICS] reported pool carries no entrapment; pass-2 views not added.");
-                    return;
+                    if (data.FdpViews == null)
+                        data.FdpViews = new List<ModelDiagnosticsData.FdpView>();
+                    data.FdpViews.AddRange(pass2Views);
                 }
 
-                if (data.FdpViews == null)
-                    data.FdpViews = new List<ModelDiagnosticsData.FdpView>();
-                data.FdpViews.AddRange(pass2Views);
+                // Pass-2 model view (feature table + composite) when a --protein-fdr
+                // run retrained Percolator on the reported pool; null otherwise.
+                data.ModelPass2 = ModelDiagnosticsData.BuildModelPass2(
+                    perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
 
                 string outPath = RenderAndWrite(data, config);
+                // Consume the FirstJoin -> MergeNode hand-off sidecar unconditionally
+                // once the report is finalized (deleting it in every path avoids
+                // leaving a stray .data.json in the output directory).
                 TryDelete(sidecarPath);
                 logInfo(string.Format(
-                    @"[MODEL-DIAGNOSTICS] added pass-2 FDR calibration views; re-wrote report: {0}", outPath));
+                    @"[MODEL-DIAGNOSTICS] finalized report ({0} pass-2 FDR view(s); pass-2 model {1}); re-wrote: {2}",
+                    pass2Views.Count, data.ModelPass2 != null ? @"included" : @"n/a", outPath));
             }
             catch (Exception ex)
             {
