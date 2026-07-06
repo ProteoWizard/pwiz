@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
@@ -548,6 +549,10 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public static SpectrumClassFilter ParseFilterString(string filterString)
         {
+            // Rewrite any human-authored CV accession reference to its canonical encoded column token
+            // first (the generic grammar cannot carry an accession directly), so a transition list or
+            // command line can name a CV term by "MS:1000505" instead of the internal token.
+            filterString = CanonicalizeCvColumnReferences(filterString);
             // Try several cultures so a filter authored in one locale parses in another (e.g. a
             // comma-decimal value from a European transition list imported on a period-decimal
             // machine). Only number formatting varies; keywords are culture-independent (English).
@@ -575,6 +580,132 @@ namespace pwiz.Skyline.Model.Results.Spectra
             throw new FormatException(string.Format(
                 SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, filterString),
                 firstError);
+        }
+
+        // A controlled-vocabulary accession: a letter prefix, a colon, then digits (e.g. "MS:1000505").
+        private static readonly Regex CV_ACCESSION = new Regex(@"[A-Za-z]+:[0-9]+");
+        private static readonly Regex CV_ACCESSION_ANCHORED = new Regex(@"\G[A-Za-z]+:[0-9]+");
+
+        /// <summary>
+        /// Rewrites a human-authored controlled-vocabulary column reference into the canonical encoded
+        /// column token before parsing, so a filter typed in a transition list or on the command line can
+        /// name a CV term by its accession rather than the internal token. In a column position - i.e.
+        /// outside a single-quoted operand - an accession such as "MS:1000505", whether bare or embedded in
+        /// a double-quoted caption like "base peak intensity (MS:1000505)", is replaced by its "cvid..."
+        /// column name; any other text in the reference is ignored, since a CV term's identity is its
+        /// accession alone. Single-quoted operand text is copied verbatim, and a string carrying no
+        /// accession is returned unchanged. (The generic filter grammar cannot carry an accession directly:
+        /// a colon is not a legal PropertyPath character, and a quoted caption's spaces and parentheses are
+        /// stripped before PropertyPath.Parse, which then rejects them.)
+        /// </summary>
+        private static string CanonicalizeCvColumnReferences(string filterString)
+        {
+            if (string.IsNullOrEmpty(filterString) || filterString.IndexOf(':') < 0)
+            {
+                return filterString;
+            }
+
+            var result = new StringBuilder(filterString.Length);
+            int i = 0;
+            while (i < filterString.Length)
+            {
+                char c = filterString[i];
+                if (c == '\'')
+                {
+                    // Single-quoted operand: copy verbatim through the closing quote ('' escapes a quote).
+                    result.Append(c);
+                    i++;
+                    while (i < filterString.Length)
+                    {
+                        char oc = filterString[i];
+                        result.Append(oc);
+                        i++;
+                        if (oc == '\'')
+                        {
+                            if (i < filterString.Length && filterString[i] == '\'')
+                            {
+                                result.Append('\'');
+                                i++;
+                                continue;
+                            }
+                            break;
+                        }
+                    }
+                    continue;
+                }
+
+                if (c == '"')
+                {
+                    // Double-quoted column caption: collapse to the canonical token when it carries an
+                    // accession, otherwise leave it exactly as authored.
+                    int start = i;
+                    var inner = new StringBuilder();
+                    i++;
+                    bool closed = false;
+                    while (i < filterString.Length)
+                    {
+                        char qc = filterString[i];
+                        if (qc == '"')
+                        {
+                            i++;
+                            if (i < filterString.Length && filterString[i] == '"')
+                            {
+                                inner.Append('"');
+                                i++;
+                                continue;
+                            }
+                            closed = true;
+                            break;
+                        }
+                        inner.Append(qc);
+                        i++;
+                    }
+                    if (closed && TryEncodeCvAccession(inner.ToString(), out var token))
+                    {
+                        result.Append(token);
+                    }
+                    else
+                    {
+                        result.Append(filterString, start, i - start);
+                    }
+                    continue;
+                }
+
+                // A bare accession can only be a column reference here: an operand is a number or is
+                // single-quoted, so an unquoted "letters:digits" token is never operand text.
+                var match = CV_ACCESSION_ANCHORED.Match(filterString, i);
+                if (match.Success && TryEncodeCvAccession(match.Value, out var bareToken))
+                {
+                    result.Append(bareToken);
+                    i += match.Length;
+                    continue;
+                }
+
+                result.Append(c);
+                i++;
+            }
+
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// If <paramref name="text"/> contains a CV accession (e.g. "MS:1000505"), sets
+        /// <paramref name="token"/> to that term's canonical encoded column name and returns true.
+        /// </summary>
+        private static bool TryEncodeCvAccession(string text, out string token)
+        {
+            token = null;
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+            var match = CV_ACCESSION.Match(text);
+            if (!match.Success)
+            {
+                return false;
+            }
+            token = SpectrumClassColumn.CvParam(match.Value, null, false).ColumnName;
+            return true;
         }
 
         /// <summary>

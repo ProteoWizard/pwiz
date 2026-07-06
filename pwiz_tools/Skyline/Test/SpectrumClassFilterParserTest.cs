@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Linq;
 using pwiz.SkylineTestUtil;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
@@ -69,6 +70,39 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(
                 string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, badText),
                 SpectrumClassFilter.ValidateFilterString(badText));
+        }
+
+        [TestMethod]
+        public void TestCvColumnFriendlyReference()
+        {
+            // A CV term can be referenced in a filter string (transition list / command line) by its
+            // accession instead of the internal encoded column token: a bare "MS:1000505", or a
+            // double-quoted caption that merely contains the accession. Each resolves to the same filter as
+            // the canonical "cvid..." token.
+            var canonicalGt = SpectrumClassFilter.ParseFilterString("cvidMS1000505 > 500");
+            AssertEx.AreEqual(canonicalGt, SpectrumClassFilter.ParseFilterString("MS:1000505 > 500"));
+
+            var canonicalDeclared = SpectrumClassFilter.ParseFilterString("cvidMS1000505 isdeclared");
+            AssertEx.AreEqual(canonicalDeclared,
+                SpectrumClassFilter.ParseFilterString("\"base peak intensity (MS:1000505)\" isdeclared"));
+            // Only the MS:xxx reference matters - any other text in the caption is ignored.
+            AssertEx.AreEqual(canonicalDeclared,
+                SpectrumClassFilter.ParseFilterString("\"whatever text MS:1000505 more text\" isdeclared"));
+
+            // The reference is normalized to the canonical encoded column, so a friendly-authored filter is
+            // identical to a UI-authored one everywhere downstream (editor display, equality, round-trip).
+            var parsed = SpectrumClassFilter.ParseFilterString("MS:1000505 isdeclared");
+            Assert.AreEqual("cvidMS1000505", parsed.Clauses.Single().FilterSpecs.Single().ColumnId.Name);
+
+            // Validation accepts the friendly forms.
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("MS:1000505 isdeclared"));
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("\"base peak intensity (MS:1000505)\" isdeclared"));
+
+            // An accession inside a single-quoted OPERAND is left untouched (a string CV filter may match
+            // literal text that happens to look like an accession); only the column reference is rewritten.
+            AssertEx.AreEqual(
+                SpectrumClassFilter.ParseFilterString("cvidMS1000512 contains 'cv=MS:1000505'"),
+                SpectrumClassFilter.ParseFilterString("MS:1000512 contains 'cv=MS:1000505'"));
         }
 
         [TestMethod]
