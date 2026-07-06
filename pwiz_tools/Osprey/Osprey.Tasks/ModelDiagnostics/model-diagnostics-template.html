@@ -47,7 +47,7 @@ nav button.on{color:var(--accent);border-bottom-color:var(--accent)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
   padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
 .card h2{font-size:15px;margin:0 0 3px;font-weight:620}
-.card .desc{color:var(--muted);font-size:12.5px;margin:0 0 14px;max-width:70ch}
+.card .desc{color:var(--muted);font-size:12.5px;margin:0 0 14px;max-width:105ch}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
 @media(max-width:820px){.grid2{grid-template-columns:1fr}}
 table{border-collapse:collapse;width:100%;font-size:13px}
@@ -65,9 +65,10 @@ tr.sel td{background:color-mix(in srgb,var(--accent) 15%,transparent)}
   font-weight:600;padding:4px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;flex:none}
 .iconbtn:hover{color:var(--accent);border-color:var(--accent)}
 .collapsewrap{position:relative}
-.collapsewrap.collapsed{max-height:330px;overflow:hidden}
-.collapsewrap.collapsed::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46px;pointer-events:none;
-  background:linear-gradient(to bottom,transparent,var(--panel))}
+/* Collapsed = a compact scrollable panel (scroll the rows in place); the toggle
+   expands to the full table (e.g. for print / an at-a-glance overview). */
+.collapsewrap.collapsed{max-height:330px;overflow-y:auto}
+#modelTable table{max-width:700px}
 .print-only{display:none}
 .featgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
 @media(max-width:820px){.featgrid{grid-template-columns:1fr}}
@@ -160,9 +161,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <p class="desc">The averaged cross-validated linear (Percolator/SVM) model, decomposed Skyline-style
       into each feature's percent contribution to the composite target&ndash;decoy separation.
       Rows in <b style="color:var(--bad)">red</b> have a trained coefficient whose sign is opposite the
-      feature's expected direction &mdash; e.g. a negative weight on MS1 isotope dot-product, where a higher
-      idotp should indicate a better match. It flags a feature behaving against expectation, often because a
-      correlated feature captured that signal first.</p>
+      feature's expected direction (behaving against expectation).</p>
     <div id="modelWrap" class="collapsewrap collapsed"><div id="modelTable"></div></div>
   </div>
   <div class="card">
@@ -345,7 +344,7 @@ const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
       H(cell,"h3",{},r.label);
       H(cell,"div",{class:"fm",html:"coefficient "+fmt(r.coefficient,4)+" &middot; contribution "+pct(r.percent/100,1)+
         (r.unexpected?" &middot; <b style='color:var(--bad)'>unexpected direction</b>":"")});
-      drawFeatureSvg(H(cell,"div",{class:"chartbox"}),r,470,210);
+      drawFeatureSvg(H(cell,"div",{class:"chartbox"}),r,470,235);
     });
   } else if(fpc){ fpc.style.display="none"; }
 })();
@@ -373,7 +372,8 @@ function drawFeatureSvg(container,r,W,Hh){
   const series=[{color:COL.target,v:r.targetHist||[]},{color:COL.decoy,v:r.decoyHist||[]}];
   const width=(i)=>edges[i+1]-edges[i];
   const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;return s.v.map((c,i)=>c/tot/width(i));});
-  const box={l:42,t:10,w:W-56,h:Hh-40};
+  // Leave room below the axis for the x-title (axes() places it at box.t+box.h+32).
+  const box={l:44,t:10,w:W-58,h:Hh-58};
   let ymax=0;dens.forEach(d=>d.forEach(v=>ymax=Math.max(ymax,v)));ymax=(ymax||1)*1.08;
   const s=svg(W,Hh);container.appendChild(s);
   const sc=axes(s,box,[edges[0],edges[nb]],[0,ymax],{xlab:"standardized score",yfmt:v=>(+v.toFixed(2))});
