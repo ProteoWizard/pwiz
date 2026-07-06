@@ -425,7 +425,7 @@ namespace pwiz.Osprey.Tasks
                 if (!string.IsNullOrEmpty(s))
                     result.Add(s);
             }
-            result.Sort(StringComparer.Ordinal);
+            result.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to dedup adjacent identical stems immediately below; equal keys are byte-identical so tie order is irrelevant
             for (int i = result.Count - 1; i > 0; i--)
             {
                 if (string.Equals(result[i], result[i - 1], StringComparison.Ordinal))
