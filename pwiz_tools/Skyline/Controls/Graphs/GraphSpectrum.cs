@@ -909,12 +909,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new PeptidePrecursorPair(sel.NodePep, sel.NodeTranGroup);
             }
 
-#if NET472
             public static explicit operator KoinaIntensityModel.PeptidePrecursorNCE(SpectrumNodeSelection sel)
             {
                 return new KoinaIntensityModel.PeptidePrecursorNCE(sel.NodePep, sel.NodeTranGroup);
             }
-#endif
 
             public TreeNodeMS SelectedTreeNode { get; }
             public PeptideGroupDocNode NodePepGroup { get; }

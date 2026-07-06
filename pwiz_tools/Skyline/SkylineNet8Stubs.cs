@@ -27,6 +27,7 @@ namespace System.Deployment.Application
 
     public class TrustNotGrantedException : Exception
     {
+        public TrustNotGrantedException() { }
         public TrustNotGrantedException(string message) : base(message) { }
     }
 }

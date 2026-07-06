@@ -64,11 +64,13 @@
          it tries to resolve pwiz.SkylineCmd.SkylineCmdResources.resources from
          Skyline-daily.dll. Legacy csproj didn't include SkylineCmd\ either. -->
     <Compile Remove="SkylineCmd\**" />
-    <!-- SkylineTool's sources are globbed into Skyline (SkylineToolClient is used
-         directly), but its AssemblyInfo.cs must not be: it would stamp Skyline-daily.dll
-         with SkylineToolClient's title and a placeholder 1.0.0.0 version, and collide
-         with the version this project stamps (StampNet8InformationalVersion). -->
-    <Compile Remove="SkylineTool\Properties\AssemblyInfo.cs" />
+    <!-- SkylineTool is its own assembly (SkylineTool.dll), referenced below. Don't glob its
+         sources into Skyline-daily.dll: that duplicates the SkylineToolClient types in two
+         assemblies and any project referencing both (e.g. TestFunctional) hits CS0433. The
+         legacy csproj referenced the project, not its sources. -->
+    <Compile Remove="SkylineTool\**" />
+    <EmbeddedResource Remove="SkylineTool\**" />
+    <None Remove="SkylineTool\**" />
     <EmbeddedResource Remove="SkylineCmd\**" />
     <None Remove="SkylineCmd\**" />
     <EmbeddedResource Remove="Executables\**" />
@@ -115,6 +117,18 @@
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
+  </ItemGroup>
+
+  <!-- KoinaConfig.xml holds the Koina server config. The real (secret) file is dropped in for
+       official builds and is gitignored; the legacy Jamfile did
+       `make KoinaConfig.xml : KoinaConfig_development.xml : @common.copy`, i.e. defaulted to the
+       checked-in development config. Embed that development file directly under the resource name
+       KoinaConfig.GetKoinaConfig() looks up (assembly.GetManifestResourceStream(typeof(KoinaConfig),
+       "KoinaConfig.xml")). Static so it works on a clean checkout with no generated file. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Model\Koina\Config\KoinaConfig_development.xml">
+      <LogicalName>pwiz.Skyline.Model.Koina.Config.KoinaConfig.xml</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <!-- iRT standard documents (Biognosys, Pierce, CiRT, etc.) loaded via
@@ -174,6 +188,7 @@
     <ProjectReference Include="..\Shared\ProteomeDb\ProteomeDb.csproj" />
     <ProjectReference Include="..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj" />
     <ProjectReference Include="..\Shared\zedgraph\ZedGraph.csproj" />
+    <ProjectReference Include="SkylineTool\SkylineTool.csproj" />
 
     <!-- BiblioSpec CLI tools (BlibBuild, BlibFilter). Skyline shells out to these via
          ProcessStartInfo expecting them to sit next to Skyline in the bin dir. Reference

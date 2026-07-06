@@ -42,6 +42,13 @@
     <ProjectReference Include="..\zedgraph\ZedGraph.csproj" />
   </ItemGroup>
 
+  <!-- DocumentationGenerator.GetStyleSheetHtml() loads this stylesheet via
+       assembly.GetManifestResourceStream(typeof(DocumentationGenerator), "DocumentationGenerator.css")
+       and returns an empty stylesheet if it isn't embedded. SDK default globs don't embed .css. -->
+  <ItemGroup>
+    <EmbeddedResource Include="DataBinding\Documentation\DocumentationGenerator.css" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <!-- Legacy bundled DLLs — kept for the net472 path so behavior matches today. -->
     <Reference Include="Iesi.Collections">
