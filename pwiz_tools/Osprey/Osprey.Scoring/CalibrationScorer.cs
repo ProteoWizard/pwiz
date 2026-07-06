@@ -205,7 +205,9 @@ namespace pwiz.Osprey.Scoring
             // Using base_id (not array index) as secondary key matches Rust's
             // compete_calibration_pairs. Array-index tiebreaks correlate with
             // target/decoy bias when input is sorted by entry_id.
-            winners.Sort((a, b) =>
+            // Array.Sort OK: the secondary key is the unique base_id (entry_id & 0x7FFFFFFF),
+            // so the comparator never returns 0 and the unstable-sort tie path is unreachable.
+            winners.Sort((a, b) => // Array.Sort OK: (see above) secondary key is unique base_id, comparator never ties
             {
                 int cmp = scores[b].CompareTo(scores[a]);
                 if (cmp != 0)
@@ -427,10 +429,12 @@ namespace pwiz.Osprey.Scoring
             // Sort groups by sequence (ordinal) for deterministic fold assignment.
             // Rust uses default String Ord which is lexicographic byte comparison;
             // C# matches via StringComparer.Ordinal.
+            // Array.Sort OK: Keys are distinct peptide-sequence dictionary keys, so the
+            // ordinal comparator never returns 0 and the unstable-sort tie path is unreachable.
             var targetGroups = new List<KeyValuePair<string, List<int>>>(targetPeptides);
-            targetGroups.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+            targetGroups.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key)); // Array.Sort OK: (see above) Keys are distinct peptide sequences, comparator never ties
             var decoyGroups = new List<KeyValuePair<string, List<int>>>(decoyPeptides);
-            decoyGroups.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+            decoyGroups.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key)); // Array.Sort OK: (see above) Keys are distinct peptide sequences, comparator never ties
 
             // Round-robin assign target peptide groups to folds
             for (int i = 0; i < targetGroups.Count; i++)

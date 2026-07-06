@@ -325,7 +325,7 @@ namespace pwiz.Osprey.IO
                 if (k.IsTargetSide)
                     targetKeys.Add(k);
             }
-            targetKeys.Sort(BucketKeyOrderComparer.Instance);
+            targetKeys.Sort(BucketKeyOrderComparer.Instance); // Array.Sort OK: targetKeys are distinct bucket dictionary keys, so the comparer never ties
             foreach (var tKey in targetKeys)
             {
                 var dKey = new BucketKey(tKey.PairIndex, tKey.Partition,
@@ -335,14 +335,16 @@ namespace pwiz.Osprey.IO
                 var tIndices = buckets[tKey];
                 var tSorted = new List<int>(tIndices);
                 var dSorted = new List<int>(dIndices);
-                tSorted.Sort((a, b) =>
+                // Array.Sort OK (both sorts): the secondary key is the unique library entry Id,
+                // so the comparator never returns 0 and the unstable-sort tie path is unreachable.
+                tSorted.Sort((a, b) => // Array.Sort OK: (see above) secondary key is unique library entry Id, comparator never ties
                 {
                     int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
                     if (c != 0)
                         return c;
                     return library[a].Id.CompareTo(library[b].Id);
                 });
-                dSorted.Sort((a, b) =>
+                dSorted.Sort((a, b) => // Array.Sort OK: (see above) secondary key is unique library entry Id, comparator never ties
                 {
                     int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
                     if (c != 0)

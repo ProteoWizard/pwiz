@@ -25,6 +25,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -1451,6 +1452,10 @@ namespace pwiz.Osprey.Tasks
             RTCalibration rtCalibration = null;
             ms2Cal = MzCalibrationResult.Uncalibrated();
             ms1Cal = MzCalibrationResult.Uncalibrated();
+            // The wide pre-calibration RT tolerance (the "before" number in the
+            // console calibration summary). Set by the compute path below; stays 0
+            // when calibration is loaded from a cached JSON (no summary emitted then).
+            double calInitialRtTolerance = 0.0;
             // Total matches scored during pass 1 of calibration; threaded
             // into CalibrationMetadata.NumSampledPrecursors to match Rust's
             // accumulated_matches.len() (Stellar Single: 192289). Stays 0
@@ -1510,12 +1515,21 @@ namespace pwiz.Osprey.Tasks
                 var swCal = Stopwatch.StartNew();
                 rtCalibration = new Calibrator(ctx).RunCalibration(
                     fullLibrary, spectra, ms1Spectra, context,
-                    out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata);
+                    out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata,
+                    out calInitialRtTolerance);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
                 ctx.LogInfo(string.Format(
                     "[TIMING] RT calibration: {0:F1}s ({1} calibration points)",
                     swCal.Elapsed.TotalSeconds, nPoints));
+
+                // Curated calibration summary on the DEFAULT console (issue #4364):
+                // the RT window before vs. after, the final search-window half-width
+                // (and how fast/usable that makes the search), and the MS1/MS2 mass
+                // corrections + applied tolerances. The detailed per-pass lines stay
+                // at --verbose inside the Calibrator.
+                EmitCalibrationSummary(ctx, config, fileName,
+                    rtCalibration, ms1Cal, ms2Cal, calInitialRtTolerance);
             }
 
             // Dump 11 calibration summary scalars (MS1/MS2 mean/sd/count/
@@ -1549,7 +1563,11 @@ namespace pwiz.Osprey.Tasks
                     },
                     Ms1Calibration = MzCalibrationJson.FromResult(ms1Cal),
                     Ms2Calibration = MzCalibrationJson.FromResult(ms2Cal),
-                    RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration),
+                    // Persist the final RT search-window half-width too (issue #4364)
+                    // so the JSON records the value the console highlights; pass the
+                    // config's RT-tolerance clamps used at scoring time.
+                    RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration,
+                        config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance),
                     SecondPassRt = null
                 };
                 // ArtifactPaths.ResolveOutputDir routes the calibration JSON to
@@ -1565,6 +1583,69 @@ namespace pwiz.Osprey.Tasks
             }
 
             return rtCalibration;
+        }
+
+        /// <summary>
+        /// Emit the curated per-file calibration summary on the DEFAULT console
+        /// (issue #4364). One compact block flagging the RT window before vs. after
+        /// calibration (initial wide tolerance -> final search-window half-width),
+        /// a fit-quality number (MAD / residual SD / R^2 / n), and the MS1/MS2
+        /// systematic mass corrections with their applied tolerance windows and
+        /// units. This is Mike's "is the AI library usable / how fast will the
+        /// search be" sanity check. The detailed per-pass lines stay at --verbose
+        /// inside the Calibrator; this promotes only the summary. Numeric values are
+        /// formatted with the invariant culture (fixed decimals), not localizable
+        /// text. Called only on the compute path (a loaded cal JSON is silent).
+        /// </summary>
+        private static void EmitCalibrationSummary(
+            PipelineContext ctx, OspreyConfig config, string fileName,
+            RTCalibration rtCalibration,
+            MzCalibrationResult ms1Cal, MzCalibrationResult ms2Cal,
+            double initialRtTolerance)
+        {
+            var ic = CultureInfo.InvariantCulture;
+            ctx.LogInfo(string.Format(ic, "Calibration summary [{0}]:", fileName));
+
+            if (rtCalibration == null)
+            {
+                ctx.LogInfo("  RT: calibration failed - using fallback RT tolerance");
+            }
+            else
+            {
+                var stats = rtCalibration.Stats();
+                double finalHalfWidth = RTCalibration.SearchWindowHalfWidth(
+                    stats.MAD, config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance);
+                ctx.LogInfo(string.Format(ic,
+                    "  RT window: {0:F2} min before -> {1:F2} min (+/-) search half-width after calibration",
+                    initialRtTolerance, finalHalfWidth));
+                ctx.LogInfo(string.Format(ic,
+                    "  RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3} points",
+                    stats.MAD, stats.ResidualSD, stats.RSquared, stats.NPoints));
+            }
+
+            EmitMassCalibrationLine(ctx, "MS1", ms1Cal);
+            EmitMassCalibrationLine(ctx, "MS2", ms2Cal);
+        }
+
+        /// <summary>
+        /// One console line for an MS1/MS2 mass calibration in the summary block:
+        /// systematic correction (mean offset), SD, and the applied tolerance window
+        /// (|mean| + 3*SD), all in the calibration's unit. Reports "not calibrated"
+        /// when the level had no usable errors.
+        /// </summary>
+        private static void EmitMassCalibrationLine(
+            PipelineContext ctx, string level, MzCalibrationResult cal)
+        {
+            var ic = CultureInfo.InvariantCulture;
+            if (cal == null || !cal.Calibrated)
+            {
+                ctx.LogInfo(string.Format(ic, "  {0} mass: not calibrated", level));
+                return;
+            }
+            double tolerance = cal.AdjustedTolerance ?? (Math.Abs(cal.Mean) + 3.0 * cal.SD);
+            ctx.LogInfo(string.Format(ic,
+                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} ({5} errors)",
+                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count));
         }
 
         /// <summary>

@@ -252,7 +252,7 @@ namespace pwiz.Osprey.FDR
             foreach (var kvp in proteinToPeptides)
             {
                 var sortedPeptides = new List<string>(kvp.Value);
-                sortedPeptides.Sort(StringComparer.Ordinal);
+                sortedPeptides.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical "|"-joined set key; equal peptide strings are byte-identical so tie order does not change the key
                 string key = string.Join("|", sortedPeptides);
 
                 List<string> accessions;
@@ -278,23 +278,102 @@ namespace pwiz.Osprey.FDR
                 var peptideSet = new HashSet<string>(kvp.Key.Split('|'), StringComparer.Ordinal);
                 groups.Add(new KeyValuePair<HashSet<string>, List<string>>(peptideSet, kvp.Value));
             }
-            groups.Sort((a, b) => b.Key.Count.CompareTo(a.Key.Count));
+            // Array.Sort OK: subset elimination below only removes a group when its count is
+            // STRICTLY less than a retained group's, so equal-count groups never eliminate one
+            // another and the retained SET is invariant under tie order. Tie hazard, conversion
+            // deferred: equal-count groups' relative order still sets their GroupId assignment
+            // in Step 4, which is the same GroupId-order class as the #4362 canonical incident.
+            // Left byte-identical here; the parsimony rewrite (#4357) is the right place to pin
+            // a stable secondary key. Not a #4362 approved U-site.
+            groups.Sort((a, b) => b.Key.Count.CompareTo(a.Key.Count)); // Array.Sort OK: (see above) retained SET is tie-invariant; GroupId-order tie hazard deferred to #4357
 
-            // Step 3: Subset elimination
-            var retained = new List<KeyValuePair<HashSet<string>, List<string>>>();
+            // Step 3: Subset elimination — rarest-peptide candidate scan (issue #4357).
+            //
+            // The naive form scanned every already-retained group for each group,
+            // which is O(groups^2 x peptides) — tens of seconds to minutes at
+            // SEA-AD scale (tens of thousands of protein groups). A proper superset
+            // of group A must contain ALL of A's peptides, hence A's rarest peptide.
+            // So we index peptide -> retained-group indices INCREMENTALLY (only
+            // groups already appended to retained), and for each A test only the
+            // retained groups sharing A's rarest peptide. This prunes only groups
+            // that provably cannot be supersets, so it drops exactly the same
+            // groups in exactly the same order as the pairwise scan — byte-identical
+            // protein grouping — while running near-linearly.
+            //
+            // Invariants (see issue #4357): the DESCENDING sort above is left
+            // untouched (its unstable tie order is part of the golden output);
+            // groups are iterated in that order and non-subsets appended to
+            // retained in that same order (retained order == gid in Step 4); and
+            // the drop test is the identical proper-subset predicate against
+            // already-retained groups only.
+
+            // Global peptide -> group-count over ALL groups, used only to pick each
+            // group's rarest peptide (the pivot minimizing the candidate set). This
+            // choice does not affect correctness, only which peptide's candidate
+            // list is scanned.
+            var peptideGroupCount = new Dictionary<string, int>(StringComparer.Ordinal);
             foreach (var group in groups)
             {
-                bool isSubset = false;
-                foreach (var larger in retained)
+                foreach (string peptide in group.Key)
                 {
-                    if (group.Key.Count < larger.Key.Count && group.Key.IsSubsetOf(larger.Key))
+                    int count;
+                    peptideGroupCount.TryGetValue(peptide, out count);
+                    peptideGroupCount[peptide] = count + 1;
+                }
+            }
+
+            var retained = new List<KeyValuePair<HashSet<string>, List<string>>>();
+            // peptide -> indices into retained of groups (already appended) containing it.
+            var peptideToRetained = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+            foreach (var group in groups)
+            {
+                var peptideSet = group.Key;
+
+                // Pick the rarest peptide of this group as the pivot: any proper
+                // superset must contain it, so its (typically short) candidate list
+                // is sufficient to find every possible superset.
+                string pivot = null;
+                int pivotCount = int.MaxValue;
+                foreach (string peptide in peptideSet)
+                {
+                    int count = peptideGroupCount[peptide];
+                    if (count < pivotCount)
                     {
-                        isSubset = true;
-                        break;
+                        pivotCount = count;
+                        pivot = peptide;
                     }
                 }
+
+                bool isSubset = false;
+                List<int> candidates;
+                if (pivot != null && peptideToRetained.TryGetValue(pivot, out candidates))
+                {
+                    foreach (int candidateIdx in candidates)
+                    {
+                        var larger = retained[candidateIdx];
+                        if (peptideSet.Count < larger.Key.Count && peptideSet.IsSubsetOf(larger.Key))
+                        {
+                            isSubset = true;
+                            break;
+                        }
+                    }
+                }
+
                 if (!isSubset)
+                {
+                    int idx = retained.Count;
                     retained.Add(group);
+                    foreach (string peptide in peptideSet)
+                    {
+                        List<int> list;
+                        if (!peptideToRetained.TryGetValue(peptide, out list))
+                        {
+                            list = new List<int>();
+                            peptideToRetained[peptide] = list;
+                        }
+                        list.Add(idx);
+                    }
+                }
             }
 
             // Step 4: Assign group IDs and build peptide -> group mapping
@@ -524,7 +603,7 @@ namespace pwiz.Osprey.FDR
                 // joined with semicolons (matches the Rust port and the
                 // Stage 7 diagnostic dump).
                 var sortedAccs = new List<string>(group.Accessions);
-                sortedAccs.Sort(StringComparer.Ordinal);
+                sortedAccs.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical ";"-joined sortKey; equal accession strings are byte-identical so tie order does not change the key
                 string sortKey = string.Join(";", sortedAccs);
 
                 bool hasT = targetScore.TryGetValue(group.Id, out double t);

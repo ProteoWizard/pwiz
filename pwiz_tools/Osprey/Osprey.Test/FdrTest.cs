@@ -1126,28 +1126,45 @@ namespace pwiz.Osprey.Test
             };
 
             string report;
+            string defaultReport;
             PercolatorResults results;
             var savedOut = OspreyOutput.Out;
+            bool savedVerbose = OspreyOutput.Verbose;
             try
             {
+                // Default console (verbose off): the model sanity-check table must NOT
+                // appear -- it is gated behind --verbose (issue #4364).
+                var defaultCapture = new StringWriter();
+                OspreyOutput.Out = defaultCapture;
+                OspreyOutput.Verbose = false;
+                PercolatorFdr.RunPercolator(entries, config);
+                defaultReport = defaultCapture.ToString();
+
+                // Verbose console: the table is emitted.
                 var capture = new StringWriter();
                 OspreyOutput.Out = capture;
+                OspreyOutput.Verbose = true;
                 results = PercolatorFdr.RunPercolator(entries, config);
                 report = capture.ToString();
             }
             finally
             {
                 OspreyOutput.Out = savedOut;
+                OspreyOutput.Verbose = savedVerbose;
             }
 
-            // The contribution decomposition is surfaced on the results.
+            // The contribution decomposition is surfaced on the results regardless of
+            // the verbose gate (the gate only controls the printed table).
             Assert.IsNotNull(results.FeatureContributions);
             var features = results.FeatureContributions.Features;
             Assert.AreEqual(3, features.Count);
 
-            // The human-readable block is present.
+            // The model sanity-check block appears only under --verbose, reframed away
+            // from importance/weight wording (issue #4364).
             StringAssert.Contains(report,
-                "Feature weight contributions (trained linear model");
+                "Model sanity check -- feature share of target-decoy separation");
+            Assert.IsFalse(defaultReport.Contains("Model sanity check"),
+                "the feature share table must be gated behind --verbose");
 
             // Parse the percent column from the three feature rows. The table rows
             // are "<4 spaces><label><coefficient F4><percent F1>%"; match on the

@@ -100,67 +100,71 @@ namespace pwiz.Osprey.Tasks
                 Directory.CreateDirectory(dir);
 
             var result = new Result();
-            using (var writer = new StreamWriter(path, false))
+            using (var saver = new FileSaver(path))
             {
-                writer.NewLine = "\n"; // emit '\n' line endings for the TSV body
-                writer.WriteLine(perRun
-                    ? "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein\trun"
-                    : "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein");
-
-                if (perRun)
+                using (var writer = new StreamWriter(saver.SafeName, false))
                 {
-                    foreach (var fileEntries in perFileEntries)
+                    writer.NewLine = "\n"; // emit '\n' line endings for the TSV body
+                    writer.WriteLine(perRun
+                        ? "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein\trun"
+                        : "peptide\tmod_peptide\tcharge\tq_value\tscore\tprotein");
+
+                    if (perRun)
                     {
-                        string runName = fileEntries.Key;
-                        foreach (var entry in fileEntries.Value)
+                        foreach (var fileEntries in perFileEntries)
                         {
-                            if (entry.IsDecoy)
-                                continue;
-                            var lookup = ResolveLibrary(libraryById, entry.EntryId, ref result);
-                            double q = entry.EffectiveRunQvalue(effectiveLevel);
-                            writer.WriteLine(FormatRow(lookup.Peptide, entry.ModifiedSequence,
-                                entry.Charge, q, entry.Score, lookup.Protein, runName));
+                            string runName = fileEntries.Key;
+                            foreach (var entry in fileEntries.Value)
+                            {
+                                if (entry.IsDecoy)
+                                    continue;
+                                var lookup = ResolveLibrary(libraryById, entry.EntryId, ref result);
+                                double q = entry.EffectiveRunQvalue(effectiveLevel);
+                                writer.WriteLine(FormatRow(lookup.Peptide, entry.ModifiedSequence,
+                                    entry.Charge, q, entry.Score, lookup.Protein, runName));
+                                result.Rows++;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Dedup across files: keep best (min q-value, ties by max score) per dedup key.
+                        var best = new Dictionary<string, BestRow>();
+                        foreach (var fileEntries in perFileEntries)
+                        {
+                            foreach (var entry in fileEntries.Value)
+                            {
+                                if (entry.IsDecoy)
+                                    continue;
+                                double q = entry.EffectiveExperimentQvalue(effectiveLevel);
+                                string key = DedupKey(entry, effectiveLevel);
+                                BestRow cur;
+                                if (!best.TryGetValue(key, out cur)
+                                    || q < cur.QValue
+                                    || (q == cur.QValue && entry.Score > cur.Score))
+                                {
+                                    best[key] = new BestRow { QValue = q, Score = entry.Score, Entry = entry };
+                                }
+                            }
+                        }
+
+                        // Dictionary enumeration order is not guaranteed stable across runs / runtimes,
+                        // so sort by the dedup-key components (modified sequence, then charge) before
+                        // writing. The key is unique per surviving row, so this is a total order with no
+                        // ties -- deterministic, diff-friendly output. Ordinal compare avoids any
+                        // culture-dependent sequence ordering.
+                        foreach (var row in best.Values
+                            .OrderBy(r => r.Entry.ModifiedSequence, System.StringComparer.Ordinal)
+                            .ThenBy(r => r.Entry.Charge))
+                        {
+                            var lookup = ResolveLibrary(libraryById, row.Entry.EntryId, ref result);
+                            writer.WriteLine(FormatRow(lookup.Peptide, row.Entry.ModifiedSequence,
+                                row.Entry.Charge, row.QValue, row.Entry.Score, lookup.Protein, null));
                             result.Rows++;
                         }
                     }
                 }
-                else
-                {
-                    // Dedup across files: keep best (min q-value, ties by max score) per dedup key.
-                    var best = new Dictionary<string, BestRow>();
-                    foreach (var fileEntries in perFileEntries)
-                    {
-                        foreach (var entry in fileEntries.Value)
-                        {
-                            if (entry.IsDecoy)
-                                continue;
-                            double q = entry.EffectiveExperimentQvalue(effectiveLevel);
-                            string key = DedupKey(entry, effectiveLevel);
-                            BestRow cur;
-                            if (!best.TryGetValue(key, out cur)
-                                || q < cur.QValue
-                                || (q == cur.QValue && entry.Score > cur.Score))
-                            {
-                                best[key] = new BestRow { QValue = q, Score = entry.Score, Entry = entry };
-                            }
-                        }
-                    }
-
-                    // Dictionary enumeration order is not guaranteed stable across runs / runtimes,
-                    // so sort by the dedup-key components (modified sequence, then charge) before
-                    // writing. The key is unique per surviving row, so this is a total order with no
-                    // ties -- deterministic, diff-friendly output. Ordinal compare avoids any
-                    // culture-dependent sequence ordering.
-                    foreach (var row in best.Values
-                        .OrderBy(r => r.Entry.ModifiedSequence, System.StringComparer.Ordinal)
-                        .ThenBy(r => r.Entry.Charge))
-                    {
-                        var lookup = ResolveLibrary(libraryById, row.Entry.EntryId, ref result);
-                        writer.WriteLine(FormatRow(lookup.Peptide, row.Entry.ModifiedSequence,
-                            row.Entry.Charge, row.QValue, row.Entry.Score, lookup.Protein, null));
-                        result.Rows++;
-                    }
-                }
+                saver.Commit();
             }
             return result;
         }

@@ -20,7 +20,7 @@
 using System;
 using System.IO;
 
-namespace pwiz.Osprey.IO
+namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// Atomic file write helper. Construct with the final destination

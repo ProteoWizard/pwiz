@@ -471,7 +471,7 @@ namespace pwiz.Osprey
                 foreach (string f in originals)
                     if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
                         result.Add(f);                                   // original with no reconciled sibling
-                result.Sort(StringComparer.Ordinal); // unique filenames, no ties
+                result.Sort(StringComparer.Ordinal); // Array.Sort OK: unique filenames, so the comparator never ties
                 return result;
             }
 
