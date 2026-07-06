@@ -586,16 +586,24 @@ namespace pwiz.Skyline.Model.Results.Spectra
         private static readonly Regex CV_ACCESSION = new Regex(@"[A-Za-z]+:[0-9]+");
         private static readonly Regex CV_ACCESSION_ANCHORED = new Regex(@"\G[A-Za-z]+:[0-9]+");
 
+        // Explicit marker for a userParam column reference. A userParam has no accession - its identity is
+        // an arbitrary name with no distinctive pattern - so it cannot be recognized implicitly the way a
+        // CV accession can; without the marker an unknown token stays an "unknown property" error, which
+        // keeps typos of interpreted columns from silently resolving to a no-match userParam.
+        private const string USER_PARAM_PREFIX = @"userParam:";
+
         /// <summary>
-        /// Rewrites a human-authored controlled-vocabulary column reference into the canonical encoded
-        /// column token before parsing, so a filter typed in a transition list or on the command line can
-        /// name a CV term by its accession rather than the internal token. In a column position - i.e.
-        /// outside a single-quoted operand - an accession such as "MS:1000505", whether bare or embedded in
-        /// a double-quoted caption like "base peak intensity (MS:1000505)", is replaced by its "cvid..."
-        /// column name; any other text in the reference is ignored, since a CV term's identity is its
-        /// accession alone. Single-quoted operand text is copied verbatim, and a string carrying no
-        /// accession is returned unchanged. (The generic filter grammar cannot carry an accession directly:
-        /// a colon is not a legal PropertyPath character, and a quoted caption's spaces and parentheses are
+        /// Rewrites a human-authored CV/userParam column reference into the canonical encoded column token
+        /// before parsing, so a filter typed in a transition list or on the command line can name the term
+        /// readably rather than by its internal token. In a column position - i.e. outside a single-quoted
+        /// operand - the following are rewritten:
+        /// a CV accession such as "MS:1000505", whether bare or embedded in a double-quoted caption like
+        /// "base peak intensity (MS:1000505)" (any other text in the caption is ignored, since a CV term's
+        /// identity is its accession alone); and a userParam named with the explicit "userParam:" marker,
+        /// either bare ("userParam:vendorSetting") or inside a double-quoted caption for names with spaces
+        /// ("userParam:vendor setting"). Single-quoted operand text is copied verbatim, and a string with
+        /// no such reference is returned unchanged. (The generic grammar cannot carry these directly: a
+        /// colon is not a legal PropertyPath character, and a quoted caption's spaces and parentheses are
         /// stripped before PropertyPath.Parse, which then rejects them.)
         /// </summary>
         private static string CanonicalizeCvColumnReferences(string filterString)
@@ -660,7 +668,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
                         inner.Append(qc);
                         i++;
                     }
-                    if (closed && TryEncodeCvAccession(inner.ToString(), out var token))
+                    if (closed && TryEncodeColumnReference(inner.ToString(), out var token))
                     {
                         result.Append(token);
                     }
@@ -671,12 +679,28 @@ namespace pwiz.Skyline.Model.Results.Spectra
                     continue;
                 }
 
+                // A bare userParam reference: the explicit marker followed by the name (up to the next
+                // delimiter). The marker is checked before the accession rule so a userParam named like an
+                // accession, e.g. "userParam:123", is a userParam and not read as a CV term.
+                if (StartsWithUserParamMarker(filterString, i))
+                {
+                    int nameStart = i + USER_PARAM_PREFIX.Length;
+                    int nameEnd = nameStart;
+                    while (nameEnd < filterString.Length && !IsColumnReferenceDelimiter(filterString[nameEnd]))
+                    {
+                        nameEnd++;
+                    }
+                    result.Append(EncodeCvColumnToken(filterString.Substring(nameStart, nameEnd - nameStart)));
+                    i = nameEnd;
+                    continue;
+                }
+
                 // A bare accession can only be a column reference here: an operand is a number or is
                 // single-quoted, so an unquoted "letters:digits" token is never operand text.
                 var match = CV_ACCESSION_ANCHORED.Match(filterString, i);
-                if (match.Success && TryEncodeCvAccession(match.Value, out var bareToken))
+                if (match.Success)
                 {
-                    result.Append(bareToken);
+                    result.Append(EncodeCvColumnToken(match.Value));
                     i += match.Length;
                     continue;
                 }
@@ -688,23 +712,50 @@ namespace pwiz.Skyline.Model.Results.Spectra
             return result.ToString();
         }
 
+        private static bool StartsWithUserParamMarker(string s, int i)
+        {
+            return i + USER_PARAM_PREFIX.Length <= s.Length &&
+                   string.Compare(s, i, USER_PARAM_PREFIX, 0, USER_PARAM_PREFIX.Length,
+                       StringComparison.OrdinalIgnoreCase) == 0;
+        }
+
+        // Characters that end an unquoted column reference: whitespace, quotes, parentheses, and the
+        // comparison-operator characters (so a no-space form like "userParam:foo>5" still splits).
+        private static bool IsColumnReferenceDelimiter(char c)
+        {
+            return char.IsWhiteSpace(c) || @"""'()=<>".IndexOf(c) >= 0;
+        }
+
+        // The canonical encoded column name for a CV/userParam identity (a CV accession encodes as
+        // "cvid...", any other name as the "cvup..." userParam form; see SpectrumClassColumn).
+        private static string EncodeCvColumnToken(string identity)
+        {
+            return SpectrumClassColumn.CvParam(identity, null, false).ColumnName;
+        }
+
         /// <summary>
-        /// If <paramref name="text"/> contains a CV accession (e.g. "MS:1000505"), sets
+        /// If <paramref name="text"/> is a CV/userParam column caption - a userParam marked with
+        /// "userParam:", or a caption containing a CV accession (e.g. "MS:1000505") - sets
         /// <paramref name="token"/> to that term's canonical encoded column name and returns true.
         /// </summary>
-        private static bool TryEncodeCvAccession(string text, out string token)
+        private static bool TryEncodeColumnReference(string text, out string token)
         {
             token = null;
             if (string.IsNullOrEmpty(text))
             {
                 return false;
             }
+            if (text.StartsWith(USER_PARAM_PREFIX, StringComparison.OrdinalIgnoreCase))
+            {
+                token = EncodeCvColumnToken(text.Substring(USER_PARAM_PREFIX.Length));
+                return true;
+            }
             var match = CV_ACCESSION.Match(text);
             if (!match.Success)
             {
                 return false;
             }
-            token = SpectrumClassColumn.CvParam(match.Value, null, false).ColumnName;
+            token = EncodeCvColumnToken(match.Value);
             return true;
         }
 

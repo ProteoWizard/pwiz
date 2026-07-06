@@ -103,6 +103,41 @@ namespace pwiz.SkylineTest
             AssertEx.AreEqual(
                 SpectrumClassFilter.ParseFilterString("cvidMS1000512 contains 'cv=MS:1000505'"),
                 SpectrumClassFilter.ParseFilterString("MS:1000512 contains 'cv=MS:1000505'"));
+
+            // A userParam has no accession, so it is named with the explicit "userParam:" marker (bare for a
+            // simple name; the marker is case-insensitive), resolving to the same "cvup..." column.
+            var canonicalUp = SpectrumClassFilter.ParseFilterString(
+                SpectrumClassColumn.CvParam("vendorSetting", null, false).ColumnName + " isdeclared");
+            AssertEx.AreEqual(canonicalUp, SpectrumClassFilter.ParseFilterString("userParam:vendorSetting isdeclared"));
+            AssertEx.AreEqual(canonicalUp, SpectrumClassFilter.ParseFilterString("USERPARAM:vendorSetting isdeclared"));
+            // A userParam name with spaces uses the marker inside a double-quoted caption.
+            var canonicalUpSpaces = SpectrumClassFilter.ParseFilterString(
+                SpectrumClassColumn.CvParam("vendor setting", null, false).ColumnName + " isdeclared");
+            AssertEx.AreEqual(canonicalUpSpaces,
+                SpectrumClassFilter.ParseFilterString("\"userParam:vendor setting\" isdeclared"));
+        }
+
+        [TestMethod]
+        public void TestNonsenseColumnReferences()
+        {
+            // A well-formed but non-existent CV accession is accepted (a term's identity is its accession;
+            // it need not be in the compiled ontology) and simply matches nothing - it is not an error.
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("MS:9999999 isdeclared"));
+
+            // A malformed accession (letters but no digits after the colon) is not a CV reference and, like
+            // any bad column token, fails to parse.
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("MS: isdeclared")));
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("MS:abc isdeclared")));
+
+            // A malformed encoded token (a "cvid"/"cvup" prefix that does not decode) is an unknown column.
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("cvidMSabc isdeclared")));
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("cvupZZ isdeclared")));
+
+            // A userParam requires the explicit marker: a bare unknown name stays an unknown property (so a
+            // typo of an interpreted column does not silently resolve to a no-match userParam)...
+            Assert.IsFalse(string.IsNullOrEmpty(SpectrumClassFilter.ValidateFilterString("vendorSetting isdeclared")));
+            // ...whereas the marker makes any name a valid userParam reference.
+            Assert.IsNull(SpectrumClassFilter.ValidateFilterString("userParam:vendorSetting isdeclared"));
         }
 
         [TestMethod]
