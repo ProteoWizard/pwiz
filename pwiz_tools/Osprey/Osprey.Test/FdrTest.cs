@@ -535,12 +535,13 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The projection must round-trip every field it carries (issue #4355 step
-        /// (b) increment ii): the identity/drive slice AND the seven FDR outputs
-        /// (Option A keeps the q-values + PEP resident). Builds an FdrEntry with a
-        /// distinct non-default value in every projected field and asserts the
-        /// FdrProjection row reproduces each one, that the interned peptide table
-        /// resolves the sequence, and that the file index is set.
+        /// The lean projection must round-trip every field it still carries (issue
+        /// #4355 struct-shrink S0): the identity/drive slice + CoelutionSum + Score.
+        /// The six q-value OUTPUTS no longer live on the struct (they flow through the
+        /// per-pass <see cref="IFdrOutputSink"/>), so they are not asserted here.
+        /// Builds an FdrEntry with a distinct non-default value in every carried field
+        /// and asserts the FdrProjection row reproduces each one, that the interned
+        /// peptide table resolves the sequence, and that the file index is set.
         /// </summary>
         [TestMethod]
         public void TestFdrProjectionRoundTripsFields()
@@ -575,24 +576,16 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(e.Charge, p.Charge);
             Assert.AreEqual(e.CoelutionSum, p.CoelutionSum, 0.0);
             Assert.AreEqual(e.Score, p.Score, 0.0);
-            Assert.AreEqual(e.RunPrecursorQvalue, p.RunPrecursorQvalue, 0.0);
-            Assert.AreEqual(e.RunPeptideQvalue, p.RunPeptideQvalue, 0.0);
-            Assert.AreEqual(e.RunProteinQvalue, p.RunProteinQvalue, 0.0);
-            Assert.AreEqual(e.ExperimentPrecursorQvalue, p.ExperimentPrecursorQvalue, 0.0);
-            Assert.AreEqual(e.ExperimentPeptideQvalue, p.ExperimentPeptideQvalue, 0.0);
-            Assert.AreEqual(e.Pep, p.Pep, 0.0);
             Assert.AreEqual(0, p.FileIdx);
             Assert.AreEqual(e.ModifiedSequence, set.PeptideById[p.PeptideId]);
 
-            // The With* replacements overlay only their fields, preserving the rest.
-            var scored = p.WithPercolatorResults(9.0, 0.1, 0.2, 0.3, 0.4, 0.5);
+            // WithScore replaces only Score, preserving the identity/drive slice.
+            var scored = p.WithScore(9.0);
             Assert.AreEqual(9.0, scored.Score, 0.0);
-            Assert.AreEqual(0.2, scored.RunPeptideQvalue, 0.0);
-            Assert.AreEqual(e.RunProteinQvalue, scored.RunProteinQvalue, 0.0); // untouched
             Assert.AreEqual(e.EntryId, scored.EntryId);
-            var reprot = scored.WithRunProteinQvalue(0.77);
-            Assert.AreEqual(0.77, reprot.RunProteinQvalue, 0.0);
-            Assert.AreEqual(9.0, reprot.Score, 0.0); // preserved
+            Assert.AreEqual(e.ParquetIndex, scored.ParquetIndex);
+            Assert.AreEqual(e.CoelutionSum, scored.CoelutionSum, 0.0);
+            Assert.AreEqual(e.IsDecoy, scored.IsDecoy);
         }
 
         /// <summary>
@@ -630,7 +623,11 @@ namespace pwiz.Osprey.Test
             }
 
             PercolatorEngine.ApplyPercolatorResults(fdrStubs, results);
-            PercolatorEngine.ApplyPercolatorResultsToProjection(projSet.PerFile, results);
+            // The lean struct only takes Score via WithScore; the five q-values are
+            // handed to the sink (issue #4355 struct-shrink S0). Capture them and
+            // compare against the FdrEntry oracle's stub values.
+            var sink = new CapturingSink();
+            PercolatorEngine.ApplyPercolatorResultsToProjection(projSet.PerFile, results, sink);
 
             Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
             for (int f = 0; f < fdrStubs.Count; f++)
@@ -641,19 +638,47 @@ namespace pwiz.Osprey.Test
                 for (int i = 0; i < stubList.Count; i++)
                 {
                     Assert.AreEqual(stubList[i].Score, projList[i].Score, 0.0);
-                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, projList[i].RunPrecursorQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].RunPeptideQvalue, projList[i].RunPeptideQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, projList[i].ExperimentPrecursorQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, projList[i].ExperimentPeptideQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].Pep, projList[i].Pep, 0.0);
+                    Assert.AreEqual(stubList[i].Score, sink.ScoreAt(f, i), 0.0);
+                    var q = sink.QAt(f, i);
+                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, q.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].RunPeptideQvalue, q.RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, q.ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, q.ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].Pep, q.Pep, 0.0);
                 }
             }
         }
 
         /// <summary>
+        /// Minimal <see cref="IFdrOutputSink"/> for the projection parity tests: records
+        /// each row's Score + <see cref="FdrQValues"/> by (fileIdx, rowIdx) so the test
+        /// can compare the streamed outputs against the FdrEntry oracle now that the lean
+        /// struct no longer stores them (issue #4355 struct-shrink S0).
+        /// </summary>
+        private sealed class CapturingSink : IFdrOutputSink
+        {
+            private readonly Dictionary<(int, int), double> _scores = new Dictionary<(int, int), double>();
+            private readonly Dictionary<(int, int), FdrQValues> _q = new Dictionary<(int, int), FdrQValues>();
+
+            public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
+                double score, in FdrQValues q)
+            {
+                _scores[(fileIdx, rowIdx)] = score;
+                _q[(fileIdx, rowIdx)] = q;
+            }
+
+            public void Finish(Action<string> logInfo)
+            {
+            }
+
+            public double ScoreAt(int fileIdx, int rowIdx) => _scores[(fileIdx, rowIdx)];
+            public FdrQValues QAt(int fileIdx, int rowIdx) => _q[(fileIdx, rowIdx)];
+        }
+
+        /// <summary>
         /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
         /// equivalence at the unit level): the projection
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
         /// overload must produce byte-identical Score + q-values to the FdrEntry
         /// <see cref="PercolatorEngine.RunPercolatorFdr(System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{string,System.Collections.Generic.List{FdrEntry}}},OspreyConfig,OspreyFeatureInfo[],System.Action{string},PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
         /// overload -- the flag-off byte-identity ORACLE -- on the same input, at the
@@ -703,9 +728,11 @@ namespace pwiz.Osprey.Test
                 fdrStubs, config, featureInfos, s => { }, null, "First-pass",
                 f => featuresA[f]);
             // Projection overload under test: must take the SAME direct dispatch and
-            // therefore match the oracle byte-for-byte.
+            // therefore match the oracle byte-for-byte. The lean struct takes Score; the
+            // q-values are captured off the sink (issue #4355 struct-shrink S0).
+            var sink = new CapturingSink();
             PercolatorEngine.RunPercolatorFdr(
-                projSet, config, featureInfos, s => { }, null, "First-pass",
+                projSet, config, featureInfos, s => { }, sink, null, "First-pass",
                 f => featuresB[f]);
 
             // Both overloads sort their buffers, so compare keyed -- EntryId repeats
@@ -721,17 +748,20 @@ namespace pwiz.Osprey.Test
             int compared = 0;
             for (int f = 0; f < projSet.PerFile.Count; f++)
             {
-                foreach (var proj in projSet.PerFile[f].Value)
+                var rows = projSet.PerFile[f].Value;
+                for (int r = 0; r < rows.Count; r++)
                 {
+                    var proj = rows[r];
                     Assert.IsTrue(refByKey.TryGetValue((f, proj.ParquetIndex), out FdrEntry e),
                         "every projection row must have its FdrEntry reference");
                     Assert.AreEqual(e.EntryId, proj.EntryId);
                     Assert.AreEqual(e.Score, proj.Score, 0.0);
-                    Assert.AreEqual(e.RunPrecursorQvalue, proj.RunPrecursorQvalue, 0.0);
-                    Assert.AreEqual(e.RunPeptideQvalue, proj.RunPeptideQvalue, 0.0);
-                    Assert.AreEqual(e.ExperimentPrecursorQvalue, proj.ExperimentPrecursorQvalue, 0.0);
-                    Assert.AreEqual(e.ExperimentPeptideQvalue, proj.ExperimentPeptideQvalue, 0.0);
-                    Assert.AreEqual(e.Pep, proj.Pep, 0.0);
+                    var q = sink.QAt(f, r);
+                    Assert.AreEqual(e.RunPrecursorQvalue, q.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(e.RunPeptideQvalue, q.RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(e.ExperimentPrecursorQvalue, q.ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(e.ExperimentPeptideQvalue, q.ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(e.Pep, q.Pep, 0.0);
                     compared++;
                 }
             }
@@ -797,10 +827,13 @@ namespace pwiz.Osprey.Test
                 percEntries, percConfig, s => { }, "First-pass", f => featuresA[f]);
             PercolatorEngine.ApplyPercolatorResults(fdrStubs, streamingResults);
 
-            // Projection-native streaming path (the change under test).
+            // Projection-native streaming path (the change under test). Score lands on
+            // the lean struct; the five q-values are captured off the sink (issue #4355
+            // struct-shrink S0).
+            var sink = new CapturingSink();
             bool abort = PercolatorEngine.RunStreamingIntoProjection(
                 projSet.PerFile, projSet.PeptideById, percConfig, s => { }, "First-pass",
-                f => featuresB[f]);
+                f => featuresB[f], sink);
             Assert.IsFalse(abort);
 
             Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
@@ -813,11 +846,12 @@ namespace pwiz.Osprey.Test
                 {
                     Assert.AreEqual(stubList[i].EntryId, projList[i].EntryId);
                     Assert.AreEqual(stubList[i].Score, projList[i].Score, 0.0);
-                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, projList[i].RunPrecursorQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].RunPeptideQvalue, projList[i].RunPeptideQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, projList[i].ExperimentPrecursorQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, projList[i].ExperimentPeptideQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].Pep, projList[i].Pep, 0.0);
+                    var q = sink.QAt(f, i);
+                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, q.RunPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].RunPeptideQvalue, q.RunPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, q.ExperimentPrecursorQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, q.ExperimentPeptideQvalue, 0.0);
+                    Assert.AreEqual(stubList[i].Pep, q.Pep, 0.0);
                 }
             }
         }

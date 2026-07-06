@@ -1014,7 +1014,8 @@ namespace pwiz.Osprey.FDR
             List<KeyValuePair<string, List<FdrProjection>>> perFile,
             bool[] labels, uint[] entryIds, string[] peptides, string[] fileNames,
             PercolatorResults trainResults, PercolatorConfig config,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            IFdrOutputSink sink)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -1084,22 +1085,28 @@ namespace pwiz.Osprey.FDR
                 out peps, out runPrecursorQvalues, out runPeptideQvalues,
                 out expPrecursorQvalues, out expPeptideQvalues);
 
-            // Zip the results straight onto the projection rows (no PercolatorResult
-            // list). FdrProjection is a readonly struct, so each row is replaced via
-            // WithPercolatorResults; RunProteinQvalue is left for the later first-pass
-            // protein FDR. Same nested (file, row) walk as the scoring loop, so index
-            // wgi stays aligned to finalScores / the q-value arrays.
+            // Write the Score straight onto the projection rows (no PercolatorResult
+            // list) and stream the five q-value outputs to the sink (issue #4355
+            // struct-shrink S0). FdrProjection is a readonly struct, so each row's
+            // Score is replaced via WithScore; the q-values no longer live on the
+            // struct. Same nested (file, row) walk as the scoring loop, so index wgi
+            // stays aligned to finalScores / the q-value arrays.
             int wgi = 0;
+            int fileIdx = 0;
             foreach (var kvp in perFile)
             {
                 var projRows = kvp.Value;
                 for (int r = 0; r < projRows.Count; r++)
                 {
-                    projRows[r] = projRows[r].WithPercolatorResults(
-                        finalScores[wgi], runPrecursorQvalues[wgi], runPeptideQvalues[wgi],
-                        expPrecursorQvalues[wgi], expPeptideQvalues[wgi], peps[wgi]);
+                    projRows[r] = projRows[r].WithScore(finalScores[wgi]);
+                    sink.Accept(fileIdx, r, projRows[r].EntryId, projRows[r].IsDecoy,
+                        finalScores[wgi],
+                        new FdrQValues(
+                            runPrecursorQvalues[wgi], runPeptideQvalues[wgi],
+                            expPrecursorQvalues[wgi], expPeptideQvalues[wgi], peps[wgi]));
                     wgi++;
                 }
+                fileIdx++;
             }
         }
 

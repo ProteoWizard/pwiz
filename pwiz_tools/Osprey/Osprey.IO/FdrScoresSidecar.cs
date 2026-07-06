@@ -192,27 +192,30 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Projection-buffer counterpart of
         /// <see cref="Write(string, IReadOnlyList{FdrEntry}, Pass)"/> (issue #4355
-        /// step (b) increment ii): write the per-file sidecar directly from the thin
-        /// <see cref="FdrProjection"/> rows. Under Option A every field the record
-        /// carries (EntryId + SVM score + the six q-values + PEP) is resident on the
-        /// projection, so this is a single-phase write producing byte-identical
-        /// 60-byte records in the same per-file (parquet) order (risk #8). Header +
-        /// record layout are single-sourced with the FdrEntry overload via
+        /// struct-shrink S0): write the per-file sidecar from pre-assembled
+        /// <see cref="FdrScoreRecord"/>s. Because the lean <c>FdrProjection</c> no longer
+        /// carries the q-value outputs, the projection sidecar writers assemble each
+        /// record from the lean row's EntryId + Score plus the parked / streamed
+        /// q-values (1st pass) or the streamed q-values + the survivor's
+        /// <c>RunProteinQvalue</c> lookup (2nd pass), then pass them here. Single-phase
+        /// write producing byte-identical 60-byte records in the given
+        /// (per-file, projection) order (risk #8). Header + record layout are
+        /// single-sourced with the FdrEntry overload via
         /// <see cref="WriteInternal"/> / <see cref="WriteRecord"/>.
         /// </summary>
-        public static void Write(string path, IReadOnlyList<FdrProjection> projections, Pass pass)
+        public static void Write(string path, IReadOnlyList<FdrScoreRecord> records, Pass pass)
         {
             if (path == null) throw new ArgumentNullException(nameof(path));
-            if (projections == null) throw new ArgumentNullException(nameof(projections));
+            if (records == null) throw new ArgumentNullException(nameof(records));
 
-            WriteInternal(path, projections.Count, pass, bw =>
+            WriteInternal(path, records.Count, pass, bw =>
             {
-                foreach (var p in projections)
+                foreach (var r in records)
                 {
-                    WriteRecord(bw, p.EntryId, p.Score,
-                        p.RunPrecursorQvalue, p.RunPeptideQvalue,
-                        p.ExperimentPrecursorQvalue, p.ExperimentPeptideQvalue,
-                        p.Pep, p.RunProteinQvalue);
+                    WriteRecord(bw, r.EntryId, r.Score,
+                        r.RunPrecursorQvalue, r.RunPeptideQvalue,
+                        r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue,
+                        r.Pep, r.RunProteinQvalue);
                 }
             });
         }

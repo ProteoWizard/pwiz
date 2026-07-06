@@ -94,17 +94,18 @@ namespace pwiz.Osprey.FDR
         /// thin <see cref="FdrProjection"/> peak buffer, materializing modified
         /// sequences from <paramref name="peptideById"/> for the library join. Same
         /// summary logging; the computation is byte-identical (see
-        /// <see cref="ProteinFdr.RunFirstPassProteinFdr(IList{KeyValuePair{string, List{FdrProjection}}}, string[], IList{LibraryEntry}, OspreyConfig)"/>).
+        /// <see cref="ProteinFdr.RunFirstPassProteinFdr(IList{KeyValuePair{string, List{FdrProjection}}}, string[], FdrProjectionOutputs, IList{LibraryEntry}, OspreyConfig)"/>).
         /// </summary>
         public static FirstPassProteinFdrResult RunFirstPass(
             IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
             string[] peptideById,
+            FdrProjectionOutputs outputs,
             IList<LibraryEntry> fullLibrary,
             OspreyConfig config,
             Action<string> logInfo)
         {
             var result = ProteinFdr.RunFirstPassProteinFdr(
-                perFileProjections, peptideById, fullLibrary, config);
+                perFileProjections, peptideById, outputs, fullLibrary, config);
 
             if (logInfo != null)
             {

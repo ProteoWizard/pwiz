@@ -196,10 +196,17 @@ namespace pwiz.Osprey.FDR
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             Action<string> logInfo,
+            IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass",
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
         {
+            // The lean FdrProjection no longer stores the q-value outputs (issue #4355
+            // struct-shrink S0): the score pass hands them to this per-pass sink (the
+            // 1st pass parks them in a parallel array; the 2nd pass streams them to the
+            // sidecar), and the sink owns the tail [COUNT] tally. A null sink is a bug.
+            if (sink == null)
+                throw new ArgumentNullException(nameof(sink));
             int numFeatures = featureInfos.Length;
             var peptideById = projections.PeptideById;
 
@@ -267,7 +274,7 @@ namespace pwiz.Osprey.FDR
                     passLabel, n));
                 bool streamingAbort = RunStreamingIntoProjection(
                     projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                    loadFileFeatures);
+                    loadFileFeatures, sink);
                 if (streamingAbort)
                     return true;
             }
@@ -303,61 +310,18 @@ namespace pwiz.Osprey.FDR
                 if (results.DiagnosticAbort)
                     return true;
 
-                ApplyPercolatorResultsToProjection(projections.PerFile, results);
+                ApplyPercolatorResultsToProjection(projections.PerFile, results, sink);
             }
 
-            // FDR result logging, reading the projection rows. Identical values to
-            // the legacy loops (same EntryId/IsDecoy/q-values), so identical [COUNT]
-            // lines.
-            int nTargetPassing = 0;
-            int nDecoyPassing = 0;
-            foreach (var kvp in projections.PerFile)
-            {
-                int fileTargets = 0;
-                int fileDecoys = 0;
-                foreach (var proj in kvp.Value)
-                {
-                    if (proj.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
-                    {
-                        if (proj.IsDecoy)
-                            fileDecoys++;
-                        else
-                            fileTargets++;
-                    }
-                }
-                logInfo(string.Format(
-                    "[COUNT] {0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
-                    passLabel, kvp.Key, fileTargets, fileDecoys, config.RunFdr));
-                nTargetPassing += fileTargets;
-                nDecoyPassing += fileDecoys;
-            }
-
-            logInfo(string.Format(
-                "{0} Percolator results: {1} targets, {2} decoys pass {3:P1} FDR",
-                passLabel, nTargetPassing, nDecoyPassing, config.RunFdr));
-            logInfo(string.Format(
-                "[COUNT] {0} total across files: {1}",
-                passLabel, nTargetPassing));
-
-            var bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
-            foreach (var kvp in projections.PerFile)
-            {
-                foreach (var proj in kvp.Value)
-                {
-                    if (proj.IsDecoy)
-                        continue;
-                    if (proj.EffectiveRunQvalue(config.FdrLevel) > config.RunFdr)
-                        continue;
-                    string pkey = peptideById[proj.PeptideId] + "|" + proj.Charge;
-                    double q = proj.EffectiveRunQvalue(config.FdrLevel);
-                    double existing;
-                    if (!bestQByPrecursor.TryGetValue(pkey, out existing) || q < existing)
-                        bestQByPrecursor[pkey] = q;
-                }
-            }
-            logInfo(string.Format(
-                "[COUNT] {0} unique precursors (best q across files): {1}",
-                passLabel, bestQByPrecursor.Count));
+            // Tail [COUNT] logging (per-file pass counts, total, unique precursors)
+            // moves into sink.Finish (issue #4355 struct-shrink S0, correction §0a):
+            // the q-values are no longer on the struct, so the tally must read the
+            // LIVE values the sink accumulated during the score pass (the 1st-pass
+            // parallel array or the 2nd-pass streamed values) -- reading them off the
+            // projection here would read the now-absent fields. The sink also flushes
+            // any deferred per-file output (2nd-pass sidecars). Same values, same
+            // FdrLevel selection, so identical [COUNT] lines.
+            sink.Finish(logInfo);
             return false;
         }
 
@@ -527,31 +491,37 @@ namespace pwiz.Osprey.FDR
 
         /// <summary>
         /// Projection-buffer counterpart of <see cref="ApplyPercolatorResults"/>
-        /// (issue #4355 step (b) increment ii): zip the SVM results back onto the
+        /// (issue #4355 struct-shrink S0): zip the SVM results back onto the
         /// <see cref="FdrProjection"/> rows by position. <c>FdrProjection</c> is a
-        /// readonly struct, so each row is replaced in place on its backing list via
-        /// <see cref="FdrProjection.WithPercolatorResults"/> (Score + the four
-        /// run/experiment precursor+peptide q-values + PEP; RunProteinQvalue is set
-        /// later by first-pass protein FDR). Same nested (file, entry) walk and same
-        /// count guard as the FdrEntry overload.
+        /// readonly struct, so each row's <see cref="FdrProjection.Score"/> is replaced
+        /// in place via <see cref="FdrProjection.WithScore"/>; the five q-value outputs
+        /// no longer live on the struct and are handed to <paramref name="sink"/> as an
+        /// <see cref="FdrQValues"/> value (the 1st pass parks them; the 2nd pass streams
+        /// them to the sidecar). Same nested (file, entry) walk and same count guard as
+        /// the FdrEntry overload.
         /// </summary>
         internal static void ApplyPercolatorResultsToProjection(
             List<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
-            PercolatorResults results)
+            PercolatorResults results,
+            IFdrOutputSink sink)
         {
             var resultEntries = results.Entries;
             int resultIndex = 0;
+            int fileIdx = 0;
             foreach (var kvp in perFileProjections)
             {
                 var rows = kvp.Value;
                 for (int i = 0; i < rows.Count; i++)
                 {
                     var result = resultEntries[resultIndex++];
-                    rows[i] = rows[i].WithPercolatorResults(
-                        result.Score, result.RunPrecursorQvalue, result.RunPeptideQvalue,
-                        result.ExperimentPrecursorQvalue, result.ExperimentPeptideQvalue,
-                        result.Pep);
+                    rows[i] = rows[i].WithScore(result.Score);
+                    sink.Accept(fileIdx, i, rows[i].EntryId, rows[i].IsDecoy, result.Score,
+                        new FdrQValues(
+                            result.RunPrecursorQvalue, result.RunPeptideQvalue,
+                            result.ExperimentPrecursorQvalue, result.ExperimentPeptideQvalue,
+                            result.Pep));
                 }
+                fileIdx++;
             }
 
             if (resultIndex != resultEntries.Count)
@@ -785,7 +755,8 @@ namespace pwiz.Osprey.FDR
             PercolatorConfig percConfig,
             Action<string> logInfo,
             string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            IFdrOutputSink sink)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -935,12 +906,13 @@ namespace pwiz.Osprey.FDR
             subsetEntries = null;
             subsetByFile = null;
 
-            // 4. Score ALL rows + run the competition/q-values, writing the results
-            //    straight onto the projection rows (no PercolatorResult list). Reuses
-            //    the flat identity arrays already built above.
+            // 4. Score ALL rows + run the competition/q-values, writing the Score
+            //    straight onto the projection rows and streaming the q-value outputs
+            //    to the sink (no PercolatorResult list). Reuses the flat identity
+            //    arrays already built above.
             PercolatorFdr.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, fileNames, trainResults, percConfig,
-                loadFileFeatures);
+                loadFileFeatures, sink);
             return false;
         }
 

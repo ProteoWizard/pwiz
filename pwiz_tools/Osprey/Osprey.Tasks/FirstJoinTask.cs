@@ -1139,12 +1139,13 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             PipelineContext ctx,
             string passLabel,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            IFdrOutputSink sink)
         {
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 projections, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
-                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
+                ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
                 loadFileFeatures);
             if (aborted)
             {
@@ -1254,14 +1255,19 @@ namespace pwiz.Osprey.Tasks
                 beforeCount, projections.PeptideById.Length));
 
             // Stage 5: first-pass Percolator over the projection. Same SVM, same
-            // dispatch, same q-values -- only the resident buffer differs.
+            // dispatch, same q-values -- only the resident buffer differs. The lean
+            // struct no longer stores the q-value outputs (issue #4355 struct-shrink
+            // S0); a StoringSink parks them in a parallel byte-neutral outputs array
+            // that protein FDR + compaction + the 1st-pass sidecar write read from.
+            var sink = new FdrStoringSink(projections, config, @"First-pass");
             var swFdr = Stopwatch.StartNew();
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 projections, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
-                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics),
+                ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
                 @"First-pass", loadFileFeatures);
             swFdr.Stop();
+            var outputs = sink.Outputs;
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired; mirror the static
@@ -1273,7 +1279,7 @@ namespace pwiz.Osprey.Tasks
                 swFdr.Elapsed.TotalSeconds));
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
 
-            LogFirstPassResultsProjection(projections, config, ctx);
+            LogFirstPassResultsProjection(projections, outputs, config, ctx);
 
             // First-pass protein FDR over the projection (sets RunProteinQvalue on
             // every row). The Stage-6 diagnostic dump reads the returned artifacts,
@@ -1283,7 +1289,7 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Empty);
                 var swProt = Stopwatch.StartNew();
                 var proteinResult = ProteinFdrEngine.RunFirstPass(
-                    projections.PerFile, projections.PeptideById, fullLibrary, config, ctx.LogInfo);
+                    projections.PerFile, projections.PeptideById, outputs, fullLibrary, config, ctx.LogInfo);
                 if (ctx.Diagnostics?.DumpProteinFdr ?? false)
                 {
                     ctx.Diagnostics?.WriteStage6ProteinFdrDump(
@@ -1301,7 +1307,7 @@ namespace pwiz.Osprey.Tasks
             // are both the Stage 5 -> Stage 6 boundary artifact AND the source the
             // survivor reload overlays below.
             int sidecarFailures = WriteFdrScoresSidecarsProjection(
-                projections, perFileParquetPaths, config, ctx);
+                projections, outputs, perFileParquetPaths, config, ctx);
             if (sidecarFailures > 0 && config.StopAfterStage5)
             {
                 ctx.LogError(string.Format(
@@ -1314,7 +1320,7 @@ namespace pwiz.Osprey.Tasks
 
             // Compaction predicate over the projection -> passing base_id set
             // (identical to CompactFirstPass's non-bundle branch, risk #7).
-            var firstPassBaseIds = ComputeFirstPassBaseIds(projections, config);
+            var firstPassBaseIds = ComputeFirstPassBaseIds(projections, outputs, config);
 
             // Reload full FdrEntry survivors from the ORIGINAL parquet + the
             // just-written 1st-pass sidecar. ParquetIndex therefore comes from
@@ -1345,16 +1351,18 @@ namespace pwiz.Osprey.Tasks
         /// which is production/gate-only.)
         /// </summary>
         private void LogFirstPassResultsProjection(
-            FdrProjectionSet projections, OspreyConfig config, PipelineContext ctx)
+            FdrProjectionSet projections, FdrProjectionOutputs outputs,
+            OspreyConfig config, PipelineContext ctx)
         {
             int passingTargets = 0;
-            foreach (var kvp in projections.PerFile)
+            for (int f = 0; f < projections.PerFile.Count; f++)
             {
+                var kvp = projections.PerFile[f];
                 int fileTargets = 0;
-                foreach (var proj in kvp.Value)
+                for (int r = 0; r < kvp.Value.Count; r++)
                 {
-                    if (!proj.IsDecoy &&
-                        proj.EffectiveRunQvalue(config.FdrLevel) <= config.RunFdr)
+                    if (!kvp.Value[r].IsDecoy &&
+                        outputs.EffectiveRunQvalue(f, r, config.FdrLevel) <= config.RunFdr)
                     {
                         fileTargets++;
                     }
@@ -1376,13 +1384,15 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private int WriteFdrScoresSidecarsProjection(
             FdrProjectionSet projections,
+            FdrProjectionOutputs outputs,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
             PipelineContext ctx)
         {
             int failures = 0;
-            foreach (var kvp in projections.PerFile)
+            for (int f = 0; f < projections.PerFile.Count; f++)
             {
+                var kvp = projections.PerFile[f];
                 string fileName = kvp.Key;
                 string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
                 if (string.IsNullOrEmpty(sidecarBase))
@@ -1395,7 +1405,12 @@ namespace pwiz.Osprey.Tasks
                 string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
                 try
                 {
-                    FdrScoresSidecar.Write(fdrPath, kvp.Value, FdrScoresSidecar.Pass.FirstPass);
+                    // The lean struct carries EntryId + Score; the six q-values come
+                    // from the parallel outputs array (issue #4355 struct-shrink S0).
+                    // Assemble the records in projection order for a byte-identical
+                    // single-phase write.
+                    var records = BuildFirstPassRecords(kvp.Value, outputs, f);
+                    FdrScoresSidecar.Write(fdrPath, records, FdrScoresSidecar.Pass.FirstPass);
                 }
                 catch (Exception ex)
                 {
@@ -1408,6 +1423,30 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Assemble one file's 1st-pass <see cref="FdrScoreRecord"/>s from the lean
+        /// projection rows (EntryId + Score) plus the parked six q-values in
+        /// <paramref name="outputs"/> (issue #4355 struct-shrink S0), in projection
+        /// order so the single-phase sidecar write is byte-identical to the pre-shrink
+        /// resident-projection write.
+        /// </summary>
+        private static List<FdrScoreRecord> BuildFirstPassRecords(
+            List<FdrProjection> rows, FdrProjectionOutputs outputs, int fileIdx)
+        {
+            var records = new List<FdrScoreRecord>(rows.Count);
+            for (int r = 0; r < rows.Count; r++)
+            {
+                var proj = rows[r];
+                var q = outputs.Get(fileIdx, r);
+                records.Add(new FdrScoreRecord(
+                    proj.EntryId, proj.Score,
+                    q.RunPrecursorQvalue, q.RunPeptideQvalue,
+                    q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
+                    q.Pep, q.RunProteinQvalue));
+            }
+            return records;
+        }
+
+        /// <summary>
         /// Compute the post-first-pass passing base_id set from the projection,
         /// using the identical predicate as <see cref="CompactFirstPass"/>'s
         /// non-bundle branch (targets whose run peptide q-value passes the peptide
@@ -1416,21 +1455,24 @@ namespace pwiz.Osprey.Tasks
         /// masked id set drives the survivor filter symmetrically.
         /// </summary>
         private static HashSet<uint> ComputeFirstPassBaseIds(
-            FdrProjectionSet projections, OspreyConfig config)
+            FdrProjectionSet projections, FdrProjectionOutputs outputs, OspreyConfig config)
         {
             var firstPassBaseIds = new HashSet<uint>();
             double peptideGate = config.RunFdr;
             double proteinGate = config.ProteinFdr ?? 0.0;
-            foreach (var kvp in projections.PerFile)
+            for (int f = 0; f < projections.PerFile.Count; f++)
             {
-                foreach (var proj in kvp.Value)
+                var rows = projections.PerFile[f].Value;
+                for (int r = 0; r < rows.Count; r++)
                 {
-                    if (proj.IsDecoy)
+                    if (rows[r].IsDecoy)
                         continue;
-                    if (proj.RunPeptideQvalue <= peptideGate ||
-                        (proteinGate > 0.0 && proj.RunProteinQvalue <= proteinGate))
+                    // Run peptide/protein q-values now live in the parallel outputs
+                    // array (issue #4355 struct-shrink S0), not on the lean struct.
+                    if (outputs.RunPeptideQvalue(f, r) <= peptideGate ||
+                        (proteinGate > 0.0 && outputs.RunProteinQvalue(f, r) <= proteinGate))
                     {
-                        firstPassBaseIds.Add(proj.EntryId & ScoringTaskShared.BASE_ID_MASK);
+                        firstPassBaseIds.Add(rows[r].EntryId & ScoringTaskShared.BASE_ID_MASK);
                     }
                 }
             }

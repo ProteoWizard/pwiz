@@ -65,12 +65,19 @@ namespace pwiz.Osprey.Tasks
             var config = ctx.Config;
 
             // When the projection 2nd-pass compute ran (flag on), this holds the scored
-            // FdrProjectionSet so the sidecar-write block below persists it (in the
-            // projection's sorted per-file order) instead of the resident survivor
-            // buffer -- the survivor buffer is NOT scored on the projection path; the
-            // entry_id overlay carries the 2nd-pass q-values onto it afterward. Null on
-            // the resident path (flag off) and on the skip / resume path. (#4374)
+            // FdrProjectionSet -- non-null is the flag that the StreamingSink already
+            // wrote each file's .2nd-pass.fdr_scores.bin + validity sidecar DURING the
+            // score pass (issue #4355 struct-shrink S0 / C1: the q-values are never
+            // stored on the projection). The resident write block below is then only
+            // for the flag-off / resume path. Null on the resident path (flag off) and
+            // on the skip / resume path. (#4374)
             FdrProjectionSet pass2Projections = null;
+
+            // Per-file 2nd-pass sidecar write tallies, shared by the projection path
+            // (updated in the StreamingSink flush callback during the score pass) and
+            // the resident write block below, so the summary log reads one set of
+            // counts. A holder object (not captured ints) keeps the flush closure clean.
+            var pass2Tally = new Pass2WriteTallies();
 
             // Run 2nd-pass Percolator on the post-reconciliation
             // entries when any 2nd-pass FDR sidecar is missing.
@@ -128,19 +135,85 @@ namespace pwiz.Osprey.Tasks
                     var swPass2 = Stopwatch.StartNew();
                     if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator)
                     {
-                        // Projection 2nd pass (issue #4374): stream the reconciled PIN
-                        // features through the SAME projection engine the 1st pass uses,
-                        // rather than loading every survivor's 21-feature vector resident.
-                        // Build the reconciled-row-indexed projection (each survivor's
-                        // ParquetIndex baked to its reconciled-parquet row via the
-                        // identity->row resolver), then run the projection Percolator,
-                        // which ALWAYS streams features per file. The sidecar-write block
-                        // below persists the projection rows and the existing entry_id
-                        // overlay carries the 2nd-pass q-values onto the resident survivor
-                        // buffer -- which therefore never holds features and never builds
-                        // a full-population PercolatorEntry/PercolatorResult stack.
+                        // Projection 2nd pass (issue #4374 + #4355 struct-shrink S0 / C1):
+                        // stream the reconciled PIN features through the SAME projection
+                        // engine the 1st pass uses, rather than loading every survivor's
+                        // 21-feature vector resident. The lean projection no longer stores
+                        // the q-values (2nd-pass peak 80 -> 32 B); a StreamingSink assembles
+                        // each .2nd-pass.fdr_scores.bin record DURING the score pass (from
+                        // the streamed q-values + the survivor's RunProteinQvalue looked up
+                        // by entry_id) and flushes the per-file sidecar + validity sidecar
+                        // directly, so the resident write block below is skipped for this
+                        // path. The existing entry_id overlay still carries the 2nd-pass
+                        // q-values onto the resident survivor buffer afterward (unchanged).
+
+                        // Survivor RunProteinQvalue by entry_id, per file: the value
+                        // BuildFromEntries used to carry onto the struct. All survivors
+                        // sharing an entry_id share a precursor (hence a ModifiedSequence,
+                        // hence a run_protein_qvalue), so the last-write map is exact.
+                        var survivorsByFile =
+                            new Dictionary<string, List<FdrEntry>>(StringComparer.Ordinal);
+                        foreach (var kvp in perFileEntries)
+                            survivorsByFile[kvp.Key] = kvp.Value;
+
+                        IReadOnlyDictionary<uint, double> ResolveProteinQ(string fileName)
+                        {
+                            var map = new Dictionary<uint, double>();
+                            if (survivorsByFile.TryGetValue(fileName, out var survivors))
+                            {
+                                foreach (var e in survivors)
+                                    map[e.EntryId] = e.RunProteinQvalue;
+                            }
+                            return map;
+                        }
+
+                        // Per-file flush: write the .2nd-pass.fdr_scores.bin from the
+                        // assembled records (skip-if-already-on-disk, preserving the resume
+                        // optimization), then the inline validity sidecar, updating the
+                        // shared tallies. This is the per-file body the resident write block
+                        // ran, sourced from records instead of the resident buffer.
+                        void FlushPass2File(string fileName, IReadOnlyList<FdrScoreRecord> records)
+                        {
+                            if (!inputByFileName.TryGetValue(fileName, out string inputFileFlush))
+                                return;
+                            string pass2PathFlush = FdrScoresSidecar.Pass2Path(inputFileFlush);
+                            if (File.Exists(pass2PathFlush))
+                            {
+                                pass2Tally.AlreadyOnDisk++;
+                                return;
+                            }
+                            try
+                            {
+                                FdrScoresSidecar.Write(
+                                    pass2PathFlush, records, FdrScoresSidecar.Pass.SecondPass);
+                                pass2Tally.Written++;
+                            }
+                            catch (Exception ex)
+                            {
+                                ctx.LogWarning(string.Format(
+                                    @"Failed to write 2nd-pass FDR sidecar for {0}: {1}",
+                                    fileName, ex.Message));
+                                pass2Tally.Failures++;
+                                return;
+                            }
+                            try
+                            {
+                                TaskValiditySidecar.Write(pass2PathFlush, taskName,
+                                    OspreyVersion.Current, taskValidityKey,
+                                    new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                                        ParquetScoreCache.GetScoresPath(inputFileFlush)) });
+                            }
+                            catch (Exception ex)
+                            {
+                                ctx.LogWarning(string.Format(
+                                    @"Failed to write {0} sidecar for {1}: {2}",
+                                    taskName, pass2PathFlush, ex.Message));
+                            }
+                        }
+
                         pass2Projections = ComputePass2Projection(
-                            ctx, perFileEntries, perFileParquetPaths, config);
+                            ctx, perFileEntries, perFileParquetPaths, config,
+                            ResolveProteinQ, FlushPass2File);
                     }
                     else
                     {
@@ -210,84 +283,65 @@ namespace pwiz.Osprey.Tasks
                 // resume-able boundary file pair (binary + validity
                 // sidecar) for every file that completed.
 
-                // When the projection path (flag on) computed the 2nd pass, index its
-                // scored per-file rows by file name so each sidecar is written from the
-                // projection -- the survivor buffer kvp.Value is NOT scored on that path.
-                // Empty on the resident / resume path, so the fallback below writes the
-                // resident buffer exactly as before. (#4374)
-                var projRowsByFile = new Dictionary<string, List<FdrProjection>>(StringComparer.Ordinal);
-                if (pass2Projections != null)
+                // Resident / resume path only: write each file's .2nd-pass sidecar from
+                // the resident survivor buffer. On the projection path (pass2Projections
+                // != null, issue #4355 struct-shrink S0 / C1) the StreamingSink already
+                // wrote the .bin + validity sidecar per file during the score pass, so
+                // this loop is skipped -- only the shared tallies it updated drive the
+                // summary log below.
+                if (pass2Projections == null)
                 {
-                    foreach (var kvp in pass2Projections.PerFile)
-                        projRowsByFile[kvp.Key] = kvp.Value;
-                }
-
-                int pass2Failures = 0;
-                int pass2Written = 0;
-                int pass2AlreadyOnDisk = 0;
-                foreach (var kvp in perFileEntries)
-                {
-                    string fileName = kvp.Key;
-                    if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
-                        continue;
-                    string pass2Path = FdrScoresSidecar.Pass2Path(inputFile3);
-                    if (File.Exists(pass2Path))
+                    foreach (var kvp in perFileEntries)
                     {
-                        pass2AlreadyOnDisk++;
-                        continue;
-                    }
-                    try
-                    {
-                        // Projection rows carry the 2nd-pass Score + q-values + the
-                        // carried-through RunProteinQvalue in the projection's sorted
-                        // per-file order -- byte-identical to the resident path's
-                        // post-sort survivor order (both scan-monotonic). Fall back to the
-                        // resident survivor buffer when no projection was built.
-                        if (projRowsByFile.TryGetValue(fileName, out var projRows))
+                        string fileName = kvp.Key;
+                        if (!inputByFileName.TryGetValue(fileName, out string inputFile3))
+                            continue;
+                        string pass2Path = FdrScoresSidecar.Pass2Path(inputFile3);
+                        if (File.Exists(pass2Path))
                         {
-                            FdrScoresSidecar.Write(
-                                pass2Path, projRows, FdrScoresSidecar.Pass.SecondPass);
+                            pass2Tally.AlreadyOnDisk++;
+                            continue;
                         }
-                        else
+                        try
                         {
                             FdrScoresSidecar.Write(
                                 pass2Path, kvp.Value, FdrScoresSidecar.Pass.SecondPass);
+                            pass2Tally.Written++;
                         }
-                        pass2Written++;
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogWarning(string.Format(
-                            @"Failed to write 2nd-pass FDR sidecar for {0}: {1}",
-                            fileName, ex.Message));
-                        pass2Failures++;
-                        continue;
-                    }
-                    // Inline per-file validity sidecar: same content
-                    // the end-of-Run WriteTaskSidecars would produce,
-                    // written immediately so an early Environment.Exit
-                    // does not strand the binary without its metadata.
-                    try
-                    {
-                        TaskValiditySidecar.Write(pass2Path, taskName, OspreyVersion.Current,
-                            taskValidityKey,
-                            new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
-                                ParquetScoreCache.GetScoresPath(inputFile3)) });
-                    }
-                    catch (Exception ex)
-                    {
-                        ctx.LogWarning(string.Format(
-                            @"Failed to write {0} sidecar for {1}: {2}",
-                            taskName, pass2Path, ex.Message));
+                        catch (Exception ex)
+                        {
+                            ctx.LogWarning(string.Format(
+                                @"Failed to write 2nd-pass FDR sidecar for {0}: {1}",
+                                fileName, ex.Message));
+                            pass2Tally.Failures++;
+                            continue;
+                        }
+                        // Inline per-file validity sidecar: same content
+                        // the end-of-Run WriteTaskSidecars would produce,
+                        // written immediately so an early Environment.Exit
+                        // does not strand the binary without its metadata.
+                        try
+                        {
+                            TaskValiditySidecar.Write(pass2Path, taskName, OspreyVersion.Current,
+                                taskValidityKey,
+                                new[] { ParquetScoreCache.EffectiveScoresPathFromScoresPath(
+                                    ParquetScoreCache.GetScoresPath(inputFile3)) });
+                        }
+                        catch (Exception ex)
+                        {
+                            ctx.LogWarning(string.Format(
+                                @"Failed to write {0} sidecar for {1}: {2}",
+                                taskName, pass2Path, ex.Message));
+                        }
                     }
                 }
-                if (pass2Failures == 0 && pass2Written > 0)
+                if (pass2Tally.Failures == 0 && pass2Tally.Written > 0)
                 {
                     ctx.LogVerbose(string.Format(
                         @"Wrote 2nd-pass FDR scores for {0} file(s){1}",
-                        pass2Written,
-                        pass2AlreadyOnDisk > 0
-                            ? string.Format(@" ({0} already on disk; skipped)", pass2AlreadyOnDisk)
+                        pass2Tally.Written,
+                        pass2Tally.AlreadyOnDisk > 0
+                            ? string.Format(@" ({0} already on disk; skipped)", pass2Tally.AlreadyOnDisk)
                             : string.Empty));
                 }
             }
@@ -461,23 +515,28 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
-        /// Projection 2nd-pass compute (flag on, issue #4374): build the thin
-        /// <see cref="FdrProjectionSet"/> from the survivor buffer with each row's
-        /// <see cref="FdrProjection.ParquetIndex"/> baked to that survivor's RECONCILED
-        /// parquet row (via <see cref="BuildReconciledIdentityToRow"/>), then run the
-        /// projection <c>FirstJoinTask.RunPercolatorFdr</c>, which ALWAYS streams the
-        /// reconciled features per file. Returns the scored projection so the caller
-        /// writes the 2nd-pass sidecars from it; the survivor buffer is intentionally
-        /// left unscored (the entry_id overlay carries the q-values back). The reconciled
-        /// features are never held resident and no full-population
-        /// PercolatorEntry/PercolatorResult stack is built -- the memory win over the
-        /// resident path.
+        /// Projection 2nd-pass compute (flag on, issue #4374 + #4355 struct-shrink S0):
+        /// build the thin <see cref="FdrProjectionSet"/> from the survivor buffer with
+        /// each row's <see cref="FdrProjection.ParquetIndex"/> baked to that survivor's
+        /// RECONCILED parquet row (via <see cref="BuildReconciledIdentityToRow"/>), then
+        /// run the projection <c>FirstJoinTask.RunPercolatorFdr</c> through an
+        /// <see cref="FdrStreamingSink"/>, which ALWAYS streams the reconciled features
+        /// per file and streams the q-value outputs straight to the per-file
+        /// <c>.2nd-pass.fdr_scores.bin</c> via <paramref name="flushFile"/> (the lean
+        /// projection never stores them -> 32 B). <paramref name="resolveProteinQ"/>
+        /// supplies each row's <c>RunProteinQvalue</c> (looked up from the resident
+        /// survivor by entry_id, no longer carried on the struct). Returns the scored
+        /// projection as the flag that the sink wrote the sidecars; the survivor buffer
+        /// is intentionally left unscored (the entry_id overlay carries the q-values
+        /// back). No full-population PercolatorEntry/PercolatorResult stack is built.
         /// </summary>
         private static FdrProjectionSet ComputePass2Projection(
             PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
-            OspreyConfig config)
+            OspreyConfig config,
+            Func<string, IReadOnlyDictionary<uint, double>> resolveProteinQ,
+            Action<string, IReadOnlyList<FdrScoreRecord>> flushFile)
         {
             // Canonicalize the survivor buffer order EXACTLY as the resident path does.
             // The FdrEntry RunPercolatorFdr overload (the flag-off oracle) sorts
@@ -587,9 +646,14 @@ namespace pwiz.Osprey.Tasks
             };
 
             // The caller gates on FdrMethod.Percolator, so the projection path is only
-            // ever Percolator; the projection engine always streams via load2.
+            // ever Percolator; the projection engine always streams via load2. The
+            // StreamingSink assembles + writes each file's .2nd-pass.fdr_scores.bin from
+            // the streamed q-values + the survivor's RunProteinQvalue during the score
+            // pass, so the q-values are never stored on the projection (issue #4355 / C1).
+            var sink = new FdrStreamingSink(
+                projections, config, "Second-pass", resolveProteinQ, flushFile);
             FirstJoinTask.RunPercolatorFdr(
-                projections, config, ctx, "Second-pass", load2);
+                projections, config, ctx, "Second-pass", load2, sink);
             return projections;
         }
 
@@ -678,6 +742,19 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             return nMapped;
+        }
+
+        /// <summary>
+        /// Mutable holder for the per-file 2nd-pass sidecar write counts. Passing this
+        /// object (rather than captured <c>int</c> locals) into the StreamingSink flush
+        /// closure keeps the counts shared with the resident write block without the
+        /// closure capturing variables the outer scope also mutates.
+        /// </summary>
+        private sealed class Pass2WriteTallies
+        {
+            public int Written;
+            public int AlreadyOnDisk;
+            public int Failures;
         }
     }
 }

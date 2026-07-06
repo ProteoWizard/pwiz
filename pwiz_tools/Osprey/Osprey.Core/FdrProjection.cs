@@ -27,17 +27,22 @@ using System.Collections.Generic;
 namespace pwiz.Osprey.Core
 {
     /// <summary>
-    /// Thin (80-byte) projection of an <see cref="FdrEntry"/> carrying only the
-    /// scalar slice the first-pass FDR peak touches: identity + the drive fields
-    /// the Percolator SVM competition reads, plus the seven FDR outputs it writes
-    /// (issue #4355 step (b) increment ii, Option A). Replaces the full
-    /// <see cref="FdrEntry"/> stub buffer that was held resident across first-pass
-    /// Percolator + protein FDR + the 1st-pass sidecar write + compaction; full
-    /// <see cref="FdrEntry"/> survivors are reloaded from parquet + the sidecar
-    /// after compaction (see <c>FirstJoinTask</c>). Held in a <c>List</c> so the
-    /// backing store is a contiguous struct array (no per-row object header, no
-    /// per-row <c>ModifiedSequence</c> string -- the string is interned once into
-    /// the <see cref="FdrProjectionSet.PeptideById"/> table and referenced here by
+    /// Thin (32-byte) projection of an <see cref="FdrEntry"/> carrying only the
+    /// scalar slice the FDR peak's Percolator SVM competition reads: identity + the
+    /// drive fields + the single <see cref="Score"/> the SVM writes (issue #4355 step
+    /// (b), FdrProjection struct-shrink S0 / increment C1). The six per-row q-value
+    /// OUTPUTS the score pass produces no longer live on the struct: the write-back
+    /// hands each row's values to a per-pass <see cref="IFdrOutputSink"/> as an
+    /// <see cref="FdrQValues"/> value (the 2nd pass streams them straight to the
+    /// sidecar; the 1st pass parks them in a parallel <see cref="FdrProjectionOutputs"/>
+    /// array). Dropping the 48 B of q-values takes the resident 2nd-pass peak buffer
+    /// from 80 -> 32 B. Replaces the full <see cref="FdrEntry"/> stub buffer that was
+    /// held resident across first-pass Percolator + protein FDR + the 1st-pass sidecar
+    /// write + compaction; full <see cref="FdrEntry"/> survivors are reloaded from
+    /// parquet + the sidecar after compaction (see <c>FirstJoinTask</c>). Held in a
+    /// <c>List</c> so the backing store is a contiguous struct array (no per-row object
+    /// header, no per-row <c>ModifiedSequence</c> string -- the string is interned once
+    /// into the <see cref="FdrProjectionSet.PeptideById"/> table and referenced here by
     /// <see cref="PeptideId"/>).
     ///
     /// Field-lifecycle rationale (design §1/§2a): every RT/bounds/heavy field is
@@ -45,10 +50,9 @@ namespace pwiz.Osprey.Core
     /// survivor set, so the peak buffer needs only this scalar projection.
     /// <see cref="CoelutionSum"/> is an f64 because best-per-precursor ranks
     /// training candidates on it BEFORE any Score exists (risk #2); it must not be
-    /// narrowed. A <c>readonly struct</c>: the FDR outputs are populated by
-    /// whole-element replacement (<see cref="WithPercolatorResults"/> /
-    /// <see cref="WithRunProteinQvalue"/>) on the backing array, never in-place
-    /// mutation.
+    /// narrowed. A <c>readonly struct</c>: <see cref="Score"/> is populated by
+    /// whole-element replacement (<see cref="WithScore"/>) on the backing array, never
+    /// in-place mutation.
     /// </summary>
     public readonly struct FdrProjection
     {
@@ -88,7 +92,7 @@ namespace pwiz.Osprey.Core
         /// <summary>Target/decoy flag.</summary>
         public readonly bool IsDecoy;
 
-        // --- Drive value + FDR outputs (64 bytes: 8 x f64) ---
+        // --- Drive value + SVM output (16 bytes: 2 x f64) ---
 
         /// <summary>Coelution sum (parquet <c>fragment_coelution_sum</c> = Features[0]); f64.</summary>
         public readonly double CoelutionSum;
@@ -96,23 +100,17 @@ namespace pwiz.Osprey.Core
         /// <summary>SVM discriminant score (Percolator output).</summary>
         public readonly double Score;
 
-        public readonly double RunPrecursorQvalue;
-        public readonly double RunPeptideQvalue;
-        public readonly double RunProteinQvalue;
-        public readonly double ExperimentPrecursorQvalue;
-        public readonly double ExperimentPeptideQvalue;
-        public readonly double Pep;
-
         /// <summary>
-        /// Full-field constructor. Mirrors the <see cref="FdrEntry"/> default of
-        /// 1.0 for every q-value / PEP when the caller passes those defaults for a
-        /// freshly-loaded (not-yet-scored) row.
+        /// Lean constructor (issue #4355 struct-shrink S0): identity/drive +
+        /// <see cref="CoelutionSum"/> + <see cref="Score"/>. The q-value outputs are
+        /// no longer stored on the struct -- they flow through an
+        /// <see cref="IFdrOutputSink"/> during the score pass (see the type remarks).
+        /// A freshly-loaded (not-yet-scored) row carries the <see cref="FdrEntry"/>
+        /// default <c>Score</c> of 0.
         /// </summary>
         public FdrProjection(
             uint entryId, uint parquetIndex, int peptideId, ushort fileIdx,
-            byte charge, bool isDecoy, double coelutionSum, double score,
-            double runPrecursorQvalue, double runPeptideQvalue, double runProteinQvalue,
-            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep)
+            byte charge, bool isDecoy, double coelutionSum, double score)
         {
             EntryId = entryId;
             ParquetIndex = parquetIndex;
@@ -122,57 +120,19 @@ namespace pwiz.Osprey.Core
             IsDecoy = isDecoy;
             CoelutionSum = coelutionSum;
             Score = score;
-            RunPrecursorQvalue = runPrecursorQvalue;
-            RunPeptideQvalue = runPeptideQvalue;
-            RunProteinQvalue = runProteinQvalue;
-            ExperimentPrecursorQvalue = experimentPrecursorQvalue;
-            ExperimentPeptideQvalue = experimentPeptideQvalue;
-            Pep = pep;
         }
 
         /// <summary>
-        /// Return a copy with the six Percolator SVM outputs overlaid (Score + the
-        /// four run/experiment precursor+peptide q-values + PEP), leaving
-        /// <see cref="RunProteinQvalue"/> for the later first-pass protein FDR.
-        /// Mirrors the fields <c>PercolatorEngine.ApplyPercolatorResults</c> writes
-        /// onto an <see cref="FdrEntry"/>.
+        /// Return a copy with <see cref="Score"/> replaced (the SVM discriminant the
+        /// write-back assigns). Whole-element replacement on the readonly struct's
+        /// backing array, the same discipline the retired six-arg
+        /// <c>WithPercolatorResults</c> used -- the q-value outputs it also overlaid
+        /// now go to the <see cref="IFdrOutputSink"/> instead.
         /// </summary>
-        public FdrProjection WithPercolatorResults(
-            double score, double runPrecursorQvalue, double runPeptideQvalue,
-            double experimentPrecursorQvalue, double experimentPeptideQvalue, double pep)
+        public FdrProjection WithScore(double score)
         {
             return new FdrProjection(
-                EntryId, ParquetIndex, PeptideId, FileIdx, Charge, IsDecoy, CoelutionSum,
-                score, runPrecursorQvalue, runPeptideQvalue, RunProteinQvalue,
-                experimentPrecursorQvalue, experimentPeptideQvalue, pep);
-        }
-
-        /// <summary>Return a copy with <see cref="RunProteinQvalue"/> set (first-pass protein FDR output).</summary>
-        public FdrProjection WithRunProteinQvalue(double runProteinQvalue)
-        {
-            return new FdrProjection(
-                EntryId, ParquetIndex, PeptideId, FileIdx, Charge, IsDecoy, CoelutionSum,
-                Score, RunPrecursorQvalue, RunPeptideQvalue, runProteinQvalue,
-                ExperimentPrecursorQvalue, ExperimentPeptideQvalue, Pep);
-        }
-
-        /// <summary>
-        /// Effective run-level q-value for the FDR control level, matching
-        /// <see cref="FdrEntry.EffectiveRunQvalue"/> exactly.
-        /// </summary>
-        public double EffectiveRunQvalue(FdrLevel level)
-        {
-            switch (level)
-            {
-                case FdrLevel.Precursor:
-                    return RunPrecursorQvalue;
-                case FdrLevel.Peptide:
-                    return RunPeptideQvalue;
-                case FdrLevel.Both:
-                    return Math.Max(RunPrecursorQvalue, RunPeptideQvalue);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(level));
-            }
+                EntryId, ParquetIndex, PeptideId, FileIdx, Charge, IsDecoy, CoelutionSum, score);
         }
     }
 
@@ -227,10 +187,11 @@ namespace pwiz.Osprey.Core
         /// training-subset selection sorts peptide group keys Ordinal, so an id
         /// ordering that reproduces the ordinal string ordering keeps the subsample
         /// (hence the trained SVM, hence every downstream q-value) byte-identical.
-        /// The <see cref="FdrEntry"/> FDR-output fields are copied through so a
-        /// round-trip of an already-scored buffer preserves them; on the
-        /// straight-through path they are the not-yet-scored defaults (Score 0,
-        /// q-values / PEP 1.0) that first-pass Percolator then fills.
+        /// The lean struct carries <see cref="FdrEntry.Score"/> through (0 on the
+        /// straight-through path; overwritten by the SVM write-back's
+        /// <see cref="FdrProjection.WithScore"/>); the q-value OUTPUTS are no longer
+        /// copied onto the struct (issue #4355 struct-shrink S0) -- they flow through
+        /// the per-pass <see cref="IFdrOutputSink"/> instead.
         ///
         /// <paramref name="parquetRowResolver"/> selects how each row's
         /// <see cref="FdrProjection.ParquetIndex"/> is resolved -- the ONLY axis on
@@ -312,9 +273,7 @@ namespace pwiz.Osprey.Core
                         parquetIndex = uint.MaxValue;
                     rows.Add(new FdrProjection(
                         e.EntryId, parquetIndex, peptideId, fileIdx, e.Charge, e.IsDecoy,
-                        e.CoelutionSum, e.Score, e.RunPrecursorQvalue, e.RunPeptideQvalue,
-                        e.RunProteinQvalue, e.ExperimentPrecursorQvalue,
-                        e.ExperimentPeptideQvalue, e.Pep));
+                        e.CoelutionSum, e.Score));
                 }
                 perFile.Add(new KeyValuePair<string, List<FdrProjection>>(kvp.Key, rows));
                 fileIdx++;

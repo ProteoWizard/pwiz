@@ -1,0 +1,236 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. uw.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.8) <noreply .at. anthropic.com>
+ *
+ * Based on osprey (https://github.com/MacCossLab/osprey)
+ *   by Michael J. MacCoss, MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+using System.Collections.Generic;
+using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
+
+namespace pwiz.Osprey.Tasks
+{
+    /// <summary>
+    /// Shared base for the two projection output sinks (issue #4355 struct-shrink S0):
+    /// owns the tail <c>[COUNT]</c> tally the retired inline block used to compute off
+    /// the struct's q-value fields. During the score pass it accumulates, per row (in
+    /// nested file/row order), the per-file passing target/decoy counts and the
+    /// best-q-per-precursor set from the LIVE <see cref="FdrQValues"/> the write-back
+    /// hands it (correction §0a: the q-values are no longer on the struct, so the tally
+    /// must read them here). <see cref="Finish"/> emits the identical [COUNT] lines and
+    /// gives the concrete sink a hook (<see cref="OnFinish"/>) to flush any deferred
+    /// per-file output. The concrete sink handles the per-row OUTPUT via
+    /// <see cref="AcceptOutput"/> -- parking it in a parallel array (1st pass) or
+    /// streaming it to the sidecar (2nd pass).
+    /// </summary>
+    internal abstract class FdrProjectionSinkBase : IFdrOutputSink
+    {
+        protected readonly FdrProjectionSet Projections;
+        private readonly FdrLevel _fdrLevel;
+        private readonly double _runFdr;
+        private readonly string _passLabel;
+        private readonly int[] _fileTargets;
+        private readonly int[] _fileDecoys;
+        private readonly Dictionary<string, double> _bestQByPrecursor;
+
+        protected FdrProjectionSinkBase(
+            FdrProjectionSet projections, OspreyConfig config, string passLabel)
+        {
+            Projections = projections;
+            _fdrLevel = config.FdrLevel;
+            _runFdr = config.RunFdr;
+            _passLabel = passLabel;
+            int nFiles = projections.PerFile.Count;
+            _fileTargets = new int[nFiles];
+            _fileDecoys = new int[nFiles];
+            _bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
+        }
+
+        public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
+            double score, in FdrQValues q)
+        {
+            // Tail [COUNT] tally, identical to the retired inline block: passing =
+            // EffectiveRunQvalue <= RunFdr, split target/decoy; best-q-per-precursor
+            // over passing targets keyed by modseq|charge (looked up from the lean row).
+            double eff = q.EffectiveRunQvalue(_fdrLevel);
+            if (eff <= _runFdr)
+            {
+                if (isDecoy)
+                    _fileDecoys[fileIdx]++;
+                else
+                    _fileTargets[fileIdx]++;
+            }
+            if (!isDecoy && eff <= _runFdr)
+            {
+                var proj = Projections.PerFile[fileIdx].Value[rowIdx];
+                string pkey = Projections.PeptideById[proj.PeptideId] + "|" + proj.Charge;
+                double existing;
+                if (!_bestQByPrecursor.TryGetValue(pkey, out existing) || eff < existing)
+                    _bestQByPrecursor[pkey] = eff;
+            }
+
+            AcceptOutput(fileIdx, rowIdx, entryId, isDecoy, score, in q);
+        }
+
+        public void Finish(Action<string> logInfo)
+        {
+            // Flush any deferred per-file output first (2nd-pass empty-file sidecars);
+            // the [COUNT] lines follow so they land at the same position the retired
+            // inline block emitted them (end of the score pass).
+            OnFinish();
+
+            int nTargetPassing = 0;
+            int nDecoyPassing = 0;
+            var perFile = Projections.PerFile;
+            for (int f = 0; f < perFile.Count; f++)
+            {
+                logInfo(string.Format(
+                    "[COUNT] {0} Percolator pass [{1}]: {2} targets, {3} decoys at {4:P0} FDR",
+                    _passLabel, perFile[f].Key, _fileTargets[f], _fileDecoys[f], _runFdr));
+                nTargetPassing += _fileTargets[f];
+                nDecoyPassing += _fileDecoys[f];
+            }
+
+            logInfo(string.Format(
+                "{0} Percolator results: {1} targets, {2} decoys pass {3:P1} FDR",
+                _passLabel, nTargetPassing, nDecoyPassing, _runFdr));
+            logInfo(string.Format(
+                "[COUNT] {0} total across files: {1}",
+                _passLabel, nTargetPassing));
+            logInfo(string.Format(
+                "[COUNT] {0} unique precursors (best q across files): {1}",
+                _passLabel, _bestQByPrecursor.Count));
+        }
+
+        /// <summary>Handle one row's q-value output (park it, or stream it to the sidecar).</summary>
+        protected abstract void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
+            bool isDecoy, double score, in FdrQValues q);
+
+        /// <summary>Flush any deferred per-file output before the [COUNT] tally is logged.</summary>
+        protected virtual void OnFinish()
+        {
+        }
+    }
+
+    /// <summary>
+    /// 1st-pass sink (issue #4355 struct-shrink S0, byte-neutral): parks each row's
+    /// five streamed q-values in a parallel <see cref="FdrProjectionOutputs"/> array
+    /// keyed by (fileIdx, rowIdx). Protein FDR, compaction, and the single-phase
+    /// 1st-pass sidecar write read from <see cref="Outputs"/> instead of the retired
+    /// struct fields, producing byte-identical output. (S1/S2 shrink this array later.)
+    /// </summary>
+    internal sealed class FdrStoringSink : FdrProjectionSinkBase
+    {
+        private readonly FdrProjectionOutputs _outputs;
+
+        public FdrStoringSink(FdrProjectionSet projections, OspreyConfig config, string passLabel)
+            : base(projections, config, passLabel)
+        {
+            _outputs = new FdrProjectionOutputs(projections);
+        }
+
+        public FdrProjectionOutputs Outputs => _outputs;
+
+        protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
+            bool isDecoy, double score, in FdrQValues q)
+        {
+            _outputs.SetStreamed(fileIdx, rowIdx, in q);
+        }
+    }
+
+    /// <summary>
+    /// 2nd-pass sink (issue #4355 struct-shrink S0, delivers C1): assembles each
+    /// <see cref="FdrScoreRecord"/> during the score pass from the streamed q-values +
+    /// the survivor's <c>RunProteinQvalue</c> looked up by entry_id (it is no longer
+    /// carried on the lean struct), buffers one file at a time in projection order, and
+    /// flushes the per-file <c>.2nd-pass.fdr_scores.bin</c> directly via the caller's
+    /// <c>flushFile</c> callback -- so the q-values are NEVER stored on the projection
+    /// (2nd-pass peak 80 -> 32 B). Empty survivor files are flushed with a 0-record
+    /// sidecar in <see cref="OnFinish"/>, matching the resident write block.
+    /// </summary>
+    internal sealed class FdrStreamingSink : FdrProjectionSinkBase
+    {
+        private readonly Func<string, IReadOnlyDictionary<uint, double>> _resolveProteinQ;
+        private readonly Action<string, IReadOnlyList<FdrScoreRecord>> _flushFile;
+        private readonly bool[] _flushed;
+        private readonly List<FdrScoreRecord> _buffer;
+        private int _curFileIdx;
+        private IReadOnlyDictionary<uint, double> _curProteinQ;
+
+        public FdrStreamingSink(
+            FdrProjectionSet projections, OspreyConfig config, string passLabel,
+            Func<string, IReadOnlyDictionary<uint, double>> resolveProteinQ,
+            Action<string, IReadOnlyList<FdrScoreRecord>> flushFile)
+            : base(projections, config, passLabel)
+        {
+            _resolveProteinQ = resolveProteinQ;
+            _flushFile = flushFile;
+            _flushed = new bool[projections.PerFile.Count];
+            _buffer = new List<FdrScoreRecord>();
+            _curFileIdx = -1;
+        }
+
+        protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
+            bool isDecoy, double score, in FdrQValues q)
+        {
+            // Resolve this file's entry_id -> RunProteinQvalue map once, at its first
+            // row (rows are contiguous per file in Accept order). This is the value
+            // BuildFromEntries used to carry onto the struct; the survivor buffer is
+            // not mutated between projection build and here, so the lookup reproduces it.
+            if (fileIdx != _curFileIdx)
+            {
+                _curFileIdx = fileIdx;
+                _curProteinQ = _resolveProteinQ(Projections.PerFile[fileIdx].Key);
+            }
+            double runProteinQvalue;
+            if (_curProteinQ == null || !_curProteinQ.TryGetValue(entryId, out runProteinQvalue))
+                runProteinQvalue = 1.0;
+
+            _buffer.Add(new FdrScoreRecord(
+                entryId, score,
+                q.RunPrecursorQvalue, q.RunPeptideQvalue,
+                q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
+                q.Pep, runProteinQvalue));
+
+            // Last row of this file: flush its sidecar and release the buffer.
+            if (rowIdx == Projections.PerFile[fileIdx].Value.Count - 1)
+            {
+                _flushFile(Projections.PerFile[fileIdx].Key, _buffer);
+                _flushed[fileIdx] = true;
+                _buffer.Clear();
+            }
+        }
+
+        protected override void OnFinish()
+        {
+            var perFile = Projections.PerFile;
+            var empty = Array.Empty<FdrScoreRecord>();
+            for (int f = 0; f < perFile.Count; f++)
+            {
+                if (!_flushed[f])
+                {
+                    _flushFile(perFile[f].Key, empty);
+                    _flushed[f] = true;
+                }
+            }
+        }
+    }
+}
