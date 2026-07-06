@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Osprey Model Diagnostics</title>
+<style>
+:root{
+  --bg:#f7f8fa; --panel:#ffffff; --ink:#1b1f24; --muted:#5b6570; --line:#e2e6ea;
+  --grid:#eef1f4; --accent:#4f46e5; --hair:#c9ced4;
+  --target:#2563eb; --decoy:#ef4444; --ptarget:#16a34a; --pdecoy:#f59e0b;
+  --good:#16a34a; --bad:#dc2626; --warn:#d97706;
+  --shadow:0 1px 2px rgba(16,24,40,.06),0 1px 3px rgba(16,24,40,.10);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1216; --panel:#171b21; --ink:#e6e9ee; --muted:#9aa4b0; --line:#252c34;
+    --grid:#1e242b; --accent:#8b8cf5; --hair:#3a424c;
+    --target:#60a5fa; --decoy:#f87171; --ptarget:#4ade80; --pdecoy:#fbbf24;
+    --good:#4ade80; --bad:#f87171; --warn:#fbbf24;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 60px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:20px;margin:0;font-weight:650;letter-spacing:-.01em}
+h1 .sub{color:var(--muted);font-weight:450;font-size:13px}
+.meta{color:var(--muted);font-size:12px;text-align:right;line-height:1.65}
+.meta b{color:var(--ink);font-weight:600}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 16px}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;
+  padding:5px 12px;font-size:12px;box-shadow:var(--shadow)}
+.chip b{font-weight:650}
+.chip.tgt b{color:var(--target)} .chip.dec b{color:var(--decoy)}
+.chip.pt b{color:var(--ptarget)} .chip.pd b{color:var(--pdecoy)}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px;flex-wrap:wrap}
+nav button{background:none;border:none;color:var(--muted);font:inherit;font-weight:550;
+  padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+nav button:hover{color:var(--ink)}
+nav button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.tab{display:none} .tab.on{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
+.card h2{font-size:15px;margin:0 0 3px;font-weight:620}
+.card .desc{color:var(--muted);font-size:12.5px;margin:0 0 14px;max-width:105ch}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:right;padding:6px 10px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;
+  cursor:pointer;user-select:none;white-space:nowrap}
+th.l,td.l{text-align:left}
+td.num{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+tr.neg td{color:var(--bad)}
+tr.clk{cursor:pointer} tr.clk:hover td{background:var(--grid)}
+tr.sel td{background:color-mix(in srgb,var(--accent) 15%,transparent)}
+#scoreBack{cursor:pointer;color:var(--accent);text-decoration:none} #scoreBack:hover{text-decoration:underline}
+.cardhdr{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.iconbtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);font:inherit;font-size:11.5px;
+  font-weight:600;padding:4px 10px;border-radius:7px;cursor:pointer;white-space:nowrap;flex:none}
+.iconbtn:hover{color:var(--accent);border-color:var(--accent)}
+.collapsewrap{position:relative}
+/* Collapsed = a compact scrollable panel (scroll the rows in place); the toggle
+   expands to the full table (e.g. for print / an at-a-glance overview). */
+.collapsewrap.collapsed{max-height:330px;overflow-y:auto}
+#modelTable table{max-width:700px}
+/* Keep the header row fixed while the body scrolls in the collapsed panel. */
+#modelTable thead th{position:sticky;top:0;background:var(--panel);z-index:1}
+#fileTable table{max-width:640px}
+.print-only{display:none}
+.featgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+@media(max-width:820px){.featgrid{grid-template-columns:1fr}}
+.featcell h3{font-size:12.5px;margin:6px 0 0;font-weight:600}
+.featcell .fm{color:var(--muted);font-size:11px;margin:0 0 2px}
+.bar{position:relative}
+.bar>i{position:absolute;left:0;top:50%;transform:translateY(-50%);height:14px;border-radius:3px;
+  background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 55%,transparent));opacity:.20}
+.bar span{position:relative}
+.chartbox{overflow-x:auto}
+svg{display:block;max-width:100%;height:auto;font:11px ui-monospace,Menlo,Consolas,monospace}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:2px 0 10px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.legend span.off{opacity:.35;text-decoration:line-through}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+.legend i.ln{height:3px;border-radius:2px;width:16px}
+.axis line,.axis path{stroke:var(--hair);stroke-width:1;shape-rendering:crispEdges}
+.grid line{stroke:var(--grid);stroke-width:1;shape-rendering:crispEdges}
+.axis text{fill:var(--muted)} .axtitle{fill:var(--muted);font-size:11.5px}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;
+  border-radius:7px;font-size:11.5px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap;
+  font-family:ui-monospace,Menlo,Consolas,monospace;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.vbtns{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.vbtns button{background:var(--panel);border:1px solid var(--line);color:var(--muted);font:inherit;
+  font-size:12.5px;font-weight:550;padding:6px 13px;border-radius:8px;cursor:pointer;box-shadow:var(--shadow)}
+.vbtns button:hover{color:var(--ink)}
+.vbtns button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:4px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;box-shadow:var(--shadow)}
+.kpi .v{font-size:22px;font-weight:660;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .k{color:var(--muted);font-size:11.5px;margin-top:2px}
+.kpi .v.good{color:var(--good)} .kpi .v.bad{color:var(--bad)} .kpi .v.warn{color:var(--warn)}
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+.pill{display:inline-block;font-size:11px;padding:1px 7px;border-radius:999px;background:var(--grid);color:var(--muted);margin-left:6px}
+footer{color:var(--muted);font-size:11.5px;text-align:center;margin-top:26px}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);padding:1px 5px;border-radius:5px}
+.printbtn{background:var(--panel);border:1px solid var(--line);color:var(--muted);font:inherit;font-size:12px;
+  font-weight:550;padding:6px 12px;border-radius:8px;cursor:pointer;box-shadow:var(--shadow);white-space:nowrap}
+.printbtn:hover{color:var(--accent);border-color:var(--accent)}
+/* Print / Save-as-PDF: stack every tab, one section per page, ink-friendly light
+   palette regardless of the on-screen theme. The interactive single-view charts
+   (one FDR view, one feature distribution) are swapped for print-only blocks that
+   render ALL 4 FDR views and ALL per-feature distributions, so the PDF is complete. */
+@media print{
+  :root{
+    --bg:#fff;--panel:#fff;--ink:#111820;--muted:#41505f;--line:#c9ced4;--grid:#eceff2;
+    --hair:#9aa4b0;--accent:#4f46e5;--shadow:none;
+    --target:#2563eb;--decoy:#ef4444;--ptarget:#16a34a;--pdecoy:#d97706;
+    --good:#15803d;--bad:#b91c1c;--warn:#b45309;
+  }
+  @page{margin:11mm}
+  html,body{background:#fff}
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .wrap{max-width:none;padding:0 4px}
+  nav,.printbtn,.tip,.vbtns,#scoreBack,.iconbtn{display:none!important}
+  header{page-break-after:avoid}
+  .tab{display:block!important;page-break-before:always;break-before:page}
+  .tab:first-of-type{page-break-before:avoid;break-before:avoid}
+  .card{break-inside:avoid;box-shadow:none}
+  .chartbox{overflow:visible!important}
+  svg{max-width:100%}
+  .print-only{display:block!important}
+  /* Expand the collapsed feature table and drop the fade so the PDF shows every row. */
+  .collapsewrap.collapsed{max-height:none!important;overflow:visible!important}
+  .collapsewrap.collapsed::after{display:none!important}
+  /* Hide the single interactive FDR view (the print-only block shows all four). */
+  #fdpChart,#fdpKpis,#fdpLegend,#fdpNote{display:none!important}
+  .featcell{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Osprey Model Diagnostics <span class="sub" id="hSub"></span></h1>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="meta" id="hMeta"></div>
+    <button id="printBtn" class="printbtn" title="Print or save the full report as a PDF (all tabs)">Save as PDF</button>
+  </div>
+</header>
+<div class="chips" id="chips"></div>
+<nav id="nav"></nav>
+
+<section class="tab" data-tab="model">
+  <div class="card">
+    <div class="cardhdr">
+      <h2>Trained scoring model &mdash; feature contributions</h2>
+      <button class="iconbtn" id="modelToggle" title="Toggle between a best-fit height and the full table">Show all &#9662;</button>
+    </div>
+    <p class="desc">The averaged cross-validated linear (Percolator/SVM) model, decomposed Skyline-style
+      into each feature's percent contribution to the composite target&ndash;decoy separation.
+      Rows in <b style="color:var(--bad)">red</b> have a trained coefficient whose sign is opposite the
+      feature's expected direction (behaving against expectation).</p>
+    <div class="vbtns" id="modelPassSel" style="margin-bottom:12px"></div>
+    <div id="modelWrap" class="collapsewrap collapsed"><div id="modelTable"></div></div>
+  </div>
+  <div class="card">
+    <h2 id="scoreHdr">Composite score distribution <a id="scoreBack" href="#" style="display:none;font-size:12px;font-weight:500">&larr; back to composite</a></h2>
+    <p class="desc" id="scoreDesc">Best-per-precursor composite score for each class, with a normal curve fit to the
+      decoy scores &mdash; the Osprey analog of Skyline's mProphet "Model Scores" view, extended with entrapment.
+      <span id="scoreTip"><b>Click any feature row above</b> to see that individual score's target/decoy distribution (the mProphet "Feature Scores" view).</span></p>
+    <div class="legend" id="scoreLegend"></div>
+    <div class="chartbox" id="scoreChart"></div>
+  </div>
+  <div class="card print-only" id="featPrintCard">
+    <h2>Per-feature score distributions</h2>
+    <p class="desc">Each feature's standardized target vs decoy distribution (the interactive report shows one at
+      a time on click; printed here in full).</p>
+    <div id="featPrintAll" class="featgrid"></div>
+  </div>
+</section>
+
+<section class="tab" data-tab="density">
+  <div class="card">
+    <h2>Score density by class (area-normalized)</h2>
+    <p class="desc">The same best-per-precursor scores as probability densities, so the shapes compare
+      regardless of class size. If entrapment (p_target) tracks the decoys, the generated/library decoys are
+      faithful nulls; if it rides higher toward the targets, the decoys understate the true error.</p>
+    <div class="legend" id="densLegend"></div>
+    <div class="chartbox" id="densChart"></div>
+  </div>
+</section>
+
+<section class="tab" data-tab="fdr">
+  <div class="card" id="fdpCard">
+    <h2>FDR calibration &mdash; Osprey q vs true FDP</h2>
+    <p class="desc">Entrapment-measured true false-discovery proportion versus Osprey's own q-value, computed
+      in-process from the pairing manifest &mdash; no FDRBench install. Pick a q-axis: the
+      <b>experiment-wide</b> views reproduce the FDRBench <code>--fdrbench</code> plots exactly (FDRBench just
+      counts entrapment on the q Osprey emits); the <b>per-run</b> views are a picture FDRBench can't show.
+      Each view has a [0,&nbsp;2%] zoom (FDP axis auto-scaled) and a full-extent panel.</p>
+    <div class="vbtns" id="fdpViewSel"></div>
+    <div class="kpis" id="fdpKpis"></div>
+    <div class="legend" id="fdpLegend"></div>
+    <div class="chartbox" id="fdpChart"></div>
+    <p class="note" id="fdpNote"></p>
+    <div class="print-only" id="fdpPrintAll"></div>
+  </div>
+  <div class="card">
+    <h2>Identification yield</h2>
+    <p class="desc">Accepted real-target precursors as the reported q-value threshold sweeps.</p>
+    <div class="chartbox" id="yieldChart"></div>
+  </div>
+</section>
+
+<section class="tab" data-tab="competition">
+  <div class="card">
+    <h2>Paired decoy-win fraction</h2>
+    <p class="desc">Within each target&ndash;decoy pair (shared base_id), how often the decoy outscores its target,
+      binned by the winner's score. A fair null sits at the 50% line. Real pairs dipping below 50% at high score is
+      native signal winning as it should; entrapment pairs holding the coin confirms the decoys are honest nulls.
+      Marginal densities cannot see this within-pair ordering &mdash; only the competition can.</p>
+    <div class="legend" id="wfLegend"></div>
+    <div class="chartbox" id="wfChart"></div>
+    <p class="note" id="wfNote"></p>
+  </div>
+</section>
+
+<section class="tab" data-tab="summary">
+  <div class="card">
+    <h2>Run summary</h2>
+    <div class="kpis" id="sumKpis"></div>
+  </div>
+  <div class="card">
+    <h2>Per-file passing precursors</h2>
+    <p class="desc">Precursors passing the run-level FDR, per input file.</p>
+    <div id="fileTable"></div>
+  </div>
+</section>
+
+<footer id="foot"></footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script id="osprey-data" type="application/json">/*__OSPREY_DATA__*/</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById("osprey-data").textContent);
+const NS="http://www.w3.org/2000/svg";
+const COL={target:cssv("--target"),decoy:cssv("--decoy"),ptarget:cssv("--ptarget"),pdecoy:cssv("--pdecoy"),
+  ink:cssv("--ink"),muted:cssv("--muted"),accent:cssv("--accent")};
+function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
+function fmt(x,d){return (x==null||isNaN(x))?"–":Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
+function pct(x,d){return (x==null||isNaN(x))?"–":fmt(100*x,d==null?1:d)+"%";}
+function svg(w,h){const s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 "+w+" "+h);s.setAttribute("width",w);s.setAttribute("height",h);return s;}
+function E(p,t,a){const e=document.createElementNS(NS,t);if(a)for(const k in a)e.setAttribute(k,a[k]);p.appendChild(e);return e;}
+function H(p,t,a,txt){const e=document.createElement(t);if(a)for(const k in a){if(k==="class")e.className=a[k];else if(k==="html")e.innerHTML=a[k];else e.setAttribute(k,a[k]);}if(txt!=null)e.textContent=txt;p.appendChild(e);return e;}
+const tip=document.getElementById("tip");
+function showTip(ev,html){tip.innerHTML=html;tip.style.opacity=1;moveTip(ev);}
+function moveTip(ev){tip.style.left=(ev.clientX+14)+"px";tip.style.top=(ev.clientY+14)+"px";}
+function hideTip(){tip.style.opacity=0;}
+
+// ---------- header ----------
+document.getElementById("hSub").textContent = D.outputName? "· "+D.outputName : "";
+(function(){  // Build the meta line from DOM nodes (textContent) rather than innerHTML,
+  // so version / date strings are never reinterpreted as HTML (CodeQL-safe).
+  const m=document.getElementById("hMeta"),t=s=>document.createTextNode(s);
+  const l1=H(m,"div",{});
+  H(l1,"b",{},String(D.fileCount||0)); l1.appendChild(t(" file"+(D.fileCount===1?"":"s")+" · "));
+  H(l1,"b",{},String(D.featureCount||0)); l1.appendChild(t(" features · run FDR ")); H(l1,"b",{},pct(D.runFdr,0));
+  const l2=H(m,"div",{});
+  l2.appendChild(t("Osprey ")); H(l2,"b",{},D.ospreyVersion||""); l2.appendChild(t(" · "+(D.generatedUtc||"")));
+})();
+function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+(function(){const c=document.getElementById("chips");
+  const rows=[["tgt","targets",D.nTarget],["dec","decoys",D.nDecoy]];
+  if(D.hasEntrapment){rows.push(["pt","entrapment",D.npTarget]);rows.push(["pd","p-decoys",D.npDecoy]);}
+  rows.forEach(r=>{H(c,"span",{class:"chip "+r[0],html:"<b>"+fmt(r[2],0)+"</b> "+r[1]});});
+})();
+
+// ---------- tabs ----------
+const TABS=[["model","Model"],["density","Density"],["fdr","FDR calibration"],["competition","Competition"],["summary","Summary"]];
+const nav=document.getElementById("nav");
+TABS.forEach((t,i)=>{const tab=document.querySelector('.tab[data-tab="'+t[0]+'"]');
+  if(t[0]==="fdr"&&!D.hasEntrapment)return; // no entrapment => no FDP tab
+  const b=H(nav,"button",{},t[1]);
+  b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");tab.classList.add("on");};
+  if(i===0)b.classList.add("on"),tab.classList.add("on");
+});
+
+// ---------- axis helpers ----------
+function axes(s,box,xd,yd,opt){
+  opt=opt||{};
+  const x=v=>box.l+(v-xd[0])/(xd[1]-xd[0])*(box.w);
+  const y=v=>box.t+box.h-(v-yd[0])/(yd[1]-yd[0])*(box.h);
+  const g=E(s,"g",{class:"grid"}), a=E(s,"g",{class:"axis"});
+  const xt=opt.xticks||ticks(xd[0],xd[1],6), yt=opt.yticks||ticks(yd[0],yd[1],5);
+  yt.forEach(v=>{E(g,"line",{x1:box.l,x2:box.l+box.w,y1:y(v),y2:y(v)});
+    E(a,"text",{x:box.l-7,y:y(v)+3,"text-anchor":"end"}).textContent=opt.yfmt?opt.yfmt(v):trim(v);});
+  xt.forEach(v=>{E(a,"text",{x:x(v),y:box.t+box.h+15,"text-anchor":"middle"}).textContent=opt.xfmt?opt.xfmt(v):trim(v);});
+  E(a,"line",{x1:box.l,x2:box.l+box.w,y1:box.t+box.h,y2:box.t+box.h});
+  E(a,"line",{x1:box.l,x2:box.l,y1:box.t,y2:box.t+box.h});
+  if(opt.xlab)E(s,"text",{class:"axtitle",x:box.l+box.w/2,y:box.t+box.h+32,"text-anchor":"middle"}).textContent=opt.xlab;
+  if(opt.ylab)E(s,"text",{class:"axtitle",x:14,y:box.t+box.h/2,"text-anchor":"middle","transform":"rotate(-90 14 "+(box.t+box.h/2)+")"}).textContent=opt.ylab;
+  return {x,y};
+}
+function ticks(a,b,n){const step=nice((b-a)/n);const out=[];let v=Math.ceil(a/step)*step;for(;v<=b+1e-9;v+=step)out.push(+v.toFixed(10));return out;}
+function nice(x){const p=Math.pow(10,Math.floor(Math.log10(Math.abs(x)||1)));const f=x/p;return (f<1.5?1:f<3?2:f<7?5:10)*p;}
+function trim(v){return Math.abs(v)>=1000?v.toLocaleString():(+v.toFixed(3)).toString();}
+function legend(node,items){node.innerHTML="";items.forEach(it=>{const s=H(node,"span",{});
+  H(s,"i",{class:it.line?"ln":"",style:"background:"+it.color});H(s,"span",{},it.name);
+  if(it.toggle){s.onclick=()=>{s.classList.toggle("off");it.toggle(s.classList.contains("off"));};}});}
+
+// ---------- Model: feature table (pass 1, + pass 2 when --protein-fdr retrained) ----------
+const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
+const MODEL_PASSES=[{pass:1,label:"1st pass",features:D.model||[],scores:D.scores,
+  degenerate:D.modelDegenerate,desc:"pre-compaction first-pass training set"}];
+if(D.modelPass2)MODEL_PASSES.push({pass:2,label:"2nd pass",features:D.modelPass2.features||[],
+  scores:D.modelPass2.scores,degenerate:D.modelPass2.degenerate,
+  desc:"post-reconciliation retrain on the reported pool (--protein-fdr)"});
+let CURP=MODEL_PASSES[0];
+if(!HAS_FEATHIST){const tip=document.getElementById("scoreTip");if(tip)tip.style.display="none";}
+
+// Pass selector — only shown when a second Percolator model exists.
+(function(){const sel=document.getElementById("modelPassSel");
+  if(MODEL_PASSES.length<2){sel.style.display="none";return;}
+  MODEL_PASSES.forEach((mp,k)=>{const b=H(sel,"button",{class:k===0?"on":""},
+    mp.label+(mp.pass===2?"  (≠ pass 1)":""));
+    b.onclick=()=>{sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");renderModel(mp);};});
+})();
+
+// (Re)render the Model tab for one pass: feature table, print grid, and the
+// composite chart below. Called on load and on a pass switch.
+function renderModel(mp){
+  CURP=mp;
+  const rows=mp.features||[];const host=document.getElementById("modelTable");host.innerHTML="";
+  const maxP=Math.max(1,...rows.map(r=>Math.abs(r.percent)||0));
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+  [["Feature","l"],["Coefficient",""],["Contribution",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const tb=H(t,"tbody",{});
+  const clickable=r=>HAS_FEATHIST && r.targetHist;
+  rows.forEach(r=>{const tr=H(tb,"tr",{class:(r.unexpected?"neg ":"")+(clickable(r)?"clk":"")});
+    H(tr,"td",{class:"l"},r.label);
+    H(tr,"td",{class:"num"},fmt(r.coefficient,4));
+    const td=H(tr,"td",{class:"num bar"});
+    H(td,"i",{style:"width:"+(Math.abs(r.percent)/maxP*100).toFixed(1)+"%"});
+    H(td,"span",{},pct(r.percent/100,1));
+    if(clickable(r))tr.onclick=()=>selectFeature(r,tr);
+  });
+  if(mp.degenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
+  if(!rows.length)H(host,"p",{class:"note"},"Model table unavailable — the first-pass model was not retrained on this run (resumed / rehydrated).");
+
+  // Collapse/expand: best-fit height so the score plot below stays visible; toggle
+  // reveals the full table. Preserve the collapsed/expanded choice across passes.
+  const wrap=document.getElementById("modelWrap"), btn=document.getElementById("modelToggle");
+  function syncToggle(){btn.innerHTML=wrap.classList.contains("collapsed")?"Show all &#9662;":"Best fit &#9652;";}
+  if(wrap.classList.contains("collapsed") && wrap.scrollHeight<=wrap.clientHeight+4){
+    btn.style.display="none";wrap.classList.remove("collapsed");
+  } else { btn.style.display=""; }
+  btn.onclick=()=>{wrap.classList.toggle("collapsed");syncToggle();};
+  syncToggle();
+
+  // Print-only: render every feature's distribution for THIS pass so the PDF shows them all.
+  const fpc=document.getElementById("featPrintCard");
+  if(HAS_FEATHIST && rows.some(r=>r.targetHist)){
+    const grid=document.getElementById("featPrintAll");grid.innerHTML="";
+    if(MODEL_PASSES.length>1)H(grid,"div",{style:"grid-column:1/-1;font-weight:600;font-size:12.5px",html:mp.label+" model"});
+    rows.filter(r=>r.targetHist).forEach(r=>{
+      const cell=H(grid,"div",{class:"featcell"});
+      H(cell,"h3",{},r.label);
+      H(cell,"div",{class:"fm",html:"coefficient "+fmt(r.coefficient,4)+" &middot; contribution "+pct(r.percent/100,1)+
+        (r.unexpected?" &middot; <b style='color:var(--bad)'>unexpected direction</b>":"")});
+      drawFeatureSvg(H(cell,"div",{class:"chartbox"}),r,470,235);
+    });
+    if(fpc)fpc.style.display="";
+  } else if(fpc){ fpc.style.display="none"; }
+
+  showComposite();   // reset the bottom chart to this pass's composite
+}
+
+// ---------- Model: composite <-> per-feature distribution swap ----------
+// Clicking a feature row replaces the composite-score chart at the bottom of the
+// Model tab with that individual feature's target/decoy score distribution (the
+// Skyline mProphet "Feature Scores" view). "Back to composite" restores it.
+function selectFeature(r,tr){
+  document.querySelectorAll("#modelTable tr.sel").forEach(x=>x.classList.remove("sel"));
+  if(tr)tr.classList.add("sel");
+  document.getElementById("scoreHdr").childNodes[0].nodeValue="Feature score distribution: "+r.label+" ";
+  document.getElementById("scoreDesc").innerHTML=
+    "Standardized "+esc(r.label)+" value for target vs decoy precursors (the space the model scores in), "+
+    "the Osprey analog of Skyline's mProphet \"Feature Scores\" view. Coefficient "+fmt(r.coefficient,4)+
+    " · contribution "+pct(r.percent/100,1)+(r.unexpected?" · <b style='color:var(--bad)'>unexpected direction</b>":"")+".";
+  document.getElementById("scoreBack").style.display="";
+  featureHist("scoreChart","scoreLegend",r);
+}
+
+// Static (non-interactive) per-feature target/decoy distribution, for the print
+// grid that renders all features. Same shape as featureHist without legend/hover.
+function drawFeatureSvg(container,r,W,Hh){
+  const edges=D.featureHistEdges,nb=edges.length-1;
+  const series=[{color:COL.target,v:r.targetHist||[]},{color:COL.decoy,v:r.decoyHist||[]}];
+  const width=(i)=>edges[i+1]-edges[i];
+  const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;return s.v.map((c,i)=>c/tot/width(i));});
+  // Leave room below the axis for the x-title (axes() places it at box.t+box.h+32).
+  const box={l:44,t:10,w:W-58,h:Hh-58};
+  let ymax=0;dens.forEach(d=>d.forEach(v=>ymax=Math.max(ymax,v)));ymax=(ymax||1)*1.08;
+  const s=svg(W,Hh);container.appendChild(s);
+  const sc=axes(s,box,[edges[0],edges[nb]],[0,ymax],{xlab:"standardized score",yfmt:v=>(+v.toFixed(2))});
+  series.forEach((se,si)=>{const d=dens[si];
+    let up="M"+sc.x(edges[0]).toFixed(1)+" "+sc.y(0).toFixed(1)+" ";
+    for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+      up+="L"+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+    up+="L"+sc.x(edges[nb]).toFixed(1)+" "+sc.y(0).toFixed(1)+"Z";
+    E(s,"path",{d:up,fill:se.color,opacity:.16,stroke:"none"});
+    let ln="";for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+      ln+=(i?"L":"M")+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+    E(s,"path",{d:ln,fill:"none",stroke:se.color,"stroke-width":1.5});
+  });
+}
+function showComposite(){
+  document.querySelectorAll("#modelTable tr.sel").forEach(x=>x.classList.remove("sel"));
+  const multi=MODEL_PASSES.length>1;
+  document.getElementById("scoreHdr").childNodes[0].nodeValue=
+    (multi?CURP.label+" composite score distribution ":"Composite score distribution ");
+  document.getElementById("scoreDesc").innerHTML=
+    'Best-per-precursor composite score for each class'+(multi?" ("+CURP.desc+")":"")+
+    ', with a normal curve fit to the decoy scores &mdash; the Osprey analog of Skyline\'s mProphet '+
+    '"Model Scores" view, extended with entrapment. '+
+    '<span id="scoreTip"><b>Click any feature row above</b> to see that individual score\'s target/decoy '+
+    'distribution (the mProphet "Feature Scores" view).</span>';
+  document.getElementById("scoreBack").style.display="none";
+  classHist(CURP.scores,"scoreChart","scoreLegend",false);
+}
+document.getElementById("scoreBack").onclick=(e)=>{e.preventDefault();showComposite();};
+
+// Draw one feature's standardized target/decoy histogram over the shared edges,
+// styled to match the composite view (target blue, decoy red, filled step areas).
+function featureHist(hostId,legId,r){
+  const edges=D.featureHistEdges,nb=edges.length-1;
+  const series=[{k:"target",name:"target",color:COL.target,v:r.targetHist||[]},
+                {k:"decoy",name:"decoy",color:COL.decoy,v:r.decoyHist||[]}];
+  const off={target:false,decoy:false};
+  const width=(i)=>edges[i+1]-edges[i];
+  const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;return s.v.map((c,i)=>c/tot/width(i));});
+  const W=680,Hh=330,box={l:52,t:14,w:W-70,h:Hh-58};
+  const xd=[edges[0],edges[nb]];
+  const host=document.getElementById(hostId);
+  function draw(){
+    host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
+    let ymax=0;dens.forEach((d,si)=>{if(!off[series[si].k])d.forEach(v=>ymax=Math.max(ymax,v))});ymax=(ymax||1)*1.08;
+    const sc=axes(s,box,xd,[0,ymax],{xlab:"standardized "+r.label+" score",ylab:"density",yfmt:v=>(+v.toFixed(2))});
+    series.forEach((se,si)=>{if(off[se.k])return;const d=dens[si];
+      let up="M"+sc.x(edges[0]).toFixed(1)+" "+sc.y(0).toFixed(1)+" ";
+      for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+        up+="L"+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+      up+="L"+sc.x(edges[nb]).toFixed(1)+" "+sc.y(0).toFixed(1)+"Z";
+      E(s,"path",{d:up,fill:se.color,opacity:.16,stroke:"none"});
+      let ln="";for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+        ln+=(i?"L":"M")+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+      E(s,"path",{d:ln,fill:"none",stroke:se.color,"stroke-width":1.7,"stroke-linejoin":"round"});
+    });
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+      const px=(ev.clientX-rb.left)/rb.width*W;const bi=Math.min(nb-1,Math.max(0,Math.floor((px-box.l)/box.w*nb)));
+      let html="<b>score "+trim(edges[bi])+"…"+trim(edges[bi+1])+"</b>";
+      series.forEach(se=>{if(off[se.k])return;html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+fmt(se.v[bi],0);});
+      showTip(ev,html);});
+    ov.addEventListener("mouseleave",hideTip);
+  }
+  legend(document.getElementById(legId),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;draw();}})));
+  draw();
+}
+
+// ---------- shared class histogram builder (H0 = the pass's ScoreHistogram) ----------
+function classHist(H0,hostId,legId,normalize){
+  if(!H0||!H0.binEdges||H0.binEdges.length<2){document.getElementById(hostId).textContent="No score data.";return;}
+  const edges=H0.binEdges, nb=edges.length-1;
+  const series=[{k:"target",name:"target",color:COL.target,v:H0.target},
+                {k:"decoy",name:"decoy",color:COL.decoy,v:H0.decoy}];
+  if(D.hasEntrapment){series.push({k:"ptarget",name:"entrapment (p_target)",color:COL.ptarget,v:H0.pTarget});
+                      series.push({k:"pdecoy",name:"p_decoy",color:COL.pdecoy,v:H0.pDecoy});}
+  const width=(i)=>edges[i+1]-edges[i];
+  const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;
+    return s.v.map((c,i)=>normalize?c/tot/width(i):c);});
+  const off={};series.forEach(s=>off[s.k]=false);off.decoynorm=false;
+  const W=680,Hh=330,box={l:52,t:14,w:W-70,h:Hh-58};
+  let ymax=0;dens.forEach((d,si)=>{if(!off[series[si].k])d.forEach(v=>ymax=Math.max(ymax,v))});ymax*=1.08||1;
+  const xd=[edges[0],edges[nb]];
+  const host=document.getElementById(hostId);host.innerHTML="";
+  function draw(){
+    host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
+    ymax=0;dens.forEach((d,si)=>{if(!off[series[si].k])d.forEach(v=>ymax=Math.max(ymax,v))});ymax=(ymax||1)*1.08;
+    const sc=axes(s,box,xd,[0,ymax],{xlab:"composite score",ylab:normalize?"density":"precursors",yfmt:v=>normalize?(+v.toFixed(2)):trim(v)});
+    // decoy normal overlay
+    if(normalize===false && H0.decoyStd>0 && !off.decoynorm){
+      const dTot=H0.decoy.reduce((a,b)=>a+b,0);const bw=(xd[1]-xd[0])/nb;
+      let path="";for(let i=0;i<=120;i++){const xx=xd[0]+(xd[1]-xd[0])*i/120;
+        const g=Math.exp(-0.5*Math.pow((xx-H0.decoyMean)/H0.decoyStd,2))/(H0.decoyStd*Math.sqrt(2*Math.PI));
+        const yy=g*dTot*bw;path+=(i?"L":"M")+sc.x(xx).toFixed(1)+" "+sc.y(yy).toFixed(1)+" ";}
+      E(s,"path",{d:path,fill:"none",stroke:COL.decoy,"stroke-width":1.4,"stroke-dasharray":"1 0","opacity":.55});
+    }
+    series.forEach((se,si)=>{if(off[se.k])return;const d=dens[si];
+      let path="";for(let i=0;i<nb;i++){const x0=sc.x(edges[i]),x1=sc.x(edges[i+1]),yy=sc.y(d[i]);
+        path+=(i?"L":"M")+x0.toFixed(1)+" "+yy.toFixed(1)+"L"+x1.toFixed(1)+" "+yy.toFixed(1)+" ";}
+      E(s,"path",{d:path,fill:"none",stroke:se.color,"stroke-width":1.7,"stroke-linejoin":"round","opacity":.95});
+    });
+    // hover
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+      const px=(ev.clientX-rb.left)/rb.width*W;const bi=Math.min(nb-1,Math.max(0,Math.floor((px-box.l)/box.w*nb)));
+      let html="<b>score "+trim(edges[bi])+"…"+trim(edges[bi+1])+"</b>";
+      series.forEach(se=>{if(off[se.k])return;html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+fmt(se.v[bi],0);});
+      showTip(ev,html);});
+    ov.addEventListener("mouseleave",hideTip);
+  }
+  legend(document.getElementById(legId),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;draw();}}))
+    .concat(normalize===false&&H0.decoyStd>0?[{name:"decoy normal",color:COL.decoy,line:true,toggle:o=>{off.decoynorm=o;draw();}}]:[]));
+  draw();
+}
+renderModel(MODEL_PASSES[0]);   // Model tab: table + composite for pass 1 (default)
+classHist(D.scores,"densChart","densLegend",true);   // Density tab: pass-1 composite density
+
+// ---------- FDR calibration (multiple q-scope / pass views) ----------
+if(D.fdpViews && D.fdpViews.length){
+  const views=D.fdpViews; let vi=0;
+  const host=document.getElementById("fdpChart"), sel=document.getElementById("fdpViewSel");
+  const series=[{k:"lower",name:"lower-bound FDP",color:COL.ptarget,key:"lowerBound"},
+                {k:"combined",name:"combined FDP",color:COL.target,key:"combined"},
+                {k:"paired",name:"paired FDP",color:COL.pdecoy,key:"paired"}];
+  const off={lower:false,combined:false,paired:false};
+  const opIdx=(f,q)=>Math.max(0,Math.min(lowerB(f.q,q)-1,f.q.length-1));
+  function drawPanel(parent,f,xmax,title){
+    const W=560,Hh=330,box={l:62,t:28,w:W-80,h:Hh-66};
+    const s=svg(W,Hh);parent.appendChild(s);
+    // FDP axis auto-scaled to the in-window curve (non-proportional zoom, so a
+    // gendecoy-style FDP well above q stays on-pane). The FDP at the smallest
+    // q-values is a tiny-n_t transient (the first accepted target can sit at
+    // combined = 100%); scale to the settled curve by ignoring the first ~2% of
+    // accepted targets in the window, else that spike pins the axis to 100%.
+    let nWin=0;
+    for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax)break;nWin=f.nTargetAccepted[i];}
+    const nMin=nWin*0.02;
+    let ymax=xmax;
+    series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;
+      for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax)break;if(f.nTargetAccepted[i]<nMin)continue;if(a[i]>ymax)ymax=a[i];}});
+    ymax=Math.min(1.0,ymax*1.15);
+    E(s,"text",{x:box.l+box.w/2,y:16,"text-anchor":"middle",class:"axtitle"}).textContent=title+"  (FDP axis to "+pct(ymax,1)+")";
+    const sc=axes(s,box,[0,xmax],[0,ymax],{xlab:"Osprey q-value",ylab:"estimated true FDP",xfmt:v=>pct(v,v<0.05?1:0),yfmt:v=>pct(v,1)});
+    const dx=Math.min(xmax,ymax);
+    E(s,"line",{x1:sc.x(0),y1:sc.y(0),x2:sc.x(dx),y2:sc.y(dx),stroke:COL.muted,"stroke-dasharray":"5 4","stroke-width":1});
+    E(s,"line",{x1:sc.x(D.runFdr),y1:box.t,x2:sc.x(D.runFdr),y2:box.t+box.h,stroke:COL.muted,"stroke-dasharray":"2 3",opacity:.55});
+    series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;
+      let path="",started=false;const pts=[];
+      for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax*1.001)break;if(f.nTargetAccepted[i]<nMin)continue;const X=sc.x(f.q[i]),Y=sc.y(Math.min(a[i],ymax));
+        path+=(started?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1)+" ";started=true;pts.push([X,Y]);}
+      E(s,"path",{d:path,fill:"none",stroke:se.color,"stroke-width":1.5});
+      const step=Math.max(1,Math.floor(pts.length/55));
+      for(let k=0;k<pts.length;k+=step)E(s,"circle",{cx:pts[k][0],cy:pts[k][1],r:2.2,fill:"none",stroke:se.color,"stroke-width":0.9});
+    });
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const q=((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*xmax;
+      let i=Math.min(lowerB(f.q,q),f.q.length-1);
+      let html="<b>q = "+pct(f.q[i],2)+"</b> · "+fmt(f.nTargetAccepted[i],0)+" targets";
+      series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+pct(a[i],2);});
+      showTip(ev,html);});
+    ov.addEventListener("mouseleave",hideTip);
+  }
+  function render(){
+    const f=views[vi];host.innerHTML="";
+    const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+    const maxq=f.q[f.q.length-1]||1;
+    drawPanel(H(wrap,"div",{}),f,0.02,"zoom  q in [0, 2%]");
+    drawPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent");
+    const i1=opIdx(f,0.01);const kp=document.getElementById("fdpKpis");kp.innerHTML="";
+    kpi(kp,"discoveries @1% q",fmt(f.nTargetAccepted[i1],0),"");
+    kpi(kp,"combined FDP @1% q",pct(f.combined[i1],2),cls(f.combined[i1],0.01));
+    if(f.paired)kpi(kp,"paired FDP @1% q",pct(f.paired[i1],2),cls(f.paired[i1],0.01));
+    kpi(kp,"lower-bound @1% q",pct(f.lowerBound[i1],2),"");
+    kpi(kp,"max q",pct(maxq,1),"");
+    document.getElementById("fdpNote").innerHTML=
+      (f.matchesFdrBench
+        ? "<b>Reproduces the FDRBench plot</b> — x is Osprey's <b>experiment-wide precursor</b> q, the exact value <code>--fdrbench</code> hands to FDRBench (which only counts entrapment on it). No FDRBench install needed. "
+        : "<b>Per-run view</b> (new) — x is Osprey's <b>per-run precursor</b> q; FDRBench collapses runs so it can't show this. ")
+      + "The dashed line is y=x (perfect calibration); the curve above it means the reported q is anti-conservative there. Entrapment DB ratio r = "+fmt(f.entrapmentRatio,2)+".";
+  }
+  sel.innerHTML="";
+  views.forEach((v,k)=>{const b=H(sel,"button",{class:"vbtn"+(k===0?" on":"")},v.label+(v.matchesFdrBench?"  (= FDRBench)":""));
+    b.onclick=()=>{vi=k;sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");render();};});
+  legend(document.getElementById("fdpLegend"),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;render();}})));
+  render();
+  // Print-only: render ALL views so the PDF captures every FDR plot, not just the
+  // one selected on screen. Reuses drawPanel; a per-view title + 1%-q summary line.
+  const pall=document.getElementById("fdpPrintAll");
+  views.forEach(f=>{
+    const blk=H(pall,"div",{style:"margin-bottom:16px"});
+    H(blk,"h3",{style:"font-size:13px;margin:0 0 3px;font-weight:600"},f.label+(f.matchesFdrBench?"  (= FDRBench)":""));
+    const i1=opIdx(f,0.01);
+    H(blk,"div",{style:"color:var(--muted);font-size:11px;margin-bottom:4px",
+      html:"discoveries @1% q "+fmt(f.nTargetAccepted[i1],0)+" &middot; combined "+pct(f.combined[i1],2)+
+        (f.paired?" &middot; paired "+pct(f.paired[i1],2):"")+" &middot; lower "+pct(f.lowerBound[i1],2)});
+    const wrap2=H(blk,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+    const maxq=f.q[f.q.length-1]||1;
+    drawPanel(H(wrap2,"div",{}),f,0.02,"zoom  q in [0, 2%]");
+    drawPanel(H(wrap2,"div",{}),f,Math.max(0.02,maxq),"full extent");
+  });
+}
+function cls(v,q){return v==null?"":(v<=q*1.15?"good":v<=q*1.6?"warn":"bad");}
+
+// ---------- ID yield ----------
+if(D.idYield){const y=D.idYield;const W=680,Hh=300,box={l:60,t:14,w:W-78,h:Hh-56};
+  const host=document.getElementById("yieldChart");const s=svg(W,Hh);host.appendChild(s);
+  const xmax=0.1, ymax=Math.max(1,...y.targets)*1.08;
+  const sc=axes(s,box,[0,xmax],[0,ymax],{xlab:"reported q-value",ylab:"accepted targets",xfmt:v=>pct(v,0),yfmt:v=>trim(v)});
+  E(s,"line",{x1:sc.x(D.runFdr),y1:box.t,x2:sc.x(D.runFdr),y2:box.t+box.h,stroke:COL.muted,"stroke-dasharray":"2 3",opacity:.7});
+  let path="";y.q.forEach((qq,i)=>{path+=(i?"L":"M")+sc.x(qq).toFixed(1)+" "+sc.y(y.targets[i]).toFixed(1)+" ";});
+  E(s,"path",{d:path,fill:"none",stroke:COL.accent,"stroke-width":2});
+}
+
+// ---------- competition: win fraction ----------
+if(D.winFraction && D.winFraction.binCenters){
+  const w=D.winFraction;const W=680,Hh=340,box={l:52,t:14,w:W-70,h:Hh-58};
+  const host=document.getElementById("wfChart");
+  const xd=[w.binCenters[0],w.binCenters[w.binCenters.length-1]];
+  const off={real:false,ent:false};
+  function draw(){
+    host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
+    const sc=axes(s,box,xd,[0,0.75],{xlab:"winner score  max(target,decoy)",ylab:"decoy-win fraction",yfmt:v=>pct(v,0)});
+    E(s,"line",{x1:box.l,y1:sc.y(0.5),x2:box.l+box.w,y2:sc.y(0.5),stroke:COL.muted,"stroke-dasharray":"4 4","stroke-width":1});
+    E(s,"text",{class:"axtitle",x:box.l+box.w-4,y:sc.y(0.5)-4,"text-anchor":"end"}).textContent="fair coin 50%";
+    function band(frac,ci,color){let up="";const pts=[];
+      for(let i=0;i<frac.length;i++){if(frac[i]==null||isNaN(frac[i]))continue;pts.push(i);}
+      pts.forEach((i,k)=>{up+=(k?"L":"M")+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(Math.min(0.75,frac[i]+ci[i])).toFixed(1)+" ";});
+      for(let k=pts.length-1;k>=0;k--){const i=pts[k];up+="L"+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(Math.max(0,frac[i]-ci[i])).toFixed(1)+" ";}
+      if(pts.length)E(s,"path",{d:up+"Z",fill:color,opacity:.13,stroke:"none"});
+      let ln="";pts.forEach((i,k)=>{ln+=(k?"L":"M")+sc.x(w.binCenters[i]).toFixed(1)+" "+sc.y(frac[i]).toFixed(1)+" ";});
+      E(s,"path",{d:ln,fill:"none",stroke:color,"stroke-width":2});
+      pts.forEach(i=>{E(s,"circle",{cx:sc.x(w.binCenters[i]),cy:sc.y(frac[i]),r:2.4,fill:color});});
+    }
+    if(!off.real)band(w.realFraction,w.realCi,COL.target);
+    if(w.hasEntrapment&&!off.ent)band(w.entFraction,w.entCi,COL.ptarget);
+  }
+  const items=[{name:"real pairs (T vs D)",color:COL.target,toggle:o=>{off.real=o;draw();}}];
+  if(w.hasEntrapment)items.push({name:"entrapment pairs (P vs Pd)",color:COL.ptarget,toggle:o=>{off.ent=o;draw();}});
+  items.push({name:"fair coin 50%",color:COL.muted,line:true});
+  legend(document.getElementById("wfLegend"),items);
+  draw();
+  document.getElementById("wfNote").innerHTML="Low-score null band ["+trim(w.nullBandLo)+", "+trim(w.nullBandHi)+"]:  real "+
+    pct(w.nullBandReal,1)+(w.hasEntrapment?"  ·  entrapment "+pct(w.nullBandEnt,1):"")+
+    ". An entrapment coin near 50% is the honest ruler; real pairs below it are native signal winning.";
+}
+
+// ---------- summary ----------
+(function(){const k=document.getElementById("sumKpis");
+  kpi(k,"targets (best/prec)",fmt(D.nTarget,0),"");
+  kpi(k,"decoys",fmt(D.nDecoy,0),"");
+  if(D.hasEntrapment){kpi(k,"entrapment",fmt(D.npTarget,0),"");}
+  kpi(k,"features",fmt(D.featureCount,0),"");
+  const rows=D.perFile||[];const host=document.getElementById("fileTable");
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+  const cols=[["File","l"],["Targets",""]];
+  if(D.hasEntrapment)cols.push(["Entrapment",""]);
+  cols.push(["Decoys",""]);
+  cols.forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const tb=H(t,"tbody",{});rows.forEach(r=>{const tr=H(tb,"tr",{});
+    H(tr,"td",{class:"l"},r.file);
+    H(tr,"td",{class:"num"},fmt(r.targets,0));
+    if(D.hasEntrapment)H(tr,"td",{class:"num"},fmt(r.entrapment,0));
+    H(tr,"td",{class:"num"},fmt(r.decoys,0));});
+})();
+
+function kpi(host,label,val,c){const d=H(host,"div",{class:"kpi"});H(d,"div",{class:"v "+(c||"")},val);H(d,"div",{class:"k"},label);}
+function lowerB(a,v){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m]<v)lo=m+1;else hi=m;}return lo;}
+
+// Print / Save-as-PDF: the @media print stylesheet stacks every tab, forces the
+// light palette, expands the feature table, and swaps the single interactive FDR
+// view + feature chart for print-only blocks that render ALL 4 FDR views and ALL
+// per-feature distributions -- so the PDF is the complete report. Reset the Model
+// chart to the composite first so its top panel is deterministic.
+window.addEventListener("beforeprint",()=>{
+  if(document.getElementById("scoreBack").style.display!=="none")showComposite();
+});
+document.getElementById("printBtn").onclick=()=>window.print();
+document.getElementById("foot").innerHTML="Generated by Osprey <code>--model-diagnostics</code> · self-contained · "+esc(D.generatedUtc||"");
+window.addEventListener("mousemove",e=>{if(tip.style.opacity==1)moveTip(e);});
+</script>
+</body>
+</html>

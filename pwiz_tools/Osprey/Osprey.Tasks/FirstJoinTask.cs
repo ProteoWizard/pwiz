@@ -31,6 +31,7 @@ using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -218,12 +219,12 @@ namespace pwiz.Osprey.Tasks
             }
 
             var swFdr = Stopwatch.StartNew();
-            RunFdr(perFileEntries, config, ctx);
+            var featureContributions = RunFdr(perFileEntries, config, ctx);
             swFdr.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
 
-            LogFirstPassResultsAndDump(perFileEntries, config, ctx);
+            LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
 
             // First-pass protein FDR: runs on the full pre-compaction
             // peptide pool so target and decoy proteins compete on a
@@ -259,6 +260,16 @@ namespace pwiz.Osprey.Tasks
                 ctx.ExitCode = 1;
                 return false;
             }
+
+            // FDRBench input TSV (pass 1): emit the full pre-compaction first-pass
+            // pool -- every scored non-decoy target, regardless of q-value, with its
+            // first-pass run + experiment q-values and raw SVM discriminant -- BEFORE
+            // compaction drops the non-surviving entries. Mirrors Rust
+            // pipeline.rs write_fdrbench_peptide_input (emitted after first-pass
+            // protein FDR, before the compaction HashSet is built). Pass 2 (the
+            // post-compaction reported set) is emitted from MergeNodeTask; the two
+            // are mutually exclusive per run (--fdrbench-pass).
+            WriteFdrBenchPass1IfRequested(perFileEntries, config, ctx);
 
             // Compaction: drop entries whose base_id (entry_id with the
             // decoy bit masked off) does not pass either the peptide-q
@@ -446,7 +457,8 @@ namespace pwiz.Osprey.Tasks
         private void LogFirstPassResultsAndDump(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            FeatureContributions contributions = null)
         {
             LogFirstPassResults(perFileEntries, config, ctx);
 
@@ -454,6 +466,17 @@ namespace pwiz.Osprey.Tasks
                 ctx.Diagnostics?.WriteStage5PercolatorDump(perFileEntries);
             if (ctx.Diagnostics?.PercolatorOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PERCOLATOR_ONLY");
+
+            // --model-diagnostics: emit the self-contained interactive HTML
+            // report from the just-scored, pre-compaction first-pass entries
+            // (decoys + entrapment still present) and the trained model. Opt-in
+            // and off the default output path, so it can't affect any other
+            // output; a failure is logged and swallowed inside Write.
+            if (config.ModelDiagnostics)
+            {
+                var libraryById = ctx.Get<LibraryById>().Value;
+                ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, config, ctx.LogInfo);
+            }
         }
 
         /// <summary>
@@ -483,6 +506,55 @@ namespace pwiz.Osprey.Tasks
             }
             ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
                 passingTargets));
+        }
+
+        /// <summary>
+        /// Write the pass-1 FDRBench input TSV from the pre-compaction first-pass
+        /// pool when <c>--fdrbench</c> is set with <c>--fdrbench-pass 1</c>. Emits
+        /// every scored non-decoy target (regardless of q-value) with its
+        /// first-pass run + experiment q-values and raw SVM discriminant -- the
+        /// assumption the second-pass reported set rests on. No-op for the default
+        /// pass-2 (emitted post-compaction by <see cref="MergeNodeTask"/>) and when
+        /// no FDRBench output was requested. Called on the straight-through Run
+        /// path only: the pre-compaction pool exists solely here, mirroring Rust
+        /// osprey, which emits at the same point in its single pipeline.
+        /// </summary>
+        private void WriteFdrBenchPass1IfRequested(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            if (string.IsNullOrEmpty(config.OutputFdrBench) || config.FdrBenchPass != 1)
+                return;
+
+            var libraryById = ctx.Get<LibraryById>().Value;
+            var swFdrBench = Stopwatch.StartNew();
+            // Reconcile the library against the external manifest: reconstruct the
+            // extras' pairing and drop unmatched entrapment (Met-clip artifacts) so the
+            // TSV and the emitted manifest stay consistent and stock FDRBench works.
+            var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+            var benchResult = FdrBenchInputWriter.WritePeptideInput(
+                config.OutputFdrBench, perFileEntries, libraryById, config.FdrLevel,
+                config.FdrBenchPerRun, pairing.ExcludedEntrapment);
+            string manifestPath = config.OutputFdrBench + @".pairing.tsv";
+            int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
+            swFdrBench.Stop();
+            ctx.LogInfo(string.Format(@"Wrote FDRBench input (pass 1, {0}) to {1}: {2} rows",
+                config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
+                config.OutputFdrBench, benchResult.Rows));
+            ctx.LogInfo(string.Format(@"Wrote FDRBench pairing manifest (from the searched library) to {0}: {1} peptides",
+                manifestPath, manifestRows));
+            pairing.LogSummary(ctx.LogInfo);
+            if (benchResult.MissingLibrary > 0)
+                ctx.LogInfo(string.Format(
+                    @"{0} FDRBench rows had no library entry; peptide and protein columns left blank",
+                    benchResult.MissingLibrary));
+            if (benchResult.TruncatedProtein > 0)
+                ctx.LogInfo(string.Format(
+                    @"{0} FDRBench rows had oversize protein-ID lists; truncated with ';...+N_more'",
+                    benchResult.TruncatedProtein));
+            ctx.LogInfo(string.Format(@"[STAGE-WALL] fdrbench-pass1: {0:F1}s",
+                swFdrBench.Elapsed.TotalSeconds));
         }
 
         /// <summary>
@@ -1030,7 +1102,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Run FDR control using the configured method.
         /// </summary>
-        private void RunFdr(
+        private FeatureContributions RunFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx)
@@ -1038,19 +1110,18 @@ namespace pwiz.Osprey.Tasks
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
-                    RunPercolatorFdr(perFileEntries, config, ctx);
-                    break;
+                    return RunPercolatorFdr(perFileEntries, config, ctx);
 
                 case FdrMethod.Simple:
                     PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
-                    break;
+                    return null;
 
                 default:
                     ctx.LogWarning(string.Format(
                         "FDR method {0} not yet supported, falling back to simple",
                         config.FdrMethod));
                     PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
-                    break;
+                    return null;
             }
         }
 
@@ -1063,7 +1134,7 @@ namespace pwiz.Osprey.Tasks
         /// workers wrote reconciled .scores.parquet but no
         /// .2nd-pass.fdr_scores.bin sidecars; mirrors Rust pipeline.rs:4394-4468).
         /// </summary>
-        internal static void RunPercolatorFdr(
+        internal static FeatureContributions RunPercolatorFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx,
@@ -1072,7 +1143,8 @@ namespace pwiz.Osprey.Tasks
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
-                ctx.LogInfo, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
+                ctx.LogInfo, out var contributions,
+                BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left
@@ -1082,6 +1154,9 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
                 Environment.Exit(0);
             }
+            // The trained model's feature contributions, for the --model-diagnostics
+            // report. Null on the Simple/second-pass paths that don't produce one.
+            return contributions;
         }
 
         /// <summary>

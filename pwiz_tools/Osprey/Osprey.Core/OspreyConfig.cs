@@ -60,6 +60,18 @@ namespace pwiz.Osprey.Core
         public bool FdrBenchPerRun { get; set; }
 
         /// <summary>
+        /// With <see cref="OutputFdrBench"/>: which FDR pass the emitted rows and q-values
+        /// come from. <c>2</c> (default) is the post-compaction, second-pass survivors written
+        /// to the blib output -- the FDR of what Osprey actually reports. <c>1</c> is the
+        /// full pre-compaction first-pass pool (every scored target, regardless of q-value)
+        /// with its first-pass q-values, mirroring Rust osprey's
+        /// <c>write_fdrbench_peptide_input</c> -- the assumption the second-pass output rests
+        /// on. Pass 1 is emitted from the first-join stage before compaction; pass 2 from the
+        /// merge node after rescoring.
+        /// </summary>
+        public int FdrBenchPass { get; set; } = 2;
+
+        /// <summary>
         /// Optional base directory for all per-file <em>derived</em> artifacts
         /// (<c>.scores.parquet</c>, <c>.calibration.json</c>,
         /// <c>.scores-reconciled.parquet</c>, the FDR sidecars, and
@@ -163,6 +175,18 @@ namespace pwiz.Osprey.Core
         /// Runtime toggle only -- intentionally NOT part of any identity hash.
         /// </summary>
         public bool Diagnostics { get; set; }
+
+        /// <summary>
+        /// --model-diagnostics: emit a single self-contained interactive HTML
+        /// report of the trained scoring model + FDR calibration (feature
+        /// contributions, target/decoy/entrapment score densities, q-value to
+        /// FDP calibration, paired decoy-win fraction) when first-pass FDR
+        /// completes. A user-facing deliverable, distinct from the -d bisection
+        /// dumps; opt-in and off the default output path (writes only its own
+        /// HTML file), so it does not affect any other output. Runtime toggle
+        /// only -- intentionally NOT part of any identity hash.
+        /// </summary>
+        public bool ModelDiagnostics { get; set; }
 
         /// <summary>
         /// --timestamp: prefix each output line with [yyyy/MM/dd HH:mm:ss]. Runtime

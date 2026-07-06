@@ -83,6 +83,14 @@ namespace pwiz.Osprey.FDR
         public OspreyFeatureInfo[] FeatureInfos { get; set; }
 
         /// <summary>
+        /// If true, the feature-contribution accumulator also bins each feature's
+        /// standardized value by class into per-feature target/decoy histograms
+        /// (the <c>--model-diagnostics</c> per-feature distribution view). Off for
+        /// the production scoring path so it adds no work. Never used for scoring.
+        /// </summary>
+        public bool CollectFeatureHistograms { get; set; }
+
+        /// <summary>
         /// If true, <see cref="PercolatorFdr.RunPercolator"/> trains the fold
         /// models + standardizer and returns early -- skips CV/averaged
         /// scoring of the input entries, PEP estimation, q-value
@@ -678,7 +686,7 @@ namespace pwiz.Osprey.FDR
             // production streaming path (ScorePopulationAndComputeFdr) actually
             // scores with -- not the per-entry CV ensemble that produced
             // finalScores on this test / small-input standalone path.
-            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
             for (int i = 0; i < n; i++)
                 contribAcc.Add(stdFeatures, i, labels[i]);   // labels[i] == IsDecoy
             var contributions = contribAcc.Build(foldWeights, config.FeatureInfos);
@@ -781,7 +789,7 @@ namespace pwiz.Osprey.FDR
             // population for the feature-contribution report below. Reporting only;
             // serial in row/index order (no PLINQ) so the printed numbers are stable
             // and this never perturbs finalScores.
-            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
             for (int i = 0; i < n; i++)
             {
                 var entry = entries[i];
