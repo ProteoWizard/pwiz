@@ -69,6 +69,9 @@ tr.sel td{background:color-mix(in srgb,var(--accent) 15%,transparent)}
    expands to the full table (e.g. for print / an at-a-glance overview). */
 .collapsewrap.collapsed{max-height:330px;overflow-y:auto}
 #modelTable table{max-width:700px}
+/* Keep the header row fixed while the body scrolls in the collapsed panel. */
+#modelTable thead th{position:sticky;top:0;background:var(--panel);z-index:1}
+#fileTable table{max-width:640px}
 .print-only{display:none}
 .featgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
 @media(max-width:820px){.featgrid{grid-template-columns:1fr}}
