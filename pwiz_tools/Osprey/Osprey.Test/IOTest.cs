@@ -1938,6 +1938,101 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Two-phase 1st-pass sidecar write (issue #4355 struct-shrink S1, risk R2):
+        /// a phase-1 partial write (every record's run_protein_qvalue held at the 1.0
+        /// placeholder) followed by <see cref="FdrScoresSidecar.PatchRunProteinQvalues"/>
+        /// must produce a file that is BYTE-IDENTICAL to a single-phase reference write
+        /// whose records already carried the finalized run_protein_qvalue. The map is
+        /// entry_id-keyed and deliberately built out of record order (and the records
+        /// carry non-sequential entry_ids) to prove the patch locates each record's
+        /// [52..60] by entry_id, not by position.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarTwoPhasePatchMatchesSinglePhase()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_2ph_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Finalized records with a distinct real run_protein_qvalue each (the
+                // last arg). entry_ids are non-sequential so a positional patch would
+                // land the wrong value.
+                var real = new List<FdrScoreRecord>
+                {
+                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.0012, 0.0013, 0.02, 0.0042),
+                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.0022, 0.0023, 0.05, 0.0123),
+                    new FdrScoreRecord(42, -3.3, 0.003, 0.0031, 0.0032, 0.0033, 0.08, 0.95),
+                    new FdrScoreRecord(3,  -3.2, 0.004, 0.0041, 0.0042, 0.0043, 0.11, 1.0),
+                };
+
+                // Phase-1 partial records: identical EXCEPT run_protein_qvalue = 1.0.
+                var partial = new List<FdrScoreRecord>(real.Count);
+                foreach (var r in real)
+                {
+                    partial.Add(new FdrScoreRecord(
+                        r.EntryId, r.Score, r.RunPrecursorQvalue, r.RunPeptideQvalue,
+                        r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue, r.Pep, 1.0));
+                }
+
+                // Map entry_id -> finalized run_protein_qvalue, inserted out of record
+                // order to prove entry_id-keyed (order-independent) patching.
+                var runProteinByEntryId = new Dictionary<uint, double>
+                {
+                    { 42, 0.95 },
+                    { 3, 1.0 },
+                    { 10, 0.0042 },
+                    { 7, 0.0123 },
+                };
+
+                string refPath = Path.Combine(dir, "ref.1st-pass.fdr_scores.bin");
+                string twoPhasePath = Path.Combine(dir, "twophase.1st-pass.fdr_scores.bin");
+
+                // Single-phase reference (the pre-S1 write): records carry the real value.
+                FdrScoresSidecar.Write(refPath, real, FdrScoresSidecar.Pass.FirstPass);
+
+                // Two-phase: phase-1 partial + phase-2 [52..60] patch.
+                FdrScoresSidecar.Write(twoPhasePath, partial, FdrScoresSidecar.Pass.FirstPass);
+                Assert.IsTrue(FdrScoresSidecar.PatchRunProteinQvalues(
+                    twoPhasePath, runProteinByEntryId, FdrScoresSidecar.Pass.FirstPass));
+
+                // The finalized two-phase file must be byte-for-byte identical to the
+                // single-phase reference (risk R2 -- what mode3 compares cross-process).
+                byte[] refBytes = File.ReadAllBytes(refPath);
+                byte[] twoPhaseBytes = File.ReadAllBytes(twoPhasePath);
+                CollectionAssert.AreEqual(refBytes, twoPhaseBytes,
+                    "Two-phase (partial + [52..60] patch) sidecar diverged from the single-phase write");
+
+                // Sanity: the patch actually finalized run_protein_qvalue (a pre-patch
+                // read would have seen the 1.0 placeholder for entries 10/7/42).
+                var loaded = new List<FdrEntry>
+                {
+                    MakeFdrEntry(10, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(7, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(42, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(3, 0.0, 0.0, 0.0),
+                };
+                Assert.IsTrue(FdrScoresSidecar.TryRead(twoPhasePath, loaded, FdrScoresSidecar.Pass.FirstPass));
+                var byId = new Dictionary<uint, FdrEntry>();
+                foreach (var e in loaded)
+                    byId[e.EntryId] = e;
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.0042),
+                                BitConverter.DoubleToInt64Bits(byId[10].RunProteinQvalue));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.95),
+                                BitConverter.DoubleToInt64Bits(byId[42].RunProteinQvalue));
+
+                // A patch with the wrong pass byte must be rejected and leave bytes intact.
+                Assert.IsFalse(FdrScoresSidecar.PatchRunProteinQvalues(
+                    twoPhasePath, runProteinByEntryId, FdrScoresSidecar.Pass.SecondPass));
+                CollectionAssert.AreEqual(refBytes, File.ReadAllBytes(twoPhasePath),
+                    "A rejected patch must not modify the sidecar");
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
         /// Pre-v2 sidecar files (no magic header, just raw f64 scores)
         /// must be rejected by the v2 reader.
         /// </summary>

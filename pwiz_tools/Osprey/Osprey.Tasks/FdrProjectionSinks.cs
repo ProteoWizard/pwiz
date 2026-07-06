@@ -64,6 +64,18 @@ namespace pwiz.Osprey.Tasks
             _bestQByPrecursor = new Dictionary<string, double>(StringComparer.Ordinal);
         }
 
+        /// <summary>
+        /// Per-file passing-target counts (<c>!IsDecoy &amp;&amp; EffectiveRunQvalue &lt;=
+        /// RunFdr</c>) accumulated during the score pass, in
+        /// <see cref="FdrProjectionSet.PerFile"/> order. Exposed so the 1st-pass per-file
+        /// passing-count logging can read the same tally the tail <c>[COUNT]</c> block
+        /// uses, instead of recomputing <c>EffectiveRunQvalue</c> off the resident q-value
+        /// array (issue #4355 struct-shrink S1: <c>RunPrecursorQvalue</c> is no longer
+        /// resident, so <c>EffectiveRunQvalue</c> cannot be recomputed for
+        /// <see cref="FdrLevel.Precursor"/>). Fully populated once the score pass ends.
+        /// </summary>
+        public IReadOnlyList<int> FilePassingTargets => _fileTargets;
+
         public void Accept(int fileIdx, int rowIdx, uint entryId, bool isDecoy,
             double score, in FdrQValues q)
         {
@@ -131,28 +143,94 @@ namespace pwiz.Osprey.Tasks
     }
 
     /// <summary>
-    /// 1st-pass sink (issue #4355 struct-shrink S0, byte-neutral): parks each row's
-    /// five streamed q-values in a parallel <see cref="FdrProjectionOutputs"/> array
-    /// keyed by (fileIdx, rowIdx). Protein FDR, compaction, and the single-phase
-    /// 1st-pass sidecar write read from <see cref="Outputs"/> instead of the retired
-    /// struct fields, producing byte-identical output. (S1/S2 shrink this array later.)
+    /// 1st-pass sink (issue #4355 struct-shrink S1, two-phase sidecar): keeps ONLY the
+    /// two q-values that must stay resident across the whole pass -- <c>RunPeptideQ</c>
+    /// and <c>RunProteinQ</c> -- in a 16 B/row <see cref="FdrProjectionOutputs"/> array
+    /// (1st-pass resident projection = 48 B), and streams the other four q-values
+    /// straight to disk. During the score pass (phase 1) it buffers each file's PARTIAL
+    /// 60-byte <see cref="FdrScoreRecord"/>s in projection order -- with the
+    /// <c>run_protein_qvalue</c> field held at its 1.0 placeholder -- and flushes the
+    /// per-file <c>.1st-pass.fdr_scores.bin</c> via the caller's <c>flushPartial</c>
+    /// callback at the file's last row, so the four streamed q-values are never held
+    /// resident. Empty survivor files are flushed with a 0-record sidecar in
+    /// <see cref="OnFinish"/>. Protein FDR + compaction read <see cref="Outputs"/>; after
+    /// protein FDR the caller runs phase 2, patching each record's <c>[52..60]</c> from
+    /// the resident <c>RunProteinQ</c>. The byte layout is single-sourced through
+    /// <c>FdrScoresSidecar.WriteRecord</c>, so the phase-1 file is byte-identical to the
+    /// pre-S1 single-phase write except for the placeholder column the patch overwrites.
     /// </summary>
     internal sealed class FdrStoringSink : FdrProjectionSinkBase
     {
         private readonly FdrProjectionOutputs _outputs;
+        private readonly Func<string, IReadOnlyList<FdrScoreRecord>, int> _flushPartial;
+        private readonly bool[] _flushed;
+        private readonly List<FdrScoreRecord> _buffer;
+        private int _partialWriteFailures;
 
-        public FdrStoringSink(FdrProjectionSet projections, OspreyConfig config, string passLabel)
+        public FdrStoringSink(
+            FdrProjectionSet projections, OspreyConfig config, string passLabel,
+            Func<string, IReadOnlyList<FdrScoreRecord>, int> flushPartial)
             : base(projections, config, passLabel)
         {
             _outputs = new FdrProjectionOutputs(projections);
+            _flushPartial = flushPartial;
+            _flushed = new bool[projections.PerFile.Count];
+            _buffer = new List<FdrScoreRecord>();
         }
 
         public FdrProjectionOutputs Outputs => _outputs;
 
+        /// <summary>
+        /// Number of per-file phase-1 partial-sidecar writes that failed during the score
+        /// pass (the <c>flushPartial</c> callback returns each file's failure count). The
+        /// caller adds this to the phase-2 patch failures for the StopAfterStage5 gate.
+        /// Owned here (not a captured local) so the callback stays a plain delegate.
+        /// </summary>
+        public int PartialWriteFailures => _partialWriteFailures;
+
         protected override void AcceptOutput(int fileIdx, int rowIdx, uint entryId,
             bool isDecoy, double score, in FdrQValues q)
         {
-            _outputs.SetStreamed(fileIdx, rowIdx, in q);
+            // Resident: keep ONLY the run peptide q-value (protein FDR + compaction need
+            // it across all rows); run protein q-value stays at its 1.0 placeholder until
+            // first-pass protein FDR fills it (issue #4355 struct-shrink S1).
+            _outputs.SetRunPeptideQvalue(fileIdx, rowIdx, q.RunPeptideQvalue);
+
+            // Phase 1 of the two-phase sidecar: buffer this row's PARTIAL record
+            // (run_protein_qvalue = 1.0 placeholder) in projection order and flush the
+            // per-file .1st-pass.fdr_scores.bin at the file's last row. The four streamed
+            // q-values (RunPrecursorQ, ExpPrecursorQ, ExpPeptideQ, Pep) go straight to
+            // disk here and are never kept resident; phase 2 patches [52..60] afterward.
+            _buffer.Add(new FdrScoreRecord(
+                entryId, score,
+                q.RunPrecursorQvalue, q.RunPeptideQvalue,
+                q.ExperimentPrecursorQvalue, q.ExperimentPeptideQvalue,
+                q.Pep, 1.0));
+
+            if (rowIdx == Projections.PerFile[fileIdx].Value.Count - 1)
+            {
+                _partialWriteFailures += _flushPartial(Projections.PerFile[fileIdx].Key, _buffer);
+                _flushed[fileIdx] = true;
+                _buffer.Clear();
+            }
+        }
+
+        protected override void OnFinish()
+        {
+            // Files with no scored rows never hit the last-row flush above; write their
+            // 0-record phase-1 partial sidecar so every file has a boundary file the
+            // survivor reload can read (matching the pre-S1 single-phase write, which
+            // wrote a sidecar per file unconditionally).
+            var perFile = Projections.PerFile;
+            var empty = Array.Empty<FdrScoreRecord>();
+            for (int f = 0; f < perFile.Count; f++)
+            {
+                if (!_flushed[f])
+                {
+                    _partialWriteFailures += _flushPartial(perFile[f].Key, empty);
+                    _flushed[f] = true;
+                }
+            }
         }
     }
 

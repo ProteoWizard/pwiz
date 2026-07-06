@@ -221,6 +221,99 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Phase 2 of the two-phase 1st-pass sidecar write (issue #4355 struct-shrink
+        /// S1): patch each record's <c>run_protein_qvalue</c> field <c>[52..60]</c> in
+        /// place on an already-written (phase-1 partial) sidecar, locating each record
+        /// by its <c>entry_id</c> at <c>[0..4]</c> in
+        /// <paramref name="runProteinByEntryId"/>. The phase-1 write (via the second
+        /// <see cref="Write(string, IReadOnlyList{FdrScoreRecord}, Pass)"/> overload)
+        /// emits a byte-identical file EXCEPT for the <c>run_protein_qvalue</c> column,
+        /// which carries the 1.0 placeholder until first-pass protein FDR is known; this
+        /// patch overwrites only those 8 bytes per record with the finalized value, so
+        /// the resulting file is byte-identical to a single-phase <c>Write</c> whose
+        /// records already carried the real <c>run_protein_qvalue</c> (risk R2). Records
+        /// whose <c>entry_id</c> is absent from the map keep their placeholder (every
+        /// 1st-pass row has a resident <c>run_protein_qvalue</c>, so that is defensive
+        /// only). The 8-byte little-endian f64 encoding matches
+        /// <see cref="WriteRecord"/>'s <c>BinaryWriter.Write(double)</c> (the platform is
+        /// little-endian, as the <see cref="BitConverter.ToDouble(byte[], int)"/> reads
+        /// in <see cref="TryRead"/> already assume). Same header validation as
+        /// <see cref="TryRead"/> (magic / version / pass / size); returns <c>false</c> on
+        /// any mismatch or IO failure, leaving the file unchanged. The finalized file is
+        /// rewritten atomically through <see cref="FileSaver"/>, matching the
+        /// <c>Write</c> path.
+        /// </summary>
+        public static bool PatchRunProteinQvalues(
+            string path,
+            IReadOnlyDictionary<uint, double> runProteinByEntryId,
+            Pass expectedPass)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (runProteinByEntryId == null) throw new ArgumentNullException(nameof(runProteinByEntryId));
+
+            byte[] data;
+            try
+            {
+                data = File.ReadAllBytes(path);
+            }
+            catch
+            {
+                return false;
+            }
+
+            if (data.Length < HeaderLength)
+                return false;
+            for (int i = 0; i < Magic.Length; i++)
+            {
+                if (data[i] != Magic[i])
+                    return false;
+            }
+            if (data[8] != FormatVersion)
+                return false;
+            // Reject a mismatched pass byte for the same reason TryRead does: a
+            // 2nd-pass sidecar must never be patched as if it were 1st-pass.
+            if (data[9] != (byte)expectedPass)
+                return false;
+            ulong headerCount = BitConverter.ToUInt64(data, 16);
+            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                return false;
+            if (data.Length != expectedLen)
+                return false;
+
+            // Overwrite ONLY the run_protein_qvalue bytes [off+52 .. off+60] of each
+            // record with the finalized value looked up by entry_id, in the identical
+            // little-endian f64 encoding BinaryWriter.Write(double) produced for every
+            // other field. Everything else in the file is left byte-for-byte untouched,
+            // so the finalized file equals a single-phase Write carrying the real value.
+            for (int rec = 0; rec < (int)headerCount; rec++)
+            {
+                int off = HeaderLength + rec * RecordLength;
+                uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
+                if (!runProteinByEntryId.TryGetValue(recordEntryId, out double runProteinQvalue))
+                    continue;
+                byte[] bytes = BitConverter.GetBytes(runProteinQvalue);
+                Buffer.BlockCopy(bytes, 0, data, off + 52, 8);
+            }
+
+            try
+            {
+                using (var saver = new FileSaver(path))
+                {
+                    using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        fs.Write(data, 0, data.Length);
+                    }
+                    saver.Commit();
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Shared header + atomic-write scaffold for both <c>Write</c>
         /// overloads. The caller supplies the body writer, which emits exactly
         /// <paramref name="entryCount"/> 60-byte records via

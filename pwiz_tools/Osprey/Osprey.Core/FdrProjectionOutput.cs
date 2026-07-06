@@ -85,8 +85,10 @@ namespace pwiz.Osprey.Core
     /// each row's freshly computed <see cref="FdrQValues"/> + <see cref="FdrProjection.Score"/>
     /// to a caller-supplied sink. The 2nd pass streams them straight to the
     /// <c>.2nd-pass.fdr_scores.bin</c> sidecar (never stored -> 32 B resident); the 1st
-    /// pass parks them in a parallel <see cref="FdrProjectionOutputs"/> array (byte-neutral
-    /// at S0). The sink also OWNS the tail <c>[COUNT]</c> tally (<see cref="Finish"/>),
+    /// pass keeps only {RunPeptideQ, RunProteinQ} in a parallel
+    /// <see cref="FdrProjectionOutputs"/> array (48 B resident) and streams the other
+    /// four q-values to a phase-1 partial sidecar (issue #4355 struct-shrink S1). The
+    /// sink also OWNS the tail <c>[COUNT]</c> tally (<see cref="Finish"/>),
     /// because it is the only place the q-values are live on BOTH passes once they are
     /// off the struct.
     /// </summary>
@@ -112,22 +114,28 @@ namespace pwiz.Osprey.Core
     }
 
     /// <summary>
-    /// The 1st-pass parallel q-value outputs array (issue #4355 step (b), FdrProjection
-    /// struct-shrink S0): holds the six q-values the lean <see cref="FdrProjection"/> no
-    /// longer carries, indexed by (fileIdx, rowIdx) against
-    /// <see cref="FdrProjectionSet.PerFile"/>. Populated by the 1st-pass storing sink
-    /// during the score pass (the five streamed values via <see cref="SetStreamed"/>),
-    /// then completed by first-pass protein FDR (<c>RunProteinQvalue</c> via
-    /// <see cref="SetRunProteinQvalue"/>). Protein FDR, compaction, and the single-phase
-    /// 1st-pass sidecar write read from here instead of the struct fields, so the 1st
-    /// pass stays BYTE-NEUTRAL at S0 (S1/S2 shrink this array later). Kept as a jagged
-    /// struct array (not a <c>List</c>) so <c>RunProteinQvalue</c> can be written in place.
+    /// The 1st-pass parallel RESIDENT q-value array (issue #4355 step (b), FdrProjection
+    /// struct-shrink S1): holds ONLY the two q-values first-pass protein FDR and
+    /// compaction still need resident across ALL rows -- <c>RunPeptideQvalue</c> and
+    /// <c>RunProteinQvalue</c> (a 2 x f64 = 16 B/row struct array, taking the 1st-pass
+    /// resident projection from 80 B to 48 B). Indexed by (fileIdx, rowIdx) against
+    /// <see cref="FdrProjectionSet.PerFile"/>. The OTHER FOUR q-values the score pass
+    /// produces (<c>RunPrecursorQvalue</c>, <c>ExperimentPrecursorQvalue</c>,
+    /// <c>ExperimentPeptideQvalue</c>, <c>Pep</c>) are NO LONGER resident: the 1st-pass
+    /// storing sink streams them straight to the phase-1 partial
+    /// <c>.1st-pass.fdr_scores.bin</c> during the score pass and never keeps them (S0
+    /// kept all six here; S1 drops four to disk). <c>RunPeptideQvalue</c> is stored during
+    /// the score pass via <see cref="SetRunPeptideQvalue"/>; <c>RunProteinQvalue</c> is
+    /// filled by first-pass protein FDR via <see cref="SetRunProteinQvalue"/> (until then
+    /// it holds the 1.0 default) and is applied to the sidecar by the phase-2
+    /// <c>[52..60]</c> patch. Kept as a jagged struct array (not a <c>List</c>) so
+    /// <c>RunProteinQvalue</c> can be written in place.
     /// </summary>
     public sealed class FdrProjectionOutputs
     {
-        // [fileIdx][rowIdx]; a mutable struct so RunProteinQvalue can be set in place
-        // after the score pass, matching the FdrEntry oracle's post-score protein-FDR
-        // write onto the resident stub.
+        // [fileIdx][rowIdx]; a mutable 2-field struct so RunProteinQvalue can be set in
+        // place after the score pass, matching the FdrEntry oracle's post-score
+        // protein-FDR write onto the resident stub.
         private readonly QValues[][] _rows;
 
         public FdrProjectionOutputs(FdrProjectionSet projections)
@@ -140,26 +148,24 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
-        /// Store the five streamed q-values for a row and reset its
-        /// <c>RunProteinQvalue</c> to the 1.0 default (mirrors the fresh
-        /// <see cref="FdrEntry"/>'s pre-protein-FDR value); first-pass protein FDR
-        /// overwrites it via <see cref="SetRunProteinQvalue"/>.
+        /// Store a row's run peptide q-value (the protein-FDR detected gate, the
+        /// best-peptide reduction, and compaction all need it resident across the whole
+        /// pass) and reset its <c>RunProteinQvalue</c> to the 1.0 default (mirrors the
+        /// fresh <see cref="FdrEntry"/>'s pre-protein-FDR value); first-pass protein FDR
+        /// overwrites it via <see cref="SetRunProteinQvalue"/>. The other four q-values
+        /// are streamed to the phase-1 sidecar by the sink, not stored here.
         /// </summary>
-        public void SetStreamed(int fileIdx, int rowIdx, in FdrQValues q)
+        public void SetRunPeptideQvalue(int fileIdx, int rowIdx, double runPeptideQvalue)
         {
             var file = _rows[fileIdx];
-            file[rowIdx].RunPrecursorQvalue = q.RunPrecursorQvalue;
-            file[rowIdx].RunPeptideQvalue = q.RunPeptideQvalue;
-            file[rowIdx].ExperimentPrecursorQvalue = q.ExperimentPrecursorQvalue;
-            file[rowIdx].ExperimentPeptideQvalue = q.ExperimentPeptideQvalue;
-            file[rowIdx].Pep = q.Pep;
+            file[rowIdx].RunPeptideQvalue = runPeptideQvalue;
             file[rowIdx].RunProteinQvalue = 1.0;
         }
 
         /// <summary>Run peptide q-value (protein-FDR detected gate + compaction + best-peptide reduction).</summary>
         public double RunPeptideQvalue(int fileIdx, int rowIdx) => _rows[fileIdx][rowIdx].RunPeptideQvalue;
 
-        /// <summary>Run protein q-value (written by first-pass protein FDR; read by compaction + sidecar).</summary>
+        /// <summary>Run protein q-value (written by first-pass protein FDR; read by compaction + the phase-2 sidecar patch).</summary>
         public double RunProteinQvalue(int fileIdx, int rowIdx) => _rows[fileIdx][rowIdx].RunProteinQvalue;
 
         /// <summary>Set the first-pass protein-FDR run protein q-value for a row.</summary>
@@ -167,43 +173,14 @@ namespace pwiz.Osprey.Core
             _rows[fileIdx][rowIdx].RunProteinQvalue = runProteinQvalue;
 
         /// <summary>
-        /// Effective run-level q-value for the FDR control level, matching the retired
-        /// <c>FdrProjection.EffectiveRunQvalue</c> exactly (used by the 1st-pass per-file
-        /// passing-count logging).
-        /// </summary>
-        public double EffectiveRunQvalue(int fileIdx, int rowIdx, FdrLevel level)
-        {
-            switch (level)
-            {
-                case FdrLevel.Precursor:
-                    return _rows[fileIdx][rowIdx].RunPrecursorQvalue;
-                case FdrLevel.Peptide:
-                    return _rows[fileIdx][rowIdx].RunPeptideQvalue;
-                case FdrLevel.Both:
-                    return Math.Max(
-                        _rows[fileIdx][rowIdx].RunPrecursorQvalue,
-                        _rows[fileIdx][rowIdx].RunPeptideQvalue);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(level));
-            }
-        }
-
-        /// <summary>All six q-values for a row (for the single-phase 1st-pass sidecar write).</summary>
-        public QValues Get(int fileIdx, int rowIdx) => _rows[fileIdx][rowIdx];
-
-        /// <summary>
-        /// The six per-row q-value outputs the 1st pass parks off the lean struct. A
-        /// mutable struct so <c>RunProteinQvalue</c> can be filled in place after protein
-        /// FDR without re-allocating.
+        /// The two per-row q-values the 1st pass keeps resident (issue #4355 struct-shrink
+        /// S1). A mutable struct so <c>RunProteinQvalue</c> can be filled in place after
+        /// protein FDR without re-allocating.
         /// </summary>
         public struct QValues
         {
-            public double RunPrecursorQvalue;
             public double RunPeptideQvalue;
             public double RunProteinQvalue;
-            public double ExperimentPrecursorQvalue;
-            public double ExperimentPeptideQvalue;
-            public double Pep;
         }
     }
 }

@@ -34,9 +34,11 @@ namespace pwiz.Osprey.Core
     /// OUTPUTS the score pass produces no longer live on the struct: the write-back
     /// hands each row's values to a per-pass <see cref="IFdrOutputSink"/> as an
     /// <see cref="FdrQValues"/> value (the 2nd pass streams them straight to the
-    /// sidecar; the 1st pass parks them in a parallel <see cref="FdrProjectionOutputs"/>
-    /// array). Dropping the 48 B of q-values takes the resident 2nd-pass peak buffer
-    /// from 80 -> 32 B. Replaces the full <see cref="FdrEntry"/> stub buffer that was
+    /// sidecar; the 1st pass keeps only {RunPeptideQ, RunProteinQ} resident in a
+    /// parallel <see cref="FdrProjectionOutputs"/> array and streams the other four to
+    /// the phase-1 partial sidecar -- issue #4355 struct-shrink S1). Dropping the 48 B
+    /// of q-values takes the resident 2nd-pass peak buffer from 80 -> 32 B, and the
+    /// 1st-pass peak buffer from 80 -> 48 B. Replaces the full <see cref="FdrEntry"/> stub buffer that was
     /// held resident across first-pass Percolator + protein FDR + the 1st-pass sidecar
     /// write + compaction; full <see cref="FdrEntry"/> survivors are reloaded from
     /// parquet + the sidecar after compaction (see <c>FirstJoinTask</c>). Held in a
