@@ -37,6 +37,10 @@ When true, adds `-p:IAgreeToVendorLicenses=true`.
 .PARAMETER AutomatedBuild
 When true, adds `-p:AutomatedBuild=true`.
 
+.PARAMETER WithoutMascot
+When true, adds `-p:MascotSupport=false` (BiblioSpec compiles out the Mascot
+reader and the 6 Mascot tests stay Inconclusive).
+
 .PARAMETER TestResultsDir
 Directory the trx logger writes to. Per-project stdout logs go under
 $TestResultsDir/test-stdout/.
@@ -56,6 +60,7 @@ param(
     [ValidateSet('Debug', 'Release')] [string] $Configuration = 'Release',
     [switch] $IAgreeToVendorLicenses,
     [switch] $AutomatedBuild,
+    [switch] $WithoutMascot,
     [string] $TestResultsDir = '',
     [string] $CoverageSnapshotDir = '',
     [string] $CoverageFilters = ''
@@ -76,6 +81,7 @@ foreach ($d in @($TestResultsDir, $LogDir)) {
 $msbuildProps = @("-p:Configuration=$Configuration")
 if ($IAgreeToVendorLicenses) { $msbuildProps += '-p:IAgreeToVendorLicenses=true' }
 if ($AutomatedBuild) { $msbuildProps += '-p:AutomatedBuild=true' }
+if ($WithoutMascot) { $msbuildProps += '-p:MascotSupport=false' }
 
 $testLoggers = @('--logger:trx', "--results-directory:$TestResultsDir")
 if ($env:TEAMCITY_VERSION) {
