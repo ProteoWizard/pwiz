@@ -246,7 +246,7 @@ namespace pwiz.Osprey.Core
                     }
                 }
             }
-            distinct.Sort(StringComparer.Ordinal);
+            distinct.Sort(StringComparer.Ordinal); // Array.Sort OK: distinct is de-duplicated (grow-only via idByPeptide), no two strings are equal, so the Ordinal comparer never ties.
             var peptideById = distinct.ToArray();
             for (int id = 0; id < peptideById.Length; id++)
                 idByPeptide[peptideById[id]] = id;

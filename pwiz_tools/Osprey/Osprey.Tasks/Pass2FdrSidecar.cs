@@ -551,7 +551,7 @@ namespace pwiz.Osprey.Tasks
             // gap-fill order diverges and file-level RT sums drift (issue #4374).
             foreach (var kvp in perFileEntries)
             {
-                kvp.Value.Sort((a, b) =>
+                kvp.Value.Sort((a, b) => // Array.Sort OK: terminal key ParquetIndex is unique per survivor, so the comparator never ties.
                 {
                     int c = a.EntryId.CompareTo(b.EntryId);
                     if (c != 0) return c;
@@ -687,6 +687,14 @@ namespace pwiz.Osprey.Tasks
                 // Parquet's positional feature rows.
                 map[(stubs[i].EntryId, stubs[i].Charge, stubs[i].ScanNumber)] = (uint)i;
             }
+            // A duplicate (entry_id, charge, scan_number) identity would collapse two
+            // reconciled stubs onto ONE map slot -- but such a collapsed pair is IDENTICAL
+            // in the projection (same reconciled row => same features, Score, entry_id, and
+            // sidecar record), so the scan-omitted 2nd-pass sort's tie on them is
+            // order-irrelevant to the output (nothing downstream reads position, only value).
+            // In practice DeduplicatePairs makes entry_id unique per file, so the collision
+            // does not arise; either way byte-identity holds (see the "// Array.Sort OK" note
+            // on the projection sort in PercolatorEngine.RunPercolatorFdr).
             return map;
         }
 

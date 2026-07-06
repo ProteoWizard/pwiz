@@ -185,8 +185,10 @@ namespace pwiz.Osprey.Tasks
             // ParquetScoreCache.LoadCwtCandidatesFromParquet.
             var perFileParquetPaths = new Dictionary<string, string>();
             // Decouple scoring from the join (issue #4355): during the scoring
-            // loop below we record ONLY each scored file's name, in the order
-            // scoring produces it, and defer materializing its FdrEntry stubs
+            // loop below we record ONLY each scored file's name, in original
+            // input order (by fileIdx -- the parallel branch re-collects by
+            // input index, the sequential branch appends in that same order),
+            // and defer materializing its FdrEntry stubs
             // until after the loop -- reloading them from the just-written
             // .scores.parquet. Retaining every file's stub buffer while the
             // ~20 GB per-file scoring transient is live is what OOMs a large

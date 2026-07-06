@@ -239,9 +239,10 @@ namespace pwiz.Osprey.IO
         /// little-endian, as the <see cref="BitConverter.ToDouble(byte[], int)"/> reads
         /// in <see cref="TryRead"/> already assume). Same header validation as
         /// <see cref="TryRead"/> (magic / version / pass / size); returns <c>false</c> on
-        /// any mismatch or IO failure, leaving the file unchanged. The finalized file is
-        /// rewritten atomically through <see cref="FileSaver"/>, matching the
-        /// <c>Write</c> path.
+        /// any mismatch or IO failure, leaving the file unchanged. Streams the source one
+        /// 60-byte record at a time straight into the <see cref="FileSaver"/> temp stream
+        /// (bounded memory -- one record resident, not an O(file-size) whole-file buffer;
+        /// issue #4355) and promotes it atomically on Commit, matching the <c>Write</c> path.
         /// </summary>
         public static bool PatchRunProteinQvalues(
             string path,
@@ -251,57 +252,69 @@ namespace pwiz.Osprey.IO
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (runProteinByEntryId == null) throw new ArgumentNullException(nameof(runProteinByEntryId));
 
-            byte[] data;
-            try
-            {
-                data = File.ReadAllBytes(path);
-            }
-            catch
-            {
-                return false;
-            }
-
-            if (data.Length < HeaderLength)
-                return false;
-            for (int i = 0; i < Magic.Length; i++)
-            {
-                if (data[i] != Magic[i])
-                    return false;
-            }
-            if (data[8] != FormatVersion)
-                return false;
-            // Reject a mismatched pass byte for the same reason TryRead does: a
-            // 2nd-pass sidecar must never be patched as if it were 1st-pass.
-            if (data[9] != (byte)expectedPass)
-                return false;
-            ulong headerCount = BitConverter.ToUInt64(data, 16);
-            if (!TryComputeExpectedLen(headerCount, out int expectedLen))
-                return false;
-            if (data.Length != expectedLen)
-                return false;
-
-            // Overwrite ONLY the run_protein_qvalue bytes [off+52 .. off+60] of each
-            // record with the finalized value looked up by entry_id, in the identical
-            // little-endian f64 encoding BinaryWriter.Write(double) produced for every
-            // other field. Everything else in the file is left byte-for-byte untouched,
-            // so the finalized file equals a single-phase Write carrying the real value.
-            for (int rec = 0; rec < (int)headerCount; rec++)
-            {
-                int off = HeaderLength + rec * RecordLength;
-                uint recordEntryId = BitConverter.ToUInt32(data, off + 0);
-                if (!runProteinByEntryId.TryGetValue(recordEntryId, out double runProteinQvalue))
-                    continue;
-                byte[] bytes = BitConverter.GetBytes(runProteinQvalue);
-                Buffer.BlockCopy(bytes, 0, data, off + 52, 8);
-            }
-
             try
             {
                 using (var saver = new FileSaver(path))
                 {
-                    using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    // Source stays open only while streaming; the FileSaver Commit that
+                    // deletes+replaces the source runs AFTER this block closes src, so the
+                    // source is never locked at rename time.
+                    using (var src = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var dst = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
                     {
-                        fs.Write(data, 0, data.Length);
+                        long fileLen = src.Length;
+                        if (fileLen < HeaderLength)
+                            return false;
+
+                        // Read + validate the 32-byte header, then copy it through
+                        // byte-for-byte. Same checks (magic / version / pass / size) as
+                        // TryRead; on any mismatch we return false before Commit, so the
+                        // source file is left unchanged (the temp is discarded on dispose).
+                        var header = new byte[HeaderLength];
+                        if (!ReadFully(src, header, HeaderLength))
+                            return false;
+                        for (int i = 0; i < Magic.Length; i++)
+                        {
+                            if (header[i] != Magic[i])
+                                return false;
+                        }
+                        if (header[8] != FormatVersion)
+                            return false;
+                        // Reject a mismatched pass byte for the same reason TryRead does: a
+                        // 2nd-pass sidecar must never be patched as if it were 1st-pass.
+                        if (header[9] != (byte)expectedPass)
+                            return false;
+                        ulong headerCount = BitConverter.ToUInt64(header, 16);
+                        if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                            return false;
+                        if (fileLen != expectedLen)
+                            return false;
+
+                        dst.Write(header, 0, HeaderLength);
+
+                        // Stream one 60-byte record at a time: overwrite ONLY the
+                        // run_protein_qvalue bytes [52..60] with the finalized value
+                        // looked up by entry_id [0..4], in the identical little-endian f64
+                        // encoding BinaryWriter.Write(double) produced for every other
+                        // field; every other byte is copied straight through. A record
+                        // whose entry_id is absent from the map keeps its placeholder
+                        // (defensive -- every 1st-pass row has a resident value). The
+                        // output is byte-identical to a single-phase Write carrying the
+                        // real value, but only one record is resident at a time instead of
+                        // the whole file (issue #4355).
+                        var record = new byte[RecordLength];
+                        for (int rec = 0; rec < (int)headerCount; rec++)
+                        {
+                            if (!ReadFully(src, record, RecordLength))
+                                return false;
+                            uint recordEntryId = BitConverter.ToUInt32(record, 0);
+                            if (runProteinByEntryId.TryGetValue(recordEntryId, out double runProteinQvalue))
+                            {
+                                byte[] bytes = BitConverter.GetBytes(runProteinQvalue);
+                                Buffer.BlockCopy(bytes, 0, record, 52, 8);
+                            }
+                            dst.Write(record, 0, RecordLength);
+                        }
                     }
                     saver.Commit();
                 }
@@ -309,6 +322,26 @@ namespace pwiz.Osprey.IO
             catch
             {
                 return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Fill <paramref name="buffer"/> with exactly <paramref name="count"/> bytes from
+        /// <paramref name="stream"/>, looping because a single
+        /// <see cref="Stream.Read(byte[],int,int)"/> may return fewer bytes than
+        /// requested. Returns <c>false</c> if the stream ends first (a truncated or
+        /// corrupt sidecar), matching the whole-file loader's size-mismatch rejection.
+        /// </summary>
+        private static bool ReadFully(Stream stream, byte[] buffer, int count)
+        {
+            int read = 0;
+            while (read < count)
+            {
+                int n = stream.Read(buffer, read, count - read);
+                if (n <= 0)
+                    return false;
+                read += n;
             }
             return true;
         }

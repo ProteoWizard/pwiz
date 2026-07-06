@@ -228,7 +228,7 @@ namespace pwiz.Osprey.Tasks
             // here did exactly that). The FDR engine drives the reload through this
             // delegate, so Osprey.FDR takes no Osprey.IO dependency. The f64 parquet
             // roundtrip is regression-exact (the same reload the second pass uses
-            // via Pass2FdrSidecar.MapFeaturesByParquetIndex). A file with no mapped
+            // via Pass2FdrSidecar.MapFeaturesByIdentity). A file with no mapped
             // parquet path yields an empty row set, so its entries fall back to
             // basic features -- matching the pre-streaming builder's fallback.
             Func<string, IReadOnlyList<double[]>> loadFileFeatures = fileName =>
@@ -1592,7 +1592,7 @@ namespace pwiz.Osprey.Tasks
 
                 stubs.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
                 stubs.TrimExcess();
-                stubs.Sort((a, b) =>
+                stubs.Sort((a, b) => // Array.Sort OK: terminal key ParquetIndex is unique per reloaded stub, so the comparator never ties.
                 {
                     int c = a.EntryId.CompareTo(b.EntryId);
                     if (c != 0) return c;

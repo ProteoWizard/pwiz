@@ -222,7 +222,7 @@ namespace pwiz.Osprey.FDR
             // already-sorted first-pass buffer.
             foreach (var kvp in projections.PerFile)
             {
-                kvp.Value.Sort((a, b) =>
+                kvp.Value.Sort((a, b) => // Array.Sort OK: terminal key ParquetIndex is unique per distinct (entry_id,charge,scan) observation (1st pass: original-parquet row; 2nd pass: reconciled row); the only possible tie is two rows collapsed to one reconciled row, which are IDENTICAL (same features, Score, entry_id, sidecar record), so their order is irrelevant to the output.
                 {
                     int c = a.EntryId.CompareTo(b.EntryId);
                     if (c != 0) return c;
@@ -463,6 +463,24 @@ namespace pwiz.Osprey.FDR
             PercolatorResults results)
         {
             var resultEntries = results.Entries;
+
+            // Guard the index-alignment invariant the zip depends on BEFORE indexing:
+            // the builder emitted exactly one result per stub. Checking first means an
+            // undersized result list fails with this clear message instead of an
+            // IndexOutOfRangeException thrown mid-zip; a count mismatch would otherwise
+            // silently misbind scores to the wrong entries. Fail loudly -- this is
+            // byte-identity-critical first-pass FDR output.
+            int stubCount = 0;
+            foreach (var kvp in perFileEntries)
+                stubCount += kvp.Value.Count;
+            if (stubCount != resultEntries.Count)
+            {
+                throw new InvalidOperationException(string.Format(
+                    "Percolator result count ({0}) does not match FdrEntry stub count ({1}); " +
+                    "the index-zip write-back requires them to be equal.",
+                    resultEntries.Count, stubCount));
+            }
+
             int resultIndex = 0;
             foreach (var kvp in perFileEntries)
             {
@@ -476,18 +494,6 @@ namespace pwiz.Osprey.FDR
                     fdrEntry.ExperimentPeptideQvalue = result.ExperimentPeptideQvalue;
                     fdrEntry.Pep = result.Pep;
                 }
-            }
-
-            // Guard the index-alignment invariant the zip depends on: the builder
-            // emitted exactly one result per stub. A count mismatch would silently
-            // misbind scores to the wrong entries, so fail loudly -- this is
-            // byte-identity-critical first-pass FDR output.
-            if (resultIndex != resultEntries.Count)
-            {
-                throw new InvalidOperationException(string.Format(
-                    "Percolator result count ({0}) does not match FdrEntry stub count ({1}); " +
-                    "the index-zip write-back requires them to be equal.",
-                    resultEntries.Count, resultIndex));
             }
         }
 
@@ -508,6 +514,21 @@ namespace pwiz.Osprey.FDR
             IFdrOutputSink sink)
         {
             var resultEntries = results.Entries;
+
+            // Same index-alignment guard as the FdrEntry overload, hoisted BEFORE the
+            // indexing loop so an undersized result list fails with this clear message
+            // instead of an IndexOutOfRangeException thrown mid-zip.
+            int rowCount = 0;
+            foreach (var kvp in perFileProjections)
+                rowCount += kvp.Value.Count;
+            if (rowCount != resultEntries.Count)
+            {
+                throw new InvalidOperationException(string.Format(
+                    "Percolator result count ({0}) does not match FdrProjection row count ({1}); " +
+                    "the index-zip write-back requires them to be equal.",
+                    resultEntries.Count, rowCount));
+            }
+
             int resultIndex = 0;
             int fileIdx = 0;
             foreach (var kvp in perFileProjections)
@@ -524,14 +545,6 @@ namespace pwiz.Osprey.FDR
                             result.Pep));
                 }
                 fileIdx++;
-            }
-
-            if (resultIndex != resultEntries.Count)
-            {
-                throw new InvalidOperationException(string.Format(
-                    "Percolator result count ({0}) does not match FdrProjection row count ({1}); " +
-                    "the index-zip write-back requires them to be equal.",
-                    resultEntries.Count, resultIndex));
             }
         }
 
