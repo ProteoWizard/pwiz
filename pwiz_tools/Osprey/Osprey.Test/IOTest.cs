@@ -1021,6 +1021,49 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheNeutralLossCollapse()
+        {
+            // A Custom neutral-loss mass within 1e-6 of a named loss must serialize
+            // to the named tag (byte-identity with the legacy reference-type writer)
+            // and read back as the named code -- the most byte-sensitive
+            // WriteNeutralLoss branch, which the round-trip test does not exercise.
+            var entry = new LibraryEntry(1, "PEPTIDER", "PEPTIDER", 2, 500.0, 10.0);
+            entry.Fragments = new List<LibraryFragment>
+            {
+                new LibraryFragment
+                {
+                    Mz = 200.0,
+                    RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation
+                    {
+                        IonType = IonType.B,
+                        Ordinal = 1,
+                        Charge = 1,
+                        NeutralLoss = NeutralLossCode.Custom,
+                        CustomLossMass = NeutralLoss.H2OMass
+                    }
+                }
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_nl_" + Guid.NewGuid().ToString("N") + ".libcache");
+            try
+            {
+                LibraryCache.SaveCache(tempPath, new List<LibraryEntry> { entry }, "hash");
+                var loaded = LibraryCache.LoadCache(tempPath);
+                Assert.AreEqual(1, loaded.Count);
+                var ann = loaded[0].Fragments[0].Annotation;
+                Assert.AreEqual(NeutralLossCode.H2O, ann.NeutralLoss);
+                Assert.AreEqual(NeutralLoss.H2OMass, ann.NeutralLossMass, 1e-10);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryStringInterning()
         {
             // Two entries repeat the same values across every interned field.

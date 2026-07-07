@@ -437,7 +437,7 @@ namespace pwiz.Osprey.Test
             return new LibraryFragment
             {
                 Mz = mz,
-                Annotation = new FragmentAnnotation { IonType = ionType, Ordinal = ordinal },
+                Annotation = new FragmentAnnotation { IonType = ionType, Ordinal = ordinal, Charge = 1 },
             };
         }
 
