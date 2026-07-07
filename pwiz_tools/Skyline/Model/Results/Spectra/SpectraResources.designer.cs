@@ -178,5 +178,11 @@ namespace pwiz.Skyline.Model.Results.Spectra {
                 return ResourceManager.GetString("SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format", resourceCulture);
             }
         }
+
+        public static string SpectrumClassFilter_ParseFilterString_Available_operators__0_ {
+            get {
+                return ResourceManager.GetString("SpectrumClassFilter_ParseFilterString_Available_operators__0_", resourceCulture);
+            }
+        }
     }
 }

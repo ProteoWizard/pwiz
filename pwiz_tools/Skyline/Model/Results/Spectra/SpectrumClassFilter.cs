@@ -549,10 +549,11 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
         public static SpectrumClassFilter ParseFilterString(string filterString)
         {
-            // Rewrite any human-authored CV accession reference to its canonical encoded column token
-            // first (the generic grammar cannot carry an accession directly), so a transition list or
-            // command line can name a CV term by "MS:1000505" instead of the internal token.
-            filterString = CanonicalizeCvColumnReferences(filterString);
+            // Normalize a human-authored filter first: rewrite CV/userParam column references to their
+            // canonical encoded tokens (the generic grammar cannot carry them directly) and friendly
+            // operator words to the symbols the grammar expects, so a transition list or command line can
+            // name a CV term by "MS:1000505" and use readable operators like "isblank"/"greaterthan".
+            filterString = NormalizeAuthoredFilterString(filterString);
             // Try several cultures so a filter authored in one locale parses in another (e.g. a
             // comma-decimal value from a European transition list imported on a period-decimal
             // machine). Only number formatting varies; keywords are culture-independent (English).
@@ -576,9 +577,13 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
             // Replace the serializer's terse "invalid filter string" with a message that shows the
-            // expected form (e.g. column/operator/value with spaces, combined with "and"/"or").
-            throw new FormatException(string.Format(
-                SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, filterString),
+            // expected form (column/operator/value with spaces, combined with "and"/"or") and lists the
+            // operator vocabulary, since the accepted operator tokens are not otherwise discoverable.
+            throw new FormatException(TextUtil.SpaceSeparate(
+                string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format,
+                    filterString),
+                string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Available_operators__0_,
+                    OPERATOR_VOCABULARY)),
                 firstError);
         }
 
@@ -592,23 +597,53 @@ namespace pwiz.Skyline.Model.Results.Spectra
         // keeps typos of interpreted columns from silently resolving to a no-match userParam.
         private const string USER_PARAM_PREFIX = @"userParam:";
 
-        /// <summary>
-        /// Rewrites a human-authored CV/userParam column reference into the canonical encoded column token
-        /// before parsing, so a filter typed in a transition list or on the command line can name the term
-        /// readably rather than by its internal token. In a column position - i.e. outside a single-quoted
-        /// operand - the following are rewritten:
-        /// a CV accession such as "MS:1000505", whether bare or embedded in a double-quoted caption like
-        /// "base peak intensity (MS:1000505)" (any other text in the caption is ignored, since a CV term's
-        /// identity is its accession alone); and a userParam named with the explicit "userParam:" marker,
-        /// either bare ("userParam:vendorSetting") or inside a double-quoted caption for names with spaces
-        /// ("userParam:vendor setting"). Single-quoted operand text is copied verbatim, and a string with
-        /// no such reference is returned unchanged. (The generic grammar cannot carry these directly: a
-        /// colon is not a legal PropertyPath character, and a quoted caption's spaces and parentheses are
-        /// stripped before PropertyPath.Parse, which then rejects them.)
-        /// </summary>
-        private static string CanonicalizeCvColumnReferences(string filterString)
+        // Case-insensitive friendly aliases for the filter-string operator symbols, so an authored spectrum
+        // filter can use readable operator words (mirroring the UI names) instead of the terse or cryptic
+        // symbols. Values are the canonical OpSymbol the generic grammar expects. Kept English (like the
+        // "and"/"or" keywords) so a filter authored in one locale parses in another. The word-symbols that
+        // the grammar already accepts are included so they match case-insensitively too.
+        private static readonly IDictionary<string, string> OPERATOR_ALIASES =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { @"equals", @"=" },
+                { @"notequals", @"<>" }, { @"notequal", @"<>" }, { @"doesnotequal", @"<>" },
+                { @"greaterthan", @">" }, { @"greaterthanorequal", @">=" }, { @"greaterthanorequalto", @">=" },
+                { @"lessthan", @"<" }, { @"lessthanorequal", @"<=" }, { @"lessthanorequalto", @"<=" },
+                { @"contains", @"contains" }, { @"notcontains", @"notcontains" }, { @"doesnotcontain", @"notcontains" },
+                { @"startswith", @"startswith" }, { @"notstartswith", @"notstartswith" },
+                { @"isblank", @"isnullorblank" }, { @"isnotblank", @"isnotnullorblank" },
+                { @"isnullorblank", @"isnullorblank" }, { @"isnotnullorblank", @"isnotnullorblank" },
+                { @"isdeclared", @"isdeclared" }, { @"isnotdeclared", @"isnotdeclared" }
+            };
+
+        // The operator tokens listed in the parse-error message so the vocabulary is discoverable. The
+        // readable blank/declared forms are shown rather than the "isnullorblank" symbols.
+        private static readonly string OPERATOR_VOCABULARY = string.Join(@" ", new[]
         {
-            if (string.IsNullOrEmpty(filterString) || filterString.IndexOf(':') < 0)
+            @"=", @"<>", @">", @">=", @"<", @"<=",
+            @"contains", @"notcontains", @"startswith", @"notstartswith",
+            @"isblank", @"isnotblank", @"isdeclared", @"isnotdeclared"
+        });
+
+        /// <summary>
+        /// Rewrites a human-authored filter into the tokens the generic grammar expects, before parsing, so
+        /// a filter typed in a transition list or on the command line can be written readably. Two kinds of
+        /// token are normalized, both only outside single-quoted operand text (which is copied verbatim):
+        /// <para>Column references - a CV accession such as "MS:1000505", whether bare or embedded in a
+        /// double-quoted caption like "base peak intensity (MS:1000505)" (any other text in the caption is
+        /// ignored, since a CV term's identity is its accession alone); and a userParam named with the
+        /// explicit "userParam:" marker, either bare ("userParam:vendorSetting") or inside a double-quoted
+        /// caption for names with spaces ("userParam:vendor setting"). The generic grammar cannot carry
+        /// these directly: a colon is not a legal PropertyPath character, and a quoted caption's spaces and
+        /// parentheses are stripped before PropertyPath.Parse, which then rejects them.</para>
+        /// <para>Operators - a friendly, case-insensitive operator word ("equals", "greaterthan",
+        /// "isblank", ...) is rewritten to its canonical symbol, so the readable form the UI shows can be
+        /// typed instead of the terse or cryptic symbol. Only recognized alias words are rewritten;
+        /// anything else (column names, "and"/"or", operands) is copied unchanged.</para>
+        /// </summary>
+        private static string NormalizeAuthoredFilterString(string filterString)
+        {
+            if (string.IsNullOrEmpty(filterString))
             {
                 return filterString;
             }
@@ -702,6 +737,23 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 {
                     result.Append(EncodeCvColumnToken(match.Value));
                     i += match.Length;
+                    continue;
+                }
+
+                // A run of letters is either an operator (word symbol or friendly alias), a column name, or
+                // "and"/"or". Only a recognized alias is rewritten to its symbol; everything else - column
+                // names never collide with an alias, and operands are numbers or single-quoted - is copied
+                // as-is. Read the whole run so a non-alias word is not re-scanned character by character.
+                if (char.IsLetter(c))
+                {
+                    int wordEnd = i;
+                    while (wordEnd < filterString.Length && char.IsLetter(filterString[wordEnd]))
+                    {
+                        wordEnd++;
+                    }
+                    var word = filterString.Substring(i, wordEnd - i);
+                    result.Append(OPERATOR_ALIASES.TryGetValue(word, out var symbol) ? symbol : word);
+                    i = wordEnd;
                     continue;
                 }
 

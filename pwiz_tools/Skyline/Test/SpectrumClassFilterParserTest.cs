@@ -65,11 +65,11 @@ namespace pwiz.SkylineTest
             // Syntactically invalid text is rejected
             var syntaxError = SpectrumClassFilter.ValidateFilterString("not a filter");
             Assert.IsFalse(string.IsNullOrEmpty(syntaxError));
-            // The message shows an example of the expected format (e.g. for a wrong operator like "Equals")
-            const string badText = "CollisionEnergy Equals -17";
-            AssertEx.AreEqual(
-                string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, badText),
-                SpectrumClassFilter.ValidateFilterString(badText));
+            // The message shows an example of the expected format. The operator must be neither a symbol
+            // nor a friendly alias to trigger it - "foobar" here, since "Equals" is now a valid alias.
+            const string badText = "CollisionEnergy foobar 17";
+            StringAssert.Contains(SpectrumClassFilter.ValidateFilterString(badText),
+                string.Format(SpectraResources.SpectrumClassFilter_ParseFilterString_Invalid_spectrum_filter_format, badText));
         }
 
         [TestMethod]
@@ -115,6 +115,40 @@ namespace pwiz.SkylineTest
                 SpectrumClassColumn.CvParam("vendor setting", null, false).ColumnName + " isdeclared");
             AssertEx.AreEqual(canonicalUpSpaces,
                 SpectrumClassFilter.ParseFilterString("\"userParam:vendor setting\" isdeclared"));
+        }
+
+        [TestMethod]
+        public void TestOperatorAliases()
+        {
+            // Friendly, case-insensitive operator aliases parse to the same filter as the terse or cryptic
+            // symbol, so an authored spectrum filter can use readable operator words matching the UI names.
+            AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("MsLevel = 1"),
+                SpectrumClassFilter.ParseFilterString("MsLevel equals 1"));
+            AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("MsLevel > 1"),
+                SpectrumClassFilter.ParseFilterString("MsLevel greaterthan 1"));
+            // The cryptic blank symbols get readable aliases.
+            AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("cvidMS1000512 isnullorblank"),
+                SpectrumClassFilter.ParseFilterString("MS:1000512 isblank"));
+            // Case-insensitive, including the operators that are already words.
+            AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("cvidMS1000505 isdeclared"),
+                SpectrumClassFilter.ParseFilterString("MS:1000505 ISDECLARED"));
+            AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("cvidMS1000512 contains 'x'"),
+                SpectrumClassFilter.ParseFilterString("cvidMS1000512 CONTAINS 'x'"));
+            // An alias-looking word inside a single-quoted operand is not rewritten.
+            AssertEx.AreEqual(SpectrumClassFilter.ParseFilterString("cvidMS1000512 contains 'equals'"),
+                SpectrumClassFilter.ParseFilterString("MS:1000512 contains 'equals'"));
+        }
+
+        [TestMethod]
+        public void TestInvalidFilterListsOperators()
+        {
+            // A filter whose operator is neither a symbol nor a known alias fails, and the error lists the
+            // valid operator tokens so the vocabulary is discoverable. (The tokens are grammar keywords,
+            // not localized text.)
+            var error = SpectrumClassFilter.ValidateFilterString("MsLevel foobar 1");
+            Assert.IsFalse(string.IsNullOrEmpty(error));
+            StringAssert.Contains(error, "isdeclared");
+            StringAssert.Contains(error, "isblank");
         }
 
         [TestMethod]
