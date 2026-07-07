@@ -98,7 +98,12 @@ namespace pwiz.Osprey.IO
                         totalIntensity += f.RelativeIntensity;
                     totalIntensities[e] = totalIntensity;
                 }
-                group.Sort((a, b) =>
+                // Array.Sort OK: picks the representative (group[0]) by fragment count then total
+                // intensity. Tie hazard, conversion deferred: two entries with identical fragment
+                // count AND identical total intensity would tie and either could become the kept
+                // representative (its Fragments/Id carry through). Not a #4362 approved U-site;
+                // adding a unique tiebreak here must be validated against the regression golden.
+                group.Sort((a, b) => // Array.Sort OK: (see above) tie hazard on (fragCount,intensity), conversion deferred; not a #4362 approved U-site
                 {
                     int fragCmp = b.Fragments.Count.CompareTo(a.Fragments.Count);
                     if (fragCmp != 0)
@@ -114,7 +119,9 @@ namespace pwiz.Osprey.IO
             }
 
             // Sort deterministically before assigning IDs
-            deduped.Sort((a, b) =>
+            // Array.Sort OK: deduped holds one entry per (ModifiedSequence, Charge), so that key
+            // is unique and the comparator never returns 0.
+            deduped.Sort((a, b) => // Array.Sort OK: (see above) (ModifiedSequence, Charge) is unique, comparator never ties
             {
                 int cmp = string.Compare(a.ModifiedSequence, b.ModifiedSequence, StringComparison.Ordinal);
                 if (cmp != 0)

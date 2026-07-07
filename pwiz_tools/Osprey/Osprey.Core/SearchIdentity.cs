@@ -86,7 +86,7 @@ namespace pwiz.Osprey.Core
                     foreach (var p in _config.DecoyPrefixes)
                         prefixes.Add(p == null ? string.Empty : p.ToLowerInvariant());
                 }
-                prefixes.Sort(StringComparer.Ordinal);
+                prefixes.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to render a stable display string of distinct decoy prefixes; equal strings are byte-identical so tie order is irrelevant
                 var prefixList = new StringBuilder("[");
                 for (int i = 0; i < prefixes.Count; i++)
                 {
@@ -285,7 +285,7 @@ namespace pwiz.Osprey.Core
                             stems.Add(stem);
                     }
                 }
-                stems.Sort(StringComparer.Ordinal);
+                stems.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to dedup adjacent identical stems below; equal keys are byte-identical so tie order is irrelevant
                 // Dedup in place (stems is sorted, so duplicates are
                 // adjacent). Rust does `dedup()` on a sorted Vec; same here.
                 int write = 0;
