@@ -122,6 +122,6 @@ a full 1:1 library.
 3. Käll L, Storey JD, MacCoss MJ, Noble WS. Assigning significance to peptides
    identified by tandem mass spectrometry using decoy databases. *J. Proteome Res.*
    2008; 7(1):29–34.
-4. Wen B, Freestone J, Riffle M, et al. Assessment of false discovery rate control in
-   tandem mass spectrometry analysis using entrapment. *Nat. Methods* 2025;
-   22:1454–1463.
+4. Wen B, Freestone J, Riffle M, MacCoss MJ, Noble WS, Keich U. Assessment of false
+   discovery rate control in tandem mass spectrometry analysis using entrapment.
+   *Nat. Methods* 2025; 22:1454–1463.
