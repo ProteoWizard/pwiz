@@ -802,6 +802,24 @@ namespace pwiz.Osprey.Tasks
             // PHASE 3 -- reconciled parquet write-back + sidecar stamp.
             WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
 
+            // Deterministically drop this file's heavy transients before the next
+            // file loads its own: the reloaded spectra (~1.5 GB) and the write-back's
+            // full-parquet reload. At 100s of files these cannot all be resident
+            // (300 files x ~1.5 GB), and .NET's Server GC otherwise defers collection
+            // until it nears the RAM ceiling -- so the reconciliation working set
+            // rides up with file count instead of staying flat. Forcing the collection
+            // here mirrors Rust's per-iteration spectra drop (pipeline.rs:3047) and
+            // keeps the working set at ~the persistent floor + one file's transient.
+            // Output is unchanged (GC timing only). Skipped under file-parallelism > 1,
+            // where concurrent files legitimately share residency and a blocking GC
+            // would stall the other in-flight rescores.
+            spectra = null;
+            ms1Spectra = null;
+            isolationWindows = null;
+            rescored = null;
+            if (ctx.RunPlan.EffectiveFileParallelism <= 1)
+                GC.Collect();
+
             return (totalRescored, totalGapCwt, totalGapForced);
         }
 
