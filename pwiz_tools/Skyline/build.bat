@@ -223,8 +223,15 @@ REM # Cover a single test project (%1) into its own snapshot and append it to ME
 :cover_one
 set _COVER_SNAP=%COVER_DIR%\cover-%~n1.dcvr
 echo ##teamcity[progressMessage 'dotnet dotcover dotnet -- test %~1 ^(with coverage^)']
-dotnet dotcover dotnet --Output="%_COVER_SNAP%" --Filters="%COVER_FILTERS%" --ReturnTargetExitCode -- test %~1 -f net8.0-windows --no-build %TEST_FILTER_ARG%%TEST_LOGGERS% --blame-hang --blame-hang-timeout 3min
+dotnet dotcover dotnet --Output="%_COVER_SNAP%" --Filters="%COVER_FILTERS%" --ReturnTargetExitCode -- test %~1 -c %CONFIG% -f net8.0-windows --no-build %TEST_FILTER_ARG%%TEST_LOGGERS% --blame-hang --blame-hang-timeout 3min
 if errorlevel 1 set EXIT=1
+REM # Guard against a false green: if the target never ran (e.g. wrong config so the
+REM # test DLL isn't found), dotcover writes no snapshot yet may still exit 0. Treat a
+REM # missing snapshot as a test failure so 0-tests-run can't pass the build.
+if not exist "%_COVER_SNAP%" (
+    echo ##teamcity[message text='No coverage snapshot for %~1 - the test run did not execute' status='ERROR']
+    set EXIT=1
+)
 if "%MERGE_SOURCES%"=="" (set MERGE_SOURCES=%_COVER_SNAP%) else (set MERGE_SOURCES=%MERGE_SOURCES%;%_COVER_SNAP%)
 goto :eof
 
@@ -234,7 +241,7 @@ REM # a non-zero exit if any of them fails.
 set EXIT=0
 for %%P in (%TEST_TARGET%) do (
     echo ##teamcity[progressMessage 'dotnet test %%P']
-    dotnet test %%P -f net8.0-windows --no-build %TEST_FILTER_ARG%%TEST_LOGGERS% --blame-hang --blame-hang-timeout 3min
+    dotnet test %%P -c %CONFIG% -f net8.0-windows --no-build %TEST_FILTER_ARG%%TEST_LOGGERS% --blame-hang --blame-hang-timeout 3min
     if errorlevel 1 set EXIT=1
 )
 goto :eof
