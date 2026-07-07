@@ -444,6 +444,52 @@ class install-target-class : basic-target
             }
         }
 
+        # Under <install-dependencies>on the recursively-collected graph can
+        # contain a raw *source* file whose basename matches the *generated*
+        # copy of the same name -- e.g. a vendor .dll fed to a 'make' copy, or a
+        # <manifest-dependency> DLL referenced only so its version can be read.
+        # Staging both to one location is a fatal "Name clash ... none/none".
+        # The generated artifact is the one meant to be installed, so on such a
+        # collision drop the raw source (a target with no creating action).
+        # Genuine conflicts -- two generated, or two source, targets sharing a
+        # name -- are left untouched so they still error as before.
+        if [ $(property-set).get <install-dependencies> ] = "on"
+        {
+            local deduped ;
+            for local r in $(result)
+            {
+                local rn = [ $(r).name ] ;
+                local rdest = $(rn:BS) ;
+                local conflict ;
+                for local k in $(deduped)
+                {
+                    local kn = [ $(k).name ] ;
+                    if $(kn:BS) = $(rdest) { conflict = $(k) ; }
+                }
+                if ! $(conflict)
+                {
+                    deduped += $(r) ;
+                }
+                else if [ $(r).action ] && ! [ $(conflict).action ]
+                {
+                    # r is generated, the kept one is a raw source: replace it.
+                    local rebuilt ;
+                    for local k in $(deduped) { if $(k) != $(conflict) { rebuilt += $(k) ; } }
+                    deduped = $(rebuilt) $(r) ;
+                }
+                else if [ $(conflict).action ] && ! [ $(r).action ]
+                {
+                    # r is a raw source and the kept one is generated: drop r.
+                }
+                else
+                {
+                    # Ambiguous: keep both and let the existing clash check run.
+                    deduped += $(r) ;
+                }
+            }
+            result = $(deduped) ;
+        }
+
         return $(result) ;
     }
 
