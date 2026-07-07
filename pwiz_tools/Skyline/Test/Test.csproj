@@ -28,6 +28,9 @@
        compiled - exclude it before SDK globs it in. -->
   <ItemGroup>
     <Compile Remove="ProtocolBuffers\tmp\**\*" />
+    <!-- GeneratedCode is git-ignored protoc output; inject via the target below
+         instead of the default glob so a fresh checkout builds correctly. -->
+    <Compile Remove="ProtocolBuffers\GeneratedCode\**\*" />
   </ItemGroup>
 
   <!-- AssortResources source files linked in from Executables\DevTools\.
@@ -42,12 +45,15 @@
     <Compile Include="..\Executables\DevTools\AssortResources\ResourceReference.cs" Link="AssortResources\ResourceReference.cs" />
   </ItemGroup>
 
-  <!-- protoc-generated code lives under ProtocolBuffers\GeneratedCode\.
-       Auto-globbed by the SDK, but the .cs file has to exist BEFORE the
-       compile step or the build errors on missing types (e.g.
-       LegacySkylineDocumentProto). Run generatecode.bat before compile. -->
-  <Target Name="TestGenerateProtobufCode" BeforeTargets="BeforeCompile" Inputs="ProtocolBuffers\LegacySkylineDocumentProto.proto" Outputs="ProtocolBuffers\GeneratedCode\LegacySkylineDocumentProto.cs">
+  <!-- protoc-generated code lives under ProtocolBuffers\GeneratedCode\ and is
+       git-ignored, so a clean checkout has none. Regenerate it from the .proto
+       via generatecode.bat and inject the result into @(Compile) here rather
+       than relying on the default glob, which evaluates before the files exist. -->
+  <Target Name="TestGenerateProtobufCode" BeforeTargets="CoreCompile">
     <Exec Command="&quot;$(ProjectDir)ProtocolBuffers\generatecode.bat&quot;" WorkingDirectory="$(ProjectDir)ProtocolBuffers" />
+    <ItemGroup>
+      <Compile Include="ProtocolBuffers\GeneratedCode\*.cs" />
+    </ItemGroup>
   </Target>
 
   <!-- Test fixture zips + a couple loose files that live next to the .cs

@@ -88,7 +88,28 @@
     <!-- ProtocolBuffers/tmp is intermediate protoc output - the real generated
          code lives in GeneratedCode/. Including both gives duplicate types. -->
     <Compile Remove="ProtocolBuffers\tmp\**" />
+    <!-- GeneratedCode/*.cs is protoc output (git-ignored) that may not exist at
+         evaluation time on a clean checkout, so keep it out of the default glob;
+         the GenerateProtobufCode target below regenerates it and injects it into
+         @(Compile) so the build is correct even on a fresh agent. -->
+    <Compile Remove="ProtocolBuffers\GeneratedCode\**" />
   </ItemGroup>
+
+  <!-- Protobuf/gRPC code generation. The C# under ProtocolBuffers/GeneratedCode/
+       is produced from the .proto sources by ProtocolBuffers/generatecode.bat
+       (protoc + grpc_csharp_plugin, both committed) and is git-ignored, so a
+       clean CI checkout has none - the legacy MSVC/Jam build ran protoc as a
+       pre-build step; the net8 SDK build must too. Runs every build but the bat
+       only rewrites GeneratedCode files whose content changed (fc.exe diff), so
+       it does not churn incremental rebuilds. Compile items are injected here
+       rather than via the default glob because the files may not exist when the
+       project is evaluated. -->
+  <Target Name="GenerateProtobufCode" BeforeTargets="CoreCompile">
+    <Exec Command="&quot;$(ProjectDir)ProtocolBuffers\generatecode.bat&quot;" WorkingDirectory="$(ProjectDir)ProtocolBuffers" />
+    <ItemGroup>
+      <Compile Include="ProtocolBuffers\GeneratedCode\*.cs" />
+    </ItemGroup>
+  </Target>
 
   <!-- net8 cuts: remaining features that still can't compile on net8.
        Original scope (Koina/Grpc, MSAmanda, DiaUmpire, Bruker PRM scheduling,
