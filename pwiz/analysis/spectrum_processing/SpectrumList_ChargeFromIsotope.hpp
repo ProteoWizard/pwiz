@@ -26,9 +26,6 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
-#include <list>
-#include <mutex>
-#include <unordered_map>
 
 typedef struct {
     int charge;
@@ -118,17 +115,8 @@ class PWIZ_API_DECL SpectrumList_ChargeFromIsotope : public msdata::SpectrumList
     std::vector <double> simulatedSSEs;
     std::vector <double> simulatedKLs;
     std::vector <int> simulatedIntensityRankSum;
-    std::vector <rtimeMap> MS1retentionTimes;
-
-    // LRU cache for full-data parent MS1 spectra. Every MSn in a DDA Top-N batch points at
-    // the same parentsBefore_+parentsAfter_ parents, so without this cache each MSn re-decodes
-    // the same parent N times from the underlying SpectrumList. Mutable + mutex because
-    // benefitsFromWorkerThreads() returns true (msconvert may call spectrum() concurrently).
-    static const size_t parentCacheCapacity_ = 16;
-    mutable std::list<std::pair<size_t, SpectrumPtr> > parentCacheList_;
-    mutable std::unordered_map<size_t, std::list<std::pair<size_t, SpectrumPtr> >::iterator> parentCacheMap_;
-    mutable std::mutex parentCacheMutex_;
-    SpectrumPtr getCachedParent(size_t index) const;
+    std::vector <rtimeMap> MS1retentionTimes; 
+    
 };
 
 
