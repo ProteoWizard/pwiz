@@ -2144,6 +2144,13 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxScanType.Enabled = false;
             lblScanId.Text = string.Empty;
             leftButton.Enabled = rightButton.Enabled = false;
+            // The mobilogram lives in its own pane separate from the heatmap, so clear it here
+            // on every clear path or a stale mobilogram lingers after the heatmap is emptied.
+            if (_mobilogramPane != null)
+            {
+                _mobilogramPane.CurveList.Clear();
+                _mobilogramPane.GraphObjList.Clear();
+            }
             graphControl.MasterPane.Title.Text = _msDataFileScanHelper.FileName;
             graphControl.MasterPane.Title.IsVisible = true;
         }
