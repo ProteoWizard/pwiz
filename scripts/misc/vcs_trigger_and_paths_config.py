@@ -4,9 +4,11 @@ targets['CoreWindowsRelease'] = \
 {
     'master':
     {
-        "bt83": "Core Windows x86_64"
+        # NET8-PORT TEMP (restore before merge): don't trigger the cpp Core x86_64
+        # builds during net8 iteration; they fan out from any pwiz_tools/ edit via All.
+        #"bt83": "Core Windows x86_64"
         #,"bt36": "Core Windows x86"
-        ,"bt143": "Core Windows x86_64 (no vendor DLLs)"
+        #,"bt143": "Core Windows x86_64 (no vendor DLLs)"
     },
     'release':
     {
@@ -20,7 +22,9 @@ targets['CoreWindowsRelease'] = \
 #}
 #targets['CoreWindows'] = merge(targets['CoreWindowsRelease'], targets['CoreWindowsDebug'])
 targets['CoreWindows'] = targets['CoreWindowsRelease']
-targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
+# NET8-PORT TEMP (restore before merge): don't trigger cpp Core Linux x86_64 during net8 iteration
+#targets['CoreLinux'] = {'master': {"bt17": "Core Linux x86_64"}}
+targets['CoreLinux'] = {'master': {}}
 
 # pwiz-sharp is the .NET 8 C# port; the corresponding TeamCity build runs `pwiz-sharp/build.bat`
 # (dotnet restore + build + test). Independent from the cpp build configs above — only files
@@ -78,7 +82,8 @@ targets['Container'] = \
 {
     'master':
     {
-        "ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
+        # NET8-PORT TEMP (restore before merge): don't trigger the Wine x86_64 container during net8 iteration
+        #"ProteoWizardAndSkylineDockerContainerWineX8664": "ProteoWizard and Skyline Docker container (Wine x86_64)"
     },
     'release':
     {
