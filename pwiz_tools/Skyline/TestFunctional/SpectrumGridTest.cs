@@ -57,12 +57,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(()=>SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.MoleculeGroups, 0));
             // The grid populates its rows asynchronously, so wait for it to settle at the expected row count
             // rather than asserting the count the instant IsComplete() first returns true.
-            WaitForConditionUI(() => spectrumGrid.IsComplete() && spectrumGrid.DataGridView.RowCount == 3);
+            WaitForConditionUI(() => spectrumGrid.IsComplete() && spectrumGrid.DataGridView.RowCount == 3,
+                () => string.Format("Expected 3 rows but found {0}", spectrumGrid.DataGridView.RowCount));
             RunUI(()=>
             {
                 SkylineWindow.SelectedPath = peptideIdentityPath;
             });
-            WaitForConditionUI(() => spectrumGrid.IsComplete() && spectrumGrid.DataGridView.RowCount == 2);
+            WaitForConditionUI(() => spectrumGrid.IsComplete() && spectrumGrid.DataGridView.RowCount == 2,
+                () => string.Format("Expected 2 rows but found {0}", spectrumGrid.DataGridView.RowCount));
             RunUI(()=>
             {
                 spectrumGrid.SetSpectrumClassColumnCheckState(SpectrumClassColumn.PresetScanConfiguration, CheckState.Unchecked);
