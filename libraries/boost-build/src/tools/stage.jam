@@ -449,42 +449,47 @@ class install-target-class : basic-target
         # copy of the same name -- e.g. a vendor .dll fed to a 'make' copy, or a
         # <manifest-dependency> DLL referenced only so its version can be read.
         # Staging both to one location is a fatal "Name clash ... none/none".
-        # The generated artifact is the one meant to be installed, so on such a
-        # collision drop the raw source (a target with no creating action).
-        # Genuine conflicts -- two generated, or two source, targets sharing a
-        # name -- are left untouched so they still error as before.
+        # The generated artifact is the one meant to be installed, so drop the
+        # raw source (a target with no creating action) that it shadows.
+        #
+        # This deliberately resolves -- rather than errors on -- that specific
+        # collision, but only for a *flat* install: when <install-source-root>
+        # is set the destination preserves sub-directories, so a basename is no
+        # longer the full destination and two same-basename files in different
+        # sub-dirs are distinct (must not be collapsed). Skipping source-root
+        # installs keeps "basename == destination", so this fires only where the
+        # copies would truly land on one path and b2 would otherwise abort.
+        # Every generated target is kept, so a genuine two-generated (or two
+        # raw-source) same-name conflict still reaches the clash check.
         if [ $(property-set).get <install-dependencies> ] = "on"
+            && ! [ $(property-set).get <install-source-root> ]
         {
+            # Basenames produced by a generated (action-bearing) target.
+            local generated-dests ;
+            for local r in $(result)
+            {
+                if [ $(r).action ]
+                {
+                    local rn = [ $(r).name ] ;
+                    generated-dests += $(rn:BS) ;
+                }
+            }
             local deduped ;
             for local r in $(result)
             {
-                local rn = [ $(r).name ] ;
-                local rdest = $(rn:BS) ;
-                local conflict ;
-                for local k in $(deduped)
+                if [ $(r).action ]
                 {
-                    local kn = [ $(k).name ] ;
-                    if $(kn:BS) = $(rdest) { conflict = $(k) ; }
-                }
-                if ! $(conflict)
-                {
-                    deduped += $(r) ;
-                }
-                else if [ $(r).action ] && ! [ $(conflict).action ]
-                {
-                    # r is generated, the kept one is a raw source: replace it.
-                    local rebuilt ;
-                    for local k in $(deduped) { if $(k) != $(conflict) { rebuilt += $(k) ; } }
-                    deduped = $(rebuilt) $(r) ;
-                }
-                else if [ $(conflict).action ] && ! [ $(r).action ]
-                {
-                    # r is a raw source and the kept one is generated: drop r.
+                    deduped += $(r) ;  # always keep generated artifacts
                 }
                 else
                 {
-                    # Ambiguous: keep both and let the existing clash check run.
-                    deduped += $(r) ;
+                    local rn = [ $(r).name ] ;
+                    if ! $(rn:BS) in $(generated-dests)
+                    {
+                        deduped += $(r) ;  # raw source not shadowed by a generated copy
+                    }
+                    # else: raw source shadowed by a generated copy of the same
+                    # name -- drop it (it would otherwise clash on install).
                 }
             }
             result = $(deduped) ;
