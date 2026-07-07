@@ -189,9 +189,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// OR when the entrapment library is not ~1:1 (see <see cref="PairedSuppressedPartial"/>).</summary>
             public double[] Paired { get; set; }
             /// <summary>True when the paired estimator was suppressed because the entrapment
-            /// library is not ~1:1 (r != 1). The paired estimator is a 1-fold method
-            /// (FDRBench / Wen et al. 2025): it is only valid when every target has exactly
-            /// one entrapment twin. Combined and lower-bound remain valid at any ratio.</summary>
+            /// library is not ~1:1 (|r - 1| exceeds <see cref="PairedRatioTolerance"/>). The
+            /// paired estimator is a 1-fold method (FDRBench / Wen et al. 2025): it is only
+            /// valid when every target has exactly one entrapment twin. Combined and
+            /// lower-bound remain valid at any ratio.</summary>
             public bool PairedSuppressedPartial { get; set; }
             public int[] NTargetAccepted { get; set; }
         }
