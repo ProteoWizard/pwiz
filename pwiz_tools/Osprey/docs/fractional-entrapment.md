@@ -26,8 +26,10 @@ estimator is
 `r` is a free parameter; the `1/r` term is the ratio correction. Its only assumption
 is the ratio-aware *equal-chance* condition — that an incorrect match lands on a
 target or a marker in proportion to their database sizes — which does not depend on
-`r`. The **lower-bound** estimator, `N_E / (N_T + N_E)`, is likewise valid at any
-ratio (it can only demonstrate a failure of FDR control, never confirm it).
+`r`. The **lower-bound** estimator, `N_E / (r·(N_T + N_E))`, is likewise ratio-aware
+and valid at any ratio (it can only demonstrate a failure of FDR control, never
+confirm it); note `combined = lower-bound + N_E/(N_T + N_E)`, so at `r = 1` the
+combined value is exactly twice the lower bound.
 
 A 1:1 ratio is required **only** for the **paired** estimator, a distinct refinement
 that pairs each target with one unique entrapment twin (so `r = 1`) *and* requires
