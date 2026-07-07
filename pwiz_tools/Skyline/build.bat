@@ -12,9 +12,22 @@ REM # locally too. Mirrors pwiz-sharp\build.bat's shape (dotnet restore + build
 REM # + parallel test with TC service messages) but scoped to the Skyline tree.
 REM #
 REM # Usage:
-REM #   build.bat [Debug|Release] [--automated] [--coverage]
+REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
+REM #             [--require-vendor-support] [--automated] [--coverage]
 REM #
 REM # Flags:
+REM #   --i-agree-to-the-vendor-licenses
+REM #       Acknowledge the vendor SDK EULAs. Forwarded to MSBuild as
+REM #       -p:IAgreeToVendorLicenses=true, which lets the referenced pwiz-sharp
+REM #       vendor projects extract the encrypted vendor archives and link the
+REM #       real readers. Without it the transitive vendor references build in
+REM #       their no-vendor-support mode. TeamCity passes this for CI.
+REM #
+REM #   --require-vendor-support
+REM #       Fail the build if vendor support isn't enabled (i.e. if
+REM #       --i-agree-to-the-vendor-licenses wasn't also passed). Use in CI to
+REM #       guard against silently producing a stripped, no-vendor artifact.
+REM #
 REM #   --automated
 REM #       Tag the assembly InformationalVersion with "(automated build)"
 REM #       instead of "(developer build)". Passed to MSBuild as
@@ -43,6 +56,8 @@ pushd "%SCRIPT_DIR%"
 
 set EXIT=0
 set CONFIG=Release
+set IAGREE=0
+set REQUIRE_VENDOR=0
 set AUTOMATED=0
 set COVERAGE=0
 set ERROR_TEXT=
@@ -50,6 +65,8 @@ set ERROR_TEXT=
 REM # Parse args. First non-flag arg is the configuration (Debug|Release).
 :parseargs
 if "%~1"=="" goto endparse
+if /i "%~1"=="--i-agree-to-the-vendor-licenses" (set IAGREE=1) else ^
+if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
 if /i "%~1"=="--coverage" (set COVERAGE=1) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
@@ -63,13 +80,26 @@ shift
 goto parseargs
 :endparse
 
+if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
+    set EXIT=2
+    set ERROR_TEXT=--require-vendor-support set but --i-agree-to-the-vendor-licenses was not passed; refusing to build a stripped artifact.
+    goto error
+)
+
 REM # Auto-enable coverage under TeamCity — TC's dotCover build feature only
 REM # wraps its built-in .NET runner, not the Command Line runner that invokes
 REM # this script. Without this, CI builds would produce no coverage data.
 if defined TEAMCITY_VERSION set COVERAGE=1
 
 set MSBUILD_PROPS=-p:Configuration=%CONFIG%
+if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
+
+if %IAGREE%==1 (
+    echo ##teamcity[message text='Vendor support: ENABLED']
+) else (
+    echo ##teamcity[message text='Vendor support: DISABLED ^(no --i-agree-to-the-vendor-licenses^); building core only']
+)
 
 REM # Build targets: only the SDK-style / net8-capable projects. Skyline.csproj
 REM # pulls in every ProjectReference (BiblioSpec, CommonMsData, ProteomeDb,
