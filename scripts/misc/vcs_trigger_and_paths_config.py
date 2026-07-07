@@ -60,9 +60,11 @@ targets['SkylineWithTestConnected'] = \
 {
     'master':
     {
-        "ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
-        ,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
-        ,"bt209": "Skyline master and PRs (Windows x86_64)"
+        # NET8-PORT TEMP (restore before merge): don't trigger TestConnected or Skyline
+        # code inspection from the net8 port PR (the net8 build runs inspection in-build).
+        #"ProteoWizard_SkylineMasterAndPRsTestConnectedTests": "Skyline master and PRs TestConnected tests" # depends on "bt209",
+        #,"ProteoWizard_WindowsX8664msvcProfessionalSkylineResharperChecks": "Skyline code inspection" # depends on "bt209",
+        "bt209": "Skyline master and PRs (Windows x86_64)"
     },
     'release':
     {
@@ -90,11 +92,14 @@ targets['BumbershootRelease'] = \
 {
     'master':
     {
-        "Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
+        # NET8-PORT TEMP (restore before merge): don't trigger Bumbershoot from the net8 port PR
+        #"Bumbershoot_Windows_X86_64": "Bumbershoot Windows x86_64"
         #,"ProteoWizard_Bumbershoot_Windows_X86": "Bumbershoot Windows x86"
     }
 }
-targets['BumbershootLinux'] = {'master': {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}
+# NET8-PORT TEMP (restore before merge): don't trigger Bumbershoot from the net8 port PR
+#targets['BumbershootLinux'] = {'master': {"ProteoWizard_Bumbershoot_Linux_x86_64": "Bumbershoot Linux x86_64"}}
+targets['BumbershootLinux'] = {'master': {}}
 targets['Bumbershoot'] = merge(targets['BumbershootRelease'], targets['BumbershootLinux'])
 
 targets['Core'] = merge(targets['CoreWindows'], targets['CoreLinux'])
