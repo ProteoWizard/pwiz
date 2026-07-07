@@ -286,6 +286,15 @@ namespace pwiz.ProteomeDatabase.Fasta
         private bool? _hasWebAccess;
         private List<ProteinSearchInfo> _activeUniprotRequeueList;
 
+        /// <summary>
+        /// Test seam: when true, repeated web-service timeouts cause the lookup to give up and mark
+        /// the affected proteins as timeout failures so an automated test does not wait on a slow
+        /// service. In normal (production) use this is false: a timeout is retried later (the
+        /// background loader reschedules and the foreground "Resolving Protein Details" dialog stays
+        /// cancelable), so a transient slowdown is not turned into a permanent gap in metadata.
+        /// </summary>
+        public bool GiveUpOnRepeatedTimeout { get; set; }
+
 
         /// <summary>
         /// Class for reading in a Fasta file, possibly noting need for later webservice access to get extra information like accession, gene etc
@@ -995,13 +1004,21 @@ namespace pwiz.ProteomeDatabase.Fasta
                     }
                     else if (lookupResult == WebserviceLookupOutcome.timed_out)
                     {
-                        // The web service is reachable but too slow. Unlike a missing network
-                        // (retry_later), waiting will not necessarily help, and leaving proteins
-                        // pending makes the background loader reschedule without limit and never
-                        // reach a "done" state. Shrink the batch and retry a few times (a smaller
-                        // request may come back in time); once we exceed the limit, give up on this
-                        // search type by marking its remaining proteins as timeout failures so the
-                        // load can complete. Other search types (different servers) are left to try.
+                        if (!GiveUpOnRepeatedTimeout)
+                        {
+                            // Normal (production) behavior: the web service is reachable but slow.
+                            // Retry later rather than giving up - the background loader reschedules
+                            // and the foreground "Resolving Protein Details" dialog stays cancelable -
+                            // so a transient slowdown is not turned into a permanent gap in metadata
+                            // (and no uniqueness filter is computed on incomplete data).
+                            abort = true;
+                            break;
+                        }
+                        // Give-up seam (opted into by automated tests): don't wait on a slow service.
+                        // Shrink the batch and retry a couple of times (a smaller request may come
+                        // back in time); once we exceed the limit, give up on this search type by
+                        // marking its remaining proteins as timeout failures so the load can complete.
+                        // Other search types (different servers) are left to try.
                         if (++consecutiveTimeouts >= MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS)
                         {
                             foreach (var ss in searchlist)

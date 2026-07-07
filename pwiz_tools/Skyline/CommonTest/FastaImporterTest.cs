@@ -1209,7 +1209,8 @@ namespace CommonTest
                     LookupTestMode.http404,
                     LookupTestMode.no_network,
                     LookupTestMode.cancellation,
-                    LookupTestMode.timeout
+                    LookupTestMode.timeout,
+                    LookupTestMode.timeout_retry
                 };
 
                 foreach (var mode in failureModes)
@@ -1300,7 +1301,8 @@ namespace CommonTest
             http404,
             no_network,
             cancellation,
-            timeout
+            timeout,        // Web service timeout with the give-up seam on (test bail)
+            timeout_retry   // Web service timeout with the seam off (production: retry-eligible)
         }
 
         private void ExecuteLookupScenario(bool useNetAccess, List<FastaHeaderParserTest> testList,
@@ -1328,6 +1330,7 @@ namespace CommonTest
                 LookupTestMode.no_network => HttpClientTestHelper.SimulateNoNetworkInterface(),
                 LookupTestMode.cancellation => HttpClientTestHelper.SimulateCancellation(),
                 LookupTestMode.timeout => HttpClientTestHelper.SimulateTimeout(),
+                LookupTestMode.timeout_retry => HttpClientTestHelper.SimulateTimeout(),
                 _ => CreateNormalHelper()
             };
 
@@ -1473,10 +1476,9 @@ namespace CommonTest
             }
             else if (mode == LookupTestMode.timeout)
             {
-                // A persistently slow web service must not leave proteins pending forever (which
-                // makes the background loader reschedule without limit and hang the UI). After
-                // exceeding the timeout limit the importer gives up and marks the unresolved
-                // proteins as timeout failures so the load can complete.
+                // Give-up seam ON (the behavior an automated test opts into): a persistently slow
+                // web service must terminate rather than wait, so the importer marks the unresolved
+                // proteins as timeout failures and the load completes.
                 Assert.AreEqual(proteins.Count, results.Count);
                 // The proteins that resolved without a web search are untouched
                 Assert.AreEqual(noSearchNeededCount, proteins.Count(p =>
@@ -1487,6 +1489,22 @@ namespace CommonTest
                 Assert.IsTrue(failedProteins.All(p => p.FailureReason == WebSearchFailureReason.timeout));
                 // Nothing should still be waiting to be searched - the load has terminated
                 Assert.AreEqual(0, proteins.Count(p => p.GetProteinMetadata().NeedsSearch()));
+            }
+            else if (mode == LookupTestMode.timeout_retry)
+            {
+                // Give-up seam OFF (normal production behavior): a timeout is retried later, so the
+                // importer must NOT permanently give up. The searched proteins are left needing a
+                // search (retry-eligible) rather than marked completed, so a transient slowdown does
+                // not become a permanent gap in metadata (and no uniqueness filter is computed on
+                // incomplete data).
+                Assert.AreEqual(noSearchNeededCount, results.Count);
+                var stillPending = proteins.Where(p => p.GetProteinMetadata().NeedsSearch()).ToList();
+                Assert.AreEqual(searchCount, stillPending.Count);
+                // None may be permanently marked failed - Status stays unsearched so a later load retries
+                Assert.IsTrue(stillPending.All(p => p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+                // It must specifically be the timeout path that left them pending (only it records this
+                // reason); a generic retry_later, e.g. no_network, would not, so this distinguishes the two
+                Assert.IsTrue(stillPending.Any(p => p.FailureReason == WebSearchFailureReason.timeout));
             }
             else
             {
@@ -1622,6 +1640,9 @@ namespace CommonTest
             // CONSIDER(brendanx): Test progress monitor cancellation by linking a CancellationToken to HttpClientTestBehavior with a ResponseFactory function that triggers cancellation.
             var progressMonitor = new SilentProgressMonitor();
             var importer = new WebEnabledFastaImporter(provider);
+            // The give-up seam is on only for the test-bail timeout mode; production (and the
+            // retry-eligible timeout mode) leaves it off so a slow service is retried later.
+            importer.GiveUpOnRepeatedTimeout = mode == LookupTestMode.timeout;
             var results = importer.DoWebserviceLookup(proteins, progressMonitor, false).ToList();
             return results;
         }
