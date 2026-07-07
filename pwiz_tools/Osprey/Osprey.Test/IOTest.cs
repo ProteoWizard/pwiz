@@ -1020,6 +1020,71 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        [TestMethod]
+        public void TestLibraryStringInterning()
+        {
+            // Two entries repeat the same values across every interned field.
+            var e0 = MakeInternEntry(1, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+            var e1 = MakeInternEntry(2, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+
+            // A third entry with a null protein list, an empty gene list, and a
+            // null modification name -- interning must leave these untouched, not throw.
+            var e2 = new LibraryEntry(3, FreshCopy("PEPTIDEK"), FreshCopy("PEPTIDEK"), 2, 600.0, 8.0);
+            e2.ProteinIds = null;
+            e2.GeneNames = new List<string>();
+            e2.Modifications = new List<Modification> { new Modification { Position = 0, Name = null } };
+
+            var entries = new List<LibraryEntry> { e0, e1, e2 };
+
+            // Pre-condition: the repeated values are DISTINCT instances (the char-array
+            // copies defeat the compiler's literal interning), so AreSame below proves
+            // LibraryStringInterner shared them -- not the CLR string pool.
+            Assert.AreNotSame(e0.Sequence, e1.Sequence);
+            Assert.AreNotSame(e0.ProteinIds[0], e1.ProteinIds[0]);
+
+            LibraryStringInterner.InternInPlace(entries);
+
+            // Values are unchanged on every interned field...
+            Assert.AreEqual("PEPTIDER", e0.Sequence);
+            Assert.AreEqual("M[16]PEPTIDER", e0.ModifiedSequence);
+            Assert.AreEqual("P12345", e0.ProteinIds[0]);
+            Assert.AreEqual("GENEA", e0.GeneNames[0]);
+            Assert.AreEqual("Oxidation", e0.Modifications[0].Name);
+
+            // ...but duplicates now share one instance, for each interned field.
+            Assert.AreSame(e0.Sequence, e1.Sequence);
+            Assert.AreSame(e0.ModifiedSequence, e1.ModifiedSequence);
+            Assert.AreSame(e0.ProteinIds[0], e1.ProteinIds[0]);
+            Assert.AreSame(e0.GeneNames[0], e1.GeneNames[0]);
+            Assert.AreSame(e0.Modifications[0].Name, e1.Modifications[0].Name);
+
+            // The null/empty entry is untouched (no NRE).
+            Assert.IsNull(e2.ProteinIds);
+            Assert.AreEqual(0, e2.GeneNames.Count);
+            Assert.IsNull(e2.Modifications[0].Name);
+            Assert.AreEqual("PEPTIDEK", e2.Sequence);
+        }
+
+        // Fresh instance with the same characters, so the compiler's literal
+        // interning does not pre-share it before LibraryStringInterner runs.
+        private static string FreshCopy(string s)
+        {
+            return new string(s.ToCharArray());
+        }
+
+        private static LibraryEntry MakeInternEntry(uint id, string seq, string modSeq,
+            string protein, string gene, string modName)
+        {
+            var e = new LibraryEntry(id, FreshCopy(seq), FreshCopy(modSeq), 2, 500.0, 10.0);
+            e.ProteinIds = new List<string> { FreshCopy(protein) };
+            e.GeneNames = new List<string> { FreshCopy(gene) };
+            e.Modifications = new List<Modification>
+            {
+                new Modification { Position = 1, Name = FreshCopy(modName) }
+            };
+            return e;
+        }
+
         #endregion
 
         #region Blob Compression Tests
