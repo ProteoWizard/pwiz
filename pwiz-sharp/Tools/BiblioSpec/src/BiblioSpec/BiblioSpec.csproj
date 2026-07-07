@@ -54,6 +54,12 @@
          -p:MascotParserPath=PATH on the dotnet command line. -->
     <MascotShimDir>$(MSBuildThisFileDirectory)..\..\native\MascotShim</MascotShimDir>
     <MascotShimBuildDir>$(MascotShimDir)\build</MascotShimBuildDir>
+    <!-- The actual built artifact, per platform + config. Used as BuildMascotShim's
+         Outputs so switching Configuration (e.g. a prior Debug build then Release)
+         rebuilds it. A config-agnostic stamp made the second config skip the build,
+         leaving its Content copy with no file (MSB3030 "MascotShim.dll not found"). -->
+    <MascotShimBuiltFile Condition="'$(OS)' == 'Windows_NT'">$(MascotShimBuildDir)\$(Configuration)\MascotShim.dll</MascotShimBuiltFile>
+    <MascotShimBuiltFile Condition="'$(OS)' != 'Windows_NT'">$(MascotShimBuildDir)/libMascotShim.so</MascotShimBuiltFile>
     <MascotParserPath Condition="'$(MascotParserPath)' == '' AND '$(OS)' == 'Windows_NT'">$(PwizLibrariesPath)\msparser_3_1_0_x86_win64\vs2015</MascotParserPath>
     <MascotParserPath Condition="'$(MascotParserPath)' == '' AND '$(OS)' != 'Windows_NT'">$(PwizLibrariesPath)/msparser_3_1_0_x86_linux64/gnu</MascotParserPath>
 
@@ -128,13 +134,12 @@
           DependsOnTargets="LocateCMake"
           BeforeTargets="ResolveAssemblyReferences;AssignTargetPaths;CoreCompile"
           Inputs="$(MascotShimDir)\CMakeLists.txt;$(MascotShimDir)\MascotShim.cpp;$(MascotShimDir)\MascotShim.h"
-          Outputs="$(MascotShimBuildDir)\.stamp">
+          Outputs="$(MascotShimBuiltFile)">
     <Exec Condition="'$(OS)' == 'Windows_NT'"
           Command="&quot;$(CMakeExe)&quot; -S &quot;$(MascotShimDir)&quot; -B &quot;$(MascotShimBuildDir)&quot; -A x64 -DMASCOT_PARSER_PATH=&quot;$(MascotParserPath)&quot;" />
     <Exec Condition="'$(OS)' != 'Windows_NT'"
           Command="&quot;$(CMakeExe)&quot; -S &quot;$(MascotShimDir)&quot; -B &quot;$(MascotShimBuildDir)&quot; -DCMAKE_BUILD_TYPE=$(Configuration) -DMASCOT_PARSER_PATH=&quot;$(MascotParserPath)&quot;" />
     <Exec Command="&quot;$(CMakeExe)&quot; --build &quot;$(MascotShimBuildDir)&quot; --config $(Configuration)" />
-    <Touch Files="$(MascotShimBuildDir)\.stamp" AlwaysCreate="true" />
   </Target>
 
   <ItemGroup Condition="'$(MascotSupport)' == 'true' AND '$(OS)' == 'Windows_NT'">
