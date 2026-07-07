@@ -117,19 +117,16 @@ internal sealed class WiffFile : AbstractWiffFile
         // locked. It exposes .Close() (not IDisposable) to release those. Also force
         // a GC + finalizer pass - the Sciex SDK sometimes enqueues finalizers rather
         // than closing the file synchronously (see WiffFile.Dispose comments).
-        // NOTE: Both Batch.GetSampleNames() and GetBasicSampleInfos().SampleName return
-        // comma-containing strings on the current Clearcore2 SDK version (e.g.
-        // "rfp9,after,h,1") where legacy pwiz.CLI returned underscore-containing
-        // strings ("rfp9_after_h_1"). This is a Sciex-SDK-version difference we can't
-        // paper over from here without corrupting WIFFs whose sample names legitimately
-        // contain commas. GetBasicSampleInfos is chosen because its single-sample
-        // behavior matches what Skyline expects when the WIFF has one sample.
+        // The current Clearcore2 SDK hands back the comma form ("rfp9,after,h,1") from both
+        // Batch.GetSampleNames() and GetBasicSampleInfos().SampleName, where cpp's
+        // WiffFile::getSampleNames() returns the underscore form ("rfp9_after_h_1"). Normalize
+        // here (see NormalizeSampleName) so the run id and enumerated names match cpp / net472.
         var provider = new AnalystWiffDataProvider();
         var names = new List<string>();
         try
         {
             foreach (var info in provider.GetBasicSampleInfos(wiffPath))
-                names.Add(info.SampleName ?? string.Empty);
+                names.Add(NormalizeSampleName(info.SampleName));
         }
         finally
         {
@@ -139,6 +136,18 @@ internal sealed class WiffFile : AbstractWiffFile
         }
         return names.ToArray();
     }
+
+    /// <summary>
+    /// Normalize a Clearcore2 sample name to the form cpp's <c>WiffFile::getSampleNames()</c>
+    /// (and legacy pwiz.CLI) return: the current Clearcore2 .NET SDK yields the comma form
+    /// ("rfp9,after,h,1") for a sample the WIFF stores as "rfp9_after_h_1". Both cpp and
+    /// Skyline's <c>SampleHelp.EscapeSampleId</c> treat commas as name-illegal and map them to
+    /// '_', so Skyline builds the requested sample path from the underscore name; the run id
+    /// ("&lt;wiff&gt;-&lt;sampleName&gt;") only matches that path when the reader normalizes here
+    /// too. Without this, multi-sample WIFF command-line import matched nothing (no results).
+    /// </summary>
+    internal static string NormalizeSampleName(string sampleName)
+        => string.IsNullOrEmpty(sampleName) ? sampleName ?? string.Empty : sampleName.Replace(',', '_');
 
     public WiffFile(string wiffPath, int sampleIndex0)
     {
@@ -166,7 +175,7 @@ internal sealed class WiffFile : AbstractWiffFile
             int idx = 0;
             foreach (var info in _provider.GetBasicSampleInfos(wiffPath))
             {
-                if (idx == sampleIndex0) { _sampleName = info.SampleName ?? string.Empty; break; }
+                if (idx == sampleIndex0) { _sampleName = NormalizeSampleName(info.SampleName); break; }
                 idx++;
             }
         }
