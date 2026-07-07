@@ -95,6 +95,15 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(SharedPeptideMode.Razor, Parse(@"--shared-peptides", @"razor").SharedPeptides);
             Assert.AreEqual(SharedPeptideMode.All, Parse(@"--shared-peptides", @"bogus").SharedPeptides); // warn -> default
 
+            // FDRBench: --fdrbench records the path, --fdrbench-per-run is a flat flag,
+            // --fdrbench-pass selects the pass (default 2, must be 1 or 2 -- invalid throws).
+            Assert.AreEqual(@"fb.tsv", Parse(@"--fdrbench", @"fb.tsv").OutputFdrBench);
+            Assert.IsTrue(Parse(@"--fdrbench-per-run").FdrBenchPerRun);
+            Assert.AreEqual(2, Parse(@"-i", @"a.mzML").FdrBenchPass); // default
+            Assert.AreEqual(1, Parse(@"--fdrbench-pass", @"1").FdrBenchPass);
+            Assert.AreEqual(2, Parse(@"--fdrbench-pass", @"2").FdrBenchPass);
+            Assert.ThrowsException<ArgumentException>(() => Parse(@"--fdrbench-pass", @"3"));
+
             // Decoys.
             Assert.IsTrue(Parse(@"--decoys-in-library").DecoysInLibrary);
             Assert.AreEqual(@"m.tsv", Parse(@"--decoys-in-library", @"--decoy-pairing-manifest", @"m.tsv").DecoyPairingManifestPath);

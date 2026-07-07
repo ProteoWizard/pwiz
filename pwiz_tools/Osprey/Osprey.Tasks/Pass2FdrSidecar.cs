@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks
@@ -55,7 +56,14 @@ namespace pwiz.Osprey.Tasks
         /// <paramref name="taskValidityKey"/> are the owning task's identity,
         /// stamped into each inline per-file validity sidecar.
         /// </summary>
-        internal static void ComputeAndPersist(
+        /// <returns>
+        /// The second-pass Percolator model's <see cref="FeatureContributions"/> when
+        /// this call actually retrained (feature histograms included if
+        /// <c>--model-diagnostics</c>), for the model-diagnostics pass-2 model view;
+        /// null when the 2nd-pass scores were rehydrated from sidecars (no retrain) or
+        /// the method is not Percolator.
+        /// </returns>
+        internal static FeatureContributions ComputeAndPersist(
             PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
@@ -63,6 +71,7 @@ namespace pwiz.Osprey.Tasks
             string taskValidityKey)
         {
             var config = ctx.Config;
+            FeatureContributions pass2Contributions = null;
 
             // Run 2nd-pass Percolator on the post-reconciliation
             // entries when any 2nd-pass FDR sidecar is missing.
@@ -197,7 +206,9 @@ namespace pwiz.Osprey.Tasks
                     switch (config.FdrMethod)
                     {
                         case FdrMethod.Percolator:
-                            FirstJoinTask.RunPercolatorFdr(
+                            // Capture the 2nd-pass model for the --model-diagnostics
+                            // pass-2 model view (retrained on the post-reconciliation pool).
+                            pass2Contributions = FirstJoinTask.RunPercolatorFdr(
                                 perFileEntries, config, ctx, "Second-pass");
                             break;
                         // Simple / Mokapot 2nd-pass paths intentionally
@@ -386,6 +397,8 @@ namespace pwiz.Osprey.Tasks
                         filesReloaded, filesReloaded + filesMissing));
                 }
             }
+
+            return pass2Contributions;
         }
 
         /// <summary>

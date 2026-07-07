@@ -779,7 +779,7 @@ namespace pwiz.Osprey.Test
 
             try
             {
-                LibraryCache.SaveCache(tempPath, entries);
+                LibraryCache.SaveCache(tempPath, entries, "round-trip-hash");
                 var loaded = LibraryCache.LoadCache(tempPath);
 
                 Assert.IsNotNull(loaded);
@@ -849,6 +849,140 @@ namespace pwiz.Osprey.Test
         }
 
         [TestMethod]
+        public void TestLibraryCacheIdentityHash()
+        {
+            // The .libcache stamps the source library's identity hash into its
+            // header (v2). A cache is reused only when the caller-supplied
+            // expected hash matches the stored one; a mismatch reports
+            // IdentityMismatch and does NOT read the entries (so a stale cache
+            // from a rebuilt-in-place library, whose decoys/pairing no longer
+            // match the current run, is rebuilt from source rather than loaded).
+            var entries = new List<LibraryEntry>
+            {
+                MakeTestEntry(0),
+                MakeTestEntry(1)
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_identity_" + Guid.NewGuid().ToString("N") + ".libcache");
+
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "hash-A");
+
+                // Matching hash -> loaded with entries.
+                LibraryCache.LibraryCacheStatus status;
+                var loadedMatch = LibraryCache.LoadCache(tempPath, "hash-A", out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
+                Assert.IsNotNull(loadedMatch);
+                Assert.AreEqual(2, loadedMatch.Count);
+
+                // Different hash -> identity mismatch, no entries read.
+                var loadedMismatch = LibraryCache.LoadCache(tempPath, "hash-B", out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.IdentityMismatch, status);
+                Assert.IsNull(loadedMismatch);
+
+                // Null expected hash -> identity check skipped, entries loaded.
+                var loadedNoCheck = LibraryCache.LoadCache(tempPath, null, out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
+                Assert.IsNotNull(loadedNoCheck);
+                Assert.AreEqual(2, loadedNoCheck.Count);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
+        public void TestLibraryCacheRealIdentityHash()
+        {
+            // End-to-end: stamp a cache with the REAL LibraryIdentityHash of a
+            // temp library file, then change the file's size and mtime and
+            // confirm the recomputed hash no longer matches the stored one, so
+            // the cache reports IdentityMismatch. This locks the size+mtime
+            // sensitivity of SearchIdentity.LibraryIdentityHash to the actual
+            // file, catching even a timestamp-preserving swap that the old
+            // mtime-ordering check would have missed.
+            string dir = Path.Combine(Path.GetTempPath(),
+                "osprey_cache_identity_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            string source = Path.Combine(dir, "lib.tsv");
+            string cachePath = Path.Combine(dir, "lib.tsv.libcache");
+            try
+            {
+                File.WriteAllText(source, "original library contents");
+                var config = new OspreyConfig { LibrarySource = LibrarySource.FromPath(source) };
+                string hashBefore = config.Identity.LibraryIdentityHash();
+
+                var entries = new List<LibraryEntry> { MakeTestEntry(0) };
+                LibraryCache.SaveCache(cachePath, entries, hashBefore);
+
+                // The cache is reused while the file identity is unchanged.
+                LibraryCache.LibraryCacheStatus status;
+                var loaded = LibraryCache.LoadCache(cachePath, hashBefore, out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Loaded, status);
+                Assert.IsNotNull(loaded);
+                Assert.AreEqual(1, loaded.Count);
+
+                // Rebuild the library in place with a different size and mtime.
+                File.WriteAllText(source, "a rebuilt library with different contents and length");
+                File.SetLastWriteTimeUtc(source,
+                    File.GetLastWriteTimeUtc(source).AddHours(1));
+                string hashAfter = config.Identity.LibraryIdentityHash();
+                Assert.AreNotEqual(hashBefore, hashAfter,
+                    "changing the library's size and mtime must change its identity hash");
+
+                // The stale cache is now detected and rebuilt from source.
+                var stale = LibraryCache.LoadCache(cachePath, hashAfter, out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.IdentityMismatch, status);
+                Assert.IsNull(stale);
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        [TestMethod]
+        public void TestLibraryCacheStaleVersionInvalid()
+        {
+            // A cache whose header carries an unsupported version -- e.g. a pre-v2
+            // cache left on disk from an older build -- reads as Invalid and is
+            // rebuilt; its body is never reinterpreted under the current layout.
+            // Poke the version field (the uint32 immediately after the 8-byte
+            // magic) down to v1 to simulate that, and confirm both the
+            // identity-checked and the no-check load report Invalid rather than
+            // misparsing the body.
+            var entries = new List<LibraryEntry> { MakeTestEntry(0) };
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_test_version_" + Guid.NewGuid().ToString("N") + ".libcache");
+            try
+            {
+                LibraryCache.SaveCache(tempPath, entries, "hash-A");
+
+                byte[] bytes = File.ReadAllBytes(tempPath);
+                BitConverter.GetBytes((uint)1).CopyTo(bytes, 8); // version at offset 8
+                File.WriteAllBytes(tempPath, bytes);
+
+                LibraryCache.LibraryCacheStatus status;
+                var loaded = LibraryCache.LoadCache(tempPath, "hash-A", out status);
+                Assert.AreEqual(LibraryCache.LibraryCacheStatus.Invalid, status);
+                Assert.IsNull(loaded);
+
+                // The version gate precedes the identity check, so the identity-
+                // agnostic overload is Invalid too, not silently accepted.
+                Assert.IsNull(LibraryCache.LoadCache(tempPath));
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
         public void TestLibraryCacheEmpty()
         {
             var entries = new List<LibraryEntry>();
@@ -858,7 +992,7 @@ namespace pwiz.Osprey.Test
 
             try
             {
-                LibraryCache.SaveCache(tempPath, entries);
+                LibraryCache.SaveCache(tempPath, entries, "empty-hash");
                 var loaded = LibraryCache.LoadCache(tempPath);
 
                 Assert.IsNotNull(loaded);
@@ -1952,6 +2086,7 @@ namespace pwiz.Osprey.Test
                 },
                 FormatVersion = ReconciliationFile.CurrentFormatVersion,
                 FileStems = new List<string> { "round_trip" },
+                FirstPassBaseIds = new[] { 3u, 100u, 101u, 200u, 201u },
                 GapFillTargets = new List<GapFillEntry>
                 {
                     new GapFillEntry
@@ -2239,6 +2374,7 @@ namespace pwiz.Osprey.Test
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
                     FileStems = new List<string> { stem },
+                    FirstPassBaseIds = new[] { 100u, 101u, 102u },
                     SearchHash = "abc123",
                     LibraryHash = "lib-h",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2375,6 +2511,7 @@ namespace pwiz.Osprey.Test
                 {
                     FormatVersion = ReconciliationFile.CurrentFormatVersion,
                     FileStems = new List<string> { stem },
+                    FirstPassBaseIds = new[] { 100u, 101u, 102u },
                     SearchHash = "x",
                     LibraryHash = "y",
                     UseCwtPeakActions = new List<UseCwtPeakEntry>
@@ -2477,13 +2614,15 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = actions,
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+                // FirstJoin's authoritative join-wide set: only base_id 1 passed
+                // first-pass FDR. This test deliberately exercises the documented
+                // union semantics: RescoreCompaction retains that set PLUS the
+                // base_ids of reconciliation-action targets (below), pulling in 2
+                // and 3, so the retained set is {1, 2, 3} -- not {1} alone.
+                GlobalFirstPassBaseIds = new HashSet<uint> { 1u },
             };
 
-            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
-            {
-                RunFdr = 0.01,
-                ProteinFdr = 0.01,
-            });
+            var stats = RescoreCompaction.Apply(inputs);
 
             // Compaction stats: planner-action union keeps base 2 alive.
             Assert.AreEqual(5, stats.EntriesBefore);
@@ -2537,13 +2676,12 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+                // FirstJoin built the passing set WITHOUT the protein rescue, so
+                // entry 2 (failing peptide, passing protein) is not in it.
+                GlobalFirstPassBaseIds = new HashSet<uint> { 1u },
             };
 
-            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
-            {
-                RunFdr = 0.01,
-                ProteinFdr = null,
-            });
+            var stats = RescoreCompaction.Apply(inputs);
 
             // Only entry 1 passes; entry 2 dropped (no protein rescue).
             Assert.AreEqual(1, stats.EntriesAfter);
@@ -2587,16 +2725,15 @@ namespace pwiz.Osprey.Test
                 ReconciliationActions = new Dictionary<(string, int), ReconcileAction>(),
                 RefinedCalibrations = new Dictionary<string, RTCalibration>(),
                 PerFileGapFill = new Dictionary<string, List<GapFillTarget>>(),
+                // FirstJoin excludes decoys when building the set, so a lone decoy's
+                // base_id is never in it -> empty set here -> decoy dropped.
+                GlobalFirstPassBaseIds = new HashSet<uint>(),
             };
 
-            var stats = RescoreCompaction.Apply(inputs, new OspreyConfig
-            {
-                RunFdr = 0.01,
-                ProteinFdr = 0.01,
-            });
+            var stats = RescoreCompaction.Apply(inputs);
 
-            // Decoy is filtered before predicate; no base_ids passed; the
-            // entry is then dropped by the base_id retain step.
+            // Decoy's base_id is not in the global set; the base_id retain step
+            // drops it.
             Assert.AreEqual(0, stats.FirstPassBaseIds);
             Assert.AreEqual(0, stats.EntriesAfter);
             Assert.AreEqual(0, inputs.PerFileEntries[0].Value.Count);

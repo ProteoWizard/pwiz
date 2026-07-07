@@ -158,7 +158,9 @@ namespace pwiz.Osprey.Core
                 if (list.Count > 1)
                 {
                     var lib = library;
-                    list.Sort((a, b) =>
+                    // Array.Sort OK: the secondary key is the unique library entry Id, so the
+                    // comparator never returns 0 and the unstable-sort tie path is unreachable.
+                    list.Sort((a, b) => // Array.Sort OK: (see above) secondary key is unique library entry Id, comparator never ties
                     {
                         int c = string.CompareOrdinal(lib[a].Sequence, lib[b].Sequence);
                         if (c != 0) return c;
@@ -175,7 +177,9 @@ namespace pwiz.Osprey.Core
                     !state.PairedDecoys.Contains(i))
                     decoyOrder.Add(i);
             }
-            decoyOrder.Sort((a, b) =>
+            // Array.Sort OK: the secondary key is the unique library entry Id, so the
+            // comparator never returns 0 and the unstable-sort tie path is unreachable.
+            decoyOrder.Sort((a, b) => // Array.Sort OK: (see above) secondary key is unique library entry Id, comparator never ties
             {
                 int c = string.CompareOrdinal(library[a].Sequence, library[b].Sequence);
                 if (c != 0) return c;
@@ -191,7 +195,7 @@ namespace pwiz.Osprey.Core
                 string aa = SortedAa(decoy.Sequence);
                 byte charge = decoy.Charge;
                 var accs = new List<string>(decoy.ProteinIds);
-                accs.Sort(StringComparer.Ordinal);
+                accs.Sort(StringComparer.Ordinal); // Array.Sort OK: only the sequence of distinct accession strings drives the first-match lookup below; equal accession strings are byte-identical so tie order is irrelevant
 
                 int matched = -1;
                 for (int a = 0; a < accs.Count && matched < 0; a++)

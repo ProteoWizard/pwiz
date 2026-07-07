@@ -289,6 +289,16 @@ namespace pwiz.Osprey.Chromatography
         [JsonProperty("mad", NullValueHandling = NullValueHandling.Ignore)]
         public double? MAD { get; set; }
 
+        /// <summary>
+        /// Final RT search-window half-width (minutes) the main search uses:
+        /// <c>3 * MAD * 1.4826</c> clamped to the configured [min, max] RT tolerance.
+        /// Persisted so the JSON records the value the console highlights (issue
+        /// #4364) -- the "how narrow / how fast" number, previously only recomputed
+        /// at scoring time. Optional (absent for uncalibrated / legacy JSON).
+        /// </summary>
+        [JsonProperty("rt_search_window_halfwidth", NullValueHandling = NullValueHandling.Ignore)]
+        public double? RtSearchWindowHalfWidth { get; set; }
+
         /// <summary>Check if RT was calibrated.</summary>
         [JsonIgnore]
         public bool IsCalibrated
@@ -315,13 +325,21 @@ namespace pwiz.Osprey.Chromatography
         /// Build a JSON DTO from an in-memory RTCalibration.
         /// Returns Uncalibrated() when <paramref name="rt"/> is null.
         /// ModelParams is populated so SaveCalibration+LoadCalibration
-        /// round-trips the LOESS fit exactly.
+        /// round-trips the LOESS fit exactly. When <paramref name="minRtTolerance"/> /
+        /// <paramref name="maxRtTolerance"/> are supplied (the search RT-tolerance
+        /// clamps), the final RT search-window half-width is persisted too so the
+        /// JSON records the value the console highlights (issue #4364).
         /// </summary>
-        public static RTCalibrationJson FromRTCalibration(RTCalibration rt)
+        public static RTCalibrationJson FromRTCalibration(RTCalibration rt,
+            double? minRtTolerance = null, double? maxRtTolerance = null)
         {
             if (rt == null)
                 return Uncalibrated();
             var stats = rt.Stats();
+            double? windowHalfWidth = null;
+            if (minRtTolerance.HasValue && maxRtTolerance.HasValue)
+                windowHalfWidth = RTCalibration.SearchWindowHalfWidth(
+                    stats.MAD, minRtTolerance.Value, maxRtTolerance.Value);
             return new RTCalibrationJson
             {
                 Method = RTCalibrationMethod.LOESS,
@@ -330,6 +348,7 @@ namespace pwiz.Osprey.Chromatography
                 RSquared = stats.RSquared,
                 P20AbsResidual = stats.P20AbsResidual,
                 MAD = stats.MAD,
+                RtSearchWindowHalfWidth = windowHalfWidth,
                 ModelParams = new RTModelParamsJson
                 {
                     LibraryRts = rt.LibraryRts,

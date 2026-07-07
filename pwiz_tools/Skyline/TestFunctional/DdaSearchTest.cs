@@ -1444,6 +1444,30 @@ namespace pwiz.SkylineTestFunctional
             var preset = Settings.Default.SearchSettingsPresets.FirstOrDefault(p => p.Name == presetName);
             Assert.IsNotNull(preset, $"Preset '{presetName}' should exist in settings");
 
+            // The DDA search just imported results. That makes the document briefly report
+            // IsLoaded==true while mProphet auto-training is still pending (IsAutoTrain==true):
+            // AutoTrainManager only starts training once the document first becomes loaded, then
+            // commits a retrained document that re-triggers background retention-time alignment
+            // (ResultFileAlignments), making the document not-loaded again for a moment.
+            // ShowRunPeptideSearchDlg refuses to open unless the *committed* Document.IsLoaded, so
+            // waiting only on IsLoaded (or WaitForDocumentLoaded, which checks DocumentUI) returns
+            // too early and lets the wizard reopen race that not-loaded window - the intermittent
+            // "document must be fully loaded before running a peptide search" failure seen on
+            // slower/contended nightly agents. Wait for the document to be fully settled: loaded
+            // AND auto-train complete.
+            WaitForConditionUI(() => SkylineWindow.Document.IsLoaded &&
+                                     !SkylineWindow.Document.Settings.PeptideSettings.Integration.IsAutoTrain,
+                () => TextUtil.LineSeparate("Document not fully settled before reopening Run Peptide Search wizard:",
+                    "IsAutoTrain=" + SkylineWindow.Document.Settings.PeptideSettings.Integration.IsAutoTrain,
+                    TextUtil.LineSeparate(SkylineWindow.Document.NonLoadedStateDescriptions)));
+
+            // Regression tripwire for the race above: at this point auto-train must be finished. If
+            // the wait is ever weakened back to a plain IsLoaded/WaitForDocumentLoaded check this
+            // fails deterministically, because auto-train is still pending the instant such a wait
+            // returns (it needs ~tens of ms after the document first loads to commit).
+            RunUI(() => Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Integration.IsAutoTrain,
+                "Document not fully settled before reopening wizard - mProphet auto-train still pending"));
+
             var importPeptideSearchDlg2 = ShowDialog<ImportPeptideSearchDlg>(SkylineWindow.ShowRunPeptideSearchDlg);
 
             RunUI(() =>
