@@ -526,6 +526,20 @@ namespace pwiz.Osprey.Tasks
                 JoinFileStems = joinFileStems,
             };
 
+            // Clean PERSISTENT floor entering reconciliation (post-GC, before the
+            // rescore loop repopulates the heavy per-entry arrays) -- fires early,
+            // so it lands even if a long run is later killed. #4376.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation start (pre-GC)");
+            if (ProfilerHooks.MemoryLoggingEnabled)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    @"[MEM reconciliation-floor] managed_heap={0:F2} GB (post-GC, entering rescore, files={1})",
+                    GC.GetTotalMemory(true) / (1024.0 * 1024.0 * 1024.0), perFileEntries.Count));
+            }
+
             int nTotalFiles = perFileEntries.Count;
             // The Stage 6 rescore is the "second per-file fan-out": each file's rescore
             // is independent (its own entry list + its own .scores-reconciled.parquet),
@@ -572,6 +586,22 @@ namespace pwiz.Osprey.Tasks
                             perFileEntries[fileNum].Key, perFileEntries[fileNum].Value,
                             inputs, ctx);
                 });
+            }
+
+            // Reconciliation memory probe (#4376). The pre-GC snapshot's peak
+            // working set reflects the transient in-loop peak (parallelism x the
+            // per-file ~1.5 GB spectra + parquet reload); the forced-GC line is the
+            // clean PERSISTENT managed heap (all files' rescored FdrEntry buffer +
+            // library). Zero-cost when OSPREY_LOG_MEMORY is unset.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation end (pre-GC)");
+            if (ProfilerHooks.MemoryLoggingEnabled)
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    @"[MEM reconciliation-resident] managed_heap={0:F2} GB (files={1}, file_parallelism={2})",
+                    GC.GetTotalMemory(true) / (1024.0 * 1024.0 * 1024.0), nTotalFiles, parallelism));
             }
 
             int totalRescored = 0;
