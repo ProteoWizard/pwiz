@@ -1,0 +1,13 @@
+<Project>
+  <!-- CA1416 (platform-compatibility) flags Windows-only API calls. It is pure noise on
+       Windows-only projects - the GUI/WinForms assemblies target net8.0-windows, so every
+       Win32/WinForms call is flagged "reachable on all platforms" - but it is valuable
+       signal on platform-neutral net8.0 projects, where it guards the multi-platform model
+       and command-line code against Windows-only API usage that would break on Linux/macOS.
+       So suppress it ONLY when the project declares a Windows target platform; leave it
+       active everywhere else. Set in Directory.Build.targets (imported after the SDK
+       resolves the target platform) so $(TargetPlatformIdentifier) is populated. -->
+  <PropertyGroup Condition="'$(TargetPlatformIdentifier)' == 'Windows'">
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+  </PropertyGroup>
+</Project>
