@@ -19,7 +19,7 @@ namespace pwiz.Skyline.FileUI {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "18.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class FileUIResources {
@@ -1200,6 +1200,15 @@ namespace pwiz.Skyline.FileUI {
                 return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_DisplayData_This_column_is_labeled_with_the_h" +
                         "eader___0___in_the_input_text__Use_the_dropdown_control_to_assign_its_meaning_fo" +
                         "r_import_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Spectrum Filter.
+        /// </summary>
+        public static string ImportTransitionListColumnSelectDlg_GetKnownHeaderTypes_Spectrum_Filter {
+            get {
+                return ResourceManager.GetString("ImportTransitionListColumnSelectDlg_GetKnownHeaderTypes_Spectrum_Filter", resourceCulture);
             }
         }
         
