@@ -16,6 +16,10 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <IsPackable>false</IsPackable>
+    <!-- Set explicitly (not just via Microsoft.NET.Test.Sdk, which we reference only under
+         the net8.0-windows condition) so IsTestProject is in scope for restore and for
+         Directory.Build.targets' test-only TeamCity logger reference. -->
+    <IsTestProject>true</IsTestProject>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);NU1605;NU1701;NU1903;SYSLIB0011</NoWarn>
     <!-- Test .zip / .data / .sky fixtures live alongside the .cs files.
