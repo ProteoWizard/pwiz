@@ -363,6 +363,12 @@ namespace pwiz.Skyline.EditUI
             set => cbAutoTransitions.Checked = value;
         }
 
+        public bool AddMinusOnePrecursor
+        {
+            get => cbAddMinusOnePrecursor.Checked;
+            set => cbAddMinusOnePrecursor.Checked = value;
+        }
+
 
         public void OkDialog()
         {
@@ -566,6 +572,7 @@ namespace pwiz.Skyline.EditUI
                                          AutoPickChildrenAll = (cbAutoPeptides.Checked ? PickLevel.peptides : 0) |
                                                                (cbAutoPrecursors.Checked ? PickLevel.precursors : 0) |
                                                                (cbAutoTransitions.Checked ? PickLevel.transitions : 0),
+                                         AddMinusOnePrecursor = cbAddMinusOnePrecursor.Checked,
                                          CVCutoff = cvCutoff,
                                          QValueCutoff = qvalueCutoff,
                                          MinimumDetections =  minimumDetections,
@@ -629,6 +636,24 @@ namespace pwiz.Skyline.EditUI
             helpTip.SetToolTip(comboRefineLabelType, cbAdd.Checked
                     ? EditUIResources.RefineDlg_cbAdd_CheckedChanged_Precursors_of_the_chosen_isotope_label_type_will_be_added_if_they_are_missing
                     : _removeTipText);
+        }
+
+        private void cbAddMinusOnePrecursor_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!cbAddMinusOnePrecursor.Checked)
+                return;
+
+            var fullScan = _settings.TransitionSettings.FullScan;
+            if (!fullScan.IsEnabledMs)
+            {
+                MessageDlg.Show(this, EditUIResources.RefineDlg_cbAddMinusOnePrecursor_CheckedChanged_MS1_full_scan_filtering_must_be_enabled_to_add_M_1_precursor_transitions_);
+                cbAddMinusOnePrecursor.Checked = false;
+            }
+            else if (!fullScan.IsHighResPrecursor)
+            {
+                MessageDlg.Show(this, EditUIResources.RefineDlg_cbAddMinusOnePrecursor_CheckedChanged_M_1_precursor_transitions_can_only_be_added_with_a_high_resolution_precursor_mass_analyzer_);
+                cbAddMinusOnePrecursor.Checked = false;
+            }
         }
 
         private void textMaxPeakRank_TextChanged(object sender, EventArgs e)

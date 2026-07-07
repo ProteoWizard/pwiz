@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
@@ -81,6 +82,55 @@ namespace pwiz.SkylineTestData
             refineSettings.MinTransitionsPepPrecursor = 20;
             Assert.AreEqual(0, refineSettings.Refine(document).PeptideGroupCount);
 
+        }
+
+        [TestMethod]
+        public void AddMinusOnePrecursorTest()
+        {
+            // Build a document with MS1 full-scan filtering so that precursors have isotope
+            // transitions, and with the precursor ion type selected.
+            var settings = SrmSettingsList.GetDefault()
+                .ChangeTransitionFilter(f => f.ChangePeptideIonTypes(new[] { IonType.precursor }))
+                .ChangeTransitionFullScan(fs =>
+                    fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, IsotopeEnrichmentsList.GetDefault()));
+            var peptideList = PeptideGroupBuilder.PEPTIDE_LIST_PREFIX + "Peptides\n" +
+                              "FALPQYLK\n" +
+                              "ALNEINQFYQK";
+            var document = new SrmDocument(settings)
+                .ImportFasta(new StringReader(peptideList), true, IdentityPath.ROOT, out _);
+
+            // Each precursor should have exactly the three isotope precursor transitions M, M+1, M+2
+            Assert.AreEqual(2, document.PeptideTransitionGroupCount);
+            foreach (var nodeGroup in document.PeptideTransitionGroups)
+            {
+                Assert.IsTrue(nodeGroup.AutoManageChildren);
+                CollectionAssert.AreEquivalent(new[] { 0, 1, 2 },
+                    nodeGroup.Transitions.Select(t => t.Transition.MassIndex).ToArray());
+            }
+
+            // Add the M-1 precursor transition to every precursor
+            var refineSettings = new RefinementSettings { AddMinusOnePrecursor = true };
+            var docMinusOne = refineSettings.Refine(document);
+
+            Assert.AreEqual(document.PeptideTransitionGroupCount, docMinusOne.PeptideTransitionGroupCount);
+            foreach (var nodeGroup in docMinusOne.PeptideTransitionGroups)
+            {
+                // The precursor gained an M-1 transition and is no longer auto-managed
+                Assert.IsFalse(nodeGroup.AutoManageChildren);
+                CollectionAssert.AreEquivalent(new[] { -1, 0, 1, 2 },
+                    nodeGroup.Transitions.Select(t => t.Transition.MassIndex).ToArray());
+                var nodeTranMinusOne = nodeGroup.Transitions.Single(t => t.Transition.MassIndex == -1);
+                Assert.AreEqual(IonType.precursor, nodeTranMinusOne.Transition.IonType);
+                // M-1 transitions are added as non-quantitative
+                Assert.IsFalse(nodeTranMinusOne.IsQuantitative(docMinusOne.Settings));
+            }
+
+            // Applying the refinement again does not add a second M-1 transition
+            Assert.AreSame(docMinusOne, refineSettings.Refine(docMinusOne));
+
+            // With SRM settings (no precursor isotopes) there is no M-1 precursor to add
+            var srmDoc = InitRefineDocument(RefinementSettings.ConvertToSmallMoleculesMode.none);
+            Assert.AreSame(srmDoc, refineSettings.Refine(srmDoc));
         }
 
         [TestMethod]

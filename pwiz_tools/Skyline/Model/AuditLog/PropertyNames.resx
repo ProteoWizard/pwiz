@@ -830,6 +830,9 @@
   <data name="RefinementSettings_AddLabelType" xml:space="preserve">
     <value>Add</value>
   </data>
+  <data name="RefinementSettings_AddMinusOnePrecursor" xml:space="preserve">
+    <value>Add M-1 precursor transition</value>
+  </data>
   <data name="RefinementSettings_AutoPickPeptidesAll" xml:space="preserve">
     <value>Auto-select all peptides</value>
   </data>

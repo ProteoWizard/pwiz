@@ -161,6 +161,8 @@ namespace pwiz.Skyline.Model
         public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
         [Track]
         public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
+        [Track(defaultValues: typeof(DefaultValuesFalse))]
+        public bool AddMinusOnePrecursor { get; set; }
         // Results
         [Track]
         public double? MinPeakFoundRatio { get; set; }
@@ -401,7 +403,61 @@ namespace pwiz.Skyline.Model
                 refined = (SrmDocument)document.ChangeChildrenChecked(
                     refined.MoleculeGroups.Where(n => n.Children.Count >= minPeptides).ToArray(), true);
             }
+
+            if (AddMinusOnePrecursor)
+                refined = AddMinusOnePrecursorTransitions(refined);
+
             return refined;
+        }
+
+        /// <summary>
+        /// Adds an M-1 precursor isotope transition to every precursor in the document that does
+        /// not already have one. Precursors that gain a transition have their auto-management of
+        /// child transitions turned off.
+        /// </summary>
+        private SrmDocument AddMinusOnePrecursorTransitions(SrmDocument document)
+        {
+            var listMoleculeGroups = new List<DocNode>();
+            foreach (PeptideGroupDocNode nodePepGroup in document.MoleculeGroups)
+            {
+                var listMolecules = new List<DocNode>();
+                foreach (PeptideDocNode nodePep in nodePepGroup.Molecules)
+                {
+                    var listGroups = new List<DocNode>();
+                    foreach (TransitionGroupDocNode nodeGroup in nodePep.TransitionGroups)
+                        listGroups.Add(AddMinusOnePrecursorTransition(nodeGroup, nodePep, document.Settings));
+                    listMolecules.Add(nodePep.ChangeChildrenChecked(listGroups));
+                }
+                listMoleculeGroups.Add(nodePepGroup.ChangeChildrenChecked(listMolecules));
+            }
+            return (SrmDocument) document.ChangeChildrenChecked(listMoleculeGroups);
+        }
+
+        private static TransitionGroupDocNode AddMinusOnePrecursorTransition(TransitionGroupDocNode nodeGroup,
+            PeptideDocNode nodePep, SrmSettings settings)
+        {
+            // Nothing to do if the M-1 precursor transition is already present
+            if (nodeGroup.Transitions.Any(nodeTran =>
+                    nodeTran.Transition.IonType == IonType.precursor && nodeTran.Transition.MassIndex == -1))
+            {
+                return nodeGroup;
+            }
+
+            // Find the M-1 precursor among the possible precursor transitions. It will be missing
+            // when the document does not extract precursor isotopes (no MS1 full-scan filtering),
+            // in which case there is nothing to add.
+            var nodeTranMinusOne = nodeGroup.GetPrecursorChoices(settings, nodePep.ExplicitMods, false)
+                .Cast<TransitionDocNode>()
+                .FirstOrDefault(nodeTran =>
+                    nodeTran.Transition.IonType == IonType.precursor && nodeTran.Transition.MassIndex == -1);
+            if (nodeTranMinusOne == null)
+                return nodeGroup;
+
+            var listTrans = nodeGroup.Transitions.ToList();
+            listTrans.Add(nodeTranMinusOne);
+            listTrans.Sort(TransitionGroup.CompareTransitions);
+            // Adding a transition turns off auto-management of the precursor's transitions
+            return (TransitionGroupDocNode) nodeGroup.ChangeChildrenChecked(listTrans.Cast<DocNode>().ToArray(), true);
         }
 
         private NormalizeOption GetLabelIndex(IsotopeLabelType type, SrmDocument doc)

@@ -162,6 +162,39 @@
   <data name="&gt;&gt;cbRemovePeptidesMissingLibrary.ZOrder" xml:space="preserve">
     <value>0</value>
   </data>
+  <data name="cbAddMinusOnePrecursor.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="cbAddMinusOnePrecursor.ImeMode" type="System.Windows.Forms.ImeMode, System.Windows.Forms">
+    <value>NoControl</value>
+  </data>
+  <data name="cbAddMinusOnePrecursor.Location" type="System.Drawing.Point, System.Drawing">
+    <value>19, 144</value>
+  </data>
+  <data name="cbAddMinusOnePrecursor.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>2, 2, 2, 2</value>
+  </data>
+  <data name="cbAddMinusOnePrecursor.Size" type="System.Drawing.Size, System.Drawing">
+    <value>172, 17</value>
+  </data>
+  <data name="cbAddMinusOnePrecursor.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="cbAddMinusOnePrecursor.Text" xml:space="preserve">
+    <value>Add M-1 pre&amp;cursor transition</value>
+  </data>
+  <data name="&gt;&gt;cbAddMinusOnePrecursor.Name" xml:space="preserve">
+    <value>cbAddMinusOnePrecursor</value>
+  </data>
+  <data name="&gt;&gt;cbAddMinusOnePrecursor.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;cbAddMinusOnePrecursor.Parent" xml:space="preserve">
+    <value>tabDocument</value>
+  </data>
+  <data name="&gt;&gt;cbAddMinusOnePrecursor.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
   <data name="cbAutoTransitions.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>

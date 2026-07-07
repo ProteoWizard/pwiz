@@ -176,6 +176,7 @@
     <Compile Include="AssociateProteinsWhileLoadingTest.cs" />
     <Compile Include="AssociateProteinVariantTest.cs" />
     <Compile Include="AutoSelectPeptidesTest.cs" />
+    <Compile Include="RefineAddMinusOnePrecursorTest.cs" />
     <Compile Include="AutoTrainModelTest.cs" />
     <Compile Include="AutoZoomTest.cs" />
     <Compile Include="BatchCalibrationGroupComparisonTest.cs" />
