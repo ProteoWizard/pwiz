@@ -25,6 +25,10 @@ namespace pwiz.Osprey.Core
 {
     /// <summary>
     /// Annotation metadata for a library fragment peak. Maps to osprey-core/src/types.rs FragmentAnnotation.
+    /// This is a value type: an initializer that omits a field gets the zero default
+    /// (<see cref="IonType.B"/> = 0, <see cref="Charge"/> = 0), NOT the former
+    /// reference-type ctor defaults (<see cref="IonType.Unknown"/>, Charge = 1). Set
+    /// <see cref="IonType"/> and <see cref="Charge"/> explicitly at every construction site.
     /// </summary>
     public struct FragmentAnnotation
     {
