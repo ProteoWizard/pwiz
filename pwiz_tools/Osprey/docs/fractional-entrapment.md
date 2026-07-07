@@ -99,6 +99,30 @@ composition (and therefore many fragment masses) and are over-identified.
 Foreign-species entrapment is the more faithful model of the sequences that cause
 real false identifications.
 
+## Why entrapment, and how to read it
+
+Entrapment is an *external* check: unlike the decoys (which are also the null the
+q-values are built on), a foreign-species marker set is an independent estimate of the
+real false-positive population, so it can catch a decoy model that is silently wrong.
+Bernhardt et al. (2016) established this methodology on high-resolution DIA — using a
+foreign proteome (*E. coli*) as a ground-truth negative control, they showed that a
+composition-preserving (scrambled/inverted) decoy matches the control and gives an
+accurate, slightly conservative FDR, whereas an m/z-shifted decoy underestimates the
+FDR while returning the *most* identifications — a mirage. Their lesson is the reason
+this report exists: the number of identifications alone is not evidence a change was
+good; only an independent false-signal control is.
+
+Read the combined estimate **comparatively**, following Wen et al. (2025) and the
+diagFDR reporting framework (Chion et al. 2026):
+
+- `FDP_entrap(α) ≫ α` at the operating cutoff is strong evidence of **anti-conservative**
+  error control — the reported q is optimistic.
+- `FDP_entrap(α) ≈ α` is *consistent with* valid control but is **not proof** of it: an
+  optimistic decoy and a pessimistic entrapment can coincidentally cancel. (In
+  particular, if the entrapment shares whatever manipulation makes the decoys unusual —
+  e.g. both shifted off the target m/z — the two agree while both mis-model real false
+  targets. Keep the entrapment representative and independent of the decoy construction.)
+
 ## Recommendation and caveats
 
 A **~10% foreign-species entrapment overlay**, read through the combined and
@@ -109,9 +133,15 @@ a full 1:1 library.
 - **Power versus cost.** Smaller `r` means fewer entrapment hits and a noisier
   estimate; 10% is a pragmatic operating point, not a proven optimum. Read the value
   as an interval, not a third significant figure.
-- **Marker choice.** The entrapment species must be genuinely absent from the sample
-  (e.g. *Arabidopsis* for human/mammalian samples), homology-filtered against the
-  targets, and matched on precursor m/z so it samples the same difficulty regime.
+- **Marker choice.** The entrapment proteome must be genuinely absent from the sample
+  (e.g. *Arabidopsis* for human/mammalian samples), sufficiently large to yield
+  measurable hits at the operating cutoff, and phylogenetically distant enough to be
+  homology-filtered cleanly against the targets (the three criteria of Chion et al.
+  2026). It should also **model the sequences that cause real false identifications**:
+  match the target precursor-m/z distribution so it samples the same difficulty regime,
+  and — on high-resolution data, where MS1 precursor features carry weight — sit at
+  physically plausible, occupied precursor m/z rather than being shifted off it, so its
+  MS1 behaviour mirrors a true false target rather than an easily-rejected artifact.
 
 ## References
 
@@ -127,3 +157,11 @@ a full 1:1 library.
 4. Wen B, Freestone J, Riffle M, MacCoss MJ, Noble WS, Keich U. Assessment of false
    discovery rate control in tandem mass spectrometry analysis using entrapment.
    *Nat. Methods* 2025; 22:1454–1463.
+5. Bernhardt OM, Bruderer R, Gandhi T, Miladinović SM, Bober M, Ehrenberger T, Rinner O,
+   Reiter L. General guidelines for validation of decoy models for HRM/DIA/SWATH as
+   exemplified using Spectronaut. *Proteomics* 2016 (poster/methods) — foreign-organism
+   (*E. coli*) negative-control validation of decoy models on high-resolution DIA.
+6. Chion M, Godmer A, Douché T, Matondo M, Giai Gianetto Q. diagFDR: verifiable FDR
+   reporting in proteomics via scope, calibration, and stability diagnostics. *bioRxiv*
+   2026; doi:10.64898/2026.04.16.718468. (Formalizes the equal-chance assumption and the
+   comparative interpretation of entrapment-based FDP.)
