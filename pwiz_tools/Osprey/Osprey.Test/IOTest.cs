@@ -816,15 +816,10 @@ namespace pwiz.Osprey.Test
                         Assert.AreEqual(orig.Fragments[f].Annotation.Charge,
                             copy.Fragments[f].Annotation.Charge);
 
-                        var origNl = orig.Fragments[f].Annotation.NeutralLoss;
-                        var copyNl = copy.Fragments[f].Annotation.NeutralLoss;
-                        if (origNl == null)
-                            Assert.IsNull(copyNl);
-                        else
-                        {
-                            Assert.IsNotNull(copyNl);
-                            Assert.AreEqual(origNl.Mass, copyNl.Mass, 1e-10);
-                        }
+                        Assert.AreEqual(orig.Fragments[f].Annotation.HasNeutralLoss,
+                            copy.Fragments[f].Annotation.HasNeutralLoss);
+                        Assert.AreEqual(orig.Fragments[f].Annotation.NeutralLossMass,
+                            copy.Fragments[f].Annotation.NeutralLossMass, 1e-10);
                     }
 
                     // Check modification details
@@ -1825,7 +1820,7 @@ namespace pwiz.Osprey.Test
                         IonType = IonType.B,
                         Ordinal = 3,
                         Charge = 1,
-                        NeutralLoss = NeutralLoss.H2O
+                        NeutralLoss = NeutralLossCode.H2O
                     }
                 },
                 new LibraryFragment
@@ -1837,7 +1832,8 @@ namespace pwiz.Osprey.Test
                         IonType = IonType.Y,
                         Ordinal = 5,
                         Charge = 2,
-                        NeutralLoss = NeutralLoss.Custom(98.0)
+                        NeutralLoss = NeutralLossCode.Custom,
+                        CustomLossMass = 98.0
                     }
                 }
             };

@@ -288,9 +288,9 @@ namespace pwiz.Osprey.Test
             var entry = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0);
             entry.Fragments = new List<LibraryFragment>
             {
-                new LibraryFragment { Mz = 300.0, RelativeIntensity = 100.0f, Annotation = new FragmentAnnotation() },
-                new LibraryFragment { Mz = 400.0, RelativeIntensity = 50.0f, Annotation = new FragmentAnnotation() },
-                new LibraryFragment { Mz = 500.0, RelativeIntensity = 75.0f, Annotation = new FragmentAnnotation() }
+                new LibraryFragment { Mz = 300.0, RelativeIntensity = 100.0f, Annotation = new FragmentAnnotation { Charge = 1 } },
+                new LibraryFragment { Mz = 400.0, RelativeIntensity = 50.0f, Annotation = new FragmentAnnotation { Charge = 1 } },
+                new LibraryFragment { Mz = 500.0, RelativeIntensity = 75.0f, Annotation = new FragmentAnnotation { Charge = 1 } }
             };
 
             var spectrum = new Spectrum

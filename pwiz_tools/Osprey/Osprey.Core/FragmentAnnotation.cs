@@ -26,18 +26,29 @@ namespace pwiz.Osprey.Core
     /// <summary>
     /// Annotation metadata for a library fragment peak. Maps to osprey-core/src/types.rs FragmentAnnotation.
     /// </summary>
-    public class FragmentAnnotation
+    public struct FragmentAnnotation
     {
         public IonType IonType { get; set; }
         public byte Ordinal { get; set; }
         public byte Charge { get; set; }
-        public NeutralLoss NeutralLoss { get; set; }
+        public NeutralLossCode NeutralLoss { get; set; }
 
-        public FragmentAnnotation()
+        /// <summary>
+        /// Custom neutral-loss mass; meaningful only when <see cref="NeutralLoss"/>
+        /// is <see cref="NeutralLossCode.Custom"/>.
+        /// </summary>
+        public double CustomLossMass { get; set; }
+
+        /// <summary>True when this fragment carries any neutral loss.</summary>
+        public bool HasNeutralLoss
         {
-            IonType = IonType.Unknown;
-            Ordinal = 0;
-            Charge = 1;
+            get { return NeutralLoss != NeutralLossCode.None; }
+        }
+
+        /// <summary>Mass of the neutral loss (0 when there is none).</summary>
+        public double NeutralLossMass
+        {
+            get { return pwiz.Osprey.Core.NeutralLoss.MassFor(NeutralLoss, CustomLossMass); }
         }
     }
 

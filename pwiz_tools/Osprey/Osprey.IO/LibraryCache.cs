@@ -130,7 +130,7 @@ namespace pwiz.Osprey.IO
                             w.Write(IonTypeToByte(frag.Annotation.IonType));
                             w.Write(frag.Annotation.Ordinal);
                             w.Write(frag.Annotation.Charge);
-                            WriteNeutralLoss(w, frag.Annotation.NeutralLoss);
+                            WriteNeutralLoss(w, frag.Annotation.NeutralLoss, frag.Annotation.CustomLossMass);
                         }
 
                         // Protein IDs
@@ -251,7 +251,7 @@ namespace pwiz.Osprey.IO
                         IonType ionType = ByteToIonType(r.ReadByte());
                         byte ordinal = r.ReadByte();
                         byte fragCharge = r.ReadByte();
-                        NeutralLoss neutralLoss = ReadNeutralLoss(r);
+                        var (lossCode, lossMass) = ReadNeutralLoss(r);
 
                         fragments.Add(new LibraryFragment
                         {
@@ -262,7 +262,8 @@ namespace pwiz.Osprey.IO
                                 IonType = ionType,
                                 Ordinal = ordinal,
                                 Charge = fragCharge,
-                                NeutralLoss = neutralLoss
+                                NeutralLoss = lossCode,
+                                CustomLossMass = lossMass
                             }
                         });
                     }
@@ -346,46 +347,59 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        private static void WriteNeutralLoss(BinaryWriter w, NeutralLoss nl)
+        private static void WriteNeutralLoss(BinaryWriter w, NeutralLossCode code, double customMass)
         {
-            if (nl == null)
+            switch (code)
             {
-                w.Write((byte)0);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.H2O) ||
-                     Math.Abs(nl.Mass - NeutralLoss.H2O.Mass) < 1e-6)
-            {
-                w.Write((byte)1);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.NH3) ||
-                     Math.Abs(nl.Mass - NeutralLoss.NH3.Mass) < 1e-6)
-            {
-                w.Write((byte)2);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.H3PO4) ||
-                     Math.Abs(nl.Mass - NeutralLoss.H3PO4.Mass) < 1e-6)
-            {
-                w.Write((byte)3);
-            }
-            else
-            {
-                w.Write((byte)4);
-                w.Write(nl.Mass);
+                case NeutralLossCode.None:
+                    w.Write((byte)0);
+                    break;
+                case NeutralLossCode.H2O:
+                    w.Write((byte)1);
+                    break;
+                case NeutralLossCode.NH3:
+                    w.Write((byte)2);
+                    break;
+                case NeutralLossCode.H3PO4:
+                    w.Write((byte)3);
+                    break;
+                default:
+                    // Custom -- collapse to a named tag when the mass matches one
+                    // within 1e-6, matching the legacy reference-type writer so the
+                    // on-disk bytes are unchanged.
+                    if (Math.Abs(customMass - NeutralLoss.H2OMass) < 1e-6)
+                    {
+                        w.Write((byte)1);
+                    }
+                    else if (Math.Abs(customMass - NeutralLoss.NH3Mass) < 1e-6)
+                    {
+                        w.Write((byte)2);
+                    }
+                    else if (Math.Abs(customMass - NeutralLoss.H3PO4Mass) < 1e-6)
+                    {
+                        w.Write((byte)3);
+                    }
+                    else
+                    {
+                        w.Write((byte)4);
+                        w.Write(customMass);
+                    }
+                    break;
             }
         }
 
-        private static NeutralLoss ReadNeutralLoss(BinaryReader r)
+        private static (NeutralLossCode Code, double CustomMass) ReadNeutralLoss(BinaryReader r)
         {
             byte tag = r.ReadByte();
             switch (tag)
             {
-                case 0: return null;
-                case 1: return NeutralLoss.H2O;
-                case 2: return NeutralLoss.NH3;
-                case 3: return NeutralLoss.H3PO4;
+                case 0: return (NeutralLossCode.None, 0.0);
+                case 1: return (NeutralLossCode.H2O, 0.0);
+                case 2: return (NeutralLossCode.NH3, 0.0);
+                case 3: return (NeutralLossCode.H3PO4, 0.0);
                 case 4:
                     double mass = r.ReadDouble();
-                    return NeutralLoss.Custom(mass);
+                    return (NeutralLossCode.Custom, mass);
                 default:
                     throw new InvalidDataException(string.Format(
                         "Unknown neutral loss tag: {0}", tag));
