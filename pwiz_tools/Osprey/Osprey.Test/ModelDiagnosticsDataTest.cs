@@ -45,6 +45,7 @@ namespace pwiz.Osprey.Test
         {
             TestFdpMatchesFdrBenchFormula();
             TestPairedEstimator();
+            TestPairedSuppressedForPartialEntrapment();
             TestClassCountsAndDegrade();
             TestWinFractionCoinVsSignal();
             TestFeatureTableContributions();
@@ -250,6 +251,44 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2.0 / 6.0, fdp.LowerBound[last], 1e-9);
             // Paired sits at or above lower-bound once an entrapment ranks above its pair.
             Assert.IsTrue(fdp.Paired[last] >= fdp.LowerBound[last]);
+            // r == 1 (balanced 1-fold library): paired is shown, not suppressed.
+            Assert.IsFalse(fdp.PairedSuppressedPartial);
+        }
+
+        // A partial (non-1:1) entrapment library -- e.g. a routine 10% overlay,
+        // r != 1 -- must SUPPRESS the paired estimator (it is 1-fold only) while
+        // combined and lower-bound stay valid and r-aware. Same fixture as
+        // TestPairedEstimator, built with r = 0.1.
+        private static void TestPairedSuppressedForPartialEntrapment()
+        {
+            var entries = new List<FdrEntry>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            var pair = new Dictionary<uint, uint>();
+            double[] tscores = { 8, 6, 4, 2 };
+            for (int i = 0; i < 4; i++)
+            {
+                entries.Add(Entry((uint)(10 + i), false, tscores[i], 0.001 * (i + 1), "T" + i, 2));
+                cls[(uint)(10 + i)] = EntrapmentClass.Target;
+                pair[(uint)(10 + i)] = (uint)i;
+            }
+            entries.Add(Entry(20, false, 5.0, 0.002, "Pa", 2));
+            cls[20] = EntrapmentClass.PTarget; pair[20] = 100;
+            entries.Add(Entry(21, false, 3.0, 0.003, "Pb", 2));
+            cls[21] = EntrapmentClass.PTarget; pair[21] = 0;
+
+            const double r = 0.1;
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, pair, r, 0.01, "peptide");
+            var fdp = data.FdpViews.Single(v => v.Scope == "experiment");
+            // Paired is a 1-fold estimator: suppressed (null) and flagged for r != 1.
+            Assert.IsNull(fdp.Paired);
+            Assert.IsTrue(fdp.PairedSuppressedPartial);
+            // Combined and lower-bound stay populated and r-aware. At the last target
+            // n_t = 4, n_p = 2: combined = (1 + 1/r)*2/(4+2), lower = 2/(r*(4+2)).
+            Assert.IsNotNull(fdp.Combined);
+            Assert.IsNotNull(fdp.LowerBound);
+            int last = fdp.Combined.Length - 1;
+            Assert.AreEqual((1.0 + 1.0 / r) * 2.0 / 6.0, fdp.Combined[last], 1e-9);
+            Assert.AreEqual(2.0 / (r * 6.0), fdp.LowerBound[last], 1e-9);
         }
 
         // combined = (1 + 1/r) * n_p / (n_t + n_p); lower = n_p / (r*(n_t+n_p)).
