@@ -28,10 +28,13 @@
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
 
-  <!-- Fixture data next to the test .cs - copy to output. -->
+  <!-- Fixture data next to the test .cs - copy to output. Exclude bin/obj: with
+       EnableDefaultNoneItems=false these globs don't inherit the SDK's default output
+       exclusion, so "**\*.zip" would otherwise re-copy bin's own fixtures into
+       bin\...\bin\...\ on every incremental build (deep nesting that fills the disk). -->
   <ItemGroup>
-    <None Include="**\*.zip" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="**\*.data" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="**\*.zip" Exclude="bin\**;obj\**" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="**\*.data" Exclude="bin\**;obj\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
