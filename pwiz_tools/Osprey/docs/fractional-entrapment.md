@@ -78,23 +78,24 @@ entrapment set at several ratios (reported precursor pool, 1% reported q):
 
 | r (entrapment:target) | combined FDP | target detections |
 |---|---|---|
-| 1.00 | 1.05% | 27,931 |
-| 0.50 | 1.14% | 29,536 |
-| 0.25 | 1.09% | 30,141 |
-| 0.10 | 1.15% | 30,654 |
+| 1.00 | 0.96% | 27,112 |
+| 0.50 | 1.05% | 28,595 |
+| 0.25 | 0.96% | 29,116 |
+| 0.10 | 1.09% | 29,576 |
 
-- The estimate is essentially **invariant (~1.1%) across a 10× change in `r`** — the
+- The estimate is essentially **invariant (~1.0%) across a 10× change in `r`** — the
   ratio correction behaving exactly as the theory predicts.
-- **Detections are recovered as `r` shrinks** (target detections rise from 27,931 to
-  30,654): at `r = 1` a 50%-marker library perturbs the search and suppresses
+- **Detections are recovered as `r` shrinks** (target detections rise from 27,112 to
+  29,576): at `r = 1` a 50%-marker library perturbs the search and suppresses
   detections; near `r ≈ 0.1` the analysis is close to native. This is the
   precision-versus-yield trade-off Fitzgibbon et al. describe, in reverse.
 
-The estimate is also sensitive to marker *realism* independently of ratio: at
-`r = 1`, target-anagram shuffled entrapment reads ~1.6% versus ~1.05% for real
+The estimate is also sensitive to marker *realism* independently of ratio:
+target-anagram shuffled entrapment reads meaningfully higher than real
 foreign-species peptides, because shuffled anagrams share the target's amino-acid
-composition and are over-identified. Foreign-species entrapment is the more faithful
-model of the sequences that cause real false identifications.
+composition (and therefore many fragment masses) and are over-identified.
+Foreign-species entrapment is the more faithful model of the sequences that cause
+real false identifications.
 
 ## Recommendation and caveats
 
