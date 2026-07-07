@@ -10,4 +10,26 @@
   <PropertyGroup Condition="'$(TargetPlatformIdentifier)' == 'Windows'">
     <NoWarn>$(NoWarn);CA1416</NoWarn>
   </PropertyGroup>
+
+  <!-- Test-only: the TeamCity vstest logger, so per-test ##teamcity[testStarted/
+       testFinished/testFailed] service messages (with suite/class organization) reach
+       the TeamCity UI when tests run under a plain Command Line step (tcbuild.bat),
+       mirroring pwiz-sharp/Directory.Build.targets. Gated on IsTestProject, which
+       Microsoft.NET.Test.Sdk sets and is in scope here (.targets imports after the
+       project) - so it applies to the net8.0-windows test build, not the net472 one. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+    <PackageReference Include="TeamCity.VSTest.TestAdapter" Version="1.0.40" GeneratePathProperty="true" />
+  </ItemGroup>
+
+  <!-- The package's build props flow its logger DLLs to net-family TFMs but NOT to
+       net8.0-windows (Skyline's WinForms test projects), so vstest can't find the
+       'teamcity' logger there. Copy the logger assemblies to the test output
+       explicitly. Only under TeamCity, where the logger is actually used. -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true' and '$(TEAMCITY_VERSION)' != ''">
+    <Content Include="$(PkgTeamCity_VSTest_TestAdapter)\build\_common\vstest15\*.dll">
+      <Link>%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
 </Project>
