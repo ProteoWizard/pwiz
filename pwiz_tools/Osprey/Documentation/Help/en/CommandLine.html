@@ -45,6 +45,9 @@ a { color: #1565c0; }
 <tr><td><nobr>--fdr-method</nobr> &lt;percolator | simple&gt;</td><td>FDR method (default: percolator)</td></tr>
 <tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>FDR level (default: precursor)</td></tr>
 <tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>Shared peptide handling (default: all)</td></tr>
+<tr><td><nobr>--fdrbench</nobr>&nbsp;&lt;input.tsv&gt;</td><td>Write an <nobr>FDRBench-compatible</nobr> input TSV to this path. The level is taken from <nobr>--fdr-level</nobr> (peptide; precursor and both emit <nobr>precursor-level</nobr>). Includes every reported (<nobr>compaction-surviving</nobr>) target, i.e. the peptides actually written to the output, regardless of <nobr>q-value</nobr>, with the raw SVM discriminant as &#39;score&#39;, so FDRBench can compute <nobr>true-FDR</nobr> via entrapment counting without truncation at Osprey&#39;s threshold.</td></tr>
+<tr><td><nobr>--fdrbench-per-run</nobr></td><td>With <nobr>--fdrbench</nobr>: emit one row per (precursor, run) using <nobr>run-level</nobr> <nobr>q-values</nobr> (adds a &#39;run&#39; column). Default is one row per precursor using <nobr>experiment-level</nobr> <nobr>q-values</nobr>.</td></tr>
+<tr><td><nobr>--fdrbench-pass</nobr> &lt;1 | 2&gt;</td><td>With <nobr>--fdrbench</nobr>: which FDR pass to emit. 2 (default) = the <nobr>post-compaction</nobr> <nobr>second-pass</nobr> survivors written to the blib (the FDR of what Osprey reports). 1 = the full <nobr>pre-compaction</nobr> <nobr>first-pass</nobr> pool (every scored target, regardless of q) with <nobr>first-pass</nobr> <nobr>q-values</nobr>, matching Rust osprey&#39;s write_fdrbench_peptide_input (the assumption the <nobr>second-pass</nobr> output rests on).</td></tr>
 </table>
 <div class="RowType">Decoys</div>
 <table>
@@ -78,6 +81,7 @@ a { color: #1565c0; }
 <table>
 <tr><th>Argument</th><th>Description</th></tr>
 <tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>Write <nobr>cross-impl</nobr> bisection dumps (OSPREY_DUMP_* bundle)</td></tr>
+<tr><td><nobr>--model-diagnostics</nobr></td><td>Write a <nobr>self-contained</nobr> interactive HTML report of the trained scoring model and FDR calibration</td></tr>
 <tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>Show this help message ([ascii|unicode|sections|html|&lt;Section&gt;])</td></tr>
 <tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>Show version</td></tr>
 </table>

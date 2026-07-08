@@ -28,6 +28,7 @@ using System.IO;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.Tasks.ModelDiagnostics;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -123,6 +124,10 @@ namespace pwiz.Osprey.Tasks
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
+            // The 2nd-pass Percolator model (--protein-fdr retrain), captured for the
+            // model-diagnostics pass-2 model view; null on a single-pass run.
+            FeatureContributions pass2Contributions = null;
+
             // Stage 8: Protein FDR (optional)
             if (config.ProteinFdr.HasValue)
             {
@@ -131,7 +136,7 @@ namespace pwiz.Osprey.Tasks
                 // write .2nd-pass sidecars -> reload onto stubs) before run-wide
                 // protein FDR consumes the 2nd-pass q-values. Extracted to
                 // Pass2FdrSidecar so Run reads as a sequencer; behavior unchanged.
-                Pass2FdrSidecar.ComputeAndPersist(
+                pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
                     ctx, perFileEntries, perFileParquetPaths,
                     Name, ValidityKey(ctx));
 
@@ -145,6 +150,15 @@ namespace pwiz.Osprey.Tasks
                     swProtein.Elapsed.TotalSeconds));
             }
 
+            // Re-clamp experiment q to each entry's best run q on the FINAL post-Stage-6
+            // pool. The pass-1 (and any pass-2) Percolator already clamped, but Stage 6
+            // reconciliation zeroes the run q of moved peaks AFTER that clamp, so a precursor
+            // whose only run-passing observation was relocated can otherwise keep a stale low
+            // experiment q with no surviving run support -- reported with no run-level ID (the
+            // blib ID-line artifact). Re-clamping here, against the run q's actually written to
+            // the blib, restores "reported => some run genuinely passed" for the final output.
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+
             // Write output blib
             ctx.LogInfo(string.Empty);
             var swBlib = Stopwatch.StartNew();
@@ -152,6 +166,53 @@ namespace pwiz.Osprey.Tasks
             swBlib.Stop();
             ctx.LogInfo(string.Format(@"[STAGE-WALL] blib: {0:F1}s",
                 swBlib.Elapsed.TotalSeconds));
+
+            // FDRBench input TSV (pass 2): the peptides we report - the final merged/rescored set
+            // written to the output - each with its final second-pass q-value and raw SVM
+            // discriminant, so FDRBench can evaluate the FDR/FDP of what Osprey actually outputs.
+            // (The blib writer only persists a 0.0 placeholder discriminant, so this is the only
+            // path to a usable FDRBench score.) Pass 1 (the full pre-compaction first-pass pool)
+            // is emitted earlier, in FirstJoinTask before compaction; the two are mutually
+            // exclusive per run (--fdrbench-pass).
+            if (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 2)
+            {
+                var swFdrBench = Stopwatch.StartNew();
+                var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
+                var benchResult = FdrBenchInputWriter.WritePeptideInput(
+                    config.OutputFdrBench, perFileEntries, libraryById, config.FdrLevel,
+                    config.FdrBenchPerRun, pairing.ExcludedEntrapment);
+                // Emit the corrected pairing manifest from the same library so FDRBench
+                // classifies every reported peptide and drops nothing (feed FDRBench -pep with this).
+                string manifestPath = config.OutputFdrBench + @".pairing.tsv";
+                int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
+                swFdrBench.Stop();
+                ctx.LogInfo(string.Format(@"Wrote FDRBench input ({0}) to {1}: {2} rows",
+                    config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
+                    config.OutputFdrBench, benchResult.Rows));
+                ctx.LogInfo(string.Format(@"Wrote FDRBench pairing manifest (from the searched library) to {0}: {1} peptides",
+                    manifestPath, manifestRows));
+                pairing.LogSummary(ctx.LogInfo);
+                if (benchResult.MissingLibrary > 0)
+                    ctx.LogInfo(string.Format(
+                        @"{0} FDRBench rows had no library entry; peptide and protein columns left blank",
+                        benchResult.MissingLibrary));
+                if (benchResult.TruncatedProtein > 0)
+                    ctx.LogInfo(string.Format(
+                        @"{0} FDRBench rows had oversize protein-ID lists; truncated with ';...+N_more'",
+                        benchResult.TruncatedProtein));
+                ctx.LogInfo(string.Format(@"[STAGE-WALL] fdrbench: {0:F1}s",
+                    swFdrBench.Elapsed.TotalSeconds));
+            }
+
+            // --model-diagnostics: append the pass-2 (final reported pool) FDR
+            // calibration views to the page FirstJoinTask wrote for pass 1, from
+            // this post-compaction, second-pass-q-valued pool -- the same
+            // RescoredEntries the pass-2 FDRBench TSV is written from. Opt-in and
+            // off the default output path; a failure is logged and swallowed.
+            if (config.ModelDiagnostics)
+                ModelDiagnosticsReport.WritePass2AndFinalize(
+                    perFileEntries, pass2Contributions, libraryById, config, ctx.LogInfo);
+
             return true;
         }
 

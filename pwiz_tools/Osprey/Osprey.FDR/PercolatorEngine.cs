@@ -61,9 +61,11 @@ namespace pwiz.Osprey.FDR
             OspreyConfig config,
             OspreyFeatureInfo[] featureInfos,
             Action<string> logInfo,
+            out FeatureContributions contributions,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass")
         {
+            contributions = null;
             int numFeatures = featureInfos.Length;
 
             // Sort each file's entries by EntryId so the SVM working-set
@@ -78,7 +80,9 @@ namespace pwiz.Osprey.FDR
             // bit-equal. Mirrors Rust pipeline.rs::run_percolator_fdr.
             foreach (var kvp in perFileEntries)
             {
-                kvp.Value.Sort((a, b) =>
+                // Array.Sort OK: the terminal key is ParquetIndex, which is unique per row,
+                // so the comparator never returns 0 and the unstable-sort tie path is unreachable.
+                kvp.Value.Sort((a, b) => // Array.Sort OK: (see above) terminal key ParquetIndex is unique per row, comparator never ties
                 {
                     int c = a.EntryId.CompareTo(b.EntryId);
                     if (c != 0) return c;
@@ -112,6 +116,9 @@ namespace pwiz.Osprey.FDR
                 MaxIterations = 10,
                 NFolds = 3,
                 FeatureInfos = featureInfos,
+                // Collect per-feature target/decoy score histograms only for the
+                // model-diagnostics report (off the production path otherwise).
+                CollectFeatureHistograms = config.ModelDiagnostics,
                 Diagnostics = diagnostics
             };
 
@@ -140,6 +147,11 @@ namespace pwiz.Osprey.FDR
             {
                 results = PercolatorFdr.RunPercolator(percEntries, percConfig);
             }
+
+            // Surface the trained model's feature contributions to the caller
+            // (the --model-diagnostics report reads them). Computed already; this
+            // is a pure hand-off, no behavior change on any production path.
+            contributions = results.FeatureContributions;
 
             // A diagnostic-only (*Only) dump fired inside the engine; it left the
             // run as a pure no-op and signalled here. Stop without scoring the
@@ -175,6 +187,13 @@ namespace pwiz.Osprey.FDR
                     }
                 }
             }
+
+            // Best-of-runs monotonicity on the just-written experiment q-values. Runs for
+            // both the first pass and the reconciliation-aware second pass, so every consumer
+            // (blib gate, --model-diagnostics, compaction) sees q-values that already satisfy
+            // "an experiment-level q is never more confident than the entry's best single run."
+            ClampExperimentQToBestRun(perFileEntries);
+
             // Log FDR results
             int nTargetPassing = 0;
             int nDecoyPassing = 0;
@@ -227,6 +246,84 @@ namespace pwiz.Osprey.FDR
                 "[COUNT] {0} unique precursors (best q across files): {1}",
                 passLabel, bestQByPrecursor.Count));
             return false;
+        }
+
+        /// <summary>
+        /// Clamp each entry's experiment-level q-value up to its own best (min) run-level
+        /// q-value, enforcing that a best-of-runs aggregate can never be more confident than
+        /// its best single run. Experiment-level FDR competes each precursor's single best
+        /// observation against a de-duplicated (thinner) decoy null, so the raw experiment q
+        /// can fall BELOW every per-run q -- letting a precursor pass experiment-level FDR with
+        /// no run passing run-level FDR. Downstream that produces reported peptides with no
+        /// run-level ID (the blib ID-line artifact Mike observed) and an anti-conservative
+        /// experiment-wide FDP calibration.
+        ///
+        /// The run floor is the entry's best (min) <em>combined</em> run q-value
+        /// (<see cref="FdrLevel.Both"/> = max(precursor, peptide)), matching the blib ID line
+        /// and <c>OspreyRunScores.RunQValue</c> (both <c>EffectiveRunQvalue(Both)</c>): so
+        /// "reported =&gt; some run passes at BOTH the precursor and peptide granularity",
+        /// which is the exact invariant a Skyline ID line represents. Both floors key on the
+        /// target/decoy-specific identity (never the shared base_id / bare sequence -- a target
+        /// must not inherit its paired decoy's good run):
+        ///   ExperimentPrecursorQvalue &lt;- max(ExperimentPrecursorQvalue, min-over-runs runBoth)   [by EntryId]
+        ///   ExperimentPeptideQvalue   &lt;- max(ExperimentPeptideQvalue,   min-over-runs runBoth)   [by (ModifiedSequence, IsDecoy)]
+        /// Run-level q is winner-only per file, so a losing run contributes 1.0 and the min
+        /// naturally picks the entry's best genuine run.
+        ///
+        /// The floor is run-Both at BOTH experiment levels even when <c>--fdr-level</c> is
+        /// <see cref="FdrLevel.Precursor"/> (the default): the reported gate and the blib ID
+        /// line are always Both, so flooring by run-Both is what makes "reported =&gt; a run
+        /// has an ID line" hold. A precursor can therefore be raised out of the reported set
+        /// because no run cleared run-<em>peptide</em> FDR, even under precursor-level control
+        /// -- intended, matching blib fidelity rather than the run-precursor gate alone.
+        /// </summary>
+        public static void ClampExperimentQToBestRun(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            var minRunBothByEntryId = new Dictionary<uint, double>();
+            var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    double runBoth = e.EffectiveRunQvalue(FdrLevel.Both);
+                    double curPrec;
+                    if (!minRunBothByEntryId.TryGetValue(e.EntryId, out curPrec) || runBoth < curPrec)
+                        minRunBothByEntryId[e.EntryId] = runBoth;
+
+                    // Treat a null/empty ModifiedSequence as missing (a Parquet stub loaded
+                    // without the modified_sequence column can be string.Empty): it has no
+                    // peptide identity, so it must not bucket unrelated entries under an empty key.
+                    if (string.IsNullOrEmpty(e.ModifiedSequence))
+                        continue;
+                    // Peptide identity is (ModifiedSequence, IsDecoy): a decoy can share its
+                    // paired target's ModifiedSequence, so keying on the sequence alone would
+                    // let a decoy's good run lower the target's peptide floor (anti-conservative).
+                    var pkey = (e.ModifiedSequence, e.IsDecoy);
+                    double curPept;
+                    if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
+                        minRunBothByPeptide[pkey] = runBoth;
+                }
+            }
+
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    double floorPrec;
+                    if (minRunBothByEntryId.TryGetValue(e.EntryId, out floorPrec) &&
+                        floorPrec > e.ExperimentPrecursorQvalue)
+                        e.ExperimentPrecursorQvalue = floorPrec;
+
+                    if (!string.IsNullOrEmpty(e.ModifiedSequence))
+                    {
+                        double floorPept;
+                        if (minRunBothByPeptide.TryGetValue((e.ModifiedSequence, e.IsDecoy), out floorPept) &&
+                            floorPept > e.ExperimentPeptideQvalue)
+                            e.ExperimentPeptideQvalue = floorPept;
+                    }
+                }
+            }
         }
 
         /// <summary>
