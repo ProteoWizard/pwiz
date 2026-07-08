@@ -760,12 +760,13 @@ namespace pwiz.Osprey.Test
             public FdrQValues QAt(int fileIdx, int rowIdx) => _q[(fileIdx, rowIdx)];
         }
 
+        // ReSharper disable once InvalidXmlDocComment
         /// <summary>
         /// End-to-end projection RunPercolatorFdr equivalence (the survivor-reload
         /// equivalence at the unit level): the projection
         /// <see cref="PercolatorEngine.RunPercolatorFdr(FdrProjectionSet,OspreyConfig,OspreyFeatureInfo[],System.Action{string},IFdrOutputSink,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
         /// overload must produce byte-identical Score + q-values to the FdrEntry
-        /// <see cref="PercolatorEngine.RunPercolatorFdr(System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{string,System.Collections.Generic.List{FdrEntry}}},OspreyConfig,OspreyFeatureInfo[],System.Action{string},PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
+        /// <see cref="PercolatorEngine.RunPercolatorFdr(List{KeyValuePair{string,List{FdrEntry}}},OspreyConfig,OspreyFeatureInfo[],System.Action{string},FeatureContributions,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
         /// overload -- the flag-off byte-identity ORACLE -- on the same input, at the
         /// shared production config (default MaxTrainSize, so both overloads take their
         /// DIRECT dispatch: train RunPercolator on the full population with the Stage 5
