@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace pwiz.Osprey.FDR
 {
@@ -178,13 +179,15 @@ namespace pwiz.Osprey.FDR
                 }
             }
 
-            // Sort winners by score descending (highest scores first).
-            // Array.Sort OK: tie hazard, conversion deferred. Distinct base_ids can carry
-            // equal scores and the cumulative target/decoy FDR walk below is order-sensitive
-            // at a tie, so this is a genuine parity hazard vs Rust's stable sort. Not a #4362
-            // approved U-site; converting to a stable/keyed sort must go through the
-            // regression golden, so it is deferred to a follow-up rather than shipped here.
-            winners.Sort((a, b) => b.Score.CompareTo(a.Score)); // Array.Sort OK: (see above) tie hazard, conversion deferred -- not a #4362 approved U-site
+            // Sort winners by score descending (highest scores first) with a STABLE sort,
+            // matching Rust winners.sort_by (osprey-fdr/src/lib.rs:148, which is stable).
+            // List<T>.Sort is an unstable introsort, so at an exact score tie between
+            // distinct base_ids it could reorder winners arbitrarily, and the cumulative
+            // target/decoy FDR walk below is order-sensitive at a tie -- a genuine parity /
+            // determinism hazard. OrderByDescending is a stable sort, so tied winners keep
+            // their input (dictionary insertion) order, mirroring Rust's stable sort of its
+            // (also map-iteration-ordered) winners.
+            winners = winners.OrderByDescending(w => w.Score).ToList();
 
             // First pass: walk down and find MAX cumulative_targets at any position where FDR <= threshold
             int nTargetWins = 0;
