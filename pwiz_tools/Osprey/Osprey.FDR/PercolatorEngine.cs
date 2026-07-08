@@ -968,5 +968,90 @@ namespace pwiz.Osprey.FDR
                 }
             }
         }
+
+        /// <summary>
+        /// Clamp each entry's experiment-level q-value up to its own best (min) run-level
+        /// q-value, enforcing that a best-of-runs aggregate can never be more confident than
+        /// its best single run. Experiment-level FDR competes each precursor's single best
+        /// observation against a de-duplicated (thinner) decoy null, so the raw experiment q
+        /// can fall BELOW every per-run q -- letting a precursor pass experiment-level FDR with
+        /// no run passing run-level FDR. Downstream that produces reported peptides with no
+        /// run-level ID (the blib ID-line artifact Mike observed) and an anti-conservative
+        /// experiment-wide FDP calibration.
+        ///
+        /// The run floor is the entry's best (min) <em>combined</em> run q-value
+        /// (<see cref="FdrLevel.Both"/> = max(precursor, peptide)), matching the blib ID line
+        /// and <c>OspreyRunScores.RunQValue</c> (both <c>EffectiveRunQvalue(Both)</c>): so
+        /// "reported =&gt; some run passes at BOTH the precursor and peptide granularity",
+        /// which is the exact invariant a Skyline ID line represents. Both floors key on the
+        /// target/decoy-specific identity (never the shared base_id / bare sequence -- a target
+        /// must not inherit its paired decoy's good run):
+        ///   ExperimentPrecursorQvalue &lt;- max(ExperimentPrecursorQvalue, min-over-runs runBoth)   [by EntryId]
+        ///   ExperimentPeptideQvalue   &lt;- max(ExperimentPeptideQvalue,   min-over-runs runBoth)   [by (ModifiedSequence, IsDecoy)]
+        /// Run-level q is winner-only per file, so a losing run contributes 1.0 and the min
+        /// naturally picks the entry's best genuine run.
+        ///
+        /// The floor is run-Both at BOTH experiment levels even when <c>--fdr-level</c> is
+        /// <see cref="FdrLevel.Precursor"/> (the default): the reported gate and the blib ID
+        /// line are always Both, so flooring by run-Both is what makes "reported =&gt; a run
+        /// has an ID line" hold. A precursor can therefore be raised out of the reported set
+        /// because no run cleared run-<em>peptide</em> FDR, even under precursor-level control
+        /// -- intended, matching blib fidelity rather than the run-precursor gate alone.
+        ///
+        /// NOTE (issue #4378): the IN-PASS clamp (first/second-pass Percolator) now runs in the
+        /// memory-bounded FLAT form -- <see cref="PercolatorFdr.ClampExperimentQToBestRunFlat"/>
+        /// over the score-pass scalar arrays -- so the full FdrEntry buffer need not be resident
+        /// on the streaming path. This resident overload remains for the post-Stage-6 pre-blib
+        /// re-clamp (<c>MergeNodeTask</c>), which runs on the already-compacted survivor buffer.
+        /// Both produce identical floors (same min/max over the same values).
+        /// </summary>
+        public static void ClampExperimentQToBestRun(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            var minRunBothByEntryId = new Dictionary<uint, double>();
+            var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    double runBoth = e.EffectiveRunQvalue(FdrLevel.Both);
+                    double curPrec;
+                    if (!minRunBothByEntryId.TryGetValue(e.EntryId, out curPrec) || runBoth < curPrec)
+                        minRunBothByEntryId[e.EntryId] = runBoth;
+
+                    // Treat a null/empty ModifiedSequence as missing (a Parquet stub loaded
+                    // without the modified_sequence column can be string.Empty): it has no
+                    // peptide identity, so it must not bucket unrelated entries under an empty key.
+                    if (string.IsNullOrEmpty(e.ModifiedSequence))
+                        continue;
+                    // Peptide identity is (ModifiedSequence, IsDecoy): a decoy can share its
+                    // paired target's ModifiedSequence, so keying on the sequence alone would
+                    // let a decoy's good run lower the target's peptide floor (anti-conservative).
+                    var pkey = (e.ModifiedSequence, e.IsDecoy);
+                    double curPept;
+                    if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
+                        minRunBothByPeptide[pkey] = runBoth;
+                }
+            }
+
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    double floorPrec;
+                    if (minRunBothByEntryId.TryGetValue(e.EntryId, out floorPrec) &&
+                        floorPrec > e.ExperimentPrecursorQvalue)
+                        e.ExperimentPrecursorQvalue = floorPrec;
+
+                    if (!string.IsNullOrEmpty(e.ModifiedSequence))
+                    {
+                        double floorPept;
+                        if (minRunBothByPeptide.TryGetValue((e.ModifiedSequence, e.IsDecoy), out floorPept) &&
+                            floorPept > e.ExperimentPeptideQvalue)
+                            e.ExperimentPeptideQvalue = floorPept;
+                    }
+                }
+            }
+        }
     }
 }

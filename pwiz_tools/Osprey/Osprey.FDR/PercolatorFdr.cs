@@ -692,6 +692,15 @@ namespace pwiz.Osprey.FDR
                     finalScores, labels, entryIds, peptides);
             }
 
+            // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
+            // each experiment q up to the entry's best (min-over-runs) combined run q, so an
+            // experiment-level q is never more confident than the entry's best single run.
+            // Identical floors to PercolatorEngine.ClampExperimentQToBestRun, over the flat
+            // score-pass arrays (no resident FdrEntry buffer). Covers the direct dispatch.
+            ClampExperimentQToBestRunFlat(
+                entryIds, labels, peptides, runPrecursorQvalues, runPeptideQvalues,
+                expPrecursorQvalues, expPeptideQvalues);
+
             // 8b. Feature weight + percent-contribution report (reporting only).
             // The Accumulator sums per-feature target/decoy means over the FULL
             // standardized matrix and averages the per-fold weights into the
@@ -1007,6 +1016,68 @@ namespace pwiz.Osprey.FDR
                     finalScores, labels, entryIds);
                 expPeptideQvalues = ComputeExperimentPeptideQvalues(
                     finalScores, labels, entryIds, peptides);
+            }
+
+            // Best-of-runs monotonicity (issue #4390 clamp, memory-bounded flat form): floor
+            // each experiment q up to the entry's best (min-over-runs) combined run q. Shared by
+            // the FdrEntry streaming path and the projection score pass, so both clamp
+            // identically without a resident FdrEntry buffer.
+            ClampExperimentQToBestRunFlat(
+                entryIds, labels, peptides, runPrecursorQvalues, runPeptideQvalues,
+                expPrecursorQvalues, expPeptideQvalues);
+        }
+
+        /// <summary>
+        /// Memory-bounded flat form of <see cref="PercolatorEngine.ClampExperimentQToBestRun"/>
+        /// (issue #4378): floor each experiment q up to the entry's best (min-over-runs)
+        /// combined run q (<c>runBoth = max(runPrecursorQ, runPeptideQ)</c>), keyed by EntryId
+        /// for the precursor floor and by <c>(peptide, isDecoy)</c> for the peptide floor (an
+        /// empty peptide is skipped). Operates on the flat score-pass scalar arrays the FDR math
+        /// already holds -- no resident FdrEntry buffer -- so the streaming path clamps without
+        /// materializing every entry. <c>min</c>/<c>max</c> are order-independent, so the result
+        /// is byte-identical to the resident overload on the same values.
+        /// </summary>
+        internal static void ClampExperimentQToBestRunFlat(
+            uint[] entryIds, bool[] labels, string[] peptides,
+            double[] runPrecursorQvalues, double[] runPeptideQvalues,
+            double[] expPrecursorQvalues, double[] expPeptideQvalues)
+        {
+            int n = entryIds.Length;
+            var minRunBothByEntryId = new Dictionary<uint, double>();
+            var minRunBothByPeptide = new Dictionary<(string, bool), double>();
+            for (int i = 0; i < n; i++)
+            {
+                double runBoth = Math.Max(runPrecursorQvalues[i], runPeptideQvalues[i]);
+                double curPrec;
+                if (!minRunBothByEntryId.TryGetValue(entryIds[i], out curPrec) || runBoth < curPrec)
+                    minRunBothByEntryId[entryIds[i]] = runBoth;
+
+                // Empty ModifiedSequence has no peptide identity; do not bucket unrelated
+                // entries under an empty key (mirrors the resident overload).
+                if (string.IsNullOrEmpty(peptides[i]))
+                    continue;
+                // Peptide identity is (ModifiedSequence, IsDecoy) so a decoy's good run never
+                // lowers its paired target's peptide floor.
+                var pkey = (peptides[i], labels[i]);
+                double curPept;
+                if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
+                    minRunBothByPeptide[pkey] = runBoth;
+            }
+
+            for (int i = 0; i < n; i++)
+            {
+                double floorPrec;
+                if (minRunBothByEntryId.TryGetValue(entryIds[i], out floorPrec) &&
+                    floorPrec > expPrecursorQvalues[i])
+                    expPrecursorQvalues[i] = floorPrec;
+
+                if (!string.IsNullOrEmpty(peptides[i]))
+                {
+                    double floorPept;
+                    if (minRunBothByPeptide.TryGetValue((peptides[i], labels[i]), out floorPept) &&
+                        floorPept > expPeptideQvalues[i])
+                        expPeptideQvalues[i] = floorPept;
+                }
             }
         }
 
