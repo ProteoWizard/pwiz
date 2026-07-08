@@ -330,14 +330,18 @@ namespace pwiz.SkylineTest
                     var importerByFile = DoImport(docResults, TextUtil.LineSeparate(headerByFile, rowByFile));
                     AssertEx.DocumentCloned(importerByFile.Document, importerByReplicate.Document);
 
-                    // The custom-report caption "Replicate Name" (ColumnCaptions.ReplicateName) is also accepted,
-                    // so a report projecting ResultFile.Replicate.Name can be fed straight to the importer without
-                    // renaming the column to the space-less "ReplicateName".
-                    string headerByReplicateCaption = string.Join(csvSep, "PeptideModifiedSequence",
-                        ColumnCaptions.ReplicateName, "Apex", "MinStartTime", "MaxEndTime", "PrecursorCharge");
-                    var importerByCaption = DoImport(docResults, TextUtil.LineSeparate(headerByReplicateCaption, rowByReplicate));
-                    AssertEx.AreEqual(0, importerByCaption.UnrecognizedFiles.Count);
-                    AssertEx.DocumentCloned(importerByFile.Document, importerByCaption.Document);
+                    // Both custom-report captions are accepted: the Replicate.Name property caption
+                    // ("Replicate Name", ColumnCaptions.ReplicateName) and the Replicate object column caption
+                    // ("Replicate", ColumnCaptions.Replicate) whose exported value is also the replicate name.
+                    // So a report keying on either column imports without renaming to the space-less "ReplicateName".
+                    foreach (var replicateCaption in new[] { ColumnCaptions.ReplicateName, ColumnCaptions.Replicate })
+                    {
+                        string headerByReplicateCaption = string.Join(csvSep, "PeptideModifiedSequence",
+                            replicateCaption, "Apex", "MinStartTime", "MaxEndTime", "PrecursorCharge");
+                        var importerByCaption = DoImport(docResults, TextUtil.LineSeparate(headerByReplicateCaption, rowByReplicate));
+                        AssertEx.AreEqual(0, importerByCaption.UnrecognizedFiles.Count);
+                        AssertEx.DocumentCloned(importerByFile.Document, importerByCaption.Document);
+                    }
 
                     // With neither file-identity column present, the error names FileName OR ReplicateName
                     // (either one suffices) rather than only FileName.

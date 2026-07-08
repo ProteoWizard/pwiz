@@ -226,7 +226,10 @@ namespace pwiz.Skyline.Model
                                 new[] {"SampleName", ColumnCaptions.SampleName},
                                 new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
                                 new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
-                                new[] {MProphetResultsHandler.REPLICATE_NAME_COLUMN, ColumnCaptions.ReplicateName},
+                                // Accept every report header that carries the replicate name: the invariant/export
+                                // "ReplicateName", the Replicate.Name property caption ("Replicate Name"), and the
+                                // Replicate object column caption ("Replicate", whose exported value is also the name).
+                                new[] {MProphetResultsHandler.REPLICATE_NAME_COLUMN, ColumnCaptions.ReplicateName, ColumnCaptions.Replicate},
                             };
                             for (var field = 0; field < currentFieldNames.Length; field++)
                             {
