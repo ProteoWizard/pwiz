@@ -262,19 +262,26 @@ namespace pwiz.Osprey.FDR
         /// (<see cref="FdrLevel.Both"/> = max(precursor, peptide)), matching the blib ID line
         /// and <c>OspreyRunScores.RunQValue</c> (both <c>EffectiveRunQvalue(Both)</c>): so
         /// "reported =&gt; some run passes at BOTH the precursor and peptide granularity",
-        /// which is the exact invariant a Skyline ID line represents. Keyed on the
-        /// target/decoy-specific identity (not the shared base_id -- a target must not
-        /// inherit its paired decoy's good run):
+        /// which is the exact invariant a Skyline ID line represents. Both floors key on the
+        /// target/decoy-specific identity (never the shared base_id / bare sequence -- a target
+        /// must not inherit its paired decoy's good run):
         ///   ExperimentPrecursorQvalue &lt;- max(ExperimentPrecursorQvalue, min-over-runs runBoth)   [by EntryId]
-        ///   ExperimentPeptideQvalue   &lt;- max(ExperimentPeptideQvalue,   min-over-runs runBoth)   [by ModifiedSequence]
+        ///   ExperimentPeptideQvalue   &lt;- max(ExperimentPeptideQvalue,   min-over-runs runBoth)   [by (ModifiedSequence, IsDecoy)]
         /// Run-level q is winner-only per file, so a losing run contributes 1.0 and the min
         /// naturally picks the entry's best genuine run.
+        ///
+        /// The floor is run-Both at BOTH experiment levels even when <c>--fdr-level</c> is
+        /// <see cref="FdrLevel.Precursor"/> (the default): the reported gate and the blib ID
+        /// line are always Both, so flooring by run-Both is what makes "reported =&gt; a run
+        /// has an ID line" hold. A precursor can therefore be raised out of the reported set
+        /// because no run cleared run-<em>peptide</em> FDR, even under precursor-level control
+        /// -- intended, matching blib fidelity rather than the run-precursor gate alone.
         /// </summary>
         public static void ClampExperimentQToBestRun(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
         {
             var minRunBothByEntryId = new Dictionary<uint, double>();
-            var minRunBothByPeptide = new Dictionary<string, double>(StringComparer.Ordinal);
+            var minRunBothByPeptide = new Dictionary<(string ModifiedSequence, bool IsDecoy), double>();
             foreach (var kvp in perFileEntries)
             {
                 foreach (var e in kvp.Value)
@@ -286,9 +293,13 @@ namespace pwiz.Osprey.FDR
 
                     if (e.ModifiedSequence == null)
                         continue;
+                    // Peptide identity is (ModifiedSequence, IsDecoy): a decoy can share its
+                    // paired target's ModifiedSequence, so keying on the sequence alone would
+                    // let a decoy's good run lower the target's peptide floor (anti-conservative).
+                    var pkey = (e.ModifiedSequence, e.IsDecoy);
                     double curPept;
-                    if (!minRunBothByPeptide.TryGetValue(e.ModifiedSequence, out curPept) || runBoth < curPept)
-                        minRunBothByPeptide[e.ModifiedSequence] = runBoth;
+                    if (!minRunBothByPeptide.TryGetValue(pkey, out curPept) || runBoth < curPept)
+                        minRunBothByPeptide[pkey] = runBoth;
                 }
             }
 
@@ -296,14 +307,16 @@ namespace pwiz.Osprey.FDR
             {
                 foreach (var e in kvp.Value)
                 {
-                    double floorPrec = minRunBothByEntryId[e.EntryId];
-                    if (floorPrec > e.ExperimentPrecursorQvalue)
+                    double floorPrec;
+                    if (minRunBothByEntryId.TryGetValue(e.EntryId, out floorPrec) &&
+                        floorPrec > e.ExperimentPrecursorQvalue)
                         e.ExperimentPrecursorQvalue = floorPrec;
 
                     if (e.ModifiedSequence != null)
                     {
-                        double floorPept = minRunBothByPeptide[e.ModifiedSequence];
-                        if (floorPept > e.ExperimentPeptideQvalue)
+                        double floorPept;
+                        if (minRunBothByPeptide.TryGetValue((e.ModifiedSequence, e.IsDecoy), out floorPept) &&
+                            floorPept > e.ExperimentPeptideQvalue)
                             e.ExperimentPeptideQvalue = floorPept;
                     }
                 }

@@ -1029,6 +1029,32 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The peptide floor keys on (ModifiedSequence, IsDecoy), not the bare sequence:
+        /// a decoy sharing its paired target's <see cref="FdrEntry.ModifiedSequence"/> must
+        /// not lower the target's peptide floor with the decoy's good run (that would be
+        /// anti-conservative). Target and decoy here share "PEPTIDER".
+        /// </summary>
+        [TestMethod]
+        public void TestClampPeptideFloorSeparatesTargetDecoyBySequence()
+        {
+            const uint decoyBit = 0x80000000;
+            // Target: only a weak run (0.8). Decoy (same ModifiedSequence): a strong run (0.001).
+            var target = MakeEntry(1, "PEPTIDER", runPrec: 0.8, runPept: 0.8, expPrec: 0.001, expPept: 0.001);
+            var decoy = MakeEntry(1 | decoyBit, "PEPTIDER", runPrec: 0.001, runPept: 0.001, expPrec: 0.001, expPept: 0.001);
+            decoy.IsDecoy = true;
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", target, decoy)
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            Assert.AreEqual(0.8, target.ExperimentPeptideQvalue, 1e-12,
+                "target peptide q floored to ITS own run (0.8), not the decoy's shared-sequence 0.001");
+            Assert.AreEqual(0.001, decoy.ExperimentPeptideQvalue, 1e-12,
+                "decoy peptide q floored to its own strong run (0.001)");
+        }
+
+        /// <summary>
         /// The peptide floor is peptide-wide (min run-Both over every charge sharing a
         /// <see cref="FdrEntry.ModifiedSequence"/>), while the precursor floor stays per-EntryId.
         /// A two-charge peptide gets both charges' peptide q floored to the peptide-wide min,
