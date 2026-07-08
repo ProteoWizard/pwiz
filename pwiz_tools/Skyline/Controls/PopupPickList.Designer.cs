@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Controls
             this.textSearch = new System.Windows.Forms.TextBox();
             this.cbSynchronize = new System.Windows.Forms.CheckBox();
             this.pickListMulti = new System.Windows.Forms.ListBox();
+            this.lblSiteDeterminingEmpty = new System.Windows.Forms.Label();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -153,12 +154,20 @@ namespace pwiz.Skyline.Controls
             this.pickListMulti.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pickListMulti_MouseDown);
             this.pickListMulti.MouseLeave += new System.EventHandler(this.pickListMulti_MouseLeave);
             this.pickListMulti.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pickListMulti_MouseMove);
-            // 
+            //
+            // lblSiteDeterminingEmpty
+            //
+            this.lblSiteDeterminingEmpty.BackColor = System.Drawing.SystemColors.Window;
+            this.lblSiteDeterminingEmpty.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblSiteDeterminingEmpty.Visible = false;
+            this.lblSiteDeterminingEmpty.Name = "lblSiteDeterminingEmpty";
+            //
             // PopupPickList
-            // 
+            //
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ControlBox = false;
+            this.Controls.Add(this.lblSiteDeterminingEmpty);
             this.Controls.Add(this.pickListMulti);
             this.Controls.Add(this.cbSynchronize);
             this.Controls.Add(this.textSearch);
@@ -193,5 +202,6 @@ namespace pwiz.Skyline.Controls
         private System.Windows.Forms.ToolStripButton tbbSiteDetermining;
         private System.Windows.Forms.CheckBox cbSynchronize;
         private System.Windows.Forms.ListBox pickListMulti;
+        private System.Windows.Forms.Label lblSiteDeterminingEmpty;
     }
 }

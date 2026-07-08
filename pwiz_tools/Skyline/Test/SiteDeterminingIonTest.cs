@@ -45,9 +45,76 @@ namespace pwiz.SkylineTest
         {
             TestPhosphoNearTerminusUnique();
             TestInteriorSerineNonUnique();
+            TestInteriorSerineRunNoUnique();
+            TestTwoSeparatedCandidatesUnique();
             TestTwoPhosphoAmongFour();
             TestTwoModTypes();
             TestNonLocalizable();
+        }
+
+        /// <summary>
+        /// Mirrors the screenshot peptide: a phospho on an interior serine inside a contiguous run
+        /// of candidate serines. Because a prefix ion reaching the modified serine necessarily also
+        /// covers its neighbor in the run (and likewise for suffix ions), NO fragment ion is unique
+        /// to the placement, even though the peptide is localizable. The site-determining filter
+        /// therefore leaves an empty list (the empty-state hint scenario).
+        /// </summary>
+        private void TestInteriorSerineRunNoUnique()
+        {
+            // A0 A1 S2 S3 S4 A5 K6 - run of three candidate serines (2,3,4); phospho on the middle one.
+            const string seq = "AASSSAK";
+            var settings = SrmSettingsList.GetDefault();
+            var peptide = new Peptide(seq);
+            var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 3)));
+            var analyzer = new SiteDeterminingIonAnalyzer(settings, nodePep);
+            var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+
+            AssertEx.IsTrue(analyzer.CanLocalize);
+            AssertEx.AreEqual(3L, analyzer.IsomerCount); // C(3,1)
+
+            // For EVERY candidate fragment ion (b and y), the placement is not uniquely localized.
+            int len = seq.Length;
+            for (int offset = 0; offset <= len - 2; offset++)
+            {
+                foreach (var ion in new[] { B(group, offset), Y(group, offset) })
+                    AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(ion));
+            }
+        }
+
+        /// <summary>
+        /// Two well-separated candidate residues - an N-terminal serine and a much later threonine -
+        /// with the phospho on the N-terminal serine. A short prefix (b) ion that contains only the
+        /// modified serine uniquely localizes the placement, while any fragment whose span covers
+        /// BOTH candidates cannot.
+        /// </summary>
+        private void TestTwoSeparatedCandidatesUnique()
+        {
+            // S0 A1 A2 A3 A4 A5 T6 A7 A8 K9 - candidates: serine 0 and threonine 6; phospho on S0.
+            const string seq = "SAAAAATAAK";
+            var settings = SrmSettingsList.GetDefault();
+            var peptide = new Peptide(seq);
+            var nodePep = new PeptideDocNode(peptide, MakeMods(peptide, (PHOSPHO, 0)));
+            var analyzer = new SiteDeterminingIonAnalyzer(settings, nodePep);
+            var group = new TransitionGroup(peptide, Adduct.SINGLY_PROTONATED, IsotopeLabelType.light);
+
+            AssertEx.IsTrue(analyzer.CanLocalize);
+            AssertEx.AreEqual(2L, analyzer.IsomerCount); // C(2,1)
+
+            // b1 (offset 0) spans only the modified serine, not the later threonine -> unique.
+            var b1 = B(group, 0);
+            AssertEx.IsTrue(analyzer.IsUniqueToPrecursor(b1));
+            AssertEx.AreEqual(1L, analyzer.GetProducingSetSize(b1));
+
+            // b7 (offset 6) spans BOTH candidate residues -> can no longer localize, not unique.
+            var b7 = B(group, 6);
+            AssertEx.IsTrue(!analyzer.IsUniqueToPrecursor(b7));
+            AssertEx.IsTrue(analyzer.GetProducingSetSize(b7) > 1);
+
+            // At least one unique b-ion exists among the prefixes that stop before the threonine.
+            bool anyUnique = false;
+            for (int offset = 0; offset <= 5; offset++)
+                anyUnique |= analyzer.IsUniqueToPrecursor(B(group, offset));
+            AssertEx.IsTrue(anyUnique);
         }
 
         /// <summary>

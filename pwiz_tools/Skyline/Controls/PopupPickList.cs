@@ -122,6 +122,13 @@ namespace pwiz.Skyline.Controls
                 cbSynchronize.Text = synchLabelText;
                 cbSynchronize.Checked = _picker.IsSynchSiblings;
             }
+
+            // Overlay the empty-state hint on the choices list. Shown only when the
+            // site-determining filter is on but no ion uniquely localizes the modification.
+            lblSiteDeterminingEmpty.Text = ControlsResources.PopupPickList_SiteDetermining_NoneFound;
+            lblSiteDeterminingEmpty.Bounds = pickListMulti.Bounds;
+            lblSiteDeterminingEmpty.Anchor = pickListMulti.Anchor;
+            lblSiteDeterminingEmpty.BringToFront();
         }
 
         public IEnumerable<string> ItemNames
@@ -170,6 +177,15 @@ namespace pwiz.Skyline.Controls
         public bool SiteDeterminingButtonVisible
         {
             get { return tbbSiteDetermining.Visible; }
+        }
+
+        /// <summary>
+        /// Test support: whether the empty-state hint (shown when the site-determining filter
+        /// leaves no visible choices) is currently displayed.
+        /// </summary>
+        public bool SiteDeterminingEmptyHintVisible
+        {
+            get { return lblSiteDeterminingEmpty.Visible; }
         }
 
         public Rectangle GetItemTextRectangle(int i)
@@ -300,6 +316,11 @@ namespace pwiz.Skyline.Controls
                 }
             }
             pickListMulti.EndUpdate();
+
+            // Show the empty-state hint when the site-determining filter is on and it left the
+            // choices list empty (no ion uniquely localizes the modification).
+            lblSiteDeterminingEmpty.Visible = _siteDeterminingOnly && pickListMulti.Items.Count == 0;
+
             UpdateSelectAll();
         }
 

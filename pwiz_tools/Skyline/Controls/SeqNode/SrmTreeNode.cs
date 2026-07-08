@@ -858,7 +858,9 @@ namespace pwiz.Skyline.Controls.SeqNode
         bool CanShowSiteDeterminingIons { get; }
 
         /// <summary>
-        /// True when the given choice is a site-determining product ion.
+        /// True when the given choice is a product ion that uniquely localizes the modification
+        /// (no other positional placement produces it). May match nothing when the placement is
+        /// unresolvable, in which case the filtered list is legitimately empty.
         /// </summary>
         bool IsSiteDeterminingChoice(DocNode choice);
 

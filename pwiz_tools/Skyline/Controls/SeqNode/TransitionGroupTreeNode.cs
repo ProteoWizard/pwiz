@@ -381,11 +381,17 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
+        /// <summary>
+        /// True when the given choice is an ion that <em>uniquely localizes</em> the modification,
+        /// i.e. no other positional placement produces it (producing-set size == 1). For placements
+        /// that cannot be resolved (e.g. the interior of a serine run) no ion is unique, so the
+        /// filtered list is legitimately empty.
+        /// </summary>
         public bool IsSiteDeterminingChoice(DocNode choice)
         {
             var analyzer = SiteDeterminingAnalyzer;
             return analyzer != null && choice.Id is Transition transition &&
-                   analyzer.IsSiteDetermining(transition);
+                   analyzer.IsUniqueToPrecursor(transition);
         }
 
         public string GetSiteDeterminingTip(DocNode choice)

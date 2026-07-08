@@ -180,7 +180,16 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Show only site-determining ions.
+        ///   Looks up a localized string similar to No ions uniquely localize this modification.
+        /// </summary>
+        public static string PopupPickList_SiteDetermining_NoneFound {
+            get {
+                return ResourceManager.GetString("PopupPickList_SiteDetermining_NoneFound", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show only ions that uniquely localize modifications.
         /// </summary>
         public static string PopupPickList_SiteDetermining_ToolTip {
             get {
