@@ -59,17 +59,26 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public bool FdrBenchPerRun { get; set; }
 
+        /// <summary>Bit for the pre-compaction first-pass pool in <see cref="FdrBenchPass"/>.</summary>
+        public const int FDRBENCH_PASS_1 = 1;
+        /// <summary>Bit for the post-compaction reported set in <see cref="FdrBenchPass"/>.</summary>
+        public const int FDRBENCH_PASS_2 = 2;
+
         /// <summary>
-        /// With <see cref="OutputFdrBench"/>: which FDR pass the emitted rows and q-values
-        /// come from. <c>2</c> (default) is the post-compaction, second-pass survivors written
-        /// to the blib output -- the FDR of what Osprey actually reports. <c>1</c> is the
-        /// full pre-compaction first-pass pool (every scored target, regardless of q-value)
-        /// with its first-pass q-values, mirroring Rust osprey's
-        /// <c>write_fdrbench_peptide_input</c> -- the assumption the second-pass output rests
-        /// on. Pass 1 is emitted from the first-join stage before compaction; pass 2 from the
-        /// merge node after rescoring.
+        /// With <see cref="OutputFdrBench"/>: which FDR pass(es) the emitted rows and q-values
+        /// come from, as a bitmask of <see cref="FDRBENCH_PASS_1"/> and
+        /// <see cref="FDRBENCH_PASS_2"/>. <c>2</c> (default) is the post-compaction, second-pass
+        /// survivors written to the blib output -- the FDR of what Osprey actually reports.
+        /// <c>1</c> is the full pre-compaction first-pass pool (every scored target, regardless
+        /// of q-value) with its first-pass q-values, mirroring Rust osprey's
+        /// <c>write_fdrbench_peptide_input</c> -- the assumption the second-pass output rests on.
+        /// <c>3</c> (both) emits both in one run; because a single <see cref="OutputFdrBench"/>
+        /// path is given, each pass is written with a <c>.pass1</c> / <c>.pass2</c> stem suffix so
+        /// they do not overwrite each other (see <c>FdrBenchInputWriter.PathForPass</c>). Pass 1
+        /// is emitted from the first-join stage before compaction; pass 2 from the merge node
+        /// after rescoring.
         /// </summary>
-        public int FdrBenchPass { get; set; } = 2;
+        public int FdrBenchPass { get; set; } = FDRBENCH_PASS_2;
 
         /// <summary>
         /// Optional base directory for all per-file <em>derived</em> artifacts
