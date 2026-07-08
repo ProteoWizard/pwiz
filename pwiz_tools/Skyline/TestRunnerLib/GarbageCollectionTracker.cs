@@ -175,9 +175,11 @@ namespace TestRunnerLib
             for (int retry = 0; retry < GC_RETRY_COUNT; retry++)
             {
                 Thread.Sleep(GC_RETRY_SLEEP_MS);
-#if NET472
+                // Force a full GC on every runtime. CheckForLeaks never collects on its
+                // own, so without this the net8 retry loop only slept and re-read the
+                // WeakReferences - transiently-rooted objects were falsely reported as
+                // leaks. FlushMemory is net8-safe (already called unguarded before the check).
                 RunTests.MemoryManagement.FlushMemory();
-#endif
                 leakMessage = CheckForLeaks();
                 if (leakMessage == null)
                     return null;

@@ -2832,6 +2832,12 @@ namespace pwiz.SkylineTestUtil
             {
                 // Clear the clipboard to avoid the appearance of a memory leak.
                 ClipboardEx.Release();
+#if !NET472
+                // Release net8 WinForms' ModalMenuFilter hold on the last active window (see
+                // ReleaseModalMenuFilterWindow) before closing, so SkylineWindow and its document
+                // can be collected and are not reported as a cross-test GC leak.
+                RunUI(ReleaseModalMenuFilterWindow);
+#endif
                 // Occasionally this causes an InvalidOperationException during stress testing.
                 RunUI(SkylineWindow.Close);
             }
@@ -2845,6 +2851,34 @@ namespace pwiz.SkylineTestUtil
             {
             }
         }
+
+#if !NET472
+        // net8 WinForms tracks the last active top-level window during menu mode via
+        // ToolStripManager.ModalMenuFilter._lastActiveWindow, a HandleRef<HWND> whose Wrapper keeps
+        // the Form managed-alive. Unlike net472 (which tracked a bare HWND), this survives menu-mode
+        // exit, so each test's SkylineWindow (and its document) would be reported as a cross-test GC
+        // leak. WinForms exposes no public reset and is not reachable via InternalsVisibleTo, so
+        // clear the HandleRef fields reflectively. Must run on the UI thread - the filter instance is
+        // thread-static. Field names verified against Microsoft.WindowsDesktop.App 8.0.
+        private static void ReleaseModalMenuFilterWindow()
+        {
+            var filterType = typeof(System.Windows.Forms.ToolStripManager).GetNestedType(
+                @"ModalMenuFilter", System.Reflection.BindingFlags.NonPublic);
+            var instance = filterType?
+                .GetField(@"t_instance",
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                ?.GetValue(null);
+            if (instance == null)
+                return; // no menu was shown on this thread - nothing to release
+            foreach (var fieldName in new[] { @"_lastActiveWindow", @"_activeHwnd" })
+            {
+                var field = filterType.GetField(fieldName,
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                if (field != null)
+                    field.SetValue(instance, System.Activator.CreateInstance(field.FieldType));
+            }
+        }
+#endif
 
         private void CloseOpenForms(Type exceptType)
         {
