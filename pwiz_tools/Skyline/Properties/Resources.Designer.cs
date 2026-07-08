@@ -3548,7 +3548,7 @@ namespace pwiz.Skyline.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
-
+        
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
@@ -7304,6 +7304,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The replicate &quot;{0}&quot; on line {1} contains multiple files, so the replicate name alone is ambiguous. Specify a FileName (and optionally a SampleName) column to identify a single file..
+        /// </summary>
+        public static string PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__conta" +
+                        "ins_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName" +
+                        "__and_optionally_a_SampleName__to_identify_a_single_file_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to find the necessary headers {0} in the first line.
         /// </summary>
         public static string PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line {
@@ -7358,16 +7369,7 @@ namespace pwiz.Skyline.Properties {
                 return ResourceManager.GetString("PeakBoundaryImporter_Import_Sample__0__on_line__1__does_not_match_the_file__2__", resourceCulture);
             }
         }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The replicate &quot;{0}&quot; on line {1} contains multiple files, so the replicate name alone is ambiguous. Specify a FileName (and optionally a SampleName) column to identify a single file..
-        /// </summary>
-        public static string PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_ {
-            get {
-                return ResourceManager.GetString("PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_", resourceCulture);
-            }
-        }
-
+        
         /// <summary>
         ///   Looks up a localized string similar to The decoy value {0} on line {1} is invalid: must be 0 or 1..
         /// </summary>

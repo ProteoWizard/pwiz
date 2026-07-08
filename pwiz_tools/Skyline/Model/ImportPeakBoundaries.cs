@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model
                                 new[] {"SampleName", ColumnCaptions.SampleName},
                                 new[] {"DetectionQValue", "m_score", ColumnCaptions.DetectionQValue},
                                 new[] {"DetectionZScore", "d_score", ColumnCaptions.DetectionZScore},
-                                new[] {MProphetResultsHandler.REPLICATE_NAME_COLUMN, ColumnCaptions.Replicate},
+                                new[] {MProphetResultsHandler.REPLICATE_NAME_COLUMN, ColumnCaptions.ReplicateName},
                             };
                             for (var field = 0; field < currentFieldNames.Length; field++)
                             {
@@ -787,10 +787,11 @@ namespace pwiz.Skyline.Model
                     missingFields.AddRange(indices.Select((index, i) => new Tuple<int, int>(index, i))
                         .Where(t => t.Item1 == -1 && requiredFields.Contains(t.Item2))
                         .Select(t => allFieldNames[t.Item2][0]));
-                    // When none of the file-identity columns (filename / replicate name) is present, point the
-                    // user at FileName as the missing header rather than reporting an empty list.
+                    // When none of the file-identity columns is present, report that either a FileName or a
+                    // ReplicateName column is needed (rather than naming only FileName).
                     if (anyOfFields != null && !anyOfFields.Any(i => i < indices.Length && indices[i] != -1))
-                        missingFields.Add(allFieldNames[(int) Field.filename][0]);
+                        missingFields.Add(string.Format(ModelResources.PeakBoundaryImporter_ReadFirstLine__0__or__1_,
+                            allFieldNames[(int) Field.filename][0], allFieldNames[(int) Field.replicate_name][0]));
                 }
                 throw new IOException(string.Format(Resources.PeakBoundaryImporter_Import_Failed_to_find_the_necessary_headers__0__in_the_first_line,
                     string.Join(@", ", missingFields)));

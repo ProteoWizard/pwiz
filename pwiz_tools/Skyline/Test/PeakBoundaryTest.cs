@@ -330,6 +330,34 @@ namespace pwiz.SkylineTest
                     var importerByFile = DoImport(docResults, TextUtil.LineSeparate(headerByFile, rowByFile));
                     AssertEx.DocumentCloned(importerByFile.Document, importerByReplicate.Document);
 
+                    // The custom-report caption "Replicate Name" (ColumnCaptions.ReplicateName) is also accepted,
+                    // so a report projecting ResultFile.Replicate.Name can be fed straight to the importer without
+                    // renaming the column to the space-less "ReplicateName".
+                    string headerByReplicateCaption = string.Join(csvSep, "PeptideModifiedSequence",
+                        ColumnCaptions.ReplicateName, "Apex", "MinStartTime", "MaxEndTime", "PrecursorCharge");
+                    var importerByCaption = DoImport(docResults, TextUtil.LineSeparate(headerByReplicateCaption, rowByReplicate));
+                    AssertEx.AreEqual(0, importerByCaption.UnrecognizedFiles.Count);
+                    AssertEx.DocumentCloned(importerByFile.Document, importerByCaption.Document);
+
+                    // With neither file-identity column present, the error names FileName OR ReplicateName
+                    // (either one suffices) rather than only FileName.
+                    var noFileId = TextUtil.LineSeparate(
+                        string.Join(csvSep, "PeptideModifiedSequence", "MinStartTime", "MaxEndTime"),
+                        string.Join(csvSep, "TPEVDDEALEK", startTime, endTime));
+                    string missingHeaderMessage = null;
+                    try
+                    {
+                        using (var reader = new StringReader(noFileId))
+                            new PeakBoundaryImporter(docResults).Import(reader, null, 2, true);
+                    }
+                    catch (IOException x)
+                    {
+                        missingHeaderMessage = x.Message;
+                    }
+                    Assert.IsNotNull(missingHeaderMessage);
+                    StringAssert.Contains(missingHeaderMessage, "FileName");
+                    StringAssert.Contains(missingHeaderMessage, "ReplicateName");
+
                     // A replicate name that resolves to a replicate holding more than one file cannot identify a
                     // single file, so the import fails with an explanatory error rather than guessing. Synthesize
                     // a multi-file replicate from single-file replicate "13" (ChangeSettingsNoDiff so no reload).
