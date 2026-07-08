@@ -258,33 +258,37 @@ namespace pwiz.Osprey.FDR
         /// run-level ID (the blib ID-line artifact Mike observed) and an anti-conservative
         /// experiment-wide FDP calibration.
         ///
-        /// Same-level floors, keyed on the target/decoy-specific identity (not the shared
-        /// base_id -- a target must not inherit its paired decoy's good run):
-        ///   ExperimentPrecursorQvalue &lt;- max(ExperimentPrecursorQvalue, min-over-runs RunPrecursorQvalue)   [by EntryId]
-        ///   ExperimentPeptideQvalue   &lt;- max(ExperimentPeptideQvalue,   min-over-runs RunPeptideQvalue)     [by ModifiedSequence]
+        /// The run floor is the entry's best (min) <em>combined</em> run q-value
+        /// (<see cref="FdrLevel.Both"/> = max(precursor, peptide)), matching the blib ID line
+        /// and <c>OspreyRunScores.RunQValue</c> (both <c>EffectiveRunQvalue(Both)</c>): so
+        /// "reported =&gt; some run passes at BOTH the precursor and peptide granularity",
+        /// which is the exact invariant a Skyline ID line represents. Keyed on the
+        /// target/decoy-specific identity (not the shared base_id -- a target must not
+        /// inherit its paired decoy's good run):
+        ///   ExperimentPrecursorQvalue &lt;- max(ExperimentPrecursorQvalue, min-over-runs runBoth)   [by EntryId]
+        ///   ExperimentPeptideQvalue   &lt;- max(ExperimentPeptideQvalue,   min-over-runs runBoth)   [by ModifiedSequence]
         /// Run-level q is winner-only per file, so a losing run contributes 1.0 and the min
         /// naturally picks the entry's best genuine run.
         /// </summary>
-        private static void ClampExperimentQToBestRun(
+        public static void ClampExperimentQToBestRun(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
         {
-            var minRunPrecByEntryId = new Dictionary<uint, double>();
-            var minRunPeptByPeptide = new Dictionary<string, double>(StringComparer.Ordinal);
+            var minRunBothByEntryId = new Dictionary<uint, double>();
+            var minRunBothByPeptide = new Dictionary<string, double>(StringComparer.Ordinal);
             foreach (var kvp in perFileEntries)
             {
                 foreach (var e in kvp.Value)
                 {
+                    double runBoth = e.EffectiveRunQvalue(FdrLevel.Both);
                     double curPrec;
-                    if (!minRunPrecByEntryId.TryGetValue(e.EntryId, out curPrec) ||
-                        e.RunPrecursorQvalue < curPrec)
-                        minRunPrecByEntryId[e.EntryId] = e.RunPrecursorQvalue;
+                    if (!minRunBothByEntryId.TryGetValue(e.EntryId, out curPrec) || runBoth < curPrec)
+                        minRunBothByEntryId[e.EntryId] = runBoth;
 
                     if (e.ModifiedSequence == null)
                         continue;
                     double curPept;
-                    if (!minRunPeptByPeptide.TryGetValue(e.ModifiedSequence, out curPept) ||
-                        e.RunPeptideQvalue < curPept)
-                        minRunPeptByPeptide[e.ModifiedSequence] = e.RunPeptideQvalue;
+                    if (!minRunBothByPeptide.TryGetValue(e.ModifiedSequence, out curPept) || runBoth < curPept)
+                        minRunBothByPeptide[e.ModifiedSequence] = runBoth;
                 }
             }
 
@@ -292,13 +296,13 @@ namespace pwiz.Osprey.FDR
             {
                 foreach (var e in kvp.Value)
                 {
-                    double floorPrec = minRunPrecByEntryId[e.EntryId];
+                    double floorPrec = minRunBothByEntryId[e.EntryId];
                     if (floorPrec > e.ExperimentPrecursorQvalue)
                         e.ExperimentPrecursorQvalue = floorPrec;
 
                     if (e.ModifiedSequence != null)
                     {
-                        double floorPept = minRunPeptByPeptide[e.ModifiedSequence];
+                        double floorPept = minRunBothByPeptide[e.ModifiedSequence];
                         if (floorPept > e.ExperimentPeptideQvalue)
                             e.ExperimentPeptideQvalue = floorPept;
                     }
