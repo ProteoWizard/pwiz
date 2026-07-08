@@ -2525,11 +2525,14 @@ namespace pwiz.Skyline.Model
             }
             string averagePeakAreaText = averagePeakArea.HasValue ? averagePeakArea.Value.ToString(CultureInfo) : string.Empty;
 
-            var rtWindowText = RTWindow.Window.ToString(CultureInfo);
+            // Format with G15 (the .NET Framework default double precision) so net8's
+            // shortest-round-trippable ToString does not emit an extra digit and diverge from
+            // the net472 reference for this computed RT-window value.
+            var rtWindowText = RTWindow.Window.ToString(@"G15", CultureInfo);
             if (!RTWindow.IsExplicit)
             {
                 var variableRtWindow = GetVariableRtWindow(maxRtDiff);
-                rtWindowText = variableRtWindow.HasValue ? variableRtWindow.Value.ToString(CultureInfo) : string.Empty;
+                rtWindowText = variableRtWindow.HasValue ? variableRtWindow.Value.ToString(@"G15", CultureInfo) : string.Empty;
             }
 
             string primaryOrSecondary = string.Empty;
@@ -5217,6 +5220,11 @@ namespace pwiz.Skyline.Model
                                         Dictionary<string, StringBuilder> dictTranLists,
                                         IProgressMonitor progressMonitor)
         {
+            // .NET 8's Process.Start no longer searches the current directory when the
+            // FileName has no rooted path, so resolve the bundled method-builder exe next
+            // to Skyline.exe (AppContext.BaseDirectory). See BlibBuild.ResolveBlibBuildPath.
+            exeName = ResolveToolPath(exeName);
+
             string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
                                            Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
             string ext = Path.GetExtension(fileName);
@@ -5289,6 +5297,16 @@ namespace pwiz.Skyline.Model
                 foreach (var fs in listFileSavers)
                     fs.Dispose();
             }
+        }
+
+        private static string ResolveToolPath(string exeName)
+        {
+            if (Path.IsPathRooted(exeName))
+                return exeName;
+            // Method-builder tools ship as Windows .exe files next to Skyline.exe.
+            var fileName = string.IsNullOrEmpty(Path.GetExtension(exeName)) ? exeName + @".exe" : exeName;
+            var candidate = Path.Combine(AppContext.BaseDirectory, fileName);
+            return File.Exists(candidate) ? candidate : exeName;
         }
     }
 
