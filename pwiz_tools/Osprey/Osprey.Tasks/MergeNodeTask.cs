@@ -150,6 +150,15 @@ namespace pwiz.Osprey.Tasks
                     swProtein.Elapsed.TotalSeconds));
             }
 
+            // Re-clamp experiment q to each entry's best run q on the FINAL post-Stage-6
+            // pool. The pass-1 (and any pass-2) Percolator already clamped, but Stage 6
+            // reconciliation zeroes the run q of moved peaks AFTER that clamp, so a precursor
+            // whose only run-passing observation was relocated can otherwise keep a stale low
+            // experiment q with no surviving run support -- reported with no run-level ID (the
+            // blib ID-line artifact). Re-clamping here, against the run q's actually written to
+            // the blib, restores "reported => some run genuinely passed" for the final output.
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+
             // Write output blib
             ctx.LogInfo(string.Empty);
             var swBlib = Stopwatch.StartNew();
