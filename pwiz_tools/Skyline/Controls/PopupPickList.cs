@@ -133,6 +133,45 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        /// <summary>
+        /// Test support: the <see cref="DocNode"/> behind each currently visible choice, in
+        /// display order. Lets a test map a visible pick to its underlying identity (e.g. a
+        /// <see cref="Transition"/>) rather than relying on the (localized) label.
+        /// </summary>
+        public IEnumerable<DocNode> VisibleChoices
+        {
+            get
+            {
+                for (int i = 0; i < pickListMulti.Items.Count; i++)
+                    yield return GetVisibleChoice(i).Choice;
+            }
+        }
+
+        /// <summary>
+        /// Test support: toggles the "site-determining ions only" filter the same way the
+        /// <see cref="tbbSiteDetermining"/> toolbar button does.
+        /// </summary>
+        public bool SiteDeterminingFilter
+        {
+            get { return _siteDeterminingOnly; }
+            set
+            {
+                _siteDeterminingOnly = value;
+                if (tbbSiteDetermining.Visible)
+                    tbbSiteDetermining.Checked = value;
+                ShowChoices();
+            }
+        }
+
+        /// <summary>
+        /// Test support: whether the site-determining ions toggle button is showing (only for
+        /// localizable peptides).
+        /// </summary>
+        public bool SiteDeterminingButtonVisible
+        {
+            get { return tbbSiteDetermining.Visible; }
+        }
+
         public Rectangle GetItemTextRectangle(int i)
         {
             var rect = pickListMulti.GetItemRectangle(i);
