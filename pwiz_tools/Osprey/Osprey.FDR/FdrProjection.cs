@@ -23,8 +23,9 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Osprey.Core;
 
-namespace pwiz.Osprey.Core
+namespace pwiz.Osprey.FDR
 {
     /// <summary>
     /// Thin (32-byte) projection of an <see cref="FdrEntry"/> carrying only the

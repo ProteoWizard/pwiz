@@ -22,8 +22,9 @@
  */
 
 using System;
+using pwiz.Osprey.Core;
 
-namespace pwiz.Osprey.Core
+namespace pwiz.Osprey.FDR
 {
     /// <summary>
     /// The five per-row Percolator q-value outputs the score pass computes, in the

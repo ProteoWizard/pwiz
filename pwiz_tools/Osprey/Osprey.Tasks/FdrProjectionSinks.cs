@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 
 namespace pwiz.Osprey.Tasks

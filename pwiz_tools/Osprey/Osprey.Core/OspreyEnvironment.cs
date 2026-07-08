@@ -113,7 +113,7 @@ namespace pwiz.Osprey.Core
 
         /// <summary>
         /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
-        /// first-pass FDR peak through the thin <see cref="FdrProjection"/> struct
+        /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
         /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
         /// resident across first-pass Percolator + protein FDR + the sidecar write
         /// + compaction. <c>FirstJoinTask</c> materializes the projection from the

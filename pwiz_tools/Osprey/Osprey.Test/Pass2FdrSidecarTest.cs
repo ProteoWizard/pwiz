@@ -27,6 +27,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Tasks;
 
