@@ -367,6 +367,15 @@ public sealed class PwizSharpSpecFileReader : SpecFileReaderBase
         {
             Verbosity.Comment(_idNotFoundWarnLevel,
                 $"Could not find native id or title '{identifier}' in {_fileName}.");
+            // cpp parity: PwizReader.cpp:224 - when the sought id has a key=value native-id shape
+            // but its key set differs from the file's, call out the format mismatch specifically
+            // (e.g. the file uses 'scan=' while the search id uses 'scanId=').
+            if (_allSpectra!.Count > 0 && identifier.Contains('=')
+                && !_allSpectra.CheckNativeIdMatch(_allSpectra.SpectrumIdentity(0).Id, identifier))
+            {
+                Verbosity.Comment(_idNotFoundWarnLevel,
+                    $"Mismatch between spectrum id format of the spectrum file ({_allSpectra.SpectrumIdentity(0).Id}) and the spectrum id ({identifier})");
+            }
             if (_idNotFoundWarnLevel == VerbosityLevel.Warn)
                 _idNotFoundWarnLevel = VerbosityLevel.Debug;
         }

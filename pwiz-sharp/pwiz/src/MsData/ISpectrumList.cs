@@ -45,6 +45,12 @@ public interface ISpectrumList : IDisposable
     /// <summary>True iff the source reader deliberately skipped calibration spectra (e.g. Waters lockmass).</summary>
     bool CalibrationSpectraAreOmitted { get; }
 
+    /// <summary>
+    /// Returns true iff <paramref name="searchedId"/> has the same native-id key set (format) as
+    /// <paramref name="firstIdInList"/>. Port of pwiz::msdata::SpectrumList::checkNativeIdMatch.
+    /// </summary>
+    bool CheckNativeIdMatch(string firstIdInList, string searchedId);
+
     /// <summary>Writes a warning once per list instance (deduplicates by message hash).</summary>
     void WarnOnce(string message);
 }
@@ -120,6 +126,17 @@ public abstract class SpectrumListBase : ISpectrumList
         for (int i = 0; i < Count; i++)
             if (SpectrumIdentity(i).SpotId == spotId) results.Add(i);
         return results;
+    }
+
+    /// <inheritdoc/>
+    public virtual bool CheckNativeIdMatch(string firstIdInList, string searchedId)
+    {
+        ArgumentNullException.ThrowIfNull(firstIdInList);
+        ArgumentNullException.ThrowIfNull(searchedId);
+        // cpp parity: MSData.cpp:1170 - the id formats match iff both ids parse to the same set
+        // of keys (e.g. one "scan" vs the other "scanId" is a mismatch).
+        var actualKeys = new HashSet<string>(Id.Parse(firstIdInList).Keys);
+        return actualKeys.SetEquals(Id.Parse(searchedId).Keys);
     }
 
     /// <inheritdoc/>
