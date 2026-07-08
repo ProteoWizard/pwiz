@@ -892,8 +892,250 @@ namespace pwiz.Osprey.Test
         #endregion
 
         // ============================================================
+        // ClampExperimentQToBestRun tests
+        // ============================================================
+
+        #region ClampExperimentQToBestRun Tests
+
+        /// <summary>
+        /// The core case: an experiment-level q artifactually below every run's q (the
+        /// thinner-null selection advantage) is raised to the entry's best (min) run-Both
+        /// q, for both the precursor floor (by <see cref="FdrEntry.EntryId"/>) and the
+        /// peptide floor (by <see cref="FdrEntry.ModifiedSequence"/>).
+        /// </summary>
+        [TestMethod]
+        public void TestClampRaisesExperimentQToBestRun()
+        {
+            // One precursor (EntryId 1) observed in two files. Raw experiment q = 0.001,
+            // below both runs. Best run-Both q across files is 0.3 (file2).
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", MakeEntry(1, "PEPTIDEA", runPrec: 0.5, runPept: 0.5, expPrec: 0.001, expPept: 0.001)),
+                MakeFile("file2", MakeEntry(1, "PEPTIDEA", runPrec: 0.3, runPept: 0.3, expPrec: 0.001, expPept: 0.001))
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+
+            foreach (var kvp in perFileEntries)
+            foreach (var e in kvp.Value)
+            {
+                Assert.AreEqual(0.3, e.ExperimentPrecursorQvalue, 1e-12,
+                    "experiment precursor q should be raised to the min run-Both (0.3)");
+                Assert.AreEqual(0.3, e.ExperimentPeptideQvalue, 1e-12,
+                    "experiment peptide q should be raised to the min run-Both (0.3)");
+            }
+        }
+
+        /// <summary>
+        /// When the experiment q is already at or above the entry's best run q, the clamp
+        /// leaves it untouched, and re-running the clamp is a no-op (idempotent).
+        /// </summary>
+        [TestMethod]
+        public void TestClampIdempotentWhenExperimentQAlreadyAboveRun()
+        {
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", MakeEntry(1, "PEPTIDEA", runPrec: 0.001, runPept: 0.001, expPrec: 0.01, expPept: 0.01))
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            var e1 = perFileEntries[0].Value[0];
+            Assert.AreEqual(0.01, e1.ExperimentPrecursorQvalue, 1e-12, "already above run q -> unchanged");
+            Assert.AreEqual(0.01, e1.ExperimentPeptideQvalue, 1e-12, "already above run q -> unchanged");
+
+            // Second application changes nothing.
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            Assert.AreEqual(0.01, e1.ExperimentPrecursorQvalue, 1e-12, "clamp is idempotent");
+            Assert.AreEqual(0.01, e1.ExperimentPeptideQvalue, 1e-12, "clamp is idempotent");
+        }
+
+        /// <summary>
+        /// The floor is the run-<see cref="FdrLevel.Both"/> q = max(runPrecursor, runPeptide),
+        /// matching the blib ID line -- NOT the run-precursor q alone. A precursor whose
+        /// run-peptide q (0.02) exceeds its run-precursor q (0.002) is floored to 0.02.
+        /// </summary>
+        [TestMethod]
+        public void TestClampFloorsByRunBothNotPrecursorAlone()
+        {
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", MakeEntry(1, "PEPTIDEA", runPrec: 0.002, runPept: 0.02, expPrec: 0.001, expPept: 0.001))
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            var e1 = perFileEntries[0].Value[0];
+            Assert.AreEqual(0.02, e1.ExperimentPrecursorQvalue, 1e-12,
+                "floor must be run-Both (0.02), not run-precursor alone (0.002)");
+            Assert.AreEqual(0.02, e1.ExperimentPeptideQvalue, 1e-12,
+                "floor must be run-Both (0.02), not run-precursor alone (0.002)");
+        }
+
+        /// <summary>
+        /// The Stage-6 / merge-node scenario: after the pass-1 clamp lets a precursor pass on
+        /// its one good run, reconciliation zeroes that run's q (moved peak -> run q back to
+        /// the 1.0 default). Re-clamping against the final run q's raises the experiment q
+        /// above threshold, so the precursor no longer reports -- the invariant Mike observed.
+        /// </summary>
+        [TestMethod]
+        public void TestClampReClampAfterStage6Zeroing()
+        {
+            // Good run in file1 (0.005), weak run in file2 (0.5).
+            var good = MakeEntry(1, "PEPTIDEA", runPrec: 0.005, runPept: 0.005, expPrec: 0.001, expPept: 0.001);
+            var weak = MakeEntry(1, "PEPTIDEA", runPrec: 0.5, runPept: 0.5, expPrec: 0.001, expPept: 0.001);
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", good),
+                MakeFile("file2", weak)
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            Assert.AreEqual(0.005, good.ExperimentPrecursorQvalue, 1e-12,
+                "pass-1 clamp floors to the best run (0.005); still passes at 1%");
+
+            // Stage 6 relocates the good peak: its run q's reset to the 1.0 default.
+            good.RunPrecursorQvalue = 1.0;
+            good.RunPeptideQvalue = 1.0;
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            Assert.AreEqual(0.5, good.ExperimentPrecursorQvalue, 1e-12,
+                "re-clamp floors to the surviving run (0.5); no longer passes at 1%");
+            Assert.AreEqual(0.5, weak.ExperimentPrecursorQvalue, 1e-12,
+                "the sibling observation is floored to the same surviving-run q");
+        }
+
+        /// <summary>
+        /// The floor keys on the target/decoy-specific <see cref="FdrEntry.EntryId"/> (decoys
+        /// carry the high bit), never the shared base_id -- so a target cannot inherit its
+        /// paired decoy's good run q, which would corrupt the target-decoy competition.
+        /// </summary>
+        [TestMethod]
+        public void TestClampKeepsTargetAndDecoySeparate()
+        {
+            const uint decoyBit = 0x80000000;
+            // Target has only a weak run (0.8); its paired decoy has a strong run (0.001).
+            var target = MakeEntry(1, "PEPTIDEA", runPrec: 0.8, runPept: 0.8, expPrec: 0.001, expPept: 0.001);
+            var decoy = MakeEntry(1 | decoyBit, "DECOYA", runPrec: 0.001, runPept: 0.001, expPrec: 0.001, expPept: 0.001);
+            decoy.IsDecoy = true;
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", target, decoy)
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            Assert.AreEqual(0.8, target.ExperimentPrecursorQvalue, 1e-12,
+                "target floored to ITS own weak run (0.8), not the decoy's 0.001");
+            Assert.AreEqual(0.001, decoy.ExperimentPrecursorQvalue, 1e-12,
+                "decoy floored to its own strong run (0.001)");
+        }
+
+        /// <summary>
+        /// The peptide floor keys on (ModifiedSequence, IsDecoy), not the bare sequence:
+        /// a decoy sharing its paired target's <see cref="FdrEntry.ModifiedSequence"/> must
+        /// not lower the target's peptide floor with the decoy's good run (that would be
+        /// anti-conservative). Target and decoy here share "PEPTIDER".
+        /// </summary>
+        [TestMethod]
+        public void TestClampPeptideFloorSeparatesTargetDecoyBySequence()
+        {
+            const uint decoyBit = 0x80000000;
+            // Target: only a weak run (0.8). Decoy (same ModifiedSequence): a strong run (0.001).
+            var target = MakeEntry(1, "PEPTIDER", runPrec: 0.8, runPept: 0.8, expPrec: 0.001, expPept: 0.001);
+            var decoy = MakeEntry(1 | decoyBit, "PEPTIDER", runPrec: 0.001, runPept: 0.001, expPrec: 0.001, expPept: 0.001);
+            decoy.IsDecoy = true;
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", target, decoy)
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+            Assert.AreEqual(0.8, target.ExperimentPeptideQvalue, 1e-12,
+                "target peptide q floored to ITS own run (0.8), not the decoy's shared-sequence 0.001");
+            Assert.AreEqual(0.001, decoy.ExperimentPeptideQvalue, 1e-12,
+                "decoy peptide q floored to its own strong run (0.001)");
+        }
+
+        /// <summary>
+        /// A null or empty <see cref="FdrEntry.ModifiedSequence"/> (a Parquet stub loaded
+        /// without the modified_sequence column can be string.Empty) has no peptide identity:
+        /// it must be skipped for the peptide floor entirely, never bucketed with unrelated
+        /// empty-sequence entries. The precursor floor (by EntryId) still applies.
+        /// </summary>
+        [TestMethod]
+        public void TestClampSkipsNullOrEmptyModifiedSequence()
+        {
+            // Two entries with empty ModifiedSequence and good runs, plus a real peptide.
+            var emptyA = MakeEntry(1, "", runPrec: 0.5, runPept: 0.5, expPrec: 0.001, expPept: 0.001);
+            var emptyB = MakeEntry(2, "", runPrec: 0.4, runPept: 0.4, expPrec: 0.002, expPept: 0.002);
+            var nullSeq = MakeEntry(3, null, runPrec: 0.3, runPept: 0.3, expPrec: 0.003, expPept: 0.003);
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", emptyA, emptyB, nullSeq)
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+
+            // Empty/null sequences do NOT share a peptide floor -> peptide q untouched.
+            Assert.AreEqual(0.001, emptyA.ExperimentPeptideQvalue, 1e-12, "empty modseq skipped for peptide floor");
+            Assert.AreEqual(0.002, emptyB.ExperimentPeptideQvalue, 1e-12, "empty modseq not bucketed with other empties");
+            Assert.AreEqual(0.003, nullSeq.ExperimentPeptideQvalue, 1e-12, "null modseq skipped for peptide floor");
+            // The precursor floor (by EntryId) still applies to each.
+            Assert.AreEqual(0.5, emptyA.ExperimentPrecursorQvalue, 1e-12, "precursor floor still applies");
+            Assert.AreEqual(0.4, emptyB.ExperimentPrecursorQvalue, 1e-12, "precursor floor still applies");
+            Assert.AreEqual(0.3, nullSeq.ExperimentPrecursorQvalue, 1e-12, "precursor floor still applies");
+        }
+
+        /// <summary>
+        /// The peptide floor is peptide-wide (min run-Both over every charge sharing a
+        /// <see cref="FdrEntry.ModifiedSequence"/>), while the precursor floor stays per-EntryId.
+        /// A two-charge peptide gets both charges' peptide q floored to the peptide-wide min,
+        /// but each charge's precursor q floored to its own run.
+        /// </summary>
+        [TestMethod]
+        public void TestClampPeptideFloorSpansCharges()
+        {
+            // Same ModifiedSequence, two charges (distinct EntryIds), distinct run q's.
+            var z2 = MakeEntry(1, "PEPTIDEA", runPrec: 0.5, runPept: 0.5, expPrec: 0.001, expPept: 0.001);
+            var z3 = MakeEntry(2, "PEPTIDEA", runPrec: 0.2, runPept: 0.2, expPrec: 0.001, expPept: 0.001);
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", z2, z3)
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+
+            // Peptide floor is the peptide-wide min run-Both (0.2) for BOTH charges.
+            Assert.AreEqual(0.2, z2.ExperimentPeptideQvalue, 1e-12, "peptide floor spans charges (min 0.2)");
+            Assert.AreEqual(0.2, z3.ExperimentPeptideQvalue, 1e-12, "peptide floor spans charges (min 0.2)");
+            // Precursor floor is per-EntryId: each charge floored to its own run.
+            Assert.AreEqual(0.5, z2.ExperimentPrecursorQvalue, 1e-12, "z2 precursor floored to its own run (0.5)");
+            Assert.AreEqual(0.2, z3.ExperimentPrecursorQvalue, 1e-12, "z3 precursor floored to its own run (0.2)");
+        }
+
+        #endregion
+
+        // ============================================================
         // Test helpers
         // ============================================================
+
+        private static KeyValuePair<string, List<FdrEntry>> MakeFile(string name, params FdrEntry[] entries)
+        {
+            return new KeyValuePair<string, List<FdrEntry>>(name, new List<FdrEntry>(entries));
+        }
+
+        private static FdrEntry MakeEntry(
+            uint entryId, string modifiedSequence,
+            double runPrec, double runPept, double expPrec, double expPept)
+        {
+            return new FdrEntry
+            {
+                EntryId = entryId,
+                ModifiedSequence = modifiedSequence,
+                RunPrecursorQvalue = runPrec,
+                RunPeptideQvalue = runPept,
+                ExperimentPrecursorQvalue = expPrec,
+                ExperimentPeptideQvalue = expPept
+            };
+        }
 
         private class CompetitionItem
         {
