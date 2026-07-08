@@ -266,61 +266,23 @@ namespace pwiz.Osprey.FDR
             // the Stellar 2nd pass, ~393k < 600k) MUST take the direct path to stay
             // byte-identical; forcing it to always-stream refits the standardizer on a
             // different population and diverges every downstream score/q-value.
-            if (percConfig.MaxTrainSize > 0 && n > percConfig.MaxTrainSize * 2)
-            {
-                // Projection-native streaming (issue #4355 step (b) increment iii):
-                // the score + compete pass runs over the projection rows and the
-                // q-values are written straight back onto them, so NEITHER a
-                // full-population PercolatorEntry list NOR a PercolatorResult list is
-                // ever resident across the peak -- only the flat working arrays the
-                // parity-locked math needs. This is the collapse that takes the
-                // Astral-scale (1st and 2nd pass) peak off the ~230 B/entry transient
-                // stack -- the #4374 memory win, applied where the population is large
-                // enough to matter.
-                LogProjectionInputCounts(
-                    projections, numFeatures, loadFileFeatures, logInfo, passLabel);
-                logInfo(string.Format("Running {0} Percolator on {1} entries...",
-                    passLabel, n));
-                bool streamingAbort = RunStreamingIntoProjection(
-                    projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                    loadFileFeatures, sink);
-                if (streamingAbort)
-                    return true;
-            }
-            else
-            {
-                // Direct path (bounded population, e.g. Stellar 1st and 2nd pass):
-                // byte-identical to the FdrEntry oracle's direct RunPercolator. The
-                // transient PercolatorEntry + PercolatorResult stack is acceptable here
-                // because the population is small; the streaming memory win targets the
-                // above-threshold peak. Features are still streamed per file (never
-                // reloaded resident onto the survivor buffer) -- DispatchSvm's direct
-                // branch calls PopulateFeaturesFromFiles(loadFileFeatures), so the
-                // 2nd-pass memory win over the resident reload holds even here.
-                // streamFeatures is unconditionally true (loadFileFeatures is
-                // guaranteed non-null above): the rows are built feature-less here and
-                // resolved per file at score time.
-                var percEntries = PercolatorEntryBuilder.BuildFromProjection(
-                    projections.PerFile, peptideById, numFeatures,
-                    streamFeatures: true,
-                    out int nWithFeatures, out int nWithoutFeatures,
-                    out int nInputTargets, out int nInputDecoys);
-
-                logInfo(string.Format(
-                    "[COUNT] {0} Percolator input: {1} entries ({2} targets, {3} decoys, {4} features)",
-                    passLabel, percEntries.Count, nInputTargets, nInputDecoys, numFeatures));
-                logInfo(string.Format(
-                    "[COUNT] {0} Percolator features computed: {1} entries with PIN features, {2} fallback",
-                    passLabel, nWithFeatures, nWithoutFeatures));
-
-                PercolatorResults results = DispatchSvm(
-                    percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
-
-                if (results.DiagnosticAbort)
-                    return true;
-
-                ApplyPercolatorResultsToProjection(projections.PerFile, results, sink);
-            }
+            // Streaming-only (cross-impl parity with the Rust streaming-only change):
+            // ALWAYS run the projection-native streaming score + compete pass, regardless
+            // of population size. The former sub-threshold direct branch built a full
+            // PercolatorEntry list, dispatched the SVM over ALL entries, and zipped a
+            // PercolatorResult list back; unifying on streaming removes that transient
+            // full-population stack and the divergent standardizer-fit population (the
+            // direct path fit on all entries, streaming fits on the best-per-precursor
+            // subsample). One path, lower memory, and matched to Rust.
+            LogProjectionInputCounts(
+                projections, numFeatures, loadFileFeatures, logInfo, passLabel);
+            logInfo(string.Format("Running {0} Percolator on {1} entries...",
+                passLabel, n));
+            bool streamingAbort = RunStreamingIntoProjection(
+                projections.PerFile, peptideById, percConfig, logInfo, passLabel,
+                loadFileFeatures, sink);
+            if (streamingAbort)
+                return true;
 
             // Tail [COUNT] logging (per-file pass counts, total, unique precursors)
             // moves into sink.Finish (issue #4355 struct-shrink S0, correction §0a):
@@ -386,29 +348,14 @@ namespace pwiz.Osprey.FDR
             logInfo(string.Format("Running {0} Percolator on {1} entries...",
                 passLabel, percEntries.Count));
 
-            // Streaming vs direct dispatch, matching Rust
-            // osprey/src/pipeline.rs::run_percolator_fdr. Above the
-            // MaxTrainSize * 2 threshold the training set is dominated by
-            // multi-observation-per-precursor redundancy; best-per-precursor
-            // dedup + peptide-grouped subsample give the SVM a diverse
-            // per-peptide training pool (same approach mokapot takes) and
-            // keep the Stage 5 standardizer fit on the subset -- essential
-            // for cross-impl byte parity with Rust once Astral-scale inputs
-            // push past the threshold.
-            if (percConfig.MaxTrainSize > 0 &&
-                percEntries.Count > percConfig.MaxTrainSize * 2)
-            {
-                return RunPercolatorStreaming(
-                    percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
-            }
-
-            // Direct path (<= MaxTrainSize * 2 entries). On the streaming build
-            // the stubs have no features yet; load every entry's vector up
-            // front (bounded by this branch's size) so RunPercolator sees real
-            // features. Without a loader the entries already carry them.
-            if (loadFileFeatures != null)
-                PopulateFeaturesFromFiles(percEntries, loadFileFeatures, percConfig.FeatureInfos.Length);
-            return PercolatorFdr.RunPercolator(percEntries, percConfig);
+            // Streaming-only (cross-impl parity with the Rust streaming-only change):
+            // ALWAYS take the streaming SVM path -- best-per-precursor dedup +
+            // peptide-grouped subsample, with the Stage 5 standardizer fit on that
+            // subset. The former sub-threshold direct path trained on ALL entries with a
+            // different standardizer-fit population; removed so C# and Rust train
+            // identically at every scale (mirrors Rust run_percolator_fdr, now stream-only).
+            return RunPercolatorStreaming(
+                percEntries, percConfig, logInfo, passLabel, loadFileFeatures);
         }
 
         /// <summary>
@@ -940,33 +887,6 @@ namespace pwiz.Osprey.FDR
                 perFile, labels, entryIds, peptides, fileNames, trainResults, percConfig,
                 loadFileFeatures, sink);
             return false;
-        }
-
-        /// <summary>
-        /// Load every entry's 21-feature vector from its source file's parquet by
-        /// <see cref="PercolatorEntry.ParquetIndex"/>, one file at a time, and
-        /// assign it onto the stub. Used by the direct path (issue #4355 Phase 4)
-        /// where the population is bounded (&lt;= MaxTrainSize * 2) so holding all
-        /// vectors is acceptable, but they still must be reloaded because the
-        /// streaming build left them null. Mirrors the per-file reload the Tasks
-        /// layer previously performed before Percolator.
-        /// </summary>
-        private static void PopulateFeaturesFromFiles(
-            List<PercolatorEntry> percEntries,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
-            int numFeatures)
-        {
-            var indicesByFile = PercolatorFdr.GroupIndicesByFileName(percEntries);
-            foreach (var kvp in indicesByFile)
-            {
-                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                foreach (int i in kvp.Value)
-                {
-                    var entry = percEntries[i];
-                    entry.Features = PercolatorFdr.ResolveFeatureRow(
-                        rows, entry.ParquetIndex, entry.CoelutionSum, numFeatures);
-                }
-            }
         }
 
         /// <summary>
