@@ -59,8 +59,8 @@ namespace pwiz.Osprey.Tasks
     /// had as <c>return 0</c> / <c>return 1</c>.
     ///
     /// Outputs (FullLibrary, LibraryById, PerFileEntries,
-    /// PerFileCalibrations, PerFileParquetPaths) are exposed as
-    /// instance properties for FirstJoinTask + downstream tasks to
+    /// PerFileCalibrations, PerFileIsolationMz, PerFileParquetPaths) are exposed
+    /// as instance properties for FirstJoinTask + downstream tasks to
     /// consume after this one completes successfully.
     /// </summary>
     internal sealed class PerFileScoringTask : OspreyTask
@@ -94,7 +94,8 @@ namespace pwiz.Osprey.Tasks
         public override IEnumerable<Type> Publishes => new[]
         {
             typeof(FullLibrary), typeof(LibraryById), typeof(PerFileCalibrations),
-            typeof(PerFileParquetPaths), typeof(RescoreBundle), typeof(ScoredEntries)
+            typeof(PerFileIsolationMz), typeof(PerFileParquetPaths),
+            typeof(RescoreBundle), typeof(ScoredEntries)
         };
 
         // Outputs reached by downstream tasks through ctx.Demand<PerFileScoringTask>().
@@ -106,6 +107,8 @@ namespace pwiz.Osprey.Tasks
             = new List<KeyValuePair<string, List<FdrEntry>>>();
         private ConcurrentDictionary<string, RTCalibration> _perFileCalibrations
             = new ConcurrentDictionary<string, RTCalibration>();
+        private ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> _perFileIsolationMz
+            = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
         private Dictionary<string, string> _perFileParquetPaths
             = new Dictionary<string, string>();
         // Probe-the-disk hydration bundle: populated when the joinOnly
@@ -180,6 +183,10 @@ namespace pwiz.Osprey.Tasks
             // Per-file RT calibration handles harvested by ProcessFile so
             // Stage 6 reconciliation has the live RTCalibration objects.
             var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+            // Per-file isolation-window m/z intervals harvested alongside the
+            // calibration so Stage 6 gap-fill filters candidates by isolation
+            // coverage (essential for GPF datasets with disjoint m/z ranges).
+            var perFileIsolationMz = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
             // fileName -> .scores.parquet path, populated below so Stage 6
             // reconciliation can lazily load CWT candidates per file via
             // ParquetScoreCache.LoadCwtCandidatesFromParquet.
@@ -224,7 +231,7 @@ namespace pwiz.Osprey.Tasks
                 var fileResult = ScoreOrLoadForFile(
                     inputFile, fileName, 0, 1,
                     fullLibrary, config, parquetFooterMetadata,
-                    perFileCalibrations, validityKey, ctx);
+                    perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                 if (fileResult != null)
                     perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
             }
@@ -243,7 +250,7 @@ namespace pwiz.Osprey.Tasks
                     var fileResult = ScoreOrLoadForFile(
                         inputFile, fileName, fileIdx, config.InputFiles.Count,
                         fullLibrary, config, parquetFooterMetadata,
-                        perFileCalibrations, validityKey, ctx);
+                        perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                     if (fileResult != null)
                         perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
                 }
@@ -281,7 +288,7 @@ namespace pwiz.Osprey.Tasks
                         var fileResult = ScoreOrLoadForFile(
                             inputFile, fileName, fileIdx, config.InputFiles.Count,
                             fullLibrary, config, parquetFooterMetadata,
-                            perFileCalibrations, validityKey, ctx);
+                            perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                         if (fileResult != null)
                             fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
                     }
@@ -317,7 +324,7 @@ namespace pwiz.Osprey.Tasks
                 totalScored, nFiles));
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileParquetPaths, nFiles, totalScored);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored);
         }
 
         public override bool Rehydrate(PipelineContext ctx)
@@ -350,6 +357,9 @@ namespace pwiz.Osprey.Tasks
 
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
             var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+            // Rehydrated from calibration.json's isolation_scheme by
+            // LoadJoinOnlyScores (the merge node has no mzML to extract from).
+            var perFileIsolationMz = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
             // fileName -> .scores.parquet path; LoadJoinOnlyScores already
             // knows each input parquet path and fills this in.
             var perFileParquetPaths = new Dictionary<string, string>();
@@ -369,7 +379,8 @@ namespace pwiz.Osprey.Tasks
             ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
 
             var swAllFiles = Stopwatch.StartNew();
-            LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths, perFileCalibrations, ctx);
+            LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths,
+                perFileCalibrations, perFileIsolationMz, ctx);
             swAllFiles.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
@@ -401,7 +412,7 @@ namespace pwiz.Osprey.Tasks
                 return false;
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileParquetPaths, nFiles, totalScored);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored);
         }
 
         /// <summary>
@@ -432,6 +443,10 @@ namespace pwiz.Osprey.Tasks
 
             var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>();
             var perFileCalibrations = new ConcurrentDictionary<string, RTCalibration>();
+            // Rehydrated per file from calibration.json's isolation_scheme by
+            // TryLoadStubsAndCalibration (this pure-load path never re-extracts
+            // isolation windows from mzML).
+            var perFileIsolationMz = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
             var perFileParquetPaths = new Dictionary<string, string>();
 
             int nFiles = config.InputFiles?.Count ?? 0;
@@ -457,7 +472,7 @@ namespace pwiz.Osprey.Tasks
                     // rescore" case -- TryLoadStubsAndCalibration logs it as an
                     // error (no misleading "will rescore" warning). Fail loudly;
                     // Rehydrate must not compute.
-                    var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx, resumeStrict: true);
+                    var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx, resumeStrict: true);
                     if (stubs == null)
                     {
                         ctx.ExitCode = 1;
@@ -481,7 +496,7 @@ namespace pwiz.Osprey.Tasks
                 totalScored, nFiles));
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileParquetPaths, nFiles, totalScored);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored);
         }
 
         /// <summary>
@@ -497,11 +512,13 @@ namespace pwiz.Osprey.Tasks
         private bool FinalizeAndCheck(PipelineContext ctx,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             Dictionary<string, string> perFileParquetPaths,
             int nFiles, int totalScored)
         {
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
+            _perFileIsolationMz = perFileIsolationMz;
             _perFileParquetPaths = perFileParquetPaths;
 
             // Publish the Stage 1-4 byproducts once, in the shared Run/Rehydrate
@@ -517,6 +534,7 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new FullLibrary(_fullLibrary));
             ctx.Publish(new LibraryById(_libraryById));
             ctx.Publish(new PerFileCalibrations(_perFileCalibrations));
+            ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
             ctx.Publish(new RescoreBundle(_rescoreInputs));
@@ -855,6 +873,7 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             Dictionary<string, string> perFileParquetPaths,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             PipelineContext ctx)
         {
             // --task FirstPassFDR: load per-file FdrEntry stubs directly from
@@ -932,6 +951,16 @@ namespace pwiz.Osprey.Tasks
                                     calParams.RtCalibration.ResidualSD);
                                 perFileCalibrations[fileName] = rtCal;
                             }
+
+                            // Isolation-window coverage for the gap-fill m/z
+                            // filter -- read independent of RT calibration from
+                            // the isolation_scheme block, so a merge node with no
+                            // mzML still gets per-file coverage. Mirrors Rust's
+                            // isolation_intervals_from_cal (pipeline.rs).
+                            var isoIntervals = IsolationIntervalsFromWindows(
+                                calParams.Metadata?.IsolationScheme?.Windows);
+                            if (isoIntervals != null)
+                                perFileIsolationMz[fileName] = isoIntervals;
                         }
                     }
                 }
@@ -942,6 +971,29 @@ namespace pwiz.Osprey.Tasks
             }
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+        }
+
+        /// <summary>
+        /// Convert calibration.json isolation-scheme windows (<c>[center, width]</c>
+        /// pairs) into the half-open <c>[Lo, Hi)</c> gap-fill m/z intervals
+        /// (<c>center +/- width/2</c>) the Stage 6 filter consumes. Ports Rust's
+        /// <c>isolation_intervals_from_cal</c> (osprey/src/pipeline.rs). Returns
+        /// <c>null</c> when no windows are present so the caller records nothing
+        /// for that file (an absent entry disables the filter there, as intended).
+        /// </summary>
+        private static IReadOnlyList<(double Lo, double Hi)> IsolationIntervalsFromWindows(double[][] windows)
+        {
+            if (windows == null || windows.Length == 0)
+                return null;
+            var intervals = new List<(double Lo, double Hi)>(windows.Length);
+            foreach (var w in windows)
+            {
+                if (w == null || w.Length < 2)
+                    continue;
+                double half = w[1] / 2.0;
+                intervals.Add((w[0] - half, w[0] + half));
+            }
+            return intervals.Count > 0 ? intervals : null;
         }
 
         /// <summary>
@@ -1037,13 +1089,14 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config,
             Dictionary<string, string> parquetFooterMetadata,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             string validityKey,
             PipelineContext ctx)
         {
             string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
             if (PerFileResumeDriver.IsCurrent(scoresPath, Name, validityKey))
             {
-                var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, ctx);
+                var loaded = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
                 if (loaded != null)
                 {
                     ctx.LogInfo(string.Format(
@@ -1059,7 +1112,7 @@ namespace pwiz.Osprey.Tasks
             // Clear stale sidecar so a mid-ProcessFile crash leaves no
             // false-positive sidecar on the next invocation.
             PerFileResumeDriver.ClearStale(scoresPath, Name);
-            var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, ctx);
+            var fileResult = ProcessFile(inputFile, fileName, fullLibrary, config, parquetFooterMetadata, perFileCalibrations, perFileIsolationMz, ctx);
             if (fileResult != null)
             {
                 PerFileResumeDriver.Stamp(scoresPath, Name, OspreyVersion.Current,
@@ -1086,6 +1139,7 @@ namespace pwiz.Osprey.Tasks
             string scoresPath,
             string fileName,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             PipelineContext ctx,
             bool resumeStrict = false)
         {
@@ -1140,6 +1194,16 @@ namespace pwiz.Osprey.Tasks
                                 calParams.RtCalibration.ResidualSD);
                             perFileCalibrations[fileName] = rtCal;
                         }
+
+                        // Rehydrate the gap-fill m/z coverage from the
+                        // isolation_scheme block too (independent of RT cal), so a
+                        // resumed / cached-calibration file gets the same filter
+                        // input a fresh ProcessFile computes. Mirrors Rust's
+                        // isolation_intervals_from_cal (pipeline.rs).
+                        var isoIntervals = IsolationIntervalsFromWindows(
+                            calParams.Metadata?.IsolationScheme?.Windows);
+                        if (isoIntervals != null)
+                            perFileIsolationMz[fileName] = isoIntervals;
                     }
                 }
             }
@@ -1158,6 +1222,7 @@ namespace pwiz.Osprey.Tasks
             List<LibraryEntry> fullLibrary, OspreyConfig config,
             Dictionary<string, string> parquetFooterMetadata,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrationsOut,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMzOut,
             PipelineContext ctx)
         {
             if (inputFile == null)
@@ -1247,7 +1312,7 @@ namespace pwiz.Osprey.Tasks
             // carries the file forward as a step when scoring begins.
             MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
-                inputFile, fileName, fullLibrary, spectra, ms1Spectra,
+                inputFile, fileName, fullLibrary, spectra, ms1Spectra, isolationWindows,
                 context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal, ctx);
 
             // Optional early exit after Stage 3 (calibration only, no main search).
@@ -1265,6 +1330,16 @@ namespace pwiz.Osprey.Tasks
             // need cross-file consensus.
             if (perFileCalibrationsOut != null && rtCalibration != null)
                 perFileCalibrationsOut[fileName] = rtCalibration;
+
+            // Surface the per-file isolation-window m/z coverage alongside the
+            // calibration so Stage 6 gap-fill can filter candidates to the m/z
+            // ranges this file actually isolated (center +/- width/2). Matches
+            // Rust pipeline.rs:4248-4255 / reconciliation.rs; inert for a single
+            // sDIA window covering the whole range.
+            if (perFileIsolationMzOut != null && isolationWindows.Count > 0)
+                perFileIsolationMzOut[fileName] = isolationWindows
+                    .Select(w => (w.Center - w.Width / 2.0, w.Center + w.Width / 2.0))
+                    .ToList();
 
             // Run coelution scoring, then drop double-counted features and
             // deduplicate target/decoy pairs per base_id. Extracted to
@@ -1391,6 +1466,7 @@ namespace pwiz.Osprey.Tasks
         private RTCalibration ResolveCalibration(
             string inputFile, string fileName,
             List<LibraryEntry> fullLibrary, List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            List<IsolationWindow> isolationWindows,
             ScoringContext context, OspreyConfig config,
             out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
             PipelineContext ctx)
@@ -1505,7 +1581,12 @@ namespace pwiz.Osprey.Tasks
                             ? rtCalibration.Stats().NPoints
                             : 0,
                         NumSampledPrecursors = numSampledPrecursorsForMetadata,
-                        Timestamp = DateTime.UtcNow.ToString("o")
+                        Timestamp = DateTime.UtcNow.ToString("o"),
+                        // DIA isolation scheme (from the first MS2 cycle) so an HPC
+                        // merge node with no mzML can rehydrate the gap-fill m/z
+                        // filter's per-file coverage. Mirrors Rust's
+                        // CalibrationMetadata.isolation_scheme (pipeline.rs).
+                        IsolationScheme = BuildIsolationScheme(isolationWindows)
                     },
                     Ms1Calibration = MzCalibrationJson.FromResult(ms1Cal),
                     Ms2Calibration = MzCalibrationJson.FromResult(ms2Cal),
@@ -1529,6 +1610,51 @@ namespace pwiz.Osprey.Tasks
             }
 
             return rtCalibration;
+        }
+
+        /// <summary>
+        /// Build the DIA <see cref="IsolationSchemeJson"/> block persisted in
+        /// calibration.json from a file's first-cycle isolation windows, so an HPC
+        /// merge node (which has no mzML) can rehydrate the gap-fill m/z filter's
+        /// coverage. Windows are stored as <c>[center, width]</c> pairs; the scalar
+        /// summary fields (num_windows / mz_min / mz_max / typical_width /
+        /// uniform_width) mirror Rust's IsolationScheme (osprey/src/pipeline.rs
+        /// extract_isolation_scheme). Returns <c>null</c> for an empty window list
+        /// so the metadata omits the block (matching Rust's <c>Option::None</c>).
+        /// </summary>
+        private static IsolationSchemeJson BuildIsolationScheme(List<IsolationWindow> isolationWindows)
+        {
+            if (isolationWindows == null || isolationWindows.Count == 0)
+                return null;
+            var windows = new double[isolationWindows.Count][];
+            double widthSum = 0.0;
+            for (int i = 0; i < isolationWindows.Count; i++)
+            {
+                var w = isolationWindows[i];
+                windows[i] = new[] { w.Center, w.Width };
+                widthSum += w.Width;
+            }
+            double typicalWidth = widthSum / isolationWindows.Count;
+            bool uniformWidth = true;
+            for (int i = 0; i < isolationWindows.Count; i++)
+            {
+                if (Math.Abs(isolationWindows[i].Width - typicalWidth) >= 0.5)
+                {
+                    uniformWidth = false;
+                    break;
+                }
+            }
+            // ExtractIsolationWindows sorts by center, so first/last are min/max
+            // -- matches Rust's mz_min/mz_max taken from the sorted window list.
+            return new IsolationSchemeJson
+            {
+                NumWindows = isolationWindows.Count,
+                MzMin = isolationWindows[0].Center,
+                MzMax = isolationWindows[isolationWindows.Count - 1].Center,
+                TypicalWidth = typicalWidth,
+                UniformWidth = uniformWidth,
+                Windows = windows,
+            };
         }
 
         /// <summary>

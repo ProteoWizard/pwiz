@@ -202,6 +202,7 @@ namespace pwiz.Osprey.Tasks
             // compacts the shared buffer below, so it reads it before that.
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
             var perFileCalibrations = ctx.Get<PerFileCalibrations>().Value;
+            var perFileIsolationMz = ctx.Get<PerFileIsolationMz>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
@@ -303,7 +304,7 @@ namespace pwiz.Osprey.Tasks
             // reconciliation degenerates to zero actions there.
             if (perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
             {
-                if (!PlanStage6(perFileEntries, perFileCalibrations,
+                if (!PlanStage6(perFileEntries, perFileCalibrations, perFileIsolationMz,
                         perFileParquetPaths, fullLibrary, config, ctx))
                     return false;
             }
@@ -647,6 +648,7 @@ namespace pwiz.Osprey.Tasks
         private bool PlanStage6(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
@@ -675,6 +677,7 @@ namespace pwiz.Osprey.Tasks
                 plan.Consensus,
                 plan.RefinedCalibrations,
                 perFileCalibrations,
+                perFileIsolationMz,
                 fullLibrary,
                 perFileParquetPaths,
                 config,
@@ -790,6 +793,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyList<PeptideConsensusRT> consensus,
             Dictionary<string, RTCalibration> refinedCalibrations,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
@@ -833,11 +837,13 @@ namespace pwiz.Osprey.Tasks
                 libPrecursorMz[entry.Id] = entry.PrecursorMz;
             }
 
-            // Compute per-file gap-fill targets. Per-file isolation-window
-            // m/z intervals are not yet plumbed through C# (Stellar
-            // calibration.json carries no isolation_scheme today, so the
-            // filter is a no-op there); when extended to GPF datasets,
-            // pass a non-null dictionary here.
+            // Compute per-file gap-fill targets. Per-file isolation-window m/z
+            // intervals (from each file's extracted windows straight through, or
+            // rehydrated from calibration.json on an HPC merge node) constrain
+            // gap-fill candidates to the m/z ranges each file actually isolated --
+            // essential for GPF datasets with disjoint windows. Inert for a single
+            // sDIA window covering the whole range (every precursor is in-range).
+            // Matches Rust reconciliation.rs's per_file_isolation_mz argument.
             var perFileForGapFill = new List<KeyValuePair<string,
                 IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
             foreach (var kvp in perFileEntries)
@@ -853,7 +859,7 @@ namespace pwiz.Osprey.Tasks
                 config.Reconciliation.ConsensusFdr,
                 libLookup,
                 libPrecursorMz,
-                perFileIsolationMz: null);
+                perFileIsolationMz);
 
             // Mirror gapFillByFile into the out param for the in-process
             // Stage 6 rescore caller. Identify returns IReadOnlyList<>;
