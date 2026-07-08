@@ -587,12 +587,13 @@ if(D.fdpViews && D.fdpViews.length){
       (f.matchesFdrBench
         ? "<b>Reproduces the FDRBench plot</b> — x is Osprey's <b>experiment-wide precursor</b> q, the exact value <code>--fdrbench</code> hands to FDRBench (which only counts entrapment on it). No FDRBench install needed. "
         : "<b>Per-run view</b> (new) — x is Osprey's <b>per-run precursor</b> q; FDRBench collapses runs so it can't show this. ")
-      + "The dashed line is y=x (perfect calibration); the curve above it means the reported q is anti-conservative there. Entrapment DB ratio r = "+fmt(f.entrapmentRatio,2)+".";
+      + "The dashed line is y=x (perfect calibration); the curve above it means the reported q is anti-conservative there. Entrapment DB ratio r = "+fmt(f.entrapmentRatio,2)+"."
+      + (f.pairedSuppressedPartial ? " <b>Paired FDP omitted</b> — it is a 1-fold estimator that needs a ~1:1 entrapment library (r near 1); combined and lower-bound remain valid at this ratio (<a href='https://github.com/ProteoWizard/pwiz/blob/master/pwiz_tools/Osprey/docs/fractional-entrapment.md' target='_blank' rel='noopener'>why non-1:1 is valid</a>)." : "");
   }
   sel.innerHTML="";
   views.forEach((v,k)=>{const b=H(sel,"button",{class:"vbtn"+(k===0?" on":"")},v.label+(v.matchesFdrBench?"  (= FDRBench)":""));
     b.onclick=()=>{vi=k;sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");render();};});
-  legend(document.getElementById("fdpLegend"),series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;render();}})));
+  legend(document.getElementById("fdpLegend"),series.filter(se=>views.some(v=>v[se.key])).map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;render();}})));
   render();
   // Print-only: render ALL views so the PDF captures every FDR plot, not just the
   // one selected on screen. Reuses drawPanel; a per-view title + 1%-q summary line.
