@@ -664,7 +664,23 @@ namespace pwiz.Skyline.Model
                     Resources.PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_,
                     replicateName, linesRead));
             }
-            return new ChromSetFileMatch(chromSet, fileInfo.FilePath, 0);
+            return new ChromSetFileMatch(chromSet, fileInfo.FilePath, GetGlobalFileOrder(chromSet, fileInfo));
+        }
+
+        /// <summary>
+        /// The running index of a file across all chromatogram sets, matching the fileOrder that
+        /// <see cref="MeasuredResults.FindMatchingMSDataFile"/> assigns to a <see cref="ChromSetFileMatch"/>.
+        /// </summary>
+        private int GetGlobalFileOrder(ChromatogramSet matchSet, ChromFileInfo matchFile)
+        {
+            int fileOrder = 0;
+            foreach (var set in Document.Settings.MeasuredResults.Chromatograms)
+            {
+                if (ReferenceEquals(set, matchSet))
+                    return fileOrder + set.MSDataFileInfos.IndexOf(matchFile);
+                fileOrder += set.FileCount;
+            }
+            return fileOrder;
         }
 
         /// <summary>

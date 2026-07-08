@@ -359,8 +359,8 @@ namespace pwiz.SkylineTest
                         missingHeaderMessage = x.Message;
                     }
                     Assert.IsNotNull(missingHeaderMessage);
-                    StringAssert.Contains(missingHeaderMessage, "FileName");
-                    StringAssert.Contains(missingHeaderMessage, "ReplicateName");
+                    StringAssert.Contains(missingHeaderMessage, PeakBoundaryImporter.STANDARD_FIELD_NAMES[(int)PeakBoundaryImporter.Field.filename]);
+                    StringAssert.Contains(missingHeaderMessage, PeakBoundaryImporter.STANDARD_FIELD_NAMES[(int)PeakBoundaryImporter.Field.replicate_name]);
 
                     // A replicate name that resolves to a replicate holding more than one file cannot identify a
                     // single file, so the import fails with an explanatory error rather than guessing. Synthesize
