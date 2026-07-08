@@ -537,7 +537,7 @@ namespace pwiz.Osprey.Tasks
                 GC.Collect();
                 ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                     @"[MEM reconciliation-floor] managed_heap={0:F2} GB (post-GC, entering rescore, files={1})",
-                    GC.GetTotalMemory(true) / (1024.0 * 1024.0 * 1024.0), perFileEntries.Count));
+                    GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), perFileEntries.Count));
             }
 
             int nTotalFiles = perFileEntries.Count;
@@ -601,7 +601,7 @@ namespace pwiz.Osprey.Tasks
                 GC.Collect();
                 ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
                     @"[MEM reconciliation-resident] managed_heap={0:F2} GB (files={1}, file_parallelism={2})",
-                    GC.GetTotalMemory(true) / (1024.0 * 1024.0 * 1024.0), nTotalFiles, parallelism));
+                    GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), nTotalFiles, parallelism));
             }
 
             int totalRescored = 0;
