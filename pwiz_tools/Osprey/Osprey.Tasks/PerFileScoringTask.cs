@@ -1636,28 +1636,40 @@ namespace pwiz.Osprey.Tasks
                 double rawTolerance = RTCalibration.SearchWindowRaw(stats.MAD);
                 double finalTolerance = RTCalibration.SearchWindowHalfWidth(
                     stats.MAD, config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance);
+                string beforeStr = initialRtTolerance.ToString("F2", ic);
+                string rawStr = rawTolerance.ToString("F2", ic);
+                string finalStr = finalTolerance.ToString("F2", ic);
                 string rtToleranceLine;
-                if (finalTolerance > rawTolerance)
+                if (double.IsNaN(finalTolerance))
                 {
-                    // The computed 3*SD was tighter than the floor: show the real
+                    // Degenerate calibration (e.g. NaN MAD): no usable spread to report.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> undetermined after calibration (no usable RT spread)",
+                        beforeStr);
+                }
+                else if (rawStr == finalStr)
+                {
+                    // In range, or a clamp too small to show at this precision: a single
+                    // value is unambiguous, so skip the computed-vs-clamp call-out.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min after calibration",
+                        beforeStr, finalStr);
+                }
+                else if (finalTolerance > rawTolerance)
+                {
+                    // The computed 3*MAD*1.4826 was tighter than the floor: show the
                     // computed tolerance and the floor actually in use.
                     rtToleranceLine = string.Format(ic,
-                        "  RT tolerance: +/-{0:F2} min before -> +/-{1:F2} min computed (3xSD), using +/-{2:F2} min floor, after calibration",
-                        initialRtTolerance, rawTolerance, finalTolerance);
-                }
-                else if (finalTolerance < rawTolerance)
-                {
-                    // The computed 3*SD exceeded the ceiling: show the computed
-                    // tolerance and the cap actually in use.
-                    rtToleranceLine = string.Format(ic,
-                        "  RT tolerance: +/-{0:F2} min before -> +/-{1:F2} min computed (3xSD), capped at +/-{2:F2} min, after calibration",
-                        initialRtTolerance, rawTolerance, finalTolerance);
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration",
+                        beforeStr, rawStr, finalStr);
                 }
                 else
                 {
+                    // finalTolerance < rawTolerance: the computed value exceeded the
+                    // ceiling, so show the computed tolerance and the cap in use.
                     rtToleranceLine = string.Format(ic,
-                        "  RT tolerance: +/-{0:F2} min before -> +/-{1:F2} min after calibration",
-                        initialRtTolerance, finalTolerance);
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration",
+                        beforeStr, rawStr, finalStr);
                 }
                 ctx.LogInfo(rtToleranceLine);
                 ctx.LogInfo(string.Format(ic,
