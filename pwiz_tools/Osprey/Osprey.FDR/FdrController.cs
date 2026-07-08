@@ -180,13 +180,17 @@ namespace pwiz.Osprey.FDR
             }
 
             // Sort winners by score descending (highest scores first) with a STABLE sort,
-            // matching Rust winners.sort_by (osprey-fdr/src/lib.rs:148, which is stable).
+            // matching Rust winners.sort_by (osprey-fdr/src/lib.rs:148, also a stable sort).
             // List<T>.Sort is an unstable introsort, so at an exact score tie between
             // distinct base_ids it could reorder winners arbitrarily, and the cumulative
-            // target/decoy FDR walk below is order-sensitive at a tie -- a genuine parity /
-            // determinism hazard. OrderByDescending is a stable sort, so tied winners keep
-            // their input (dictionary insertion) order, mirroring Rust's stable sort of its
-            // (also map-iteration-ordered) winners.
+            // target/decoy FDR walk below is order-sensitive at a tie -- a determinism
+            // hazard. OrderByDescending is stable, so tied winners keep their input
+            // (dictionary insertion) order, making C# deterministic run-to-run. This does
+            // NOT pin exact-tie order cross-impl: Rust's winners come from a std HashMap
+            // (RandomState), so Rust's tie order is randomized per run -- both impls use
+            // the same stable-sort algorithm, but neither fixes the tie order across
+            // impls. Exact score ties across distinct base_ids are rare, and this is the
+            // Simple-FDR path only (default Percolator uses PercolatorFdr).
             winners = winners.OrderByDescending(w => w.Score).ToList();
 
             // First pass: walk down and find MAX cumulative_targets at any position where FDR <= threshold
