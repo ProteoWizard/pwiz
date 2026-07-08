@@ -114,7 +114,19 @@ namespace pwiz.SkylineTestFunctional
             TestContext.EnsureTestResultsDir();
             var tempPath = TestContext.GetTestResultsPath();
             var destFileName = Path.Combine(tempPath, "SkylineCmd.exe");
-            File.Copy(FindSkylineCmdExe(), destFileName);
+            var skylineCmdExe = FindSkylineCmdExe();
+            File.Copy(skylineCmdExe, destFileName);
+#if !NET472
+            // On net8 SkylineCmd.exe is a native apphost that needs its managed companions beside it
+            // to bootstrap; copy them (but NOT Skyline*.dll, which the test expects to be missing) so
+            // the managed entry point runs and reports the missing Skyline.dll from tempPath.
+            foreach (var companion in new[] { "SkylineCmd.dll", "SkylineCmd.runtimeconfig.json", "SkylineCmd.deps.json" })
+            {
+                var companionSrc = Path.Combine(Path.GetDirectoryName(skylineCmdExe) ?? string.Empty, companion);
+                if (File.Exists(companionSrc))
+                    File.Copy(companionSrc, Path.Combine(tempPath, companion), true);
+            }
+#endif
             var processStartInfo = GetProcessStartInfo(string.Empty);
             processStartInfo.FileName = destFileName;
             var processRunner = new ProcessRunner { OutputEncoding = Encoding.UTF8 };
