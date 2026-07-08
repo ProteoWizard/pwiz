@@ -187,6 +187,13 @@ namespace pwiz.Osprey.FDR
                     }
                 }
             }
+
+            // Best-of-runs monotonicity on the just-written experiment q-values. Runs for
+            // both the first pass and the reconciliation-aware second pass, so every consumer
+            // (blib gate, --model-diagnostics, compaction) sees q-values that already satisfy
+            // "an experiment-level q is never more confident than the entry's best single run."
+            ClampExperimentQToBestRun(perFileEntries);
+
             // Log FDR results
             int nTargetPassing = 0;
             int nDecoyPassing = 0;
@@ -239,6 +246,64 @@ namespace pwiz.Osprey.FDR
                 "[COUNT] {0} unique precursors (best q across files): {1}",
                 passLabel, bestQByPrecursor.Count));
             return false;
+        }
+
+        /// <summary>
+        /// Clamp each entry's experiment-level q-value up to its own best (min) run-level
+        /// q-value, enforcing that a best-of-runs aggregate can never be more confident than
+        /// its best single run. Experiment-level FDR competes each precursor's single best
+        /// observation against a de-duplicated (thinner) decoy null, so the raw experiment q
+        /// can fall BELOW every per-run q -- letting a precursor pass experiment-level FDR with
+        /// no run passing run-level FDR. Downstream that produces reported peptides with no
+        /// run-level ID (the blib ID-line artifact Mike observed) and an anti-conservative
+        /// experiment-wide FDP calibration.
+        ///
+        /// Same-level floors, keyed on the target/decoy-specific identity (not the shared
+        /// base_id -- a target must not inherit its paired decoy's good run):
+        ///   ExperimentPrecursorQvalue &lt;- max(ExperimentPrecursorQvalue, min-over-runs RunPrecursorQvalue)   [by EntryId]
+        ///   ExperimentPeptideQvalue   &lt;- max(ExperimentPeptideQvalue,   min-over-runs RunPeptideQvalue)     [by ModifiedSequence]
+        /// Run-level q is winner-only per file, so a losing run contributes 1.0 and the min
+        /// naturally picks the entry's best genuine run.
+        /// </summary>
+        private static void ClampExperimentQToBestRun(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            var minRunPrecByEntryId = new Dictionary<uint, double>();
+            var minRunPeptByPeptide = new Dictionary<string, double>(StringComparer.Ordinal);
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    double curPrec;
+                    if (!minRunPrecByEntryId.TryGetValue(e.EntryId, out curPrec) ||
+                        e.RunPrecursorQvalue < curPrec)
+                        minRunPrecByEntryId[e.EntryId] = e.RunPrecursorQvalue;
+
+                    if (e.ModifiedSequence == null)
+                        continue;
+                    double curPept;
+                    if (!minRunPeptByPeptide.TryGetValue(e.ModifiedSequence, out curPept) ||
+                        e.RunPeptideQvalue < curPept)
+                        minRunPeptByPeptide[e.ModifiedSequence] = e.RunPeptideQvalue;
+                }
+            }
+
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var e in kvp.Value)
+                {
+                    double floorPrec = minRunPrecByEntryId[e.EntryId];
+                    if (floorPrec > e.ExperimentPrecursorQvalue)
+                        e.ExperimentPrecursorQvalue = floorPrec;
+
+                    if (e.ModifiedSequence != null)
+                    {
+                        double floorPept = minRunPeptByPeptide[e.ModifiedSequence];
+                        if (floorPept > e.ExperimentPeptideQvalue)
+                            e.ExperimentPeptideQvalue = floorPept;
+                    }
+                }
+            }
         }
 
         /// <summary>
