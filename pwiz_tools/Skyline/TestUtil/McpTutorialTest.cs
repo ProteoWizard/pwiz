@@ -77,6 +77,16 @@ namespace pwiz.SkylineTestUtil
             ResolveWhenOpen(form => form.Type == typeName);
 
         /// <summary>
+        /// Waits for the summary graph whose window title contains <paramref name="titleSubstring"/> -- the way
+        /// an MCP client tells several open graphs apart through GetOpenForms (each GraphSummary reports its
+        /// title, e.g. "...CV Histogram", "...Scheduling") -- and returns it as an IFormElement. Pass the
+        /// localized graph name (a GraphsResources string) so it matches in any UI language.
+        /// </summary>
+        protected IFormElement WaitForConnectorGraph(string titleSubstring) =>
+            ResolveWhenOpen(form => form.Type == @"GraphSummary" && form.HasGraph
+                                    && true == form.Title?.Contains(titleSubstring));
+
+        /// <summary>
         /// Waits for the native common file dialog (Open / Save As) to appear -- it is enumerated by
         /// GetOpenForms with IsNative=true and type "FileDialog" -- and returns it as an IFormElement.
         /// </summary>
@@ -155,6 +165,31 @@ namespace pwiz.SkylineTestUtil
             int before = Connector.UnfinishedActionCount();
             action();
             WaitForCondition(() => Connector.UnfinishedActionCount() == before);
+        }
+
+        /// <summary>
+        /// Clicks an item, by its visible text, on a graph's right-click context menu -- addressed by a
+        /// <see cref="UiElementPath"/> whose Type is "ContextMenu" (a menu built on demand by the graph, not part
+        /// of the main menu). This is how the connector reaches graph commands such as "Properties..." or
+        /// "Remove Outliers" that have no main-menu equivalent.
+        /// </summary>
+        protected void ClickGraphContextMenuItem(IFormElement form, string itemText)
+        {
+            var contextMenu = new UiElementPath(
+                new UiElementPath(null, form.FormId, null, @"Form"), null, null, @"ContextMenu");
+            JsonUiService.PerformAction(new UiElementPath(contextMenu, itemText, null, null), @"click", null);
+        }
+
+        /// <summary>
+        /// Selects the tab with the given visible text on the form's single tab control (a connector select_tab
+        /// action), so a tabbed dialog's page -- and the controls on it -- become the visible ones to act on and
+        /// to capture.
+        /// </summary>
+        protected void SelectTab(IFormElement form, string tabText)
+        {
+            var tabControl = new UiElementPath(
+                new UiElementPath(null, form.FormId, null, @"Form"), null, null, @"TabControl");
+            JsonUiService.PerformAction(tabControl, @"select_tab", tabText);
         }
 
         /// <summary>

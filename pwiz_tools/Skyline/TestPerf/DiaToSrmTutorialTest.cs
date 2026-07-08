@@ -18,13 +18,16 @@
  * limitations under the License.
  */
 
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.Startup;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.Menus;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.FileUI.PeptideSearch;
@@ -97,13 +100,75 @@ namespace TestPerf
             ImportFastaAndAssociateProteins(wizard);        // s-07, s-08, s-09
             ImportPrtcDocument();                           // s-10
             ImportGpfDiaResults();                          // s-11
+            RefineByCv();                                   // s-12 .. s-15
 
             // TODO(connector tutorial): the remaining steps are filled in incrementally, each driven through
             // the IJsonToolService and each ending in a PauseForScreenShot whose number matches the s-NN.png
             // referenced by the HTML. The remaining mapping is:
-            //   Step 2  CV Histogram + Refine > Advanced ............... s-12 .. s-15
             //   Step 3  Accept Proteins + ranked-intensity refine ..... s-16 .. s-19
             //   Step 4  iRT calculator + scheduling + export .......... s-20 .. s-31
+
+            // Never return while a background chromatogram load is still in flight: the framework's end-of-test
+            // SwitchDocument to a blank document is retried only twice and fails against active background
+            // processing, which leaves the modified document in place and raises a "save changes?" prompt that
+            // wedges teardown. (A connector action's WaitForDocumentLoaded can return in the brief gap before a
+            // save-triggered reload registers, so settle once more here, after every step, before returning.)
+            WaitForDocumentLoaded(60 * 60 * 1000);
+        }
+
+        /// <summary>
+        /// Step 2 (s-12 .. s-15): survey the %CV distribution (View &gt; Peak Areas &gt; CV Histogram) and raise
+        /// its cutoff line to 30%, then refine with Refine &gt; Advanced -- 2 peptides per protein (Document tab)
+        /// and a 30%-CV consistency filter on summed product transitions (Consistency tab) -- and save the
+        /// filtered document. Everything is driven through the connector, including the graph's right-click
+        /// Properties menu.
+        /// </summary>
+        private void RefineByCv()
+        {
+            // 2.1 Show the CV histogram of the peptide peak areas. The Peak Areas graph window titles it
+            // "Peak Areas - CV Histogram", which is how the connector finds it among the open graphs.
+            Connector.InvokeMenuItem(MenuPath<ViewMenu>(
+                "viewToolStripMenuItem", "peakAreasMenuItem", "areaCVHistogramMenuItem"));
+            var cvHistogram = WaitForConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
+            PauseForScreenShot(cvHistogram, "Peak Areas -- CV Histogram"); // s-12
+
+            // Raise the CV-cutoff line to 30% through the histogram's right-click Properties dialog.
+            ClickGraphContextMenuItem(cvHistogram, GetLocalizedText<PeakAreasContextMenu>("areaPropsContextMenuItem"));
+            var cvProperties = WaitForConnectorForm<AreaCVToolbarProperties>();
+            cvProperties.SetValue(GetLocalizedText<AreaCVToolbarProperties>("label2"), "30"); // CV cutoff
+            cvProperties.Accept();
+            var cvHistogram30 = WaitForConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
+            PauseForScreenShot(cvHistogram30, "CV Histogram -- 30% cutoff"); // s-13
+
+            // 2.2 Refine > Advanced. Document tab: at least 2 peptides per protein.
+            Connector.InvokeMenuItem(MenuPath<RefineMenu>("refineToolStripMenuItem", "refineAdvancedMenuItem"));
+            var refine = WaitForConnectorForm<RefineDlg>();
+            SelectTab(refine, GetLocalizedText<RefineDlg>("tabDocument"));
+            refine.SetValue(GetLocalizedText<RefineDlg>("label1"), "2"); // Min peptides per protein
+            PauseForScreenShot(refine, "Refine -- Document tab"); // s-14
+
+            // Consistency tab: keep only peptides under 30% CV across the replicates. The other options the
+            // tutorial lists are already this document's defaults, so only the cutoff needs setting -- Transition
+            // type is "Products" (the sole transition type present, so RefineDlg leaves that combo disabled),
+            // Normalize to defaults to "None", and Summed transitions defaults to "all".
+            SelectTab(refine, GetLocalizedText<RefineDlg>("tabConsistency"));
+            WaitForAction(() => refine.SetValue(GetLocalizedText<RefineDlg>("labelCV"), "30")); // CV cutoff %
+            PauseForScreenShot(refine, "Refine -- Consistency tab"); // s-15
+            // Accept runs the refine (it drops the peptides/proteins that fail the filters and can show a
+            // progress dialog); wait it out before saving.
+            WaitForAction(() => refine.Accept());
+            WaitForDocumentLoaded();
+
+            // Save the filtered document under a new name.
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem"));
+            var saveDlg = WaitForNativeFileDialog();
+            saveDlg.SetValue("FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
+            saveDlg.Accept();
+            // The native Save dialog's Accept posts the save (a modal "Saving..." dialog for the large document)
+            // as a Win32 message, not a tracked connector action, so WaitForAction does not apply and
+            // WaitForDocumentLoaded tracks loading, not saving. Wait for the save to clear the dirty flag, or it
+            // is still running when the next step (and teardown) begins.
+            WaitForConditionUI(5 * 60 * 1000, () => !SkylineWindow.Dirty);
         }
 
         /// <summary>The wizard's Next button caption, localized and normalized so it matches in any language
@@ -202,7 +267,7 @@ namespace TestPerf
             WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label2"), "last ion"));  // product ions to
             WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label3"), "50"));        // min m/z
             WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label6"), "2000"));      // max m/z
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblTolerance"), "0.005"));
+            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblTolerance"), 0.005.ToString(CultureInfo.CurrentCulture)));
             WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCount"), "8"));    // pick N product ions
             // The min-product-ions box sits between two unit labels; the connector pairs a caption-less field
             // with the label before it in tab order, which here is "product ions" (lblIonCountUnits), not the
@@ -297,8 +362,10 @@ namespace TestPerf
             WaitForDocumentLoaded();
             PauseForScreenShot(WaitForConnectorForm<SkylineWindow>(), "Targets with PRTC added"); // s-10
 
-            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem"));
-            WaitForDocumentLoaded();
+            // Save is a fire-and-forget connector action that blocks in a modal "Saving..." progress dialog
+            // until the (large) document is written; WaitForAction waits out that posted action, so the next
+            // step does not run -- and the test does not end -- while the save is still in progress.
+            WaitForAction(() => Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
         }
 
         /// <summary>
@@ -339,10 +406,16 @@ namespace TestPerf
             WaitForAction(() => nameDlg.ClickButton(GetLocalizedText<ImportResultsNameDlg>("radioDontRemove")));
             nameDlg.Accept();
 
-            // Extracting chromatograms from the gas-phase fractionated runs (18 ~2 GB mzML files) is slow.
+            // Accept posts the import fire-and-forget, so WaitForDocumentLoaded on its own can return in the gap
+            // before the import has registered (the document still reads loaded). First wait until the results
+            // actually exist (the replicates have been added), then wait until they finish loading -- extracting
+            // chromatograms from the gas-phase fractionated runs (18 ~2 GB mzML files) is slow.
+            WaitForConditionUI(60 * 60 * 1000, () => SkylineWindow.DocumentUI.MeasuredResults != null);
             WaitForDocumentLoaded(60 * 60 * 1000);
-            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem"));
-            WaitForDocumentLoaded();
+            // Save is a fire-and-forget connector action that blocks in a modal "Saving..." progress dialog
+            // until the (large) document is written; WaitForAction waits out that posted action, so the next
+            // step does not run -- and the test does not end -- while the save is still in progress.
+            WaitForAction(() => Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
         }
 
         /// <summary>
