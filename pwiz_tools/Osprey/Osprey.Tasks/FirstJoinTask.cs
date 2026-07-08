@@ -577,21 +577,23 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Write the pass-1 FDRBench input TSV from the pre-compaction first-pass
-        /// pool when <c>--fdrbench</c> is set with <c>--fdrbench-pass 1</c>. Emits
-        /// every scored non-decoy target (regardless of q-value) with its
-        /// first-pass run + experiment q-values and raw SVM discriminant -- the
-        /// assumption the second-pass reported set rests on. No-op for the default
-        /// pass-2 (emitted post-compaction by <see cref="MergeNodeTask"/>) and when
-        /// no FDRBench output was requested. Called on the straight-through Run
-        /// path only: the pre-compaction pool exists solely here, mirroring Rust
-        /// osprey, which emits at the same point in its single pipeline.
+        /// pool when <c>--fdrbench</c> is set with a pass mask that includes pass 1
+        /// (<c>--fdrbench-pass 1</c> or <c>both</c>). Emits every scored non-decoy
+        /// target (regardless of q-value) with its first-pass run + experiment
+        /// q-values and raw SVM discriminant -- the assumption the second-pass
+        /// reported set rests on. No-op for the default pass-2 (emitted
+        /// post-compaction by <see cref="MergeNodeTask"/>) and when no FDRBench
+        /// output was requested. Called on the straight-through Run path only: the
+        /// pre-compaction pool exists solely here, mirroring Rust osprey, which
+        /// emits at the same point in its single pipeline.
         /// </summary>
         private void WriteFdrBenchPass1IfRequested(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx)
         {
-            if (string.IsNullOrEmpty(config.OutputFdrBench) || config.FdrBenchPass != 1)
+            var benchPath = FdrBenchInputWriter.PathForPass(config, OspreyConfig.FDRBENCH_PASS_1);
+            if (benchPath == null)
                 return;
 
             var libraryById = ctx.Get<LibraryById>().Value;
@@ -601,14 +603,14 @@ namespace pwiz.Osprey.Tasks
             // TSV and the emitted manifest stay consistent and stock FDRBench works.
             var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
             var benchResult = FdrBenchInputWriter.WritePeptideInput(
-                config.OutputFdrBench, perFileEntries, libraryById, config.FdrLevel,
+                benchPath, perFileEntries, libraryById, config.FdrLevel,
                 config.FdrBenchPerRun, pairing.ExcludedEntrapment);
-            string manifestPath = config.OutputFdrBench + @".pairing.tsv";
+            string manifestPath = benchPath + @".pairing.tsv";
             int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
             swFdrBench.Stop();
             ctx.LogInfo(string.Format(@"Wrote FDRBench input (pass 1, {0}) to {1}: {2} rows",
                 config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
-                config.OutputFdrBench, benchResult.Rows));
+                benchPath, benchResult.Rows));
             ctx.LogInfo(string.Format(@"Wrote FDRBench pairing manifest (from the searched library) to {0}: {1} peptides",
                 manifestPath, manifestRows));
             pairing.LogSummary(ctx.LogInfo);
