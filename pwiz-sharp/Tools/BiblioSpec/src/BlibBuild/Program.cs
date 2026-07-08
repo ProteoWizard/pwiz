@@ -27,6 +27,13 @@ public static class Program
     {
         ArgumentNullException.ThrowIfNull(args);
 
+        // Emit UTF-8 regardless of the launching console's code page. Skyline reads our stdout/
+        // stderr as UTF-8 (ProcessStartInfo.StandardOutputEncoding), and non-ASCII text in the
+        // output - notably score-type input file names with Unicode paths - must round-trip so the
+        // caller can match results back to files. Without this the child defaults to the console's
+        // ANSI code page and the mangled names fail to match, hanging the Build Library dialog.
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         // Vendor SDK-backed readers register themselves with the shared format-detection
         // dispatcher so PwizSharpSpecFileReader can open .raw / .wiff / .baf / .lcd / etc.
         // when a pep.xml or msms.txt references one. The vendor projects can't live in

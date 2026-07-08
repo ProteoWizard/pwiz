@@ -27,6 +27,10 @@ public static class Program
     {
         ArgumentNullException.ThrowIfNull(args);
 
+        // Emit UTF-8 regardless of the launching console's code page, so non-ASCII paths in our
+        // stdout/stderr round-trip to Skyline (which reads them as UTF-8). See BlibBuild Program.cs.
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+
         // Shared argv preprocessing: -e capture, --out=PATH rewrite, --unicode strip.
         var (argv, expectedError) = CliPreproc.Strip(args);
 
