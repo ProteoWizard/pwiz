@@ -185,7 +185,12 @@ public class BlibMaker : IDisposable
 
         try
         {
-            using var test = File.OpenRead(file);
+            // cpp parity: BlibMaker.cpp:159 uses std::ifstream, which shares read+write, so the
+            // check succeeds even when another process holds the file open (e.g. Skyline has this
+            // .blib loaded as a document library while the Build Library dialog queries its score
+            // types). File.OpenRead uses FileShare.Read and would spuriously throw a sharing
+            // violation against that writer, flagging a score-type error that hangs the dialog.
+            using var test = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
         }
         catch (IOException)
         {
