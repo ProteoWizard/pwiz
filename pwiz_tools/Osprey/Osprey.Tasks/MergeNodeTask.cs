@@ -84,7 +84,10 @@ namespace pwiz.Osprey.Tasks
         {
             if (!string.IsNullOrEmpty(ctx.Config.OutputBlib))
                 yield return ctx.Config.OutputBlib;
-            if (ctx.Config.ProteinFdr.HasValue && ctx.Config.InputFiles != null)
+            // 2nd-pass FDR sidecars are written whenever Stage 6 rescored entries
+            // (independent of protein FDR -- the second Percolator pass runs on the
+            // reconciled features), so declare them on that same condition.
+            if (ctx.Config.InputFiles != null && AnyReconciledParquet(ctx.Config))
             {
                 foreach (var input in ctx.Config.InputFiles)
                     yield return FdrScoresSidecar.Pass2Path(input);
@@ -124,31 +127,45 @@ namespace pwiz.Osprey.Tasks
             var libraryById = ctx.Get<LibraryById>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
 
-            // The 2nd-pass Percolator model (--protein-fdr retrain), captured for the
-            // model-diagnostics pass-2 model view; null on a single-pass run.
+            // The 2nd-pass Percolator model, captured for the model-diagnostics
+            // pass-2 model view; null when no reconciliation rescore happened.
             FeatureContributions pass2Contributions = null;
 
-            // Stage 8: Protein FDR (optional)
-            if (config.ProteinFdr.HasValue)
+            // Second-pass Percolator FDR. Runs whenever Stage 6 reconciliation /
+            // multi-charge consensus / gap-fill rescored entries -- the C# analog of
+            // Rust's `total_rescored > 0` gate (pipeline.rs:5209) -- INDEPENDENT of
+            // protein FDR. A reconciled parquet exists for a file iff that file had
+            // rescore work, so "any reconciled parquet on disk" == total_rescored > 0,
+            // and the test holds in both the straight-through pipeline (Stage 6 just
+            // wrote them) and the --task SecondPassFDR merge (the Stage 6 worker wrote
+            // them). Previously this was wrongly nested inside the ProteinFdr.HasValue
+            // block, so a run without --protein-fdr wrote the blib from stale
+            // first-pass (pre-reconciliation) scores. ComputeAndPersist reloads the
+            // reconciled features, reruns Percolator, writes the .2nd-pass sidecars,
+            // and reloads them onto the stubs so downstream protein FDR + blib see the
+            // 2nd-pass q-values.
+            if (AnyReconciledParquet(config))
             {
-                // Persist the post-Stage-6 per-file 2nd-pass FDR scores
-                // (reload reconciled features -> run 2nd-pass Percolator ->
-                // write .2nd-pass sidecars -> reload onto stubs) before run-wide
-                // protein FDR consumes the 2nd-pass q-values. Extracted to
-                // Pass2FdrSidecar so Run reads as a sequencer; behavior unchanged.
                 pass2Contributions = Pass2FdrSidecar.ComputeAndPersist(
                     ctx, perFileEntries, perFileParquetPaths,
                     Name, ValidityKey(ctx));
-
-                ctx.LogInfo(string.Empty);
-                ctx.LogInfo(string.Format(@"Running protein-level FDR at {0:P1}...",
-                    config.ProteinFdr.Value));
-                var swProtein = Stopwatch.StartNew();
-                RunProteinFdr(perFileEntries, fullLibrary, config, ctx);
-                swProtein.Stop();
-                ctx.LogInfo(string.Format(@"[STAGE-WALL] stage7: {0:F1}s",
-                    swProtein.Elapsed.TotalSeconds));
             }
+
+            // Protein-level FDR. Always runs (parsimony + picked-protein at the
+            // config.RunFdr Savitski gate), matching Rust's unconditional second-pass
+            // protein-FDR block (pipeline.rs:5293). --protein-fdr only sets the
+            // threshold used for the passing-group count and --fdr-level protein output
+            // filtering; the machinery is not optional (EffectiveProteinFdr defaults to
+            // 0.01). It consumes the 2nd-pass q-values above when they were recomputed,
+            // else the standing first-pass scores.
+            ctx.LogInfo(string.Empty);
+            ctx.LogInfo(string.Format(@"Running protein-level FDR at {0:P1}...",
+                config.EffectiveProteinFdr));
+            var swProtein = Stopwatch.StartNew();
+            RunProteinFdr(perFileEntries, fullLibrary, config, ctx);
+            swProtein.Stop();
+            ctx.LogInfo(string.Format(@"[STAGE-WALL] stage7: {0:F1}s",
+                swProtein.Elapsed.TotalSeconds));
 
             // Write output blib
             ctx.LogInfo(string.Empty);
@@ -243,6 +260,27 @@ namespace pwiz.Osprey.Tasks
                 if (ctx.Diagnostics?.Stage7ProteinFdrOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_STAGE7_PROTEIN_FDR_ONLY");
             }
+        }
+
+        /// <summary>
+        /// True iff any input file has a reconciled scores parquet on disk -- i.e.
+        /// Stage 6 rescored at least one file (multi-charge consensus, inter-replicate
+        /// reconciliation, or gap-fill). Disk-based so it reads identically in the
+        /// in-process pipeline (Stage 6 just wrote them) and the --task SecondPassFDR
+        /// merge node (the Stage 6 worker wrote them). The C# analog of Rust's
+        /// <c>total_rescored &gt; 0</c> gate (pipeline.rs:5209) for the second
+        /// Percolator pass.
+        /// </summary>
+        private static bool AnyReconciledParquet(OspreyConfig config)
+        {
+            if (config.InputFiles == null)
+                return false;
+            foreach (var input in config.InputFiles)
+            {
+                if (File.Exists(ParquetScoreCache.GetReconciledScoresPath(input)))
+                    return true;
+            }
+            return false;
         }
 
         /// <summary>

@@ -230,9 +230,12 @@ namespace pwiz.Osprey.Tasks
             // peptide pool so target and decoy proteins compete on a
             // symmetric set. Sets RunProteinQvalue on every FdrEntry,
             // which Stage 6 reconciliation reads via the protein-rescue
-            // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
-            // ("First-pass protein FDR").
-            if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
+            // gate in ConsensusRts.Compute. Runs unconditionally (not gated
+            // on --protein-fdr), matching Rust where config.protein_fdr is a
+            // plain f64 (default 0.01) and this block is gated only on
+            // !can_skip_fdr. Mirrors Rust pipeline.rs:3029 ("First-pass
+            // protein FDR").
+            if (perFileEntries.Count > 0)
             {
                 ctx.LogInfo(string.Empty);
                 var swFirstPassProtein = Stopwatch.StartNew();
@@ -595,7 +598,10 @@ namespace pwiz.Osprey.Tasks
                 {
                     var firstPassBaseIds = new HashSet<uint>();
                     double peptideGate = config.RunFdr;
-                    double proteinGate = config.ProteinFdr ?? 0.0;
+                    // Protein-rescue gate is always active (default 0.01), matching
+                    // Rust pipeline.rs:4651/4658 where protein_compaction_gate =
+                    // config.protein_fdr (a plain f64, never a null switch).
+                    double proteinGate = config.EffectiveProteinFdr;
                     foreach (var kvp in perFileEntries)
                     {
                         foreach (var entry in kvp.Value)
@@ -603,7 +609,7 @@ namespace pwiz.Osprey.Tasks
                             if (entry.IsDecoy)
                                 continue;
                             if (entry.RunPeptideQvalue <= peptideGate ||
-                                (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
+                                entry.RunProteinQvalue <= proteinGate)
                             {
                                 firstPassBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
                             }

@@ -166,15 +166,15 @@ namespace pwiz.Osprey.FDR
             int passingProteins = 0;
             foreach (var kvp in proteinFdr.GroupQvalues)
             {
-                if (kvp.Value <= config.ProteinFdr.Value)
+                if (kvp.Value <= config.EffectiveProteinFdr)
                     passingProteins++;
             }
 
             logInfo?.Invoke(string.Format("{0} protein groups pass {1:P1} protein FDR",
-                passingProteins, config.ProteinFdr.Value));
+                passingProteins, config.EffectiveProteinFdr));
             logInfo?.Invoke(string.Format(
                 "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
-                passingProteins, config.ProteinFdr.Value));
+                passingProteins, config.EffectiveProteinFdr));
 
             // Propagate protein q-values to FdrEntry stubs. The Stage-7
             // diagnostic dumps + Stage7ProteinFdrOnly early-exit are owned by
