@@ -240,6 +240,31 @@
     </Content>
   </ItemGroup>
 
+  <!-- BlibBuild reads Mascot .dat results through the native MascotShim.dll wrapper and its
+       msparser.dll dependency, emitted under BlibBuild's runtimes\win-x64\native\. The wildcard
+       Content above does not deploy files whose Link lands under runtimes\...\ into consuming bins
+       (they collide with RID-specific native-asset handling), so the mascot reader was missing at
+       run time. Deploy the mascot natives flat next to BlibBuild.exe - as legacy Skyline shipped
+       msparser.dll - so DllImport("MascotShim") and its msparser dependency resolve from the
+       executable's own directory. -->
+  <ItemGroup Condition="Exists('..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native')">
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native\MascotShim.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>MascotShim.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native\msparser.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>msparser.dll</Link>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="..\..\pwiz-sharp\Tools\BiblioSpec\src\BlibBuild\bin\$(Configuration)\net8.0\runtimes\win-x64\native\msparser-config\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>msparser-config\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
   <!-- SkylineCmd.exe launcher - command-line tests (e.g. CmdLineAssociateProteinsTest)
        shell out to it expecting it next to Skyline in the bin dir. Reference it so it
        builds first. net8-only: the net472 build gets SkylineCmd from the Jam toolchain. -->
