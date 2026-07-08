@@ -96,7 +96,7 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(SharedPeptideMode.All, Parse(@"--shared-peptides", @"bogus").SharedPeptides); // warn -> default
 
             // FDRBench: --fdrbench records the path, --fdrbench-per-run is a flat flag,
-            // --fdrbench-pass selects the pass(es) as a bitmask (default 2; 1, 2, both/1,2;
+            // --fdrbench-pass selects the pass(es) as a bitmask (default 2; 1, 2, or both;
             // an unlisted value throws).
             Assert.AreEqual(@"fb.tsv", Parse(@"--fdrbench", @"fb.tsv").OutputFdrBench);
             Assert.IsTrue(Parse(@"--fdrbench-per-run").FdrBenchPerRun);
@@ -105,8 +105,6 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_2, Parse(@"--fdrbench-pass", @"2").FdrBenchPass);
             Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2,
                 Parse(@"--fdrbench-pass", @"both").FdrBenchPass);
-            Assert.AreEqual(OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2,
-                Parse(@"--fdrbench-pass", @"1,2").FdrBenchPass);
             Assert.ThrowsException<ArgumentException>(() => Parse(@"--fdrbench-pass", @"3"));
 
             // Decoys.

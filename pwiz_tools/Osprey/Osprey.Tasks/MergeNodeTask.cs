@@ -178,7 +178,7 @@ namespace pwiz.Osprey.Tasks
                 string manifestPath = benchPath + @".pairing.tsv";
                 int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
                 swFdrBench.Stop();
-                ctx.LogInfo(string.Format(@"Wrote FDRBench input ({0}) to {1}: {2} rows",
+                ctx.LogInfo(string.Format(@"Wrote FDRBench input (pass 2, {0}) to {1}: {2} rows",
                     config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
                     benchPath, benchResult.Rows));
                 ctx.LogInfo(string.Format(@"Wrote FDRBench pairing manifest (from the searched library) to {0}: {1} peptides",
