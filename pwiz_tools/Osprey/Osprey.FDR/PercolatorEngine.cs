@@ -456,57 +456,6 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Projection-buffer counterpart of <see cref="ApplyPercolatorResults"/>
-        /// (issue #4355 struct-shrink S0): zip the SVM results back onto the
-        /// <see cref="FdrProjection"/> rows by position. <c>FdrProjection</c> is a
-        /// readonly struct, so each row's <see cref="FdrProjection.Score"/> is replaced
-        /// in place via <see cref="FdrProjection.WithScore"/>; the five q-value outputs
-        /// no longer live on the struct and are handed to <paramref name="sink"/> as an
-        /// <see cref="FdrQValues"/> value (the 1st pass parks them; the 2nd pass streams
-        /// them to the sidecar). Same nested (file, entry) walk and same count guard as
-        /// the FdrEntry overload.
-        /// </summary>
-        internal static void ApplyPercolatorResultsToProjection(
-            List<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
-            PercolatorResults results,
-            IFdrOutputSink sink)
-        {
-            var resultEntries = results.Entries;
-
-            // Same index-alignment guard as the FdrEntry overload, hoisted BEFORE the
-            // indexing loop so an undersized result list fails with this clear message
-            // instead of an IndexOutOfRangeException thrown mid-zip.
-            int rowCount = 0;
-            foreach (var kvp in perFileProjections)
-                rowCount += kvp.Value.Count;
-            if (rowCount != resultEntries.Count)
-            {
-                throw new InvalidOperationException(string.Format(
-                    "Percolator result count ({0}) does not match FdrProjection row count ({1}); " +
-                    "the index-zip write-back requires them to be equal.",
-                    resultEntries.Count, rowCount));
-            }
-
-            int resultIndex = 0;
-            int fileIdx = 0;
-            foreach (var kvp in perFileProjections)
-            {
-                var rows = kvp.Value;
-                for (int i = 0; i < rows.Count; i++)
-                {
-                    var result = resultEntries[resultIndex++];
-                    rows[i] = rows[i].WithScore(result.Score);
-                    sink.Accept(fileIdx, i, rows[i].EntryId, rows[i].IsDecoy, result.Score,
-                        new FdrQValues(
-                            result.RunPrecursorQvalue, result.RunPeptideQvalue,
-                            result.ExperimentPrecursorQvalue, result.ExperimentPeptideQvalue,
-                            result.Pep));
-                }
-                fileIdx++;
-            }
-        }
-
-        /// <summary>
         /// Streaming Percolator dispatch for multi-observation-per-precursor
         /// inputs (total entries above <c>MaxTrainSize * 2</c>). Mirrors
         /// Rust's <c>run_percolator_fdr</c> streaming branch

@@ -674,67 +674,6 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The projection index-zip write-back
-        /// (<see cref="PercolatorEngine.ApplyPercolatorResultsToProjection"/>) must
-        /// place the same Score + five q-values onto each row as the FdrEntry
-        /// write-back places on the corresponding stub, given identical
-        /// index-aligned results. This is the q-value source the 1st-pass sidecar
-        /// (hence the survivor reload) reads, so a divergence here would move the
-        /// reloaded survivor buffer off the legacy oracle.
-        /// </summary>
-        [TestMethod]
-        public void TestApplyPercolatorResultsToProjectionMatchesFdrEntry()
-        {
-            var fdrStubs = BuildWritebackFixture();
-            var projSet = FdrProjectionSet.BuildFromEntries(BuildWritebackFixture());
-
-            var results = new PercolatorResults { Entries = new List<PercolatorResult>() };
-            int seq = 0;
-            foreach (var kvp in fdrStubs)
-            {
-                for (int i = 0; i < kvp.Value.Count; i++)
-                {
-                    results.Entries.Add(new PercolatorResult
-                    {
-                        Score = 100.0 + seq,
-                        RunPrecursorQvalue = 0.100 + seq * 0.001,
-                        RunPeptideQvalue = 0.200 + seq * 0.001,
-                        ExperimentPrecursorQvalue = 0.300 + seq * 0.001,
-                        ExperimentPeptideQvalue = 0.400 + seq * 0.001,
-                        Pep = 0.500 + seq * 0.001
-                    });
-                    seq++;
-                }
-            }
-
-            PercolatorEngine.ApplyPercolatorResults(fdrStubs, results);
-            // The lean struct only takes Score via WithScore; the five q-values are
-            // handed to the sink (issue #4355 struct-shrink S0). Capture them and
-            // compare against the FdrEntry oracle's stub values.
-            var sink = new CapturingSink();
-            PercolatorEngine.ApplyPercolatorResultsToProjection(projSet.PerFile, results, sink);
-
-            Assert.AreEqual(fdrStubs.Count, projSet.PerFile.Count);
-            for (int f = 0; f < fdrStubs.Count; f++)
-            {
-                var stubList = fdrStubs[f].Value;
-                var projList = projSet.PerFile[f].Value;
-                Assert.AreEqual(stubList.Count, projList.Count);
-                for (int i = 0; i < stubList.Count; i++)
-                {
-                    Assert.AreEqual(stubList[i].Score, projList[i].Score, 0.0);
-                    Assert.AreEqual(stubList[i].Score, sink.ScoreAt(f, i), 0.0);
-                    var q = sink.QAt(f, i);
-                    Assert.AreEqual(stubList[i].RunPrecursorQvalue, q.RunPrecursorQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].RunPeptideQvalue, q.RunPeptideQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].ExperimentPrecursorQvalue, q.ExperimentPrecursorQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].ExperimentPeptideQvalue, q.ExperimentPeptideQvalue, 0.0);
-                    Assert.AreEqual(stubList[i].Pep, q.Pep, 0.0);
-                }
-            }
-        }
-
-        /// <summary>
         /// Minimal <see cref="IFdrOutputSink"/> for the projection parity tests: records
         /// each row's Score + <see cref="FdrQValues"/> by (fileIdx, rowIdx) so the test
         /// can compare the streamed outputs against the FdrEntry oracle now that the lean

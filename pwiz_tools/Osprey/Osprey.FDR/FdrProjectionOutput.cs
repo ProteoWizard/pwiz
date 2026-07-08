@@ -79,9 +79,8 @@ namespace pwiz.Osprey.FDR
     /// Per-pass output sink for the projection score pass (issue #4355 step (b),
     /// FdrProjection struct-shrink S0 / increment C1). The lean
     /// <see cref="FdrProjection"/> no longer carries the six q-value outputs; the
-    /// two write-back paths (streaming
-    /// <c>PercolatorFdr.ScoreProjectionAndComputeFdrInPlace</c> and direct
-    /// <c>PercolatorEngine.ApplyPercolatorResultsToProjection</c>) instead call
+    /// streaming write-back path
+    /// (<c>PercolatorFdr.ScoreProjectionAndComputeFdrInPlace</c>) instead calls
     /// <see cref="Accept"/> per row, in the existing nested (file, row) order, handing
     /// each row's freshly computed <see cref="FdrQValues"/> + <see cref="FdrProjection.Score"/>
     /// to a caller-supplied sink. The 2nd pass streams them straight to the
