@@ -113,6 +113,8 @@ namespace pwiz.Osprey
             () => @"<threshold>", (c, p) => c._config.RunFdr = ParseDouble(p.Value, @"--run-fdr"));
         public static readonly OspreyArgument ARG_EXPERIMENT_FDR = new OspreyArgument(@"experiment-fdr",
             () => @"<threshold>", (c, p) => c._config.ExperimentFdr = ParseDouble(p.Value, @"--experiment-fdr"));
+        public static readonly OspreyArgument ARG_RECONCILIATION_COMPACTION_FDR = new OspreyArgument(@"reconciliation-compaction-fdr",
+            () => @"<threshold>", (c, p) => c._config.ReconciliationCompactionFdr = ParseDouble(p.Value, @"--reconciliation-compaction-fdr"));
         public static readonly OspreyArgument ARG_PROTEIN_FDR = new OspreyArgument(@"protein-fdr",
             () => @"<threshold>", (c, p) => c._config.ProteinFdr = ParseDouble(p.Value, @"--protein-fdr"));
         public static readonly OspreyArgument ARG_FDR_METHOD = new OspreyArgument(@"fdr-method",
@@ -183,7 +185,7 @@ namespace pwiz.Osprey
 
         private static readonly ArgumentGroup<OspreyCommandArgs> GROUP_FDR =
             new ArgumentGroup<OspreyCommandArgs>(() => @"FDR & Protein Inference", true,
-                ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_PROTEIN_FDR, ARG_FDR_METHOD, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
+                ARG_RUN_FDR, ARG_EXPERIMENT_FDR, ARG_RECONCILIATION_COMPACTION_FDR, ARG_PROTEIN_FDR, ARG_FDR_METHOD, ARG_FDR_LEVEL, ARG_SHARED_PEPTIDES,
                 ARG_FDRBENCH, ARG_FDRBENCH_PER_RUN, ARG_FDRBENCH_PASS);
 
         // --- Decoys -----------------------------------------------------------------------
@@ -753,6 +755,7 @@ namespace pwiz.Osprey
                 { @"no-prefilter", @"Disable coelution signal pre-filter" },
                 { @"run-fdr", @"Run-level FDR threshold (default: 0.01)" },
                 { @"experiment-fdr", @"Experiment-level FDR threshold (default: 0.01)" },
+                { @"reconciliation-compaction-fdr", @"Peptide q-value gate for first-pass compaction (default: 0.01 = run-fdr; loosen e.g. to 0.05 to broaden the reconciliation pool)" },
                 { @"protein-fdr", @"Protein-level FDR threshold (optional)" },
                 { @"fdr-method", @"FDR method (default: percolator)" },
                 { @"fdr-level", @"FDR level (default: precursor)" },

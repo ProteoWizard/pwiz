@@ -68,6 +68,32 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.05, config.EffectiveProteinFdr, TOLERANCE);
         }
 
+        /// <summary>
+        /// #4 parity: C# now exposes a dedicated first-pass compaction peptide-q gate
+        /// (<see cref="OspreyConfig.ReconciliationCompactionFdr"/>, default 0.01)
+        /// mirroring Rust <c>config.reconciliation_compaction_fdr</c>, instead of
+        /// hardwiring <see cref="OspreyConfig.RunFdr"/> at the compaction site. The
+        /// default equals run_fdr, so the change is inert out of the box; loosening it
+        /// (e.g. to 0.05) broadens the reconciliation pool -- which C# previously could
+        /// not express independently of run_fdr.
+        ///
+        /// FAILS on revert: if the field is removed (the compaction gate would track
+        /// RunFdr again, unable to loosen) or its 0.01 default changes (silently
+        /// shifting the compaction pool).
+        /// </summary>
+        [TestMethod]
+        public void TestReconciliationCompactionFdr()
+        {
+            var config = new OspreyConfig();
+            Assert.AreEqual(0.01, config.ReconciliationCompactionFdr, TOLERANCE);
+            Assert.AreEqual(config.RunFdr, config.ReconciliationCompactionFdr, TOLERANCE);
+
+            // Independently settable from RunFdr (the whole point of the knob):
+            config.ReconciliationCompactionFdr = 0.05;
+            Assert.AreEqual(0.05, config.ReconciliationCompactionFdr, TOLERANCE);
+            Assert.AreEqual(0.01, config.RunFdr, TOLERANCE); // unchanged
+        }
+
         // NOTE: A direct compaction protein-rescue test (a non-decoy entry whose
         // RunPeptideQvalue is above config.RunFdr but whose RunProteinQvalue <= 0.01
         // still survives first-pass compaction) is intentionally NOT added here.

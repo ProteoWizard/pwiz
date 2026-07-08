@@ -598,7 +598,11 @@ namespace pwiz.Osprey.Tasks
                 else
                 {
                     var firstPassBaseIds = new HashSet<uint>();
-                    double peptideGate = config.RunFdr;
+                    // Peptide-q compaction gate: a dedicated field (default 0.01 = RunFdr)
+                    // loosenable to broaden the reconciliation pool, mirroring Rust
+                    // config.reconciliation_compaction_fdr (pipeline.rs:4650). Previously
+                    // hardwired to config.RunFdr, which C# could not loosen independently.
+                    double peptideGate = config.ReconciliationCompactionFdr;
                     // Protein-rescue gate is always active (default 0.01), matching
                     // Rust pipeline.rs:4651/4658 where protein_compaction_gate =
                     // config.protein_fdr (a plain f64, never a null switch).

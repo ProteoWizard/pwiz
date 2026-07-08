@@ -113,6 +113,18 @@ namespace pwiz.Osprey.Core
         /// <summary>Experiment-level FDR threshold.</summary>
         public double ExperimentFdr { get; set; } = 0.01;
 
+        /// <summary>
+        /// Peptide q-value threshold for first-pass compaction. Peptides whose
+        /// first-pass peptide q-value is at or below this threshold survive
+        /// compaction and remain available for reconciliation and second-pass FDR.
+        /// Default 0.01 matches <see cref="RunFdr"/>; loosening it (e.g. to 0.05)
+        /// broadens the reconciliation pool but risks second-pass FDR inflation
+        /// (Percolator re-trains on an enriched set). Mirrors Rust
+        /// config.reconciliation_compaction_fdr. Peptides whose protein group passes
+        /// first-pass protein FDR are additionally rescued regardless of this threshold.
+        /// </summary>
+        public double ReconciliationCompactionFdr { get; set; } = 0.01;
+
         /// <summary>Decoy generation method.</summary>
         public DecoyMethod DecoyMethod { get; set; } = DecoyMethod.Reverse;
 
