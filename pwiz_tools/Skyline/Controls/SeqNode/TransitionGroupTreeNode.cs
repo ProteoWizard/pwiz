@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.Databinding.Entities;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Model.Results.Spectra;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -37,8 +38,9 @@ using Transition = pwiz.Skyline.Model.Transition;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class TransitionGroupTreeNode : SrmTreeNodeParent
+    public class TransitionGroupTreeNode : SrmTreeNodeParent, ISiteDeterminingIonPicker
     {
+        private SiteDeterminingIonAnalyzer _siteDeterminingAnalyzer;
         public static TransitionGroupTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
         {
             Debug.Assert(nodeDoc is TransitionGroupDocNode);
@@ -354,6 +356,47 @@ namespace pwiz.Skyline.Controls.SeqNode
             return true;
         }
         
+        #endregion
+
+        #region ISiteDeterminingIonPicker Members
+
+        private SiteDeterminingIonAnalyzer SiteDeterminingAnalyzer
+        {
+            get
+            {
+                var nodePep = PepNode;
+                if (nodePep == null)
+                    return null;
+                return _siteDeterminingAnalyzer ??
+                       (_siteDeterminingAnalyzer = new SiteDeterminingIonAnalyzer(DocSettings, nodePep));
+            }
+        }
+
+        public bool CanShowSiteDeterminingIons
+        {
+            get
+            {
+                var analyzer = SiteDeterminingAnalyzer;
+                return analyzer != null && analyzer.CanLocalize;
+            }
+        }
+
+        public bool IsSiteDeterminingChoice(DocNode choice)
+        {
+            var analyzer = SiteDeterminingAnalyzer;
+            return analyzer != null && choice.Id is Transition transition &&
+                   analyzer.IsSiteDetermining(transition);
+        }
+
+        public string GetSiteDeterminingTip(DocNode choice)
+        {
+            var analyzer = SiteDeterminingAnalyzer;
+            if (analyzer == null || !(choice.Id is Transition transition))
+                return null;
+            var mod = analyzer.GetResolvedModification(transition);
+            return mod?.Name;
+        }
+
         #endregion
 
         #region ITipProvider Members

@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Controls
             this.tbbAutoManageChildren = new System.Windows.Forms.ToolStripButton();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.tbbFind = new System.Windows.Forms.ToolStripButton();
+            this.tbbSiteDetermining = new System.Windows.Forms.ToolStripButton();
             this.cbItems = new System.Windows.Forms.CheckBox();
             this.textSearch = new System.Windows.Forms.TextBox();
             this.cbSynchronize = new System.Windows.Forms.CheckBox();
@@ -55,7 +56,8 @@ namespace pwiz.Skyline.Controls
             this.tbbFilter,
             this.tbbAutoManageChildren,
             this.toolStripSeparator2,
-            this.tbbFind});
+            this.tbbFind,
+            this.tbbSiteDetermining});
             this.toolStrip1.Name = "toolStrip1";
             // 
             // tbbOk
@@ -111,7 +113,15 @@ namespace pwiz.Skyline.Controls
             resources.ApplyResources(this.tbbFind, "tbbFind");
             this.tbbFind.Name = "tbbFind";
             this.tbbFind.Click += new System.EventHandler(this.tbbFind_Click);
-            // 
+            //
+            // tbbSiteDetermining
+            //
+            this.tbbSiteDetermining.CheckOnClick = true;
+            this.tbbSiteDetermining.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tbbSiteDetermining.Image = global::pwiz.Skyline.Properties.Resources.Ions_fragments;
+            this.tbbSiteDetermining.Name = "tbbSiteDetermining";
+            this.tbbSiteDetermining.Click += new System.EventHandler(this.tbbSiteDetermining_Click);
+            //
             // cbItems
             // 
             resources.ApplyResources(this.cbItems, "cbItems");
@@ -180,6 +190,7 @@ namespace pwiz.Skyline.Controls
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton tbbFind;
         private System.Windows.Forms.ToolStripButton tbbAutoManageChildren;
+        private System.Windows.Forms.ToolStripButton tbbSiteDetermining;
         private System.Windows.Forms.CheckBox cbSynchronize;
         private System.Windows.Forms.ListBox pickListMulti;
     }

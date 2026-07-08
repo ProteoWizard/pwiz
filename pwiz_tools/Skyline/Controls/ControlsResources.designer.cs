@@ -180,6 +180,15 @@ namespace pwiz.Skyline.Controls {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Show only site-determining ions.
+        /// </summary>
+        public static string PopupPickList_SiteDetermining_ToolTip {
+            get {
+                return ResourceManager.GetString("PopupPickList_SiteDetermining_ToolTip", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Auto-select filtered {0}.
         /// </summary>
         public static string PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_ {

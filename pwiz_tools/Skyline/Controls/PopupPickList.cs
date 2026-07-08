@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Controls
         private bool _closing;
         private bool _autoManageChildren;
         private bool _selectalInternalChange;
+        private bool _siteDeterminingOnly;
 
         private int _leftText;
 
@@ -98,6 +99,11 @@ namespace pwiz.Skyline.Controls
             // change what is picked.
             _autoManageChildren = _picker.AutoManageChildren;
             UpdateAutoManageUI();
+
+            // Show the site-determining ions toggle only for localizable peptides.
+            bool canSd = _picker is ISiteDeterminingIonPicker sd && sd.CanShowSiteDeterminingIons;
+            tbbSiteDetermining.Visible = canSd;
+            tbbSiteDetermining.ToolTipText = ControlsResources.PopupPickList_SiteDetermining_ToolTip;
 
             // Hide the synchronize checkbox, or set its label correctly
             string synchLabelText = _picker.SynchSiblingsLabel;
@@ -246,6 +252,9 @@ namespace pwiz.Skyline.Controls
             for (int i = 0; i < _choices.Count; i++)
             {
                 var choice = _choices[i];
+                if (_siteDeterminingOnly && _picker is ISiteDeterminingIonPicker sd2 &&
+                    !sd2.IsSiteDeterminingChoice(choice.Choice))
+                    continue;
                 if (!textSearch.Visible || AcceptChoice(choice, searches))
                 {
                     pickListMulti.Items.Add(choice);
@@ -360,6 +369,12 @@ namespace pwiz.Skyline.Controls
         private void tbbAutoManageChildren_Click(object sender, EventArgs e)
         {
             ToggleAutoManageChildren();
+        }
+
+        private void tbbSiteDetermining_Click(object sender, EventArgs e)
+        {
+            _siteDeterminingOnly = tbbSiteDetermining.Checked;
+            ShowChoices();
         }
 
         public void ToggleAutoManageChildren()
