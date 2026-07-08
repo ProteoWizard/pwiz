@@ -55,7 +55,11 @@ namespace pwiz.BiblioSpec
                 WorkingDirectory = Path.GetDirectoryName(destinationFile) ?? string.Empty,
                 Arguments = string.Join(@" ", argv.ToArray()),
                 RedirectStandardOutput = true,
-                RedirectStandardError = true
+                RedirectStandardError = true,
+                // BlibFilter.exe emits UTF-8; without this net8 decodes its redirected
+                // output with the default code page and mangles it (mirror BlibBuild.cs).
+                StandardOutputEncoding = System.Text.Encoding.UTF8,
+                StandardErrorEncoding = System.Text.Encoding.UTF8
             };
             var processRunner = new ProcessRunner();
             processRunner.Run(psiBlibFilter, null, progressMonitor, ref status);
