@@ -291,7 +291,10 @@ namespace pwiz.Osprey.FDR
                     if (!minRunBothByEntryId.TryGetValue(e.EntryId, out curPrec) || runBoth < curPrec)
                         minRunBothByEntryId[e.EntryId] = runBoth;
 
-                    if (e.ModifiedSequence == null)
+                    // Treat a null/empty ModifiedSequence as missing (a Parquet stub loaded
+                    // without the modified_sequence column can be string.Empty): it has no
+                    // peptide identity, so it must not bucket unrelated entries under an empty key.
+                    if (string.IsNullOrEmpty(e.ModifiedSequence))
                         continue;
                     // Peptide identity is (ModifiedSequence, IsDecoy): a decoy can share its
                     // paired target's ModifiedSequence, so keying on the sequence alone would
@@ -312,7 +315,7 @@ namespace pwiz.Osprey.FDR
                         floorPrec > e.ExperimentPrecursorQvalue)
                         e.ExperimentPrecursorQvalue = floorPrec;
 
-                    if (e.ModifiedSequence != null)
+                    if (!string.IsNullOrEmpty(e.ModifiedSequence))
                     {
                         double floorPept;
                         if (minRunBothByPeptide.TryGetValue((e.ModifiedSequence, e.IsDecoy), out floorPept) &&

@@ -1055,6 +1055,36 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// A null or empty <see cref="FdrEntry.ModifiedSequence"/> (a Parquet stub loaded
+        /// without the modified_sequence column can be string.Empty) has no peptide identity:
+        /// it must be skipped for the peptide floor entirely, never bucketed with unrelated
+        /// empty-sequence entries. The precursor floor (by EntryId) still applies.
+        /// </summary>
+        [TestMethod]
+        public void TestClampSkipsNullOrEmptyModifiedSequence()
+        {
+            // Two entries with empty ModifiedSequence and good runs, plus a real peptide.
+            var emptyA = MakeEntry(1, "", runPrec: 0.5, runPept: 0.5, expPrec: 0.001, expPept: 0.001);
+            var emptyB = MakeEntry(2, "", runPrec: 0.4, runPept: 0.4, expPrec: 0.002, expPept: 0.002);
+            var nullSeq = MakeEntry(3, null, runPrec: 0.3, runPept: 0.3, expPrec: 0.003, expPept: 0.003);
+            var perFileEntries = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                MakeFile("file1", emptyA, emptyB, nullSeq)
+            };
+
+            PercolatorEngine.ClampExperimentQToBestRun(perFileEntries);
+
+            // Empty/null sequences do NOT share a peptide floor -> peptide q untouched.
+            Assert.AreEqual(0.001, emptyA.ExperimentPeptideQvalue, 1e-12, "empty modseq skipped for peptide floor");
+            Assert.AreEqual(0.002, emptyB.ExperimentPeptideQvalue, 1e-12, "empty modseq not bucketed with other empties");
+            Assert.AreEqual(0.003, nullSeq.ExperimentPeptideQvalue, 1e-12, "null modseq skipped for peptide floor");
+            // The precursor floor (by EntryId) still applies to each.
+            Assert.AreEqual(0.5, emptyA.ExperimentPrecursorQvalue, 1e-12, "precursor floor still applies");
+            Assert.AreEqual(0.4, emptyB.ExperimentPrecursorQvalue, 1e-12, "precursor floor still applies");
+            Assert.AreEqual(0.3, nullSeq.ExperimentPrecursorQvalue, 1e-12, "precursor floor still applies");
+        }
+
+        /// <summary>
         /// The peptide floor is peptide-wide (min run-Both over every charge sharing a
         /// <see cref="FdrEntry.ModifiedSequence"/>), while the precursor floor stays per-EntryId.
         /// A two-charge peptide gets both charges' peptide q floored to the peptide-wide min,
