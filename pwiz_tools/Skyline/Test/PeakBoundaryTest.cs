@@ -378,6 +378,29 @@ namespace pwiz.SkylineTest
                         .First(c => Equals(c.Name, replicateName)).FileCount);
                     ImportThrowsException(docMultiFile, TextUtil.LineSeparate(headerByReplicate, rowByReplicate),
                         Resources.PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_);
+
+                    // A SampleName narrows a multi-file replicate (e.g. a multi-sample .wiff) to a single file.
+                    // Synthesize replicate "13" as two files with distinct sample names.
+                    var sampledSet = singleFileSet.ChangeMSDataFileInfos(new List<ChromFileInfo>
+                    {
+                        new ChromFileInfo(new MsDataFilePath("Multi.wiff", "SampleA", 0)),
+                        new ChromFileInfo(new MsDataFilePath("Multi.wiff", "SampleB", 1))
+                    });
+                    var docSampled = docResults.ChangeSettingsNoDiff(docResults.Settings.ChangeMeasuredResults(
+                        new MeasuredResults(measuredResults.Chromatograms
+                            .Select(c => ReferenceEquals(c, singleFileSet) ? sampledSet : c).ToList())));
+                    string headerRepSample = string.Join(csvSep, "PeptideModifiedSequence", "ReplicateName",
+                        "SampleName", "Apex", "MinStartTime", "MaxEndTime", "PrecursorCharge");
+                    // A matching SampleName resolves to a single file within the replicate (no ambiguity error);
+                    // the peptide is recognized and its file identity resolved, so nothing is left unrecognized.
+                    var rowGoodSample = string.Join(csvSep, "TPEVDDEALEK", replicateName, "SampleA", apex, startTime, endTime, chargeStr);
+                    var importerGoodSample = DoImport(docSampled, TextUtil.LineSeparate(headerRepSample, rowGoodSample));
+                    AssertEx.AreEqual(0, importerGoodSample.UnrecognizedPeptides.Count);
+                    AssertEx.AreEqual(0, importerGoodSample.UnrecognizedFiles.Count);
+                    // A SampleName that matches no file in the replicate fails with an explanatory error.
+                    var rowBadSample = string.Join(csvSep, "TPEVDDEALEK", replicateName, "NoSuchSample", apex, startTime, endTime, chargeStr);
+                    ImportThrowsException(docSampled, TextUtil.LineSeparate(headerRepSample, rowBadSample),
+                        Resources.PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not_match_a_single_file_in_the_replicate___2__);
                 }
 
                 if (AsSmallMolecules)

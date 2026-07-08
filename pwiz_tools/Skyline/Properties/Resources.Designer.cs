@@ -7304,7 +7304,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The replicate &quot;{0}&quot; on line {1} contains multiple files, so the replicate name alone is ambiguous. Specify a FileName (and optionally a SampleName) column to identify a single file..
+        ///   Looks up a localized string similar to The replicate &quot;{0}&quot; on line {1} contains multiple files, so the replicate name alone is ambiguous. Add a SampleName column to select a single file within the replicate, or use a FileName column instead..
         /// </summary>
         public static string PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_ {
             get {
@@ -7313,7 +7313,17 @@ namespace pwiz.Skyline.Properties {
                         "__and_optionally_a_SampleName__to_identify_a_single_file_", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to The sample &quot;{0}&quot; on line {1} does not match a single file in the replicate &quot;{2}&quot;..
+        /// </summary>
+        public static string PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not_match_a_single_file_in_the_replicate___2__ {
+            get {
+                return ResourceManager.GetString("PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not" +
+                        "_match_a_single_file_in_the_replicate___2__", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to Failed to find the necessary headers {0} in the first line.
         /// </summary>

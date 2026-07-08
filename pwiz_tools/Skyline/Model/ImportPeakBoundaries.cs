@@ -515,7 +515,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (useReplicate)
                     {
-                        fileMatch = FindReplicateFileMatch(replicateName, linesRead);
+                        fileMatch = FindReplicateFileMatch(replicateName, sampleName, linesRead);
                     }
                     else
                     {
@@ -628,25 +628,42 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Resolves a replicate name to a single result file, for peak-boundary rows that key on the
         /// (vendor-independent) replicate name instead of the on-disk file name. Returns null when no
-        /// replicate matches the name (the row is then reported as unrecognized). Throws when the replicate
-        /// holds more than one file, since the replicate name alone is ambiguous in that case - the user must
-        /// fall back to a FileName (and optionally SampleName) column to identify a single file.
+        /// replicate matches the name (the row is then reported as unrecognized). For a multi-file replicate
+        /// (e.g. a multi-sample .wiff) an optional <paramref name="sampleName"/> selects a single file within
+        /// the replicate; without it, or if it does not match exactly one file, the row is ambiguous and throws.
         /// </summary>
-        private ChromSetFileMatch FindReplicateFileMatch(string replicateName, long linesRead)
+        private ChromSetFileMatch FindReplicateFileMatch(string replicateName, string sampleName, long linesRead)
         {
             if (!Document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out var chromSet, out _))
                 return null;    // No replicate by that name - the row is reported as unrecognized
-            if (chromSet.FileCount > 1)
+            if (chromSet.FileCount == 0)
+                return null;    // Degenerate replicate with no files - reported as unrecognized
+
+            ChromFileInfo fileInfo;
+            if (!string.IsNullOrEmpty(sampleName))
             {
-                // A multi-file replicate (multi-file replicate / multi-sample .wiff) cannot be resolved to a
-                // single file from the replicate name alone, so fail rather than guess which file to adjust.
+                // A SampleName narrows a multi-file replicate (e.g. a multi-sample .wiff) to a single file.
+                var sampleMatches = chromSet.MSDataFileInfos
+                    .Where(info => Equals(info.FilePath.GetSampleName(), sampleName)).ToArray();
+                if (sampleMatches.Length != 1)
+                {
+                    throw new IOException(string.Format(
+                        Resources.PeakBoundaryImporter_FindReplicateFileMatch_The_sample___0___on_line__1__does_not_match_a_single_file_in_the_replicate___2__,
+                        sampleName, linesRead, replicateName));
+                }
+                fileInfo = sampleMatches[0];
+            }
+            else if (chromSet.FileCount == 1)
+            {
+                fileInfo = chromSet.MSDataFileInfos[0];
+            }
+            else
+            {
+                // More than one file and no SampleName to pick one - fail rather than guess which file to adjust.
                 throw new IOException(string.Format(
                     Resources.PeakBoundaryImporter_FindReplicateFileMatch_The_replicate___0___on_line__1__contains_multiple_files__so_the_replicate_name_alone_is_ambiguous__Specify_a_FileName__and_optionally_a_SampleName__to_identify_a_single_file_,
                     replicateName, linesRead));
             }
-            if (chromSet.FileCount == 0)
-                return null;    // Degenerate replicate with no files - reported as unrecognized
-            var fileInfo = chromSet.MSDataFileInfos[0];
             return new ChromSetFileMatch(chromSet, fileInfo.FilePath, 0);
         }
 
