@@ -1214,7 +1214,10 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (TestSettings.SearchEngine != SearchEngine.MSAmanda)
+                // Every engine except MSFragger (handled above) uses the generic download
+                // confirmation dialog. On net8 MSAmanda became an on-demand download too, so
+                // it must go through this path rather than being excluded.
+                if (TestSettings.SearchEngine != SearchEngine.MSFragger)
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
