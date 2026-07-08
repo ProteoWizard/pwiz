@@ -194,9 +194,10 @@ internal sealed class WiffFile : AbstractWiffFile
         // synchronously release the underlying .wiff handle when each of these
         // returns; under .NET 8 the experiment + sample disposes still leave
         // native readers active for SIM/SRM-bearing samples (the SDK enqueues
-        // their finalizers and the file handle survives past return). The
-        // harness's post-test rename probe soft-fails on those known cases —
-        // see VendorReaderTestHarness.AssertFilesUnlocked.
+        // their finalizers and the file handle survives past return). Forcing a
+        // finalizer pass here does not help - this instance is still reachable, so
+        // its SDK objects are not yet collectable; the handle is instead released on
+        // demand at the next file open (see ReaderList.ReadHead retry).
         foreach (var exp in _experiments)
         {
             try { exp.Dispose(); } catch { /* best-effort */ }
@@ -367,11 +368,45 @@ internal sealed class WiffExperiment : AbstractWiffExperiment
     public override IReadOnlyList<WiffMrmTarget> SrmTransitions => _srm.Value;
     public override IReadOnlyList<WiffSimTarget> SimTransitions => _sim.Value;
 
+    private int? _lastCycleForSic;
+
+    // cpp ExperimentImpl::convertRetentionTimeToCycle -> msExperiment->RetentionTimeToExperimentScan(rt).
+    // Cached because it is the same last-cycle value for every transition in the experiment.
+    private int LastCycleForSic()
+    {
+        if (_lastCycleForSic.HasValue)
+            return _lastCycleForSic.Value;
+        int last = 0;
+        try
+        {
+            var tic = _exp.GetTotalIonChromatogram();
+            var ticTimes = tic.GetActualXValues();
+            if (ticTimes != null && ticTimes.Length > 0)
+                last = (int)_exp.RetentionTimeToExperimentScan(ticTimes[ticTimes.Length - 1]);
+        }
+        catch { last = 0; }
+        _lastCycleForSic = last;
+        return last;
+    }
+
     public override (double[] Times, double[] Intensities) GetSic(int transitionIndex)
     {
         try
         {
-            var sic = _exp.GetExtractedIonChromatogram(new ExtractedIonChromatogramSettings(transitionIndex));
+            // Mirror cpp ExperimentImpl::getSIC with ignoreScheduledLimits=true (the value
+            // ChromatogramList_ABI hardcodes for SRM/SIM): request the SIC over the full experiment
+            // cycle range so out-of-scheduled-window zero points are present. Without them, Skyline's
+            // peak finder extends integration boundaries differently, shifting areas and flipping
+            // forced-integration flags (see TestAsymCEOpt: 86 vs 90 transitions).
+            var settings = new ExtractedIonChromatogramSettings(transitionIndex);
+            int lastCycle = LastCycleForSic();
+            if (lastCycle > 0)
+            {
+                settings.StartCycle = 0;
+                settings.EndCycle = lastCycle;
+                settings.UseStartEndCycle = true;
+            }
+            var sic = _exp.GetExtractedIonChromatogram(settings);
             return (sic.GetActualXValues() ?? Array.Empty<double>(),
                     sic.GetActualYValues() ?? Array.Empty<double>());
         }
