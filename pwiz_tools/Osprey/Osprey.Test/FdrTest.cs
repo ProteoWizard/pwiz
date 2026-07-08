@@ -707,25 +707,22 @@ namespace pwiz.Osprey.Test
         /// overload must produce byte-identical Score + q-values to the FdrEntry
         /// <see cref="PercolatorEngine.RunPercolatorFdr(List{KeyValuePair{string,List{FdrEntry}}},OspreyConfig,OspreyFeatureInfo[],System.Action{string},FeatureContributions,PercolatorDiagnosticsConfig,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
         /// overload -- the flag-off byte-identity ORACLE -- on the same input, at the
-        /// shared production config (default MaxTrainSize, so both overloads take their
-        /// DIRECT dispatch: train RunPercolator on the full population with the Stage 5
-        /// standardizer fit on ALL entries). This is the exact equivalence the 2nd-pass
-        /// survivor reload preserves.
+        /// shared production config. Streaming-only: both overloads always take the
+        /// streaming SVM path (best-per-precursor subsample, Stage 5 standardizer fit
+        /// on that subset), so this checks that the two buffer shapes -- the FdrEntry
+        /// stub list and the thin FdrProjection buffer -- drive that shared streaming
+        /// core to identical results end-to-end. This is the exact equivalence the
+        /// 2nd-pass survivor reload preserves.
         ///
         /// The fixture deliberately gives each precursor MULTIPLE observations (several
         /// scans per base_id) so best-per-precursor dedup collapses the training pool to
-        /// a strict SUBSET of the population. That is the property that makes the
-        /// direct-vs-streaming DISPATCH observable (issue #4374): the direct path fits
-        /// the standardizer on all observations, the streaming path fits it on the
-        /// best-per-precursor subset only, so the two produce DIFFERENT scores on this
-        /// fixture. If the projection overload ever silently reverts to always-streaming
-        /// (dropping the below-threshold direct fork), it fits the standardizer on the
-        /// subset while the FdrEntry oracle keeps fitting it on the full population, and
-        /// every Score/q-value here diverges -- turning this test red. A single-
-        /// observation fixture (where dedup is a no-op and streaming == direct) would NOT
-        /// catch that regression; multi-observation is load-bearing.
+        /// a strict SUBSET of the population -- exercising the subsample selection on
+        /// both buffer shapes rather than a trivial no-op. If the two overloads ever
+        /// selected different subsamples, or fit the standardizer on different
+        /// populations, every Score/q-value here would diverge -- turning this test red.
         /// (<see cref="TestProjectionStreamingMatchesFdrEntryStreaming"/> covers the
-        /// subsample-forced streaming primitive above the threshold.)
+        /// projection-native streaming primitive against the PercolatorEntry-list
+        /// streaming path with a forced small-MaxTrainSize subsample.)
         /// </summary>
         [TestMethod]
         public void TestProjectionRunPercolatorFdrMatchesFdrEntry()
@@ -740,20 +737,19 @@ namespace pwiz.Osprey.Test
             var config = new OspreyConfig(); // RunFdr 0.01, Percolator, Precursor
 
             // Multi-observation fixture: best-per-precursor dedup is non-trivial, so the
-            // DIRECT path (standardizer on all) and the STREAMING path (standardizer on
-            // the deduped subset) give different results -- the property that lets this
-            // test gate the below-threshold direct dispatch.
+            // streaming subsample is a strict subset of the population -- exercising the
+            // subsample selection on both buffer shapes (not a trivial no-op).
             var fdrStubs = BuildMultiObservationEquivFixture(nFeat, out var featuresA);
             var fdrStubs2 = BuildMultiObservationEquivFixture(nFeat, out var featuresB);
             var projSet = FdrProjectionSet.BuildFromEntries(fdrStubs2);
 
-            // FdrEntry oracle overload: at the default MaxTrainSize this dispatches to
-            // the direct RunPercolator (standardizer fit on the full population).
+            // FdrEntry oracle overload: streams via DispatchSvm -> RunPercolatorStreaming
+            // (standardizer fit on the best-per-precursor subsample).
             PercolatorEngine.RunPercolatorFdr(
                 fdrStubs, config, featureInfos, s => { }, out _, null, "First-pass",
                 f => featuresA[f]);
-            // Projection overload under test: must take the SAME direct dispatch and
-            // therefore match the oracle byte-for-byte. The lean struct takes Score; the
+            // Projection overload under test: streams the same way (RunStreamingIntoProjection)
+            // and must match the oracle byte-for-byte. The lean struct takes Score; the
             // q-values are captured off the sink (issue #4355 struct-shrink S0).
             var sink = new CapturingSink();
             PercolatorEngine.RunPercolatorFdr(
@@ -944,16 +940,16 @@ namespace pwiz.Osprey.Test
 
         /// <summary>
         /// Paired target/decoy fixture with MULTIPLE observations per precursor for the
-        /// direct-dispatch equivalence gate (<see cref="TestProjectionRunPercolatorFdrMatchesFdrEntry"/>):
+        /// end-to-end overload equivalence test (<see cref="TestProjectionRunPercolatorFdrMatchesFdrEntry"/>):
         /// 2 files x 20 precursors x 3 scans each, well-separated target (high) vs decoy
         /// (low) features. Every observation of a precursor shares the precursor's
         /// EntryId (so <c>SelectBestPerPrecursor</c> collapses the 3 scans to 1) but
         /// carries DISTINCT feature values (each scan offsets by <c>k</c>), so the Stage 5
         /// standardizer's mean/std over ALL 240 observations differs measurably from over
-        /// the 80-row best-per-precursor subset. That difference is what makes the direct
-        /// path (standardizer on all) and the streaming path (standardizer on the subset)
-        /// produce different results -- the property the equivalence test relies on to
-        /// detect a projection overload that skips its below-threshold direct dispatch.
+        /// the 80-row best-per-precursor subset. That gap makes the streaming subsample
+        /// selection non-trivial, so the test exercises it on both buffer shapes (the
+        /// FdrEntry stub list and the FdrProjection buffer) rather than a no-op dedup;
+        /// if the two overloads selected different subsamples the scores would diverge.
         /// Rows for a precursor are appended consecutively with increasing scan AND
         /// increasing ParquetIndex, so within each (EntryId, Charge) group the projection
         /// sort (EntryId, Charge, ParquetIndex) yields the identical order the FdrEntry

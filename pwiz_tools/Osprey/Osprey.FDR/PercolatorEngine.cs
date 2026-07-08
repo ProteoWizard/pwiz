@@ -192,9 +192,9 @@ namespace pwiz.Osprey.FDR
         /// #4355 step (b) increment ii): run first-pass Percolator FDR over the thin
         /// <see cref="FdrProjectionSet"/> peak buffer instead of the full
         /// <see cref="FdrEntry"/> stub buffer. The SVM path is UNCHANGED -- the
-        /// projection is expanded into the identical <see cref="PercolatorEntry"/>
-        /// input (strings materialized from the interned peptide table), the same
-        /// streaming/direct dispatch runs, and the results are zipped back onto the
+        /// projection is scored through the identical <see cref="PercolatorEntry"/>
+        /// SVM core (strings materialized from the interned peptide table), the same
+        /// streaming dispatch runs, and the results are written back onto the
         /// projection rows by position. Only the buffer that stays resident across
         /// the peak differs, so the trained model + every q-value are byte-identical
         /// to the legacy path (the flag-off oracle). Returns <c>true</c> on a
@@ -253,19 +253,6 @@ namespace pwiz.Osprey.FDR
             var percConfig = BuildProjectionPercolatorConfig(config, featureInfos, diagnostics);
             int n = projections.TotalRows;
 
-            // Streaming vs direct decided up front from the projection row count with
-            // the SAME percConfig (hence the SAME MaxTrainSize * 2 threshold) the
-            // FdrEntry oracle's DispatchSvm applies -- so the projection selects the
-            // IDENTICAL SVM path (and the identical standardizer-fit population) the
-            // FdrEntry buffer would for this population (issue #4374 byte-identity;
-            // risk #5). This dispatch is byte-identity-critical, NOT cosmetic: the
-            // direct path (RunPercolator on the full population) fits the Stage 5
-            // standardizer on ALL entries, whereas the streaming path fits it on the
-            // best-per-precursor subsample only. Rust and the flag-off oracle switch
-            // between the two at this threshold, so a below-threshold population (e.g.
-            // the Stellar 2nd pass, ~393k < 600k) MUST take the direct path to stay
-            // byte-identical; forcing it to always-stream refits the standardizer on a
-            // different population and diverges every downstream score/q-value.
             // Streaming-only (cross-impl parity with the Rust streaming-only change):
             // ALWAYS run the projection-native streaming score + compete pass, regardless
             // of population size. The former sub-threshold direct branch built a full
@@ -299,12 +286,11 @@ namespace pwiz.Osprey.FDR
         /// <summary>
         /// Build the first-pass <see cref="PercolatorConfig"/> shared by the legacy
         /// <see cref="FdrEntry"/> path and the projection path. Centralized (issue
-        /// #4355 step (b) increment iii) so the streaming-vs-direct threshold
-        /// (<c>MaxTrainSize * 2</c>) and every SVM knob are IDENTICAL whether the
-        /// dispatch runs off a <see cref="PercolatorEntry"/> list or is decided up
-        /// front from the projection row count -- the two buffer shapes cannot select
-        /// a different SVM path for the same population. <c>MaxTrainSize</c> is left at
-        /// the <see cref="PercolatorConfig"/> default (300000).
+        /// #4355 step (b) increment iii) so every SVM knob is IDENTICAL whether the
+        /// SVM runs off a <see cref="PercolatorEntry"/> list or the projection row
+        /// count -- the two buffer shapes cannot select a different SVM path for the
+        /// same population. <c>MaxTrainSize</c> (the streaming training-subsample size)
+        /// is left at the <see cref="PercolatorConfig"/> default (300000).
         /// </summary>
         private static PercolatorConfig BuildProjectionPercolatorConfig(
             OspreyConfig config,
@@ -327,9 +313,8 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Shared SVM dispatch for the legacy and projection first-pass paths: log the
-        /// "Running..." header and pick the streaming vs direct path off the same
-        /// <c>MaxTrainSize * 2</c> threshold. Pure code motion out of
+        /// Shared SVM entry point for the legacy and projection first-pass paths: log the
+        /// "Running..." header and run the streaming SVM path. Pure code motion out of
         /// <c>RunPercolatorFdr</c> so both buffer shapes drive the identical,
         /// parity-locked SVM core -- the projection path cannot silently diverge in
         /// dispatch, standardizer, or subsample. The <see cref="PercolatorConfig"/> is
@@ -456,8 +441,8 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Streaming Percolator dispatch for multi-observation-per-precursor
-        /// inputs (total entries above <c>MaxTrainSize * 2</c>). Mirrors
+        /// Streaming Percolator path for all first-pass inputs (streaming-only:
+        /// the former sub-threshold direct branch is removed). Mirrors
         /// Rust's <c>run_percolator_fdr</c> streaming branch
         /// (osprey/src/pipeline.rs:4232-4580):
         /// <list type="number">
@@ -475,13 +460,14 @@ namespace pwiz.Osprey.FDR
         /// score array.</item>
         /// </list>
         /// The selection uses <see cref="PercolatorFdr.SelectBestPerPrecursor"/>
-        /// and <see cref="PercolatorFdr.SubsampleByPeptideGroup"/> -- the
-        /// same helpers the direct path calls internally, so both paths
-        /// select identical 300K subsets when given identical input.
+        /// and <see cref="PercolatorFdr.SubsampleByPeptideGroup"/> to build the
+        /// best-per-precursor training subsample -- the same helpers (and the same
+        /// 300K cap) Rust's streaming path uses, so the subsets match given
+        /// identical input.
         ///
         /// Internal (not private) so <c>FdrTest</c> can drive it head-to-head against
-        /// <see cref="RunStreamingIntoProjection"/> on a fixture forced past
-        /// the streaming threshold, proving the two buffer shapes yield identical
+        /// <see cref="RunStreamingIntoProjection"/> on a multi-observation fixture,
+        /// proving the two buffer shapes yield identical
         /// Score + q-values (issue #4355 step (b) increment iii, gate 1).
         /// </summary>
         internal static PercolatorResults RunPercolatorStreaming(
@@ -516,8 +502,9 @@ namespace pwiz.Osprey.FDR
 
             // 1. Best-per-precursor dedup, then 2. peptide-grouped subsample when
             //    the dedup count still exceeds MaxTrainSize. Both steps are owned
-            //    by PercolatorFdr.BuildTrainingSubset so this streaming path and
-            //    the direct path select identical subsets for identical input.
+            //    by PercolatorFdr.BuildTrainingSubset so every caller (this projection
+            //    streaming path and the FdrEntry path) selects identical subsets for
+            //    identical input.
             int[] bestIdx;
             int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
                 labels, entryIds, peptides, percEntries, maxTrain, percConfig.Seed,
