@@ -31,6 +31,7 @@ public sealed class MascotResultsReader : BuildParser
     private string _tempCopy = string.Empty;     // delete on Dispose if non-empty
     private IntPtr _handle;          // borrowed by the spec reader; freed by Dispose
     private bool _disposed;
+    private double _scoreThreshold;  // applied in ParseFile (cpp:226), not by the shim
 
     // Static-mod table: residue letter / N_TERM_POS / C_TERM_POS → list of
     // delta masses. cpp MascotResultsReader.h:64 uses the same shape
@@ -172,6 +173,17 @@ public sealed class MascotResultsReader : BuildParser
                     bucket = new List<PSM>();
                     _psmsByFile[sourceFile] = bucket;
                 }
+
+                // cpp parity: MascotResultsReader.cpp:226 - apply the score threshold here, after
+                // the source-file bucket exists, so a file whose PSMs are all filtered out still
+                // has a bucket and BuildTables reports "No matches passed score filter" for it
+                // instead of the build ending as a generic empty library.
+                if (psm.Score > _scoreThreshold)
+                {
+                    FilteredOutPsmCount++;
+                    continue;
+                }
+
                 bucket.Add(psm);
 
                 Psms.Add(psm);
@@ -557,11 +569,14 @@ public sealed class MascotResultsReader : BuildParser
                 + $"copying file to a temporary non-Unicode path '{tempPath}'.");
         }
 
-        // cpp parity: MascotResultsReader.cpp:101 sets the score threshold
-        // from getScoreThreshold(MASCOT) (default 0.05). The shim's PSM
-        // iterator drops PSMs whose expectation value exceeds this.
-        double cutoff = GetScoreThreshold(BuildInput.Mascot);
-        int rc = MascotShimInterop.Open(_openedPath, scoreCutoff: cutoff, out _handle);
+        // cpp parity: MascotResultsReader.cpp:101 sets the score threshold from
+        // getScoreThreshold(MASCOT) (default 0.05). cpp reads every PSM and applies the
+        // threshold itself in the parse loop (cpp:226) - that is what lets a source file whose
+        // PSMs are all filtered out still get an (empty) bucket and produce the "No matches
+        // passed score filter" warning. So open the shim permissively (its iterator yields every
+        // PSM) and apply the threshold in ParseFile rather than letting the shim drop PSMs.
+        _scoreThreshold = GetScoreThreshold(BuildInput.Mascot);
+        int rc = MascotShimInterop.Open(_openedPath, scoreCutoff: double.MaxValue, out _handle);
         if (rc != (int)MascotResult.Ok)
         {
             throw new BlibException(true,
