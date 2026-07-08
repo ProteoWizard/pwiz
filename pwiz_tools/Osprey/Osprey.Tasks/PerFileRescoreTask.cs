@@ -808,7 +808,8 @@ namespace pwiz.Osprey.Tasks
             // (300 files x ~1.5 GB), and .NET's Server GC otherwise defers collection
             // until it nears the RAM ceiling -- so the reconciliation working set
             // rides up with file count instead of staying flat. Forcing the collection
-            // here mirrors Rust's per-iteration spectra drop (pipeline.rs:3047) and
+            // here mirrors Rust's per-iteration spectra drop (pipeline.rs:3338, in Rust's
+            // strictly sequential reconciliation file loop) and
             // keeps the working set at ~the persistent floor + one file's transient.
             // Output is unchanged (GC timing only). Skipped under file-parallelism > 1,
             // where concurrent files legitimately share residency and a blocking GC
