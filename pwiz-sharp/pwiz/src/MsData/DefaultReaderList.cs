@@ -145,6 +145,37 @@ public sealed class ReaderList : IReader
     /// <summary>Reads up to 8 KB of the file head so <see cref="Identify(string, string?)"/> can sniff content.</summary>
     private static string ReadHead(string filename, int maxBytes = 8192)
     {
+        try
+        {
+            return ReadHeadOnce(filename, maxBytes);
+        }
+        catch (IOException)
+        {
+            // A vendor reader can leave the previous sample's native file handle alive past Dispose:
+            // the Sciex SDK on .NET 8 releases a SIM/SRM sample's .wiff handle only when the reader is
+            // finalized AND its SDK-internal async native close completes, briefly locking the file and
+            // breaking the next per-sample import's format sniff. Force finalization of the now-
+            // unreachable prior reader, then poll for the async release. cpp releases synchronously.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            var start = System.Diagnostics.Stopwatch.StartNew();
+            while (true)
+            {
+                System.Threading.Thread.Sleep(50);
+                try
+                {
+                    return ReadHeadOnce(filename, maxBytes);
+                }
+                catch (IOException) when (start.ElapsedMilliseconds < 5000)
+                {
+                }
+            }
+        }
+    }
+
+    private static string ReadHeadOnce(string filename, int maxBytes)
+    {
         using var stream = File.OpenRead(filename);
         byte[] buffer = new byte[maxBytes];
         int read = stream.ReadAtLeast(buffer, maxBytes, throwOnEndOfStream: false);
