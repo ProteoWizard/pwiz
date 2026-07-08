@@ -330,7 +330,7 @@
     <PackageReference Include="Sprache" Version="2.3.1" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="Parquet.Net" Version="4.23.5" />
+    <PackageReference Include="Parquet.Net" Version="4.25.0" />
     <PackageReference Include="IdentityModel" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
