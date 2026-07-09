@@ -22,6 +22,7 @@
  */
 
 using System.Collections.Generic;
+using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.Scoring
@@ -71,6 +72,17 @@ namespace pwiz.Osprey.Scoring
         /// abs_residuals.
         /// </summary>
         public double? OriginalRtMad { get; set; }
+
+        /// <summary>
+        /// The library-to-mzML RT range mapping, used to centre the search window when
+        /// calibration failed. The search would otherwise use the raw library RT --
+        /// harmless when the two RT scales agree (the mapping is then the identity),
+        /// badly wrong when they do not. Predict-only: the RT tolerance still comes
+        /// from <c>FallbackRtTolerance</c> and the file is still reported as
+        /// calibration_successful=false. Null when calibration succeeded, or when the
+        /// library RT range is degenerate. See issue #4401.
+        /// </summary>
+        public RTCalibration FallbackRtMap { get; set; }
 
         public ScoringContext(OspreyConfig config, string fileName)
         {

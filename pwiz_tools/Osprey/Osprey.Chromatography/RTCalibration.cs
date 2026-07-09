@@ -62,6 +62,18 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         public bool ClassicalRobustIterations { get; set; }
 
+        /// <summary>
+        /// Fit a single global least-squares line instead of a LOESS curve, and
+        /// report the calibration as <see cref="RTCalibrationMethod.Linear"/>.
+        /// LOESS bandwidth is a *fraction* of the points, so its local window
+        /// (<c>Bandwidth * n</c>) thins out as n falls; below ~100 points the
+        /// window no longer supports a locally varying fit and a line is the
+        /// better-conditioned estimator. <see cref="Bandwidth"/>,
+        /// <see cref="Degree"/> and <see cref="RobustnessIterations"/> are ignored
+        /// when this is set. See issue #4401.
+        /// </summary>
+        public bool LinearFit { get; set; }
+
         /// <summary>Create default configuration.</summary>
         public RTCalibratorConfig()
         {
@@ -71,6 +83,7 @@ namespace pwiz.Osprey.Chromatography
             RobustnessIterations = 2;
             OutlierRetention = 0.8;
             ClassicalRobustIterations = true;
+            LinearFit = false;
         }
     }
 
@@ -136,6 +149,17 @@ namespace pwiz.Osprey.Chromatography
                 y[i] = measuredRts[order[i]];
             }
 
+            // A global least-squares line for point sets too thin to support a
+            // locally varying fit (see RTCalibratorConfig.LinearFit). The fitted
+            // values are evaluated at the same x, so every downstream consumer --
+            // Predict, InversePredict, the .calibration.json model params, resume
+            // and the HPC merge -- is identical to the LOESS path.
+            if (_config.LinearFit)
+            {
+                double[] linearFitted = FitRobustLine(x, y);
+                return BuildCalibration(x, y, linearFitted, RTCalibrationMethod.Linear);
+            }
+
             // Fit LOESS with robustness iterations
             LoessModel model = LoessRegression.Fit(x, y, _config.Bandwidth,
                 _config.Degree, _config.RobustnessIterations,
@@ -174,7 +198,17 @@ namespace pwiz.Osprey.Chromatography
                 }
             }
 
-            // Compute residuals and stats
+            return BuildCalibration(x, y, fitted, RTCalibrationMethod.LOESS);
+        }
+
+        /// <summary>
+        /// Compute residual statistics from the fitted values and wrap them in an
+        /// <see cref="RTCalibration"/>. Shared by the LOESS and linear paths.
+        /// </summary>
+        private static RTCalibration BuildCalibration(
+            double[] x, double[] y, double[] fitted, RTCalibrationMethod method)
+        {
+            int n = x.Length;
             double[] residuals = new double[n];
             double[] absResiduals = new double[n];
             for (int i = 0; i < n; i++)
@@ -184,7 +218,64 @@ namespace pwiz.Osprey.Chromatography
             }
             double residualSD = LoessRegression.StdDev(residuals);
 
-            return new RTCalibration(x, y, fitted, absResiduals, residualSD);
+            return new RTCalibration(x, y, fitted, absResiduals, residualSD, method);
+        }
+
+        /// <summary>
+        /// Theil-Sen robust line through (x, y), evaluated at each x: the slope is the
+        /// median of the pairwise slopes over all distinct-x pairs, and the intercept
+        /// the median of <c>y - slope*x</c>.
+        ///
+        /// The linear tier fits point sets of a few dozen peptides. Each one cleared
+        /// LDA + 1% FDR + S/N, but at that count the FDR estimate is granular, so one
+        /// or two false positives can survive -- and ordinary least squares lets a
+        /// single such point, if it sits at an RT extreme, lever the slope across the
+        /// whole gradient. Theil-Sen has a ~29% breakdown point, so it shrugs those
+        /// off. O(n^2) is trivial here (n &lt; ~100 gives under 5,000 pairs).
+        ///
+        /// A degenerate x (every library RT equal, so no distinct-x pair exists)
+        /// yields a horizontal line at median(y) rather than dividing by zero.
+        /// See issue #4401.
+        /// </summary>
+        private static double[] FitRobustLine(double[] x, double[] y)
+        {
+            int n = x.Length;
+            var slopes = new List<double>(n * (n - 1) / 2);
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = i + 1; j < n; j++)
+                {
+                    double dx = x[j] - x[i];
+                    if (dx != 0.0)
+                        slopes.Add((y[j] - y[i]) / dx);
+                }
+            }
+
+            double slope = slopes.Count > 0 ? Median(slopes) : 0.0;
+
+            var offsets = new List<double>(n);
+            for (int i = 0; i < n; i++)
+                offsets.Add(y[i] - slope * x[i]);
+            double intercept = Median(offsets);
+
+            double[] fitted = new double[n];
+            for (int i = 0; i < n; i++)
+                fitted[i] = intercept + slope * x[i];
+            return fitted;
+        }
+
+        /// <summary>
+        /// Median of the values, averaging the two central elements on an even count.
+        /// Sorts a copy, so the caller's list order is preserved.
+        /// </summary>
+        private static double Median(List<double> values)
+        {
+            var sorted = values.ToArray();
+            Array.Sort(sorted); // Array.Sort OK: single primitive array sorted for a median; equal values are interchangeable so tie order cannot change the result
+            int mid = sorted.Length / 2;
+            return sorted.Length % 2 == 0
+                ? (sorted[mid - 1] + sorted[mid]) / 2.0
+                : sorted[mid];
         }
     }
 
@@ -204,7 +295,7 @@ namespace pwiz.Osprey.Chromatography
 
         internal RTCalibration(double[] libraryRts, double[] measuredRts,
             double[] fittedValues, double[] absResiduals,
-            double residualSD)
+            double residualSD, RTCalibrationMethod method)
         {
             _libraryRts = libraryRts;
             _measuredRts = measuredRts;
@@ -212,7 +303,18 @@ namespace pwiz.Osprey.Chromatography
             _absResiduals = absResiduals;
             _residualSD = residualSD;
             _model = new LoessModel(libraryRts, fittedValues);
+            Method = method;
         }
+
+        /// <summary>
+        /// How the fitted values were produced. Prediction is knot interpolation in
+        /// every case, so this is reporting metadata (it reaches
+        /// <c>.calibration.json</c>'s <c>rt_calibration.method</c>), not behaviour.
+        /// A calibration rebuilt by <see cref="FromModelParams"/> reports
+        /// <see cref="RTCalibrationMethod.LOESS"/> because the saved model is just
+        /// the knots and no longer records how they were fitted.
+        /// </summary>
+        public RTCalibrationMethod Method { get; private set; }
 
         /// <summary>Library retention times (sorted).</summary>
         public double[] LibraryRts { get { return _libraryRts; } }
@@ -321,9 +423,50 @@ namespace pwiz.Osprey.Chromatography
         }
 
         /// <summary>
+        /// <see cref="SearchWindowHalfWidth(double,double,double)"/> with the floor
+        /// widened for a calibration fitted from few points, via
+        /// <see cref="EffectiveMinRtTolerance"/>.
+        /// </summary>
+        public static double SearchWindowHalfWidth(double mad, int nPoints,
+            double minTolerance, double maxTolerance, int minCalibrationPoints)
+        {
+            return SearchWindowHalfWidth(mad,
+                EffectiveMinRtTolerance(nPoints, minTolerance, maxTolerance, minCalibrationPoints),
+                maxTolerance);
+        }
+
+        /// <summary>
+        /// The minimum RT search-window half-width appropriate for a calibration
+        /// fitted from <paramref name="nPoints"/> points.
+        ///
+        /// The configured <c>MinRtTolerance</c> (0.5 min) is the floor that suits a
+        /// *well-estimated* MAD -- one measured from at least
+        /// <paramref name="minCalibrationPoints"/> confident peptides. The sampling
+        /// error of a scale estimate shrinks like <c>1/sqrt(n)</c>, so from a thin
+        /// point set the MAD can come out small by luck, and clamping to 0.5 min
+        /// would pair a tight window with a fit that does not deserve one. Widen the
+        /// floor by <c>sqrt(minCalibrationPoints / n)</c> to compensate: the fit
+        /// still tightens the window, but only as far as its own precision supports.
+        ///
+        /// Reduces exactly to <paramref name="minTolerance"/> at
+        /// <c>n &gt;= minCalibrationPoints</c>, so a healthy calibration is unaffected.
+        /// Never exceeds <paramref name="maxTolerance"/>. See issue #4401.
+        /// </summary>
+        public static double EffectiveMinRtTolerance(int nPoints, double minTolerance,
+            double maxTolerance, int minCalibrationPoints)
+        {
+            if (nPoints <= 0 || nPoints >= minCalibrationPoints)
+                return minTolerance;
+
+            double inflated = minTolerance * Math.Sqrt((double)minCalibrationPoints / nPoints);
+            return Math.Min(inflated, maxTolerance);
+        }
+
+        /// <summary>
         /// The unclamped RT search tolerance (minutes) for a given robust-spread
         /// MAD: <c>3 * MAD * 1.4826</c>, before the <c>[minTolerance, maxTolerance]</c>
-        /// clamp in <see cref="SearchWindowHalfWidth"/> is applied. Shared so the
+        /// clamp in <see cref="SearchWindowHalfWidth(double,double,double)"/> is
+        /// applied. Shared so the
         /// console summary can report the computed tolerance alongside the clamped
         /// one (e.g. when the fit is tighter than the floor).
         /// </summary>
@@ -354,6 +497,34 @@ namespace pwiz.Osprey.Chromatography
         }
 
         /// <summary>
+        /// The library-to-mzML RT mapping derived from the two RT *ranges*
+        /// (<c>slope * libraryRt + intercept</c>), as a predict-only calibration.
+        ///
+        /// This is what the search should centre its RT window on when calibration
+        /// fails. Without it the search falls back to the raw library RT -- fine when
+        /// the two RT scales already agree (the mapping is then the identity and this
+        /// changes nothing), but badly wrong when they do not, e.g. a Carafe library
+        /// whose Tr_recalibrated is in seconds against a minutes-keyed mzML.
+        ///
+        /// Carries no residuals, so it must not be used to derive a search tolerance
+        /// or reported as a successful calibration -- the caller keeps using the
+        /// fallback tolerance and records calibration_successful=false. Returns null
+        /// for a degenerate library RT range. See issue #4401.
+        /// </summary>
+        public static RTCalibration FromLinearMapping(
+            double libMinRt, double libMaxRt, double slope, double intercept)
+        {
+            if (!(libMaxRt > libMinRt))
+                return null;
+
+            double[] libraryRts = { libMinRt, libMaxRt };
+            double[] fitted = { intercept + slope * libMinRt, intercept + slope * libMaxRt };
+            double[] absResiduals = { 0.0, 0.0 };
+            return new RTCalibration(libraryRts, fitted, fitted, absResiduals, 0.0,
+                RTCalibrationMethod.Linear);
+        }
+
+        /// <summary>
         /// Reconstruct an RTCalibration from saved model parameters.
         /// </summary>
         public static RTCalibration FromModelParams(double[] libraryRts, double[] fittedRts,
@@ -372,7 +543,7 @@ namespace pwiz.Osprey.Chromatography
                 : CreateUniformArray(libraryRts.Length, residualSD);
 
             return new RTCalibration(libraryRts, fittedRts, fittedRts, residuals,
-                residualSD);
+                residualSD, RTCalibrationMethod.LOESS);
         }
 
         private double InterpolateAbsResidual(double libraryRt)
