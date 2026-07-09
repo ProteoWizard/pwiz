@@ -516,6 +516,36 @@ namespace pwiz.Osprey.Test
                     sawCoin = true;
             }
             Assert.IsTrue(sawCoin);
+
+            // In THIS fixture the real pairs are native signal (winner ~5.0, above
+            // the low-score null band), so only the entrapment coin populates the
+            // band -- a fair ~0.5 (the Competition KPI shows the real coin as "-").
+            Assert.IsTrue(System.Math.Abs(wf.NullBandEnt - 0.5) < 0.1);
+
+            // Boost signature: real target-decoy pairs sitting IN the low-score null
+            // band where the target nonetheless wins ~70% of competitions (real
+            // decoy-win ~30%), against entrapment pairs at a fair ~50% in the same
+            // band. Only the paired coin sees this -- the real coin collapses below
+            // the entrapment ruler (the KPI's headline gap), invisible to every
+            // marginal density and to the entrapment FDP.
+            var be = new List<FdrEntry>();
+            var bc = new Dictionary<uint, EntrapmentClass>();
+            for (int i = 0; i < 200; i++)
+            {
+                bool rDecoy = (i % 10) < 3;                 // real decoy-win 30%
+                be.Add(Entry((uint)(1000 + i), false, rDecoy ? 1.7 : 2.0, 0.2, "BR" + i, 2));
+                be.Add(Entry((uint)(1000 + i) | DECOY_BIT, true, rDecoy ? 2.0 : 1.7, 0.5, "BRD" + i, 2));
+                bc[(uint)(1000 + i)] = EntrapmentClass.Target;
+                bool eDecoy = (i % 2 == 0);                 // entrapment coin 50%
+                be.Add(Entry((uint)(5000 + i), false, eDecoy ? 1.7 : 2.0, 0.5, "BE" + i, 2));
+                be.Add(Entry((uint)(5000 + i) | DECOY_BIT, true, eDecoy ? 2.0 : 1.7, 0.5, "BED" + i, 2));
+                bc[(uint)(5000 + i)] = EntrapmentClass.PTarget;
+            }
+            var bwf = ModelDiagnosticsData.Build(Wrap(be), null, bc, null, 1.0, 0.01, "peptide").WinFraction;
+            Assert.IsTrue(bwf.NullBandReal < 0.4, "real coin should be collapsed: " + bwf.NullBandReal);
+            Assert.IsTrue(System.Math.Abs(bwf.NullBandEnt - 0.5) < 0.1, "entrapment coin ~0.5: " + bwf.NullBandEnt);
+            Assert.IsTrue(bwf.NullBandEnt - bwf.NullBandReal > 0.1,
+                "coin collapse gap positive: " + (bwf.NullBandEnt - bwf.NullBandReal));
         }
 
         private static void TestFeatureTableContributions()

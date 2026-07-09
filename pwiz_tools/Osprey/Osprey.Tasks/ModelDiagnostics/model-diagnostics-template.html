@@ -237,6 +237,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       binned by the winner's score. A fair null sits at the 50% line. Real pairs dipping below 50% at high score is
       native signal winning as it should; entrapment pairs holding the coin confirms the decoys are honest nulls.
       Marginal densities cannot see this within-pair ordering &mdash; only the competition can.</p>
+    <div class="kpis" id="wfKpis"></div>
     <div class="legend" id="wfLegend"></div>
     <div class="chartbox" id="wfChart"></div>
     <p class="note" id="wfNote"></p>
@@ -613,10 +614,12 @@ function ratioFmt(v){return v>=1?(+v.toFixed(v<10?1:0)).toString():(+v.toFixed(2
   const slope=num(dr.flatnessSlope);
   document.getElementById("ratioNote").innerHTML= isFinite(slope)
     ? "Read the shaded null region on the left: a <b>flat</b> target:decoy plateau (tilt near 0) means the decoys "+
-      "track the false-target null; a <b>sloping</b> left side (large tilt) means they don't. The plateau height "+
-      "is a Storey-style &pi;0 (the null fraction 1&minus;&pi;<sub>true</sub>); the curve rises where real hits begin."+
-      (hasRef?" The <b>p_target : p_decoy</b> line (both pure null) is the matched-null reference &mdash; it rides "+
-        "~1 flat, showing what a faithful pairing looks like on this run.":"")
+      "track the false-target null in <i>shape</i>; a <b>sloping</b> left side (large tilt) means they don't. The plateau "+
+      "height is a Storey-style &pi;0 (the null fraction 1&minus;&pi;<sub>true</sub>); the curve rises where real hits begin."+
+      (hasRef?" The <b>p_target : p_decoy</b> line rides ~1 flat when the entrapment decoys are a faithful null, and "+
+        "slopes when they are not (e.g. generated decoys).":"")+
+      " This is a <b>marginal</b> check: a target-side score boost that leaves the decoy and entrapment marginals "+
+      "intact is invisible here &mdash; see the paired decoy-win fraction (Competition) for that."
     : "Not enough populated null-region bins on this run to measure the plateau tilt.";
 })();
 
@@ -706,6 +709,11 @@ if(D.fdpViews && D.fdpViews.length){
   });
 }
 function cls(v,q){return v==null?"":(v<=q*1.15?"good":v<=q*1.6?"warn":"bad");}
+// Flag a paired-coin fraction by its distance from a fair 50%, and a real-vs-
+// entrapment coin gap (ent - real) by how far the real coin has collapsed below
+// the entrapment ruler. Thresholds are report cues, not a calibrated alarm.
+function coinCls(v){v=Number(v);return isNaN(v)?"":(Math.abs(v-0.5)<=0.05?"good":Math.abs(v-0.5)<=0.15?"warn":"bad");}
+function gapCls(g){g=Number(g);return isNaN(g)?"":(g<=0.05?"good":g<=0.15?"warn":"bad");}
 
 // ---------- ID yield ----------
 if(D.idYield){const y=D.idYield;const W=680,Hh=300,box={l:60,t:14,w:W-78,h:Hh-56};
@@ -745,9 +753,24 @@ if(D.winFraction && D.winFraction.binCenters){
   items.push({name:"fair coin 50%",color:COL.muted,line:true});
   legend(document.getElementById("wfLegend"),items);
   draw();
-  document.getElementById("wfNote").innerHTML="Low-score null band ["+trim(w.nullBandLo)+", "+trim(w.nullBandHi)+"]:  real "+
-    pct(w.nullBandReal,1)+(w.hasEntrapment?"  ·  entrapment "+pct(w.nullBandEnt,1):"")+
-    ". An entrapment coin near 50% is the honest ruler; real pairs below it are native signal winning.";
+  // KPI: the null-band paired coin. A fair target-decoy competition sits at 50%.
+  // The REAL coin collapsing below the ENTRAPMENT coin is real targets beating
+  // their own decoys unfairly -- score inflation that marginal densities and the
+  // entrapment FDP both miss (the target-boost failure). Within-pair, not
+  // marginal: this competition view is the one thing that sees it.
+  (function(){const kp=document.getElementById("wfKpis");if(!kp)return;kp.innerHTML="";
+    const real=w.nullBandReal, ent=w.nullBandEnt;
+    kpi(kp,"real coin (null band)",pct(real,1),coinCls(real));
+    if(w.hasEntrapment){
+      kpi(kp,"entrapment coin (null band)",pct(ent,1),coinCls(ent));
+      const gap=(isFinite(Number(real))&&isFinite(Number(ent)))?Number(ent)-Number(real):NaN;
+      kpi(kp,"coin collapse (ent − real)",isFinite(gap)?pct(gap,1):"–",gapCls(gap));
+    }
+  })();
+  document.getElementById("wfNote").innerHTML="Low-score null band ["+trim(w.nullBandLo)+", "+trim(w.nullBandHi)+"]. "+
+    "A fair target–decoy competition sits at 50%. "+(w.hasEntrapment
+      ? "The entrapment coin is the honest ruler — it holds ~50% under any target-side effect; the <b>real coin collapsing below it</b> means real targets are beating their own decoys unfairly, i.e. score inflation that marginal densities and the entrapment FDP both miss (a target-score boost). This within-pair view is the one that sees it."
+      : "Without an entrapment library this is confounded by true positives, but a real coin well below 50% in the null band is still suspect.");
 }
 
 // ---------- summary ----------
