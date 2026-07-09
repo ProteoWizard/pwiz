@@ -297,5 +297,111 @@ namespace pwiz.Osprey.FDR
 
             return new FdrProjectionSet(perFile, peptideById);
         }
+
+        /// <summary>
+        /// Streaming builder that produces a byte-identical <see cref="FdrProjectionSet"/>
+        /// without ever materializing the fat <see cref="FdrEntry"/> stub buffer. The
+        /// 191M-row stub rematerialize (PerFileScoringTask) cost ~53 GB on an 82-file
+        /// Astral run purely to be converted here into 32 B rows; feeding parquet scalars
+        /// straight in drops that to ~6 GB.
+        ///
+        /// Parity invariant: <see cref="BuildFromEntries"/> assigns
+        /// <see cref="FdrProjection.PeptideId"/> as the Ordinal rank of the modified
+        /// sequence among the distinct set across ALL files. A streaming pass cannot know
+        /// that rank up front, so ids are assigned in INSERTION order while rows arrive and
+        /// remapped to the ordinal rank in <see cref="Build"/>. Row order, file order and
+        /// <see cref="FdrProjection.ParquetIndex"/> are unchanged, so the result is
+        /// element-for-element identical to <see cref="BuildFromEntries"/>.
+        ///
+        /// NOT thread-safe, by design: <see cref="FdrProjection.FileIdx"/> and the
+        /// per-file <see cref="FdrProjection.ParquetIndex"/> running counts are only
+        /// meaningful if files are added in a deterministic sequence. Callers must drive
+        /// BeginFile/AddRow/EndFile from a single thread (PerFileScoringTask does, after
+        /// its per-file scoring fan-out has already joined).
+        /// </summary>
+        public sealed class Builder
+        {
+            private readonly Dictionary<string, int> _insertionIdByPeptide =
+                new Dictionary<string, int>(StringComparer.Ordinal);
+            private readonly List<string> _distinctByInsertion = new List<string>();
+            private readonly List<KeyValuePair<string, List<FdrProjection>>> _perFile =
+                new List<KeyValuePair<string, List<FdrProjection>>>();
+            private List<FdrProjection> _rows;
+            private ushort _fileIdx;
+
+            /// <summary>
+            /// Open a file's row list. Files must be added in the same order the join
+            /// expects (the scoring order), which is what fixes <see cref="FdrProjection.FileIdx"/>.
+            /// </summary>
+            public void BeginFile(string fileName, int capacityHint = 0)
+            {
+                _rows = capacityHint > 0
+                    ? new List<FdrProjection>(capacityHint)
+                    : new List<FdrProjection>();
+                _perFile.Add(new KeyValuePair<string, List<FdrProjection>>(fileName, _rows));
+            }
+
+            /// <summary>
+            /// Append one parquet row of the open file. <see cref="FdrProjection.ParquetIndex"/>
+            /// is the running per-file row ordinal, matching
+            /// <c>LoadFdrStubsFromParquet</c>'s <c>ParquetIndex = stubs.Count</c>.
+            /// <see cref="FdrProjection.Score"/> stays 0 -- the FDR pass writes it back.
+            /// </summary>
+            public void AddRow(uint entryId, byte charge, bool isDecoy, double coelutionSum,
+                string modifiedSequence)
+            {
+                string modseq = modifiedSequence ?? string.Empty;
+                if (!_insertionIdByPeptide.TryGetValue(modseq, out int insertionId))
+                {
+                    insertionId = _distinctByInsertion.Count;
+                    _insertionIdByPeptide[modseq] = insertionId;
+                    _distinctByInsertion.Add(modseq);
+                }
+                _rows.Add(new FdrProjection(
+                    entryId, (uint)_rows.Count, insertionId, _fileIdx, charge, isDecoy,
+                    coelutionSum, 0.0));
+            }
+
+            /// <summary>Close the open file and advance <see cref="FdrProjection.FileIdx"/>.</summary>
+            public void EndFile()
+            {
+                _rows = null;
+                _fileIdx++;
+            }
+
+            /// <summary>
+            /// Sort the distinct peptides Ordinal, remap every row's insertion-order
+            /// <see cref="FdrProjection.PeptideId"/> to its ordinal rank, and return the set.
+            /// The remap table is one int per distinct peptide (~9 MB at 2.3M peptides).
+            /// </summary>
+            public FdrProjectionSet Build()
+            {
+                var peptideById = _distinctByInsertion.ToArray();
+                Array.Sort(peptideById, StringComparer.Ordinal); // Array.Sort OK: _distinctByInsertion is de-duplicated (grow-only via _insertionIdByPeptide), no two strings are equal, so the Ordinal comparer never ties -- the same argument BuildFromEntries makes for its List.Sort.
+
+                var ordinalIdByPeptide =
+                    new Dictionary<string, int>(peptideById.Length, StringComparer.Ordinal);
+                for (int id = 0; id < peptideById.Length; id++)
+                    ordinalIdByPeptide[peptideById[id]] = id;
+
+                var remap = new int[_distinctByInsertion.Count];
+                for (int insertionId = 0; insertionId < remap.Length; insertionId++)
+                    remap[insertionId] = ordinalIdByPeptide[_distinctByInsertion[insertionId]];
+
+                foreach (var kvp in _perFile)
+                {
+                    var rows = kvp.Value;
+                    for (int i = 0; i < rows.Count; i++)
+                    {
+                        var r = rows[i];
+                        rows[i] = new FdrProjection(
+                            r.EntryId, r.ParquetIndex, remap[r.PeptideId], r.FileIdx,
+                            r.Charge, r.IsDecoy, r.CoelutionSum, r.Score);
+                    }
+                }
+
+                return new FdrProjectionSet(_perFile, peptideById);
+            }
+        }
     }
 }

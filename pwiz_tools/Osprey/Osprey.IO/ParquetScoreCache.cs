@@ -772,6 +772,58 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
+        /// single <see cref="FdrEntry"/>. Reads exactly the five columns the first-pass
+        /// FdrProjection needs -- entry_id, charge, is_decoy, coelution_sum,
+        /// modified_sequence -- and invokes <paramref name="onRow"/> once per row in the
+        /// same order as <see cref="LoadFdrStubsFromParquet"/>, applying the identical
+        /// "skip this row group when entry_id/is_decoy are absent" rule. The caller's
+        /// running row count therefore equals that method's <c>ParquetIndex</c>.
+        ///
+        /// Exists because rematerializing the whole 191M-row stub buffer just to convert it
+        /// into 32 B projection rows cost ~53 GB on an 82-file Astral run. Osprey.IO must
+        /// not depend on Osprey.FDR, so the projection row is assembled by the caller from
+        /// these scalars rather than returned from here.
+        /// </summary>
+        public static void ReadFdrStubScalars(string path,
+            Action<uint, byte, bool, double, string> onRow)
+        {
+            if (onRow == null)
+                throw new ArgumentNullException(nameof(onRow));
+
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                        var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
+                        var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+                        var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
+                        var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
+
+                        if (entryIdCol == null || isDecoyCol == null)
+                            continue;
+
+                        int rowCount = entryIdCol.Length;
+                        for (int row = 0; row < rowCount; row++)
+                        {
+                            onRow(
+                                entryIdCol[row],
+                                chargeCol != null ? chargeCol[row] : (byte)0,
+                                isDecoyCol[row],
+                                coelutionCol != null ? coelutionCol[row] : 0.0,
+                                modseqCol != null ? modseqCol[row] : string.Empty);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Load only the <c>cwt_candidates</c> column from a Parquet cache,
         /// returning one <see cref="CwtCandidate"/> list per row in the same
         /// order as <see cref="LoadFdrStubsFromParquet"/>. Used by Stage 6
