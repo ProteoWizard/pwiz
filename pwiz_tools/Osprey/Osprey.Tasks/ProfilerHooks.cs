@@ -139,5 +139,25 @@ namespace pwiz.Osprey.Tasks
             if (MemoryLoggingEnabled)
                 LogMemoryStats(log, label);
         }
+
+        /// <summary>
+        /// Force a full blocking collection, then log the resulting PERSISTENT managed
+        /// heap size -- the post-GC floor with transient garbage reclaimed -- as a
+        /// <c>[MEM {label}]</c> line. Guarded by <see cref="MemoryLoggingEnabled"/> so it
+        /// is a zero-cost no-op INCLUDING the collection on ordinary runs.
+        /// <paramref name="detail"/> is appended verbatim for run context (e.g.
+        /// <c>"(files=82, file_parallelism=1)"</c>).
+        /// </summary>
+        public static void LogManagedHeapAfterGcIfEnabled(Action<string> log, string label, string detail)
+        {
+            if (!MemoryLoggingEnabled || log == null)
+                return;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            log(string.Format(CultureInfo.InvariantCulture,
+                "[MEM {0}] managed_heap={1:F2} GB {2}",
+                label, GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail));
+        }
     }
 }
