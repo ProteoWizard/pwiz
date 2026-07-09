@@ -1633,18 +1633,52 @@ namespace pwiz.Osprey.Tasks
             else
             {
                 var stats = rtCalibration.Stats();
-                double finalHalfWidth = RTCalibration.SearchWindowHalfWidth(
+                double rawTolerance = RTCalibration.SearchWindowRaw(stats.MAD);
+                double finalTolerance = RTCalibration.SearchWindowHalfWidth(
                     stats.MAD, config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance);
-                ctx.LogInfo(string.Format(ic,
-                    "  RT window: {0:F2} min before -> {1:F2} min (+/-) search half-width after calibration",
-                    initialRtTolerance, finalHalfWidth));
+                string beforeStr = initialRtTolerance.ToString("F2", ic);
+                string rawStr = rawTolerance.ToString("F2", ic);
+                string finalStr = finalTolerance.ToString("F2", ic);
+                string rtToleranceLine;
+                if (double.IsNaN(finalTolerance))
+                {
+                    // Degenerate calibration (e.g. NaN MAD): no usable spread to report.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> undetermined after calibration (no usable RT spread)",
+                        beforeStr);
+                }
+                else if (rawStr == finalStr)
+                {
+                    // In range, or a clamp too small to show at this precision: a single
+                    // value is unambiguous, so skip the computed-vs-clamp call-out.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min after calibration",
+                        beforeStr, finalStr);
+                }
+                else if (finalTolerance > rawTolerance)
+                {
+                    // The computed 3*MAD*1.4826 was tighter than the floor: show the
+                    // computed tolerance and the floor actually in use.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration",
+                        beforeStr, rawStr, finalStr);
+                }
+                else
+                {
+                    // finalTolerance < rawTolerance: the computed value exceeded the
+                    // ceiling, so show the computed tolerance and the cap in use.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration",
+                        beforeStr, rawStr, finalStr);
+                }
+                ctx.LogInfo(rtToleranceLine);
                 ctx.LogInfo(string.Format(ic,
                     "  RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3} points",
                     stats.MAD, stats.ResidualSD, stats.RSquared, stats.NPoints));
             }
 
-            EmitMassCalibrationLine(ctx, "MS1", ms1Cal);
-            EmitMassCalibrationLine(ctx, "MS2", ms2Cal);
+            EmitMassCalibrationLine(ctx, "MS1", "precursor", ms1Cal);
+            EmitMassCalibrationLine(ctx, "MS2", "fragment", ms2Cal);
         }
 
         /// <summary>
@@ -1654,7 +1688,7 @@ namespace pwiz.Osprey.Tasks
         /// when the level had no usable errors.
         /// </summary>
         private static void EmitMassCalibrationLine(
-            PipelineContext ctx, string level, MzCalibrationResult cal)
+            PipelineContext ctx, string level, string matchNoun, MzCalibrationResult cal)
         {
             var ic = CultureInfo.InvariantCulture;
             if (cal == null || !cal.Calibrated)
@@ -1664,8 +1698,8 @@ namespace pwiz.Osprey.Tasks
             }
             double tolerance = cal.AdjustedTolerance ?? (Math.Abs(cal.Mean) + 3.0 * cal.SD);
             ctx.LogInfo(string.Format(ic,
-                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} ({5} errors)",
-                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count));
+                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5} {6} matches)",
+                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count, matchNoun));
         }
 
         /// <summary>
