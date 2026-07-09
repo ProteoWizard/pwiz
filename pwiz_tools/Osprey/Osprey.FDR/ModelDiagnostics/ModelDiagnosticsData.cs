@@ -772,17 +772,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 return data;   // no target/decoy mass to divide: ratio lines only
 
             // Null region = the null-dominated lower portion of the decoy (null)
-            // distribution (up to NullRegionDecoyQuantile), where true target hits
-            // are negligible -- they sit at high scores. Fitting only this range
-            // isolates the FLAT plateau Storey's check reads and excludes the
-            // true-hit "shoulder" (the rise a target/decoy crossover would let in:
-            // the crossover lands only after the target has accumulated its true-hit
-            // mass, well past where the ratio departs its plateau). The crossover
-            // onset still caps it as a safety for a degenerate target~decoy
+            // distribution -- bins up to and including the NullRegionDecoyQuantile
+            // bin, where true target hits are negligible (they sit at high scores).
+            // Fitting only this range isolates the FLAT plateau Storey's check reads
+            // and excludes the true-hit "shoulder" (the rise a target/decoy crossover
+            // would let in: the crossover lands only after the target has accumulated
+            // its true-hit mass, well past where the ratio departs its plateau). The
+            // true-hit onset still caps it as a safety for a degenerate target~decoy
             // separation (onset fires at bin 0 -> empty region -> "cannot assess").
-            // Both bounds are exclusive (the fit loop below runs over [0, hi)).
             int onset = TrueHitOnset(h.Target, h.Decoy, nb);
-            int hi = Math.Min(onset, DecoyQuantileBin(h.Decoy, nb, NullRegionDecoyQuantile));
+            // hi is the exclusive end of the [0, hi) fit loop below: the +1 includes
+            // the decoy-quantile bin itself (still null-dominated), while the onset
+            // bin (the first true-hit bin) stays excluded.
+            int hi = Math.Min(onset, DecoyQuantileBin(h.Decoy, nb, NullRegionDecoyQuantile) + 1);
 
             var xs = new List<double>();
             var ys = new List<double>();

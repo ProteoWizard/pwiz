@@ -607,9 +607,9 @@ function ratioFmt(v){return v>=1?(+v.toFixed(v<10?1:0)).toString():(+v.toFixed(2
   legend(document.getElementById("ratioLegend"),items);
   draw();
   const kp=document.getElementById("ratioKpis");kp.innerHTML="";
-  kpi(kp,"null-plateau tilt (T:D)",fmt(dr.flatnessSlope,2),"");
+  kpi(kp,"null-plateau tilt (target:decoy)",fmt(dr.flatnessSlope,2),"");
   kpi(kp,"plateau height (pi0)",fmt(dr.plateauRatio,2),"");
-  if(hasRef)kpi(kp,"reference tilt (P:Pd)",fmt(dr.refFlatnessSlope,2),"");
+  if(hasRef)kpi(kp,"reference tilt (p_target:p_decoy)",fmt(dr.refFlatnessSlope,2),"");
   kpi(kp,"null-region bins",fmt(dr.nullRegionBins,0),"");
   const slope=num(dr.flatnessSlope);
   document.getElementById("ratioNote").innerHTML= isFinite(slope)
