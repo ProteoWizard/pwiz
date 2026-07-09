@@ -345,9 +345,22 @@ public sealed class MzxmlReader
             }
         }
 
-        if (TryGetDoubleAttr(reader, "startMz", out double startMz)
-            && TryGetDoubleAttr(reader, "endMz", out double endMz)
-            && endMz > 0)
+        // Scan window: prefer the instrument scan range (startMz/endMz); when those
+        // attributes are omitted, fall back to the observed m/z range (lowMz/highMz).
+        // cpp parity - SpectrumList_mzXML.cpp:483-490:
+        //   if (endMz <= 0) { getAttribute("lowMz", startMz); getAttribute("highMz", endMz); }
+        //   if (endMz > 0) scan.scanWindows.push_back(ScanWindow(startMz, endMz, MS_m_z));
+        // Agilent GC-EI mzXML (ProteoWizard conversion) omits startMz/endMz but carries
+        // lowMz/highMz; Skyline synthesizes the all-ions MS1 isolation window from this scan
+        // window (via SimAsSpectra), so without the fallback EI extraction produces no data.
+        TryGetDoubleAttr(reader, "startMz", out double startMz);
+        TryGetDoubleAttr(reader, "endMz", out double endMz);
+        if (endMz <= 0)
+        {
+            TryGetDoubleAttr(reader, "lowMz", out startMz);
+            TryGetDoubleAttr(reader, "highMz", out endMz);
+        }
+        if (endMz > 0)
         {
             scanEl.ScanWindows.Add(new ScanWindow(startMz, endMz, CVID.MS_m_z));
         }
