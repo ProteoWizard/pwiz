@@ -193,6 +193,19 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="legend" id="densLegend"></div>
     <div class="chartbox" id="densChart"></div>
   </div>
+  <div class="card" id="ratioCard">
+    <h2>Null-alignment density ratio (non-parametric)</h2>
+    <p class="desc">The per-class score densities above, divided: <b>target : decoy</b> (the diagnostic) and,
+      when entrapment is present, <b>p_target : p_decoy</b> (a matched-null reference). On a fair (equal-chance)
+      pairing the target:decoy line rides a <b>flat</b> plateau across the null-dominated left side, then rises
+      where real hits begin; a <b>sloping</b> left side means the decoys don't track the false-target null &mdash;
+      an equal-chance / decoy-quality violation, visible with <b>no parametric fit</b> (unlike the decoy-normal
+      overlay, which misfits skewed decoys). Storey's original check.</p>
+    <div class="kpis" id="ratioKpis"></div>
+    <div class="legend" id="ratioLegend"></div>
+    <div class="chartbox" id="ratioChart"></div>
+    <p class="note" id="ratioNote"></p>
+  </div>
 </section>
 
 <section class="tab" data-tab="fdr">
@@ -525,6 +538,87 @@ function classHist(H0,hostId,legId,normalize){
 }
 renderModel(MODEL_PASSES[0]);   // Model tab: table + composite for pass 1 (default)
 classHist(D.scores,"densChart","densLegend",true);   // Density tab: pass-1 composite density
+
+// ---------- Density tab: non-parametric null-alignment density ratio ----------
+// Storey's original check: divide the per-class densities. target:decoy is the
+// diagnostic (flat null plateau = decoys track the false-target null; a sloping
+// left side = they don't); p_target:p_decoy is the matched-null reference (~1).
+// Log-y so the flat plateau and any tilt read clearly against the ratio=1 line.
+function logTicks(lo,hi){const out=[];const k0=Math.floor(Math.log10(lo)),k1=Math.ceil(Math.log10(hi));
+  for(let k=k0;k<=k1;k++)[1,2,5].forEach(m=>{const v=m*Math.pow(10,k);if(v>=lo&&v<=hi)out.push(v);});return out;}
+function ratioFmt(v){return v>=1?(+v.toFixed(v<10?1:0)).toString():(+v.toFixed(2)).toString();}
+(function(){
+  const dr=D.densityRatio, card=document.getElementById("ratioCard");
+  const num=v=>Number(v);
+  if(!dr||!dr.binCenters||!dr.targetDecoy){if(card)card.style.display="none";return;}
+  const cx=dr.binCenters, nb=cx.length;
+  const hasRef=!!(dr.hasEntrapment && dr.pTargetPDecoy);
+  const series=[{k:"td",name:"target : decoy",color:COL.accent,v:dr.targetDecoy}];
+  if(hasRef)series.push({k:"pp",name:"p_target : p_decoy (matched null)",color:COL.ptarget,v:dr.pTargetPDecoy});
+  const off={td:false,pp:false};
+  // Log-y range from finite positive ratios (robust percentiles so a sparse-tail
+  // spike can't blow out the axis), always bracketing the ratio=1 reference.
+  const vals=[];series.forEach(s=>s.v.forEach(v=>{const n=num(v);if(isFinite(n)&&n>0)vals.push(n);}));
+  if(vals.length<2){if(card)card.style.display="none";return;}
+  vals.sort((a,b)=>a-b);
+  const q=p=>vals[Math.min(vals.length-1,Math.max(0,Math.floor(p*(vals.length-1))))];
+  let ylo=Math.min(q(0.02),0.8), yhi=Math.max(q(0.98),1.25); ylo/=1.6; yhi*=1.6;
+  const lylo=Math.log10(ylo), lyhi=Math.log10(yhi);
+  const xd=[cx[0],cx[nb-1]];
+  const W=680,Hh=340,box={l:56,t:16,w:W-74,h:Hh-62};
+  const host=document.getElementById("ratioChart");
+  const X=v=>box.l+(v-xd[0])/((xd[1]-xd[0])||1)*box.w;
+  const Y=v=>box.t+box.h-(Math.log10(v)-lylo)/((lyhi-lylo)||1)*box.h;
+  const nlo=num(dr.nullRegionLo), nhi=num(dr.nullRegionHi), pl=num(dr.plateauRatio);
+  function draw(){
+    host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
+    const g=E(s,"g",{class:"grid"}),a=E(s,"g",{class:"axis"});
+    logTicks(ylo,yhi).forEach(v=>{E(g,"line",{x1:box.l,x2:box.l+box.w,y1:Y(v),y2:Y(v)});
+      E(a,"text",{x:box.l-7,y:Y(v)+3,"text-anchor":"end"}).textContent=ratioFmt(v);});
+    ticks(xd[0],xd[1],6).forEach(v=>E(a,"text",{x:X(v),y:box.t+box.h+15,"text-anchor":"middle"}).textContent=trim(v));
+    E(a,"line",{x1:box.l,x2:box.l+box.w,y1:box.t+box.h,y2:box.t+box.h});
+    E(a,"line",{x1:box.l,x2:box.l,y1:box.t,y2:box.t+box.h});
+    E(s,"text",{class:"axtitle",x:box.l+box.w/2,y:box.t+box.h+32,"text-anchor":"middle"}).textContent="composite score";
+    E(s,"text",{class:"axtitle",x:14,y:box.t+box.h/2,"text-anchor":"middle",transform:"rotate(-90 14 "+(box.t+box.h/2)+")"}).textContent="density ratio (log)";
+    // null-region shading, the ratio=1 reference, and the plateau (pi0) level
+    if(isFinite(nlo)&&isFinite(nhi)&&nhi>nlo)
+      E(s,"rect",{x:X(nlo),y:box.t,width:Math.max(0,X(nhi)-X(nlo)),height:box.h,fill:COL.muted,opacity:.07});
+    if(1>=ylo&&1<=yhi)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:Y(1),y2:Y(1),stroke:COL.muted,"stroke-dasharray":"4 4","stroke-width":1});
+    if(isFinite(pl)&&pl>=ylo&&pl<=yhi)
+      E(s,"line",{x1:X(isFinite(nlo)?nlo:xd[0]),x2:X(isFinite(nhi)?nhi:xd[1]),y1:Y(pl),y2:Y(pl),stroke:COL.accent,"stroke-dasharray":"2 3","stroke-width":1,opacity:.6});
+    series.forEach(se=>{if(off[se.k])return;let path="",started=false;
+      for(let i=0;i<nb;i++){const v=num(se.v[i]);
+        if(!isFinite(v)||v<=0){started=false;continue;}
+        const yy=Y(Math.min(yhi,Math.max(ylo,v))),xx=X(cx[i]);
+        path+=(started?"L":"M")+xx.toFixed(1)+" "+yy.toFixed(1)+" ";started=true;}
+      E(s,"path",{d:path,fill:"none",stroke:se.color,"stroke-width":1.8,"stroke-linejoin":"round"});});
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+      const px=(ev.clientX-rb.left)/rb.width*W;const bi=Math.min(nb-1,Math.max(0,Math.round((px-box.l)/box.w*(nb-1))));
+      let html="<b>score "+trim(cx[bi])+"</b>";
+      series.forEach(se=>{if(off[se.k])return;const v=num(se.v[bi]);
+        html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+(isFinite(v)?fmt(v,2):"–");});
+      showTip(ev,html);});
+    ov.addEventListener("mouseleave",hideTip);
+  }
+  const items=series.map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;draw();}}));
+  items.push({name:"ratio = 1",color:COL.muted,line:true});
+  legend(document.getElementById("ratioLegend"),items);
+  draw();
+  const kp=document.getElementById("ratioKpis");kp.innerHTML="";
+  kpi(kp,"null-plateau tilt (T:D)",fmt(dr.flatnessSlope,2),"");
+  kpi(kp,"plateau height (pi0)",fmt(dr.plateauRatio,2),"");
+  if(hasRef)kpi(kp,"reference tilt (P:Pd)",fmt(dr.refFlatnessSlope,2),"");
+  kpi(kp,"null-region bins",fmt(dr.nullRegionBins,0),"");
+  const slope=num(dr.flatnessSlope);
+  document.getElementById("ratioNote").innerHTML= isFinite(slope)
+    ? "Read the shaded null region on the left: a <b>flat</b> target:decoy plateau (tilt near 0) means the decoys "+
+      "track the false-target null; a <b>sloping</b> left side (large tilt) means they don't. The plateau height "+
+      "is a Storey-style &pi;0 (the null fraction 1&minus;&pi;<sub>true</sub>); the curve rises where real hits begin."+
+      (hasRef?" The <b>p_target : p_decoy</b> line (both pure null) is the matched-null reference &mdash; it rides "+
+        "~1 flat, showing what a faithful pairing looks like on this run.":"")
+    : "Not enough populated null-region bins on this run to measure the plateau tilt.";
+})();
 
 // ---------- FDR calibration (multiple q-scope / pass views) ----------
 if(D.fdpViews && D.fdpViews.length){

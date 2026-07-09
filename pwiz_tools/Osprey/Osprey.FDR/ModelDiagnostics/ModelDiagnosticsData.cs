@@ -98,6 +98,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public double[] FeatureHistEdges { get; set; }
         public ScoreHistogram Scores { get; set; }
         /// <summary>
+        /// Non-parametric null-alignment ratios (Storey-style) derived from
+        /// <see cref="Scores"/>: the per-class score-density ratios target:decoy
+        /// and (when entrapment is present) p_target:p_decoy, plus a left-side
+        /// flatness KPI. Null when there is no score histogram to divide.
+        /// </summary>
+        public DensityRatioData DensityRatio { get; set; }
+        /// <summary>
         /// The FDR-calibration views the report offers. Each pairs an Osprey
         /// q-value axis (run- vs experiment-scope precursor q, at pass 1 or 2)
         /// with the entrapment FDP estimators. The experiment-scope views
@@ -162,6 +169,66 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public double DecoyMean { get; set; }
             public double DecoyStd { get; set; }
             public long DecoyN { get; set; }
+        }
+
+        /// <summary>
+        /// Non-parametric null-alignment ratios and the left-side flatness KPI,
+        /// derived from a <see cref="ScoreHistogram"/>'s per-class count arrays
+        /// (the Storey-style check). Each class density integrates to 1, so the
+        /// ratio lines are pure shape comparisons on a unit scale. Companion to
+        /// the decoy-normal overlay, but with no parametric fit: a decoy that
+        /// tracks the false-target null rides a flat plateau on the null-dominated
+        /// left; one that mistracks makes the target:decoy left side slope.
+        /// </summary>
+        public sealed class DensityRatioData
+        {
+            /// <summary>Score bin centers (the shared x for both ratio lines).</summary>
+            public double[] BinCenters { get; set; }
+            /// <summary>
+            /// target:decoy density ratio per bin -- the diagnostic line. NaN in
+            /// bins empty on either side. Flat on the null-dominated left at the
+            /// null fraction pi0 (&lt; 1; the target carries the true-hit mass),
+            /// then rises where real hits begin.
+            /// </summary>
+            public double[] TargetDecoy { get; set; }
+            /// <summary>
+            /// p_target:p_decoy density ratio per bin -- the matched-null reference
+            /// line, or null when there is no entrapment. Both classes are pure
+            /// null, so it rides ~1 flat throughout: "what a matched null pair
+            /// looks like."
+            /// </summary>
+            public double[] PTargetPDecoy { get; set; }
+            /// <summary>Lower score bound of the null region the flatness KPI was fit over (NaN if unmeasured).</summary>
+            public double NullRegionLo { get; set; }
+            /// <summary>Upper score bound of the null region the flatness KPI was fit over (NaN if unmeasured).</summary>
+            public double NullRegionHi { get; set; }
+            /// <summary>Number of bins that fed the target:decoy flatness fit.</summary>
+            public int NullRegionBins { get; set; }
+            /// <summary>
+            /// Headline KPI: the tilt of the target:decoy plateau across the null
+            /// region -- the weighted least-squares slope of ln(target:decoy)
+            /// against a null-region-normalized score in [0, 1]. ~0 = flat (decoys
+            /// track the false-target null); a large magnitude means the left side
+            /// slopes (a decoy-quality / equal-chance violation), caught with no
+            /// parametric fit. NaN when the null region has too little support to
+            /// assess.
+            /// </summary>
+            public double FlatnessSlope { get; set; }
+            /// <summary>
+            /// Bonus Storey read: the left-plateau height of target:decoy (the
+            /// weighted geometric-mean ratio over the null region) ~ pi0 = 1 -
+            /// true-hit fraction. NaN when unmeasured.
+            /// </summary>
+            public double PlateauRatio { get; set; }
+            /// <summary>
+            /// The reference line's flatness (slope of ln(p_target:p_decoy) over
+            /// the same null window) -- expected ~0 since both are pure null. NaN
+            /// with no entrapment or insufficient support. A same-run "what flat
+            /// looks like" baseline for <see cref="FlatnessSlope"/>.
+            /// </summary>
+            public double RefFlatnessSlope { get; set; }
+            /// <summary>True when the p_target:p_decoy reference line is present (an entrapment run).</summary>
+            public bool HasEntrapment { get; set; }
         }
 
         /// <summary>
@@ -354,6 +421,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
             // ---- score histogram + decoy normal fit ----
             data.Scores = BuildScoreHistogram(precs);
+
+            // ---- non-parametric null-alignment density ratios + flatness KPI ----
+            // Divides the per-class density arrays already reduced above; no new
+            // binning pass. Pass 1 only (the Density tab shows the pass-1 densities).
+            data.DensityRatio = BuildDensityRatio(data.Scores, data.HasEntrapment);
 
             // ---- id-yield curve (accepted targets vs q) ----
             data.IdYield = BuildIdYield(precs);
@@ -645,6 +717,208 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 h.DecoyN = dN;
             }
             return h;
+        }
+
+        // Minimum usable bins the flatness fit needs before it will report a KPI
+        // (below this the null region is too sparse to assess -> NaN "cannot assess").
+        private const int MinNullRegionBins = 4;
+
+        /// <summary>
+        /// Build the non-parametric null-alignment density ratios and the
+        /// left-side flatness KPI from a best-per-precursor
+        /// <see cref="ScoreHistogram"/>. Each per-class count array is
+        /// area-normalized to a unit-mass density, then two ratio lines are
+        /// formed -- target:decoy (the diagnostic, Mike's Storey check) and, when
+        /// entrapment is present, p_target:p_decoy (the matched-null reference).
+        /// The flatness KPI is the weighted slope of ln(target:decoy) across the
+        /// null-dominated left region: ~0 when the decoys track the false-target
+        /// null, large when they mistrack -- with no parametric fit. Pure function
+        /// over the histogram (shared by <see cref="Build"/> and unit-tested
+        /// directly); returns null when there is no histogram to divide.
+        /// </summary>
+        public static DensityRatioData BuildDensityRatio(ScoreHistogram h, bool hasEntrapment)
+        {
+            if (h?.BinEdges == null || h.BinEdges.Length < 3)
+                return null;   // need at least two bins to form a ratio line
+            int nb = h.BinEdges.Length - 1;
+            var centers = new double[nb];
+            for (int i = 0; i < nb; i++)
+                centers[i] = 0.5 * (h.BinEdges[i] + h.BinEdges[i + 1]);
+
+            double[] td = DensityRatioSeries(h.Target, h.Decoy, nb);
+            double[] pp = hasEntrapment ? DensityRatioSeries(h.PTarget, h.PDecoy, nb) : null;
+
+            var data = new DensityRatioData
+            {
+                BinCenters = centers,
+                TargetDecoy = td,
+                PTargetPDecoy = pp,
+                HasEntrapment = pp != null,
+                NullRegionLo = double.NaN,
+                NullRegionHi = double.NaN,
+                FlatnessSlope = double.NaN,
+                PlateauRatio = double.NaN,
+                RefFlatnessSlope = double.NaN,
+            };
+            if (td == null)
+                return data;   // no target/decoy mass to divide: ratio lines only
+
+            // Null region: usable left bins (both classes populated) up to the
+            // true-hit onset -- the first bin where the target density sustainedly
+            // meets/exceeds the decoy density (real hits arriving). Capped at the
+            // decoy 95th percentile so a degenerate never-crossing case still
+            // bounds the fit to well-populated bins.
+            int onset = TrueHitOnset(h.Target, h.Decoy, nb);
+            int hi = Math.Min(onset, DecoyQuantileBin(h.Decoy, nb, 0.95));
+
+            var xs = new List<double>();
+            var ys = new List<double>();
+            var ws = new List<double>();
+            for (int i = 0; i < hi; i++)
+                AddFitBin(centers, td, h.Target, h.Decoy, i, xs, ys, ws);
+            if (xs.Count < MinNullRegionBins)
+                return data;   // insufficient null support to assess flatness
+
+            double loScore = xs[0], hiScore = xs[xs.Count - 1];
+            data.NullRegionLo = loScore;
+            data.NullRegionHi = hiScore;
+            data.NullRegionBins = xs.Count;
+            WeightedLogFit(xs, ys, ws, loScore, hiScore, out double slope, out double meanLog);
+            data.FlatnessSlope = slope;
+            data.PlateauRatio = Math.Exp(meanLog);   // weighted geometric-mean ratio ~ pi0
+
+            // Reference line's flatness over the SAME score window, for an
+            // apples-to-apples "what flat looks like" baseline (both p_target and
+            // p_decoy are pure null -> ~0).
+            if (pp != null)
+            {
+                var rxs = new List<double>();
+                var rys = new List<double>();
+                var rws = new List<double>();
+                for (int i = 0; i < nb; i++)
+                {
+                    if (centers[i] < loScore || centers[i] > hiScore)
+                        continue;
+                    AddFitBin(centers, pp, h.PTarget, h.PDecoy, i, rxs, rys, rws);
+                }
+                if (rxs.Count >= MinNullRegionBins)
+                {
+                    WeightedLogFit(rxs, rys, rws, loScore, hiScore, out double rslope, out _);
+                    data.RefFlatnessSlope = rslope;
+                }
+            }
+            return data;
+        }
+
+        // Form one density-ratio line num:den over nb bins:
+        // (num_i / sum(num)) / (den_i / sum(den)). Each class is area-normalized to
+        // unit mass first, so the ratio is a pure shape comparison. NaN where a bin
+        // is empty on either side (a gap the plot skips and the fit excludes) --
+        // never +/-Infinity, which the HTML's JS isNaN() guard would let through.
+        // Null when either class has no mass at all.
+        private static double[] DensityRatioSeries(int[] num, int[] den, int nb)
+        {
+            if (num == null || den == null)
+                return null;
+            long sumN = 0, sumD = 0;
+            for (int i = 0; i < nb; i++) { sumN += num[i]; sumD += den[i]; }
+            if (sumN == 0 || sumD == 0)
+                return null;
+            var r = new double[nb];
+            for (int i = 0; i < nb; i++)
+                r[i] = num[i] <= 0 || den[i] <= 0
+                    ? double.NaN
+                    : ((double)num[i] / sumN) / ((double)den[i] / sumD);
+            return r;
+        }
+
+        // Accumulate one bin into a weighted-log-fit sample set when both classes
+        // are populated (ratio finite and loggable). x = score center, y = ln(ratio),
+        // weight = num*den/(num+den): the inverse of the log-ratio's variance
+        // (~ 1/num + 1/den by the delta method), so sparse bins count for less.
+        private static void AddFitBin(double[] centers, double[] ratio, int[] num, int[] den,
+            int i, List<double> xs, List<double> ys, List<double> ws)
+        {
+            if (num[i] < 1 || den[i] < 1)
+                return;
+            xs.Add(centers[i]);
+            ys.Add(Math.Log(ratio[i]));
+            ws.Add((double)num[i] * den[i] / (num[i] + den[i]));
+        }
+
+        // The true-hit onset: the first bin at which the target density rises to
+        // meet or exceed the decoy density and STAYS there (the next usable bin is
+        // also at/above) -- i.e. where real hits begin to dominate the shared null.
+        // Below it, target:decoy sits on its null plateau (at pi0 < 1). Returns nb
+        // when no sustained crossover exists (a degenerate target~decoy separation),
+        // leaving the decoy-quantile cap to bound the fit. Densities are compared by
+        // cross-multiplication (target_i/sumT >= decoy_i/sumD) to avoid recomputing sums.
+        private static int TrueHitOnset(int[] target, int[] decoy, int nb)
+        {
+            long sumT = 0, sumD = 0;
+            for (int i = 0; i < nb; i++) { sumT += target[i]; sumD += decoy[i]; }
+            if (sumT == 0 || sumD == 0)
+                return nb;
+            for (int i = 0; i < nb; i++)
+            {
+                if (target[i] < 1 || decoy[i] < 1 || !AtOrAbove(target[i], decoy[i], sumT, sumD))
+                    continue;
+                int j = i + 1;
+                while (j < nb && (target[j] < 1 || decoy[j] < 1))
+                    j++;
+                if (j >= nb || AtOrAbove(target[j], decoy[j], sumT, sumD))
+                    return i;
+            }
+            return nb;
+        }
+
+        // target_i/sumT >= decoy_i/sumD, cross-multiplied (all non-negative).
+        private static bool AtOrAbove(int target, int decoy, long sumT, long sumD)
+        {
+            return (double)target * sumD >= (double)decoy * sumT;
+        }
+
+        // The bin index at the given quantile of the decoy score distribution (by
+        // decoy count) -- used to cap the null-region fit to well-populated bins
+        // when no true-hit onset is found. Returns nb-1 as a safe upper bound if
+        // decoys are empty.
+        private static int DecoyQuantileBin(int[] decoy, int nb, double q)
+        {
+            long total = 0;
+            for (int i = 0; i < nb; i++) total += decoy[i];
+            if (total == 0)
+                return nb - 1;
+            long threshold = (long)Math.Ceiling(q * total);
+            long cum = 0;
+            for (int i = 0; i < nb; i++)
+            {
+                cum += decoy[i];
+                if (cum >= threshold)
+                    return i;
+            }
+            return nb - 1;
+        }
+
+        // Weighted least-squares slope of y = ln(ratio) against an x normalized to
+        // [0, 1] across [loScore, hiScore], plus the weighted mean of y. The [0, 1]
+        // normalization makes the slope a scale-free "e-folds of drift across the
+        // null plateau" (0 = perfectly flat), comparable across runs regardless of
+        // the composite score's units. meanLog exponentiates to the weighted
+        // geometric-mean ratio (~ pi0). slope is NaN for a degenerate (single-x) fit.
+        private static void WeightedLogFit(List<double> xs, List<double> ys, List<double> ws,
+            double loScore, double hiScore, out double slope, out double meanLog)
+        {
+            double span = hiScore - loScore;
+            double sw = 0, swx = 0, swy = 0, swxx = 0, swxy = 0;
+            for (int i = 0; i < xs.Count; i++)
+            {
+                double x = span > 0 ? (xs[i] - loScore) / span : 0.0;
+                double y = ys[i], w = ws[i];
+                sw += w; swx += w * x; swy += w * y; swxx += w * x * x; swxy += w * x * y;
+            }
+            meanLog = sw > 0 ? swy / sw : double.NaN;
+            double denom = sw * swxx - swx * swx;
+            slope = Math.Abs(denom) > 1e-12 ? (sw * swxy - swx * swy) / denom : double.NaN;
         }
 
         private static IdYieldData BuildIdYield(List<Prec> precs)
