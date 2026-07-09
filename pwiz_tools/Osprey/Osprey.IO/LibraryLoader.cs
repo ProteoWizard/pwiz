@@ -86,6 +86,7 @@ namespace pwiz.Osprey.IO
                         logInfo(string.Format(
                             "Loaded {0} library entries from cache '{1}'",
                             cached.Count, cachePath));
+                        LibraryStringInterner.InternInPlace(cached, logInfo);
                         return cached;
                     }
                     if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
@@ -143,6 +144,11 @@ namespace pwiz.Osprey.IO
             {
                 logWarning(string.Format("Failed to save library cache: {0}", ex.Message));
             }
+
+            // Intern after the cache is written (the cache bytes are identical
+            // either way) so the resident set shares one instance per distinct
+            // string.
+            LibraryStringInterner.InternInPlace(entries, logInfo);
 
             return entries;
         }

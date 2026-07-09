@@ -528,6 +528,13 @@ namespace pwiz.Osprey.Tasks
                 JoinFileStems = joinFileStems,
             };
 
+            // Clean PERSISTENT floor entering reconciliation (post-GC, before the
+            // rescore loop repopulates the heavy per-entry arrays) -- fires early,
+            // so it lands even if a long run is later killed. #4376.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation start (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"reconciliation-floor",
+                string.Format(@"(post-GC, entering rescore, files={0})", perFileEntries.Count));
+
             int nTotalFiles = perFileEntries.Count;
             // The Stage 6 rescore is the "second per-file fan-out": each file's rescore
             // is independent (its own entry list + its own .scores-reconciled.parquet),
@@ -575,6 +582,15 @@ namespace pwiz.Osprey.Tasks
                             inputs, ctx);
                 });
             }
+
+            // Reconciliation memory probe (#4376). The pre-GC snapshot's peak
+            // working set reflects the transient in-loop peak (parallelism x the
+            // per-file ~1.5 GB spectra + parquet reload); the forced-GC line is the
+            // clean PERSISTENT managed heap (all files' rescored FdrEntry buffer +
+            // library). Zero-cost when OSPREY_LOG_MEMORY is unset.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation end (pre-GC)");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"reconciliation-resident",
+                string.Format(@"(files={0}, file_parallelism={1})", nTotalFiles, parallelism));
 
             int totalRescored = 0;
             int totalGapCwt = 0;
@@ -773,6 +789,25 @@ namespace pwiz.Osprey.Tasks
             MultiProgressReporter.Current?.BeginSegment();
             // PHASE 3 -- reconciled parquet write-back + sidecar stamp.
             WriteReconciledAndStamp(fileName, inputFile, fdrEntries, inputs, ctx);
+
+            // Deterministically drop this file's heavy transients before the next
+            // file loads its own: the reloaded spectra (~1.5 GB) and the write-back's
+            // full-parquet reload. At 100s of files these cannot all be resident
+            // (300 files x ~1.5 GB), and .NET's Server GC otherwise defers collection
+            // until it nears the RAM ceiling -- so the reconciliation working set
+            // rides up with file count instead of staying flat. Forcing the collection
+            // here mirrors Rust's per-iteration spectra drop (pipeline.rs:3338, in Rust's
+            // strictly sequential reconciliation file loop) and
+            // keeps the working set at ~the persistent floor + one file's transient.
+            // Output is unchanged (GC timing only). Skipped under file-parallelism > 1,
+            // where concurrent files legitimately share residency and a blocking GC
+            // would stall the other in-flight rescores.
+            spectra = null;
+            ms1Spectra = null;
+            isolationWindows = null;
+            rescored = null;
+            if (ctx.RunPlan.EffectiveFileParallelism <= 1)
+                GC.Collect();
 
             return (totalRescored, totalGapCwt, totalGapForced);
         }
@@ -1251,7 +1286,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Sort one file's entry list by (EntryId, Charge, ScanNumber, ParquetIndex) --
         /// the exact order a COLD run establishes via
-        /// <see cref="FirstJoinTask.RunPercolatorFdr"/> (run by MergeNode's 2nd-pass,
+        /// <c>FirstJoinTask.RunPercolatorFdr</c> (run by MergeNode's 2nd-pass,
         /// which a WARM straight-through resume skips when the <c>.2nd-pass</c> sidecars
         /// are already valid on disk). Both resume paths apply this to EVERY file's
         /// list, including no-work files with no reconciled parquet, so the WARM buffer
