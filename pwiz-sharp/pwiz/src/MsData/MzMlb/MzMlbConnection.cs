@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using HDF.PInvoke;
+using Pwiz.Util.Misc;
 
 // HDF.PInvoke's close/release functions return an HRESULT-style int. We can't
 // usefully react to errors in cleanup paths (we're already disposing), so the
@@ -75,7 +76,11 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
         // Silence the default error stack auto-print; we surface errors as exceptions.
         H5E.set_auto(H5E.DEFAULT, null, IntPtr.Zero);
 
-        _fileId = H5F.open(filename, H5F.ACC_RDONLY);
+        // HDF5 1.10's native H5Fopen takes an ANSI const char* path, so a non-ASCII
+        // (Unicode) path is mangled and the open fails even though the file exists.
+        // Feed it the Windows 8.3 short name (pure ASCII), mirroring how the vendor
+        // readers hand non-Unicode paths to their ANSI SDKs.
+        _fileId = H5F.open(Filesystem.GetNonUnicodePath(filename), H5F.ACC_RDONLY);
         if (_fileId < 0)
             throw new IOException($"Could not open mzMLb file for reading: {filename}");
 
@@ -152,7 +157,10 @@ public sealed class MzMlbConnection : IExternalBinarySource, IExternalBinarySink
             w0 = 1.0;
             H5P.set_cache(fapl, mdcElems, nslots, nbytes, w0);
 
-            _fileId = H5F.create(filename, H5F.ACC_TRUNC, H5P.DEFAULT, fapl);
+            // See the read ctor: HDF5 1.10's ANSI path handling needs the 8.3 short
+            // name for non-ASCII directories (the parent must exist, which it does by
+            // the time we create a file inside it).
+            _fileId = H5F.create(Filesystem.GetNonUnicodePath(filename), H5F.ACC_TRUNC, H5P.DEFAULT, fapl);
         }
         finally
         {
