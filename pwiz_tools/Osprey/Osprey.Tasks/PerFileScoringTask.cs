@@ -31,6 +31,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
@@ -331,23 +332,69 @@ namespace pwiz.Osprey.Tasks
             // live per-file RTCalibration objects in perFileCalibrations are NOT
             // reloaded: they are not stored in .scores.parquet, so they must stay
             // the live objects harvested during scoring.
-            foreach (string fileName in scoredFileNames)
-            {
-                string parquetPath = perFileParquetPaths[fileName];
-                // A scored file always has a parquet here; the sole exception is
-                // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
-                // returns an empty result without writing one. Skip that case so
-                // the run still stops cleanly at the "no scored entries" gate
-                // below rather than throwing on a missing file.
-                if (!File.Exists(parquetPath))
-                    continue;
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                    fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
-            }
+            // The lean path is valid only where FirstJoinTask actually consumes a
+            // projection. It must mirror that task's dispatch exactly (FirstJoinTask.cs:
+            // UseFdrProjection && Percolator && !needsResidentFirstPassPool): any other
+            // combination -- a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0, or the
+            // resident-pool consumers (--model-diagnostics / FDRBench pass 1, which walk
+            // the full pre-compaction FdrEntry pool) -- still needs the fat stubs here.
+            bool needsResidentPool =
+                !OspreyEnvironment.UseFdrProjection ||
+                ctx.Config.FdrMethod != FdrMethod.Percolator ||
+                ctx.Config.ModelDiagnostics ||
+                (!string.IsNullOrEmpty(ctx.Config.OutputFdrBench) && ctx.Config.FdrBenchPass == 1);
 
+            FdrProjectionSet projections = null;
             int totalScored = 0;
-            foreach (var kvp in perFileEntries)
-                totalScored += kvp.Value.Count;
+
+            if (needsResidentPool)
+            {
+                foreach (string fileName in scoredFileNames)
+                {
+                    string parquetPath = perFileParquetPaths[fileName];
+                    // A scored file always has a parquet here; the sole exception is
+                    // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
+                    // returns an empty result without writing one. Skip that case so
+                    // the run still stops cleanly at the "no scored entries" gate
+                    // below rather than throwing on a missing file.
+                    if (!File.Exists(parquetPath))
+                        continue;
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                        fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
+                }
+                foreach (var kvp in perFileEntries)
+                    totalScored += kvp.Value.Count;
+            }
+            else
+            {
+                // Issue #4397: rematerializing every file's FdrEntry stubs here cost
+                // ~53 GB on an 82-file Astral run (191M x ~280 B) purely so FirstJoin
+                // could convert them into 32 B FdrProjection rows and drop them. Stream
+                // the projection rows straight out of each .scores.parquet instead --
+                // no FdrEntry is ever allocated. Peptide ids arrive in insertion order
+                // and are remapped to the global Ordinal rank by Build(), so the result
+                // is element-for-element identical to BuildFromEntries (pinned by
+                // TestFdrProjectionBuilderMatchesBuildFromEntries).
+                var builder = new FdrProjectionSet.Builder();
+                foreach (string fileName in scoredFileNames)
+                {
+                    string parquetPath = perFileParquetPaths[fileName];
+                    if (!File.Exists(parquetPath))
+                        continue;
+                    builder.BeginFile(fileName);
+                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
+                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                            builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
+                    builder.EndFile();
+                    // Keep the per-file key and ordering so ScoredEntries consumers and
+                    // the file-count guard below still see one entry per scored file;
+                    // the stub lists themselves stay empty on this path.
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                        fileName, new List<FdrEntry>()));
+                }
+                projections = builder.Build();
+                totalScored = projections.TotalRows;
+            }
 
             ctx.LogInfo(string.Empty);
             ctx.LogInfo(string.Format(
@@ -355,7 +402,7 @@ namespace pwiz.Osprey.Tasks
                 totalScored, nFiles));
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileParquetPaths, nFiles, totalScored);
+                perFileParquetPaths, nFiles, totalScored, projections);
         }
 
         public override bool Rehydrate(PipelineContext ctx)
@@ -536,7 +583,7 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             Dictionary<string, string> perFileParquetPaths,
-            int nFiles, int totalScored)
+            int nFiles, int totalScored, FdrProjectionSet projections = null)
         {
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
@@ -557,6 +604,10 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileCalibrations(_perFileCalibrations));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
+            // Lean first-pass rows (issue #4397). Null on the rehydrate/merge paths and
+            // on --model-diagnostics / FDRBench pass 1, which publish fat stubs above;
+            // FirstJoinTask falls back to ScoredEntries whenever this is null.
+            ctx.Publish(new FdrProjections(projections));
             ctx.Publish(new RescoreBundle(_rescoreInputs));
 
             if (perFileEntries.Count == 0 || totalScored == 0)
