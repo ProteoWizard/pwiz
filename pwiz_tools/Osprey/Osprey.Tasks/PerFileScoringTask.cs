@@ -719,6 +719,24 @@ namespace pwiz.Osprey.Tasks
 
             _fullLibrary = fullLibrary;
             _libraryById = libraryById;
+
+            // Diagnostic: the true resident-library managed heap. The working set
+            // at this point still holds the one-time TSV/cache read buffers and freed
+            // load garbage, so the settled managed heap is the clean resident number.
+            // Collect/WaitForPendingFinalizers/Collect settles finalizable objects,
+            // then GetTotalMemory(false) reads the result WITHOUT forcing a further
+            // collection. Zero-cost when OSPREY_LOG_MEMORY is unset.
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY")))
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                long managedBytes = GC.GetTotalMemory(false);
+                ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    @"[MEM library-resident] managed_heap={0:F2} GB ({1} entries)",
+                    managedBytes / (1024.0 * 1024.0 * 1024.0), fullLibrary.Count));
+            }
+
             return true;
         }
 
