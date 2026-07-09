@@ -346,6 +346,7 @@ namespace pwiz.Osprey.Tasks
             // resident-pool consumers (--model-diagnostics / FDRBench pass 1, which walk
             // the full pre-compaction FdrEntry pool) -- still needs the fat stubs here.
             bool needsResidentPool =
+                ctx.Config.ExpectReconciledInput ||
                 !OspreyEnvironment.UseFdrProjection ||
                 ctx.Config.FdrMethod != FdrMethod.Percolator ||
                 ctx.Config.ModelDiagnostics ||
