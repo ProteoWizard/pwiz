@@ -1604,17 +1604,25 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Compute the post-first-pass passing base_id set from the projection,
         /// using the identical predicate as <see cref="CompactFirstPass"/>'s
-        /// non-bundle branch (targets whose run peptide q-value passes the peptide
-        /// gate, or -- when protein FDR is on -- whose run protein q-value passes the
-        /// protein gate; risk #7). Target and paired decoy share a base_id, so the
-        /// masked id set drives the survivor filter symmetrically.
+        /// non-bundle branch (targets whose run peptide q-value passes the compaction
+        /// peptide gate, or whose run protein q-value passes the always-active
+        /// protein-rescue gate; risk #7). Target and paired decoy share a base_id, so
+        /// the masked id set drives the survivor filter symmetrically.
         /// </summary>
         private static HashSet<uint> ComputeFirstPassBaseIds(
             FdrProjectionSet projections, FdrProjectionOutputs outputs, OspreyConfig config)
         {
             var firstPassBaseIds = new HashSet<uint>();
-            double peptideGate = config.RunFdr;
-            double proteinGate = config.ProteinFdr ?? 0.0;
+            // Peptide-q compaction gate: the dedicated field (default 0.01 = RunFdr)
+            // loosenable to broaden the reconciliation pool, mirroring Rust
+            // config.reconciliation_compaction_fdr (pipeline.rs:4650) -- identical to
+            // the legacy CompactFirstPass twin, not hardwired to config.RunFdr.
+            double peptideGate = config.ReconciliationCompactionFdr;
+            // Protein-rescue gate is always active (default 0.01), matching Rust
+            // pipeline.rs:4651/4658 (protein_compaction_gate = config.protein_fdr, a
+            // plain f64, never a null switch). First-pass protein FDR now runs
+            // unconditionally on this path too, so RunProteinQvalue is populated.
+            double proteinGate = config.EffectiveProteinFdr;
             for (int f = 0; f < projections.PerFile.Count; f++)
             {
                 var rows = projections.PerFile[f].Value;
@@ -1625,7 +1633,7 @@ namespace pwiz.Osprey.Tasks
                     // Run peptide/protein q-values now live in the parallel outputs
                     // array (issue #4355 struct-shrink S0), not on the lean struct.
                     if (outputs.RunPeptideQvalue(f, r) <= peptideGate ||
-                        (proteinGate > 0.0 && outputs.RunProteinQvalue(f, r) <= proteinGate))
+                        outputs.RunProteinQvalue(f, r) <= proteinGate)
                     {
                         firstPassBaseIds.Add(rows[r].EntryId & ScoringTaskShared.BASE_ID_MASK);
                     }
