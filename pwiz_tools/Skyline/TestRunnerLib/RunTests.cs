@@ -166,13 +166,13 @@ namespace TestRunnerLib
         private string _dotMemoryTestName;
 
         // Escape hatch to skip the system-heap accounting (GetProcessHeapSizes) entirely. Normally left
-        // off: the accounting is now segment-heap safe. HeapWalk/HeapLock fault with a fatal, non-catchable
+        // off: the accounting is segment-heap safe. HeapWalk/HeapLock fault with a fatal, non-catchable
         // AccessViolation in a Windows Segment Heap process (the default on Windows Server + Windows
-        // containers, hence on the net8 Docker workers and the TeamCity build agents), so GetProcessHeapSizes
-        // detects segment heaps by their structure signature and, in a segment-heap process, reads every
-        // heap's committed/reserved via HeapSummary instead of walking. Leak tracking therefore keeps
-        // working on net8. This flag is just a manual escape hatch now: the SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS
-        // env var or the skipsystemheaps=on arg forces the whole thing off for diagnosing heap issues.
+        // containers, hence on the net8 Docker workers and the TeamCity build agents) -- and even on some
+        // classic HEAP_NO_SERIALIZE heaps -- so on net8 GetProcessHeapSizes reads committed/reserved via
+        // HeapSummary (which never walks) instead of walking; net472 keeps the historically-safe walk.
+        // Leak tracking therefore keeps working on net8. This flag is just a manual escape hatch now: the
+        // SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS env var or the skipsystemheaps=on arg forces it all off.
         public static bool SkipSystemHeaps { get; set; } =
             !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS"));
 
@@ -904,22 +904,6 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
-            // A process heap handle is the base address of its heap structure, whose signature DWORD at
-            // offset 0x10 identifies the type: 0xFFEEFFEE = classic _HEAP.SegmentSignature (walkable),
-            // 0xDDEEDDEE = _SEGMENT_HEAP.Signature (NOT walkable). This read is safe on both heap types
-            // (unlike HeapLock/HeapWalk). HeapCompatibilityInformation is deliberately NOT used: verified
-            // in a Windows Server container that segment heaps report compat 0/2 (never a distinct 3), so
-            // it cannot tell segment from classic.
-            private const uint NT_HEAP_SIGNATURE = 0xFFEEFFEE;
-            private const uint SEGMENT_HEAP_SIGNATURE = 0xDDEEDDEE;
-            private const int HEAP_SIGNATURE_OFFSET = 0x10;
-
-            private static bool IsClassicWalkableHeap(IntPtr hHeap)
-            {
-                try { return (uint)Marshal.ReadInt32(hHeap, HEAP_SIGNATURE_OFFSET) == NT_HEAP_SIGNATURE; }
-                catch { return false; }   // can't read the signature -> don't risk walking it
-            }
-
             // HeapSummary yields committed/reserved/allocated totals without walking the heap, so it can
             // read a segment heap where HeapWalk cannot. Available on Windows 8+ (kernelbase.dll). Wrapped
             // in try/catch at the call site in case the export is unavailable on the host OS.
@@ -1055,41 +1039,10 @@ namespace TestRunnerLib
                 GetProcessHeaps(count, buffer);
                 var sizes = new HeapAllocationSizes[count];
 
-                // Decide once, for the whole process, whether the heaps can be walked. A Windows Segment
-                // Heap (the default on Windows Server and inside Windows containers) cannot be: HeapLock/
-                // HeapWalk fault with a fatal, non-catchable AccessViolation on it -- and, verified in a
-                // Windows Server container, in a segment-heap process even some classic-signature heaps
-                // (e.g. HEAP_NO_SERIALIZE ones) fault the same way. So walk only when EVERY heap is a
-                // confirmed classic _HEAP; otherwise read committed/reserved for all heaps via HeapSummary,
-                // which never walks. That keeps the leak-tracking number working on segment-heap hosts
-                // while a pure classic-heap process (dev boxes, the net472 CI) still gets the full walk.
-                bool allClassic = true;
-                for (int i = 0; i < count; i++)
-                    if (!IsClassicWalkableHeap(buffer[i])) { allClassic = false; break; }
-
-                if (!allClassic)
-                {
-                    for (int i = 0; i < count; i++)
-                    {
-                        try
-                        {
-                            var summary = new HEAP_SUMMARY { cb = (uint)Marshal.SizeOf(typeof(HEAP_SUMMARY)) };
-                            if (HeapSummary(buffer[i], 0, ref summary))
-                            {
-                                sizes[i].Committed += (long)summary.cbCommitted.ToUInt64();
-                                sizes[i].Reserved += (long)summary.cbReserved.ToUInt64();
-                            }
-                        }
-                        catch (Exception)
-                        {
-                            // HeapSummary unavailable on this OS; leave this heap's totals at zero.
-                        }
-                    }
-                    if (HeapDiagnostics)
-                        TRACK_SIZES.ForEach(t => t.CloseDumpFile());
-                    return sizes;
-                }
-
+#if NET472
+                // net472: walk every heap for the full committed/reserved breakdown (and the optional
+                // per-block HeapDiagnostics histogram). This has been safe on the net472 CI agents for
+                // years -- their process heaps are all classic, lockable NT heaps.
                 for (int i = 0; i < count; i++)
                 {
                     var committedSizes = HeapDiagnostics ? new Dictionary<long, int>() : null;
@@ -1140,6 +1093,33 @@ namespace TestRunnerLib
                     if (stringCounts != null)
                         sizes[i].StringCounts = stringCounts.OrderByDescending(p => p.Value).ToList();
                 }
+#else
+                // net8: never walk. HeapLock/HeapWalk fault with a fatal, non-catchable AccessViolation on
+                // a Windows Segment Heap (the default on Windows Server + Windows containers) AND on some
+                // classic-signature heaps -- e.g. HEAP_NO_SERIALIZE ones with a null lock -- and no cheap
+                // heap-type check reliably tells the safe ones from the unsafe ones across Windows builds
+                // (a segment-signature check still crashed on HeapLock on the TeamCity Windows Server
+                // agent). HeapSummary never walks and works on every heap, so use it for the
+                // committed/reserved totals. cbAllocated matches the walk's "busy bytes" Committed
+                // semantics (and is the more sensitive leak signal); leak tracking keeps working. The
+                // per-block HeapDiagnostics detail is net472-only.
+                for (int i = 0; i < count; i++)
+                {
+                    try
+                    {
+                        var summary = new HEAP_SUMMARY { cb = (uint)Marshal.SizeOf(typeof(HEAP_SUMMARY)) };
+                        if (HeapSummary(buffer[i], 0, ref summary))
+                        {
+                            sizes[i].Committed += (long)summary.cbAllocated.ToUInt64();
+                            sizes[i].Reserved += (long)summary.cbReserved.ToUInt64();
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // HeapSummary unavailable on this OS; leave this heap's totals at zero.
+                    }
+                }
+#endif
                 if (HeapDiagnostics)
                     TRACK_SIZES.ForEach(t => t.CloseDumpFile());
                 return sizes;

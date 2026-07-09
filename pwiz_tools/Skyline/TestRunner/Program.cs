@@ -320,10 +320,10 @@ namespace TestRunner
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
             // skipsystemheaps=on is a manual escape hatch to skip the GetProcessHeapSizes system-heap
-            // accounting entirely. It is no longer needed for segment-heap safety -- GetProcessHeapSizes now
-            // detects segment heaps (the default in Windows Server + containers) by their structure signature
-            // and, in a segment-heap process, reads committed/reserved via HeapSummary instead of the
-            // AccessViolation-prone walk -- but it stays available for diagnosing heap issues without a rebuild.
+            // accounting entirely. It is no longer needed for segment-heap safety -- on net8
+            // GetProcessHeapSizes reads committed/reserved via HeapSummary instead of the AccessViolation-prone
+            // HeapWalk (which faults on the segment heaps Windows Server + containers use by default) -- but
+            // it stays available for diagnosing heap issues without a rebuild.
             if (commandLineArgs.ArgAsBool("skipsystemheaps"))
                 RunTests.SkipSystemHeaps = true;
 
@@ -951,11 +951,11 @@ namespace TestRunner
 
         // Environment fragment spliced into `docker run` for the Docker workers. Currently empty:
         // container workers no longer need SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS to dodge the segment-heap
-        // AccessViolation -- GetProcessHeapSizes detects the segment heaps a Windows Server container uses
-        // by default (by their structure signature) and reads committed/reserved with HeapSummary instead
-        // of walking them, so the committed-heap leak-tracking number keeps working in the container. Kept
-        // as the single seam for any future `docker run -e` needs. (The net8 runtime is supplied by the
-        // staged dotnet.exe muxer - see GetTestRunnerExe - not by an environment variable.)
+        // AccessViolation -- on net8 GetProcessHeapSizes reads committed/reserved with HeapSummary instead
+        // of walking the heaps a Windows Server container uses by default, so the committed-heap
+        // leak-tracking number keeps working in the container. Kept as the single seam for any future
+        // `docker run -e` needs. (The net8 runtime is supplied by the staged dotnet.exe muxer - see
+        // GetTestRunnerExe - not by an environment variable.)
         private static string GetDockerEnvArgs()
         {
             return string.Empty;
