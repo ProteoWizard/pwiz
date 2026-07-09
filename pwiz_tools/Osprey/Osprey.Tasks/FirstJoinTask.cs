@@ -260,8 +260,13 @@ namespace pwiz.Osprey.Tasks
             if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
                 !needsResidentFirstPassPool)
             {
+                // Null unless PerFileScoring took the lean path and streamed the rows
+                // straight from parquet (issue #4397); RunFirstPassProjection then builds
+                // from the fat stubs instead.
+                var prebuiltProjections = ctx.Get<FdrProjections>().Value;
                 var survivors = RunFirstPassProjection(
-                    perFileEntries, perFileParquetPaths, fullLibrary, config, ctx, loadFileFeatures);
+                    perFileEntries, perFileParquetPaths, fullLibrary, config, ctx, loadFileFeatures,
+                    prebuiltProjections);
                 if (survivors == null)
                     return false;  // StopAfterStage5 sidecar failure; ExitCode already set
                 perFileEntries = survivors;
@@ -1348,17 +1353,20 @@ namespace pwiz.Osprey.Tasks
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            FdrProjectionSet prebuiltProjections)
         {
-            // Build the projection, releasing each file's FdrEntry stubs (and their
-            // per-row modseq strings) INCREMENTALLY as its rows are built
-            // (releaseStubs: true) -- the full projection never coexists with the full
-            // stub buffer, so the "projection built" spike is gone. The interned
-            // peptide table keeps only the M distinct modified sequences. Clearing the
-            // hand-off ScoredEntries lists is safe: nothing downstream of this task
-            // reads ScoredEntries on a compute path -- the survivor buffer is
-            // published as CompactedEntries.
-            var projections = FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
+            // Preferred path (issue #4397): PerFileScoring streamed these rows straight
+            // out of the per-file .scores.parquet, so the fat FdrEntry stub buffer was
+            // never allocated at all (it cost ~53 GB at 191M rows). Fall back to building
+            // from stubs on the paths that still publish them -- rehydrate/merge, or when
+            // a resident pool is required. BuildFromEntries releases each file's stubs
+            // incrementally (releaseStubs: true) so the projection never coexists with the
+            // full stub buffer. Clearing the hand-off ScoredEntries lists is safe: nothing
+            // downstream of this task reads ScoredEntries on a compute path -- the survivor
+            // buffer is published as CompactedEntries.
+            var projections = prebuiltProjections ??
+                FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
             int beforeCount = projections.TotalRows;
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, string.Format(
                 @"projection built: {0} rows, {1} distinct peptides; FdrEntry stubs released",
