@@ -608,7 +608,7 @@ namespace pwiz.ProteowizardWrapper
 
         public static string GetCvParamName(string cvParamAccession)
         {
-            return CvLookup.CvTermInfo(cvParamAccession).Name;
+            return CvLookup.CvTermInfo(cvParamAccession).ShortName;
         }
 
         public void GetNativeIdAndFileFormat(out string nativeIdFormatAccession, out string fileFormatAccession)
@@ -2012,7 +2012,7 @@ namespace pwiz.ProteowizardWrapper
             var cvidDissociationMethod = GetPrecursorDissociationMethods(p);
             if (cvidDissociationMethod.Count > 0)
             {
-                msPrecursor.DissociationMethod = string.Join(" ", cvidDissociationMethod.Select(cvid => CvLookup.CvTermInfo(cvid).Name));
+                msPrecursor.DissociationMethod = string.Join(" ", cvidDissociationMethod.Select(cvid => CvLookup.CvTermInfo(cvid).ShortName));
             }
             return msPrecursor;
         }

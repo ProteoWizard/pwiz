@@ -103,8 +103,21 @@ public sealed class CVTermInfo
     public IReadOnlyList<KeyValuePair<string, string>> PropertyValues { get; set; } =
         Array.Empty<KeyValuePair<string, string>>();
 
-    /// <summary>Short form of the name.</summary>
-    public string ShortName => Name;
+    /// <summary>Short form of the name: the shortest of <see cref="Name"/> and the
+    /// <see cref="ExactSynonyms"/> (e.g. "CID" for "collision-induced dissociation").
+    /// Mirrors cpp <c>CVTermInfo::shortName()</c> (cv.inl:54), which likewise scans the
+    /// exact synonyms for the shortest string, keeping the first on a length tie.</summary>
+    public string ShortName
+    {
+        get
+        {
+            var result = Name;
+            foreach (var synonym in ExactSynonyms)
+                if (result.Length > synonym.Length)
+                    result = synonym;
+            return result;
+        }
+    }
 
     /// <summary>Prefix portion of the id ("MS", "UO", "UNIMOD", "PEFF").</summary>
     public string Prefix
