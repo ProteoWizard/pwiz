@@ -107,9 +107,12 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
     public void InvokeMenuItem(string menuPath) { CallClientVoid(c => c.InvokeMenuItem(menuPath)); }
     public void CloseForm(string formId) { CallClientVoid(c => c.CloseForm(formId)); }
+    public void Accept(string formId) { CallClientVoid(c => c.Accept(formId)); }
+    public void Cancel(string formId) { CallClientVoid(c => c.Cancel(formId)); }
 
     // 2-arg methods
     public void ClickToolStripItem(string formId, string menuPath) { CallClientVoid(c => c.ClickToolStripItem(formId, menuPath)); }
+    public void InvokeContextMenuItem(string formId, string controlSelector, string itemText) { CallClientVoid(c => c.InvokeContextMenuItem(formId, controlSelector, itemText)); }
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }

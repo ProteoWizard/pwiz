@@ -439,6 +439,34 @@ namespace SkylineTool
         void CloseForm(string formId);
 
         /// <summary>
+        /// Accepts (confirms) an open dialog -- presses its default button, the equivalent of pressing Enter,
+        /// without keying on a localized "OK" caption -- then waits until the dialog has closed and any work the
+        /// accept resumes has finished. Use this to confirm a dialog and block until it (and its follow-on work)
+        /// is done, rather than posting a click and polling yourself.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        void Accept(string formId);
+
+        /// <summary>
+        /// Cancels (dismisses) an open dialog -- presses its cancel button, or closes it when it has none --
+        /// then waits until the dialog has closed. The dismissing counterpart of <see cref="Accept"/>.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        void Cancel(string formId);
+
+        /// <summary>
+        /// Clicks an item on a control's right-click context menu. Address the control the way
+        /// <see cref="GetControls"/> does -- by its visible label or, when it has none, its type -- and give the
+        /// item's visible text (or a '&gt;'-separated path into a submenu). A string-friendly wrapper over the
+        /// ContextMenu <see cref="UiElementPath"/> that <see cref="PerformAction"/> otherwise needs hand-built.
+        /// For a grid, move to the target cell first with <see cref="SetCurrentCellAddress"/>.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlSelector">The owning control's visible label, or its type when it has no label.</param>
+        /// <param name="itemText">The menu item's visible text, or a '&gt;'-separated submenu path.</param>
+        void InvokeContextMenuItem(string formId, string controlSelector, string itemText);
+
+        /// <summary>
         /// Exports graph data to a TSV file. Returns the file path.
         /// </summary>
         /// <param name="graphId">Form identifier from <see cref="GetOpenForms"/> (e.g. "GraphSummary:Title").</param>

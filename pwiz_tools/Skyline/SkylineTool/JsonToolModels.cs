@@ -309,6 +309,13 @@ namespace SkylineTool
         /// that are driven through UI Automation rather than as WinForms forms.
         /// </summary>
         public bool IsNative { get; set; }
+        /// <summary>
+        /// For an interactive modal dialog the connector tracks, the <see cref="UnfinishedActionCount"/> value
+        /// that existed just before the dialog was shown (its "pre-show count") -- the level the action count
+        /// returns to once the dialog is accepted/cancelled and any resumed work it triggered has finished.
+        /// Null for a form that is not a tracked interactive modal (or whose pre-show count is unknown).
+        /// </summary>
+        public int? PreShowActionCount { get; set; }
     }
 
     /// <summary>

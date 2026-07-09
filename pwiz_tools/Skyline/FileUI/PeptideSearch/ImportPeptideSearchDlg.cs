@@ -51,7 +51,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
         void ModifyDocument(string description, Func<SrmDocument, SrmDocument> act, Func<SrmDocumentPair, AuditLogEntry> logFunc);
     }
 
-    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogModifier<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer
+    public sealed partial class ImportPeptideSearchDlg : FormEx, IAuditLogModifier<ImportPeptideSearchDlg.ImportPeptideSearchSettings>, IMultipleViewProvider, IModifyDocumentContainer, ILongWaitForm
     {
         public enum Pages
         {
@@ -1330,6 +1330,18 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
             }
         }
 
+        // True while a DDA/DIA/feature-detection search is running on its background thread and streaming
+        // progress into the SearchControl's log text box (which has its own Cancel button, not a LongWaitDlg).
+        // Set when the search is launched (InitiateSearch) and cleared when it finishes (SearchControlSearchFinished).
+        private bool _searchRunning;
+
+        // ILongWaitForm: the wizard is "busy" (and the connector's no-progress watchdog must not trip) while it
+        // is driving a long-running background operation in its own progress display rather than a LongWaitDlg.
+        // The one such operation the wizard runs itself is the search on the DDA search page; every other long
+        // operation it performs (FASTA import, feature detection, etc.) is shown in a LongWaitDlg, which the
+        // watchdog already rides through.
+        public bool IsBusy => _searchRunning;
+
         private void InitiateSearch()
         {
             ImportFastaControl.UpdateDigestSettings();
@@ -1382,6 +1394,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                 _expandedDdaSearchLog = true;
             }
 
+            _searchRunning = true;
             SearchControl.RunSearch();
         }
 
@@ -1436,6 +1449,7 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
 
         private void SearchControlSearchFinished(bool success)
         {
+            _searchRunning = false;
             btnCancel.Enabled = true;
             btnBack.Enabled = true;
             btnNext.Enabled = success;

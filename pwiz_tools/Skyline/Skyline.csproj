@@ -5421,6 +5421,7 @@
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
+    <Compile Include="Util\ILongWaitForm.cs" />
     <Compile Include="Util\IonInfo.cs" />
     <Compile Include="Util\Log.cs" />
     <Compile Include="Util\MemoryInfo.cs" />

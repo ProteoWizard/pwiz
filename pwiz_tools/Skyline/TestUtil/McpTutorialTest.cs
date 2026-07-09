@@ -158,26 +158,15 @@ namespace pwiz.SkylineTestUtil
         /// returns to the value it had before. The count is incremented synchronously as the action is posted
         /// and decremented when its delegate returns, so this reliably waits out the click / value-set. For an
         /// action that DOES open a dialog (which stays counted until the dialog closes), wait for the dialog
-        /// with <see cref="WaitForConnectorForm{TForm}"/> instead.
+        /// with <see cref="WaitForConnectorForm{TForm}"/> instead. A dismissing action (an Accept/Cancel that
+        /// closes a dialog) settles the count BELOW the captured value -- the dialog's blocked opener delegate
+        /// completes on dismissal -- so this waits for &lt;= that value rather than an exact match.
         /// </summary>
         protected void WaitForAction(Action action)
         {
             int before = Connector.UnfinishedActionCount();
             action();
-            WaitForCondition(() => Connector.UnfinishedActionCount() == before);
-        }
-
-        /// <summary>
-        /// Clicks an item, by its visible text, on a graph's right-click context menu -- addressed by a
-        /// <see cref="UiElementPath"/> whose Type is "ContextMenu" (a menu built on demand by the graph, not part
-        /// of the main menu). This is how the connector reaches graph commands such as "Properties..." or
-        /// "Remove Outliers" that have no main-menu equivalent.
-        /// </summary>
-        protected void ClickGraphContextMenuItem(IFormElement form, string itemText)
-        {
-            var contextMenu = new UiElementPath(
-                new UiElementPath(null, form.FormId, null, @"Form"), null, null, @"ContextMenu");
-            JsonUiService.PerformAction(new UiElementPath(contextMenu, itemText, null, null), @"click", null);
+            WaitForCondition(() => Connector.UnfinishedActionCount() <= before);
         }
 
         /// <summary>

@@ -286,10 +286,16 @@ namespace pwiz.Skyline.ToolsUI
             .Describe(new LlmInstruction(@"Select the tab with the given text."), new LlmInstruction(@"the tab's visible text"));
 
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
-        // Like every action, this calls straight through to the method (FormElement.Accept), which owns its own
-        // gating and fire-and-forget posting.
-        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept())
-            .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
+        // This is the PerformAction escape-hatch path, which MUST stay fire-and-forget -- so it posts the click
+        // via the post-only PostAccept for a managed form (the named Accept verb adds the wait), and calls a
+        // native dialog's already-fire-and-forget Accept directly.
+        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e =>
+        {
+            if (e is FormElement formElement)
+                formElement.PostAccept();
+            else
+                e.Accept();
+        }).Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
         // for the tutorial paste steps, without touching the clipboard.
@@ -1025,7 +1031,11 @@ namespace pwiz.Skyline.ToolsUI
         // DataGridView, with its scroll bars -- a single element instead of dissolving it into its parts.
         private IEnumerable<UiElement> FlattenChildren(Control container)
         {
-            foreach (Control control in container.Controls)
+            // Walk the children in TAB order (Control.TabIndex), not the z-order the Controls collection is in,
+            // so an adjacent label -> field pair is reported one right after the other. OrderBy is stable, so
+            // controls that share a TabIndex keep their Controls-collection order. Nesting is honored because
+            // FlattenChildren recurses per container, ordering each level's own children.
+            foreach (Control control in container.Controls.Cast<Control>().OrderBy(c => c.TabIndex))
             {
                 // Skip a hidden control and everything under it -- e.g. the controls on an unselected tab page,
                 // which a user cannot see or act on either (Control.Visible reflects a hidden ancestor too).
@@ -1211,6 +1221,20 @@ namespace pwiz.Skyline.ToolsUI
         // caller, and its work must run on the UI thread, not the caller's. Must be called off the UI thread.
         public void Accept()
         {
+            // The named/convenience accept: post the click, then wait for it to take effect (the count to settle,
+            // a modal it opens to appear, or -- when it dismisses the top modal -- the count to ride back to the
+            // opener's pre-show level). PerformAction's accept stays fire-and-forget via PostAccept (see
+            // UiActions.Accept). Must be called off the UI thread.
+            JsonUiService.WaitForGesture(PostAccept);
+        }
+
+        // The fire-and-forget core of Accept: gate the form and resolve its default button synchronously on the
+        // UI thread (so a blocked form or one with no default button fails here, on the caller), then POST the
+        // click -- never run it synchronously on the caller (a test/pipe thread): an accept that starts a long
+        // import or opens a modal must not block the caller, and its work must run on the UI thread. Must be
+        // called off the UI thread.
+        public void PostAccept()
+        {
             var acceptButton = InvokeOnUiThread(() =>
             {
                 VerifyInteractable();
@@ -1221,6 +1245,22 @@ namespace pwiz.Skyline.ToolsUI
                 return button;
             });
             BeginInvokeOnUiThread(() => acceptButton.PerformClick());
+        }
+
+        // The fire-and-forget cancel: gate the form and read its cancel button on the UI thread, then post its
+        // click -- or, when the form has no cancel button, post a Close. Used by the named Cancel verb (which
+        // owns its own wait). Must be called off the UI thread.
+        public void PostCancel()
+        {
+            var cancelButton = InvokeOnUiThread(() =>
+            {
+                VerifyInteractable();
+                return Form.CancelButton;
+            });
+            if (cancelButton != null)
+                BeginInvokeOnUiThread(() => cancelButton.PerformClick());
+            else
+                BeginInvokeOnUiThread(() => Form.Close());
         }
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
@@ -1768,7 +1808,9 @@ namespace pwiz.Skyline.ToolsUI
             if (leaf == null)
                 return false;
             // The item's Click gates its form (a modal blocking it) and the item itself, then posts the click.
-            UiActions.Click.Invoke(leaf, null);
+            // Wait out the posted gesture (the count settling, or a modal it opens appearing) so the named
+            // menu/toolbar verbs return only once the click has taken effect.
+            JsonUiService.WaitForGesture(() => UiActions.Click.Invoke(leaf, null));
             return true;
         }
 

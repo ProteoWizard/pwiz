@@ -120,6 +120,9 @@ namespace SkylineTool
         public void SetCurrentCellAddress(string formId, string controlId, int column, int row) { Call(nameof(SetCurrentCellAddress), formId, controlId, column, row); }
         public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
         public void CloseForm(string formId) { Call(nameof(CloseForm), formId); }
+        public void Accept(string formId) { Call(nameof(Accept), formId); }
+        public void Cancel(string formId) { Call(nameof(Cancel), formId); }
+        public void InvokeContextMenuItem(string formId, string controlSelector, string itemText) { Call(nameof(InvokeContextMenuItem), formId, controlSelector, itemText); }
 
         // 1-arg methods
         public string GetSelectedElementLocator(string elementType)

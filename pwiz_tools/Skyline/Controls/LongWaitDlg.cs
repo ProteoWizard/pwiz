@@ -28,8 +28,13 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class LongWaitDlg : FormEx, ILongWaitBroker
+    public partial class LongWaitDlg : FormEx, ILongWaitBroker, ILongWaitForm
     {
+        // ILongWaitForm: a LongWaitDlg exists only while it is driving a long-running operation, so it is
+        // always "busy" as far as the connector's no-progress watchdog is concerned. This preserves the
+        // watchdog's original behavior, which treated any open LongWaitDlg as a sign that work is advancing.
+        public bool IsBusy => true;
+
         private readonly string _cancelMessage = string.Format(@" ({0})", ControlsResources.LongWaitDlg_PerformWork_canceled);
 
         private const int MAX_HEIGHT = 500;

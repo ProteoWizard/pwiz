@@ -892,6 +892,21 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.ResolveForm(formId).Close();
         }
 
+        public void Accept(string formId)
+        {
+            JsonUiService.Accept(formId);
+        }
+
+        public void Cancel(string formId)
+        {
+            JsonUiService.Cancel(formId);
+        }
+
+        public void InvokeContextMenuItem(string formId, string controlSelector, string itemText)
+        {
+            JsonUiService.InvokeContextMenuItem(formId, controlSelector, itemText);
+        }
+
         public string GetGraphData(string graphId, string filePath = null)
         {
             return JsonUiService.GetGraphData(graphId, filePath);

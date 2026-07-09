@@ -101,11 +101,11 @@ namespace TestPerf
             ImportPrtcDocument();                           // s-10
             ImportGpfDiaResults();                          // s-11
             RefineByCv();                                   // s-12 .. s-15
+            FilterPeptidesForProteins();                    // s-16 .. s-19
 
             // TODO(connector tutorial): the remaining steps are filled in incrementally, each driven through
             // the IJsonToolService and each ending in a PauseForScreenShot whose number matches the s-NN.png
             // referenced by the HTML. The remaining mapping is:
-            //   Step 3  Accept Proteins + ranked-intensity refine ..... s-16 .. s-19
             //   Step 4  iRT calculator + scheduling + export .......... s-20 .. s-31
 
             // Never return while a background chromatogram load is still in flight: the framework's end-of-test
@@ -133,7 +133,8 @@ namespace TestPerf
             PauseForScreenShot(cvHistogram, "Peak Areas -- CV Histogram"); // s-12
 
             // Raise the CV-cutoff line to 30% through the histogram's right-click Properties dialog.
-            ClickGraphContextMenuItem(cvHistogram, GetLocalizedText<PeakAreasContextMenu>("areaPropsContextMenuItem"));
+            Connector.InvokeContextMenuItem(cvHistogram.FormId, string.Empty,
+                GetLocalizedText<PeakAreasContextMenu>("areaPropsContextMenuItem"));
             var cvProperties = WaitForConnectorForm<AreaCVToolbarProperties>();
             cvProperties.SetValue(GetLocalizedText<AreaCVToolbarProperties>("label2"), "30"); // CV cutoff
             cvProperties.Accept();
@@ -168,6 +169,70 @@ namespace TestPerf
             // as a Win32 message, not a tracked connector action, so WaitForAction does not apply and
             // WaitForDocumentLoaded tracks loading, not saving. Wait for the save to clear the dirty flag, or it
             // is still running when the next step (and teardown) begins.
+            WaitForConditionUI(5 * 60 * 1000, () => !SkylineWindow.Dirty);
+        }
+
+        /// <summary>
+        /// Step 3 (s-16 .. s-19): narrow the document to a subset of proteins of interest. Refine &gt; Accept
+        /// Proteins keeps only the proteins named in target_proteins.txt (matched by Name), confirming the prompt
+        /// that lists the names not present in the document (s-16, s-17). Then Refine &gt; Advanced -- Results tab
+        /// -- caps each protein at its 2 best peptides and each peptide at its 5 best transitions by ranked peak
+        /// intensity (s-18), Edit &gt; Expand All &gt; Proteins shows the result (s-19), and the document is saved
+        /// as SRM_targets.sky. Everything is driven through the connector.
+        /// </summary>
+        private void FilterPeptidesForProteins()
+        {
+            // 3.1 Protein filtering: Refine > Accept Proteins keeps only the proteins named in target_proteins.txt.
+            // The tutorial opens that file, copies its contents, and pastes them into the dialog; here the file is
+            // read directly and set as the "Proteins to keep" text (the caption-less multiline box is paired with
+            // the label before it in tab order -- "Proteins to keep:"). "Names" is the default match mode; select
+            // it to match the tutorial.
+            Connector.InvokeMenuItem(MenuPath<RefineMenu>("refineToolStripMenuItem", "acceptProteinsMenuItem"));
+            var acceptProteins = WaitForConnectorForm<RefineProteinListDlg>();
+            acceptProteins.SetValue(GetLocalizedText<RefineProteinListDlg>("label1"),
+                File.ReadAllText(GetTestPath("target_proteins.txt")));
+            acceptProteins.ClickButton(GetLocalizedText<RefineProteinListDlg>("proteinNames")); // match by Names
+            PauseForScreenShot(acceptProteins, "Accept Proteins -- paste protein list"); // s-16
+
+            // OK checks the pasted names against the document; because some of the target proteins are not in the
+            // document, a prompt lists them and asks whether to continue. The click is posted (not run through
+            // WaitForAction) because it opens this nested modal, which would not complete until the prompt closes.
+            acceptProteins.ClickButton(GetLocalizedText<RefineProteinListDlg>("btnOk"));
+            var notInDocument = WaitForConnectorForm<MultiButtonMsgDlg>();
+            PauseForScreenShot(notInDocument, "Proteins not in document"); // s-17
+            // Accept (OK) dismisses the prompt, which lets Accept Proteins run the refine that drops the unlisted
+            // proteins; wait out the posted action, then let the document settle.
+            WaitForAction(() => notInDocument.Accept());
+            WaitForDocumentLoaded();
+
+            // 3.2 Peptide ranked intensity filtering: Refine > Advanced, Results tab -- keep each protein's 2 best
+            // peptides and each peptide's 5 best transitions by ranked peak intensity. The two rank boxes are
+            // caption-less and paired with the label before each in tab order ("Max peptide peak rank:" and
+            // "Max transition peak rank:"). The other Results-tab options are left at their defaults, as the
+            // tutorial notes they would not change this document.
+            Connector.InvokeMenuItem(MenuPath<RefineMenu>("refineToolStripMenuItem", "refineAdvancedMenuItem"));
+            var refine = WaitForConnectorForm<RefineDlg>();
+            SelectTab(refine, GetLocalizedText<RefineDlg>("tabResults"));
+            WaitForAction(() => refine.SetValue(GetLocalizedText<RefineDlg>("label8"), "2"));           // max peptide peak rank
+            WaitForAction(() => refine.SetValue(GetLocalizedText<RefineDlg>("labelMaxPeakRank"), "5")); // max transition peak rank
+            PauseForScreenShot(refine, "Refine -- Results tab"); // s-18
+            // Accept runs the refine (dropping the lower-ranked peptides/transitions and possibly showing a
+            // progress dialog); wait it out before continuing.
+            WaitForAction(() => refine.Accept());
+            WaitForDocumentLoaded();
+
+            // Expand all proteins so the screenshot shows the peptides kept under each target.
+            Connector.InvokeMenuItem(MenuPath<EditMenu>(
+                "editToolStripMenuItem", "expandAllToolStripMenuItem", "expandProteinsMenuItem"));
+            PauseForScreenShot(WaitForConnectorForm<SkylineWindow>(), "Targets -- SRM peptide targets"); // s-19
+
+            // Save the SRM target document under a new name.
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem"));
+            var saveDlg = WaitForNativeFileDialog();
+            saveDlg.SetValue("FileName", GetTestPath("SRM_targets.sky"));
+            saveDlg.Accept();
+            // As in RefineByCv, the native Save dialog posts the save as a Win32 message (not a tracked connector
+            // action), so wait for the dirty flag to clear rather than a tracked action or a document reload.
             WaitForConditionUI(5 * 60 * 1000, () => !SkylineWindow.Dirty);
         }
 
