@@ -135,6 +135,7 @@
     <EmbeddedResource Include="Model\IonMobility\mapping.xml" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
+    <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
     <EmbeddedResource Include="Model\Lib\ChromLib\Data\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\Midas\mapping.xml" />
     <EmbeddedResource Include="Model\Optimization\mapping.xml" />
