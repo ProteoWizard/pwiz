@@ -312,6 +312,12 @@ namespace pwiz.Osprey.FDR
         /// remapped to the ordinal rank in <see cref="Build"/>. Row order, file order and
         /// <see cref="FdrProjection.ParquetIndex"/> are unchanged, so the result is
         /// element-for-element identical to <see cref="BuildFromEntries"/>.
+        ///
+        /// NOT thread-safe, by design: <see cref="FdrProjection.FileIdx"/> and the
+        /// per-file <see cref="FdrProjection.ParquetIndex"/> running counts are only
+        /// meaningful if files are added in a deterministic sequence. Callers must drive
+        /// BeginFile/AddRow/EndFile from a single thread (PerFileScoringTask does, after
+        /// its per-file scoring fan-out has already joined).
         /// </summary>
         public sealed class Builder
         {

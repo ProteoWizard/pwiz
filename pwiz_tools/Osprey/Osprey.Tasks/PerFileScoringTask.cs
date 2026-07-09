@@ -95,7 +95,14 @@ namespace pwiz.Osprey.Tasks
         public override IEnumerable<Type> Publishes => new[]
         {
             typeof(FullLibrary), typeof(LibraryById), typeof(PerFileCalibrations),
-            typeof(PerFileParquetPaths), typeof(RescoreBundle), typeof(ScoredEntries)
+            typeof(PerFileParquetPaths), typeof(RescoreBundle), typeof(ScoredEntries),
+            // Must be declared, not just published: PipelineContext builds its
+            // producer registry from this list, so an undeclared byproduct cannot be
+            // lazily materialized and ctx.Get<T> throws UnknownByproductException on a
+            // cache miss. Without this entry FdrProjections only resolves because
+            // FirstJoinTask happens to read ScoredEntries first, which materializes
+            // this task and co-publishes both -- an ordering coupling, not a contract.
+            typeof(FdrProjections)
         };
 
         // Outputs reached by downstream tasks through ctx.Demand<PerFileScoringTask>().
