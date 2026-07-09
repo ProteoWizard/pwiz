@@ -750,6 +750,15 @@ public sealed class MzmlReader
         var encoderConfig = new BinaryEncoderConfig();
         ConfigureFromParams(tempParams, encoderConfig, isInteger);
 
+        // In mzML (not mzMLb), when numpress is on the 32/64-bit-integer type term is
+        // meaningless -- numpress defines word size and format -- so an integer-typed
+        // numpress array (e.g. a Pic-compressed intensity array) decodes as doubles into
+        // a BinaryDataArray rather than an IntegerDataArray. Matches cpp IO.cpp:2461-2478,
+        // whose int64 decode path likewise never handles numpress. mzMLb keeps its integer
+        // arrays, so this remap is gated on the base64 path (no external HDF5 source).
+        if (isInteger && encoderConfig.Numpress != BinaryNumpress.None && ExternalBinarySource is null)
+            isInteger = false;
+
         // mzMLb branch: the binary element is empty and three cvParams point at
         // a named dataset in the surrounding HDF5 file. Route through the
         // injected ExternalBinarySource instead of decoding base64.
