@@ -18,5 +18,12 @@
       image lists into .resx (load icons programmatically), tracked for later. It runs fine
       on net8 today (WinForms reads ImageStream intrinsically); demoted until that lands. -->
  <LangVersion>8.0</LangVersion>
- </PropertyGroup> 
+ <!-- Legacy SkylineTool IPC (ToolService/RemoteService) and other trusted, local serialization still
+      use BinaryFormatter, which net8 disables by default (throws NotSupportedException). net472 had it
+      enabled everywhere; re-enable it here so those paths keep working and match the reference behavior.
+      This only affects net8 exes' runtimeconfig (net472 ignores the property) and deserializes trusted,
+      local data only. The tool IPC is migrating to the JSON protocol (JsonToolServer); once that lands
+      this can be removed - BinaryFormatter is gone entirely in net9. -->
+ <EnableUnsafeBinaryFormatterSerialization>true</EnableUnsafeBinaryFormatterSerialization>
+ </PropertyGroup>
  </Project>
