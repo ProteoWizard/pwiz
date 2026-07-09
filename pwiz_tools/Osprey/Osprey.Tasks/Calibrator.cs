@@ -141,7 +141,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>Which curve to fit for a given number of calibration points.</summary>
         internal struct CalibrationFitPlan
         {
-            /// <summary>Fit a global least-squares line instead of a LOESS curve.</summary>
+            /// <summary>Fit a global robust (Theil-Sen) line instead of a LOESS curve.</summary>
             public bool LinearFit;
             /// <summary>LOESS bandwidth to use when <see cref="LinearFit"/> is false.</summary>
             public double Bandwidth;
@@ -567,9 +567,29 @@ namespace pwiz.Osprey.Tasks
                             pass2.Stats.NPoints,
                             pass2.Stats.RSquared));
 
+                        // A refined LINEAR fit must clear the same guards pass 1's does.
+                        // R^2 alone is not sufficient evidence for a line: a narrowed
+                        // pass-2 window can leave the confident points clustered over a
+                        // short RT span, where a line scores R^2 ~ 1 yet extrapolates
+                        // badly across the rest of the gradient. Without this, such a fit
+                        // could displace a perfectly good pass-1 LOESS. Reachable
+                        // whenever pass 2's point count lands in
+                        // [ABSOLUTE_MIN_CALIBRATION_POINTS, LINEAR_FIT_MAX_POINTS).
+                        bool refinedLinearOk = IsRefinedFitAcceptable(
+                            pass2.Calibration, pass2.LibRts, libMinRt, libMaxRt,
+                            rtSlope, mzmlMinRt, mzmlMaxRt);
+
+                        if (!refinedLinearOk)
+                        {
+                            _ctx.LogInfo(string.Format(
+                                "Refined calibration is a linear fit over {0} points that fails the " +
+                                "span/plausibility guards, keeping original calibration",
+                                pass2.Stats.NPoints));
+                        }
+
                         // Accept the refined calibration only if R^2 didn't degrade
-                        // by more than 1% (matches Rust pipeline.rs:1186).
-                        if (pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
+                        // by more than 1% (matches Rust pipeline.rs).
+                        if (refinedLinearOk && pass2.Stats.RSquared >= pass1.Stats.RSquared * 0.99)
                         {
                             // Overwrite the OSPREY_DUMP_LOESS_INPUT dump with
                             // pass 2's points so the diagnostic reflects the
@@ -700,7 +720,7 @@ namespace pwiz.Osprey.Tasks
         /// (0.3 * 200 = 60 points) by widening the bandwidth as n shrinks -- a wider
         /// bandwidth is a *stiffer*, less locally varying fit. Below
         /// <see cref="LINEAR_FIT_MAX_POINTS"/> even that is over-flexible, and a single
-        /// global least-squares line is the better-conditioned estimator.
+        /// global robust (Theil-Sen) line is the better-conditioned estimator.
         ///
         /// Pure, so the tier boundaries are directly testable. See issue #4401.
         /// </summary>
@@ -731,7 +751,7 @@ namespace pwiz.Osprey.Tasks
         /// however confident each is. Guards the linear tier (#4401).
         /// </summary>
         internal static bool HasSufficientRtSpan(
-            List<double> libRts, double libMinRt, double libMaxRt)
+            IReadOnlyList<double> libRts, double libMinRt, double libMaxRt)
         {
             double libRange = libMaxRt - libMinRt;
             if (libRange <= 0.0 || libRts.Count == 0)
@@ -782,6 +802,31 @@ namespace pwiz.Osprey.Tasks
                 return false;
             double margin = mzmlRange * 0.1;
             return predMin >= mzmlMinRt - margin && predMax <= mzmlMaxRt + margin;
+        }
+
+        /// <summary>
+        /// May pass 2's refit replace pass 1's calibration?
+        ///
+        /// A LOESS refit is judged on R^2 alone. A LINEAR refit must additionally clear
+        /// the same span and plausibility guards pass 1's linear fit does, because R^2
+        /// is not evidence for a line: pass 2 re-scores inside a narrowed RT window, so
+        /// its surviving points can be clustered over a short span where a line scores
+        /// R^2 ~ 1 yet extrapolates badly across the rest of the gradient. Reachable
+        /// whenever pass 2's point count lands in
+        /// [<see cref="ABSOLUTE_MIN_CALIBRATION_POINTS"/>, <see cref="LINEAR_FIT_MAX_POINTS"/>),
+        /// since pass 2 only runs at all when pass 1 was a LOESS fit. Reported by Copilot
+        /// on maccoss/osprey#52; see issue #4401.
+        /// </summary>
+        internal static bool IsRefinedFitAcceptable(
+            RTCalibration refined, IReadOnlyList<double> refinedLibRts,
+            double libMinRt, double libMaxRt,
+            double rangeSlope, double mzmlMinRt, double mzmlMaxRt)
+        {
+            if (refined.Method != RTCalibrationMethod.Linear)
+                return true;
+
+            return HasSufficientRtSpan(refinedLibRts, libMinRt, libMaxRt) &&
+                   IsPlausibleLinearFit(refined, rangeSlope, mzmlMinRt, mzmlMaxRt);
         }
 
         /// <summary>

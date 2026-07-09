@@ -850,7 +850,7 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// The linear tier fits a true global least-squares line, recovers exact
+        /// The linear tier fits a true global robust (Theil-Sen) line, recovers exact
         /// slope/intercept on collinear input, reports itself as
         /// <see cref="RTCalibrationMethod.Linear"/>, and -- unlike LOESS -- does not
         /// bend toward a single outlier.
@@ -1070,13 +1070,65 @@ namespace pwiz.Osprey.Test
             Assert.IsNull(RTCalibration.FromLinearMapping(5.0, 5.0, 1.0, 0.0));
             Assert.IsNull(RTCalibration.FromLinearMapping(5.0, 1.0, 1.0, 0.0));
 
-            // Non-finite bounds are rejected rather than producing a degenerate map:
-            // `libMaxRt > libMinRt` alone would accept an infinite max. Matches Rust's
-            // is_finite() guard, which a malformed library could otherwise diverge on.
+            // Non-finite bounds are rejected rather than producing a degenerate map,
+            // matching Rust's is_finite() guard in RTCalibration::from_linear_mapping.
+            // The infinite cases are the ones a bare `libMaxRt > libMinRt` test would
+            // wrongly ACCEPT (+Inf > 0 is true), so they are what pin this guard.
             Assert.IsNull(RTCalibration.FromLinearMapping(0.0, double.PositiveInfinity, 1.0, 0.0));
             Assert.IsNull(RTCalibration.FromLinearMapping(double.NegativeInfinity, 100.0, 1.0, 0.0));
+            // NaN already fell out of the old comparison (every NaN compare is false), so
+            // these two do not distinguish it. They guard the other plausible regression:
+            // simplifying to a bare `libMaxRt <= libMinRt`, which NaN would slip past.
             Assert.IsNull(RTCalibration.FromLinearMapping(double.NaN, 100.0, 1.0, 0.0));
             Assert.IsNull(RTCalibration.FromLinearMapping(0.0, double.NaN, 1.0, 0.0));
+        }
+
+        /// <summary>
+        /// A pass-2 LOESS refit is judged on R^2 alone, but a pass-2 LINEAR refit must
+        /// clear the span and plausibility guards too -- otherwise a line fitted to
+        /// points clustered in a narrow RT window (where R^2 ~ 1) could displace a
+        /// perfectly good pass-1 LOESS calibration.
+        /// </summary>
+        [TestMethod]
+        public void TestRefinedLinearFitMustClearPass1Guards()
+        {
+            var spread = new List<double>();
+            for (int i = 0; i < 20; i++)
+                spread.Add(i * 5.0); // 0..95 of a 0..100 library range
+            var bunched = new List<double>();
+            for (int i = 0; i < 20; i++)
+                bunched.Add(40.0 + i * 0.5); // 40..49.5
+
+            // A LOESS refit is always acceptable here: R^2 alone decides it, even when
+            // the points are bunched.
+            double[] x = spread.ToArray();
+            double[] y = new double[x.Length];
+            for (int i = 0; i < x.Length; i++)
+                y[i] = x[i] + 1.0;
+            var loess = new RTCalibrator(new RTCalibratorConfig
+            {
+                Bandwidth = 0.3,
+                MinPoints = x.Length,
+                OutlierRetention = 1.0
+            }).Fit(x, y);
+            Assert.AreEqual(RTCalibrationMethod.LOESS, loess.Method);
+            Assert.IsTrue(Calibrator.IsRefinedFitAcceptable(
+                loess, bunched, 0.0, 100.0, 1.0, 0.0, 100.0));
+
+            // A linear refit spanning the gradient and agreeing with the range mapping.
+            var good = LineCalibration(0.0, 100.0, 1.0, 0.0);
+            Assert.IsTrue(Calibrator.IsRefinedFitAcceptable(
+                good, spread, 0.0, 100.0, 1.0, 0.0, 100.0));
+
+            // Same line, but its points are bunched into one RT region: reject.
+            Assert.IsFalse(Calibrator.IsRefinedFitAcceptable(
+                good, bunched, 0.0, 100.0, 1.0, 0.0, 100.0),
+                "a line from a narrow RT span must not replace a pass-1 LOESS fit");
+
+            // Well-spread points, but the line disagrees with the range mapping: reject.
+            var steep = LineCalibration(0.0, 100.0, 3.0, 0.0);
+            Assert.IsFalse(Calibrator.IsRefinedFitAcceptable(
+                steep, spread, 0.0, 100.0, 1.0, 0.0, 100.0));
         }
 
         /// <summary>Build a linear RTCalibration spanning [xMin, xMax] with the given line.</summary>

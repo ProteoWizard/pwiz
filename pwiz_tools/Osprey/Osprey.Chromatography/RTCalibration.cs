@@ -63,7 +63,7 @@ namespace pwiz.Osprey.Chromatography
         public bool ClassicalRobustIterations { get; set; }
 
         /// <summary>
-        /// Fit a single global least-squares line instead of a LOESS curve, and
+        /// Fit a single global robust (Theil-Sen) line instead of a LOESS curve, and
         /// report the calibration as <see cref="RTCalibrationMethod.Linear"/>.
         /// LOESS bandwidth is a *fraction* of the points, so its local window
         /// (<c>Bandwidth * n</c>) thins out as n falls; below ~100 points the
@@ -149,7 +149,7 @@ namespace pwiz.Osprey.Chromatography
                 y[i] = measuredRts[order[i]];
             }
 
-            // A global least-squares line for point sets too thin to support a
+            // A robust (Theil-Sen) line for point sets too thin to support a
             // locally varying fit (see RTCalibratorConfig.LinearFit). The fitted
             // values are evaluated at the same x, so every downstream consumer --
             // Predict, InversePredict, the .calibration.json model params, resume
