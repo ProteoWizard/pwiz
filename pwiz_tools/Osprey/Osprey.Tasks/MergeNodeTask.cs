@@ -65,7 +65,7 @@ namespace pwiz.Osprey.Tasks
 
         // Phase B resume surface. Reads each file's reconciled
         // .scores.parquet, writes the .2nd-pass.fdr_scores.bin
-        // sidecars (only when protein-FDR is enabled) and the
+        // sidecars (whenever Stage 6 rescored -- see AnyReconciledParquet) and the
         // .blib output. ValidityKey adds the reconciliation hash
         // because the reconciled parquet is read.
         public override IEnumerable<string> Inputs(PipelineContext ctx)
