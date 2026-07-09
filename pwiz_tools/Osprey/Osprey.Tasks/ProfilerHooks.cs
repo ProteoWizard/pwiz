@@ -98,6 +98,20 @@ namespace pwiz.Osprey.Tasks
         /// Log peak working set and managed heap size to the given
         /// writer. Cheap to call; suitable for per-stage and end-of-run
         /// snapshots.
+        ///
+        /// On net8.0 this also emits the <see cref="GCMemoryInfo"/> triple that
+        /// decomposes resident memory. <c>managed_heap</c>
+        /// (<c>GC.GetTotalMemory(false)</c>) counts only bytes the GC considers
+        /// *in use*, so it silently omits two large quantities:
+        ///   gc_committed - what the GC has committed from the OS, including
+        ///                  free space it is holding rather than decommitting.
+        ///                  With Server GC (one heap per core) this can exceed
+        ///                  the in-use heap by many GB.
+        ///   gc_fragmented - free bytes stranded *between* live objects.
+        /// Then working_set - gc_committed approximates genuinely native memory
+        /// (Parquet/mzML/SQLite buffers, runtime, JIT). Without these three,
+        /// "working set minus managed heap" conflates GC slack with native
+        /// allocation and cannot tell you which one to go after.
         /// </summary>
         public static void LogMemoryStats(Action<string> log, string label)
         {
@@ -109,17 +123,29 @@ namespace pwiz.Osprey.Tasks
             long curWs = proc.WorkingSet64;
             long managed = GC.GetTotalMemory(false);
 
+            const double gb = 1024.0 * 1024.0 * 1024.0;
+            string gcDetail = string.Empty;
+#if NETCOREAPP || NET5_0_OR_GREATER
+            var gcInfo = GC.GetGCMemoryInfo();
+            gcDetail = string.Format(CultureInfo.InvariantCulture,
+                ", gc_committed={0:F2} GB, gc_heap={1:F2} GB, gc_fragmented={2:F2} GB",
+                gcInfo.TotalCommittedBytes / gb,
+                gcInfo.HeapSizeBytes / gb,
+                gcInfo.FragmentedBytes / gb);
+#endif
+
             log(string.Format(CultureInfo.InvariantCulture,
-                "[MEM {0}] working_set={1:F2} GB (peak={2:F2} GB), managed_heap={3:F2} GB, peak_paged={4:F2} GB, gen2_count={5}, loh_count={6}",
+                "[MEM {0}] working_set={1:F2} GB (peak={2:F2} GB), managed_heap={3:F2} GB, peak_paged={4:F2} GB, gen2_count={5}, loh_count={6}{7}",
                 label,
-                curWs / (1024.0 * 1024.0 * 1024.0),
-                peakWs / (1024.0 * 1024.0 * 1024.0),
-                managed / (1024.0 * 1024.0 * 1024.0),
-                peakPaged / (1024.0 * 1024.0 * 1024.0),
+                curWs / gb,
+                peakWs / gb,
+                managed / gb,
+                peakPaged / gb,
                 GC.CollectionCount(2),
                 // Large Object Heap collection count is same as gen-2 in
                 // standard GC; report it explicitly to document intent.
-                GC.CollectionCount(2)));
+                GC.CollectionCount(2),
+                gcDetail));
         }
 
         /// <summary>
