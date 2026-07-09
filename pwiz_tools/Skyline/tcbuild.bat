@@ -20,11 +20,11 @@ REM #   5. git status --porcelain: catches builds that produce stray files
 REM #      not covered by .gitignore.
 REM #
 REM # Usage:
-REM #   tcbuild.bat [Debug|Release] [--automated] [--coverage]
+REM #   tcbuild.bat [Debug|Release] [--automated] [--parallel]
 REM #
 REM # Args are forwarded verbatim to build.bat; see that script for flag
-REM # semantics. TC should pass --automated for the standard CI run;
-REM # --coverage is auto-enabled inside build.bat when TEAMCITY_VERSION is set.
+REM # semantics. TC should pass --automated for the standard CI run, and
+REM # --parallel to spread the tests across Docker workers (needs Docker).
 REM #
 REM # Scope note:
 REM #   TestPerf and TestTutorial are intentionally EXCLUDED from the standard

@@ -1,55 +1,52 @@
 @echo off
-REM # NOTE: intentionally NOT `setlocal enabledelayedexpansion` at file scope.
-REM # The test filter contains `!=` and delayed expansion would eat every `!`
-REM # here (setting TEST_FILTER=`FullyQualifiedName!=X&FullyQualifiedName!=Y`
-REM # would triger `!name!` parsing and mangle the whole string). Delayed
-REM # expansion is enabled locally inside the small blocks that need it.
 setlocal
 
 REM # ------------------------------------------------------------------------
-REM # Skyline build entry point. TeamCity calls this from tcbuild.bat; runs
-REM # locally too. Mirrors pwiz-sharp\build.bat's shape (dotnet restore + build
-REM # + parallel test with TC service messages) but scoped to the Skyline tree.
+REM # Skyline build + test entry point. TeamCity calls this from tcbuild.bat;
+REM # runs locally too. Builds the net8 SDK-style Skyline tree, stages the test
+REM # binaries, and runs the whole suite (Test + TestData + TestFunctional)
+REM # through the Skyline TestRunner harness -- the harness the functional tests
+REM # are written for (offscreen mode, per-test form lifecycle, requeue-on-flake)
+REM # -- rather than `dotnet test`, which can't run the functional (UI) tests.
 REM #
 REM # Usage:
 REM #   build.bat [Debug|Release] [--i-agree-to-the-vendor-licenses]
-REM #             [--require-vendor-support] [--automated] [--coverage]
+REM #             [--require-vendor-support] [--automated] [--parallel]
 REM #
 REM # Flags:
 REM #   --i-agree-to-the-vendor-licenses
-REM #       Acknowledge the vendor SDK EULAs. Forwarded to MSBuild as
-REM #       -p:IAgreeToVendorLicenses=true, which lets the referenced pwiz-sharp
-REM #       vendor projects extract the encrypted vendor archives and link the
-REM #       real readers. Without it the transitive vendor references build in
-REM #       their no-vendor-support mode. TeamCity passes this for CI.
-REM #
+REM #       Acknowledge the vendor SDK EULAs (-p:IAgreeToVendorLicenses=true) so
+REM #       the referenced pwiz-sharp vendor projects link the real readers.
+REM #       TeamCity passes this for CI; without it the vendor readers build in
+REM #       their no-vendor-support mode.
 REM #   --require-vendor-support
-REM #       Fail the build if vendor support isn't enabled (i.e. if
-REM #       --i-agree-to-the-vendor-licenses wasn't also passed). Use in CI to
-REM #       guard against silently producing a stripped, no-vendor artifact.
-REM #
+REM #       Fail if vendor support isn't enabled (guards against silently shipping
+REM #       a stripped, no-vendor artifact).
 REM #   --automated
-REM #       Tag the assembly InformationalVersion with "(automated build)"
-REM #       instead of "(developer build)". Passed to MSBuild as
-REM #       -p:AutomatedBuild=true.
+REM #       Tag InformationalVersion "(automated build)" (-p:AutomatedBuild=true).
+REM #   --parallel
+REM #       Run the tests in parallel across Docker workers (TestRunner
+REM #       parallelmode=server) instead of the default host-only sequential run.
+REM #       Needs Docker Desktop in Windows-container mode + the always_up_runner
+REM #       image. Much faster for the full functional suite. Also settable via
+REM #       SKYLINE_TEST_PARALLEL=1.
 REM #
-REM #   --coverage
-REM #       Run the test step under JetBrains dotCover instead of `dotnet test`
-REM #       directly. Emits a snapshot at TestResults\coverage.dcvr and an HTML
-REM #       report at TestResults\coverage-report\. Auto-enabled when
-REM #       TEAMCITY_VERSION is set (TC's Command Line runner isn't wrapped by
-REM #       TC's built-in dotCover feature, so the script has to invoke it).
+REM # Environment:
+REM #   SKYLINE_TEST_WORKERS   parallel worker count (1 host + N-1 Docker); default 8.
+REM #   SKYLINE_TEST_PARALLEL  set to 1 to prefer the parallel Docker run (same as --parallel).
+REM #   SKYLINE_TEST_ARGS      extra args appended verbatim to the TestRunner
+REM #                          command (e.g. test=Foo,Bar for a smoke run).
 REM #
 REM # Scope:
-REM #   Only the Skyline projects already migrated to SDK-style csproj + net8
-REM #   are built/tested here: Skyline.csproj and TestData.csproj. Test/,
-REM #   TestFunctional/, TestConnected/ are still legacy csproj (net472-only)
-REM #   and are skipped until they're ported. TestPerf/ and TestTutorial/ are
-REM #   intentionally EXCLUDED from the standard build; run them separately
-REM #   when needed.
+REM #   Builds + tests Skyline.csproj and the net8-ported test projects Test,
+REM #   TestData, TestFunctional (plus the TestRunner harness). TestConnected is
+REM #   not ported yet; TestPerf and TestTutorial are intentionally EXCLUDED from
+REM #   the standard build -- run those separately when needed.
+REM #
+REM # NOTE: dotCover coverage (--coverage) is temporarily removed while the
+REM #   TestRunner path beds in; re-add it as a separate step once proven in CI.
 REM # ------------------------------------------------------------------------
 
-REM # Resolve to the directory this script lives in so we work from pwiz_tools\Skyline\
 set SCRIPT_DIR=%~dp0
 set SCRIPT_DIR=%SCRIPT_DIR:~0,-1%
 pushd "%SCRIPT_DIR%"
@@ -59,8 +56,11 @@ set CONFIG=Release
 set IAGREE=0
 set REQUIRE_VENDOR=0
 set AUTOMATED=0
-set COVERAGE=0
+set SEQUENTIAL=1
 set ERROR_TEXT=
+
+if "%SKYLINE_TEST_PARALLEL%"=="1" set SEQUENTIAL=0
+if not defined SKYLINE_TEST_WORKERS set SKYLINE_TEST_WORKERS=8
 
 REM # Parse args. First non-flag arg is the configuration (Debug|Release).
 :parseargs
@@ -68,7 +68,8 @@ if "%~1"=="" goto endparse
 if /i "%~1"=="--i-agree-to-the-vendor-licenses" (set IAGREE=1) else ^
 if /i "%~1"=="--require-vendor-support" (set REQUIRE_VENDOR=1) else ^
 if /i "%~1"=="--automated" (set AUTOMATED=1) else ^
-if /i "%~1"=="--coverage" (set COVERAGE=1) else ^
+if /i "%~1"=="--parallel" (set SEQUENTIAL=0) else ^
+if /i "%~1"=="--coverage" (echo ##teamcity[message text='--coverage is temporarily disabled in build.bat; ignoring' status='WARNING']) else ^
 if /i "%~1"=="Debug" (set CONFIG=Debug) else ^
 if /i "%~1"=="Release" (set CONFIG=Release) else (
     echo Unrecognized argument: %~1 1>&2
@@ -86,11 +87,6 @@ if %REQUIRE_VENDOR%==1 if %IAGREE%==0 (
     goto error
 )
 
-REM # Auto-enable coverage under TeamCity — TC's dotCover build feature only
-REM # wraps its built-in .NET runner, not the Command Line runner that invokes
-REM # this script. Without this, CI builds would produce no coverage data.
-if defined TEAMCITY_VERSION set COVERAGE=1
-
 set MSBUILD_PROPS=-p:Configuration=%CONFIG%
 if %IAGREE%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:IAgreeToVendorLicenses=true
 if %AUTOMATED%==1 set MSBUILD_PROPS=%MSBUILD_PROPS% -p:AutomatedBuild=true
@@ -101,149 +97,80 @@ if %IAGREE%==1 (
     echo ##teamcity[message text='Vendor support: DISABLED ^(no --i-agree-to-the-vendor-licenses^); building core only']
 )
 
-REM # Build targets: only the SDK-style / net8-capable projects. Skyline.csproj
-REM # pulls in every ProjectReference (BiblioSpec, CommonMsData, ProteomeDb,
-REM # ProteowizardWrapper, ZedGraph, plus the BlibBuild/BlibFilter tool projects
-REM # under pwiz-sharp/Tools/BiblioSpec). TestData.csproj and Test.csproj add the
-REM # integration + unit test suites next to Skyline's runtime output.
-set BUILD_TARGET=Skyline.csproj TestData\TestData.csproj Test\Test.csproj
+REM # Build targets: Skyline.csproj pulls in every ProjectReference (BiblioSpec,
+REM # CommonMsData, ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp
+REM # vendor + BiblioSpec tool projects, ...). The test projects add the suites,
+REM # and TestRunner is the harness that stages + runs them.
+set BUILD_TARGET=Skyline.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestRunner\TestRunner.csproj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet not on PATH & goto error)
 
-echo ##teamcity[progressMessage 'dotnet restore (%CONFIG%)']
-dotnet restore Skyline.csproj %MSBUILD_PROPS%
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet restore Skyline failed & goto error)
-dotnet restore TestData\TestData.csproj %MSBUILD_PROPS%
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet restore TestData failed & goto error)
-dotnet restore Test\Test.csproj %MSBUILD_PROPS%
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet restore Test failed & goto error)
+for %%P in (%BUILD_TARGET%) do call :restore_one "%%~P"
+if %EXIT% NEQ 0 goto error
 
-echo ##teamcity[progressMessage 'dotnet build Skyline (%CONFIG%)']
-dotnet build Skyline.csproj -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet build Skyline failed & goto error)
-
-echo ##teamcity[progressMessage 'dotnet build TestData (%CONFIG%)']
-dotnet build TestData\TestData.csproj -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet build TestData failed & goto error)
-
-echo ##teamcity[progressMessage 'dotnet build Test (%CONFIG%)']
-dotnet build Test\Test.csproj -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet build Test failed & goto error)
+for %%P in (%BUILD_TARGET%) do call :build_one "%%~P"
+if %EXIT% NEQ 0 goto error
 
 REM # ------------------------------------------------------------------------
 REM # Test step
 REM #
-REM # TestData\TestData.csproj (integration) and Test\Test.csproj (unit) are net8-ready.
-REM # TestFunctional\, TestConnected\ get added here as they get ported. TestPerf\ and
-REM # TestTutorial\ are permanently excluded from the default build per project policy —
-REM # kick them off manually when needed. Each project runs as a separate `dotnet test`.
-REM #
-REM # No filter: the entire TestData suite runs. Previously three
-REM # WatersCalcurveTest cases (WatersCacheTest, WatersMultiReplicateTest,
-REM # WatersMultiFileTest) hung at MemoryDocumentContainer.WaitForComplete
-REM # because Skyline's IsFinal check required (IsFinal AND IsError) — a
-REM # loader that finished successfully but left doc.IsLoaded=false would
-REM # never satisfy either condition and the test blocked forever. Fixed
-REM # in MemoryDocumentContainer.IsFinal to accept ANY final loader state.
+REM # Stage every project's net8 output into one bin\staging-net8\<Config> (the
+REM # single-bin layout TestRunner + the Docker workers assume) plus a bundled
+REM # portable .NET 8 runtime for the workers, then run the staged TestRunner.
+REM # No filter: the whole discovered suite runs. TestFunctional (UI) tests need
+REM # this harness -- offscreen mode + the form lifecycle -- which `dotnet test`
+REM # can't provide.
 REM # ------------------------------------------------------------------------
-set TEST_TARGET=TestData\TestData.csproj Test\Test.csproj
+echo ##teamcity[progressMessage 'Stage-Net8Tests.ps1 (%CONFIG%)']
+pwsh -NoProfile -File "%SCRIPT_DIR%\Stage-Net8Tests.ps1" -Configuration %CONFIG%
+set EXIT=%ERRORLEVEL%
+if %EXIT% NEQ 0 (set ERROR_TEXT=Stage-Net8Tests.ps1 failed & goto error)
+
+set STAGE_DIR=%SCRIPT_DIR%\bin\staging-net8\%CONFIG%
 
 set TC_TEST_RESULTS=%SCRIPT_DIR%\TestResults
 if exist "%TC_TEST_RESULTS%" rmdir /s /q "%TC_TEST_RESULTS%"
 mkdir "%TC_TEST_RESULTS%"
 
-set TEST_FILTER=
-set TEST_FILTER_ARG=
-if defined TEST_FILTER if not "%TEST_FILTER%"=="" set TEST_FILTER_ARG=--filter "%TEST_FILTER%"
+REM # No skip list: every discovered test runs. A test that can't run in parallel
+REM # (shared resource, or needs a host-only vendor SDK / network) marks itself with
+REM # [NoParallelTesting("reason")] -- TestRunner routes those to the host worker
+REM # instead of a Docker worker, so they still run rather than being skipped.
+set RUNNER_ARGS=loop=1 language=en offscreen=on results="%TC_TEST_RESULTS%"
+if defined TEAMCITY_VERSION set RUNNER_ARGS=%RUNNER_ARGS% teamcitytestdecoration=on
+if defined SKYLINE_TEST_ARGS set RUNNER_ARGS=%RUNNER_ARGS% %SKYLINE_TEST_ARGS%
 
-REM # Build up the logger flags without delayed expansion by using two SETs.
-REM # (Delayed expansion is deliberately off at file scope so `!=` in the test
-REM # filter stays literal.)
-set TEST_LOGGERS=--logger trx --results-directory "%TC_TEST_RESULTS%"
-if defined TEAMCITY_VERSION set TEST_LOGGERS=%TEST_LOGGERS% --logger teamcity
-if not defined TEAMCITY_VERSION set TEST_LOGGERS=%TEST_LOGGERS% --logger "console;verbosity=normal"
+if %SEQUENTIAL%==1 (
+    set RUNNER_MODE=parallelmode=off
+    echo ##teamcity[progressMessage 'TestRunner ^(host, sequential^)']
+) else (
+    set RUNNER_MODE=parallelmode=server workercount=%SKYLINE_TEST_WORKERS%
+    echo ##teamcity[progressMessage 'TestRunner ^(parallel, %SKYLINE_TEST_WORKERS% workers^)']
+)
 
-echo ##teamcity[progressMessage 'dotnet test (%CONFIG%)']
-
-REM # Dispatch to :run_coverage or :run_test via call so the SET EXIT=%ERRORLEVEL%
-REM # inside each subroutine happens after the actual command runs. Doing this
-REM # inline inside an if-block would need delayed expansion (%ERRORLEVEL% in an
-REM # if-block is parsed at block start, not after the command).
-if %COVERAGE%==1 (call :run_coverage) else (call :run_test)
-
-if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet test failed & goto error)
+pushd "%STAGE_DIR%"
+echo "%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS%
+"%STAGE_DIR%\TestRunner.exe" %RUNNER_MODE% %RUNNER_ARGS%
+set EXIT=%ERRORLEVEL%
+popd
+if %EXIT% NEQ 0 (set ERROR_TEXT=TestRunner reported test failures & goto error)
 
 popd
 exit /b 0
 
-:run_coverage
-echo ##teamcity[progressMessage 'dotnet tool restore - local manifest .config\dotnet-tools.json']
-dotnet tool restore
-if %ERRORLEVEL% NEQ 0 (
-    set EXIT=2
-    set ERROR_TEXT=`dotnet tool restore` failed; see .config\dotnet-tools.json. Coverage cannot run.
-    goto :eof
-)
-
-set COVER_DIR=%TC_TEST_RESULTS%
-set COVER_REPORT_DIR=%COVER_DIR%\coverage-report
-set COVER_SNAPSHOT=%COVER_DIR%\coverage.dcvr
-set COVER_FILTERS=+:module=Skyline*;+:module=pwiz.*;+:module=BiblioSpec;-:module=*Test*
-
-REM # dotcover's dotnet-test wrapper covers one project at a time, so snapshot each
-REM # project into cover-<project>.dcvr and merge them into COVER_SNAPSHOT for the report.
-set EXIT=0
-set MERGE_SOURCES=
-for %%P in (%TEST_TARGET%) do call :cover_one "%%~P"
-if %EXIT% NEQ 0 goto :eof
-
-echo ##teamcity[progressMessage 'dotnet dotcover merge']
-dotnet dotcover merge --Source="%MERGE_SOURCES%" --Output="%COVER_SNAPSHOT%"
-
-echo ##teamcity[progressMessage 'dotnet dotcover report - HTML at %COVER_REPORT_DIR%']
-if not exist "%COVER_REPORT_DIR%" mkdir "%COVER_REPORT_DIR%"
-dotnet dotcover report --Source="%COVER_SNAPSHOT%" --Output="%COVER_REPORT_DIR%\index.html" --ReportType=HTML --HideAutoProperties
-if %ERRORLEVEL% NEQ 0 echo ##teamcity[message text='dotCover report generation failed - snapshot is still at %COVER_SNAPSHOT%' status='WARNING']
-
-REM # Emit the snapshot path as a TC service message so the dotCover build
-REM # feature can pick it up. Harmless locally.
-if defined TEAMCITY_VERSION echo ##teamcity[importData type='dotNetCoverage' tool='dotcover' path='%COVER_SNAPSHOT%']
+:restore_one
+echo ##teamcity[progressMessage 'dotnet restore %~1']
+dotnet restore "%~1" %MSBUILD_PROPS%
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet restore %~1 failed")
 goto :eof
 
-REM # Cover a single test project (%1) into its own snapshot and append it to MERGE_SOURCES.
-:cover_one
-set _COVER_SNAP=%COVER_DIR%\cover-%~n1.dcvr
-echo ##teamcity[progressMessage 'dotnet dotcover dotnet -- test %~1 ^(with coverage^)']
-dotnet dotcover dotnet --Output="%_COVER_SNAP%" --Filters="%COVER_FILTERS%" --ReturnTargetExitCode -- test %~1 -c %CONFIG% -f net8.0-windows --no-build %TEST_FILTER_ARG%%TEST_LOGGERS% --blame-hang --blame-hang-timeout 3min
-if errorlevel 1 set EXIT=1
-REM # Guard against a false green: if the target never ran (e.g. wrong config so the
-REM # test DLL isn't found), dotcover writes no snapshot yet may still exit 0. Treat a
-REM # missing snapshot as a test failure so 0-tests-run can't pass the build.
-if not exist "%_COVER_SNAP%" (
-    echo ##teamcity[message text='No coverage snapshot for %~1 - the test run did not execute' status='ERROR']
-    set EXIT=1
-)
-if "%MERGE_SOURCES%"=="" (set MERGE_SOURCES=%_COVER_SNAP%) else (set MERGE_SOURCES=%MERGE_SOURCES%;%_COVER_SNAP%)
-goto :eof
-
-:run_test
-REM # dotnet test takes one project at a time; run each in TEST_TARGET and keep
-REM # a non-zero exit if any of them fails.
-set EXIT=0
-for %%P in (%TEST_TARGET%) do (
-    echo ##teamcity[progressMessage 'dotnet test %%P']
-    dotnet test %%P -c %CONFIG% -f net8.0-windows --no-build %TEST_FILTER_ARG%%TEST_LOGGERS% --blame-hang --blame-hang-timeout 3min
-    if errorlevel 1 set EXIT=1
-)
+:build_one
+echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
+dotnet build "%~1" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
 goto :eof
 
 :error
