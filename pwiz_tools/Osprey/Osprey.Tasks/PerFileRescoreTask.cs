@@ -530,15 +530,8 @@ namespace pwiz.Osprey.Tasks
             // rescore loop repopulates the heavy per-entry arrays) -- fires early,
             // so it lands even if a long run is later killed. #4376.
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation start (pre-GC)");
-            if (ProfilerHooks.MemoryLoggingEnabled)
-            {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-                ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                    @"[MEM reconciliation-floor] managed_heap={0:F2} GB (post-GC, entering rescore, files={1})",
-                    GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), perFileEntries.Count));
-            }
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"reconciliation-floor",
+                string.Format(@"(post-GC, entering rescore, files={0})", perFileEntries.Count));
 
             int nTotalFiles = perFileEntries.Count;
             // The Stage 6 rescore is the "second per-file fan-out": each file's rescore
@@ -594,15 +587,8 @@ namespace pwiz.Osprey.Tasks
             // clean PERSISTENT managed heap (all files' rescored FdrEntry buffer +
             // library). Zero-cost when OSPREY_LOG_MEMORY is unset.
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"reconciliation end (pre-GC)");
-            if (ProfilerHooks.MemoryLoggingEnabled)
-            {
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                GC.Collect();
-                ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
-                    @"[MEM reconciliation-resident] managed_heap={0:F2} GB (files={1}, file_parallelism={2})",
-                    GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), nTotalFiles, parallelism));
-            }
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"reconciliation-resident",
+                string.Format(@"(files={0}, file_parallelism={1})", nTotalFiles, parallelism));
 
             int totalRescored = 0;
             int totalGapCwt = 0;
