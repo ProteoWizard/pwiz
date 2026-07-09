@@ -1069,6 +1069,14 @@ namespace pwiz.Osprey.Test
             // A degenerate library RT range yields no mapping.
             Assert.IsNull(RTCalibration.FromLinearMapping(5.0, 5.0, 1.0, 0.0));
             Assert.IsNull(RTCalibration.FromLinearMapping(5.0, 1.0, 1.0, 0.0));
+
+            // Non-finite bounds are rejected rather than producing a degenerate map:
+            // `libMaxRt > libMinRt` alone would accept an infinite max. Matches Rust's
+            // is_finite() guard, which a malformed library could otherwise diverge on.
+            Assert.IsNull(RTCalibration.FromLinearMapping(0.0, double.PositiveInfinity, 1.0, 0.0));
+            Assert.IsNull(RTCalibration.FromLinearMapping(double.NegativeInfinity, 100.0, 1.0, 0.0));
+            Assert.IsNull(RTCalibration.FromLinearMapping(double.NaN, 100.0, 1.0, 0.0));
+            Assert.IsNull(RTCalibration.FromLinearMapping(0.0, double.NaN, 1.0, 0.0));
         }
 
         /// <summary>Build a linear RTCalibration spanning [xMin, xMax] with the given line.</summary>

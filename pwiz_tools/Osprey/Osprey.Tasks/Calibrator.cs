@@ -831,24 +831,26 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
 
-            // MinPoints is only a fit-time guard (OutlierRetention == 1.0 disables the
-            // other branch that reads it), and this value is always <= the point count,
-            // so the refit is never rejected for its size -- a weak pass 2 is discarded
-            // by the R^2 test below, not by the fit. That is the behaviour osprey
-            // docs/02-calibration.md specifies: "If refinement produces fewer
-            // calibration points than the absolute minimum (50), or if R^2 drops, the
-            // original pass-1 calibration is kept."
+            // The refit's own adaptive floor, matching Rust's
+            // `n_refined.min(min_calibration_points)` (pipeline.rs). MinPoints is only a
+            // fit-time guard (OutlierRetention == 1.0 disables the other branch that
+            // reads it) and this value is always <= the point count, so the refit is
+            // never rejected for its size -- a weak pass 2 is discarded by the R^2 test
+            // below, not by the fit. That is the behaviour osprey docs/02-calibration.md
+            // specifies: "If refinement produces fewer calibration points than the
+            // absolute minimum (50), or if R^2 drops, the original pass-1 calibration is
+            // kept."
             //
             // Rust used to violate its own doc here by reusing pass 1's calibrator,
             // whose min_points is pass 1's effective_min_points. On a band file that is
             // n_pass1 (e.g. 193), not 50, so a refit yielding 50..192 points cleared the
             // >= 50 guard and then tripped RTCalibrator::fit's min_points check, whose
             // error discarded a perfectly good pass-1 calibration and ran the file
-            // uncalibrated. Fixed upstream in maccoss/osprey (pipeline.rs now builds the
-            // refit its own adaptive floor). See issue #4401.
+            // uncalibrated. Fixed upstream in maccoss/osprey. See issue #4401.
             return FitCalibrationPass(
                 2, matchArray, refined, libRtsDetected, measuredRtsDetected,
-                context.Config, Math.Min(20, libRtsDetected.Count));
+                context.Config,
+                Math.Min(libRtsDetected.Count, context.Config.RtCalibration.MinCalibrationPoints));
         }
 
         /// <summary>

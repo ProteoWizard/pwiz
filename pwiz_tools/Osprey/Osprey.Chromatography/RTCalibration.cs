@@ -514,8 +514,15 @@ namespace pwiz.Osprey.Chromatography
         public static RTCalibration FromLinearMapping(
             double libMinRt, double libMaxRt, double slope, double intercept)
         {
-            if (!(libMaxRt > libMinRt))
+            // Reject non-finite bounds explicitly: `libMaxRt > libMinRt` alone would
+            // accept an infinite libMaxRt and build a degenerate map. Matches Rust's
+            // `!lib_min_rt.is_finite() || !lib_max_rt.is_finite()` guard.
+            if (double.IsNaN(libMinRt) || double.IsInfinity(libMinRt) ||
+                double.IsNaN(libMaxRt) || double.IsInfinity(libMaxRt) ||
+                libMaxRt <= libMinRt)
+            {
                 return null;
+            }
 
             double[] libraryRts = { libMinRt, libMaxRt };
             double[] fitted = { intercept + slope * libMinRt, intercept + slope * libMaxRt };
