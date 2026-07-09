@@ -723,6 +723,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // (below this the null region is too sparse to assess -> NaN "cannot assess").
         private const int MinNullRegionBins = 4;
 
+        // The null-region fit is bounded at this quantile of the decoy (null) score
+        // distribution -- its null-dominated lower portion, below the true-hit
+        // "shoulder" where the target's real hits start lifting the target:decoy
+        // ratio off its plateau. Calibrated on the Stellar libdecoy oracle, where
+        // that plateau is flat below ~the decoy 40th percentile and rises above it;
+        // fitting only the plateau is what makes a calibrated pairing read as flat.
+        private const double NullRegionDecoyQuantile = 0.40;
+
         /// <summary>
         /// Build the non-parametric null-alignment density ratios and the
         /// left-side flatness KPI from a best-per-precursor
@@ -763,13 +771,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (td == null)
                 return data;   // no target/decoy mass to divide: ratio lines only
 
-            // Null region: usable left bins (both classes populated) up to the
-            // true-hit onset -- the first bin where the target density sustainedly
-            // meets/exceeds the decoy density (real hits arriving). Capped at the
-            // decoy 95th percentile so a degenerate never-crossing case still
-            // bounds the fit to well-populated bins.
+            // Null region = the null-dominated lower portion of the decoy (null)
+            // distribution (up to NullRegionDecoyQuantile), where true target hits
+            // are negligible -- they sit at high scores. Fitting only this range
+            // isolates the FLAT plateau Storey's check reads and excludes the
+            // true-hit "shoulder" (the rise a target/decoy crossover would let in:
+            // the crossover lands only after the target has accumulated its true-hit
+            // mass, well past where the ratio departs its plateau). The crossover
+            // onset still caps it as a safety for a degenerate target~decoy
+            // separation (onset fires at bin 0 -> empty region -> "cannot assess").
+            // Both bounds are exclusive (the fit loop below runs over [0, hi)).
             int onset = TrueHitOnset(h.Target, h.Decoy, nb);
-            int hi = Math.Min(onset, DecoyQuantileBin(h.Decoy, nb, 0.95));
+            int hi = Math.Min(onset, DecoyQuantileBin(h.Decoy, nb, NullRegionDecoyQuantile));
 
             var xs = new List<double>();
             var ys = new List<double>();
@@ -843,16 +856,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 return;
             xs.Add(centers[i]);
             ys.Add(Math.Log(ratio[i]));
-            ws.Add((double)num[i] * den[i] / (num[i] + den[i]));
+            ws.Add((double)num[i] * den[i] / ((double)num[i] + den[i]));
         }
 
         // The true-hit onset: the first bin at which the target density rises to
-        // meet or exceed the decoy density and STAYS there (the next usable bin is
-        // also at/above) -- i.e. where real hits begin to dominate the shared null.
-        // Below it, target:decoy sits on its null plateau (at pi0 < 1). Returns nb
-        // when no sustained crossover exists (a degenerate target~decoy separation),
-        // leaving the decoy-quantile cap to bound the fit. Densities are compared by
-        // cross-multiplication (target_i/sumT >= decoy_i/sumD) to avoid recomputing sums.
+        // meet or exceed the decoy density and STAYS there (this bin AND the next
+        // two usable bins are all at/above) -- i.e. where real hits begin to
+        // dominate the shared null. Requiring a sustained run keeps a 1-2 bin
+        // statistical bump in the null-dominated left from tripping a false-early
+        // onset (which would only shrink the fit window -- conservative -- but is
+        // still worth guarding). Below the onset, target:decoy sits on its null
+        // plateau (at pi0 < 1). Returns nb when no sustained crossover exists (a
+        // degenerate target~decoy separation), leaving the decoy-quantile cap to
+        // bound the fit. Densities are compared by cross-multiplication
+        // (target_i/sumT >= decoy_i/sumD) to avoid recomputing sums.
         private static int TrueHitOnset(int[] target, int[] decoy, int nb)
         {
             long sumT = 0, sumD = 0;
@@ -863,10 +880,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             {
                 if (target[i] < 1 || decoy[i] < 1 || !AtOrAbove(target[i], decoy[i], sumT, sumD))
                     continue;
-                int j = i + 1;
-                while (j < nb && (target[j] < 1 || decoy[j] < 1))
-                    j++;
-                if (j >= nb || AtOrAbove(target[j], decoy[j], sumT, sumD))
+                if (SustainedAtOrAbove(target, decoy, nb, i, sumT, sumD, 2))
                     return i;
             }
             return nb;
@@ -878,10 +892,29 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return (double)target * sumD >= (double)decoy * sumT;
         }
 
+        // True when the next `lookahead` USABLE bins after `start` (both classes
+        // populated) are all at/above the decoy density -- or fewer usable bins
+        // remain before nb (a crossover close to the right edge is still real).
+        // Lets TrueHitOnset require a sustained, not single-fluctuation, crossover.
+        private static bool SustainedAtOrAbove(int[] target, int[] decoy, int nb,
+            int start, long sumT, long sumD, int lookahead)
+        {
+            int seen = 0;
+            for (int j = start + 1; j < nb && seen < lookahead; j++)
+            {
+                if (target[j] < 1 || decoy[j] < 1)
+                    continue;
+                if (!AtOrAbove(target[j], decoy[j], sumT, sumD))
+                    return false;
+                seen++;
+            }
+            return true;
+        }
+
         // The bin index at the given quantile of the decoy score distribution (by
-        // decoy count) -- used to cap the null-region fit to well-populated bins
-        // when no true-hit onset is found. Returns nb-1 as a safe upper bound if
-        // decoys are empty.
+        // decoy count) -- the primary null-region upper bound (its null-dominated
+        // lower portion); the true-hit onset only caps it in the degenerate case.
+        // Returns nb-1 as a safe upper bound if decoys are empty.
         private static int DecoyQuantileBin(int[] decoy, int nb, double q)
         {
             long total = 0;
