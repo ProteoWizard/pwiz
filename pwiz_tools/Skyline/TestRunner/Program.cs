@@ -1035,14 +1035,23 @@ namespace TestRunner
                 languages = new[] { "en-US" };
             }
 
+            // Each worker connection is handled on its own thread, so LogTestOutput is called
+            // concurrently. Console and the shared StreamWriter are not thread-safe -- unsynchronized
+            // WriteLine calls race and (on net8) throw IndexOutOfRangeException, which the worker
+            // thread's catch escalates to Environment.Exit, killing the whole parallel run. Serialize
+            // the writes so a parallel pass completes.
+            var logWriteLock = new object();
             Action<string, StreamWriter, int> LogTestOutput = (testOutput, testLog, pass) =>
             {
                 testOutput = testOutput.Trim(' ', '\t', '\r', '\n');
                 testOutput = Regex.Replace(testOutput, @"\d+ failures", $"{testsFailed} failures");
                 testOutput = Regex.Replace(testOutput, @"^(\[\d+:\d+\])?\s*(\d+)\.(\d+)?", $" $1 {pass}.{testsResultsReturned} ", RegexOptions.Multiline);
 
-                Console.WriteLine(testOutput);
-                testLog.WriteLine(testOutput);
+                lock (logWriteLock)
+                {
+                    Console.WriteLine(testOutput);
+                    testLog.WriteLine(testOutput);
+                }
             };
 
             for (int pass=0; pass < passEnabled.Length; ++pass)
