@@ -317,9 +317,20 @@ namespace pwiz.Osprey.Chromatography
         /// </summary>
         public static double SearchWindowHalfWidth(double mad, double minTolerance, double maxTolerance)
         {
+            return Math.Max(minTolerance, Math.Min(maxTolerance, SearchWindowRaw(mad)));
+        }
+
+        /// <summary>
+        /// The unclamped RT search tolerance (minutes) for a given robust-spread
+        /// MAD: <c>3 * MAD * 1.4826</c>, before the <c>[minTolerance, maxTolerance]</c>
+        /// clamp in <see cref="SearchWindowHalfWidth"/> is applied. Shared so the
+        /// console summary can report the computed tolerance alongside the clamped
+        /// one (e.g. when the fit is tighter than the floor).
+        /// </summary>
+        public static double SearchWindowRaw(double mad)
+        {
             double robustSd = mad * 1.4826;
-            double window = robustSd * 3.0;
-            return Math.Max(minTolerance, Math.Min(maxTolerance, window));
+            return robustSd * 3.0;
         }
 
         /// <summary>Get the library RT range used for calibration.</summary>

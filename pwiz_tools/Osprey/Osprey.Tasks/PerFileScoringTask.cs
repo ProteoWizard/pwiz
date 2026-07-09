@@ -184,6 +184,17 @@ namespace pwiz.Osprey.Tasks
             // reconciliation can lazily load CWT candidates per file via
             // ParquetScoreCache.LoadCwtCandidatesFromParquet.
             var perFileParquetPaths = new Dictionary<string, string>();
+            // Decouple scoring from the join (issue #4355): during the scoring
+            // loop below we record ONLY each scored file's name, in original
+            // input order (by fileIdx -- the parallel branch re-collects by
+            // input index, the sequential branch appends in that same order),
+            // and defer materializing its FdrEntry stubs
+            // until after the loop -- reloading them from the just-written
+            // .scores.parquet. Retaining every file's stub buffer while the
+            // ~20 GB per-file scoring transient is live is what OOMs a large
+            // straight-through run; deferring holds the scoring peak to
+            // library + one file's transient (flat in file count).
+            var scoredFileNames = new List<string>();
 
             int nFiles = config.InputFiles.Count;
 
@@ -226,7 +237,7 @@ namespace pwiz.Osprey.Tasks
                     fullLibrary, config, parquetFooterMetadata,
                     perFileCalibrations, validityKey, ctx);
                 if (fileResult != null)
-                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                    scoredFileNames.Add(fileName);
             }
             else if (effectiveParallelism == 1)
             {
@@ -245,7 +256,9 @@ namespace pwiz.Osprey.Tasks
                         fullLibrary, config, parquetFooterMetadata,
                         perFileCalibrations, validityKey, ctx);
                     if (fileResult != null)
-                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult));
+                        scoredFileNames.Add(fileName);
+                    ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
+                        string.Format(@"scored file {0}/{1}", fileIdx + 1, config.InputFiles.Count));
                 }
             }
             else
@@ -257,7 +270,7 @@ namespace pwiz.Osprey.Tasks
                     MaxDegreeOfParallelism = effectiveParallelism
                 };
                 string validityKey = ValidityKey(ctx);
-                var fileResults = new ConcurrentDictionary<int, KeyValuePair<string, List<FdrEntry>>>();
+                var fileResults = new ConcurrentDictionary<int, string>();
                 // Legend mapping each aggregate-line slot to its input file, printed once
                 // before the concurrent "[i] p%" line starts -- mirrors Skyline's numbered
                 // file list above its multi-file import progress, so a reader can tell which
@@ -283,14 +296,14 @@ namespace pwiz.Osprey.Tasks
                             fullLibrary, config, parquetFooterMetadata,
                             perFileCalibrations, validityKey, ctx);
                         if (fileResult != null)
-                            fileResults[fileIdx] = new KeyValuePair<string, List<FdrEntry>>(fileName, fileResult);
+                            fileResults[fileIdx] = fileName;
                     }
                 });
                 // Collect in original order
                 for (int i = 0; i < config.InputFiles.Count; i++)
                 {
-                    if (fileResults.TryGetValue(i, out KeyValuePair<string, List<FdrEntry>> result))
-                        perFileEntries.Add(result);
+                    if (fileResults.TryGetValue(i, out string scoredName))
+                        scoredFileNames.Add(scoredName);
                 }
             }
             swAllFiles.Stop();
@@ -305,6 +318,31 @@ namespace pwiz.Osprey.Tasks
             {
                 string fileName = Path.GetFileNameWithoutExtension(inputFile);
                 perFileParquetPaths[fileName] = ParquetScoreCache.GetScoresPath(inputFile);
+            }
+
+            // Now that every per-file scoring transient has been released,
+            // rematerialize the cold FdrEntry stubs the join needs by reloading
+            // them from each scored file's just-written .scores.parquet, in the
+            // same order scoring produced (issue #4355). Only the scalar stub
+            // fields are read back -- no PIN features / CWT / fragment arrays --
+            // which is exactly the cold shape the straight-through path already
+            // left here after ProcessFile spilled every file's full results and
+            // nulled those arrays (FirstJoin streams features back per file). The
+            // live per-file RTCalibration objects in perFileCalibrations are NOT
+            // reloaded: they are not stored in .scores.parquet, so they must stay
+            // the live objects harvested during scoring.
+            foreach (string fileName in scoredFileNames)
+            {
+                string parquetPath = perFileParquetPaths[fileName];
+                // A scored file always has a parquet here; the sole exception is
+                // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
+                // returns an empty result without writing one. Skip that case so
+                // the run still stops cleanly at the "no scored entries" gate
+                // below rather than throwing on a missing file.
+                if (!File.Exists(parquetPath))
+                    continue;
+                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                    fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
             }
 
             int totalScored = 0;
@@ -681,6 +719,24 @@ namespace pwiz.Osprey.Tasks
 
             _fullLibrary = fullLibrary;
             _libraryById = libraryById;
+
+            // Diagnostic: the true resident-library managed heap. The working set
+            // at this point still holds the one-time TSV/cache read buffers and freed
+            // load garbage, so the settled managed heap is the clean resident number.
+            // Collect/WaitForPendingFinalizers/Collect settles finalizable objects,
+            // then GetTotalMemory(false) reads the result WITHOUT forcing a further
+            // collection. Zero-cost when OSPREY_LOG_MEMORY is unset.
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY")))
+            {
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+                long managedBytes = GC.GetTotalMemory(false);
+                ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                    @"[MEM library-resident] managed_heap={0:F2} GB ({1} entries)",
+                    managedBytes / (1024.0 * 1024.0 * 1024.0), fullLibrary.Count));
+            }
+
             return true;
         }
 
@@ -1310,6 +1366,24 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Format(
                     "Wrote {0} scored entries to {1} ({2:F1}s)",
                     scoredEntries.Count, parquetPath, swParquet.Elapsed.TotalSeconds));
+
+                // Phase 1 (issue #4355): the heavy per-entry arrays are now persisted in
+                // the parquet above and are reloadable by ParquetIndex, so drop them from
+                // the retained buffer to bound memory -- all N files' entries are held at
+                // once for the join, and these arrays dominate. Features is reloaded before
+                // first-pass Percolator (FirstJoinTask); CWT / fragments / ref-XIC are
+                // reloaded from parquet in Stage 6 / 7. This brings the cold buffer to the
+                // same stub shape LoadFdrStubsFromParquet produces (see the FdrEntry field
+                // docs, which already document these as null on parquet-loaded stubs).
+                foreach (var entry in scoredEntries)
+                {
+                    entry.Features = null;
+                    entry.CwtCandidates = null;
+                    entry.FragmentMzs = null;
+                    entry.FragmentIntensities = null;
+                    entry.ReferenceXicRts = null;
+                    entry.ReferenceXicIntensities = null;
+                }
             }
 
             return scoredEntries;
@@ -1559,18 +1633,52 @@ namespace pwiz.Osprey.Tasks
             else
             {
                 var stats = rtCalibration.Stats();
-                double finalHalfWidth = RTCalibration.SearchWindowHalfWidth(
+                double rawTolerance = RTCalibration.SearchWindowRaw(stats.MAD);
+                double finalTolerance = RTCalibration.SearchWindowHalfWidth(
                     stats.MAD, config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance);
-                ctx.LogInfo(string.Format(ic,
-                    "  RT window: {0:F2} min before -> {1:F2} min (+/-) search half-width after calibration",
-                    initialRtTolerance, finalHalfWidth));
+                string beforeStr = initialRtTolerance.ToString("F2", ic);
+                string rawStr = rawTolerance.ToString("F2", ic);
+                string finalStr = finalTolerance.ToString("F2", ic);
+                string rtToleranceLine;
+                if (double.IsNaN(finalTolerance))
+                {
+                    // Degenerate calibration (e.g. NaN MAD): no usable spread to report.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> undetermined after calibration (no usable RT spread)",
+                        beforeStr);
+                }
+                else if (rawStr == finalStr)
+                {
+                    // In range, or a clamp too small to show at this precision: a single
+                    // value is unambiguous, so skip the computed-vs-clamp call-out.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min after calibration",
+                        beforeStr, finalStr);
+                }
+                else if (finalTolerance > rawTolerance)
+                {
+                    // The computed 3*MAD*1.4826 was tighter than the floor: show the
+                    // computed tolerance and the floor actually in use.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration",
+                        beforeStr, rawStr, finalStr);
+                }
+                else
+                {
+                    // finalTolerance < rawTolerance: the computed value exceeded the
+                    // ceiling, so show the computed tolerance and the cap in use.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration",
+                        beforeStr, rawStr, finalStr);
+                }
+                ctx.LogInfo(rtToleranceLine);
                 ctx.LogInfo(string.Format(ic,
                     "  RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3} points",
                     stats.MAD, stats.ResidualSD, stats.RSquared, stats.NPoints));
             }
 
-            EmitMassCalibrationLine(ctx, "MS1", ms1Cal);
-            EmitMassCalibrationLine(ctx, "MS2", ms2Cal);
+            EmitMassCalibrationLine(ctx, "MS1", "precursor", ms1Cal);
+            EmitMassCalibrationLine(ctx, "MS2", "fragment", ms2Cal);
         }
 
         /// <summary>
@@ -1580,7 +1688,7 @@ namespace pwiz.Osprey.Tasks
         /// when the level had no usable errors.
         /// </summary>
         private static void EmitMassCalibrationLine(
-            PipelineContext ctx, string level, MzCalibrationResult cal)
+            PipelineContext ctx, string level, string matchNoun, MzCalibrationResult cal)
         {
             var ic = CultureInfo.InvariantCulture;
             if (cal == null || !cal.Calibrated)
@@ -1590,8 +1698,8 @@ namespace pwiz.Osprey.Tasks
             }
             double tolerance = cal.AdjustedTolerance ?? (Math.Abs(cal.Mean) + 3.0 * cal.SD);
             ctx.LogInfo(string.Format(ic,
-                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} ({5} errors)",
-                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count));
+                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5} {6} matches)",
+                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count, matchNoun));
         }
 
         /// <summary>
