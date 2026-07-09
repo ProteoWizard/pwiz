@@ -450,6 +450,10 @@ namespace pwiz.Skyline.ToolsUI
             if (builder == null)
                 throw new ArgumentException(new LlmInstruction(@"This graph has no context menu."));
             var centerPoint = new System.Drawing.Point(zedGraph.Width / 2, zedGraph.Height / 2);
+            // menuStrip is the control's reused ContextMenuStrip, so it may still hold items from a previous
+            // populate or a prior real right-click; empty it first (as ZedGraph's own contextMenuStrip1_Opening
+            // does) before the builder repopulates it.
+            menuStrip.Items.Clear();
             builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
         }
 

@@ -904,12 +904,12 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Builds this control's right-click context menu the way a right-click would (so items added
         /// on demand are present), for <see cref="ContextMenuElement"/> to list or invoke. The default is the
-        /// control's own <see cref="System.Windows.Forms.Control.ContextMenuStrip"/> (a graph builds a fresh
+        /// control's own <see cref="System.Windows.Forms.Control.ContextMenuStrip"/> (a graph populates its own
         /// menu); a grid and the Targets tree, whose menus are built/owned elsewhere, override this. Runs on
         /// the UI thread.</summary>
         public virtual ContextMenuStrip BuildContextMenu()
         {
-            // A graph (this control is a ZedGraphControl, or a graph form is just its graph) builds a fresh menu.
+            // A graph (this control is a ZedGraphControl, or a graph form is just its graph) populates its own menu.
             var graphMenu = TryBuildGraphContextMenu(Control);
             if (graphMenu != null)
                 return graphMenu;
@@ -929,16 +929,20 @@ namespace pwiz.Skyline.ToolsUI
             return menu;
         }
 
-        // Builds a fresh context menu for a graph through its ContextMenuBuilder, or returns null when the
+        // Populates a graph's own context menu through its ContextMenuBuilder, or returns null when the
         // control is not a graph. The graph can be addressed as its ZedGraphControl, or -- since a graph form
-        // is just its graph -- as the form itself. Runs on the UI thread.
+        // is just its graph -- as the form itself. The menu returned is the control's own ContextMenuStrip
+        // (created with the control's components and disposed with the control), so the caller must not dispose
+        // it. Runs on the UI thread.
         internal static ContextMenuStrip TryBuildGraphContextMenu(Control control)
         {
             var zedGraph = control as ZedGraph.ZedGraphControl
                 ?? (control as DockableFormEx != null ? JsonUiService.TryGetZedGraphControl((DockableFormEx) control) : null);
             if (zedGraph == null)
                 return null;
-            var graphMenu = new ContextMenuStrip();
+            // Reuse the ZedGraphControl's own ContextMenuStrip (contextMenuStrip1) rather than building a new
+            // one, so there is nothing extra to dispose -- it is owned and disposed by the control.
+            var graphMenu = zedGraph.ContextMenuStrip;
             JsonUiService.PopulateGraphContextMenu(zedGraph, graphMenu);
             return graphMenu;
         }
