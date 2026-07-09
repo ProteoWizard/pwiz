@@ -1984,6 +1984,66 @@ namespace pwiz.Osprey.Test
             }
         }
 
+        /// <summary>
+        /// Byte-parity gate for the streaming lean-stub load. <see cref="FdrProjectionSet.Builder"/>
+        /// must produce an element-for-element identical set to
+        /// <see cref="FdrProjectionSet.BuildFromEntries"/> without ever allocating an
+        /// <see cref="FdrEntry"/> (rematerializing 191M fat stubs just to convert them cost
+        /// ~53 GB on an 82-file Astral run). The builder assigns peptide ids in INSERTION
+        /// order and remaps them to the global Ordinal rank in Build(); this pins that the
+        /// remap reproduces BuildFromEntries' assignment across files, which is the invariant
+        /// the SVM subsample and protein-FDR join depend on.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrProjectionBuilderMatchesBuildFromEntries()
+        {
+            // Insertion order deliberately NOT ordinal, with duplicates within and across
+            // files, so an insertion-order id assignment differs from the ordinal one.
+            var seqsA = new[] { "peptide", "B", "AAA", "b" };
+            var seqsB = new[] { "b", "AAA", "zeta", "peptide" };
+
+            var perFile = new List<KeyValuePair<string, List<FdrEntry>>>
+            {
+                new KeyValuePair<string, List<FdrEntry>>("fileA", MakeColdStubs(seqsA, 100)),
+                new KeyValuePair<string, List<FdrEntry>>("fileB", MakeColdStubs(seqsB, 200))
+            };
+
+            var expected = FdrProjectionSet.BuildFromEntries(perFile);
+
+            // Same rows, streamed in exactly as ParquetScoreCache.ReadFdrStubScalars feeds them.
+            var builder = new FdrProjectionSet.Builder();
+            foreach (var kvp in perFile)
+            {
+                builder.BeginFile(kvp.Key, kvp.Value.Count);
+                foreach (var e in kvp.Value)
+                    builder.AddRow(e.EntryId, e.Charge, e.IsDecoy, e.CoelutionSum, e.ModifiedSequence);
+                builder.EndFile();
+            }
+            var actual = builder.Build();
+
+            CollectionAssert.AreEqual(expected.PeptideById, actual.PeptideById,
+                "interned peptide table must be identical");
+            Assert.AreEqual(expected.PerFile.Count, actual.PerFile.Count);
+            for (int f = 0; f < expected.PerFile.Count; f++)
+            {
+                Assert.AreEqual(expected.PerFile[f].Key, actual.PerFile[f].Key);
+                var exp = expected.PerFile[f].Value;
+                var act = actual.PerFile[f].Value;
+                Assert.AreEqual(exp.Count, act.Count);
+                for (int i = 0; i < exp.Count; i++)
+                {
+                    Assert.AreEqual(exp[i].EntryId, act[i].EntryId, "EntryId");
+                    Assert.AreEqual(exp[i].ParquetIndex, act[i].ParquetIndex, "ParquetIndex");
+                    Assert.AreEqual(exp[i].PeptideId, act[i].PeptideId, "PeptideId");
+                    Assert.AreEqual(exp[i].FileIdx, act[i].FileIdx, "FileIdx");
+                    Assert.AreEqual(exp[i].Charge, act[i].Charge, "Charge");
+                    Assert.AreEqual(exp[i].IsDecoy, act[i].IsDecoy, "IsDecoy");
+                    Assert.AreEqual(exp[i].CoelutionSum, act[i].CoelutionSum, "CoelutionSum");
+                    Assert.AreEqual(exp[i].Score, act[i].Score, "Score");
+                }
+            }
+        }
+
         private static LibraryEntry MakeLibEntry(
             uint id, string modifiedSequence, string[] proteinIds, bool isDecoy)
         {
@@ -1992,6 +2052,31 @@ namespace pwiz.Osprey.Test
                 ProteinIds = new List<string>(proteinIds),
                 IsDecoy = isDecoy
             };
+        }
+
+        /// <summary>
+        /// Cold FdrEntry stubs shaped exactly as
+        /// <c>ParquetScoreCache.LoadFdrStubsFromParquet</c> returns them: ParquetIndex is
+        /// the per-file row ordinal, the heavy arrays stay null, and Score stays 0 (the
+        /// first-pass FDR writes it back). Matching that shape is what makes the
+        /// BuildFromEntries-vs-Builder comparison meaningful.
+        /// </summary>
+        private static List<FdrEntry> MakeColdStubs(string[] modifiedSequences, uint firstEntryId)
+        {
+            var stubs = new List<FdrEntry>(modifiedSequences.Length);
+            for (int i = 0; i < modifiedSequences.Length; i++)
+            {
+                stubs.Add(new FdrEntry
+                {
+                    EntryId = firstEntryId + (uint)i,
+                    ParquetIndex = (uint)i,
+                    ModifiedSequence = modifiedSequences[i],
+                    Charge = (byte)(2 + (i % 2)),
+                    IsDecoy = (i % 3) == 0,
+                    CoelutionSum = 1.5 * (i + 1)
+                });
+            }
+            return stubs;
         }
     }
 }
