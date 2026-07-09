@@ -31,6 +31,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
@@ -95,7 +96,14 @@ namespace pwiz.Osprey.Tasks
         {
             typeof(FullLibrary), typeof(LibraryById), typeof(PerFileCalibrations),
             typeof(PerFileIsolationMz), typeof(PerFileParquetPaths),
-            typeof(RescoreBundle), typeof(ScoredEntries)
+            typeof(RescoreBundle), typeof(ScoredEntries),
+            // Must be declared, not just published: PipelineContext builds its
+            // producer registry from this list, so an undeclared byproduct cannot be
+            // lazily materialized and ctx.Get<T> throws UnknownByproductException on a
+            // cache miss. Without this entry FdrProjections only resolves because
+            // FirstJoinTask happens to read ScoredEntries first, which materializes
+            // this task and co-publishes both -- an ordering coupling, not a contract.
+            typeof(FdrProjections)
         };
 
         // Outputs reached by downstream tasks through ctx.Demand<PerFileScoringTask>().
@@ -338,23 +346,70 @@ namespace pwiz.Osprey.Tasks
             // live per-file RTCalibration objects in perFileCalibrations are NOT
             // reloaded: they are not stored in .scores.parquet, so they must stay
             // the live objects harvested during scoring.
-            foreach (string fileName in scoredFileNames)
-            {
-                string parquetPath = perFileParquetPaths[fileName];
-                // A scored file always has a parquet here; the sole exception is
-                // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
-                // returns an empty result without writing one. Skip that case so
-                // the run still stops cleanly at the "no scored entries" gate
-                // below rather than throwing on a missing file.
-                if (!File.Exists(parquetPath))
-                    continue;
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                    fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
-            }
+            // The lean path is valid only where FirstJoinTask actually consumes a
+            // projection. It must mirror that task's dispatch exactly (FirstJoinTask.cs:
+            // UseFdrProjection && Percolator && !needsResidentFirstPassPool): any other
+            // combination -- a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0, or the
+            // resident-pool consumers (--model-diagnostics / FDRBench pass 1, which walk
+            // the full pre-compaction FdrEntry pool) -- still needs the fat stubs here.
+            bool needsResidentPool =
+                ctx.Config.ExpectReconciledInput ||
+                !OspreyEnvironment.UseFdrProjection ||
+                ctx.Config.FdrMethod != FdrMethod.Percolator ||
+                ctx.Config.ModelDiagnostics ||
+                (!string.IsNullOrEmpty(ctx.Config.OutputFdrBench) && ctx.Config.FdrBenchPass == 1);
 
+            FdrProjectionSet projections = null;
             int totalScored = 0;
-            foreach (var kvp in perFileEntries)
-                totalScored += kvp.Value.Count;
+
+            if (needsResidentPool)
+            {
+                foreach (string fileName in scoredFileNames)
+                {
+                    string parquetPath = perFileParquetPaths[fileName];
+                    // A scored file always has a parquet here; the sole exception is
+                    // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
+                    // returns an empty result without writing one. Skip that case so
+                    // the run still stops cleanly at the "no scored entries" gate
+                    // below rather than throwing on a missing file.
+                    if (!File.Exists(parquetPath))
+                        continue;
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                        fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
+                }
+                foreach (var kvp in perFileEntries)
+                    totalScored += kvp.Value.Count;
+            }
+            else
+            {
+                // Issue #4397: rematerializing every file's FdrEntry stubs here cost
+                // ~53 GB on an 82-file Astral run (191M x ~280 B) purely so FirstJoin
+                // could convert them into 32 B FdrProjection rows and drop them. Stream
+                // the projection rows straight out of each .scores.parquet instead --
+                // no FdrEntry is ever allocated. Peptide ids arrive in insertion order
+                // and are remapped to the global Ordinal rank by Build(), so the result
+                // is element-for-element identical to BuildFromEntries (pinned by
+                // TestFdrProjectionBuilderMatchesBuildFromEntries).
+                var builder = new FdrProjectionSet.Builder();
+                foreach (string fileName in scoredFileNames)
+                {
+                    string parquetPath = perFileParquetPaths[fileName];
+                    if (!File.Exists(parquetPath))
+                        continue;
+                    builder.BeginFile(fileName);
+                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
+                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                            builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
+                    builder.EndFile();
+                    // Keep the per-file key and ordering so ScoredEntries consumers and
+                    // the file-count guard below still see one entry per scored file;
+                    // the stub lists themselves stay empty on this path.
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                        fileName, new List<FdrEntry>()));
+                }
+                projections = builder.Build();
+                totalScored = projections.TotalRows;
+            }
 
             ctx.LogInfo(string.Empty);
             ctx.LogInfo(string.Format(
@@ -362,7 +417,7 @@ namespace pwiz.Osprey.Tasks
                 totalScored, nFiles));
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, projections);
         }
 
         public override bool Rehydrate(PipelineContext ctx)
@@ -552,7 +607,7 @@ namespace pwiz.Osprey.Tasks
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             Dictionary<string, string> perFileParquetPaths,
-            int nFiles, int totalScored)
+            int nFiles, int totalScored, FdrProjectionSet projections = null)
         {
             _perFileEntries = perFileEntries;
             _perFileCalibrations = perFileCalibrations;
@@ -575,6 +630,10 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
+            // Lean first-pass rows (issue #4397). Null on the rehydrate/merge paths and
+            // on --model-diagnostics / FDRBench pass 1, which publish fat stubs above;
+            // FirstJoinTask falls back to ScoredEntries whenever this is null.
+            ctx.Publish(new FdrProjections(projections));
             ctx.Publish(new RescoreBundle(_rescoreInputs));
 
             if (perFileEntries.Count == 0 || totalScored == 0)
@@ -1759,18 +1818,52 @@ namespace pwiz.Osprey.Tasks
             else
             {
                 var stats = rtCalibration.Stats();
-                double finalHalfWidth = RTCalibration.SearchWindowHalfWidth(
+                double rawTolerance = RTCalibration.SearchWindowRaw(stats.MAD);
+                double finalTolerance = RTCalibration.SearchWindowHalfWidth(
                     stats.MAD, config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance);
-                ctx.LogInfo(string.Format(ic,
-                    "  RT window: {0:F2} min before -> {1:F2} min (+/-) search half-width after calibration",
-                    initialRtTolerance, finalHalfWidth));
+                string beforeStr = initialRtTolerance.ToString("F2", ic);
+                string rawStr = rawTolerance.ToString("F2", ic);
+                string finalStr = finalTolerance.ToString("F2", ic);
+                string rtToleranceLine;
+                if (double.IsNaN(finalTolerance))
+                {
+                    // Degenerate calibration (e.g. NaN MAD): no usable spread to report.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> undetermined after calibration (no usable RT spread)",
+                        beforeStr);
+                }
+                else if (rawStr == finalStr)
+                {
+                    // In range, or a clamp too small to show at this precision: a single
+                    // value is unambiguous, so skip the computed-vs-clamp call-out.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min after calibration",
+                        beforeStr, finalStr);
+                }
+                else if (finalTolerance > rawTolerance)
+                {
+                    // The computed 3*MAD*1.4826 was tighter than the floor: show the
+                    // computed tolerance and the floor actually in use.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), using +/-{2} min floor, after calibration",
+                        beforeStr, rawStr, finalStr);
+                }
+                else
+                {
+                    // finalTolerance < rawTolerance: the computed value exceeded the
+                    // ceiling, so show the computed tolerance and the cap in use.
+                    rtToleranceLine = string.Format(ic,
+                        "  RT tolerance: +/-{0} min before -> +/-{1} min computed (3*MAD*1.4826), capped at +/-{2} min, after calibration",
+                        beforeStr, rawStr, finalStr);
+                }
+                ctx.LogInfo(rtToleranceLine);
                 ctx.LogInfo(string.Format(ic,
                     "  RT fit: MAD={0:F3} min, residual SD={1:F3} min, R^2={2:F4}, n={3} points",
                     stats.MAD, stats.ResidualSD, stats.RSquared, stats.NPoints));
             }
 
-            EmitMassCalibrationLine(ctx, "MS1", ms1Cal);
-            EmitMassCalibrationLine(ctx, "MS2", ms2Cal);
+            EmitMassCalibrationLine(ctx, "MS1", "precursor", ms1Cal);
+            EmitMassCalibrationLine(ctx, "MS2", "fragment", ms2Cal);
         }
 
         /// <summary>
@@ -1780,7 +1873,7 @@ namespace pwiz.Osprey.Tasks
         /// when the level had no usable errors.
         /// </summary>
         private static void EmitMassCalibrationLine(
-            PipelineContext ctx, string level, MzCalibrationResult cal)
+            PipelineContext ctx, string level, string matchNoun, MzCalibrationResult cal)
         {
             var ic = CultureInfo.InvariantCulture;
             if (cal == null || !cal.Calibrated)
@@ -1790,8 +1883,8 @@ namespace pwiz.Osprey.Tasks
             }
             double tolerance = cal.AdjustedTolerance ?? (Math.Abs(cal.Mean) + 3.0 * cal.SD);
             ctx.LogInfo(string.Format(ic,
-                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} ({5} errors)",
-                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count));
+                "  {0} mass: correction={1:F2} {2}, SD={3:F2} {2}, tolerance=+/-{4:F2} {2} (n={5} {6} matches)",
+                level, cal.Mean, cal.Unit, cal.SD, tolerance, cal.Count, matchNoun));
         }
 
         /// <summary>

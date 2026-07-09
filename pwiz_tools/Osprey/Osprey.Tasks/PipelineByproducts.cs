@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 
 namespace pwiz.Osprey.Tasks
@@ -185,6 +186,20 @@ namespace pwiz.Osprey.Tasks
     internal sealed class ScoredEntries : PerFileEntries
     {
         public ScoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+    }
+
+    /// <summary>
+    /// The lean first-pass projection built straight from each file's .scores.parquet,
+    /// bypassing the fat <see cref="FdrEntry"/> stub buffer entirely (issue #4397:
+    /// rematerializing 191M stubs to convert them into 32 B rows cost ~53 GB).
+    /// <c>Value</c> is null when the run needs the resident stub pool instead
+    /// (--model-diagnostics / FDRBench pass 1) or on the rehydrate/merge paths, which
+    /// still publish fat stubs via <see cref="ScoredEntries"/>.
+    /// </summary>
+    internal sealed class FdrProjections
+    {
+        public FdrProjectionSet Value { get; }
+        public FdrProjections(FdrProjectionSet value) { Value = value; }
     }
 
     /// <summary>The buffer after FirstJoin's first-pass FDR + compaction.</summary>
