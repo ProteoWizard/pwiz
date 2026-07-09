@@ -111,6 +111,27 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string CrossImplReconciliationOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
+        /// <summary>
+        /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
+        /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
+        /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
+        /// resident across first-pass Percolator + protein FDR + the sidecar write
+        /// + compaction. <c>FirstJoinTask</c> materializes the projection from the
+        /// cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs before the
+        /// SVM peak, and reloads full <see cref="FdrEntry"/> survivors from parquet +
+        /// the just-written 1st-pass sidecar after compaction.
+        ///
+        /// DEFAULT ON: Osprey cannot process real (large) file counts without this --
+        /// the legacy resident path OOMs -- so streaming is the production default and
+        /// byte-identical to the legacy path (Stellar regression mode1/2/3). Set
+        /// OSPREY_FDR_PROJECTION=0 ONLY to force the legacy <see cref="FdrEntry"/>-buffer
+        /// path as a transitional A/B / byte-identity oracle; that path (and this flag)
+        /// are slated for removal once model-diagnostics + FDRBench stream from the
+        /// persisted per-file scores. A settable property (not a readonly field) so
+        /// unit tests can A/B both paths.
+        /// </summary>
+        public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
+
         private static int ParseIntOrZero(string name)
         {
             string v = Environment.GetEnvironmentVariable(name);
@@ -128,6 +149,12 @@ namespace pwiz.Osprey.Core
         private static bool IsNotZero(string name)
         {
             return Environment.GetEnvironmentVariable(name) != @"0";
+        }
+
+        private static bool IsSetAndNotZero(string name)
+        {
+            string v = Environment.GetEnvironmentVariable(name);
+            return !string.IsNullOrEmpty(v) && v != @"0";
         }
     }
 }

@@ -1249,7 +1249,7 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Sort one file's entry list by (EntryId, Charge, ScanNumber, ParquetIndex) --
         /// the exact order a COLD run establishes via
-        /// <see cref="FirstJoinTask.RunPercolatorFdr"/> (run by MergeNode's 2nd-pass,
+        /// <c>FirstJoinTask.RunPercolatorFdr</c> (run by MergeNode's 2nd-pass,
         /// which a WARM straight-through resume skips when the <c>.2nd-pass</c> sidecars
         /// are already valid on disk). Both resume paths apply this to EVERY file's
         /// list, including no-work files with no reconciled parquet, so the WARM buffer

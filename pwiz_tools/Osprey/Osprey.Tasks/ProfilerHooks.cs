@@ -121,5 +121,23 @@ namespace pwiz.Osprey.Tasks
                 // standard GC; report it explicitly to document intent.
                 GC.CollectionCount(2)));
         }
+
+        /// <summary>
+        /// True when the OSPREY_LOG_MEMORY environment variable is set (any non-empty
+        /// value). Gates the per-stage [MEM ...] snapshots so ordinary runs stay quiet;
+        /// set it for a memory-profiling run (issue #4355).
+        /// </summary>
+        public static readonly bool MemoryLoggingEnabled =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY"));
+
+        /// <summary>
+        /// <see cref="LogMemoryStats"/> guarded by <see cref="MemoryLoggingEnabled"/> so
+        /// stage-boundary probes can stay in the pipeline at zero cost when disabled.
+        /// </summary>
+        public static void LogMemoryStatsIfEnabled(Action<string> log, string label)
+        {
+            if (MemoryLoggingEnabled)
+                LogMemoryStats(log, label);
+        }
     }
 }

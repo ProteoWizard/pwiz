@@ -107,6 +107,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// </summary>
         public List<FdpView> FdpViews { get; set; }
         public WinFractionData WinFraction { get; set; }
+        // ReSharper disable once CollectionNeverQueried.Global
         public List<FileSummaryRow> PerFile { get; set; }
         public IdYieldData IdYield { get; set; }
 
