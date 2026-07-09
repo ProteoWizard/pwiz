@@ -319,10 +319,11 @@ namespace TestRunner
             // Parse command line args and initialize default values.
             var commandLineArgs = new CommandLineArgs(args, commandLineOptions);
 
-            // The coordinator passes skipsystemheaps=on to Docker workers so they don't run the
-            // segment-heap-unsafe GetProcessHeapSizes walk (a fatal AccessViolation in a container on
-            // net8). It must arrive as a command-line arg, not an env var: AlwaysUp runs the worker as
-            // a service whose session does not inherit `docker run -e` variables.
+            // skipsystemheaps=on is a manual escape hatch to skip the GetProcessHeapSizes system-heap
+            // walk entirely. It is no longer needed for segment-heap safety -- GetProcessHeapSizes now
+            // detects each heap's type and only walks the classic NT heaps (segment heaps, the default in
+            // Windows Server + containers, are read with HeapSummary instead of the AccessViolation-prone
+            // walk) -- but it stays available for diagnosing heap-walk issues without a rebuild.
             if (commandLineArgs.ArgAsBool("skipsystemheaps"))
                 RunTests.SkipSystemHeaps = true;
 
@@ -828,7 +829,7 @@ namespace TestRunner
 
             // paths in testRunnerCmd are in container-space (c:\pwiz is mounted from pwizRoot, c:\downloads is mounted from GetDownloadsPath(), c:\AlwaysUpCLT is not copied to the host)
             var testRunnerExe = GetTestRunnerExe();
-            var testRunnerCmd = $@" parallelmode=client showheader=0 skipsystemheaps=on results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog} workerport={workerPort} workername={workerName}";
+            var testRunnerCmd = $@" parallelmode=client showheader=0 results=c:\AlwaysUpCLT\TestResults_{i} log={testRunnerLog} workerport={workerPort} workername={workerName}";
             
             if (commandLineArgs.ArgAsBool("coverage"))
             {
@@ -948,17 +949,16 @@ namespace TestRunner
 #endif
         }
 
-        // Environment fragment spliced into `docker run` for the Docker workers.
-        //
-        // SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS: skip the GetProcessHeapSizes system-heap walk in the
-        // container. HeapWalk/HeapLock fault against the segment heap that Windows Server containers
-        // enable by default; on net8 that native AccessViolation is a fatal, non-catchable fast-fail.
-        // The committed-heap number it produces is display-only (leak pass/fail uses private bytes),
-        // so container workers simply omit it. (The net8 runtime itself is supplied by the staged
-        // dotnet.exe muxer - see GetTestRunnerExe - not by an environment variable.)
+        // Environment fragment spliced into `docker run` for the Docker workers. Currently empty:
+        // container workers no longer need SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS to dodge the segment-heap
+        // AccessViolation -- GetProcessHeapSizes now detects each heap's type and reads segment heaps
+        // (the default inside Windows Server containers) with HeapSummary instead of walking them, so the
+        // committed-heap leak-tracking number keeps working in the container. Kept as the single seam for
+        // any future `docker run -e` needs. (The net8 runtime is supplied by the staged dotnet.exe muxer -
+        // see GetTestRunnerExe - not by an environment variable.)
         private static string GetDockerEnvArgs()
         {
-            return "-e SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS=1 ";
+            return string.Empty;
         }
 
         private static void LaunchAndWaitForDockerWorker(int i, CommandLineArgs commandLineArgs, ref string workerNames, bool bigWorker,

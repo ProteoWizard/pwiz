@@ -165,19 +165,16 @@ namespace TestRunnerLib
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
-        // Skip the system-heap walk (GetProcessHeapSizes). HeapWalk/HeapLock fault against the segment
-        // heap with a fatal, non-catchable AccessViolation on net8 -- seen not only on the Docker workers
-        // (Windows Server containers enable the segment heap by default) but also on the TeamCity build
-        // agents, where a plain host run (parallelmode=off) crashed on the first test. The number is
-        // display-only, so default to skipping it on net8. On net472 keep the walk unless the env var /
-        // skipsystemheaps=on arg turns it off. The coordinator also sets skipsystemheaps=on on its
-        // workers (an env var would not reach the AlwaysUp service that runs a container worker).
+        // Escape hatch to skip the system-heap walk (GetProcessHeapSizes) entirely. Normally left off:
+        // the walk is per-heap safe. HeapWalk/HeapLock fault with a fatal, non-catchable AccessViolation
+        // against a Windows Segment Heap (the default on Windows Server + Windows containers, hence on
+        // the net8 Docker workers and the TeamCity build agents), so GetProcessHeapSizes now detects each
+        // heap's type via HeapQueryInformation and only walks the classic NT heaps, reading segment-heap
+        // totals with HeapSummary instead. Leak tracking therefore keeps working on net8. This flag is
+        // just a manual escape hatch now: the SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS env var or the
+        // skipsystemheaps=on arg forces the whole walk off for diagnosing heap-walk issues.
         public static bool SkipSystemHeaps { get; set; } =
-#if NET472
             !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS"));
-#else
-            true;
-#endif
 
         public bool ReportSystemHeaps
         {
@@ -907,6 +904,35 @@ namespace TestRunnerLib
             [DllImport("kernel32.dll", SetLastError = true)]
             static extern bool HeapUnlock(IntPtr hHeap);
 
+            // HeapQueryInformation(HeapCompatibilityInformation) reports the heap's front-end type:
+            //   0 = standard (classic NT heap), 1 = LAL (look-aside, legacy), 2 = LFH (low-fragmentation --
+            //   still a classic NT heap underneath), 3 = segment heap. HeapWalk/HeapLock are only valid
+            //   on the classic NT-heap family (0/1/2) and fault fatally on the segment heap (3).
+            [DllImport("kernel32.dll", SetLastError = true)]
+            static extern bool HeapQueryInformation(IntPtr hHeap, int heapInformationClass,
+                out uint heapInformation, UIntPtr heapInformationLength, IntPtr returnLength);
+
+            private const int HeapCompatibilityInformation = 0;
+            private const uint HEAP_COMPAT_STANDARD = 0;
+            private const uint HEAP_COMPAT_LAL = 1;
+            private const uint HEAP_COMPAT_LFH = 2;
+
+            // HeapSummary yields committed/reserved/allocated totals without walking the heap, so it can
+            // read a segment heap where HeapWalk cannot. Available on Windows 8+ (kernelbase.dll). Wrapped
+            // in try/catch at the call site in case the export is unavailable on the host OS.
+            [StructLayoutAttribute(LayoutKind.Sequential)]
+            public struct HEAP_SUMMARY
+            {
+                public uint cb;                 // sizeof(HEAP_SUMMARY); must be set before the call
+                public UIntPtr cbAllocated;
+                public UIntPtr cbCommitted;
+                public UIntPtr cbReserved;
+                public UIntPtr cbMaxReserve;
+            }
+
+            [DllImport("kernelbase.dll", SetLastError = true)]
+            static extern bool HeapSummary(IntPtr hHeap, uint dwFlags, ref HEAP_SUMMARY lpSummary);
+
             public static bool HeapDiagnostics { get; set; }
 
             public struct HeapAllocationSizes
@@ -1031,6 +1057,36 @@ namespace TestRunnerLib
                     var stringCounts = HeapDiagnostics ? new Dictionary<string, int>() : null;
 
                     var h = buffer[i];
+
+                    // A segment heap cannot be walked -- HeapWalk/HeapLock fault with a fatal,
+                    // non-catchable AccessViolation on it. Detect the heap type per-heap and only walk the
+                    // classic NT-heap family, whose HeapCompatibilityInformation is 0 (standard), 1 (LAL)
+                    // or 2 (LFH); a segment heap reports 3. Whitelist the known-walkable values so that
+                    // any unexpected value -- or a failed query -- falls through to the HeapSummary path
+                    // rather than risking the crash (better to lose the per-block breakdown than fail fast).
+                    bool walkable =
+                        HeapQueryInformation(h, HeapCompatibilityInformation, out var compat, (UIntPtr)4, IntPtr.Zero) &&
+                        (compat == HEAP_COMPAT_STANDARD || compat == HEAP_COMPAT_LAL || compat == HEAP_COMPAT_LFH);
+
+                    if (!walkable)
+                    {
+                        try
+                        {
+                            var summary = new HEAP_SUMMARY { cb = (uint)Marshal.SizeOf(typeof(HEAP_SUMMARY)) };
+                            if (HeapSummary(h, 0, ref summary))
+                            {
+                                sizes[i].Committed += (long)summary.cbCommitted.ToUInt64();
+                                sizes[i].Reserved += (long)summary.cbReserved.ToUInt64();
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            // HeapSummary unavailable on this OS; leave this heap's totals at zero
+                            // rather than risk walking it.
+                        }
+                        continue;
+                    }
+
                     HeapLock(h);
                     var e = new PROCESS_HEAP_ENTRY();
                     while (HeapWalk(h, ref e))
