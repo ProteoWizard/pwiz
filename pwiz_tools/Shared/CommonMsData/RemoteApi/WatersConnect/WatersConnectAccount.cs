@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http;
 using System.Security.Authentication;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.Serialization;
@@ -243,13 +244,16 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
             // Try to refresh the token if we have an expired one
             if (_authenticationTokens.TryGetValue(this, out var expiredTokenCacheEntry))
             {
-                var refreshedToken = tokenClient.RequestRefreshTokenAsync(new RefreshTokenRequest
+                // Offload the blocking token call to the thread pool. Authenticate() runs on the UI
+                // thread (e.g. via SupportsMethodDevelopment) and blocking on the HTTP call's result
+                // directly would deadlock the captured WinForms SynchronizationContext on net8.
+                var refreshedToken = Task.Run(() => tokenClient.RequestRefreshTokenAsync(new RefreshTokenRequest
                 {
                     Address = tokenEndpoint,
                     ClientId = ClientId,
                     ClientSecret = ClientSecret,
                     RefreshToken = expiredTokenCacheEntry.TokenResponse.RefreshToken
-                }).Result;
+                })).Result;
                 if (!refreshedToken.IsError)
                 {
                     // If the refresh token worked, update the cache with the new token
@@ -259,7 +263,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
             }
             // Otherwise, request a new token using the username and password
-            var newToken = tokenClient.RequestPasswordTokenAsync(new PasswordTokenRequest
+            var newToken = Task.Run(() => tokenClient.RequestPasswordTokenAsync(new PasswordTokenRequest
             {
                 Address = tokenEndpoint,
                 ClientId = ClientId,
@@ -267,7 +271,7 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 UserName = Username,
                 Password = Password,
                 Scope = ClientScope
-            }).Result;
+            })).Result;
             if (newToken.IsError)
             {
                 AuthenticationException ex;
