@@ -165,13 +165,19 @@ namespace TestRunnerLib
         private int _dotMemoryIterationCount;
         private string _dotMemoryTestName;
 
-        // Skip the system-heap walk (GetProcessHeapSizes) for a Docker worker: HeapWalk/HeapLock fault
-        // against the segment heap Windows Server containers enable by default, which is a fatal,
-        // non-catchable AccessViolation on net8. The number is display-only. The coordinator turns this
-        // on via the skipsystemheaps command-line arg (an env var would not reach the AlwaysUp service
-        // that runs the worker); the env var is honored too for a directly-launched container process.
+        // Skip the system-heap walk (GetProcessHeapSizes). HeapWalk/HeapLock fault against the segment
+        // heap with a fatal, non-catchable AccessViolation on net8 -- seen not only on the Docker workers
+        // (Windows Server containers enable the segment heap by default) but also on the TeamCity build
+        // agents, where a plain host run (parallelmode=off) crashed on the first test. The number is
+        // display-only, so default to skipping it on net8. On net472 keep the walk unless the env var /
+        // skipsystemheaps=on arg turns it off. The coordinator also sets skipsystemheaps=on on its
+        // workers (an env var would not reach the AlwaysUp service that runs a container worker).
         public static bool SkipSystemHeaps { get; set; } =
+#if NET472
             !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SKYLINE_TESTRUNNER_SKIP_SYSTEM_HEAPS"));
+#else
+            true;
+#endif
 
         public bool ReportSystemHeaps
         {
