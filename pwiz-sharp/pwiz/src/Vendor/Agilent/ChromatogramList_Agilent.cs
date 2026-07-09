@@ -350,7 +350,15 @@ public sealed class ChromatogramList_Agilent : ChromatogramListBase
             }
         }
         c.DefaultArrayLength = times.Count;
-        if (getBinaryData && times.Count > 0)
+        // cpp ChromatogramList_Agilent.cpp:109-128 (MS_TIC_chromatogram) always calls
+        // setTimeIntensityArrays and emplaces the "ms level" integer array whenever binary data
+        // is requested, so the TIC carries time/intensity/ms-level arrays even when empty. When
+        // globalChromatogramsAreMs1Only filters out every scan of an all-MS2 CNL file the TIC is
+        // legitimately empty, but the arrays must still exist: pwiz.ProteowizardWrapper
+        // .MsDataFileImpl.GetChromatogram dereferences GetTimeArray().Data unconditionally (and
+        // has an explicit empty-MS1-TIC placeholder path), so a missing time array throws
+        // NullReferenceException on import. Guarding on times.Count > 0 dropped the arrays.
+        if (getBinaryData)
         {
             var t = new BinaryDataArray();
             t.Set(CVID.MS_time_array, "", CVID.UO_minute);
