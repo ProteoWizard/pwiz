@@ -872,6 +872,11 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.GetFormValue(formId, controlId);
         }
 
+        public string[] GetOptions(string formId, string controlId)
+        {
+            return JsonUiService.GetOptions(formId, controlId);
+        }
+
         public void SetGridText(string formId, string controlId, string text)
         {
             JsonUiService.SetGridText(formId, controlId, text);

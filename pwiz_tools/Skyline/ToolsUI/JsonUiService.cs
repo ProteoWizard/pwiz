@@ -382,7 +382,6 @@ namespace pwiz.Skyline.ToolsUI
         private static ModalProbeResult ProbeModals(HashSet<IntPtr> startModalHandles, IntPtr topModalHandle)
         {
             var currentHandles = FindModalDialogWindows();
-            var currentSet = new HashSet<IntPtr>(currentHandles);
             var forms = FormUtil.OpenForms.Where(f => f.IsHandleCreated).ToDictionary(f => f.Handle);
             bool IsLongWait(IntPtr h) => forms.TryGetValue(h, out var f) && f is LongWaitDlg;
             // A form that is currently driving long-running work in its own progress display (a LongWaitDlg,
@@ -404,7 +403,13 @@ namespace pwiz.Skyline.ToolsUI
                     break; // prefer a managed form to record
                 }
             }
-            result.TopModalDismissed = topModalHandle != IntPtr.Zero && !currentSet.Contains(topModalHandle);
+            // "Dismissed" means the top modal's window is actually GONE, not merely disabled. A modal that has
+            // itself opened a nested child modal is disabled (so it drops out of FindModalDialogWindows, whose
+            // set only holds enabled modal windows) yet is still visible -- it has NOT been dismissed and its
+            // opener's work has not resumed. Testing the window's visibility (rather than modal-set membership)
+            // keeps a still-open parent from being mistaken for a dismissed one -- which would otherwise drop the
+            // ride-through target to its pre-show count while its opener delegate is still legitimately blocked.
+            result.TopModalDismissed = topModalHandle != IntPtr.Zero && !User32.IsWindowVisible(topModalHandle);
             result.LongWaitPresent = currentHandles.Any(IsBusyProgressForm);
             return result;
         }
@@ -809,6 +814,27 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
+        /// Returns all the choices a list control on a form offers (a combo box, list box, or checked list
+        /// box), found by its Label/name, as their visible text -- every option regardless of selection or
+        /// checked state (unlike <see cref="GetFormValue"/>, which reports the current selection). See
+        /// <see cref="IJsonToolService"/>.
+        /// </summary>
+        public static string[] GetOptions(string formId, string controlId)
+        {
+            ValidateFormIdFormat(formId);
+            // A value read: run it synchronously inside the dialog-watch so it does not hang if a modal is up.
+            string[] result = null;
+            RunWithDialogWatch(() =>
+            {
+                result = OnFormThread(formId, formElement =>
+                    ((IOptionsElement) formElement.FindElement(controlId, UiActions.GetOptions))
+                    .GetOptions().ToArray());
+                return true;
+            });
+            return result;
+        }
+
+        /// <summary>
         /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at its current
         /// cell -- move there first with <see cref="SetCurrentCellAddress"/> (the anchor a user would click). The
         /// text may be a multi-cell TSV block (it fills down and to the right). Works for a
@@ -818,10 +844,12 @@ namespace pwiz.Skyline.ToolsUI
         public static void SetGridText(string formId, string controlId, string text)
         {
             ValidateFormIdFormat(formId);
-            // Resolve the grid synchronously; the action's Invoke gates it and pastes fire-and-forget, so a
-            // type conversion alert the paste raises becomes a form the caller drives rather than blocking here.
+            // Resolve the grid synchronously; the action's Invoke gates it and pastes fire-and-forget. This
+            // named/convenience verb then waits out the posted paste (the count settling, or a type-conversion
+            // alert the paste raises appearing, which the caller then drives) so it returns only once the paste
+            // has taken effect. The PerformAction escape-hatch path (UiActions.SetGridText) stays fire-and-forget.
             var grid = OnFormThread(formId, formElement => formElement.FindGrid(controlId));
-            UiActions.SetGridText.Invoke(grid, text ?? string.Empty);
+            WaitForGesture(() => UiActions.SetGridText.Invoke(grid, text ?? string.Empty));
         }
 
         /// <summary>
@@ -834,8 +862,11 @@ namespace pwiz.Skyline.ToolsUI
         {
             ValidateFormIdFormat(formId);
             // Resolve the grid synchronously; the action's Invoke gates it and moves the cell fire-and-forget.
+            // This named/convenience verb then waits out the posted move (the count settling) so it returns only
+            // once the cell has moved. The PerformAction escape-hatch path (UiActions.SetCurrentCellAddress) stays
+            // fire-and-forget.
             var grid = OnFormThread(formId, formElement => formElement.FindGrid(controlId));
-            UiActions.SetCurrentCellAddress.Invoke(grid, new[] { column, row });
+            WaitForGesture(() => UiActions.SetCurrentCellAddress.Invoke(grid, new[] { column, row }));
         }
 
         /// <summary>

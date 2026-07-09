@@ -400,6 +400,16 @@ namespace SkylineTool
         string GetFormValue(string formId, string controlId);
 
         /// <summary>
+        /// Returns all the choices a list control on a form offers -- a combo box, a list box, or a checked
+        /// list box -- as their visible text, regardless of which are currently selected or checked. Unlike
+        /// <see cref="GetFormValue"/> (which reports the current selection / checked items), this lists every
+        /// available option, so a caller can see what there is to pick or check.
+        /// </summary>
+        /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
+        /// <param name="controlId">The control's visible label or name, or null when the form has a single list control.</param>
+        string[] GetOptions(string formId, string controlId);
+
+        /// <summary>
         /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at its current
         /// cell -- move there first with <see cref="SetCurrentCellAddress"/>. The text may be a multi-cell TSV
         /// block (it fills down and to the right). Works for the Document Grid (and other

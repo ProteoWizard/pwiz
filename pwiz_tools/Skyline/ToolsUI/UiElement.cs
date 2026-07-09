@@ -82,6 +82,12 @@ namespace pwiz.Skyline.ToolsUI
     /// peptide group), as a user does by editing the node label and pressing Enter.</summary>
     public interface IRenameNodeElement { void RenameNode(string value); }
 
+    /// <summary>An element that offers a fixed list of choices whose visible text can be read (get_options) --
+    /// a combo box, a list box, or a checked list box. Unlike get_value (which reports the current
+    /// selection / checked items), this returns EVERY choice regardless of state, so a caller can see the
+    /// options that are available to select or check.</summary>
+    public interface IOptionsElement { IEnumerable<string> GetOptions(); }
+
     // ---- Actions --------------------------------------------------------------------------------
 
     /// <summary>
@@ -261,6 +267,10 @@ namespace pwiz.Skyline.ToolsUI
                 @"SetSelectedIndex", (e, arg) => e.SetSelectedIndex(UiValue.ToInt(arg)))
             .Describe(new LlmInstruction(@"Select the list item at the given index (clears any other selection)."), new LlmInstruction(@"the zero-based index"));
 
+        public static readonly UiAction GetOptions = SimpleFunction<IOptionsElement>(
+                @"GetOptions", e => e.GetOptions().ToArray())
+            .Describe(new LlmInstruction(@"List all the choices this control offers (a combo box, list box, or checked list box), regardless of which are selected or checked."));
+
         public static readonly UiAction GetGridText = SimpleFunction<GridElement>(
                 @"GetGridText", e => e.GetGridText())
             .Describe(new LlmInstruction(@"Get the whole grid as tab-separated text -- the column headers then every row."));
@@ -315,7 +325,7 @@ namespace pwiz.Skyline.ToolsUI
         // Every action, in get_actions / get_children listing order (the universal ones first).
         public static readonly UiAction[] AllActions =
         {
-            GetActions, GetChildren, Click, GetValue, SetValue, CheckItem, UncheckItem, SelectItem,
+            GetActions, GetChildren, Click, GetValue, SetValue, GetOptions, CheckItem, UncheckItem, SelectItem,
             UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
             Collapse, SelectTab, Accept, Paste, SelectAll, RenameNode
         };
@@ -1150,31 +1160,40 @@ namespace pwiz.Skyline.ToolsUI
 
         // Clicks a button (or any clickable) on the form by its caption. Resolve the target synchronously on
         // the UI thread (so a missing control fails here); the element's Click then gates the form and control
-        // and posts the click fire-and-forget so a click that opens a modal does not block. Each element knows
-        // how to click itself (a button via BM_CLICK so an AutoCheck=false checkbox still toggles; a
-        // menu/toolbar item or tile via PerformClick; a tab by selecting it).
+        // and posts the click fire-and-forget. Each element knows how to click itself (a button via BM_CLICK so
+        // an AutoCheck=false checkbox still toggles; a menu/toolbar item or tile via PerformClick; a tab by
+        // selecting it). This named/convenience verb then waits out the posted gesture (the count settling, or a
+        // modal it opens appearing) so it returns only once the click has taken effect; the PerformAction
+        // escape-hatch path (UiActions.Click) stays fire-and-forget. Must be called off the UI thread.
         public void ClickButton(string button)
         {
             var element = InvokeOnUiThread(() => FindElement(button, UiActions.Click));
-            UiActions.Click.Invoke(element, null);
+            JsonUiService.WaitForGesture(() => UiActions.Click.Invoke(element, null));
         }
 
         // Sets a control's value (or a grid cell) on the form. The target is resolved synchronously on the UI
         // thread (so a missing control fails here); the element's set-value then gates it and applies the value
-        // fire-and-forget -- so a setter that pops a validation or confirmation alert does not block. A grid
-        // cell ("grid[column,row]") moves the current cell there and pastes, reusing the grid path so a
-        // DataboundGridControl stays in sync; a field is matched by its own Label.
+        // fire-and-forget. A grid cell ("grid[column,row]") moves the current cell there and pastes, reusing the
+        // grid path so a DataboundGridControl stays in sync; a field is matched by its own Label. This
+        // named/convenience verb waits out the posted gesture (the count settling, or a modal a validation /
+        // confirmation raises appearing) so it returns only once the value has taken effect; the PerformAction
+        // escape-hatch path (UiActions.SetValue) stays fire-and-forget. Must be called off the UI thread.
         public void SetValue(string controlId, string value)
         {
             if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
             {
                 var gridElement = InvokeOnUiThread(() => FindGrid(gridName));
-                UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
-                UiActions.SetGridText.Invoke(gridElement, value);
+                // Post both moves in one gesture so the wait's initial count is captured before either, and the
+                // wait covers the paste (not just the cell move).
+                JsonUiService.WaitForGesture(() =>
+                {
+                    UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
+                    UiActions.SetGridText.Invoke(gridElement, value);
+                });
                 return;
             }
             var element = InvokeOnUiThread(() => FindElement(controlId, UiActions.SetValue));
-            UiActions.SetValue.Invoke(element, value);
+            JsonUiService.WaitForGesture(() => UiActions.SetValue.Invoke(element, value));
         }
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the single
@@ -1371,12 +1390,13 @@ namespace pwiz.Skyline.ToolsUI
         public void SelectAll() => PerformGesture(() => _textBox.SelectAll());
     }
 
-    /// <summary>A combo box -- value set by selecting the matching item.</summary>
-    internal sealed class ComboBoxElement : ControlElement
+    /// <summary>A combo box -- value set by selecting the matching item; its choices are read with get_options.</summary>
+    internal sealed class ComboBoxElement : ControlElement, IOptionsElement
     {
         private readonly ComboBox _comboBox;
         public ComboBoxElement(ComboBox comboBox) : base(comboBox) { _comboBox = comboBox; }
         public override object Value => InvokeOnUiThread(() => (object) _comboBox.GetItemText(_comboBox.SelectedItem));
+        public IEnumerable<string> GetOptions() => InvokeOnUiThread(() => ListItems.GetOptions(_comboBox));
         public override void SetValue(object value) => PerformGesture(() =>
         {
             var text = value?.ToString();
@@ -1390,13 +1410,15 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>A ListControl -- a ListBox or CheckedListBox. Select an item by index
     /// (set_selected_index) or by its text (select_item / unselect_item).</summary>
-    internal class ListControlElement<T> : ControlElement<T>, ISelectItemsElement
+    internal class ListControlElement<T> : ControlElement<T>, ISelectItemsElement, IOptionsElement
         where T : ListControl
     {
         public ListControlElement(T control) : base(control) { }
         public void SetSelectedIndex(int index) => PerformGesture(() => ListItems.SetSelectedIndex(Control, index));
         public void SetItemSelected(string item, bool isSelected) =>
             PerformGesture(() => ListItems.SetSelected(Control, item, isSelected));
+        // Every choice the list offers (get_options), regardless of selection/checked state.
+        public virtual IEnumerable<string> GetOptions() => InvokeOnUiThread(() => ListItems.GetOptions(Control));
     }
 
     /// <summary>A CheckedListBox. Besides the ListControl actions, an item is checked/unchecked by its text
@@ -1569,6 +1591,9 @@ namespace pwiz.Skyline.ToolsUI
             return (object) string.Join(Environment.NewLine,
                 Enumerable.Range(0, names.Count).Where(pickList.GetItemChecked).Select(i => names[i]));
         });
+        // The pop-up's choices are the PickList's own item names (its ListBox items are not the display text),
+        // so read them there -- and return ALL of them (get_options), not just the checked ones that Value reports.
+        public override IEnumerable<string> GetOptions() => InvokeOnUiThread(() => PickList.ItemNames.ToList());
         public void SetItemChecked(string item, bool isChecked) =>
             PerformGesture(() => PickList.SetItemChecked(FindPickListIndex(item), isChecked));
         // A click toggles the selected item's check, like a user's click/space (move to the item first with
@@ -1680,6 +1705,23 @@ namespace pwiz.Skyline.ToolsUI
             if (index < 0 || index >= count)
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Index {0} is out of range; {1} has {2} items.", index, controlName, count));
+        }
+
+        // The display text of EVERY item a list control offers, regardless of which are selected or checked --
+        // what get_options reads. A ComboBox and a ListBox (a CheckedListBox derives from ListBox) both expose
+        // their choices through Items + GetItemText.
+        public static IEnumerable<string> GetOptions(Control control)
+        {
+            switch (control)
+            {
+                case ComboBox comboBox:
+                    return comboBox.Items.Cast<object>().Select(comboBox.GetItemText).ToList();
+                case ListBox listBox: // CheckedListBox derives from ListBox
+                    return listBox.Items.Cast<object>().Select(listBox.GetItemText).ToList();
+                default:
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"Listing options is supported for a ComboBox or ListBox, not {0}.", control.Name));
+            }
         }
 
         // Index of the best-matching item (by display text) in a ListBox. Throws if none.

@@ -153,11 +153,11 @@ namespace TestPerf
             // type is "Products" (the sole transition type present, so RefineDlg leaves that combo disabled),
             // Normalize to defaults to "None", and Summed transitions defaults to "all".
             SelectTab(refine, GetLocalizedText<RefineDlg>("tabConsistency"));
-            WaitForAction(() => refine.SetValue(GetLocalizedText<RefineDlg>("labelCV"), "30")); // CV cutoff %
+            refine.SetValue(GetLocalizedText<RefineDlg>("labelCV"), "30"); // CV cutoff %
             PauseForScreenShot(refine, "Refine -- Consistency tab"); // s-15
             // Accept runs the refine (it drops the peptides/proteins that fail the filters and can show a
-            // progress dialog); wait it out before saving.
-            WaitForAction(() => refine.Accept());
+            // progress dialog); the connector's Accept waits it out before returning.
+            refine.Accept();
             WaitForDocumentLoaded();
 
             // Save the filtered document under a new name.
@@ -195,14 +195,14 @@ namespace TestPerf
             PauseForScreenShot(acceptProteins, "Accept Proteins -- paste protein list"); // s-16
 
             // OK checks the pasted names against the document; because some of the target proteins are not in the
-            // document, a prompt lists them and asks whether to continue. The click is posted (not run through
-            // WaitForAction) because it opens this nested modal, which would not complete until the prompt closes.
+            // document, a prompt lists them and asks whether to continue. ClickButton auto-waits, but because this
+            // click opens a nested modal the wait returns as soon as that prompt appears (it does not block on it).
             acceptProteins.ClickButton(GetLocalizedText<RefineProteinListDlg>("btnOk"));
             var notInDocument = WaitForConnectorForm<MultiButtonMsgDlg>();
             PauseForScreenShot(notInDocument, "Proteins not in document"); // s-17
             // Accept (OK) dismisses the prompt, which lets Accept Proteins run the refine that drops the unlisted
-            // proteins; wait out the posted action, then let the document settle.
-            WaitForAction(() => notInDocument.Accept());
+            // proteins; the connector's Accept waits it out, then let the document settle.
+            notInDocument.Accept();
             WaitForDocumentLoaded();
 
             // 3.2 Peptide ranked intensity filtering: Refine > Advanced, Results tab -- keep each protein's 2 best
@@ -213,12 +213,12 @@ namespace TestPerf
             Connector.InvokeMenuItem(MenuPath<RefineMenu>("refineToolStripMenuItem", "refineAdvancedMenuItem"));
             var refine = WaitForConnectorForm<RefineDlg>();
             SelectTab(refine, GetLocalizedText<RefineDlg>("tabResults"));
-            WaitForAction(() => refine.SetValue(GetLocalizedText<RefineDlg>("label8"), "2"));           // max peptide peak rank
-            WaitForAction(() => refine.SetValue(GetLocalizedText<RefineDlg>("labelMaxPeakRank"), "5")); // max transition peak rank
+            refine.SetValue(GetLocalizedText<RefineDlg>("label8"), "2");           // max peptide peak rank
+            refine.SetValue(GetLocalizedText<RefineDlg>("labelMaxPeakRank"), "5"); // max transition peak rank
             PauseForScreenShot(refine, "Refine -- Results tab"); // s-18
             // Accept runs the refine (dropping the lower-ranked peptides/transitions and possibly showing a
-            // progress dialog); wait it out before continuing.
-            WaitForAction(() => refine.Accept());
+            // progress dialog); the connector's Accept waits it out before continuing.
+            refine.Accept();
             WaitForDocumentLoaded();
 
             // Expand all proteins so the screenshot shows the peptides kept under each target.
@@ -287,13 +287,13 @@ namespace TestPerf
         {
             // Build Spectral Library page: choose "Use existing" (which reveals the library path box), then set
             // the path to the EncyclopeDIA .elib. Controls are addressed by their localized captions, pulled
-            // from the resources so the test works in any UI language. Wait out each posted action so the next
-            // sees its effect.
-            WaitForAction(() => wizard.ClickButton(GetLocalizedText<BuildPeptideSearchLibraryControl>("radioExistingLibrary")));
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<BuildPeptideSearchLibraryControl>("lblLibraryPath"),
-                GetTestPath("CSF_GPFLib_QRcombined.elib")));
+            // from the resources so the test works in any UI language. Each connector verb waits out its posted
+            // action, so the next sees its effect.
+            wizard.ClickButton(GetLocalizedText<BuildPeptideSearchLibraryControl>("radioExistingLibrary"));
+            wizard.SetValue(GetLocalizedText<BuildPeptideSearchLibraryControl>("lblLibraryPath"),
+                GetTestPath("CSF_GPFLib_QRcombined.elib"));
             PauseForScreenShot(wizard, "Build Spectral Library -- use existing library"); // s-02
-            WaitForAction(() => wizard.ClickButton(GetLocalizedText<ImportPeptideSearchDlg>("btnNext")));
+            wizard.ClickButton(GetLocalizedText<ImportPeptideSearchDlg>("btnNext"));
 
             // Extract Chromatograms page: nothing to add here (results are imported later), so just capture it.
             // Clicking Next loaded the library and swaps this page in asynchronously, so wait for it before the
@@ -319,27 +319,27 @@ namespace TestPerf
             // 1.3 Add Modifications: no modifications were used in the search, so just move on.
             WaitForControl(wizard, nameof(MatchModificationsControl));
             PauseForScreenShot(wizard, "Add Modifications"); // s-04
-            WaitForAction(() => wizard.ClickButton(WizardNextButton));
+            wizard.ClickButton(WizardNextButton);
 
             // 1.4 Configure Transition Settings. Text fields (charges/types/m-z/tolerance/counts) are
             // language-neutral and addressed by their localized labels; the two ion-range combo boxes are set
             // by their (currently English) item text -- see the localization note at the bottom of this file.
             WaitForControl(wizard, nameof(TransitionSettingsControl));
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblPrecursorCharges"), "2, 3"));
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCharges"), "1, 2"));
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonTypes"), "y, b"));
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label1"), "ion 3"));     // product ions from
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label2"), "last ion"));  // product ions to
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label3"), "50"));        // min m/z
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label6"), "2000"));      // max m/z
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblTolerance"), 0.005.ToString(CultureInfo.CurrentCulture)));
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCount"), "8"));    // pick N product ions
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblPrecursorCharges"), "2, 3");
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCharges"), "1, 2");
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonTypes"), "y, b");
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label1"), "ion 3");     // product ions from
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label2"), "last ion");  // product ions to
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label3"), "50");        // min m/z
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("label6"), "2000");      // max m/z
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblTolerance"), 0.005.ToString(CultureInfo.CurrentCulture));
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCount"), "8");    // pick N product ions
             // The min-product-ions box sits between two unit labels; the connector pairs a caption-less field
             // with the label before it in tab order, which here is "product ions" (lblIonCountUnits), not the
             // "min product ions" suffix label that follows the box.
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCountUnits"), "3"));
+            wizard.SetValue(GetLocalizedText<TransitionSettingsControl>("lblIonCountUnits"), "3");
             PauseForScreenShot(wizard, "Configure Transition Settings"); // s-05
-            WaitForAction(() => wizard.ClickButton(WizardNextButton));
+            wizard.ClickButton(WizardNextButton);
 
             // 1.5 Configure Full-Scan Settings: the defining DIA choices are a Centroided product mass analyzer
             // and the Results-only isolation scheme (set below). The mass-accuracy value and the "use only scans
@@ -347,10 +347,10 @@ namespace TestPerf
             // fields are relabeled at runtime / have split unit labels, so they are not cleanly addressable by
             // caption yet (a remaining item to wire up, possibly needing a connector tweak).
             WaitForControl(wizard, nameof(FullScanSettingsControl));
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<FullScanSettingsControl>("label22"), "Centroided"));        // product mass analyzer
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<FullScanSettingsControl>("labelIsolationScheme"), "Results only"));
+            wizard.SetValue(GetLocalizedText<FullScanSettingsControl>("label22"), "Centroided");        // product mass analyzer
+            wizard.SetValue(GetLocalizedText<FullScanSettingsControl>("labelIsolationScheme"), "Results only");
             PauseForScreenShot(wizard, "Configure Full-Scan Settings"); // s-06
-            WaitForAction(() => wizard.ClickButton(WizardNextButton));
+            wizard.ClickButton(WizardNextButton);
         }
 
         /// <summary>
@@ -363,8 +363,8 @@ namespace TestPerf
             // 1.6 Import FASTA (required): Trypsin [KR | P] / 0 missed cleavages (enzyme names are settings, not
             // localized), then browse to the human FASTA through the native Open dialog.
             WaitForControl(wizard, nameof(ImportFastaControl));
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<ImportFastaControl>("label3"), "Trypsin [KR | P]"));   // enzyme
-            WaitForAction(() => wizard.SetValue(GetLocalizedText<ImportFastaControl>("label2"), "0"));                  // max missed cleavages
+            wizard.SetValue(GetLocalizedText<ImportFastaControl>("label3"), "Trypsin [KR | P]");   // enzyme
+            wizard.SetValue(GetLocalizedText<ImportFastaControl>("label2"), "0");                  // max missed cleavages
             wizard.ClickButton(GetLocalizedText<ImportFastaControl>("browseFastaBtn"));
             var fastaDlg = WaitForNativeFileDialog();
             fastaDlg.SetValue("FileName", GetTestPath("uniprot_human_25apr2019.fasta"));
@@ -427,10 +427,10 @@ namespace TestPerf
             WaitForDocumentLoaded();
             PauseForScreenShot(WaitForConnectorForm<SkylineWindow>(), "Targets with PRTC added"); // s-10
 
-            // Save is a fire-and-forget connector action that blocks in a modal "Saving..." progress dialog
-            // until the (large) document is written; WaitForAction waits out that posted action, so the next
-            // step does not run -- and the test does not end -- while the save is still in progress.
-            WaitForAction(() => Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
+            // Save blocks in a modal "Saving..." progress dialog until the (large) document is written; the
+            // connector's InvokeMenuItem waits out that posted action (riding through the progress dialog), so the
+            // next step does not run -- and the test does not end -- while the save is still in progress.
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem"));
         }
 
         /// <summary>
@@ -456,7 +456,7 @@ namespace TestPerf
             // Import Results: each subfolder of the chosen directory becomes a replicate whose data files are
             // its injections. Choose that option (s-11), then OK opens the native folder browser.
             var importResults = WaitForConnectorForm<ImportResultsDlg>();
-            WaitForAction(() => importResults.ClickButton(GetLocalizedText<ImportResultsDlg>("radioCreateMultipleMulti")));
+            importResults.ClickButton(GetLocalizedText<ImportResultsDlg>("radioCreateMultipleMulti"));
             PauseForScreenShot(importResults, "Import Results -- multi-injection replicates in directories"); // s-11
             importResults.Accept();
 
@@ -468,7 +468,7 @@ namespace TestPerf
 
             // The replicate names share a common prefix; keep the full folder names (Do not remove), then OK.
             var nameDlg = WaitForConnectorForm<ImportResultsNameDlg>();
-            WaitForAction(() => nameDlg.ClickButton(GetLocalizedText<ImportResultsNameDlg>("radioDontRemove")));
+            nameDlg.ClickButton(GetLocalizedText<ImportResultsNameDlg>("radioDontRemove"));
             nameDlg.Accept();
 
             // Accept posts the import fire-and-forget, so WaitForDocumentLoaded on its own can return in the gap
@@ -477,10 +477,10 @@ namespace TestPerf
             // chromatograms from the gas-phase fractionated runs (18 ~2 GB mzML files) is slow.
             WaitForConditionUI(60 * 60 * 1000, () => SkylineWindow.DocumentUI.MeasuredResults != null);
             WaitForDocumentLoaded(60 * 60 * 1000);
-            // Save is a fire-and-forget connector action that blocks in a modal "Saving..." progress dialog
-            // until the (large) document is written; WaitForAction waits out that posted action, so the next
-            // step does not run -- and the test does not end -- while the save is still in progress.
-            WaitForAction(() => Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
+            // Save blocks in a modal "Saving..." progress dialog until the (large) document is written; the
+            // connector's InvokeMenuItem waits out that posted action (riding through the progress dialog), so the
+            // next step does not run -- and the test does not end -- while the save is still in progress.
+            Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem"));
         }
 
         /// <summary>
