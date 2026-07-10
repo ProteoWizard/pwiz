@@ -126,7 +126,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// intersection and a growing "detected in only one run" bump read FDR trouble
         /// with no decoy or entrapment model -- the picture that works on the ordinary
         /// target+decoy libraries most users run. Built unconditionally from the
-        /// reported per-file passing precursors (the same pool as <see cref="PerFile"/>).
+        /// reported per-file passing REAL-target precursors (unique per modified
+        /// sequence + charge; decoys and entrapment excluded as in <see cref="IdYield"/>).
         /// </summary>
         public CrossRunDetection CrossRun { get; set; }
 
@@ -481,9 +482,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             data.IdYield = BuildIdYield(precs);
 
             // ---- cross-run detection reproducibility (entrapment-free FDR QC) ----
-            // From the reported per-file passing precursors -- the same pool the
-            // Summary per-file table counts; built unconditionally (no manifest needed).
-            data.CrossRun = BuildCrossRunDetection(perFileEntries, runFdr);
+            // From the reported per-file passing REAL-target precursors (entrapment
+            // excluded, like the id-yield curve, so a run's reproducibility picture is
+            // not polluted by the deliberately-non-reproducing entrapment padding).
+            // Built unconditionally (no manifest needed for a plain target+decoy run).
+            data.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest, runFdr);
 
             // ---- paired decoy-win fraction ----
             data.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
@@ -1037,14 +1040,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         }
 
         // Build the cross-run detection reproducibility model from the reported
-        // per-file passing precursors: for each run, the set of non-decoy precursors
-        // (modified sequence + charge) passing the run-level FDR -- the same pass test
-        // and pool the Summary per-file table uses. Cumulative union / intersection
-        // are walked in input-file order; the run-count histogram tallies, over all
-        // detected precursors, how many runs each appears in. Entrapment-independent
-        // (no manifest needed), so it is built on every run.
+        // per-file passing REAL-target precursors: for each run, the set of UNIQUE
+        // real-target precursors (modified sequence + charge, deduped per file)
+        // passing the run-level peptide FDR. Decoys are excluded by is_decoy (which
+        // also drops p_decoys) and entrapment (p_target) is excluded via the manifest
+        // classification, mirroring BuildIdYield -- so the reproducibility picture
+        // reflects real detections, not the deliberately-non-reproducing entrapment
+        // padding. This is the real-target counterpart of the Summary per-file Targets
+        // column (that column counts passing rows; here each precursor is counted once).
+        // Cumulative union / intersection are walked in input-file order; the run-count
+        // histogram tallies how many runs each detected precursor appears in.
+        // Entrapment-independent (no manifest needed for a plain target+decoy run).
         private static CrossRunDetection BuildCrossRunDetection(
-            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries, double runFdr)
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest, double runFdr)
         {
             int n = perFileEntries.Count;
             var runNames = new string[n];
@@ -1057,6 +1066,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 foreach (var e in kvp.Value)
                 {
                     if (e.IsDecoy || e.RunPeptideQvalue > runFdr)
+                        continue;
+                    // Exclude entrapment (p_target): a known false set that by design
+                    // does not reproduce, so counting it would inflate the k=1 bump.
+                    if (haveManifest && classByBaseId != null
+                        && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var cls)
+                        && cls == EntrapmentClass.PTarget)
                         continue;
                     set.Add(e.ModifiedSequence + "|" + e.Charge);   // same key as ReduceToPrecs
                 }

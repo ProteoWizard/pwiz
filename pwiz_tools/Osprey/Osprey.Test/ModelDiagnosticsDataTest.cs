@@ -145,6 +145,21 @@ namespace pwiz.Osprey.Test
                 Assert.IsTrue(cr.CumIntersection[i] <= cr.CumIntersection[i - 1]);
             }
             Assert.AreEqual(2.0, cr.MeanPerRun, 1e-9);             // (3+2+1)/3
+
+            // Entrapment (p_target) precursors are excluded from the reproducibility
+            // counts (like the id-yield curve), so the deliberately-non-reproducing
+            // entrapment padding does not inflate the k=1 bump. Base-id 50 -> PTarget.
+            var ef1 = new List<FdrEntry> { Entry(1, false, 5, 0.001, "A", 2), Entry(50, false, 5, 0.001, "ENT", 2) };
+            var ef2 = new List<FdrEntry> { Entry(1, false, 5, 0.001, "A", 2) };
+            var ecls = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1u, EntrapmentClass.Target }, { 50u, EntrapmentClass.PTarget },
+            };
+            var ecr = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 1.0, 0.01, "peptide").CrossRun;
+            // File 1 has A (target) + ENT (entrapment); only A is counted. File 2 has A.
+            CollectionAssert.AreEqual(new[] { 1, 1 }, ecr.PerRunCount);
+            Assert.AreEqual(1, ecr.CumUnion[ecr.CumUnion.Length - 1]);   // ENT never enters the union
+            Assert.AreEqual(1, ecr.RunCountHistogram.Sum());             // just A, in both runs
         }
 
         // The non-parametric null-alignment ratio (Mike's Storey check): the ratio
