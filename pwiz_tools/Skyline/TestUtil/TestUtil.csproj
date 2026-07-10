@@ -194,6 +194,7 @@
     <Compile Include="ScreenshotPreviewForm.Designer.cs">
       <DependentUpon>ScreenshotPreviewForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="UniprotApiVersionCheck.cs" />
     <Compile Include="FormSeen.cs" />
     <Compile Include="GridTester.cs" />
     <Compile Include="InstallTestUtil.cs" />

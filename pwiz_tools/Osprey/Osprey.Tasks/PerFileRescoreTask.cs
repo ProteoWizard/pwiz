@@ -434,8 +434,10 @@ namespace pwiz.Osprey.Tasks
                 // persisted set, omitting it diverged the post-compaction set from
                 // Rust by ~19 peptides / 1 protein at Stage 7 on Stellar Single).
                 // Do not remove without re-checking the 2nd-pass protein-FDR path.
-                // Only runs when protein FDR is enabled. Mirrors Rust pipeline.rs:4292-4358.
-                if (ctx.Config.ProteinFdr.HasValue && bundle.PerFileEntries.Count > 0)
+                // Runs unconditionally (not gated on --protein-fdr), matching Rust where
+                // first-pass protein FDR is gated only on !can_skip_fdr || expect_reconciled_input
+                // (pipeline.rs:4529). Mirrors Rust pipeline.rs:4292-4358.
+                if (bundle.PerFileEntries.Count > 0)
                 {
                     var fullLibrary = ctx.Get<FullLibrary>().Value;
                     // Silent (logInfo: null) -- the rehydration recompute runs
