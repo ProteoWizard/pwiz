@@ -87,7 +87,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
                 var data = ModelDiagnosticsData.Build(
                     perFileEntries, contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel.ToString());
+                    entrapmentRatio, config.RunFdr, config.FdrLevel);
                 // On a resumed / rehydrated run the first-pass SVM is not retrained
                 // (q-values come from sidecars), so there is no trained model to show.
                 // Surface it rather than silently emitting a blank Model tab.

@@ -392,7 +392,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// present -- FDRBench's 1-fold estimators use r = 1.
         /// </param>
         /// <param name="runFdr">The configured run-level FDR (for the summary counts).</param>
-        /// <param name="fdrLevel">Display name of the FDR level used.</param>
+        /// <param name="fdrLevel">
+        /// The FDR control level the run was reported at (Precursor / Peptide / Both).
+        /// Decides which run-level q gates the "passing" set (via
+        /// <see cref="FdrEntry.EffectiveRunQvalue"/>), so the per-file and cross-run
+        /// counts match what the pipeline actually reported -- not a hardcoded scope.
+        /// </param>
         public static ModelDiagnosticsData Build(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
@@ -400,12 +405,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             double entrapmentRatio,
             double runFdr,
-            string fdrLevel)
+            FdrLevel fdrLevel)
         {
             var data = new ModelDiagnosticsData
             {
                 RunFdr = runFdr,
-                FdrLevel = fdrLevel ?? string.Empty,
+                FdrLevel = fdrLevel.ToString(),
                 FileCount = perFileEntries.Count,
                 Model = new List<FeatureRow>(),
                 PerFile = new List<FileSummaryRow>(),
@@ -427,7 +432,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 int fileTargets = 0, fileDecoys = 0, fileEntrap = 0;
                 foreach (var e in kvp.Value)
                 {
-                    if (e.RunPeptideQvalue > runFdr)
+                    // Gate on the run-level q for the CONFIGURED FDR level (precursor /
+                    // peptide / both), the same value the pipeline reports on -- not a
+                    // hardcoded peptide q, which would miscount a precursor-controlled run.
+                    if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
                         continue;
                     if (e.IsDecoy)
                     {
@@ -486,7 +494,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // excluded, like the id-yield curve, so a run's reproducibility picture is
             // not polluted by the deliberately-non-reproducing entrapment padding).
             // Built unconditionally (no manifest needed for a plain target+decoy run).
-            data.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest, runFdr);
+            data.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
 
             // ---- paired decoy-win fraction ----
             data.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
@@ -1053,7 +1061,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // Entrapment-independent (no manifest needed for a plain target+decoy run).
         private static CrossRunDetection BuildCrossRunDetection(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest, double runFdr)
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest,
+            double runFdr, FdrLevel fdrLevel)
         {
             int n = perFileEntries.Count;
             var runNames = new string[n];
@@ -1065,7 +1074,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 var set = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var e in kvp.Value)
                 {
-                    if (e.IsDecoy || e.RunPeptideQvalue > runFdr)
+                    // Gate on the CONFIGURED FDR level's run q (the value the pipeline
+                    // reports on), matching the Summary per-file loop -- not a hardcoded
+                    // peptide q, which miscounts a precursor- or both-controlled run.
+                    if (e.IsDecoy || e.EffectiveRunQvalue(fdrLevel) > runFdr)
                         continue;
                     // Exclude entrapment (p_target): a known false set that by design
                     // does not reproduce, so counting it would inflate the k=1 bump.

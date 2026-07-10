@@ -57,6 +57,34 @@ namespace pwiz.Osprey.Test
             TestDensityRatioFlatness();
             TestIdYieldPerScope();
             TestCrossRunDetection();
+            TestPassingSetHonorsFdrLevel();
+        }
+
+        // The "passing at run FDR" set (per-file Summary counts AND cross-run detection)
+        // must gate on the run q for the CONFIGURED FDR level via EffectiveRunQvalue,
+        // not a hardcoded peptide q -- otherwise a precursor- or both-controlled run is
+        // miscounted. Three precursors whose precursor and peptide q straddle the
+        // threshold differently make the passing set depend on the level.
+        private static void TestPassingSetHonorsFdrLevel()
+        {
+            var f = new List<FdrEntry>
+            {
+                EntryPP(1, 0.005, 0.05, "A"),   // passes at precursor q, fails at peptide q
+                EntryPP(2, 0.005, 0.05, "B"),   // passes at precursor q, fails at peptide q
+                EntryPP(3, 0.05, 0.005, "C"),   // fails at precursor q, passes at peptide q
+            };
+            // Precursor level -> A, B pass (gated on RunPrecursorQvalue).
+            var prec = ModelDiagnosticsData.Build(WrapFiles(f), null, null, null, 1.0, 0.01, FdrLevel.Precursor);
+            Assert.AreEqual(2, prec.PerFile[0].Targets);
+            CollectionAssert.AreEqual(new[] { 2 }, prec.CrossRun.PerRunCount);
+            // Peptide level -> only C passes (gated on RunPeptideQvalue).
+            var pep = ModelDiagnosticsData.Build(WrapFiles(f), null, null, null, 1.0, 0.01, FdrLevel.Peptide);
+            Assert.AreEqual(1, pep.PerFile[0].Targets);
+            CollectionAssert.AreEqual(new[] { 1 }, pep.CrossRun.PerRunCount);
+            // Both level -> max(prec, pep) q; every precursor's max is 0.05 > 0.01 -> none pass.
+            var both = ModelDiagnosticsData.Build(WrapFiles(f), null, null, null, 1.0, 0.01, FdrLevel.Both);
+            Assert.AreEqual(0, both.PerFile[0].Targets);
+            CollectionAssert.AreEqual(new[] { 0 }, both.CrossRun.PerRunCount);
         }
 
         // The identification-yield curve carries BOTH precursor-q scopes over one
@@ -74,7 +102,7 @@ namespace pwiz.Osprey.Test
                 EntryQ(1, false, 5.0, 0.003, 0.003, "TA", 2),
                 EntryQ(2, false, 4.0, 0.09, 0.008, "TB", 2),
             };
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, null, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, null, null, 1.0, 0.01, FdrLevel.Peptide);
             var y = data.IdYield;
             Assert.IsNotNull(y);
             Assert.IsNotNull(y.TargetsExperiment);
@@ -125,7 +153,7 @@ namespace pwiz.Osprey.Test
                 Entry(2, false, 5, 0.5, "B", 2),                  // B fails FDR here
                 Entry(3, false, 5, 0.5, "C", 2),                  // C fails FDR here
             };
-            var data = ModelDiagnosticsData.Build(WrapFiles(f1, f2, f3), null, null, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(WrapFiles(f1, f2, f3), null, null, null, 1.0, 0.01, FdrLevel.Peptide);
             var cr = data.CrossRun;
             Assert.IsNotNull(cr);
             Assert.IsFalse(data.HasEntrapment);                    // built without a manifest
@@ -155,7 +183,7 @@ namespace pwiz.Osprey.Test
             {
                 { 1u, EntrapmentClass.Target }, { 50u, EntrapmentClass.PTarget },
             };
-            var ecr = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 1.0, 0.01, "peptide").CrossRun;
+            var ecr = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 1.0, 0.01, FdrLevel.Peptide).CrossRun;
             // File 1 has A (target) + ENT (entrapment); only A is counted. File 2 has A.
             CollectionAssert.AreEqual(new[] { 1, 1 }, ecr.PerRunCount);
             Assert.AreEqual(1, ecr.CumUnion[ecr.CumUnion.Length - 1]);   // ENT never enters the union
@@ -337,7 +365,7 @@ namespace pwiz.Osprey.Test
 
             // The report carries them through onto the model rows.
             var entries = new List<FdrEntry> { Entry(1, false, 5, 0.001, "TA", 2), Entry(1 | DECOY_BIT, true, 1, 0.5, "DA", 2) };
-            var data = ModelDiagnosticsData.Build(Wrap(entries), c, null, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), c, null, null, 1.0, 0.01, FdrLevel.Peptide);
             Assert.IsNotNull(data.FeatureHistEdges);
             Assert.IsTrue(data.Model.All(m => m.TargetHist != null && m.DecoyHist != null));
 
@@ -407,7 +435,7 @@ namespace pwiz.Osprey.Test
                 cls[(uint)(100 + i)] = EntrapmentClass.Target;
             }
             AddEntrap(entries, cls, 200, 5.5, 0.003, "P0");
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
 
             var settings = new JsonSerializerSettings
             {
@@ -457,7 +485,7 @@ namespace pwiz.Osprey.Test
             entries.Add(Entry(21, false, 3.0, 0.003, "Pb", 2));
             cls[21] = EntrapmentClass.PTarget; pair[21] = 0;
 
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, pair, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, pair, 1.0, 0.01, FdrLevel.Peptide);
             var fdp = data.FdpViews.Single(v => v.Scope == "experiment");
             Assert.IsNotNull(fdp.Paired);
             int last = fdp.Paired.Length - 1;
@@ -493,7 +521,7 @@ namespace pwiz.Osprey.Test
             cls[21] = EntrapmentClass.PTarget; pair[21] = 0;
 
             const double r = 0.1;
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, pair, r, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, pair, r, 0.01, FdrLevel.Peptide);
             var fdp = data.FdpViews.Single(v => v.Scope == "experiment");
             // Paired is a 1-fold estimator: suppressed (null) and flagged for r != 1.
             Assert.IsNull(fdp.Paired);
@@ -528,7 +556,7 @@ namespace pwiz.Osprey.Test
             // The entrapment DB ratio r is defined by the manifest composition,
             // not the observed hits: a balanced library gives r = 1, passed in
             // explicitly -- the case the estimator asserts below.
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
             Assert.IsTrue(data.HasEntrapment);
             Assert.IsNotNull(data.FdpViews);
             // Two pass-1 views: experiment-wide (FDRBench-matching) + per-run.
@@ -563,7 +591,7 @@ namespace pwiz.Osprey.Test
             {
                 { 1u, EntrapmentClass.Target }, { 2u, EntrapmentClass.PTarget },
             };
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
             Assert.AreEqual(1, data.NTarget);
             Assert.AreEqual(1, data.NDecoy);
             Assert.AreEqual(1, data.NPTarget);
@@ -571,7 +599,7 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(data.HasEntrapment);
 
             // No manifest -> degrade to the is_decoy-only split; no FDP views.
-            var degraded = ModelDiagnosticsData.Build(Wrap(entries), null, null, null, 1.0, 0.01, "peptide");
+            var degraded = ModelDiagnosticsData.Build(Wrap(entries), null, null, null, 1.0, 0.01, FdrLevel.Peptide);
             Assert.IsFalse(degraded.HasEntrapment);
             Assert.IsNull(degraded.FdpViews);
             Assert.AreEqual(2, degraded.NTarget);  // TA + PA both is_decoy=false
@@ -597,7 +625,7 @@ namespace pwiz.Osprey.Test
                 entries.Add(Entry((uint)(5000 + i) | DECOY_BIT, true, decoyWins ? 3.4 : 3.0, 0.5, "EPD" + i, 2));
                 cls[(uint)(5000 + i)] = EntrapmentClass.PTarget;
             }
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
             var wf = data.WinFraction;
             Assert.IsNotNull(wf);
             Assert.IsTrue(wf.HasEntrapment);
@@ -646,7 +674,7 @@ namespace pwiz.Osprey.Test
                 be.Add(Entry((uint)(5000 + i) | DECOY_BIT, true, eDecoy ? 2.0 : 1.7, 0.5, "BED" + i, 2));
                 bc[(uint)(5000 + i)] = EntrapmentClass.PTarget;
             }
-            var bwf = ModelDiagnosticsData.Build(Wrap(be), null, bc, null, 1.0, 0.01, "peptide").WinFraction;
+            var bwf = ModelDiagnosticsData.Build(Wrap(be), null, bc, null, 1.0, 0.01, FdrLevel.Peptide).WinFraction;
             Assert.IsTrue(bwf.NullBandReal < 0.4, "real coin should be collapsed: " + bwf.NullBandReal);
             Assert.IsTrue(System.Math.Abs(bwf.NullBandEnt - 0.5) < 0.1, "entrapment coin ~0.5: " + bwf.NullBandEnt);
             Assert.IsTrue(bwf.NullBandEnt - bwf.NullBandReal > 0.1,
@@ -673,7 +701,7 @@ namespace pwiz.Osprey.Test
                 Entry(1, false, 5, 0.001, "TA", 2),
                 Entry(1 | DECOY_BIT, true, 1, 0.5, "DA", 2),
             };
-            var data = ModelDiagnosticsData.Build(Wrap(entries), contrib, null, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), contrib, null, null, 1.0, 0.01, FdrLevel.Peptide);
             Assert.AreEqual(2, data.Model.Count);
             // Sorted most-influential-first: |200%| before |-100%|.
             Assert.AreEqual("Feature Zero", data.Model[0].Label);
@@ -701,7 +729,7 @@ namespace pwiz.Osprey.Test
                 Entry(7, false, 4, 0.002, "SOMEUNPAIREDK", 2),
             };
             var cls = new Dictionary<uint, EntrapmentClass> { { 1u, EntrapmentClass.PTarget } };
-            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, "peptide");
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
             Assert.AreEqual(1, data.NPTarget);
             Assert.AreEqual(1, data.NPDecoy);
             // The unmatched non-decoy is dropped, NOT counted as a target.
@@ -750,6 +778,23 @@ namespace pwiz.Osprey.Test
                 ExperimentPrecursorQvalue = qExp,
                 ModifiedSequence = seq,
                 Charge = charge,
+            };
+        }
+
+        // A non-decoy entry with distinct run precursor / peptide q, for testing that
+        // the passing set follows the configured FDR level (EffectiveRunQvalue).
+        private static FdrEntry EntryPP(uint id, double runPrecursorQ, double runPeptideQ, string seq)
+        {
+            return new FdrEntry
+            {
+                EntryId = id,
+                IsDecoy = false,
+                Score = 5,
+                RunPrecursorQvalue = runPrecursorQ,
+                RunPeptideQvalue = runPeptideQ,
+                ExperimentPrecursorQvalue = runPrecursorQ,
+                ModifiedSequence = seq,
+                Charge = 2,
             };
         }
 
