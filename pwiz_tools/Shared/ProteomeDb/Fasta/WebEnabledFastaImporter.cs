@@ -246,6 +246,7 @@ namespace pwiz.ProteomeDatabase.Fasta
     {
         none,
         no_response,
+        invalid_response,
         ambiguous_response,
         sequence_mismatch,
         failure_threshold,
@@ -287,13 +288,14 @@ namespace pwiz.ProteomeDatabase.Fasta
         private List<ProteinSearchInfo> _activeUniprotRequeueList;
 
         /// <summary>
-        /// Test seam: when true, repeated web-service timeouts cause the lookup to give up and mark
-        /// the affected proteins as timeout failures so an automated test does not wait on a slow
-        /// service. In normal (production) use this is false: a timeout is retried later (the
-        /// background loader reschedules and the foreground "Resolving Protein Details" dialog stays
-        /// cancelable), so a transient slowdown is not turned into a permanent gap in metadata.
+        /// Test seam: when true, a web service that repeatedly fails to return usable data - whether
+        /// it times out or answers with an unusable body - causes the lookup to give up and mark the
+        /// affected proteins as failures, so an automated test does not wait on it. In normal
+        /// (production) use this is false: the pass is abandoned and retried later (the background
+        /// loader reschedules and the foreground "Resolving Protein Details" dialog stays cancelable),
+        /// so a transient outage is not turned into a permanent gap in metadata.
         /// </summary>
-        public bool GiveUpOnRepeatedTimeout { get; set; }
+        public bool GiveUpOnUnresponsiveWebService { get; set; }
 
 
         /// <summary>
@@ -691,10 +693,26 @@ namespace pwiz.ProteomeDatabase.Fasta
                 return proteins.Select(x => x.GetProteinMetadata().GetPendingSearchTerm()).ToList();
             }
 
+            /// <summary>
+            /// Largest page the UniProt search endpoint will return; asking for more is an error.
+            /// </summary>
+            public const int UNIPROT_SEARCH_PAGE_SIZE = 500;
+
             public virtual string ConstructUniprotURL(IEnumerable<string> searches)
             {
+                // The "search" endpoint, not "stream": stream is UniProt's bulk one-off download
+                // path, and it answers some perfectly ordinary queries with a 200 whose body is
+                // "Error encountered when streaming data" instead of the requested rows.
+                //
+                // Nothing may be appended to the query. An accession alone is looked up as an
+                // accession, but "(P10636-2) AND (anything)" makes UniProt read the isoform
+                // accession as free text and return dozens of unrelated proteins.
+                //
+                // The field list must be named with "fields": the modern REST API silently ignores
+                // the legacy "columns" parameter and picks its own columns instead.
                 return ConstructURL(searches,
-                    @"https://rest.uniprot.org/uniprotkb/stream?query=({0})&format=tsv&columns=id,genes,organism,length,entry name,protein names,reviewed",
+                    @"https://rest.uniprot.org/uniprotkb/search?query=({0})&format=tsv&size=" + UNIPROT_SEARCH_PAGE_SIZE +
+                    @"&fields=accession,gene_names,organism_name,length,id,protein_name,reviewed",
                     @"+OR+");
             }
 
@@ -937,7 +955,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             foreach (var searchType in searchOrder)
             {
                 var consecutiveFailures = 0;
-                var consecutiveTimeouts = 0;
+                var consecutiveUnresponsiveReplies = 0;
                 var failureCount = 0;
                 var successCount = 0;
                 cancelled |= progressMonitor.IsCanceled;
@@ -1002,31 +1020,39 @@ namespace pwiz.ProteomeDatabase.Fasta
                         abort = true;
                         break;
                     }
-                    else if (lookupResult == WebserviceLookupOutcome.timed_out)
+                    else if (lookupResult == WebserviceLookupOutcome.timed_out ||
+                             lookupResult == WebserviceLookupOutcome.unusable_response)
                     {
-                        if (!GiveUpOnRepeatedTimeout)
+                        // Either the service never answered, or it answered with something other than
+                        // the data. Both mean this request made no progress, and repeating it as-is
+                        // will not either.
+                        var unresponsiveReason = lookupResult == WebserviceLookupOutcome.timed_out
+                            ? WebSearchFailureReason.timeout
+                            : WebSearchFailureReason.invalid_response;
+                        if (!GiveUpOnUnresponsiveWebService)
                         {
-                            // Normal (production) behavior: the web service is reachable but slow.
-                            // Retry later rather than giving up - the background loader reschedules
-                            // and the foreground "Resolving Protein Details" dialog stays cancelable -
-                            // so a transient slowdown is not turned into a permanent gap in metadata
-                            // (and no uniqueness filter is computed on incomplete data).
+                            // Normal (production) behavior: retry later rather than giving up - the
+                            // background loader reschedules and the foreground "Resolving Protein
+                            // Details" dialog stays cancelable - so a transient outage is not turned
+                            // into a permanent gap in metadata (and no uniqueness filter is computed
+                            // on incomplete data).
                             abort = true;
                             break;
                         }
-                        // Give-up seam (opted into by automated tests): don't wait on a slow service.
-                        // Shrink the batch and retry a couple of times (a smaller request may come
-                        // back in time); once we exceed the limit, give up on this search type by
-                        // marking its remaining proteins as timeout failures so the load can complete.
-                        // Other search types (different servers) are left to try.
-                        if (++consecutiveTimeouts >= MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS)
+                        // Give-up seam (opted into by automated tests): don't wait on a service that
+                        // isn't answering usefully. Shrink the batch and retry a couple of times (a
+                        // smaller request may succeed, and it isolates a single poisonous search term
+                        // that would otherwise spoil every batch it lands in); once we exceed the
+                        // limit, give up on this search type by marking its remaining proteins as
+                        // failures so the load can complete. Other search types are left to try.
+                        if (++consecutiveUnresponsiveReplies >= MAX_CONSECUTIVE_WEBSERVICE_FAILURES)
                         {
                             foreach (var ss in searchlist)
                             {
                                 if (ss.GetProteinMetadata().GetPendingSearchTerm().Length > 0)
                                 {
-                                    ss.NoteSearchFailure(WebSearchFailureReason.timeout,
-                                        detail: @"Exceeded consecutive web service timeout limit.");
+                                    ss.NoteSearchFailure(unresponsiveReason,
+                                        detail: @"Exceeded consecutive web service failure limit.");
                                     ss.SetWebSearchCompleted(); // Stop retrying - give up on this one
                                     yield return ss;
                                 }
@@ -1035,7 +1061,7 @@ namespace pwiz.ProteomeDatabase.Fasta
                         }
                         _maxBatchSize[searchType] = Math.Max(1, _maxBatchSize[searchType] / 2);
                         _batchsize[searchType] = Math.Max(1, _batchsize[searchType] / 2);
-                        _successCountAtThisBatchsize[searchType] = 0; // Don't let pre-timeout successes ramp the batch size back up
+                        _successCountAtThisBatchsize[searchType] = 0; // Don't let earlier successes ramp the batch size back up
                         continue;
                     }
                     else if (lookupResult == WebserviceLookupOutcome.cancelled)
@@ -1118,7 +1144,7 @@ namespace pwiz.ProteomeDatabase.Fasta
 
                     if (success)
                     {
-                        consecutiveTimeouts = 0; // Made progress, so this isn't a persistently-stalled service
+                        consecutiveUnresponsiveReplies = 0; // Made progress, so this isn't a persistently-stalled service
                         if ((_successCountAtThisBatchsize[searchType] > batchsizeIncreaseThreshold) && (_batchsize[searchType] < idealBatchsize))
                         {
                             _batchsize[searchType] = Math.Min(idealBatchsize, _batchsize[searchType]*2);
@@ -1522,32 +1548,71 @@ namespace pwiz.ProteomeDatabase.Fasta
             int colSpecies = fieldNames.FindIndex(i => i.Equals(@"Organism", StringComparison.OrdinalIgnoreCase));
             int colLength = fieldNames.FindIndex(i => i.Equals(@"Length", StringComparison.OrdinalIgnoreCase));
             int colStatus = fieldNames.FindIndex(i => i.Equals(@"Reviewed", StringComparison.OrdinalIgnoreCase)); // Formerly "Status"
+            var rowCount = 0;
             while (!reader.EndOfStream)
             {
                 var line = reader.ReadLine();
-                if (line != null)
+                if (line == null)
+                    break;
+                if (string.IsNullOrWhiteSpace(line))
+                    continue; // UniProt pads an error response with blank lines before the message
+
+                string[] fields = line.Split('\t');
+                if (fields.Length < fieldNames.Count)
                 {
-                    string[] fields = line.Split('\t');
-                    int length = 0;
-                    if (colLength >= 0)
-                        int.TryParse(fields[colLength], out length);
-                    var response = new ProteinSearchInfo
-                    {
-                        ProteinDbInfo = new DbProteinName
-                        {
-                            Accession = NullForEmpty(fields[colAccession]),
-                            PreferredName = NullForEmpty(fields[colPreferredName]),
-                            Description = NullForEmpty(fields[colDescription]),
-                            Gene = NullForEmpty(fields[colGene]),
-                            Species = NullForEmpty(fields[colSpecies]),
-                        },
-                        SeqLength = length,
-                        ReviewStatus = NullForEmpty(colStatus >= 0 ? fields[colStatus] : null) // Reviewed or unreviewed
-                    };
-                    response.MarkLastSearchUrl(urlString);
-                    responses.Add(response);
+                    // Too few columns to be a data row. UniProt answers some requests with HTTP 200,
+                    // a well-formed header, and then a plain-text error where the rows belong.
+                    throw new UnusableWebResponseException(
+                        string.Format(@"Unusable response from {0}: ""{1}""", urlString, line.Trim()));
                 }
+
+                rowCount++;
+
+                int length = 0;
+                var lengthField = GetField(fields, colLength);
+                if (lengthField != null)
+                    int.TryParse(lengthField, out length);
+                if (colLength >= 0 && length == 0)
+                {
+                    // An entry UniProt has withdrawn comes back as a tombstone: protein name
+                    // "deleted", with no gene, organism, or length. It is not a candidate match, and
+                    // leaving it in would hide a real match that the same query also returned.
+                    continue;
+                }
+
+                var response = new ProteinSearchInfo
+                {
+                    ProteinDbInfo = new DbProteinName
+                    {
+                        Accession = GetField(fields, colAccession),
+                        PreferredName = GetField(fields, colPreferredName),
+                        Description = GetField(fields, colDescription),
+                        Gene = GetField(fields, colGene),
+                        Species = GetField(fields, colSpecies),
+                    },
+                    SeqLength = length,
+                    ReviewStatus = GetField(fields, colStatus) // Reviewed or unreviewed
+                };
+                response.MarkLastSearchUrl(urlString);
+                responses.Add(response);
             }
+
+            if (rowCount >= WebSearchProvider.UNIPROT_SEARCH_PAGE_SIZE && searchTerms.Count > 1)
+            {
+                // A full page may have been truncated, and the response carries no total we can
+                // consult here, so ask for fewer terms at a time rather than silently losing rows.
+                // Only worth doing for a batch: a single term that matches a whole page is already
+                // too ambiguous to resolve, and shrinking a batch of one would never terminate.
+                throw new ResponsePageFullException();
+            }
+        }
+
+        /// <summary>
+        /// Reads one column of a TSV row, tolerating a column the server did not send.
+        /// </summary>
+        private static string GetField(IReadOnlyList<string> fields, int index)
+        {
+            return index >= 0 && index < fields.Count ? NullForEmpty(fields[index]) : null;
         }
 
         private ProteinMetadata MergeSearchResult(ProteinMetadata searchResult, ProteinMetadata original)
@@ -1570,7 +1635,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         public const string KNOWNGOOD_UNIPROT_SEARCH_TARGET = "Q08641";
         public const int KNOWNGOOD_UNIPROT_SEARCH_TARGET_SEQLEN = 628;
         public const int MAX_CONSECUTIVE_PROTEIN_METATDATA_LOOKUP_FAILURES = 20; // If we fail on several in a row, assume all are doomed to fail.
-        public const int MAX_CONSECUTIVE_WEBSERVICE_TIMEOUTS = 2; // Give up on a search type after this many consecutive single-request timeouts (the batch is shrunk between tries) rather than retrying a slow service forever.
+        public const int MAX_CONSECUTIVE_WEBSERVICE_FAILURES = 2; // Give up on a search type after this many consecutive requests that returned no usable data - a timeout, or a success carrying an error body (the batch is shrunk between tries) - rather than retrying an unresponsive service forever.
         private bool SimilarSearchTerms(string a, string b)
         {
             var searchA = a.ToUpperInvariant().Split('.')[0]; // xp_12345.6 -> XP_12345
@@ -1584,7 +1649,27 @@ namespace pwiz.ProteomeDatabase.Fasta
             url_too_long,
             retry_later,
             timed_out,
+            unusable_response,
             cancelled
+        }
+
+        /// <summary>
+        /// The web service reported success but sent something other than the data that was asked
+        /// for. Worth distinguishing from an empty result, which is a final answer, and from a
+        /// timeout, which says nothing about the content.
+        /// </summary>
+        private class UnusableWebResponseException : Exception
+        {
+            public UnusableWebResponseException(string message) : base(message)
+            {
+            }
+        }
+
+        /// <summary>
+        /// The response filled a whole page, so rows beyond it may have been dropped.
+        /// </summary>
+        private class ResponsePageFullException : Exception
+        {
         }
 
         /// <summary>
@@ -1612,8 +1697,9 @@ namespace pwiz.ProteomeDatabase.Fasta
                     break; // Cancelled
 
                 var iterationOutcome = ExecuteLookupIteration(proteins, searchType, searchTerms, responses, progressMonitor);
-                if (iterationOutcome == WebserviceLookupOutcome.timed_out)
-                    return WebserviceLookupOutcome.timed_out;  // A slow service won't be helped by repeating the same request immediately; the caller retries with a smaller batch
+                if (iterationOutcome == WebserviceLookupOutcome.timed_out ||
+                    iterationOutcome == WebserviceLookupOutcome.unusable_response)
+                    return iterationOutcome;  // A slow service, or one answering with an error body, won't be helped by repeating the same request immediately; the caller retries with a smaller batch
                 if (iterationOutcome == WebserviceLookupOutcome.retry_later)
                 {
                     if (retries == 0)
@@ -1696,6 +1782,15 @@ namespace pwiz.ProteomeDatabase.Fasta
             {
                 RecordFailure(proteins, WebSearchFailureReason.timeout, ex);
                 return WebserviceLookupOutcome.timed_out;
+            }
+            catch (UnusableWebResponseException ex)
+            {
+                RecordFailure(proteins, WebSearchFailureReason.invalid_response, ex);
+                return WebserviceLookupOutcome.unusable_response;
+            }
+            catch (ResponsePageFullException)
+            {
+                return WebserviceLookupOutcome.url_too_long; // Ask for fewer search terms per request
             }
             catch (Exception ex)
             {

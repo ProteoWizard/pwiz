@@ -1129,9 +1129,60 @@ namespace CommonTest
                 TestContext.EnsureTestResultsDir();
 
             TestProteinSearchInfoIntersection();
+            TestUniprotErrorBody();
 
             DoTestFastaImport(false, false);  // Run with simulated web access
             DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
+        }
+
+        /// <summary>
+        /// UniProt can answer a batch query with HTTP 200 and a valid TSV header, then emit a
+        /// plain-text error where the data rows belong. That is not an exception, not a timeout,
+        /// and not an empty result, so it has to be recognized on its own terms. Otherwise the
+        /// importer reads the pass as "nothing happened, try again later" and the background
+        /// loader reschedules it forever, hanging the caller instead of failing.
+        /// </summary>
+        private void TestUniprotErrorBody()
+        {
+            // Verbatim response body observed from rest.uniprot.org, including its blank lines
+            const string errorBody =
+                "Entry\tEntry Name\tReviewed\tProtein names\tGene Names\tOrganism\tLength\n\n\n" +
+                "Error encountered when streaming data. Please try again later.\n";
+
+            // Seam on, as automated tests opt into: a doomed request must not be retried forever
+            var abandoned = RunUniprotErrorBodyLookup(errorBody, giveUpOnUnresponsiveWebService: true);
+            Assert.AreEqual(0, abandoned.Count(p => p.GetProteinMetadata().NeedsSearch()),
+                "An error body carried by a 200 response must not leave proteins pending forever");
+            Assert.IsTrue(abandoned.All(p => p.FailureReason == WebSearchFailureReason.invalid_response));
+            Assert.IsTrue(abandoned.All(p => p.Status == ProteinSearchInfo.SearchStatus.failure));
+
+            // Seam off, as production runs: retry-eligible, but never silently marked resolved
+            var pending = RunUniprotErrorBodyLookup(errorBody, giveUpOnUnresponsiveWebService: false);
+            Assert.AreEqual(pending.Count, pending.Count(p => p.GetProteinMetadata().NeedsSearch()));
+            Assert.IsTrue(pending.All(p => p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+            // It must specifically be the unusable-body path that left them pending
+            Assert.IsTrue(pending.Any(p => p.FailureReason == WebSearchFailureReason.invalid_response));
+        }
+
+        private static IList<ProteinSearchInfo> RunUniprotErrorBodyLookup(string responseBody,
+            bool giveUpOnUnresponsiveWebService)
+        {
+            using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(responseBody);
+            Assert.IsNotNull(helper);
+
+            // Accessions from the tail of human_and_yeast_no_metadata.protdb that go to the web
+            var proteins = new[] { "Q96K55", "B4DZL2", "B3KRD2" }
+                .Select(accession => new ProteinSearchInfo(
+                    new DbProteinName(null, new ProteinMetadata(accession, string.Empty, null, null, null, null,
+                        WebEnabledFastaImporter.UNIPROTKB_TAG + accession)), 100))
+                .ToList();
+
+            var importer = new WebEnabledFastaImporter(new QuickFailWebSearchProvider())
+            {
+                GiveUpOnUnresponsiveWebService = giveUpOnUnresponsiveWebService
+            };
+            importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            return proteins;
         }
 
         [TestMethod]
@@ -1414,7 +1465,7 @@ namespace CommonTest
             HttpClientTestHelper helper, IList<object> initialSnapshot)
         {
             const int noSearchNeededCount = 7;  // Seven proteins will return successfully without any web access
-            const int failOnSearch = 8; // 3 failures expected, and 5 just can't be resolved live on web
+            const int failOnSearch = 10; // 3 failures expected, and 7 just can't be resolved live on web
             int searchCount = proteins.Count - noSearchNeededCount;
 
             Assert.AreNotEqual(0, results.Count);
@@ -1642,7 +1693,7 @@ namespace CommonTest
             var importer = new WebEnabledFastaImporter(provider);
             // The give-up seam is on only for the test-bail timeout mode; production (and the
             // retry-eligible timeout mode) leaves it off so a slow service is retried later.
-            importer.GiveUpOnRepeatedTimeout = mode == LookupTestMode.timeout;
+            importer.GiveUpOnUnresponsiveWebService = mode == LookupTestMode.timeout;
             var results = importer.DoWebserviceLookup(proteins, progressMonitor, false).ToList();
             return results;
         }

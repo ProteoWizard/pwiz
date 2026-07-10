@@ -129,7 +129,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             // This perf test drives live web lookups against real servers. Opt into the give-up
             // seam so a slow or unresponsive service makes the test fail fast rather than hang;
             // normal Skyline use leaves the seam off and retries a timed-out lookup later.
-            RunUI(() => SkylineWindow.BackgroundProteomeManager.FastaImporter.GiveUpOnRepeatedTimeout = true);
+            RunUI(() => SkylineWindow.BackgroundProteomeManager.FastaImporter.GiveUpOnUnresponsiveWebService = true);
             runScenario(_cancellationCheckType,
                 (_initialBackgroundProteome == null) ? null : TestFilesDir.GetTestPath(_initialBackgroundProteome),
                 (_newBackgroundProteome == null) ? null : TestFilesDir.GetTestPath(_newBackgroundProteome));
