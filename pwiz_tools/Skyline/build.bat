@@ -39,9 +39,10 @@ REM #                          command (e.g. test=Foo,Bar for a smoke run).
 REM #
 REM # Scope:
 REM #   Builds + tests Skyline.csproj and the net8-ported test projects Test,
-REM #   TestData, TestFunctional (plus the TestRunner harness). TestConnected is
-REM #   not ported yet; TestPerf and TestTutorial are intentionally EXCLUDED from
-REM #   the standard build -- run those separately when needed.
+REM #   TestData, TestFunctional, TestConnected (plus the TestRunner harness).
+REM #   TestConnected's network-service tests self-skip when their credentials
+REM #   aren't configured. TestPerf and TestTutorial are intentionally EXCLUDED
+REM #   from the standard build -- run those separately when needed.
 REM #
 REM # NOTE: dotCover coverage (--coverage) is temporarily removed while the
 REM #   TestRunner path beds in; re-add it as a separate step once proven in CI.
@@ -101,7 +102,7 @@ REM # Build targets: Skyline.csproj pulls in every ProjectReference (BiblioSpec,
 REM # CommonMsData, ProteomeDb, ProteowizardWrapper, ZedGraph, the pwiz-sharp
 REM # vendor + BiblioSpec tool projects, ...). The test projects add the suites,
 REM # and TestRunner is the harness that stages + runs them.
-set BUILD_TARGET=Skyline.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestRunner\TestRunner.csproj
+set BUILD_TARGET=Skyline.csproj Test\Test.csproj TestData\TestData.csproj TestFunctional\TestFunctional.csproj TestConnected\TestConnected.csproj TestRunner\TestRunner.csproj
 
 echo ##teamcity[progressMessage 'dotnet --version']
 dotnet --version

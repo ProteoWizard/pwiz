@@ -42,6 +42,20 @@ namespace pwiz.SkylineTestConnected
         private string _selectItem;
         private PointF? _chromatogramPoint;
 
+        // .NET Framework and .NET 8 surface a failed socket connection with different text: net472's
+        // WebException wrapper vs net8's raw socket message. Derive the net8 expectation from the OS socket
+        // layer (the same source HttpClient's message comes from) so it follows the machine locale rather
+        // than being a hardcoded English literal.
+#if NET472
+        private static readonly string ConnectionRefusedMessage = "Unable to connect to the remote server";
+        private static readonly string DnsResolutionFailedMessage = "The remote name could not be resolved";
+#else
+        private static readonly string ConnectionRefusedMessage =
+            new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.ConnectionRefused).Message;
+        private static readonly string DnsResolutionFailedMessage =
+            new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.HostNotFound).Message;
+#endif
+
         [TestMethod]
         public void TestUnifi()
         {
@@ -103,9 +117,11 @@ namespace pwiz.SkylineTestConnected
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("localhost")));
             AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ToolsUIResources.EditRemoteAccountDlg_ValidateValues_Invalid_server_URL_);
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://localhost:12345"))); // resolves, but no server there
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "Unable to connect to the remote server");
+            // .NET Framework's WebException said "Unable to connect to the remote server"; .NET 8's HttpClient
+            // surfaces the raw Winsock error instead. Both wrap the same socket failure.
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), ConnectionRefusedMessage);
             RunUI(() => editAccountDlg.SetRemoteAccount(_testAccount.ChangeServerUrl("https://asdfdsafads.local"))); // non-resolving hostname
-            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), "The remote name could not be resolved");
+            AssertAlertDlgContainsMessage(() => editAccountDlg.TestSettings(), DnsResolutionFailedMessage);
 
             // Test invalid client id, scope, and secret
             RunUI(() => editAccountDlg.SetRemoteAccount((_testAccount as WatersConnectAccount)!.ChangeClientId("foobar")));
@@ -143,8 +159,17 @@ namespace pwiz.SkylineTestConnected
 
             RunUI(() => SkylineWindow.SelectElement(ElementRefs.FromObjectReference(ElementLocator.Parse(_selectItem))));
 
-            var chromGraph = FindOpenForm<GraphChromatogram>();
-            WaitForConditionUI(5000, () => chromGraph.CurveCount == _filenames.Length);
+            // Skyline creates one GraphChromatogram per imported replicate. On net8 the WinForms handle
+            // for every one of them is created eagerly (net472 deferred the hidden ones), so
+            // FindOpenForm<GraphChromatogram> - which requires a single open form - sees them all. Target
+            // the graph for the currently selected replicate, waiting for the async graph update to settle.
+            GraphChromatogram chromGraph = null;
+            WaitForConditionUI(5000, () =>
+            {
+                chromGraph = SkylineWindow.GetGraphChrom(SkylineWindow.SelectedGraphChromName);
+                return chromGraph != null && chromGraph.CurveCount == _filenames.Length;
+            });
+            Assert.IsNotNull(chromGraph);
             Assert.AreEqual(_filenames.Length, chromGraph.CurveCount);
 
             if (_chromatogramPoint != null)

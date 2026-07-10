@@ -304,6 +304,11 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 var errorType = (tokenResponse[@"error"] ?? "").ToString();
                 if (errorType == @"invalid_scope")
                 {
+                    // Surface the identity server's raw (non-localized) error detail so the user sees the
+                    // rejected scope. On net472 IdentityModel left TokenResponse.Raw empty, so this went
+                    // through the generic path below that showed the same detail; net8's IdentityModel 7
+                    // populates Raw and reaches this branch, which otherwise left the message blank.
+                    message = error;
                     return AuthenticationErrorType.InvalidClientScope;
                 }
                 else if (errorType == @"invalid_client")
@@ -312,6 +317,10 @@ namespace pwiz.CommonMsData.RemoteApi.WatersConnect
                 }
                 else if (errorType == @"invalid_grant")
                 {
+                    // As with invalid_scope, surface the identity server's raw (non-localized) detail
+                    // (e.g. "password entered for this user is incorrect") that net472 showed via the
+                    // generic path before net8's IdentityModel 7 started populating TokenResponse.Raw.
+                    message = error;
                     return AuthenticationErrorType.InvalidPassword;
                 }
                 else if (!string.IsNullOrEmpty(error))
