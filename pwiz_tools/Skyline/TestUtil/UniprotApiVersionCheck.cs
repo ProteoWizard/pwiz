@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestUtil
         /// Update this whenever the recorded responses in the various WebData.json files are
         /// refreshed, so that the next API change UniProt makes is the one that gets reported.
         /// </summary>
-        public const string RECORDED_API_DEPLOYMENT_DATE = @"12-June-2026";
+        public const string RECORDED_API_DEPLOYMENT_DATE = @"10-July-2026";
 
         private const string API_DEPLOYMENT_DATE_HEADER = @"X-API-Deployment-Date";
 
