@@ -21,9 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -50,16 +48,23 @@ namespace TestPerf
     /// Tutorial-style perf test for the DIA-NN integration, driven by the published
     /// ProteoBench DIA-LFQ (AIF) reference dataset (PXD028735, Q Exactive HF-X,
     /// Human + Yeast + E.coli mix engineered to log2FC of 0 / -1 / +2 between
-    /// Condition_A and Condition_B). Full 6-file run, full HYE FASTA, ProteoBench
-    /// recipe — walks through DiannSearchDlg + ImportPeptideSearchDlg with
-    /// PauseForScreenShot at each page so the same body doubles as the basis for
-    /// tutorial-doc screenshots.
+    /// Condition_A and Condition_B). Runs 4 files (2 replicates per condition — enough
+    /// for the volcano plot's t-test), each shipped as a centroided mzML holding only the
+    /// first half of the original ~150-min gradient (built from the raws by
+    /// make-proteobench-subset-zip.bat, which is bundled inside the zip) to keep the
+    /// run short, against the abbreviated HYE FASTA, ProteoBench recipe — walks through
+    /// DiannSearchDlg +
+    /// ImportPeptideSearchDlg with PauseForScreenShot at each page so the same body
+    /// doubles as the basis for tutorial-doc screenshots.
     ///
-    /// First run is ~2 hr (downloads + presearches files 1–5 + runs the wizard on
-    /// all 6). Subsequent runs are ~25–45 min — DIA-NN reuses 5 cached `.quant`
-    /// files and Skyline reuses the cached predicted library, so the wizard only
-    /// drives the search for file #6 + MBR cross-run analysis. See
-    /// <see cref="EnsureCachedPresearch"/> for the caching invariants.
+    /// Data comes from ProteoBenchSubset.zip, which bundles not just the mzML + FASTA but
+    /// also the DIA-NN cache (per-file `.quant` files + the predicted spectral library), all
+    /// extracted once to a persistent dir. That makes EVERY run — including the first on a
+    /// fresh machine — ~16 min (measured): the presearch is a no-op and the predictor build
+    /// is skipped. The test still deletes the first file's cached .quant so the wizard runs a
+    /// real DIA-NN search on it (the workflow the tutorial demonstrates), reusing the other
+    /// three from cache. A fully cold run only happens if the whole cache is deleted (then
+    /// <see cref="EnsureCachedPresearch"/> rebuilds it).
     /// </summary>
     [TestClass]
     public class DiannSearchTutorialTest : AbstractFunctionalTestEx
@@ -84,47 +89,55 @@ namespace TestPerf
         // anything less and the median is too noisy to be meaningful.
         private const int MIN_QUANTIFIED_PEPTIDES_PER_SPECIES = 50;
 
-        // Canonical ProteoBench AIF file set per the archived module docs. Do not rename.
-        private const string PRIDE_BASE = @"https://ftp.pride.ebi.ac.uk/pride/data/archive/2022/02/PXD028735/";
-        private static readonly string[] SUBSET_FILES =
+        // Tutorial data + DIA-NN cache ship as a reusable zip (other tutorials may use it too)
+        // in the standard Skyline tutorials mirror: a single top-level ProteoBenchSubset/ folder
+        // (matching the other tutorial zips), unzipped in place via TestFilesZipExtractHere so it
+        // lands at …/Tutorials/ProteoBenchSubset/ (no double nesting). Contents: 4 first-half
+        // mzML, the abbreviated HYE FASTA, the per-file .quant + predicted library, and
+        // make-proteobench-subset-zip.bat (which rebuilds the mzML from the raw ProteoBench
+        // PXD028735 files — it lives in the zip, not the repo).
+        private const string ZIP_NAME = @"ProteoBenchSubset";
+
+        // The mzML the wizard searches: each is only the FIRST HALF (0-75 min) of the
+        // original ~150-min gradient, which roughly halves DIA-NN's per-file search time and
+        // Skyline's chromatogram extraction. Two replicates per condition — the minimum that
+        // still gives the volcano plot's t-test real variance. Filenames keep the
+        // Condition_A / Condition_B tokens the replicate classification keys on, and are
+        // marked persistent (see TestFilesPersistent) so DIA-NN's per-file `.quant` cache
+        // survives next to them across runs.
+        private static readonly string[] MZML_FILES =
         {
-            @"LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_01.raw",
-            @"LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_01.raw",
-        };
-        private static readonly string[] FULL_FILES =
-        {
-            @"LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_01.raw",
-            @"LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_02.raw",
-            @"LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_03.raw",
-            @"LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_01.raw",
-            @"LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_02.raw",
-            @"LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_03.raw",
+            @"LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_01.half.mzML",
+            @"LFQ_Orbitrap_AIF_Condition_A_Sample_Alpha_02.half.mzML",
+            @"LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_01.half.mzML",
+            @"LFQ_Orbitrap_AIF_Condition_B_Sample_Alpha_02.half.mzML",
         };
 
-        private const string FASTA_ZIP_URL = @"https://proteobench.cubimed.rub.de/fasta/ProteoBenchFASTA_MixedSpecies_HYE.zip";
-        // Abbreviated FASTA — only the proteins identified by a previous full-FASTA run.
-        // Cuts predicted-library build time from ~45 min (31,889 proteins) to ~15 min
-        // (11,559 proteins) without losing IDs the workflow can recover. Re-generate with
-        // scripts/make_abbreviated_fasta.py against a fresh diann-output.parquet.
+        // Abbreviated FASTA — only the proteins identified by a previous full-FASTA run,
+        // which cuts predicted-library build time. Bundled in the tutorial zip.
         private const string FASTA_FILENAME = @"ProteoBenchFASTA_MixedSpecies_HYE_identified.fasta";
 
-        // Cache root for downloaded data + persisted DIA-NN intermediates. Survives across
-        // test runs so that .quant files (per-raw) and the predicted library can be reused.
-        private static readonly string CacheDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            @"SkylinePerfTests", @"DiannPxd028735");
+        // DIA-NN's predicted spectral library. Also shipped in the tutorial zip (so the
+        // ~15-20 min predictor build is skipped even on the first run) and seeded into
+        // DocDir, where the wizard/presearch look for it via ReuseCachedLibrary.
+        private const string PREDICTED_LIB_FILENAME = @"diann-predicted.predicted.speclib";
+
+        // DIA-NN reads the mzML and writes its per-file `.quant` next to them, in the tutorial
+        // zip's ProteoBenchSubset/ folder. With ExtractHere=true the framework unzips into the
+        // mirror root, so PersistentFilesDir is the mirror (…/Tutorials) and the folder lands at
+        // …/Tutorials/ProteoBenchSubset/ — a single level, no double nesting. Survives across
+        // runs → fast repeat runs. Only valid after the zip is unzipped (inside DoTest and later).
+        private string CacheDir => Path.Combine(TestFilesDirs[0].PersistentFilesDir, ZIP_NAME);
 
         // Stable Skyline doc directory — also receives DIA-NN intermediates (predicted
-        // library, MBR output parquet). Stable across runs so the library is reused.
+        // library, MBR output parquet). Kept out of the tutorial extraction dir so that dir
+        // holds only the shipped inputs + the `.quant` cache. Stable across runs for reuse.
         private static readonly string DocDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             @"SkylinePerfTests", @"DiannPerfDoc-stable");
 
-        // Subset path remains opt-out via env var for fast local iteration only;
-        // not the default any more since the cache makes the full run feasible.
-        private bool UseSubset =>
-            string.Equals(Environment.GetEnvironmentVariable(@"SKYLINE_PERF_DIANN_SUBSET"), @"1");
-        private string[] DiaFiles => UseSubset ? SUBSET_FILES : FULL_FILES;
+        // Full paths to the mzML the wizard searches.
+        private string[] DiaSearchPaths => MZML_FILES.Select(f => Path.Combine(CacheDir, f)).ToArray();
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE),
          NoLeakTesting(TestExclusionReason.EXCESSIVE_TIME)]
@@ -142,9 +155,17 @@ namespace TestPerf
             // tutorial-doc check on screenshot capture passes:
             // LinkPdf = @"https://skyline.ms/_webdav/home/software/Skyline/%40files/tutorials/DIA-NN-Search.pdf";
 
-            // Files come from PRIDE/ProteoBench rather than the Skyline tutorial mirror, so
-            // we handle the download ourselves rather than via TestFilesZipPaths.
-            EnsureBenchmarkFilesDownloaded();
+            // Tutorial data + DIA-NN cache ship as a zip (single top-level ProteoBenchSubset/
+            // folder) in the standard Skyline tutorials mirror. ExtractHere=true unzips that
+            // folder in place (<mirror>/ProteoBenchSubset/) instead of nesting it under an extra
+            // zip-name dir. Mark everything persistent so the ~4.8 GB extracts once and is reused
+            // in place across runs (the .quant + predicted library keep every run warm).
+            TestFilesZip = @"http://skyline.ms/tutorials/" + ZIP_NAME + @".zip";
+            TestFilesZipExtractHere = new[] { true };
+            TestFilesPersistent = MZML_FILES
+                .Concat(MZML_FILES.Select(f => f + @".quant"))
+                .Concat(new[] { FASTA_FILENAME, PREDICTED_LIB_FILENAME })
+                .ToArray();
             RunFunctionalTest();
         }
 
@@ -187,22 +208,41 @@ namespace TestPerf
                 return;
             }
 
+            // The .quant files ship in the zip as the persistent baseline. The first file's
+            // .quant is deleted so the wizard performs a real search (and removed again after
+            // the run), so register it as an expected-missing file. If the cache was deleted
+            // and a .quant is rebuilt by EnsureCachedPresearch, PotentialAdditional lets the
+            // check treat it as an expected addition rather than an unexpected change. The check
+            // names persistent entries relative to PersistentFilesDir's parent, so prefix with
+            // the zip folder (ZIP_NAME) — e.g. "ProteoBenchSubset\<file>.quant".
+            TestFilesDirs[0].PotentialAdditionalPersistentFileSet =
+                new HashSet<string>(MZML_FILES.Select(f => Path.Combine(ZIP_NAME, f + @".quant")));
+            TestFilesDirs[0].PotentialMissingPersistentFileSet =
+                new HashSet<string> { Path.Combine(ZIP_NAME, MZML_FILES[0] + @".quant") };
+
             PrepareDocument(@"DiannSearchPerf.sky");
 
             var realDiannPath = ResolveDiannBinary();
             AssertEx.IsTrue(File.Exists(realDiannPath),
                 $@"DIA-NN binary not available at {realDiannPath}");
 
-            // One-time-per-machine: presearch all files so DIA-NN's per-file `.quant`
-            // files are cached on disk. Subsequent test invocations skip this entirely.
+            // The predicted library ships in the zip (extracted into CacheDir); copy it to
+            // DocDir where DIA-NN looks for it, so the first run skips the predictor build.
+            SeedPredictedLibraryFromZip();
+
+            // Cache guard: the .quant files ship in the zip, so this is normally a no-op. It
+            // only does real DIA-NN work if the cache was deleted and needs rebuilding.
             EnsureCachedPresearch(realDiannPath);
 
-            // Delete the .quant for the first input so the wizard's `--use-quant` run does
-            // a real per-file DIA-NN search on at least one file — exercising the actual
-            // search path, not just MBR re-quant from fully cached results.
-            var firstQuant = Path.Combine(CacheDir, DiaFiles[0]) + @".quant";
-            if (File.Exists(firstQuant))
-                File.Delete(firstQuant);
+            // Delete the first file's cached .quant so the wizard runs a REAL DIA-NN search on
+            // it (not just MBR re-quant from fully cached results) — the search the tutorial
+            // demonstrates. The other 3 files reuse their shipped .quant. We remove this file
+            // again after the run so the persistent dir never diverges from the shipped
+            // baseline; it's registered in PotentialMissing (above) so the persistent-files
+            // check tolerates it being gone, and it's re-extracted fresh from the zip next run.
+            var forcedSearchQuant = DiaSearchPaths[0] + @".quant";
+            if (File.Exists(forcedSearchQuant))
+                File.Delete(forcedSearchQuant);
 
             DiannSearchDlg searchDlg;
             try
@@ -228,6 +268,11 @@ namespace TestPerf
             BuildAndShowVolcanoPlot();
             BuildAndShowSpeciesBoxPlot();
             AssertPerSpeciesLog2FoldChanges();
+
+            // The wizard re-created the forced-search .quant; remove it so the persistent dir
+            // matches the shipped baseline minus this one file (tolerated via PotentialMissing).
+            if (File.Exists(forcedSearchQuant))
+                File.Delete(forcedSearchQuant);
         }
 
         /// <summary>
@@ -364,7 +409,7 @@ namespace TestPerf
         private void ConfigureAndRunSearch(DiannSearchDlg searchDlg)
         {
             string fasta = Path.Combine(CacheDir, FASTA_FILENAME);
-            string[] diaPaths = DiaFiles.Select(f => Path.Combine(CacheDir, f)).ToArray();
+            string[] diaPaths = DiaSearchPaths;
 
             // Page 1: data files. Already on this page when the dialog opens.
             WaitForConditionUI(() => searchDlg.CurrentPage == DiannSearchDlg.Pages.data_files_page);
@@ -433,8 +478,9 @@ namespace TestPerf
             {
                 bool? searchSucceeded = null;
                 searchDlg.SearchControl.SearchFinished += success => searchSucceeded = success;
-                // 90 min covers the cached-rerun case comfortably (~45 min); first run
-                // populates the cache and may take ~2 hr — bump if that's expected.
+                // 120 min is a generous ceiling: a cached rerun searches only one file
+                // (~a few min), while a cold first run populates the whole cache — bump if
+                // that's expected on a fresh machine.
                 WaitForConditionUI(120 * 60 * 1000, () => searchSucceeded.HasValue);
                 RunUI(() => AssertEx.IsTrue(searchSucceeded.Value, searchDlg.SearchControl.LogText));
             }
@@ -465,7 +511,7 @@ namespace TestPerf
             WaitForConditionUI(() => importDlg.CurrentPage == ImportPeptideSearchDlg.Pages.chromatograms_page);
             PauseForScreenShot<ImportPeptideSearchDlg.ChromatogramsDiaPage>(@"Extract chromatograms page");
             // With >1 file the rename/prefix dialog pops up; accept defaults.
-            if (DiaFiles.Length > 1)
+            if (MZML_FILES.Length > 1)
             {
                 var removeSuffix = ShowDialog<ImportResultsNameDlg>(() => importDlg.ClickNextButton());
                 PauseForScreenShot<ImportResultsNameDlg>(@"Import results names form");
@@ -509,9 +555,9 @@ namespace TestPerf
             var associate = ShowDialog<AssociateProteinsDlg>(importDlg.ClickNextButtonNoCheck);
             WaitForConditionUI(() => associate.DocumentFinalCalculated);
             PauseForScreenShot<AssociateProteinsDlg>(@"Associate proteins form (post-import summary)");
-            // Chromatogram extraction on 6 × 1.5 GB Thermo .raw files takes well over
-            // the 180-second default — observed ~5–10 min per file on a 24-core box.
-            // 30 min covers the full 6-file run comfortably.
+            // Chromatogram extraction on the ~0.9 GB half-gradient mzML files takes well over
+            // the 180-second default — observed a few min per file on a 24-core box.
+            // 30 min covers the 4-file run comfortably.
             const int chromExtractionTimeoutMs = 30 * 60 * 1000;
             using (new WaitDocumentChange(null, true, chromExtractionTimeoutMs))
             {
@@ -792,8 +838,8 @@ namespace TestPerf
                 var charges = pwiz.Skyline.Util.Adduct.ProtonatedFromCharges(1, 2, 3, 4);
                 var oldFilter = doc.Settings.TransitionSettings.Filter;
                 var newFilter = oldFilter.ChangePeptidePrecursorCharges(charges);
-                // Default retention-time filter is ±5 min around every MS2 ID; on 6 × 1.5 GB
-                // Thermo .raw files that's the bulk of the import wall-clock. The ms2_ids
+                // Default retention-time filter is ±5 min around every MS2 ID; across the 4
+                // mzML files that's the bulk of the import wall-clock. The ms2_ids
                 // filter uses the OBSERVED RT from each DIA-NN ID (not the prediction), so
                 // the window only needs to cover the peak shape — DIA-NN's stats here show
                 // peak FWHM ≈ 0.3 min, so ±0.5 min covers any real peak comfortably.
@@ -838,17 +884,32 @@ namespace TestPerf
         #region DIA-NN cache management
 
         /// <summary>
+        /// Copy the predicted spectral library that ships in the tutorial zip (extracted into
+        /// <see cref="CacheDir"/>) to <see cref="DocDir"/>, where DIA-NN looks for it via
+        /// ReuseCachedLibrary. This is what lets the first run on a fresh machine skip the
+        /// ~15-20 min predictor build. If DocDir already has one (a previous run), keep it.
+        /// </summary>
+        private void SeedPredictedLibraryFromZip()
+        {
+            Directory.CreateDirectory(DocDir);
+            var shipped = Path.Combine(CacheDir, PREDICTED_LIB_FILENAME);
+            var target = Path.Combine(DocDir, PREDICTED_LIB_FILENAME);
+            if (File.Exists(shipped) && !File.Exists(target))
+                File.Copy(shipped, target);
+        }
+
+        /// <summary>
         /// Make sure DIA-NN's per-file `.quant` cache is populated for every input file,
         /// and that the predicted library is on disk in <see cref="DocDir"/>. The wizard's
         /// run uses DiannConfig.ReuseQuantFiles=true (`--use-quant`) which then skips the
         /// per-file search step entirely and goes straight to cross-run analysis. The
         /// per-file search code path is still exercised — by THIS method on cache misses.
-        /// On a populated cache this is a no-op; on a fresh machine it's the bulk of the
-        /// ~2-hour first-run cost.
+        /// Normally a no-op because the `.quant` files ship in the tutorial zip; it only does
+        /// real work if the cache was deleted (then it's the bulk of a fresh-search cost).
         /// </summary>
         private void EnsureCachedPresearch(string realDiannPath)
         {
-            var diaPaths = DiaFiles.Select(f => Path.Combine(CacheDir, f)).ToArray();
+            var diaPaths = DiaSearchPaths;
             string fasta = Path.Combine(CacheDir, FASTA_FILENAME);
 
             // If every input file already has a .quant alongside, skip the slow path.
@@ -856,7 +917,7 @@ namespace TestPerf
                 return;
 
             // Run DIA-NN against ALL inputs. This generates the predicted library in
-            // DocDir (so the wizard can reuse it) AND a .quant file next to each raw.
+            // DocDir (so the wizard can reuse it) AND a .quant file next to each mzML input.
             try
             {
                 DiannHelpers.RegisteredDiannPathOverride = () => realDiannPath;
@@ -913,52 +974,5 @@ namespace TestPerf
 
         #endregion
 
-        #region Dataset download
-
-        /// <summary>
-        /// Download (and cache) the ProteoBench AIF FASTA and the selected .raw files
-        /// into <see cref="CacheDir"/>. Files are large (~1.5 GB each), so don't
-        /// re-download if present.
-        /// </summary>
-        private void EnsureBenchmarkFilesDownloaded()
-        {
-            Directory.CreateDirectory(CacheDir);
-            EnsureFastaDownloaded();
-            foreach (var raw in DiaFiles)
-            {
-                var target = Path.Combine(CacheDir, raw);
-                if (File.Exists(target) && new FileInfo(target).Length > 100_000_000)
-                    continue; // already cached
-                DownloadFile(PRIDE_BASE + raw, target);
-            }
-        }
-
-        private void EnsureFastaDownloaded()
-        {
-            var fastaPath = Path.Combine(CacheDir, FASTA_FILENAME);
-            if (File.Exists(fastaPath) && new FileInfo(fastaPath).Length > 0)
-                return;
-
-            var zipPath = Path.Combine(CacheDir, @"ProteoBenchFASTA_MixedSpecies_HYE.zip");
-            DownloadFile(FASTA_ZIP_URL, zipPath);
-            using (var archive = ZipFile.OpenRead(zipPath))
-            {
-                var entry = archive.Entries.FirstOrDefault(e => e.FullName.EndsWith(@".fasta", StringComparison.OrdinalIgnoreCase))
-                            ?? throw new InvalidDataException(@"No .fasta entry inside " + zipPath);
-                entry.ExtractToFile(fastaPath, true);
-            }
-            File.Delete(zipPath);
-        }
-
-        private static void DownloadFile(string url, string targetPath)
-        {
-            var tmp = targetPath + @".part";
-            using (var client = new WebClient())
-                client.DownloadFile(url, tmp);
-            if (File.Exists(targetPath)) File.Delete(targetPath);
-            File.Move(tmp, targetPath);
-        }
-
-        #endregion
     }
 }
