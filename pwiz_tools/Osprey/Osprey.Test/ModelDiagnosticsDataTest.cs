@@ -55,6 +55,96 @@ namespace pwiz.Osprey.Test
             TestFeatureHistograms();
             TestModelPass2();
             TestDensityRatioFlatness();
+            TestIdYieldPerScope();
+            TestCrossRunDetection();
+        }
+
+        // The identification-yield curve carries BOTH precursor-q scopes over one
+        // shared grid so the report's scope selector can switch between them (the
+        // report bug: the panel didn't change experiment-wide vs per-run). The two
+        // curves genuinely differ when a precursor's experiment-wide and per-run q
+        // straddle the threshold.
+        private static void TestIdYieldPerScope()
+        {
+            // Two real targets. T0 clears 1% at BOTH scopes; T1 clears 1% only at the
+            // experiment scope (its per-run q is 9%). So at q = 1% the experiment
+            // curve has accepted 2 and the per-run curve 1.
+            var entries = new List<FdrEntry>
+            {
+                EntryQ(1, false, 5.0, 0.003, 0.003, "TA", 2),
+                EntryQ(2, false, 4.0, 0.09, 0.008, "TB", 2),
+            };
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, null, null, 1.0, 0.01, "peptide");
+            var y = data.IdYield;
+            Assert.IsNotNull(y);
+            Assert.IsNotNull(y.TargetsExperiment);
+            Assert.IsNotNull(y.TargetsRun);
+            Assert.AreEqual(y.Q.Length, y.TargetsExperiment.Length);
+            Assert.AreEqual(y.Q.Length, y.TargetsRun.Length);
+            // Index 9 is threshold 0.01 (grid = 0.10*(i+1)/100).
+            Assert.AreEqual(0.01, y.Q[9], 1e-12);
+            Assert.AreEqual(2, y.TargetsExperiment[9]);   // both clear 1% experiment-wide
+            Assert.AreEqual(1, y.TargetsRun[9]);          // only TA clears 1% per-run
+            // The two scopes converge once the threshold clears both q's (last point).
+            int last = y.Q.Length - 1;
+            Assert.AreEqual(2, y.TargetsExperiment[last]);
+            Assert.AreEqual(2, y.TargetsRun[last]);
+            // Both curves are monotone non-decreasing in q.
+            for (int i = 1; i < y.Q.Length; i++)
+            {
+                Assert.IsTrue(y.TargetsExperiment[i] >= y.TargetsExperiment[i - 1]);
+                Assert.IsTrue(y.TargetsRun[i] >= y.TargetsRun[i - 1]);
+            }
+        }
+
+        // Cross-run detection reproducibility is built unconditionally (no entrapment
+        // manifest needed) from the reported per-file passing precursors: cumulative
+        // union monotone up, intersection monotone down, the run-count histogram sums
+        // to the total unique precursors, at-least-half counts precursors in >= ceil(N/2)
+        // runs, and decoys / q-failing entries are excluded.
+        private static void TestCrossRunDetection()
+        {
+            // 3 runs. A passes in all 3, B in 2, C in 1. A decoy passes in run 1 (must
+            // be excluded) and C fails the FDR in runs 2-3 (q above runFdr).
+            var f1 = new List<FdrEntry>
+            {
+                Entry(1, false, 5, 0.001, "A", 2),
+                Entry(2, false, 5, 0.001, "B", 2),
+                Entry(3, false, 5, 0.001, "C", 2),
+                Entry(9 | DECOY_BIT, true, 5, 0.001, "DEC", 2),   // decoy: excluded
+            };
+            var f2 = new List<FdrEntry>
+            {
+                Entry(1, false, 5, 0.001, "A", 2),
+                Entry(2, false, 5, 0.001, "B", 2),
+                Entry(3, false, 5, 0.5, "C", 2),                  // C fails FDR here
+            };
+            var f3 = new List<FdrEntry>
+            {
+                Entry(1, false, 5, 0.001, "A", 2),
+                Entry(2, false, 5, 0.5, "B", 2),                  // B fails FDR here
+                Entry(3, false, 5, 0.5, "C", 2),                  // C fails FDR here
+            };
+            var data = ModelDiagnosticsData.Build(WrapFiles(f1, f2, f3), null, null, null, 1.0, 0.01, "peptide");
+            var cr = data.CrossRun;
+            Assert.IsNotNull(cr);
+            Assert.IsFalse(data.HasEntrapment);                    // built without a manifest
+            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, cr.PerRunCount);   // A,B,C | A,B | A
+            CollectionAssert.AreEqual(new[] { 3, 3, 3 }, cr.CumUnion);      // all 3 unique from run 1
+            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, cr.CumIntersection);
+            // Histogram index k-1 => #precursors in exactly k runs: C(1), B(2), A(3).
+            CollectionAssert.AreEqual(new[] { 1, 1, 1 }, cr.RunCountHistogram);
+            Assert.AreEqual(3, cr.RunCountHistogram.Sum());        // == total unique precursors
+            Assert.AreEqual(3, cr.CumUnion[cr.CumUnion.Length - 1]);
+            Assert.AreEqual(2, cr.AtLeastHalf);                    // A,B in >= ceil(3/2)=2 runs
+            Assert.AreEqual(3, cr.RunNames.Length);
+            // Union monotone up, intersection monotone down.
+            for (int i = 1; i < cr.CumUnion.Length; i++)
+            {
+                Assert.IsTrue(cr.CumUnion[i] >= cr.CumUnion[i - 1]);
+                Assert.IsTrue(cr.CumIntersection[i] <= cr.CumIntersection[i - 1]);
+            }
+            Assert.AreEqual(2.0, cr.MeanPerRun, 1e-9);             // (3+2+1)/3
         }
 
         // The non-parametric null-alignment ratio (Mike's Storey check): the ratio
@@ -630,12 +720,40 @@ namespace pwiz.Osprey.Test
             };
         }
 
+        // An entry with distinct per-run and experiment-wide precursor q (for the
+        // per-scope yield curve, where the default Entry sets both scopes equal).
+        private static FdrEntry EntryQ(uint id, bool decoy, double score,
+            double qRun, double qExp, string seq, byte charge)
+        {
+            return new FdrEntry
+            {
+                EntryId = id,
+                IsDecoy = decoy,
+                Score = score,
+                RunPeptideQvalue = System.Math.Min(qRun, qExp),
+                RunPrecursorQvalue = qRun,
+                ExperimentPrecursorQvalue = qExp,
+                ModifiedSequence = seq,
+                Charge = charge,
+            };
+        }
+
         private static List<KeyValuePair<string, List<FdrEntry>>> Wrap(List<FdrEntry> entries)
         {
             return new List<KeyValuePair<string, List<FdrEntry>>>
             {
                 new KeyValuePair<string, List<FdrEntry>>("file1", entries),
             };
+        }
+
+        // Wrap several per-file entry lists as ordered (fileN -> entries) pairs, for
+        // the cross-run detection reproducibility model (which walks files in order).
+        private static List<KeyValuePair<string, List<FdrEntry>>> WrapFiles(params List<FdrEntry>[] files)
+        {
+            var list = new List<KeyValuePair<string, List<FdrEntry>>>();
+            for (int i = 0; i < files.Length; i++)
+                list.Add(new KeyValuePair<string, List<FdrEntry>>("file" + (i + 1), files[i]));
+            return list;
         }
     }
 }

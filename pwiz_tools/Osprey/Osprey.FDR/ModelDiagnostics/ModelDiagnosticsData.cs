@@ -117,6 +117,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // ReSharper disable once CollectionNeverQueried.Global
         public List<FileSummaryRow> PerFile { get; set; }
         public IdYieldData IdYield { get; set; }
+        /// <summary>
+        /// Cross-run detection reproducibility (entrapment-free FDR QC): per-run
+        /// detected-precursor counts and their cumulative union / intersection over
+        /// runs, plus the histogram of precursors by the number of runs they are
+        /// detected in. Real precursors reproduce across replicate runs while
+        /// FDR-escaping false precursors do not, so a runaway union / collapsing
+        /// intersection and a growing "detected in only one run" bump read FDR trouble
+        /// with no decoy or entrapment model -- the picture that works on the ordinary
+        /// target+decoy libraries most users run. Built unconditionally from the
+        /// reported per-file passing precursors (the same pool as <see cref="PerFile"/>).
+        /// </summary>
+        public CrossRunDetection CrossRun { get; set; }
 
         /// <summary>
         /// A trained model for one FDR pass: its feature-contribution table, the
@@ -296,11 +308,49 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public int Entrapment { get; set; }
         }
 
-        /// <summary>Cumulative accepted-target count vs q-value threshold (the yield curve).</summary>
+        /// <summary>
+        /// Cumulative accepted real-target precursor count vs the reported q-value
+        /// threshold (the yield curve), at each precursor-q scope over one shared
+        /// <see cref="Q"/> grid. The report's scope selector switches between the two
+        /// curves: the experiment-wide q pooled across runs (what <c>--fdrbench</c>
+        /// emits) and the per-run q. Both are entrapment-independent.
+        /// </summary>
         public sealed class IdYieldData
         {
             public double[] Q { get; set; }
-            public int[] Targets { get; set; }
+            /// <summary>Accepted targets vs the experiment-wide precursor q (pooled across runs).</summary>
+            public int[] TargetsExperiment { get; set; }
+            /// <summary>Accepted targets vs the per-run precursor q.</summary>
+            public int[] TargetsRun { get; set; }
+        }
+
+        /// <summary>
+        /// Cross-run detection reproducibility, read off run-to-run membership with no
+        /// decoy or entrapment model. Built from the reported per-file passing
+        /// precursors (identity = modified sequence + charge, in input-file order):
+        /// real precursors reproduce across replicate runs, FDR-escaping false ones do
+        /// not, so a runaway <see cref="CumUnion"/> / collapsing <see cref="CumIntersection"/>
+        /// and a growing "detected in only one run" bump in <see cref="RunCountHistogram"/>
+        /// surface FDR trouble that the entrapment FDP needs a special library to see.
+        /// </summary>
+        public sealed class CrossRunDetection
+        {
+            /// <summary>Input-file names, in input order (the x for the per-run curves).</summary>
+            public string[] RunNames { get; set; }
+            /// <summary>Detected precursors passing the run FDR in each run (the bars).</summary>
+            public int[] PerRunCount { get; set; }
+            /// <summary>|union of detected precursors over runs 1..i| -- total unique seen so far (monotone up).</summary>
+            public int[] CumUnion { get; set; }
+            /// <summary>|intersection over runs 1..i| -- detected in every run so far (monotone down).</summary>
+            public int[] CumIntersection { get; set; }
+            /// <summary>Precursors detected in at least ceil(N/2) of the N runs (the reproducibility floor line).</summary>
+            public int AtLeastHalf { get; set; }
+            /// <summary>Index k-1 =&gt; number of precursors detected in exactly k runs (k = 1..N).</summary>
+            public int[] RunCountHistogram { get; set; }
+            /// <summary>Mean of <see cref="PerRunCount"/> (annotation).</summary>
+            public double MeanPerRun { get; set; }
+            /// <summary>Population standard deviation of <see cref="PerRunCount"/> (annotation).</summary>
+            public double StdPerRun { get; set; }
         }
 
         // A precursor reduced to the fields the diagnostics need.
@@ -427,8 +477,13 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // binning pass. Pass 1 only (the Density tab shows the pass-1 densities).
             data.DensityRatio = BuildDensityRatio(data.Scores, data.HasEntrapment);
 
-            // ---- id-yield curve (accepted targets vs q) ----
+            // ---- id-yield curve (accepted targets vs q, both precursor-q scopes) ----
             data.IdYield = BuildIdYield(precs);
+
+            // ---- cross-run detection reproducibility (entrapment-free FDR QC) ----
+            // From the reported per-file passing precursors -- the same pool the
+            // Summary per-file table counts; built unconditionally (no manifest needed).
+            data.CrossRun = BuildCrossRunDetection(perFileEntries, runFdr);
 
             // ---- paired decoy-win fraction ----
             data.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
@@ -958,21 +1013,111 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
         private static IdYieldData BuildIdYield(List<Prec> precs)
         {
-            // Cumulative accepted real-target precursors as the reported-q
-            // threshold sweeps [0, 0.1]. Uses a fixed grid so the JSON is small.
-            var qs = precs.Where(p => !p.IsDecoy && p.Class != EntrapmentClass.PTarget
-                                       && p.Class != EntrapmentClass.PDecoy)
-                          .Select(p => p.QExpPrecursor).OrderBy(q => q).ToArray();
+            // Cumulative accepted real-target precursors as the reported-q threshold
+            // sweeps [0, 0.1], at BOTH precursor-q scopes so the report's scope
+            // selector can switch between them (experiment-wide = what --fdrbench
+            // emits; per-run = the per-file picture). Real targets only (entrapment
+            // excluded), and a fixed grid so the JSON stays small.
+            var reals = precs.Where(p => !p.IsDecoy && p.Class != EntrapmentClass.PTarget
+                                          && p.Class != EntrapmentClass.PDecoy).ToList();
+            var qExp = reals.Select(p => p.QExpPrecursor).OrderBy(q => q).ToArray();
+            var qRun = reals.Select(p => p.QRunPrecursor).OrderBy(q => q).ToArray();
             const int steps = 100;
             var grid = new double[steps];
-            var counts = new int[steps];
+            var cExp = new int[steps];
+            var cRun = new int[steps];
             for (int i = 0; i < steps; i++)
             {
                 double thr = 0.10 * (i + 1) / steps;
                 grid[i] = thr;
-                counts[i] = UpperBound(qs, thr);
+                cExp[i] = UpperBound(qExp, thr);
+                cRun[i] = UpperBound(qRun, thr);
             }
-            return new IdYieldData { Q = grid, Targets = counts };
+            return new IdYieldData { Q = grid, TargetsExperiment = cExp, TargetsRun = cRun };
+        }
+
+        // Build the cross-run detection reproducibility model from the reported
+        // per-file passing precursors: for each run, the set of non-decoy precursors
+        // (modified sequence + charge) passing the run-level FDR -- the same pass test
+        // and pool the Summary per-file table uses. Cumulative union / intersection
+        // are walked in input-file order; the run-count histogram tallies, over all
+        // detected precursors, how many runs each appears in. Entrapment-independent
+        // (no manifest needed), so it is built on every run.
+        private static CrossRunDetection BuildCrossRunDetection(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries, double runFdr)
+        {
+            int n = perFileEntries.Count;
+            var runNames = new string[n];
+            var perRunSets = new List<HashSet<string>>(n);
+            for (int i = 0; i < n; i++)
+            {
+                var kvp = perFileEntries[i];
+                runNames[i] = kvp.Key;
+                var set = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var e in kvp.Value)
+                {
+                    if (e.IsDecoy || e.RunPeptideQvalue > runFdr)
+                        continue;
+                    set.Add(e.ModifiedSequence + "|" + e.Charge);   // same key as ReduceToPrecs
+                }
+                perRunSets.Add(set);
+            }
+
+            var perRunCount = new int[n];
+            var cumUnion = new int[n];
+            var cumIntersection = new int[n];
+            var union = new HashSet<string>(StringComparer.Ordinal);
+            HashSet<string> inter = null;               // running intersection (seeded by run 0)
+            var runCount = new Dictionary<string, int>(StringComparer.Ordinal);
+            for (int i = 0; i < n; i++)
+            {
+                var set = perRunSets[i];
+                perRunCount[i] = set.Count;
+                union.UnionWith(set);
+                cumUnion[i] = union.Count;
+                if (inter == null)
+                    inter = new HashSet<string>(set, StringComparer.Ordinal);
+                else
+                    inter.IntersectWith(set);
+                cumIntersection[i] = inter.Count;
+                foreach (var k in set)
+                {
+                    runCount.TryGetValue(k, out int c);
+                    runCount[k] = c + 1;
+                }
+            }
+
+            // Histogram: index k-1 => precursors detected in exactly k runs (k = 1..n),
+            // and the reproducibility floor (precursors in at least ceil(n/2) runs).
+            var hist = new int[n];
+            int half = (n + 1) / 2;                     // ceil(n/2)
+            int atLeastHalf = 0;
+            foreach (var c in runCount.Values)
+            {
+                if (c >= 1 && c <= n)
+                    hist[c - 1]++;
+                if (c >= half)
+                    atLeastHalf++;
+            }
+
+            double mean = 0;
+            for (int i = 0; i < n; i++) mean += perRunCount[i];
+            if (n > 0) mean /= n;
+            double varSum = 0;
+            for (int i = 0; i < n; i++) { double d = perRunCount[i] - mean; varSum += d * d; }
+            double std = n > 0 ? Math.Sqrt(varSum / n) : 0;
+
+            return new CrossRunDetection
+            {
+                RunNames = runNames,
+                PerRunCount = perRunCount,
+                CumUnion = cumUnion,
+                CumIntersection = cumIntersection,
+                AtLeastHalf = atLeastHalf,
+                RunCountHistogram = hist,
+                MeanPerRun = mean,
+                StdPerRun = std,
+            };
         }
 
         private static WinFractionData BuildWinFraction(
