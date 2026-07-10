@@ -80,7 +80,6 @@ namespace pwiz.SkylineTestUtil
 
             if (_alreadyChecked)
                 return; // The answer cannot change during a run, and one report of it is enough
-            _alreadyChecked = true;
 
             string deploymentDate;
             try
@@ -91,11 +90,14 @@ namespace pwiz.SkylineTestUtil
             }
             catch (Exception e)
             {
+                // Do not latch on a failed probe - if UniProt was briefly unreachable, a later web
+                // test in the same run should be free to ask again.
                 Console.WriteLine(@"NOTE: could not ask UniProt which API version it is serving ({0}). " +
                                   @"This says nothing about whether the recorded responses are still accurate.",
                     e.Message);
                 return;
             }
+            _alreadyChecked = true; // Got an answer; no need to ask again this run
 
             if (deploymentDate == null)
             {
