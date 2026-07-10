@@ -121,12 +121,21 @@ namespace pwiz.Osprey.Tasks
             ScoringContext context,
             out MzCalibrationResult ms1Calibration,
             out MzCalibrationResult ms2Calibration,
-            out int numSampledPrecursors)
+            out int numSampledPrecursors,
+            out double initialRtTolerance)
         {
             var config = context.Config;
             // Default to 0 so early returns / exception paths leave the
             // metadata caller in a known state. Overwritten on success.
             numSampledPrecursors = 0;
+            // The wide pre-calibration RT tolerance (the "before" number in the
+            // console summary's before-vs-after RT window). Defaults to 0 to keep the
+            // out-parameter assigned on any early exit before the initial tolerance is
+            // computed below; every return path that runs past that point carries the
+            // computed value (the no-target return happens after it is set, and the
+            // caller ignores it then since RunCalibration returns null and emits no
+            // summary).
+            initialRtTolerance = 0.0;
             _ctx.LogInfo("Running RT calibration...");
 
             // Calculate library and mzML RT ranges
@@ -176,6 +185,7 @@ namespace pwiz.Osprey.Tasks
 
             double toleranceFraction = rangesSimilar ? 0.2 : 0.5;
             double initialTolerance = mzmlRtRange * toleranceFraction;
+            initialRtTolerance = initialTolerance;
 
             _ctx.LogVerbose(string.Format("Initial RT tolerance: {0:F1} min", initialTolerance));
 
@@ -230,8 +240,13 @@ namespace pwiz.Osprey.Tasks
                 list.Add(spectrum);
             }
             // Sort each window's spectra by RT for deterministic XIC extraction.
+            // Array.Sort OK: RT tie hazard, conversion deferred (not a #4362 approved
+            // U-site; the dict lists are re-sorted in place and reused across both
+            // calibration passes, so an in-loop OrderBy reassignment is awkward). Two
+            // spectra within one window sharing an identical RT would be rare; RT values
+            // are per-cycle sampling times. Mirror of the CoelutionScorer RT sort.
             foreach (var list in spectraByWindowKey.Values)
-                list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime));
+                list.Sort((a, b) => a.RetentionTime.CompareTo(b.RetentionTime)); // Array.Sort OK: (see above) RT tie hazard, conversion deferred; not a #4362 approved U-site
 
             // Pass 1: score all sampled entries with the linear pre-fit RT mapping
             // and the wide initial tolerance. Fits a LOESS RTCalibration from the
@@ -723,10 +738,10 @@ namespace pwiz.Osprey.Tasks
             ms1Calibration = MzCalibration.CalculateSingleLevel(allMs1Errors.ToArray(), unitStr);
             ms2Calibration = MzCalibration.CalculateSingleLevel(allMs2Errors.ToArray(), unitStr);
             _ctx.LogVerbose(string.Format(
-                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
+                "MS1 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5} precursor matches)",
                 passNumber, ms1Calibration.Mean, unitStr, ms1Calibration.SD, 3.0 * ms1Calibration.SD, allMs1Errors.Count));
             _ctx.LogVerbose(string.Format(
-                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} ({5} errors)",
+                "MS2 calibration (pass {0}): mean={1:F4} {2}, SD={3:F4} {2}, 3*SD={4:F4} {2} (n={5} fragment matches)",
                 passNumber, ms2Calibration.Mean, unitStr, ms2Calibration.SD, 3.0 * ms2Calibration.SD, allMs2Errors.Count));
         }
 

@@ -15,6 +15,15 @@
        profiling; this package reference backs it. -->
   <ItemGroup>
     <PackageReference Include="JetBrains.Profiler.Api" Version="1.4.0" />
+    <!-- Serializes the model-diagnostics data model to the JSON blob embedded
+         in the self-contained HTML report. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- The self-contained model-diagnostics HTML page (markup + CSS + JS);
+       ModelDiagnosticsHtml splices the run's JSON data in at render time. -->
+  <ItemGroup>
+    <EmbeddedResource Include="ModelDiagnostics\model-diagnostics-template.html" />
   </ItemGroup>
 
   <!-- Tasks is the pipeline layer: the task bodies (scoring, calibration,

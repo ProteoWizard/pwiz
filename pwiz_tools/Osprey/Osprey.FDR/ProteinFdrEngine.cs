@@ -51,7 +51,7 @@ namespace pwiz.Osprey.FDR
         /// parsimony from peptides passing peptide-level run FDR, runs picked-protein
         /// FDR at <see cref="OspreyConfig.RunFdr"/>, and writes
         /// <see cref="FdrEntry.RunProteinQvalue"/> on every stub. The pure computation
-        /// lives in <see cref="ProteinFdr.RunFirstPassProteinFdr"/>; this adds the
+        /// lives in <c>ProteinFdr.RunFirstPassProteinFdr</c>; this adds the
         /// summary logging and returns the artifacts so the Tasks facade can emit the
         /// Stage-6 diagnostic dump + <c>ProteinFdrOnly</c> early-exit WITHOUT
         /// recomputing them. <paramref name="logInfo"/> may be null for the
@@ -88,6 +88,46 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
+        /// Projection-buffer counterpart of
+        /// <see cref="RunFirstPass(IList{KeyValuePair{string, List{FdrEntry}}}, IList{LibraryEntry}, OspreyConfig, Action{string})"/>
+        /// (issue #4355 step (b) increment ii): run first-pass protein FDR over the
+        /// thin <see cref="FdrProjection"/> peak buffer, materializing modified
+        /// sequences from <paramref name="peptideById"/> for the library join. Same
+        /// summary logging; the computation is byte-identical (see
+        /// <see cref="ProteinFdr.RunFirstPassProteinFdr(IList{KeyValuePair{string, List{FdrProjection}}}, string[], FdrProjectionOutputs, IList{LibraryEntry}, OspreyConfig)"/>).
+        /// </summary>
+        public static FirstPassProteinFdrResult RunFirstPass(
+            IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
+            string[] peptideById,
+            FdrProjectionOutputs outputs,
+            IList<LibraryEntry> fullLibrary,
+            OspreyConfig config,
+            Action<string> logInfo)
+        {
+            var result = ProteinFdr.RunFirstPassProteinFdr(
+                perFileProjections, peptideById, outputs, fullLibrary, config);
+
+            if (logInfo != null)
+            {
+                logInfo(string.Format(
+                    "[COUNT] First-pass detected peptides for protein FDR: {0} unique",
+                    result.DetectedPeptides.Count));
+
+                int nAtRunFdr = 0;
+                foreach (var qv in result.ProteinFdr.GroupQvalues.Values)
+                {
+                    if (qv <= config.RunFdr)
+                        nAtRunFdr++;
+                }
+                logInfo(string.Format(
+                    "First-pass protein FDR: {0} target groups at {1:P1} FDR",
+                    nAtRunFdr, config.RunFdr));
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// Second-pass / run-wide protein FDR (merge node, post Stage-6): collects
         /// best peptide scores, gates the detected-peptide set on experiment-level
         /// q-value, builds parsimony, runs picked-protein FDR at
@@ -95,7 +135,7 @@ namespace pwiz.Osprey.FDR
         /// <see cref="FdrEntry.RunProteinQvalue"/> and
         /// <see cref="FdrEntry.ExperimentProteinQvalue"/> onto every stub. Logs
         /// summary counts via <paramref name="logInfo"/> (which may be null for a
-        /// silent run, like <see cref="RunFirstPass"/>) and returns the parsimony /
+        /// silent run, like <c>RunFirstPass</c>) and returns the parsimony /
         /// FDR artifacts so the Tasks facade can emit the Stage-7 detected-peptides
         /// and protein-FDR diagnostic dumps + the <c>Stage7ProteinFdrOnly</c>
         /// early-exit WITHOUT recomputing them. Moved here from
@@ -166,15 +206,15 @@ namespace pwiz.Osprey.FDR
             int passingProteins = 0;
             foreach (var kvp in proteinFdr.GroupQvalues)
             {
-                if (kvp.Value <= config.ProteinFdr.Value)
+                if (kvp.Value <= config.EffectiveProteinFdr)
                     passingProteins++;
             }
 
             logInfo?.Invoke(string.Format("{0} protein groups pass {1:P1} protein FDR",
-                passingProteins, config.ProteinFdr.Value));
+                passingProteins, config.EffectiveProteinFdr));
             logInfo?.Invoke(string.Format(
                 "[COUNT] Protein groups passing FDR: {0} at {1:P0}",
-                passingProteins, config.ProteinFdr.Value));
+                passingProteins, config.EffectiveProteinFdr));
 
             // Propagate protein q-values to FdrEntry stubs. The Stage-7
             // diagnostic dumps + Stage7ProteinFdrOnly early-exit are owned by

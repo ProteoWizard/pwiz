@@ -51,7 +51,7 @@ namespace pwiz.Osprey.FDR
         /// </summary>
         internal static List<PercolatorEntry> Build(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            int numFeatures,
+            int numFeatures, bool streamFeatures,
             out int nWithFeatures, out int nWithoutFeatures,
             out int nInputTargets, out int nInputDecoys)
         {
@@ -67,12 +67,25 @@ namespace pwiz.Osprey.FDR
                 string fileName = kvp.Key;
                 foreach (var fdrEntry in kvp.Value)
                 {
-                    // Prefer the 21-feature vector computed during coelution scoring.
-                    // Fall back to an all-zeros vector only for stub entries (e.g. loaded
-                    // from a Parquet cache without features) so the PercolatorEntry is
-                    // well-formed.
+                    // Feature vector source. On the streaming path (issue #4355
+                    // Phase 4) the vector is left null here and reloaded per file
+                    // from parquet by ParquetIndex at score time, so the O(N)
+                    // vectors are never all resident at once. Otherwise prefer the
+                    // 21-feature vector computed during coelution scoring, falling
+                    // back to a basic vector only for stub entries (e.g. loaded
+                    // from a Parquet cache without features).
                     double[] features;
-                    if (fdrEntry.Features != null &&
+                    if (streamFeatures)
+                    {
+                        features = null;
+                        // uint.MaxValue marks an appended entry with no original
+                        // parquet row (its features will fall back to basic).
+                        if (fdrEntry.ParquetIndex != uint.MaxValue)
+                            nWithFeatures++;
+                        else
+                            nWithoutFeatures++;
+                    }
+                    else if (fdrEntry.Features != null &&
                         fdrEntry.Features.Length == numFeatures)
                     {
                         features = fdrEntry.Features;
@@ -80,7 +93,7 @@ namespace pwiz.Osprey.FDR
                     }
                     else
                     {
-                        features = BuildBasicFeatures(fdrEntry, numFeatures);
+                        features = BuildBasicFeatures(fdrEntry.CoelutionSum, numFeatures);
                         nWithoutFeatures++;
                     }
 
@@ -88,28 +101,25 @@ namespace pwiz.Osprey.FDR
                         nInputDecoys++;
                     else nInputTargets++;
 
-                    // PSM Id must uniquely identify each observation so the
-                    // result -> FdrEntry write-back can score every row
-                    // independently. EntryId alone is NOT unique within a
-                    // file: a single base_id with multiple scan-time
-                    // observations (different scan numbers, same charge,
-                    // same modified_sequence) shares one EntryId. Using
-                    // "{fileName}_{EntryId}" collided those rows in
-                    // resultMap, leaving the last-inserted score
-                    // overwriting every same-EntryId observation's
-                    // FdrEntry.Score and producing 176-185 score
-                    // divergences per file vs. Rust's 4-component psm_id.
-                    // Mirrors osprey-fdr/src/percolator.rs:5978-5980.
+                    // One PercolatorEntry per FdrEntry, emitted in this nested
+                    // (file, entry) order. Both SVM paths return results
+                    // index-aligned to this input, so the score / q-value
+                    // write-back zips them back onto the stubs by position
+                    // (PercolatorEngine.ApplyPercolatorResults) instead of
+                    // re-joining through a per-row psm_id string + resultMap.
+                    // The former "{file}_{modseq}_{charge}_{scan}" psm_id is
+                    // therefore no longer built here (it allocated one string
+                    // per observation). Mirrors the Rust direct path, which
+                    // likewise zips by index (osprey-fdr/src/percolator.rs:5978-5980).
                     percEntries.Add(new PercolatorEntry
                     {
-                        Id = string.Format("{0}_{1}_{2}_{3}",
-                            fileName, fdrEntry.ModifiedSequence,
-                            fdrEntry.Charge, fdrEntry.ScanNumber),
                         FileName = fileName,
                         Peptide = fdrEntry.ModifiedSequence,
                         Charge = fdrEntry.Charge,
                         IsDecoy = fdrEntry.IsDecoy,
                         EntryId = fdrEntry.EntryId,
+                        ParquetIndex = fdrEntry.ParquetIndex,
+                        CoelutionSum = fdrEntry.CoelutionSum,
                         Features = features
                     });
                 }
@@ -118,20 +128,23 @@ namespace pwiz.Osprey.FDR
         }
 
         /// <summary>
-        /// Build a minimal PIN feature vector from an FdrEntry.
-        /// Used as a fallback ONLY when <see cref="FdrEntry.Features"/> has not been
-        /// populated (e.g. stubs loaded from a Parquet cache). In normal operation the
+        /// Build a minimal PIN feature vector from an entry's coelution_sum.
+        /// Used as a fallback ONLY when the full 21-feature vector is unavailable
+        /// (e.g. stubs loaded from a Parquet cache without features, or a streaming
+        /// entry whose parquet row cannot be resolved). In normal operation the
         /// 21-feature vector is computed during coelution scoring in
-        /// <c>CoelutionScorer</c> and stored on the entry.
+        /// <c>CoelutionScorer</c> and stored on the entry. Internal so the
+        /// streaming score pass (<see cref="PercolatorFdr.ResolveFeatureRow"/>) can
+        /// reuse the exact same fallback vector for byte-identical results.
         /// </summary>
-        private static double[] BuildBasicFeatures(FdrEntry entry, int numFeatures)
+        internal static double[] BuildBasicFeatures(double coelutionSum, int numFeatures)
         {
             double[] features = new double[numFeatures];
 
             // 0: coelution_sum
-            features[0] = entry.CoelutionSum;
+            features[0] = coelutionSum;
             // 1: coelution_max (approximate as coelution_sum for basic version)
-            features[1] = entry.CoelutionSum * 0.5;
+            features[1] = coelutionSum * 0.5;
             // 2: n_coeluting_fragments
             features[2] = 3.0;
             // 3: peak_apex

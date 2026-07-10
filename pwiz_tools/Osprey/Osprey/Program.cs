@@ -213,7 +213,7 @@ namespace pwiz.Osprey
                 }
 
                 // Log startup info
-                LogInfo(string.Format("Osprey v{0}", OspreyVersion.Current));
+                LogInfo(string.Format("Osprey v{0}", OspreyVersion.DisplayVersion));
                 LogInfo(string.Format("Command: {0}", string.Join(" ", args)));
                 LogInfo(string.Format("Input files: {0}", config.InputFiles.Count));
                 LogInfo(string.Format("Library: {0} ({1})",
@@ -238,8 +238,7 @@ namespace pwiz.Osprey
                     config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th"));
                 LogInfo(string.Format("Run FDR: {0:P1}", config.RunFdr));
                 LogInfo(string.Format("Experiment FDR: {0:P1}", config.ExperimentFdr));
-                if (config.ProteinFdr.HasValue)
-                    LogInfo(string.Format("Protein FDR: {0:P1}", config.ProteinFdr.Value));
+                LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
 
@@ -471,7 +470,7 @@ namespace pwiz.Osprey
                 foreach (string f in originals)
                     if (!reconciledSet.Contains(ParquetScoreCache.ReconciledPathFromScoresPath(f)))
                         result.Add(f);                                   // original with no reconciled sibling
-                result.Sort(StringComparer.Ordinal); // unique filenames, no ties
+                result.Sort(StringComparer.Ordinal); // Array.Sort OK: unique filenames, so the comparator never ties
                 return result;
             }
 

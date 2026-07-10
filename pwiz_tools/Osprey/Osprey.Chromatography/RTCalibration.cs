@@ -306,6 +306,33 @@ namespace pwiz.Osprey.Chromatography
             };
         }
 
+        /// <summary>
+        /// The final RT search-window half-width (minutes) actually used by the
+        /// main search for a given robust-spread MAD: <c>3 * MAD * 1.4826</c>
+        /// clamped to <c>[minTolerance, maxTolerance]</c>. This is the single
+        /// definition shared by the scoring path (<c>ScoringPipeline</c>), the
+        /// persisted calibration JSON (<c>RTCalibrationJson</c>), and the console
+        /// calibration summary, so all three report the same number. MAD*1.4826
+        /// approximates a robust SD; 3x covers ~99.7% of a normal spread.
+        /// </summary>
+        public static double SearchWindowHalfWidth(double mad, double minTolerance, double maxTolerance)
+        {
+            return Math.Max(minTolerance, Math.Min(maxTolerance, SearchWindowRaw(mad)));
+        }
+
+        /// <summary>
+        /// The unclamped RT search tolerance (minutes) for a given robust-spread
+        /// MAD: <c>3 * MAD * 1.4826</c>, before the <c>[minTolerance, maxTolerance]</c>
+        /// clamp in <see cref="SearchWindowHalfWidth"/> is applied. Shared so the
+        /// console summary can report the computed tolerance alongside the clamped
+        /// one (e.g. when the fit is tighter than the floor).
+        /// </summary>
+        public static double SearchWindowRaw(double mad)
+        {
+            double robustSd = mad * 1.4826;
+            return robustSd * 3.0;
+        }
+
         /// <summary>Get the library RT range used for calibration.</summary>
         public void LibraryRtRange(out double min, out double max)
         {

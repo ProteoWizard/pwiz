@@ -121,5 +121,43 @@ namespace pwiz.Osprey.Tasks
                 // standard GC; report it explicitly to document intent.
                 GC.CollectionCount(2)));
         }
+
+        /// <summary>
+        /// True when the OSPREY_LOG_MEMORY environment variable is set (any non-empty
+        /// value). Gates the per-stage [MEM ...] snapshots so ordinary runs stay quiet;
+        /// set it for a memory-profiling run (issue #4355).
+        /// </summary>
+        public static readonly bool MemoryLoggingEnabled =
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable(@"OSPREY_LOG_MEMORY"));
+
+        /// <summary>
+        /// <see cref="LogMemoryStats"/> guarded by <see cref="MemoryLoggingEnabled"/> so
+        /// stage-boundary probes can stay in the pipeline at zero cost when disabled.
+        /// </summary>
+        public static void LogMemoryStatsIfEnabled(Action<string> log, string label)
+        {
+            if (MemoryLoggingEnabled)
+                LogMemoryStats(log, label);
+        }
+
+        /// <summary>
+        /// Force a full blocking collection, then log the resulting PERSISTENT managed
+        /// heap size -- the post-GC floor with transient garbage reclaimed -- as a
+        /// <c>[MEM {label}]</c> line. Guarded by <see cref="MemoryLoggingEnabled"/> so it
+        /// is a zero-cost no-op INCLUDING the collection on ordinary runs.
+        /// <paramref name="detail"/> is appended verbatim for run context (e.g.
+        /// <c>"(files=82, file_parallelism=1)"</c>).
+        /// </summary>
+        public static void LogManagedHeapAfterGcIfEnabled(Action<string> log, string label, string detail)
+        {
+            if (!MemoryLoggingEnabled || log == null)
+                return;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+            log(string.Format(CultureInfo.InvariantCulture,
+                "[MEM {0}] managed_heap={1:F2} GB {2}",
+                label, GC.GetTotalMemory(false) / (1024.0 * 1024.0 * 1024.0), detail));
+        }
     }
 }

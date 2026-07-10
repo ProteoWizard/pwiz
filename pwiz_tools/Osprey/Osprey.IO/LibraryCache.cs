@@ -38,90 +38,143 @@ namespace pwiz.Osprey.IO
         /// <summary>Magic bytes at the start of every cache file.</summary>
         private static readonly byte[] MAGIC = Encoding.ASCII.GetBytes("OSPRLBR\0");
 
-        /// <summary>Current cache format version.</summary>
-        private const uint VERSION = 1;
+        /// <summary>
+        /// Current cache format version. v2 stamps the source library's
+        /// identity hash (<see cref="pwiz.Osprey.Core.SearchIdentity.LibraryIdentityHash"/>)
+        /// into the header immediately after the version, so a cache built from
+        /// a different build of the same library path is detected and rebuilt.
+        /// v1 had no identity and a different header layout, so it reads as
+        /// <see cref="LibraryCacheStatus.Invalid"/> and is rebuilt once.
+        /// </summary>
+        private const uint VERSION = 2;
 
         /// <summary>
-        /// Save library entries to a binary cache file.
+        /// Outcome of a <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
+        /// attempt.
         /// </summary>
-        public static void SaveCache(string path, List<LibraryEntry> entries)
+        public enum LibraryCacheStatus
         {
-            using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
-            using (var w = new BinaryWriter(stream))
+            /// <summary>Cache was valid and its entries were read.</summary>
+            Loaded,
+            /// <summary>
+            /// Cache was structurally valid but was built from a different
+            /// version of the source library (stored identity hash mismatch).
+            /// Its entries were NOT read, so the caller should rebuild.
+            /// </summary>
+            IdentityMismatch,
+            /// <summary>
+            /// Cache was unreadable: bad magic bytes or an unsupported version.
+            /// </summary>
+            Invalid
+        }
+
+        /// <summary>
+        /// Save library entries to a binary cache file, stamping the source
+        /// library's identity hash into the header.
+        /// </summary>
+        public static void SaveCache(string path, List<LibraryEntry> entries, string libraryHash)
+        {
+            using (var saver = new FileSaver(path))
             {
-                w.Write(MAGIC);
-                w.Write(VERSION);
-                w.Write((ulong)entries.Count);
-
-                foreach (var entry in entries)
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var w = new BinaryWriter(stream))
                 {
-                    w.Write(entry.Id);
-                    WriteString(w, entry.Sequence);
-                    WriteString(w, entry.ModifiedSequence);
-                    w.Write(entry.Charge);
-                    w.Write(entry.PrecursorMz);
-                    w.Write(entry.RetentionTime);
-                    w.Write(entry.RtCalibrated ? (byte)1 : (byte)0);
-                    w.Write(entry.IsDecoy ? (byte)1 : (byte)0);
+                    w.Write(MAGIC);
+                    w.Write(VERSION);
+                    WriteString(w, libraryHash ?? string.Empty);
+                    w.Write((ulong)entries.Count);
 
-                    // Modifications
-                    w.Write((uint)entry.Modifications.Count);
-                    foreach (var m in entry.Modifications)
+                    foreach (var entry in entries)
                     {
-                        w.Write((uint)m.Position);
-                        if (m.UnimodId.HasValue)
+                        w.Write(entry.Id);
+                        WriteString(w, entry.Sequence);
+                        WriteString(w, entry.ModifiedSequence);
+                        w.Write(entry.Charge);
+                        w.Write(entry.PrecursorMz);
+                        w.Write(entry.RetentionTime);
+                        w.Write(entry.RtCalibrated ? (byte)1 : (byte)0);
+                        w.Write(entry.IsDecoy ? (byte)1 : (byte)0);
+
+                        // Modifications
+                        w.Write((uint)entry.Modifications.Count);
+                        foreach (var m in entry.Modifications)
                         {
-                            w.Write((byte)1);
-                            w.Write((uint)m.UnimodId.Value);
+                            w.Write((uint)m.Position);
+                            if (m.UnimodId.HasValue)
+                            {
+                                w.Write((byte)1);
+                                w.Write((uint)m.UnimodId.Value);
+                            }
+                            else
+                            {
+                                w.Write((byte)0);
+                            }
+                            w.Write(m.MassDelta);
+                            if (m.Name != null)
+                            {
+                                w.Write((byte)1);
+                                WriteString(w, m.Name);
+                            }
+                            else
+                            {
+                                w.Write((byte)0);
+                            }
                         }
-                        else
+
+                        // Fragments
+                        w.Write((uint)entry.Fragments.Count);
+                        foreach (var frag in entry.Fragments)
                         {
-                            w.Write((byte)0);
+                            w.Write(frag.Mz);
+                            w.Write(frag.RelativeIntensity);
+                            w.Write(IonTypeToByte(frag.Annotation.IonType));
+                            w.Write(frag.Annotation.Ordinal);
+                            w.Write(frag.Annotation.Charge);
+                            WriteNeutralLoss(w, frag.Annotation.NeutralLoss, frag.Annotation.CustomLossMass);
                         }
-                        w.Write(m.MassDelta);
-                        if (m.Name != null)
-                        {
-                            w.Write((byte)1);
-                            WriteString(w, m.Name);
-                        }
-                        else
-                        {
-                            w.Write((byte)0);
-                        }
+
+                        // Protein IDs
+                        w.Write((uint)entry.ProteinIds.Count);
+                        foreach (string pid in entry.ProteinIds)
+                            WriteString(w, pid);
+
+                        // Gene names
+                        w.Write((uint)entry.GeneNames.Count);
+                        foreach (string gn in entry.GeneNames)
+                            WriteString(w, gn);
                     }
 
-                    // Fragments
-                    w.Write((uint)entry.Fragments.Count);
-                    foreach (var frag in entry.Fragments)
-                    {
-                        w.Write(frag.Mz);
-                        w.Write(frag.RelativeIntensity);
-                        w.Write(IonTypeToByte(frag.Annotation.IonType));
-                        w.Write(frag.Annotation.Ordinal);
-                        w.Write(frag.Annotation.Charge);
-                        WriteNeutralLoss(w, frag.Annotation.NeutralLoss);
-                    }
-
-                    // Protein IDs
-                    w.Write((uint)entry.ProteinIds.Count);
-                    foreach (string pid in entry.ProteinIds)
-                        WriteString(w, pid);
-
-                    // Gene names
-                    w.Write((uint)entry.GeneNames.Count);
-                    foreach (string gn in entry.GeneNames)
-                        WriteString(w, gn);
+                    w.Flush();
                 }
-
-                w.Flush();
+                saver.Commit();
             }
         }
 
         /// <summary>
-        /// Load library entries from a binary cache file.
+        /// Load library entries from a binary cache file, identity-agnostic.
         /// Returns null if the file is invalid or has an unsupported version.
+        /// Thin overload of <see cref="LoadCache(string,string,out LibraryCacheStatus)"/>
+        /// with no expected identity hash (used by round-trip tests and the
+        /// source-missing fallback, where the cache is the only copy available).
         /// </summary>
         public static List<LibraryEntry> LoadCache(string path)
+        {
+            return LoadCache(path, null, out _);
+        }
+
+        /// <summary>
+        /// Load library entries from a binary cache file, validating the source
+        /// library's identity hash against <paramref name="expectedLibraryHash"/>.
+        /// On bad magic or an unsupported version, returns null with
+        /// <paramref name="status"/> = <see cref="LibraryCacheStatus.Invalid"/>.
+        /// When <paramref name="expectedLibraryHash"/> is non-empty and the
+        /// stored hash differs, returns null with
+        /// <see cref="LibraryCacheStatus.IdentityMismatch"/> WITHOUT reading the
+        /// entries (skips a multi-GB read on a stale cache). Otherwise reads the
+        /// entries and returns <see cref="LibraryCacheStatus.Loaded"/>.
+        /// </summary>
+        public static List<LibraryEntry> LoadCache(string path, string expectedLibraryHash,
+            out LibraryCacheStatus status)
         {
             using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
             using (var r = new BinaryReader(stream))
@@ -129,11 +182,29 @@ namespace pwiz.Osprey.IO
                 // Validate magic
                 byte[] magic = r.ReadBytes(8);
                 if (magic.Length != 8 || !BytesEqual(magic, MAGIC))
+                {
+                    status = LibraryCacheStatus.Invalid;
                     return null;
+                }
 
                 uint version = r.ReadUInt32();
                 if (version != VERSION)
+                {
+                    status = LibraryCacheStatus.Invalid;
                     return null;
+                }
+
+                // Identity hash stamped at write time (v2). When the caller
+                // supplies a non-empty expected hash and it disagrees, the cache
+                // was built from a different version of the source library at
+                // this path -- treat it as stale and skip reading the entries.
+                string storedLibraryHash = ReadString(r);
+                if (!string.IsNullOrEmpty(expectedLibraryHash) &&
+                    !string.Equals(storedLibraryHash, expectedLibraryHash, StringComparison.Ordinal))
+                {
+                    status = LibraryCacheStatus.IdentityMismatch;
+                    return null;
+                }
 
                 ulong count = r.ReadUInt64();
                 var entries = new List<LibraryEntry>((int)count);
@@ -180,7 +251,7 @@ namespace pwiz.Osprey.IO
                         IonType ionType = ByteToIonType(r.ReadByte());
                         byte ordinal = r.ReadByte();
                         byte fragCharge = r.ReadByte();
-                        NeutralLoss neutralLoss = ReadNeutralLoss(r);
+                        var (lossCode, lossMass) = ReadNeutralLoss(r);
 
                         fragments.Add(new LibraryFragment
                         {
@@ -191,7 +262,8 @@ namespace pwiz.Osprey.IO
                                 IonType = ionType,
                                 Ordinal = ordinal,
                                 Charge = fragCharge,
-                                NeutralLoss = neutralLoss
+                                NeutralLoss = lossCode,
+                                CustomLossMass = lossMass
                             }
                         });
                     }
@@ -220,6 +292,7 @@ namespace pwiz.Osprey.IO
                     entries.Add(entry);
                 }
 
+                status = LibraryCacheStatus.Loaded;
                 return entries;
             }
         }
@@ -274,46 +347,59 @@ namespace pwiz.Osprey.IO
             }
         }
 
-        private static void WriteNeutralLoss(BinaryWriter w, NeutralLoss nl)
+        private static void WriteNeutralLoss(BinaryWriter w, NeutralLossCode code, double customMass)
         {
-            if (nl == null)
+            switch (code)
             {
-                w.Write((byte)0);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.H2O) ||
-                     Math.Abs(nl.Mass - NeutralLoss.H2O.Mass) < 1e-6)
-            {
-                w.Write((byte)1);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.NH3) ||
-                     Math.Abs(nl.Mass - NeutralLoss.NH3.Mass) < 1e-6)
-            {
-                w.Write((byte)2);
-            }
-            else if (ReferenceEquals(nl, NeutralLoss.H3PO4) ||
-                     Math.Abs(nl.Mass - NeutralLoss.H3PO4.Mass) < 1e-6)
-            {
-                w.Write((byte)3);
-            }
-            else
-            {
-                w.Write((byte)4);
-                w.Write(nl.Mass);
+                case NeutralLossCode.None:
+                    w.Write((byte)0);
+                    break;
+                case NeutralLossCode.H2O:
+                    w.Write((byte)1);
+                    break;
+                case NeutralLossCode.NH3:
+                    w.Write((byte)2);
+                    break;
+                case NeutralLossCode.H3PO4:
+                    w.Write((byte)3);
+                    break;
+                default:
+                    // Custom -- collapse to a named tag when the mass matches one
+                    // within 1e-6, matching the legacy reference-type writer so the
+                    // on-disk bytes are unchanged.
+                    if (Math.Abs(customMass - NeutralLoss.H2OMass) < 1e-6)
+                    {
+                        w.Write((byte)1);
+                    }
+                    else if (Math.Abs(customMass - NeutralLoss.NH3Mass) < 1e-6)
+                    {
+                        w.Write((byte)2);
+                    }
+                    else if (Math.Abs(customMass - NeutralLoss.H3PO4Mass) < 1e-6)
+                    {
+                        w.Write((byte)3);
+                    }
+                    else
+                    {
+                        w.Write((byte)4);
+                        w.Write(customMass);
+                    }
+                    break;
             }
         }
 
-        private static NeutralLoss ReadNeutralLoss(BinaryReader r)
+        private static (NeutralLossCode Code, double CustomMass) ReadNeutralLoss(BinaryReader r)
         {
             byte tag = r.ReadByte();
             switch (tag)
             {
-                case 0: return null;
-                case 1: return NeutralLoss.H2O;
-                case 2: return NeutralLoss.NH3;
-                case 3: return NeutralLoss.H3PO4;
+                case 0: return (NeutralLossCode.None, 0.0);
+                case 1: return (NeutralLossCode.H2O, 0.0);
+                case 2: return (NeutralLossCode.NH3, 0.0);
+                case 3: return (NeutralLossCode.H3PO4, 0.0);
                 case 4:
                     double mass = r.ReadDouble();
-                    return NeutralLoss.Custom(mass);
+                    return (NeutralLossCode.Custom, mass);
                 default:
                     throw new InvalidDataException(string.Format(
                         "Unknown neutral loss tag: {0}", tag));

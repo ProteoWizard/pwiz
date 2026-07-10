@@ -470,7 +470,9 @@ namespace pwiz.Osprey.Test
                         AbsResiduals = new[] { 0.1, 0.2, 0.3, 0.4 }
                     },
                     P20AbsResidual = 0.15,
-                    MAD = 0.12
+                    MAD = 0.12,
+                    // Final RT search-window half-width persisted per issue #4364.
+                    RtSearchWindowHalfWidth = 1.5
                 }
             };
 
@@ -480,6 +482,7 @@ namespace pwiz.Osprey.Test
 
             Assert.IsTrue(json.Contains("\"ms1_calibration\""));
             Assert.IsTrue(json.Contains("-2.5"));
+            Assert.IsTrue(json.Contains("\"rt_search_window_halfwidth\""));
 
             // Deserialize back
             var loaded = Newtonsoft.Json.JsonConvert.DeserializeObject<CalibrationParams>(json);
@@ -488,6 +491,84 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(RTCalibrationMethod.LOESS, loaded.RtCalibration.Method);
             Assert.IsNotNull(loaded.RtCalibration.ModelParams);
             Assert.AreEqual(4, loaded.RtCalibration.ModelParams.LibraryRts.Length);
+            Assert.IsTrue(loaded.RtCalibration.RtSearchWindowHalfWidth.HasValue);
+            Assert.AreEqual(1.5, loaded.RtCalibration.RtSearchWindowHalfWidth.Value, TOLERANCE);
+        }
+
+        /// <summary>
+        /// The final RT search-window half-width is the single shared definition
+        /// <c>clamp(3 * MAD * 1.4826, [min, max])</c> used by the scoring path, the
+        /// persisted JSON, and the console summary (issue #4364). Verifies the clamp
+        /// and that FromRTCalibration only persists the field when the clamps are
+        /// supplied.
+        /// </summary>
+        [TestMethod]
+        public void TestRtSearchWindowHalfWidth()
+        {
+            // 3 * 1.4826 * MAD, unclamped when inside [min, max].
+            double mad = 0.30;
+            double expected = 3.0 * mad * 1.4826; // ~1.334
+            Assert.AreEqual(expected,
+                RTCalibration.SearchWindowHalfWidth(mad, 0.5, 3.0), TOLERANCE);
+
+            // Clamped up to the min floor for a tiny MAD.
+            Assert.AreEqual(0.5,
+                RTCalibration.SearchWindowHalfWidth(0.001, 0.5, 3.0), TOLERANCE);
+
+            // Clamped down to the max ceiling for a large MAD.
+            Assert.AreEqual(3.0,
+                RTCalibration.SearchWindowHalfWidth(5.0, 0.5, 3.0), TOLERANCE);
+
+            // Fit a small calibration and confirm FromRTCalibration persists the
+            // window only when the clamps are supplied.
+            double[] libraryRts = new double[50];
+            double[] measuredRts = new double[50];
+            for (int i = 0; i < 50; i++)
+            {
+                libraryRts[i] = i;
+                measuredRts[i] = 2.0 * i + 5.0;
+            }
+            var cal = new RTCalibrator(
+                new RTCalibratorConfig { Bandwidth = 0.3, OutlierRetention = 1.0 })
+                .Fit(libraryRts, measuredRts);
+
+            var withoutClamps = RTCalibrationJson.FromRTCalibration(cal);
+            Assert.IsFalse(withoutClamps.RtSearchWindowHalfWidth.HasValue);
+
+            var withClamps = RTCalibrationJson.FromRTCalibration(cal, 0.5, 3.0);
+            Assert.IsTrue(withClamps.RtSearchWindowHalfWidth.HasValue);
+            Assert.AreEqual(
+                RTCalibration.SearchWindowHalfWidth(cal.Stats().MAD, 0.5, 3.0),
+                withClamps.RtSearchWindowHalfWidth.Value, TOLERANCE);
+        }
+
+        /// <summary>
+        /// <see cref="RTCalibration.SearchWindowRaw"/> is the unclamped
+        /// <c>3 * MAD * 1.4826</c> the console summary reports as the computed
+        /// tolerance. Verifies the formula and the small / large / in-range MAD
+        /// cases that select the summary's floor / cap / in-range wording.
+        /// </summary>
+        [TestMethod]
+        public void TestSearchWindowRaw()
+        {
+            // Unclamped 3 * 1.4826 * MAD.
+            double mad = 0.30;
+            Assert.AreEqual(3.0 * mad * 1.4826,
+                RTCalibration.SearchWindowRaw(mad), TOLERANCE);
+            Assert.AreEqual(0.0, RTCalibration.SearchWindowRaw(0.0), TOLERANCE);
+
+            // The raw value vs the clamped SearchWindowHalfWidth selects which
+            // branch the summary reports: below the floor, above the ceiling, or
+            // in range (equal).
+            Assert.IsTrue(RTCalibration.SearchWindowRaw(0.001)
+                < RTCalibration.SearchWindowHalfWidth(0.001, 0.5, 3.0));
+            Assert.IsTrue(RTCalibration.SearchWindowRaw(5.0)
+                > RTCalibration.SearchWindowHalfWidth(5.0, 0.5, 3.0));
+            Assert.AreEqual(RTCalibration.SearchWindowRaw(0.30),
+                RTCalibration.SearchWindowHalfWidth(0.30, 0.5, 3.0), TOLERANCE);
+
+            // A NaN MAD propagates, so the summary treats it as undetermined.
+            Assert.IsTrue(double.IsNaN(RTCalibration.SearchWindowRaw(double.NaN)));
         }
 
         /// <summary>
