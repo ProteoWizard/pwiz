@@ -1574,9 +1574,11 @@ namespace pwiz.ProteomeDatabase.Fasta
                     int.TryParse(lengthField, out length);
                 if (colLength >= 0 && length == 0)
                 {
-                    // An entry UniProt has withdrawn comes back as a tombstone: protein name
-                    // "deleted", with no gene, organism, or length. It is not a candidate match, and
-                    // leaving it in would hide a real match that the same query also returned.
+                    // An entry UniProt has withdrawn comes back as a tombstone, with no gene,
+                    // organism, or length, and a protein name that is only ever a status word -
+                    // "deleted" or "demerged" so far, which is why the length is what decides here.
+                    // It is not a candidate match, and leaving it in would hide a real match that
+                    // the same query also returned.
                     continue;
                 }
 

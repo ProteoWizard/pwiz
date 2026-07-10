@@ -1478,7 +1478,7 @@ namespace CommonTest
             HttpClientTestHelper helper, IList<object> initialSnapshot)
         {
             const int noSearchNeededCount = 7;  // Seven proteins will return successfully without any web access
-            const int failOnSearch = 10; // 3 failures expected, and 7 just can't be resolved live on web
+            const int failOnSearch = 10; // 3 accessions made up to fail, and 7 real ones the web no longer resolves
             int searchCount = proteins.Count - noSearchNeededCount;
 
             Assert.AreNotEqual(0, results.Count);
