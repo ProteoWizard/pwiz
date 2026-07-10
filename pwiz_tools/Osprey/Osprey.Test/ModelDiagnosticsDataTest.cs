@@ -45,6 +45,7 @@ namespace pwiz.Osprey.Test
         {
             TestFdpMatchesFdrBenchFormula();
             TestPairedEstimator();
+            TestPairedSuppressedForPartialEntrapment();
             TestClassCountsAndDegrade();
             TestWinFractionCoinVsSignal();
             TestFeatureTableContributions();
@@ -53,9 +54,120 @@ namespace pwiz.Osprey.Test
             TestSidecarRoundTrip();
             TestFeatureHistograms();
             TestModelPass2();
+            TestDensityRatioFlatness();
         }
 
-        // The pass-2 model view (the --protein-fdr retrain) is built from the
+        // The non-parametric null-alignment ratio (Mike's Storey check): the ratio
+        // of the per-class score DENSITIES. A matched decoy null gives a FLAT
+        // target:decoy plateau on the null-dominated left (small flatness slope); a
+        // decoy shifted off the false-target null makes that left side SLOPE (large
+        // flatness slope). The p_target:p_decoy reference (both pure null) rides an
+        // exactly-flat ratio of 1. Built directly from a synthetic ScoreHistogram so
+        // the assertions are deterministic (no binning / percentile dependence).
+        private static void TestDensityRatioFlatness()
+        {
+            const int nb = 60;
+            var edges = Edges(nb);
+            // A true-hit bump well to the right of the null, shared by both cases, so
+            // the target's high-score mass sits above the decoy null either way.
+            var trueHit = Bump(nb, 45, 5, 1200);
+
+            // --- Matched: false-target null and decoys share a shape (centered 20).
+            // target = 0.30 * decoy (its false component) + the true-hit bump.
+            var decoyM = Bump(nb, 20, 5, 2000);
+            var targetM = new int[nb];
+            for (int i = 0; i < nb; i++)
+                targetM[i] = (int)System.Math.Round(0.30 * decoyM[i]) + trueHit[i];
+            var hM = Hist(edges, targetM, decoyM, new int[nb], new int[nb]);
+            var drM = ModelDiagnosticsData.BuildDensityRatio(hM, false);
+
+            Assert.IsNotNull(drM);
+            Assert.IsNotNull(drM.TargetDecoy);
+            Assert.IsNull(drM.PTargetPDecoy);                      // no entrapment supplied
+            Assert.IsTrue(drM.NullRegionBins >= 4);
+            Assert.IsFalse(double.IsNaN(drM.FlatnessSlope));
+            // Empty far-left bin -> NaN in the series (never +/-Infinity).
+            Assert.IsTrue(double.IsNaN(drM.TargetDecoy[0]));
+            // Matched: the left plateau is essentially flat.
+            Assert.IsTrue(System.Math.Abs(drM.FlatnessSlope) < 0.15,
+                "matched flatness slope should be ~0, was " + drM.FlatnessSlope);
+            // Plateau height is the null fraction pi0 (< 1: target carries true hits).
+            Assert.IsTrue(drM.PlateauRatio > 0.05 && drM.PlateauRatio < 1.0,
+                "matched plateau ratio (pi0) out of range: " + drM.PlateauRatio);
+
+            // --- Shifted: decoys centered LEFT of the false-target null (too weak,
+            // the gendecoy signature). Same true-hit bump.
+            var decoyS = Bump(nb, 14, 5, 2000);
+            var falseS = Bump(nb, 24, 5, 2000);                    // false-target null, shifted right of decoys
+            var targetS = new int[nb];
+            for (int i = 0; i < nb; i++)
+                targetS[i] = (int)System.Math.Round(0.30 * falseS[i]) + trueHit[i];
+            var hS = Hist(edges, targetS, decoyS, new int[nb], new int[nb]);
+            var drS = ModelDiagnosticsData.BuildDensityRatio(hS, false);
+
+            Assert.IsNotNull(drS);
+            Assert.IsFalse(double.IsNaN(drS.FlatnessSlope));
+            Assert.IsTrue(drS.NullRegionBins >= 4);
+            // The miscalibrated decoy makes the left side clearly slope...
+            Assert.IsTrue(System.Math.Abs(drS.FlatnessSlope) > 0.6,
+                "shifted flatness slope should be large, was " + drS.FlatnessSlope);
+            // ...and much larger than the matched case (the oracle the report leans on).
+            Assert.IsTrue(System.Math.Abs(drS.FlatnessSlope) > 4.0 * System.Math.Abs(drM.FlatnessSlope),
+                "shifted slope " + drS.FlatnessSlope + " should dwarf matched " + drM.FlatnessSlope);
+
+            // --- Reference line: p_target == p_decoy (identical pure-null arrays) ->
+            // the ratio is exactly 1 everywhere, so the reference flatness is exactly 0.
+            var pnull = Bump(nb, 20, 5, 1500);
+            var hEnt = Hist(edges, targetM, decoyM, (int[])pnull.Clone(), (int[])pnull.Clone());
+            var drEnt = ModelDiagnosticsData.BuildDensityRatio(hEnt, true);
+            Assert.IsTrue(drEnt.HasEntrapment);
+            Assert.IsNotNull(drEnt.PTargetPDecoy);
+            // Identical arrays -> unit ratio in every populated bin.
+            for (int i = 0; i < nb; i++)
+                if (!double.IsNaN(drEnt.PTargetPDecoy[i]))
+                    Assert.AreEqual(1.0, drEnt.PTargetPDecoy[i], 1e-9);
+            Assert.IsFalse(double.IsNaN(drEnt.RefFlatnessSlope));
+            Assert.AreEqual(0.0, drEnt.RefFlatnessSlope, 1e-9);   // pure-null reference is dead flat
+
+            // Too little data to assess -> a ratio object with NaN KPIs, not a throw.
+            var hTiny = Hist(edges, Bump(nb, 20, 5, 3), Bump(nb, 20, 5, 3), new int[nb], new int[nb]);
+            var drTiny = ModelDiagnosticsData.BuildDensityRatio(hTiny, false);
+            Assert.IsNotNull(drTiny);
+            Assert.IsTrue(double.IsNaN(drTiny.FlatnessSlope));
+
+            // No histogram to divide -> null.
+            Assert.IsNull(ModelDiagnosticsData.BuildDensityRatio(
+                new ModelDiagnosticsData.ScoreHistogram { BinEdges = new double[0] }, false));
+        }
+
+        // A discretized Gaussian bump (rounded integer counts) over nb unit bins.
+        private static int[] Bump(int nb, double center, double sigma, double peak)
+        {
+            var a = new int[nb];
+            for (int i = 0; i < nb; i++)
+                a[i] = (int)System.Math.Round(peak *
+                    System.Math.Exp(-((i - center) * (i - center)) / (2 * sigma * sigma)));
+            return a;
+        }
+
+        // Unit-width bin edges 0..nb (centers i+0.5).
+        private static double[] Edges(int nb)
+        {
+            var e = new double[nb + 1];
+            for (int i = 0; i <= nb; i++) e[i] = i;
+            return e;
+        }
+
+        private static ModelDiagnosticsData.ScoreHistogram Hist(
+            double[] edges, int[] target, int[] decoy, int[] pTarget, int[] pDecoy)
+        {
+            return new ModelDiagnosticsData.ScoreHistogram
+            {
+                BinEdges = edges, Target = target, Decoy = decoy, PTarget = pTarget, PDecoy = pDecoy,
+            };
+        }
+
+        // The pass-2 model view (the second-pass retrain) is built from the
         // second-pass contributions + the reported pool: a feature table (same
         // most-influential-first ordering + per-feature histograms as pass 1) and a
         // composite score histogram. Null contributions -> null pass (single-pass run).
@@ -250,6 +362,44 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(2.0 / 6.0, fdp.LowerBound[last], 1e-9);
             // Paired sits at or above lower-bound once an entrapment ranks above its pair.
             Assert.IsTrue(fdp.Paired[last] >= fdp.LowerBound[last]);
+            // r == 1 (balanced 1-fold library): paired is shown, not suppressed.
+            Assert.IsFalse(fdp.PairedSuppressedPartial);
+        }
+
+        // A partial (non-1:1) entrapment library -- e.g. a routine 10% overlay,
+        // r != 1 -- must SUPPRESS the paired estimator (it is 1-fold only) while
+        // combined and lower-bound stay valid and r-aware. Same fixture as
+        // TestPairedEstimator, built with r = 0.1.
+        private static void TestPairedSuppressedForPartialEntrapment()
+        {
+            var entries = new List<FdrEntry>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            var pair = new Dictionary<uint, uint>();
+            double[] tscores = { 8, 6, 4, 2 };
+            for (int i = 0; i < 4; i++)
+            {
+                entries.Add(Entry((uint)(10 + i), false, tscores[i], 0.001 * (i + 1), "T" + i, 2));
+                cls[(uint)(10 + i)] = EntrapmentClass.Target;
+                pair[(uint)(10 + i)] = (uint)i;
+            }
+            entries.Add(Entry(20, false, 5.0, 0.002, "Pa", 2));
+            cls[20] = EntrapmentClass.PTarget; pair[20] = 100;
+            entries.Add(Entry(21, false, 3.0, 0.003, "Pb", 2));
+            cls[21] = EntrapmentClass.PTarget; pair[21] = 0;
+
+            const double r = 0.1;
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, pair, r, 0.01, "peptide");
+            var fdp = data.FdpViews.Single(v => v.Scope == "experiment");
+            // Paired is a 1-fold estimator: suppressed (null) and flagged for r != 1.
+            Assert.IsNull(fdp.Paired);
+            Assert.IsTrue(fdp.PairedSuppressedPartial);
+            // Combined and lower-bound stay populated and r-aware. At the last target
+            // n_t = 4, n_p = 2: combined = (1 + 1/r)*2/(4+2), lower = 2/(r*(4+2)).
+            Assert.IsNotNull(fdp.Combined);
+            Assert.IsNotNull(fdp.LowerBound);
+            int last = fdp.Combined.Length - 1;
+            Assert.AreEqual((1.0 + 1.0 / r) * 2.0 / 6.0, fdp.Combined[last], 1e-9);
+            Assert.AreEqual(2.0 / (r * 6.0), fdp.LowerBound[last], 1e-9);
         }
 
         // combined = (1 + 1/r) * n_p / (n_t + n_p); lower = n_p / (r*(n_t+n_p)).
@@ -366,6 +516,36 @@ namespace pwiz.Osprey.Test
                     sawCoin = true;
             }
             Assert.IsTrue(sawCoin);
+
+            // In THIS fixture the real pairs are native signal (winner ~5.0, above
+            // the low-score null band), so only the entrapment coin populates the
+            // band -- a fair ~0.5 (the Competition KPI shows the real coin as "-").
+            Assert.IsTrue(System.Math.Abs(wf.NullBandEnt - 0.5) < 0.1);
+
+            // Boost signature: real target-decoy pairs sitting IN the low-score null
+            // band where the target nonetheless wins ~70% of competitions (real
+            // decoy-win ~30%), against entrapment pairs at a fair ~50% in the same
+            // band. Only the paired coin sees this -- the real coin collapses below
+            // the entrapment ruler (the KPI's headline gap), invisible to every
+            // marginal density and to the entrapment FDP.
+            var be = new List<FdrEntry>();
+            var bc = new Dictionary<uint, EntrapmentClass>();
+            for (int i = 0; i < 200; i++)
+            {
+                bool rDecoy = (i % 10) < 3;                 // real decoy-win 30%
+                be.Add(Entry((uint)(1000 + i), false, rDecoy ? 1.7 : 2.0, 0.2, "BR" + i, 2));
+                be.Add(Entry((uint)(1000 + i) | DECOY_BIT, true, rDecoy ? 2.0 : 1.7, 0.5, "BRD" + i, 2));
+                bc[(uint)(1000 + i)] = EntrapmentClass.Target;
+                bool eDecoy = (i % 2 == 0);                 // entrapment coin 50%
+                be.Add(Entry((uint)(5000 + i), false, eDecoy ? 1.7 : 2.0, 0.5, "BE" + i, 2));
+                be.Add(Entry((uint)(5000 + i) | DECOY_BIT, true, eDecoy ? 2.0 : 1.7, 0.5, "BED" + i, 2));
+                bc[(uint)(5000 + i)] = EntrapmentClass.PTarget;
+            }
+            var bwf = ModelDiagnosticsData.Build(Wrap(be), null, bc, null, 1.0, 0.01, "peptide").WinFraction;
+            Assert.IsTrue(bwf.NullBandReal < 0.4, "real coin should be collapsed: " + bwf.NullBandReal);
+            Assert.IsTrue(System.Math.Abs(bwf.NullBandEnt - 0.5) < 0.1, "entrapment coin ~0.5: " + bwf.NullBandEnt);
+            Assert.IsTrue(bwf.NullBandEnt - bwf.NullBandReal > 0.1,
+                "coin collapse gap positive: " + (bwf.NullBandEnt - bwf.NullBandReal));
         }
 
         private static void TestFeatureTableContributions()

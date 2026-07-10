@@ -14,7 +14,7 @@ targets['Skyline'] = \
     }
 }
 
-targets['OspreyWindowsNetPerfRegressionTests'] = {'master': {"ProteoWizard_OspreyWindowsNetPerfRegressionTests": "Osprey Windows .NET Perf Regression Tests"}}
+targets['OspreyWindowsNetPerfRegressionTests'] = {} # Nightly perf tests for Osprey disbled until PR cadence slows down; {'master': {"ProteoWizard_OspreyWindowsNetPerfRegressionTests": "Osprey Windows .NET Perf Regression Tests"}}
 
 targets['Core'] = {}
 targets['Container'] = {}

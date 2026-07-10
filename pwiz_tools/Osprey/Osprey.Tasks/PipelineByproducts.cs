@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 
 namespace pwiz.Osprey.Tasks
@@ -60,6 +61,22 @@ namespace pwiz.Osprey.Tasks
     {
         public IReadOnlyDictionary<string, RTCalibration> Value { get; }
         public PerFileCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
+    }
+
+    /// <summary>
+    /// Per-file isolation-window m/z intervals (half-open <c>[Lo, Hi)</c>) from
+    /// Stages 2-4 -- the gap-fill m/z filter's per-file coverage map. Straight
+    /// through, each file's list is built from its extracted isolation windows
+    /// (<c>center +/- width/2</c>); on an HPC merge node (no mzML) it is
+    /// rehydrated from the <c>isolation_scheme</c> block in calibration.json.
+    /// Always published non-null (empty when no scheme is available), so the
+    /// byproduct exists for every run. Parallels <see cref="PerFileCalibrations"/>
+    /// and is keyed by the same bare file stem.
+    /// </summary>
+    internal sealed class PerFileIsolationMz
+    {
+        public IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> Value { get; }
+        public PerFileIsolationMz(IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> value) { Value = value; }
     }
 
     /// <summary>Map of file name to its on-disk <c>.scores.parquet</c> path.</summary>
@@ -169,6 +186,20 @@ namespace pwiz.Osprey.Tasks
     internal sealed class ScoredEntries : PerFileEntries
     {
         public ScoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+    }
+
+    /// <summary>
+    /// The lean first-pass projection built straight from each file's .scores.parquet,
+    /// bypassing the fat <see cref="FdrEntry"/> stub buffer entirely (issue #4397:
+    /// rematerializing 191M stubs to convert them into 32 B rows cost ~53 GB).
+    /// <c>Value</c> is null when the run needs the resident stub pool instead
+    /// (--model-diagnostics / FDRBench pass 1) or on the rehydrate/merge paths, which
+    /// still publish fat stubs via <see cref="ScoredEntries"/>.
+    /// </summary>
+    internal sealed class FdrProjections
+    {
+        public FdrProjectionSet Value { get; }
+        public FdrProjections(FdrProjectionSet value) { Value = value; }
     }
 
     /// <summary>The buffer after FirstJoin's first-pass FDR + compaction.</summary>

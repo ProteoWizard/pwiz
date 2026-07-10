@@ -543,6 +543,35 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// <see cref="RTCalibration.SearchWindowRaw"/> is the unclamped
+        /// <c>3 * MAD * 1.4826</c> the console summary reports as the computed
+        /// tolerance. Verifies the formula and the small / large / in-range MAD
+        /// cases that select the summary's floor / cap / in-range wording.
+        /// </summary>
+        [TestMethod]
+        public void TestSearchWindowRaw()
+        {
+            // Unclamped 3 * 1.4826 * MAD.
+            double mad = 0.30;
+            Assert.AreEqual(3.0 * mad * 1.4826,
+                RTCalibration.SearchWindowRaw(mad), TOLERANCE);
+            Assert.AreEqual(0.0, RTCalibration.SearchWindowRaw(0.0), TOLERANCE);
+
+            // The raw value vs the clamped SearchWindowHalfWidth selects which
+            // branch the summary reports: below the floor, above the ceiling, or
+            // in range (equal).
+            Assert.IsTrue(RTCalibration.SearchWindowRaw(0.001)
+                < RTCalibration.SearchWindowHalfWidth(0.001, 0.5, 3.0));
+            Assert.IsTrue(RTCalibration.SearchWindowRaw(5.0)
+                > RTCalibration.SearchWindowHalfWidth(5.0, 0.5, 3.0));
+            Assert.AreEqual(RTCalibration.SearchWindowRaw(0.30),
+                RTCalibration.SearchWindowHalfWidth(0.30, 0.5, 3.0), TOLERANCE);
+
+            // A NaN MAD propagates, so the summary treats it as undetermined.
+            Assert.IsTrue(double.IsNaN(RTCalibration.SearchWindowRaw(double.NaN)));
+        }
+
+        /// <summary>
         /// Verifies save and load of calibration file to disk.
         /// </summary>
         [TestMethod]

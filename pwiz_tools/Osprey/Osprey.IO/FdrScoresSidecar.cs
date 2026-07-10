@@ -85,8 +85,8 @@ namespace pwiz.Osprey.IO
     /// <c>run_peptide_qvalue ≤ 0.01</c> OR
     /// <c>run_protein_qvalue ≤ 0.01</c> (the protein-rescue branch);
     /// the v2 sidecar carried only the first half of that predicate,
-    /// so a rehydrated worker couldn't reproduce in-process compaction
-    /// when <c>--protein-fdr</c> is set. v3 closes that gap.
+    /// so a rehydrated worker couldn't reproduce the protein-rescue
+    /// half of in-process compaction. v3 closes that gap.
     /// </summary>
     public static class FdrScoresSidecar
     {
@@ -177,20 +177,192 @@ namespace pwiz.Osprey.IO
             if (path == null) throw new ArgumentNullException(nameof(path));
             if (entries == null) throw new ArgumentNullException(nameof(entries));
 
+            WriteInternal(path, entries.Count, pass, bw =>
+            {
+                foreach (var e in entries)
+                {
+                    WriteRecord(bw, e.EntryId, e.Score,
+                        e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                        e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue,
+                        e.Pep, e.RunProteinQvalue);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Projection-buffer counterpart of
+        /// <see cref="Write(string, IReadOnlyList{FdrEntry}, Pass)"/> (issue #4355
+        /// struct-shrink S0): write the per-file sidecar from pre-assembled
+        /// <see cref="FdrScoreRecord"/>s. Because the lean <c>FdrProjection</c> no longer
+        /// carries the q-value outputs, the projection sidecar writers assemble each
+        /// record from the lean row's EntryId + Score plus the parked / streamed
+        /// q-values (1st pass) or the streamed q-values + the survivor's
+        /// <c>RunProteinQvalue</c> lookup (2nd pass), then pass them here. Single-phase
+        /// write producing byte-identical 60-byte records in the given
+        /// (per-file, projection) order (risk #8). Header + record layout are
+        /// single-sourced with the FdrEntry overload via
+        /// <see cref="WriteInternal"/> / <see cref="WriteRecord"/>.
+        /// </summary>
+        public static void Write(string path, IReadOnlyList<FdrScoreRecord> records, Pass pass)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (records == null) throw new ArgumentNullException(nameof(records));
+
+            WriteInternal(path, records.Count, pass, bw =>
+            {
+                foreach (var r in records)
+                {
+                    WriteRecord(bw, r.EntryId, r.Score,
+                        r.RunPrecursorQvalue, r.RunPeptideQvalue,
+                        r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue,
+                        r.Pep, r.RunProteinQvalue);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Phase 2 of the two-phase 1st-pass sidecar write (issue #4355 struct-shrink
+        /// S1): patch each record's <c>run_protein_qvalue</c> field <c>[52..60]</c> in
+        /// place on an already-written (phase-1 partial) sidecar, locating each record
+        /// by its <c>entry_id</c> at <c>[0..4]</c> in
+        /// <paramref name="runProteinByEntryId"/>. The phase-1 write (via the second
+        /// <see cref="Write(string, IReadOnlyList{FdrScoreRecord}, Pass)"/> overload)
+        /// emits a byte-identical file EXCEPT for the <c>run_protein_qvalue</c> column,
+        /// which carries the 1.0 placeholder until first-pass protein FDR is known; this
+        /// patch overwrites only those 8 bytes per record with the finalized value, so
+        /// the resulting file is byte-identical to a single-phase <c>Write</c> whose
+        /// records already carried the real <c>run_protein_qvalue</c> (risk R2). Records
+        /// whose <c>entry_id</c> is absent from the map keep their placeholder (every
+        /// 1st-pass row has a resident <c>run_protein_qvalue</c>, so that is defensive
+        /// only). The 8-byte little-endian f64 encoding matches
+        /// <see cref="WriteRecord"/>'s <c>BinaryWriter.Write(double)</c> (the platform is
+        /// little-endian, as the <see cref="BitConverter.ToDouble(byte[], int)"/> reads
+        /// in <see cref="TryRead"/> already assume). Same header validation as
+        /// <see cref="TryRead"/> (magic / version / pass / size); returns <c>false</c> on
+        /// any mismatch or IO failure, leaving the file unchanged. Streams the source one
+        /// 60-byte record at a time straight into the <see cref="FileSaver"/> temp stream
+        /// (bounded memory -- one record resident, not an O(file-size) whole-file buffer;
+        /// issue #4355) and promotes it atomically on Commit, matching the <c>Write</c> path.
+        /// </summary>
+        public static bool PatchRunProteinQvalues(
+            string path,
+            IReadOnlyDictionary<uint, double> runProteinByEntryId,
+            Pass expectedPass)
+        {
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (runProteinByEntryId == null) throw new ArgumentNullException(nameof(runProteinByEntryId));
+
+            try
+            {
+                using (var saver = new FileSaver(path))
+                {
+                    // Source stays open only while streaming; the FileSaver Commit that
+                    // deletes+replaces the source runs AFTER this block closes src, so the
+                    // source is never locked at rename time.
+                    using (var src = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    using (var dst = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        long fileLen = src.Length;
+                        if (fileLen < HeaderLength)
+                            return false;
+
+                        // Read + validate the 32-byte header, then copy it through
+                        // byte-for-byte. Same checks (magic / version / pass / size) as
+                        // TryRead; on any mismatch we return false before Commit, so the
+                        // source file is left unchanged (the temp is discarded on dispose).
+                        var header = new byte[HeaderLength];
+                        if (!ReadFully(src, header, HeaderLength))
+                            return false;
+                        for (int i = 0; i < Magic.Length; i++)
+                        {
+                            if (header[i] != Magic[i])
+                                return false;
+                        }
+                        if (header[8] != FormatVersion)
+                            return false;
+                        // Reject a mismatched pass byte for the same reason TryRead does: a
+                        // 2nd-pass sidecar must never be patched as if it were 1st-pass.
+                        if (header[9] != (byte)expectedPass)
+                            return false;
+                        ulong headerCount = BitConverter.ToUInt64(header, 16);
+                        if (!TryComputeExpectedLen(headerCount, out int expectedLen))
+                            return false;
+                        if (fileLen != expectedLen)
+                            return false;
+
+                        dst.Write(header, 0, HeaderLength);
+
+                        // Stream one 60-byte record at a time: overwrite ONLY the
+                        // run_protein_qvalue bytes [52..60] with the finalized value
+                        // looked up by entry_id [0..4], in the identical little-endian f64
+                        // encoding BinaryWriter.Write(double) produced for every other
+                        // field; every other byte is copied straight through. A record
+                        // whose entry_id is absent from the map keeps its placeholder
+                        // (defensive -- every 1st-pass row has a resident value). The
+                        // output is byte-identical to a single-phase Write carrying the
+                        // real value, but only one record is resident at a time instead of
+                        // the whole file (issue #4355).
+                        var record = new byte[RecordLength];
+                        for (int rec = 0; rec < (int)headerCount; rec++)
+                        {
+                            if (!ReadFully(src, record, RecordLength))
+                                return false;
+                            uint recordEntryId = BitConverter.ToUInt32(record, 0);
+                            if (runProteinByEntryId.TryGetValue(recordEntryId, out double runProteinQvalue))
+                            {
+                                byte[] bytes = BitConverter.GetBytes(runProteinQvalue);
+                                Buffer.BlockCopy(bytes, 0, record, 52, 8);
+                            }
+                            dst.Write(record, 0, RecordLength);
+                        }
+                    }
+                    saver.Commit();
+                }
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Fill <paramref name="buffer"/> with exactly <paramref name="count"/> bytes from
+        /// <paramref name="stream"/>, looping because a single
+        /// <see cref="Stream.Read(byte[],int,int)"/> may return fewer bytes than
+        /// requested. Returns <c>false</c> if the stream ends first (a truncated or
+        /// corrupt sidecar), matching the whole-file loader's size-mismatch rejection.
+        /// </summary>
+        private static bool ReadFully(Stream stream, byte[] buffer, int count)
+        {
+            int read = 0;
+            while (read < count)
+            {
+                int n = stream.Read(buffer, read, count - read);
+                if (n <= 0)
+                    return false;
+                read += n;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Shared header + atomic-write scaffold for both <c>Write</c>
+        /// overloads. The caller supplies the body writer, which emits exactly
+        /// <paramref name="entryCount"/> 60-byte records via
+        /// <see cref="WriteRecord"/>. Atomic write via FileSaver: write to a unique
+        /// sibling temp file and promote it to the destination on Commit; on
+        /// exception the FileSaver disposes and deletes the temp without touching
+        /// the destination. The FileStream is disposed before Commit so the file is
+        /// unlocked when File.Move runs.
+        /// </summary>
+        private static void WriteInternal(
+            string path, int entryCount, Pass pass, Action<BinaryWriter> writeBody)
+        {
             string parent = Path.GetDirectoryName(Path.GetFullPath(path));
             if (!string.IsNullOrEmpty(parent))
                 Directory.CreateDirectory(parent);
 
-            // Atomic write via FileSaver: write to a unique sibling
-            // temp file (allocated by Path.GetRandomFileName +
-            // FileStream.CreateNew, so parallel writers retry past
-            // any astronomically-rare name collision) and promote it
-            // to the destination on Commit. On exception, the
-            // using-block disposes FileSaver which deletes the temp
-            // without touching the destination. The FileStream is
-            // disposed in an inner block before Commit so the file is
-            // unlocked when File.Move runs (FileShare.None would
-            // otherwise block the move).
             using (var saver = new FileSaver(path))
             {
                 using (var fs = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write, FileShare.None))
@@ -201,24 +373,34 @@ namespace pwiz.Osprey.IO
                     bw.Write(FormatVersion);                          // [8]
                     bw.Write((byte)pass);                             // [9]
                     bw.Write(new byte[6]);                            // [10..16] reserved
-                    bw.Write((ulong)entries.Count);                   // [16..24]
+                    bw.Write((ulong)entryCount);                      // [16..24]
                     bw.Write(new byte[8]);                            // [24..32] reserved
 
-                    // Body: 60 bytes per entry (entry_id + 7 f64s)
-                    foreach (var e in entries)
-                    {
-                        bw.Write(e.EntryId);                          // [0..4]
-                        bw.Write(e.Score);                            // [4..12]
-                        bw.Write(e.RunPrecursorQvalue);               // [12..20]
-                        bw.Write(e.RunPeptideQvalue);                 // [20..28]
-                        bw.Write(e.ExperimentPrecursorQvalue);        // [28..36]
-                        bw.Write(e.ExperimentPeptideQvalue);          // [36..44]
-                        bw.Write(e.Pep);                              // [44..52]
-                        bw.Write(e.RunProteinQvalue);                 // [52..60]
-                    }
+                    writeBody(bw);
                 }
                 saver.Commit();
             }
+        }
+
+        /// <summary>
+        /// Write one 60-byte record (entry_id + 7 f64s, little-endian) in the exact
+        /// v3 field order. Single-sourced so the FdrEntry and FdrProjection write
+        /// paths cannot drift on byte layout.
+        /// </summary>
+        private static void WriteRecord(
+            BinaryWriter bw, uint entryId, double score,
+            double runPrecursorQvalue, double runPeptideQvalue,
+            double experimentPrecursorQvalue, double experimentPeptideQvalue,
+            double pep, double runProteinQvalue)
+        {
+            bw.Write(entryId);                          // [0..4]
+            bw.Write(score);                            // [4..12]
+            bw.Write(runPrecursorQvalue);               // [12..20]
+            bw.Write(runPeptideQvalue);                 // [20..28]
+            bw.Write(experimentPrecursorQvalue);        // [28..36]
+            bw.Write(experimentPeptideQvalue);          // [36..44]
+            bw.Write(pep);                              // [44..52]
+            bw.Write(runProteinQvalue);                 // [52..60]
         }
 
         /// <summary>
