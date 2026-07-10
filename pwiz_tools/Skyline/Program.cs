@@ -892,53 +892,8 @@ namespace pwiz.Skyline
         public static SkylineWindow MainWindow { get; private set; }
         public static StartPage StartWindow { get; private set; }
 
-        /// <summary>
-        /// The window used to marshal work onto the UI thread: the main window once it exists, otherwise
-        /// the StartPage while it is showing. Null very early in startup before either has a usable handle.
-        /// Lets background services (e.g. the JSON/MCP tool server) drive the UI before the main window
-        /// exists. Safe to read from a background thread (only checks handle/disposed flags).
-        /// </summary>
-        private static Control UiThreadWindow
-        {
-            get
-            {
-                var mainWindow = MainWindow;
-                if (mainWindow != null && mainWindow.IsHandleCreated && !mainWindow.IsDisposed)
-                    return mainWindow;
-                var startWindow = StartWindow;
-                if (startWindow != null && startWindow.IsHandleCreated && !startWindow.IsDisposed)
-                    return startWindow;
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Runs <paramref name="action"/> synchronously on the UI thread, marshaling through the main
-        /// window or, before it exists, the StartPage. If neither is up yet (very early startup), runs it
-        /// synchronously on the calling thread.
-        /// </summary>
-        public static void InvokeOnUiThread(Action action)
-        {
-            var window = UiThreadWindow;
-            if (window != null)
-                window.Invoke(action);
-            else
-                action();
-        }
-
-        /// <summary>
-        /// Posts <paramref name="action"/> to the UI thread fire-and-forget, through the main window or,
-        /// before it exists, the StartPage. If neither is up yet (very early startup), runs it on a
-        /// background thread so the caller still does not block.
-        /// </summary>
-        public static void BeginInvokeOnUiThread(Action action)
-        {
-            var window = UiThreadWindow;
-            if (window != null)
-                window.BeginInvoke(action);
-            else
-                CommonActionUtil.RunAsync(action);
-        }
+        // The UI-thread marshaling primitives (UiThreadWindow, InvokeOnUiThread, BeginInvokeOnUiThread) moved
+        // to pwiz.Skyline.ToolsUI.JsonUiService, which now owns the connector's UI-thread machinery.
         public static SrmDocument ActiveDocument { get { return MainWindow != null ? MainWindow.Document : null; } }
         public static SrmDocument ActiveDocumentUI { get { return MainWindow != null ? MainWindow.DocumentUI : null; } }
         

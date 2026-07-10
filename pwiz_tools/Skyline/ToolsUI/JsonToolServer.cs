@@ -461,7 +461,7 @@ namespace pwiz.Skyline.ToolsUI
             // Read on the UI thread (the mode helper reads Settings.Default). Works whether the main
             // window or the start page is showing -- read it from whichever is up.
             string mode = null;
-            Program.InvokeOnUiThread(() => mode = ActiveModeUiForm.ModeUI.ToString());
+            JsonUiService.InvokeOnUiThread(() => mode = ActiveModeUiForm.ModeUI.ToString());
             return mode;
         }
 
@@ -474,7 +474,7 @@ namespace pwiz.Skyline.ToolsUI
                     @"Invalid UI mode '{0}'. Must be 'proteomic', 'small_molecules', or 'mixed'.", mode));
             }
             // Drive the UI-mode control on whichever window is showing (the start page has its own).
-            Program.InvokeOnUiThread(() => ActiveModeUiForm.SetUIMode(docType));
+            JsonUiService.InvokeOnUiThread(() => ActiveModeUiForm.SetUIMode(docType));
         }
 
         public UndoRedoEntry[] GetUndoRedo()

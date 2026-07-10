@@ -59,12 +59,17 @@ namespace pwiz.Skyline.ToolsUI
         /// Executes an action on the UI thread. Exceptions propagate to the caller via wrapping to preserve
         /// the original stack trace. <paramref name="dispatcher"/> is the control to marshal through -- a
         /// form on its own thread when given (see <see cref="UiElement.InvokeOnUiThread(System.Action)"/>),
-        /// otherwise (null) the main window. Most callers go through the <see cref="UiElement"/> methods.
+        /// otherwise (null) the main window. Most callers go through the <see cref="UiElement"/> methods. Delegates
+        /// the raw <see cref="Control.Invoke(System.Delegate)"/> to <see cref="UiServiceDispatcher"/>, which owns
+        /// the marshal, and adds the exception wrapping here.
         /// </summary>
         public static void InvokeOnUiThread(Action action, Control dispatcher = null)
         {
+            // Route through the InvokeOnUiThread factory + Run (a synchronous Control.Invoke); the wrapping stays
+            // here around it -- the action's exception is caught inside, then re-thrown wrapped (ArgumentException
+            // preserved) so the original stack trace survives, exactly as before.
             Exception caught = null;
-            DispatchToUiThread(() =>
+            UiServiceDispatcher.ForInvoke(dispatcher).Run(() =>
             {
                 try
                 {
@@ -74,7 +79,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     caught = ex;
                 }
-            }, dispatcher);
+            });
             if (caught is ArgumentException argEx)
                 throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
             if (caught != null)
@@ -82,45 +87,26 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Executes a function on the UI thread and returns the result.
-        /// Must be called from a background thread (pipe server thread).
-        /// Exceptions propagate to the caller.
+        /// Executes a function on the UI thread and returns the result, through the InvokeOnUiThread factory + Run
+        /// (a synchronous <see cref="Control.Invoke(System.Delegate)"/>). Must be called from a background thread
+        /// (pipe server thread). Exceptions propagate to the caller raw.
         /// </summary>
         public static T InvokeOnUiThread<T>(Func<T> func, Control dispatcher = null)
         {
-            T result = default(T);
-            DispatchToUiThread(() => result = func(), dispatcher);
-            return result;
+            return UiServiceDispatcher.ForInvoke(dispatcher).Run(func);
         }
 
         /// <summary>
-        /// Marshals an action onto the UI thread. When a <paramref name="dispatcher"/> control with a live
-        /// handle is given, it is used (so a form on its own thread is driven through its own message loop);
-        /// otherwise <see cref="Program.InvokeOnUiThread"/> targets the main window, or -- before it exists --
-        /// the StartPage, so the form-introspection verbs work while only the StartPage is showing. Must be
-        /// called off the UI thread.
+        /// The number of fire-and-forget actions (posted by <see cref="BeginInvokeOnUiThread"/>, or wrapped by
+        /// <see cref="UiServiceDispatcher"/>) that have been posted but have not yet finished running -- the public
+        /// (IJsonToolService) accessor, forwarding to the count state that now lives on
+        /// <see cref="UiServiceDispatcher"/>. Incremented when an action is posted and decremented when its delegate
+        /// returns -- so an action that opens a modal dialog stays counted until that modal closes (its delegate is
+        /// blocked in the modal's message loop). It is therefore usually equal to the number of modal dialogs the
+        /// connector's actions have raised and left open, and a caller can poll it to wait until pending
+        /// sets/clicks have actually been applied.
         /// </summary>
-        private static void DispatchToUiThread(Action action, Control dispatcher = null)
-        {
-            if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
-            {
-                dispatcher.Invoke(action);
-                return;
-            }
-            Program.InvokeOnUiThread(action);
-        }
-
-        private static int _unfinishedActionCount;
-
-        /// <summary>
-        /// The number of fire-and-forget actions (posted by <see cref="BeginInvokeOnUiThread"/>) that have
-        /// been posted but have not yet finished running. Incremented when an action is posted and
-        /// decremented when its delegate returns -- so an action that opens a modal dialog stays counted
-        /// until that modal closes (its delegate is blocked in the modal's message loop). It is therefore
-        /// usually equal to the number of modal dialogs the connector's actions have raised and left open,
-        /// and a caller can poll it to wait until pending sets/clicks have actually been applied.
-        /// </summary>
-        public static int UnfinishedActionCount => Volatile.Read(ref _unfinishedActionCount);
+        public static int UnfinishedActionCount => UiServiceDispatcher.UnfinishedActionCount;
 
         /// <summary>
         /// Posts an action to the UI thread fire-and-forget (BeginInvoke, not Invoke): the caller returns at
@@ -133,7 +119,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void BeginInvokeOnUiThread(Action action, Control dispatcher = null)
         {
-            Interlocked.Increment(ref _unfinishedActionCount);
+            UiServiceDispatcher.IncrementUnfinishedActionCount();
             void Run()
             {
                 try
@@ -148,27 +134,25 @@ namespace pwiz.Skyline.ToolsUI
                     // gate (see BlockingAlertMessage), so the next command can report what went wrong.
                     MessageDlg.ShowException((IWin32Window) dispatcher ?? Program.MainWindow, exception);
                 }
-                finally { Interlocked.Decrement(ref _unfinishedActionCount); }
+                finally { UiServiceDispatcher.DecrementUnfinishedActionCount(); }
             }
             try
             {
                 // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own
-                // BeginInvoke; otherwise Program.BeginInvokeOnUiThread targets the main window, or the
+                // BeginInvoke; otherwise UiServiceDispatcher.PostToUiThreadWindow targets the main window, or the
                 // StartPage before it exists (and falls back to a background thread if neither is up).
                 if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
                     dispatcher.BeginInvoke((Action) Run);
                 else
-                    Program.BeginInvokeOnUiThread(Run);
+                    UiServiceDispatcher.PostToUiThreadWindow(Run);
             }
             catch
             {
                 // Posting failed, so the action will never run and is not pending after all.
-                Interlocked.Decrement(ref _unfinishedActionCount);
+                UiServiceDispatcher.DecrementUnfinishedActionCount();
                 throw;
             }
         }
-
-        private const int DIALOG_POLL_INTERVAL_MILLIS = 100;
 
         /// <summary>
         /// Runs <paramref name="work"/> on a background thread and waits for it, but never hangs behind a
@@ -182,43 +166,10 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static T RunWithDialogWatch<T>(Func<T> work)
         {
-            var knownModals = new HashSet<IntPtr>(FindModalDialogWindows());
-
-            T result = default(T);
-            Exception workError = null;
-            // Capture the worker's exception here rather than letting it escape, so the RunAsync
-            // reporter does not surface its own error dialog.
-            var worker = ActionUtil.RunAsync(() =>
-            {
-                try { result = work(); }
-                catch (Exception ex) { workError = ex; }
-            }, @"JsonTool command");
-
-            while (!worker.Join(DIALOG_POLL_INTERVAL_MILLIS))
-            {
-                var newModals = FindModalDialogWindows().Where(h => !knownModals.Contains(h)).ToList();
-                if (newModals.Count == 0)
-                    continue;
-                var blockingMessage = InvokeOnUiThread(() => FirstBlockingDialogMessage(newModals));
-                if (blockingMessage == null)
-                {
-                    // Every new modal is a LongWaitDlg progress dialog; ignore them and keep waiting.
-                    knownModals.UnionWith(newModals);
-                    continue;
-                }
-                // A modal is blocking (an alert/error, or any other dialog including a native one); surface its
-                // message so the caller sees what is in the way instead of hanging.
-                throw new InvalidOperationException(blockingMessage);
-            }
-
-            if (workError != null)
-            {
-                // Preserve ArgumentException (maps to an invalid-params error) like InvokeOnUiThread.
-                if (workError is ArgumentException argEx)
-                    throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
-                ExceptionUtil.WrapAndThrowException(workError);
-            }
-            return result;
+            // Run the value-producing work on a background thread and THROW a blocking modal's message rather than
+            // hang, with no timeout -- the shared wait/modal machinery, configured for the dialog-watch. See
+            // <see cref="UiServiceDispatcher"/>.
+            return UiServiceDispatcher.ForDialogWatch().Run(work);
         }
 
         public static void RunWithDialogWatch(Action work)
@@ -226,195 +177,9 @@ namespace pwiz.Skyline.ToolsUI
             RunWithDialogWatch(() => { work(); return true; });
         }
 
-        // The message a blocking modal dialog shows, or null for a LongWaitDlg (a progress dialog that does not
-        // block): a CommonAlertDlg's or ReportErrorDlg's text, or any other dialog's title -- a managed Form's
-        // caption, or, for a native window (no managed form), its window title.
-        // The message a blocking modal dialog shows: a CommonFormEx's DetailedMessage (a CommonAlertDlg's
-        // composed text, or the ReportErrorDlg's exception message), else any other managed dialog's title,
-        // else (a native window with no managed form) its window title.
-        private static string ModalDialogMessage(IntPtr hwnd, Form form)
-        {
-            return (form as CommonFormEx)?.DetailedMessage ?? form?.Text ?? GetWindowTitle(hwnd);
-        }
-
-        // The message of the first of the given modal windows that is actually blocking, or null if none
-        // blocks (every one is a LongWaitDlg, a progress dialog the work itself drives). The shared core of
-        // BlockingAlertMessage (the form gate) and the dialog-watch. Reads the open forms, so it must run on
-        // the UI thread.
-        private static string FirstBlockingDialogMessage(IEnumerable<IntPtr> modalHandles)
-        {
-            var forms = FormUtil.OpenForms.Where(f => f.IsHandleCreated).ToDictionary(f => f.Handle);
-            foreach (var hwnd in modalHandles)
-            {
-                forms.TryGetValue(hwnd, out var form);
-                if (form is LongWaitDlg)
-                    continue; // a progress dialog -- not a blocker; keep waiting
-                return ModalDialogMessage(hwnd, form);
-            }
-            return null;
-        }
-
-        // The title of a window (used for a native dialog, which has no managed Form), or empty if it has none.
-        private static string GetWindowTitle(IntPtr hwnd)
-        {
-            var buffer = new StringBuilder(256);
-            return User32.GetWindowText(hwnd, buffer, buffer.Capacity) > 0 ? buffer.ToString() : string.Empty;
-        }
-
-        // The message of a dialog currently blocking the UI -- a CommonAlertDlg's or ReportErrorDlg's text, or
-        // any other modal dialog's title (a managed caption or a native window's title), but never a LongWaitDlg
-        // progress dialog. Null if nothing is blocking, so the form gate can tell the caller what is in the way.
-        // Must run on the UI thread (it reads the open forms).
-        internal static string BlockingAlertMessage()
-        {
-            return FirstBlockingDialogMessage(FindModalDialogWindows());
-        }
-
-        // Returns the handles of this process's modal dialogs: visible, enabled, top-level windows
-        // whose owner window is disabled -- the signature of a modal dialog blocking its owner.
-        private static IList<IntPtr> FindModalDialogWindows()
-        {
-            var processId = (uint)Process.GetCurrentProcess().Id;
-            var result = new List<IntPtr>();
-            User32.EnumWindows((hwnd, lparam) =>
-            {
-                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                if (windowProcessId != processId || !User32.IsWindowVisible(hwnd) || !User32.IsWindowEnabled(hwnd))
-                    return true;
-                var owner = User32.GetWindow(hwnd, User32.GW_OWNER);
-                if (owner != IntPtr.Zero && !User32.IsWindowEnabled(owner))
-                    result.Add(hwnd);
-                return true;
-            }, IntPtr.Zero);
-            return result;
-        }
-
-        // ===== Interactive-modal tracking and convenience-method waits (connector) =====
-
-        // Whether a modal is one the caller would drive (true) rather than a progress/wait dialog the work drives
-        // itself (false). Excludes the LongWaitDlg family (its BackgroundThreadLongWaitDlg subclass included), the
-        // same way the dialog-watch already skips them.
-        internal static bool IsInteractiveModal(Form form)
-        {
-            return form != null && form.Modal && !(form is LongWaitDlg);
-        }
-
-        // The pre-show count for each interactive modal the connector has SEEN APPEAR: the UnfinishedActionCount
-        // that existed just before the modal was shown. Recorded ONLY in the primary path -- when WaitForGesture
-        // detects that the gesture it posted opened a new interactive modal, it records that modal here. There is
-        // no process-wide hook and no close hook, so entries are pruned lazily whenever the tracker is read or
-        // written. The Form is held by a WEAK reference so a stale entry (this static list outlives any single
-        // wait) never keeps a closed dialog -- and through it the SkylineWindow / document -- alive. A modal
-        // opened another way simply has no entry, and Accept/Cancel then wait for its disappearance only. Kept
-        // LIFO (modals stack) but searched by Form. Guarded by its own lock.
-        private static readonly List<KeyValuePair<WeakReference<Form>, int>> _modalPreShowCounts =
-            new List<KeyValuePair<WeakReference<Form>, int>>();
-
-        // Drops entries whose Form has been collected or disposed. Called under the lock, in place of a close hook.
-        private static void PruneDeadModals()
-        {
-            _modalPreShowCounts.RemoveAll(e => !e.Key.TryGetTarget(out var form) || form.IsDisposed);
-        }
-
-        // Records a newly appeared interactive modal's pre-show count, unless one is already recorded for it.
-        private static void RecordModalPreShowCount(Form form, int preShowCount)
-        {
-            lock (_modalPreShowCounts)
-            {
-                PruneDeadModals();
-                if (!_modalPreShowCounts.Any(e => e.Key.TryGetTarget(out var f) && ReferenceEquals(f, form)))
-                    _modalPreShowCounts.Add(new KeyValuePair<WeakReference<Form>, int>(new WeakReference<Form>(form), preShowCount));
-            }
-        }
-
-        // The recorded pre-show count for a modal, or the given default when none is recorded.
-        private static int PeekModalPreShowCount(Form form, int defaultCount)
-        {
-            return TryGetPreShowActionCount(form) ?? defaultCount;
-        }
-
-        // The recorded pre-show count for a form, or null when it is not a tracked interactive modal -- surfaced
-        // in each FormInfo (get_open_forms) so a caller can confirm the tracker's state.
-        internal static int? TryGetPreShowActionCount(Form form)
-        {
-            lock (_modalPreShowCounts)
-            {
-                PruneDeadModals();
-                foreach (var entry in _modalPreShowCounts)
-                    if (entry.Key.TryGetTarget(out var f) && ReferenceEquals(f, form))
-                        return entry.Value;
-            }
-            return null;
-        }
-
-        // The interactive modal most recently seen appear and still alive (the LIFO top of the tracker), or null.
-        private static Form CurrentTopInteractiveModal()
-        {
-            lock (_modalPreShowCounts)
-            {
-                PruneDeadModals();
-                for (int i = _modalPreShowCounts.Count - 1; i >= 0; i--)
-                    if (_modalPreShowCounts[i].Key.TryGetTarget(out var form))
-                        return form;
-                return null;
-            }
-        }
-
-        // How long the message-loop-progress watchdog waits between probes, and how many consecutive
-        // actively-pumping probes with no completion and no LongWaitDlg it tolerates before giving up. Each probe
-        // is a SYNCHRONOUS marshaled read, so the counter advances only while the UI message loop is pumping (a
-        // non-pumping/blocked UI thread simply parks the probe and never trips the watchdog).
-        private const int PROGRESS_POLL_MILLIS = 1000;
-        private const int NO_PROGRESS_LIMIT = 10;
-
-        // What a single synchronous, UI-thread probe of the modal/count state reports back to the waiting worker.
-        private class ModalProbeResult
-        {
-            public bool NewInteractiveModal;   // a modal not open at the start appeared and is not a LongWaitDlg
-            public Form NewModalForm;          // the managed interactive modal to record (null for a native one)
-            public bool TopModalDismissed;     // the interactive modal open at the start is gone
-            public bool LongWaitPresent;       // a busy progress form (LongWaitDlg or other ILongWaitForm) is open
-            public int UnfinishedCount;        // UnfinishedActionCount sampled in the same UI-thread pass
-        }
-
-        // Samples the modal/count state on the UI thread in one pass, relative to the state captured at the start
-        // of the wait. Runs synchronously (the caller marshals it), so returning proves the message loop pumped.
-        private static ModalProbeResult ProbeModals(HashSet<IntPtr> startModalHandles, IntPtr topModalHandle)
-        {
-            var currentHandles = FindModalDialogWindows();
-            var forms = FormUtil.OpenForms.Where(f => f.IsHandleCreated).ToDictionary(f => f.Handle);
-            bool IsLongWait(IntPtr h) => forms.TryGetValue(h, out var f) && f is LongWaitDlg;
-            // A form that is currently driving long-running work in its own progress display (a LongWaitDlg,
-            // which is always busy, or e.g. the Import Peptide Search wizard while its search is running). The
-            // watchdog rides through any of these, not just a LongWaitDlg.
-            bool IsBusyProgressForm(IntPtr h) => forms.TryGetValue(h, out var f) && f is ILongWaitForm { IsBusy: true };
-
-            var result = new ModalProbeResult { UnfinishedCount = UnfinishedActionCount };
-            // A new modal that is not a LongWaitDlg progress dialog is an interactive stop (managed OR native --
-            // a native window has no managed form, so it is not a LongWaitDlg either). Mirrors the dialog-watch.
-            foreach (var hwnd in currentHandles)
-            {
-                if (startModalHandles.Contains(hwnd) || IsLongWait(hwnd))
-                    continue;
-                result.NewInteractiveModal = true;
-                if (forms.TryGetValue(hwnd, out var form) && IsInteractiveModal(form))
-                {
-                    result.NewModalForm = form;
-                    break; // prefer a managed form to record
-                }
-            }
-            // "Dismissed" means the top modal's window is actually GONE, not merely disabled. A modal that has
-            // itself opened a nested child modal is disabled (so it drops out of FindModalDialogWindows, whose
-            // set only holds enabled modal windows) yet is still visible -- it has NOT been dismissed and its
-            // opener's work has not resumed. Testing the window's visibility (rather than modal-set membership)
-            // keeps a still-open parent from being mistaken for a dismissed one -- which would otherwise drop the
-            // ride-through target to its pre-show count while its opener delegate is still legitimately blocked.
-            result.TopModalDismissed = topModalHandle != IntPtr.Zero && !User32.IsWindowVisible(topModalHandle);
-            result.LongWaitPresent = currentHandles.Any(IsBusyProgressForm);
-            return result;
-        }
-
-        // The wait a named/convenience method runs after posting its (fire-and-forget) gesture. Unifies three
+        // The wait a named/convenience method runs for its gesture. The gesture (<paramref name="postGesture"/>) is
+        // posted onto <paramref name="dispatcher"/> -- the TARGET FORM's own UI thread -- as one delegate that
+        // resolves the control, gates it, and does the gesture; UiServiceDispatcher waits it out. Unifies three
         // cases: a plain mutating action returns when UnfinishedActionCount falls back to where it started; an
         // action that opens an interactive modal returns as soon as the modal appears (recording its pre-show
         // count -- the ONLY place a pre-show count is recorded); an action that dismisses the top modal waits
@@ -422,74 +187,14 @@ namespace pwiz.Skyline.ToolsUI
         // work shows. Progress is gauged by a synchronous marshaled probe each cycle (see ProbeModals): the wait
         // aborts only after NO_PROGRESS_LIMIT consecutive actively-pumping probes show neither completion nor a
         // LongWaitDlg. Must be called off the UI thread.
-        internal static void WaitForGesture(Action postGesture)
+        internal static void WaitForGesture(Control dispatcher, Action postGesture)
         {
-            int initialCount = UnfinishedActionCount;
-            var startModalHandles = new HashSet<IntPtr>(FindModalDialogWindows());
-            var topModalAtStart = CurrentTopInteractiveModal();
-            // Capture the opener's pre-show count and the modal's window handle now, before it (and its tracker
-            // entry) can close, so the ride-through target and the "still open" test do not race the close.
-            int topModalPreShowCount = topModalAtStart != null
-                ? PeekModalPreShowCount(topModalAtStart, initialCount) : initialCount;
-            IntPtr topModalHandle = topModalAtStart != null
-                ? InvokeOnUiThread(() => topModalAtStart.IsHandleCreated ? topModalAtStart.Handle : IntPtr.Zero)
-                : IntPtr.Zero;
-
-            postGesture();
-
-            int target = initialCount;
-            int noProgress = 0;
-            while (true)
-            {
-                // Probe first (before any sleep), so a fast gesture -- which the UI thread runs before this
-                // synchronously-queued probe, FIFO -- is seen complete without waiting a whole cycle.
-                var probe = InvokeOnUiThread(() => ProbeModals(startModalHandles, topModalHandle));
-
-                if (probe.NewInteractiveModal)
-                {
-                    // A new interactive modal (managed or native) appeared -- the caller will drive it. Record its
-                    // pre-show count if it is a managed form we can track (a native dialog has none). Primary path.
-                    if (probe.NewModalForm != null)
-                        RecordModalPreShowCount(probe.NewModalForm, initialCount);
-                    return;
-                }
-
-                if (topModalAtStart != null && target == initialCount && probe.TopModalDismissed)
-                {
-                    // The top modal open at the start was dismissed; drop the target to the level its opener left,
-                    // so the work the dismissal resumes (which may show a LongWaitDlg) is waited out.
-                    target = topModalPreShowCount;
-                }
-
-                // <= (not ==): the count can settle BELOW target and be missed by an exact match. A dismissed
-                // modal whose pre-show count was never tracked falls back to an upper-bound target (initialCount,
-                // which still counts the modal's blocked opener); after the dismissal that opener completes and
-                // the count drops past it. It stays above target while the gesture is in flight, so once at or
-                // below the pre-show level the gesture -- and any work its dismissal resumed -- is done.
-                if (probe.UnfinishedCount <= target)
-                    return;
-
-                if (probe.LongWaitPresent)
-                    noProgress = 0; // a progress dialog is up: the operation is advancing, keep waiting
-                else if (++noProgress >= NO_PROGRESS_LIMIT)
-                {
-                    string openForms = InvokeOnUiThread(() =>
-                        string.Join(@", ", FormUtil.OpenForms.Select(f => f.GetType().Name)));
-                    throw new InvalidOperationException(new LlmInstruction(GestureTimeoutMessage +
-                        string.Format(@" [initialCount={0}, target={1}, current={2}, topModalDismissed={3}, openForms=[{4}]]",
-                            initialCount, target, probe.UnfinishedCount, probe.TopModalDismissed, openForms)));
-                }
-
-                Thread.Sleep(PROGRESS_POLL_MILLIS);
-            }
+            // BeginInvoke the gesture onto the target form's own thread, do NOT throw on a modal but STOP and record
+            // it, and ride the ~10s message-loop-progress watchdog -- the shared wait/modal machinery, configured
+            // for the posted-gesture wait. Falls back to the main/start window only if no form is given. See
+            // UiServiceDispatcher.
+            UiServiceDispatcher.ForGesture(dispatcher ?? UiServiceDispatcher.UiThreadWindow).Run(postGesture);
         }
-
-        // The message the watchdog throws: about NO_PROGRESS_LIMIT seconds of an actively-pumping message loop
-        // with no completion and no progress dialog, which points at a slow Skyline operation not showing one.
-        private static string GestureTimeoutMessage =>
-            LlmInstruction.Format(
-                @"Timed out after about {0} seconds of an active Skyline message loop with no long-wait (progress) dialog showing. A wait this long with no progress dialog usually means a Skyline operation is slow but is not surfacing a LongWaitDlg. If a dialog is open, drive it with skyline_get_open_forms and the accept/cancel/click verbs.",
-                NO_PROGRESS_LIMIT.ToString());
 
         // Level 2: UI patterns
 
@@ -707,8 +412,7 @@ namespace pwiz.Skyline.ToolsUI
         // return to the form's pre-show level). Must be called off the UI thread.
         private static void AcceptOrCancel(IFormElement formElement, bool accept)
         {
-            var managedForm = (formElement as FormElement)?.Form;
-            int? preShowCount = managedForm != null ? TryGetPreShowActionCount(managedForm) : null;
+            int? preShowCount = UiServiceDispatcher.TryGetPreShowActionCount(formElement);
 
             // Post the gesture fire-and-forget (a managed form through its post-only helper, so the wait is here
             // and not doubled inside the helper; a native dialog's Accept/Close are already fire-and-forget).
@@ -730,7 +434,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 var probe = InvokeOnUiThread(() => new
                 {
-                    StillOpen = IsFormStillOpenOnUi(formElement, managedForm),
+                    StillOpen = formElement.IsOpen,
                     LongWaitPresent = FormUtil.OpenForms.Any(f => f is ILongWaitForm { IsBusy: true }),
                     Count = UnfinishedActionCount
                 });
@@ -740,25 +444,13 @@ namespace pwiz.Skyline.ToolsUI
 
                 if (probe.LongWaitPresent)
                     noProgress = 0;
-                else if (++noProgress >= NO_PROGRESS_LIMIT)
+                else if (++noProgress >= UiServiceDispatcher.NO_PROGRESS_LIMIT)
                     throw new InvalidOperationException(LlmInstruction.Format(
                         @"Timed out after about {0} seconds waiting for form {1} to close, with an active message loop and no long-wait (progress) dialog showing.",
-                        NO_PROGRESS_LIMIT.ToString(), formElement.FormId));
+                        UiServiceDispatcher.NO_PROGRESS_LIMIT.ToString(), formElement.FormId));
 
-                Thread.Sleep(PROGRESS_POLL_MILLIS);
+                Thread.Sleep(UiServiceDispatcher.PROGRESS_POLL_MILLIS);
             }
-        }
-
-        // Whether the resolved form is still on screen, inspecting the form INSTANCE directly (its own
-        // Visible/handle, or a native window's visibility) rather than Application.OpenForms / IsFormOpen. Must
-        // run on the UI thread for a managed form (it reads control state).
-        private static bool IsFormStillOpenOnUi(IFormElement formElement, Form managedForm)
-        {
-            if (managedForm != null)
-                return !managedForm.IsDisposed && managedForm.IsHandleCreated && managedForm.Visible;
-            if (formElement is NativeDialog nativeDialog)
-                return User32.IsWindowVisible(nativeDialog.WindowHandle);
-            return false;
         }
 
         /// <summary>
@@ -786,12 +478,12 @@ namespace pwiz.Skyline.ToolsUI
                 itemPath = new UiElementPath(itemPath, segment.Trim(), null, null);
 
             // Resolve the item on the form's UI thread (building the context menu has side effects), then click it
-            // through the same named-action wait ClickToolStripItem uses.
+            // by posting the click onto that form's own thread and waiting it out.
             var formRoot = (UiElement) ResolveForm(formId);
             var pathToClick = itemPath;
             var element = formRoot.InvokeOnUiThread(() =>
                 RequireAction(ResolvePath(pathToClick, formRoot), UiActions.Click));
-            WaitForGesture(() => UiActions.Click.Invoke(element, null));
+            WaitForGesture((formRoot as FormElement)?.Form, () => UiActions.Click.Invoke(element, null));
         }
 
         /// <summary>
@@ -844,12 +536,14 @@ namespace pwiz.Skyline.ToolsUI
         public static void SetGridText(string formId, string controlId, string text)
         {
             ValidateFormIdFormat(formId);
-            // Resolve the grid synchronously; the action's Invoke gates it and pastes fire-and-forget. This
-            // named/convenience verb then waits out the posted paste (the count settling, or a type-conversion
-            // alert the paste raises appearing, which the caller then drives) so it returns only once the paste
-            // has taken effect. The PerformAction escape-hatch path (UiActions.SetGridText) stays fire-and-forget.
-            var grid = OnFormThread(formId, formElement => formElement.FindGrid(controlId));
-            WaitForGesture(() => UiActions.SetGridText.Invoke(grid, text ?? string.Empty));
+            // Identify the form (its own thread) synchronously, then post the whole paste onto that thread: resolve
+            // the grid there, and SetGridText gates it and pastes. This named/convenience verb waits out the posted
+            // paste (the count settling, or a type-conversion alert the paste raises appearing, which the caller
+            // then drives) so it returns only once the paste has taken effect. The PerformAction escape-hatch path
+            // (UiActions.SetGridText) stays fire-and-forget.
+            var form = InvokeOnUiThread(() => FindFormById(formId));
+            var formElement = new FormElement(form);
+            WaitForGesture(form, () => UiActions.SetGridText.Invoke(formElement.FindGrid(controlId), text ?? string.Empty));
         }
 
         /// <summary>
@@ -861,12 +555,13 @@ namespace pwiz.Skyline.ToolsUI
         public static void SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
             ValidateFormIdFormat(formId);
-            // Resolve the grid synchronously; the action's Invoke gates it and moves the cell fire-and-forget.
-            // This named/convenience verb then waits out the posted move (the count settling) so it returns only
-            // once the cell has moved. The PerformAction escape-hatch path (UiActions.SetCurrentCellAddress) stays
-            // fire-and-forget.
-            var grid = OnFormThread(formId, formElement => formElement.FindGrid(controlId));
-            WaitForGesture(() => UiActions.SetCurrentCellAddress.Invoke(grid, new[] { column, row }));
+            // Identify the form (its own thread) synchronously, then post the whole move onto that thread: resolve
+            // the grid there, and SetCurrentCellAddress gates it and moves the cell. This named/convenience verb
+            // waits out the posted move (the count settling) so it returns only once the cell has moved. The
+            // PerformAction escape-hatch path (UiActions.SetCurrentCellAddress) stays fire-and-forget.
+            var form = InvokeOnUiThread(() => FindFormById(formId));
+            var formElement = new FormElement(form);
+            WaitForGesture(form, () => UiActions.SetCurrentCellAddress.Invoke(formElement.FindGrid(controlId), new[] { column, row }));
         }
 
         /// <summary>
@@ -984,7 +679,7 @@ namespace pwiz.Skyline.ToolsUI
                         HasGraph = false,
                         DockState = @"Main",
                         Id = GetFormId(skylineWindow),
-                        PreShowActionCount = TryGetPreShowActionCount(skylineWindow),
+                        PreShowActionCount = UiServiceDispatcher.TryGetPreShowActionCount(new FormElement(skylineWindow)),
                     });
                     foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                     {
@@ -1000,7 +695,7 @@ namespace pwiz.Skyline.ToolsUI
                             HasGraph = zedGraph != null,
                             DockState = dockState.ToString(),
                             Id = GetFormId(form),
-                            PreShowActionCount = TryGetPreShowActionCount(form),
+                            PreShowActionCount = UiServiceDispatcher.TryGetPreShowActionCount(new FormElement(form)),
                         });
                     }
                 }
@@ -1019,7 +714,7 @@ namespace pwiz.Skyline.ToolsUI
                         HasGraph = false,
                         DockState = @"Dialog",
                         Id = GetFormId(form),
-                        PreShowActionCount = TryGetPreShowActionCount(form),
+                        PreShowActionCount = UiServiceDispatcher.TryGetPreShowActionCount(new FormElement(form)),
                     });
                 }
                 return formInfos;

@@ -19,8 +19,11 @@
  */
 
 using System;
+using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -74,6 +77,57 @@ namespace pwiz.SkylineTestFunctional
             // Dismiss the alert the way the model would over its connection, which also unblocks the
             // orphaned work thread.
             OkDialog(alert, alert.ClickOk);
+
+            // A NATIVE message box (a Win32 #32770 with no managed Form, e.g. from MessageBox.Show) must surface
+            // its message BODY -- not its caption -- through the dialog-watch. The work pops the box on the UI
+            // thread (blocking it); RunWithDialogWatch (on this test thread) detects the native modal and throws
+            // with the body text read from the box's child controls.
+            const string nativeBody = @"The native message box body the connector should surface";
+            const string nativeCaption = @"AlertWatchNativeBoxCaption";
+            AssertEx.ThrowsException<Exception>(
+                () => JsonUiService.RunWithDialogWatch(() =>
+                {
+                    JsonUiService.InvokeOnUiThread(() =>
+                    {
+                        MessageBox.Show(SkylineWindow, nativeBody, nativeCaption, MessageBoxButtons.OK);
+                        return true;
+                    });
+                    return true;
+                }),
+                thrown =>
+                {
+                    AssertEx.Contains(thrown.Message, nativeBody);              // the BODY was surfaced
+                    Assert.IsFalse(thrown.Message.Contains(nativeCaption),      // not the caption (old behavior)
+                        string.Format(@"Expected the message body, not the caption, but got: {0}", thrown.Message));
+                });
+
+            // The native box has no managed Form (WaitForOpenForm cannot reach it); dismiss it by posting WM_CLOSE
+            // to the #32770 window, which also unblocks the orphaned work thread.
+            DismissNativeMessageBox(nativeCaption);
+        }
+
+        // Finds the process's native message-box window (#32770) with the given caption, waits for it to close
+        // after posting WM_CLOSE, so nothing is left blocking at teardown.
+        private static void DismissNativeMessageBox(string caption)
+        {
+            IntPtr found = IntPtr.Zero;
+            for (int i = 0; i < 200 && found == IntPtr.Zero; i++)
+            {
+                found = FindNativeMessageBox(caption);
+                if (found == IntPtr.Zero)
+                    Thread.Sleep(50);
+            }
+            Assert.AreNotEqual(IntPtr.Zero, found, @"Native message box window not found to dismiss.");
+            User32.PostMessageA(found, User32.WinMessageType.WM_CLOSE, 0, 0);
+            for (int i = 0; i < 200 && FindNativeMessageBox(caption) != IntPtr.Zero; i++)
+                Thread.Sleep(50);
+        }
+
+        // The handle of a top-level #32770 (native dialog box) window whose caption matches, or Zero if none.
+        private static IntPtr FindNativeMessageBox(string caption)
+        {
+            return User32.EnumWindows().FirstOrDefault(hwnd =>
+                User32.GetClassName(hwnd) == @"#32770" && User32.GetWindowText(hwnd) == caption);
         }
     }
 }

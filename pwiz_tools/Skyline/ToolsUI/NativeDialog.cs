@@ -97,6 +97,56 @@ namespace pwiz.Skyline.ToolsUI
         public override Type ElementType => GetType();
         public override bool IsEnabled => User32.IsWindowEnabled(WindowHandle);
 
+        // ---- Window-state queries (IFormElement) the modal-watch asks of a native dialog, all via Win32 (never
+        // UI Automation, which can deadlock when queried from the UI thread the dialog's modal loop is running on).
+        /// <summary>A native dialog is always an interactive stop the caller would drive (never a progress dialog).</summary>
+        public bool IsInteractiveModal => true;
+        /// <summary>Whether the dialog window is still visible.</summary>
+        public bool IsOpen => User32.IsWindowVisible(WindowHandle);
+        /// <summary>A native dialog is never an ILongWaitForm busy progress form.</summary>
+        public bool IsBusy => false;
+        /// <summary>The dialog's message body (its Static-control text) else its caption.</summary>
+        public string BlockingMessage => NativeBodyText(WindowHandle) ?? User32.GetWindowText(WindowHandle);
+
+        // Identity is the underlying native window handle, so a fresh wrapper of the same window compares equal
+        // (the modal-watch tells a new modal from one already open by IFormElement identity, not raw handles).
+        public override bool Equals(object obj) => obj is NativeDialog other && WindowHandle == other.WindowHandle;
+        public override int GetHashCode() => WindowHandle.GetHashCode();
+
+        /// <summary>The handles of this process's modal dialog windows -- visible, enabled, top-level windows whose
+        /// owner window is disabled (the signature of a modal blocking its owner), managed OR native. Pure Win32,
+        /// so it is safe off the UI thread (the connector's cheap "did a new modal appear" check).</summary>
+        internal static IList<IntPtr> EnumModalWindowHandles()
+        {
+            var processId = (uint) Process.GetCurrentProcess().Id;
+            return User32.EnumWindows().Where(hwnd =>
+            {
+                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
+                if (windowProcessId != processId || !User32.IsWindowVisible(hwnd) || !User32.IsWindowEnabled(hwnd))
+                    return false;
+                var owner = User32.GetOwner(hwnd);
+                return owner != IntPtr.Zero && !User32.IsWindowEnabled(owner);
+            }).ToList();
+        }
+
+        /// <summary>Wraps a raw modal window handle (one with no managed Form) as a generic native dialog, for the
+        /// modal-watch's Win32-only queries. Not a UI-Automation-driven file dialog -- see <see cref="Create"/>.</summary>
+        internal static NativeDialog ForModalWindow(IntPtr handle) => new NativeDialog(handle);
+
+        // The message body of a native dialog box (a Win32 #32770, e.g. MessageBox.Show), read from its child
+        // controls, or null when none is found. The body is a "Static" control with text -- the icon's Static has
+        // none -- so among the Static children with non-empty text, take the LONGEST, so the message wins over any
+        // short label. In-process, so GetWindowText reads the static's text directly.
+        private static string NativeBodyText(IntPtr hwnd)
+        {
+            return User32.EnumChildWindows(hwnd)
+                .Where(child => User32.GetClassName(child) == @"Static")
+                .Select(User32.GetWindowText)
+                .Where(text => !string.IsNullOrEmpty(text))
+                .OrderByDescending(text => text.Length)
+                .FirstOrDefault();
+        }
+
         protected AutomationElement DialogElement =>
             _dialogElement ?? (_dialogElement = AutomationElement.FromHandle(WindowHandle));
 
@@ -308,14 +358,11 @@ namespace pwiz.Skyline.ToolsUI
         private static IList<AutomationElement> FindDialogElements()
         {
             var processId = (uint)Process.GetCurrentProcess().Id;
-            var dialogHandles = new List<IntPtr>();
-            User32.EnumWindows((hwnd, lparam) =>
+            var dialogHandles = User32.EnumWindows().Where(hwnd =>
             {
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                if (windowProcessId == processId && GetWindowClassName(hwnd) == DIALOG_CLASS_NAME)
-                    dialogHandles.Add(hwnd);
-                return true; // keep enumerating
-            }, IntPtr.Zero);
+                return windowProcessId == processId && GetWindowClassName(hwnd) == DIALOG_CLASS_NAME;
+            }).ToList();
 
             var result = new List<AutomationElement>();
             foreach (var hwnd in dialogHandles)
@@ -338,12 +385,7 @@ namespace pwiz.Skyline.ToolsUI
             return result;
         }
 
-        private static string GetWindowClassName(IntPtr hwnd)
-        {
-            var buffer = new StringBuilder(256);
-            int length = User32.GetClassName(hwnd, buffer, buffer.Capacity);
-            return length > 0 ? buffer.ToString() : string.Empty;
-        }
+        private static string GetWindowClassName(IntPtr hwnd) => User32.GetClassName(hwnd);
 
         private static TResult PollUntil<TResult>(int millisTimeout, string description, Func<TResult> find)
             where TResult : class

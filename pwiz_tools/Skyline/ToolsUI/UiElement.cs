@@ -29,6 +29,7 @@ using System.Windows.Forms;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Util;
@@ -432,7 +433,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 // A modal dialog has disabled the form. If it is an alert (CommonAlertDlg), include its text so
                 // the caller sees what it says without having to capture a screenshot of it.
-                var alertMessage = JsonUiService.BlockingAlertMessage();
+                var alertMessage = UiServiceDispatcher.BlockingAlertMessage();
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Cannot interact with form '{0}': it is blocked by an open dialog{1}. Handle the open dialog first (see skyline_get_open_forms).",
                     JsonUiService.GetFormId(form),
@@ -656,17 +657,45 @@ namespace pwiz.Skyline.ToolsUI
         /// <see cref="JsonUiService.UnfinishedActionCount"/> until it finishes).</summary>
         public virtual void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action);
 
-        /// <summary>The marshaling a mutating or clicking method owns (it used to be applied centrally by the
-        /// action layer): gate the element synchronously on its UI thread -- so a control blocked by a modal or
-        /// disabled fails here, on the caller -- and then post the change fire-and-forget, so a gesture that
-        /// opens a modal does not block the caller (the modal is driven by later commands). A read does not use
-        /// this: it needs no gate and returns a value, so it just calls <see cref="InvokeOnUiThread{T}"/>
-        /// directly. Must be called off the UI thread.</summary>
+        /// <summary>The gate-and-gesture a mutating or clicking method owns. Two callers, distinguished by which
+        /// thread they run it on:
+        /// <list type="bullet">
+        /// <item>A named/convenience verb posts the WHOLE gesture onto the element's own form thread through
+        /// <see cref="UiServiceDispatcher"/> (Dispatcher = the form) and then waits it out; so when this runs we are
+        /// already ON that thread. Gate and do the gesture DIRECTLY -- one dispatched action, no separate
+        /// synchronous gate -- so a blocked/disabled control throws out of the posted delegate and the dispatcher
+        /// re-throws it to the caller (fail-fast), and a gesture that opens a modal blocks here, keeping its action
+        /// counted until the modal closes.</item>
+        /// <item>The PerformAction escape hatch calls this fire-and-forget from off the form thread: gate
+        /// synchronously on the form thread (so a blocked/disabled control fails fast to the caller) and post the
+        /// gesture, so a gesture that opens a modal does not block the caller.</item>
+        /// </list>
+        /// A read does not use this: it needs no gate and returns a value, so it calls <see cref="InvokeOnUiThread{T}"/>
+        /// directly.</summary>
         protected void PerformGesture(Action gesture)
         {
-            InvokeOnUiThread(VerifyInteractable);
-            BeginInvokeOnUiThread(gesture);
+            // Decide the thread from the element's STORED form (thread-safe: a saved reference plus the thread-safe
+            // Control.InvokeRequired) -- never OwningForm, whose control override walks the control tree, which must
+            // not run off the UI thread.
+            var form = GestureThreadForm;
+            if (form != null && !form.InvokeRequired)
+            {
+                // On the element's own form thread (posted here by a named verb's UiServiceDispatcher.Run): gate and
+                // gesture directly, so the gate throws out of the one posted delegate and Run re-throws it.
+                VerifyInteractable();
+                gesture();
+            }
+            else
+            {
+                // Off the form thread (the fire-and-forget escape hatch): gate synchronously, then post the gesture.
+                InvokeOnUiThread(VerifyInteractable);
+                BeginInvokeOnUiThread(gesture);
+            }
         }
+
+        // The element's own form -- a STORED reference (never a control-tree walk), so PerformGesture can safely
+        // test off the UI thread whether it is already on that form's thread. Null for a form-less element.
+        internal virtual Form GestureThreadForm => null;
 
         /// <summary>The actions this element supports, for discovery via GetActions / GetControls: every
         /// action that <see cref="UiAction.AppliesTo"/> this element (it is the kind the action targets).
@@ -825,6 +854,9 @@ namespace pwiz.Skyline.ToolsUI
         // The element's form gates acting on it (a modal blocking the form); a control narrows this to its own
         // hosting form (which also catches a disabled ancestor).
         internal override Form OwningForm => FormElement?.Form;
+
+        // The stored form used only to decide whether PerformGesture is already on the form's thread (see base).
+        internal override Form GestureThreadForm => FormElement?.Form;
     }
 
     // ---- Control-backed elements ----------------------------------------------------------------
@@ -1016,6 +1048,24 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
         /// the caller has done the screen-capture pre-flight).</summary>
         System.Drawing.Bitmap CaptureImage();
+
+        // ---- Window-state queries the modal-watch (UiServiceDispatcher) asks each form about itself ----
+
+        /// <summary>Whether this is an interactive modal the caller would drive (a managed non-progress modal --
+        /// Modal and not a LongWaitDlg -- or a native dialog) rather than a progress/wait dialog the work itself
+        /// drives (a LongWaitDlg), which the watch rides through instead of stopping on.</summary>
+        bool IsInteractiveModal { get; }
+        /// <summary>Whether the form/dialog is still on screen (a managed form: not disposed, handle created and
+        /// visible; a native dialog: its window is visible). Must be read on the owning UI thread for a managed
+        /// form. Its negation is "dismissed".</summary>
+        bool IsOpen { get; }
+        /// <summary>Whether this is a busy progress form (an <see cref="ILongWaitForm"/> mid-operation) the
+        /// message-loop watchdog rides through; false for a native dialog.</summary>
+        bool IsBusy { get; }
+        /// <summary>The message this form shows when it blocks the UI: a managed form's composed alert text
+        /// (CommonFormEx.DetailedMessage) else its caption; a native dialog's message-body text else its caption.
+        /// Read on the owning UI thread for a managed form.</summary>
+        string BlockingMessage { get; }
     }
 
     /// <summary>A Form or a UserControl -- a boundary that owns its (flattened) children. It has no action
@@ -1075,6 +1125,17 @@ namespace pwiz.Skyline.ToolsUI
             FormElement = this;
         }
         internal Form Form => (Form) Control;
+
+        // Window-state queries (IFormElement) answered from this element's Form.
+        public bool IsInteractiveModal => Form.Modal && !(Form is LongWaitDlg);
+        public bool IsOpen => !Form.IsDisposed && Form.IsHandleCreated && Form.Visible;
+        public bool IsBusy => Form is ILongWaitForm { IsBusy: true };
+        public string BlockingMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
+
+        // Identity is the underlying Form, so a fresh FormElement wrapping the same Form compares equal (the
+        // modal-watch tells a new modal from one already open by IFormElement identity, not window handles).
+        public override bool Equals(object obj) => obj is FormElement other && ReferenceEquals(Form, other.Form);
+        public override int GetHashCode() => Form.GetHashCode();
 
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
         // other form has no window-level clipboard gesture, so refuse it with a clear message.
@@ -1167,8 +1228,10 @@ namespace pwiz.Skyline.ToolsUI
         // escape-hatch path (UiActions.Click) stays fire-and-forget. Must be called off the UI thread.
         public void ClickButton(string button)
         {
-            var element = InvokeOnUiThread(() => FindElement(button, UiActions.Click));
-            JsonUiService.WaitForGesture(() => UiActions.Click.Invoke(element, null));
+            // Post the whole gesture onto this form's own thread: resolve the control there, then Click gates it
+            // (the form and the control) and does the click. UiServiceDispatcher waits it out and re-throws a
+            // not-found / not-interactable failure to the caller.
+            JsonUiService.WaitForGesture(Form, () => UiActions.Click.Invoke(FindElement(button, UiActions.Click), null));
         }
 
         // Sets a control's value (or a grid cell) on the form. The target is resolved synchronously on the UI
@@ -1182,18 +1245,17 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
             {
-                var gridElement = InvokeOnUiThread(() => FindGrid(gridName));
-                // Post both moves in one gesture so the wait's initial count is captured before either, and the
-                // wait covers the paste (not just the cell move).
-                JsonUiService.WaitForGesture(() =>
+                // Post both moves in one gesture on this form's thread so the wait's initial count is captured
+                // before either, and the wait covers the paste (not just the cell move).
+                JsonUiService.WaitForGesture(Form, () =>
                 {
+                    var gridElement = FindGrid(gridName);
                     UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
                     UiActions.SetGridText.Invoke(gridElement, value);
                 });
                 return;
             }
-            var element = InvokeOnUiThread(() => FindElement(controlId, UiActions.SetValue));
-            JsonUiService.WaitForGesture(() => UiActions.SetValue.Invoke(element, value));
+            JsonUiService.WaitForGesture(Form, () => UiActions.SetValue.Invoke(FindElement(controlId, UiActions.SetValue), value));
         }
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the single
@@ -1244,7 +1306,7 @@ namespace pwiz.Skyline.ToolsUI
             // a modal it opens to appear, or -- when it dismisses the top modal -- the count to ride back to the
             // opener's pre-show level). PerformAction's accept stays fire-and-forget via PostAccept (see
             // UiActions.Accept). Must be called off the UI thread.
-            JsonUiService.WaitForGesture(PostAccept);
+            JsonUiService.WaitForGesture(Form, PostAccept);
         }
 
         // The fire-and-forget core of Accept: gate the form and resolve its default button synchronously on the
@@ -1849,10 +1911,10 @@ namespace pwiz.Skyline.ToolsUI
             var leaf = InvokeOnUiThread(() => ResolveMenuItem(menuPath));
             if (leaf == null)
                 return false;
-            // The item's Click gates its form (a modal blocking it) and the item itself, then posts the click.
-            // Wait out the posted gesture (the count settling, or a modal it opens appearing) so the named
-            // menu/toolbar verbs return only once the click has taken effect.
-            JsonUiService.WaitForGesture(() => UiActions.Click.Invoke(leaf, null));
+            // Post the click onto the form's own thread, where the item's Click gates its form (a modal blocking it)
+            // and the item itself and then does the click. Wait out the posted gesture (the count settling, or a
+            // modal it opens appearing) so the named menu/toolbar verbs return only once the click has taken effect.
+            JsonUiService.WaitForGesture(FormElement.Form, () => UiActions.Click.Invoke(leaf, null));
             return true;
         }
 

@@ -15,6 +15,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -191,19 +192,72 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool EndPaint(IntPtr hWnd, ref PAINTSTRUCT ps);
 
-        [DllImport("user32.dll")]
-        public static extern bool EnumThreadWindows(int tid, EnumThreadWindowsProc callback, IntPtr lp);
-        public delegate bool EnumThreadWindowsProc(IntPtr hWnd, IntPtr lp);
+        // The raw enumeration P/Invokes take a callback; callers use the handle-returning wrappers below instead
+        // (pure C#/LINQ), so these are private. The callback MUST be a non-generic delegate -- the P/Invoke
+        // marshaller rejects Func<> ("Generic types cannot be marshaled") -- so one private delegate (same
+        // signature) serves all three.
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
 
         [DllImport("user32.dll")]
-        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
-        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        private static extern bool EnumThreadWindows(int tid, EnumWindowsProc callback, IntPtr lp);
 
         [DllImport("user32.dll")]
-        public static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
+        private static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        private static extern bool EnumChildWindows(IntPtr hWndParent, EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        /// <summary>The handles of all top-level windows, in z-order (top to bottom) -- callers use LINQ over these
+        /// rather than an enumeration callback.</summary>
+        public static IEnumerable<IntPtr> EnumWindows()
+        {
+            var handles = new List<IntPtr>();
+            EnumWindows((hwnd, lparam) => { handles.Add(hwnd); return true; }, IntPtr.Zero);
+            return handles;
+        }
+
+        /// <summary>The handles of the immediate + nested child windows of <paramref name="parent"/>.</summary>
+        public static IEnumerable<IntPtr> EnumChildWindows(IntPtr parent)
+        {
+            var handles = new List<IntPtr>();
+            EnumChildWindows(parent, (hwnd, lparam) => { handles.Add(hwnd); return true; }, IntPtr.Zero);
+            return handles;
+        }
+
+        /// <summary>The handles of the top-level windows belonging to the given thread.</summary>
+        public static IEnumerable<IntPtr> EnumThreadWindows(uint threadId)
+        {
+            var handles = new List<IntPtr>();
+            EnumThreadWindows((int) threadId, (hwnd, lp) => { handles.Add(hwnd); return true; }, IntPtr.Zero);
+            return handles;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern int GetClassName(IntPtr hWnd, StringBuilder buffer, int buflen);
+
+        /// <summary>The window class name of <paramref name="hwnd"/> (e.g. "#32770" for a dialog), or empty if none.</summary>
+        public static string GetClassName(IntPtr hwnd)
+        {
+            var buffer = new StringBuilder(256);
+            return GetClassName(hwnd, buffer, buffer.Capacity) > 0 ? buffer.ToString() : string.Empty;
+        }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        public static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+        private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern int GetWindowTextLength(IntPtr hWnd);
+
+        /// <summary>
+        /// The full text (caption / control text) of a window, or empty if it has none. Sizes the buffer to the
+        /// window's text length (GetWindowTextLength) up front, so the complete text is always returned.
+        /// </summary>
+        public static string GetWindowText(IntPtr hwnd)
+        {
+            var sb = new StringBuilder(GetWindowTextLength(hwnd) + 1);
+            GetWindowText(hwnd, sb, sb.Capacity);
+            return sb.ToString();
+        }
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern IntPtr GetDC(IntPtr hWnd);
@@ -236,10 +290,13 @@ namespace pwiz.Common.SystemUtil.PInvoke
         public static extern bool IsWindowEnabled(IntPtr hwnd);
 
         // uCmd values for GetWindow.
-        public const uint GW_OWNER = 4;
+        private const uint GW_OWNER = 4;
 
         [DllImport("user32.dll")]
-        public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+        private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        /// <summary>The owner window of <paramref name="hwnd"/> (GW_OWNER), or IntPtr.Zero if it has none.</summary>
+        public static IntPtr GetOwner(IntPtr hwnd) => GetWindow(hwnd, GW_OWNER);
 
         [DllImport("user32.dll")]
         public static extern bool MoveWindow(IntPtr hWnd, int x, int y, int width, int height, bool repaint);

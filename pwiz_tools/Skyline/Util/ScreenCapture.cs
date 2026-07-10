@@ -252,16 +252,16 @@ namespace pwiz.Skyline.Util
             var foreignRects = new List<Rectangle>();
             var scalingFactor = GetScalingFactor();
 
-            User32.EnumWindows((hWnd, lParam) =>
+            foreach (var hWnd in User32.EnumWindows()) // z-order, top to bottom
             {
                 if (!User32.IsWindowVisible(hWnd))
-                    return true; // continue enumeration
+                    continue;
 
                 User32.GetWindowThreadProcessId(hWnd, out uint windowPid);
 
-                // Check if we've reached our target window in z-order
+                // Stop once we reach our target window in z-order -- nothing below it can obscure the target.
                 if (windowPid == currentPid && hWnd == targetHandle)
-                    return false; // stop enumeration
+                    break;
 
                 var rect = new User32.RECT();
                 User32.GetWindowRect(hWnd, ref rect);
@@ -270,15 +270,13 @@ namespace pwiz.Skyline.Util
                 var intersection = Rectangle.Intersect(screenRect, windowRect);
 
                 if (intersection.IsEmpty)
-                    return true; // no overlap, skip
+                    continue; // no overlap, skip
 
                 if (windowPid == currentPid)
-                    return true; // skip Skyline-owned windows above target
+                    continue; // skip Skyline-owned windows above target
 
                 foreignRects.Add(intersection);
-
-                return true; // continue enumeration
-            }, IntPtr.Zero);
+            }
 
             return foreignRects;
         }
