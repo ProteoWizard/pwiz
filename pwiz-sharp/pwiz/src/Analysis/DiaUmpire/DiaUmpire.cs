@@ -767,7 +767,11 @@ public sealed class DiaUmpire : System.IDisposable
             // still root the input. cpp's lazy SpectrumList_mzML doesn't need this — its
             // input pages out naturally.
             Sl = null;
-            Msd.Run.SpectrumList = null;
+            // NB: do NOT null Msd.Run.SpectrumList here. In cpp that field is the raw input list, but
+            // in pwiz-sharp it is the SpectrumList_DiaUmpire wrapper that owns this DiaUmpire (and its
+            // per-window spill temp directory). Detaching the wrapper from Run would orphan it, so the
+            // enclosing MSData.Dispose never disposes it and the spill directory leaks. The input
+            // SpectrumListSimple is already released above via `Sl = null`; the GC.Collect reclaims it.
             System.GC.Collect(generation: 2, mode: System.GCCollectionMode.Aggressive,
                               blocking: true, compacting: true);
 

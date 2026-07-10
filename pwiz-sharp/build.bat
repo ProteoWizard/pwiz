@@ -209,7 +209,7 @@ if %COVERAGE%==1 (
     set COVER_DIR=%TC_TEST_RESULTS%
     if not exist "!COVER_DIR!" mkdir "!COVER_DIR!"
     set COVER_REPORT_DIR=!COVER_DIR!\coverage-report
-    set COVER_FILTERS=+:module=Pwiz.*;-:module=*.Tests;-:module=msconvert-sharp
+    set COVER_FILTERS=+:module=Pwiz.*;-:module=*.Tests;-:module=msconvert
 
     echo ##teamcity[progressMessage 'pwsh Run-Tests-Parallel.ps1 ^(with coverage^)']
     pwsh -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%\scripts\Run-Tests-Parallel.ps1" -TestProjects "%TEST_TARGET%" %PS_FLAGS% -TestResultsDir "!COVER_DIR!" -CoverageSnapshotDir "!COVER_DIR!" -CoverageFilters "!COVER_FILTERS!"

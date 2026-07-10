@@ -3,7 +3,7 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <RootNamespace>Pwiz.Tools.MsConvert</RootNamespace>
-    <AssemblyName>msconvert-sharp</AssemblyName>
+    <AssemblyName>msconvert</AssemblyName>
     <Description>Command-line spectrum-file converter. Port of pwiz_tools/commandline/msconvert.</Description>
     <!-- Expose Main via a plain class so tests can drive it without Process overhead. -->
     <InternalsVisibleTo>$(AssemblyName).Tests</InternalsVisibleTo>

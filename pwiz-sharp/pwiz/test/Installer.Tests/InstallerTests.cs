@@ -13,7 +13,7 @@ namespace Pwiz.Installer.Tests;
 /// <summary>
 /// End-to-end tests for the Inno Setup-built <c>ProteoWizard-Sharp-Setup.exe</c>.
 /// Each test runs a silent install, verifies file deployment + registry state +
-/// a quick CLI smoke (<c>msconvert-sharp.exe --help</c>), then silently
+/// a quick CLI smoke (<c>msconvert.exe --help</c>), then silently
 /// uninstalls and verifies cleanup.
 ///
 /// Test policy:
@@ -48,7 +48,7 @@ public class InstallerTests
     private static readonly string[] RequiredFiles = new[]
     {
         "MSConvertGUI-sharp.exe",
-        "msconvert-sharp.exe",
+        "msconvert.exe",
         "seems-sharp.exe",
         "Pwiz.Vendor.Common.dll",
     };
@@ -387,7 +387,7 @@ public class InstallerTests
             Assert.Inconclusive(fixtureReason);
             return;
         }
-        string exe = Path.Combine(installDir, "msconvert-sharp.exe");
+        string exe = Path.Combine(installDir, "msconvert.exe");
         string outDir = Path.Combine(
             Path.GetTempPath(),
             $"pwiz-sharp-installer-smoke-{Guid.NewGuid():N}");
@@ -411,10 +411,10 @@ public class InstallerTests
             // 3 min wall-clock: cold-cache vendor SDK fetch + extract usually finishes in
             // ~3-10s but we leave headroom for slow networks on CI.
             Assert.IsTrue(proc.WaitForExit(milliseconds: 3 * 60_000),
-                $"msconvert-sharp.exe did not exit within 3 minutes. " +
+                $"msconvert.exe did not exit within 3 minutes. " +
                 $"stdout=<{stdout}> stderr=<{stderr}>");
             Assert.AreEqual(0, proc.ExitCode,
-                $"msconvert-sharp.exe exited with code {proc.ExitCode}. " +
+                $"msconvert.exe exited with code {proc.ExitCode}. " +
                 $"stdout=<{stdout}> stderr=<{stderr}>");
 
             string outFile = Path.Combine(outDir, "out.mzML");

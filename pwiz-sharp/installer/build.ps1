@@ -64,7 +64,7 @@ pwsh -File (Join-Path $installerDir "Refresh-VendorPins.ps1")
 if ($LASTEXITCODE -ne 0) { throw "Refresh-VendorPins failed (exit $LASTEXITCODE)" }
 
 # 2. Build MSConvertGUI + SeeMS Release. MSConvertGUI's chain produces
-#    msconvert-sharp.exe + MSConvertGUI-sharp.exe + all Pwiz.* DLLs. SeeMS is a
+#    msconvert.exe + MSConvertGUI-sharp.exe + all Pwiz.* DLLs. SeeMS is a
 #    separate WinExe target that produces seems-sharp.exe (plus its own copies
 #    of the shared Pwiz.* DLLs which are identical so deduping is trivial at
 #    staging time).
@@ -76,7 +76,7 @@ if (-not $SkipBuild) {
     if ($LASTEXITCODE -ne 0) { throw "SeeMS build failed (exit $LASTEXITCODE)" }
 }
 
-foreach ($exe in @("MSConvertGUI-sharp.exe", "msconvert-sharp.exe", "7za.exe")) {
+foreach ($exe in @("MSConvertGUI-sharp.exe", "msconvert.exe", "7za.exe")) {
     if (-not (Test-Path (Join-Path $msconvertGuiOut $exe))) {
         throw "expected $exe in $msconvertGuiOut but it's missing — did the build succeed?"
     }

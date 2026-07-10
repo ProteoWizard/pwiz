@@ -234,6 +234,10 @@ internal static class ArgParser
                     config.Merge = true;
                     break;
 
+                // Native msconvert (boost::program_options) accepts "--runIndex" as an unambiguous
+                // prefix abbreviation of "--runIndexSet"; callers such as Skyline's EncyclopeDIA path
+                // pass the abbreviated form. Accept it explicitly so msconvert-sharp stays a drop-in.
+                case "--runIndex":
                 case "--runIndexSet":
                     config.RunIndexSet = RequireNext(args, ref i, a);
                     break;
@@ -420,7 +424,7 @@ internal static class ArgParser
 
     private static readonly string[] s_usageLines =
     {
-        "Usage: msconvert-sharp [options] <input files...>",
+        "Usage: msconvert [options] <input files...>",
         "",
         "Input / output:",
         "  -f, --filelist FILE      Read input file paths from FILE (one per line)",

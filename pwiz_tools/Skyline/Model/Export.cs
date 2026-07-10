@@ -5301,12 +5301,9 @@ namespace pwiz.Skyline.Model
 
         private static string ResolveToolPath(string exeName)
         {
-            if (Path.IsPathRooted(exeName))
-                return exeName;
-            // Method-builder tools ship as Windows .exe files next to Skyline.exe.
-            var fileName = string.IsNullOrEmpty(Path.GetExtension(exeName)) ? exeName + @".exe" : exeName;
-            var candidate = Path.Combine(AppContext.BaseDirectory, fileName);
-            return File.Exists(candidate) ? candidate : exeName;
+            // Method-builder tools ship as Windows .exe files next to Skyline.exe. Root the path so
+            // they launch on net8, whose Process.Start no longer searches the working directory.
+            return PathEx.ResolveBundledExe(exeName);
         }
     }
 

@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Model
                     _diaUmpireConfig.WriteConfigToFile(tmpParams);
 
                     var pr = new ProcessRunner();
-                    var psi = new ProcessStartInfo(MSCONVERT_EXE)
+                    var psi = new ProcessStartInfo(PathEx.ResolveBundledExe(MSCONVERT_EXE))
                     {
                         CreateNoWindow = true,
                         UseShellExecute = false,

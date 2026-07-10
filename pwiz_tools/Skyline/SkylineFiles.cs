@@ -3493,7 +3493,6 @@ namespace pwiz.Skyline
 
         public void ShowEncyclopeDiaSearchDlg()
         {
-#if NET472
             KoinaUIHelpers.CheckKoinaSettings(this, this);
             if (!KoinaHelpers.KoinaSettingsValid)
             {
@@ -3516,9 +3515,6 @@ namespace pwiz.Skyline
                     // Nothing to do; the dialog does all the work.
                 }
             }
-#else
-            throw new NotSupportedException("EncyclopeDia search not available on .NET 8 - feature deferred");
-#endif
         }
 
         public void ShowFeatureDetectionDlg()

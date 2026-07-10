@@ -454,23 +454,50 @@ public static class SpectrumListFactory
 
     // ----- Tier 1 filter parsers (one per cpp filterCreator_*) -----
 
-    /// <summary>Parses key=value pairs out of <paramref name="args"/> in place — strips matching
-    /// tokens from the whitespace-separated list and returns the value (or default). Mirrors
-    /// cpp's <c>parseKeyValuePair</c> contract used throughout SpectrumListFactory.cpp.</summary>
+    /// <summary>Parses key=value pairs out of <paramref name="args"/> in place — removes the matching
+    /// <c>key&lt;value&gt;</c> span and returns the value (or <paramref name="fallback"/>). The value may
+    /// be double-quoted to carry whitespace (e.g. <c>params="C:\dir with spaces\x.params"</c>); the
+    /// surrounding quotes are preserved in the return value, matching cpp's <c>parseKeyValuePair</c>
+    /// contract where quote-stripping is the caller's job. Mirrors the usage throughout
+    /// SpectrumListFactory.cpp.</summary>
     private static string TakeKeyValue(ref string args, string key, string fallback)
     {
-        var tokens = args.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
-        for (int i = 0; i < tokens.Count; i++)
+        int searchFrom = 0;
+        while (true)
         {
-            if (tokens[i].StartsWith(key, StringComparison.OrdinalIgnoreCase))
+            int idx = args.IndexOf(key, searchFrom, StringComparison.OrdinalIgnoreCase);
+            if (idx < 0)
             {
-                string value = tokens[i].Substring(key.Length);
-                tokens.RemoveAt(i);
-                args = string.Join(' ', tokens);
-                return value;
+                return fallback;
             }
+            // Only match at a token boundary (start of string or preceded by whitespace) so a key
+            // does not match inside another token's quoted value.
+            if (idx != 0 && !char.IsWhiteSpace(args[idx - 1]))
+            {
+                searchFrom = idx + key.Length;
+                continue;
+            }
+            int valueStart = idx + key.Length;
+            int valueEnd;
+            if (valueStart < args.Length && args[valueStart] == '"')
+            {
+                // Quoted value: consume through the matching closing quote (whitespace allowed inside).
+                int closing = args.IndexOf('"', valueStart + 1);
+                valueEnd = closing < 0 ? args.Length : closing + 1;
+            }
+            else
+            {
+                // Unquoted value: up to the next whitespace.
+                valueEnd = valueStart;
+                while (valueEnd < args.Length && !char.IsWhiteSpace(args[valueEnd]))
+                {
+                    valueEnd++;
+                }
+            }
+            string value = args.Substring(valueStart, valueEnd - valueStart);
+            args = string.Concat(args.AsSpan(0, idx), args.AsSpan(valueEnd)).Trim();
+            return value;
         }
-        return fallback;
     }
 
     private static MZTolerance TakeMzTolerance(ref string args, MZTolerance fallback)
