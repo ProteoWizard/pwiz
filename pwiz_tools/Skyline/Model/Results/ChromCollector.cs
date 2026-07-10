@@ -58,6 +58,51 @@ namespace pwiz.Skyline.Model.Results
         public bool IsSetTimes { get { return Times != null; } }
 
         /// <summary>
+        /// The chromatogram index whose spill file the (possibly shared) Times list was
+        /// written to, or null if the Times list has not spilled to disk. Used to verify that
+        /// this chromatogram is being released from the spill file its shared times live in.
+        /// </summary>
+        public int? TimesSpillChromatogramIndex
+        {
+            get { return Times != null && Times.HasSpilledToDisk ? Times.SpillChromatogramIndex : (int?) null; }
+        }
+
+        /// <summary>
+        /// The chromatogram index whose spill file the (possibly shared) Scans list was
+        /// written to, or null if the Scans list has not spilled to disk.
+        /// </summary>
+        public int? ScansSpillChromatogramIndex
+        {
+            get { return Scans != null && Scans.HasSpilledToDisk ? Scans.SpillChromatogramIndex : (int?) null; }
+        }
+
+        // DIAGNOSTIC (issue #4287): spill indexes for the product ion's own lists.
+        public int? IntensitiesSpillChromatogramIndex
+        {
+            get { return Intensities != null && Intensities.HasSpilledToDisk ? Intensities.SpillChromatogramIndex : (int?) null; }
+        }
+
+        public int? MassErrorsSpillChromatogramIndex
+        {
+            get { return MassErrors != null && MassErrors.HasSpilledToDisk ? MassErrors.SpillChromatogramIndex : (int?) null; }
+        }
+
+        // DIAGNOSTIC (issue #4287): describe each list's spill state for logging.
+        public string DescribeSpillState()
+        {
+            return string.Format(@"Times[{0}] Intensities[{1}] MassErrors[{2}] Scans[{3}]",
+                DescribeList(Times), DescribeList(Intensities), DescribeList(MassErrors), DescribeList(Scans));
+        }
+
+        private static string DescribeList<TData>(BlockedList<TData> list)
+        {
+            if (list == null)
+                return @"null";
+            return string.Format(@"count={0},onDisk={1},spillIdx={2}",
+                list.Count, list.HasSpilledToDisk, list.SpillChromatogramIndex);
+        }
+
+        /// <summary>
         /// Set a shared reference to a list of Times that is allocated independently.
         /// </summary>
         public void SetTimes(SortedBlockedList<float> times)
@@ -118,18 +163,33 @@ namespace pwiz.Skyline.Model.Results
 
         public int? MassErrorsCount { get { return MassErrors == null ? (int?)null : MassErrors.Count; } }
 
+        // DIAGNOSTIC (issue #4287): call ToArray but annotate the exception with the list's role.
+        private static TData[] ToArrayDiag<TData>(string role, BlockedList<TData> list, byte[] bytesFromDisk)
+        {
+            try
+            {
+                return list.ToArray(bytesFromDisk);
+            }
+            catch (Exception e)
+            {
+                throw new InvalidDataException(role + @": " + e.Message, e);
+            }
+        }
+
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
         /// </summary>
         public void ReleaseChromatogram(byte[] bytesFromDisk, out TimeIntensities timeIntensities)
         {
-            var times = Times.ToArray(bytesFromDisk);
-            var intensities = Intensities.ToArray(bytesFromDisk);
+            // DIAGNOSTIC (issue #4287): annotate which list fails so we know whether the corrupt
+            // back-link chain is in a shared list (Times/Scans) or a per-product list (Intensities/MassErrors).
+            var times = ToArrayDiag(@"Times", Times, bytesFromDisk);
+            var intensities = ToArrayDiag(@"Intensities", Intensities, bytesFromDisk);
             var massErrors = MassErrors != null
-                ? MassErrors.ToArray(bytesFromDisk)
+                ? ToArrayDiag(@"MassErrors", MassErrors, bytesFromDisk)
                 : null;
             var scanIds = Scans != null
-                ? Scans.ToArray(bytesFromDisk)
+                ? ToArrayDiag(@"Scans", Scans, bytesFromDisk)
                 : null;
 
             // Filter out NaN intensities from narrow scan window coverage.
@@ -214,10 +274,42 @@ namespace pwiz.Skyline.Model.Results
         private int _blocksInMemory;
         private int _blocksOnDisk;
         private int _filePosition;
+        // The chromatogram index that selects the spill file this list's blocks were
+        // written to. A list is always spilled to a single spill file (chosen by
+        // chromatogram index), so this stays constant once set. -1 until the first block
+        // spills. Used to verify at read time that we are reconstructing this list from
+        // the same spill file its data was written to (see issue #4287).
+        private int _spillChromatogramIndex = -1;
 
         public BlockedList()
         {
             _blockSize = Environment.Is64BitProcess ? BLOCK_SIZE_FOR_64_BIT : BLOCK_SIZE_FOR_32_BIT;
+        }
+
+        /// <summary>
+        /// The chromatogram index whose spill file this list's on-disk blocks live in
+        /// (only meaningful when <see cref="HasSpilledToDisk"/> is true).
+        /// </summary>
+        public int SpillChromatogramIndex { get { return _spillChromatogramIndex; } }
+
+        /// <summary>
+        /// True if any of this list's blocks have been written to a spill file on disk.
+        /// </summary>
+        public bool HasSpilledToDisk { get { return _blocksOnDisk > 0; } }
+
+        /// <summary>
+        /// Remember the chromatogram index that selects the spill file this list is being
+        /// written to. Every block of a given list must go to the same spill file, so a
+        /// change here means the list is being split across spill files, which is itself a bug.
+        /// </summary>
+        private void RecordSpillChromatogramIndex(int chromatogramIndex)
+        {
+            if (_spillChromatogramIndex == -1)
+                _spillChromatogramIndex = chromatogramIndex;
+            else if (_spillChromatogramIndex != chromatogramIndex)
+                throw new InvalidDataException(string.Format(
+                    @"A spilled data list was written under two different chromatogram indexes ({0} and {1}), which would split it across spill files.",
+                    _spillChromatogramIndex, chromatogramIndex));
         }
 
         /// <summary>
@@ -253,7 +345,10 @@ namespace pwiz.Skyline.Model.Results
                 if (_blocksInMemory == 0 || writer == null)
                     NewBlock();
                 else
+                {
+                    RecordSpillChromatogramIndex(chromatogramIndex);
                     writer.WriteBlock(chromatogramIndex, this);
+                }
             }
 
             // Store data.
@@ -318,6 +413,8 @@ namespace pwiz.Skyline.Model.Results
                 }
 
                 // Write zeroed blocks to disk.
+                if (count >= _blockSize)
+                    RecordSpillChromatogramIndex(chromatogramIndex);
                 while (count >= _blockSize)
                 {
                     writer.WriteBlock(chromatogramIndex, this);
@@ -349,10 +446,23 @@ namespace pwiz.Skyline.Model.Results
 
         private void WriteData(Block block, Stream fileStream)
         {
+            // DIAGNOSTIC (issue #4287): an append-only writer should always write at the end of the
+            // stream. If Position is before Length, the stream was seeked backward (e.g. by a
+            // concurrent release reading the whole file) and this write will overwrite an earlier
+            // block, corrupting back links.
+            if (fileStream.Position < fileStream.Length)
+                Console.Error.WriteLine(
+                    @"[#4287] WRITE-INTO-MIDDLE pos={0} len={1} thread={2} spillIdx={3}",
+                    fileStream.Position, fileStream.Length,
+                    System.Threading.Thread.CurrentThread.ManagedThreadId, _spillChromatogramIndex);
+
             // Create back link to previous spilled block.
             var lastFilePosition = _filePosition;
             _filePosition = (int) fileStream.Position;
             PrimitiveArrays.WriteOneValue(fileStream, lastFilePosition);
+            // Tag the block with the chromatogram index that selects its spill file, so that
+            // at read time we can detect having followed a back link into the wrong spill file.
+            PrimitiveArrays.WriteOneValue(fileStream, _spillChromatogramIndex);
 
             PrimitiveArrays.Write(fileStream, block._data);
         }
@@ -404,10 +514,21 @@ namespace pwiz.Skyline.Model.Results
             while (_blocksOnDisk > 0)
             {
                 dest -= _blockSize;
+                int blockStart = _filePosition;
                 int source = _filePosition;
                 // ReSharper disable once AssignNullToNotNullAttribute
                 _filePosition = BitConverter.ToInt32(bytes, source);
                 source += sizeof (int);
+                // Verify this block was written to the spill file we are reading from. A
+                // mismatch means we followed a back link into a different chromatogram's spill
+                // file (issue #4287), which otherwise corrupts times/scans silently whenever the
+                // wrong file happens to be long enough not to trigger an out-of-range crash.
+                int blockChromatogramIndex = BitConverter.ToInt32(bytes, source);
+                source += sizeof (int);
+                if (blockChromatogramIndex != _spillChromatogramIndex)
+                    throw new InvalidDataException(string.Format(
+                        @"Read a spilled data block for chromatogram {0} while reconstructing chromatogram {1} at fileOffset {2} (blocksOnDisk remaining {3}, nextBackLink {4}, bytesLen {5}); the wrong spill file was read.",
+                        blockChromatogramIndex, _spillChromatogramIndex, blockStart, _blocksOnDisk, _filePosition, bytes.Length));
                 int dest2 = dest;
 
                 // Convert byte data.
@@ -494,8 +615,13 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public void WriteBlock(int chromatogramIndex, IBlockedList blockedList)
         {
-            var fileStream = _chromGroups.GetFileStream(chromatogramIndex);
-            blockedList.WriteBlock(fileStream);
+            // Serialize with the release-time whole-file read so the write position is never
+            // computed from a stream another thread has seeked to 0 (issue #4287).
+            lock (_chromGroups.SpillStreamLock)
+            {
+                var fileStream = _chromGroups.GetFileStream(chromatogramIndex);
+                blockedList.WriteBlock(fileStream);
+            }
         }
     }
 
@@ -520,6 +646,19 @@ namespace pwiz.Skyline.Model.Results
         private readonly int[] _idToGroupId;
         private SpillFile _cachedSpillFile;
         private byte[] _bytesFromSpillFile;
+        // Leaf lock serializing all spill-file stream I/O (block writes on the extraction thread
+        // and the whole-file read on the reader thread). Issue #4287: without this, the reader's
+        // Seek(0) to read a spill file races with a concurrent block write to the same shared
+        // stream (files are shared across request-order groups), so the writer computes its next
+        // file position from the seeked-back stream and overwrites earlier blocks, corrupting the
+        // back-link chains. Acquired last and released before any Monitor.Wait, so it can never
+        // participate in a deadlock with the _blockWriter / Collectors ("this") locks.
+        private readonly object _spillStreamLock = new object();
+
+        /// <summary>
+        /// Lock guarding all reads and writes of the spill-file streams (see <see cref="_spillStreamLock"/>).
+        /// </summary>
+        public object SpillStreamLock { get { return _spillStreamLock; } }
 
         public ChromGroups(
             IList<IList<int>> chromatogramRequestOrder,
@@ -656,41 +795,103 @@ namespace pwiz.Skyline.Model.Results
                 return 0;
             }
 
-            if (ReferenceEquals(_cachedSpillFile, spillFile))
+            // Fail fast if the shared time/scan lists this chromatogram uses were spilled to a
+            // different spill file than the one selected by this chromatogram index. Reading the
+            // wrong spill file is the root cause of issue #4287; catch it here with a clear message
+            // instead of a later out-of-range crash or (worse) silently wrong retention times.
+            AssertSharedListSpillFile(collector.TimesSpillChromatogramIndex, chromatogramIndex, groupIndex);
+            AssertSharedListSpillFile(collector.ScansSpillChromatogramIndex, chromatogramIndex, groupIndex);
+
+            // Serialize the whole-file read with concurrent block writes to the same shared spill
+            // stream (issue #4287). The lock is released before returning, and this method never
+            // waits, so it cannot deadlock with the extraction thread's locks.
+            lock (_spillStreamLock)
             {
-                if (spillFile.Stream != null)
+                if (ReferenceEquals(_cachedSpillFile, spillFile))
                 {
-                    if (_bytesFromSpillFile == null || spillFile.Stream.Length != _bytesFromSpillFile.Length)
+                    if (spillFile.Stream != null)
                     {
-                        // Need to reread spill file if more bytes were written since the time it was cached.
-                        _cachedSpillFile = null;
+                        if (_bytesFromSpillFile == null || spillFile.Stream.Length != _bytesFromSpillFile.Length)
+                        {
+                            // Need to reread spill file if more bytes were written since the time it was cached.
+                            _cachedSpillFile = null;
+                        }
+                    }
+                }
+
+                if (!ReferenceEquals(_cachedSpillFile, spillFile))
+                {
+                    _cachedSpillFile = spillFile;
+                    _bytesFromSpillFile = null;
+                    var fileStream = spillFile.Stream;
+                    if (fileStream != null)
+                    {
+                        // DIAGNOSTIC (issue #4287): reading seeks the shared write stream to 0. Log the
+                        // thread and file so we can see whether this races with WriteData on the same file.
+                        Console.Error.WriteLine(@"[#4287] SEEK-READ file={0} len={1} thread={2}",
+                            spillFile, fileStream.Length, System.Threading.Thread.CurrentThread.ManagedThreadId);
+                        fileStream.Seek(0, SeekOrigin.Begin);
+                        _bytesFromSpillFile = new byte[fileStream.Length];
+                        int bytesRead = fileStream.Read(_bytesFromSpillFile, 0, _bytesFromSpillFile.Length);
+                        Assume.IsTrue(bytesRead == _bytesFromSpillFile.Length);
+                        // TODO: Would be nice to have something that releases spill files progressively, as they are
+                        //       no longer needed.
+                        // spillFile.CloseStream();
                     }
                 }
             }
-
-            if (!ReferenceEquals(_cachedSpillFile, spillFile))
+            // DIAGNOSTIC (issue #4287): on any release failure, dump the full spill state so we can
+            // see which list mismatches, its write group, and whether that group's spill file is the
+            // same object as the one selected by the release chromatogram index.
+            try
             {
-                _cachedSpillFile = spillFile;
-                _bytesFromSpillFile = null;
-                var fileStream = spillFile.Stream;
-                if (fileStream != null)
-                {
-                    fileStream.Seek(0, SeekOrigin.Begin);
-                    _bytesFromSpillFile = new byte[fileStream.Length];
-                    int bytesRead = fileStream.Read(_bytesFromSpillFile, 0, _bytesFromSpillFile.Length);
-                    Assume.IsTrue(bytesRead == _bytesFromSpillFile.Length);
-                    // TODO: Would be nice to have something that releases spill files progressively, as they are
-                    //       no longer needed.
-                    // spillFile.CloseStream();
-                }
+                collector.ReleaseChromatogram(_bytesFromSpillFile, out timeIntensities);
             }
-            collector.ReleaseChromatogram(_bytesFromSpillFile, out timeIntensities);
-                
+            catch (Exception)
+            {
+                Console.Error.WriteLine(
+                    @"[#4287] FAIL release chromIndex={0} releaseGroup={1} releaseFile={2} streamNull={3} bytesNull={4} bytesLen={5} | {6} | {7} {8} {9} {10}",
+                    chromatogramIndex, groupIndex, spillFile, spillFile.Stream == null,
+                    _bytesFromSpillFile == null, _bytesFromSpillFile?.Length ?? -1,
+                    collector.DescribeSpillState(),
+                    DescribeListFile(@"Times", collector.TimesSpillChromatogramIndex, spillFile),
+                    DescribeListFile(@"Scans", collector.ScansSpillChromatogramIndex, spillFile),
+                    DescribeListFile(@"Intens", collector.IntensitiesSpillChromatogramIndex, spillFile),
+                    DescribeListFile(@"MassErr", collector.MassErrorsSpillChromatogramIndex, spillFile));
+                throw;
+            }
+
             return collector.StatusId;
         }
 
+        // DIAGNOSTIC (issue #4287): describe where a list was spilled relative to the release file.
+        private string DescribeListFile(string name, int? spillIdx, SpillFile releaseFile)
+        {
+            if (!spillIdx.HasValue)
+                return name + @"=-";
+            int g = GetGroupIndex(spillIdx.Value);
+            return string.Format(@"{0}[idx={1},grp={2},sameFile={3},file={4}]",
+                name, spillIdx.Value, g, ReferenceEquals(_spillFiles[g], releaseFile), _spillFiles[g]);
+        }
+
         /// <summary>
-        /// Get the maximum possible size (in bytes) of a group, including all the chromatograms that are 
+        /// Throw if a shared time/scan list was spilled to a different spill file group than the
+        /// one this chromatogram is being released from. When they differ, the bytes handed to
+        /// <see cref="ChromCollector.ReleaseChromatogram"/> come from the wrong file (issue #4287).
+        /// </summary>
+        private void AssertSharedListSpillFile(int? spillChromatogramIndex, int releaseChromatogramIndex, int releaseGroupIndex)
+        {
+            if (!spillChromatogramIndex.HasValue)
+                return;
+            int writeGroupIndex = GetGroupIndex(spillChromatogramIndex.Value);
+            if (writeGroupIndex != releaseGroupIndex)
+                throw new InvalidDataException(string.Format(
+                    @"Chromatogram {0} uses a shared time/scan list written to spill file group {1} (via chromatogram {2}), but is being released from spill file group {3}.",
+                    releaseChromatogramIndex, writeGroupIndex, spillChromatogramIndex.Value, releaseGroupIndex));
+        }
+
+        /// <summary>
+        /// Get the maximum possible size (in bytes) of a group, including all the chromatograms that are
         /// included in the group.
         /// </summary>
         private long GetMaxSize(int groupIndex)
