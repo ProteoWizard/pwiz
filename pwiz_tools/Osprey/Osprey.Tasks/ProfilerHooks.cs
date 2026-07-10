@@ -99,19 +99,29 @@ namespace pwiz.Osprey.Tasks
         /// writer. Cheap to call; suitable for per-stage and end-of-run
         /// snapshots.
         ///
-        /// On net8.0 this also emits the <see cref="GCMemoryInfo"/> triple that
-        /// decomposes resident memory. <c>managed_heap</c>
-        /// (<c>GC.GetTotalMemory(false)</c>) counts only bytes the GC considers
-        /// *in use*, so it silently omits two large quantities:
-        ///   gc_committed - what the GC has committed from the OS, including
-        ///                  free space it is holding rather than decommitting.
-        ///                  With Server GC (one heap per core) this can exceed
-        ///                  the in-use heap by many GB.
-        ///   gc_fragmented - free bytes stranded *between* live objects.
-        /// Then working_set - gc_committed approximates genuinely native memory
-        /// (Parquet/mzML/SQLite buffers, runtime, JIT). Without these three,
-        /// "working set minus managed heap" conflates GC slack with native
-        /// allocation and cannot tell you which one to go after.
+        /// NONE OF THESE NUMBERS IS A LIVE SET. Read them with the caveats below,
+        /// or use <see cref="LogManagedHeapAfterGcIfEnabled"/>, which forces a
+        /// collection first and is the only probe here that answers "will this fit".
+        ///
+        /// <c>managed_heap</c> is <c>GC.GetTotalMemory(false)</c>: bytes allocated
+        /// since the last collection, WITHOUT forcing one. It therefore includes
+        /// uncollected garbage, and two runs doing identical work can differ by tens
+        /// of GB purely on whether a gen-2 happened to land before the probe.
+        ///
+        /// <c>working_set</c> is resident memory, but Server GC expands heaps until it
+        /// nears the high-memory-load threshold (~90% of physical) before collecting,
+        /// so on a large box the working set reflects available RAM at least as much
+        /// as demand. Peak working set is close to useless for sizing.
+        ///
+        /// The net8.0 <c>GCMemoryInfo</c> triple is measured AS OF THE LAST GC,
+        /// not now -- <c>GC.GetGCMemoryInfo()</c> with no argument returns the most
+        /// recent collection's snapshot. Hence the <c>_last_gc</c> suffixes. Do NOT
+        /// subtract them from the live figures above: <c>working_set - gc_committed</c>
+        /// mixes a current value with a stale one and can go negative (it did, by
+        /// 10 GB, on an 82-file run).
+        ///   gc_committed_last_gc  - bytes the GC had committed from the OS.
+        ///   gc_heap_last_gc       - heap size, including fragmentation.
+        ///   gc_fragmented_last_gc - free bytes stranded between live objects.
         /// </summary>
         public static void LogMemoryStats(Action<string> log, string label)
         {
@@ -128,7 +138,7 @@ namespace pwiz.Osprey.Tasks
 #if NETCOREAPP || NET5_0_OR_GREATER
             var gcInfo = GC.GetGCMemoryInfo();
             gcDetail = string.Format(CultureInfo.InvariantCulture,
-                ", gc_committed={0:F2} GB, gc_heap={1:F2} GB, gc_fragmented={2:F2} GB",
+                ", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
                 gcInfo.TotalCommittedBytes / gb,
                 gcInfo.HeapSizeBytes / gb,
                 gcInfo.FragmentedBytes / gb);
