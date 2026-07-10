@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -1447,12 +1448,26 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
-        /// Raw IEEE-754 bits of a float, for bit-exact comparison.
-        /// <c>BitConverter.SingleToInt32Bits</c> does not exist on net472.
+        /// Reinterprets a float's storage as an int, in place and without allocating.
+        /// The all-bins parity tests call this twice per bin over 100,001 bins, so a
+        /// <c>BitConverter.GetBytes</c> round-trip would churn ~400 k byte[4]s.
+        /// <c>BitConverter.SingleToInt32Bits</c> would do, but does not exist on net472.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct FloatBits
+        {
+            [FieldOffset(0)] public float Single;
+            [FieldOffset(0)] public int Bits;
+        }
+
+        /// <summary>
+        /// Raw IEEE-754 bits of a float, for bit-exact comparison. Distinguishes
+        /// <c>+0.0</c> from <c>-0.0</c> and preserves NaN payloads, which
+        /// <c>Assert.AreEqual(float, float)</c> would not.
         /// </summary>
         private static int SingleBits(float value)
         {
-            return BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
+            return new FloatBits { Single = value }.Bits;
         }
 
         #endregion
