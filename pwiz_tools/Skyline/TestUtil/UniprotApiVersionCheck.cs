@@ -24,19 +24,23 @@ using System.Net.Http;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
-    /// UniProt states, in the headers of every response, the date its API code was deployed and the
-    /// release of the data it serves. Our recorded web responses are only as good as the pair they
-    /// were recorded against, so a change in either is the earliest warning we get that a recording,
-    /// or the code reading it, may no longer describe UniProt.
+    /// UniProt states, in the headers of every response, the date its API code was deployed. Our
+    /// recorded web responses, and the code that reads them, are only as good as the API they were
+    /// written against, so a deployment there is the earliest warning we get that either may no
+    /// longer describe UniProt.
     ///
-    /// This warns rather than fails. UniProt moves on its own schedule, and a deployment there is not
-    /// a defect here - but it is the moment to run the live tests and see whether they still agree.
+    /// This warns rather than fails. UniProt deploys on its own schedule, and doing so is not a
+    /// defect here - but it is the moment to run the live tests and see whether they still agree.
     /// The alternative is what happened in July 2026: the stream endpoint began answering with an
     /// error message in place of the data, and nothing noticed until the perf tests spent 360 seconds
     /// timing out, four weeks after the deployment that caused it.
     ///
+    /// The data release is deliberately not watched. UniProt publishes one every few weeks, entries
+    /// come and go with it, and a warning that routine would soon be read as noise. Only the API
+    /// itself changing is worth interrupting anyone over.
+    ///
     /// UniProt offers no version endpoint. Its published OpenAPI document is frozen at 2022 and does
-    /// not mention the fields parameter this code depends on, so these headers are the only signal.
+    /// not mention the fields parameter this code depends on, so this header is the only signal.
     ///
     /// Take care which header means what. UniProt's help page for response headers documents
     /// X-UniProt-Release-Date as "the last date that the API was updated", but its own examples pair
@@ -47,14 +51,12 @@ namespace pwiz.SkylineTestUtil
     public static class UniprotApiVersionCheck
     {
         /// <summary>
-        /// Update these whenever the recorded responses in the various WebData.json files are
-        /// refreshed, so that the next change UniProt makes is the one that gets reported.
+        /// Update this whenever the recorded responses in the various WebData.json files are
+        /// refreshed, so that the next API change UniProt makes is the one that gets reported.
         /// </summary>
         public const string RECORDED_API_DEPLOYMENT_DATE = @"12-June-2026";
-        public const string RECORDED_DATA_RELEASE = @"2026_02";
 
         private const string API_DEPLOYMENT_DATE_HEADER = @"X-API-Deployment-Date";
-        private const string DATA_RELEASE_HEADER = @"X-UniProt-Release";
 
         // Cheapest request that still gets us the headers - one field of one known-good entry
         private const string PROBE_URL =
@@ -76,13 +78,12 @@ namespace pwiz.SkylineTestUtil
                 return; // Once per test run is plenty
             _alreadyChecked = true;
 
-            string deploymentDate, dataRelease;
+            string deploymentDate;
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, PROBE_URL);
                 using var response = CLIENT.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).Result;
                 deploymentDate = GetHeader(response, API_DEPLOYMENT_DATE_HEADER);
-                dataRelease = GetHeader(response, DATA_RELEASE_HEADER);
             }
             catch (Exception e)
             {
@@ -113,15 +114,6 @@ namespace pwiz.SkylineTestUtil
                                   @"TestOlderProteomeDbWeb, UniquePeptides1PerfTest) and see whether they still agree " +
                                   @"with the recordings. Then update {0} in {1}.",
                     nameof(RECORDED_API_DEPLOYMENT_DATE), nameof(UniprotApiVersionCheck));
-                Console.WriteLine();
-            }
-
-            if (!Equals(dataRelease, RECORDED_DATA_RELEASE))
-            {
-                Console.WriteLine();
-                Console.WriteLine(@"WARNING: UniProt is now serving data release {0}; the recordings were made " +
-                                  @"against {1}. Entries the tests expect may have been revised or withdrawn.",
-                    dataRelease ?? @"an unreported release", RECORDED_DATA_RELEASE);
                 Console.WriteLine();
             }
         }
