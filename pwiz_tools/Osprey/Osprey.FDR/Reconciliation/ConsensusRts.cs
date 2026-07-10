@@ -57,7 +57,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
         /// If &gt; 0, rescue borderline peptides whose first-pass protein
         /// q-value is &lt;= this threshold. Lets peptides from strong proteins
         /// contribute to consensus RT computation even if their own peptide
-        /// q-value is borderline. Typically set to <c>config.ProteinFdr</c>.
+        /// q-value is borderline. Typically set to <c>config.EffectiveProteinFdr</c>.
         /// Pass 0.0 to disable.
         /// </param>
         /// <param name="invPredictTrace">

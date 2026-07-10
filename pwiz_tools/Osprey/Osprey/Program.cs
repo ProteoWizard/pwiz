@@ -238,8 +238,7 @@ namespace pwiz.Osprey
                     config.FragmentTolerance.Unit == ToleranceUnit.Ppm ? "ppm" : "Th"));
                 LogInfo(string.Format("Run FDR: {0:P1}", config.RunFdr));
                 LogInfo(string.Format("Experiment FDR: {0:P1}", config.ExperimentFdr));
-                if (config.ProteinFdr.HasValue)
-                    LogInfo(string.Format("Protein FDR: {0:P1}", config.ProteinFdr.Value));
+                LogInfo(string.Format("Protein FDR: {0:P1}", config.EffectiveProteinFdr));
                 LogInfo(string.Format("Threads: {0}", config.NThreads));
                 LogInfo("");
 

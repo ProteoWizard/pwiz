@@ -202,6 +202,7 @@ namespace pwiz.Osprey.Tasks
             // compacts the shared buffer below, so it reads it before that.
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
             var perFileCalibrations = ctx.Get<PerFileCalibrations>().Value;
+            var perFileIsolationMz = ctx.Get<PerFileIsolationMz>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
@@ -260,8 +261,13 @@ namespace pwiz.Osprey.Tasks
             if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
                 !needsResidentFirstPassPool)
             {
+                // Null unless PerFileScoring took the lean path and streamed the rows
+                // straight from parquet (issue #4397); RunFirstPassProjection then builds
+                // from the fat stubs instead.
+                var prebuiltProjections = ctx.Get<FdrProjections>().Value;
                 var survivors = RunFirstPassProjection(
-                    perFileEntries, perFileParquetPaths, fullLibrary, config, ctx, loadFileFeatures);
+                    perFileEntries, perFileParquetPaths, fullLibrary, config, ctx, loadFileFeatures,
+                    prebuiltProjections);
                 if (survivors == null)
                     return false;  // StopAfterStage5 sidecar failure; ExitCode already set
                 perFileEntries = survivors;
@@ -281,9 +287,12 @@ namespace pwiz.Osprey.Tasks
                 // peptide pool so target and decoy proteins compete on a
                 // symmetric set. Sets RunProteinQvalue on every FdrEntry,
                 // which Stage 6 reconciliation reads via the protein-rescue
-                // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
-                // ("First-pass protein FDR").
-                if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
+                // gate in ConsensusRts.Compute. Runs unconditionally (not gated
+                // on --protein-fdr), matching Rust where config.protein_fdr is a
+                // plain f64 (default 0.01) and this block is gated only on
+                // !can_skip_fdr. Mirrors Rust pipeline.rs:3029 ("First-pass
+                // protein FDR").
+                if (perFileEntries.Count > 0)
                 {
                     ctx.LogInfo(string.Empty);
                     var swFirstPassProtein = Stopwatch.StartNew();
@@ -367,7 +376,7 @@ namespace pwiz.Osprey.Tasks
             // reconciliation degenerates to zero actions there.
             if (perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
             {
-                if (!PlanStage6(perFileEntries, perFileCalibrations,
+                if (!PlanStage6(perFileEntries, perFileCalibrations, perFileIsolationMz,
                         perFileParquetPaths, fullLibrary, config, ctx))
                     return false;
             }
@@ -663,8 +672,15 @@ namespace pwiz.Osprey.Tasks
                 else
                 {
                     var firstPassBaseIds = new HashSet<uint>();
-                    double peptideGate = config.RunFdr;
-                    double proteinGate = config.ProteinFdr ?? 0.0;
+                    // Peptide-q compaction gate: a dedicated field (default 0.01 = RunFdr)
+                    // loosenable to broaden the reconciliation pool, mirroring Rust
+                    // config.reconciliation_compaction_fdr (pipeline.rs:4650). Previously
+                    // hardwired to config.RunFdr, which C# could not loosen independently.
+                    double peptideGate = config.ReconciliationCompactionFdr;
+                    // Protein-rescue gate is always active (default 0.01), matching
+                    // Rust pipeline.rs:4651/4658 where protein_compaction_gate =
+                    // config.protein_fdr (a plain f64, never a null switch).
+                    double proteinGate = config.EffectiveProteinFdr;
                     foreach (var kvp in perFileEntries)
                     {
                         foreach (var entry in kvp.Value)
@@ -672,7 +688,7 @@ namespace pwiz.Osprey.Tasks
                             if (entry.IsDecoy)
                                 continue;
                             if (entry.RunPeptideQvalue <= peptideGate ||
-                                (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
+                                entry.RunProteinQvalue <= proteinGate)
                             {
                                 firstPassBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
                             }
@@ -710,6 +726,7 @@ namespace pwiz.Osprey.Tasks
         private bool PlanStage6(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
@@ -738,6 +755,7 @@ namespace pwiz.Osprey.Tasks
                 plan.Consensus,
                 plan.RefinedCalibrations,
                 perFileCalibrations,
+                perFileIsolationMz,
                 fullLibrary,
                 perFileParquetPaths,
                 config,
@@ -853,6 +871,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyList<PeptideConsensusRT> consensus,
             Dictionary<string, RTCalibration> refinedCalibrations,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
@@ -896,11 +915,13 @@ namespace pwiz.Osprey.Tasks
                 libPrecursorMz[entry.Id] = entry.PrecursorMz;
             }
 
-            // Compute per-file gap-fill targets. Per-file isolation-window
-            // m/z intervals are not yet plumbed through C# (Stellar
-            // calibration.json carries no isolation_scheme today, so the
-            // filter is a no-op there); when extended to GPF datasets,
-            // pass a non-null dictionary here.
+            // Compute per-file gap-fill targets. Per-file isolation-window m/z
+            // intervals (from each file's extracted windows straight through, or
+            // rehydrated from calibration.json on an HPC merge node) constrain
+            // gap-fill candidates to the m/z ranges each file actually isolated --
+            // essential for GPF datasets with disjoint windows. Inert for a single
+            // sDIA window covering the whole range (every precursor is in-range).
+            // Matches Rust reconciliation.rs's per_file_isolation_mz argument.
             var perFileForGapFill = new List<KeyValuePair<string,
                 IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
             foreach (var kvp in perFileEntries)
@@ -916,7 +937,7 @@ namespace pwiz.Osprey.Tasks
                 config.Reconciliation.ConsensusFdr,
                 libLookup,
                 libPrecursorMz,
-                perFileIsolationMz: null);
+                perFileIsolationMz);
 
             // Mirror gapFillByFile into the out param for the in-process
             // Stage 6 rescore caller. Identify returns IReadOnlyList<>;
@@ -1348,17 +1369,20 @@ namespace pwiz.Osprey.Tasks
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
             PipelineContext ctx,
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            FdrProjectionSet prebuiltProjections)
         {
-            // Build the projection, releasing each file's FdrEntry stubs (and their
-            // per-row modseq strings) INCREMENTALLY as its rows are built
-            // (releaseStubs: true) -- the full projection never coexists with the full
-            // stub buffer, so the "projection built" spike is gone. The interned
-            // peptide table keeps only the M distinct modified sequences. Clearing the
-            // hand-off ScoredEntries lists is safe: nothing downstream of this task
-            // reads ScoredEntries on a compute path -- the survivor buffer is
-            // published as CompactedEntries.
-            var projections = FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
+            // Preferred path (issue #4397): PerFileScoring streamed these rows straight
+            // out of the per-file .scores.parquet, so the fat FdrEntry stub buffer was
+            // never allocated at all (it cost ~53 GB at 191M rows). Fall back to building
+            // from stubs on the paths that still publish them -- rehydrate/merge, or when
+            // a resident pool is required. BuildFromEntries releases each file's stubs
+            // incrementally (releaseStubs: true) so the projection never coexists with the
+            // full stub buffer. Clearing the hand-off ScoredEntries lists is safe: nothing
+            // downstream of this task reads ScoredEntries on a compute path -- the survivor
+            // buffer is published as CompactedEntries.
+            var projections = prebuiltProjections ??
+                FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
             int beforeCount = projections.TotalRows;
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, string.Format(
                 @"projection built: {0} rows, {1} distinct peptides; FdrEntry stubs released",
@@ -1426,8 +1450,11 @@ namespace pwiz.Osprey.Tasks
 
             // First-pass protein FDR over the projection (sets RunProteinQvalue on
             // every row). The Stage-6 diagnostic dump reads the returned artifacts,
-            // exactly as the FdrEntry path's RunFirstPassProteinFdr does.
-            if (config.ProteinFdr.HasValue && projections.TotalRows > 0)
+            // exactly as the FdrEntry path's RunFirstPassProteinFdr does. Runs
+            // unconditionally (not gated on --protein-fdr), matching Rust where
+            // config.protein_fdr is a plain f64 (default 0.01), gated only on
+            // !can_skip_fdr.
+            if (projections.TotalRows > 0)
             {
                 ctx.LogInfo(string.Empty);
                 var swProt = Stopwatch.StartNew();
@@ -1585,17 +1612,25 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Compute the post-first-pass passing base_id set from the projection,
         /// using the identical predicate as <see cref="CompactFirstPass"/>'s
-        /// non-bundle branch (targets whose run peptide q-value passes the peptide
-        /// gate, or -- when protein FDR is on -- whose run protein q-value passes the
-        /// protein gate; risk #7). Target and paired decoy share a base_id, so the
-        /// masked id set drives the survivor filter symmetrically.
+        /// non-bundle branch (targets whose run peptide q-value passes the compaction
+        /// peptide gate, or whose run protein q-value passes the always-active
+        /// protein-rescue gate; risk #7). Target and paired decoy share a base_id, so
+        /// the masked id set drives the survivor filter symmetrically.
         /// </summary>
         private static HashSet<uint> ComputeFirstPassBaseIds(
             FdrProjectionSet projections, FdrProjectionOutputs outputs, OspreyConfig config)
         {
             var firstPassBaseIds = new HashSet<uint>();
-            double peptideGate = config.RunFdr;
-            double proteinGate = config.ProteinFdr ?? 0.0;
+            // Peptide-q compaction gate: the dedicated field (default 0.01 = RunFdr)
+            // loosenable to broaden the reconciliation pool, mirroring Rust
+            // config.reconciliation_compaction_fdr (pipeline.rs:4650) -- identical to
+            // the legacy CompactFirstPass twin, not hardwired to config.RunFdr.
+            double peptideGate = config.ReconciliationCompactionFdr;
+            // Protein-rescue gate is always active (default 0.01), matching Rust
+            // pipeline.rs:4651/4658 (protein_compaction_gate = config.protein_fdr, a
+            // plain f64, never a null switch). First-pass protein FDR now runs
+            // unconditionally on this path too, so RunProteinQvalue is populated.
+            double proteinGate = config.EffectiveProteinFdr;
             for (int f = 0; f < projections.PerFile.Count; f++)
             {
                 var rows = projections.PerFile[f].Value;
@@ -1606,7 +1641,7 @@ namespace pwiz.Osprey.Tasks
                     // Run peptide/protein q-values now live in the parallel outputs
                     // array (issue #4355 struct-shrink S0), not on the lean struct.
                     if (outputs.RunPeptideQvalue(f, r) <= peptideGate ||
-                        (proteinGate > 0.0 && outputs.RunProteinQvalue(f, r) <= proteinGate))
+                        outputs.RunProteinQvalue(f, r) <= proteinGate)
                     {
                         firstPassBaseIds.Add(rows[r].EntryId & ScoringTaskShared.BASE_ID_MASK);
                     }
