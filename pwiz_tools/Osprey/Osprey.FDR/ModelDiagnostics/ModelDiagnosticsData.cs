@@ -338,7 +338,32 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         {
             /// <summary>Input-file names, in input order (the x for the per-run curves).</summary>
             public string[] RunNames { get; set; }
-            /// <summary>Detected precursors passing the run FDR in each run (the bars).</summary>
+            /// <summary>
+            /// Membership gated on the RUN-level q only -- the per-run picture. False
+            /// positives are ~random per run, so they land at k=1 and inflate the union
+            /// (the run-vs-global FDR gap; Collins/Rosenberger 2017).
+            /// </summary>
+            public CrossRunView PerRun { get; set; }
+            /// <summary>
+            /// Membership gated on BOTH the run-level AND experiment-wide q
+            /// (max(run q, experiment q) &lt;= run FDR) -- locally AND globally credible.
+            /// The experiment-wide q controls the dataset-wide multiple testing, so a
+            /// single-run false positive (small run q but large experiment q) drops out
+            /// entirely: the union saturates and the k=1 bump collapses relative to
+            /// <see cref="PerRun"/>. That contrast is the point of the toggle.
+            /// </summary>
+            public CrossRunView Experiment { get; set; }
+        }
+
+        /// <summary>
+        /// One reproducibility view (per-run bars, cumulative union / intersection,
+        /// at-least-half floor, run-count histogram, mean/std) under a single q-gating
+        /// rule. The report holds two of these -- run-level and experiment-wide -- and a
+        /// tab toggle switches all the cross-run plots between them.
+        /// </summary>
+        public sealed class CrossRunView
+        {
+            /// <summary>Detected precursors passing the gate in each run (the bars).</summary>
             public int[] PerRunCount { get; set; }
             /// <summary>|union of detected precursors over runs 1..i| -- total unique seen so far (monotone up).</summary>
             public int[] CumUnion { get; set; }
@@ -1066,30 +1091,59 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         {
             int n = perFileEntries.Count;
             var runNames = new string[n];
-            var perRunSets = new List<HashSet<string>>(n);
+            // Two parallel per-run membership sets over the SAME real-target precursors:
+            //   run-scoped        = run-level q passes (the per-run picture);
+            //   experiment-scoped = max(run q, experiment q) passes, i.e. locally AND
+            //                       globally credible -- a subset that drops single-run
+            //                       false positives (small run q, large experiment q).
+            // The experiment-wide q controls the dataset-wide multiple testing
+            // (Collins/Rosenberger 2017), so its union saturates and its k=1 bump shrinks.
+            var runSets = new List<HashSet<string>>(n);
+            var expSets = new List<HashSet<string>>(n);
             for (int i = 0; i < n; i++)
             {
                 var kvp = perFileEntries[i];
                 runNames[i] = kvp.Key;
-                var set = new HashSet<string>(StringComparer.Ordinal);
+                var runSet = new HashSet<string>(StringComparer.Ordinal);
+                var expSet = new HashSet<string>(StringComparer.Ordinal);
                 foreach (var e in kvp.Value)
                 {
-                    // Gate on the CONFIGURED FDR level's run q (the value the pipeline
-                    // reports on), matching the Summary per-file loop -- not a hardcoded
-                    // peptide q, which miscounts a precursor- or both-controlled run.
-                    if (e.IsDecoy || e.EffectiveRunQvalue(fdrLevel) > runFdr)
+                    // Exclude decoys and entrapment (p_target): a known false set that by
+                    // design does not reproduce, so counting it would inflate the k=1 bump.
+                    if (e.IsDecoy)
                         continue;
-                    // Exclude entrapment (p_target): a known false set that by design
-                    // does not reproduce, so counting it would inflate the k=1 bump.
                     if (haveManifest && classByBaseId != null
                         && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var cls)
                         && cls == EntrapmentClass.PTarget)
                         continue;
-                    set.Add(e.ModifiedSequence + "|" + e.Charge);   // same key as ReduceToPrecs
+                    // Gate on the CONFIGURED FDR level (the value the pipeline reports on),
+                    // matching the Summary per-file loop -- not a hardcoded peptide q.
+                    if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
+                        continue;
+                    string key = e.ModifiedSequence + "|" + e.Charge;   // same key as ReduceToPrecs
+                    runSet.Add(key);
+                    if (e.EffectiveExperimentQvalue(fdrLevel) <= runFdr)
+                        expSet.Add(key);                                 // max(run q, exp q) <= FDR
                 }
-                perRunSets.Add(set);
+                runSets.Add(runSet);
+                expSets.Add(expSet);
             }
 
+            return new CrossRunDetection
+            {
+                RunNames = runNames,
+                PerRun = ComputeCrossRunView(runSets, n),
+                Experiment = ComputeCrossRunView(expSets, n),
+            };
+        }
+
+        // Reduce a list of per-run detected-precursor sets (input-file order) to one
+        // reproducibility view: per-run bars, cumulative union (monotone up) and
+        // intersection (monotone down, seeded by run 0), the run-count histogram
+        // (index k-1 => precursors in exactly k runs), the at-least-half floor, and the
+        // per-run mean/std. Shared by the run-scoped and experiment-scoped views.
+        private static CrossRunView ComputeCrossRunView(List<HashSet<string>> perRunSets, int n)
+        {
             var perRunCount = new int[n];
             var cumUnion = new int[n];
             var cumIntersection = new int[n];
@@ -1114,8 +1168,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
             }
 
-            // Histogram: index k-1 => precursors detected in exactly k runs (k = 1..n),
-            // and the reproducibility floor (precursors in at least ceil(n/2) runs).
             var hist = new int[n];
             int half = (n + 1) / 2;                     // ceil(n/2)
             int atLeastHalf = 0;
@@ -1134,9 +1186,8 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             for (int i = 0; i < n; i++) { double d = perRunCount[i] - mean; varSum += d * d; }
             double std = n > 0 ? Math.Sqrt(varSum / n) : 0;
 
-            return new CrossRunDetection
+            return new CrossRunView
             {
-                RunNames = runNames,
                 PerRunCount = perRunCount,
                 CumUnion = cumUnion,
                 CumIntersection = cumIntersection,

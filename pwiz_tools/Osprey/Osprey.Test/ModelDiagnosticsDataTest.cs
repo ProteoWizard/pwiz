@@ -76,15 +76,15 @@ namespace pwiz.Osprey.Test
             // Precursor level -> A, B pass (gated on RunPrecursorQvalue).
             var prec = ModelDiagnosticsData.Build(WrapFiles(f), null, null, null, 1.0, 0.01, FdrLevel.Precursor);
             Assert.AreEqual(2, prec.PerFile[0].Targets);
-            CollectionAssert.AreEqual(new[] { 2 }, prec.CrossRun.PerRunCount);
+            CollectionAssert.AreEqual(new[] { 2 }, prec.CrossRun.PerRun.PerRunCount);
             // Peptide level -> only C passes (gated on RunPeptideQvalue).
             var pep = ModelDiagnosticsData.Build(WrapFiles(f), null, null, null, 1.0, 0.01, FdrLevel.Peptide);
             Assert.AreEqual(1, pep.PerFile[0].Targets);
-            CollectionAssert.AreEqual(new[] { 1 }, pep.CrossRun.PerRunCount);
+            CollectionAssert.AreEqual(new[] { 1 }, pep.CrossRun.PerRun.PerRunCount);
             // Both level -> max(prec, pep) q; every precursor's max is 0.05 > 0.01 -> none pass.
             var both = ModelDiagnosticsData.Build(WrapFiles(f), null, null, null, 1.0, 0.01, FdrLevel.Both);
             Assert.AreEqual(0, both.PerFile[0].Targets);
-            CollectionAssert.AreEqual(new[] { 0 }, both.CrossRun.PerRunCount);
+            CollectionAssert.AreEqual(new[] { 0 }, both.CrossRun.PerRun.PerRunCount);
         }
 
         // The identification-yield curve carries BOTH precursor-q scopes over one
@@ -157,35 +157,49 @@ namespace pwiz.Osprey.Test
             var cr = data.CrossRun;
             Assert.IsNotNull(cr);
             Assert.IsFalse(data.HasEntrapment);                    // built without a manifest
-            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, cr.PerRunCount);   // A,B,C | A,B | A
-            CollectionAssert.AreEqual(new[] { 3, 3, 3 }, cr.CumUnion);      // all 3 unique from run 1
-            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, cr.CumIntersection);
+            var pr = cr.PerRun;
+            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, pr.PerRunCount);   // A,B,C | A,B | A
+            CollectionAssert.AreEqual(new[] { 3, 3, 3 }, pr.CumUnion);      // all 3 unique from run 1
+            CollectionAssert.AreEqual(new[] { 3, 2, 1 }, pr.CumIntersection);
             // Histogram index k-1 => #precursors in exactly k runs: C(1), B(2), A(3).
-            CollectionAssert.AreEqual(new[] { 1, 1, 1 }, cr.RunCountHistogram);
-            Assert.AreEqual(3, cr.RunCountHistogram.Sum());        // == total unique precursors
-            Assert.AreEqual(3, cr.CumUnion[cr.CumUnion.Length - 1]);
-            Assert.AreEqual(2, cr.AtLeastHalf);                    // A,B in >= ceil(3/2)=2 runs
+            CollectionAssert.AreEqual(new[] { 1, 1, 1 }, pr.RunCountHistogram);
+            Assert.AreEqual(3, pr.RunCountHistogram.Sum());        // == total unique precursors
+            Assert.AreEqual(3, pr.CumUnion[pr.CumUnion.Length - 1]);
+            Assert.AreEqual(2, pr.AtLeastHalf);                    // A,B in >= ceil(3/2)=2 runs
             Assert.AreEqual(3, cr.RunNames.Length);
             // Union monotone up, intersection monotone down.
-            for (int i = 1; i < cr.CumUnion.Length; i++)
+            for (int i = 1; i < pr.CumUnion.Length; i++)
             {
-                Assert.IsTrue(cr.CumUnion[i] >= cr.CumUnion[i - 1]);
-                Assert.IsTrue(cr.CumIntersection[i] <= cr.CumIntersection[i - 1]);
+                Assert.IsTrue(pr.CumUnion[i] >= pr.CumUnion[i - 1]);
+                Assert.IsTrue(pr.CumIntersection[i] <= pr.CumIntersection[i - 1]);
             }
-            Assert.AreEqual(2.0, cr.MeanPerRun, 1e-9);             // (3+2+1)/3
+            Assert.AreEqual(2.0, pr.MeanPerRun, 1e-9);             // (3+2+1)/3
+            // Here run q == experiment q for every entry (Entry sets both), so the
+            // experiment-wide view (gate max(run q, exp q)) matches the per-run view.
+            CollectionAssert.AreEqual(pr.PerRunCount, cr.Experiment.PerRunCount);
+            CollectionAssert.AreEqual(pr.RunCountHistogram, cr.Experiment.RunCountHistogram);
+
+            // Experiment-wide gate drops a precursor whose run q passes but experiment q
+            // does not: max(run q, exp q) <= FDR. G has run q 0.001 in both runs (would be
+            // k=2 under per-run) but experiment q 0.20 -> excluded entirely from the
+            // experiment view; A (both q small) stays.
+            var g1 = new List<FdrEntry> { EntryRunExp(1, 0.001, 0.001, "A"), EntryRunExp(2, 0.001, 0.20, "G") };
+            var g2 = new List<FdrEntry> { EntryRunExp(1, 0.001, 0.001, "A"), EntryRunExp(2, 0.001, 0.20, "G") };
+            var gcr = ModelDiagnosticsData.Build(WrapFiles(g1, g2), null, null, null, 1.0, 0.01, FdrLevel.Precursor).CrossRun;
+            CollectionAssert.AreEqual(new[] { 2, 2 }, gcr.PerRun.PerRunCount);      // A, G both pass run q
+            CollectionAssert.AreEqual(new[] { 1, 1 }, gcr.Experiment.PerRunCount);  // G dropped by exp q
+            Assert.AreEqual(1, gcr.Experiment.CumUnion[gcr.Experiment.CumUnion.Length - 1]);
 
             // Entrapment (p_target) precursors are excluded from the reproducibility
-            // counts (like the id-yield curve), so the deliberately-non-reproducing
-            // entrapment padding does not inflate the k=1 bump. Base-id 50 -> PTarget.
+            // counts (like the id-yield curve). Base-id 50 -> PTarget.
             var ef1 = new List<FdrEntry> { Entry(1, false, 5, 0.001, "A", 2), Entry(50, false, 5, 0.001, "ENT", 2) };
             var ef2 = new List<FdrEntry> { Entry(1, false, 5, 0.001, "A", 2) };
             var ecls = new Dictionary<uint, EntrapmentClass>
             {
                 { 1u, EntrapmentClass.Target }, { 50u, EntrapmentClass.PTarget },
             };
-            var ecr = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 1.0, 0.01, FdrLevel.Peptide).CrossRun;
-            // File 1 has A (target) + ENT (entrapment); only A is counted. File 2 has A.
-            CollectionAssert.AreEqual(new[] { 1, 1 }, ecr.PerRunCount);
+            var ecr = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 1.0, 0.01, FdrLevel.Peptide).CrossRun.PerRun;
+            CollectionAssert.AreEqual(new[] { 1, 1 }, ecr.PerRunCount);  // File 1 A + ENT -> only A; File 2 A
             Assert.AreEqual(1, ecr.CumUnion[ecr.CumUnion.Length - 1]);   // ENT never enters the union
             Assert.AreEqual(1, ecr.RunCountHistogram.Sum());             // just A, in both runs
         }
@@ -758,6 +772,7 @@ namespace pwiz.Osprey.Test
                 // The FDR-calibration views use precursor-level q; set both scopes.
                 RunPrecursorQvalue = q,
                 ExperimentPrecursorQvalue = q,
+                ExperimentPeptideQvalue = q,
                 ModifiedSequence = seq,
                 Charge = charge,
             };
@@ -793,6 +808,25 @@ namespace pwiz.Osprey.Test
                 RunPrecursorQvalue = runPrecursorQ,
                 RunPeptideQvalue = runPeptideQ,
                 ExperimentPrecursorQvalue = runPrecursorQ,
+                ModifiedSequence = seq,
+                Charge = 2,
+            };
+        }
+
+        // A non-decoy entry with distinct run and experiment q (both scopes set to the
+        // same run / experiment value), for testing the experiment-wide cross-run gate
+        // max(run q, experiment q).
+        private static FdrEntry EntryRunExp(uint id, double runQ, double expQ, string seq)
+        {
+            return new FdrEntry
+            {
+                EntryId = id,
+                IsDecoy = false,
+                Score = 5,
+                RunPrecursorQvalue = runQ,
+                RunPeptideQvalue = runQ,
+                ExperimentPrecursorQvalue = expQ,
+                ExperimentPeptideQvalue = expQ,
                 ModifiedSequence = seq,
                 Charge = 2,
             };
