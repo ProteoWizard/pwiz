@@ -1699,7 +1699,11 @@ namespace pwiz.ProteomeDatabase.Fasta
                 var iterationOutcome = ExecuteLookupIteration(proteins, searchType, searchTerms, responses, progressMonitor);
                 if (iterationOutcome == WebserviceLookupOutcome.timed_out ||
                     iterationOutcome == WebserviceLookupOutcome.unusable_response)
-                    return iterationOutcome;  // A slow service, or one answering with an error body, won't be helped by repeating the same request immediately; the caller retries with a smaller batch
+                    // A slow service, or one answering with an error body, won't be helped by
+                    // repeating the same request immediately. The caller retries with a smaller
+                    // batch when the give-up seam is on, and otherwise abandons the pass for the
+                    // background loader to reschedule.
+                    return iterationOutcome;
                 if (iterationOutcome == WebserviceLookupOutcome.retry_later)
                 {
                     if (retries == 0)

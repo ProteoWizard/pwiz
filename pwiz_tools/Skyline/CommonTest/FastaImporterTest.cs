@@ -1144,9 +1144,10 @@ namespace CommonTest
         /// </summary>
         private void TestUniprotErrorBody()
         {
-            // Verbatim response body observed from rest.uniprot.org, including its blank lines
+            // The error text UniProt emits in place of the rows, with the blank lines that precede
+            // it, under the header the importer's own field list asks for
             const string errorBody =
-                "Entry\tEntry Name\tReviewed\tProtein names\tGene Names\tOrganism\tLength\n\n\n" +
+                "Entry\tGene Names\tOrganism\tLength\tEntry Name\tProtein names\tReviewed\n\n\n" +
                 "Error encountered when streaming data. Please try again later.\n";
 
             // Seam on, as automated tests opt into: a doomed request must not be retried forever
@@ -1177,7 +1178,10 @@ namespace CommonTest
             Assert.IsNotNull(helper);
 
             // Accessions from the tail of human_and_yeast_no_metadata.protdb that go to the web.
-            // Distinct sequence lengths, so the batch builder does not discard any as ambiguous.
+            // UniProt requests start one protein at a time, so only the first reaches the web before
+            // the pass ends; the other two are here to show that giving up completes every protein
+            // still waiting, not just the one whose request failed. Their sequence lengths differ
+            // only because proteins of equal length are treated as interchangeable.
             var lengths = new[] { 100, 200, 300 };
             var proteins = new[] { "Q96K55", "B4DZL2", "B3KRD2" }
                 .Select((accession, i) => new ProteinSearchInfo(
