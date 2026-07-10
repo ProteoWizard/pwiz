@@ -131,37 +131,14 @@ namespace pwiz.Common.DataBinding
         }
 
         /// <summary>
-        /// Formats a value, emulating .NET Framework's round-trip ("R") algorithm on net8 so invariant
-        /// report exports stay byte-identical across frameworks. .NET Framework's "R" formatted a double
-        /// at 15 significant digits, falling back to 17 only when 15 failed to round-trip; net8's "R"
-        /// emits the shortest round-trippable form, which is 16 digits for some values where net472
-        /// produced 17 (e.g. 742.90069580078125 -> 742.9006958007812). A blanket "G15" would instead
-        /// corrupt the many legitimate 16-17 digit round-trip values, so reproduce the net472 sequence.
+        /// Formats a value, emulating .NET Framework's round-trip ("R") algorithm on net8 (see
+        /// <see cref="RoundTripFormat"/>) so invariant report exports stay byte-identical across
+        /// frameworks and match the invariant grid preview.
         /// </summary>
         private static string FormatRoundTripCompatible(IFormattable value, string formatString, IFormatProvider provider)
         {
-#if NET472
-            return value.ToString(formatString, provider);
-#else
-            if (formatString == @"R" || formatString == @"r")
-            {
-                if (value is double d)
-                {
-                    var g15 = d.ToString(@"G15", provider);
-                    if (double.TryParse(g15, NumberStyles.Float, provider, out var back) && back == d)
-                        return g15;
-                    return d.ToString(@"G17", provider);
-                }
-                if (value is float f)
-                {
-                    var g7 = f.ToString(@"G7", provider);
-                    if (float.TryParse(g7, NumberStyles.Float, provider, out var back) && back == f)
-                        return g7;
-                    return f.ToString(@"G9", provider);
-                }
-            }
-            return value.ToString(formatString, provider);
-#endif
+            return RoundTripFormat.FormatOrNull(value, formatString, provider)
+                   ?? value.ToString(formatString, provider);
         }
 
         protected virtual string GetFormatString(IFormattable value, PropertyDescriptor propertyDescriptor)
