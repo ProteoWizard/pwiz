@@ -187,6 +187,16 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             RunUI(() => graphFullScan.ChangeScan(-1));
             WaitForGraphs();
+
+            // Regression guard for the floating-GraphFullScan teardown hang: the Full Scan graph is
+            // always shown floating, and removing all results while it is open makes UpdateGraphUI
+            // tear it down. That teardown used to run under the dock panel layout lock, where
+            // DigitalRune's floating-pane teardown intermittently wedged the UI thread in a native
+            // SetWindowRgn call. Assert the graph is actually destroyed (and, implicitly, that
+            // closing it here does not hang).
+            Assert.IsNotNull(SkylineWindow.GraphFullScan);
+            RunUI(() => SkylineWindow.ModifyDocument("Remove results", document => document.ChangeMeasuredResults(null)));
+            WaitForConditionUI(() => SkylineWindow.GraphFullScan == null);
         }
     }
 }

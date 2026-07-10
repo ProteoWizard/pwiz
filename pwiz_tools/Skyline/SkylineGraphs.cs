@@ -301,11 +301,24 @@ namespace pwiz.Skyline
                     listUpdateGraphs.Add(_graphSpectrum);
             }
 
+            // The Full Scan graph is always shown as a floating window, and DigitalRune's
+            // floating-pane teardown intermittently wedges the UI thread in a native SetWindowRgn
+            // call when it runs while the dock panel layout is locked (SuspendLayout + CoverControl).
+            // When the graph is about to be torn down anyway - because results were removed, or
+            // because a saved layout is about to replace it - close it here, before locking the
+            // layout below, where closing a floating window is safe.
+            string layoutFile = GetViewFile(DocumentFilePath);
+            bool willLoadLayout = docIdChanged && File.Exists(layoutFile);
+            if (_graphFullScan != null &&
+                (willLoadLayout || (_graphFullScan.Visible && !settingsNew.HasResults)))
+            {
+                DestroyGraphFullScan();
+            }
+
             using (var layoutLock = new DockPanelLayoutLock(dockPanel))
             {
                 bool deserialized = false;
-                string layoutFile = GetViewFile(DocumentFilePath);
-                if (docIdChanged && File.Exists(layoutFile))
+                if (willLoadLayout)
                 {
                     layoutLock.EnsureLocked();
                     try
@@ -326,13 +339,6 @@ namespace pwiz.Skyline
                 }
 
                 ViewMenu.UpdateGraphUi(layoutLock.EnsureLocked, settingsNew, deserialized);
-
-                var enable = settingsNew.HasResults;
-                if (_graphFullScan != null && _graphFullScan.Visible && !enable)
-                {
-                    layoutLock.EnsureLocked();
-                    DestroyGraphFullScan();
-                }
 
                 if (!ReferenceEquals(settingsNew.MeasuredResults, settingsOld.MeasuredResults))
                 {
@@ -481,6 +487,11 @@ namespace pwiz.Skyline
         // Load view layout from the given stream.
         public void LoadLayout(Stream layoutStream)
         {
+            // Close a floating Full Scan graph before locking the layout, to avoid the DigitalRune
+            // floating-pane SetWindowRgn teardown wedge (see UpdateGraphUI). No-op when the caller
+            // already destroyed it.
+            if (_graphFullScan != null)
+                DestroyGraphFullScan();
             using (new DockPanelLayoutLock(dockPanel, true))
             {
                 if (Program.SkylineOffscreen)
@@ -529,7 +540,8 @@ namespace pwiz.Skyline
             HideFindResults(true);
             foreach (var graphChrom in _listGraphChrom.ToArray())
                 DestroyGraphChrom(graphChrom);
-            DestroyGraphFullScan();
+            // GraphFullScan is destroyed up front in LoadLayout, before the layout lock, because its
+            // floating-pane teardown must not run under the lock (DigitalRune SetWindowRgn wedge).
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
 
             InsertFilesViewIntoLegacyLayout();
