@@ -79,8 +79,11 @@ namespace pwiz.Osprey.Scoring
         /// harmless when the two RT scales agree (the mapping is then the identity),
         /// badly wrong when they do not. Predict-only: the RT tolerance still comes
         /// from <c>FallbackRtTolerance</c> and the file is still reported as
-        /// calibration_successful=false. Null when calibration succeeded, or when the
-        /// library RT range is degenerate. See issue #4401.
+        /// calibration_successful=false. Set unconditionally, early in
+        /// <c>Calibrator.RunCalibration</c>, so it is available on every failure path
+        /// that follows; when calibration succeeds it is simply never read, because the
+        /// scoring pipeline prefers the real calibration. Null only when the library RT
+        /// range is degenerate. See issue #4401.
         /// </summary>
         public RTCalibration FallbackRtMap { get; set; }
 
