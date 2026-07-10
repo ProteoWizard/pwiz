@@ -1150,38 +1150,47 @@ namespace CommonTest
                 "Error encountered when streaming data. Please try again later.\n";
 
             // Seam on, as automated tests opt into: a doomed request must not be retried forever
-            var abandoned = RunUniprotErrorBodyLookup(errorBody, giveUpOnUnresponsiveWebService: true);
+            var abandoned = RunUniprotErrorBodyLookup(errorBody, giveUpOnUnresponsiveWebService: true,
+                out var abandonedCompleted);
             Assert.AreEqual(0, abandoned.Count(p => p.GetProteinMetadata().NeedsSearch()),
                 "An error body carried by a 200 response must not leave proteins pending forever");
             Assert.IsTrue(abandoned.All(p => p.FailureReason == WebSearchFailureReason.invalid_response));
             Assert.IsTrue(abandoned.All(p => p.Status == ProteinSearchInfo.SearchStatus.failure));
+            // Every protein is accounted for, so the caller's load can finish
+            Assert.AreEqual(abandoned.Count, abandonedCompleted.Count);
 
             // Seam off, as production runs: retry-eligible, but never silently marked resolved
-            var pending = RunUniprotErrorBodyLookup(errorBody, giveUpOnUnresponsiveWebService: false);
+            var pending = RunUniprotErrorBodyLookup(errorBody, giveUpOnUnresponsiveWebService: false,
+                out var pendingCompleted);
             Assert.AreEqual(pending.Count, pending.Count(p => p.GetProteinMetadata().NeedsSearch()));
             Assert.IsTrue(pending.All(p => p.Status == ProteinSearchInfo.SearchStatus.unsearched));
             // It must specifically be the unusable-body path that left them pending
             Assert.IsTrue(pending.Any(p => p.FailureReason == WebSearchFailureReason.invalid_response));
+            // Nothing is reported as done, so a later pass will search these again
+            Assert.AreEqual(0, pendingCompleted.Count);
         }
 
         private static IList<ProteinSearchInfo> RunUniprotErrorBodyLookup(string responseBody,
-            bool giveUpOnUnresponsiveWebService)
+            bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed)
         {
             using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(responseBody);
             Assert.IsNotNull(helper);
 
-            // Accessions from the tail of human_and_yeast_no_metadata.protdb that go to the web
+            // Accessions from the tail of human_and_yeast_no_metadata.protdb that go to the web.
+            // Distinct sequence lengths, so the batch builder does not discard any as ambiguous.
+            var lengths = new[] { 100, 200, 300 };
             var proteins = new[] { "Q96K55", "B4DZL2", "B3KRD2" }
-                .Select(accession => new ProteinSearchInfo(
+                .Select((accession, i) => new ProteinSearchInfo(
                     new DbProteinName(null, new ProteinMetadata(accession, string.Empty, null, null, null, null,
-                        WebEnabledFastaImporter.UNIPROTKB_TAG + accession)), 100))
+                        WebEnabledFastaImporter.UNIPROTKB_TAG + accession)), lengths[i]))
                 .ToList();
 
             var importer = new WebEnabledFastaImporter(new QuickFailWebSearchProvider())
             {
                 GiveUpOnUnresponsiveWebService = giveUpOnUnresponsiveWebService
             };
-            importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            // The lookup yields lazily, so enumerate it to make it run
+            completed = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
             return proteins;
         }
 
