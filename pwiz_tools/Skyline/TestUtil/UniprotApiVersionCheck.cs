@@ -85,7 +85,19 @@ namespace pwiz.SkylineTestUtil
             try
             {
                 using var request = new HttpRequestMessage(HttpMethod.Get, PROBE_URL);
-                using var response = CLIENT.SendAsync(request, HttpCompletionOption.ResponseHeadersRead).Result;
+                // GetAwaiter().GetResult() rather than .Result, so a failure surfaces as itself
+                // rather than wrapped in an AggregateException whose message is unhelpful.
+                using var response = CLIENT.SendAsync(request, HttpCompletionOption.ResponseHeadersRead)
+                    .GetAwaiter().GetResult();
+                if (!response.IsSuccessStatusCode)
+                {
+                    // A maintenance page or other error has no version header to read; treating its
+                    // absence as "the header was withdrawn" would cry wolf over a transient outage.
+                    Console.WriteLine(@"NOTE: UniProt answered the version probe with HTTP {0}, so its API " +
+                                      @"version is unknown right now. This says nothing about whether the " +
+                                      @"recorded responses are still accurate.", (int)response.StatusCode);
+                    return;
+                }
                 deploymentDate = GetHeader(response, API_DEPLOYMENT_DATE_HEADER);
             }
             catch (Exception e)
