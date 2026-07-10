@@ -167,7 +167,7 @@ namespace pwiz.Osprey.Test
             };
         }
 
-        // The pass-2 model view (the --protein-fdr retrain) is built from the
+        // The pass-2 model view (the second-pass retrain) is built from the
         // second-pass contributions + the reported pool: a feature table (same
         // most-influential-first ordering + per-feature histograms as pass 1) and a
         // composite score histogram. Null contributions -> null pass (single-pass run).
