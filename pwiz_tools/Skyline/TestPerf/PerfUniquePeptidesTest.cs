@@ -89,7 +89,8 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
         public void UniquePeptides1PerfTest()
         {
             // 1)  No current background proteome
-            scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb", true);
+            scenario(PeptideFilter.PeptideUniquenessConstraint.gene, null, "human_and_yeast_no_metadata.protdb",
+                verbose: false); // Set true to log the step-by-step progress used to chase down UniProt-related hangs
         }
 
         [TestMethod, NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
