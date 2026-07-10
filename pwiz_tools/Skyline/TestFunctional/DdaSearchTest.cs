@@ -118,7 +118,9 @@ namespace pwiz.SkylineTestFunctional
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
                 FragmentTolerance = new MzTolerance(25, MzTolerance.Units.ppm),
                 AdditionalSettings = new Dictionary<string, string>(),
-                ExpectedResultsFinal = new ExpectedResults(133, 334, 396, 1188, 164)
+                // Counts for the standalone MS Amanda (3.0.22.864) + Percolator; only percolator-validated
+                // PSMs enter the library, so these are lower than the retired in-process integration's.
+                ExpectedResultsFinal = new ExpectedResults(79, 192, 241, 723, 93)
             };
 
             RunFunctionalTest();

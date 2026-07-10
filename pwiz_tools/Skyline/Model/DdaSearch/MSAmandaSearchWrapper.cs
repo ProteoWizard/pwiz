@@ -28,6 +28,7 @@ using System.Text;
 using System.Threading;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
 using pwiz.Skyline.Model.AuditLog;
@@ -68,6 +69,9 @@ namespace pwiz.Skyline.Model.DdaSearch
             new FileDownloadInfo
             {
                 Filename = MSAMANDA_FILENAME, DownloadUrl = MSAMANDA_URL, InstallPath = MSAmandaDirectory,
+                // Upstream publishes a rolling, generic "latest.zip"; give the S3 mirror + download cache a
+                // distinctive, version-pinned name so it doesn't collide with any other tool's latest.zip.
+                MirrorFilename = MSAMANDA_FILENAME + @".zip",
                 OverwriteExisting = true, Unzip = true,
                 ToolType = SearchToolType.MSAmanda, ToolPath = MSAmandaBinary, ToolExtraArgs = MSAmandaArgs
             }
@@ -172,9 +176,15 @@ namespace pwiz.Skyline.Model.DdaSearch
             return Path.ChangeExtension(searchFilepath.GetFilePath(), @".mzid.gz");
         }
 
+        // The standalone MSAmanda command-line tool only reads mzML (unlike the old in-process
+        // integration, which used the vendor readers). Anything else must be converted to mzML first.
+        private static readonly string[] SupportedExtensions = { @".mzml" };
+
         public override bool GetSearchFileNeedsConversion(MsDataFileUri searchFilepath, out AbstractDdaConverter.MsdataFileFormat requiredFormat)
         {
             requiredFormat = AbstractDdaConverter.MsdataFileFormat.mzML;
+            if (!SupportedExtensions.Contains(e => e == searchFilepath.GetExtension().ToLowerInvariant()))
+                return true;
             return false;
         }
 
@@ -197,11 +207,17 @@ namespace pwiz.Skyline.Model.DdaSearch
 
                     string spectrumPath = rawFileName.GetFilePath();
                     string outputMzid = Path.ChangeExtension(spectrumPath, @".mzid");
+                    // MSAmanda requires the -e settings file to have a .xml extension ("Only .xml files
+                    // are accepted!"), so a Path.GetTempFileName() .tmp file is rejected. Use a temp path
+                    // that ends in .xml (GetRandomFileName does not create a file, so nothing leaks).
                     string settingsFile = KeepIntermediateFiles
                         ? Path.ChangeExtension(spectrumPath, @".msamanda.settings.xml")
-                        : Path.GetTempFileName();
+                        : Path.Combine(Path.GetTempPath(), Path.ChangeExtension(Path.GetRandomFileName(), @".xml"));
                     _intermediateFiles.Add(settingsFile);
                     _intermediateFiles.Add(outputMzid);
+                    // MSAmanda also emits an echoed settings file and an SDRF alongside its output.
+                    _intermediateFiles.Add(outputMzid + @"_settings.xml");
+                    _intermediateFiles.Add(Path.ChangeExtension(spectrumPath, @".sdrf.tsv"));
 
                     File.WriteAllText(settingsFile, BuildSettingsXml());
 
@@ -217,7 +233,12 @@ namespace pwiz.Skyline.Model.DdaSearch
                         UseShellExecute = false,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
-                        RedirectStandardInput = false
+                        RedirectStandardInput = false,
+                        // MSAmanda resolves the EnzymesFile/ModificationsFile named in its settings.xml
+                        // (enzymes.xml, modifications.xml) relative to its working directory, so run it
+                        // from its own install dir where those bundled files live. All -s/-d/-e/-o paths
+                        // passed above are absolute, so they are unaffected by the working directory.
+                        WorkingDirectory = Path.GetDirectoryName(MSAmandaBinary)
                     };
 
                     // ReSharper disable once LocalizableElement
@@ -230,14 +251,20 @@ namespace pwiz.Skyline.Model.DdaSearch
                     if (_cancelToken.IsCancellationRequested)
                         break;
 
-                    // gzip the .mzid so downstream (BiblioSpec) consumers see the
-                    // legacy .mzid.gz artifact this wrapper has always produced.
-                    if (File.Exists(outputMzid))
+                    // The standalone MSAmanda writes the mzIdentML already gzip-compressed, appending .gz
+                    // to the -o name (spectrum.mzid -> spectrum.mzid.gz), which is exactly the .mzid.gz
+                    // artifact downstream (BiblioSpec) consumers expect. If a build instead emits a plain
+                    // .mzid, gzip it here as a fallback.
+                    if (File.Exists(outputMzidGz))
+                    {
+                        // MSAmanda already produced the gzipped mzIdentML.
+                    }
+                    else if (File.Exists(outputMzid))
                         GzipFile(outputMzid, outputMzidGz);
                     else
                         throw new IOException(string.Format(
                             DdaSearchResources.DdaSearch_Search_failed__0,
-                            $@"MSAmanda did not produce expected output {outputMzid}"));
+                            $@"MSAmanda did not produce expected output {outputMzidGz}"));
 
                     CurrentFile++;
                     _progressStatus = _progressStatus.NextSegment();
