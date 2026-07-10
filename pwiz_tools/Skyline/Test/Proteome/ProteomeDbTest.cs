@@ -79,6 +79,7 @@ namespace pwiz.SkylineTest.Proteome
             // Only run this if SkylineTester has enabled web access or web responses are being recorded
             if (AllowInternetAccess || IsRecordMode)
             {
+                UniprotApiVersionCheck.WarnIfChanged();
                 DoActualWebAccess = true; // Actually go to the web
                 DoTestOlderProteomeDb();
             }

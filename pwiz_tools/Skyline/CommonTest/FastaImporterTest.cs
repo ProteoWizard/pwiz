@@ -1207,6 +1207,7 @@ namespace CommonTest
             // Only run this if SkylineTester has enabled web access or web responses are being recorded
             if (AllowInternetAccess || IsRecordMode || CurrentDiagnosticMode != DiagnosticMode.none)
             {
+                UniprotApiVersionCheck.WarnIfChanged();
                 TestProteinSearchInfoIntersection();
                 DoTestFastaImport(true, false); // run with actual web access
                 DoTestFastaImport(true, true); // run with actual web access, using negative tests
