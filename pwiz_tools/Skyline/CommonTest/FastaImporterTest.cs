@@ -1129,9 +1129,82 @@ namespace CommonTest
                 TestContext.EnsureTestResultsDir();
 
             TestProteinSearchInfoIntersection();
+            TestUniprotErrorBody();
 
             DoTestFastaImport(false, false);  // Run with simulated web access
             DoTestFastaImport(false, true); // Run with simulated web access, using negative tests
+        }
+
+        /// <summary>
+        /// UniProt can answer a batch query with HTTP 200 and a valid TSV header, then emit a
+        /// plain-text error where the data rows belong. That is not an exception, not a timeout,
+        /// and not an empty result, so it has to be recognized on its own terms. Otherwise the
+        /// importer reads the pass as "nothing happened, try again later" and the background
+        /// loader reschedules it forever, hanging the caller instead of failing.
+        /// </summary>
+        private void TestUniprotErrorBody()
+        {
+            // The error text UniProt emits in place of the rows, with the blank lines that precede
+            // it, under the header the importer's own field list asks for
+            const string errorBody =
+                "Entry\tGene Names\tOrganism\tLength\tEntry Name\tProtein names\tReviewed\n\n\n" +
+                "Error encountered when streaming data. Please try again later.\n";
+
+            // Seam on, as automated tests opt into: a doomed request must not be retried forever
+            var abandoned = RunUniprotErrorBodyLookup(errorBody, giveUpOnUnresponsiveWebService: true,
+                out var abandonedCompleted);
+            Assert.AreEqual(0, abandoned.Count(p => p.GetProteinMetadata().NeedsSearch()),
+                "An error body carried by a 200 response must not leave proteins pending forever");
+            Assert.IsTrue(abandoned.All(p => p.FailureReason == WebSearchFailureReason.invalid_response));
+            Assert.IsTrue(abandoned.All(p => p.Status == ProteinSearchInfo.SearchStatus.failure));
+            // Every protein is accounted for, so the caller's load can finish
+            Assert.AreEqual(abandoned.Count, abandonedCompleted.Count);
+
+            // Seam off, as production runs: retry-eligible, but never silently marked resolved
+            var pending = RunUniprotErrorBodyLookup(errorBody, giveUpOnUnresponsiveWebService: false,
+                out var pendingCompleted);
+            Assert.AreEqual(pending.Count, pending.Count(p => p.GetProteinMetadata().NeedsSearch()));
+            Assert.IsTrue(pending.All(p => p.Status == ProteinSearchInfo.SearchStatus.unsearched));
+            // It must specifically be the unusable-body path that left them pending
+            Assert.IsTrue(pending.Any(p => p.FailureReason == WebSearchFailureReason.invalid_response));
+            // Nothing is reported as done, so a later pass will search these again
+            Assert.AreEqual(0, pendingCompleted.Count);
+
+            // The same error, arriving where the header belongs. Nothing then names the columns, and a
+            // response we cannot read must not be mistaken for a protein that simply has no match -
+            // that would retire the search and drop the metadata for good.
+            const string headerlessErrorBody = "Error encountered when streaming data. Please try again later.\n";
+            var unreadable = RunUniprotErrorBodyLookup(headerlessErrorBody, giveUpOnUnresponsiveWebService: true,
+                out _);
+            Assert.IsTrue(unreadable.All(p => p.FailureReason == WebSearchFailureReason.invalid_response),
+                "A response with no recognizable header is unusable, not an answer of 'no such protein'");
+        }
+
+        private static IList<ProteinSearchInfo> RunUniprotErrorBodyLookup(string responseBody,
+            bool giveUpOnUnresponsiveWebService, out IList<ProteinSearchInfo> completed)
+        {
+            using var helper = HttpClientTestHelper.SimulateSuccessfulDownload(responseBody);
+            Assert.IsNotNull(helper);
+
+            // Accessions from the tail of human_and_yeast_no_metadata.protdb that go to the web.
+            // UniProt requests start one protein at a time, so only the first reaches the web before
+            // the pass ends; the other two are here to show that giving up completes every protein
+            // still waiting, not just the one whose request failed. Their sequence lengths differ
+            // only because proteins of equal length are treated as interchangeable.
+            var lengths = new[] { 100, 200, 300 };
+            var proteins = new[] { "Q96K55", "B4DZL2", "B3KRD2" }
+                .Select((accession, i) => new ProteinSearchInfo(
+                    new DbProteinName(null, new ProteinMetadata(accession, string.Empty, null, null, null, null,
+                        WebEnabledFastaImporter.UNIPROTKB_TAG + accession)), lengths[i]))
+                .ToList();
+
+            var importer = new WebEnabledFastaImporter(new QuickFailWebSearchProvider())
+            {
+                GiveUpOnUnresponsiveWebService = giveUpOnUnresponsiveWebService
+            };
+            // The lookup yields lazily, so enumerate it to make it run
+            completed = importer.DoWebserviceLookup(proteins, new SilentProgressMonitor(), false).ToList();
+            return proteins;
         }
 
         [TestMethod]
@@ -1143,6 +1216,7 @@ namespace CommonTest
             // Only run this if SkylineTester has enabled web access or web responses are being recorded
             if (AllowInternetAccess || IsRecordMode || CurrentDiagnosticMode != DiagnosticMode.none)
             {
+                UniprotApiVersionCheck.WarnIfChanged(AllowInternetAccess);
                 TestProteinSearchInfoIntersection();
                 DoTestFastaImport(true, false); // run with actual web access
                 DoTestFastaImport(true, true); // run with actual web access, using negative tests
@@ -1414,7 +1488,7 @@ namespace CommonTest
             HttpClientTestHelper helper, IList<object> initialSnapshot)
         {
             const int noSearchNeededCount = 7;  // Seven proteins will return successfully without any web access
-            const int failOnSearch = 8; // 3 failures expected, and 5 just can't be resolved live on web
+            const int failOnSearch = 10; // 3 accessions made up to fail, and 7 real ones the web no longer resolves
             int searchCount = proteins.Count - noSearchNeededCount;
 
             Assert.AreNotEqual(0, results.Count);
@@ -1642,7 +1716,7 @@ namespace CommonTest
             var importer = new WebEnabledFastaImporter(provider);
             // The give-up seam is on only for the test-bail timeout mode; production (and the
             // retry-eligible timeout mode) leaves it off so a slow service is retried later.
-            importer.GiveUpOnRepeatedTimeout = mode == LookupTestMode.timeout;
+            importer.GiveUpOnUnresponsiveWebService = mode == LookupTestMode.timeout;
             var results = importer.DoWebserviceLookup(proteins, progressMonitor, false).ToList();
             return results;
         }
