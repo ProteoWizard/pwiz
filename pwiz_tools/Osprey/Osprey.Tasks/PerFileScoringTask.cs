@@ -1727,7 +1727,8 @@ namespace pwiz.Osprey.Tasks
                     // so the JSON records the value the console highlights; pass the
                     // config's RT-tolerance clamps used at scoring time.
                     RtCalibration = RTCalibrationJson.FromRTCalibration(rtCalibration,
-                        config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance),
+                        config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
+                        config.RtCalibration.MinCalibrationPoints),
                     SecondPassRt = null
                 };
                 // ArtifactPaths.ResolveOutputDir routes the calibration JSON to
@@ -1820,7 +1821,9 @@ namespace pwiz.Osprey.Tasks
                 var stats = rtCalibration.Stats();
                 double rawTolerance = RTCalibration.SearchWindowRaw(stats.MAD);
                 double finalTolerance = RTCalibration.SearchWindowHalfWidth(
-                    stats.MAD, config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance);
+                    stats.MAD, stats.NPoints,
+                    config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
+                    config.RtCalibration.MinCalibrationPoints);
                 string beforeStr = initialRtTolerance.ToString("F2", ic);
                 string rawStr = rawTolerance.ToString("F2", ic);
                 string finalStr = finalTolerance.ToString("F2", ic);
