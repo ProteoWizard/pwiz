@@ -1548,6 +1548,17 @@ namespace pwiz.ProteomeDatabase.Fasta
             int colSpecies = fieldNames.FindIndex(i => i.Equals(@"Organism", StringComparison.OrdinalIgnoreCase));
             int colLength = fieldNames.FindIndex(i => i.Equals(@"Length", StringComparison.OrdinalIgnoreCase));
             int colStatus = fieldNames.FindIndex(i => i.Equals(@"Reviewed", StringComparison.OrdinalIgnoreCase)); // Formerly "Status"
+
+            if (colAccession < 0)
+            {
+                // Whatever this is, it does not name the column every row is identified by, so it is
+                // not the table we asked for - an error message where the header belongs, most likely.
+                // Saying so is important: an unreadable response must not pass for an empty one, which
+                // is a final answer that would retire the search and drop the metadata for good.
+                throw new UnusableWebResponseException(
+                    string.Format(@"Unreadable response from {0}: header was ""{1}""", urlString, header.Trim()));
+            }
+
             var rowCount = 0;
             while (!reader.EndOfStream)
             {

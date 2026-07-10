@@ -68,14 +68,18 @@ namespace pwiz.SkylineTestUtil
         private static bool _alreadyChecked;
 
         /// <summary>
-        /// Reports to the console when UniProt has moved since the recordings were made. Call only
-        /// when internet access is allowed. Never throws, and never fails a test: an unreachable
+        /// Reports to the console when UniProt has moved since the recordings were made. Pass the
+        /// caller's AllowInternetAccess, so that a test which is not permitted to reach the web
+        /// cannot ask this question by accident. Never throws, and never fails a test: an unreachable
         /// UniProt says nothing about whether its API has changed.
         /// </summary>
-        public static void WarnIfChanged()
+        public static void WarnIfChanged(bool allowInternetAccess)
         {
+            if (!allowInternetAccess)
+                return; // Asking would mean going to the web, which this caller may not do
+
             if (_alreadyChecked)
-                return; // Once per test run is plenty
+                return; // The answer cannot change during a run, and one report of it is enough
             _alreadyChecked = true;
 
             string deploymentDate;

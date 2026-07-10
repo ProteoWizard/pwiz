@@ -173,7 +173,6 @@
     <Compile Include="GitFileHelper.cs" />
     <Compile Include="HangDetection.cs" />
     <Compile Include="HttpClientTestHelper.cs" />
-    <Compile Include="UniprotApiVersionCheck.cs" />
     <Compile Include="KoinaTestUtil.cs" />
     <Compile Include="MockHttpMessageHandler.cs" />
     <Compile Include="MultiFormActivator.cs" />
@@ -194,6 +193,7 @@
     <Compile Include="ScreenshotPreviewForm.Designer.cs">
       <DependentUpon>ScreenshotPreviewForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="UniprotApiVersionCheck.cs" />
     <Compile Include="FormSeen.cs" />
     <Compile Include="GridTester.cs" />
     <Compile Include="InstallTestUtil.cs" />

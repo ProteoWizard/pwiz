@@ -1169,6 +1169,15 @@ namespace CommonTest
             Assert.IsTrue(pending.Any(p => p.FailureReason == WebSearchFailureReason.invalid_response));
             // Nothing is reported as done, so a later pass will search these again
             Assert.AreEqual(0, pendingCompleted.Count);
+
+            // The same error, arriving where the header belongs. Nothing then names the columns, and a
+            // response we cannot read must not be mistaken for a protein that simply has no match -
+            // that would retire the search and drop the metadata for good.
+            const string headerlessErrorBody = "Error encountered when streaming data. Please try again later.\n";
+            var unreadable = RunUniprotErrorBodyLookup(headerlessErrorBody, giveUpOnUnresponsiveWebService: true,
+                out _);
+            Assert.IsTrue(unreadable.All(p => p.FailureReason == WebSearchFailureReason.invalid_response),
+                "A response with no recognizable header is unusable, not an answer of 'no such protein'");
         }
 
         private static IList<ProteinSearchInfo> RunUniprotErrorBodyLookup(string responseBody,
@@ -1207,7 +1216,7 @@ namespace CommonTest
             // Only run this if SkylineTester has enabled web access or web responses are being recorded
             if (AllowInternetAccess || IsRecordMode || CurrentDiagnosticMode != DiagnosticMode.none)
             {
-                UniprotApiVersionCheck.WarnIfChanged();
+                UniprotApiVersionCheck.WarnIfChanged(AllowInternetAccess);
                 TestProteinSearchInfoIntersection();
                 DoTestFastaImport(true, false); // run with actual web access
                 DoTestFastaImport(true, true); // run with actual web access, using negative tests
