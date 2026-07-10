@@ -1431,7 +1431,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                         else
                         {
-                            collector.ReleaseChromatogram(null, out timeIntensities);
+                            collector.ReleaseChromatogram(null, null, out timeIntensities);
                             status = collector.StatusId;
                         }
                         if (status >= 0)

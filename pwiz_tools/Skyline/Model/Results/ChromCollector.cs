@@ -179,17 +179,20 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Get a chromatogram with properly sorted time values.
         /// </summary>
-        public void ReleaseChromatogram(byte[] bytesFromDisk, out TimeIntensities timeIntensities)
+        public void ReleaseChromatogram(byte[] bytesFromDisk, byte[] sharedBytesFromDisk, out TimeIntensities timeIntensities)
         {
-            // DIAGNOSTIC (issue #4287): annotate which list fails so we know whether the corrupt
-            // back-link chain is in a shared list (Times/Scans) or a per-product list (Intensities/MassErrors).
-            var times = ToArrayDiag(@"Times", Times, bytesFromDisk);
+            // The shared Times/Scans lists may live in a different spill file than this product's
+            // own Intensities/MassErrors (issue #4287): a precursor's products can be split across
+            // request-order groups that map to different files. Read the shared lists from the
+            // bytes of the file they were actually written to; null means they share this file.
+            var sharedBytes = sharedBytesFromDisk ?? bytesFromDisk;
+            var times = ToArrayDiag(@"Times", Times, sharedBytes);
             var intensities = ToArrayDiag(@"Intensities", Intensities, bytesFromDisk);
             var massErrors = MassErrors != null
                 ? ToArrayDiag(@"MassErrors", MassErrors, bytesFromDisk)
                 : null;
             var scanIds = Scans != null
-                ? ToArrayDiag(@"Scans", Scans, bytesFromDisk)
+                ? ToArrayDiag(@"Scans", Scans, sharedBytes)
                 : null;
 
             // Filter out NaN intensities from narrow scan window coverage.
@@ -646,6 +649,10 @@ namespace pwiz.Skyline.Model.Results
         private readonly int[] _idToGroupId;
         private SpillFile _cachedSpillFile;
         private byte[] _bytesFromSpillFile;
+        // A second cache slot for the file that holds a chromatogram's shared time/scan lists when
+        // that file differs from the chromatogram's own release file (issue #4287, bug #2).
+        private SpillFile _cachedSharedSpillFile;
+        private byte[] _bytesFromSharedSpillFile;
         // Leaf lock serializing all spill-file stream I/O (block writes on the extraction thread
         // and the whole-file read on the reader thread). Issue #4287: without this, the reader's
         // Seek(0) to read a spill file races with a concurrent block write to the same shared
@@ -795,13 +802,6 @@ namespace pwiz.Skyline.Model.Results
                 return 0;
             }
 
-            // Fail fast if the shared time/scan lists this chromatogram uses were spilled to a
-            // different spill file than the one selected by this chromatogram index. Reading the
-            // wrong spill file is the root cause of issue #4287; catch it here with a clear message
-            // instead of a later out-of-range crash or (worse) silently wrong retention times.
-            AssertSharedListSpillFile(collector.TimesSpillChromatogramIndex, chromatogramIndex, groupIndex);
-            AssertSharedListSpillFile(collector.ScansSpillChromatogramIndex, chromatogramIndex, groupIndex);
-
             // Serialize the whole-file read with concurrent block writes to the same shared spill
             // stream (issue #4287). The lock is released before returning, and this method never
             // waits, so it cannot deadlock with the extraction thread's locks.
@@ -840,12 +840,17 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
+            // The shared time/scan lists may live in a different spill file than this chromatogram's
+            // own lists (issue #4287). Read that file's bytes so the shared lists are reconstructed
+            // from the file they were actually written to, not this chromatogram's release file.
+            byte[] sharedBytes = GetSharedSpillBytes(collector, spillFile);
+
             // DIAGNOSTIC (issue #4287): on any release failure, dump the full spill state so we can
             // see which list mismatches, its write group, and whether that group's spill file is the
             // same object as the one selected by the release chromatogram index.
             try
             {
-                collector.ReleaseChromatogram(_bytesFromSpillFile, out timeIntensities);
+                collector.ReleaseChromatogram(_bytesFromSpillFile, sharedBytes, out timeIntensities);
             }
             catch (Exception)
             {
@@ -875,19 +880,51 @@ namespace pwiz.Skyline.Model.Results
         }
 
         /// <summary>
-        /// Throw if a shared time/scan list was spilled to a different spill file group than the
-        /// one this chromatogram is being released from. When they differ, the bytes handed to
-        /// <see cref="ChromCollector.ReleaseChromatogram"/> come from the wrong file (issue #4287).
+        /// Return the spill-file bytes holding this chromatogram's shared time/scan lists when that
+        /// file differs from its own <paramref name="releaseSpillFile"/>, or null when they are in the
+        /// same physical file (the common case, where the caller's own bytes already cover them).
+        /// A precursor's products can be split across request-order groups that map to different
+        /// files, so the shared list must be read from the file it was written to (issue #4287, bug #2).
+        /// Several groups can map to one file, so this compares SpillFile objects, not group indexes.
         /// </summary>
-        private void AssertSharedListSpillFile(int? spillChromatogramIndex, int releaseChromatogramIndex, int releaseGroupIndex)
+        private byte[] GetSharedSpillBytes(ChromCollector collector, SpillFile releaseSpillFile)
         {
-            if (!spillChromatogramIndex.HasValue)
-                return;
-            int writeGroupIndex = GetGroupIndex(spillChromatogramIndex.Value);
-            if (writeGroupIndex != releaseGroupIndex)
-                throw new InvalidDataException(string.Format(
-                    @"Chromatogram {0} uses a shared time/scan list written to spill file group {1} (via chromatogram {2}), but is being released from spill file group {3}.",
-                    releaseChromatogramIndex, writeGroupIndex, spillChromatogramIndex.Value, releaseGroupIndex));
+            // Times and Scans are written together under the same chromatogram index, so a single
+            // shared file covers both.
+            int? sharedIndex = collector.TimesSpillChromatogramIndex ?? collector.ScansSpillChromatogramIndex;
+            if (!sharedIndex.HasValue)
+                return null;
+            var sharedSpillFile = _spillFiles[GetGroupIndex(sharedIndex.Value)];
+            if (ReferenceEquals(sharedSpillFile, releaseSpillFile))
+                return null;
+
+            lock (_spillStreamLock)
+            {
+                if (ReferenceEquals(_cachedSharedSpillFile, sharedSpillFile) &&
+                    sharedSpillFile.Stream != null && _bytesFromSharedSpillFile != null &&
+                    sharedSpillFile.Stream.Length != _bytesFromSharedSpillFile.Length)
+                {
+                    // Stream grew since it was cached; reread.
+                    _cachedSharedSpillFile = null;
+                }
+                if (!ReferenceEquals(_cachedSharedSpillFile, sharedSpillFile))
+                {
+                    _cachedSharedSpillFile = sharedSpillFile;
+                    _bytesFromSharedSpillFile = null;
+                    var stream = sharedSpillFile.Stream;
+                    if (stream != null)
+                    {
+                        // DIAGNOSTIC (issue #4287): a genuine cross-file shared read - the bug this fixes.
+                        Console.Error.WriteLine(@"[#4287] SHARED-FILE-READ viaChrom={0} sharedFile={1} releaseFile={2} len={3}",
+                            sharedIndex.Value, sharedSpillFile, releaseSpillFile, stream.Length);
+                        stream.Seek(0, SeekOrigin.Begin);
+                        _bytesFromSharedSpillFile = new byte[stream.Length];
+                        int read = stream.Read(_bytesFromSharedSpillFile, 0, _bytesFromSharedSpillFile.Length);
+                        Assume.IsTrue(read == _bytesFromSharedSpillFile.Length);
+                    }
+                }
+                return _bytesFromSharedSpillFile;
+            }
         }
 
         /// <summary>
