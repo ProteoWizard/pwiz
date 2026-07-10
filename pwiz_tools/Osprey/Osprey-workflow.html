@@ -405,7 +405,7 @@
 
   <rect class="st-done" x="80" y="366" width="1040" height="56" rx="4"/>
   <text class="stage-title" x="600" y="386" text-anchor="middle">Cross-run consensus RTs + per-file calibration refit</text>
-  <text class="stage-desc"  x="600" y="400" text-anchor="middle">sigmoid(score)-weighted median, hard run_precursor_qvalue gate, optional protein-FDR rescue</text>
+  <text class="stage-desc"  x="600" y="400" text-anchor="middle">sigmoid(score)-weighted median, hard run_precursor_qvalue gate, protein-FDR rescue</text>
   <text class="stage-desc"  x="600" y="414" text-anchor="middle">consensus + inv_predict + loess_fit + refit dumps bit-identical on Stellar + Astral 3-file</text>
 
   <rect class="st-done" x="80" y="440" width="1040" height="42" rx="4"/>
@@ -472,7 +472,7 @@
   <text x="140" y="22" class="task-hdr-name">&#9656; --task SecondPassFDR</text>
   <text x="1060" y="22" text-anchor="end" class="task-hdr-role">merge node &#183; second join</text>
   <text x="140" y="40" class="task-hdr-io"><tspan class="task-hdr-key">in&#160;&#160;</tspan>&lt;stem&gt;.scores-reconciled.parquet (via --input-scores; falls back to &lt;stem&gt;.scores.parquet for no-work files)</text>
-  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;output&gt;.blib, &lt;stem&gt;.2nd-pass.fdr_scores.bin (protein-FDR only)   &#183;   validity  &lt;out&gt;.SecondPassFDR.osprey.task</text>
+  <text x="140" y="56" class="task-hdr-io"><tspan class="task-hdr-key">out&#160;</tspan>&lt;output&gt;.blib, &lt;stem&gt;.2nd-pass.fdr_scores.bin (when Stage 6 rescored)   &#183;   validity  &lt;out&gt;.SecondPassFDR.osprey.task</text>
 </g>
 
 <!-- ================================================================= -->
