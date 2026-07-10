@@ -268,6 +268,17 @@ namespace pwiz.Osprey.Tasks
                 var survivors = RunFirstPassProjection(
                     perFileEntries, perFileParquetPaths, fullLibrary, config, ctx, loadFileFeatures,
                     prebuiltProjections);
+
+                // This is the projection set's only consumer, and it is done. The byproduct
+                // cache is process-lifetime, so leaving it published pinned ~5.7 GiB (191 M
+                // rows x 32 B) plus the interned peptide table through reconciliation and the
+                // blib write -- memory that scales with total scored entries across all files,
+                // which is exactly what streaming the projection was meant to stop paying for.
+                // Released here rather than after the null check so the StopAfterStage5 path
+                // drops it too (issue #4405).
+                ctx.Release<FdrProjections>();
+                prebuiltProjections = null;
+
                 if (survivors == null)
                     return false;  // StopAfterStage5 sidecar failure; ExitCode already set
                 perFileEntries = survivors;
