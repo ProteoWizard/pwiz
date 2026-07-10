@@ -1411,6 +1411,42 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// The sparse cache's bit-exactness rests on every retained bin being strictly
+        /// positive and finite: that is what makes "skip the zeros" a per-step additive
+        /// identity (x + 0.0 == x) rather than a reassociation of the sum. Pathological
+        /// intensities cannot break it, because BOTH paths run the same
+        /// ApplyWindowingNormalizationD, which drops them identically -- NaN > threshold
+        /// is false, so the bin stays 0.0 and is never retained. Pins that shared-filter
+        /// property rather than trusting it.
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrCacheHandlesPathologicalIntensities()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+            var scratch = new XcorrScratch(nBins);
+
+            var spectrum = new Spectrum
+            {
+                Mzs = new[] { 300.0, 400.0, 500.0, 600.0, 700.0, 800.0 },
+                Intensities = new[]
+                {
+                    1000.0f, float.NaN, -500.0f, float.PositiveInfinity, 2000.0f, 0.0f
+                }
+            };
+
+            float[] dense = scorer.PreprocessSpectrumForXcorrF32(spectrum);
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(spectrum, scratch);
+
+            for (int bin = 0; bin < nBins; bin++)
+            {
+                Assert.AreEqual(SingleBits(dense[bin]), SingleBits(sparse.CenteredAt(bin)),
+                    string.Format("Bin {0}: dense {1:R} != sparse {2:R}",
+                        bin, dense[bin], sparse.CenteredAt(bin)));
+            }
+        }
+
+        /// <summary>
         /// Raw IEEE-754 bits of a float, for bit-exact comparison.
         /// <c>BitConverter.SingleToInt32Bits</c> does not exist on net472.
         /// </summary>

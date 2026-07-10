@@ -105,8 +105,8 @@ namespace pwiz.Osprey.Scoring
                 return;
             Array.Clear(s.Binned, 0, s.Binned.Length);
             Array.Clear(s.VisitedBins, 0, s.VisitedBins.Length);
-            // BinnedF is zeroed by callers on each preprocess call so it does
-            // not need post-window zeroing here (would just duplicate work).
+            // Windowed / Prefix / Preprocessed are fully overwritten on every
+            // preprocess call, so zeroing them here would only duplicate work.
             _scratchBag.Add(s);
         }
 
