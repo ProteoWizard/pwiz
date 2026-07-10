@@ -331,13 +331,13 @@ function legend(node,items){node.innerHTML="";items.forEach(it=>{const s=H(node,
   H(s,"i",{class:it.line?"ln":"",style:"background:"+it.color});H(s,"span",{},it.name);
   if(it.toggle){s.onclick=()=>{s.classList.toggle("off");it.toggle(s.classList.contains("off"));};}});}
 
-// ---------- Model: feature table (pass 1, + pass 2 when --protein-fdr retrained) ----------
+// ---------- Model: feature table (pass 1, + pass 2 when the second pass retrained) ----------
 const HAS_FEATHIST = !!(D.featureHistEdges && D.featureHistEdges.length>1);
 const MODEL_PASSES=[{pass:1,label:"1st pass",features:D.model||[],scores:D.scores,
   degenerate:D.modelDegenerate,desc:"pre-compaction first-pass training set"}];
 if(D.modelPass2)MODEL_PASSES.push({pass:2,label:"2nd pass",features:D.modelPass2.features||[],
   scores:D.modelPass2.scores,degenerate:D.modelPass2.degenerate,
-  desc:"post-reconciliation retrain on the reported pool (--protein-fdr)"});
+  desc:"post-reconciliation retrain on the reported pool"});
 let CURP=MODEL_PASSES[0];
 if(!HAS_FEATHIST){const tip=document.getElementById("scoreTip");if(tip)tip.style.display="none";}
 

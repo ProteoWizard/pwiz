@@ -83,8 +83,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public List<FeatureRow> Model { get; set; }
         /// <summary>
         /// The second-pass model (feature table + composite score histogram),
-        /// present only when a run with <c>--protein-fdr</c> retrained Percolator on
-        /// the post-reconciliation pool. Null on a single-pass run. The Model tab
+        /// present whenever the second pass retrained Percolator on the
+        /// post-reconciliation reported pool -- i.e. any run where Stage 6
+        /// reconciliation rescored entries. Null on a single-pass run (no
+        /// reconciliation). The Model tab
         /// offers a Pass 1 / Pass 2 selector when this is present. Shares
         /// <see cref="FeatureHistEdges"/> with pass 1 (same standardized bins).
         /// </summary>
@@ -122,7 +124,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// A trained model for one FDR pass: its feature-contribution table, the
         /// composite target/decoy separation, and the best-per-precursor composite
         /// score histogram over the pool it was trained on. Pass 1 lives in the
-        /// top-level fields; pass 2 (the <c>--protein-fdr</c> retrain) is this type.
+        /// top-level fields; pass 2 (the second-pass retrain) is this type.
         /// </summary>
         public sealed class ModelPass
         {
@@ -487,9 +489,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// <summary>
         /// Build the pass-2 model view (feature table + composite score histogram)
         /// from the second-pass Percolator model and the post-reconciliation pool.
-        /// Called by the end-of-run writer (MergeNodeTask) only when a
-        /// <c>--protein-fdr</c> run retrained Percolator on the reported pool, so both
-        /// models can be shown side by side. Returns null when no second-pass
+        /// Called by the end-of-run writer (MergeNodeTask) whenever the second pass
+        /// retrained Percolator on the reported pool -- i.e. any reconciled run --
+        /// so both models can be shown side by side. Returns null when no second-pass
         /// contributions are available (single-pass run or a rehydrated resume).
         /// </summary>
         public static ModelPass BuildModelPass2(
