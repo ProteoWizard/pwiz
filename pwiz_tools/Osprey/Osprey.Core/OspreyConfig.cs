@@ -122,6 +122,18 @@ namespace pwiz.Osprey.Core
         /// <summary>Experiment-level FDR threshold.</summary>
         public double ExperimentFdr { get; set; } = 0.01;
 
+        /// <summary>
+        /// Peptide q-value threshold for first-pass compaction. Peptides whose
+        /// first-pass peptide q-value is at or below this threshold survive
+        /// compaction and remain available for reconciliation and second-pass FDR.
+        /// Default 0.01 matches <see cref="RunFdr"/>; loosening it (e.g. to 0.05)
+        /// broadens the reconciliation pool but risks second-pass FDR inflation
+        /// (Percolator re-trains on an enriched set). Mirrors Rust
+        /// config.reconciliation_compaction_fdr. Peptides whose protein group passes
+        /// first-pass protein FDR are additionally rescued regardless of this threshold.
+        /// </summary>
+        public double ReconciliationCompactionFdr { get; set; } = 0.01;
+
         /// <summary>Decoy generation method.</summary>
         public DecoyMethod DecoyMethod { get; set; } = DecoyMethod.Reverse;
 
@@ -235,8 +247,28 @@ namespace pwiz.Osprey.Core
         /// <summary>Enable the coelution signal pre-filter.</summary>
         public bool PrefilterEnabled { get; set; } = true;
 
-        /// <summary>Protein-level FDR threshold (enables protein parsimony and picked-protein FDR).</summary>
+        /// <summary>
+        /// Protein-level FDR threshold. Optional on the command line
+        /// (<c>--protein-fdr</c>); when unset, <see cref="EffectiveProteinFdr"/>
+        /// falls back to <see cref="DefaultProteinFdr"/>. To match Rust osprey
+        /// (where <c>config.protein_fdr</c> is a plain f64, default 0.01, and the
+        /// protein-FDR machinery runs unconditionally), the presence of this value
+        /// no longer gates whether protein parsimony / picked-protein FDR / the
+        /// second Percolator pass run -- those always run. It only sets the
+        /// threshold used for the passing-group count and <c>--fdr-level protein</c>
+        /// output filtering.
+        /// </summary>
         public double? ProteinFdr { get; set; }
+
+        /// <summary>Default protein-FDR threshold applied when <c>--protein-fdr</c>
+        /// is not supplied, matching Rust <c>config.protein_fdr</c> (default 0.01).</summary>
+        public const double DefaultProteinFdr = 0.01;
+
+        /// <summary>Protein-FDR threshold actually applied: <see cref="ProteinFdr"/>
+        /// when supplied, else <see cref="DefaultProteinFdr"/>. Always defined so the
+        /// protein-FDR machinery can run without a null check, matching Rust's
+        /// always-present <c>config.protein_fdr</c>.</summary>
+        public double EffectiveProteinFdr => ProteinFdr ?? DefaultProteinFdr;
 
         /// <summary>How to handle shared peptides for protein inference.</summary>
         public SharedPeptideMode SharedPeptides { get; set; } = SharedPeptideMode.All;

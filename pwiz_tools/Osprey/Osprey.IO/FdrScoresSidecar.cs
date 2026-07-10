@@ -85,8 +85,8 @@ namespace pwiz.Osprey.IO
     /// <c>run_peptide_qvalue ≤ 0.01</c> OR
     /// <c>run_protein_qvalue ≤ 0.01</c> (the protein-rescue branch);
     /// the v2 sidecar carried only the first half of that predicate,
-    /// so a rehydrated worker couldn't reproduce in-process compaction
-    /// when <c>--protein-fdr</c> is set. v3 closes that gap.
+    /// so a rehydrated worker couldn't reproduce the protein-rescue
+    /// half of in-process compaction. v3 closes that gap.
     /// </summary>
     public static class FdrScoresSidecar
     {
