@@ -306,5 +306,32 @@ namespace pwiz.Osprey.Test
             }
             Assert.AreEqual(1, producer.RehydrateCount, @"Producer must not be re-demanded after Release");
         }
+
+        /// <summary>
+        /// Consume is Get + Release in one call, so a large single-consumer byproduct cannot
+        /// be left pinned by a refactor that quietly loses a separate Release call -- the
+        /// failure mode that put ~5.7 GiB of FdrProjections through Stages 6-7 (issue #4405).
+        /// </summary>
+        [TestMethod]
+        public void TestConsumeReturnsValueAndDropsIt()
+        {
+            var producer = new CountingProducerTask();
+            var ctx = ContextFor(producer);
+
+            Assert.AreEqual(99, ctx.Consume<StubByproduct>().Value);
+            Assert.IsFalse(ctx.TryGet<StubByproduct>(out _), @"Consume must drop the byproduct");
+
+            // Same finality as Release: a second Consume throws rather than rebuilding.
+            try
+            {
+                ctx.Consume<StubByproduct>();
+                Assert.Fail(@"Expected UnknownByproductException on a second Consume");
+            }
+            catch (UnknownByproductException ex)
+            {
+                Assert.AreEqual(typeof(StubByproduct), ex.RequestedType);
+            }
+            Assert.AreEqual(1, producer.RehydrateCount);
+        }
     }
 }

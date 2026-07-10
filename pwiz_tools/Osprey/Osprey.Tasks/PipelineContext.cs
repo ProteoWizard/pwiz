@@ -383,10 +383,33 @@ namespace pwiz.Osprey.Tasks
         ///
         /// Therefore: release only when every consumer has already run. The failure mode
         /// is a loud exception at the next <see cref="Get{TInfo}"/>, not silent corruption.
+        ///
+        /// NOT for the <c>PerFileEntries</c> milestone family: the DEBUG republish guard
+        /// (<c>_consumedByproducts</c> / <see cref="AssertMilestoneConsumedBeforeRepublish{TInfo}"/>)
+        /// is not updated here, so releasing a milestone and republishing over the same
+        /// backing list would read stale state. Prefer <see cref="Consume{TInfo}"/>.
         /// </summary>
         public bool Release<TInfo>()
         {
             return _byproducts.Remove(typeof(TInfo));
+        }
+
+        /// <summary>
+        /// <see cref="Get{TInfo}"/> followed by <see cref="Release{TInfo}"/>: take the value
+        /// and drop the pipeline's reference to it in one step. For a large byproduct with a
+        /// single consumer this is the form to use -- it makes retention impossible to
+        /// reintroduce by accident, where a `Get` plus a separate `Release` call can silently
+        /// lose the release in a later refactor and re-pin the memory (issue #4405).
+        ///
+        /// Same finality as <see cref="Release{TInfo}"/>: a second <see cref="Get{TInfo}"/> or
+        /// <see cref="Consume{TInfo}"/> for the same type throws
+        /// <see cref="UnknownByproductException"/> rather than rebuilding.
+        /// </summary>
+        public TInfo Consume<TInfo>()
+        {
+            var info = Get<TInfo>();
+            Release<TInfo>();
+            return info;
         }
 
         /// <summary>
