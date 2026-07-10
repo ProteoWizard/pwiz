@@ -241,6 +241,8 @@ public class MzIdentMLReader : BuildParser
     /// <remarks>cpp parity: MzIdentMLReader.cpp:146.</remarks>
     private void CollectPsms(Dictionary<DBSequence, Protein> proteins)
     {
+        int itemsWithoutScore = 0;   // top-ranked PSMs skipped because they had no supported score
+
         // cpp parity: MzIdentMLReader.cpp:148 — 1 SpectrumIdentificationList = 1 .MGF (or other)
         foreach (var sil in _pwizReader.DataCollection.AnalysisData.SpectrumIdentificationList)
         {
@@ -276,10 +278,17 @@ public class MzIdentMLReader : BuildParser
 
                     // cpp parity: MzIdentMLReader.cpp:188 — pick the score (and side-effect:
                     // sets analysisType_ + scoreThreshold_).
-                    double score = GetScore(item);
+                    double? score = GetScore(item);
+                    if (score == null)
+                    {
+                        // No supported score for this PSM (e.g. a MS Amanda + Percolator item carrying
+                        // only the raw AmandaScore and no q-value); skip it rather than failing the file.
+                        itemsWithoutScore++;
+                        continue;
+                    }
 
                     PSM? curPsm;
-                    if (!PassThreshold(score))
+                    if (!PassThreshold(score.Value))
                     {
                         FilteredOutPsmCount++;
                         curPsm = null;
@@ -317,7 +326,17 @@ public class MzIdentMLReader : BuildParser
                         if (curPsm.SpecKey < 0)
                             StringToScan(curPsm.SpecName, curPsm);
 
-                        curPsm.Score = score;
+                        // The standalone MS Amanda references spectra by "index=N" (mzIdentML's
+                        // "multiple peak list nativeID format"); scan= parsing above can't read that, so
+                        // look those up by spectrum index rather than by nativeID/scan.
+                        if (curPsm.SpecKey < 0 && TryParseSpectrumIndex(curPsm.SpecName, out var specIndex))
+                        {
+                            // IndexId lookups read PSM.SpecIndex (see BuildParser.FindSpectrum), not SpecKey.
+                            curPsm.SpecIndex = specIndex;
+                            LookUpBy = SpecIdType.IndexId;
+                        }
+
+                        curPsm.Score = score.Value;
                         curPsm.Charge = item.ChargeState;
                         ExtractIonMobility(result, item, curPsm);
 
@@ -369,6 +388,13 @@ public class MzIdentMLReader : BuildParser
                 }
             }
         }
+
+        // If we walked PSMs but none carried a score we recognise, the file's search engine is
+        // genuinely unsupported (preserves the original error). A partially-scored file - e.g. the
+        // standalone MS Amanda + Percolator, where only q-value items are usable - reaches here with
+        // _analysisType already set and its unscored items simply skipped above.
+        if (_analysisType == Analysis.Unknown && itemsWithoutScore > 0)
+            Verbosity.Error(".mzid file contains an unsupported score type");
     }
 
     /// <summary>
@@ -455,7 +481,7 @@ public class MzIdentMLReader : BuildParser
     /// <see cref="_scoreThreshold"/> as a side effect on the first recognised CV term.
     /// </summary>
     /// <remarks>cpp parity: MzIdentMLReader.cpp:324.</remarks>
-    private double GetScore(SpectrumIdentificationItem item)
+    private double? GetScore(SpectrumIdentificationItem item)
     {
         // cpp parity: MzIdentMLReader.cpp:327 — two-pass approach. Primary scores first.
         foreach (var cvParam in item.CVParams)
@@ -564,9 +590,11 @@ public class MzIdentMLReader : BuildParser
             }
         }
 
-        // cpp parity: MzIdentMLReader.cpp:428 — Verbosity::error throws via BlibException.
-        Verbosity.Error(".mzid file contains an unsupported score type");
-        return 0; // unreachable: Verbosity.Error always throws.
+        // No supported score CV term on this item. Return null so the caller skips it. Some engines
+        // (e.g. the standalone MS Amanda + Percolator) emit SpectrumIdentificationItems carrying only
+        // the raw engine score and no q-value; those PSMs are simply not added to the library. A file in
+        // which NO item has a supported score is still reported as an error, in CollectPsms after the walk.
+        return null;
     }
 
     /// <summary>
@@ -617,6 +645,18 @@ public class MzIdentMLReader : BuildParser
         // cpp parity: MzIdentMLReader.cpp:478 — Verbosity::error throws BlibException.
         Verbosity.Error("Can't determine cutoff score, unknown analysis type");
         return false; // unreachable: Verbosity.Error always throws.
+    }
+
+    /// <summary>
+    /// Parse mzIdentML's "multiple peak list nativeID format" spectrum id, "index=N", into a 0-based
+    /// spectrum index. Used by tools such as the standalone MS Amanda that reference spectra by index.
+    /// </summary>
+    private static bool TryParseSpectrumIndex(string name, out int index)
+    {
+        index = -1;
+        if (name != null && name.StartsWith("index=", StringComparison.Ordinal))
+            return int.TryParse(name.AsSpan(6), NumberStyles.Integer, CultureInfo.InvariantCulture, out index);
+        return false;
     }
 
     /// <summary>
