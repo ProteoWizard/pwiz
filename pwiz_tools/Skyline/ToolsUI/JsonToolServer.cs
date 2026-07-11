@@ -827,9 +827,9 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.SetReplicate(replicateName);
         }
 
-        public int UnfinishedActionCount()
+        public int ModalNestingCount()
         {
-            return JsonUiService.UnfinishedActionCount;
+            return JsonUiService.ModalNestingCount;
         }
 
         public FormInfo[] GetOpenForms()

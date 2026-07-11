@@ -310,12 +310,13 @@ namespace SkylineTool
         /// </summary>
         public bool IsNative { get; set; }
         /// <summary>
-        /// For an interactive modal dialog the connector tracks, the <see cref="UnfinishedActionCount"/> value
-        /// that existed just before the dialog was shown (its "pre-show count") -- the level the action count
-        /// returns to once the dialog is accepted/cancelled and any resumed work it triggered has finished.
-        /// Null for a form that is not a tracked interactive modal (or whose pre-show count is unknown).
+        /// For an interactive modal dialog the connector tracks, the <see cref="IJsonToolService.ModalNestingCount"/>
+        /// value that existed just before the dialog was shown -- how many connector-raised modals were already
+        /// nested when it appeared, and the level the count returns to once the dialog is accepted/cancelled and any
+        /// resumed work it triggered has finished. The topmost open modal is the one with the highest value. Null
+        /// for a form that is not a tracked interactive modal (or whose nesting level is unknown).
         /// </summary>
-        public int? PreShowActionCount { get; set; }
+        public int? ModalNestingCount { get; set; }
     }
 
     /// <summary>

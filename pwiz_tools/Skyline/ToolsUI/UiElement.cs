@@ -654,7 +654,7 @@ namespace pwiz.Skyline.ToolsUI
         public virtual T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func);
 
         /// <summary>Posts a void action to this element's UI thread fire-and-forget (it is counted in
-        /// <see cref="JsonUiService.UnfinishedActionCount"/> until it finishes).</summary>
+        /// <see cref="JsonUiService.ModalNestingCount"/> until it finishes).</summary>
         public virtual void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action);
 
         /// <summary>The gate-and-gesture a mutating or clicking method owns. Two callers, distinguished by which
@@ -1062,10 +1062,15 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Whether this is a busy progress form (an <see cref="ILongWaitForm"/> mid-operation) the
         /// message-loop watchdog rides through; false for a native dialog.</summary>
         bool IsBusy { get; }
-        /// <summary>The message this form shows when it blocks the UI: a managed form's composed alert text
-        /// (CommonFormEx.DetailedMessage) else its caption; a native dialog's message-body text else its caption.
-        /// Read on the owning UI thread for a managed form.</summary>
-        string BlockingMessage { get; }
+        /// <summary>The detailed message this form shows when it blocks the UI: a managed form's composed alert
+        /// text (CommonFormEx.DetailedMessage) else its caption; a native dialog's message-body text else its
+        /// caption. Read on the owning UI thread for a managed form.</summary>
+        string DetailedMessage { get; }
+        /// <summary>This form's/dialog's top-level window handle. Captured up front (a managed form reads it on
+        /// its UI thread when the element is built; a native dialog is identified by it), so off-thread code such
+        /// as the modal-watch can identify or capture the window without reading Form.Handle off its UI thread
+        /// (which would trip the cross-thread check).</summary>
+        IntPtr Hwnd { get; }
     }
 
     /// <summary>A Form or a UserControl -- a boundary that owns its (flattened) children. It has no action
@@ -1120,22 +1125,34 @@ namespace pwiz.Skyline.ToolsUI
     /// factory (<see cref="ElementFor"/>) for the elements in its tree, tagging each with itself.</summary>
     internal sealed class FormElement : ContainerElement, IFormElement, IClipboardElement
     {
+        // Wraps a managed form, reading its window handle now. Must be built on the form's own UI thread -- reading
+        // Form.Handle off it trips the cross-thread check -- which the assertion enforces. Off that thread, build it
+        // with the handle already in hand (the two-argument constructor).
         public FormElement(Form form) : base(form)
         {
             FormElement = this;
+            Assume.IsFalse(form.InvokeRequired);
+            _hwnd = form.Handle;
         }
+
+        // Wraps a managed form whose window handle is already known (e.g. from a Win32 modal-window enumeration, or
+        // recorded when the modal was shown), so the element can be built off the form's UI thread without touching
+        // Form.Handle.
+        public FormElement(Form form, IntPtr hwnd) : base(form)
+        {
+            FormElement = this;
+            _hwnd = hwnd;
+        }
+
+        private readonly IntPtr _hwnd;
+        public IntPtr Hwnd => _hwnd;
         internal Form Form => (Form) Control;
 
         // Window-state queries (IFormElement) answered from this element's Form.
         public bool IsInteractiveModal => Form.Modal && !(Form is LongWaitDlg);
         public bool IsOpen => !Form.IsDisposed && Form.IsHandleCreated && Form.Visible;
         public bool IsBusy => Form is ILongWaitForm { IsBusy: true };
-        public string BlockingMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
-
-        // Identity is the underlying Form, so a fresh FormElement wrapping the same Form compares equal (the
-        // modal-watch tells a new modal from one already open by IFormElement identity, not window handles).
-        public override bool Equals(object obj) => obj is FormElement other && ReferenceEquals(Form, other.Form);
-        public override int GetHashCode() => Form.GetHashCode();
+        public string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
 
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
         // other form has no window-level clipboard gesture, so refuse it with a clear message.

@@ -106,7 +106,7 @@ namespace pwiz.Skyline.ToolsUI
         /// connector's actions have raised and left open, and a caller can poll it to wait until pending
         /// sets/clicks have actually been applied.
         /// </summary>
-        public static int UnfinishedActionCount => UiServiceDispatcher.UnfinishedActionCount;
+        public static int ModalNestingCount => UiServiceDispatcher.ModalNestingCount;
 
         /// <summary>
         /// Posts an action to the UI thread fire-and-forget (BeginInvoke, not Invoke): the caller returns at
@@ -114,12 +114,12 @@ namespace pwiz.Skyline.ToolsUI
         /// so a gesture that opens a modal dialog does not block -- the modal is driven by later commands,
         /// the same way the main-menu-item path posts its click. Posted on the same (main-window) queue as
         /// <see cref="InvokeOnUiThread"/>, so a later synchronous read sees this action's
-        /// effect (the queue is FIFO). The action is counted in <see cref="UnfinishedActionCount"/> from when
+        /// effect (the queue is FIFO). The action is counted in <see cref="ModalNestingCount"/> from when
         /// it is posted until its delegate returns. Must be called off the UI thread.
         /// </summary>
         public static void BeginInvokeOnUiThread(Action action, Control dispatcher = null)
         {
-            UiServiceDispatcher.IncrementUnfinishedActionCount();
+            UiServiceDispatcher.IncrementModalNestingCount();
             void Run()
             {
                 try
@@ -134,7 +134,7 @@ namespace pwiz.Skyline.ToolsUI
                     // gate (see BlockingAlertMessage), so the next command can report what went wrong.
                     MessageDlg.ShowException((IWin32Window) dispatcher ?? Program.MainWindow, exception);
                 }
-                finally { UiServiceDispatcher.DecrementUnfinishedActionCount(); }
+                finally { UiServiceDispatcher.DecrementModalNestingCount(); }
             }
             try
             {
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.ToolsUI
             catch
             {
                 // Posting failed, so the action will never run and is not pending after all.
-                UiServiceDispatcher.DecrementUnfinishedActionCount();
+                UiServiceDispatcher.DecrementModalNestingCount();
                 throw;
             }
         }
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.ToolsUI
         // The wait a named/convenience method runs for its gesture. The gesture (<paramref name="postGesture"/>) is
         // posted onto <paramref name="dispatcher"/> -- the TARGET FORM's own UI thread -- as one delegate that
         // resolves the control, gates it, and does the gesture; UiServiceDispatcher waits it out. Unifies three
-        // cases: a plain mutating action returns when UnfinishedActionCount falls back to where it started; an
+        // cases: a plain mutating action returns when ModalNestingCount falls back to where it started; an
         // action that opens an interactive modal returns as soon as the modal appears (recording its pre-show
         // count -- the ONLY place a pre-show count is recorded); an action that dismisses the top modal waits
         // until the count falls to the pre-show level its opener left, riding through any LongWaitDlg the resumed
@@ -341,8 +341,10 @@ namespace pwiz.Skyline.ToolsUI
             if (Program.MainWindow == null)
                 throw new InvalidOperationException(
                     @"Cannot invoke a menu item: the main Skyline window is not open yet (the StartPage may be showing).");
-            // The main menu is the main window's; drive it through that form's element model.
-            new FormElement(Program.MainWindow).InvokeMenuItem(menuPath);
+            // The main menu is the main window's; drive it through that form's element model. Build the element on
+            // the UI thread (it reads the window handle), then InvokeMenuItem drives it from this thread.
+            var mainWindow = InvokeOnUiThread(() => new FormElement(Program.MainWindow));
+            mainWindow.InvokeMenuItem(menuPath);
         }
 
         // Populates a ContextMenuStrip the way right-clicking the graph would: it invokes the graph's
@@ -376,9 +378,9 @@ namespace pwiz.Skyline.ToolsUI
             ValidateFormIdFormat(formId);
             // The path-walk, matching, gating, and click all live in ToolStripElement.ClickMenuItem; the
             // first segment is a top-level item on one of the form's toolstrips, so try each until one has it.
+            var formElement = (FormElement) FindFormById(formId);
             var toolStrips = InvokeOnUiThread(() =>
-                new FormElement(FindFormById(formId))
-                    .SelfAndDescendants().OfType<ToolStripElement>().ToList());
+                formElement.SelfAndDescendants().OfType<ToolStripElement>().ToList());
             if (!toolStrips.Any(toolStrip => toolStrip.ClickMenuItem(menuPath)))
                 throw new ArgumentException(LlmInstruction.Format(
                     @"Toolbar item not found on form {0}: {1}.", formId, menuPath));
@@ -388,7 +390,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Accepts the dialog named by <paramref name="formId"/> -- presses its default (accept) button, fire and
         /// forget -- then WAITS until the dialog is gone (inspecting the form object's own Visible / handle state,
         /// not <see cref="System.Windows.Forms.Application.OpenForms"/>) and, when its pre-show count is known,
-        /// until <see cref="UnfinishedActionCount"/> has fallen back to it (so the work the accept resumes is
+        /// until <see cref="ModalNestingCount"/> has fallen back to it (so the work the accept resumes is
         /// waited out). See <see cref="IJsonToolService"/>.
         /// </summary>
         public static void Accept(string formId)
@@ -436,7 +438,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     StillOpen = formElement.IsOpen,
                     LongWaitPresent = FormUtil.OpenForms.Any(f => f is ILongWaitForm { IsBusy: true }),
-                    Count = UnfinishedActionCount
+                    Count = ModalNestingCount
                 });
                 bool countReached = !preShowCount.HasValue || probe.Count == preShowCount.Value;
                 if (!probe.StillOpen && countReached)
@@ -541,9 +543,8 @@ namespace pwiz.Skyline.ToolsUI
             // paste (the count settling, or a type-conversion alert the paste raises appearing, which the caller
             // then drives) so it returns only once the paste has taken effect. The PerformAction escape-hatch path
             // (UiActions.SetGridText) stays fire-and-forget.
-            var form = InvokeOnUiThread(() => FindFormById(formId));
-            var formElement = new FormElement(form);
-            WaitForGesture(form, () => UiActions.SetGridText.Invoke(formElement.FindGrid(controlId), text ?? string.Empty));
+            var formElement = (FormElement) FindFormById(formId);
+            WaitForGesture(formElement.Form, () => UiActions.SetGridText.Invoke(formElement.FindGrid(controlId), text ?? string.Empty));
         }
 
         /// <summary>
@@ -559,9 +560,8 @@ namespace pwiz.Skyline.ToolsUI
             // the grid there, and SetCurrentCellAddress gates it and moves the cell. This named/convenience verb
             // waits out the posted move (the count settling) so it returns only once the cell has moved. The
             // PerformAction escape-hatch path (UiActions.SetCurrentCellAddress) stays fire-and-forget.
-            var form = InvokeOnUiThread(() => FindFormById(formId));
-            var formElement = new FormElement(form);
-            WaitForGesture(form, () => UiActions.SetCurrentCellAddress.Invoke(formElement.FindGrid(controlId), new[] { column, row }));
+            var formElement = (FormElement) FindFormById(formId);
+            WaitForGesture(formElement.Form, () => UiActions.SetCurrentCellAddress.Invoke(formElement.FindGrid(controlId), new[] { column, row }));
         }
 
         /// <summary>
@@ -679,7 +679,7 @@ namespace pwiz.Skyline.ToolsUI
                         HasGraph = false,
                         DockState = @"Main",
                         Id = GetFormId(skylineWindow),
-                        PreShowActionCount = UiServiceDispatcher.TryGetPreShowActionCount(new FormElement(skylineWindow)),
+                        ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(skylineWindow),
                     });
                     foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                     {
@@ -695,7 +695,7 @@ namespace pwiz.Skyline.ToolsUI
                             HasGraph = zedGraph != null,
                             DockState = dockState.ToString(),
                             Id = GetFormId(form),
-                            PreShowActionCount = UiServiceDispatcher.TryGetPreShowActionCount(new FormElement(form)),
+                            ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(form),
                         });
                     }
                 }
@@ -714,7 +714,7 @@ namespace pwiz.Skyline.ToolsUI
                         HasGraph = false,
                         DockState = @"Dialog",
                         Id = GetFormId(form),
-                        PreShowActionCount = UiServiceDispatcher.TryGetPreShowActionCount(new FormElement(form)),
+                        ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(form),
                     });
                 }
                 return formInfos;
@@ -744,8 +744,8 @@ namespace pwiz.Skyline.ToolsUI
         // dialog (NativeDialog) -- so every verb drives both through IFormElement and none special-cases a
         // native dialog. Native dialogs are matched first, on this (pipe) thread: they are non-managed windows
         // enumerated via UI Automation cross-thread (no Control to marshal through), which runs alongside their
-        // modal loop rather than on it. A managed form is then found on the UI thread. Throws if no open window
-        // has the id.
+        // modal loop rather than on it. A managed form is then found (also off the UI thread). Throws if no open
+        // window has the id.
         public static IFormElement ResolveForm(string formId)
         {
             ValidateFormIdFormat(formId);
@@ -757,28 +757,31 @@ namespace pwiz.Skyline.ToolsUI
                     dialog.Path = formPath;
                     return dialog;
                 }
-            return InvokeOnUiThread(() => (IFormElement) new FormElement(FindFormById(formId)) { Path = formPath });
+            // The managed form, already built (with its handle) by GetOpenFormElements; recording its path is a
+            // plain field set, so no UI-thread marshal is needed.
+            var formElement = (FormElement) FindFormById(formId);
+            formElement.Path = formPath;
+            return formElement;
         }
 
         // Resolves the managed form named by formId and runs func against it on that form's own UI thread --
         // the correct thread even for a form created on its own background thread (e.g. a
         // BackgroundThreadLongWaitDlg), whose controls must be touched through its message loop, not the main
-        // window's (see UiElement.InvokeOnUiThread). The form lookup runs on the main thread; func then runs on
+        // window's (see UiElement.InvokeOnUiThread). The form lookup runs on the calling thread; func then runs on
         // the form's thread, where it walks/reads the control tree. Must be called off the UI thread.
         private static T OnFormThread<T>(string formId, Func<FormElement, T> func)
         {
-            return InvokeOnUiThread(() =>
-            {
-                var formElement = new FormElement(FindFormById(formId));
-                return formElement.InvokeOnUiThread(() => func(formElement));
-            });
+            // Find the form (any thread); it is already built (with its handle). Run func on the form's OWN thread:
+            // its controls must be touched through that form's Invoke.
+            var formElement = (FormElement) FindFormById(formId);
+            return InvokeOnUiThread(() => func(formElement), formElement.Form);
         }
 
         public static string GetGraphData(string graphId, string filePath)
         {
+            var form = ((FormElement) FindFormById(graphId)).Form as DockableFormEx;
             return InvokeOnUiThread(() =>
             {
-                var form = FindFormById(graphId) as DockableFormEx;
                 var zedGraph = form != null ? TryGetZedGraphControl(form) : null;
                 if (zedGraph == null)
                 {
@@ -922,7 +925,7 @@ namespace pwiz.Skyline.ToolsUI
         // CheckImageToolPreflight and as the first step of actual rendering.
         private static void EnsureGraphForm(string graphId, out DockableFormEx form, out ZedGraphControl graph)
         {
-            form = FindFormById(graphId) as DockableFormEx;
+            form = ((FormElement) FindFormById(graphId)).Form as DockableFormEx;
             graph = form != null ? TryGetZedGraphControl(form) : null;
             if (graph == null)
             {
@@ -1042,51 +1045,58 @@ namespace pwiz.Skyline.ToolsUI
             return null;
         }
 
-        /// <summary>
-        /// Finds a form by its TypeName:Title identifier from GetOpenForms.
-        /// Searches docked forms first, then non-docked forms (dialogs).
-        /// </summary>
-        private static Form FindFormById(string formId)
+        /// <summary>Every window a connector caller can address, each wrapped as the connector form abstraction
+        /// that drives it: the top-level windows (see <see cref="NativeDialog.GetTopLevelWindows"/>) plus, when the
+        /// main Skyline window is up, the forms docked inside it. Lazy -- the top-level windows are yielded first
+        /// (Win32-only, no marshal), and only if the caller keeps enumerating past them is the docked-form list
+        /// fetched. The docked forms are child windows (not top-level), so they are read through the main window's
+        /// DockPanel, which must be on its UI thread -- hence the single Invoke, paid only when reached (a caller
+        /// that finds its match among the top-level windows never triggers it).</summary>
+        public static IEnumerable<IFormElement> GetOpenFormElements()
         {
-            ValidateFormIdFormat(formId);
-            int colonIndex = formId.IndexOf(':');
-            string typeName = formId.Substring(0, colonIndex);
-            string title = formId.Substring(colonIndex + 1);
+            foreach (var window in NativeDialog.GetTopLevelWindows())
+                yield return window;
 
-            var skylineWindow = Program.MainWindow;
+            foreach (var docked in GetDockedForms())
+                yield return docked;
+        }
 
-            // The main Skyline window itself -- it is not in DockPanel.Contents, but it owns the main menu
-            // and toolbars, so it must be resolvable to walk/drive them (e.g. View > Libraries > Ion Types).
-            if (skylineWindow != null
-                && skylineWindow.GetType().Name == typeName && GetFormTitle(skylineWindow) == title)
-                return skylineWindow;
-
-            // Search docked forms (none while the StartPage is showing -- no main window yet)
-            if (skylineWindow != null)
+        // The forms docked in the main Skyline window, each as a FormElement, or empty when the main window is not
+        // up. Callable from any thread: the docked forms are child windows read through the main window's DockPanel,
+        // which must be on its UI thread, so this Invokes the read (and the FormElement construction, which captures
+        // each handle) onto that thread. Hidden/unknown-state docked forms are skipped (not on screen).
+        private static IList<IFormElement> GetDockedForms()
+        {
+            var mainWindow = Program.MainWindow;
+            if (mainWindow == null)
+                return new List<IFormElement>();
+            return (IList<IFormElement>) mainWindow.Invoke((Func<IList<IFormElement>>) (() =>
             {
-                foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
+                var result = new List<IFormElement>();
+                foreach (var form in mainWindow.DockPanel.Contents.OfType<DockableFormEx>())
                 {
                     var dockState = form.DockState;
                     if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                         continue;
-                    if (form.GetType().Name == typeName && GetFormTitle(form) == title)
-                        return form;
+                    result.Add(new FormElement(form));
                 }
-            }
+                return result;
+            }));
+        }
 
-            // Search non-docked forms (dialogs)
-            var dockedForms = skylineWindow != null
-                ? new HashSet<Form>(skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
-                : new HashSet<Form>();
-            foreach (var form in FormUtil.OpenForms)
-            {
-                if (form == skylineWindow || dockedForms.Contains(form))
-                    continue;
-                if (!form.Visible)
-                    continue;
-                if (form.GetType().Name == typeName && GetFormTitle(form) == title)
-                    return form;
-            }
+        /// <summary>
+        /// Finds a managed form by its TypeName:Title identifier -- the main window, a form docked in it, or an
+        /// open dialog -- and returns it as the already-built <see cref="FormElement"/> (its window handle already
+        /// captured). Matches against <see cref="GetOpenFormElements"/>, which enumerates the top-level windows off
+        /// any thread and reads the docked forms through the main window's own Invoke, so this may be called from
+        /// any thread (the caller need not marshal it onto the UI thread).
+        /// </summary>
+        private static IFormElement FindFormById(string formId)
+        {
+            ValidateFormIdFormat(formId);
+            foreach (var window in GetOpenFormElements())
+                if (window is FormElement formElement && formElement.FormId == formId)
+                    return formElement;
 
             throw new ArgumentException(LlmInstruction.Format(
                 @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",

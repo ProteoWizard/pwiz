@@ -37,7 +37,7 @@ namespace pwiz.Skyline.ToolsUI
     /// timing out via a message-loop-progress watchdog). Construct it, set the properties, then call
     /// <see cref="Run{T}"/> (or the void <see cref="Run(System.Action)"/>).
     ///
-    /// The work is counted in <see cref="JsonUiService.UnfinishedActionCount"/> from before it is dispatched until
+    /// The work is counted in <see cref="JsonUiService.ModalNestingCount"/> from before it is dispatched until
     /// its delegate returns, so an action that opens a modal stays counted while its delegate blocks in the modal
     /// loop. The shared wait loop then: polls the modals; rides through a busy progress form; on a new
     /// blocking/interactive modal either throws its message or stops and records it (per <see cref="ThrowOnDialog"/>);
@@ -74,7 +74,7 @@ namespace pwiz.Skyline.ToolsUI
         /// When true (the InvokeOnUiThread config), <see cref="Run{T}"/> is a plain SYNCHRONOUS UI-thread marshal
         /// (a <see cref="Control.Invoke(System.Delegate)"/> that blocks until the work returns its result): no
         /// pending-action count, no modal wait loop. It skips the count deliberately -- a synchronous read must not
-        /// move <see cref="UnfinishedActionCount"/>, because callers read that count from INSIDE such an invoke
+        /// move <see cref="ModalNestingCount"/>, because callers read that count from INSIDE such an invoke
         /// (e.g. the Accept/Cancel wait) and an increment would corrupt it -- and a read cannot afford the
         /// posted-and-polled wait a gesture uses (that would add a poll interval per read). Exceptions propagate raw.
         /// </summary>
@@ -108,17 +108,17 @@ namespace pwiz.Skyline.ToolsUI
         // decrement in the delegate's finally), and JsonUiService.BeginInvokeOnUiThread counts its posted gestures
         // the same way. An action that opens a modal stays counted while its delegate blocks in the modal loop, so
         // the count is usually the number of open connector-raised modals, and the wait loop polls it to know when
-        // a gesture's effect has drained. Exposed read-only through JsonUiService.UnfinishedActionCount (the
+        // a gesture's effect has drained. Exposed read-only through JsonUiService.ModalNestingCount (the
         // IJsonToolService accessor).
-        private static int _unfinishedActionCount;
+        private static int _modalNestingCount;
 
-        /// <summary>The pending fire-and-forget action count (see <see cref="JsonUiService.UnfinishedActionCount"/>).</summary>
-        public static int UnfinishedActionCount => Volatile.Read(ref _unfinishedActionCount);
+        /// <summary>The pending fire-and-forget action count (see <see cref="JsonUiService.ModalNestingCount"/>).</summary>
+        public static int ModalNestingCount => Volatile.Read(ref _modalNestingCount);
 
         // Increment/decrement the pending-action count: Run wraps its own dispatched work, and
         // JsonUiService.BeginInvokeOnUiThread wraps its posted gestures, with these.
-        internal static void IncrementUnfinishedActionCount() => Interlocked.Increment(ref _unfinishedActionCount);
-        internal static void DecrementUnfinishedActionCount() => Interlocked.Decrement(ref _unfinishedActionCount);
+        internal static void IncrementModalNestingCount() => Interlocked.Increment(ref _modalNestingCount);
+        internal static void DecrementModalNestingCount() => Interlocked.Decrement(ref _modalNestingCount);
 
         // ===== UI-thread marshaling (owned here; JsonUiService.InvokeOnUiThread delegates to these) =====
 
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         /// Posts <paramref name="action"/> to the UI thread fire-and-forget, through <see cref="UiThreadWindow"/>
         /// (or a background thread if neither window is up yet). The RAW post that does NOT count in
-        /// <see cref="UnfinishedActionCount"/> (unlike the connector's counted
+        /// <see cref="ModalNestingCount"/> (unlike the connector's counted
         /// <see cref="JsonUiService.BeginInvokeOnUiThread(System.Action,System.Windows.Forms.Control)"/>). Off the UI thread.
         /// </summary>
         internal static void PostToUiThreadWindow(Action action)
@@ -194,21 +194,13 @@ namespace pwiz.Skyline.ToolsUI
         // ===== Modal-dialog detection and messages =====
 
         // The modal dialogs currently open in this process, each wrapped as the connector form abstraction that
-        // drives it. Two independent sources, so there is no Form<->handle pairing (reading Form.Handle off the
-        // poll thread trips the cross-thread check): managed modals come straight from FormUtil.OpenForms (thread-
-        // safe) by Form.Modal (a safe state read); truly-native dialogs come from the Win32 modal-window
-        // enumeration behind NativeDialog. A managed WinForms window (class "WindowsForms...") also shows up in that
-        // Win32 enumeration, so it is excluded there -- it is already covered by the OpenForms source -- leaving the
-        // native windows (a #32770 message box, an Open/Save file dialog, ...). Excluding by class-name PREFIX
-        // rather than testing for "#32770" keeps every native modal kind (not only #32770), matching the old
-        // "not a managed form" rule. GetClassName is a Win32 call, so it does not trip the check either.
+        // drives it -- managed modals as a FormElement, truly-native ones as a NativeDialog. A single Win32
+        // enumeration of the modal windows is the sole source (see NativeDialog.GetModalDialogs), so there is no
+        // Form<->handle pairing and no Form.Handle read that would trip the cross-thread check; safe off the poll
+        // thread.
         internal static IList<IFormElement> GetOpenModals()
         {
-            var managed = FormUtil.OpenForms.Where(f => f.Modal).Select(f => (IFormElement) new FormElement(f));
-            var native = NativeDialog.EnumModalWindowHandles()
-                .Where(hwnd => !User32.GetClassName(hwnd).StartsWith(@"WindowsForms", StringComparison.Ordinal))
-                .Select(NativeDialog.ForModalWindow);
-            return managed.Concat(native).ToList();
+            return NativeDialog.GetModalDialogs().ToList();
         }
 
         // The message of the first interactive modal currently blocking the UI (an alert/error text or a dialog's
@@ -216,12 +208,12 @@ namespace pwiz.Skyline.ToolsUI
         // (UiElement.VerifyFormInteractable).
         internal static string BlockingAlertMessage()
         {
-            return GetOpenModals().Where(m => m.IsInteractiveModal).Select(m => m.BlockingMessage).FirstOrDefault();
+            return GetOpenModals().Where(m => m.IsInteractiveModal).Select(m => m.DetailedMessage).FirstOrDefault();
         }
 
         // ===== Interactive-modal pre-show-count tracker =====
 
-        // The pre-show count for each interactive modal the connector has SEEN APPEAR: the UnfinishedActionCount
+        // The pre-show count for each interactive modal the connector has SEEN APPEAR: the ModalNestingCount
         // that existed just before the modal was shown. Recorded ONLY in the primary path -- when Run detects that
         // the gesture it posted opened a new interactive modal, it records that modal here. There is no
         // process-wide hook and no close hook, so entries are pruned lazily whenever the tracker is read or
@@ -229,31 +221,48 @@ namespace pwiz.Skyline.ToolsUI
         // wait) never keeps a closed dialog -- and through it the SkylineWindow / document -- alive. A modal
         // opened another way simply has no entry, and Accept/Cancel then wait for its disappearance only. Kept
         // LIFO (modals stack) but searched by Form. Guarded by its own lock.
-        private static readonly List<KeyValuePair<WeakReference<Form>, int>> _modalPreShowCounts =
-            new List<KeyValuePair<WeakReference<Form>, int>>();
+        private static readonly List<ModalEntry> _modalPreShowCounts = new List<ModalEntry>();
+
+        // One tracked modal: a weak reference to its Form, its pre-show count, and its window handle. The handle is
+        // captured now (when the modal appears) so CurrentTopInteractiveModal can rebuild the FormElement off the
+        // UI thread without reading Form.Handle (which would trip the cross-thread check).
+        private readonly struct ModalEntry
+        {
+            public ModalEntry(Form form, IntPtr hwnd, int preShowCount)
+            {
+                FormRef = new WeakReference<Form>(form);
+                Hwnd = hwnd;
+                PreShowCount = preShowCount;
+            }
+            public WeakReference<Form> FormRef { get; }
+            public IntPtr Hwnd { get; }
+            public int PreShowCount { get; }
+        }
 
         // Drops entries whose Form has been collected or disposed. Called under the lock, in place of a close hook.
         private static void PruneDeadModals()
         {
-            _modalPreShowCounts.RemoveAll(e => !e.Key.TryGetTarget(out var form) || form.IsDisposed);
+            _modalPreShowCounts.RemoveAll(e => !e.FormRef.TryGetTarget(out var form) || form.IsDisposed);
         }
 
         // The managed Form a tracked modal wraps -- only a managed FormElement is ever tracked (a native dialog
         // has no pre-show count), so this is null for a NativeDialog.
-        private static Form TrackedForm(IFormElement modal) => (modal as FormElement)?.Form;
+        private static FormElement TrackedFormElement(IFormElement modal) => modal as FormElement;
 
         // Records a newly appeared interactive modal's pre-show count, unless one is already recorded for it. A
-        // native dialog has no managed Form, so it is never tracked.
+        // native dialog has no managed Form, so it is never tracked. The modal's handle is already known (it was
+        // built with it in hand), so it is stored without touching Form.Handle.
         internal static void RecordModalPreShowCount(IFormElement modal, int preShowCount)
         {
-            var form = TrackedForm(modal);
-            if (form == null)
+            var formElement = TrackedFormElement(modal);
+            if (formElement == null)
                 return;
+            var form = formElement.Form;
             lock (_modalPreShowCounts)
             {
                 PruneDeadModals();
-                if (!_modalPreShowCounts.Any(e => e.Key.TryGetTarget(out var f) && ReferenceEquals(f, form)))
-                    _modalPreShowCounts.Add(new KeyValuePair<WeakReference<Form>, int>(new WeakReference<Form>(form), preShowCount));
+                if (!_modalPreShowCounts.Any(e => e.FormRef.TryGetTarget(out var f) && ReferenceEquals(f, form)))
+                    _modalPreShowCounts.Add(new ModalEntry(form, formElement.Hwnd, preShowCount));
             }
         }
 
@@ -268,29 +277,36 @@ namespace pwiz.Skyline.ToolsUI
         // tracker's state.
         internal static int? TryGetPreShowActionCount(IFormElement modal)
         {
-            var form = TrackedForm(modal);
+            return TryGetPreShowActionCount(TrackedFormElement(modal)?.Form);
+        }
+
+        // The recorded pre-show count for a managed form, keyed on Form identity (not its handle) -- so a caller
+        // that already holds the Form need not build a FormElement (which would read the handle off the form's own
+        // thread). Null when the form is untracked.
+        internal static int? TryGetPreShowActionCount(Form form)
+        {
             if (form == null)
                 return null;
             lock (_modalPreShowCounts)
             {
                 PruneDeadModals();
                 foreach (var entry in _modalPreShowCounts)
-                    if (entry.Key.TryGetTarget(out var f) && ReferenceEquals(f, form))
-                        return entry.Value;
+                    if (entry.FormRef.TryGetTarget(out var f) && ReferenceEquals(f, form))
+                        return entry.PreShowCount;
             }
             return null;
         }
 
         // The interactive modal most recently seen appear and still alive (the LIFO top of the tracker), wrapped as
-        // a FormElement, or null.
+        // a FormElement, or null. Built with the entry's recorded handle, so it is safe on this poll thread.
         internal static IFormElement CurrentTopInteractiveModal()
         {
             lock (_modalPreShowCounts)
             {
                 PruneDeadModals();
                 for (int i = _modalPreShowCounts.Count - 1; i >= 0; i--)
-                    if (_modalPreShowCounts[i].Key.TryGetTarget(out var form))
-                        return new FormElement(form);
+                    if (_modalPreShowCounts[i].FormRef.TryGetTarget(out var form))
+                        return new FormElement(form, _modalPreShowCounts[i].Hwnd);
                 return null;
             }
         }
@@ -314,28 +330,28 @@ namespace pwiz.Skyline.ToolsUI
             public string BlockingMessage;     // the first new blocking modal's message (throw text / record); null if none
             public bool TopModalDismissed;     // the interactive modal open at the start is gone
             public bool LongWaitPresent;       // a busy progress form (LongWaitDlg or other ILongWaitForm) is open
-            public int UnfinishedCount;        // UnfinishedActionCount sampled in the same UI-thread pass
+            public int ModalNestingCount;        // ModalNestingCount sampled in the same UI-thread pass
         }
 
         // Samples the modal/count state in one pass, relative to the state captured at the start of the wait. Runs
         // on the caller's poll thread (FormUtil.OpenForms is thread-safe), asking each modal (a FormElement or
         // NativeDialog) about itself -- no window handles, no UI-thread marshal.
-        internal static ModalProbeResult ProbeModals(HashSet<IFormElement> startModals, IFormElement topModal)
+        internal static ModalProbeResult ProbeModals(Dictionary<IntPtr, IFormElement> startModals, IFormElement topModal)
         {
             var currentModals = GetOpenModals();
-            var result = new ModalProbeResult { UnfinishedCount = UnfinishedActionCount };
+            var result = new ModalProbeResult { ModalNestingCount = ModalNestingCount };
             // A new modal that is not a progress dialog is an interactive stop (a managed modal, or a native
             // dialog). Mirrors the dialog-watch.
             foreach (var modal in currentModals)
             {
-                if (startModals.Contains(modal) || !modal.IsInteractiveModal)
-                    continue; // open at the start (by IFormElement identity), or a progress dialog -- not a new stop
+                if (startModals.ContainsKey(modal.Hwnd) || !modal.IsInteractiveModal)
+                    continue; // open at the start (by window handle), or a progress dialog -- not a new stop
                 if (!result.NewInteractiveModal)
                 {
                     // The FIRST new interactive modal (in window-enumeration order): the message the dialog-watch
                     // throws, or the posted-gesture wait records.
                     result.NewInteractiveModal = true;
-                    result.BlockingMessage = modal.BlockingMessage;
+                    result.BlockingMessage = modal.DetailedMessage;
                 }
                 if (modal is FormElement)
                 {
@@ -375,11 +391,10 @@ namespace pwiz.Skyline.ToolsUI
                 return syncResult;
             }
 
-            int initialCount = UnfinishedActionCount;
-            // The modals open at the start, as form abstractions -- the identity (by underlying Form / native
-            // window, via IFormElement equality) the wait loop uses to tell a NEW modal from one already open. Read
-            // off the poll thread (FormUtil.OpenForms is thread-safe); no window handles.
-            var startModals = new HashSet<IFormElement>(GetOpenModals());
+            int initialCount = ModalNestingCount;
+            // The modals open at the start, keyed by window handle -- the identity the wait loop uses to tell a NEW
+            // modal from one already open. Read off the poll thread (FormUtil.OpenForms is thread-safe).
+            var startModals = GetOpenModals().ToDictionary(form => form.Hwnd);
             // The top interactive modal open at the start, as a form abstraction, and the opener's pre-show count --
             // captured now, before it (and its tracker entry) can close, so the ride-through target does not race
             // the close. The probe later asks this modal itself whether it is still open. Inert for a value read
@@ -404,12 +419,12 @@ namespace pwiz.Skyline.ToolsUI
             // loop. Capture the worker's exception (on whichever thread it runs) rather than let it escape: the
             // dialog-watch avoids a RunAsync error dialog, and the posted gesture surfaces a not-interactable gate
             // failure to the caller (re-thrown below) instead of leaving it on the form thread.
-            IncrementUnfinishedActionCount();
+            IncrementModalNestingCount();
             void RunWork()
             {
                 try { result = work(); }
                 catch (Exception ex) { workError = ex; }
-                finally { DecrementUnfinishedActionCount(); }
+                finally { DecrementModalNestingCount(); }
             }
             try
             {
@@ -425,7 +440,7 @@ namespace pwiz.Skyline.ToolsUI
             catch
             {
                 // Dispatch failed, so the work will never run and is not pending after all.
-                DecrementUnfinishedActionCount();
+                DecrementModalNestingCount();
                 throw;
             }
 
@@ -436,7 +451,7 @@ namespace pwiz.Skyline.ToolsUI
                 // Read the modal/count state on this poll thread -- no marshal (FormUtil.OpenForms is thread-safe,
                 // and each modal answers about itself).
                 var probe = ProbeModals(startModals, topModalAtStart);
-                int count = probe.UnfinishedCount;
+                int count = probe.ModalNestingCount;
 
                 if (probe.NewInteractiveModal)
                 {

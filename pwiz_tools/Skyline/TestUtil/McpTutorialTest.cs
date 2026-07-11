@@ -154,7 +154,7 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// Performs a connector action that is NOT expected to open a modal dialog, then waits for the posted
-        /// (fire-and-forget) action to finish -- i.e. until <see cref="IJsonToolService.UnfinishedActionCount"/>
+        /// (fire-and-forget) action to finish -- i.e. until <see cref="IJsonToolService.ModalNestingCount"/>
         /// returns to the value it had before. The count is incremented synchronously as the action is posted
         /// and decremented when its delegate returns, so this reliably waits out the click / value-set. For an
         /// action that DOES open a dialog (which stays counted until the dialog closes), wait for the dialog
@@ -164,9 +164,9 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void WaitForAction(Action action)
         {
-            int before = Connector.UnfinishedActionCount();
+            int before = Connector.ModalNestingCount();
             action();
-            WaitForCondition(() => Connector.UnfinishedActionCount() <= before);
+            WaitForCondition(() => Connector.ModalNestingCount() <= before);
         }
 
         /// <summary>

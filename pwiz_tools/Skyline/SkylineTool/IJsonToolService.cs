@@ -310,13 +310,13 @@ namespace SkylineTool
         // --- UI state ---
 
         /// <summary>
-        /// Returns the number of fire-and-forget UI actions (a click, a value set posted by a verb such as
-        /// <see cref="ClickFormButton"/> or <see cref="SetFormValue"/>) that have been posted but have not
-        /// yet finished. An action that opens a modal dialog stays counted until that modal closes, so this
-        /// is usually equal to the number of modal dialogs those actions have raised and left open. Poll it
-        /// to wait until pending sets/clicks have actually been applied.
+        /// Returns the connector's modal-nesting count: the number of fire-and-forget UI actions (a click, a value
+        /// set posted by a verb such as <see cref="ClickFormButton"/> or <see cref="SetFormValue"/>) that have been
+        /// posted but have not yet finished. An action that opens a modal dialog stays counted until that modal
+        /// closes, so this is usually equal to the number of modal dialogs those actions have raised and left open.
+        /// Poll it to wait until pending sets/clicks have actually been applied.
         /// </summary>
-        int UnfinishedActionCount();
+        int ModalNestingCount();
 
         /// <summary>
         /// Returns information about all open forms, panels, and dialogs.
