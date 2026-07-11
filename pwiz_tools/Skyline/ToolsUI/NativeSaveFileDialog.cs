@@ -79,13 +79,17 @@ namespace pwiz.Skyline.ToolsUI
             SetWindowText(GetFileNameEditHandle(), path);
         }
 
-        /// <summary>Posts the Save-button click (the base Accept waits for the dialog to close).</summary>
-        public override void EnqueueAcceptMsg()
+        /// <summary>Resolves the Save button (on the caller thread) and returns its click; the base Accept runs that
+        /// send on the dialog's UI thread and waits for the dialog to close.</summary>
+        protected override Action ResolveAcceptGesture()
         {
-            // Post (not send) BM_CLICK: clicking Save can raise a nested modal (the overwrite-confirm prompt), whose
-            // message loop would never return to a synchronous SendMessage and so would wedge the single-instance
-            // connector. PostMessage returns at once, leaving the pipe thread free to drive that second dialog.
-            User32.PostMessageA(GetSaveButtonHandle(), User32.WinMessageType.BM_CLICK, 0, 0);
+            // Resolve the Save button's handle here (UI Automation, off the dialog's UI thread). The returned click is
+            // SENT on the dialog's OWN thread by OkDialog: clicking Save can raise a nested modal (the overwrite-confirm
+            // prompt); running the send on the UI thread lets that modal's loop run there -- the send blocks in it,
+            // keeping the action counted and letting the wait detect the prompt -- instead of pinning the pipe thread a
+            // cross-thread send would.
+            var handle = GetSaveButtonHandle();
+            return () => SendClick(handle);
         }
 
         // The file-name Edit is the class "Edit" control inside the file-name control host. Find it by

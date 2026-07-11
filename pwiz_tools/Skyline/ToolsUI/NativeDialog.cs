@@ -267,46 +267,60 @@ namespace pwiz.Skyline.ToolsUI
         /// button through UI Automation, which the dialog (a DirectUI surface) does not always
         /// honor.
         /// </summary>
-        // Posts WM_CLOSE (dismisses the dialog), fire and forget. Shared by the close_form verb (Close) and the
-        // named Cancel verb (which adds the wait).
+        // Posts WM_CLOSE (dismisses the dialog), fire and forget -- the close_form verb (Close).
         private void EnqueueCancelMsg()
         {
             User32.PostMessageA(WindowHandle, User32.WinMessageType.WM_CLOSE, 0, 0);
         }
 
-        /// <summary>Cancels the dialog (posts WM_CLOSE) and rides the shared accept/cancel wait (IFormElement.Cancel).</summary>
+        /// <summary>Cancels the dialog (sends WM_CLOSE on its own UI thread) and rides the shared accept/cancel wait
+        /// (IFormElement.Cancel).</summary>
         public ActionResult Cancel()
         {
-            return RunDismissGesture(EnqueueCancelMsg);
+            return RunDismissGesture(() =>
+                User32.SendMessage(WindowHandle, User32.WinMessageType.WM_CLOSE, IntPtr.Zero, IntPtr.Zero));
         }
 
         /// <summary>
-        /// Posts the accept gesture -- the generic dialog presses Enter (which activates the default button); the
-        /// file dialogs override this with the gesture their surface needs. UI Automation lookup and Win32 post both
-        /// run on the caller (pipe) thread (IFormElement.EnqueueAcceptMsg), where UI Automation is safe.
+        /// Resolves the accept gesture -- run on the CALLER (pipe) thread, where UI Automation is safe (off the
+        /// dialog's own UI thread) -- as an Action that OkDialog runs on the dialog's OWN UI thread. A button gesture
+        /// SENDS BM_CLICK, so a click that raises a nested modal (e.g. the Save dialog's overwrite-confirm) blocks
+        /// there -- keeping its action counted and letting the wait detect the new modal -- rather than pinning the
+        /// pipe thread a cross-thread send would. An Enter gesture (this generic dialog, the Open dialog) POSTS instead
+        /// (see PostEnter). The file dialogs override this with the gesture their DirectUI surface needs.
         /// </summary>
-        public virtual void EnqueueAcceptMsg()
+        protected virtual Action ResolveAcceptGesture()
         {
-            PressEnter(DialogElement);
+            var handle = new IntPtr(DialogElement.Current.NativeWindowHandle);
+            return () => PostEnter(handle);
+        }
+
+        /// <summary>Posts the accept gesture fire-and-forget onto the dialog's UI thread (IFormElement.EnqueueAcceptMsg,
+        /// the generic UiActions.Accept escape hatch). The UI-Automation lookup runs here, on the caller thread; the
+        /// resolved Win32 send is BeginInvoked onto the dialog's thread so it never blocks the caller.</summary>
+        public void EnqueueAcceptMsg()
+        {
+            BeginInvokeOnUiThread(ResolveAcceptGesture());
         }
 
         /// <summary>Accepts the dialog (its default/OK gesture) and rides the shared accept/cancel wait (IFormElement.Accept).</summary>
         public ActionResult Accept()
         {
-            return RunDismissGesture(EnqueueAcceptMsg);
+            return RunDismissGesture(ResolveAcceptGesture());
         }
 
-        // Rides DialogWatcher.OkDialogNow's shared accept wait -- the SAME machinery a managed form's accept uses,
-        // but running the WHOLE gesture (UI Automation lookup and the Win32 post) here on the caller thread rather
-        // than on the dialog's own thread, where UI Automation would deadlock. Because the dialog was tracked when it
-        // appeared, the wait completes only once its window has closed AND the count has drained to its opener's
-        // pre-show level -- i.e. the action that showed it (e.g. an openMenuItem_Click that then loads a file for
-        // minutes) has returned -- stopping early on a new modal or the watchdog. The wait judges its condition with
-        // a synchronous Send on the UI thread, which flushes a closing common dialog's child-window teardown (e.g.
-        // the folder-tree "Namespace Tree Control") behind it -- so no separate flush is needed here.
-        private ActionResult RunDismissGesture(Action postGesture)
+        // Resolves the gesture on THIS (caller) thread, then rides DialogWatcher.OkDialog's shared accept/cancel wait
+        // -- the SAME machinery a managed form's accept uses. The gesture's UI-Automation lookup is done here (safe off
+        // the dialog's own UI thread); OkDialog runs the resolved Win32 SEND on the dialog's own UI thread, where a
+        // click that opens a nested modal blocks (counted) instead of wedging the pipe thread, and the wait stops early
+        // on that new modal. Because the dialog was tracked when it appeared, the wait completes only once its window
+        // has closed AND the count has drained to its opener's pre-show level -- i.e. the action that showed it (e.g.
+        // an openMenuItem_Click that then loads a file for minutes) has returned. The wait judges its condition with a
+        // synchronous Send on the UI thread, which flushes a closing common dialog's child-window teardown (e.g. the
+        // folder-tree "Namespace Tree Control") behind it -- so no separate flush is needed here.
+        private ActionResult RunDismissGesture(Action sendGesture)
         {
-            return DialogWatcher.OkDialogNow(WindowHandle, postGesture);
+            return DialogWatcher.OkDialog(WindowHandle, sendGesture);
         }
 
         // ---- IFormElement: drive the dialog the way JsonUiService drives any form -------------------
@@ -411,9 +425,27 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         protected void PressEnter(AutomationElement element)
         {
-            var handle = new IntPtr(element.Current.NativeWindowHandle);
+            PostEnter(new IntPtr(element.Current.NativeWindowHandle));
+        }
+
+        // Posts Enter (key down then up) to a control. Enter MUST be POSTED, not sent: the dialog's modal message
+        // loop translates a queued VK_RETURN into its default action (IsDialogMessage) -- a synchronous send, calling
+        // the control's wndproc directly, bypasses that and does not accept the dialog. (Unlike BM_CLICK, which acts
+        // on the button regardless of how it arrives; see SendClick.) The post is thread-agnostic, so a gesture posted
+        // from the UI thread lands on the same queue and is accepted when OkDialog's wait next flushes it.
+        protected static void PostEnter(IntPtr handle)
+        {
             User32.PostMessageA(handle, User32.WinMessageType.WM_KEYDOWN, VK_RETURN, 0);
             User32.PostMessageA(handle, User32.WinMessageType.WM_KEYUP, VK_RETURN, 0);
+        }
+
+        // Sends BM_CLICK to a button synchronously. Run on the button's OWN UI thread (see ResolveAcceptGesture), so a
+        // click that opens a nested modal blocks there (keeping its action counted) rather than pinning the pipe
+        // thread. BM_CLICK acts on the button directly, so -- unlike an Enter keypress (see PostEnter) -- it needs no
+        // dialog-message-loop translation and works when sent.
+        protected static void SendClick(IntPtr buttonHandle)
+        {
+            User32.SendMessage(buttonHandle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
         }
 
         /// <summary>Waits for a descendant control of the dialog with the given AutomationId.</summary>

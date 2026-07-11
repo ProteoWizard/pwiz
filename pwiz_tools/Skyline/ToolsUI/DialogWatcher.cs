@@ -76,30 +76,25 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         internal static Control UiThreadWindow => (Control) Program.MainWindow ?? Program.StartWindow;
 
-        // ===== The four entry points =====
+        // ===== The three entry points =====
 
         /// <summary>Posts <paramref name="action"/> onto <paramref name="hwnd"/>'s UI thread and waits until it
         /// finishes, or until it opens/leaves an interactive modal (Completed = false, with that modal's message).</summary>
         public static ActionResult PerformAction(IntPtr hwnd, Action action)
         {
-            return PerformActionAndWait(hwnd, null, action, null);
+            return PerformActionAndWait(hwnd, action, null);
         }
 
         /// <summary>Accepts or cancels the dialog at <paramref name="hwndDlg"/>: posts <paramref name="dismissAction"/>
         /// onto its UI thread, then waits until that window has closed AND the nesting count has dropped back to the
         /// level recorded when the dialog was shown -- i.e. the action that opened it has returned -- stopping early
-        /// on a new modal or the watchdog.</summary>
+        /// on a new modal or the watchdog. A native dialog resolves the control to drive (its UI-Automation lookup,
+        /// safe off the dialog's own thread) BEFORE calling this and passes a Win32 gesture as <paramref name="dismissAction"/>
+        /// -- a SENT BM_CLICK for a button (so a click that opens a nested modal blocks on the dialog's UI thread,
+        /// counted, rather than pinning the pipe thread) or a POSTED Enter where the modal loop must translate it.</summary>
         public static ActionResult OkDialog(IntPtr hwndDlg, Action dismissAction)
         {
-            return PerformActionAndWait(hwndDlg, null, dismissAction, DismissedAndDrained(hwndDlg));
-        }
-
-        /// <summary>Like <see cref="OkDialog"/>, but runs <paramref name="dismissAction"/> on the CALLER's thread
-        /// (as actionNow) instead of posting it to the dialog's UI thread -- for a native dialog, whose whole gesture
-        /// (the UI-Automation lookup AND the Win32 post) must run off the dialog's own (UI) thread.</summary>
-        public static ActionResult OkDialogNow(IntPtr hwndDlg, Action dismissAction)
-        {
-            return PerformActionAndWait(hwndDlg, dismissAction, null, DismissedAndDrained(hwndDlg));
+            return PerformActionAndWait(hwndDlg, dismissAction, DismissedAndDrained(hwndDlg));
         }
 
         /// <summary>Runs <paramref name="function"/> on <paramref name="hwnd"/>'s UI thread and returns its result;
@@ -107,7 +102,7 @@ namespace pwiz.Skyline.ToolsUI
         public static T CallFunction<T>(IntPtr hwnd, Func<T> function)
         {
             T result = default(T);
-            var actionResult = PerformActionAndWait(hwnd, null, () => { result = function(); }, null);
+            var actionResult = PerformActionAndWait(hwnd, () => { result = function(); }, null);
             if (!actionResult.Completed)
                 throw new InvalidOperationException(actionResult.Message);
             return result;
@@ -126,15 +121,14 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Snapshots -- on the caller thread, FIRST -- the nesting count and open top-level windows (pruning the
-        /// pre-show tracker to them), runs <paramref name="actionNow"/> here, then BeginInvokes
-        /// <paramref name="actionLater"/> onto <paramref name="hwnd"/>'s UI thread and waits it out. The hop also
-        /// captures that thread's sync context (for the watchdog). The wait returns Completed = false on a new
-        /// interactive modal (recording its pre-show count); re-throws an exception actionLater raised; returns
-        /// Completed = true once actionLater has run (actionNow already has) and <paramref name="waitCondition"/>
+        /// pre-show tracker to them), then BeginInvokes <paramref name="action"/> onto <paramref name="hwnd"/>'s UI
+        /// thread and waits it out. The hop also captures that thread's sync context (for the watchdog). The wait
+        /// returns Completed = false on a new interactive modal (recording its pre-show count); re-throws an exception
+        /// <paramref name="action"/> raised; returns Completed = true once it has run and <paramref name="waitCondition"/>
         /// holds; and trips the watchdog after <see cref="NO_PROGRESS_LIMIT"/> message-loop pumps with no LongWaitDlg
         /// and no completion. Must be called off the UI thread.
         /// </summary>
-        private static ActionResult PerformActionAndWait(IntPtr hwnd, Action actionNow, Action actionLater, Func<bool> waitCondition)
+        private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition)
         {
             // On the caller thread, FIRST: snapshot what the wait compares against, BEFORE running anything, so an
             // effect of either action is seen as new.
@@ -143,38 +137,37 @@ namespace pwiz.Skyline.ToolsUI
             PruneModalsNotOpen(startWindows);
 
             var control = Control.FromHandle(hwnd) ?? UiThreadWindow;
-            // syncContext / actionLaterDone / actionError are set on the UI thread (the posted delegate) and read on
-            // this thread; guard them with lockObj, and have the delegate Pulse it so the wait below wakes on a state
+            // syncContext / actionDone / actionError are set on the UI thread (the posted delegate) and read on this
+            // thread; guard them with lockObj, and have the delegate Pulse it so the wait below wakes on a state
             // change rather than only on the poll timeout.
             var lockObj = new object();
             WindowsFormsSynchronizationContext syncContext = null;
             Exception actionError = null;
-            bool actionLaterDone = false;
+            bool actionDone = false;
 
-            // Count this operation from BEFORE any action runs -- before either action can open a new window -- until
-            // actionLater returns (the posted delegate's finally, below). actionNow (a native dialog's whole gesture,
-            // whose UI Automation must not touch the dialog's own thread) runs here; actionLater is posted onto that
-            // thread. If actionNow or the dispatch throws, no window opened, so undo the count and propagate.
+            // Count this operation from BEFORE the action runs -- before it can open a new window -- until the posted
+            // delegate returns (its finally, below). A native dialog's accept sends its Win32 message from here (on
+            // the dialog's own UI thread), so a click that opens a nested modal blocks in the delegate, keeping the
+            // count up until that modal closes. If the dispatch throws, no window opened, so undo the count and propagate.
             IncrementModalNestingCount();
             try
             {
-                actionNow?.Invoke();
                 control.BeginInvoke((Action) (() =>
                 {
                     var ctx = SynchronizationContext.Current as WindowsFormsSynchronizationContext ?? new WindowsFormsSynchronizationContext();
                     lock (lockObj) { syncContext = ctx; Monitor.Pulse(lockObj); }
-                    try { actionLater?.Invoke(); }
+                    try { action?.Invoke(); }
                     catch (Exception ex) { lock (lockObj) { actionError = ex; Monitor.Pulse(lockObj); } }
                     finally
                     {
                         DecrementModalNestingCount();
-                        lock (lockObj) { actionLaterDone = true; Monitor.Pulse(lockObj); }
+                        lock (lockObj) { actionDone = true; Monitor.Pulse(lockObj); }
                     }
                 }));
             }
             catch
             {
-                DecrementModalNestingCount(); // the action or dispatch failed before the posted delegate could run
+                DecrementModalNestingCount(); // the dispatch failed before the posted delegate could run
                 throw;
             }
 
@@ -194,10 +187,10 @@ namespace pwiz.Skyline.ToolsUI
                 }
 
                 WindowsFormsSynchronizationContext ctx;
-                bool laterDone;
+                bool actionRan;
                 Exception err;
-                lock (lockObj) { ctx = syncContext; laterDone = actionLaterDone; err = actionError; }
-                // If actionLater threw on the UI thread, surface it now -- nothing else to wait for.
+                lock (lockObj) { ctx = syncContext; actionRan = actionDone; err = actionError; }
+                // If the action threw on the UI thread, surface it now -- nothing else to wait for.
                 if (err != null)
                     ExceptionUtil.WrapAndThrowException(err);
 
@@ -209,7 +202,7 @@ namespace pwiz.Skyline.ToolsUI
                     // effect, an asynchronously-shown follow-on dialog), letting a new modal be caught before the
                     // condition can complete; the nesting count, held up while the gesture runs, keeps the condition
                     // false until then. If the UI thread is blocked, the Send parks until it resumes.
-                    bool done = laterDone;
+                    bool done = actionRan;
                     if (waitCondition != null)
                     {
                         ctx.Send(_ => done = waitCondition(), null);

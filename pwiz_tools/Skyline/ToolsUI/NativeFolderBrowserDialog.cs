@@ -82,13 +82,14 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // EnqueueAcceptMsg clicks OK (posted BM_CLICK, like the file dialogs -- the click closes the dialog and unwinds
-        // its modal loop, so a synchronous send could wedge the caller). OK is found by its control id, not a
-        // localized caption. The base Accept waits for the dialog to close.
-        public override void EnqueueAcceptMsg()
+        // Resolves the OK button by its control id (on the caller thread; not a localized caption) and returns its
+        // click; the base Accept runs that send on the dialog's UI thread and waits for the dialog to close. The click
+        // closes the dialog and unwinds its modal loop; run on the dialog's own thread (via OkDialog) it does not wedge
+        // the caller a cross-thread send would.
+        protected override Action ResolveAcceptGesture()
         {
-            var okButton = WaitForElement(IDOK.ToString());
-            User32.PostMessageA(new IntPtr(okButton.Current.NativeWindowHandle), User32.WinMessageType.BM_CLICK, 0, 0);
+            var handle = new IntPtr(WaitForElement(IDOK.ToString()).Current.NativeWindowHandle);
+            return () => SendClick(handle);
         }
     }
 }
