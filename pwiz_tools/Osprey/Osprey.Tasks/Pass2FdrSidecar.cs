@@ -857,6 +857,16 @@ namespace pwiz.Osprey.Tasks
                     "present (the 1st pass did not build one in this process); cannot transfer.");
                 return false;
             }
+            // ScoresDesc and QDesc are built and published together (always parallel), but
+            // guard against a partially-populated byproduct so the logging + lookup below
+            // never index a null or mismatched QDesc.
+            if (fullTable.QDesc == null || fullTable.QDesc.Length != fullTable.ScoresDesc.Length)
+            {
+                ctx.LogWarning(
+                    "OSPREY_PASS2_QVALUE=transfer: score->q table byproduct has a null or " +
+                    "length-mismatched QDesc; cannot transfer.");
+                return false;
+            }
 
             AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
             int nFeatures = avgWeights.Length;
@@ -912,6 +922,7 @@ namespace pwiz.Osprey.Tasks
             var tableScores = new List<double>();
             var tableQs = new List<double>();
             int nSkipped = 0;
+            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
@@ -922,7 +933,7 @@ namespace pwiz.Osprey.Tasks
                         continue;
                     }
                     double rawScore = ScoreWithFrozenModel(
-                        entry.Features, standardizer, avgWeights, avgBias);
+                        entry.Features, standardizer, avgWeights, avgBias, scratch);
                     double effQ = Math.Max(
                         entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue);
                     tableScores.Add(rawScore);
@@ -949,22 +960,25 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Apply the averaged frozen model to a single raw feature vector: standardize a
-        /// copy, then score = avgBias + sum(avgWeights[j] * feat[j]). Mirrors the per-entry
-        /// math in <c>PercolatorFdr.ScorePopulationAndComputeFdr</c>. Does not mutate
-        /// <paramref name="rawFeatures"/>.
+        /// copy into the caller-supplied <paramref name="scratch"/> buffer, then
+        /// score = avgBias + sum(avgWeights[j] * std(feat)[j]). Mirrors the per-entry math
+        /// in <c>PercolatorFdr.ScorePopulationAndComputeFdr</c>, which likewise reuses a
+        /// single feature buffer to avoid a per-entry allocation in the scoring loop. Does
+        /// not mutate <paramref name="rawFeatures"/>; overwrites <paramref name="scratch"/>
+        /// (length must be &gt;= rawFeatures.Length).
         /// </summary>
         internal static double ScoreWithFrozenModel(
             double[] rawFeatures,
             FeatureStandardizer standardizer,
             double[] avgWeights,
-            double avgBias)
+            double avgBias,
+            double[] scratch)
         {
-            var buf = new double[rawFeatures.Length];
-            Array.Copy(rawFeatures, 0, buf, 0, rawFeatures.Length);
-            standardizer.TransformSlice(buf);
+            Array.Copy(rawFeatures, 0, scratch, 0, rawFeatures.Length);
+            standardizer.TransformSlice(scratch);
             double score = avgBias;
             for (int j = 0; j < avgWeights.Length; j++)
-                score += avgWeights[j] * buf[j];
+                score += avgWeights[j] * scratch[j];
             return score;
         }
 
@@ -1019,6 +1033,7 @@ namespace pwiz.Osprey.Tasks
         {
             int nScored = 0;
             int nSkipped = 0;
+            var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
             foreach (var kvp in perFileEntries)
             {
                 foreach (var entry in kvp.Value)
@@ -1029,7 +1044,7 @@ namespace pwiz.Osprey.Tasks
                         continue;
                     }
                     double newScore = ScoreWithFrozenModel(
-                        entry.Features, standardizer, avgWeights, avgBias);
+                        entry.Features, standardizer, avgWeights, avgBias, scratch);
                     entry.Score = newScore;
                     double q = LookupQForScore(newScore, scoresDesc, qDesc);
                     // Assign one transferred q to all four q slots (precursor/peptide x
