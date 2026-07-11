@@ -85,9 +85,9 @@ namespace pwiz.Osprey.Scoring
         /// can be reused across all library entries scored against this spectrum.
         /// Matches Rust's <c>preprocess_spectrum_for_xcorr</c> in pipeline.rs.
         /// Calibration + unit-res use this f64 path for bit-identical parity.
-        /// The f32 variant <see cref="PreprocessSpectrumForXcorrInto"/> is used
-        /// only by the HRAM main-search per-window cache, where halving the
-        /// 800 KB / 400 KB per spectrum matters for parallel-file memory.
+        /// The HRAM main-search per-window cache instead uses the sparse form
+        /// <see cref="PreprocessSpectrumForXcorrSparse"/>, which avoids the dense
+        /// per-spectrum LOH cost (issue #4398).
         /// </summary>
         public double[] PreprocessSpectrumForXcorr(Spectrum spectrum)
         {
@@ -106,56 +106,6 @@ namespace pwiz.Osprey.Scoring
 
             double[] windowed = ApplyWindowingNormalizationD(binned);
             return ApplySlidingWindowD(windowed);
-        }
-
-        /// <summary>
-        /// Pool-aware preprocessing that writes the final sliding-window
-        /// result into the caller-supplied f32 <paramref name="output"/>
-        /// buffer (the per-spectrum HRAM cache). Internal binning,
-        /// windowing, and sliding-window math run in f64 on the pooled
-        /// double[] scratch fields; only the final cache store narrows to
-        /// f32. The cache stays f32 to preserve the 400 KB-per-spectrum
-        /// HRAM budget, while values now carry single-cast precision
-        /// rather than f32-cascade noise. Bit-equal cross-impl with Rust
-        /// <c>preprocess_spectrum_for_xcorr_into</c>.
-        /// </summary>
-        public void PreprocessSpectrumForXcorrInto(
-            Spectrum spectrum, XcorrScratch scratch, float[] output)
-        {
-            if (output == null)
-                throw new ArgumentNullException();
-            int n = _binConfig.NBins;
-            if (output.Length < n)
-                throw new ArgumentException("output length < NBins");
-
-            if (spectrum == null || spectrum.Mzs == null || spectrum.Mzs.Length == 0)
-            {
-                Array.Clear(output, 0, n);
-                return;
-            }
-
-            // True scratch-pool path: f64 scratch (Binned / Windowed /
-            // Prefix double[]) for the windowing cascade; final sliding-
-            // window result is narrowed to f32 directly into `output`.
-            // No per-call allocation, no intermediate copy.
-            //
-            // Fallback: if no scratch was passed in, allocate as before.
-            // The fallback exists only for safety and code that hasn't
-            // been migrated; the HRAM per-window path (the hot one)
-            // always supplies scratch.
-            if (scratch != null && scratch.Binned.Length >= n)
-            {
-                // Binned accumulates via +=, so zero it per spectrum.
-                Array.Clear(scratch.Binned, 0, n);
-                PreprocessSpectrumForXcorrF32IntoBuffers(
-                    spectrum, n, scratch.Binned, scratch.Windowed,
-                    scratch.Prefix, output);
-            }
-            else
-            {
-                float[] pre = PreprocessSpectrumForXcorrF32(spectrum);
-                Array.Copy(pre, output, n);
-            }
         }
 
         /// <summary>
@@ -411,8 +361,8 @@ namespace pwiz.Osprey.Scoring
 
             // (1) Bin observed spectrum - ACCUMULATE sqrt intensities in each bin.
             // f64 throughout to preserve calibration parity; the HRAM main-
-            // search path stores a narrowed f32 cache via
-            // PreprocessSpectrumForXcorrInto, but this in-place scan path is
+            // search path caches each spectrum in the sparse form via
+            // PreprocessSpectrumForXcorrSparse, but this in-place scan path is
             // used by calibration fallback and unit-res scoring where the
             // full f64 precision is required. Scratch.Binned arrives zeroed
             // from Return().
