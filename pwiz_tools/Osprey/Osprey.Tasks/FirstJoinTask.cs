@@ -272,10 +272,20 @@ namespace pwiz.Osprey.Tasks
                 // Null unless PerFileScoring took the lean path and streamed the rows
                 // straight from parquet (issue #4397); RunFirstPassProjection then builds
                 // from the fat stubs instead.
-                var prebuiltProjections = ctx.Get<FdrProjections>().Value;
+                //
+                // Consume, not Get: this is the projection set's only consumer, and the
+                // byproduct cache is process-lifetime. Leaving it published pinned ~5.7 GiB
+                // (191 M rows x 32 B) plus the interned peptide table through reconciliation
+                // and the blib write -- memory that scales with total scored entries across
+                // all files, exactly what streaming the projection was meant to stop paying
+                // for. Consume drops the pipeline's reference up front so no later path,
+                // including the StopAfterStage5 early return below, can retain it (#4405).
+                var prebuiltProjections = ctx.Consume<FdrProjections>().Value;
                 var survivors = RunFirstPassProjection(
                     perFileEntries, perFileParquetPaths, fullLibrary, config, ctx, loadFileFeatures,
                     prebuiltProjections);
+                prebuiltProjections = null;
+
                 if (survivors == null)
                     return false;  // StopAfterStage5 sidecar failure; ExitCode already set
                 perFileEntries = survivors;

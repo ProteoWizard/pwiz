@@ -253,5 +253,85 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(typeof(StubByproduct), ex.RequestedType);
             }
         }
+
+        /// <summary>
+        /// The byproduct cache is otherwise process-lifetime, which pinned the ~5.7 GiB
+        /// first-pass FdrProjections through reconciliation and the blib write (issue
+        /// #4405). Release drops the entry so the value becomes collectible.
+        /// </summary>
+        [TestMethod]
+        public void TestReleaseDropsByproduct()
+        {
+            var producer = new CountingProducerTask();
+            var ctx = ContextFor(producer);
+
+            Assert.AreEqual(99, ctx.Get<StubByproduct>().Value);
+            Assert.AreEqual(1, producer.RehydrateCount);
+            Assert.IsTrue(ctx.TryGet<StubByproduct>(out _));
+
+            Assert.IsTrue(ctx.Release<StubByproduct>(), @"Release must report that it removed the entry");
+            Assert.IsFalse(ctx.TryGet<StubByproduct>(out _), @"Released byproduct must not remain cached");
+
+            // Releasing something absent is a no-op, not a throw.
+            Assert.IsFalse(ctx.Release<StubByproduct>());
+        }
+
+        /// <summary>
+        /// Release is FINAL. A producer materializes at most once per context, so a Get
+        /// after Release does not rebuild -- it throws. Pins the contract, because the
+        /// tempting alternative (evict from _materialized so Get re-demands) would make
+        /// Rehydrate republish the producer's *other* byproducts, and Publish throws on a
+        /// duplicate key. The failure mode must be a loud exception, never silent
+        /// corruption or a null.
+        /// </summary>
+        [TestMethod]
+        public void TestGetAfterReleaseThrowsRatherThanRebuilding()
+        {
+            var producer = new CountingProducerTask();
+            var ctx = ContextFor(producer);
+
+            Assert.AreEqual(99, ctx.Get<StubByproduct>().Value);
+            Assert.AreEqual(1, producer.RehydrateCount);
+
+            ctx.Release<StubByproduct>();
+
+            try
+            {
+                ctx.Get<StubByproduct>();
+                Assert.Fail(@"Expected UnknownByproductException after Release");
+            }
+            catch (UnknownByproductException ex)
+            {
+                Assert.AreEqual(typeof(StubByproduct), ex.RequestedType);
+            }
+            Assert.AreEqual(1, producer.RehydrateCount, @"Producer must not be re-demanded after Release");
+        }
+
+        /// <summary>
+        /// Consume is Get + Release in one call, so a large single-consumer byproduct cannot
+        /// be left pinned by a refactor that quietly loses a separate Release call -- the
+        /// failure mode that put ~5.7 GiB of FdrProjections through Stages 6-7 (issue #4405).
+        /// </summary>
+        [TestMethod]
+        public void TestConsumeReturnsValueAndDropsIt()
+        {
+            var producer = new CountingProducerTask();
+            var ctx = ContextFor(producer);
+
+            Assert.AreEqual(99, ctx.Consume<StubByproduct>().Value);
+            Assert.IsFalse(ctx.TryGet<StubByproduct>(out _), @"Consume must drop the byproduct");
+
+            // Same finality as Release: a second Consume throws rather than rebuilding.
+            try
+            {
+                ctx.Consume<StubByproduct>();
+                Assert.Fail(@"Expected UnknownByproductException on a second Consume");
+            }
+            catch (UnknownByproductException ex)
+            {
+                Assert.AreEqual(typeof(StubByproduct), ex.RequestedType);
+            }
+            Assert.AreEqual(1, producer.RehydrateCount);
+        }
     }
 }

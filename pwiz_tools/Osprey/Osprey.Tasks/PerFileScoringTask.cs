@@ -809,7 +809,7 @@ namespace pwiz.Osprey.Tasks
                 GC.WaitForPendingFinalizers();
                 GC.Collect();
                 long managedBytes = GC.GetTotalMemory(false);
-                ctx.LogInfo(string.Format(System.Globalization.CultureInfo.InvariantCulture,
+                ctx.LogInfo(string.Format(CultureInfo.InvariantCulture,
                     @"[MEM library-resident] managed_heap={0:F2} GB ({1} entries)",
                     managedBytes / (1024.0 * 1024.0 * 1024.0), fullLibrary.Count));
             }

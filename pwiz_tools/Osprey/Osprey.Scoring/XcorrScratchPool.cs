@@ -31,9 +31,9 @@ namespace pwiz.Osprey.Scoring
     /// A single set of scratch buffers reused across XCorr calls to avoid
     /// per-call LOH allocation on HRAM (NBins ~100K, ~800 KB per array).
     ///
-    /// All preprocessing math runs in f64 on these buffers; the per-
-    /// spectrum cache that feeds the dot product is f32 and is owned by
-    /// the caller (see <c>SpectralScorer.PreprocessSpectrumForXcorrInto</c>).
+    /// All preprocessing math runs in f64 on these buffers; the HRAM per-
+    /// spectrum cache that feeds the dot product is the sparse form built by
+    /// <c>SpectralScorer.PreprocessSpectrumForXcorrSparse</c> (issue #4398).
     /// The f64 scratch is shared between the calibration path
     /// (XcorrAtScan) and the HRAM main-search cache build path, so a
     /// single rented scratch services both.
