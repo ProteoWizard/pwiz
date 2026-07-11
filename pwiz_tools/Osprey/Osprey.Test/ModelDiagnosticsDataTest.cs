@@ -158,10 +158,13 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(cr);
             Assert.IsFalse(data.HasEntrapment);                    // built without a manifest
             var pr = cr.PerRun;
-            // No manifest -> no entrapment overlay on either scope.
+            // No manifest -> no entrapment overlay and no union-FDP curve on either scope.
             Assert.IsNull(pr.EntrapmentRunCountHistogram);
             Assert.IsNull(pr.EntrapmentFdpByRunCount);
+            Assert.IsNull(pr.CumUnionEntrapment);
+            Assert.IsNull(pr.UnionFdp);
             Assert.IsNull(cr.Experiment.EntrapmentRunCountHistogram);
+            Assert.IsNull(cr.Experiment.UnionFdp);
             CollectionAssert.AreEqual(new[] { 3, 2, 1 }, pr.PerRunCount);   // A,B,C | A,B | A
             CollectionAssert.AreEqual(new[] { 3, 3, 3 }, pr.CumUnion);      // all 3 unique from run 1
             CollectionAssert.AreEqual(new[] { 3, 2, 1 }, pr.CumIntersection);
@@ -219,11 +222,20 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.0, ecr.EntrapmentFdpByRunCount[1], 1e-9);
             Assert.IsNotNull(ecrFull.Experiment.EntrapmentRunCountHistogram);
 
-            // The ratio r scales the combined FDP: at r = 0.1 the k=1 slice reads
-            // (1 + 1/0.1) * 1 / 1 = 11.0 (each entrapment hit implies ~1/r false targets).
+            // Phase C: union FDP vs number of runs. Real union = {A} at both prefixes;
+            // entrapment union = {ENT} from run 1 on. UnionFdp[i] = (1 + 1/r) * npU /
+            // (ntU + npU); r = 1: (2 * 1) / (1 + 1) = 1.0 at both i.
+            CollectionAssert.AreEqual(new[] { 1, 1 }, ecr.CumUnionEntrapment);
+            Assert.AreEqual(1.0, ecr.UnionFdp[0], 1e-9);
+            Assert.AreEqual(1.0, ecr.UnionFdp[1], 1e-9);
+
+            // The ratio r scales both the per-k and the union FDP: at r = 0.1 the k=1
+            // slice reads (1 + 1/0.1) * 1 / 1 = 11.0, and the run-1 union reads
+            // (11 * 1) / (1 + 1) = 5.5.
             var rcr = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 0.1, 0.01, FdrLevel.Peptide)
                 .CrossRun.PerRun;
             Assert.AreEqual(11.0, rcr.EntrapmentFdpByRunCount[0], 1e-9);
+            Assert.AreEqual(5.5, rcr.UnionFdp[0], 1e-9);
         }
 
         // The non-parametric null-alignment ratio (Mike's Storey check): the ratio

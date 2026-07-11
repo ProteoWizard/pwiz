@@ -400,6 +400,23 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             /// accepting too many 1-hit-wonders (a calibration failure one level up).
             /// </summary>
             public double[] EntrapmentFdpByRunCount { get; set; }
+            /// <summary>
+            /// |union of ENTRAPMENT precursors over runs 1..i| (index i-1), the entrapment
+            /// companion to <see cref="CumUnion"/>, or null with no entrapment. The direct
+            /// empirical input to <see cref="UnionFdp"/>.
+            /// </summary>
+            public int[] CumUnionEntrapment { get; set; }
+            /// <summary>
+            /// Entrapment-measured FDP of the ACCUMULATED UNION over runs 1..i (index i-1),
+            /// combining <see cref="CumUnion"/> and <see cref="CumUnionEntrapment"/> through the
+            /// FDRBench combined estimator at the library ratio r, or null with no entrapment.
+            /// This is the direct empirical "union FDP vs number of runs" curve: false positives
+            /// are ~random per run, so under the run-level gate the union accretes fresh FPs and
+            /// this rises with i (Collins/Rosenberger 2017); the experiment-wide gate bounds the
+            /// dataset-wide error, so its curve stays far flatter. The run-vs-experiment gap at
+            /// i = N quantifies "how anti-conservative is per-run FDR at this run count".
+            /// </summary>
+            public double[] UnionFdp { get; set; }
         }
 
         // A precursor reduced to the fields the diagnostics need.
@@ -1260,6 +1277,26 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
                 view.EntrapmentRunCountHistogram = entHist;
                 view.EntrapmentFdpByRunCount = fdp;
+
+                // Phase C: "union FDP vs number of runs". Accumulate the entrapment union
+                // in input-file order (parallel to the real-target cumUnion built above) and
+                // report the FDRBench combined FDP of the accumulated union at each prefix
+                // i = 1..n. Under the run-level gate false positives are ~random per run, so
+                // the union accretes fresh FPs and this climbs with i; the experiment-wide
+                // gate bounds the dataset-wide error, so its curve stays far flatter. The
+                // gap at i = n is the empirical Collins/Rosenberger run-vs-global FDR effect.
+                var cumUnionEnt = new int[n];
+                var unionFdp = new double[n];
+                var entUnion = new HashSet<string>(StringComparer.Ordinal);
+                for (int i = 0; i < n; i++)
+                {
+                    entUnion.UnionWith(entRunSets[i]);
+                    cumUnionEnt[i] = entUnion.Count;
+                    int ntU = cumUnion[i], npU = cumUnionEnt[i];
+                    unionFdp[i] = ntU + npU > 0 ? (1.0 + 1.0 / r) * npU / (ntU + npU) : double.NaN;
+                }
+                view.CumUnionEntrapment = cumUnionEnt;
+                view.UnionFdp = unionFdp;
             }
 
             return view;

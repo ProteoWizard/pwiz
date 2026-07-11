@@ -268,6 +268,19 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="chartbox" id="runHistChart"></div>
     <p class="note" id="runHistNote"></p>
   </div>
+  <div class="card" id="unionFdpCard" style="display:none">
+    <h2>Union FDP vs number of runs</h2>
+    <p class="desc">The entrapment-measured FDP of the accumulated union of detected precursors as runs are added
+      (1&hellip;N), shown for <b>both</b> q scopes at once (this panel does not follow the toggle &mdash; the gap is the
+      point). Per-run FDR does not bound the dataset-wide error: false positives are ~random per run, so the union
+      accretes fresh ones and its FDP climbs with run count (Collins <i>et&nbsp;al.</i> 2017; Rosenberger
+      <i>et&nbsp;al.</i> 2017). The experiment-wide gate controls the global error, so its curve stays far flatter
+      &mdash; the widening gap is the run-vs-global FDR problem, quantified. At the full 82-run dataset the per-run
+      curve is expected to be materially worse. Dashed line = the nominal run FDR.</p>
+    <div class="legend" id="unionFdpLegend"></div>
+    <div class="chartbox" id="unionFdpChart"></div>
+    <p class="note" id="unionFdpNote"></p>
+  </div>
 </section>
 
 <section class="tab" data-tab="competition">
@@ -907,6 +920,48 @@ function gapCls(g){g=Number(g);return isNaN(g)?"":(g<=0.05?"good":g<=0.15?"warn"
     document.getElementById("runHistNote").innerHTML=note;
   }
 
+  // Phase C: entrapment-measured FDP of the accumulated union vs number of runs, BOTH
+  // scopes on one axis (the run-vs-global gap is the point, so this panel is
+  // scope-independent -- drawn once, not on the toggle). Hidden without entrapment or N<2.
+  function drawUnionFdp(){
+    const card=document.getElementById("unionFdpCard");
+    const pr=hasCross&&cr.perRun&&cr.perRun.unionFdp, ex=hasCross&&cr.experiment&&cr.experiment.unionFdp;
+    if(!pr||!ex||N<2){if(card)card.style.display="none";return;}
+    card.style.display="";
+    const host=document.getElementById("unionFdpChart");host.innerHTML="";
+    const W=700,Hh=320,box={l:56,t:16,w:W-76,h:Hh-64};
+    const s=svg(W,Hh);host.appendChild(s);
+    let ymax=D.runFdr*2;
+    for(let i=0;i<N;i++)[pr[i],ex[i]].forEach(x=>{const f=x==null?NaN:Number(x);if(!isNaN(f))ymax=Math.max(ymax,f);});
+    ymax*=1.15;
+    const xt=N<=20?Array.from({length:N},(_,i)=>i+1):null;
+    const sc=axes(s,box,[1,N],[0,ymax],{xlab:"number of runs accumulated",ylab:"union FDP",
+      xticks:xt,xfmt:v=>String(Math.round(v)),yfmt:v=>pct(v,ymax<0.1?1:0)});
+    if(D.runFdr<=ymax)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(D.runFdr),y2:sc.y(D.runFdr),
+      stroke:COL.muted,"stroke-dasharray":"2 4",opacity:.6});
+    function line(arr,color){let p="",started=false;
+      for(let i=0;i<N;i++){const f=arr[i]==null?NaN:Number(arr[i]);if(isNaN(f)){started=false;continue;}
+        p+=(started?"L":"M")+sc.x(i+1).toFixed(1)+" "+sc.y(f).toFixed(1)+" ";started=true;
+        if(N<=40)E(s,"circle",{cx:sc.x(i+1),cy:sc.y(f),r:2.3,fill:color});}
+      E(s,"path",{d:p,fill:"none",stroke:color,"stroke-width":2});}
+    line(ex,COL.accent);   // experiment-wide (globally controlled)
+    line(pr,COL.decoy);    // per-run (accretes false positives)
+    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+      const px=(ev.clientX-rb.left)/rb.width*W;
+      const i=Math.min(N-1,Math.max(0,Math.round((px-box.l)/box.w*(N-1))));
+      showTip(ev,"<b>"+(i+1)+" run"+(i+1===1?"":"s")+" accumulated</b>"+
+        "<br><span style='color:"+COL.decoy+"'>■</span> per-run union FDP: "+pct(pr[i],1)+
+        "<br><span style='color:"+COL.accent+"'>■</span> experiment-wide: "+pct(ex[i],1));});
+    ov.addEventListener("mouseleave",hideTip);
+    const pN=Number(pr[N-1]), eN=Number(ex[N-1]), gap=pN-eN;
+    document.getElementById("unionFdpNote").innerHTML=
+      "At "+N+" runs the per-run union measures "+pct(pN,1)+" FDP vs "+pct(eN,1)+" experiment-wide (gap "+
+      pct(gap,1)+"). "+(gap>0.005
+        ? "The per-run union's FDP climbs above the experiment-wide curve as runs accumulate — per-run FDR does not bound the dataset-wide error, and the gap grows with run count."
+        : "The two track closely here; the gap is expected to widen at higher run counts.");
+  }
+
   function renderRepro(){drawYield();drawDet();drawHist();}
   if(hasCross)legend(document.getElementById("detLegend"),[
     {name:"detected / run",color:COL.target,toggle:o=>{detOff.bars=o;drawDet();}},
@@ -921,10 +976,16 @@ function gapCls(g){g=Number(g);return isNaN(g)?"":(g<=0.05?"good":g<=0.15?"warn"
       {name:"real targets",color:COL.target},
       {name:"entrapment FDP (right axis)",color:COL.warn,line:true,toggle:o=>{histOff.ent=o;drawHist();}},
     ]);
+  if(hasCross && cr.perRun && cr.perRun.unionFdp && N>=2)
+    legend(document.getElementById("unionFdpLegend"),[
+      {name:"per-run union FDP",color:COL.decoy,line:true},
+      {name:"experiment-wide union FDP",color:COL.accent,line:true},
+    ]);
   const sel=document.getElementById("reproScopeSel");sel.innerHTML="";
   SCOPES.forEach((sco,k)=>{const b=H(sel,"button",{class:k===scope?"on":""},sco.name);
     b.onclick=()=>{scope=k;sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");renderRepro();};});
   renderRepro();
+  drawUnionFdp();   // scope-independent (shows both curves); drawn once
 })();
 
 // ---------- competition: win fraction ----------
