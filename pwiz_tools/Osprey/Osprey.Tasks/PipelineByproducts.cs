@@ -63,6 +63,22 @@ namespace pwiz.Osprey.Tasks
         public PerFileCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
     }
 
+    /// <summary>
+    /// Per-file isolation-window m/z intervals (half-open <c>[Lo, Hi)</c>) from
+    /// Stages 2-4 -- the gap-fill m/z filter's per-file coverage map. Straight
+    /// through, each file's list is built from its extracted isolation windows
+    /// (<c>center +/- width/2</c>); on an HPC merge node (no mzML) it is
+    /// rehydrated from the <c>isolation_scheme</c> block in calibration.json.
+    /// Always published non-null (empty when no scheme is available), so the
+    /// byproduct exists for every run. Parallels <see cref="PerFileCalibrations"/>
+    /// and is keyed by the same bare file stem.
+    /// </summary>
+    internal sealed class PerFileIsolationMz
+    {
+        public IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> Value { get; }
+        public PerFileIsolationMz(IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> value) { Value = value; }
+    }
+
     /// <summary>Map of file name to its on-disk <c>.scores.parquet</c> path.</summary>
     internal sealed class PerFileParquetPaths
     {

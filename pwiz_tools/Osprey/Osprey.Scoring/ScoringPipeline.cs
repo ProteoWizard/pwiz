@@ -172,8 +172,14 @@ namespace pwiz.Osprey.Scoring
                 // Shared definition of the final search-window half-width so the
                 // scoring path, the persisted calibration JSON, and the console
                 // calibration summary all report the same number (issue #4364).
+                // The floor widens for a calibration fitted from few points: a MAD
+                // measured from a thin set can be small by luck, and clamping it to
+                // the configured 0.5 min would pair a tight window with a fit that
+                // does not support one (issue #4401). No-op at n >= MinCalibrationPoints.
                 rtToleranceGlobal = RTCalibration.SearchWindowHalfWidth(
-                    mad, config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance);
+                    mad, rtCalibration.Stats().NPoints,
+                    config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
+                    config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
                 if (OspreyOutput.Verbose) _logInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
@@ -274,9 +280,15 @@ namespace pwiz.Osprey.Scoring
                 {
                     var window = windowsToScore[wIdx];
                     var swWindow = Stopwatch.StartNew();
+                    // When calibration failed, centre the window on the library/mzML RT
+                    // range mapping instead of the raw library RT. The tolerance above
+                    // is still FallbackRtTolerance -- the map predicts, it does not
+                    // narrow (issue #4401). Identity, hence a no-op, when the two RT
+                    // scales already agree.
                     var windowEntries = coelutionScorer.ScoreWindow(
                         window, fullLibrary, spectraByWindowKey, ms1Spectra,
-                        rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
+                        rtCalibration ?? context.FallbackRtMap,
+                        ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
                         scorer, context);
                     swWindow.Stop();
 
