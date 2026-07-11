@@ -427,13 +427,13 @@ namespace pwiz.Skyline.ToolsUI
             foreach (var segment in itemText.Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries))
                 itemPath = new UiElementPath(itemPath, segment.Trim(), null, null);
 
-            // Resolve the item on the form's UI thread (building the context menu has side effects), then click it
-            // by posting the click onto that form's own thread and waiting it out.
+            // Resolve the item on the form's UI thread (building the context menu has side effects), then click it --
+            // Click posts onto that form's own thread and waits it out itself.
             var formRoot = (UiElement) ResolveForm(formId);
             var pathToClick = itemPath;
             var element = formRoot.InvokeOnUiThread(() =>
                 RequireAction(ResolvePath(pathToClick, formRoot), UiActions.Click));
-            WaitForGesture(((IFormElement) formRoot).Hwnd, () => UiActions.Click.Invoke(element, null));
+            UiActions.Click.Invoke(element, null);
         }
 
         /// <summary>
@@ -486,13 +486,12 @@ namespace pwiz.Skyline.ToolsUI
         public static ActionResult SetGridText(string formId, string controlId, string text)
         {
             ValidateFormIdFormat(formId);
-            // Identify the form (its own thread) synchronously, then post the whole paste onto that thread: resolve
-            // the grid there, and SetGridText gates it and pastes. This named/convenience verb waits out the posted
-            // paste (the count settling, or a type-conversion alert the paste raises appearing, which the caller
-            // then drives) so it returns only once the paste has taken effect. The PerformAction escape-hatch path
-            // (UiActions.SetGridText) stays fire-and-forget.
+            // Resolve the grid on the form's own thread, then paste: SetGridText posts onto that thread and waits the
+            // paste out itself (the count settling, or a type-conversion alert the paste raises appearing, which the
+            // caller then drives), returning only once the paste has taken effect.
             var formElement = (FormElement) FindFormById(formId);
-            return WaitForGesture(formElement.Hwnd, () => UiActions.SetGridText.Invoke(formElement.FindGrid(controlId), text ?? string.Empty));
+            var gridElement = formElement.InvokeOnUiThread(() => formElement.FindGrid(controlId));
+            return (ActionResult) UiActions.SetGridText.Invoke(gridElement, text ?? string.Empty);
         }
 
         /// <summary>
@@ -504,12 +503,11 @@ namespace pwiz.Skyline.ToolsUI
         public static ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
             ValidateFormIdFormat(formId);
-            // Identify the form (its own thread) synchronously, then post the whole move onto that thread: resolve
-            // the grid there, and SetCurrentCellAddress gates it and moves the cell. This named/convenience verb
-            // waits out the posted move (the count settling) so it returns only once the cell has moved. The
-            // PerformAction escape-hatch path (UiActions.SetCurrentCellAddress) stays fire-and-forget.
+            // Resolve the grid on the form's own thread, then move the current cell: SetCurrentCellAddress posts onto
+            // that thread and waits the move out itself (the count settling), returning only once the cell has moved.
             var formElement = (FormElement) FindFormById(formId);
-            return WaitForGesture(formElement.Hwnd, () => UiActions.SetCurrentCellAddress.Invoke(formElement.FindGrid(controlId), new[] { column, row }));
+            var gridElement = formElement.InvokeOnUiThread(() => formElement.FindGrid(controlId));
+            return (ActionResult) UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
         }
 
         /// <summary>
@@ -552,16 +550,16 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(path.GetRoot().Text).PerformAction(path, uiAction, value);
         }
 
-        // Runs a resolved action, which gates and marshals itself (see UiAction.Invoke): a void action posts
-        // fire-and-forget; a value action (get_value, get_grid_text) is run synchronously and its result
-        // returned. The value action is run inside the dialog-watch so that if producing the value brings up a
-        // modal, the watch surfaces it (or leaves it open) rather than the server blocking on it; a void action
-        // is posted and returns at once, so it needs no watch. Must be called off the UI thread.
+        // Runs a resolved action. A value read (get_value, get_grid_text, get_actions, get_children) runs inside the
+        // dialog-watch so producing it does not hang behind a modal. A mutation/click owns its own wait -- the
+        // element's method posts the gesture onto the form's UI thread and waits it out (UiElement.PerformGesture),
+        // or an accept rides DialogWatcher.OkDialog -- so it is run here, on the caller thread, and returns its
+        // ActionResult. Either way perform_action matches the named verbs. Must be called off the UI thread.
         internal static object ExecuteAction(UiAction action, UiElement element, object value)
         {
-            if (!action.ReturnsValue)
-                return action.Invoke(element, value);
-            return RunWithDialogWatch(() => action.Invoke(element, value));
+            if (action.ReturnsValue)
+                return RunWithDialogWatch(() => action.Invoke(element, value));
+            return action.Invoke(element, value);
         }
 
         // Verifies the resolved element supports the action (it is the kind the action targets); the

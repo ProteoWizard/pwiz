@@ -20,6 +20,7 @@
 
 using System;
 using System.Windows.Automation;
+using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -82,13 +83,13 @@ namespace pwiz.Skyline.ToolsUI
             SetEditValue(GetFileNameEdit(), path);
         }
 
-        /// <summary>Resolves the file-name box (on the caller thread) and returns an Enter keypress (POSTED, so the
-        /// dialog's modal loop translates it into accept -- see PostEnter); the base Accept runs it on the dialog's UI
-        /// thread and waits for the dialog to close.</summary>
-        protected override Action ResolveAcceptGesture()
+        /// <summary>Accepts by pressing Enter in the file-name box. Resolves its handle here (UI Automation, off the
+        /// dialog's UI thread); OkDialog POSTS Enter on the dialog's UI thread (so the modal loop translates it into
+        /// accept -- see PostEnter) and waits for the dialog to close.</summary>
+        public override ActionResult Accept()
         {
             var handle = new IntPtr(GetFileNameEdit().Current.NativeWindowHandle);
-            return () => PostEnter(handle);
+            return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle));
         }
 
         private AutomationElement GetFileNameEdit()

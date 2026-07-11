@@ -22,6 +22,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Automation;
 using pwiz.Common.SystemUtil.PInvoke;
+using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -79,17 +80,15 @@ namespace pwiz.Skyline.ToolsUI
             SetWindowText(GetFileNameEditHandle(), path);
         }
 
-        /// <summary>Resolves the Save button (on the caller thread) and returns its click; the base Accept runs that
-        /// send on the dialog's UI thread and waits for the dialog to close.</summary>
-        protected override Action ResolveAcceptGesture()
+        /// <summary>Accepts by clicking the Save button. Resolves its handle here (UI Automation, off the dialog's UI
+        /// thread), then OkDialog SENDS BM_CLICK on the dialog's OWN thread and waits for the dialog to close: clicking
+        /// Save can raise a nested modal (the overwrite-confirm prompt), and running the send on the UI thread lets
+        /// that modal's loop run there -- the send blocks in it, keeping the action counted and letting the wait
+        /// detect the prompt -- instead of pinning the pipe thread a cross-thread send would.</summary>
+        public override ActionResult Accept()
         {
-            // Resolve the Save button's handle here (UI Automation, off the dialog's UI thread). The returned click is
-            // SENT on the dialog's OWN thread by OkDialog: clicking Save can raise a nested modal (the overwrite-confirm
-            // prompt); running the send on the UI thread lets that modal's loop run there -- the send blocks in it,
-            // keeping the action counted and letting the wait detect the prompt -- instead of pinning the pipe thread a
-            // cross-thread send would.
             var handle = GetSaveButtonHandle();
-            return () => SendClick(handle);
+            return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle));
         }
 
         // The file-name Edit is the class "Edit" control inside the file-name control host. Find it by

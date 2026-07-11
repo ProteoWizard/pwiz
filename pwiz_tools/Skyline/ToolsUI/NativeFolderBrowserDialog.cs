@@ -22,6 +22,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Automation;
 using pwiz.Common.SystemUtil.PInvoke;
+using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -82,14 +83,14 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Resolves the OK button by its control id (on the caller thread; not a localized caption) and returns its
-        // click; the base Accept runs that send on the dialog's UI thread and waits for the dialog to close. The click
-        // closes the dialog and unwinds its modal loop; run on the dialog's own thread (via OkDialog) it does not wedge
-        // the caller a cross-thread send would.
-        protected override Action ResolveAcceptGesture()
+        // Accepts by clicking OK (found by its control id, not a localized caption). Resolves its handle here (UI
+        // Automation, off the dialog's UI thread); OkDialog SENDS BM_CLICK on the dialog's UI thread and waits for the
+        // dialog to close. The click closes the dialog and unwinds its modal loop; run on the dialog's own thread it
+        // does not wedge the caller a cross-thread send would.
+        public override ActionResult Accept()
         {
             var handle = new IntPtr(WaitForElement(IDOK.ToString()).Current.NativeWindowHandle);
-            return () => SendClick(handle);
+            return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle));
         }
     }
 }
