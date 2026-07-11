@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsNotNull(image.Message);
 
             // Dismiss the dialog and confirm it leaves the document unchanged.
-            fileDialog.Cancel();
+            fileDialog.DismissWithCancelButton();
             WaitForCondition(() => !NativeDialog.GetOpenDialogs().Any());
             Assert.AreSame(documentBefore, SkylineWindow.Document);
 

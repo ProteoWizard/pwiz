@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestFunctional
     ///     <see cref="DataboundGridControl"/> grid at an anchor cell -- like a Ctrl-V, but without the
     ///     system clipboard;
     ///   * <see cref="JsonUiService.GetGridText"/> reads the whole grid back as tab-separated text;
-    ///   * <see cref="JsonToolServer.CloseForm"/> closes the grid form.
+    ///   * <see cref="JsonToolServer.DismissWithCancelButton"/> closes the grid form.
     /// The grid is found with a null controlId/gridId (the Document Grid form has a single grid), and
     /// the "Note" column is targeted by its visible index, so the test is translation-proof.
     /// </summary>
@@ -112,8 +112,9 @@ namespace pwiz.SkylineTestFunctional
             StringAssert.Contains(gridText, @"First note");
             StringAssert.Contains(gridText, @"Second note");
 
-            // CloseForm closes the (floating) Document Grid; GetOpenForms then no longer lists it.
-            Program.MainJsonToolServer.CloseForm(gridId);
+            // DismissWithCancelButton closes the (floating) Document Grid (it has no cancel button, so it just
+            // closes) and waits for it to go; GetOpenForms then no longer lists it.
+            Program.MainJsonToolServer.DismissWithCancelButton(gridId);
             WaitForCondition(() => JsonUiService.GetOpenForms().All(form => form.Type != nameof(DocumentGridForm)));
         }
     }

@@ -20,6 +20,8 @@
 
 using System;
 using System.ComponentModel;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -66,49 +68,49 @@ namespace pwiz.SkylineTestUtil
 
         /// <summary>
         /// Waits until a form of the given WinForms type appears among the connector's open forms
-        /// (<see cref="IJsonToolService.GetOpenForms"/> -- the connector's own discovery method), then resolves
-        /// and returns it as an <see cref="IFormElement"/> the test can drive (ClickButton, SetValue, Accept,
-        /// Close, CaptureImage, ...).
+        /// (<see cref="IJsonToolService.GetOpenForms"/> -- the connector's own discovery method), then returns its
+        /// form id (a string) the test drives with Connector.ClickFormButton / SetFormValue / DismissWith... -- an
+        /// MCP client has no in-process form object.
         /// </summary>
-        protected IFormElement WaitForConnectorForm<TForm>() where TForm : Form =>
+        protected string WaitForConnectorForm<TForm>() where TForm : Form =>
             WaitForConnectorForm(typeof(TForm).Name);
 
         /// <summary>Waits for a form by its connector type name (see <see cref="WaitForConnectorForm{TForm}"/>).</summary>
-        protected IFormElement WaitForConnectorForm(string typeName) =>
+        protected string WaitForConnectorForm(string typeName) =>
             ResolveWhenOpen(form => form.Type == typeName);
 
         /// <summary>
         /// Waits for the summary graph whose window title contains <paramref name="titleSubstring"/> -- the way
         /// an MCP client tells several open graphs apart through GetOpenForms (each GraphSummary reports its
-        /// title, e.g. "...CV Histogram", "...Scheduling") -- and returns it as an IFormElement. Pass the
+        /// title, e.g. "...CV Histogram", "...Scheduling") -- and returns its form id. Pass the
         /// localized graph name (a GraphsResources string) so it matches in any UI language.
         /// </summary>
-        protected IFormElement WaitForConnectorGraph(string titleSubstring) =>
+        protected string WaitForConnectorGraph(string titleSubstring) =>
             ResolveWhenOpen(form => form.Type == @"GraphSummary" && form.HasGraph
                                     && true == form.Title?.Contains(titleSubstring));
 
         /// <summary>
         /// Waits for the native common file dialog (Open / Save As) to appear -- it is enumerated by GetOpenForms
-        /// with IsNative=true -- and returns it as an IFormElement. A native dialog's reported type is the generic
+        /// with IsNative=true -- and returns its form id. A native dialog's reported type is the generic
         /// "Dialog" (its file-dialog nature is not known the instant it appears), so this matches on IsNative; the
         /// caller knows it triggered a file dialog rather than a folder dialog.
         /// </summary>
-        protected IFormElement WaitForNativeFileDialog() =>
+        protected string WaitForNativeFileDialog() =>
             ResolveWhenOpen(form => form.IsNative);
 
         /// <summary>
         /// Waits for the native Browse-For-Folder dialog (enumerated by GetOpenForms with IsNative=true) and
-        /// returns it as an IFormElement; SetValue selects a folder by its path. Like the file dialog it reports
+        /// returns its form id; SetValue selects a folder by its path. Like the file dialog it reports
         /// the generic "Dialog" type, so this matches on IsNative.
         /// </summary>
-        protected IFormElement WaitForNativeFolderDialog() =>
+        protected string WaitForNativeFolderDialog() =>
             ResolveWhenOpen(form => form.IsNative);
 
-        private IFormElement ResolveWhenOpen(Func<FormInfo, bool> predicate)
+        private string ResolveWhenOpen(Func<FormInfo, bool> predicate)
         {
             string id = null;
             WaitForCondition(() => null != (id = Connector.GetOpenForms().FirstOrDefault(predicate)?.Id));
-            return JsonUiService.ResolveForm(id);
+            return id;
         }
 
         /// <summary>Asserts that a connector action reported it completed by the time the verb returned (see
@@ -122,38 +124,58 @@ namespace pwiz.SkylineTestUtil
                             "ActionResult.Message: " + (actionResult.Message ?? "(none)"));
         }
 
+        /// <summary>
+        /// Resolves the modal dialog a connector action just opened, straight from the <see cref="ActionResult"/> it
+        /// returned: asserts the action left a modal open (Completed=false, its id in <see cref="ActionResult.FormId"/>)
+        /// and returns its form id (a string) -- so the caller drives it without a
+        /// <see cref="WaitForConnectorForm{TForm}"/> / GetOpenForms round-trip and without keying on a form type. Use
+        /// for an action whose own gesture blocks in the new modal's message loop and so names it: a menu-item click
+        /// that shows a dialog, or a native/managed dialog accept that raises a follow-on. An action that merely POSTS
+        /// its click (a managed button) or whose dialog appears on a later background pass or a separate startup frame
+        /// does NOT name it -- wait for that one with <see cref="WaitForConnectorForm{TForm}"/> instead.
+        /// </summary>
+        protected static string ResolveModal(ActionResult actionResult)
+        {
+            if (actionResult.Completed)
+                Assert.Fail("Expected the connector action to leave a modal dialog open, but it reported completed. " +
+                            "ActionResult.Message: " + (actionResult.Message ?? "(none)"));
+            Assert.IsNotNull(actionResult.FormId,
+                "Expected the connector action to name the modal it left open in ActionResult.FormId.");
+            return actionResult.FormId;
+        }
+
         /// <summary>Resolves a form of the given WinForms type from the connector's open forms RIGHT NOW, without
         /// waiting -- the counterpart to <see cref="WaitForConnectorForm{TForm}"/> for when a preceding action was
         /// expected to have already opened it. Fails if it is not open yet, revealing an action that did not open
         /// its dialog synchronously.</summary>
-        protected IFormElement GetConnectorForm<TForm>() where TForm : Form =>
+        protected string GetConnectorForm<TForm>() where TForm : Form =>
             GetConnectorForm(typeof(TForm).Name);
 
         /// <summary>Resolves a form by its connector type name right now (see <see cref="GetConnectorForm{TForm}"/>).</summary>
-        protected IFormElement GetConnectorForm(string typeName) =>
+        protected string GetConnectorForm(string typeName) =>
             ResolveNow(form => form.Type == typeName, "a form of type " + typeName);
 
         /// <summary>Resolves the summary graph whose title contains <paramref name="titleSubstring"/> right now
         /// (the immediate counterpart to <see cref="WaitForConnectorGraph"/>).</summary>
-        protected IFormElement GetConnectorGraph(string titleSubstring) =>
+        protected string GetConnectorGraph(string titleSubstring) =>
             ResolveNow(form => form.Type == @"GraphSummary" && form.HasGraph && true == form.Title?.Contains(titleSubstring),
                 "a graph whose title contains '" + titleSubstring + "'");
 
         /// <summary>Resolves the native file dialog right now (the immediate counterpart to
         /// <see cref="WaitForNativeFileDialog"/>).</summary>
-        protected IFormElement GetNativeFileDialog() =>
+        protected string GetNativeFileDialog() =>
             ResolveNow(form => form.IsNative, "the native file dialog");
 
         /// <summary>Resolves the native folder dialog right now (the immediate counterpart to
         /// <see cref="WaitForNativeFolderDialog"/>).</summary>
-        protected IFormElement GetNativeFolderDialog() =>
+        protected string GetNativeFolderDialog() =>
             ResolveNow(form => form.IsNative, "the native folder dialog");
 
-        private IFormElement ResolveNow(Func<FormInfo, bool> predicate, string description)
+        private string ResolveNow(Func<FormInfo, bool> predicate, string description)
         {
             var id = Connector.GetOpenForms().FirstOrDefault(predicate)?.Id;
             Assert.IsNotNull(id, "Expected {0} to be open already, but it was not.", description);
-            return JsonUiService.ResolveForm(id);
+            return id;
         }
 
         /// <summary>
@@ -162,7 +184,7 @@ namespace pwiz.SkylineTestUtil
         /// after then captures the settled page rather than a mid-transition frame. Uses the connector's
         /// GetControls, which lists only the controls currently shown (a not-yet-displayed page is not listed).
         /// </summary>
-        protected void WaitForControl(IFormElement form, string controlType)
+        protected void WaitForControl(string formId, string controlType)
         {
             WaitForCondition(() =>
             {
@@ -170,7 +192,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     // GetControls can return null while the form is mid-gesture / re-laying-out; treat that (and a
                     // no-match) as "not ready yet" and keep polling.
-                    return form.GetControls()?.Any(control => Equals(control.Path.Type, controlType)) ?? false;
+                    return Connector.GetControls(formId)?.Any(control => Equals(control.Path.Type, controlType)) ?? false;
                 }
                 catch (InvalidOperationException)
                 {
@@ -188,7 +210,7 @@ namespace pwiz.SkylineTestUtil
         /// option changes) disables its OK button while it works and re-enables it when the result is ready, so
         /// a test must wait for that before accepting.
         /// </summary>
-        protected void WaitForControlEnabled(IFormElement form, string controlType)
+        protected void WaitForControlEnabled(string formId, string controlType)
         {
             WaitForCondition(() =>
             {
@@ -196,7 +218,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     // GetControls can return null while the dialog is mid-recompute; treat null (and a disabled or
                     // missing control) as "not ready yet" and keep polling.
-                    return form.GetControls()?.FirstOrDefault(control => Equals(control.Path.Type, controlType))?.Enabled == true;
+                    return Connector.GetControls(formId)?.FirstOrDefault(control => Equals(control.Path.Type, controlType))?.Enabled == true;
                 }
                 catch (InvalidOperationException)
                 {
@@ -227,21 +249,26 @@ namespace pwiz.SkylineTestUtil
         /// action), so a tabbed dialog's page -- and the controls on it -- become the visible ones to act on and
         /// to capture.
         /// </summary>
-        protected void SelectTab(IFormElement form, string tabText)
+        protected void SelectTab(string formId, string tabText)
         {
             var tabControl = new UiElementPath(
-                new UiElementPath(null, form.FormId, null, @"Form"), null, null, @"TabControl");
-            JsonUiService.PerformAction(tabControl, @"select_tab", tabText);
+                new UiElementPath(null, formId, null, @"Form"), null, null, @"TabControl");
+            Connector.PerformAction(tabControl, @"select_tab", tabText);
         }
 
         /// <summary>
-        /// Captures the given form's image through the connector (<see cref="IFormElement.CaptureImage"/>) and
-        /// saves it as the next numbered tutorial screenshot. Unlike the screen-grab PauseForScreenShot, the
-        /// image comes from the connector, the way an MCP client would request it.
+        /// Captures the form's image through the connector (<see cref="IJsonToolService.GetFormImageBytes"/>, the
+        /// way an MCP client requests it -- by form id, no in-process form object) and saves it as the next numbered
+        /// tutorial screenshot. The capture only runs while recording screenshots (a real desktop); a normal run just
+        /// advances the counter.
         /// </summary>
-        protected void PauseForScreenShot(IFormElement form, string description = null)
+        protected void PauseForScreenShot(string formId, string description = null)
         {
-            SaveConnectorScreenShot(form.CaptureImage);
+            SaveConnectorScreenShot(() =>
+            {
+                var image = Connector.GetFormImageBytes(formId);
+                return image.Data == null ? null : new Bitmap(new MemoryStream(image.Data));
+            });
         }
 
         /// <summary>

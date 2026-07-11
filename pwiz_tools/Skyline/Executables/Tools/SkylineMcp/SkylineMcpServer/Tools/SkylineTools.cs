@@ -635,9 +635,9 @@ public static class SkylineTools
     [McpServerTool(Name = "skyline_click_form_button"),
      Description("Click a control on an open form, matching it by control name or visible text: a " +
         "button, a checkbox or radio button, a toolbar/menu item, an item in a checked-list box (its " +
-        "check is toggled), or any other control. For a native dialog (IsNative=True from " +
-        "skyline_get_open_forms) this accepts the dialog, or cancels it when the button names the " +
-        "Cancel/Close action. The click is posted asynchronously, so a button that opens another " +
+        "check is toggled), or any other control. To dismiss a dialog instead, use " +
+        "skyline_dismiss_with_accept_button / skyline_dismiss_with_cancel_button / skyline_dismiss_with_button, " +
+        "which wait for it to close. The click is posted asynchronously, so a button that opens another " +
         "dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
     public static string ClickFormButton(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
@@ -646,6 +646,52 @@ public static class SkylineTools
         return Invoke(connection =>
         {
             var result = connection.ClickFormButton(formId, button);
+            return DescribeAction(result, $"Clicked '{button}' on {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_dismiss_with_accept_button"),
+     Description("Accept (confirm) an open dialog by pressing its default button -- the equivalent of pressing " +
+        "Enter, without matching a localized 'OK' caption -- then wait until the dialog has closed. Use this to " +
+        "commit a native file dialog (Type 'Dialog', IsNative=True -- it has no caption-addressable button) or to " +
+        "click a WinForms dialog's default button. If accepting opens another dialog it reports not-completed and " +
+        "names it (drive that one next).")]
+    public static string DismissWithAcceptButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.DismissWithAcceptButton(formId);
+            return DescribeAction(result, $"Accepted {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_dismiss_with_cancel_button"),
+     Description("Cancel (dismiss) an open dialog by pressing its cancel button, or closing it when it has none, " +
+        "then wait until it has closed. A message box with only affirmative choices (e.g. Yes/No) has no cancel " +
+        "affordance -- dismiss such a box with skyline_dismiss_with_button instead.")]
+    public static string DismissWithCancelButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.DismissWithCancelButton(formId);
+            return DescribeAction(result, $"Cancelled {formId}.");
+        });
+    }
+
+    [McpServerTool(Name = "skyline_dismiss_with_button"),
+     Description("Dismiss an open dialog by clicking the button with the given caption, then wait until it has " +
+        "closed -- e.g. 'No' on a 'replace it?' message box, when neither the default (accept) nor the cancel " +
+        "button is wanted. A native file dialog has no caption-addressable button, so commit one with " +
+        "skyline_dismiss_with_accept_button.")]
+    public static string DismissWithButton(
+        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
+        [Description("The visible caption of the button to click, e.g. 'No' or 'Yes'")] string button)
+    {
+        return Invoke(connection =>
+        {
+            var result = connection.DismissWithButton(formId, button);
             return DescribeAction(result, $"Clicked '{button}' on {formId}.");
         });
     }
@@ -730,19 +776,6 @@ public static class SkylineTools
         return Invoke(connection => connection.GetGridText(formId, gridId));
     }
 
-    [McpServerTool(Name = "skyline_close_form"),
-     Description("Close an open form: a dialog, a docked or floating tool window (e.g. the Document " +
-        "Grid or Audit Log), or a native file dialog (which is cancelled). Use skyline_get_open_forms " +
-        "to find the form identifier.")]
-    public static string CloseForm(
-        [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId)
-    {
-        return Invoke(connection =>
-        {
-            connection.CloseForm(formId);
-            return $"Closed {formId}.";
-        });
-    }
 
     [McpServerTool(Name = "skyline_get_graph_data"),
      Description("Extract tab-separated data from a Skyline graph. Returns the same data as " +

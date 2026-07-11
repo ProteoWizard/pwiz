@@ -85,7 +85,7 @@ namespace pwiz.Skyline.ToolsUI
         // Automation, off the dialog's UI thread); OkDialog SENDS BM_CLICK on the dialog's UI thread and waits for the
         // dialog to close. The click closes the dialog and unwinds its modal loop; run on the dialog's own thread it
         // does not wedge the caller a cross-thread send would.
-        public override ActionResult Accept(string button)
+        public override ActionResult DismissWithAcceptButton()
         {
             var handle = new IntPtr(WaitForElement(IDOK.ToString()).Current.NativeWindowHandle);
             return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle));

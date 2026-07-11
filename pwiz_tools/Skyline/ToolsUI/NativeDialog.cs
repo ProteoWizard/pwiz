@@ -57,7 +57,7 @@ namespace pwiz.Skyline.ToolsUI
     /// A dialog is a <see cref="UiElement"/>: it presents to the connector exactly like any other form (it
     /// is listed by GetOpenForms and addressed by a path whose Text is its id). This base class is concrete
     /// and drives any "#32770" generically: it lists the dialog's text and push buttons, clicks a button by
-    /// its caption, accepts by pressing the default button, and cancels with close_form (WM_CLOSE) -- enough
+    /// its caption, accepts by pressing the default button, and cancels by sending WM_CLOSE -- enough
     /// for a message box (e.g. the Save dialog's "replace it?" confirm) or any other Windows dialog. The
     /// file dialogs (<see cref="NativeFileDialog"/>) specialize it with the file-name field: set_value types
     /// a path and the accept gesture differs by surface.
@@ -277,36 +277,34 @@ namespace pwiz.Skyline.ToolsUI
                 () => GetOpenDialogs().OfType<T>().FirstOrDefault());
         }
 
-        /// <summary>
-        /// Accepts the dialog by pressing Enter (which activates its default button). The target control is
-        /// resolved HERE, on the CALLER (pipe) thread, where UI Automation is safe (off the dialog's own UI
-        /// thread); DialogWatcher.OkDialog then runs the Win32 gesture on the dialog's own UI thread and waits it
-        /// out -- the SAME machinery a managed form's accept uses. Enter is POSTED, so the dialog's modal loop
-        /// translates it into accept (a synchronous send would bypass that -- see PostEnter). The file dialogs
-        /// override the whole method with the gesture their DirectUI surface needs. The wait completes once the
-        /// dialog's window has closed AND the count has drained to its opener's pre-show level -- i.e. the action
-        /// that showed it (e.g. an openMenuItem_Click that then loads a file for minutes) has returned -- stopping
-        /// early on a new modal. Its condition is judged with a synchronous Send on the UI thread, which flushes a
-        /// closing common dialog's child-window teardown behind it. Must be called off the UI thread.
-        /// </summary>
-        public virtual ActionResult Accept(string button)
+        /// <summary>Dismisses the dialog by clicking the button with the given caption (found among the dialog's
+        /// child buttons), then waits until the dialog has closed -- e.g. "No" on a "replace it?" message box. A file
+        /// dialog's commit button is DirectUI (not a child button), so this throws "no button" for one; accept a file
+        /// dialog with <see cref="DismissWithAcceptButton"/> instead. Must be called off the UI thread.</summary>
+        public virtual ActionResult DismissWithButton(string button)
         {
-            if (string.IsNullOrEmpty(button))
-            {
-                var handle = new IntPtr(DialogElement.Current.NativeWindowHandle);
-                PostEnter(handle);
-            }
-            else
-            {
-                ClickButton(button);
-            }
+            ClickButton(button);
             return DialogWatcher.OkDialog(WindowHandle, () => { });
+        }
+
+        /// <summary>Accepts the dialog by pressing Enter, which activates its default button. Its target control is
+        /// resolved HERE, on the CALLER (pipe) thread, where UI Automation is safe (off the dialog's own UI thread);
+        /// DialogWatcher.OkDialog then runs the Win32 gesture on the dialog's UI thread and waits until it closes --
+        /// the SAME machinery a managed form's accept uses. Enter is POSTED, so the dialog's modal loop translates it
+        /// into accept (a synchronous send would bypass that -- see PostEnter). The file dialogs override this with
+        /// the gesture their DirectUI surface needs. Must be called off the UI thread.</summary>
+        public virtual ActionResult DismissWithAcceptButton()
+        {
+            var handle = new IntPtr(DialogElement.Current.NativeWindowHandle);
+            return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle));
         }
 
         /// <summary>Cancels the dialog by sending WM_CLOSE on its own UI thread (which dismisses it the way the
         /// title-bar close button would -- more reliable than invoking the Cancel button through UI Automation on a
-        /// DirectUI surface), riding the shared accept/cancel wait. Must be called off the UI thread.</summary>
-        public virtual ActionResult Cancel()
+        /// DirectUI surface), riding the shared wait until it closes. A message box with no cancel/close affordance
+        /// (a Yes/No box) ignores WM_CLOSE -- dismiss such a box with <see cref="DismissWithButton"/>. Must be called
+        /// off the UI thread.</summary>
+        public virtual ActionResult DismissWithCancelButton()
         {
             return DialogWatcher.OkDialog(WindowHandle, () =>
                 User32.SendMessage(WindowHandle, User32.WinMessageType.WM_CLOSE, IntPtr.Zero, IntPtr.Zero));
@@ -389,10 +387,6 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.Format(
                 @"Setting values is not supported for native dialog {0}.", FormId));
         }
-
-        // Dismisses the dialog by posting WM_CLOSE, fire and forget -- the close_form verb. (The named Cancel verb
-        // sends WM_CLOSE and waits it out; this one just posts and returns.)
-        public void Close() => User32.PostMessageA(WindowHandle, User32.WinMessageType.WM_CLOSE, 0, 0);
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
         {

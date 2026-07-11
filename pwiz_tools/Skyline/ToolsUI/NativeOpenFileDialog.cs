@@ -75,7 +75,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Types a file name into the dialog's file name box without accepting; call
-        /// <see cref="Accept"/> to open. Pass several double-quoted, space-separated paths
+        /// <see cref="NativeDialog.DismissWithAcceptButton"/> to open. Pass several double-quoted, space-separated paths
         /// (<c>"a" "b"</c>) to select multiple files in a multiselect dialog.
         /// </summary>
         public override void EnterPath(string path)
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Accepts by pressing Enter in the file-name box. Resolves its handle here (UI Automation, off the
         /// dialog's UI thread); OkDialog POSTS Enter on the dialog's UI thread (so the modal loop translates it into
         /// accept -- see PostEnter) and waits for the dialog to close.</summary>
-        public override ActionResult Accept(string button)
+        public override ActionResult DismissWithAcceptButton()
         {
             var handle = new IntPtr(GetFileNameEdit().Current.NativeWindowHandle);
             return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle));

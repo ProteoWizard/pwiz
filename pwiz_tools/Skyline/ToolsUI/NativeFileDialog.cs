@@ -38,14 +38,14 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>
         /// Types the file name(s) into the dialog's file name field without accepting; call
-        /// <see cref="NativeDialog.Accept"/> to open/save. The Open dialog accepts several
+        /// <see cref="NativeDialog.DismissWithAcceptButton"/> to open/save. The Open dialog accepts several
         /// double-quoted, space-separated paths for a multiselect; the Save dialog takes a single path.
         /// </summary>
         public abstract void EnterPath(string path);
 
         // A file dialog is not introspected as a set of child controls; it is driven entirely at the form
         // level -- set_value types the path (its controlId is ignored, a file dialog has the one file-name
-        // field) and the accept action commits it (close_form cancels).
+        // field) and the accept action commits it (the cancel verb cancels).
         protected override void SetValueCore(string value) => EnterPath(value);
     }
 }

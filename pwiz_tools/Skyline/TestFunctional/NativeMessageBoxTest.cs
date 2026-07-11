@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -31,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     /// Drives the native "replace it?" message box that the common Save dialog raises when Save As targets an
     /// existing file, all through the in-process <see cref="SkylineTool.IJsonToolService"/> (as an external MCP
     /// client would). The point of the test is that the interface handles a file dialog whose Accept opens a
-    /// message box: <see cref="SkylineTool.IJsonToolService.Accept"/> on the file dialog surfaces that box (it
+    /// message box: <see cref="IJsonToolService.DismissWithAcceptButton"/> on the file dialog surfaces that box (it
     /// reports not-completed and names the box) rather than hanging, and both of the box's buttons can then be
     /// driven through the interface -- declining ("No") leaves the file dialog open, and accepting (its default
     /// button) replaces the file.
@@ -60,9 +61,9 @@ namespace pwiz.SkylineTestFunctional
 
             // 1) First Save As: save to a name that does not exist yet -- no confirmation.
             Connector.InvokeMenuItem(saveAsMenu);
-            var fileDialogId = WaitForNativeFileDialog().FormId;
+            var fileDialogId = WaitForNativeFileDialog();
             AssertComplete(Connector.SetFormValue(fileDialogId, @"FileName", savePath));
-            AssertComplete(Connector.Accept(fileDialogId, null));
+            AssertComplete(Connector.DismissWithAcceptButton(fileDialogId));
             WaitForCondition(() => !Connector.GetOpenForms().Any(form => form.IsNative));
             WaitForConditionUI(() => Equals(SkylineWindow.DocumentFilePath, savePath));
 
@@ -75,22 +76,21 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNotNull(fileDialogId);
             Assert.AreEqual(modalNestingCount, GetModalNestingCount(fileDialogId));
             AssertComplete(Connector.SetFormValue(fileDialogId, @"FileName", savePath));
-            actionResult = Connector.Accept(fileDialogId, null);
+            actionResult = Connector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);
             Assert.IsNotNull(actionResult.FormId);
             Assert.IsNotNull(actionResult.Message);
             var buttons = Connector.GetControls(actionResult.FormId).Where(control => control.Path.Type == nameof(System.Windows.Forms.Button)).ToList();
             Assert.AreEqual(2, buttons.Count);
             // Press "No" (decline to overwrite the file): the MessageBox closes and the file dialog stays open
-            AssertComplete(Connector.Accept(actionResult.FormId, buttons[1].Path.Text));
-            AssertComplete(actionResult);
-            actionResult = Connector.Accept(fileDialogId, null);
+            AssertComplete(Connector.DismissWithButton(actionResult.FormId, buttons[1].Path.Text));
+            actionResult = Connector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);
             Assert.IsNotNull(actionResult.FormId);
             Assert.IsNotNull(actionResult.Message);
             buttons = Connector.GetControls(actionResult.FormId).Where(control => control.Path.Type == nameof(System.Windows.Forms.Button)).ToList();
             Assert.AreEqual(2, buttons.Count);
-            AssertComplete(Connector.Accept(actionResult.FormId, buttons[0].Path.Text));
+            AssertComplete(Connector.DismissWithButton(actionResult.FormId, buttons[0].Path.Text));
             WaitForConditionUI(() => modalNestingCount == Connector.ModalNestingCount());
 
             var nativeForms = Connector.GetOpenForms().Where(form => form.IsNative).ToList();

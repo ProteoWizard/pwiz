@@ -892,19 +892,20 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.GetGridText(formId, gridId);
         }
 
-        public void CloseForm(string formId)
+
+        public ActionResult DismissWithAcceptButton(string formId)
         {
-            JsonUiService.ResolveForm(formId).Close();
+            return JsonUiService.ResolveForm(formId).DismissWithAcceptButton();
         }
 
-        public ActionResult Accept(string formId, string button)
+        public ActionResult DismissWithButton(string formId, string button)
         {
-            return JsonUiService.ResolveForm(formId).Accept(button);
+            return JsonUiService.ResolveForm(formId).DismissWithButton(button);
         }
 
-        public ActionResult Cancel(string formId)
+        public ActionResult DismissWithCancelButton(string formId)
         {
-            return JsonUiService.Cancel(formId);
+            return JsonUiService.ResolveForm(formId).DismissWithCancelButton();
         }
 
         public void InvokeContextMenuItem(string formId, string controlSelector, string itemText)

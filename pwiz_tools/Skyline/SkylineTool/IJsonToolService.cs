@@ -443,11 +443,14 @@ namespace SkylineTool
         string GetGridText(string formId, string gridId);
 
         /// <summary>
-        /// Closes an open form: a dialog, a docked or floating tool window (e.g. the Document Grid or
-        /// Audit Log), or a native dialog (which is cancelled).
+        /// Dismisses an open dialog by clicking the button with the given caption, then waits until it has closed --
+        /// e.g. "No" on a "replace it?" message box, for a choice that is neither the default nor the cancel button. A
+        /// native file dialog has no caption-addressable button, so this throws for one; accept it with
+        /// <see cref="DismissWithAcceptButton"/>. Same <see cref="ActionResult"/> semantics as that method.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        void CloseForm(string formId);
+        /// <param name="button">The visible caption of the button to click.</param>
+        ActionResult DismissWithButton(string formId, string button);
 
         /// <summary>
         /// Accepts (confirms) an open dialog -- presses its default button, the equivalent of pressing Enter,
@@ -457,15 +460,15 @@ namespace SkylineTool
         /// <see cref="ActionResult.Message"/>) when it cannot confirm that.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        ActionResult Accept(string formId, string button);
+        ActionResult DismissWithAcceptButton(string formId);
 
         /// <summary>
         /// Cancels (dismisses) an open dialog -- presses its cancel button, or closes it when it has none --
-        /// then waits until the dialog has closed. The dismissing counterpart of <see cref="Accept"/>, with the
-        /// same <see cref="ActionResult"/> semantics.
+        /// then waits until the dialog has closed. The dismissing counterpart of <see cref="DismissWithAcceptButton"/>,
+        /// with the same <see cref="ActionResult"/> semantics.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        ActionResult Cancel(string formId);
+        ActionResult DismissWithCancelButton(string formId);
 
         /// <summary>
         /// Clicks an item on a control's right-click context menu. Address the control the way

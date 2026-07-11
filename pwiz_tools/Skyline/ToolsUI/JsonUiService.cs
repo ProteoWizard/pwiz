@@ -383,27 +383,6 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Accepts the dialog named by <paramref name="formId"/> -- the resolved form knows how to accept itself
-        /// (a managed form posts its default button and waits the gesture out; a native dialog does its OK gesture
-        /// and waits for the window to close) and reports whether it completed. See <see cref="IJsonToolService"/>.
-        /// </summary>
-        public static ActionResult Accept(string formId, string button)
-        {
-            ValidateFormIdFormat(formId);
-            return ResolveForm(formId).Accept(button);
-        }
-
-        /// <summary>
-        /// Cancels the dialog named by <paramref name="formId"/> -- the dismissing counterpart of
-        /// <see cref="Accept"/>, likewise delegated to the resolved form. See <see cref="IJsonToolService"/>.
-        /// </summary>
-        public static ActionResult Cancel(string formId)
-        {
-            ValidateFormIdFormat(formId);
-            return ResolveForm(formId).Cancel();
-        }
-
-        /// <summary>
         /// Clicks an item on a control's right-click context menu. The control is addressed the way get_controls
         /// addresses one (by its <paramref name="controlSelector"/> label or type); <paramref name="itemText"/>
         /// is the item's visible text, or a '&gt;'-separated path into a submenu. A string-friendly wrapper over
