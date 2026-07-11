@@ -90,6 +90,24 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The message of the modal that stopped the wait (see <see cref="StoppedOnModal"/>), else null.</summary>
         public string BlockingMessage { get; private set; }
 
+        /// <summary>
+        /// The window this wait is dismissing (an accept or cancel), or null for a plain gesture. When set it IS the
+        /// top modal <see cref="Run{T}"/> waits on -- we know exactly which window we expect to disappear -- and Run
+        /// completes only once it is actually GONE and the count has drained to its pre-show level, not on the count
+        /// alone. A native accept needs this: its Win32 gesture is UNCOUNTED, so the count returns to initialCount
+        /// the instant the gesture is posted, before the window has closed. The same wait is correct for a managed
+        /// form, so both go through it.
+        /// </summary>
+        public IFormElement AwaitedDismissal { get; set; }
+
+        /// <summary>
+        /// When true (the accept/cancel wait), <see cref="Run{T}"/> runs the gesture on the CALLER's thread instead
+        /// of dispatching it: a managed accept's <c>PostAccept</c> marshals to the UI thread itself, and a native
+        /// dialog's UI Automation must NOT touch the UI thread that owns the dialog's modal loop. The gesture only
+        /// posts (it returns at once); the wait loop then runs on the caller's thread as usual.
+        /// </summary>
+        public bool WorkOnCallerThread { get; set; }
+
         /// <summary>Constructs a dispatcher for the given launch control (null = background/dialog-watch).</summary>
         public UiServiceDispatcher(Control dispatcher)
         {
@@ -107,6 +125,14 @@ namespace pwiz.Skyline.ToolsUI
         /// blocking modal's message, no timeout.</summary>
         internal static UiServiceDispatcher ForDialogWatch() =>
             new UiServiceDispatcher(null) { ThrowOnDialog = true, TimeOut = false };
+
+        /// <summary>The accept/cancel wait shared by a managed form and a native dialog (WaitForOkDialog): run the
+        /// dismiss gesture on the caller's thread, stop-and-record on a new modal, ride the ~10s watchdog, and
+        /// complete only once <paramref name="dialog"/>'s window has closed AND the count has drained to the level
+        /// its opener left (the action that showed the dialog returned).</summary>
+        internal static UiServiceDispatcher ForOkDialog(IFormElement dialog) =>
+            new UiServiceDispatcher(null)
+                { ThrowOnDialog = false, TimeOut = true, AwaitedDismissal = dialog, WorkOnCallerThread = true };
 
         /// <summary>The synchronous UI-thread invoke (InvokeOnUiThread): a direct <see cref="Control.Invoke(System.Delegate)"/>
         /// against <paramref name="dispatcher"/> (or the UI-thread window when null), no count, no wait loop.</summary>
@@ -133,57 +159,63 @@ namespace pwiz.Skyline.ToolsUI
         // ===== UI-thread marshaling (owned here; JsonUiService.InvokeOnUiThread delegates to these) =====
 
         /// <summary>
-        /// The window used to marshal work onto the UI thread: the main window once it exists, otherwise the
-        /// StartPage while it is showing. Null very early in startup before either has a usable handle. Lets
-        /// background services (the JSON/MCP tool server) drive the UI before the main window exists. Safe to read
-        /// from a background thread (only checks handle/disposed flags). Also the <see cref="Dispatcher"/> a
-        /// posted-gesture wait falls back to when no target form is given.
+        /// The window used to marshal onto the UI thread (and to capture that thread's synchronization context):
+        /// the main window once it exists, otherwise the StartPage while it is showing. Null only very early in
+        /// startup before either exists. No disposed/handle checks: the tool service is shut down before the main
+        /// window closes, so it is never asked to marshal through a dead window.
         /// </summary>
-        internal static Control UiThreadWindow
-        {
-            get
-            {
-                var mainWindow = Program.MainWindow;
-                if (mainWindow != null && mainWindow.IsHandleCreated && !mainWindow.IsDisposed)
-                    return mainWindow;
-                var startWindow = Program.StartWindow;
-                if (startWindow != null && startWindow.IsHandleCreated && !startWindow.IsDisposed)
-                    return startWindow;
-                return null;
-            }
-        }
+        internal static Control UiThreadWindow => (Control) Program.MainWindow ?? Program.StartWindow;
+
+        // The UI thread's synchronization context, captured on this dispatcher's FIRST marshal (see FirstMarshal)
+        // and used for every marshal after that. Null until then.
+        private WindowsFormsSynchronizationContext _synchronizationContext;
 
         /// <summary>
-        /// The RAW synchronous UI-thread marshal: a <see cref="Control.Invoke(System.Delegate)"/> against
-        /// <paramref name="dispatcher"/> when it is a live control (so a form on its own thread runs through its own
-        /// message loop), else against <see cref="UiThreadWindow"/>, else -- before either exists -- on the calling
-        /// thread. Exceptions propagate raw. Kept PRIVATE so it is reached only through <see cref="Run{T}"/> (the
-        /// synchronous config) and the wait loop's probe: the public <see cref="JsonUiService.InvokeOnUiThread(System.Action,System.Windows.Forms.Control)"/>
-        /// now routes through Run, and the probe must NOT route back through Run, so it calls this directly and cannot
-        /// recurse. Must be called off the UI thread.
+        /// Marshals <paramref name="action"/> onto the UI thread and BLOCKS until it has run (a synchronous invoke).
+        /// The first marshal goes through the Control -- assumed to have a valid handle at construction -- and, while
+        /// running there, captures that thread's WinForms synchronization context; every marshal after that goes
+        /// through the captured context instead, so a form this dispatcher is in the middle of closing is never
+        /// touched again. Must be called off the UI thread.
         /// </summary>
-        private static void DirectInvoke(Action action, Control dispatcher)
+        private void Send(Action action)
         {
-            if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
-            {
-                dispatcher.Invoke(action);
-                return;
-            }
-            var window = UiThreadWindow;
-            if (window != null)
-                window.Invoke(action);
+            if (_synchronizationContext != null)
+                _synchronizationContext.Send(_ => action(), null);
             else
-                action();
+                FirstMarshal(action, synchronous: true);
         }
 
-        /// <summary>The raw synchronous UI-thread marshal returning the func's result (see the Action overload).</summary>
-        private static T DirectInvoke<T>(Func<T> func, Control dispatcher)
+        /// <summary>Marshals <paramref name="action"/> onto the UI thread fire-and-forget (an async post); otherwise
+        /// like <see cref="Send"/>. Must be called off the UI thread.</summary>
+        private void Post(Action action)
         {
-            T result = default(T);
-            // Block-body lambda so this binds to the Action overload above -- an expression lambda
-            // "() => result = func()" would bind to THIS Func overload (an assignment yields a value) and recurse.
-            DirectInvoke(() => { result = func(); }, dispatcher);
-            return result;
+            if (_synchronizationContext != null)
+                _synchronizationContext.Post(_ => action(), null);
+            else
+                FirstMarshal(action, synchronous: false);
+        }
+
+        // The first marshal for this dispatcher: hop onto the UI thread through the Control, capture that thread's
+        // synchronization context (so later marshals bypass the Control), then run the action. Before any window
+        // exists (very early startup) there is nothing to marshal through, so the action runs on the calling thread.
+        private void FirstMarshal(Action action, bool synchronous)
+        {
+            var control = Dispatcher ?? UiThreadWindow;
+            if (control == null)
+            {
+                action();
+                return;
+            }
+            void OnUiThread()
+            {
+                _synchronizationContext ??= SynchronizationContext.Current as WindowsFormsSynchronizationContext
+                                            ?? new WindowsFormsSynchronizationContext();
+                action();
+            }
+            if (synchronous)
+                control.Invoke((Action) OnUiThread);
+            else
+                control.BeginInvoke((Action) OnUiThread);
         }
 
         /// <summary>
@@ -223,57 +255,30 @@ namespace pwiz.Skyline.ToolsUI
 
         // ===== Interactive-modal pre-show-count tracker =====
 
-        // The pre-show count for each interactive modal the connector has SEEN APPEAR: the ModalNestingCount
-        // that existed just before the modal was shown. Recorded ONLY in the primary path -- when Run detects that
-        // the gesture it posted opened a new interactive modal, it records that modal here. There is no
-        // process-wide hook and no close hook, so entries are pruned lazily whenever the tracker is read or
-        // written. The Form is held by a WEAK reference so a stale entry (this static list outlives any single
-        // wait) never keeps a closed dialog -- and through it the SkylineWindow / document -- alive. A modal
-        // opened another way simply has no entry, and Accept/Cancel then wait for its disappearance only. Kept
-        // LIFO (modals stack) but searched by Form. Guarded by its own lock.
-        private static readonly List<ModalEntry> _modalPreShowCounts = new List<ModalEntry>();
+        // The pre-show count for each interactive modal the connector has SEEN APPEAR: the ModalNestingCount that
+        // existed just before the modal was shown. Recorded ONLY in the primary path -- when Run detects that the
+        // gesture it posted opened a new interactive modal, it records that modal here. Keyed by WINDOW HANDLE, so a
+        // native dialog can be tracked exactly like a managed form (both expose Hwnd). The key is a value, so a
+        // stale entry never keeps a closed dialog -- and through it the SkylineWindow / document -- alive. There is
+        // no close hook, so entries are pruned lazily (a closed dialog's window is destroyed) whenever the tracker
+        // is read or written. Kept LIFO (modals stack). Guarded by its own lock.
+        private static readonly List<KeyValuePair<IntPtr, int>> _modalPreShowCounts = new List<KeyValuePair<IntPtr, int>>();
 
-        // One tracked modal: a weak reference to its Form, its pre-show count, and its window handle. The handle is
-        // captured now (when the modal appears) so CurrentTopInteractiveModal can rebuild the FormElement off the
-        // UI thread without reading Form.Handle (which would trip the cross-thread check).
-        private readonly struct ModalEntry
+        // Drops entries whose window is no longer among the currently-open top-level windows (a closed dialog).
+        // Called once per wait, right after that window set is captured (see Run) -- there is no other time the
+        // tracker needs pruning, and doing it against the fresh set avoids a stale-handle race with handle reuse.
+        internal static void PruneModalsNotOpen(HashSet<IntPtr> openWindows)
         {
-            public ModalEntry(Form form, IntPtr hwnd, int preShowCount)
-            {
-                FormRef = new WeakReference<Form>(form);
-                Hwnd = hwnd;
-                PreShowCount = preShowCount;
-            }
-            public WeakReference<Form> FormRef { get; }
-            public IntPtr Hwnd { get; }
-            public int PreShowCount { get; }
+            lock (_modalPreShowCounts)
+                _modalPreShowCounts.RemoveAll(e => !openWindows.Contains(e.Key));
         }
 
-        // Drops entries whose Form has been collected or disposed. Called under the lock, in place of a close hook.
-        private static void PruneDeadModals()
-        {
-            _modalPreShowCounts.RemoveAll(e => !e.FormRef.TryGetTarget(out var form) || form.IsDisposed);
-        }
-
-        // The managed Form a tracked modal wraps -- only a managed FormElement is ever tracked (a native dialog
-        // has no pre-show count), so this is null for a NativeDialog.
-        private static FormElement TrackedFormElement(IFormElement modal) => modal as FormElement;
-
-        // Records a newly appeared interactive modal's pre-show count, unless one is already recorded for it. A
-        // native dialog has no managed Form, so it is never tracked. The modal's handle is already known (it was
-        // built with it in hand), so it is stored without touching Form.Handle.
+        // Records a newly appeared interactive modal's pre-show count, unless one is already recorded for it.
         internal static void RecordModalPreShowCount(IFormElement modal, int preShowCount)
         {
-            var formElement = TrackedFormElement(modal);
-            if (formElement == null)
-                return;
-            var form = formElement.Form;
             lock (_modalPreShowCounts)
-            {
-                PruneDeadModals();
-                if (!_modalPreShowCounts.Any(e => e.FormRef.TryGetTarget(out var f) && ReferenceEquals(f, form)))
-                    _modalPreShowCounts.Add(new ModalEntry(form, formElement.Hwnd, preShowCount));
-            }
+                if (_modalPreShowCounts.All(e => e.Key != modal.Hwnd))
+                    _modalPreShowCounts.Add(new KeyValuePair<IntPtr, int>(modal.Hwnd, preShowCount));
         }
 
         // The recorded pre-show count for a modal, or the given default when none is recorded.
@@ -282,43 +287,29 @@ namespace pwiz.Skyline.ToolsUI
             return TryGetPreShowActionCount(modal) ?? defaultCount;
         }
 
-        // The recorded pre-show count for a modal, or null when it is not a tracked interactive modal (a native
-        // dialog, or an untracked one) -- surfaced in each FormInfo (get_open_forms) so a caller can confirm the
-        // tracker's state.
-        internal static int? TryGetPreShowActionCount(IFormElement modal)
-        {
-            return TryGetPreShowActionCount(TrackedFormElement(modal)?.Form);
-        }
+        // The recorded pre-show count for a modal (by its window handle), or null when it is not a tracked
+        // interactive modal -- surfaced in each FormInfo (get_open_forms) so a caller can confirm the tracker state.
+        internal static int? TryGetPreShowActionCount(IFormElement modal) => TryGetPreShowActionCount(modal.Hwnd);
 
-        // The recorded pre-show count for a managed form, keyed on Form identity (not its handle) -- so a caller
-        // that already holds the Form need not build a FormElement (which would read the handle off the form's own
-        // thread). Null when the form is untracked.
-        internal static int? TryGetPreShowActionCount(Form form)
+        // The recorded pre-show count for a window handle, or null when it is untracked.
+        internal static int? TryGetPreShowActionCount(IntPtr hwnd)
         {
-            if (form == null)
-                return null;
             lock (_modalPreShowCounts)
-            {
-                PruneDeadModals();
                 foreach (var entry in _modalPreShowCounts)
-                    if (entry.FormRef.TryGetTarget(out var f) && ReferenceEquals(f, form))
-                        return entry.PreShowCount;
-            }
+                    if (entry.Key == hwnd)
+                        return entry.Value;
             return null;
         }
 
         // The interactive modal most recently seen appear and still alive (the LIFO top of the tracker), wrapped as
-        // a FormElement, or null. Built with the entry's recorded handle, so it is safe on this poll thread.
+        // the connector form abstraction that drives it -- a managed FormElement or a native NativeDialog -- or
+        // null. Built from the recorded handle, so it is safe on this poll thread.
         internal static IFormElement CurrentTopInteractiveModal()
         {
             lock (_modalPreShowCounts)
-            {
-                PruneDeadModals();
-                for (int i = _modalPreShowCounts.Count - 1; i >= 0; i--)
-                    if (_modalPreShowCounts[i].FormRef.TryGetTarget(out var form))
-                        return new FormElement(form, _modalPreShowCounts[i].Hwnd);
-                return null;
-            }
+                return _modalPreShowCounts.Count > 0
+                    ? NativeDialog.WrapWindow(_modalPreShowCounts[_modalPreShowCounts.Count - 1].Key)
+                    : null;
         }
 
         // ===== The modal/count probe =====
@@ -336,7 +327,7 @@ namespace pwiz.Skyline.ToolsUI
         internal class ModalProbeResult
         {
             public bool NewInteractiveModal;   // a modal not open at the start appeared and is not a progress dialog
-            public IFormElement NewModal;      // the managed interactive modal to record (null for a native one)
+            public IFormElement NewModal;      // the new interactive modal to record a pre-show count for (managed or native)
             public string BlockingMessage;     // the first new blocking modal's message (throw text / record); null if none
             public bool TopModalDismissed;     // the interactive modal open at the start is gone
             public bool LongWaitPresent;       // a busy progress form (LongWaitDlg or other ILongWaitForm) is open
@@ -346,7 +337,7 @@ namespace pwiz.Skyline.ToolsUI
         // Samples the modal/count state in one pass, relative to the state captured at the start of the wait. Runs
         // on the caller's poll thread (FormUtil.OpenForms is thread-safe), asking each modal (a FormElement or
         // NativeDialog) about itself -- no window handles, no UI-thread marshal.
-        internal static ModalProbeResult ProbeModals(Dictionary<IntPtr, IFormElement> startModals, IFormElement topModal)
+        internal static ModalProbeResult ProbeModals(HashSet<IntPtr> startModals, IFormElement topModal)
         {
             var currentModals = GetOpenModals();
             var result = new ModalProbeResult { ModalNestingCount = ModalNestingCount };
@@ -354,20 +345,15 @@ namespace pwiz.Skyline.ToolsUI
             // dialog). Mirrors the dialog-watch.
             foreach (var modal in currentModals)
             {
-                if (startModals.ContainsKey(modal.Hwnd) || !modal.IsInteractiveModal)
+                if (startModals.Contains(modal.Hwnd) || !modal.IsInteractiveModal)
                     continue; // open at the start (by window handle), or a progress dialog -- not a new stop
-                if (!result.NewInteractiveModal)
-                {
-                    // The FIRST new interactive modal (in window-enumeration order): the message the dialog-watch
-                    // throws, or the posted-gesture wait records.
-                    result.NewInteractiveModal = true;
-                    result.BlockingMessage = modal.DetailedMessage;
-                }
-                if (modal is FormElement)
-                {
-                    result.NewModal = modal;
-                    break; // prefer a managed modal to record (a native dialog has no pre-show count)
-                }
+                // The FIRST new interactive modal (in window-enumeration order): the message the dialog-watch throws
+                // or the posted-gesture wait records, and the modal whose pre-show count is recorded. Managed and
+                // native modals are both tracked (by window handle), so there is no need to prefer a managed one.
+                result.NewInteractiveModal = true;
+                result.BlockingMessage = modal.DetailedMessage;
+                result.NewModal = modal;
+                break;
             }
             // "Dismissed" means the top modal open at the start is no longer on screen (gone, not merely disabled
             // by a nested child modal it opened). IsOpen tests visibility, so a still-visible parent whose child
@@ -397,7 +383,7 @@ namespace pwiz.Skyline.ToolsUI
                 // propagate raw (the InvokeOnUiThread Action overload adds its own wrapping). This is the whole of
                 // Run for this config; the count/dispatch/wait machinery below is only for the async configs.
                 T syncResult = default(T);
-                DirectInvoke(() => { syncResult = work(); }, Dispatcher);
+                Send(() => { syncResult = work(); });
                 return syncResult;
             }
 
@@ -409,12 +395,17 @@ namespace pwiz.Skyline.ToolsUI
             // would misread the parent as a NEW modal when the child closes and re-enables it. GetTopLevelWindows
             // keys on visibility, not enabled state, so the disabled parent is present and recognized as already
             // open. Read off the poll thread (Win32 + Control.FromHandle; no marshal).
-            var startModals = NativeDialog.GetTopLevelWindows().ToDictionary(form => form.Hwnd);
+            var startModals = new HashSet<IntPtr>(NativeDialog.GetTopLevelWindows().Select(form => form.Hwnd));
+            // Prune the pre-show tracker against the windows open right now: any tracked modal whose window is not
+            // among them has closed. This is the ONLY place the tracker is pruned -- done against the fresh set, so
+            // no separate close hook or per-access sweep is needed.
+            PruneModalsNotOpen(startModals);
             // The top interactive modal open at the start, as a form abstraction, and the opener's pre-show count --
             // captured now, before it (and its tracker entry) can close, so the ride-through target does not race
-            // the close. The probe later asks this modal itself whether it is still open. Inert for a value read
-            // that opens/dismisses nothing.
-            var topModalAtStart = CurrentTopInteractiveModal();
+            // the close. For an accept/cancel this is exactly the window being dismissed (AwaitedDismissal); for a
+            // plain gesture it is whatever modal is on top (only to ride a dismissal it happens to cause). The probe
+            // later asks this modal itself whether it is still open. Inert for a value read that opens nothing.
+            var topModalAtStart = AwaitedDismissal ?? CurrentTopInteractiveModal();
             // Only a modal actually OPEN at the start is a dismissal candidate. A stale tracker entry -- e.g. the
             // StartPage, recorded when the connector first gestured before the main window came up and since closed
             // -- can still be the LIFO top; treating its !IsOpen as "dismissed" would wrongly lower the target and
@@ -423,8 +414,11 @@ namespace pwiz.Skyline.ToolsUI
             // open here.
             if (topModalAtStart != null && !topModalAtStart.IsOpen)
                 topModalAtStart = null;
+            // The smaller of initialCount or the modal's recorded pre-show count: an accept waits for the count to
+            // fall back to this. (Peek returns initialCount when the pre-show count is unknown, so the Min is a no-op
+            // then; when known, the pre-show count is at or below initialCount anyway.)
             int topModalPreShowCount = topModalAtStart != null
-                ? PeekModalPreShowCount(topModalAtStart, initialCount) : initialCount;
+                ? Math.Min(initialCount, PeekModalPreShowCount(topModalAtStart, initialCount)) : initialCount;
 
             T result = default(T);
             Exception workError = null;
@@ -443,14 +437,22 @@ namespace pwiz.Skyline.ToolsUI
             }
             try
             {
-                if (Dispatcher == null)
+                if (WorkOnCallerThread)
+                    // The native-dialog gesture: run it right here on the caller's (pipe) thread. Its Win32 posts /
+                    // UI Automation must NOT marshal onto the UI thread that owns the dialog's modal loop (that would
+                    // deadlock), and the AutomationElement must stay on the thread it was obtained on -- so no
+                    // dispatch. RunWork returns at once (it only posts a gesture); the wait loop below does the rest.
+                    RunWork();
+                else if (Dispatcher == null)
                     // The dialog-watch: run the (possibly blocking) value work on a background thread and watch here.
                     ActionUtil.RunAsync(RunWork, @"JsonTool command");
                 else
                     // The posted-gesture wait: post the whole gesture (resolve control, gate, do it) onto the form's
                     // own UI thread; RunWork captures its exception (including a not-interactable gate failure),
-                    // which is re-thrown below after the wait, just as the dialog-watch re-throws its worker's.
-                    Dispatcher.BeginInvoke((Action) RunWork);
+                    // which is re-thrown below after the wait, just as the dialog-watch re-throws its worker's. This
+                    // first Post also captures the UI thread's context, so the later watchdog Sends never touch the
+                    // form (which the gesture may be closing).
+                    Post(RunWork);
             }
             catch
             {
@@ -461,7 +463,10 @@ namespace pwiz.Skyline.ToolsUI
 
             int target = initialCount;
             int noProgress = 0;
-            while (true)
+            // Stop the moment the work has errored: a caller-thread gesture (WorkOnCallerThread) runs synchronously
+            // above, so a throw during it (e.g. no accept button) is already visible here -- do not wait for a
+            // dismissal that will never come; fall through to re-throw its exception below.
+            while (workError == null)
             {
                 // Read the modal/count state on this poll thread -- no marshal (FormUtil.OpenForms is thread-safe,
                 // and each modal answers about itself).
@@ -475,8 +480,8 @@ namespace pwiz.Skyline.ToolsUI
                         // its message so the caller sees what is in the way instead of hanging.
                         throw new InvalidOperationException(probe.BlockingMessage);
                     // A new interactive modal (managed or native) appeared -- the caller will drive it. Record its
-                    // pre-show count if it is a managed modal we can track (a native dialog has none); the ONLY place
-                    // one is recorded. Note the stop-on-modal outcome (and its message) for the caller, then stop.
+                    // pre-show count (the ONLY place one is recorded), so a later accept of it can wait for the count
+                    // to fall back to this level. Note the stop-on-modal outcome (and its message), then stop.
                     if (probe.NewModal != null)
                         RecordModalPreShowCount(probe.NewModal, initialCount);
                     StoppedOnModal = true;
@@ -496,7 +501,14 @@ namespace pwiz.Skyline.ToolsUI
                 // still counts the modal's blocked opener); after the dismissal that opener completes and the count
                 // drops past it. It stays above target while the work is in flight, so once at or below the pre-show
                 // level the work -- and any work a dismissal resumed -- is done.
-                if (count <= target)
+                //
+                // AwaitedDismissal (an accept/cancel): also require its window to be actually GONE, not just the
+                // count drained. A native accept posts an UNCOUNTED Win32 gesture, so the count returns to
+                // initialCount the instant the gesture is posted -- before the window has closed; without this it
+                // would complete early. Bypassed for a plain gesture (no AwaitedDismissal) and when the awaited
+                // window was already closed at the start (topModalAtStart nulled), which nothing then waits on.
+                if (count <= target &&
+                    (AwaitedDismissal == null || topModalAtStart == null || probe.TopModalDismissed))
                     break;
 
                 if (TimeOut)
@@ -505,7 +517,7 @@ namespace pwiz.Skyline.ToolsUI
                     // pumps but shows no progress dialog) -- a pure off-thread read cannot show that. So ping the UI
                     // thread with a minimal synchronous no-op: it returns only if the loop pumped, and parks here
                     // (so noProgress cannot advance) if the loop is blocked, exactly as the old marshaled probe did.
-                    DirectInvoke(() => { }, null);
+                    Send(() => { });
                     if (probe.LongWaitPresent)
                         noProgress = 0; // a progress dialog is up: the operation is advancing, keep waiting
                     else if (++noProgress >= NO_PROGRESS_LIMIT)

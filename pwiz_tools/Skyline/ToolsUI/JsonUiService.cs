@@ -202,6 +202,21 @@ namespace pwiz.Skyline.ToolsUI
                 : new ActionResult { Completed = true };
         }
 
+        // The accept/cancel wait, shared by a managed form (FormElement) and a native dialog (NativeDialog): post
+        // the dismiss gesture on the caller's thread, then ride the shared wait until dialog's window has closed AND
+        // the count has drained to the level the action that showed it left -- i.e. that action (e.g. an
+        // openMenuItem_Click that then loads a file for minutes) has actually returned -- stopping early on a new
+        // modal or the ~10s watchdog. Completed is true unless a new modal stopped the wait, whose message the
+        // caller drives next. Must be called off the UI thread.
+        internal static ActionResult WaitForOkDialog(IFormElement dialog, Action postGesture)
+        {
+            var dispatch = UiServiceDispatcher.ForOkDialog(dialog);
+            dispatch.Run(postGesture);
+            return dispatch.StoppedOnModal
+                ? new ActionResult { Completed = false, Message = dispatch.BlockingMessage }
+                : new ActionResult { Completed = true };
+        }
+
         // Level 2: UI patterns
 
         /// <summary>
@@ -638,7 +653,7 @@ namespace pwiz.Skyline.ToolsUI
                         HasGraph = false,
                         DockState = @"Main",
                         Id = GetFormId(skylineWindow),
-                        ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(skylineWindow),
+                        ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(skylineWindow.Handle),
                     });
                     foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                     {
@@ -654,7 +669,7 @@ namespace pwiz.Skyline.ToolsUI
                             HasGraph = zedGraph != null,
                             DockState = dockState.ToString(),
                             Id = GetFormId(form),
-                            ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(form),
+                            ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(form.Handle),
                         });
                     }
                 }
@@ -673,7 +688,7 @@ namespace pwiz.Skyline.ToolsUI
                         HasGraph = false,
                         DockState = @"Dialog",
                         Id = GetFormId(form),
-                        ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(form),
+                        ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(form.Handle),
                     });
                 }
                 return formInfos;

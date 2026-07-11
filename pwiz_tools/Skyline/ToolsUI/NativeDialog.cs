@@ -142,7 +142,7 @@ namespace pwiz.Skyline.ToolsUI
         // Wraps a top-level window handle as the connector form abstraction that drives it: Control.FromHandle
         // resolves a managed WinForms form (a FormElement built with the handle already in hand -- safe off the UI
         // thread), or returns nothing for a truly native window (a generic NativeDialog).
-        private static IFormElement WrapWindow(IntPtr hwnd)
+        internal static IFormElement WrapWindow(IntPtr hwnd)
         {
             return Control.FromHandle(hwnd) is Form form ? (IFormElement) new FormElement(form, hwnd) : ForModalWindow(hwnd);
         }
@@ -274,11 +274,10 @@ namespace pwiz.Skyline.ToolsUI
             User32.PostMessageA(WindowHandle, User32.WinMessageType.WM_CLOSE, 0, 0);
         }
 
-        /// <summary>Cancels the dialog (posts WM_CLOSE) and waits for it to close (IFormElement.Cancel).</summary>
+        /// <summary>Cancels the dialog (posts WM_CLOSE) and rides the shared accept/cancel wait (IFormElement.Cancel).</summary>
         public ActionResult Cancel()
         {
-            PostClose();
-            return WaitForClosed();
+            return RunDismissGesture(PostClose);
         }
 
         /// <summary>
@@ -290,35 +289,27 @@ namespace pwiz.Skyline.ToolsUI
             PressEnter(DialogElement);
         }
 
-        /// <summary>Accepts the dialog (its default/OK gesture) and waits for it to close (IFormElement.Accept).</summary>
+        /// <summary>Accepts the dialog (its default/OK gesture) and rides the shared accept/cancel wait (IFormElement.Accept).</summary>
         public ActionResult Accept()
         {
-            PostAccept();
-            return WaitForClosed();
+            return RunDismissGesture(PostAccept);
         }
 
-        // Waits for the dialog to close after an accept/cancel gesture, then reports the outcome. A native dialog
-        // is not part of the modal-nesting count and its opener is untracked, so the follow-on work it resumes
-        // (loading or saving a file) cannot be confirmed finished -- Completed is therefore always false.
-        private ActionResult WaitForClosed()
+        // Posts the dismiss gesture and rides UiServiceDispatcher's shared accept wait -- the SAME machinery (and
+        // ForOkDialog config) a managed form's accept uses; the gesture runs on the caller's thread because its UI
+        // Automation must not touch the UI thread that owns this dialog's modal loop. Because the dialog was tracked
+        // when it appeared, the wait completes only once its window has closed AND the count has drained to its
+        // opener's pre-show level -- i.e. the action that showed it (e.g. an openMenuItem_Click that then loads a
+        // file for minutes) has actually returned -- stopping early on a new modal or the ~10s watchdog.
+        private ActionResult RunDismissGesture(Action postGesture)
         {
-            // First wait for the dialog's own window to close -- the ShowDialog call that raised it is returning
-            // (whether its handler then returns or opens the next modal, the window goes either way).
-            var stopwatch = Stopwatch.StartNew();
-            while (IsOpen && stopwatch.ElapsedMilliseconds <= MillisTimeout)
-                Thread.Sleep(POLL_INTERVAL_MILLIS);
-            // Then flush the UI thread with a synchronous no-op. A closing common dialog tears down its owned child
-            // windows (e.g. the folder-tree "Namespace Tree Control") with messages posted AFTER its main window
-            // hides, and those keep the owner disabled. The no-op is queued behind them, so by the time it runs --
-            // even if a new modal has since taken the UI thread, since a modal message loop still pumps -- the
-            // teardown is done and the owner is interactable. This is the "wait a tiny bit more" before returning.
+            var result = JsonUiService.WaitForOkDialog(this, postGesture);
+            // One more synchronous flush, native-only: a closing common dialog tears down its owned child windows
+            // (e.g. the folder-tree "Namespace Tree Control") via messages posted AFTER its window hides. Waiting
+            // for the opener outlasts that in the common case, but when the wait stopped on a new modal (a Save that
+            // opens a wizard) the teardown can still be pending; the queued no-op lands behind it.
             JsonUiService.InvokeOnUiThread(() => { });
-            return new ActionResult
-            {
-                Completed = false,
-                Message = LlmInstruction.Format(
-                    @"Drove the native dialog; its follow-on file operation is not tracked, so completion is not confirmed. Poll skyline_get_open_forms or the document state.")
-            };
+            return result;
         }
 
         // ---- IFormElement: drive the dialog the way JsonUiService drives any form -------------------
