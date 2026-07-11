@@ -82,7 +82,7 @@ namespace pwiz.Skyline.ToolsUI
         /// finishes, or until it opens/leaves an interactive modal (Completed = false, with that modal's message).</summary>
         public static ActionResult PerformGesture(IntPtr hwnd, Action action)
         {
-            return PerformActionAndWait(hwnd, null, action, () => true);
+            return PerformActionAndWait(hwnd, null, action, null);
         }
 
         /// <summary>Accepts or cancels the dialog at <paramref name="hwndDlg"/>: posts <paramref name="dismissAction"/>
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.ToolsUI
         public static T CallFunction<T>(IntPtr hwnd, Func<T> function)
         {
             T result = default(T);
-            var actionResult = PerformActionAndWait(hwnd, null, () => { result = function(); }, () => true);
+            var actionResult = PerformActionAndWait(hwnd, null, () => { result = function(); }, null);
             if (!actionResult.Completed)
                 throw new InvalidOperationException(actionResult.Message);
             return result;
@@ -166,50 +166,42 @@ namespace pwiz.Skyline.ToolsUI
                 Volatile.Write(ref actionLaterDone, true);
             }));
 
-            int pumpCount = 0, lastPump = 0, noProgress = 0;
-            bool pumpOutstanding = false;
+            int noProgress = 0;
             while (true)
             {
+                var openModals = GetOpenModals();
                 // A new interactive modal (one not open at the start) means an action opened, or left open, a dialog:
                 // record its pre-show count so a later OkDialog can wait the count back to it, then stop.
-                var newModal = GetOpenModals()
+                var newModal = openModals
                     .FirstOrDefault(m => m.IsInteractiveModal && !startWindows.Contains(m.Hwnd));
                 if (newModal != null)
                 {
                     RecordModalPreShowCount(newModal, startCount);
                     return new ActionResult { Completed = false, Message = newModal.DetailedMessage };
                 }
+                // actionLater ran on the UI thread; if it threw, re-throw here (its finally set the flag last).
+                if (Volatile.Read(ref actionLaterDone) && actionError != null)
+                    ExceptionUtil.WrapAndThrowException(actionError);
 
-                // actionNow already ran here; wait for actionLater (if any) to have run before judging the wait
-                // condition, so we do not complete before a UI-thread gesture has taken effect.
-                if (actionLater == null || Volatile.Read(ref actionLaterDone))
-                {
-                    if (actionError != null)
-                        ExceptionUtil.WrapAndThrowException(actionError); // the gesture failed on the UI thread
-                    if (waitCondition())
-                        return new ActionResult { Completed = true };
-                }
-
-                // Watchdog (needs the sync context the hop captures): post a no-op and count message-loop pumps.
-                // While one is outstanding the loop may just be busy; when one returns with no LongWaitDlg and no
-                // completion, that is a pump with no progress -- abort after a run of them.
                 var ctx = Volatile.Read(ref syncContext);
                 if (ctx != null)
                 {
-                    if (!pumpOutstanding)
-                    {
-                        lastPump = Volatile.Read(ref pumpCount);
-                        ctx.Post(_ => Interlocked.Increment(ref pumpCount), null);
-                        pumpOutstanding = true;
-                    }
-                    else if (Volatile.Read(ref pumpCount) != lastPump)
-                    {
-                        pumpOutstanding = false;
-                        if (GetOpenModals().Any(m => m.IsBusy))
-                            noProgress = 0; // a progress dialog is up: the operation is advancing, keep waiting
-                        else if (++noProgress >= NO_PROGRESS_LIMIT)
-                            throw new InvalidOperationException(new LlmInstruction(GestureTimeoutMessage));
-                    }
+                    // Judge the wait ON the UI thread with a synchronous Send. Running behind any messages already
+                    // queued (a closing dialog's child-window teardown, a posted click's effect), it flushes the
+                    // queue up to this point before deciding -- so no separate flush is needed. If the UI thread is
+                    // blocked and not pumping, the Send simply parks here until it resumes. actionNow already ran on
+                    // this thread; a UI-thread actionLater must have run before we judge, so its effect is in.
+                    bool done = false;
+                    ctx.Send(_ => done = (actionLater == null || Volatile.Read(ref actionLaterDone))
+                                         && (waitCondition == null || waitCondition()), null);
+                    if (done)
+                        return new ActionResult { Completed = true };
+                    // A returning Send is one message-loop pump. Count pumps that show no LongWaitDlg and no
+                    // completion toward the watchdog; a busy progress dialog means the operation is advancing.
+                    if (openModals.Any(m => m.IsBusy))
+                        noProgress = 0;
+                    else if (++noProgress >= NO_PROGRESS_LIMIT)
+                        throw new InvalidOperationException(new LlmInstruction(GestureTimeoutMessage));
                 }
                 Thread.Sleep(POLL_MILLIS);
             }

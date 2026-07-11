@@ -301,16 +301,12 @@ namespace pwiz.Skyline.ToolsUI
         // than on the dialog's own thread, where UI Automation would deadlock. Because the dialog was tracked when it
         // appeared, the wait completes only once its window has closed AND the count has drained to its opener's
         // pre-show level -- i.e. the action that showed it (e.g. an openMenuItem_Click that then loads a file for
-        // minutes) has returned -- stopping early on a new modal or the watchdog.
+        // minutes) has returned -- stopping early on a new modal or the watchdog. The wait judges its condition with
+        // a synchronous Send on the UI thread, which flushes a closing common dialog's child-window teardown (e.g.
+        // the folder-tree "Namespace Tree Control") behind it -- so no separate flush is needed here.
         private ActionResult RunDismissGesture(Action postGesture)
         {
-            var result = DialogWatcher.OkDialogNow(WindowHandle, postGesture);
-            // One more synchronous flush, native-only: a closing common dialog tears down its owned child windows
-            // (e.g. the folder-tree "Namespace Tree Control") via messages posted AFTER its window hides. Waiting
-            // for the opener outlasts that in the common case, but when the wait stopped on a new modal (a Save that
-            // opens a wizard) the teardown can still be pending; the queued no-op lands behind it.
-            JsonUiService.InvokeOnUiThread(() => { });
-            return result;
+            return DialogWatcher.OkDialogNow(WindowHandle, postGesture);
         }
 
         // ---- IFormElement: drive the dialog the way JsonUiService drives any form -------------------
