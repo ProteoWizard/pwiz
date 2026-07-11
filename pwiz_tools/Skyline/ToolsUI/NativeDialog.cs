@@ -281,42 +281,30 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Accepts the dialog through the IFormElement.PostAccept escape hatch (PerformAction): resolves and posts
-        /// its accept gesture in one step. A native dialog is normally driven through the named <see cref="Accept"/>
-        /// verb, which resolves the gesture on the caller thread and hands OkDialog a post-only one.
+        /// Posts the accept gesture -- the generic dialog presses Enter (which activates the default button); the
+        /// file dialogs override this with the gesture their surface needs. UI Automation lookup and Win32 post both
+        /// run on the caller (pipe) thread (IFormElement.PostAccept), where UI Automation is safe.
         /// </summary>
-        public void PostAccept()
+        public virtual void PostAccept()
         {
-            ResolveAcceptGesture()();
-        }
-
-        /// <summary>
-        /// Resolves -- on the caller (pipe) thread, where UI Automation is safe -- the POST-ONLY gesture that
-        /// accepts the dialog. The generic dialog presses Enter on its own window (activating the default button);
-        /// the file dialogs override to poke the child their surface needs. Resolving here keeps the gesture OkDialog
-        /// runs on the dialog's OWN UI thread free of UI Automation, which would deadlock there.
-        /// </summary>
-        protected virtual Action ResolveAcceptGesture()
-        {
-            var hwnd = WindowHandle;
-            return () => PressEnter(hwnd);
+            PressEnter(DialogElement);
         }
 
         /// <summary>Accepts the dialog (its default/OK gesture) and rides the shared accept/cancel wait (IFormElement.Accept).</summary>
         public ActionResult Accept()
         {
-            return RunDismissGesture(ResolveAcceptGesture());
+            return RunDismissGesture(PostAccept);
         }
 
-        // Rides DialogWatcher.OkDialog's shared accept wait -- the SAME machinery a managed form's accept uses. The
-        // gesture (already post-only: its handle was resolved on the caller thread) is run by OkDialog on the
-        // dialog's own UI thread. Because the dialog was tracked when it appeared, the wait completes only once its
-        // window has closed AND the count has drained to its opener's pre-show level -- i.e. the action that showed
-        // it (e.g. an openMenuItem_Click that then loads a file for minutes) has returned -- stopping early on a new
-        // modal or the watchdog.
+        // Rides DialogWatcher.OkDialogNow's shared accept wait -- the SAME machinery a managed form's accept uses,
+        // but running the WHOLE gesture (UI Automation lookup and the Win32 post) here on the caller thread rather
+        // than on the dialog's own thread, where UI Automation would deadlock. Because the dialog was tracked when it
+        // appeared, the wait completes only once its window has closed AND the count has drained to its opener's
+        // pre-show level -- i.e. the action that showed it (e.g. an openMenuItem_Click that then loads a file for
+        // minutes) has returned -- stopping early on a new modal or the watchdog.
         private ActionResult RunDismissGesture(Action postGesture)
         {
-            var result = JsonUiService.WaitForOkDialog(this, postGesture);
+            var result = DialogWatcher.OkDialogNow(WindowHandle, postGesture);
             // One more synchronous flush, native-only: a closing common dialog tears down its owned child windows
             // (e.g. the folder-tree "Namespace Tree Control") via messages posted AFTER its window hides. Waiting
             // for the opener outlasts that in the common case, but when the wait stopped on a new modal (a Save that
@@ -427,13 +415,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         protected void PressEnter(AutomationElement element)
         {
-            PressEnter(new IntPtr(element.Current.NativeWindowHandle));
-        }
-
-        // Post-only Enter: WM_KEYDOWN/UP VK_RETURN to a window handle, safe on any thread -- so it can be the gesture
-        // OkDialog runs on the dialog's own UI thread (the handle is resolved on the caller thread beforehand).
-        protected void PressEnter(IntPtr handle)
-        {
+            var handle = new IntPtr(element.Current.NativeWindowHandle);
             User32.PostMessageA(handle, User32.WinMessageType.WM_KEYDOWN, VK_RETURN, 0);
             User32.PostMessageA(handle, User32.WinMessageType.WM_KEYUP, VK_RETURN, 0);
         }

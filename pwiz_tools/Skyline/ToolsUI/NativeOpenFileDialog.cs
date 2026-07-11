@@ -82,11 +82,10 @@ namespace pwiz.Skyline.ToolsUI
             SetEditValue(GetFileNameEdit(), path);
         }
 
-        /// <summary>Resolves the file-name box's handle (caller thread) and returns a post-only Enter gesture.</summary>
-        protected override Action ResolveAcceptGesture()
+        /// <summary>Posts Enter in the file name box (the base Accept waits for the dialog to close).</summary>
+        public override void PostAccept()
         {
-            var edit = new IntPtr(GetFileNameEdit().Current.NativeWindowHandle);
-            return () => PressEnter(edit);
+            PressEnter(GetFileNameEdit());
         }
 
         private AutomationElement GetFileNameEdit()

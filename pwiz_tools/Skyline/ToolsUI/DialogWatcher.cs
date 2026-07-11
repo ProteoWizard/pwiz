@@ -76,26 +76,30 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         internal static Control UiThreadWindow => (Control) Program.MainWindow ?? Program.StartWindow;
 
-        // ===== The three entry points =====
+        // ===== The four entry points =====
 
         /// <summary>Posts <paramref name="action"/> onto <paramref name="hwnd"/>'s UI thread and waits until it
         /// finishes, or until it opens/leaves an interactive modal (Completed = false, with that modal's message).</summary>
         public static ActionResult PerformGesture(IntPtr hwnd, Action action)
         {
-            return PerformActionAndWait(hwnd, action, () => true);
+            return PerformActionAndWait(hwnd, null, action, () => true);
         }
 
         /// <summary>Accepts or cancels the dialog at <paramref name="hwndDlg"/>: posts <paramref name="dismissAction"/>
-        /// (a post-only gesture), then waits until that window has closed AND the nesting count has dropped back to
-        /// the level recorded when the dialog was shown -- i.e. the action that opened it has returned -- stopping
-        /// early on a new modal or the watchdog.</summary>
+        /// onto its UI thread, then waits until that window has closed AND the nesting count has dropped back to the
+        /// level recorded when the dialog was shown -- i.e. the action that opened it has returned -- stopping early
+        /// on a new modal or the watchdog.</summary>
         public static ActionResult OkDialog(IntPtr hwndDlg, Action dismissAction)
         {
-            // The count to wait back to: the level in effect when the dialog first appeared (recorded then), or the
-            // current level if it was never tracked (then this reduces to "wait for the window to close").
-            int preShowCount = TryGetPreShowActionCount(hwndDlg) ?? ModalNestingCount;
-            return PerformActionAndWait(hwndDlg, dismissAction,
-                () => !User32.IsWindowVisible(hwndDlg) && ModalNestingCount <= preShowCount);
+            return PerformActionAndWait(hwndDlg, null, dismissAction, DismissedAndDrained(hwndDlg));
+        }
+
+        /// <summary>Like <see cref="OkDialog"/>, but runs <paramref name="dismissAction"/> on the CALLER's thread
+        /// (as actionNow) instead of posting it to the dialog's UI thread -- for a native dialog, whose whole gesture
+        /// (the UI-Automation lookup AND the Win32 post) must run off the dialog's own (UI) thread.</summary>
+        public static ActionResult OkDialogNow(IntPtr hwndDlg, Action dismissAction)
+        {
+            return PerformActionAndWait(hwndDlg, dismissAction, null, DismissedAndDrained(hwndDlg));
         }
 
         /// <summary>Runs <paramref name="function"/> on <paramref name="hwnd"/>'s UI thread and returns its result;
@@ -103,79 +107,95 @@ namespace pwiz.Skyline.ToolsUI
         public static T CallFunction<T>(IntPtr hwnd, Func<T> function)
         {
             T result = default(T);
-            var actionResult = PerformActionAndWait(hwnd, () => { result = function(); }, () => true);
+            var actionResult = PerformActionAndWait(hwnd, null, () => { result = function(); }, () => true);
             if (!actionResult.Completed)
                 throw new InvalidOperationException(actionResult.Message);
             return result;
         }
 
+        // The accept/cancel wait condition: the dialog's window is gone AND the nesting count has drained to the
+        // level in effect when it appeared (recorded then), or the current level if it was never tracked (then this
+        // reduces to "wait for the window to close"). Captured now, before the dismiss gesture runs.
+        private static Func<bool> DismissedAndDrained(IntPtr hwndDlg)
+        {
+            int preShowCount = TryGetPreShowActionCount(hwndDlg) ?? ModalNestingCount;
+            return () => !User32.IsWindowVisible(hwndDlg) && ModalNestingCount <= preShowCount;
+        }
+
         // ===== The shared wait =====
 
         /// <summary>
-        /// BeginInvokes <paramref name="action"/> onto <paramref name="hwnd"/>'s UI thread and waits it out on the
-        /// caller thread. On the UI thread, before running the action, it snapshots the sync context, the nesting
-        /// count, and the open top-level windows (and prunes the pre-show tracker to them). The wait then: returns
-        /// Completed = false on a new interactive modal (recording its pre-show count); re-throws an exception the
-        /// action raised; returns Completed = true once the action has finished and <paramref name="waitCondition"/>
+        /// Snapshots -- on the caller thread, FIRST -- the nesting count and open top-level windows (pruning the
+        /// pre-show tracker to them), runs <paramref name="actionNow"/> here, then BeginInvokes
+        /// <paramref name="actionLater"/> onto <paramref name="hwnd"/>'s UI thread and waits it out. The hop also
+        /// captures that thread's sync context (for the watchdog). The wait returns Completed = false on a new
+        /// interactive modal (recording its pre-show count); re-throws an exception actionLater raised; returns
+        /// Completed = true once actionLater has run (actionNow already has) and <paramref name="waitCondition"/>
         /// holds; and trips the watchdog after <see cref="NO_PROGRESS_LIMIT"/> message-loop pumps with no LongWaitDlg
         /// and no completion. Must be called off the UI thread.
         /// </summary>
-        private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition)
+        private static ActionResult PerformActionAndWait(IntPtr hwnd, Action actionNow, Action actionLater, Func<bool> waitCondition)
         {
+            // On the caller thread, FIRST: snapshot what the wait compares against, BEFORE running anything, so an
+            // effect of either action is seen as new. Then run actionNow here -- a native dialog's whole gesture,
+            // whose UI Automation must not touch the dialog's own (UI) thread.
+            int startCount = ModalNestingCount;
+            var startWindows = new HashSet<IntPtr>(NativeDialog.GetTopLevelWindows().Select(w => w.Hwnd));
+            PruneModalsNotOpen(startWindows);
+            actionNow?.Invoke();
+
             var control = Control.FromHandle(hwnd) ?? UiThreadWindow;
-
             WindowsFormsSynchronizationContext syncContext = null;
-            HashSet<IntPtr> startWindows = null;
-            int startCount = 0;
             Exception actionError = null;
-            bool actionDone = false;
+            bool actionLaterDone = false;
 
+            // Hop onto the window's UI thread to capture its sync context (for the watchdog) and run actionLater
+            // there -- a managed gesture, which may block in a modal loop it opens, counted while it runs. For a
+            // native dialog actionLater is null and this hop only captures the context.
             control.BeginInvoke((Action) (() =>
             {
-                // On the window's own UI thread: snapshot everything the wait compares against, then run the action
-                // (which may block here in a modal loop it opens -- the snapshot is already taken either way). The
-                // action is counted while it runs, so a blocked one keeps the nesting count elevated.
-                startCount = ModalNestingCount;
-                startWindows = new HashSet<IntPtr>(NativeDialog.GetTopLevelWindows().Select(w => w.Hwnd));
-                PruneModalsNotOpen(startWindows);
                 Volatile.Write(ref syncContext,
                     SynchronizationContext.Current as WindowsFormsSynchronizationContext ?? new WindowsFormsSynchronizationContext());
-                IncrementModalNestingCount();
-                try { action(); }
-                catch (Exception ex) { actionError = ex; }
-                finally { DecrementModalNestingCount(); Volatile.Write(ref actionDone, true); }
+                if (actionLater != null)
+                {
+                    IncrementModalNestingCount();
+                    try { actionLater(); }
+                    catch (Exception ex) { actionError = ex; }
+                    finally { DecrementModalNestingCount(); }
+                }
+                Volatile.Write(ref actionLaterDone, true);
             }));
 
             int pumpCount = 0, lastPump = 0, noProgress = 0;
             bool pumpOutstanding = false;
             while (true)
             {
-                // Nothing to compare until the posted delegate has taken its snapshot (it does so before running the
-                // action, even one that then blocks). Once the sync context is published, watch.
+                // A new interactive modal (one not open at the start) means an action opened, or left open, a dialog:
+                // record its pre-show count so a later OkDialog can wait the count back to it, then stop.
+                var newModal = GetOpenModals()
+                    .FirstOrDefault(m => m.IsInteractiveModal && !startWindows.Contains(m.Hwnd));
+                if (newModal != null)
+                {
+                    RecordModalPreShowCount(newModal, startCount);
+                    return new ActionResult { Completed = false, Message = newModal.DetailedMessage };
+                }
+
+                // actionNow already ran here; wait for actionLater (if any) to have run before judging the wait
+                // condition, so we do not complete before a UI-thread gesture has taken effect.
+                if (actionLater == null || Volatile.Read(ref actionLaterDone))
+                {
+                    if (actionError != null)
+                        ExceptionUtil.WrapAndThrowException(actionError); // the gesture failed on the UI thread
+                    if (waitCondition())
+                        return new ActionResult { Completed = true };
+                }
+
+                // Watchdog (needs the sync context the hop captures): post a no-op and count message-loop pumps.
+                // While one is outstanding the loop may just be busy; when one returns with no LongWaitDlg and no
+                // completion, that is a pump with no progress -- abort after a run of them.
                 var ctx = Volatile.Read(ref syncContext);
                 if (ctx != null)
                 {
-                    // A new interactive modal (one not open at the start) means the action opened, or left open, a
-                    // dialog: record its pre-show count so a later OkDialog can wait the count back to it, then stop.
-                    var newModal = GetOpenModals()
-                        .FirstOrDefault(m => m.IsInteractiveModal && !startWindows.Contains(m.Hwnd));
-                    if (newModal != null)
-                    {
-                        RecordModalPreShowCount(newModal, startCount);
-                        return new ActionResult { Completed = false, Message = newModal.DetailedMessage };
-                    }
-
-                    if (Volatile.Read(ref actionDone))
-                    {
-                        if (actionError != null)
-                            ExceptionUtil.WrapAndThrowException(actionError); // the gesture failed on the UI thread
-                        if (waitCondition())
-                            return new ActionResult { Completed = true };
-                    }
-
-                    // Watchdog: post a no-op and count message-loop pumps. While a pump is outstanding (the loop has
-                    // not run it yet) we make no judgement -- the loop may simply be busy. When one comes back with no
-                    // LongWaitDlg showing and no completion, that is a pump with no progress; abort after a run of them.
                     if (!pumpOutstanding)
                     {
                         lastPump = Volatile.Read(ref pumpCount);
