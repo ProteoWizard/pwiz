@@ -158,6 +158,10 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(cr);
             Assert.IsFalse(data.HasEntrapment);                    // built without a manifest
             var pr = cr.PerRun;
+            // No manifest -> no entrapment overlay on either scope.
+            Assert.IsNull(pr.EntrapmentRunCountHistogram);
+            Assert.IsNull(pr.EntrapmentFdpByRunCount);
+            Assert.IsNull(cr.Experiment.EntrapmentRunCountHistogram);
             CollectionAssert.AreEqual(new[] { 3, 2, 1 }, pr.PerRunCount);   // A,B,C | A,B | A
             CollectionAssert.AreEqual(new[] { 3, 3, 3 }, pr.CumUnion);      // all 3 unique from run 1
             CollectionAssert.AreEqual(new[] { 3, 2, 1 }, pr.CumIntersection);
@@ -198,10 +202,28 @@ namespace pwiz.Osprey.Test
             {
                 { 1u, EntrapmentClass.Target }, { 50u, EntrapmentClass.PTarget },
             };
-            var ecr = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 1.0, 0.01, FdrLevel.Peptide).CrossRun.PerRun;
+            var ecrFull = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 1.0, 0.01, FdrLevel.Peptide).CrossRun;
+            var ecr = ecrFull.PerRun;
             CollectionAssert.AreEqual(new[] { 1, 1 }, ecr.PerRunCount);  // File 1 A + ENT -> only A; File 2 A
             Assert.AreEqual(1, ecr.CumUnion[ecr.CumUnion.Length - 1]);   // ENT never enters the union
             Assert.AreEqual(1, ecr.RunCountHistogram.Sum());             // just A, in both runs
+
+            // Phase B: the entrapment (p_target) precursors get their own run-count
+            // overlay and a per-k entrapment-measured FDP. ENT is in only file 1 (k=1);
+            // the real target A is in both (k=2). Both scopes carry the overlay.
+            CollectionAssert.AreEqual(new[] { 0, 1 }, ecr.RunCountHistogram);            // A in exactly 2 runs
+            CollectionAssert.AreEqual(new[] { 1, 0 }, ecr.EntrapmentRunCountHistogram);  // ENT in exactly 1 run
+            // Combined estimator (1 + 1/r) * n_p / (n_t + n_p), r = 1: k=1 slice has
+            // n_t=0, n_p=1 -> 2.0; k=2 slice has n_p=0 -> 0.
+            Assert.AreEqual(2.0, ecr.EntrapmentFdpByRunCount[0], 1e-9);
+            Assert.AreEqual(0.0, ecr.EntrapmentFdpByRunCount[1], 1e-9);
+            Assert.IsNotNull(ecrFull.Experiment.EntrapmentRunCountHistogram);
+
+            // The ratio r scales the combined FDP: at r = 0.1 the k=1 slice reads
+            // (1 + 1/0.1) * 1 / 1 = 11.0 (each entrapment hit implies ~1/r false targets).
+            var rcr = ModelDiagnosticsData.Build(WrapFiles(ef1, ef2), null, ecls, null, 0.1, 0.01, FdrLevel.Peptide)
+                .CrossRun.PerRun;
+            Assert.AreEqual(11.0, rcr.EntrapmentFdpByRunCount[0], 1e-9);
         }
 
         // The non-parametric null-alignment ratio (Mike's Storey check): the ratio

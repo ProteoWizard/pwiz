@@ -259,7 +259,12 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <h2>Precursors by number of runs detected</h2>
     <p class="desc">How many precursors are detected in exactly k of the N runs. The healthy shape is J/U: a tall
       right peak at k=N (reproducible real precursors) with a modest k=1 bump. A <b>growing left (k=1) bump</b> is the
-      FDR-struggling signature &mdash; false precursors don't reproduce, so they pile up at low k.</p>
+      FDR-struggling signature &mdash; false precursors don't reproduce, so they pile up at low k. When an entrapment
+      library is present, the amber curve on the <b>right axis</b> is the <b>entrapment-measured FDP of each k-slice</b>
+      &mdash; the contamination fraction of the precursors detected in exactly k runs (dashed line = the nominal run FDR).
+      It rises at low k and falls toward the reproducible k=N peak, and it is the adjudicator for whether the singletons
+      that survive the experiment-wide gate are real rare biology or over-admitted 1-hit-wonders.</p>
+    <div class="legend" id="runHistLegend"></div>
     <div class="chartbox" id="runHistChart"></div>
     <p class="note" id="runHistNote"></p>
   </div>
@@ -301,7 +306,7 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
 const D = JSON.parse(document.getElementById("osprey-data").textContent);
 const NS="http://www.w3.org/2000/svg";
 const COL={target:cssv("--target"),decoy:cssv("--decoy"),ptarget:cssv("--ptarget"),pdecoy:cssv("--pdecoy"),
-  ink:cssv("--ink"),muted:cssv("--muted"),accent:cssv("--accent")};
+  ink:cssv("--ink"),muted:cssv("--muted"),accent:cssv("--accent"),warn:cssv("--warn")};
 function cssv(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();}
 function fmt(x,d){return (x==null||isNaN(x))?"–":Number(x).toLocaleString(undefined,{minimumFractionDigits:d,maximumFractionDigits:d});}
 function pct(x,d){return (x==null||isNaN(x))?"–":fmt(100*x,d==null?1:d)+"%";}
@@ -764,6 +769,7 @@ function gapCls(g){g=Number(g);return isNaN(g)?"":(g<=0.05?"good":g<=0.15?"warn"
   const N=hasCross?cr.perRun.perRunCount.length:0;
   const view=()=>scope===0?cr.experiment:cr.perRun;                       // CrossRunView for current scope
   const detOff={bars:false,union:false,inter:false,half:false};
+  const histOff={ent:false};   // entrapment overlay on the run-count histogram
 
   function drawYield(){
     if(!hasYield)return;
@@ -824,8 +830,17 @@ function gapCls(g){g=Number(g);return isNaN(g)?"":(g<=0.05?"good":g<=0.15?"warn"
   function drawHist(){
     if(!hasCross)return;
     const v=view(), h=v.runCountHistogram;
-    const W=700,Hh=330,box={l:64,t:16,w:W-84,h:Hh-64};
+    // Entrapment (p_target) run-count overlay + per-k entrapment-measured FDP, when a
+    // manifest is present (both arrays null on a plain target+decoy run).
+    const eh=v.entrapmentRunCountHistogram, fdp=v.entrapmentFdpByRunCount, hasEnt=!!(eh&&fdp);
+    const showEnt=hasEnt&&!histOff.ent;
+    // Reserve a wider right margin when the FDP axis is present so its tick labels
+    // ("40%") and rotated title clear the SVG edge. Keyed on hasEnt (not showEnt) so
+    // toggling the curve off via the legend doesn't reflow the chart.
+    const W=700,Hh=330,rm=hasEnt?62:20,box={l:64,t:16,w:W-64-rm,h:Hh-64};
     const host=document.getElementById("runHistChart");host.innerHTML="";const s=svg(W,Hh);host.appendChild(s);
+    // Left axis: real-target counts only (the entrapment counts are far smaller and
+    // would be invisible on this scale -- they get their own right axis below, as a rate).
     let ymax=1;for(let i=0;i<N;i++)ymax=Math.max(ymax,h[i]);ymax*=1.08;
     const xt=N<=20?Array.from({length:N},(_,i)=>i+1):null;
     const sc=axes(s,box,[0.5,N+0.5],[0,ymax],
@@ -836,18 +851,60 @@ function gapCls(g){g=Number(g);return isNaN(g)?"":(g<=0.05?"good":g<=0.15?"warn"
       const color=(k===N-1)?COL.ptarget:(k===0)?COL.decoy:COL.target;
       E(s,"rect",{x:(cx-bw/2).toFixed(1),y:y1.toFixed(1),width:bw.toFixed(1),height:Math.max(0,y0-y1).toFixed(1),
         fill:color,opacity:.55});}
+    // Entrapment adjudication on a SECOND (right) y-axis: the entrapment-measured FDP of
+    // each k-slice as an amber rate curve. A rate is naturally scaled, so it reads clearly
+    // where the raw entrapment counts (dwarfed by the real bars) could not. High at low k,
+    // ~0 at the reproducible k=N peak; a faint dashed line marks the nominal run FDR -- the
+    // curve towering over it IS the miscalibration. Empty k-slices (NaN) break the curve.
+    if(showEnt){
+      // Scale the FDP axis to the max across BOTH scopes (not just the current view), so
+      // the axis is stable and flipping the toggle makes the curve visibly rise/fall
+      // rather than both scopes filling the plot identically (a comparison toggle needs a
+      // shared axis to read as a change).
+      let fmax=D.runFdr*2;
+      [cr.perRun,cr.experiment].forEach(vv=>{const a=vv&&vv.entrapmentFdpByRunCount;if(!a)return;
+        for(let k=0;k<a.length;k++){const f=a[k]==null?NaN:Number(a[k]);if(!isNaN(f))fmax=Math.max(fmax,f);}});
+      const fdpMax=fmax*1.15;
+      const yR=f=>box.t+box.h-(f/fdpMax)*box.h;
+      ticks(0,fdpMax,5).forEach(t=>{if(t<0)return;
+        E(s,"text",{x:box.l+box.w+7,y:yR(t)+3,"text-anchor":"start",fill:COL.warn,"font-size":"10"})
+          .textContent=pct(t,fdpMax<0.1?1:0);});
+      E(s,"line",{x1:box.l+box.w,x2:box.l+box.w,y1:box.t,y2:box.t+box.h,stroke:COL.warn,opacity:.5});
+      const tx=box.l+box.w+40;   // right of the numeric tick labels
+      E(s,"text",{class:"axtitle",x:tx,y:box.t+box.h/2,"text-anchor":"middle",fill:COL.warn,
+        transform:"rotate(90 "+tx+" "+(box.t+box.h/2)+")"}).textContent="entrapment FDP";
+      if(D.runFdr<=fdpMax)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:yR(D.runFdr),y2:yR(D.runFdr),
+        stroke:COL.warn,"stroke-dasharray":"2 4",opacity:.55});
+      let p="",started=false;
+      for(let k=0;k<N;k++){const f=fdp[k]==null?NaN:Number(fdp[k]);
+        if(isNaN(f)){started=false;continue;}
+        p+=(started?"L":"M")+sc.x(k+1).toFixed(1)+" "+yR(f).toFixed(1)+" ";started=true;
+        if(N<=40)E(s,"circle",{cx:sc.x(k+1),cy:yR(f),r:2.6,fill:COL.warn});}
+      E(s,"path",{d:p,fill:"none",stroke:COL.warn,"stroke-width":2});}
     const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
     ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
       const px=(ev.clientX-rb.left)/rb.width*W;
       const k=Math.min(N-1,Math.max(0,Math.round((px-box.l)/box.w*N-0.5)));
-      showTip(ev,"<b>"+(k+1)+" of "+N+" run"+(k+1===1?"":"s")+"</b><br>"+fmt(h[k],0)+" precursors");});
+      let html="<b>"+(k+1)+" of "+N+" run"+(k+1===1?"":"s")+"</b><br>"+fmt(h[k],0)+" precursors";
+      if(hasEnt){html+="<br><span style='color:"+COL.warn+"'>■</span> entrapment: "+fmt(eh[k],0);
+        if(fdp[k]!=null&&!isNaN(fdp[k]))html+="<br>entrapment FDP: "+pct(fdp[k],1);}
+      showTip(ev,html);});
     ov.addEventListener("mouseleave",hideTip);
     const k1=h[0], kN=h[N-1], tot=h.reduce((a,b)=>a+b,0)||1;
-    document.getElementById("runHistNote").innerHTML= N<2
+    let note = N<2
       ? "Single run: every detected precursor sits at k=1 (no cross-run reproducibility to read yet)."
       : "<span style='color:"+COL.decoy+"'>■</span> "+fmt(k1,0)+" ("+pct(k1/tot,0)+") detected in only one run · "+
         "<span style='color:"+COL.ptarget+"'>■</span> "+fmt(kN,0)+" ("+pct(kN/tot,0)+") in all "+N+
         " ("+SCOPES[scope].name+"). Flip to experiment-wide: the k=1 bump should shrink as globally-uncredible singletons drop.";
+    // Adjudication: is the k=1 survivor set real rare biology or over-admitted noise?
+    if(hasEnt&&N>=2){const f1=fdp[0], nom=D.runFdr;
+      if(f1!=null&&!isNaN(f1))
+        note += (f1<=nom*1.6
+          ? " <b>Entrapment adjudication:</b> the k=1 set measures "+pct(f1,1)+" FDP — near the "+pct(nom,0)+
+            " nominal, so these singletons read as real rare / donor-specific precursors, not FDR escapees."
+          : " <b>Entrapment adjudication:</b> the k=1 set measures "+pct(f1,1)+" FDP — well above the "+pct(nom,0)+
+            " nominal, so the "+SCOPES[scope].name+" q is admitting excess 1-hit-wonders (a calibration gap one level up); read low-k detections with caution.");}
+    document.getElementById("runHistNote").innerHTML=note;
   }
 
   function renderRepro(){drawYield();drawDet();drawHist();}
@@ -857,6 +914,13 @@ function gapCls(g){g=Number(g);return isNaN(g)?"":(g<=0.05?"good":g<=0.15?"warn"
     {name:"cumulative intersection",color:COL.ink,line:true,toggle:o=>{detOff.inter=o;drawDet();}},
     {name:"detected in ≥ half the runs",color:COL.decoy,line:true,toggle:o=>{detOff.half=o;drawDet();}},
   ]);
+  // Run-count histogram legend, only when the entrapment overlay exists (both scopes
+  // carry the entrapment arrays when a manifest is present).
+  if(hasCross && cr.experiment && cr.experiment.entrapmentRunCountHistogram)
+    legend(document.getElementById("runHistLegend"),[
+      {name:"real targets",color:COL.target},
+      {name:"entrapment FDP (right axis)",color:COL.warn,line:true,toggle:o=>{histOff.ent=o;drawHist();}},
+    ]);
   const sel=document.getElementById("reproScopeSel");sel.innerHTML="";
   SCOPES.forEach((sco,k)=>{const b=H(sel,"button",{class:k===scope?"on":""},sco.name);
     b.onclick=()=>{scope=k;sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));b.classList.add("on");renderRepro();};});
