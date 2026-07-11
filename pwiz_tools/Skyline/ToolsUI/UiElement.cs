@@ -297,16 +297,10 @@ namespace pwiz.Skyline.ToolsUI
             .Describe(new LlmInstruction(@"Select the tab with the given text."), new LlmInstruction(@"the tab's visible text"));
 
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
-        // This is the PerformAction escape-hatch path, which MUST stay fire-and-forget -- so it posts the click
-        // via the post-only PostAccept for a managed form (the named Accept verb adds the wait), and calls a
-        // native dialog's already-fire-and-forget Accept directly.
-        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e =>
-        {
-            if (e is FormElement formElement)
-                formElement.PostAccept();
-            else
-                e.Accept();
-        }).Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
+        // This is the PerformAction escape-hatch path, which MUST stay fire-and-forget -- so it posts the accept
+        // via the post-only PostAccept (the named Accept verb adds the wait). Each IFormElement posts its own way.
+        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.PostAccept())
+            .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
         // for the tutorial paste steps, without touching the clipboard.
@@ -1032,17 +1026,26 @@ namespace pwiz.Skyline.ToolsUI
         string Title { get; }
         /// <summary>The form's controls as ControlInfo, each path parented onto the form (the get_controls verb).</summary>
         ControlInfo[] GetControls();
-        /// <summary>Clicks a control on the form by its visible label. (To confirm a form or dialog use the
-        /// accept action, and to dismiss it use Close -- neither keys on a localized button caption.)</summary>
-        void ClickButton(string button);
-        /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name).</summary>
-        void SetValue(string controlId, string value);
-        /// <summary>Closes (a form) or cancels (a native dialog).</summary>
+        /// <summary>Clicks a control on the form by its visible label, returning whether the click completed or
+        /// left a dialog open. (To confirm a form or dialog use the accept action, and to dismiss it use Close --
+        /// neither keys on a localized button caption.)</summary>
+        ActionResult ClickButton(string button);
+        /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name), returning whether the
+        /// set completed or left a dialog open.</summary>
+        ActionResult SetValue(string controlId, string value);
+        /// <summary>Closes (a form) or cancels (a native dialog), fire and forget (the close_form verb).</summary>
         void Close();
         /// <summary>Accepts the form/dialog -- the equivalent of pressing its default button (a managed form
-        /// clicks its AcceptButton, a native dialog does its OK gesture), so confirming a dialog never keys on
-        /// a localized button caption (cancelling is <see cref="Close"/>). Exposed as the accept action.</summary>
-        void Accept();
+        /// clicks its AcceptButton, a native dialog does its OK gesture), so confirming a dialog never keys on a
+        /// localized button caption -- then waits it out and reports whether it completed. Each kind knows how to
+        /// accept itself; the accept verb just calls this.</summary>
+        ActionResult Accept();
+        /// <summary>Cancels the form/dialog -- presses its cancel button (or closes it when it has none) -- then
+        /// waits it out and reports whether it completed. The dismissing counterpart of <see cref="Accept"/>.</summary>
+        ActionResult Cancel();
+        /// <summary>Posts the accept gesture fire-and-forget, without waiting -- the PerformAction escape hatch
+        /// (UiActions.Accept), which must not block. The named accept verb uses <see cref="Accept"/> instead.</summary>
+        void PostAccept();
         /// <summary>Resolves the path against this form and performs the action in the form's thread context.</summary>
         object PerformAction(UiElementPath path, UiAction action, object value);
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
@@ -1243,12 +1246,12 @@ namespace pwiz.Skyline.ToolsUI
         // selecting it). This named/convenience verb then waits out the posted gesture (the count settling, or a
         // modal it opens appearing) so it returns only once the click has taken effect; the PerformAction
         // escape-hatch path (UiActions.Click) stays fire-and-forget. Must be called off the UI thread.
-        public void ClickButton(string button)
+        public ActionResult ClickButton(string button)
         {
             // Post the whole gesture onto this form's own thread: resolve the control there, then Click gates it
             // (the form and the control) and does the click. UiServiceDispatcher waits it out and re-throws a
-            // not-found / not-interactable failure to the caller.
-            JsonUiService.WaitForGesture(Form, () => UiActions.Click.Invoke(FindElement(button, UiActions.Click), null));
+            // not-found / not-interactable failure to the caller, and reports whether the click completed.
+            return JsonUiService.WaitForGesture(Form, () => UiActions.Click.Invoke(FindElement(button, UiActions.Click), null));
         }
 
         // Sets a control's value (or a grid cell) on the form. The target is resolved synchronously on the UI
@@ -1258,21 +1261,20 @@ namespace pwiz.Skyline.ToolsUI
         // named/convenience verb waits out the posted gesture (the count settling, or a modal a validation /
         // confirmation raises appearing) so it returns only once the value has taken effect; the PerformAction
         // escape-hatch path (UiActions.SetValue) stays fire-and-forget. Must be called off the UI thread.
-        public void SetValue(string controlId, string value)
+        public ActionResult SetValue(string controlId, string value)
         {
             if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
             {
                 // Post both moves in one gesture on this form's thread so the wait's initial count is captured
                 // before either, and the wait covers the paste (not just the cell move).
-                JsonUiService.WaitForGesture(Form, () =>
+                return JsonUiService.WaitForGesture(Form, () =>
                 {
                     var gridElement = FindGrid(gridName);
                     UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
                     UiActions.SetGridText.Invoke(gridElement, value);
                 });
-                return;
             }
-            JsonUiService.WaitForGesture(Form, () => UiActions.SetValue.Invoke(FindElement(controlId, UiActions.SetValue), value));
+            return JsonUiService.WaitForGesture(Form, () => UiActions.SetValue.Invoke(FindElement(controlId, UiActions.SetValue), value));
         }
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the single
@@ -1317,13 +1319,20 @@ namespace pwiz.Skyline.ToolsUI
         // here, on the caller), then the click is POSTED fire-and-forget -- never run synchronously on the
         // caller (a test/pipe thread): an accept that starts a long import or opens a modal must not block the
         // caller, and its work must run on the UI thread, not the caller's. Must be called off the UI thread.
-        public void Accept()
+        public ActionResult Accept()
         {
             // The named/convenience accept: post the click, then wait for it to take effect (the count to settle,
             // a modal it opens to appear, or -- when it dismisses the top modal -- the count to ride back to the
             // opener's pre-show level). PerformAction's accept stays fire-and-forget via PostAccept (see
             // UiActions.Accept). Must be called off the UI thread.
-            JsonUiService.WaitForGesture(Form, PostAccept);
+            return JsonUiService.WaitForGesture(Form, PostAccept);
+        }
+
+        // The named cancel: post the cancel click (or a close when the form has no cancel button), then wait it
+        // out the same way Accept does. Must be called off the UI thread.
+        public ActionResult Cancel()
+        {
+            return JsonUiService.WaitForGesture(Form, PostCancel);
         }
 
         // The fire-and-forget core of Accept: gate the form and resolve its default button synchronously on the
@@ -1404,13 +1413,13 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>Invokes a menu item on this form's main menu by its '>'-separated path (e.g. "File &gt;
-        /// Import &gt; Peptide Search").</summary>
-        public void InvokeMenuItem(string menuPath)
+        /// Import &gt; Peptide Search"), returning whether the click completed or left a dialog open.</summary>
+        public ActionResult InvokeMenuItem(string menuPath)
         {
             if (Form.MainMenuStrip == null)
                 throw new ArgumentException(new LlmInstruction(@"This form has no main menu."));
-            if (!new ToolStripElement(Form.MainMenuStrip) { FormElement = this }.ClickMenuItem(menuPath))
-                throw new ArgumentException(LlmInstruction.Format(@"Menu item not found: {0}.", menuPath));
+            return new ToolStripElement(Form.MainMenuStrip) { FormElement = this }.ClickMenuItem(menuPath)
+                ?? throw new ArgumentException(LlmInstruction.Format(@"Menu item not found: {0}.", menuPath));
         }
     }
 
@@ -1923,16 +1932,17 @@ namespace pwiz.Skyline.ToolsUI
         /// item) synchronously on the UI thread, then posts its click fire-and-forget so an item that opens a
         /// modal does not block. Returns false (clicking nothing) when the path is not in this toolstrip, so a
         /// caller can try the next toolstrip on the form. Throws if the form is blocked or the item disabled.</summary>
-        public bool ClickMenuItem(string menuPath)
+        // Returns the click's ActionResult, or null when the menu path does not resolve to an item on this
+        // toolstrip (so a caller trying several toolstrips can move on to the next).
+        public ActionResult ClickMenuItem(string menuPath)
         {
             var leaf = InvokeOnUiThread(() => ResolveMenuItem(menuPath));
             if (leaf == null)
-                return false;
+                return null;
             // Post the click onto the form's own thread, where the item's Click gates its form (a modal blocking it)
             // and the item itself and then does the click. Wait out the posted gesture (the count settling, or a
             // modal it opens appearing) so the named menu/toolbar verbs return only once the click has taken effect.
-            JsonUiService.WaitForGesture(FormElement.Form, () => UiActions.Click.Invoke(leaf, null));
-            return true;
+            return JsonUiService.WaitForGesture(FormElement.Form, () => UiActions.Click.Invoke(leaf, null));
         }
 
         // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.

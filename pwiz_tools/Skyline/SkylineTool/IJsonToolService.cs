@@ -349,23 +349,24 @@ namespace SkylineTool
         /// <summary>
         /// Invokes a main-menu item by its visible path, e.g. "File > Import > Peptide Search".
         /// Each segment is matched against a menu item's text (mnemonic '&amp;' and trailing
-        /// ellipsis ignored) or its control name, case-insensitively. The click is posted
-        /// asynchronously, so an item that opens a modal dialog returns immediately; poll
-        /// <see cref="GetOpenForms"/> for the resulting form.
+        /// ellipsis ignored) or its control name, case-insensitively. Waits out the click and
+        /// reports in the <see cref="ActionResult"/> whether it completed or left a dialog open
+        /// (whose text is in <see cref="ActionResult.Message"/>) for the caller to drive next.
         /// </summary>
         /// <param name="menuPath">Menu path; segments separated by '>' (also '|' or '/').</param>
-        void InvokeMenuItem(string menuPath);
+        ActionResult InvokeMenuItem(string menuPath);
 
         /// <summary>
         /// Clicks a control on an open form, matching <paramref name="button"/> against the control's
         /// name or visible text: a Button, a CheckBox or RadioButton, a custom IButtonControl (e.g. a
         /// StartPage tile), a ToolStrip / menu / toolbar item, or any other control. For a native
         /// dialog this accepts the dialog, or cancels it when <paramref name="button"/> names the
-        /// cancel/close action. The click is posted asynchronously when it may open a modal dialog.
+        /// cancel/close action. Waits out the click and reports in the <see cref="ActionResult"/>
+        /// whether it completed or left a dialog open (whose text is in <see cref="ActionResult.Message"/>).
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="button">Control name or visible label.</param>
-        void ClickFormButton(string formId, string button);
+        ActionResult ClickFormButton(string formId, string button);
 
         /// <summary>
         /// Clicks an item on a form's ToolStrip (toolbar / menu strip) by its path, e.g.
@@ -375,7 +376,7 @@ namespace SkylineTool
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="menuPath">Toolbar/menu path; segments separated by '>' (also '|' or '/').</param>
-        void ClickToolStripItem(string formId, string menuPath);
+        ActionResult ClickToolStripItem(string formId, string menuPath);
 
         /// <summary>
         /// Sets the value of a control on an open form. For a native file dialog the value is the
@@ -388,7 +389,7 @@ namespace SkylineTool
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">Control name, a grid cell locator "grid[column,row]", or ignored for a native file dialog.</param>
         /// <param name="value">Text, "true"/"false", or item text, per control kind.</param>
-        void SetFormValue(string formId, string controlId, string value);
+        ActionResult SetFormValue(string formId, string controlId, string value);
 
         /// <summary>
         /// Returns the current value of a control on a form, found by its visible label: a text box's
@@ -418,7 +419,7 @@ namespace SkylineTool
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
         /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
         /// <param name="text">Tab-separated (and newline-separated) values to paste at the current cell.</param>
-        void SetGridText(string formId, string controlId, string text);
+        ActionResult SetGridText(string formId, string controlId, string text);
 
         /// <summary>
         /// Moves the current cell of a grid on a form (move there before pasting with
@@ -430,7 +431,7 @@ namespace SkylineTool
         /// <param name="controlId">Grid control name, or null when the form has a single grid.</param>
         /// <param name="column">The target visible-column index.</param>
         /// <param name="row">The target row index.</param>
-        void SetCurrentCellAddress(string formId, string controlId, int column, int row);
+        ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row);
 
         /// <summary>
         /// Returns all the text in a grid on a form -- the column headers followed by every data row --
@@ -451,18 +452,20 @@ namespace SkylineTool
         /// <summary>
         /// Accepts (confirms) an open dialog -- presses its default button, the equivalent of pressing Enter,
         /// without keying on a localized "OK" caption -- then waits until the dialog has closed and any work the
-        /// accept resumes has finished. Use this to confirm a dialog and block until it (and its follow-on work)
-        /// is done, rather than posting a click and polling yourself.
+        /// accept resumes has finished. The <see cref="ActionResult.Completed"/> flag is true only when the
+        /// connector knew which action opened the dialog and that action has finished; false (with a note in
+        /// <see cref="ActionResult.Message"/>) when it cannot confirm that.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        void Accept(string formId);
+        ActionResult Accept(string formId);
 
         /// <summary>
         /// Cancels (dismisses) an open dialog -- presses its cancel button, or closes it when it has none --
-        /// then waits until the dialog has closed. The dismissing counterpart of <see cref="Accept"/>.
+        /// then waits until the dialog has closed. The dismissing counterpart of <see cref="Accept"/>, with the
+        /// same <see cref="ActionResult"/> semantics.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        void Cancel(string formId);
+        ActionResult Cancel(string formId);
 
         /// <summary>
         /// Clicks an item on a control's right-click context menu. Address the control the way

@@ -79,8 +79,8 @@ namespace pwiz.Skyline.ToolsUI
             SetWindowText(GetFileNameEditHandle(), path);
         }
 
-        /// <summary>Accepts the dialog -- the equivalent of clicking its Save button.</summary>
-        public override void Accept()
+        /// <summary>Posts the Save-button click (the base Accept waits for the dialog to close).</summary>
+        public override void PostAccept()
         {
             // Post (not send) BM_CLICK: clicking Save can raise a nested modal (the overwrite-confirm
             // prompt), whose message loop would never return to a synchronous SendMessage and so would

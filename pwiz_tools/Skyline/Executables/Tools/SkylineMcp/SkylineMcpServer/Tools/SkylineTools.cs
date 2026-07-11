@@ -610,8 +610,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.InvokeMenuItem(menuPath);
-            return $"Invoked menu item: {menuPath}";
+            var result = connection.InvokeMenuItem(menuPath);
+            return DescribeAction(result, $"Invoked menu item: {menuPath}");
         });
     }
 
@@ -627,8 +627,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.ClickToolStripItem(formId, menuPath);
-            return $"Clicked toolbar item '{menuPath}' on {formId}.";
+            var result = connection.ClickToolStripItem(formId, menuPath);
+            return DescribeAction(result, $"Clicked toolbar item '{menuPath}' on {formId}.");
         });
     }
 
@@ -645,8 +645,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.ClickFormButton(formId, button);
-            return $"Clicked '{button}' on {formId}.";
+            var result = connection.ClickFormButton(formId, button);
+            return DescribeAction(result, $"Clicked '{button}' on {formId}.");
         });
     }
 
@@ -665,8 +665,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.SetFormValue(formId, controlId, value);
-            return $"Set value on {formId}.";
+            var result = connection.SetFormValue(formId, controlId, value);
+            return DescribeAction(result, $"Set value on {formId}.");
         });
     }
 
@@ -696,8 +696,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.SetGridText(formId, controlId, text);
-            return $"Pasted grid text on {formId}.";
+            var result = connection.SetGridText(formId, controlId, text);
+            return DescribeAction(result, $"Pasted grid text on {formId}.");
         });
     }
 
@@ -714,8 +714,8 @@ public static class SkylineTools
     {
         return Invoke(connection =>
         {
-            connection.SetCurrentCellAddress(formId, controlId, column, row);
-            return $"Moved to cell (column {column}, row {row}) on {formId}.";
+            var result = connection.SetCurrentCellAddress(formId, controlId, column, row);
+            return DescribeAction(result, $"Moved to cell (column {column}, row {row}) on {formId}.");
         });
     }
 
@@ -1397,6 +1397,17 @@ public static class SkylineTools
     /// When Skyline is not connected, returns a helpful message instead of throwing.
     /// The connection is established per-call and disposed after each call.
     /// </summary>
+    // Turns an ActionResult into the tool's reply: the plain done-message when the action completed, or that
+    // message plus the reason it is not known to have completed (e.g. a dialog it left open) otherwise.
+    private static string DescribeAction(ActionResult result, string doneMessage)
+    {
+        if (result.Completed)
+            return doneMessage;
+        return string.IsNullOrEmpty(result.Message)
+            ? $"{doneMessage} This did not complete; poll skyline_get_open_forms for any dialog it opened."
+            : $"{doneMessage} This did not complete: {result.Message}";
+    }
+
     private static string Invoke(Func<SkylineConnection, string> action)
     {
         SkylineConnection connection = null;

@@ -82,8 +82,8 @@ namespace pwiz.Skyline.ToolsUI
             SetEditValue(GetFileNameEdit(), path);
         }
 
-        /// <summary>Accepts the dialog (Enter in the file name box), opening the typed file(s).</summary>
-        public override void Accept()
+        /// <summary>Posts Enter in the file name box (the base Accept waits for the dialog to close).</summary>
+        public override void PostAccept()
         {
             PressEnter(GetFileNameEdit());
         }

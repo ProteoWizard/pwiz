@@ -111,18 +111,18 @@ namespace SkylineTool
         }
 
         // UI interaction
-        public void InvokeMenuItem(string menuPath) { Call(nameof(InvokeMenuItem), menuPath); }
-        public void ClickFormButton(string formId, string button) { Call(nameof(ClickFormButton), formId, button); }
-        public void ClickToolStripItem(string formId, string menuPath) { Call(nameof(ClickToolStripItem), formId, menuPath); }
-        public void SetFormValue(string formId, string controlId, string value) { Call(nameof(SetFormValue), formId, controlId, value); }
+        public ActionResult InvokeMenuItem(string menuPath) { return CallTyped<ActionResult>(nameof(InvokeMenuItem), menuPath); }
+        public ActionResult ClickFormButton(string formId, string button) { return CallTyped<ActionResult>(nameof(ClickFormButton), formId, button); }
+        public ActionResult ClickToolStripItem(string formId, string menuPath) { return CallTyped<ActionResult>(nameof(ClickToolStripItem), formId, menuPath); }
+        public ActionResult SetFormValue(string formId, string controlId, string value) { return CallTyped<ActionResult>(nameof(SetFormValue), formId, controlId, value); }
         public string GetFormValue(string formId, string controlId) { return Call(nameof(GetFormValue), formId, controlId); }
         public string[] GetOptions(string formId, string controlId) { return CallTyped<string[]>(nameof(GetOptions), formId, controlId); }
-        public void SetGridText(string formId, string controlId, string text) { Call(nameof(SetGridText), formId, controlId, text); }
-        public void SetCurrentCellAddress(string formId, string controlId, int column, int row) { Call(nameof(SetCurrentCellAddress), formId, controlId, column, row); }
+        public ActionResult SetGridText(string formId, string controlId, string text) { return CallTyped<ActionResult>(nameof(SetGridText), formId, controlId, text); }
+        public ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row) { return CallTyped<ActionResult>(nameof(SetCurrentCellAddress), formId, controlId, column, row); }
         public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
         public void CloseForm(string formId) { Call(nameof(CloseForm), formId); }
-        public void Accept(string formId) { Call(nameof(Accept), formId); }
-        public void Cancel(string formId) { Call(nameof(Cancel), formId); }
+        public ActionResult Accept(string formId) { return CallTyped<ActionResult>(nameof(Accept), formId); }
+        public ActionResult Cancel(string formId) { return CallTyped<ActionResult>(nameof(Cancel), formId); }
         public void InvokeContextMenuItem(string formId, string controlSelector, string itemText) { Call(nameof(InvokeContextMenuItem), formId, controlSelector, itemText); }
 
         // 1-arg methods

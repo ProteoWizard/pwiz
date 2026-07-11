@@ -80,6 +80,16 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public bool Synchronous { get; set; }
 
+        /// <summary>
+        /// After <see cref="Run{T}"/> returns for a posted-gesture wait: true when the wait ended because a new
+        /// interactive modal appeared (the gesture opened, or left open, a dialog) rather than because the work
+        /// drained. False when the work completed normally. Meaningless for the synchronous / dialog-watch configs.
+        /// </summary>
+        public bool StoppedOnModal { get; private set; }
+
+        /// <summary>The message of the modal that stopped the wait (see <see cref="StoppedOnModal"/>), else null.</summary>
+        public string BlockingMessage { get; private set; }
+
         /// <summary>Constructs a dispatcher for the given launch control (null = background/dialog-watch).</summary>
         public UiServiceDispatcher(Control dispatcher)
         {
@@ -392,9 +402,14 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             int initialCount = ModalNestingCount;
-            // The modals open at the start, keyed by window handle -- the identity the wait loop uses to tell a NEW
-            // modal from one already open. Read off the poll thread (FormUtil.OpenForms is thread-safe).
-            var startModals = GetOpenModals().ToDictionary(form => form.Hwnd);
+            // The windows open at the start, keyed by window handle -- the identity the wait loop uses to tell a
+            // NEW modal from one already open. Snapshotted from ALL top-level windows, not just the currently-active
+            // modals (GetOpenModals): a parent modal disabled by a nested child (a prompt on top of a wizard) is
+            // EXCLUDED from GetOpenModals while the child is up (it filters on IsWindowEnabled), so keying on that
+            // would misread the parent as a NEW modal when the child closes and re-enables it. GetTopLevelWindows
+            // keys on visibility, not enabled state, so the disabled parent is present and recognized as already
+            // open. Read off the poll thread (Win32 + Control.FromHandle; no marshal).
+            var startModals = NativeDialog.GetTopLevelWindows().ToDictionary(form => form.Hwnd);
             // The top interactive modal open at the start, as a form abstraction, and the opener's pre-show count --
             // captured now, before it (and its tracker entry) can close, so the ride-through target does not race
             // the close. The probe later asks this modal itself whether it is still open. Inert for a value read
@@ -461,9 +476,11 @@ namespace pwiz.Skyline.ToolsUI
                         throw new InvalidOperationException(probe.BlockingMessage);
                     // A new interactive modal (managed or native) appeared -- the caller will drive it. Record its
                     // pre-show count if it is a managed modal we can track (a native dialog has none); the ONLY place
-                    // one is recorded. Then just stop waiting (the message is not needed when we are not throwing).
+                    // one is recorded. Note the stop-on-modal outcome (and its message) for the caller, then stop.
                     if (probe.NewModal != null)
                         RecordModalPreShowCount(probe.NewModal, initialCount);
+                    StoppedOnModal = true;
+                    BlockingMessage = probe.BlockingMessage;
                     break;
                 }
 

@@ -267,19 +267,58 @@ namespace pwiz.Skyline.ToolsUI
         /// button through UI Automation, which the dialog (a DirectUI surface) does not always
         /// honor.
         /// </summary>
-        public void Cancel()
+        // Posts WM_CLOSE (dismisses the dialog), fire and forget. Shared by the close_form verb (Close) and the
+        // named Cancel verb (which adds the wait).
+        private void PostClose()
         {
             User32.PostMessageA(WindowHandle, User32.WinMessageType.WM_CLOSE, 0, 0);
         }
 
+        /// <summary>Cancels the dialog (posts WM_CLOSE) and waits for it to close (IFormElement.Cancel).</summary>
+        public ActionResult Cancel()
+        {
+            PostClose();
+            return WaitForClosed();
+        }
+
         /// <summary>
-        /// Accepts the dialog -- the equivalent of clicking its default/OK button. The generic dialog
-        /// presses Enter (which activates the default button); the file dialogs override this with the
-        /// gesture their surface needs.
+        /// Posts the accept gesture -- the generic dialog presses Enter (which activates the default button); the
+        /// file dialogs override this with the gesture their surface needs. Fire and forget (IFormElement.PostAccept).
         /// </summary>
-        public virtual void Accept()
+        public virtual void PostAccept()
         {
             PressEnter(DialogElement);
+        }
+
+        /// <summary>Accepts the dialog (its default/OK gesture) and waits for it to close (IFormElement.Accept).</summary>
+        public ActionResult Accept()
+        {
+            PostAccept();
+            return WaitForClosed();
+        }
+
+        // Waits for the dialog to close after an accept/cancel gesture, then reports the outcome. A native dialog
+        // is not part of the modal-nesting count and its opener is untracked, so the follow-on work it resumes
+        // (loading or saving a file) cannot be confirmed finished -- Completed is therefore always false.
+        private ActionResult WaitForClosed()
+        {
+            // First wait for the dialog's own window to close -- the ShowDialog call that raised it is returning
+            // (whether its handler then returns or opens the next modal, the window goes either way).
+            var stopwatch = Stopwatch.StartNew();
+            while (IsOpen && stopwatch.ElapsedMilliseconds <= MillisTimeout)
+                Thread.Sleep(POLL_INTERVAL_MILLIS);
+            // Then flush the UI thread with a synchronous no-op. A closing common dialog tears down its owned child
+            // windows (e.g. the folder-tree "Namespace Tree Control") with messages posted AFTER its main window
+            // hides, and those keep the owner disabled. The no-op is queued behind them, so by the time it runs --
+            // even if a new modal has since taken the UI thread, since a modal message loop still pumps -- the
+            // teardown is done and the owner is interactable. This is the "wait a tiny bit more" before returning.
+            JsonUiService.InvokeOnUiThread(() => { });
+            return new ActionResult
+            {
+                Completed = false,
+                Message = LlmInstruction.Format(
+                    @"Drove the native dialog; its follow-on file operation is not tracked, so completion is not confirmed. Poll skyline_get_open_forms or the document state.")
+            };
         }
 
         // ---- IFormElement: drive the dialog the way JsonUiService drives any form -------------------
@@ -319,7 +358,7 @@ namespace pwiz.Skyline.ToolsUI
         // modal loop, so a synchronous send could wedge the caller (see NativeSaveFileDialog.Accept). Caption
         // matching is case- and '&'-mnemonic-insensitive; the caller reads the localized caption from
         // get_controls.
-        public virtual void ClickButton(string button)
+        public virtual ActionResult ClickButton(string button)
         {
             var buttons = FindChildren(ControlType.Button).ToList();
             var match = buttons.FirstOrDefault(b => CaptionMatches(b.Current.Name, button));
@@ -328,14 +367,25 @@ namespace pwiz.Skyline.ToolsUI
                     @"The dialog '{0}' has no button '{1}'. Its buttons are: {2}.",
                     FormId, button, string.Join(@", ", buttons.Select(b => b.Current.Name))));
             User32.PostMessageA(new IntPtr(match.Current.NativeWindowHandle), User32.WinMessageType.BM_CLICK, 0, 0);
+            // The click is posted (not waited on): a native dialog is not part of the modal-nesting count, so
+            // completion cannot be confirmed. Report it as not completed with a note to poll.
+            return new ActionResult
+            {
+                Completed = false,
+                Message = LlmInstruction.Format(
+                    @"Posted the click of '{0}' to native dialog '{1}'; poll skyline_get_open_forms for the result.",
+                    button, FormId)
+            };
         }
 
         // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base
-        // refuses, and the file dialogs override SetValueCore to type the path.
-        public void SetValue(string controlId, string value)
+        // refuses, and the file dialogs override SetValueCore to type the path. The value is typed synchronously
+        // and has no follow-on work, so the set is complete on return.
+        public ActionResult SetValue(string controlId, string value)
         {
             VerifyNotBlocked();
             SetValueCore(value);
+            return new ActionResult { Completed = true };
         }
 
         protected virtual void SetValueCore(string value)
@@ -344,7 +394,7 @@ namespace pwiz.Skyline.ToolsUI
                 @"Setting values is not supported for native dialog {0}.", FormId));
         }
 
-        public void Close() => Cancel();
+        public void Close() => PostClose();
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
         {

@@ -320,6 +320,27 @@ namespace SkylineTool
     }
 
     /// <summary>
+    /// The outcome of a UI action verb (InvokeMenuItem, ClickFormButton, SetFormValue, Accept, Cancel).
+    /// </summary>
+    public class ActionResult
+    {
+        /// <summary>
+        /// True only when the connector is SURE the action has finished: for a gesture (a click, a value set)
+        /// that the connector's modal-nesting count settled back to where it started with no new dialog left
+        /// open; for Accept/Cancel that the connector knew which action originally opened the dialog and that
+        /// action has since finished. False means the action is not known to have completed -- typically because
+        /// it opened (or left open) a modal dialog, which <see cref="Message"/> describes.
+        /// </summary>
+        public bool Completed { get; set; }
+        /// <summary>
+        /// When <see cref="Completed"/> is false, a human-readable note on why -- e.g. the text of the modal
+        /// dialog the action raised and left open, which the caller should now drive. Null when there is nothing
+        /// to report.
+        /// </summary>
+        public string Message { get; set; }
+    }
+
+    /// <summary>
     /// Information about one interactive control on a form, returned by GetControls. Lets a caller
     /// discover what is on a form -- and how to address it -- without reading the source: <see cref="Path"/>
     /// is the locator to pass back (to PerformAction), and <see cref="Enabled"/> reports whether it can be

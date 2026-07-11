@@ -82,10 +82,10 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Accept clicks OK (posted BM_CLICK, like the file dialogs -- the click closes the dialog and unwinds
+        // PostAccept clicks OK (posted BM_CLICK, like the file dialogs -- the click closes the dialog and unwinds
         // its modal loop, so a synchronous send could wedge the caller). OK is found by its control id, not a
-        // localized caption.
-        public override void Accept()
+        // localized caption. The base Accept waits for the dialog to close.
+        public override void PostAccept()
         {
             var okButton = WaitForElement(IDOK.ToString());
             User32.PostMessageA(new IntPtr(okButton.Current.NativeWindowHandle), User32.WinMessageType.BM_CLICK, 0, 0);

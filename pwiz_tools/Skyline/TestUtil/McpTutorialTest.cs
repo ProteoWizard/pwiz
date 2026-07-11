@@ -22,6 +22,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -107,6 +108,51 @@ namespace pwiz.SkylineTestUtil
             return JsonUiService.ResolveForm(id);
         }
 
+        /// <summary>Asserts that a connector action reported it completed by the time the verb returned (see
+        /// <see cref="ActionResult.Completed"/>) -- for an action the caller expects to finish synchronously.
+        /// Fails with the action's message (e.g. the dialog it unexpectedly left open) when it did not, so a
+        /// test that assumes completion surfaces the actions where that assumption does not hold.</summary>
+        protected static void AssertComplete(ActionResult actionResult)
+        {
+            if (!actionResult.Completed)
+                Assert.Fail("Expected the connector action to have completed on return, but it did not. " +
+                            "ActionResult.Message: " + (actionResult.Message ?? "(none)"));
+        }
+
+        /// <summary>Resolves a form of the given WinForms type from the connector's open forms RIGHT NOW, without
+        /// waiting -- the counterpart to <see cref="WaitForConnectorForm{TForm}"/> for when a preceding action was
+        /// expected to have already opened it. Fails if it is not open yet, revealing an action that did not open
+        /// its dialog synchronously.</summary>
+        protected IFormElement GetConnectorForm<TForm>() where TForm : Form =>
+            GetConnectorForm(typeof(TForm).Name);
+
+        /// <summary>Resolves a form by its connector type name right now (see <see cref="GetConnectorForm{TForm}"/>).</summary>
+        protected IFormElement GetConnectorForm(string typeName) =>
+            ResolveNow(form => form.Type == typeName, "a form of type " + typeName);
+
+        /// <summary>Resolves the summary graph whose title contains <paramref name="titleSubstring"/> right now
+        /// (the immediate counterpart to <see cref="WaitForConnectorGraph"/>).</summary>
+        protected IFormElement GetConnectorGraph(string titleSubstring) =>
+            ResolveNow(form => form.Type == @"GraphSummary" && form.HasGraph && true == form.Title?.Contains(titleSubstring),
+                "a graph whose title contains '" + titleSubstring + "'");
+
+        /// <summary>Resolves the native file dialog right now (the immediate counterpart to
+        /// <see cref="WaitForNativeFileDialog"/>).</summary>
+        protected IFormElement GetNativeFileDialog() =>
+            ResolveNow(form => form.IsNative && form.Type == @"FileDialog", "the native file dialog");
+
+        /// <summary>Resolves the native folder dialog right now (the immediate counterpart to
+        /// <see cref="WaitForNativeFolderDialog"/>).</summary>
+        protected IFormElement GetNativeFolderDialog() =>
+            ResolveNow(form => form.IsNative && form.Type == @"FolderDialog", "the native folder dialog");
+
+        private IFormElement ResolveNow(Func<FormInfo, bool> predicate, string description)
+        {
+            var id = Connector.GetOpenForms().FirstOrDefault(predicate)?.Id;
+            Assert.IsNotNull(id, "Expected {0} to be open already, but it was not.", description);
+            return JsonUiService.ResolveForm(id);
+        }
+
         /// <summary>
         /// Waits until the form shows a control of the given type -- e.g. a wizard page's UserControl that swaps
         /// in after a transition (clicking "Next" can advance the page asynchronously). A screenshot taken right
@@ -119,7 +165,9 @@ namespace pwiz.SkylineTestUtil
             {
                 try
                 {
-                    return form.GetControls().Any(control => Equals(control.Path.Type, controlType));
+                    // GetControls can return null while the form is mid-gesture / re-laying-out; treat that (and a
+                    // no-match) as "not ready yet" and keep polling.
+                    return form.GetControls()?.Any(control => Equals(control.Path.Type, controlType)) ?? false;
                 }
                 catch (InvalidOperationException)
                 {
@@ -143,7 +191,9 @@ namespace pwiz.SkylineTestUtil
             {
                 try
                 {
-                    return form.GetControls().FirstOrDefault(control => Equals(control.Path.Type, controlType))?.Enabled == true;
+                    // GetControls can return null while the dialog is mid-recompute; treat null (and a disabled or
+                    // missing control) as "not ready yet" and keep polling.
+                    return form.GetControls()?.FirstOrDefault(control => Equals(control.Path.Type, controlType))?.Enabled == true;
                 }
                 catch (InvalidOperationException)
                 {

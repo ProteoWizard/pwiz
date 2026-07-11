@@ -187,13 +187,19 @@ namespace pwiz.Skyline.ToolsUI
         // work shows. Progress is gauged by a synchronous marshaled probe each cycle (see ProbeModals): the wait
         // aborts only after NO_PROGRESS_LIMIT consecutive actively-pumping probes show neither completion nor a
         // LongWaitDlg. Must be called off the UI thread.
-        internal static void WaitForGesture(Control dispatcher, Action postGesture)
+        internal static ActionResult WaitForGesture(Control dispatcher, Action postGesture)
         {
             // BeginInvoke the gesture onto the target form's own thread, do NOT throw on a modal but STOP and record
             // it, and ride the ~10s message-loop-progress watchdog -- the shared wait/modal machinery, configured
             // for the posted-gesture wait. Falls back to the main/start window only if no form is given. See
             // UiServiceDispatcher.
-            UiServiceDispatcher.ForGesture(dispatcher ?? UiServiceDispatcher.UiThreadWindow).Run(postGesture);
+            var dispatch = UiServiceDispatcher.ForGesture(dispatcher ?? UiServiceDispatcher.UiThreadWindow);
+            dispatch.Run(postGesture);
+            // The gesture completed only if the count drained; if it opened (or left open) a modal, report that
+            // dialog's message so the caller knows what to drive next.
+            return dispatch.StoppedOnModal
+                ? new ActionResult { Completed = false, Message = dispatch.BlockingMessage }
+                : new ActionResult { Completed = true };
         }
 
         // Level 2: UI patterns
@@ -334,7 +340,7 @@ namespace pwiz.Skyline.ToolsUI
         /// item is located on the UI thread (throwing if absent), then its click is posted with
         /// BeginInvoke so a menu item that opens a modal dialog does not block the caller.
         /// </summary>
-        public static void InvokeMenuItem(string menuPath)
+        public static ActionResult InvokeMenuItem(string menuPath)
         {
             // There is no main menu while the StartPage is showing (the main window does not exist
             // yet). Fail with a clear message rather than dereferencing a null main window.
@@ -344,7 +350,7 @@ namespace pwiz.Skyline.ToolsUI
             // The main menu is the main window's; drive it through that form's element model. Build the element on
             // the UI thread (it reads the window handle), then InvokeMenuItem drives it from this thread.
             var mainWindow = InvokeOnUiThread(() => new FormElement(Program.MainWindow));
-            mainWindow.InvokeMenuItem(menuPath);
+            return mainWindow.InvokeMenuItem(menuPath);
         }
 
         // Populates a ContextMenuStrip the way right-clicking the graph would: it invokes the graph's
@@ -373,86 +379,39 @@ namespace pwiz.Skyline.ToolsUI
         /// in the static DropDownItems, e.g. the Document Grid's Reports list) are present before the
         /// item is matched. Each segment is matched by item name or visible text, like InvokeMenuItem.
         /// </summary>
-        public static void ClickToolStripItem(string formId, string menuPath)
+        public static ActionResult ClickToolStripItem(string formId, string menuPath)
         {
             ValidateFormIdFormat(formId);
-            // The path-walk, matching, gating, and click all live in ToolStripElement.ClickMenuItem; the
-            // first segment is a top-level item on one of the form's toolstrips, so try each until one has it.
+            // The path-walk, matching, gating, and click all live in ToolStripElement.ClickMenuItem; the first
+            // segment is a top-level item on one of the form's toolstrips, so try each until one has it (a null
+            // result means that toolstrip did not have it -- move on). Stops at the first that clicks it.
             var formElement = (FormElement) FindFormById(formId);
             var toolStrips = InvokeOnUiThread(() =>
                 formElement.SelfAndDescendants().OfType<ToolStripElement>().ToList());
-            if (!toolStrips.Any(toolStrip => toolStrip.ClickMenuItem(menuPath)))
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"Toolbar item not found on form {0}: {1}.", formId, menuPath));
+            var result = toolStrips.Select(toolStrip => toolStrip.ClickMenuItem(menuPath)).FirstOrDefault(r => r != null);
+            return result ?? throw new ArgumentException(LlmInstruction.Format(
+                @"Toolbar item not found on form {0}: {1}.", formId, menuPath));
         }
 
         /// <summary>
-        /// Accepts the dialog named by <paramref name="formId"/> -- presses its default (accept) button, fire and
-        /// forget -- then WAITS until the dialog is gone (inspecting the form object's own Visible / handle state,
-        /// not <see cref="System.Windows.Forms.Application.OpenForms"/>) and, when its pre-show count is known,
-        /// until <see cref="ModalNestingCount"/> has fallen back to it (so the work the accept resumes is
-        /// waited out). See <see cref="IJsonToolService"/>.
+        /// Accepts the dialog named by <paramref name="formId"/> -- the resolved form knows how to accept itself
+        /// (a managed form posts its default button and waits the gesture out; a native dialog does its OK gesture
+        /// and waits for the window to close) and reports whether it completed. See <see cref="IJsonToolService"/>.
         /// </summary>
-        public static void Accept(string formId)
+        public static ActionResult Accept(string formId)
         {
             ValidateFormIdFormat(formId);
-            AcceptOrCancel(ResolveForm(formId), true);
+            return ResolveForm(formId).Accept();
         }
 
         /// <summary>
-        /// Cancels the dialog named by <paramref name="formId"/> -- presses its cancel button (or closes it when
-        /// it has none), fire and forget -- then waits for it to disappear the same way <see cref="Accept"/> does.
-        /// See <see cref="IJsonToolService"/>.
+        /// Cancels the dialog named by <paramref name="formId"/> -- the dismissing counterpart of
+        /// <see cref="Accept"/>, likewise delegated to the resolved form. See <see cref="IJsonToolService"/>.
         /// </summary>
-        public static void Cancel(string formId)
+        public static ActionResult Cancel(string formId)
         {
             ValidateFormIdFormat(formId);
-            AcceptOrCancel(ResolveForm(formId), false);
-        }
-
-        // Posts the accept/cancel gesture and waits for the form to go (and, if known, for the action count to
-        // return to the form's pre-show level). Must be called off the UI thread.
-        private static void AcceptOrCancel(IFormElement formElement, bool accept)
-        {
-            int? preShowCount = UiServiceDispatcher.TryGetPreShowActionCount(formElement);
-
-            // Post the gesture fire-and-forget (a managed form through its post-only helper, so the wait is here
-            // and not doubled inside the helper; a native dialog's Accept/Close are already fire-and-forget).
-            if (formElement is FormElement form)
-            {
-                if (accept) form.PostAccept(); else form.PostCancel();
-            }
-            else if (accept)
-                formElement.Accept();
-            else
-                formElement.Close();
-
-            // Wait on the same message-loop-progress watchdog WaitForGesture uses: each cycle a SYNCHRONOUS
-            // marshaled probe samples whether the form is gone (and the count has returned) and whether a busy
-            // progress form (LongWaitDlg or other ILongWaitForm) is up, so the watchdog advances only while the
-            // loop is actually pumping.
-            int noProgress = 0;
-            while (true)
-            {
-                var probe = InvokeOnUiThread(() => new
-                {
-                    StillOpen = formElement.IsOpen,
-                    LongWaitPresent = FormUtil.OpenForms.Any(f => f is ILongWaitForm { IsBusy: true }),
-                    Count = ModalNestingCount
-                });
-                bool countReached = !preShowCount.HasValue || probe.Count == preShowCount.Value;
-                if (!probe.StillOpen && countReached)
-                    return;
-
-                if (probe.LongWaitPresent)
-                    noProgress = 0;
-                else if (++noProgress >= UiServiceDispatcher.NO_PROGRESS_LIMIT)
-                    throw new InvalidOperationException(LlmInstruction.Format(
-                        @"Timed out after about {0} seconds waiting for form {1} to close, with an active message loop and no long-wait (progress) dialog showing.",
-                        UiServiceDispatcher.NO_PROGRESS_LIMIT.ToString(), formElement.FormId));
-
-                Thread.Sleep(UiServiceDispatcher.PROGRESS_POLL_MILLIS);
-            }
+            return ResolveForm(formId).Cancel();
         }
 
         /// <summary>
@@ -535,7 +494,7 @@ namespace pwiz.Skyline.ToolsUI
         /// DataboundGridControl (e.g. the Document Grid) and for a plain DataGridView (e.g. the Rule Set
         /// Editor's rules grid). See <see cref="IJsonToolService"/>.
         /// </summary>
-        public static void SetGridText(string formId, string controlId, string text)
+        public static ActionResult SetGridText(string formId, string controlId, string text)
         {
             ValidateFormIdFormat(formId);
             // Identify the form (its own thread) synchronously, then post the whole paste onto that thread: resolve
@@ -544,7 +503,7 @@ namespace pwiz.Skyline.ToolsUI
             // then drives) so it returns only once the paste has taken effect. The PerformAction escape-hatch path
             // (UiActions.SetGridText) stays fire-and-forget.
             var formElement = (FormElement) FindFormById(formId);
-            WaitForGesture(formElement.Form, () => UiActions.SetGridText.Invoke(formElement.FindGrid(controlId), text ?? string.Empty));
+            return WaitForGesture(formElement.Form, () => UiActions.SetGridText.Invoke(formElement.FindGrid(controlId), text ?? string.Empty));
         }
 
         /// <summary>
@@ -553,7 +512,7 @@ namespace pwiz.Skyline.ToolsUI
         /// visible-column index and <paramref name="row"/> is the row index -- the same indices the grid
         /// reports columns and rows in. See <see cref="IJsonToolService"/>.
         /// </summary>
-        public static void SetCurrentCellAddress(string formId, string controlId, int column, int row)
+        public static ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
             ValidateFormIdFormat(formId);
             // Identify the form (its own thread) synchronously, then post the whole move onto that thread: resolve
@@ -561,7 +520,7 @@ namespace pwiz.Skyline.ToolsUI
             // waits out the posted move (the count settling) so it returns only once the cell has moved. The
             // PerformAction escape-hatch path (UiActions.SetCurrentCellAddress) stays fire-and-forget.
             var formElement = (FormElement) FindFormById(formId);
-            WaitForGesture(formElement.Form, () => UiActions.SetCurrentCellAddress.Invoke(formElement.FindGrid(controlId), new[] { column, row }));
+            return WaitForGesture(formElement.Form, () => UiActions.SetCurrentCellAddress.Invoke(formElement.FindGrid(controlId), new[] { column, row }));
         }
 
         /// <summary>
