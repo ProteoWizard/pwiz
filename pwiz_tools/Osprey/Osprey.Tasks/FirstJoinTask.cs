@@ -324,7 +324,7 @@ namespace pwiz.Osprey.Tasks
                     frozenForTable?.Results != null)
                 {
                     var scoreQTable = Pass2FdrSidecar.BuildFullPopulationScoreQTable(
-                        perFileEntries, frozenForTable.Results, ctx);
+                        perFileEntries, frozenForTable.Results, loadFileFeatures, ctx);
                     if (scoreQTable != null)
                         ctx.Publish(scoreQTable);
                 }

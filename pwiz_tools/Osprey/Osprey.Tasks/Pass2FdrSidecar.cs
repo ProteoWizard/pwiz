@@ -889,20 +889,28 @@ namespace pwiz.Osprey.Tasks
         /// Build the FULL 1st-pass-population score-&gt;q table at first-pass FDR time
         /// (called from <see cref="FirstJoinTask"/> BEFORE compaction, while
         /// <paramref name="perFileEntries"/> still holds every entry -- passing, failing,
-        /// target, and decoy -- with its in-memory Stage-4 <see cref="FdrEntry.Features"/>
-        /// and unbiased 1st-pass q-values). Sourcing the table from the full pre-compaction
-        /// null preserves the high-q failing/decoy tail so a peak that reconciliation moved
-        /// to a worse position maps to an honestly higher q -- the tail the decoy-depleted
-        /// compacted pool lacks. Each entry's key is the SAME raw averaged-model score the
-        /// transfer uses (<see cref="ScoreWithFrozenModel"/>), NOT the stored per-fold
-        /// recalibrated <see cref="FdrEntry.Score"/>, so table and transfer stay on one
-        /// scale by construction. Paired q is the entry's effective experiment q (max of
-        /// precursor + peptide). Returns null (logged) when the frozen model is unusable so
-        /// the caller publishes nothing and the transfer falls back to the retrain.
+        /// target, and decoy -- with its unbiased 1st-pass q-values). Sourcing the table
+        /// from the full pre-compaction null preserves the high-q failing/decoy tail so a
+        /// peak that reconciliation moved to a worse position maps to an honestly higher q --
+        /// the tail the decoy-depleted compacted pool lacks.
+        ///
+        /// Features are STREAMED per file from the original Stage-4 parquet via
+        /// <paramref name="loadFileFeatures"/> and addressed by each entry's
+        /// <see cref="FdrEntry.ParquetIndex"/> -- the same source and row binding the
+        /// first-pass Percolator score pass uses. (The resident first-pass path builds lean
+        /// stubs and streams features into the SVM without persisting them onto
+        /// <see cref="FdrEntry.Features"/>, so reading that field here would find nothing.)
+        /// Each entry's key is the SAME raw averaged-model score the transfer uses
+        /// (<see cref="ScoreWithFrozenModel"/>), NOT the stored per-fold recalibrated
+        /// <see cref="FdrEntry.Score"/>, so table and transfer stay on one scale by
+        /// construction. Paired q is the entry's effective experiment q (max of precursor +
+        /// peptide). Returns null (logged) when the frozen model is unusable or no features
+        /// resolved, so the caller publishes nothing and the transfer falls back to the retrain.
         /// </summary>
         internal static FirstPassScoreQTable BuildFullPopulationScoreQTable(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             PercolatorResults firstPassModel,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
             PipelineContext ctx)
         {
             if (firstPassModel.FoldWeights == null || firstPassModel.FoldWeights.Count == 0 ||
@@ -913,27 +921,51 @@ namespace pwiz.Osprey.Tasks
                     "frozen 1st-pass model has no fold weights or standardizer.");
                 return null;
             }
+            if (loadFileFeatures == null)
+            {
+                ctx.LogWarning(
+                    "OSPREY_PASS2_QVALUE=transfer: no per-file feature loader supplied; cannot " +
+                    "build the full-population score->q table (transfer will fall back).");
+                return null;
+            }
             AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
             int nFeatures = avgWeights.Length;
             var standardizer = firstPassModel.Standardizer;
 
-            // Score every entry that still carries its in-memory Stage-4 features (the full
-            // pre-compaction population), paired with its unbiased 1st-pass effective q.
+            // Score every entry in the full pre-compaction population, paired with its
+            // unbiased 1st-pass effective q. Features come from each file's Stage-4 parquet
+            // (loaded once per file) addressed by ParquetIndex.
             var tableScores = new List<double>();
             var tableQs = new List<double>();
             int nSkipped = 0;
             var scratch = new double[nFeatures]; // reused per entry to avoid a per-row allocation
             foreach (var kvp in perFileEntries)
             {
+                IReadOnlyList<double[]> rows;
+                try
+                {
+                    rows = loadFileFeatures(kvp.Key);
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogWarning(string.Format(
+                        "OSPREY_PASS2_QVALUE=transfer: failed to load 1st-pass features for '{0}': {1}; " +
+                        "its entries are excluded from the score->q table.", kvp.Key, ex.Message));
+                    nSkipped += kvp.Value.Count;
+                    continue;
+                }
+                int rowCount = rows?.Count ?? 0;
                 foreach (var entry in kvp.Value)
                 {
-                    if (entry.Features == null || entry.Features.Length != nFeatures)
+                    int idx = (int)entry.ParquetIndex;
+                    if (rows == null || idx < 0 || idx >= rowCount ||
+                        rows[idx] == null || rows[idx].Length != nFeatures)
                     {
                         nSkipped++;
                         continue;
                     }
                     double rawScore = ScoreWithFrozenModel(
-                        entry.Features, standardizer, avgWeights, avgBias, scratch);
+                        rows[idx], standardizer, avgWeights, avgBias, scratch);
                     double effQ = Math.Max(
                         entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue);
                     tableScores.Add(rawScore);
@@ -943,8 +975,8 @@ namespace pwiz.Osprey.Tasks
             if (tableScores.Count == 0)
             {
                 ctx.LogWarning(
-                    "OSPREY_PASS2_QVALUE=transfer: full-population score->q table build found no " +
-                    "entries with in-memory features; table not published (transfer will fall back).");
+                    "OSPREY_PASS2_QVALUE=transfer: full-population score->q table build resolved no " +
+                    "features from parquet; table not published (transfer will fall back).");
                 return null;
             }
 
