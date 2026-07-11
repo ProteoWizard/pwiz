@@ -222,6 +222,14 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
                 string.Format(@"Stage 5 start: {0} files loaded (stubs), before first-pass FDR", perFileEntries.Count));
 
+            // The line above reports GC.GetTotalMemory(false) -- allocated-since-last-GC,
+            // so it carries whatever garbage scoring left behind, and two runs doing
+            // identical work can differ by tens of GB on GC timing alone. This one forces
+            // a collection first, so it is the LIVE set entering first-pass FDR: the only
+            // number that answers whether the run fits in a given box.
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage5-start-live",
+                string.Format(@"(post-GC, entering first-pass FDR, files={0})", perFileEntries.Count));
+
             // Phase 4 (issue #4355): first-pass Percolator reloads each entry's PIN
             // features on demand -- one file at a time, from that file's
             // .scores.parquet by ParquetIndex -- keeping only scalar scores
@@ -280,6 +288,8 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                     swFdr.Elapsed.TotalSeconds));
                 ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"first-pass-fdr-live",
+                    string.Format(@"(post-GC, resident pool, files={0})", perFileEntries.Count));
 
                 LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
 
@@ -1445,6 +1455,8 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"first-pass-fdr-live",
+                string.Format(@"(post-GC, projection path, rows={0})", projections.TotalRows));
 
             LogFirstPassResultsProjection(projections, sink, config, ctx);
 
