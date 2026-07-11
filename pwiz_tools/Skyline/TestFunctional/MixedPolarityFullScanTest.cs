@@ -194,9 +194,10 @@ namespace pwiz.SkylineTestFunctional
             // DigitalRune's floating-pane teardown intermittently wedged the UI thread in a native
             // SetWindowRgn call. Assert the graph is actually destroyed (and, implicitly, that
             // closing it here does not hang).
-            Assert.IsNotNull(SkylineWindow.GraphFullScan);
+            Assert.IsNotNull(SkylineWindow.GraphFullScan, "Full Scan graph should be open before removing results");
             RunUI(() => SkylineWindow.ModifyDocument("Remove results", document => document.ChangeMeasuredResults(null)));
-            WaitForConditionUI(() => SkylineWindow.GraphFullScan == null);
+            WaitForConditionUI(() => SkylineWindow.GraphFullScan == null,
+                "Full Scan graph was not destroyed after removing results");
         }
     }
 }
