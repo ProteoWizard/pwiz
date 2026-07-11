@@ -158,6 +158,12 @@ namespace pwiz.Osprey.Core
         ///     re-scoring ID gain.
         /// Unset or unrecognized normalizes to the parity-preserving default. Read once at
         /// process start. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+        ///
+        /// LIMITATION (experimental mode): use a FRESH <c>--output-dir</c> per mode. The
+        /// per-file 2nd-pass sidecar (.2nd-pass.fdr_scores.bin) is not tagged with the mode,
+        /// so resuming a run in an output dir written under a different mode would reuse the
+        /// other mode's cached q-values. The Part-B work tags the sidecar validity with the
+        /// mode; until then, do not switch modes within one output dir.
         /// </summary>
         public static readonly string Pass2QValue = NormalizePass2QValue(
             Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));

@@ -1032,6 +1032,15 @@ namespace pwiz.Osprey.Tasks
                         entry.Features, standardizer, avgWeights, avgBias);
                     entry.Score = newScore;
                     double q = LookupQForScore(newScore, scoresDesc, qDesc);
+                    // Assign one transferred q to all four q slots (precursor/peptide x
+                    // run/experiment). This is the coarse whole-pool transfer: it collapses
+                    // the precursor-vs-peptide and run-vs-experiment distinctions the
+                    // percolator path maintains, so the reported "experiment q" here is a
+                    // per-observation transferred value, not a genuine across-file estimate.
+                    // The downstream best-of-runs clamp (MergeNodeTask) is then a no-op on
+                    // these equal values. Acceptable for this experimental mode; Part B's
+                    // surgical transfer (Design 1) preserves the survivors' calibrated q
+                    // per level instead. See TODO-20260710_osprey_pass2_recalibration_fix.
                     entry.ExperimentPrecursorQvalue = q;
                     entry.ExperimentPeptideQvalue = q;
                     entry.RunPrecursorQvalue = q;

@@ -357,7 +357,8 @@ namespace pwiz.Osprey.Tasks
                 !OspreyEnvironment.UseFdrProjection ||
                 ctx.Config.FdrMethod != FdrMethod.Percolator ||
                 ctx.Config.ModelDiagnostics ||
-                (!string.IsNullOrEmpty(ctx.Config.OutputFdrBench) && ctx.Config.FdrBenchPass == 1);
+                (!string.IsNullOrEmpty(ctx.Config.OutputFdrBench) && ctx.Config.FdrBenchPass == 1) ||
+                OspreyEnvironment.Pass2TransferQ;
 
             FdrProjectionSet projections = null;
             int totalScored = 0;

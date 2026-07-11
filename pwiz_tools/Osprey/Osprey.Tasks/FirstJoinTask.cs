@@ -1292,8 +1292,15 @@ namespace pwiz.Osprey.Tasks
             if (OspreyEnvironment.Pass2TransferQ &&
                 string.Equals(passLabel, @"First-pass", StringComparison.Ordinal))
             {
+                // Publish is add-only (throws on a duplicate key); guard so a first pass
+                // that somehow ran twice in one process degrades to a no-op rather than a
+                // raw ArgumentException. The passLabel gate already makes this unreachable
+                // on normal paths.
                 captureModel = results =>
-                    ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                {
+                    if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
+                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                };
             }
 
             bool aborted = PercolatorEngine.RunPercolatorFdr(
