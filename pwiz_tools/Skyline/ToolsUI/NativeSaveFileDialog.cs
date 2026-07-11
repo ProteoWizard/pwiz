@@ -79,14 +79,14 @@ namespace pwiz.Skyline.ToolsUI
             SetWindowText(GetFileNameEditHandle(), path);
         }
 
-        /// <summary>Posts the Save-button click (the base Accept waits for the dialog to close).</summary>
-        public override void PostAccept()
+        /// <summary>Resolves the Save button's handle (caller thread) and returns a post-only BM_CLICK gesture.</summary>
+        protected override Action ResolveAcceptGesture()
         {
-            // Post (not send) BM_CLICK: clicking Save can raise a nested modal (the overwrite-confirm
-            // prompt), whose message loop would never return to a synchronous SendMessage and so would
-            // wedge the single-instance connector. PostMessage returns at once, leaving the pipe thread
-            // free to drive that second dialog.
-            User32.PostMessageA(GetSaveButtonHandle(), User32.WinMessageType.BM_CLICK, 0, 0);
+            // Post (not send) BM_CLICK: clicking Save can raise a nested modal (the overwrite-confirm prompt), whose
+            // message loop would never return to a synchronous SendMessage and so would wedge the single-instance
+            // connector. PostMessage returns at once, leaving the pipe thread free to drive that second dialog.
+            var saveButton = GetSaveButtonHandle();
+            return () => User32.PostMessageA(saveButton, User32.WinMessageType.BM_CLICK, 0, 0);
         }
 
         // The file-name Edit is the class "Edit" control inside the file-name control host. Find it by

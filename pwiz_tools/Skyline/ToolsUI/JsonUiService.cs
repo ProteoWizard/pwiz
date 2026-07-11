@@ -65,21 +65,22 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void InvokeOnUiThread(Action action, Control dispatcher = null)
         {
-            // Route through the InvokeOnUiThread factory + Run (a synchronous Control.Invoke); the wrapping stays
-            // here around it -- the action's exception is caught inside, then re-thrown wrapped (ArgumentException
-            // preserved) so the original stack trace survives, exactly as before.
+            // A plain synchronous marshal: Control.Invoke through the given control (a form on its own thread), or
+            // the UI-thread window, or -- when already on that thread, or before any window exists -- run inline. The
+            // action's exception is caught and re-thrown wrapped (ArgumentException preserved) so its stack survives.
+            var control = dispatcher;
+            if (control == null || !control.IsHandleCreated || control.IsDisposed)
+                control = DialogWatcher.UiThreadWindow;
             Exception caught = null;
-            UiServiceDispatcher.ForInvoke(dispatcher).Run(() =>
+            void Run()
             {
-                try
-                {
-                    action();
-                }
-                catch (Exception ex)
-                {
-                    caught = ex;
-                }
-            });
+                try { action(); }
+                catch (Exception ex) { caught = ex; }
+            }
+            if (control != null && control.InvokeRequired)
+                control.Invoke((Action) Run);
+            else
+                Run();
             if (caught is ArgumentException argEx)
                 throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
             if (caught != null)
@@ -87,13 +88,15 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Executes a function on the UI thread and returns the result, through the InvokeOnUiThread factory + Run
-        /// (a synchronous <see cref="Control.Invoke(System.Delegate)"/>). Must be called from a background thread
-        /// (pipe server thread). Exceptions propagate to the caller raw.
+        /// Executes a function on the UI thread and returns the result (a synchronous
+        /// <see cref="Control.Invoke(System.Delegate)"/>). Must be called from a background thread (pipe server
+        /// thread). Exceptions propagate to the caller raw.
         /// </summary>
         public static T InvokeOnUiThread<T>(Func<T> func, Control dispatcher = null)
         {
-            return UiServiceDispatcher.ForInvoke(dispatcher).Run(func);
+            T result = default(T);
+            InvokeOnUiThread(() => { result = func(); }, dispatcher);
+            return result;
         }
 
         /// <summary>
@@ -106,7 +109,7 @@ namespace pwiz.Skyline.ToolsUI
         /// connector's actions have raised and left open, and a caller can poll it to wait until pending
         /// sets/clicks have actually been applied.
         /// </summary>
-        public static int ModalNestingCount => UiServiceDispatcher.ModalNestingCount;
+        public static int ModalNestingCount => DialogWatcher.ModalNestingCount;
 
         /// <summary>
         /// Posts an action to the UI thread fire-and-forget (BeginInvoke, not Invoke): the caller returns at
@@ -119,7 +122,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static void BeginInvokeOnUiThread(Action action, Control dispatcher = null)
         {
-            UiServiceDispatcher.IncrementModalNestingCount();
+            DialogWatcher.IncrementModalNestingCount();
             void Run()
             {
                 try
@@ -134,22 +137,25 @@ namespace pwiz.Skyline.ToolsUI
                     // gate (see BlockingAlertMessage), so the next command can report what went wrong.
                     MessageDlg.ShowException((IWin32Window) dispatcher ?? Program.MainWindow, exception);
                 }
-                finally { UiServiceDispatcher.DecrementModalNestingCount(); }
+                finally { DialogWatcher.DecrementModalNestingCount(); }
             }
+            // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own BeginInvoke;
+            // otherwise the UI-thread window (main window, or StartPage before it). Before either exists, a
+            // background thread, so a service can still act during startup.
+            var control = dispatcher;
+            if (control == null || !control.IsHandleCreated || control.IsDisposed)
+                control = DialogWatcher.UiThreadWindow;
             try
             {
-                // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own
-                // BeginInvoke; otherwise UiServiceDispatcher.PostToUiThreadWindow targets the main window, or the
-                // StartPage before it exists (and falls back to a background thread if neither is up).
-                if (dispatcher != null && dispatcher.IsHandleCreated && !dispatcher.IsDisposed)
-                    dispatcher.BeginInvoke((Action) Run);
+                if (control != null)
+                    control.BeginInvoke((Action) Run);
                 else
-                    UiServiceDispatcher.PostToUiThreadWindow(Run);
+                    ActionUtil.RunAsync(Run, @"JsonTool command");
             }
             catch
             {
                 // Posting failed, so the action will never run and is not pending after all.
-                UiServiceDispatcher.DecrementModalNestingCount();
+                DialogWatcher.DecrementModalNestingCount();
                 throw;
             }
         }
@@ -166,10 +172,10 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public static T RunWithDialogWatch<T>(Func<T> work)
         {
-            // Run the value-producing work on a background thread and THROW a blocking modal's message rather than
-            // hang, with no timeout -- the shared wait/modal machinery, configured for the dialog-watch. See
-            // <see cref="UiServiceDispatcher"/>.
-            return UiServiceDispatcher.ForDialogWatch().Run(work);
+            // Run the value-producing work on the UI-thread window and return its result, throwing a blocking modal's
+            // message rather than hanging behind it -- DialogWatcher.CallFunction. IntPtr.Zero resolves to no managed
+            // control, so it targets the UI-thread window (main window / StartPage).
+            return DialogWatcher.CallFunction(IntPtr.Zero, work);
         }
 
         public static void RunWithDialogWatch(Action work)
@@ -177,44 +183,22 @@ namespace pwiz.Skyline.ToolsUI
             RunWithDialogWatch(() => { work(); return true; });
         }
 
-        // The wait a named/convenience method runs for its gesture. The gesture (<paramref name="postGesture"/>) is
-        // posted onto <paramref name="dispatcher"/> -- the TARGET FORM's own UI thread -- as one delegate that
-        // resolves the control, gates it, and does the gesture; UiServiceDispatcher waits it out. Unifies three
-        // cases: a plain mutating action returns when ModalNestingCount falls back to where it started; an
-        // action that opens an interactive modal returns as soon as the modal appears (recording its pre-show
-        // count -- the ONLY place a pre-show count is recorded); an action that dismisses the top modal waits
-        // until the count falls to the pre-show level its opener left, riding through any LongWaitDlg the resumed
-        // work shows. Progress is gauged by a synchronous marshaled probe each cycle (see ProbeModals): the wait
-        // aborts only after NO_PROGRESS_LIMIT consecutive actively-pumping probes show neither completion nor a
-        // LongWaitDlg. Must be called off the UI thread.
-        internal static ActionResult WaitForGesture(Control dispatcher, Action postGesture)
+        // The wait a named/convenience method runs for its gesture: post <paramref name="postGesture"/> onto the
+        // window at <paramref name="hwnd"/> (the target form's own UI thread) and wait until it finishes or leaves an
+        // interactive modal open (DialogWatcher.PerformGesture). Must be called off the UI thread.
+        internal static ActionResult WaitForGesture(IntPtr hwnd, Action postGesture)
         {
-            // BeginInvoke the gesture onto the target form's own thread, do NOT throw on a modal but STOP and record
-            // it, and ride the ~10s message-loop-progress watchdog -- the shared wait/modal machinery, configured
-            // for the posted-gesture wait. Falls back to the main/start window only if no form is given. See
-            // UiServiceDispatcher.
-            var dispatch = UiServiceDispatcher.ForGesture(dispatcher ?? UiServiceDispatcher.UiThreadWindow);
-            dispatch.Run(postGesture);
-            // The gesture completed only if the count drained; if it opened (or left open) a modal, report that
-            // dialog's message so the caller knows what to drive next.
-            return dispatch.StoppedOnModal
-                ? new ActionResult { Completed = false, Message = dispatch.BlockingMessage }
-                : new ActionResult { Completed = true };
+            return DialogWatcher.PerformGesture(hwnd, postGesture);
         }
 
-        // The accept/cancel wait, shared by a managed form (FormElement) and a native dialog (NativeDialog): post
-        // the dismiss gesture on the caller's thread, then ride the shared wait until dialog's window has closed AND
-        // the count has drained to the level the action that showed it left -- i.e. that action (e.g. an
-        // openMenuItem_Click that then loads a file for minutes) has actually returned -- stopping early on a new
-        // modal or the ~10s watchdog. Completed is true unless a new modal stopped the wait, whose message the
-        // caller drives next. Must be called off the UI thread.
+        // The accept/cancel wait, shared by a managed form (FormElement) and a native dialog (NativeDialog): post the
+        // dismiss gesture onto the dialog's UI thread, then wait until its window has closed AND the count has
+        // drained to the level the action that showed it left -- i.e. that action (e.g. an openMenuItem_Click that
+        // then loads a file for minutes) has returned -- stopping early on a new modal or the watchdog
+        // (DialogWatcher.OkDialog). Must be called off the UI thread.
         internal static ActionResult WaitForOkDialog(IFormElement dialog, Action postGesture)
         {
-            var dispatch = UiServiceDispatcher.ForOkDialog(dialog);
-            dispatch.Run(postGesture);
-            return dispatch.StoppedOnModal
-                ? new ActionResult { Completed = false, Message = dispatch.BlockingMessage }
-                : new ActionResult { Completed = true };
+            return DialogWatcher.OkDialog(dialog.Hwnd, postGesture);
         }
 
         // Level 2: UI patterns
@@ -459,7 +443,7 @@ namespace pwiz.Skyline.ToolsUI
             var pathToClick = itemPath;
             var element = formRoot.InvokeOnUiThread(() =>
                 RequireAction(ResolvePath(pathToClick, formRoot), UiActions.Click));
-            WaitForGesture((formRoot as FormElement)?.Form, () => UiActions.Click.Invoke(element, null));
+            WaitForGesture(((IFormElement) formRoot).Hwnd, () => UiActions.Click.Invoke(element, null));
         }
 
         /// <summary>
@@ -518,7 +502,7 @@ namespace pwiz.Skyline.ToolsUI
             // then drives) so it returns only once the paste has taken effect. The PerformAction escape-hatch path
             // (UiActions.SetGridText) stays fire-and-forget.
             var formElement = (FormElement) FindFormById(formId);
-            return WaitForGesture(formElement.Form, () => UiActions.SetGridText.Invoke(formElement.FindGrid(controlId), text ?? string.Empty));
+            return WaitForGesture(formElement.Hwnd, () => UiActions.SetGridText.Invoke(formElement.FindGrid(controlId), text ?? string.Empty));
         }
 
         /// <summary>
@@ -535,7 +519,7 @@ namespace pwiz.Skyline.ToolsUI
             // waits out the posted move (the count settling) so it returns only once the cell has moved. The
             // PerformAction escape-hatch path (UiActions.SetCurrentCellAddress) stays fire-and-forget.
             var formElement = (FormElement) FindFormById(formId);
-            return WaitForGesture(formElement.Form, () => UiActions.SetCurrentCellAddress.Invoke(formElement.FindGrid(controlId), new[] { column, row }));
+            return WaitForGesture(formElement.Hwnd, () => UiActions.SetCurrentCellAddress.Invoke(formElement.FindGrid(controlId), new[] { column, row }));
         }
 
         /// <summary>
@@ -653,7 +637,7 @@ namespace pwiz.Skyline.ToolsUI
                         HasGraph = false,
                         DockState = @"Main",
                         Id = GetFormId(skylineWindow),
-                        ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(skylineWindow.Handle),
+                        ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(skylineWindow.Handle),
                     });
                     foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
                     {
@@ -669,7 +653,7 @@ namespace pwiz.Skyline.ToolsUI
                             HasGraph = zedGraph != null,
                             DockState = dockState.ToString(),
                             Id = GetFormId(form),
-                            ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(form.Handle),
+                            ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(form.Handle),
                         });
                     }
                 }
@@ -688,7 +672,7 @@ namespace pwiz.Skyline.ToolsUI
                         HasGraph = false,
                         DockState = @"Dialog",
                         Id = GetFormId(form),
-                        ModalNestingCount = UiServiceDispatcher.TryGetPreShowActionCount(form.Handle),
+                        ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(form.Handle),
                     });
                 }
                 return formInfos;
@@ -1105,6 +1089,21 @@ namespace pwiz.Skyline.ToolsUI
             string timestamp = DateTime.Now.ToString(@"yyyyMMdd-HHmmss");
             return Path.Combine(GetMcpTmpDir(),
                 string.Format(@"{0}-{1}-{2}{3}", prefix, safe, timestamp, extension));
+        }
+
+        public static ActionResult OkDialog(IFormElement formElement, Action okAction)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static ActionResult PerformGesture(UiElement element, Action gesture)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static T CallFunction<T>(UiElement element, Func<T> function)
+        {
+            throw new NotImplementedException();
         }
     }
 }

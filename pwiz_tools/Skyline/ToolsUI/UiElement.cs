@@ -427,7 +427,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 // A modal dialog has disabled the form. If it is an alert (CommonAlertDlg), include its text so
                 // the caller sees what it says without having to capture a screenshot of it.
-                var alertMessage = UiServiceDispatcher.BlockingAlertMessage();
+                var alertMessage = DialogWatcher.BlockingAlertMessage();
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Cannot interact with form '{0}': it is blocked by an open dialog{1}. Handle the open dialog first (see skyline_get_open_forms).",
                     JsonUiService.GetFormId(form),
@@ -1251,7 +1251,7 @@ namespace pwiz.Skyline.ToolsUI
             // Post the whole gesture onto this form's own thread: resolve the control there, then Click gates it
             // (the form and the control) and does the click. UiServiceDispatcher waits it out and re-throws a
             // not-found / not-interactable failure to the caller, and reports whether the click completed.
-            return JsonUiService.WaitForGesture(Form, () => UiActions.Click.Invoke(FindElement(button, UiActions.Click), null));
+            return JsonUiService.WaitForGesture(Hwnd,() => UiActions.Click.Invoke(FindElement(button, UiActions.Click), null));
         }
 
         // Sets a control's value (or a grid cell) on the form. The target is resolved synchronously on the UI
@@ -1267,14 +1267,14 @@ namespace pwiz.Skyline.ToolsUI
             {
                 // Post both moves in one gesture on this form's thread so the wait's initial count is captured
                 // before either, and the wait covers the paste (not just the cell move).
-                return JsonUiService.WaitForGesture(Form, () =>
+                return JsonUiService.WaitForGesture(Hwnd,() =>
                 {
                     var gridElement = FindGrid(gridName);
                     UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
                     UiActions.SetGridText.Invoke(gridElement, value);
                 });
             }
-            return JsonUiService.WaitForGesture(Form, () => UiActions.SetValue.Invoke(FindElement(controlId, UiActions.SetValue), value));
+            return JsonUiService.WaitForGesture(Hwnd,() => UiActions.SetValue.Invoke(FindElement(controlId, UiActions.SetValue), value));
         }
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the single
@@ -1942,7 +1942,7 @@ namespace pwiz.Skyline.ToolsUI
             // Post the click onto the form's own thread, where the item's Click gates its form (a modal blocking it)
             // and the item itself and then does the click. Wait out the posted gesture (the count settling, or a
             // modal it opens appearing) so the named menu/toolbar verbs return only once the click has taken effect.
-            return JsonUiService.WaitForGesture(FormElement.Form, () => UiActions.Click.Invoke(leaf, null));
+            return JsonUiService.WaitForGesture(FormElement.Hwnd, () => UiActions.Click.Invoke(leaf, null));
         }
 
         // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.

@@ -82,13 +82,13 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // PostAccept clicks OK (posted BM_CLICK, like the file dialogs -- the click closes the dialog and unwinds
-        // its modal loop, so a synchronous send could wedge the caller). OK is found by its control id, not a
-        // localized caption. The base Accept waits for the dialog to close.
-        public override void PostAccept()
+        // Resolves the OK button's handle (caller thread, by control id -- not a localized caption) and returns a
+        // post-only BM_CLICK gesture. Post (not send): the click closes the dialog and unwinds its modal loop, so a
+        // synchronous send could wedge the caller. The base Accept waits for the dialog to close.
+        protected override Action ResolveAcceptGesture()
         {
-            var okButton = WaitForElement(IDOK.ToString());
-            User32.PostMessageA(new IntPtr(okButton.Current.NativeWindowHandle), User32.WinMessageType.BM_CLICK, 0, 0);
+            var okButton = new IntPtr(WaitForElement(IDOK.ToString()).Current.NativeWindowHandle);
+            return () => User32.PostMessageA(okButton, User32.WinMessageType.BM_CLICK, 0, 0);
         }
     }
 }

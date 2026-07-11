@@ -382,7 +382,7 @@ namespace pwiz.Skyline.ToolsUI
                     catch (TimeoutException)
                     {
                         var error = @"No response from " + documentChangeSender.Value.Name; 
-                        UiServiceDispatcher.PostToUiThreadWindow(() =>
+                        JsonUiService.BeginInvokeOnUiThread(() =>
                         {
                             Program.MainWindow.ShowImmediateWindow();
                             Program.MainWindow.ImmediateWindow.WriteLine(error);

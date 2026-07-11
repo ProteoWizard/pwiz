@@ -166,7 +166,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete.
             Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem"));
-            var saveDlg = GetNativeFileDialog();
+            var saveDlg = WaitForNativeFileDialog();
             saveDlg.SetValue("FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
             Connector.Accept(saveDlg.FormId);
         }
@@ -231,7 +231,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete.
             Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem"));
-            var saveDlg = GetNativeFileDialog();
+            var saveDlg = WaitForNativeFileDialog();
             saveDlg.SetValue("FileName", GetTestPath("SRM_targets.sky"));
             Connector.Accept(saveDlg.FormId);
         }
@@ -270,7 +270,10 @@ namespace TestPerf
             startPage.ClickButton(StartupResources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search);
             Connector.Accept(GetConnectorForm<MultiButtonMsgDlg>().FormId);
 
-            var saveDlg = GetNativeFileDialog();
+            // The Start Page tile sets DialogResult and returns; the "must save" prompt and this Save dialog are then
+            // shown by the startup frame (StartupActions), NOT by a counted connector gesture -- so accepting the
+            // prompt completes (its window is gone) before the Save dialog appears. Wait for it rather than assume it.
+            var saveDlg = WaitForNativeFileDialog();
             saveDlg.SetValue("FileName", GetTestPath("DIA_to_SRM_Tutorial.sky"));
             Connector.Accept(saveDlg.FormId);
 
@@ -364,7 +367,7 @@ namespace TestPerf
             AssertComplete(wizard.SetValue(GetLocalizedText<ImportFastaControl>("label2"), "0"));                  // max missed cleavages
             // Browse opens the native Open dialog (a dialog, so it does not complete); accept it to load the FASTA.
             wizard.ClickButton(GetLocalizedText<ImportFastaControl>("browseFastaBtn"));
-            var fastaDlg = GetNativeFileDialog();
+            var fastaDlg = WaitForNativeFileDialog();
             fastaDlg.SetValue("FileName", GetTestPath("uniprot_human_25apr2019.fasta"));
             Connector.Accept(fastaDlg.FormId);
             PauseForScreenShot(wizard, "Import FASTA"); // s-07
@@ -422,7 +425,7 @@ namespace TestPerf
             // Import Document opens the native Open dialog (a dialog), so it does not complete; accept it to import.
             Connector.InvokeMenuItem(MenuPath<SkylineWindow>(
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem"));
-            var importDlg = GetNativeFileDialog();
+            var importDlg = WaitForNativeFileDialog();
             importDlg.SetValue("FileName", GetTestPath("PRTC.sky"));
             Connector.Accept(importDlg.FormId);
             PauseForScreenShot(GetConnectorForm<SkylineWindow>(), "Targets with PRTC added"); // s-10
@@ -461,7 +464,7 @@ namespace TestPerf
 
             // Pick the assembled mzmls folder in the native Browse-For-Folder dialog (its LibA/LibB/LibC
             // subfolders are the replicates). The connector selects the folder by path; its controlId is ignored.
-            var folderDlg = GetNativeFolderDialog();
+            var folderDlg = WaitForNativeFolderDialog();
             folderDlg.SetValue(@"Folder", mzmlFolder);
             Connector.Accept(folderDlg.FormId);
 
