@@ -83,7 +83,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>Posts Enter in the file name box (the base Accept waits for the dialog to close).</summary>
-        public override void PostAccept()
+        public override void EnqueueAcceptMsg()
         {
             PressEnter(GetFileNameEdit());
         }

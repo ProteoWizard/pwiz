@@ -298,8 +298,8 @@ namespace pwiz.Skyline.ToolsUI
 
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption.
         // This is the PerformAction escape-hatch path, which MUST stay fire-and-forget -- so it posts the accept
-        // via the post-only PostAccept (the named Accept verb adds the wait). Each IFormElement posts its own way.
-        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.PostAccept())
+        // via the post-only EnqueueAcceptMsg (the named Accept verb adds the wait). Each IFormElement posts its own way.
+        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.EnqueueAcceptMsg())
             .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
@@ -1045,7 +1045,7 @@ namespace pwiz.Skyline.ToolsUI
         ActionResult Cancel();
         /// <summary>Posts the accept gesture fire-and-forget, without waiting -- the PerformAction escape hatch
         /// (UiActions.Accept), which must not block. The named accept verb uses <see cref="Accept"/> instead.</summary>
-        void PostAccept();
+        void EnqueueAcceptMsg();
         /// <summary>Resolves the path against this form and performs the action in the form's thread context.</summary>
         object PerformAction(UiElementPath path, UiAction action, object value);
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
@@ -1321,18 +1321,18 @@ namespace pwiz.Skyline.ToolsUI
         // caller, and its work must run on the UI thread, not the caller's. Must be called off the UI thread.
         public ActionResult Accept()
         {
-            // The named/convenience accept: post the click on THIS thread (PostAccept marshals to the UI thread
+            // The named/convenience accept: post the click on THIS thread (EnqueueAcceptMsg marshals to the UI thread
             // itself), then ride the shared accept wait -- complete once this form's window has closed AND the count
             // has ridden back to its opener's pre-show level, stopping on a modal it opens. The same wait a native
-            // dialog uses. PerformAction's accept stays fire-and-forget via PostAccept. Must be called off the UI thread.
-            return JsonUiService.WaitForOkDialog(this, PostAccept);
+            // dialog uses. PerformAction's accept stays fire-and-forget via EnqueueAcceptMsg. Must be called off the UI thread.
+            return JsonUiService.WaitForOkDialog(this, EnqueueAcceptMsg);
         }
 
         // The named cancel: post the cancel click (or a close when the form has no cancel button), then wait it
         // out the same way Accept does. Must be called off the UI thread.
         public ActionResult Cancel()
         {
-            return JsonUiService.WaitForOkDialog(this, PostCancel);
+            return JsonUiService.WaitForOkDialog(this, EnqueueCancelMsg);
         }
 
         // The fire-and-forget core of Accept: gate the form and resolve its default button synchronously on the
@@ -1340,7 +1340,7 @@ namespace pwiz.Skyline.ToolsUI
         // click -- never run it synchronously on the caller (a test/pipe thread): an accept that starts a long
         // import or opens a modal must not block the caller, and its work must run on the UI thread. Must be
         // called off the UI thread.
-        public void PostAccept()
+        public void EnqueueAcceptMsg()
         {
             var acceptButton = InvokeOnUiThread(() =>
             {
@@ -1357,7 +1357,7 @@ namespace pwiz.Skyline.ToolsUI
         // The fire-and-forget cancel: gate the form and read its cancel button on the UI thread, then post its
         // click -- or, when the form has no cancel button, post a Close. Used by the named Cancel verb (which
         // owns its own wait). Must be called off the UI thread.
-        public void PostCancel()
+        public void EnqueueCancelMsg()
         {
             var cancelButton = InvokeOnUiThread(() =>
             {

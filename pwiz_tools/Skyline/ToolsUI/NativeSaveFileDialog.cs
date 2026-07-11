@@ -80,7 +80,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>Posts the Save-button click (the base Accept waits for the dialog to close).</summary>
-        public override void PostAccept()
+        public override void EnqueueAcceptMsg()
         {
             // Post (not send) BM_CLICK: clicking Save can raise a nested modal (the overwrite-confirm prompt), whose
             // message loop would never return to a synchronous SendMessage and so would wedge the single-instance

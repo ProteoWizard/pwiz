@@ -269,7 +269,7 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         // Posts WM_CLOSE (dismisses the dialog), fire and forget. Shared by the close_form verb (Close) and the
         // named Cancel verb (which adds the wait).
-        private void PostClose()
+        private void EnqueueCancelMsg()
         {
             User32.PostMessageA(WindowHandle, User32.WinMessageType.WM_CLOSE, 0, 0);
         }
@@ -277,15 +277,15 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Cancels the dialog (posts WM_CLOSE) and rides the shared accept/cancel wait (IFormElement.Cancel).</summary>
         public ActionResult Cancel()
         {
-            return RunDismissGesture(PostClose);
+            return RunDismissGesture(EnqueueCancelMsg);
         }
 
         /// <summary>
         /// Posts the accept gesture -- the generic dialog presses Enter (which activates the default button); the
         /// file dialogs override this with the gesture their surface needs. UI Automation lookup and Win32 post both
-        /// run on the caller (pipe) thread (IFormElement.PostAccept), where UI Automation is safe.
+        /// run on the caller (pipe) thread (IFormElement.EnqueueAcceptMsg), where UI Automation is safe.
         /// </summary>
-        public virtual void PostAccept()
+        public virtual void EnqueueAcceptMsg()
         {
             PressEnter(DialogElement);
         }
@@ -293,7 +293,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Accepts the dialog (its default/OK gesture) and rides the shared accept/cancel wait (IFormElement.Accept).</summary>
         public ActionResult Accept()
         {
-            return RunDismissGesture(PostAccept);
+            return RunDismissGesture(EnqueueAcceptMsg);
         }
 
         // Rides DialogWatcher.OkDialogNow's shared accept wait -- the SAME machinery a managed form's accept uses,
@@ -382,7 +382,7 @@ namespace pwiz.Skyline.ToolsUI
                 @"Setting values is not supported for native dialog {0}.", FormId));
         }
 
-        public void Close() => PostClose();
+        public void Close() => EnqueueCancelMsg();
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
         {
