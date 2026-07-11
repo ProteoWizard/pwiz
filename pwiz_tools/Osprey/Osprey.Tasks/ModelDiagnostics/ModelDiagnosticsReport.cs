@@ -163,8 +163,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     data.FdpViews.AddRange(pass2Views);
                 }
 
-                // Pass-2 model view (feature table + composite) when a --protein-fdr
-                // run retrained Percolator on the reported pool; null otherwise.
+                // Pass-2 model view (feature table + composite) whenever the second
+                // pass retrained Percolator on the reported pool (any reconciled run);
+                // null otherwise.
                 data.ModelPass2 = ModelDiagnosticsData.BuildModelPass2(
                     perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
 
