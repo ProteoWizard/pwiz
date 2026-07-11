@@ -338,6 +338,12 @@ namespace SkylineTool
         /// to report.
         /// </summary>
         public string Message { get; set; }
+        /// <summary>
+        /// When the action opened (or left open) a modal dialog, the id of that dialog -- the same id
+        /// <see cref="FormInfo.Id"/> uses -- so the caller can drive it (get_controls / set_value / accept /
+        /// click) without a separate get_open_forms round-trip. Null when no dialog was left open.
+        /// </summary>
+        public string FormId { get; set; }
     }
 
     /// <summary>

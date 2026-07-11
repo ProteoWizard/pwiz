@@ -1403,9 +1403,14 @@ public static class SkylineTools
     {
         if (result.Completed)
             return doneMessage;
+        // When the action left a dialog open, name it so the caller can drive it directly (get_controls /
+        // set_value / accept / click) without a get_open_forms round-trip.
+        string formHint = string.IsNullOrEmpty(result.FormId)
+            ? " poll skyline_get_open_forms for any dialog it opened."
+            : $" it left form '{result.FormId}' open; drive it with get_controls / set_form_value / accept / click.";
         return string.IsNullOrEmpty(result.Message)
-            ? $"{doneMessage} This did not complete; poll skyline_get_open_forms for any dialog it opened."
-            : $"{doneMessage} This did not complete: {result.Message}";
+            ? $"{doneMessage} This did not complete;{formHint}"
+            : $"{doneMessage} This did not complete: {result.Message}.{formHint}";
     }
 
     private static string Invoke(Func<SkylineConnection, string> action)

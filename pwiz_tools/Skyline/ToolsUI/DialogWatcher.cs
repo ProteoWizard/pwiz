@@ -189,7 +189,8 @@ namespace pwiz.Skyline.ToolsUI
                 if (newModal != null)
                 {
                     RecordModalPreShowCount(newModal, startCount);
-                    return new ActionResult { Completed = false, Message = newModal.DetailedMessage };
+                    return new ActionResult
+                        { Completed = false, Message = newModal.DetailedMessage, FormId = newModal.FormId };
                 }
 
                 WindowsFormsSynchronizationContext ctx;
