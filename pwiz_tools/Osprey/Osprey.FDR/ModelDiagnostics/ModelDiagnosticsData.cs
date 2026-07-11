@@ -1239,7 +1239,9 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var hist = TallyRunCountHistogram(perRunSets, n);
             int half = (n + 1) / 2;                     // ceil(n/2)
             int atLeastHalf = 0;
-            for (int k = half; k <= n; k++)
+            // Start at max(half, 1): hist is indexed k-1, so k must be >= 1. Guards the
+            // degenerate n == 0 case (half == 0) from indexing hist[-1].
+            for (int k = Math.Max(half, 1); k <= n; k++)
                 atLeastHalf += hist[k - 1];
 
             double mean = 0;

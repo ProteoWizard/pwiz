@@ -236,6 +236,33 @@ namespace pwiz.Osprey.Test
                 .CrossRun.PerRun;
             Assert.AreEqual(11.0, rcr.EntrapmentFdpByRunCount[0], 1e-9);
             Assert.AreEqual(5.5, rcr.UnionFdp[0], 1e-9);
+
+            // 3 runs where the entrapment's run q and experiment q diverge, so the two
+            // scopes genuinely differ (and union FDP accretion is exercised past N=2). Real
+            // A reproduces in all 3. E1 clears both q (survives experiment-wide); E2/E3 clear
+            // run q but fail experiment q (per-run only). Base-ids 60-62 -> PTarget.
+            var sd = new Dictionary<uint, EntrapmentClass>
+            {
+                { 1u, EntrapmentClass.Target },
+                { 60u, EntrapmentClass.PTarget }, { 61u, EntrapmentClass.PTarget }, { 62u, EntrapmentClass.PTarget },
+            };
+            var sf1 = new List<FdrEntry> { EntryRunExp(1, 0.001, 0.001, "A"), EntryRunExp(60, 0.001, 0.001, "E1") };
+            var sf2 = new List<FdrEntry> { EntryRunExp(1, 0.001, 0.001, "A"), EntryRunExp(61, 0.001, 0.50, "E2") };
+            var sf3 = new List<FdrEntry> { EntryRunExp(1, 0.001, 0.001, "A"), EntryRunExp(62, 0.001, 0.50, "E3") };
+            var sdcr = ModelDiagnosticsData.Build(WrapFiles(sf1, sf2, sf3), null, sd, null, 1.0, 0.01, FdrLevel.Precursor).CrossRun;
+            // Per-run: all 3 entrapment pass run q (one run each) -> hist [3,0,0], union accretes 1->2->3.
+            CollectionAssert.AreEqual(new[] { 3, 0, 0 }, sdcr.PerRun.EntrapmentRunCountHistogram);
+            CollectionAssert.AreEqual(new[] { 1, 2, 3 }, sdcr.PerRun.CumUnionEntrapment);
+            // UnionFdp per-run climbs with run count: (2*1)/(1+1), (2*2)/(1+2), (2*3)/(1+3).
+            Assert.AreEqual(1.0, sdcr.PerRun.UnionFdp[0], 1e-9);
+            Assert.AreEqual(4.0 / 3.0, sdcr.PerRun.UnionFdp[1], 1e-9);
+            Assert.AreEqual(1.5, sdcr.PerRun.UnionFdp[2], 1e-9);
+            // Experiment: only E1 clears exp q -> hist [1,0,0], union flat at 1, UnionFdp flat at 1.0.
+            CollectionAssert.AreEqual(new[] { 1, 0, 0 }, sdcr.Experiment.EntrapmentRunCountHistogram);
+            CollectionAssert.AreEqual(new[] { 1, 1, 1 }, sdcr.Experiment.CumUnionEntrapment);
+            Assert.AreEqual(1.0, sdcr.Experiment.UnionFdp[2], 1e-9);
+            // The Collins/Rosenberger split: per-run union FDP climbs above the flat experiment-wide one.
+            Assert.IsTrue(sdcr.PerRun.UnionFdp[2] > sdcr.Experiment.UnionFdp[2] + 0.4);
         }
 
         // The non-parametric null-alignment ratio (Mike's Storey check): the ratio
