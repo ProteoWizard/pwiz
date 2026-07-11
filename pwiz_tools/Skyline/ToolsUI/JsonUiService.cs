@@ -185,20 +185,10 @@ namespace pwiz.Skyline.ToolsUI
 
         // The wait a named/convenience method runs for its gesture: post <paramref name="postGesture"/> onto the
         // window at <paramref name="hwnd"/> (the target form's own UI thread) and wait until it finishes or leaves an
-        // interactive modal open (DialogWatcher.PerformGesture). Must be called off the UI thread.
+        // interactive modal open (DialogWatcher.PerformAction). Must be called off the UI thread.
         internal static ActionResult WaitForGesture(IntPtr hwnd, Action postGesture)
         {
-            return DialogWatcher.PerformGesture(hwnd, postGesture);
-        }
-
-        // The accept/cancel wait, shared by a managed form (FormElement) and a native dialog (NativeDialog): post the
-        // dismiss gesture onto the dialog's UI thread, then wait until its window has closed AND the count has
-        // drained to the level the action that showed it left -- i.e. that action (e.g. an openMenuItem_Click that
-        // then loads a file for minutes) has returned -- stopping early on a new modal or the watchdog
-        // (DialogWatcher.OkDialog). Must be called off the UI thread.
-        internal static ActionResult WaitForOkDialog(IFormElement dialog, Action postGesture)
-        {
-            return DialogWatcher.OkDialog(dialog.Hwnd, postGesture);
+            return DialogWatcher.PerformAction(hwnd, postGesture);
         }
 
         // Level 2: UI patterns

@@ -34,7 +34,7 @@ namespace pwiz.Skyline.ToolsUI
     /// Runs one unit of connector work on a window's own UI thread and watches, from the caller (pipe) thread, for
     /// it to finish or for a modal dialog to appear. Three entry points, all keyed on a window handle:
     /// <list type="bullet">
-    /// <item><see cref="PerformGesture"/> -- post an action (a click, a set-value) and return when it finishes or
+    /// <item><see cref="PerformAction"/> -- post an action (a click, a set-value) and return when it finishes or
     /// leaves an interactive modal open.</item>
     /// <item><see cref="OkDialog"/> -- accept/cancel a dialog: post its dismiss gesture, then wait until that
     /// window has closed AND the nesting count has drained back to the level its opener left.</item>
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Posts <paramref name="action"/> onto <paramref name="hwnd"/>'s UI thread and waits until it
         /// finishes, or until it opens/leaves an interactive modal (Completed = false, with that modal's message).</summary>
-        public static ActionResult PerformGesture(IntPtr hwnd, Action action)
+        public static ActionResult PerformAction(IntPtr hwnd, Action action)
         {
             return PerformActionAndWait(hwnd, null, action, null);
         }
@@ -137,34 +137,46 @@ namespace pwiz.Skyline.ToolsUI
         private static ActionResult PerformActionAndWait(IntPtr hwnd, Action actionNow, Action actionLater, Func<bool> waitCondition)
         {
             // On the caller thread, FIRST: snapshot what the wait compares against, BEFORE running anything, so an
-            // effect of either action is seen as new. Then run actionNow here -- a native dialog's whole gesture,
-            // whose UI Automation must not touch the dialog's own (UI) thread.
+            // effect of either action is seen as new.
             int startCount = ModalNestingCount;
             var startWindows = new HashSet<IntPtr>(NativeDialog.GetTopLevelWindows().Select(w => w.Hwnd));
             PruneModalsNotOpen(startWindows);
-            actionNow?.Invoke();
 
             var control = Control.FromHandle(hwnd) ?? UiThreadWindow;
+            // syncContext / actionLaterDone / actionError are set on the UI thread (the posted delegate) and read on
+            // this thread; guard them with lockObj, and have the delegate Pulse it so the wait below wakes on a state
+            // change rather than only on the poll timeout.
+            var lockObj = new object();
             WindowsFormsSynchronizationContext syncContext = null;
             Exception actionError = null;
             bool actionLaterDone = false;
 
-            // Hop onto the window's UI thread to capture its sync context (for the watchdog) and run actionLater
-            // there -- a managed gesture, which may block in a modal loop it opens, counted while it runs. For a
-            // native dialog actionLater is null and this hop only captures the context.
-            control.BeginInvoke((Action) (() =>
+            // Count this operation from BEFORE any action runs -- before either action can open a new window -- until
+            // actionLater returns (the posted delegate's finally, below). actionNow (a native dialog's whole gesture,
+            // whose UI Automation must not touch the dialog's own thread) runs here; actionLater is posted onto that
+            // thread. If actionNow or the dispatch throws, no window opened, so undo the count and propagate.
+            IncrementModalNestingCount();
+            try
             {
-                Volatile.Write(ref syncContext,
-                    SynchronizationContext.Current as WindowsFormsSynchronizationContext ?? new WindowsFormsSynchronizationContext());
-                if (actionLater != null)
+                actionNow?.Invoke();
+                control.BeginInvoke((Action) (() =>
                 {
-                    IncrementModalNestingCount();
-                    try { actionLater(); }
-                    catch (Exception ex) { actionError = ex; }
-                    finally { DecrementModalNestingCount(); }
-                }
-                Volatile.Write(ref actionLaterDone, true);
-            }));
+                    var ctx = SynchronizationContext.Current as WindowsFormsSynchronizationContext ?? new WindowsFormsSynchronizationContext();
+                    lock (lockObj) { syncContext = ctx; Monitor.Pulse(lockObj); }
+                    try { actionLater?.Invoke(); }
+                    catch (Exception ex) { lock (lockObj) { actionError = ex; Monitor.Pulse(lockObj); } }
+                    finally
+                    {
+                        DecrementModalNestingCount();
+                        lock (lockObj) { actionLaterDone = true; Monitor.Pulse(lockObj); }
+                    }
+                }));
+            }
+            catch
+            {
+                DecrementModalNestingCount(); // the action or dispatch failed before the posted delegate could run
+                throw;
+            }
 
             int noProgress = 0;
             while (true)
@@ -179,31 +191,45 @@ namespace pwiz.Skyline.ToolsUI
                     RecordModalPreShowCount(newModal, startCount);
                     return new ActionResult { Completed = false, Message = newModal.DetailedMessage };
                 }
-                // actionLater ran on the UI thread; if it threw, re-throw here (its finally set the flag last).
-                if (Volatile.Read(ref actionLaterDone) && actionError != null)
-                    ExceptionUtil.WrapAndThrowException(actionError);
 
-                var ctx = Volatile.Read(ref syncContext);
+                WindowsFormsSynchronizationContext ctx;
+                bool laterDone;
+                Exception err;
+                lock (lockObj) { ctx = syncContext; laterDone = actionLaterDone; err = actionError; }
+                // If actionLater threw on the UI thread, surface it now -- nothing else to wait for.
+                if (err != null)
+                    ExceptionUtil.WrapAndThrowException(err);
+
                 if (ctx != null)
                 {
-                    // Judge the wait ON the UI thread with a synchronous Send. Running behind any messages already
-                    // queued (a closing dialog's child-window teardown, a posted click's effect), it flushes the
-                    // queue up to this point before deciding -- so no separate flush is needed. If the UI thread is
-                    // blocked and not pumping, the Send simply parks here until it resumes. actionNow already ran on
-                    // this thread; a UI-thread actionLater must have run before we judge, so its effect is in.
-                    bool done = false;
-                    ctx.Send(_ => done = (actionLater == null || Volatile.Read(ref actionLaterDone))
-                                         && (waitCondition == null || waitCondition()), null);
+                    // A plain gesture (no wait condition) completes once the posted delegate has run. An accept/cancel
+                    // judges its wait condition ON the UI thread with a synchronous Send, run EACH iteration -- so it
+                    // keeps flushing the queue behind it (a closing dialog's child-window teardown, a posted click's
+                    // effect, an asynchronously-shown follow-on dialog), letting a new modal be caught before the
+                    // condition can complete; the nesting count, held up while the gesture runs, keeps the condition
+                    // false until then. If the UI thread is blocked, the Send parks until it resumes.
+                    bool done = laterDone;
+                    if (waitCondition != null)
+                    {
+                        ctx.Send(_ => done = waitCondition(), null);
+                        // A returning Send that did not satisfy the condition is one message-loop pump with no
+                        // completion; count it toward the watchdog unless a busy LongWaitDlg shows the work advancing.
+                        if (!done)
+                        {
+                            if (openModals.Any(m => m.IsBusy))
+                                noProgress = 0;
+                            else if (++noProgress >= NO_PROGRESS_LIMIT)
+                                throw new InvalidOperationException(new LlmInstruction(GestureTimeoutMessage));
+                        }
+                    }
                     if (done)
                         return new ActionResult { Completed = true };
-                    // A returning Send is one message-loop pump. Count pumps that show no LongWaitDlg and no
-                    // completion toward the watchdog; a busy progress dialog means the operation is advancing.
-                    if (openModals.Any(m => m.IsBusy))
-                        noProgress = 0;
-                    else if (++noProgress >= NO_PROGRESS_LIMIT)
-                        throw new InvalidOperationException(new LlmInstruction(GestureTimeoutMessage));
                 }
-                Thread.Sleep(POLL_MILLIS);
+
+                // Park until the posted delegate pulses a state change (context captured, action finished) or the
+                // poll interval elapses, then re-check. Monitor.Wait releases lockObj while parked, re-acquires on wake.
+                lock (lockObj)
+                    Monitor.Wait(lockObj, POLL_MILLIS);
             }
         }
 

@@ -1322,17 +1322,18 @@ namespace pwiz.Skyline.ToolsUI
         public ActionResult Accept()
         {
             // The named/convenience accept: post the click on THIS thread (EnqueueAcceptMsg marshals to the UI thread
-            // itself), then ride the shared accept wait -- complete once this form's window has closed AND the count
-            // has ridden back to its opener's pre-show level, stopping on a modal it opens. The same wait a native
-            // dialog uses. PerformAction's accept stays fire-and-forget via EnqueueAcceptMsg. Must be called off the UI thread.
-            return JsonUiService.WaitForOkDialog(this, EnqueueAcceptMsg);
+            // itself), then ride DialogWatcher.OkDialog's shared accept wait -- complete once this form's window has
+            // closed AND the count has ridden back to its opener's pre-show level, stopping on a modal it opens. The
+            // same wait a native dialog uses. The generic perform_action verb's accept stays fire-and-forget via
+            // EnqueueAcceptMsg. Must be called off the UI thread.
+            return DialogWatcher.OkDialog(Hwnd, EnqueueAcceptMsg);
         }
 
         // The named cancel: post the cancel click (or a close when the form has no cancel button), then wait it
         // out the same way Accept does. Must be called off the UI thread.
         public ActionResult Cancel()
         {
-            return JsonUiService.WaitForOkDialog(this, EnqueueCancelMsg);
+            return DialogWatcher.OkDialog(Hwnd, EnqueueCancelMsg);
         }
 
         // The fire-and-forget core of Accept: gate the form and resolve its default button synchronously on the
