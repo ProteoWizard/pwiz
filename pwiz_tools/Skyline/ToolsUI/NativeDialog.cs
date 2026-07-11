@@ -317,13 +317,13 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "FileDialog:Open …".</summary>
         public string FormId => DialogTypeName + @":" + Title;
 
-        public ControlInfo[] GetControls() => GetControlInfos();
+        public ControlInfo[] GetControls() => GetControlsNow();
 
         // The dialog's text and its push buttons, so a caller can read the prompt and see which choices it
         // offers. The buttons are clicked by caption (ClickFormButton) or with the accept/close actions; the
         // text rows are informational. (A file dialog's modern controls are DirectUI and mostly not direct
         // children, so this is typically empty for one -- it is driven by set_value + accept instead.)
-        public override ControlInfo[] GetControlInfos()
+        public override ControlInfo[] GetControlsNow()
         {
             var result = new List<ControlInfo>();
             foreach (var text in FindChildren(ControlType.Text))

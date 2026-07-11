@@ -230,7 +230,7 @@ namespace pwiz.Skyline.ToolsUI
             .Describe(new LlmInstruction(@"List the actions this control supports, each with a description and the value it takes."));
 
         public static readonly UiAction GetChildren = SimpleFunction<UiElement>(
-                @"GetChildren", e => e.GetControlInfos())
+                @"GetChildren", e => e.GetControlsNow())
             .Describe(new LlmInstruction(@"List this element's child controls; each one's path can be used directly in a later call."));
 
         // A void action (click, value set, item check, ...) gates and posts its change fire-and-forget inside
@@ -376,7 +376,7 @@ namespace pwiz.Skyline.ToolsUI
     public abstract class UiElement
     {
         /// <summary>This element's own addressable path (from a form root), set when the element is resolved
-        /// from a path or returned as a form. <see cref="GetControlInfos"/> parents the child paths it returns
+        /// from a path or returned as a form. <see cref="GetControlsNow"/> parents the child paths it returns
         /// onto this, so a caller can use them directly in a later call without re-parenting. Null until set
         /// (then children are reported parentless, as before).</summary>
         public UiElementPath Path { get; internal set; }
@@ -703,7 +703,7 @@ namespace pwiz.Skyline.ToolsUI
         /// walk is one level at a time -- GetControls and the get_children action both return this; descend by
         /// calling GetChildren on a child. Each child's Index is its position among the siblings of its same
         /// Type, so adding a control of another Type never shifts it.</summary>
-        public virtual ControlInfo[] GetControlInfos() => InvokeOnUiThread(() =>
+        public virtual ControlInfo[] GetControlsNow() => InvokeOnUiThread(() =>
         {
             var indexByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var result = new List<ControlInfo>();
@@ -803,7 +803,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>The parentless path segment that addresses this element as the <paramref name="typeIndex"/>-th
         /// child of its parent among the siblings of this element's Type (its Text, that Index, and its Type).
-        /// <see cref="GetControlInfos"/> parents it onto the listing element before returning it.</summary>
+        /// <see cref="GetControlsNow"/> parents it onto the listing element before returning it.</summary>
         internal UiElementPath PathSegment(int typeIndex) =>
             new UiElementPath(null, NullIfEmpty(NormalizeLabel(Label)), typeIndex, ElementType.Name);
         internal static string NullIfEmpty(string text) => string.IsNullOrEmpty(text) ? null : text;
@@ -1226,14 +1226,14 @@ namespace pwiz.Skyline.ToolsUI
         public string FormId => JsonUiService.GetFormId(Form);
         public string Title => JsonUiService.GetFormTitle(Form);
 
-        // A value read: run inside the dialog-watch so it does not hang if a modal is up (GetControlInfos does
+        // A value read: run inside the dialog-watch so it does not hang if a modal is up (GetControlsNow does
         // its own UI-thread marshaling).
         public ControlInfo[] GetControls()
         {
             ControlInfo[] result = null;
             JsonUiService.RunWithDialogWatch(() =>
             {
-                result = GetControlInfos();
+                result = GetControlsNow();
                 return true;
             });
             return result;
