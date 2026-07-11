@@ -202,6 +202,7 @@ namespace pwiz.Osprey.Tasks
             // compacts the shared buffer below, so it reads it before that.
             var perFileEntries = ctx.Get<ScoredEntries>().Value;
             var perFileCalibrations = ctx.Get<PerFileCalibrations>().Value;
+            var perFileIsolationMz = ctx.Get<PerFileIsolationMz>().Value;
             var perFileParquetPaths = ctx.Get<PerFileParquetPaths>().Value;
             var fullLibrary = ctx.Get<FullLibrary>().Value;
 
@@ -218,69 +219,190 @@ namespace pwiz.Osprey.Tasks
                     config.FdrMethod));
             }
 
-            var swFdr = Stopwatch.StartNew();
-            var featureContributions = RunFdr(perFileEntries, config, ctx);
-            swFdr.Stop();
-            ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
-                swFdr.Elapsed.TotalSeconds));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
+                string.Format(@"Stage 5 start: {0} files loaded (stubs), before first-pass FDR", perFileEntries.Count));
 
-            LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
+            // The line above reports GC.GetTotalMemory(false) -- allocated-since-last-GC,
+            // so it carries whatever garbage scoring left behind, and two runs doing
+            // identical work can differ by tens of GB on GC timing alone. This one forces
+            // a collection first, so it is the LIVE set entering first-pass FDR: the only
+            // number that answers whether the run fits in a given box.
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage5-start-live",
+                string.Format(@"(post-GC, entering first-pass FDR, files={0})", perFileEntries.Count));
 
-            // First-pass protein FDR: runs on the full pre-compaction
-            // peptide pool so target and decoy proteins compete on a
-            // symmetric set. Sets RunProteinQvalue on every FdrEntry,
-            // which Stage 6 reconciliation reads via the protein-rescue
-            // gate in ConsensusRts.Compute. Mirrors Rust pipeline.rs:3029
-            // ("First-pass protein FDR").
-            if (config.ProteinFdr.HasValue && perFileEntries.Count > 0)
+            // Phase 4 (issue #4355): first-pass Percolator reloads each entry's PIN
+            // features on demand -- one file at a time, from that file's
+            // .scores.parquet by ParquetIndex -- keeping only scalar scores
+            // resident instead of holding all N files' 21-feature vectors at once
+            // (which OOM'd 80-file joins; the Phase-1 bulk reload that used to sit
+            // here did exactly that). The FDR engine drives the reload through this
+            // delegate, so Osprey.FDR takes no Osprey.IO dependency. The f64 parquet
+            // roundtrip is regression-exact (the same reload the second pass uses
+            // via Pass2FdrSidecar.MapFeaturesByIdentity). A file with no mapped
+            // parquet path yields an empty row set, so its entries fall back to
+            // basic features -- matching the pre-streaming builder's fallback.
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = fileName =>
             {
-                ctx.LogInfo(string.Empty);
-                var swFirstPassProtein = Stopwatch.StartNew();
-                RunFirstPassProteinFdr(perFileEntries, fullLibrary, config, ctx);
-                swFirstPassProtein.Stop();
-                ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
-                    swFirstPassProtein.Elapsed.TotalSeconds));
-            }
+                if (perFileParquetPaths.TryGetValue(fileName, out string scoresPath))
+                    return ParquetScoreCache.LoadPinFeaturesFromParquet(scoresPath);
+                return Array.Empty<double[]>();
+            };
 
-            // Persist the per-file `.1st-pass.fdr_scores.bin` sidecars
-            // BEFORE compaction so every stub (passing or not) carries
-            // its q-values into the file. Mirrors osprey/src/pipeline.rs
-            // around persist_fdr_scores at line ~3180. Stage 6 workers
-            // re-derive the post-compaction set by applying the q-value
-            // threshold themselves, so they need every entry's q-values
-            // -- not just the survivors.
-            int fdrSidecarFailures = WriteFdrScoresSidecars(
-                perFileEntries, perFileParquetPaths, config, ctx);
-            if (fdrSidecarFailures > 0 && config.StopAfterStage5)
+            // Issue #4355 step (b) increment ii: when the projection flag is set (and
+            // the production Percolator method is in use), route the first-pass FDR
+            // peak through the thin FdrProjection buffer instead of holding the full
+            // FdrEntry stub buffer resident across Percolator + protein FDR + the
+            // sidecar write + compaction. RunFirstPassProjection returns the reloaded
+            // full-FdrEntry survivor buffer (from parquet + the just-written 1st-pass
+            // sidecar), which then flows into PlanStage6 / Publish exactly as the
+            // legacy compacted buffer does -- the blast radius is confined to this
+            // pre-compaction span. Falls back to the legacy FdrEntry-buffer path
+            // (the byte-identity oracle) when the flag is off or FdrMethod != Percolator.
+            // --model-diagnostics and FDRBench pass-1 (#4377) both read the full
+            // pre-compaction first-pass pool resident (decoys + entrapment, with scores) --
+            // exactly what the projection path drops to bound memory -- so when either
+            // opt-in output is requested, take the resident (legacy) path so those reports
+            // still emit. Both are off the default output path, so byte-identity is
+            // unaffected (the regression gate never sets either).
+            // OSPREY_PASS2_QVALUE=transfer also needs the resident first-pass pool: it
+            // captures the frozen 1st-pass model and builds the FULL pre-compaction
+            // score->q table (BuildFullPopulationScoreQTable, below), both of which read
+            // every entry's in-memory Stage-4 features -- exactly what the projection path
+            // streams and drops. The regression gate never sets the env var, so byte-identity
+            // on the default percolator path is unaffected (same rationale as --model-diagnostics).
+            bool needsResidentFirstPassPool = config.ModelDiagnostics ||
+                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
+                OspreyEnvironment.Pass2TransferQ;
+            if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
+                !needsResidentFirstPassPool)
             {
-                ctx.LogError(string.Format(
-                    @"--task FirstPassFDR: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
-                    @"writes failed; boundary file pair is incomplete. See warnings above.",
-                    fdrSidecarFailures, perFileEntries.Count));
-                ctx.ExitCode = 1;
-                return false;
+                // Null unless PerFileScoring took the lean path and streamed the rows
+                // straight from parquet (issue #4397); RunFirstPassProjection then builds
+                // from the fat stubs instead.
+                //
+                // Consume, not Get: this is the projection set's only consumer, and the
+                // byproduct cache is process-lifetime. Leaving it published pinned ~5.7 GiB
+                // (191 M rows x 32 B) plus the interned peptide table through reconciliation
+                // and the blib write -- memory that scales with total scored entries across
+                // all files, exactly what streaming the projection was meant to stop paying
+                // for. Consume drops the pipeline's reference up front so no later path,
+                // including the StopAfterStage5 early return below, can retain it (#4405).
+                var prebuiltProjections = ctx.Consume<FdrProjections>().Value;
+                var survivors = RunFirstPassProjection(
+                    perFileEntries, perFileParquetPaths, fullLibrary, config, ctx, loadFileFeatures,
+                    prebuiltProjections);
+                prebuiltProjections = null;
+
+                if (survivors == null)
+                    return false;  // StopAfterStage5 sidecar failure; ExitCode already set
+                perFileEntries = survivors;
             }
+            else
+            {
+                var swFdr = Stopwatch.StartNew();
+                var featureContributions = RunFdr(perFileEntries, config, ctx, loadFileFeatures);
+                swFdr.Stop();
+                ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
+                    swFdr.Elapsed.TotalSeconds));
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"first-pass-fdr-live",
+                    string.Format(@"(post-GC, resident pool, files={0})", perFileEntries.Count));
 
-            // FDRBench input TSV (pass 1): emit the full pre-compaction first-pass
-            // pool -- every scored non-decoy target, regardless of q-value, with its
-            // first-pass run + experiment q-values and raw SVM discriminant -- BEFORE
-            // compaction drops the non-surviving entries. Mirrors Rust
-            // pipeline.rs write_fdrbench_peptide_input (emitted after first-pass
-            // protein FDR, before the compaction HashSet is built). Pass 2 (the
-            // post-compaction reported set) is emitted from MergeNodeTask; the two
-            // are mutually exclusive per run (--fdrbench-pass).
-            WriteFdrBenchPass1IfRequested(perFileEntries, config, ctx);
+                LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
 
-            // Compaction: drop entries whose base_id (entry_id with the
-            // decoy bit masked off) does not pass either the peptide-q
-            // or protein-q gate. Target and paired decoy share base_id
-            // and are kept or dropped together. Mirrors Rust
-            // pipeline.rs:3094-3132. Without this, Stage 6 multi-charge
-            // consensus selection groups by modified_sequence and
-            // includes non-passing charge states that Rust has already
-            // dropped, producing different rescore-target sets and
-            // different per-file Vec positions.
-            CompactFirstPass(perFileEntries, null, config, ctx);
+                // OSPREY_PASS2_QVALUE=transfer: build the score->q lookup table NOW, from
+                // the FULL pre-compaction 1st-pass population -- every entry (passing,
+                // failing, target, decoy) still carries its in-memory Stage-4 features and
+                // its unbiased 1st-pass q-values here. The frozen model was published as a
+                // byproduct during RunFdr above. Publishing the full-population table lets
+                // the merge-node 2nd-pass transfer map reconciled-feature scores through a
+                // table that RETAINS the high-q failing/decoy region -- the region compaction
+                // strips out, and whose absence would collapse the transfer's q. Off by
+                // default (byproduct never published on the percolator path).
+                if (OspreyEnvironment.Pass2TransferQ &&
+                    ctx.TryGet<FirstPassPercolatorModel>(out var frozenForTable) &&
+                    frozenForTable?.Results != null)
+                {
+                    var scoreQTable = Pass2FdrSidecar.BuildFullPopulationScoreQTable(
+                        perFileEntries, frozenForTable.Results, loadFileFeatures, ctx);
+                    if (scoreQTable != null)
+                        ctx.Publish(scoreQTable);
+                }
+
+                // First-pass protein FDR: runs on the full pre-compaction
+                // peptide pool so target and decoy proteins compete on a
+                // symmetric set. Sets RunProteinQvalue on every FdrEntry,
+                // which Stage 6 reconciliation reads via the protein-rescue
+                // gate in ConsensusRts.Compute. Runs unconditionally (not gated
+                // on --protein-fdr), matching Rust where config.protein_fdr is a
+                // plain f64 (default 0.01) and this block is gated only on
+                // !can_skip_fdr. Mirrors Rust pipeline.rs:3029 ("First-pass
+                // protein FDR").
+                if (perFileEntries.Count > 0)
+                {
+                    ctx.LogInfo(string.Empty);
+                    var swFirstPassProtein = Stopwatch.StartNew();
+                    RunFirstPassProteinFdr(perFileEntries, fullLibrary, config, ctx);
+                    swFirstPassProtein.Stop();
+                    ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
+                        swFirstPassProtein.Elapsed.TotalSeconds));
+                }
+
+                // Persist the per-file `.1st-pass.fdr_scores.bin` sidecars
+                // BEFORE compaction so every stub (passing or not) carries
+                // its q-values into the file. Mirrors osprey/src/pipeline.rs
+                // around persist_fdr_scores at line ~3180. Stage 6 workers
+                // re-derive the post-compaction set by applying the q-value
+                // threshold themselves, so they need every entry's q-values
+                // -- not just the survivors.
+                int fdrSidecarFailures = WriteFdrScoresSidecars(
+                    perFileEntries, perFileParquetPaths, config, ctx);
+                if (fdrSidecarFailures > 0 && config.StopAfterStage5)
+                {
+                    ctx.LogError(string.Format(
+                        @"--task FirstPassFDR: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
+                        @"writes failed; boundary file pair is incomplete. See warnings above.",
+                        fdrSidecarFailures, perFileEntries.Count));
+                    ctx.ExitCode = 1;
+                    return false;
+                }
+
+                // FDRBench input TSV (pass 1): emit the full pre-compaction first-pass
+                // pool -- every scored non-decoy target, regardless of q-value, with its
+                // first-pass run + experiment q-values and raw SVM discriminant -- BEFORE
+                // compaction drops the non-surviving entries. Mirrors Rust
+                // pipeline.rs write_fdrbench_peptide_input (#4377). Pass 2 (the
+                // post-compaction reported set) is emitted from MergeNodeTask; the two
+                // are mutually exclusive per run (--fdrbench-pass). Reached only on the
+                // resident (legacy) first-pass path -- --fdrbench pass 1 routes here via
+                // the projection gate above.
+                WriteFdrBenchPass1IfRequested(perFileEntries, config, ctx);
+
+                // Compaction: drop entries whose base_id (entry_id with the
+                // decoy bit masked off) does not pass either the peptide-q
+                // or protein-q gate. Target and paired decoy share base_id
+                // and are kept or dropped together. Mirrors Rust
+                // pipeline.rs:3094-3132. Without this, Stage 6 multi-charge
+                // consensus selection groups by modified_sequence and
+                // includes non-passing charge states that Rust has already
+                // dropped, producing different rescore-target sets and
+                // different per-file Vec positions.
+                // Phase 4 (issue #4355): the first-pass score pass now streams features
+                // per file and never assigns them onto these FdrEntry stubs, so on the
+                // straight-through path they are already null here. But the
+                // --input-scores / per-file-resume stub loaders DO populate
+                // FdrEntry.Features when hydrating, so null them defensively to keep the
+                // "Features != null means this entry was rescored" sentinel that
+                // ReconciledParquetWriter.ApplyRescoredRows relies on valid going into
+                // Stage 6 (mirrors the resume-rehydrate re-null and
+                // PerFileScoringTask.HydrateRescoreBundleIfPresent). MergeNode reloads
+                // features from the reconciled parquet.
+                foreach (var kvp in perFileEntries)
+                    foreach (var entry in kvp.Value)
+                        entry.Features = null;
+                CompactFirstPass(perFileEntries, null, config, ctx);
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after Stage-5 CompactFirstPass");
+            }
 
             // NOTE: no 2nd-pass FDR sidecar overlay here. Stage 7
             // (MergeNodeTask) owns its own 2nd-pass rehydrate -- it reloads (or
@@ -300,7 +422,7 @@ namespace pwiz.Osprey.Tasks
             // reconciliation degenerates to zero actions there.
             if (perFileEntries.Count >= 1 && config.Reconciliation.Enabled)
             {
-                if (!PlanStage6(perFileEntries, perFileCalibrations,
+                if (!PlanStage6(perFileEntries, perFileCalibrations, perFileIsolationMz,
                         perFileParquetPaths, fullLibrary, config, ctx))
                     return false;
             }
@@ -510,21 +632,23 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Write the pass-1 FDRBench input TSV from the pre-compaction first-pass
-        /// pool when <c>--fdrbench</c> is set with <c>--fdrbench-pass 1</c>. Emits
-        /// every scored non-decoy target (regardless of q-value) with its
-        /// first-pass run + experiment q-values and raw SVM discriminant -- the
-        /// assumption the second-pass reported set rests on. No-op for the default
-        /// pass-2 (emitted post-compaction by <see cref="MergeNodeTask"/>) and when
-        /// no FDRBench output was requested. Called on the straight-through Run
-        /// path only: the pre-compaction pool exists solely here, mirroring Rust
-        /// osprey, which emits at the same point in its single pipeline.
+        /// pool when <c>--fdrbench</c> is set with a pass mask that includes pass 1
+        /// (<c>--fdrbench-pass 1</c> or <c>both</c>). Emits every scored non-decoy
+        /// target (regardless of q-value) with its first-pass run + experiment
+        /// q-values and raw SVM discriminant -- the assumption the second-pass
+        /// reported set rests on. No-op for the default pass-2 (emitted
+        /// post-compaction by <see cref="MergeNodeTask"/>) and when no FDRBench
+        /// output was requested. Called on the straight-through Run path only: the
+        /// pre-compaction pool exists solely here, mirroring Rust osprey, which
+        /// emits at the same point in its single pipeline.
         /// </summary>
         private void WriteFdrBenchPass1IfRequested(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx)
         {
-            if (string.IsNullOrEmpty(config.OutputFdrBench) || config.FdrBenchPass != 1)
+            var benchPath = FdrBenchInputWriter.PathForPass(config, OspreyConfig.FDRBENCH_PASS_1);
+            if (benchPath == null)
                 return;
 
             var libraryById = ctx.Get<LibraryById>().Value;
@@ -534,14 +658,14 @@ namespace pwiz.Osprey.Tasks
             // TSV and the emitted manifest stay consistent and stock FDRBench works.
             var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
             var benchResult = FdrBenchInputWriter.WritePeptideInput(
-                config.OutputFdrBench, perFileEntries, libraryById, config.FdrLevel,
+                benchPath, perFileEntries, libraryById, config.FdrLevel,
                 config.FdrBenchPerRun, pairing.ExcludedEntrapment);
-            string manifestPath = config.OutputFdrBench + @".pairing.tsv";
+            string manifestPath = benchPath + @".pairing.tsv";
             int manifestRows = FdrBenchInputWriter.WritePairingManifest(manifestPath, libraryById, pairing);
             swFdrBench.Stop();
             ctx.LogInfo(string.Format(@"Wrote FDRBench input (pass 1, {0}) to {1}: {2} rows",
                 config.FdrBenchPerRun ? @"per-run" : @"per-precursor",
-                config.OutputFdrBench, benchResult.Rows));
+                benchPath, benchResult.Rows));
             ctx.LogInfo(string.Format(@"Wrote FDRBench pairing manifest (from the searched library) to {0}: {1} peptides",
                 manifestPath, manifestRows));
             pairing.LogSummary(ctx.LogInfo);
@@ -594,8 +718,15 @@ namespace pwiz.Osprey.Tasks
                 else
                 {
                     var firstPassBaseIds = new HashSet<uint>();
-                    double peptideGate = config.RunFdr;
-                    double proteinGate = config.ProteinFdr ?? 0.0;
+                    // Peptide-q compaction gate: a dedicated field (default 0.01 = RunFdr)
+                    // loosenable to broaden the reconciliation pool, mirroring Rust
+                    // config.reconciliation_compaction_fdr (pipeline.rs:4650). Previously
+                    // hardwired to config.RunFdr, which C# could not loosen independently.
+                    double peptideGate = config.ReconciliationCompactionFdr;
+                    // Protein-rescue gate is always active (default 0.01), matching
+                    // Rust pipeline.rs:4651/4658 where protein_compaction_gate =
+                    // config.protein_fdr (a plain f64, never a null switch).
+                    double proteinGate = config.EffectiveProteinFdr;
                     foreach (var kvp in perFileEntries)
                     {
                         foreach (var entry in kvp.Value)
@@ -603,7 +734,7 @@ namespace pwiz.Osprey.Tasks
                             if (entry.IsDecoy)
                                 continue;
                             if (entry.RunPeptideQvalue <= peptideGate ||
-                                (proteinGate > 0.0 && entry.RunProteinQvalue <= proteinGate))
+                                entry.RunProteinQvalue <= proteinGate)
                             {
                                 firstPassBaseIds.Add(entry.EntryId & ScoringTaskShared.BASE_ID_MASK);
                             }
@@ -641,6 +772,7 @@ namespace pwiz.Osprey.Tasks
         private bool PlanStage6(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             List<LibraryEntry> fullLibrary,
             OspreyConfig config,
@@ -669,6 +801,7 @@ namespace pwiz.Osprey.Tasks
                 plan.Consensus,
                 plan.RefinedCalibrations,
                 perFileCalibrations,
+                perFileIsolationMz,
                 fullLibrary,
                 perFileParquetPaths,
                 config,
@@ -784,6 +917,7 @@ namespace pwiz.Osprey.Tasks
             IReadOnlyList<PeptideConsensusRT> consensus,
             Dictionary<string, RTCalibration> refinedCalibrations,
             IReadOnlyDictionary<string, RTCalibration> perFileCalibrations,
+            IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
             List<LibraryEntry> fullLibrary,
             IReadOnlyDictionary<string, string> perFileParquetPaths,
             OspreyConfig config,
@@ -827,11 +961,13 @@ namespace pwiz.Osprey.Tasks
                 libPrecursorMz[entry.Id] = entry.PrecursorMz;
             }
 
-            // Compute per-file gap-fill targets. Per-file isolation-window
-            // m/z intervals are not yet plumbed through C# (Stellar
-            // calibration.json carries no isolation_scheme today, so the
-            // filter is a no-op there); when extended to GPF datasets,
-            // pass a non-null dictionary here.
+            // Compute per-file gap-fill targets. Per-file isolation-window m/z
+            // intervals (from each file's extracted windows straight through, or
+            // rehydrated from calibration.json on an HPC merge node) constrain
+            // gap-fill candidates to the m/z ranges each file actually isolated --
+            // essential for GPF datasets with disjoint windows. Inert for a single
+            // sDIA window covering the whole range (every precursor is in-range).
+            // Matches Rust reconciliation.rs's per_file_isolation_mz argument.
             var perFileForGapFill = new List<KeyValuePair<string,
                 IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
             foreach (var kvp in perFileEntries)
@@ -847,7 +983,7 @@ namespace pwiz.Osprey.Tasks
                 config.Reconciliation.ConsensusFdr,
                 libLookup,
                 libPrecursorMz,
-                perFileIsolationMz: null);
+                perFileIsolationMz);
 
             // Mirror gapFillByFile into the out param for the in-process
             // Stage 6 rescore caller. Identify returns IReadOnlyList<>;
@@ -1105,12 +1241,13 @@ namespace pwiz.Osprey.Tasks
         private FeatureContributions RunFdr(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
-            PipelineContext ctx)
+            PipelineContext ctx,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
         {
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
-                    return RunPercolatorFdr(perFileEntries, config, ctx);
+                    return RunPercolatorFdr(perFileEntries, config, ctx, loadFileFeatures: loadFileFeatures);
 
                 case FdrMethod.Simple:
                     PercolatorEngine.RunSimpleFdr(perFileEntries, config, ctx.LogInfo);
@@ -1127,7 +1264,7 @@ namespace pwiz.Osprey.Tasks
 
         /// <summary>
         /// Run Percolator-based FDR control (Stage 5). Thin facade over
-        /// <see cref="PercolatorEngine.RunPercolatorFdr"/>: supplies the PIN
+        /// <c>PercolatorEngine.RunPercolatorFdr</c>: supplies the PIN
         /// feature names and routes logging through <c>ctx.LogInfo</c>. Static +
         /// internal so <see cref="MergeNodeTask"/> can call it for the 2nd-pass
         /// run after Stage 6 reconciliation (the HPC distribution case where
@@ -1138,13 +1275,40 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             OspreyConfig config,
             PipelineContext ctx,
-            string passLabel = "First-pass")
+            string passLabel = "First-pass",
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
         {
+            // loadFileFeatures is supplied by the first-pass caller (FirstJoinTask.Run)
+            // so the engine streams PIN features per file from parquet (issue #4355
+            // Phase 4). The 2nd-pass caller (Pass2FdrSidecar) leaves it null and
+            // pre-reloads features onto the stubs, so the engine reads them resident.
+
+            // OSPREY_PASS2_QVALUE=transfer: on the FIRST-pass run only, publish the trained
+            // model (FoldWeights / FoldBiases / Standardizer) as a byproduct so the
+            // merge-node 2nd-pass step can re-score reconciled features with this FROZEN
+            // model instead of retraining. Null (a pure no-op in the engine) on the default
+            // percolator path and on the 2nd-pass run, so scoring stays byte-identical.
+            Action<PercolatorResults> captureModel = null;
+            if (OspreyEnvironment.Pass2TransferQ &&
+                string.Equals(passLabel, @"First-pass", StringComparison.Ordinal))
+            {
+                // Publish is add-only (throws on a duplicate key); guard so a first pass
+                // that somehow ran twice in one process degrades to a no-op rather than a
+                // raw ArgumentException. The passLabel gate already makes this unreachable
+                // on normal paths.
+                captureModel = results =>
+                {
+                    if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
+                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                };
+            }
+
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, out var contributions,
-                BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel);
+                BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures,
+                captureModel);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left
@@ -1157,6 +1321,38 @@ namespace pwiz.Osprey.Tasks
             // The trained model's feature contributions, for the --model-diagnostics
             // report. Null on the Simple/second-pass paths that don't produce one.
             return contributions;
+        }
+
+        /// <summary>
+        /// Projection-buffer counterpart of the <see cref="FdrEntry"/>
+        /// <see cref="RunPercolatorFdr(System.Collections.Generic.List{System.Collections.Generic.KeyValuePair{string,System.Collections.Generic.List{FdrEntry}}},OspreyConfig,PipelineContext,string,System.Func{string,System.Collections.Generic.IReadOnlyList{double[]}})"/>
+        /// facade: run Percolator FDR over the thin <see cref="FdrProjectionSet"/>
+        /// buffer, supplying the PIN feature names + the Stage 5 diagnostics config and
+        /// owning the diagnostic-only process exit. Used by the projection 1st-pass
+        /// span and the projection 2nd-pass path (<see cref="Pass2FdrSidecar"/>, issue
+        /// #4374). The projection engine ALWAYS streams, so a per-file feature loader
+        /// is mandatory.
+        /// </summary>
+        internal static void RunPercolatorFdr(
+            FdrProjectionSet projections,
+            OspreyConfig config,
+            PipelineContext ctx,
+            string passLabel,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            IFdrOutputSink sink)
+        {
+            bool aborted = PercolatorEngine.RunPercolatorFdr(
+                projections, config,
+                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
+                ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel,
+                loadFileFeatures);
+            if (aborted)
+            {
+                // A diagnostic-only (*Only) Stage 5 dump fired; mirror the FdrEntry
+                // facade -- the Tasks layer owns the process exit.
+                ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
+                Environment.Exit(0);
+            }
         }
 
         /// <summary>
@@ -1220,6 +1416,386 @@ namespace pwiz.Osprey.Tasks
                 if (ctx.Diagnostics?.ProteinFdrOnly ?? false)
                     OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
             }
+        }
+
+        /// <summary>
+        /// Projection-buffer first-pass FDR span (issue #4355 step (b) increment ii).
+        /// Materializes the thin <see cref="FdrProjectionSet"/> from the cold
+        /// hand-off buffer, RELEASES the <see cref="FdrEntry"/> stubs so they are not
+        /// resident across the SVM peak, then drives first-pass Percolator +
+        /// first-pass protein FDR + the 1st-pass sidecar write + compaction entirely
+        /// off the projection. Finally reloads full <see cref="FdrEntry"/> survivors
+        /// from each file's ORIGINAL parquet + the just-written 1st-pass sidecar and
+        /// returns them, so <see cref="PlanStage6"/> / Stage 6 / Stage 7 consume the
+        /// identical survivor buffer the legacy compacted-in-place path produced.
+        /// Returns <c>null</c> (with <see cref="PipelineContext.ExitCode"/> set) only
+        /// on a StopAfterStage5 sidecar-write failure or a survivor-reload fault.
+        /// </summary>
+        private List<KeyValuePair<string, List<FdrEntry>>> RunFirstPassProjection(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            List<LibraryEntry> fullLibrary,
+            OspreyConfig config,
+            PipelineContext ctx,
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures,
+            FdrProjectionSet prebuiltProjections)
+        {
+            // Preferred path (issue #4397): PerFileScoring streamed these rows straight
+            // out of the per-file .scores.parquet, so the fat FdrEntry stub buffer was
+            // never allocated at all (it cost ~53 GB at 191M rows). Fall back to building
+            // from stubs on the paths that still publish them -- rehydrate/merge, or when
+            // a resident pool is required. BuildFromEntries releases each file's stubs
+            // incrementally (releaseStubs: true) so the projection never coexists with the
+            // full stub buffer. Clearing the hand-off ScoredEntries lists is safe: nothing
+            // downstream of this task reads ScoredEntries on a compute path -- the survivor
+            // buffer is published as CompactedEntries.
+            var projections = prebuiltProjections ??
+                FdrProjectionSet.BuildFromEntries(perFileEntries, releaseStubs: true);
+            int beforeCount = projections.TotalRows;
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, string.Format(
+                @"projection built: {0} rows, {1} distinct peptides; FdrEntry stubs released",
+                beforeCount, projections.PeptideById.Length));
+
+            // Stage 5: first-pass Percolator over the projection. Same SVM, same
+            // dispatch, same q-values -- only the resident buffer differs. The lean
+            // struct no longer stores the q-value outputs (issue #4355 struct-shrink
+            // S0/S1); a StoringSink keeps ONLY {RunPeptideQ, RunProteinQ} resident (48 B)
+            // that protein FDR + compaction read, and streams the other four q-values to
+            // the phase-1 partial sidecar as it goes.
+            //
+            // Two-phase 1st-pass sidecar (issue #4355 struct-shrink S1). Phase 1: the
+            // StoringSink writes each file's PARTIAL .1st-pass.fdr_scores.bin during the
+            // score pass (run_protein_qvalue = 1.0 placeholder), so the four streamed
+            // q-values are never held resident. This flush resolves the per-file sidecar
+            // path the same way the pre-S1 single-phase write did, so the survivor reload
+            // and the Stage 6 worker read identical bytes; it returns a per-file failure
+            // count the sink accumulates (sink.PartialWriteFailures) for the
+            // StopAfterStage5 gate. Phase 2 patches [52..60] after protein FDR (below).
+            int FlushPartialSidecar(string fileName, IReadOnlyList<FdrScoreRecord> records)
+            {
+                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                if (string.IsNullOrEmpty(sidecarBase))
+                {
+                    ctx.LogWarning(string.Format(
+                        "No sidecar base path for `{0}` — skipping fdr_scores.bin write", fileName));
+                    return 1;
+                }
+                string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
+                try
+                {
+                    FdrScoresSidecar.Write(fdrPath, records, FdrScoresSidecar.Pass.FirstPass);
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogWarning(string.Format(
+                        "Failed to write 1st-pass fdr_scores.bin for {0}: {1}", fileName, ex.Message));
+                    return 1;
+                }
+                return 0;
+            }
+
+            var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar);
+            var swFdr = Stopwatch.StartNew();
+            bool aborted = PercolatorEngine.RunPercolatorFdr(
+                projections, config,
+                OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
+                ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
+                @"First-pass", loadFileFeatures);
+            swFdr.Stop();
+            var outputs = sink.Outputs;
+            if (aborted)
+            {
+                // A diagnostic-only (*Only) Stage 5 dump fired; mirror the static
+                // RunPercolatorFdr wrapper's process exit.
+                ctx.LogInfo(@"[BISECT] Percolator diagnostic-only dump complete - aborting run");
+                Environment.Exit(0);
+            }
+            ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
+                swFdr.Elapsed.TotalSeconds));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"first-pass-fdr-live",
+                string.Format(@"(post-GC, projection path, rows={0})", projections.TotalRows));
+
+            LogFirstPassResultsProjection(projections, sink, config, ctx);
+
+            // First-pass protein FDR over the projection (sets RunProteinQvalue on
+            // every row). The Stage-6 diagnostic dump reads the returned artifacts,
+            // exactly as the FdrEntry path's RunFirstPassProteinFdr does. Runs
+            // unconditionally (not gated on --protein-fdr), matching Rust where
+            // config.protein_fdr is a plain f64 (default 0.01), gated only on
+            // !can_skip_fdr.
+            if (projections.TotalRows > 0)
+            {
+                ctx.LogInfo(string.Empty);
+                var swProt = Stopwatch.StartNew();
+                var proteinResult = ProteinFdrEngine.RunFirstPass(
+                    projections.PerFile, projections.PeptideById, outputs, fullLibrary, config, ctx.LogInfo);
+                if (ctx.Diagnostics?.DumpProteinFdr ?? false)
+                {
+                    ctx.Diagnostics?.WriteStage6ProteinFdrDump(
+                        proteinResult.BestScores, proteinResult.ProteinFdr.PeptideQvalues);
+                    if (ctx.Diagnostics?.ProteinFdrOnly ?? false)
+                        OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_PROTEIN_FDR_ONLY");
+                }
+                swProt.Stop();
+                ctx.LogInfo(string.Format(@"[TIMING] First-pass protein FDR: {0:F1}s",
+                    swProt.Elapsed.TotalSeconds));
+            }
+
+            // Phase 2 of the two-phase sidecar (issue #4355 struct-shrink S1): now that
+            // first-pass protein FDR has filled RunProteinQ in the resident outputs array,
+            // patch each partial record's run_protein_qvalue [52..60] on disk (located by
+            // entry_id), finalizing the Stage 5 -> Stage 6 boundary artifact AND the
+            // source the survivor reload overlays below. This replaces the pre-S1
+            // single-phase write; the finalized bytes are identical (only the placeholder
+            // [52..60] is overwritten). Combine the phase-1 partial-write failures the
+            // sink accumulated during the score pass with the phase-2 patch failures.
+            int sidecarFailures = sink.PartialWriteFailures + PatchFirstPassSidecarProteinQvalues(
+                projections, outputs, perFileParquetPaths, config, ctx);
+            if (sidecarFailures > 0 && config.StopAfterStage5)
+            {
+                ctx.LogError(string.Format(
+                    @"--task FirstPassFDR: {0}/{1} 1st-pass fdr_scores.bin sidecar " +
+                    @"writes failed; boundary file pair is incomplete. See warnings above.",
+                    sidecarFailures, projections.PerFile.Count));
+                ctx.ExitCode = 1;
+                return null;
+            }
+
+            // Compaction predicate over the projection -> passing base_id set
+            // (identical to CompactFirstPass's non-bundle branch, risk #7).
+            var firstPassBaseIds = ComputeFirstPassBaseIds(projections, outputs, config);
+
+            // Reload full FdrEntry survivors from the ORIGINAL parquet + the
+            // just-written 1st-pass sidecar. ParquetIndex therefore comes from
+            // LoadFdrStubsFromParquet on the original parquet (risk #9), keeping
+            // Stage 6's positional CWT lookup byte-identical -- the same parquet +
+            // sidecar round-trip modes 2/3 already validate.
+            var survivors = ReloadFirstPassSurvivors(
+                projections, perFileParquetPaths, firstPassBaseIds, config, ctx);
+            if (survivors == null)
+                return null;  // reload fault; ExitCode already set
+
+            int afterCount = 0;
+            foreach (var kvp in survivors)
+                afterCount += kvp.Value.Count;
+            ctx.LogInfo(string.Format(
+                @"First-pass compaction: {0} -> {1} entries ({2} passing base_ids)",
+                beforeCount, afterCount, firstPassBaseIds.Count));
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after Stage-5 CompactFirstPass");
+            return survivors;
+        }
+
+        /// <summary>
+        /// Projection-buffer counterpart of <see cref="LogFirstPassResults"/>: log
+        /// per-file and total first-pass passing-target counts from the projection
+        /// rows. (The OSPREY_DUMP_PERCOLATOR pre-compaction dump is a cross-impl
+        /// bisection diagnostic that needs the full FdrEntry buffer the projection
+        /// path deliberately does not hold; it is not emitted on the projection path,
+        /// which is production/gate-only.)
+        /// </summary>
+        private void LogFirstPassResultsProjection(
+            FdrProjectionSet projections, FdrStoringSink sink,
+            OspreyConfig config, PipelineContext ctx)
+        {
+            // Read the per-file passing-target counts the sink accumulated during the
+            // score pass (!IsDecoy && EffectiveRunQvalue <= RunFdr) rather than
+            // recomputing EffectiveRunQvalue off the resident q-value array: at S1
+            // RunPrecursorQvalue is no longer resident, so it cannot be recomputed for
+            // FdrLevel.Precursor. The tally is the identical predicate the tail [COUNT]
+            // block uses, so the logged counts are unchanged.
+            var filePassingTargets = sink.FilePassingTargets;
+            int passingTargets = 0;
+            for (int f = 0; f < projections.PerFile.Count; f++)
+            {
+                int fileTargets = filePassingTargets[f];
+                ctx.LogInfo(string.Format(@"  {0}: {1} precursors at {2:P1} run-level FDR",
+                    projections.PerFile[f].Key, fileTargets, config.RunFdr));
+                passingTargets += fileTargets;
+            }
+            ctx.LogInfo(string.Format(@"Total: {0} precursors pass run-level FDR across all files",
+                passingTargets));
+        }
+
+        /// <summary>
+        /// Phase 2 of the two-phase 1st-pass sidecar (issue #4355 struct-shrink S1): for
+        /// each file, patch the partial <c>.1st-pass.fdr_scores.bin</c> the storing sink
+        /// wrote during the score pass so every record's <c>run_protein_qvalue</c>
+        /// <c>[52..60]</c> carries the finalized value from the resident
+        /// <c>RunProteinQ</c> array (filled by first-pass protein FDR), located by
+        /// <c>entry_id</c>. Same sidecar path resolution as phase 1, so the survivor
+        /// reload and the Stage 6 worker read the identical, byte-finalized file -- which
+        /// is byte-identical to the pre-S1 single-phase write. Returns the number of
+        /// files whose patch failed (missing / unreadable / size-mismatched sidecar);
+        /// files that never got a phase-1 base path were already counted there.
+        /// </summary>
+        private int PatchFirstPassSidecarProteinQvalues(
+            FdrProjectionSet projections,
+            FdrProjectionOutputs outputs,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            int failures = 0;
+            for (int f = 0; f < projections.PerFile.Count; f++)
+            {
+                var kvp = projections.PerFile[f];
+                string fileName = kvp.Key;
+                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                if (string.IsNullOrEmpty(sidecarBase))
+                {
+                    // Phase 1 already warned + counted this file; there is no file on
+                    // disk to patch, so do not double-count it here.
+                    continue;
+                }
+                string fdrPath = FdrScoresSidecar.Pass1Path(sidecarBase);
+
+                // Map this file's entry_id -> finalized run protein q-value (one file at
+                // a time; bounded). entry_id is unique within a file, matching the
+                // sidecar's entry_id-keyed record identity.
+                var rows = kvp.Value;
+                var runProteinByEntryId = new Dictionary<uint, double>(rows.Count);
+                for (int r = 0; r < rows.Count; r++)
+                    runProteinByEntryId[rows[r].EntryId] = outputs.RunProteinQvalue(f, r);
+
+                try
+                {
+                    if (!FdrScoresSidecar.PatchRunProteinQvalues(
+                            fdrPath, runProteinByEntryId, FdrScoresSidecar.Pass.FirstPass))
+                    {
+                        ctx.LogWarning(string.Format(
+                            "Failed to patch run_protein_qvalue in 1st-pass fdr_scores.bin for {0} " +
+                            "(expected at {1})", fileName, fdrPath));
+                        failures++;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogWarning(string.Format(
+                        "Failed to patch 1st-pass fdr_scores.bin for {0}: {1}", fileName, ex.Message));
+                    failures++;
+                }
+            }
+            return failures;
+        }
+
+        /// <summary>
+        /// Compute the post-first-pass passing base_id set from the projection,
+        /// using the identical predicate as <see cref="CompactFirstPass"/>'s
+        /// non-bundle branch (targets whose run peptide q-value passes the compaction
+        /// peptide gate, or whose run protein q-value passes the always-active
+        /// protein-rescue gate; risk #7). Target and paired decoy share a base_id, so
+        /// the masked id set drives the survivor filter symmetrically.
+        /// </summary>
+        private static HashSet<uint> ComputeFirstPassBaseIds(
+            FdrProjectionSet projections, FdrProjectionOutputs outputs, OspreyConfig config)
+        {
+            var firstPassBaseIds = new HashSet<uint>();
+            // Peptide-q compaction gate: the dedicated field (default 0.01 = RunFdr)
+            // loosenable to broaden the reconciliation pool, mirroring Rust
+            // config.reconciliation_compaction_fdr (pipeline.rs:4650) -- identical to
+            // the legacy CompactFirstPass twin, not hardwired to config.RunFdr.
+            double peptideGate = config.ReconciliationCompactionFdr;
+            // Protein-rescue gate is always active (default 0.01), matching Rust
+            // pipeline.rs:4651/4658 (protein_compaction_gate = config.protein_fdr, a
+            // plain f64, never a null switch). First-pass protein FDR now runs
+            // unconditionally on this path too, so RunProteinQvalue is populated.
+            double proteinGate = config.EffectiveProteinFdr;
+            for (int f = 0; f < projections.PerFile.Count; f++)
+            {
+                var rows = projections.PerFile[f].Value;
+                for (int r = 0; r < rows.Count; r++)
+                {
+                    if (rows[r].IsDecoy)
+                        continue;
+                    // Run peptide/protein q-values now live in the parallel outputs
+                    // array (issue #4355 struct-shrink S0), not on the lean struct.
+                    if (outputs.RunPeptideQvalue(f, r) <= peptideGate ||
+                        outputs.RunProteinQvalue(f, r) <= proteinGate)
+                    {
+                        firstPassBaseIds.Add(rows[r].EntryId & ScoringTaskShared.BASE_ID_MASK);
+                    }
+                }
+            }
+            return firstPassBaseIds;
+        }
+
+        /// <summary>
+        /// Reload full <see cref="FdrEntry"/> survivors for the projection path. For
+        /// each file: load the full stub set from the ORIGINAL parquet
+        /// (<see cref="ParquetScoreCache.LoadFdrStubsFromParquet"/>, which re-assigns
+        /// <see cref="FdrEntry.ParquetIndex"/> = row -- risk #9), overlay the
+        /// just-written 1st-pass sidecar onto that superset (the loader's TryRead
+        /// requires the stub list to be a superset of the sidecar records), drop
+        /// non-survivors with the same base_id predicate <c>RemoveAll</c> the legacy
+        /// path uses, and canonicalize the order with the full
+        /// (EntryId, Charge, ScanNumber, ParquetIndex) comparer so the survivor
+        /// buffer is byte-order-identical to the legacy post-Percolator-sort +
+        /// compaction buffer. Returns <c>null</c> (ExitCode set) on any missing
+        /// parquet path or failed sidecar overlay -- both genuine faults here, since
+        /// this task just wrote the sidecar.
+        /// </summary>
+        private List<KeyValuePair<string, List<FdrEntry>>> ReloadFirstPassSurvivors(
+            FdrProjectionSet projections,
+            IReadOnlyDictionary<string, string> perFileParquetPaths,
+            HashSet<uint> firstPassBaseIds,
+            OspreyConfig config,
+            PipelineContext ctx)
+        {
+            var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
+            foreach (var kvp in projections.PerFile)
+            {
+                string fileName = kvp.Key;
+                if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
+                {
+                    ctx.LogError(string.Format(
+                        @"Projection survivor reload: no scores parquet path for {0}", fileName));
+                    ctx.ExitCode = 1;
+                    return null;
+                }
+
+                List<FdrEntry> stubs;
+                try
+                {
+                    stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                }
+                catch (Exception ex)
+                {
+                    ctx.LogError(string.Format(
+                        @"Projection survivor reload: failed to load stubs from {0}: {1}",
+                        parquetPath, ex.Message));
+                    ctx.ExitCode = 1;
+                    return null;
+                }
+
+                // Overlay the 1st-pass sidecar onto the FULL stub set (superset
+                // contract) BEFORE filtering to survivors.
+                string sidecarBase = ResolveSidecarBasePath(fileName, perFileParquetPaths, config);
+                string pass1Path = FdrScoresSidecar.Pass1Path(sidecarBase);
+                if (!FdrScoresSidecar.TryRead(pass1Path, stubs, FdrScoresSidecar.Pass.FirstPass))
+                {
+                    ctx.LogError(string.Format(
+                        @"Projection survivor reload: failed to overlay .1st-pass.fdr_scores.bin for {0} " +
+                        @"(expected at {1})", fileName, pass1Path));
+                    ctx.ExitCode = 1;
+                    return null;
+                }
+
+                stubs.RemoveAll(e => !firstPassBaseIds.Contains(e.EntryId & ScoringTaskShared.BASE_ID_MASK));
+                stubs.TrimExcess();
+                stubs.Sort((a, b) => // Array.Sort OK: terminal key ParquetIndex is unique per reloaded stub, so the comparator never ties.
+                {
+                    int c = a.EntryId.CompareTo(b.EntryId);
+                    if (c != 0) return c;
+                    c = a.Charge.CompareTo(b.Charge);
+                    if (c != 0) return c;
+                    c = a.ScanNumber.CompareTo(b.ScanNumber);
+                    if (c != 0) return c;
+                    return a.ParquetIndex.CompareTo(b.ParquetIndex);
+                });
+                survivors.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+            }
+            return survivors;
         }
     }
 }

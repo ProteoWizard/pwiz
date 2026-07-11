@@ -151,6 +151,18 @@ namespace pwiz.Osprey.Chromatography
         /// <summary>Whether all windows have the same width.</summary>
         [JsonProperty("uniform_width")]
         public bool UniformWidth { get; set; }
+
+        /// <summary>
+        /// Individual isolation windows as <c>[center, width]</c> pairs, one per
+        /// window in the cycle. Maps to <c>IsolationScheme.windows</c>
+        /// (<c>Vec&lt;(f64, f64)&gt;</c>) in
+        /// osprey-chromatography/src/calibration/mod.rs, which serializes as JSON
+        /// <c>[[center,width],...]</c>. Carries the gap-fill m/z filter's
+        /// per-window coverage to an HPC merge node that has no mzML. Nullable for
+        /// legacy JSON written before this field existed.
+        /// </summary>
+        [JsonProperty("windows", NullValueHandling = NullValueHandling.Ignore)]
+        public double[][] Windows { get; set; }
     }
 
     /// <summary>
@@ -331,18 +343,28 @@ namespace pwiz.Osprey.Chromatography
         /// JSON records the value the console highlights (issue #4364).
         /// </summary>
         public static RTCalibrationJson FromRTCalibration(RTCalibration rt,
-            double? minRtTolerance = null, double? maxRtTolerance = null)
+            double? minRtTolerance = null, double? maxRtTolerance = null,
+            int? minCalibrationPoints = null)
         {
             if (rt == null)
                 return Uncalibrated();
             var stats = rt.Stats();
             double? windowHalfWidth = null;
             if (minRtTolerance.HasValue && maxRtTolerance.HasValue)
+            {
+                // Widen the floor for a thin fit so the persisted half-width matches
+                // what the search actually uses (issue #4401). No-op without
+                // minCalibrationPoints, or at n >= minCalibrationPoints.
+                double minTol = minCalibrationPoints.HasValue
+                    ? RTCalibration.EffectiveMinRtTolerance(stats.NPoints,
+                        minRtTolerance.Value, maxRtTolerance.Value, minCalibrationPoints.Value)
+                    : minRtTolerance.Value;
                 windowHalfWidth = RTCalibration.SearchWindowHalfWidth(
-                    stats.MAD, minRtTolerance.Value, maxRtTolerance.Value);
+                    stats.MAD, minTol, maxRtTolerance.Value);
+            }
             return new RTCalibrationJson
             {
-                Method = RTCalibrationMethod.LOESS,
+                Method = rt.Method,
                 ResidualSD = stats.ResidualSD,
                 NPoints = stats.NPoints,
                 RSquared = stats.RSquared,

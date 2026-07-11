@@ -87,7 +87,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
 
                 var data = ModelDiagnosticsData.Build(
                     perFileEntries, contributions, classByBaseId, pairByBaseId,
-                    entrapmentRatio, config.RunFdr, config.FdrLevel.ToString());
+                    entrapmentRatio, config.RunFdr, config.FdrLevel);
                 // On a resumed / rehydrated run the first-pass SVM is not retrained
                 // (q-values come from sidecars), so there is no trained model to show.
                 // Surface it rather than silently emitting a blank Model tab.
@@ -163,8 +163,9 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                     data.FdpViews.AddRange(pass2Views);
                 }
 
-                // Pass-2 model view (feature table + composite) when a --protein-fdr
-                // run retrained Percolator on the reported pool; null otherwise.
+                // Pass-2 model view (feature table + composite) whenever the second
+                // pass retrained Percolator on the reported pool (any reconciled run);
+                // null otherwise.
                 data.ModelPass2 = ModelDiagnosticsData.BuildModelPass2(
                     perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
 

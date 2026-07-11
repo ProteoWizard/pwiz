@@ -25,6 +25,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -51,7 +52,18 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private const int EXPECTED_TOOL_COUNT = 47;
+        // The version stamped into the committed SkylineAiConnector.zip: both
+        // tool-inf/info.properties (what the Tool Store shows) and the bundled
+        // binaries. This is intentionally a hand-entered constant, NOT the running
+        // Skyline version. Skyline's version is day-of-year derived and changes
+        // every day, so asserting equality with the live version would fail the
+        // day after any commit. The committed ZIP only changes when someone
+        // rebuilds it, so bumping this constant in lockstep with a rebuild is the
+        // discipline gate that catches a forgotten rebuild. (A stale ZIP once
+        // shipped stamped 26.1.1.077 while its own info.properties Requires line
+        // demanded 26.1.1.083 - a ZIP that fails its own stated requirement.)
+        // When you rebuild SkylineAiConnector.zip, update this to match.
+        private const string EXPECTED_ZIP_VERSION = "26.1.1.159";
 
         // Short FASTA for a quick import test
         private const string TEST_FASTA =
@@ -93,6 +105,22 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 SkylineWindow.PopulateToolsMenu();
                 AssertEx.AreEqual(expectedToolName, SkylineWindow.GetToolText(0));
             });
+
+            // Freshness gate: the version stamped into the installed tool-inf/info.properties
+            // (copied verbatim from the ZIP, and what the Tool Store displays) must match
+            // EXPECTED_ZIP_VERSION. This is the check that catches a stale or mis-stamped ZIP -
+            // e.g. a binary rebuilt from current source but packaged with an old info.properties -
+            // which every other assertion here sails past because they only exercise the binary.
+            string infoPropertiesPath = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(),
+                @"SkylineAiConnector", @"tool-inf", @"info.properties");
+            Assert.IsTrue(File.Exists(infoPropertiesPath),
+                @"Installed tool-inf/info.properties not found at " + infoPropertiesPath);
+            string zipVersion = new ExternalToolProperties(infoPropertiesPath).Version;
+            AssertEx.AreEqual(EXPECTED_ZIP_VERSION, zipVersion,
+                TextUtil.LineSeparate(
+                    @"SkylineAiConnector.zip version does not match EXPECTED_ZIP_VERSION.",
+                    @"Rebuild SkylineAiConnector (which restamps info.properties from AssemblyInfo.cs)" +
+                    @" and update EXPECTED_ZIP_VERSION to match the new build."));
         }
 
         private void TestMcpServerEndToEnd()
@@ -104,6 +132,14 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 @"SkylineAiConnector", @"mcp-server", @"SkylineMcpServer.exe");
             if (!File.Exists(mcpServerPath))
                 Assert.Inconclusive(@"SkylineMcpServer.exe not found in installed tools");
+
+            // The bundled server binary must carry the same version as the ZIP manifest,
+            // so a rebuilt-but-mis-stamped package (or a stale binary under a fresh manifest)
+            // cannot slip through. Together with the info.properties check in
+            // TestToolInstallation this pins manifest == binary == EXPECTED_ZIP_VERSION.
+            string serverFileVersion = FileVersionInfo.GetVersionInfo(mcpServerPath).FileVersion;
+            AssertEx.AreEqual(EXPECTED_ZIP_VERSION, serverFileVersion,
+                @"Bundled SkylineMcpServer.exe FileVersion does not match EXPECTED_ZIP_VERSION - rebuild the tool ZIP.");
 
             // Phase 1: default-cap subprocess covers the existing protocol tests
             // plus the inline / file return-format paths for the image tools.
@@ -186,6 +222,25 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             return process;
         }
 
+        /// <summary>
+        /// The authoritative set of MCP tool names, derived at test time by parsing the
+        /// [McpServerTool(Name = "...")] attributes in the server source. Deriving it from
+        /// source (rather than duplicating a list in the test) means adding or removing a
+        /// tool in SkylineTools.cs automatically updates the expectation - no list to keep
+        /// in sync by hand.
+        /// </summary>
+        private HashSet<string> GetSourceDeclaredToolNames()
+        {
+            string sourcePath = TestContext.GetProjectDirectory(
+                @"Executables\Tools\SkylineMcp\SkylineMcpServer\Tools\SkylineTools.cs");
+            Assert.IsTrue(File.Exists(sourcePath), @"SkylineTools.cs source not found at " + sourcePath);
+            var names = new HashSet<string>();
+            foreach (Match m in Regex.Matches(File.ReadAllText(sourcePath), @"McpServerTool\(Name = ""([a-z_]+)"""))
+                names.Add(m.Groups[1].Value);
+            Assert.IsTrue(names.Count > 0, @"No [McpServerTool(Name = ...)] attributes parsed from SkylineTools.cs");
+            return names;
+        }
+
         private void ValidateMcpProtocol(Process mcpProcess, JsonToolServer server)
         {
             // Wrap stdin with UTF-8 StreamWriter (Process.StandardInput defaults to
@@ -221,7 +276,26 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             Assert.IsNull(toolsResult.Error, "tools/list should not surface an error");
             Assert.IsNotNull(toolsResult.Result, "tools/list should return a result body");
             Assert.IsNotNull(toolsResult.Result.Tools, "tools/list result missing tools array");
-            AssertEx.AreEqual(EXPECTED_TOOL_COUNT, toolsResult.Result.Tools.Count);
+            // Assert the EXACT advertised tool set, deriving the expected names by
+            // parsing the [McpServerTool(Name = "...")] attributes in the server source
+            // rather than maintaining a duplicate list here. A count-only check passes
+            // when a tool is renamed or swapped; a hand-maintained list is a standing
+            // chore. Parsing source means adding a tool automatically updates the
+            // expectation, and the assertion fails only if the bundled ZIP server does
+            // not advertise exactly what the current source declares (i.e. the ZIP was
+            // not rebuilt after a tool change).
+            var expectedToolNames = GetSourceDeclaredToolNames();
+            var advertisedToolNames = new HashSet<string>(toolsResult.Result.Tools.Select(t => t.Name));
+            var missingTools = expectedToolNames.Where(n => !advertisedToolNames.Contains(n))
+                .OrderBy(n => n, StringComparer.Ordinal).ToArray();
+            var unexpectedTools = advertisedToolNames.Where(n => !expectedToolNames.Contains(n))
+                .OrderBy(n => n, StringComparer.Ordinal).ToArray();
+            Assert.IsTrue(missingTools.Length == 0 && unexpectedTools.Length == 0,
+                TextUtil.LineSeparate(
+                    @"Advertised MCP tool set does not match the [McpServerTool] attributes in SkylineTools.cs.",
+                    @"If the ZIP predates a tool change, rebuild SkylineAiConnector.zip.",
+                    @"Missing (declared in source but not advertised by the ZIP server): " + string.Join(@", ", missingTools),
+                    @"Unexpected (advertised by the ZIP server but not declared in source): " + string.Join(@", ", unexpectedTools)));
 
             // Verify get_version returns a non-empty string
             string version = McpToolCall(mcpProcess, stdin, stdout, ref id, "skyline_get_version");

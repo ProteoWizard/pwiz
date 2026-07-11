@@ -111,6 +111,95 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly string CrossImplReconciliationOut = Environment.GetEnvironmentVariable(@"OSPREY_CROSS_IMPL_RECONCILIATION_OUT");
 
+        /// <summary>
+        /// OSPREY_FDR_PROJECTION (issue #4355 step (b) increment ii): route the
+        /// first-pass FDR peak through the thin <c>FdrProjection</c> struct
+        /// buffer instead of holding the full <see cref="FdrEntry"/> stub buffer
+        /// resident across first-pass Percolator + protein FDR + the sidecar write
+        /// + compaction. <c>FirstJoinTask</c> materializes the projection from the
+        /// cold hand-off buffer, releases the <see cref="FdrEntry"/> stubs before the
+        /// SVM peak, and reloads full <see cref="FdrEntry"/> survivors from parquet +
+        /// the just-written 1st-pass sidecar after compaction.
+        ///
+        /// DEFAULT ON: Osprey cannot process real (large) file counts without this --
+        /// the legacy resident path OOMs -- so streaming is the production default and
+        /// byte-identical to the legacy path (Stellar regression mode1/2/3). Set
+        /// OSPREY_FDR_PROJECTION=0 ONLY to force the legacy <see cref="FdrEntry"/>-buffer
+        /// path as a transitional A/B / byte-identity oracle; that path (and this flag)
+        /// are slated for removal once model-diagnostics + FDRBench stream from the
+        /// persisted per-file scores. A settable property (not a readonly field) so
+        /// unit tests can A/B both paths.
+        /// </summary>
+        public static bool UseFdrProjection { get; set; } = IsNotZero(@"OSPREY_FDR_PROJECTION");
+
+        /// <summary>The default <see cref="Pass2QValue"/> mode: retrain the 2nd-pass
+        /// Percolator SVM and recompute a target/decoy null on the reconciled + compacted
+        /// reported pool. Current (PR #4395) behavior; preserves Rust parity.</summary>
+        public const string PASS2_QVALUE_PERCOLATOR = @"percolator";
+
+        /// <summary>The <see cref="Pass2QValue"/> confidence-transfer mode: do NOT retrain
+        /// or re-estimate a null; score each reconciled peak with the frozen 1st-pass model
+        /// and map it to a q via the full pre-compaction 1st-pass score-&gt;q table.</summary>
+        public const string PASS2_QVALUE_TRANSFER = @"transfer";
+
+        /// <summary>
+        /// OSPREY_PASS2_QVALUE: selects how the merge-node 2nd pass assigns the reported
+        /// precursor/peptide q-values AFTER Stage 6 reconciliation. The 2nd-pass peak
+        /// RE-SCORING (better peak choices against the consensus) is kept in ALL modes;
+        /// only the q-value step changes.
+        ///   <see cref="PASS2_QVALUE_PERCOLATOR"/> (default): retrain Percolator + recompute
+        ///     a target/decoy null on the reconciled + compacted pool. Preserves the
+        ///     always-on Rust 2nd pass. Compaction has already stripped most decoys from
+        ///     that pool, so the null is decoy-depleted and the retrained q anti-conservative.
+        ///   <see cref="PASS2_QVALUE_TRANSFER"/>: score each reconciled peak with the FROZEN
+        ///     1st-pass model and read its q from the FULL pre-compaction 1st-pass
+        ///     score-&gt;q table (co-monotonic confidence transfer; Rost 2016 TRIC). No
+        ///     retrain, no reduced-pool null. Restores calibration while keeping the
+        ///     re-scoring ID gain.
+        /// Unset or unrecognized normalizes to the parity-preserving default. Read once at
+        /// process start. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+        ///
+        /// LIMITATION (experimental mode): use a FRESH <c>--output-dir</c> per mode. The
+        /// per-file 2nd-pass sidecar (.2nd-pass.fdr_scores.bin) is not tagged with the mode,
+        /// so resuming a run in an output dir written under a different mode would reuse the
+        /// other mode's cached q-values. The Part-B work tags the sidecar validity with the
+        /// mode; until then, do not switch modes within one output dir.
+        /// </summary>
+        public static readonly string Pass2QValue = NormalizePass2QValue(
+            Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
+
+        /// <summary>True when OSPREY_PASS2_QVALUE was set to a value that is neither
+        /// <see cref="PASS2_QVALUE_PERCOLATOR"/> nor <see cref="PASS2_QVALUE_TRANSFER"/> and
+        /// was therefore normalized to the default. The consuming site logs a one-line
+        /// warning so a typo does not silently pick the default.</summary>
+        public static readonly bool Pass2QValueUnrecognized = IsUnrecognizedPass2QValue(
+            Environment.GetEnvironmentVariable(@"OSPREY_PASS2_QVALUE"));
+
+        /// <summary>True when <see cref="Pass2QValue"/> selects the frozen-model
+        /// confidence-transfer path (OSPREY_PASS2_QVALUE=transfer).</summary>
+        public static readonly bool Pass2TransferQ =
+            string.Equals(Pass2QValue, PASS2_QVALUE_TRANSFER, StringComparison.Ordinal);
+
+        private static string NormalizePass2QValue(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return PASS2_QVALUE_PERCOLATOR;
+            string v = raw.Trim().ToLowerInvariant();
+            if (v == PASS2_QVALUE_TRANSFER)
+                return PASS2_QVALUE_TRANSFER;
+            // Fall back to the parity-preserving default on any unrecognized token; the
+            // consuming site (Pass2FdrSidecar) warns so a typo is visible in the log.
+            return PASS2_QVALUE_PERCOLATOR;
+        }
+
+        private static bool IsUnrecognizedPass2QValue(string raw)
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+                return false;
+            string v = raw.Trim().ToLowerInvariant();
+            return v != PASS2_QVALUE_PERCOLATOR && v != PASS2_QVALUE_TRANSFER;
+        }
+
         private static int ParseIntOrZero(string name)
         {
             string v = Environment.GetEnvironmentVariable(name);
@@ -128,6 +217,12 @@ namespace pwiz.Osprey.Core
         private static bool IsNotZero(string name)
         {
             return Environment.GetEnvironmentVariable(name) != @"0";
+        }
+
+        private static bool IsSetAndNotZero(string name)
+        {
+            string v = Environment.GetEnvironmentVariable(name);
+            return !string.IsNullOrEmpty(v) && v != @"0";
         }
     }
 }
