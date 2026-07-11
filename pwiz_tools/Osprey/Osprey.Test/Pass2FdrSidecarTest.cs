@@ -258,6 +258,75 @@ namespace pwiz.Osprey.Test
             return a.ParquetIndex.CompareTo(b.ParquetIndex);
         }
 
+        /// <summary>
+        /// The OSPREY_PASS2_QVALUE=transfer score-&gt;q table
+        /// (<see cref="Pass2FdrSidecar.BuildScoreToQTable"/> +
+        /// <see cref="Pass2FdrSidecar.LookupQForScore"/>) must produce a CALIBRATED,
+        /// monotone map even when the input (score, q) pairs are individually
+        /// non-monotone (the raw averaged-model score is a different scale from the
+        /// stored per-fold CV q). Asserts: (a) the emitted table is descending in score
+        /// with q non-decreasing as score falls (isotonic); (b) lookups clamp to the
+        /// table's min q above the top score and max q below the bottom score; (c) the
+        /// lookup is monotone -- a higher query score never yields a larger q.
+        /// </summary>
+        [TestMethod]
+        public void TestTransferScoreQTable()
+        {
+            // Underlying trend: higher score -> lower q, from ~0 at the top to ~0.05 at
+            // the bottom, with a deterministic wobble so adjacent pairs are NOT monotone
+            // (exercises the quantile-bin mean + pool-adjacent-violators smoothing).
+            const int n = 2000;
+            var scores = new List<double>(n);
+            var qs = new List<double>(n);
+            for (int i = 0; i < n; i++)
+            {
+                double s = i * 0.01;                       // 0 .. 19.99, ascending
+                double trend = 0.05 * (n - 1 - i) / (n - 1); // 0.05 at low score -> 0 at high
+                double wobble = 0.01 * Math.Sin(i * 0.7);   // deterministic non-monotone noise
+                double q = Math.Max(0.0, Math.Min(0.05, trend + wobble));
+                scores.Add(s);
+                qs.Add(q);
+            }
+
+            Pass2FdrSidecar.BuildScoreToQTable(
+                scores, qs, out double[] scoresDesc, out double[] qDesc);
+
+            Assert.AreEqual(scoresDesc.Length, qDesc.Length);
+            Assert.IsTrue(scoresDesc.Length > 1);
+
+            // (a) scores descending; q non-decreasing along the descending scores (i.e.
+            // calibrated: q only rises as the score falls).
+            for (int i = 1; i < scoresDesc.Length; i++)
+            {
+                Assert.IsTrue(scoresDesc[i] <= scoresDesc[i - 1],
+                    "score->q table must be sorted by score descending");
+                Assert.IsTrue(qDesc[i] >= qDesc[i - 1] - 1e-12,
+                    "q must be monotone non-decreasing as score decreases (isotonic)");
+            }
+
+            // (b) clamping: a score above the top gets the minimum q; a score below the
+            // bottom gets the maximum q.
+            double qMin = qDesc[0];
+            double qMax = qDesc[qDesc.Length - 1];
+            Assert.AreEqual(qMin, Pass2FdrSidecar.LookupQForScore(1e6, scoresDesc, qDesc), 1e-12);
+            Assert.AreEqual(qMax, Pass2FdrSidecar.LookupQForScore(-1e6, scoresDesc, qDesc), 1e-12);
+            Assert.IsTrue(qMin <= qMax, "top-score q must not exceed bottom-score q");
+
+            // (c) lookup monotonicity: sweep ascending query scores; the returned q must
+            // never increase as the query score increases.
+            double prevQ = double.PositiveInfinity;
+            for (double s = -1.0; s <= 21.0; s += 0.05)
+            {
+                double q = Pass2FdrSidecar.LookupQForScore(s, scoresDesc, qDesc);
+                Assert.IsTrue(q <= prevQ + 1e-12,
+                    "LookupQForScore must be non-increasing in score");
+                prevQ = q;
+            }
+
+            // An empty table returns the conservative q = 1.
+            Assert.AreEqual(1.0, Pass2FdrSidecar.LookupQForScore(0.0, new double[0], new double[0]), 1e-12);
+        }
+
         // Verbatim copy of the FdrProjectionSet-overload comparer in
         // PercolatorEngine.RunPercolatorFdr (the scan-omitted projection sort). Same
         // isolation caveat as LegacyResidentComparison.
