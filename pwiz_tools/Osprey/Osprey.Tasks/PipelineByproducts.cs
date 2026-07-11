@@ -213,4 +213,37 @@ namespace pwiz.Osprey.Tasks
     {
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
     }
+
+    /// <summary>
+    /// The FROZEN 1st-pass Percolator model (fold weights + biases + feature
+    /// standardizer, carried on <see cref="PercolatorResults"/>), captured at
+    /// first-pass FDR time. Published only under the OSPREY_PASS2_QVALUE=transfer
+    /// path so the merge-node 2nd-pass step can re-score reconciled features with
+    /// this frozen model (TRIC-style confidence transfer) instead of retraining a
+    /// decoy-depleted 2nd-pass SVM. Absent (never published) on the default
+    /// percolator path. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+    /// </summary>
+    internal sealed class FirstPassPercolatorModel
+    {
+        public PercolatorResults Results { get; set; }
+    }
+
+    /// <summary>
+    /// The FULL 1st-pass-population score-&gt;q lookup table (each entry's raw
+    /// averaged-model score paired with its unbiased 1st-pass effective q),
+    /// captured at first-pass FDR time BEFORE compaction -- so it retains the
+    /// high-q failing/decoy region that the compacted reported pool no longer
+    /// holds. Sorted by score descending with a monotone non-increasing q.
+    /// Published only under OSPREY_PASS2_QVALUE=transfer; the merge-node 2nd-pass
+    /// transfer maps each frozen-model reconciled score to a q via THIS table
+    /// instead of one rebuilt from the decoy-depleted compacted entries. Absent
+    /// (never published) on the default percolator path.
+    /// </summary>
+    internal sealed class FirstPassScoreQTable
+    {
+        /// <summary>Raw averaged-model scores, sorted descending.</summary>
+        public double[] ScoresDesc { get; set; }
+        /// <summary>Monotone non-increasing effective q, parallel to <see cref="ScoresDesc"/>.</summary>
+        public double[] QDesc { get; set; }
+    }
 }

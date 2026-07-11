@@ -264,8 +264,15 @@ namespace pwiz.Osprey.Tasks
             // opt-in output is requested, take the resident (legacy) path so those reports
             // still emit. Both are off the default output path, so byte-identity is
             // unaffected (the regression gate never sets either).
+            // OSPREY_PASS2_QVALUE=transfer also needs the resident first-pass pool: it
+            // captures the frozen 1st-pass model and builds the FULL pre-compaction
+            // score->q table (BuildFullPopulationScoreQTable, below), both of which read
+            // every entry's in-memory Stage-4 features -- exactly what the projection path
+            // streams and drops. The regression gate never sets the env var, so byte-identity
+            // on the default percolator path is unaffected (same rationale as --model-diagnostics).
             bool needsResidentFirstPassPool = config.ModelDiagnostics ||
-                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
+                OspreyEnvironment.Pass2TransferQ;
             if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
                 !needsResidentFirstPassPool)
             {
@@ -302,6 +309,25 @@ namespace pwiz.Osprey.Tasks
                     string.Format(@"(post-GC, resident pool, files={0})", perFileEntries.Count));
 
                 LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
+
+                // OSPREY_PASS2_QVALUE=transfer: build the score->q lookup table NOW, from
+                // the FULL pre-compaction 1st-pass population -- every entry (passing,
+                // failing, target, decoy) still carries its in-memory Stage-4 features and
+                // its unbiased 1st-pass q-values here. The frozen model was published as a
+                // byproduct during RunFdr above. Publishing the full-population table lets
+                // the merge-node 2nd-pass transfer map reconciled-feature scores through a
+                // table that RETAINS the high-q failing/decoy region -- the region compaction
+                // strips out, and whose absence would collapse the transfer's q. Off by
+                // default (byproduct never published on the percolator path).
+                if (OspreyEnvironment.Pass2TransferQ &&
+                    ctx.TryGet<FirstPassPercolatorModel>(out var frozenForTable) &&
+                    frozenForTable?.Results != null)
+                {
+                    var scoreQTable = Pass2FdrSidecar.BuildFullPopulationScoreQTable(
+                        perFileEntries, frozenForTable.Results, ctx);
+                    if (scoreQTable != null)
+                        ctx.Publish(scoreQTable);
+                }
 
                 // First-pass protein FDR: runs on the full pre-compaction
                 // peptide pool so target and decoy proteins compete on a
@@ -1256,11 +1282,26 @@ namespace pwiz.Osprey.Tasks
             // so the engine streams PIN features per file from parquet (issue #4355
             // Phase 4). The 2nd-pass caller (Pass2FdrSidecar) leaves it null and
             // pre-reloads features onto the stubs, so the engine reads them resident.
+
+            // OSPREY_PASS2_QVALUE=transfer: on the FIRST-pass run only, publish the trained
+            // model (FoldWeights / FoldBiases / Standardizer) as a byproduct so the
+            // merge-node 2nd-pass step can re-score reconciled features with this FROZEN
+            // model instead of retraining. Null (a pure no-op in the engine) on the default
+            // percolator path and on the 2nd-pass run, so scoring stays byte-identical.
+            Action<PercolatorResults> captureModel = null;
+            if (OspreyEnvironment.Pass2TransferQ &&
+                string.Equals(passLabel, @"First-pass", StringComparison.Ordinal))
+            {
+                captureModel = results =>
+                    ctx.Publish(new FirstPassPercolatorModel { Results = results });
+            }
+
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, out var contributions,
-                BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures);
+                BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures,
+                captureModel);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left

@@ -29,6 +29,7 @@ using System.Linq;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
 using pwiz.Osprey.IO;
+using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.Tasks
 {
@@ -72,6 +73,24 @@ namespace pwiz.Osprey.Tasks
         {
             var config = ctx.Config;
             FeatureContributions pass2Contributions = null;
+
+            // OSPREY_PASS2_QVALUE selects how this 2nd pass assigns reported q-values.
+            // Log the active mode once so a run's provenance is in the log; warn on an
+            // unrecognized token (normalized to the parity-preserving percolator default).
+            if (OspreyEnvironment.Pass2QValueUnrecognized)
+            {
+                ctx.LogWarning(string.Format(
+                    "OSPREY_PASS2_QVALUE was set to an unrecognized value; using the default " +
+                    "'{0}'. Recognized modes: '{0}', '{1}'.",
+                    OspreyEnvironment.PASS2_QVALUE_PERCOLATOR, OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            }
+            if (OspreyEnvironment.Pass2TransferQ)
+            {
+                ctx.LogInfo(string.Format(
+                    "OSPREY_PASS2_QVALUE={0}: 2nd-pass q comes from the frozen 1st-pass model + " +
+                    "full pre-compaction score->q table (confidence transfer), not a reduced-pool retrain.",
+                    OspreyEnvironment.PASS2_QVALUE_TRANSFER));
+            }
 
             // When the projection 2nd-pass compute ran (flag on), this holds the scored
             // FdrProjectionSet -- non-null is the flag that the StreamingSink already
@@ -147,8 +166,12 @@ namespace pwiz.Osprey.Tasks
                     // streams through a sink and produces none. Route --model-diagnostics to
                     // the resident path so ComputePass2Resident can return the model. Off the
                     // default output path, so byte-identity is unaffected (#4377).
+                    // OSPREY_PASS2_QVALUE=transfer also takes the resident path: the transfer
+                    // needs each survivor's RECONCILED features loaded onto entry.Features (which
+                    // ComputePass2Resident does) so the frozen 1st-pass model can re-score them.
+                    // The projection path streams features to a sink and never lands them resident.
                     if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
-                        !config.ModelDiagnostics)
+                        !config.ModelDiagnostics && !OspreyEnvironment.Pass2TransferQ)
                     {
                         // Projection 2nd pass (issue #4374 + #4355 struct-shrink S0 / C1):
                         // stream the reconciled PIN features through the SAME projection
@@ -513,6 +536,30 @@ namespace pwiz.Osprey.Tasks
             switch (config.FdrMethod)
             {
                 case FdrMethod.Percolator:
+                    // OSPREY_PASS2_QVALUE=transfer: instead of retraining a 2nd-pass SVM on
+                    // the decoy-depleted reconciled+compacted set, apply the FROZEN 1st-pass
+                    // model to each entry's RECONCILED features (loaded onto entry.Features
+                    // above) and map the resulting score to a q via the full pre-compaction
+                    // 1st-pass score->q table. Falls through to the retrain if the flag is
+                    // off or the frozen-model / table byproducts were not captured.
+                    if (OspreyEnvironment.Pass2TransferQ &&
+                        ctx.TryGet<FirstPassPercolatorModel>(out var frozenModel) &&
+                        frozenModel?.Results != null &&
+                        TransferQFromFrozenModel(perFileEntries, ctx, frozenModel.Results))
+                    {
+                        // Transferred: no retrained 2nd-pass model in transfer mode -> no
+                        // pass-2 SVM model view for --model-diagnostics (the pass-2 FDR
+                        // calibration curve still renders from the transferred q-values;
+                        // the pass-1 model view still renders too).
+                        return null;
+                    }
+                    if (OspreyEnvironment.Pass2TransferQ)
+                    {
+                        ctx.LogWarning(
+                            "OSPREY_PASS2_QVALUE=transfer could not transfer (frozen 1st-pass " +
+                            "model or full-population score->q table byproduct absent); falling " +
+                            "back to the 2nd-pass Percolator retrain.");
+                    }
                     // Capture the 2nd-pass model for the --model-diagnostics pass-2 model
                     // view (retrained on the post-reconciliation pool, #4377). Capturing
                     // the return value does not change what RunPercolatorFdr does, so the
@@ -770,6 +817,370 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             return nMapped;
+        }
+
+        /// <summary>
+        /// OSPREY_PASS2_QVALUE=transfer. Instead of retraining a 2nd-pass Percolator SVM
+        /// on the decoy-depleted reconciled+compacted set -- which underestimates q
+        /// anti-conservatively -- apply the FROZEN 1st-pass model
+        /// (<paramref name="firstPassModel"/>: averaged fold weights + biases +
+        /// standardizer) to each entry's RECONCILED features (already on
+        /// <see cref="FdrEntry.Features"/>) and map the resulting score to a q via the
+        /// FULL pre-compaction 1st-pass score-&gt;q table (the
+        /// <see cref="FirstPassScoreQTable"/> byproduct built by
+        /// <see cref="BuildFullPopulationScoreQTable"/> at first-pass time). This keeps
+        /// the reconciliation peak-move (a peak moved to a worse position maps through the
+        /// unbiased table to an honestly higher q) while discarding the retrain's
+        /// decoy-depleted null (co-monotonic confidence transfer; Rost 2016 TRIC).
+        /// Returns false (caller falls back to the retrain) when the model is unusable or
+        /// the full-population table byproduct is absent (e.g. a resume path that did not
+        /// run the 1st pass in this process).
+        /// </summary>
+        internal static bool TransferQFromFrozenModel(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            PipelineContext ctx,
+            PercolatorResults firstPassModel)
+        {
+            if (firstPassModel.FoldWeights == null || firstPassModel.FoldWeights.Count == 0 ||
+                firstPassModel.Standardizer == null)
+            {
+                ctx.LogWarning(
+                    "OSPREY_PASS2_QVALUE=transfer: frozen 1st-pass model has no fold weights " +
+                    "or standardizer; cannot transfer.");
+                return false;
+            }
+            if (!ctx.TryGet<FirstPassScoreQTable>(out var fullTable) ||
+                fullTable?.ScoresDesc == null || fullTable.ScoresDesc.Length == 0)
+            {
+                ctx.LogWarning(
+                    "OSPREY_PASS2_QVALUE=transfer: no FULL-population score->q table byproduct " +
+                    "present (the 1st pass did not build one in this process); cannot transfer.");
+                return false;
+            }
+
+            AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
+            int nFeatures = avgWeights.Length;
+
+            ctx.LogInfo(string.Format(
+                "OSPREY_PASS2_QVALUE=transfer: using FULL-population score->q table ({0} points, " +
+                "raw-score range [{1:F4}, {2:F4}], q range [{3:E3}, {4:E3}]) from the " +
+                "pre-compaction 1st-pass null.",
+                fullTable.ScoresDesc.Length,
+                fullTable.ScoresDesc[fullTable.ScoresDesc.Length - 1], fullTable.ScoresDesc[0],
+                fullTable.QDesc[0], fullTable.QDesc[fullTable.QDesc.Length - 1]));
+
+            TransferQWithTable(
+                perFileEntries, firstPassModel.Standardizer, avgWeights, avgBias, nFeatures,
+                fullTable.ScoresDesc, fullTable.QDesc, ctx);
+            return true;
+        }
+
+        /// <summary>
+        /// Build the FULL 1st-pass-population score-&gt;q table at first-pass FDR time
+        /// (called from <see cref="FirstJoinTask"/> BEFORE compaction, while
+        /// <paramref name="perFileEntries"/> still holds every entry -- passing, failing,
+        /// target, and decoy -- with its in-memory Stage-4 <see cref="FdrEntry.Features"/>
+        /// and unbiased 1st-pass q-values). Sourcing the table from the full pre-compaction
+        /// null preserves the high-q failing/decoy tail so a peak that reconciliation moved
+        /// to a worse position maps to an honestly higher q -- the tail the decoy-depleted
+        /// compacted pool lacks. Each entry's key is the SAME raw averaged-model score the
+        /// transfer uses (<see cref="ScoreWithFrozenModel"/>), NOT the stored per-fold
+        /// recalibrated <see cref="FdrEntry.Score"/>, so table and transfer stay on one
+        /// scale by construction. Paired q is the entry's effective experiment q (max of
+        /// precursor + peptide). Returns null (logged) when the frozen model is unusable so
+        /// the caller publishes nothing and the transfer falls back to the retrain.
+        /// </summary>
+        internal static FirstPassScoreQTable BuildFullPopulationScoreQTable(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            PercolatorResults firstPassModel,
+            PipelineContext ctx)
+        {
+            if (firstPassModel.FoldWeights == null || firstPassModel.FoldWeights.Count == 0 ||
+                firstPassModel.Standardizer == null)
+            {
+                ctx.LogWarning(
+                    "OSPREY_PASS2_QVALUE=transfer: cannot build full-population score->q table -- " +
+                    "frozen 1st-pass model has no fold weights or standardizer.");
+                return null;
+            }
+            AverageFoldModel(firstPassModel, out double[] avgWeights, out double avgBias);
+            int nFeatures = avgWeights.Length;
+            var standardizer = firstPassModel.Standardizer;
+
+            // Score every entry that still carries its in-memory Stage-4 features (the full
+            // pre-compaction population), paired with its unbiased 1st-pass effective q.
+            var tableScores = new List<double>();
+            var tableQs = new List<double>();
+            int nSkipped = 0;
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (entry.Features == null || entry.Features.Length != nFeatures)
+                    {
+                        nSkipped++;
+                        continue;
+                    }
+                    double rawScore = ScoreWithFrozenModel(
+                        entry.Features, standardizer, avgWeights, avgBias);
+                    double effQ = Math.Max(
+                        entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue);
+                    tableScores.Add(rawScore);
+                    tableQs.Add(effQ);
+                }
+            }
+            if (tableScores.Count == 0)
+            {
+                ctx.LogWarning(
+                    "OSPREY_PASS2_QVALUE=transfer: full-population score->q table build found no " +
+                    "entries with in-memory features; table not published (transfer will fall back).");
+                return null;
+            }
+
+            BuildScoreToQTable(tableScores, tableQs, out double[] scoresDesc, out double[] qDesc);
+            ctx.LogInfo(string.Format(
+                "OSPREY_PASS2_QVALUE=transfer: built FULL-population score->q table from {0} entries " +
+                "({1} skipped for missing features; raw-score range [{2:F4}, {3:F4}]; q range [{4:E3}, {5:E3}]).",
+                scoresDesc.Length, nSkipped,
+                scoresDesc[scoresDesc.Length - 1], scoresDesc[0],
+                qDesc[0], qDesc[qDesc.Length - 1]));
+            return new FirstPassScoreQTable { ScoresDesc = scoresDesc, QDesc = qDesc };
+        }
+
+        /// <summary>
+        /// Apply the averaged frozen model to a single raw feature vector: standardize a
+        /// copy, then score = avgBias + sum(avgWeights[j] * feat[j]). Mirrors the per-entry
+        /// math in <c>PercolatorFdr.ScorePopulationAndComputeFdr</c>. Does not mutate
+        /// <paramref name="rawFeatures"/>.
+        /// </summary>
+        internal static double ScoreWithFrozenModel(
+            double[] rawFeatures,
+            FeatureStandardizer standardizer,
+            double[] avgWeights,
+            double avgBias)
+        {
+            var buf = new double[rawFeatures.Length];
+            Array.Copy(rawFeatures, 0, buf, 0, rawFeatures.Length);
+            standardizer.TransformSlice(buf);
+            double score = avgBias;
+            for (int j = 0; j < avgWeights.Length; j++)
+                score += avgWeights[j] * buf[j];
+            return score;
+        }
+
+        /// <summary>Number of equal-count score-quantile bins
+        /// <see cref="BuildScoreToQTable"/> smooths the per-entry q into. Large enough to
+        /// trace the FDR curve finely, small enough that each bin averages out the
+        /// per-entry q noise from the raw-vs-calibrated score scale mismatch.</summary>
+        private const int SCORE_Q_TABLE_BINS = 1000;
+
+        /// <summary>
+        /// Average the frozen Percolator fold weights + biases into a single (weights, bias)
+        /// pair -- the same averaged-model math <c>PercolatorFdr.ScorePopulationAndComputeFdr</c>
+        /// applies before scoring a population. Caller has already verified the model carries
+        /// at least one fold.
+        /// </summary>
+        private static void AverageFoldModel(
+            PercolatorResults model, out double[] avgWeights, out double avgBias)
+        {
+            int nModels = model.FoldWeights.Count;
+            int nFeatures = model.FoldWeights[0].Length;
+            avgWeights = new double[nFeatures];
+            avgBias = 0.0;
+            for (int f = 0; f < nModels; f++)
+            {
+                double[] foldW = model.FoldWeights[f];
+                for (int j = 0; j < nFeatures; j++)
+                    avgWeights[j] += foldW[j];
+                avgBias += model.FoldBiases[f];
+            }
+            for (int j = 0; j < nFeatures; j++)
+                avgWeights[j] /= nModels;
+            avgBias /= nModels;
+        }
+
+        /// <summary>
+        /// Apply the frozen 1st-pass model to each entry's RECONCILED features (already on
+        /// <see cref="FdrEntry.Features"/>), overwrite <see cref="FdrEntry.Score"/> with the
+        /// raw averaged-model score, and map that score to a q via the supplied score-&gt;q
+        /// table (<paramref name="scoresDesc"/> / <paramref name="qDesc"/>). Sets both
+        /// precursor + peptide levels (run + experiment) so the downstream effective-q
+        /// filtering (detected-peptides gate) sees the transferred q.
+        /// </summary>
+        private static void TransferQWithTable(
+            List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            FeatureStandardizer standardizer,
+            double[] avgWeights,
+            double avgBias,
+            int nFeatures,
+            double[] scoresDesc,
+            double[] qDesc,
+            PipelineContext ctx)
+        {
+            int nScored = 0;
+            int nSkipped = 0;
+            foreach (var kvp in perFileEntries)
+            {
+                foreach (var entry in kvp.Value)
+                {
+                    if (entry.Features == null || entry.Features.Length != nFeatures)
+                    {
+                        nSkipped++;
+                        continue;
+                    }
+                    double newScore = ScoreWithFrozenModel(
+                        entry.Features, standardizer, avgWeights, avgBias);
+                    entry.Score = newScore;
+                    double q = LookupQForScore(newScore, scoresDesc, qDesc);
+                    entry.ExperimentPrecursorQvalue = q;
+                    entry.ExperimentPeptideQvalue = q;
+                    entry.RunPrecursorQvalue = q;
+                    entry.RunPeptideQvalue = q;
+                    nScored++;
+                }
+            }
+            ctx.LogInfo(string.Format(
+                "OSPREY_PASS2_QVALUE=transfer: re-scored {0} entries with the FROZEN 1st-pass model " +
+                "on reconciled features ({1} skipped for missing features); q transferred via the " +
+                "score->q table.", nScored, nSkipped));
+        }
+
+        /// <summary>
+        /// Build the score-&gt;q lookup table from parallel (score, q) lists (the raw
+        /// averaged-model score paired with the unbiased 1st-pass effective q). A calibrated
+        /// q is monotone NON-INCREASING in score, but the per-entry pairs are not
+        /// individually monotone (the stored 1st-pass q was computed on the per-fold
+        /// calibrated CV score, a different scale from this raw averaged-model score), so a
+        /// running-min/max envelope would collapse to the global extreme on one outlier.
+        /// Instead: (1) sort by score ascending; (2) partition into
+        /// <see cref="SCORE_Q_TABLE_BINS"/> equal-count quantile bins and take each bin's
+        /// MEAN q; (3) run pool-adjacent-violators (isotonic regression) so q is
+        /// non-decreasing as score decreases. Emits parallel arrays:
+        /// <paramref name="scoresDesc"/> (bin score, descending) and <paramref name="qDesc"/>
+        /// (isotonic bin-mean q, non-decreasing as score decreases).
+        /// </summary>
+        internal static void BuildScoreToQTable(
+            IReadOnlyList<double> scores,
+            IReadOnlyList<double> qs,
+            out double[] scoresDesc,
+            out double[] qDesc)
+        {
+            int nPts = scores.Count;
+            var order = new int[nPts];
+            for (int i = 0; i < nPts; i++)
+                order[i] = i;
+            // Sort indices by score ASCENDING (ties by q ascending, deterministic).
+            Array.Sort(order, (a, b) => // Array.Sort OK: quantile-bin means are tie-order-insensitive, and this table feeds only the OSPREY_PASS2_QVALUE=transfer path (never cross-impl parity output)
+            {
+                int c = scores[a].CompareTo(scores[b]);
+                if (c != 0)
+                    return c;
+                return qs[a].CompareTo(qs[b]);
+            });
+
+            int nBins = Math.Min(SCORE_Q_TABLE_BINS, nPts);
+            var binScoreAsc = new double[nBins];   // representative (max) score in bin
+            var binQAsc = new double[nBins];        // mean q in bin
+            for (int b = 0; b < nBins; b++)
+            {
+                // Equal-count partition of the ascending-sorted points.
+                int start = (int)((long)b * nPts / nBins);
+                int end = (int)((long)(b + 1) * nPts / nBins);
+                if (end <= start)
+                    end = start + 1;
+                double qSum = 0.0;
+                double maxScore = double.NegativeInfinity;
+                for (int k = start; k < end; k++)
+                {
+                    int idx = order[k];
+                    qSum += qs[idx];
+                    if (scores[idx] > maxScore)
+                        maxScore = scores[idx];
+                }
+                binScoreAsc[b] = maxScore;
+                binQAsc[b] = qSum / (end - start);
+            }
+
+            // Pool-adjacent-violators (isotonic regression) over the ascending-score bins to
+            // force q NON-INCREASING as score increases. Blocks are stored low-score-first;
+            // blockW[j] counts bins from the low-score end.
+            var blockQ = new double[nBins];
+            var blockW = new int[nBins];
+            int nBlocks = 0;
+            for (int b = 0; b < nBins; b++)
+            {
+                double q = binQAsc[b];
+                int w = 1;
+                while (nBlocks > 0 && blockQ[nBlocks - 1] < q)
+                {
+                    double pooledSum = blockQ[nBlocks - 1] * blockW[nBlocks - 1] + q * w;
+                    w += blockW[nBlocks - 1];
+                    q = pooledSum / w;
+                    nBlocks--;
+                }
+                blockQ[nBlocks] = q;
+                blockW[nBlocks] = w;
+                nBlocks++;
+            }
+            // Expand blocks back to per-bin isotonic q (low-score-first).
+            var binQIso = new double[nBins];
+            int fillLo = 0;
+            for (int j = 0; j < nBlocks; j++)
+            {
+                for (int c = 0; c < blockW[j]; c++)
+                {
+                    binQIso[fillLo] = blockQ[j];
+                    fillLo++;
+                }
+            }
+
+            // Emit descending-by-score (highest score first) for LookupQForScore.
+            scoresDesc = new double[nBins];
+            qDesc = new double[nBins];
+            for (int b = 0; b < nBins; b++)
+            {
+                scoresDesc[b] = binScoreAsc[nBins - 1 - b];
+                qDesc[b] = binQIso[nBins - 1 - b];
+            }
+        }
+
+        /// <summary>
+        /// Map a score to a q via the score-&gt;q table built by
+        /// <see cref="BuildScoreToQTable"/>. Binary search for the deepest table entry whose
+        /// score is still &gt;= the query score and return its q; clamp at both ends (a score
+        /// above the table max gets the table's minimum q; a score below the table min gets
+        /// the maximum q).
+        /// </summary>
+        internal static double LookupQForScore(
+            double score, double[] scoresDesc, double[] qDesc)
+        {
+            int n = scoresDesc.Length;
+            if (n == 0)
+                return 1.0;
+            // scoresDesc is descending; qDesc is non-decreasing along it. A score above the
+            // best table score is the most confident -> the minimum q at qDesc[0]; a score
+            // below the worst table score is the least confident -> the maximum q at qDesc[n-1].
+            if (score > scoresDesc[0])
+                return qDesc[0];
+            if (score <= scoresDesc[n - 1])
+                return qDesc[n - 1];
+            // Largest index i such that scoresDesc[i] >= score (deepest table position still
+            // at least as good as the query); qDesc non-decreasing -> most conservative q.
+            int lo = 0, hi = n - 1, best = 0;
+            while (lo <= hi)
+            {
+                int mid = (lo + hi) / 2;
+                if (scoresDesc[mid] >= score)
+                {
+                    best = mid;
+                    lo = mid + 1;
+                }
+                else
+                {
+                    hi = mid - 1;
+                }
+            }
+            return qDesc[best];
         }
 
         /// <summary>
