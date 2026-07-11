@@ -37,6 +37,58 @@ namespace pwiz.SkylineTest
     public class ChromPeakTest : AbstractUnitTest
     {
         [TestMethod]
+        public void TestMobilogramPeakMetrics()
+        {
+            // Well-formed peak over a baseline of 5, sampled finely enough that >= 3 bins clear
+            // half-max.  IM: 0..10   int: 5 10 25 60 90 100 90 60 25 10 5
+            var peak = new[]
+            {
+                new KeyValuePair<double, double>(0, 5),
+                new KeyValuePair<double, double>(1, 10),
+                new KeyValuePair<double, double>(2, 25),
+                new KeyValuePair<double, double>(3, 60),
+                new KeyValuePair<double, double>(4, 90),
+                new KeyValuePair<double, double>(5, 100),
+                new KeyValuePair<double, double>(6, 90),
+                new KeyValuePair<double, double>(7, 60),
+                new KeyValuePair<double, double>(8, 25),
+                new KeyValuePair<double, double>(9, 10),
+                new KeyValuePair<double, double>(10, 5),
+            };
+            var m = MobilogramPeakMetrics.Compute(peak);
+            Assert.IsTrue(m.HasValue);
+            Assert.AreEqual(95, m.Value.Height, 1e-9);  // apex 100 - baseline 5
+            Assert.AreEqual(425, m.Value.Area, 1e-9);   // baseline-subtracted trapezoids
+            Assert.IsTrue(m.Value.FullWidthHalfMax.HasValue);
+            // Half-max level = 5 + 95/2 = 52.5; crossings on the 25->60 rise and 60->25 fall.
+            var left = 2 + (52.5 - 25) / (60 - 25.0);
+            var right = 7 + (52.5 - 60) / (25 - 60.0);
+            Assert.AreEqual(right - left, m.Value.FullWidthHalfMax.Value, 1e-9);
+
+            // Ill-formed: a single spike over a noise floor - only one bin clears half-max, so FWHM
+            // is withheld, while baseline-subtracted area/height still report.
+            var spike = new[]
+            {
+                new KeyValuePair<double, double>(0, 2),
+                new KeyValuePair<double, double>(1, 3),
+                new KeyValuePair<double, double>(2, 100),
+                new KeyValuePair<double, double>(3, 3),
+                new KeyValuePair<double, double>(4, 2),
+            };
+            var ms = MobilogramPeakMetrics.Compute(spike);
+            Assert.IsTrue(ms.HasValue);
+            Assert.AreEqual(98, ms.Value.Height, 1e-9); // apex 100 - baseline 2
+            Assert.AreEqual(100, ms.Value.Area, 1e-9);  // trapezoids of (v - 2)
+            Assert.IsFalse(ms.Value.FullWidthHalfMax.HasValue);
+
+            // Degenerate inputs return null.
+            Assert.IsFalse(MobilogramPeakMetrics.Compute(null).HasValue);
+            Assert.IsFalse(MobilogramPeakMetrics.Compute(new KeyValuePair<double, double>[0]).HasValue);
+            Assert.IsFalse(MobilogramPeakMetrics.Compute(
+                new[] { new KeyValuePair<double, double>(1, 100) }).HasValue);
+        }
+
+        [TestMethod]
         public void TestObservedIonMobilityCcsErrorPrecision()
         {
             // Regression: the observed-vs-target IM/CCS percent error was formatted with the

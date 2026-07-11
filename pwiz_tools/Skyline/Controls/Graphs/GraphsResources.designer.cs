@@ -1483,6 +1483,33 @@ namespace pwiz.Skyline.Controls.Graphs {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Mobility peak area.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_MobiloPeakArea {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_MobiloPeakArea", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Mobility peak FWHM.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_MobiloPeakFwhm {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_MobiloPeakFwhm", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Mobility peak height.
+        /// </summary>
+        public static string GraphFullScan_ToolTip_MobiloPeakHeight {
+            get {
+                return ResourceManager.GetString("GraphFullScan_ToolTip_MobiloPeakHeight", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to m/z.
         /// </summary>
         public static string GraphFullScan_ToolTip_mz {

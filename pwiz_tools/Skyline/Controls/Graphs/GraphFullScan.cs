@@ -3602,6 +3602,24 @@ namespace pwiz.Skyline.Controls.Graphs
                             ObservedValueFormatter.FormatWithPercentError(observedCcs.Value, targetCcsForError, Formats.CCS), rt);
                     }
                 }
+
+                // Mobility-peak shape metrics from the on-screen mobilogram histogram: area under
+                // the curve, apex height, and FWHM. Single-peak assumption; omitted when the
+                // histogram has too few points to characterize a peak.
+                var peakMetrics = MobilogramPeakMetrics.Compute(
+                    _heatMapData?.PlotY2D?.Select(p => new KeyValuePair<double, double>(p.Key, p.Value)));
+                if (peakMetrics.HasValue)
+                {
+                    var pm = peakMetrics.Value;
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_MobiloPeakArea,
+                        pm.Area.ToString(@"F0"), rt);
+                    table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_MobiloPeakHeight,
+                        pm.Height.ToString(@"F0"), rt);
+                    if (pm.FullWidthHalfMax.HasValue)
+                        table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_MobiloPeakFwhm,
+                            TextUtil.SpaceSeparate(pm.FullWidthHalfMax.Value.ToString(Formats.IonMobility),
+                                IonMobilityValue.GetUnitsString(_msDataFileScanHelper.IonMobilityUnits)), rt);
+                }
             }
             return table;
         }
