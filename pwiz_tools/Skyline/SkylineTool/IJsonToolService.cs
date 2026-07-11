@@ -457,7 +457,7 @@ namespace SkylineTool
         /// <see cref="ActionResult.Message"/>) when it cannot confirm that.
         /// </summary>
         /// <param name="formId">Form identifier from <see cref="GetOpenForms"/>.</param>
-        ActionResult Accept(string formId);
+        ActionResult Accept(string formId, string button);
 
         /// <summary>
         /// Cancels (dismisses) an open dialog -- presses its cancel button, or closes it when it has none --

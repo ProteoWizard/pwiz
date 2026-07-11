@@ -387,10 +387,10 @@ namespace pwiz.Skyline.ToolsUI
         /// (a managed form posts its default button and waits the gesture out; a native dialog does its OK gesture
         /// and waits for the window to close) and reports whether it completed. See <see cref="IJsonToolService"/>.
         /// </summary>
-        public static ActionResult Accept(string formId)
+        public static ActionResult Accept(string formId, string button)
         {
             ValidateFormIdFormat(formId);
-            return ResolveForm(formId).Accept();
+            return ResolveForm(formId).Accept(button);
         }
 
         /// <summary>
@@ -673,15 +673,23 @@ namespace pwiz.Skyline.ToolsUI
             // can deadlock.
             foreach (var dialog in NativeDialog.GetOpenDialogs())
             {
-                results.Add(new FormInfo
+                try
                 {
-                    Type = dialog.DialogTypeName,
-                    Title = dialog.Title,
-                    HasGraph = false,
-                    DockState = @"Dialog",
-                    Id = dialog.FormId,
-                    IsNative = true,
-                });
+                    results.Add(new FormInfo
+                    {
+                        Type = dialog.DialogTypeName,
+                        Title = dialog.Title,
+                        HasGraph = false,
+                        DockState = @"Dialog",
+                        Id = dialog.FormId,
+                        IsNative = true,
+                    });
+                }
+                catch (Exception)
+                {
+                    // The dialog can close between enumeration and reading its title/id (UI Automation) -- skip a
+                    // vanishing one rather than failing the whole GetOpenForms for a caller polling during a close.
+                }
             }
             return results.ToArray();
         }
@@ -1077,21 +1085,6 @@ namespace pwiz.Skyline.ToolsUI
             string timestamp = DateTime.Now.ToString(@"yyyyMMdd-HHmmss");
             return Path.Combine(GetMcpTmpDir(),
                 string.Format(@"{0}-{1}-{2}{3}", prefix, safe, timestamp, extension));
-        }
-
-        public static ActionResult OkDialog(IFormElement formElement, Action okAction)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static ActionResult PerformGesture(UiElement element, Action gesture)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static T CallFunction<T>(UiElement element, Func<T> function)
-        {
-            throw new NotImplementedException();
         }
     }
 }

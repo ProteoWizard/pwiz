@@ -300,7 +300,7 @@ namespace pwiz.Skyline.ToolsUI
         // Accepts a form/dialog (its default button); cancelling is close_form, so neither keys on a caption. Like
         // every mutation it just calls the element's own method -- IFormElement.Accept, which rides DialogWatcher's
         // accept wait and returns the ActionResult -- so it needs no special dispatch.
-        public static readonly UiAction Accept = SimpleAction<IFormElement>(@"Accept", e => e.Accept())
+        public static readonly UiAction Accept = SimpleAction<IFormElement, string>(@"Accept", (e, button) => e.Accept(button))
             .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button (cancel with close_form)."));
 
         // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
@@ -1019,7 +1019,7 @@ namespace pwiz.Skyline.ToolsUI
         /// clicks its AcceptButton, a native dialog does its OK gesture), so confirming a dialog never keys on a
         /// localized button caption -- then waits it out and reports whether it completed. Each kind knows how to
         /// accept itself; the accept verb just calls this.</summary>
-        ActionResult Accept();
+        ActionResult Accept(string button);
         /// <summary>Cancels the form/dialog -- presses its cancel button (or closes it when it has none) -- then
         /// waits it out and reports whether it completed. The dismissing counterpart of <see cref="Accept"/>.</summary>
         ActionResult Cancel();
@@ -1296,17 +1296,23 @@ namespace pwiz.Skyline.ToolsUI
         // form's window has closed AND the count has ridden back to its opener's pre-show level, stopping on a modal
         // it opens -- the same wait a native dialog uses. Called both directly (e.g. by tests) and through
         // UiActions.Accept. Must be called off the UI thread.
-        public ActionResult Accept()
+        public ActionResult Accept(string button)
         {
-            return DialogWatcher.OkDialog(Hwnd, () =>
+            if (string.IsNullOrEmpty(button))
             {
-                VerifyInteractable();
-                var button = Form.AcceptButton;
-                if (button == null)
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"The form '{0}' has no default (accept) button.", FormId));
-                BeginInvokeOnUiThread(() => button.PerformClick());
-            });
+                return DialogWatcher.OkDialog(Hwnd, () =>
+                {
+                    VerifyInteractable();
+                    IButtonControl buttonControl = Form.AcceptButton;
+                    if (buttonControl == null)
+                        throw new ArgumentException(LlmInstruction.Format(
+                            @"The form '{0}' has no default (accept) button.", FormId));
+                    buttonControl.PerformClick();
+                });
+            }
+
+            ClickButton(button);
+            return DialogWatcher.OkDialog(Hwnd, () => { });
         }
 
         // Like Accept, but clicks the form's cancel button (or closes the form when it has none). Must be called

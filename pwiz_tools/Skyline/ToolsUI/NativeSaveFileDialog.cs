@@ -85,7 +85,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Save can raise a nested modal (the overwrite-confirm prompt), and running the send on the UI thread lets
         /// that modal's loop run there -- the send blocks in it, keeping the action counted and letting the wait
         /// detect the prompt -- instead of pinning the pipe thread a cross-thread send would.</summary>
-        public override ActionResult Accept()
+        public override ActionResult Accept(string button)
         {
             var handle = GetSaveButtonHandle();
             return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle));

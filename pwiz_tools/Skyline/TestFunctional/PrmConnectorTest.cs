@@ -140,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
         {
             string id = null;
             WaitForCondition(() => null != (id = JsonUiService.GetOpenForms()
-                .FirstOrDefault(form => form.IsNative && form.Type == @"FileDialog")?.Id));
+                .FirstOrDefault(form => form.IsNative)?.Id));
             return id;
         }
     }

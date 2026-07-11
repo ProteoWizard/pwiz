@@ -86,13 +86,18 @@ namespace pwiz.Skyline.ToolsUI
         public int MillisTimeout { get; set; } = DEFAULT_TIMEOUT_MILLIS;
 
         /// <summary>
-        /// Short identifier for the kind of dialog ("FileDialog" for the file dialogs, otherwise the
-        /// generic "Dialog"), for callers that classify dialogs without knowing the concrete subclass.
+        /// Short identifier for the kind of dialog, used as the first half of <see cref="FormId"/>. It is always
+        /// "Dialog": a subclass overrides this ONLY for a kind that can be told the instant the window appears,
+        /// before any of its children exist. The file/folder dialogs cannot -- classifying them needs their
+        /// (lazily-created) DirectUI children -- so they keep "Dialog". Baking a lagging classification into the id
+        /// would make it unstable: the connector reports the modal the moment it is shown (a file dialog then still
+        /// looks like a generic "Dialog"), and a later ResolveForm would see a different id. Callers tell a native
+        /// dialog apart by <see cref="FormInfo.IsNative"/> and its caption, not this.
         /// </summary>
         public virtual string DialogTypeName => @"Dialog";
 
         /// <summary>The dialog window's caption.</summary>
-        public string Title => DialogElement.Current.Name;
+        public string Title => User32.GetWindowText(Hwnd);
 
         // UiElement: a native dialog is the root of its own path, so most of these are not used for matching
         // (the dialog is found by its form id, not walked into as a child). They are implemented so the
@@ -175,8 +180,7 @@ namespace pwiz.Skyline.ToolsUI
                     if (User32.IsWindowVisible(hwnd))
                         yield return new FormElement(form, hwnd);
                 }
-                else if (IsModalDialogWindow(hwnd))
-                    yield return ForModalWindow(hwnd);
+                else yield return ForModalWindow(hwnd);
             }
         }
 
@@ -244,7 +248,19 @@ namespace pwiz.Skyline.ToolsUI
             var seen = new HashSet<IntPtr>();
             foreach (var element in FindDialogElements())
             {
-                var automation = Create(element);
+                NativeDialog automation;
+                try
+                {
+                    automation = Create(element);
+                }
+                catch (Exception)
+                {
+                    // A dialog can vanish mid-enumeration -- it is closing (e.g. a message box just dismissed) --
+                    // and classifying it (Create's UI-Automation queries) then throws. Skip it: a window we cannot
+                    // even classify is one we cannot drive, and it is on its way out. Without this, a caller polling
+                    // GetOpenForms while a dialog closes would see the whole call throw.
+                    continue;
+                }
                 if (automation != null && automation.WindowHandle != IntPtr.Zero && seen.Add(automation.WindowHandle))
                     result.Add(automation);
             }
@@ -273,10 +289,18 @@ namespace pwiz.Skyline.ToolsUI
         /// early on a new modal. Its condition is judged with a synchronous Send on the UI thread, which flushes a
         /// closing common dialog's child-window teardown behind it. Must be called off the UI thread.
         /// </summary>
-        public virtual ActionResult Accept()
+        public virtual ActionResult Accept(string button)
         {
-            var handle = new IntPtr(DialogElement.Current.NativeWindowHandle);
-            return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle));
+            if (string.IsNullOrEmpty(button))
+            {
+                var handle = new IntPtr(DialogElement.Current.NativeWindowHandle);
+                PostEnter(handle);
+            }
+            else
+            {
+                ClickButton(button);
+            }
+            return DialogWatcher.OkDialog(WindowHandle, () => { });
         }
 
         /// <summary>Cancels the dialog by sending WM_CLOSE on its own UI thread (which dismisses it the way the
@@ -333,7 +357,12 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(LlmInstruction.Format(
                     @"The dialog '{0}' has no button '{1}'. Its buttons are: {2}.",
                     FormId, button, string.Join(@", ", buttons.Select(b => b.Current.Name))));
-            User32.PostMessageA(new IntPtr(match.Current.NativeWindowHandle), User32.WinMessageType.BM_CLICK, 0, 0);
+            // Capture the button handle and the dialog id BEFORE posting: the click may close the dialog (a
+            // message box's OK/Yes/No does), after which its UI-Automation element is gone and FormId (Title) would
+            // throw ElementNotAvailableException.
+            var buttonHandle = new IntPtr(match.Current.NativeWindowHandle);
+            var formId = FormId;
+            User32.PostMessageA(buttonHandle, User32.WinMessageType.BM_CLICK, 0, 0);
             // The click is posted (not waited on): a native dialog is not part of the modal-nesting count, so
             // completion cannot be confirmed. Report it as not completed with a note to poll.
             return new ActionResult
@@ -341,7 +370,7 @@ namespace pwiz.Skyline.ToolsUI
                 Completed = false,
                 Message = LlmInstruction.Format(
                     @"Posted the click of '{0}' to native dialog '{1}'; poll skyline_get_open_forms for the result.",
-                    button, FormId)
+                    button, formId)
             };
         }
 

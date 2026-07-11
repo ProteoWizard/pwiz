@@ -26,16 +26,15 @@ namespace pwiz.Skyline.ToolsUI
     /// Base for the native common file dialogs -- Open (<see cref="NativeOpenFileDialog"/>) and
     /// Save (<see cref="NativeSaveFileDialog"/>). Both are "#32770" dialogs that take a file name
     /// and then accept or cancel, but they expose their file-name field differently, so the
-    /// path-entry gesture is abstract. They share the single "FileDialog" type name the MCP layer
-    /// uses to route SetFormValue / accept to either dialog uniformly.
+    /// path-entry gesture is abstract. Like every native dialog they report the generic
+    /// <see cref="NativeDialog.DialogTypeName"/> "Dialog" (their file-dialog nature is not knowable the
+    /// instant the window appears -- see that property -- so it is not baked into the form id).
     /// </summary>
     public abstract class NativeFileDialog : NativeDialog
     {
         protected NativeFileDialog(IntPtr windowHandle) : base(windowHandle)
         {
         }
-
-        public override string DialogTypeName => @"FileDialog";
 
         /// <summary>
         /// Types the file name(s) into the dialog's file name field without accepting; call

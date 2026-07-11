@@ -121,7 +121,7 @@ namespace SkylineTool
         public ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row) { return CallTyped<ActionResult>(nameof(SetCurrentCellAddress), formId, controlId, column, row); }
         public string GetGridText(string formId, string gridId) { return Call(nameof(GetGridText), formId, gridId); }
         public void CloseForm(string formId) { Call(nameof(CloseForm), formId); }
-        public ActionResult Accept(string formId) { return CallTyped<ActionResult>(nameof(Accept), formId); }
+        public ActionResult Accept(string formId, string button) { return CallTyped<ActionResult>(nameof(Accept), formId, button); }
         public ActionResult Cancel(string formId) { return CallTyped<ActionResult>(nameof(Cancel), formId); }
         public void InvokeContextMenuItem(string formId, string controlSelector, string itemText) { Call(nameof(InvokeContextMenuItem), formId, controlSelector, itemText); }
 

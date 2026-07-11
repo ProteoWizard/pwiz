@@ -897,9 +897,9 @@ namespace pwiz.Skyline.ToolsUI
             JsonUiService.ResolveForm(formId).Close();
         }
 
-        public ActionResult Accept(string formId)
+        public ActionResult Accept(string formId, string button)
         {
-            return JsonUiService.Accept(formId);
+            return JsonUiService.ResolveForm(formId).Accept(button);
         }
 
         public ActionResult Cancel(string formId)

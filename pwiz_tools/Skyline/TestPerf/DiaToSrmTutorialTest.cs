@@ -140,7 +140,7 @@ namespace TestPerf
                 GetLocalizedText<PeakAreasContextMenu>("areaPropsContextMenuItem"));
             var cvProperties = GetConnectorForm<AreaCVToolbarProperties>();
             AssertComplete(cvProperties.SetValue(GetLocalizedText<AreaCVToolbarProperties>("label2"), "30")); // CV cutoff
-            AssertComplete(Connector.Accept(cvProperties.FormId));
+            AssertComplete(Connector.Accept(cvProperties.FormId, null));
             var cvHistogram30 = GetConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
             PauseForScreenShot(cvHistogram30, "CV Histogram -- 30% cutoff"); // s-13
 
@@ -161,14 +161,14 @@ namespace TestPerf
             // Accept runs the refine (dropping the peptides/proteins that fail the filters, possibly via a progress
             // dialog). Accept completes when the dialog closes, but the refine's background reintegration keeps
             // loading -- Gap: Save As below requires a fully-loaded document, so wait for that load here.
-            AssertComplete(Connector.Accept(refine.FormId));
+            AssertComplete(Connector.Accept(refine.FormId, null));
             WaitForDocumentLoaded();
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete.
             Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem"));
             var saveDlg = WaitForNativeFileDialog();
             saveDlg.SetValue("FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
-            Connector.Accept(saveDlg.FormId);
+            Connector.Accept(saveDlg.FormId, null);
         }
 
         /// <summary>
@@ -204,7 +204,7 @@ namespace TestPerf
             // Accept (OK) dismisses the prompt, which lets Accept Proteins run the refine that drops the unlisted
             // proteins. Same gap as RefineByCv: the refine's background reintegration keeps loading after Accept
             // returns, so wait for the document before the next refine.
-            AssertComplete(Connector.Accept(notInDocument.FormId));
+            AssertComplete(Connector.Accept(notInDocument.FormId, null));
             WaitForDocumentLoaded();
 
             // 3.2 Peptide ranked intensity filtering: Refine > Advanced, Results tab -- keep each protein's 2 best
@@ -221,7 +221,7 @@ namespace TestPerf
             // Accept runs the refine (dropping the lower-ranked peptides/transitions, possibly via a progress
             // dialog); its background reintegration keeps loading after Accept returns, so wait for the document
             // before the Save As below (which requires a fully-loaded document).
-            AssertComplete(Connector.Accept(refine.FormId));
+            AssertComplete(Connector.Accept(refine.FormId, null));
             WaitForDocumentLoaded();
 
             // Expand all proteins (a synchronous menu action) -- expected to complete.
@@ -233,7 +233,7 @@ namespace TestPerf
             Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem"));
             var saveDlg = WaitForNativeFileDialog();
             saveDlg.SetValue("FileName", GetTestPath("SRM_targets.sky"));
-            Connector.Accept(saveDlg.FormId);
+            Connector.Accept(saveDlg.FormId, null);
         }
 
         /// <summary>The wizard's Next button caption, localized and normalized so it matches in any language
@@ -268,14 +268,14 @@ namespace TestPerf
             // accepting it (OK) brings up the native Save As dialog. Save as DIA_to_SRM_Tutorial.sky and the wizard
             // opens. Each of these gestures opens the NEXT dialog rather than completing, so none is AssertComplete.
             startPage.ClickButton(StartupResources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search);
-            Connector.Accept(GetConnectorForm<MultiButtonMsgDlg>().FormId);
+            Connector.Accept(GetConnectorForm<MultiButtonMsgDlg>().FormId, null);
 
             // The Start Page tile sets DialogResult and returns; the "must save" prompt and this Save dialog are then
             // shown by the startup frame (StartupActions), NOT by a counted connector gesture -- so accepting the
             // prompt completes (its window is gone) before the Save dialog appears. Wait for it rather than assume it.
             var saveDlg = WaitForNativeFileDialog();
             saveDlg.SetValue("FileName", GetTestPath("DIA_to_SRM_Tutorial.sky"));
-            Connector.Accept(saveDlg.FormId);
+            Connector.Accept(saveDlg.FormId, null);
 
             return GetConnectorForm<ImportPeptideSearchDlg>();
         }
@@ -317,7 +317,7 @@ namespace TestPerf
             // Next opens the "no results files, continue?" prompt (a dialog), so it does not complete; accepting
             // that prompt advances the wizard, which we DO expect to complete.
             wizard.ClickButton(WizardNextButton);
-            AssertComplete(Connector.Accept(GetConnectorForm<MultiButtonMsgDlg>().FormId));
+            AssertComplete(Connector.Accept(GetConnectorForm<MultiButtonMsgDlg>().FormId, null));
 
             // 1.3 Add Modifications: no modifications were used in the search, so just move on. No WaitForControl --
             // the accept above is assumed to have settled the Add Modifications page.
@@ -369,7 +369,7 @@ namespace TestPerf
             wizard.ClickButton(GetLocalizedText<ImportFastaControl>("browseFastaBtn"));
             var fastaDlg = WaitForNativeFileDialog();
             fastaDlg.SetValue("FileName", GetTestPath("uniprot_human_25apr2019.fasta"));
-            Connector.Accept(fastaDlg.FormId);
+            Connector.Accept(fastaDlg.FormId, null);
             PauseForScreenShot(wizard, "Import FASTA"); // s-07
 
             // Finish the wizard. Building peptides from the FASTA brings up the Associate Proteins dialog.
@@ -409,7 +409,7 @@ namespace TestPerf
             // reports complete), so wait for the OK button to re-enable first.
             WaitForControlEnabled(associate, @"Button");
             PauseForScreenShot(associate, "Associate Proteins"); // s-08
-            AssertComplete(Connector.Accept(associate.FormId));
+            AssertComplete(Connector.Accept(associate.FormId, null));
 
             // Capture the populated Targets view of the main window (assumed built by the accept above).
             PauseForScreenShot(GetConnectorForm<SkylineWindow>(), "Targets populated"); // s-09
@@ -427,7 +427,7 @@ namespace TestPerf
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem"));
             var importDlg = WaitForNativeFileDialog();
             importDlg.SetValue("FileName", GetTestPath("PRTC.sky"));
-            Connector.Accept(importDlg.FormId);
+            Connector.Accept(importDlg.FormId, null);
             PauseForScreenShot(GetConnectorForm<SkylineWindow>(), "Targets with PRTC added"); // s-10
 
             // Save blocks in a modal "Saving..." progress dialog until the (large) document is written; the
@@ -460,13 +460,13 @@ namespace TestPerf
             var importResults = GetConnectorForm<ImportResultsDlg>();
             AssertComplete(importResults.ClickButton(GetLocalizedText<ImportResultsDlg>("radioCreateMultipleMulti")));
             PauseForScreenShot(importResults, "Import Results -- multi-injection replicates in directories"); // s-11
-            Connector.Accept(importResults.FormId);
+            Connector.Accept(importResults.FormId, null);
 
             // Pick the assembled mzmls folder in the native Browse-For-Folder dialog (its LibA/LibB/LibC
             // subfolders are the replicates). The connector selects the folder by path; its controlId is ignored.
             var folderDlg = WaitForNativeFolderDialog();
             folderDlg.SetValue(@"Folder", mzmlFolder);
-            Connector.Accept(folderDlg.FormId);
+            Connector.Accept(folderDlg.FormId, null);
 
             // The replicate names share a common prefix; keep the full folder names (Do not remove), then OK.
             var nameDlg = GetConnectorForm<ImportResultsNameDlg>();
@@ -474,7 +474,7 @@ namespace TestPerf
             // Accept closes the dialog and starts the (slow) chromatogram extraction from the gas-phase runs. The
             // experiment assumes it completes on return -- no WaitForDocumentLoaded -- which for a heavy background
             // import is a prime place to find the assumption failing.
-            AssertComplete(Connector.Accept(nameDlg.FormId));
+            AssertComplete(Connector.Accept(nameDlg.FormId, null));
             // Save (rides its "Saving..." progress dialog); expected to complete.
             AssertComplete(Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
         }

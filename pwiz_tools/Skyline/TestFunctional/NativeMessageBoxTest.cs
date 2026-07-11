@@ -18,23 +18,26 @@
  * limitations under the License.
  */
 
-using System;
+using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Verifies the connector can get past a native Windows message box (the kind the common Save dialog
-    /// raises to confirm replacing an existing file). It is enumerated as a generic native dialog, its
-    /// prompt and Yes/No buttons are listed by <see cref="NativeDialog.GetControls"/>, and clicking a
-    /// button by its caption dismisses the box with that result.
+    /// Drives the native "replace it?" message box that the common Save dialog raises when Save As targets an
+    /// existing file, all through the in-process <see cref="SkylineTool.IJsonToolService"/> (as an external MCP
+    /// client would). The point of the test is that the interface handles a file dialog whose Accept opens a
+    /// message box: <see cref="SkylineTool.IJsonToolService.Accept"/> on the file dialog surfaces that box (it
+    /// reports not-completed and names the box) rather than hanging, and both of the box's buttons can then be
+    /// driven through the interface -- declining ("No") leaves the file dialog open, and accepting (its default
+    /// button) replaces the file.
     /// </summary>
     [TestClass]
-    public class NativeMessageBoxTest : AbstractFunctionalTest
+    public class NativeMessageBoxTest : McpTutorialTest
     {
         [TestMethod]
         public void TestNativeMessageBox()
@@ -44,31 +47,61 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            // Show a native message box without blocking the test thread (it runs its own modal loop on
-            // the UI thread until dismissed).
-            var result = DialogResult.None;
-            SkylineWindow.BeginInvoke((Action)(() =>
-                result = MessageBox.Show(SkylineWindow, // Purposely using MessageBox here
-                    @"Yeast.protdb already exists.\nDo you want to replace it?",
-                    @"Confirm Save As", MessageBoxButtons.YesNo)));
+            StartToolService();
 
-            var messageBox = NativeDialog.WaitForDialog<NativeDialog>();
+            // No TestFilesZip is set for this test, so there is no TestFilesDir; use the (writable) test results
+            // folder for the document, the same way PrmConnectorTest does.
+            var savePath = TestContext.GetTestResultsPath(@"MyDocument.sky");
+            // Start from a clean slate so the FIRST save has no file to replace (a leftover from an earlier run
+            // would otherwise raise the replace-confirm box on the first save, before the test expects it).
+            if (File.Exists(savePath))
+                File.Delete(savePath);
+            var saveAsMenu = MenuPath<SkylineWindow>(@"fileToolStripMenuItem", @"saveAsMenuItem");
 
-            // The connector enumerates it as a generic native dialog.
-            var nativeForm = JsonUiService.GetOpenForms().Single(form => form.IsNative);
-            Assert.AreEqual(@"Dialog", nativeForm.Type);
+            // 1) First Save As: save to a name that does not exist yet -- no confirmation.
+            Connector.InvokeMenuItem(saveAsMenu);
+            var fileDialogId = WaitForNativeFileDialog().FormId;
+            AssertComplete(Connector.SetFormValue(fileDialogId, @"FileName", savePath));
+            AssertComplete(Connector.Accept(fileDialogId, null));
+            WaitForCondition(() => !Connector.GetOpenForms().Any(form => form.IsNative));
+            WaitForConditionUI(() => Equals(SkylineWindow.DocumentFilePath, savePath));
 
-            // get_controls lists the prompt text and the Yes / No buttons.
-            var labels = messageBox.GetControls().Select(control => control.Path.Text).ToArray();
-            CollectionAssert.Contains(labels, @"Yes");
-            CollectionAssert.Contains(labels, @"No");
+            // 2) Save As over the existing file: accepting the file dialog raises the native "replace?" message
+            // box. The interface must SURFACE it (report not-completed and name it) rather than hang.
+            int modalNestingCount = Connector.ModalNestingCount();
+            var actionResult = Connector.InvokeMenuItem(saveAsMenu);
+            Assert.IsFalse(actionResult.Completed);
+            fileDialogId = actionResult.FormId;
+            Assert.IsNotNull(fileDialogId);
+            Assert.AreEqual(modalNestingCount, GetModalNestingCount(fileDialogId));
+            AssertComplete(Connector.SetFormValue(fileDialogId, @"FileName", savePath));
+            actionResult = Connector.Accept(fileDialogId, null);
+            Assert.IsFalse(actionResult.Completed);
+            Assert.IsNotNull(actionResult.FormId);
+            Assert.IsNotNull(actionResult.Message);
+            var buttons = Connector.GetControls(actionResult.FormId).Where(control => control.Path.Type == nameof(System.Windows.Forms.Button)).ToList();
+            Assert.AreEqual(2, buttons.Count);
+            // Press "No" (decline to overwrite the file): the MessageBox closes and the file dialog stays open
+            AssertComplete(Connector.Accept(actionResult.FormId, buttons[1].Path.Text));
+            AssertComplete(actionResult);
+            actionResult = Connector.Accept(fileDialogId, null);
+            Assert.IsFalse(actionResult.Completed);
+            Assert.IsNotNull(actionResult.FormId);
+            Assert.IsNotNull(actionResult.Message);
+            buttons = Connector.GetControls(actionResult.FormId).Where(control => control.Path.Type == nameof(System.Windows.Forms.Button)).ToList();
+            Assert.AreEqual(2, buttons.Count);
+            AssertComplete(Connector.Accept(actionResult.FormId, buttons[0].Path.Text));
+            WaitForConditionUI(() => modalNestingCount == Connector.ModalNestingCount());
 
-            // Clicking "Yes" by its caption dismisses the box with that result.
-            messageBox.ClickButton(@"Yes");
-            WaitForCondition(() => !NativeDialog.GetOpenDialogs().Any());
-            WaitForConditionUI(() => result == DialogResult.Yes);
-            RunUI(() => Assert.AreEqual(DialogResult.Yes, result,
-                @"Clicking 'Yes' on the message box should return DialogResult.Yes."));
+            var nativeForms = Connector.GetOpenForms().Where(form => form.IsNative).ToList();
+            Assert.AreEqual(0, nativeForms.Count);
+        }
+
+        private int? GetModalNestingCount(string formId)
+        {
+            var formElement = JsonUiService.ResolveForm(formId);
+            Assert.IsNotNull(formElement);
+            return DialogWatcher.TryGetPreShowActionCount(formElement);
         }
     }
 }

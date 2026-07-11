@@ -86,7 +86,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Accepts by pressing Enter in the file-name box. Resolves its handle here (UI Automation, off the
         /// dialog's UI thread); OkDialog POSTS Enter on the dialog's UI thread (so the modal loop translates it into
         /// accept -- see PostEnter) and waits for the dialog to close.</summary>
-        public override ActionResult Accept()
+        public override ActionResult Accept(string button)
         {
             var handle = new IntPtr(GetFileNameEdit().Current.NativeWindowHandle);
             return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle));

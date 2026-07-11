@@ -88,18 +88,21 @@ namespace pwiz.SkylineTestUtil
                                     && true == form.Title?.Contains(titleSubstring));
 
         /// <summary>
-        /// Waits for the native common file dialog (Open / Save As) to appear -- it is enumerated by
-        /// GetOpenForms with IsNative=true and type "FileDialog" -- and returns it as an IFormElement.
+        /// Waits for the native common file dialog (Open / Save As) to appear -- it is enumerated by GetOpenForms
+        /// with IsNative=true -- and returns it as an IFormElement. A native dialog's reported type is the generic
+        /// "Dialog" (its file-dialog nature is not known the instant it appears), so this matches on IsNative; the
+        /// caller knows it triggered a file dialog rather than a folder dialog.
         /// </summary>
         protected IFormElement WaitForNativeFileDialog() =>
-            ResolveWhenOpen(form => form.IsNative && form.Type == @"FileDialog");
+            ResolveWhenOpen(form => form.IsNative);
 
         /// <summary>
-        /// Waits for the native Browse-For-Folder dialog (enumerated by GetOpenForms with IsNative=true and
-        /// type "FolderDialog") and returns it as an IFormElement; SetValue selects a folder by its path.
+        /// Waits for the native Browse-For-Folder dialog (enumerated by GetOpenForms with IsNative=true) and
+        /// returns it as an IFormElement; SetValue selects a folder by its path. Like the file dialog it reports
+        /// the generic "Dialog" type, so this matches on IsNative.
         /// </summary>
         protected IFormElement WaitForNativeFolderDialog() =>
-            ResolveWhenOpen(form => form.IsNative && form.Type == @"FolderDialog");
+            ResolveWhenOpen(form => form.IsNative);
 
         private IFormElement ResolveWhenOpen(Func<FormInfo, bool> predicate)
         {
@@ -139,12 +142,12 @@ namespace pwiz.SkylineTestUtil
         /// <summary>Resolves the native file dialog right now (the immediate counterpart to
         /// <see cref="WaitForNativeFileDialog"/>).</summary>
         protected IFormElement GetNativeFileDialog() =>
-            ResolveNow(form => form.IsNative && form.Type == @"FileDialog", "the native file dialog");
+            ResolveNow(form => form.IsNative, "the native file dialog");
 
         /// <summary>Resolves the native folder dialog right now (the immediate counterpart to
         /// <see cref="WaitForNativeFolderDialog"/>).</summary>
         protected IFormElement GetNativeFolderDialog() =>
-            ResolveNow(form => form.IsNative && form.Type == @"FolderDialog", "the native folder dialog");
+            ResolveNow(form => form.IsNative, "the native folder dialog");
 
         private IFormElement ResolveNow(Func<FormInfo, bool> predicate, string description)
         {
