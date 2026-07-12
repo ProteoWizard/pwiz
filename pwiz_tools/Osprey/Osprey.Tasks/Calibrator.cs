@@ -1175,10 +1175,40 @@ namespace pwiz.Osprey.Tasks
             return lines;
         }
 
-        /// <summary>One anchor-purity line at a q threshold: target vs entrapment anchor
-        /// counts and the raw / lower-bound / combined entrapment-FDP.</summary>
-        private static string AnchorPurityLine(
-            CalibrationMatch[] matchArray, double qThreshold, double rLib, string label)
+        /// <summary>
+        /// Target/entrapment anchor counts and the entrapment-FDP at one q threshold. Internal
+        /// so Osprey.Test can assert the FDP math (docs/fractional-entrapment.md) directly.
+        /// </summary>
+        internal readonly struct AnchorPurityStat
+        {
+            public AnchorPurityStat(int nTarget, int nEntrapment, double rawFraction,
+                double fdpLower, double fdpCombined)
+            {
+                NTarget = nTarget;
+                NEntrapment = nEntrapment;
+                RawFraction = rawFraction;
+                FdpLower = fdpLower;
+                FdpCombined = fdpCombined;
+            }
+            public int NTarget { get; }
+            public int NEntrapment { get; }
+            public int Total => NTarget + NEntrapment;
+            /// <summary>N_E / (N_T + N_E) -- also the lower-bound FDP at r = 1.</summary>
+            public double RawFraction { get; }
+            /// <summary>Ratio-corrected lower bound N_E / (r * (N_T + N_E)).</summary>
+            public double FdpLower { get; }
+            /// <summary>Combined upper bound (1 + 1/r) * N_E / (N_T + N_E).</summary>
+            public double FdpCombined { get; }
+        }
+
+        /// <summary>
+        /// Count the target vs entrapment anchors that clear <paramref name="qThreshold"/> and
+        /// compute the entrapment-FDP estimators (docs/fractional-entrapment.md): the raw
+        /// fraction, the ratio-corrected lower bound, and the combined upper bound. Decoys are
+        /// ignored (target-side anchors only). Internal for direct unit testing of the math.
+        /// </summary>
+        internal static AnchorPurityStat ComputeAnchorPurity(
+            CalibrationMatch[] matchArray, double qThreshold, double rLib)
         {
             int nT = 0, nE = 0;
             foreach (var m in matchArray)
@@ -1193,9 +1223,18 @@ namespace pwiz.Osprey.Tasks
             double rawFrac = total > 0 ? (double)nE / total : 0.0;
             double fdpLower = (total > 0 && rLib > 0) ? nE / (rLib * total) : 0.0;
             double fdpCombined = (total > 0 && rLib > 0) ? (1.0 + 1.0 / rLib) * nE / total : 0.0;
+            return new AnchorPurityStat(nT, nE, rawFrac, fdpLower, fdpCombined);
+        }
+
+        /// <summary>One anchor-purity report line at a q threshold (formats
+        /// <see cref="ComputeAnchorPurity"/>).</summary>
+        private static string AnchorPurityLine(
+            CalibrationMatch[] matchArray, double qThreshold, double rLib, string label)
+        {
+            var s = ComputeAnchorPurity(matchArray, qThreshold, rLib);
             return string.Format(
                 "  {0}: {1} anchors = {2} target + {3} entrapment | entrapment-frac {4:P2} | FDP lower {5:P2} combined {6:P2}",
-                label, total, nT, nE, rawFrac, fdpLower, fdpCombined);
+                label, s.Total, s.NTarget, s.NEntrapment, s.RawFraction, s.FdpLower, s.FdpCombined);
         }
 
         /// <summary>
