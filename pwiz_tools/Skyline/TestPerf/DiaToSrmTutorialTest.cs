@@ -65,21 +65,18 @@ namespace TestPerf
             // IsPauseForScreenShots = true;
             CoverShotName = "DIAtoSRM";
 
-            // The framework downloads each ZIP to a persistent local cache and reuses it across runs. The DIA
-            // library zips (~3 GB each) hold the gas-phase fractionated mzML runs that Step 1.9 imports.
-            TestFilesZipPaths = new[]
-            {
-                @"https://skyline.ms/webinars/Webinar22.zip",
-                @"https://skyline.ms/webinars/Webinar22_dia_libA.zip",
-                @"https://skyline.ms/webinars/Webinar22_dia_libB.zip",
-                @"https://skyline.ms/webinars/Webinar22_dia_libC.zip",
-            };
+            // One ZIP holding exactly what the tutorial needs, downloaded to a persistent local cache and reused
+            // across runs. It repackages the webinar's four downloads (Webinar22.zip plus a ~3 GB library zip per
+            // gas-phase replicate): the .mzML runs already sit under mzmls\LibA|LibB|LibC -- the layout the
+            // multi-injection import of Step 1.9 wants, one subfolder per replicate -- so nothing has to be copied
+            // into place at run time, and the files the webinar ships but the tutorial never reads (the PRTC .raw
+            // runs -- PRTC.sky has no results) are left out.
+            TestFilesZip = @"https://proteome.gs.washington.edu/~nicksh/test/Webinar22_DIAtoSRM.zip";
 
-            // The gas-phase fractionated runs are huge (~36 GB of .mzML); extract them once to a shared
-            // persistent location and reuse them in place across runs rather than re-extracting every run.
-            // (Takes effect once the GPF library zips and the results-import step below are re-enabled. The
-            // .elib is deliberately not persisted -- loading it creates a .elibc cache beside it, which would
-            // trip the "persistent files were modified" check.)
+            // The gas-phase fractionated runs are huge (~36 GB of .mzML); extract them once to a shared persistent
+            // location and reuse them in place across runs rather than re-extracting every run. (The .elib is
+            // deliberately not persisted -- loading it creates a .elibc cache beside it, which would trip the
+            // "persistent files were modified" check.)
             TestFilesPersistent = new[] { @".mzML" };
 
             RunFunctionalTest();
@@ -87,8 +84,17 @@ namespace TestPerf
 
         private string GetTestPath(string relativePath)
         {
-            return TestFilesDirs[0].GetTestPath(Path.Combine("Webinar22", relativePath));
+            return TestFilesDir.GetTestPath(Path.Combine("Webinar22", relativePath));
         }
+
+        /// <summary>
+        /// The folder holding the three gas-phase-fractionated replicates (mzmls\LibA|LibB|LibC, each a subfolder
+        /// of six m/z-range injections) that Step 1.9 imports as multi-injection replicates. It is built from the
+        /// PERSISTENT files dir rather than through <see cref="GetTestPath"/>, because GetTestPath redirects a
+        /// persistent FILE (one whose path contains ".mzML") but not the DIRECTORY that holds them.
+        /// </summary>
+        private string MzmlReplicateFolder => Path.Combine(
+            TestFilesDir.PersistentFilesDir ?? TestFilesDir.FullPath, "Webinar22", "mzmls");
 
         protected override void DoTest()
         {
@@ -324,8 +330,6 @@ namespace TestPerf
         /// </summary>
         private void ImportGpfDiaResults()
         {
-            var mzmlFolder = AssembleMzmlReplicateFolder();
-
             // Import Results opens a dialog (so it does not complete): either a conditional "no decoys -- add
             // them?" prompt or the Import Results dialog. Because the menu-item verb returns only once one of them
             // is up, query the open forms directly (no WaitForCondition) and decline the decoy prompt if present.
@@ -344,55 +348,24 @@ namespace TestPerf
             // ActionResult.FormId (its LibA/LibB/LibC subfolders are the replicates). The connector selects the
             // folder by path; its controlId is ignored.
             var folderDlg = ResolveModal(Connector.DismissWithAcceptButton(importResults));
-            Connector.SetFormValue(folderDlg, @"Folder", mzmlFolder);
+            Connector.SetFormValue(folderDlg, @"Folder", MzmlReplicateFolder);
 
             // Accepting the folder dialog opens the ImportResultsNameDlg; resolve it from that accept's
             // ActionResult.FormId. The replicate names share a common prefix; keep the full folder names (Do not
             // remove), then OK.
             var nameDlg = ResolveModal(Connector.DismissWithAcceptButton(folderDlg));
             AssertComplete(Connector.ClickFormButton(nameDlg, GetLocalizedText<ImportResultsNameDlg>("radioDontRemove")));
-            // Accept closes the dialog and starts the (slow) chromatogram extraction from the gas-phase runs. The
-            // experiment assumes it completes on return -- no WaitForDocumentLoaded -- which for a heavy background
-            // import is a prime place to find the assumption failing.
+            // Accept closes the dialog and starts the (slow) chromatogram extraction from the gas-phase runs. Its
+            // progress dialog is transient, so the accept completes as soon as that dialog goes away -- but the
+            // extraction itself keeps running in the background. Everything downstream reads PEAK AREAS (the CV
+            // histogram, and the consistency refine that keeps peptides under a 30% CV), and a peptide whose
+            // chromatograms have not loaded yet has no CV at all -- so refining here would silently drop EVERY
+            // peptide. Wait the extraction out. It is the heavy step of the tutorial (tens of GB of gas-phase
+            // runs), hence the long timeout.
             AssertComplete(Connector.DismissWithAcceptButton(nameDlg));
+            WaitForDocumentLoaded(60 * 60 * 1000);
             // Save (rides its "Saving..." progress dialog); expected to complete.
             AssertComplete(Connector.ClickMainMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
-        }
-
-        /// <summary>
-        /// The three gas-phase-fractionated runs ship as three separate download zips (one replicate each), so
-        /// gather them under a single parent folder -- the layout the multi-injection import expects (each
-        /// subfolder a replicate). Copy the files (a directory junction is unreliable on some machines),
-        /// skipping any already copied so reruns are cheap. Returns the assembled parent folder.
-        /// </summary>
-        private string AssembleMzmlReplicateFolder()
-        {
-            var mzmlFolder = TestFilesDirs[0].GetTestPath(Path.Combine("Webinar22", "mzmls"));
-            for (int i = 0; i < 3; i++)
-            {
-                var lib = @"Lib" + (char)('A' + i);
-                // The .mzML runs are persisted (TestFilesPersistent), so they live under the shared persistent
-                // dir, not the per-run extraction dir; GetTestPath only redirects file paths, not the directory.
-                var libFilesDir = TestFilesDirs[i + 1];
-                var sourceDir = Path.Combine(libFilesDir.PersistentFilesDir ?? libFilesDir.FullPath,
-                    @"Webinar22", @"mzml", lib);
-                var destDir = Path.Combine(mzmlFolder, lib);
-                Directory.CreateDirectory(destDir);
-                foreach (var sourceFile in Directory.GetFiles(sourceDir))
-                {
-                    var destFile = Path.Combine(destDir, Path.GetFileName(sourceFile));
-                    // Skip a file that is already fully copied (same size). Otherwise copy via a temp name and
-                    // move it into place, so an interrupted copy never leaves a partial file that a later run
-                    // would trust -- which would wedge the import reading a truncated mzML.
-                    if (File.Exists(destFile) && new FileInfo(destFile).Length == new FileInfo(sourceFile).Length)
-                        continue;
-                    var tempFile = destFile + @".copying";
-                    File.Copy(sourceFile, tempFile, true);
-                    File.Delete(destFile);
-                    File.Move(tempFile, destFile);
-                }
-            }
-            return mzmlFolder;
         }
 
         /// <summary>
@@ -443,6 +416,12 @@ namespace TestPerf
             // loading -- Gap: Save As below requires a fully-loaded document, so wait for that load here.
             AssertComplete(Connector.DismissWithAcceptButton(refine));
             WaitForDocumentLoaded();
+
+            // The consistency filter drops every peptide whose CV it cannot compute, so a document whose peak areas
+            // are missing refines away to NOTHING -- and the next step then fails obscurely, on a protein list that
+            // matches an empty document. Fail here instead, where the cause is.
+            RunUI(() => Assert.AreNotEqual(0, SkylineWindow.Document.MoleculeGroupCount,
+                "The CV refine removed every protein. Were the chromatograms fully loaded?"));
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.

@@ -44,7 +44,7 @@ friction A).
 ```
 skyline_invoke_menu_item     "File > Open"
 skyline_set_form_value       "FileDialog:Open" "filename" "{DATA}\Rat_plasma.sky"
-skyline_perform_action       form="FileDialog:Open" action="accept"
+skyline_perform_action       form="FileDialog:Open" action="dismiss"
 # Document: 48 proteins, 125 peptides, 721 transitions, 42 replicates.
 ```
 

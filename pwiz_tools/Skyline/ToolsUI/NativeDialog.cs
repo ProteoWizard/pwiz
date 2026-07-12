@@ -363,14 +363,22 @@ namespace pwiz.Skyline.ToolsUI
         /// windows -- so this finds a dialog owned by a nested modal form (e.g. the "Add Input Files" dialog owned
         /// by the Import Peptide Search wizard). EnumWindows visits only top-level windows, never the control
         /// subtree, so it stays cheap.
+        ///
+        /// <para>Only a SHOWN dialog counts. A common dialog's window exists for a moment before it is shown, and
+        /// in that window it has no controls yet -- so <see cref="Create"/> would see no file-name field and
+        /// classify a file dialog as a generic one, which cannot be typed into. Reporting it only once it is
+        /// visible means a caller that waits for the dialog to appear gets one it can actually drive, and matches
+        /// what <see cref="IsOpen"/> already says an open dialog is.</para>
         /// </summary>
         private static IEnumerable<IntPtr> FindDialogHandles()
         {
             var processId = (uint) Process.GetCurrentProcess().Id;
             return User32.EnumWindows().Where(hwnd =>
             {
+                if (!User32.IsWindowVisible(hwnd) || User32.GetClassName(hwnd) != DIALOG_CLASS_NAME)
+                    return false;
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                return windowProcessId == processId && User32.GetClassName(hwnd) == DIALOG_CLASS_NAME;
+                return windowProcessId == processId;
             });
         }
 
