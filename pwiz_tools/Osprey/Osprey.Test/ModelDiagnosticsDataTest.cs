@@ -51,6 +51,7 @@ namespace pwiz.Osprey.Test
             TestFeatureTableContributions();
             TestBaseIdClassificationAndInvalidDrop();
             TestPass2FdpViews();
+            TestBuildPass2();
             TestSidecarRoundTrip();
             TestFeatureHistograms();
             TestModelPass2();
@@ -493,6 +494,99 @@ namespace pwiz.Osprey.Test
                 Wrap(new List<FdrEntry> { Entry(1, false, 5, 0.001, "T", 2) }),
                 new Dictionary<uint, EntrapmentClass> { { 1u, EntrapmentClass.Target } }, null, 1.0);
             Assert.AreEqual(0, noEntrap.Count);
+        }
+
+        // The complete pass-2 bundle (BuildPass2) behind the report's top-level Pass 1
+        // / Pass 2 switch: every pass-dependent card recomputed on the reported pool.
+        // The STRUCTURAL half (Model / DensityRatio / WinFraction) is present only when
+        // the second pass RETRAINED (contributions non-null); under confidence-transfer
+        // (contributions null) it degrades to null while the Q-DRIVEN half (FdpViews /
+        // IdYield / CrossRun / PerFile) still builds. FdpViews is empty without an
+        // entrapment pool. The bundle survives the sidecar round-trip alongside pass 1.
+        private static void TestBuildPass2()
+        {
+            // A reported pool with entrapment: 8 real targets (+ their decoys, so the
+            // structural density / win-fraction have both sides) and 2 entrapment.
+            var entries = new List<FdrEntry>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            for (int i = 0; i < 8; i++)
+            {
+                entries.Add(Entry((uint)(100 + i), false, 8 - i, 0.001 * (i + 1), "T" + i, 2));
+                entries.Add(Entry((uint)(100 + i) | DECOY_BIT, true, 1.0 + 0.1 * i, 0.5, "D" + i, 2));
+                cls[(uint)(100 + i)] = EntrapmentClass.Target;
+            }
+            AddEntrap(entries, cls, 200, 5.5, 0.003, "P0");
+            AddEntrap(entries, cls, 201, 1.5, 0.005, "P1");
+
+            // Retrain contributions (same 2-feature shape as TestModelPass2).
+            var infos = new[]
+            {
+                new OspreyFeatureInfo("f0", "Feature Zero", false),
+                new OspreyFeatureInfo("f1", "Feature One", false),
+            };
+            var acc = new FeatureContributions.Accumulator(2, true);
+            for (int i = 0; i < 10; i++) acc.Add(new[] { 2.0, 0.5 }, false);
+            for (int i = 0; i < 10; i++) acc.Add(new[] { -1.0, 0.0 }, true);
+            var contrib = acc.Build(new List<double[]> { new[] { 2.0, -1.0 } }, infos);
+
+            // --- Retrain path: structural AND q-driven halves both present.
+            var retrain = ModelDiagnosticsData.BuildPass2(
+                Wrap(entries), contrib, cls, null, 1.0, 0.01, FdrLevel.Peptide);
+            Assert.IsNotNull(retrain.Model);                    // retrained -> structural present
+            Assert.IsNotNull(retrain.Model.Scores);
+            Assert.IsNotNull(retrain.DensityRatio);
+            Assert.IsNotNull(retrain.WinFraction);
+            Assert.IsNotNull(retrain.IdYield);                  // q-driven
+            Assert.IsNotNull(retrain.CrossRun);
+            Assert.AreEqual(1, retrain.PerFile.Count);
+            Assert.AreEqual(2, retrain.FdpViews.Count);         // experiment + per-run
+            Assert.IsTrue(retrain.FdpViews.All(v => v.Pass == 2));
+
+            // --- Transfer path: contributions null -> structural half degrades to null,
+            // q-driven half (which needs only the transferred q) still builds.
+            var transfer = ModelDiagnosticsData.BuildPass2(
+                Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
+            Assert.IsNull(transfer.Model);                      // no retrain -> structural n/a
+            Assert.IsNull(transfer.DensityRatio);
+            Assert.IsNull(transfer.WinFraction);
+            Assert.IsNotNull(transfer.IdYield);
+            Assert.IsNotNull(transfer.CrossRun);
+            Assert.AreEqual(2, transfer.FdpViews.Count);        // entrapment pool -> FDP views exist
+            // The mode changes only the structural half: the q-driven half is identical.
+            Assert.AreEqual(retrain.PerFile[0].Targets, transfer.PerFile[0].Targets);
+
+            // --- No entrapment: FdpViews empty, entrapment-free q-driven cards remain.
+            var plain = new List<FdrEntry>
+            {
+                Entry(1, false, 5, 0.001, "A", 2),
+                Entry(1 | DECOY_BIT, true, 1, 0.5, "DA", 2),
+            };
+            var noEnt = ModelDiagnosticsData.BuildPass2(Wrap(plain), null,
+                new Dictionary<uint, EntrapmentClass> { { 1u, EntrapmentClass.Target } },
+                null, 1.0, 0.01, FdrLevel.Peptide);
+            Assert.AreEqual(0, noEnt.FdpViews.Count);
+            Assert.IsNotNull(noEnt.IdYield);
+            Assert.IsNotNull(noEnt.CrossRun);
+            Assert.AreEqual(1, noEnt.PerFile[0].Targets);
+
+            // --- The Pass2 bundle survives a Newtonsoft round-trip (camelCase +
+            // NaN-as-literal) -- the same serialization robustness the HTML embed relies
+            // on. (Pass2 itself is built at MergeNode and serialized only into the HTML,
+            // never through the FirstJoin->MergeNode data sidecar, which carries pass 1.)
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
+            data.Pass2 = retrain;
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                FloatFormatHandling = FloatFormatHandling.Symbol,
+                FloatParseHandling = FloatParseHandling.Double,
+            };
+            var back = JsonConvert.DeserializeObject<ModelDiagnosticsData>(
+                JsonConvert.SerializeObject(data, settings), settings);
+            Assert.IsNotNull(back.Pass2);
+            Assert.IsNotNull(back.Pass2.Model);
+            Assert.AreEqual(retrain.FdpViews.Count, back.Pass2.FdpViews.Count);
+            Assert.AreEqual(retrain.Model.Features.Count, back.Pass2.Model.Features.Count);
         }
 
         // The pass-1 data model must survive a Newtonsoft round-trip (camelCase +
