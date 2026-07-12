@@ -20,6 +20,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Automation;
 using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTool;
@@ -50,7 +51,7 @@ namespace pwiz.Skyline.ToolsUI
         private const string EDIT_CLASS_NAME = @"Edit";
         private const string BUTTON_CLASS_NAME = @"Button";
 
-        public NativeSaveFileDialog(IntPtr windowHandle) : base(windowHandle)
+        public NativeSaveFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
         }
 
@@ -88,7 +89,7 @@ namespace pwiz.Skyline.ToolsUI
         public override ActionResult DismissWithAcceptButton()
         {
             var handle = GetSaveButtonHandle();
-            return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle));
+            return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle), CancellationToken);
         }
 
         // The file-name Edit is the class "Edit" control inside the file-name control host. Find it by

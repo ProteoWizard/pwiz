@@ -375,6 +375,19 @@ namespace pwiz.Skyline.ToolsUI
     /// </summary>
     public abstract class UiElement
     {
+        protected UiElement(CancellationToken cancellationToken)
+        {
+            CancellationToken = cancellationToken;
+        }
+
+        /// <summary>The cancellation of the request this element was built to serve -- carried by the element so
+        /// every marshal and wait it performs can be abandoned when the client that asked for it disconnects. It is
+        /// per-request (not per-server) state, so it must travel with the element rather than sit in a static: the
+        /// tool server may be serving several clients at once, on several threads, each with its own cancellation.
+        /// <see cref="System.Threading.CancellationToken.None"/> for an element built outside a request (in-process,
+        /// where there is no client to disconnect).</summary>
+        public CancellationToken CancellationToken { get; }
+
         /// <summary>This element's own addressable path (from a form root), set when the element is resolved
         /// from a path or returned as a form. <see cref="GetControlsNow"/> parents the child paths it returns
         /// onto this, so a caller can use them directly in a later call without re-parenting. Null until set
@@ -407,7 +420,7 @@ namespace pwiz.Skyline.ToolsUI
         /// check reads a window handle).</summary>
         public virtual void VerifyInteractable()
         {
-            VerifyFormInteractable(OwningForm);
+            VerifyFormInteractable(OwningForm, CancellationToken);
             if (!IsEnabled)
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"'{0}' is disabled.", Label ?? Name));
@@ -418,7 +431,7 @@ namespace pwiz.Skyline.ToolsUI
         // Win32 enabled state of the TOP-LEVEL window (e.g. the main window for a docked form): showing a modal
         // dialog calls EnableWindow(false) on the other windows WITHOUT flipping their managed Control.Enabled,
         // so a managed-only check would miss it.
-        protected static void VerifyFormInteractable(Form form)
+        protected static void VerifyFormInteractable(Form form, CancellationToken cancellationToken)
         {
             if (form == null)
                 return;
@@ -427,7 +440,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 // A modal dialog has disabled the form. If it is an alert (CommonAlertDlg), include its text so
                 // the caller sees what it says without having to capture a screenshot of it.
-                var alertMessage = DialogWatcher.BlockingAlertMessage();
+                var alertMessage = DialogWatcher.BlockingAlertMessage(cancellationToken);
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Cannot interact with form '{0}': it is blocked by an open dialog{1}. Handle the open dialog first (see skyline_get_open_forms).",
                     JsonUiService.GetFormId(form),
@@ -642,10 +655,12 @@ namespace pwiz.Skyline.ToolsUI
         // of its own.
 
         /// <summary>Runs a void action synchronously on this element's UI thread (exceptions propagate).</summary>
-        public virtual void InvokeOnUiThread(Action action) => JsonUiService.InvokeOnUiThread(action);
+        public virtual void InvokeOnUiThread(Action action) =>
+            JsonUiService.InvokeOnUiThread(action, null, CancellationToken);
 
         /// <summary>Runs a function synchronously on this element's UI thread and returns its result.</summary>
-        public virtual T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func);
+        public virtual T InvokeOnUiThread<T>(Func<T> func) =>
+            JsonUiService.InvokeOnUiThread(func, null, CancellationToken);
 
         /// <summary>Posts a void action to this element's UI thread fire-and-forget (it is counted in
         /// <see cref="JsonUiService.ModalNestingCount"/> until it finishes).</summary>
@@ -665,7 +680,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 VerifyInteractable();
                 gesture();
-            });
+            }, CancellationToken);
         }
 
         // The window handle whose UI thread this element's gestures run on -- its form's, captured safely (never a
@@ -814,6 +829,8 @@ namespace pwiz.Skyline.ToolsUI
     /// the main window's, and a modal blocking the form stops the element being acted on.</summary>
     internal abstract class UiComponent : UiElement
     {
+        protected UiComponent(CancellationToken cancellationToken) : base(cancellationToken) { }
+
         /// <summary>The form this element belongs to -- the root of the element tree it was built in. Set once
         /// when the element is created: by <see cref="FormElement.ElementFor"/> for a control (the FormElement
         /// sets its own to itself), or in the constructor of a <see cref="ToolStripItemElement"/>.</summary>
@@ -823,8 +840,10 @@ namespace pwiz.Skyline.ToolsUI
         // message loop there, so the element must be touched through that form's Invoke/BeginInvoke.
         // FormElement?.Form is null (so the dispatch falls back to the main window) only before the form is
         // wired up; a FormElement's own form is itself.
-        public override void InvokeOnUiThread(Action action) => JsonUiService.InvokeOnUiThread(action, FormElement?.Form);
-        public override T InvokeOnUiThread<T>(Func<T> func) => JsonUiService.InvokeOnUiThread(func, FormElement?.Form);
+        public override void InvokeOnUiThread(Action action) =>
+            JsonUiService.InvokeOnUiThread(action, FormElement?.Form, CancellationToken);
+        public override T InvokeOnUiThread<T>(Func<T> func) =>
+            JsonUiService.InvokeOnUiThread(func, FormElement?.Form, CancellationToken);
         public override void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action, FormElement?.Form);
 
         // The element's form gates acting on it (a modal blocking the form); a control narrows this to its own
@@ -842,7 +861,10 @@ namespace pwiz.Skyline.ToolsUI
     /// capability interface.</summary>
     internal abstract class ControlElement : UiComponent, IClickableElement
     {
-        protected ControlElement(Control control) { Control = control; }
+        protected ControlElement(Control control, CancellationToken cancellationToken) : base(cancellationToken)
+        {
+            Control = control;
+        }
 
         public Control Control { get; }
 
@@ -872,7 +894,7 @@ namespace pwiz.Skyline.ToolsUI
         // that goes hidden mid-action (e.g. a menu whose dropdown has closed) should still be acted on.
         public override void VerifyInteractable()
         {
-            VerifyFormInteractable(OwningForm);
+            VerifyFormInteractable(OwningForm, CancellationToken);
             if (!Control.Enabled)
                 throw new InvalidOperationException(LlmInstruction.Format(
                     @"Control '{0}' is disabled.", Control.Name));
@@ -990,7 +1012,7 @@ namespace pwiz.Skyline.ToolsUI
     /// its real type (e.g. a CheckedListBox) without casting.</summary>
     internal abstract class ControlElement<T> : ControlElement where T : Control
     {
-        protected ControlElement(T control) : base(control) { }
+        protected ControlElement(T control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public new T Control => (T) base.Control;
     }
 
@@ -1065,7 +1087,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <see cref="FormElement"/> (a container that is also an addressable <see cref="IFormElement"/>).</summary>
     internal class ContainerElement : ControlElement
     {
-        public ContainerElement(Control control) : base(control) { }
+        public ContainerElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
 
         public override IEnumerable<UiElement> EnumerateChildren() => FlattenChildren(Control);
 
@@ -1113,7 +1135,7 @@ namespace pwiz.Skyline.ToolsUI
         // Wraps a managed form, reading its window handle now. Must be built on the form's own UI thread -- reading
         // Form.Handle off it trips the cross-thread check -- which the assertion enforces. Off that thread, build it
         // with the handle already in hand (the two-argument constructor).
-        public FormElement(Form form) : base(form)
+        public FormElement(Form form, CancellationToken cancellationToken) : base(form, cancellationToken)
         {
             FormElement = this;
             Assume.IsFalse(form.InvokeRequired);
@@ -1123,7 +1145,7 @@ namespace pwiz.Skyline.ToolsUI
         // Wraps a managed form whose window handle is already known (e.g. from a Win32 modal-window enumeration, or
         // recorded when the modal was shown), so the element can be built off the form's UI thread without touching
         // Form.Handle.
-        public FormElement(Form form, IntPtr hwnd) : base(form)
+        public FormElement(Form form, IntPtr hwnd, CancellationToken cancellationToken) : base(form, cancellationToken)
         {
             FormElement = this;
             _hwnd = hwnd;
@@ -1167,38 +1189,41 @@ namespace pwiz.Skyline.ToolsUI
 
         private ControlElement CreateElement(Control control)
         {
+            // Each child is built with this form's cancellation, so a client that disconnects abandons work done
+            // through any element in the tree, not just the form itself.
+            var token = CancellationToken;
             switch (control)
             {
-                case CheckBox checkBox: return new CheckBoxElement(checkBox);
-                case RadioButton radioButton: return new RadioButtonElement(radioButton);
-                case ButtonBase button: return new ButtonElement(button);
-                case ComboBox comboBox: return new ComboBoxElement(comboBox);
-                case TextBoxBase textBox: return new TextBoxElement(textBox);
-                case TabControl tabControl: return new TabElement(tabControl);
+                case CheckBox checkBox: return new CheckBoxElement(checkBox, token);
+                case RadioButton radioButton: return new RadioButtonElement(radioButton, token);
+                case ButtonBase button: return new ButtonElement(button, token);
+                case ComboBox comboBox: return new ComboBoxElement(comboBox, token);
+                case TextBoxBase textBox: return new TextBoxElement(textBox, token);
+                case TabControl tabControl: return new TabElement(tabControl, token);
                 // CheckedListBox before ListBox -- it derives from ListBox, so its case must win.
-                case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox);
+                case CheckedListBox checkedListBox: return new CheckedListBoxElement(checkedListBox, token);
                 // The Pick Children pop-up's owner-drawn ListBox presents as a CheckedListBox.
-                case ListBox listBox when listBox.FindForm() is PopupPickList: return new PopupPickListElement(listBox);
-                case ListBox listBox: return new ListControlElement<ListBox>(listBox);
+                case ListBox listBox when listBox.FindForm() is PopupPickList: return new PopupPickListElement(listBox, token);
+                case ListBox listBox: return new ListControlElement<ListBox>(listBox, token);
                 // SequenceTree before TreeView -- it derives from TreeView, so its case must win.
-                case SequenceTree sequenceTree: return new SequenceTreeElement(sequenceTree);
-                case TreeView treeView: return new TreeViewElement(treeView);
-                case ListView listView: return new ItemContainerElement<ListView>(listView);
+                case SequenceTree sequenceTree: return new SequenceTreeElement(sequenceTree, token);
+                case TreeView treeView: return new TreeViewElement(treeView, token);
+                case ListView listView: return new ItemContainerElement<ListView>(listView, token);
                 // The grid itself -- the inner grid of a DataboundGridControl (a BoundDataGridView, driven
                 // through its rich copy/paste path) or a standalone DataGridView (direct cell access). The
                 // DataboundGridControl is a UserControl you walk into to reach this grid and its nav bar.
-                case BoundDataGridView boundDataGridView: return new BoundGridElement(boundDataGridView);
-                case DataGridView dataGridView: return new GridElement(dataGridView);
-                case ToolStrip toolStrip: return new ToolStripElement(toolStrip);
+                case BoundDataGridView boundDataGridView: return new BoundGridElement(boundDataGridView, token);
+                case DataGridView dataGridView: return new GridElement(dataGridView, token);
+                case ToolStrip toolStrip: return new ToolStripElement(toolStrip, token);
                 // A UserControl (including a DataboundGridControl) is a boundary that owns its (flattened)
                 // children; everything else that contains controls is transparent. A nested Form (rare as a
                 // child) is treated as a plain container under this form's token.
-                case UserControl userControl: return new ContainerElement(userControl);
-                case Form form: return new ContainerElement(form);
+                case UserControl userControl: return new ContainerElement(userControl, token);
+                case Form form: return new ContainerElement(form, token);
                 default:
                     // A custom clickable that is not a ButtonBase (e.g. a StartPage tile).
                     if (control is IButtonControl)
-                        return new ClickableControlElement(control);
+                        return new ClickableControlElement(control, token);
                     // Anything else reaching here is a leaf with no capability (a label, a spacer, an empty
                     // panel); it is not something a caller can act on, so it is not an element.
                     return null;
@@ -1217,7 +1242,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 result = GetControlsNow();
                 return true;
-            });
+            }, CancellationToken);
             return result;
         }
 
@@ -1295,7 +1320,7 @@ namespace pwiz.Skyline.ToolsUI
         public ActionResult DismissWithButton(string button)
         {
             ClickButton(button);
-            return DialogWatcher.OkDialog(Hwnd, () => { });
+            return DialogWatcher.OkDialog(Hwnd, () => { }, CancellationToken);
         }
 
         // Accepts the form by clicking its default (accept) button -- what pressing Enter does -- so the connector
@@ -1313,7 +1338,7 @@ namespace pwiz.Skyline.ToolsUI
                     throw new ArgumentException(LlmInstruction.Format(
                         @"The form '{0}' has no default (accept) button.", FormId));
                 acceptButton.PerformClick();
-            });
+            }, CancellationToken);
         }
 
         // Like DismissWithAcceptButton, but clicks the form's cancel button (or closes the form when it has none),
@@ -1328,7 +1353,7 @@ namespace pwiz.Skyline.ToolsUI
                     cancelButton.PerformClick();
                 else
                     Form.Close();
-            });
+            }, CancellationToken);
         }
 
         public object PerformAction(UiElementPath path, UiAction action, object value)
@@ -1380,7 +1405,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (Form.MainMenuStrip == null)
                 throw new ArgumentException(new LlmInstruction(@"This form has no main menu."));
-            return new ToolStripElement(Form.MainMenuStrip) { FormElement = this }.ClickMenuItem(menuPath)
+            return new ToolStripElement(Form.MainMenuStrip, CancellationToken) { FormElement = this }.ClickMenuItem(menuPath)
                 ?? throw new ArgumentException(LlmInstruction.Format(@"Menu item not found: {0}.", menuPath));
         }
     }
@@ -1389,7 +1414,7 @@ namespace pwiz.Skyline.ToolsUI
     /// like a real mouse click (even for an AutoCheck=false checkbox) and bypasses PerformClick's gates.</summary>
     internal class ButtonElement : ControlElement
     {
-        public ButtonElement(Control control) : base(control) { }
+        public ButtonElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public override string Label => Control.Text;
         // BM_CLICK is POSTED (not sent) cross-thread: like a real user click it returns to the message
         // loop at once. A click that opens a modal dialog must not block the worker thread until that
@@ -1406,7 +1431,7 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class CheckBoxElement : ButtonElement
     {
         private readonly CheckBox _checkBox;
-        public CheckBoxElement(CheckBox checkBox) : base(checkBox) { _checkBox = checkBox; }
+        public CheckBoxElement(CheckBox checkBox, CancellationToken cancellationToken) : base(checkBox, cancellationToken) { _checkBox = checkBox; }
         public override object Value => InvokeOnUiThread(() => (object) _checkBox.Checked);
         public override ActionResult SetValue(object value) =>
             PerformGesture(() => _checkBox.Checked = UiValue.ParseBool(value));
@@ -1416,7 +1441,7 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class RadioButtonElement : ButtonElement
     {
         private readonly RadioButton _radioButton;
-        public RadioButtonElement(RadioButton radioButton) : base(radioButton) { _radioButton = radioButton; }
+        public RadioButtonElement(RadioButton radioButton, CancellationToken cancellationToken) : base(radioButton, cancellationToken) { _radioButton = radioButton; }
         public override object Value => InvokeOnUiThread(() => (object) _radioButton.Checked);
         public override ActionResult SetValue(object value) =>
             PerformGesture(() => _radioButton.Checked = UiValue.ParseBool(value));
@@ -1426,7 +1451,7 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class TextBoxElement : ControlElement, IClipboardElement
     {
         private readonly TextBoxBase _textBox;
-        public TextBoxElement(TextBoxBase textBox) : base(textBox) { _textBox = textBox; }
+        public TextBoxElement(TextBoxBase textBox, CancellationToken cancellationToken) : base(textBox, cancellationToken) { _textBox = textBox; }
         public override object Value => InvokeOnUiThread(() => (object) _textBox.Text);
         // A multi-line box parses/lays out on CRLF (what Enter inserts), so normalize bare newlines.
         public override ActionResult SetValue(object value) => PerformGesture(() =>
@@ -1444,7 +1469,7 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class ComboBoxElement : ControlElement, IOptionsElement
     {
         private readonly ComboBox _comboBox;
-        public ComboBoxElement(ComboBox comboBox) : base(comboBox) { _comboBox = comboBox; }
+        public ComboBoxElement(ComboBox comboBox, CancellationToken cancellationToken) : base(comboBox, cancellationToken) { _comboBox = comboBox; }
         public override object Value => InvokeOnUiThread(() => (object) _comboBox.GetItemText(_comboBox.SelectedItem));
         public IEnumerable<string> GetOptions() => InvokeOnUiThread(() => ListItems.GetOptions(_comboBox));
         public override ActionResult SetValue(object value) => PerformGesture(() =>
@@ -1463,7 +1488,7 @@ namespace pwiz.Skyline.ToolsUI
     internal class ListControlElement<T> : ControlElement<T>, ISelectItemsElement, IOptionsElement
         where T : ListControl
     {
-        public ListControlElement(T control) : base(control) { }
+        public ListControlElement(T control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public ActionResult SetSelectedIndex(int index) => PerformGesture(() => ListItems.SetSelectedIndex(Control, index));
         public ActionResult SetItemSelected(string item, bool isSelected) =>
             PerformGesture(() => ListItems.SetSelected(Control, item, isSelected));
@@ -1477,7 +1502,7 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class CheckedListBoxElement : ListControlElement<CheckedListBox>,
         ICheckItemsElement
     {
-        public CheckedListBoxElement(CheckedListBox control) : base(control) { }
+        public CheckedListBoxElement(CheckedListBox control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public override object Value => InvokeOnUiThread(() => (object)
             string.Join(Environment.NewLine, Control.CheckedItems.Cast<object>().Select(Control.GetItemText)));
         public ActionResult SetItemChecked(string item, bool isChecked) =>
@@ -1501,7 +1526,7 @@ namespace pwiz.Skyline.ToolsUI
     internal class ItemContainerElement<T> : ControlElement<T>, ICheckItemsElement, ISelectItemsElement
         where T : Control
     {
-        public ItemContainerElement(T control) : base(control) { }
+        public ItemContainerElement(T control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public ActionResult SetItemChecked(string item, bool isChecked) =>
             PerformGesture(() => ListItems.SetChecked(Control, item, isChecked));
         public ActionResult SetItemSelected(string item, bool isSelected) =>
@@ -1514,7 +1539,7 @@ namespace pwiz.Skyline.ToolsUI
     /// first child whose text matches it, an integer is the child at that index.</summary>
     internal class TreeViewElement : ItemContainerElement<TreeView>, IExpandCollapseElement
     {
-        public TreeViewElement(TreeView control) : base(control) { }
+        public TreeViewElement(TreeView control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public ActionResult Expand(object path) => PerformGesture(() => ResolveTreePath(path).Expand());
         public ActionResult Collapse(object path) => PerformGesture(() => ResolveTreePath(path).Collapse());
 
@@ -1596,7 +1621,7 @@ namespace pwiz.Skyline.ToolsUI
     /// context menu and an in-place node rename a plain TreeView does not have.</summary>
     internal sealed class SequenceTreeElement : TreeViewElement, IRenameNodeElement, IClipboardElement
     {
-        public SequenceTreeElement(SequenceTree control) : base(control) { }
+        public SequenceTreeElement(SequenceTree control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
 
         private SequenceTree SequenceTree => (SequenceTree) Control;
 
@@ -1631,7 +1656,7 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class PopupPickListElement : ListControlElement<ListBox>,
         ICheckItemsElement
     {
-        public PopupPickListElement(ListBox control) : base(control) { }
+        public PopupPickListElement(ListBox control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         private PopupPickList PickList => (PopupPickList) Control.FindForm();
         public override Type ElementType => typeof(CheckedListBox);
         public override object Value => InvokeOnUiThread(() =>
@@ -1842,7 +1867,7 @@ namespace pwiz.Skyline.ToolsUI
     /// caption as the Label.</summary>
     internal sealed class ClickableControlElement : ControlElement
     {
-        public ClickableControlElement(Control control) : base(control) { }
+        public ClickableControlElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public override string Label => Control.Text;
     }
 
@@ -1854,9 +1879,9 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class ToolStripElement : ControlElement
     {
         private readonly ToolStrip _toolStrip;
-        public ToolStripElement(ToolStrip toolStrip) : base(toolStrip) { _toolStrip = toolStrip; }
+        public ToolStripElement(ToolStrip toolStrip, CancellationToken cancellationToken) : base(toolStrip, cancellationToken) { _toolStrip = toolStrip; }
         public override IEnumerable<UiElement> EnumerateChildren() =>
-            _toolStrip.Items.Cast<ToolStripItem>().Select(item => (UiElement) new ToolStripItemElement(item, FormElement));
+            _toolStrip.Items.Cast<ToolStripItem>().Select(item => (UiElement) new ToolStripItemElement(item, FormElement, CancellationToken));
 
         /// <summary>Resolves a '>'-separated menu/toolbar path (e.g. "Reports &gt; Replicates") to its leaf
         /// item element within this toolstrip, opening each non-leaf level's dropdown so items built on demand
@@ -1927,7 +1952,8 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class ToolStripItemElement : UiComponent, IClickableElement
     {
         private readonly ToolStripItem _item;
-        public ToolStripItemElement(ToolStripItem item, FormElement formElement)
+        public ToolStripItemElement(ToolStripItem item, FormElement formElement, CancellationToken cancellationToken)
+            : base(cancellationToken)
         {
             _item = item;
             FormElement = formElement;
@@ -1961,7 +1987,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (hosted != null)
                     children.Add(hosted);
                 else
-                    children.AddRange(new ContainerElement(host.Control) { FormElement = FormElement }.EnumerateChildren());
+                    children.AddRange(new ContainerElement(host.Control, CancellationToken) { FormElement = FormElement }.EnumerateChildren());
             }
             if (_item is ToolStripDropDownItem dropDownItem)
             {
@@ -1970,7 +1996,7 @@ namespace pwiz.Skyline.ToolsUI
                 {
                     foreach (ToolStripItem child in dropDownItem.DropDownItems)
                     {
-                        var childElement = new ToolStripItemElement(child, FormElement);
+                        var childElement = new ToolStripItemElement(child, FormElement, CancellationToken);
                         if (child is ToolStripControlHost)
                             children.AddRange(childElement.EnumerateChildren());
                         else
@@ -2000,7 +2026,7 @@ namespace pwiz.Skyline.ToolsUI
     internal class GridElement : ControlElement, IClipboardElement
     {
         private readonly DataGridView _dataGridView;
-        public GridElement(DataGridView dataGridView) : base(dataGridView) { _dataGridView = dataGridView; }
+        public GridElement(DataGridView dataGridView, CancellationToken cancellationToken) : base(dataGridView, cancellationToken) { _dataGridView = dataGridView; }
 
         // Pasting into a grid is the same as set_grid_text: tab-separated text filled from the current cell.
         // SetGridText owns the gating/marshaling, so this just delegates to it.
@@ -2121,7 +2147,7 @@ namespace pwiz.Skyline.ToolsUI
     /// document stays in sync), instead of the base's direct cell access.</summary>
     internal sealed class BoundGridElement : GridElement
     {
-        public BoundGridElement(BoundDataGridView boundDataGridView) : base(boundDataGridView) { }
+        public BoundGridElement(BoundDataGridView boundDataGridView, CancellationToken cancellationToken) : base(boundDataGridView, cancellationToken) { }
         private BindingListSource BindingListSource => DataGridView.DataSource as BindingListSource;
 
         public override string GetGridText() => InvokeOnUiThread(() =>
@@ -2154,13 +2180,13 @@ namespace pwiz.Skyline.ToolsUI
     {
         public const string TypeName = "ContextMenu";
         private readonly ControlElement _owner;
-        public ContextMenuElement(ControlElement owner) { _owner = owner; }
+        public ContextMenuElement(ControlElement owner) : base(owner.CancellationToken) { _owner = owner; }
         public override string Name => string.Empty;
         public override Type ElementType => typeof(ContextMenuStrip);
         public override bool IsEnabled => _owner.IsEnabled;
         public override IEnumerable<UiElement> EnumerateChildren() =>
             _owner.BuildContextMenu().Items.Cast<ToolStripItem>()
-                .Select(item => (UiElement) new ToolStripItemElement(item, _owner.FormElement));
+                .Select(item => (UiElement) new ToolStripItemElement(item, _owner.FormElement, CancellationToken));
     }
 
     /// <summary>A TabControl -- select one of its tabs by the tab's text (select_tab). The tab pages
@@ -2168,7 +2194,7 @@ namespace pwiz.Skyline.ToolsUI
     /// addressed directly (select its tab first to make it visible).</summary>
     internal sealed class TabElement : ControlElement<TabControl>, ISelectTabElement
     {
-        public TabElement(TabControl control) : base(control) { }
+        public TabElement(TabControl control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         // The tab contents are flattened to the form, so the TabControl itself has no children.
         public override IEnumerable<UiElement> EnumerateChildren() => Enumerable.Empty<UiElement>();
         public ActionResult SelectTab(string tabText) =>

@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Threading;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.ToolsUI
     /// </summary>
     public abstract class NativeFileDialog : NativeDialog
     {
-        protected NativeFileDialog(IntPtr windowHandle) : base(windowHandle)
+        protected NativeFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
         }
 

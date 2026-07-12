@@ -20,6 +20,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -72,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Dismiss the dialog and confirm it leaves the document unchanged.
             fileDialog.DismissWithCancelButton();
-            WaitForCondition(() => !NativeDialog.GetOpenDialogs().Any());
+            WaitForCondition(() => !NativeDialog.GetOpenDialogs(CancellationToken.None).Any());
             Assert.AreSame(documentBefore, SkylineWindow.Document);
 
             // Exercise the open flow used by OpenDocument: save the current document, start a new

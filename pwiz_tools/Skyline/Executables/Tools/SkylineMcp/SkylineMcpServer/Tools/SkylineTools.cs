@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using SkylineTool;
@@ -1446,6 +1447,37 @@ public static class SkylineTools
             : $"{doneMessage} This did not complete: {result.Message}.{formHint}";
     }
 
+    /// <summary>
+    /// How long one Skyline call may block before the MCP gives up on it. Skyline's pipe server is single-instance
+    /// and serves one request at a time, so a verb riding a long operation (a big document load sitting behind its
+    /// LongWaitDlg) would otherwise pin the connection and lock out every later call -- including the very call that
+    /// would cancel the dialog. On timeout we drop the connection; Skyline peeks the pipe, sees the client is gone,
+    /// abandons the waiting call (the work itself keeps running) and is immediately free to serve the next one.
+    /// </summary>
+    private static readonly TimeSpan CallTimeout = TimeSpan.FromSeconds(30);
+
+    // The message a timed-out call returns. It has to tell the caller two non-obvious things: the operation is still
+    // running (nothing was undone), and Skyline is nevertheless reachable again right now.
+    private const string CALL_TIMED_OUT_MESSAGE =
+        "This call did not finish in time and was abandoned, so the connection to Skyline was dropped and Skyline " +
+        "can accept new commands again. Skyline is STILL DOING the work it started (a long document load, an " +
+        "import) -- nothing was undone or cancelled. Call skyline_get_open_forms to find the progress dialog, then " +
+        "skyline_dismiss_with_cancel_button on it to actually cancel the operation, or simply wait and retry.";
+
+    /// <summary>
+    /// Runs one call to Skyline, giving up after <see cref="CallTimeout"/>. The deadline is applied to the response
+    /// read itself (which is cancellable overlapped I/O), so the timeout releases the pipe handle -- and the
+    /// <c>using (connection)</c> around this then really disconnects, which is the signal Skyline abandons the call on.
+    /// </summary>
+    private static T RunWithTimeout<T>(SkylineConnection connection, Func<T> call)
+    {
+        using (var timeout = new CancellationTokenSource(CallTimeout))
+        {
+            connection.CancellationToken = timeout.Token;
+            return call();
+        }
+    }
+
     private static string Invoke(Func<SkylineConnection, string> action)
     {
         SkylineConnection connection = null;
@@ -1458,12 +1490,17 @@ public static class SkylineTools
 
             using (connection)
             {
-                string result = action(connection);
+                string result = RunWithTimeout(connection, () => action(connection));
                 return AppendDiagnosticLog(result);
             }
         }
         catch (Exception ex)
         {
+            // Gave up waiting. The read was cancelled and the connection dropped (the using block above) -- which is
+            // what tells Skyline to abandon the call it was still working on.
+            if (ex is OperationCanceledException)
+                return CALL_TIMED_OUT_MESSAGE;
+
             // Check if this is a broken pipe (Skyline exited mid-call)
             if (ex is IOException)
             {
@@ -1517,13 +1554,16 @@ public static class SkylineTools
 
             using (connection)
             {
-                var result = action(connection);
+                var result = RunWithTimeout(connection, () => action(connection));
                 AppendDiagnosticLog(result);
                 return result;
             }
         }
         catch (Exception ex)
         {
+            if (ex is OperationCanceledException)
+                return ErrorResult(CALL_TIMED_OUT_MESSAGE);
+
             if (ex is IOException)
             {
                 return ErrorResult("Skyline disconnected during the operation. " +

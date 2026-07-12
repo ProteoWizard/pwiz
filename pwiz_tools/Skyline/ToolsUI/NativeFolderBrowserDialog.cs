@@ -20,6 +20,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Automation;
 using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTool;
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.ToolsUI
         private const int BFFM_SETSELECTIONW = 0x0400 + 103; // WM_USER + 103
         private const int IDOK = 1; // the dialog's OK button carries this control id as its AutomationId
 
-        public NativeFolderBrowserDialog(IntPtr windowHandle) : base(windowHandle)
+        public NativeFolderBrowserDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
         }
 
@@ -88,7 +89,7 @@ namespace pwiz.Skyline.ToolsUI
         public override ActionResult DismissWithAcceptButton()
         {
             var handle = new IntPtr(WaitForElement(IDOK.ToString()).Current.NativeWindowHandle);
-            return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle));
+            return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle), CancellationToken);
         }
     }
 }

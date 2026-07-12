@@ -20,6 +20,7 @@
 
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.ToolsUI;
@@ -99,7 +100,7 @@ namespace pwiz.SkylineTestFunctional
 
         private int? GetModalNestingCount(string formId)
         {
-            var formElement = JsonUiService.ResolveForm(formId);
+            var formElement = JsonUiService.ResolveForm(formId, CancellationToken.None);
             Assert.IsNotNull(formElement);
             return DialogWatcher.TryGetPreShowActionCount(formElement);
         }

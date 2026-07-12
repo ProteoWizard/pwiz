@@ -37,6 +37,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.DataBinding.Layout;
 using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
@@ -125,6 +126,27 @@ namespace pwiz.Skyline.ToolsUI
         private readonly Dictionary<string, MethodInfo> _methods;
         private volatile bool _stopping;
         private ToolLog _currentLog;
+
+        // ===== Client-disconnect cancellation =====
+
+        // The cancellation of the request being served ON THIS THREAD. Thread-local, not one field for the server,
+        // because the server assumes it is called in a multi-threaded way: several clients may be in flight at once,
+        // and cancelling one must not touch the others. Each request installs its own source (and disposes it when it
+        // finishes); everything the request builds -- every UiElement -- carries the token, so the whole call tree can
+        // be abandoned when that one client disconnects.
+        private static readonly ThreadLocal<CancellationTokenSource> _requestCancellation =
+            new ThreadLocal<CancellationTokenSource>();
+
+        /// <summary>The cancellation of the request being served on the calling thread, or
+        /// <see cref="CancellationToken.None"/> when the caller is not a request (in-process, no client to
+        /// disconnect). Every IJsonToolService method here reads this FIRST and hands it to whatever it builds, so
+        /// the token travels with the work instead of being looked up from a static deep inside it.</summary>
+        internal static CancellationToken RequestCancellation =>
+            _requestCancellation.Value?.Token ?? CancellationToken.None;
+
+        // How often the watchdog peeks the pipe while a request is in flight: free enough to run continuously, quick
+        // enough that a client which gave up does not wait noticeably for the server to notice it is gone.
+        private const int DISCONNECT_POLL_MILLIS = 200;
 
         public string PipeName { get { return _pipeName; } }
 
@@ -252,7 +274,7 @@ namespace pwiz.Skyline.ToolsUI
                             if (requestBytes.Length == 0)
                                 break;
 
-                            var responseJson = HandleRequest(requestBytes);
+                            var responseJson = HandleRequestWatchingForDisconnect(pipe, requestBytes);
                             var responseBytes = Encoding.UTF8.GetBytes(responseJson);
                             pipe.Write(responseBytes, 0, responseBytes.Length);
                             pipe.Flush();
@@ -269,6 +291,78 @@ namespace pwiz.Skyline.ToolsUI
                     if (!_stopping)
                         Thread.Sleep(100); // Brief pause before retrying
                 }
+            }
+        }
+
+        /// <summary>
+        /// Serves one request with a fresh cancellation, watching the pipe for the whole call so a client that gives
+        /// up and disconnects abandons it. Without this the server thread stays parked in a long verb (a document
+        /// load riding its LongWaitDlg) and -- being the single instance's only thread -- nothing else can get in,
+        /// not even the request that would cancel the dialog.
+        /// </summary>
+        private string HandleRequestWatchingForDisconnect(NamedPipeServerStream pipe, byte[] requestBytes)
+        {
+            using (var cancellation = new CancellationTokenSource())
+            using (var requestDone = new ManualResetEventSlim(false))
+            {
+                // Publish it for this thread: the verbs read it (RequestCancellation) and hand it to every element
+                // they build. The watchdog runs on ANOTHER thread, so it is given the source directly.
+                _requestCancellation.Value = cancellation;
+                var watchdog = new Thread(() => WatchForDisconnect(pipe, cancellation, requestDone))
+                {
+                    Name = @"JsonToolServerDisconnectWatchdog-" + _pipeName,
+                    IsBackground = true
+                };
+                watchdog.Start();
+                try
+                {
+                    return HandleRequest(requestBytes);
+                }
+                finally
+                {
+                    // Stop the watchdog and WAIT for it before the source is disposed (the using below): it may be in
+                    // the middle of cancelling, and cancelling a disposed source throws -- on a thread with no one to
+                    // catch it. It parks on requestDone, so it returns as soon as this is set.
+                    requestDone.Set();
+                    watchdog.Join();
+                    _requestCancellation.Value = null;
+                }
+            }
+        }
+
+        // Peeks the pipe until the request finishes or the client goes away, abandoning the request in the latter
+        // case. Takes the source it cancels as an argument: it runs on its own thread, so it cannot read the
+        // request thread's thread-local.
+        private static void WatchForDisconnect(NamedPipeServerStream pipe, CancellationTokenSource cancellation,
+            ManualResetEventSlim requestDone)
+        {
+            while (!requestDone.Wait(DISCONNECT_POLL_MILLIS))
+            {
+                if (IsClientConnected(pipe))
+                    continue;
+                cancellation.Cancel();
+                return;
+            }
+        }
+
+        // Reliable "client still connected" check for a server thread busy in a verb (no read in progress).
+        // NamedPipeServerStream.IsConnected does not detect a disconnect without I/O, so peek the pipe --
+        // PeekNamedPipe returns false once the client has closed its end.
+        private static bool IsClientConnected(NamedPipeServerStream pipe)
+        {
+            try
+            {
+                if (!pipe.IsConnected)
+                    return false;
+                var handle = pipe.SafePipeHandle;
+                if (handle == null || handle.IsInvalid || handle.IsClosed)
+                    return false;
+                return Kernel32.PeekNamedPipe(handle.DangerousGetHandle(),
+                    IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            }
+            catch (Exception)
+            {
+                return false; // A dead handle is a dead client
             }
         }
 
@@ -834,37 +928,37 @@ namespace pwiz.Skyline.ToolsUI
 
         public FormInfo[] GetOpenForms()
         {
-            return JsonUiService.GetOpenForms();
+            return JsonUiService.GetOpenForms(RequestCancellation);
         }
 
         public ControlInfo[] GetControls(string formId)
         {
-            return JsonUiService.ResolveForm(formId).GetControls();
+            return JsonUiService.ResolveForm(formId, RequestCancellation).GetControls();
         }
 
         public object PerformAction(UiElementPath path, string action, object value)
         {
-            return JsonUiService.PerformAction(path, action, value);
+            return JsonUiService.PerformAction(path, action, value, RequestCancellation);
         }
 
         public ActionResult InvokeMenuItem(string menuPath)
         {
-            return JsonUiService.InvokeMenuItem(menuPath);
+            return JsonUiService.InvokeMenuItem(menuPath, RequestCancellation);
         }
 
         public ActionResult ClickFormButton(string formId, string button)
         {
-            return JsonUiService.ResolveForm(formId).ClickButton(button);
+            return JsonUiService.ResolveForm(formId, RequestCancellation).ClickButton(button);
         }
 
         public ActionResult ClickToolStripItem(string formId, string menuPath)
         {
-            return JsonUiService.ClickToolStripItem(formId, menuPath);
+            return JsonUiService.ClickToolStripItem(formId, menuPath, RequestCancellation);
         }
 
         public ActionResult SetFormValue(string formId, string controlId, string value)
         {
-            return JsonUiService.ResolveForm(formId).SetValue(controlId, value);
+            return JsonUiService.ResolveForm(formId, RequestCancellation).SetValue(controlId, value);
         }
 
         public string GetFormValue(string formId, string controlId)
@@ -879,12 +973,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public ActionResult SetGridText(string formId, string controlId, string text)
         {
-            return JsonUiService.SetGridText(formId, controlId, text);
+            return JsonUiService.SetGridText(formId, controlId, text, RequestCancellation);
         }
 
         public ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
-            return JsonUiService.SetCurrentCellAddress(formId, controlId, column, row);
+            return JsonUiService.SetCurrentCellAddress(formId, controlId, column, row, RequestCancellation);
         }
 
         public string GetGridText(string formId, string gridId)
@@ -895,27 +989,27 @@ namespace pwiz.Skyline.ToolsUI
 
         public ActionResult DismissWithAcceptButton(string formId)
         {
-            return JsonUiService.ResolveForm(formId).DismissWithAcceptButton();
+            return JsonUiService.ResolveForm(formId, RequestCancellation).DismissWithAcceptButton();
         }
 
         public ActionResult DismissWithButton(string formId, string button)
         {
-            return JsonUiService.ResolveForm(formId).DismissWithButton(button);
+            return JsonUiService.ResolveForm(formId, RequestCancellation).DismissWithButton(button);
         }
 
         public ActionResult DismissWithCancelButton(string formId)
         {
-            return JsonUiService.ResolveForm(formId).DismissWithCancelButton();
+            return JsonUiService.ResolveForm(formId, RequestCancellation).DismissWithCancelButton();
         }
 
         public void InvokeContextMenuItem(string formId, string controlSelector, string itemText)
         {
-            JsonUiService.InvokeContextMenuItem(formId, controlSelector, itemText);
+            JsonUiService.InvokeContextMenuItem(formId, controlSelector, itemText, RequestCancellation);
         }
 
         public string GetGraphData(string graphId, string filePath = null)
         {
-            return JsonUiService.GetGraphData(graphId, filePath);
+            return JsonUiService.GetGraphData(graphId, filePath, RequestCancellation);
         }
 
         public string GetGraphImage(string graphId, string filePath = null)
@@ -930,12 +1024,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetFormImage(string formId, string filePath = null)
         {
-            return JsonUiService.GetFormImage(formId, filePath);
+            return JsonUiService.GetFormImage(formId, filePath, RequestCancellation);
         }
 
         public ImageBytesMetadata GetFormImageBytes(string formId)
         {
-            return JsonUiService.GetFormImageBytes(formId);
+            return JsonUiService.GetFormImageBytes(formId, RequestCancellation);
         }
 
         // Multi-arg methods

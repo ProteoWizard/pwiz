@@ -71,7 +71,7 @@ namespace pwiz.Skyline.ToolsUI
 
         private AutomationElement _dialogElement;
 
-        protected NativeDialog(IntPtr windowHandle)
+        protected NativeDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(cancellationToken)
         {
             WindowHandle = windowHandle;
         }
@@ -142,14 +142,17 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Wraps a raw modal window handle (one with no managed Form) as a generic native dialog, for the
         /// modal-watch's Win32-only queries. Not a UI-Automation-driven file dialog -- see <see cref="Create"/>.</summary>
-        private static NativeDialog ForModalWindow(IntPtr handle) => new NativeDialog(handle);
+        private static NativeDialog ForModalWindow(IntPtr handle, CancellationToken cancellationToken) =>
+            new NativeDialog(handle, cancellationToken);
 
         // Wraps a top-level window handle as the connector form abstraction that drives it: Control.FromHandle
         // resolves a managed WinForms form (a FormElement built with the handle already in hand -- safe off the UI
         // thread), or returns nothing for a truly native window (a generic NativeDialog).
-        internal static IFormElement WrapWindow(IntPtr hwnd)
+        internal static IFormElement WrapWindow(IntPtr hwnd, CancellationToken cancellationToken)
         {
-            return Control.FromHandle(hwnd) is Form form ? (IFormElement) new FormElement(form, hwnd) : ForModalWindow(hwnd);
+            return Control.FromHandle(hwnd) is Form form
+                ? (IFormElement) new FormElement(form, hwnd, cancellationToken)
+                : ForModalWindow(hwnd, cancellationToken);
         }
 
         /// <summary>Every modal dialog currently open in this process, each wrapped as the connector form abstraction
@@ -157,9 +160,9 @@ namespace pwiz.Skyline.ToolsUI
         /// managed and native modals are discovered the same way (see <see cref="WrapWindow"/>). Going handle -> Form
         /// avoids reading Form.Handle (which trips the cross-thread check) and needs no Form<->handle pairing, so it is
         /// safe off the UI thread -- both the enumeration and Control.FromHandle are a lookup, never a UI touch.</summary>
-        public static IEnumerable<IFormElement> GetModalDialogs()
+        public static IEnumerable<IFormElement> GetModalDialogs(CancellationToken cancellationToken)
         {
-            return EnumModalWindowHandles().Select(WrapWindow);
+            return EnumModalWindowHandles().Select(hwnd => WrapWindow(hwnd, cancellationToken));
         }
 
         /// <summary>Every top-level window of this process that is a managed Form (visible) or a native modal dialog,
@@ -167,7 +170,7 @@ namespace pwiz.Skyline.ToolsUI
         /// Control.FromHandle lookup, so it is safe on any thread. Top-level only -- a form docked inside the main
         /// window is a child window and does not appear here (see
         /// <see cref="JsonUiService.GetOpenFormElements"/>).</summary>
-        public static IEnumerable<IFormElement> GetTopLevelWindows()
+        public static IEnumerable<IFormElement> GetTopLevelWindows(CancellationToken cancellationToken)
         {
             var processId = (uint) Process.GetCurrentProcess().Id;
             foreach (var hwnd in User32.EnumWindows())
@@ -178,9 +181,9 @@ namespace pwiz.Skyline.ToolsUI
                 if (Control.FromHandle(hwnd) is Form form)
                 {
                     if (User32.IsWindowVisible(hwnd))
-                        yield return new FormElement(form, hwnd);
+                        yield return new FormElement(form, hwnd, cancellationToken);
                 }
-                else yield return ForModalWindow(hwnd);
+                else yield return ForModalWindow(hwnd, cancellationToken);
             }
         }
 
@@ -206,7 +209,7 @@ namespace pwiz.Skyline.ToolsUI
         /// it is one, otherwise a generic <see cref="NativeDialog"/>. Null only when the element is not a
         /// "#32770" dialog (or its handle is gone).
         /// </summary>
-        public static NativeDialog Create(AutomationElement dialog)
+        public static NativeDialog Create(AutomationElement dialog, CancellationToken cancellationToken)
         {
             IntPtr handle;
             try
@@ -222,27 +225,27 @@ namespace pwiz.Skyline.ToolsUI
             if (handle == IntPtr.Zero)
                 return null;
             if (NativeOpenFileDialog.IsOpenFileDialog(dialog))
-                return new NativeOpenFileDialog(handle);
+                return new NativeOpenFileDialog(handle, cancellationToken);
             // Check Save after Open: the modern Open dialog has the classic file-name combo
             // (AutomationId 1148) that IsOpenFileDialog keys on; the Save dialog does not, so the
             // two never both match.
             if (NativeSaveFileDialog.IsSaveFileDialog(dialog))
-                return new NativeSaveFileDialog(handle);
+                return new NativeSaveFileDialog(handle, cancellationToken);
             // The classic Browse-For-Folder dialog (a folder tree, no file-name combo) -- checked after the
             // file dialogs, whose navigation pane also has a tree but which match first on their combo.
             if (NativeFolderBrowserDialog.IsFolderBrowserDialog(dialog))
-                return new NativeFolderBrowserDialog(handle);
+                return new NativeFolderBrowserDialog(handle, cancellationToken);
             // Any other "#32770" (a message box such as the Save dialog's "replace it?" confirm, or any
             // other Windows dialog) is driven generically by the base class -- it lists the buttons and
             // clicks one by caption.
-            return new NativeDialog(handle);
+            return new NativeDialog(handle, cancellationToken);
         }
 
         /// <summary>
         /// Returns automation wrappers for the native dialogs currently open in this process,
         /// found via UI Automation.
         /// </summary>
-        public static IList<NativeDialog> GetOpenDialogs()
+        public static IList<NativeDialog> GetOpenDialogs(CancellationToken cancellationToken)
         {
             var result = new List<NativeDialog>();
             var seen = new HashSet<IntPtr>();
@@ -251,7 +254,7 @@ namespace pwiz.Skyline.ToolsUI
                 NativeDialog automation;
                 try
                 {
-                    automation = Create(element);
+                    automation = Create(element, cancellationToken);
                 }
                 catch (Exception)
                 {
@@ -271,10 +274,11 @@ namespace pwiz.Skyline.ToolsUI
         /// Waits for a native dialog of the given type to appear in this process and returns its
         /// automation wrapper.
         /// </summary>
-        public static T WaitForDialog<T>(int millisTimeout = DEFAULT_TIMEOUT_MILLIS) where T : NativeDialog
+        public static T WaitForDialog<T>(int millisTimeout = DEFAULT_TIMEOUT_MILLIS,
+            CancellationToken cancellationToken = default(CancellationToken)) where T : NativeDialog
         {
             return PollUntil(millisTimeout, typeof(T).Name,
-                () => GetOpenDialogs().OfType<T>().FirstOrDefault());
+                () => GetOpenDialogs(cancellationToken).OfType<T>().FirstOrDefault());
         }
 
         /// <summary>Dismisses the dialog by clicking the button with the given caption (found among the dialog's
@@ -284,7 +288,7 @@ namespace pwiz.Skyline.ToolsUI
         public virtual ActionResult DismissWithButton(string button)
         {
             ClickButton(button);
-            return DialogWatcher.OkDialog(WindowHandle, () => { });
+            return DialogWatcher.OkDialog(WindowHandle, () => { }, CancellationToken);
         }
 
         /// <summary>Accepts the dialog by pressing Enter, which activates its default button. Its target control is
@@ -296,7 +300,7 @@ namespace pwiz.Skyline.ToolsUI
         public virtual ActionResult DismissWithAcceptButton()
         {
             var handle = new IntPtr(DialogElement.Current.NativeWindowHandle);
-            return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle));
+            return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle), CancellationToken);
         }
 
         /// <summary>Cancels the dialog by sending WM_CLOSE on its own UI thread (which dismisses it the way the
@@ -306,8 +310,9 @@ namespace pwiz.Skyline.ToolsUI
         /// off the UI thread.</summary>
         public virtual ActionResult DismissWithCancelButton()
         {
-            return DialogWatcher.OkDialog(WindowHandle, () =>
-                User32.SendMessage(WindowHandle, User32.WinMessageType.WM_CLOSE, IntPtr.Zero, IntPtr.Zero));
+            return DialogWatcher.OkDialog(WindowHandle,
+                () => User32.SendMessage(WindowHandle, User32.WinMessageType.WM_CLOSE, IntPtr.Zero, IntPtr.Zero),
+                CancellationToken);
         }
 
         // ---- IFormElement: drive the dialog the way JsonUiService drives any form -------------------

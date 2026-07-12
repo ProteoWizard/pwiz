@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Threading;
 using System.Windows.Automation;
 using SkylineTool;
 
@@ -37,7 +38,7 @@ namespace pwiz.Skyline.ToolsUI
         // and locales, and its presence distinguishes a file dialog from other "#32770" dialogs.
         private const string FILE_NAME_COMBO_ID = @"1148";
 
-        public NativeOpenFileDialog(IntPtr windowHandle) : base(windowHandle)
+        public NativeOpenFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
         }
 
@@ -89,7 +90,7 @@ namespace pwiz.Skyline.ToolsUI
         public override ActionResult DismissWithAcceptButton()
         {
             var handle = new IntPtr(GetFileNameEdit().Current.NativeWindowHandle);
-            return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle));
+            return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle), CancellationToken);
         }
 
         private AutomationElement GetFileNameEdit()

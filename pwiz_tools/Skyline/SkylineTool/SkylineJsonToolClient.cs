@@ -22,6 +22,7 @@ using System.IO;
 using System.IO.Pipes;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 // ReSharper disable InvalidXmlDocComment (for direct link into .NET 8.0)
 
@@ -76,6 +77,19 @@ namespace SkylineTool
         /// Diagnostic log content from the most recent response, or null if absent.
         /// </summary>
         public string LastLog { get; private set; }
+
+        /// <summary>
+        /// Gives up on a call that is still waiting for Skyline's response. A caller that will not wait forever (the
+        /// MCP bounds every call) sets this, then disposes the connection: Skyline sees the disconnect and abandons
+        /// the call, freeing its single-instance pipe server for the next one.
+        ///
+        /// <para>The wait is an asynchronous read for exactly this reason. A caller blocked in a SYNCHRONOUS read
+        /// cannot drop the connection at all -- Windows keeps the pipe handle open until the pending read returns, so
+        /// disposing the stream does not actually disconnect it and Skyline goes on waiting. Cancelling an overlapped
+        /// read releases the handle, so the dispose really does disconnect. Requires the pipe to have been opened with
+        /// <see cref="PipeOptions.Asynchronous"/>.</para>
+        /// </summary>
+        public CancellationToken CancellationToken { get; set; } = CancellationToken.None;
 
         public SkylineJsonToolClient(NamedPipeClientStream pipe)
         {
@@ -361,13 +375,17 @@ namespace SkylineTool
             _pipe.Dispose();
         }
 
-        private static byte[] ReadAllBytes(PipeStream stream)
+        // Reads the response, honoring CancellationToken so a caller that has waited long enough can abandon the call
+        // (see CancellationToken). ReadAsync is what makes that possible: on a pipe opened Asynchronous it is real
+        // overlapped I/O, so cancelling it releases the handle and the connection can then actually be dropped.
+        private byte[] ReadAllBytes(PipeStream stream)
         {
             var memoryStream = new MemoryStream();
             do
             {
                 var buffer = new byte[65536];
-                int count = stream.Read(buffer, 0, buffer.Length);
+                int count = stream.ReadAsync(buffer, 0, buffer.Length, CancellationToken)
+                    .GetAwaiter().GetResult();
                 if (count == 0)
                     return memoryStream.ToArray();
                 memoryStream.Write(buffer, 0, count);

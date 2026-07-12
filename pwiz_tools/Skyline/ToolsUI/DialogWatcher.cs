@@ -55,6 +55,23 @@ namespace pwiz.Skyline.ToolsUI
         private const int POLL_MILLIS = 30;
         private const int NO_PROGRESS_LIMIT = 10;
 
+        // ===== Request cancellation =====
+
+        // What an abandoned call throws. Skyline keeps doing whatever it started -- only the wait is abandoned -- so
+        // point the caller at the progress dialog it can now go cancel.
+        private static string CancelledMessage =>
+            LlmInstruction.Format(
+                @"The request was abandoned because the calling client disconnected. Skyline is still doing the work it started. Reconnect and use skyline_get_open_forms to find the progress dialog, then cancel it with skyline_dismiss_with_cancel_button.");
+
+        // Throws if the client that asked for this work has disconnected. Called from every wait, which is what makes
+        // a parked call abandonable. The token is the REQUEST's, carried in from the element being driven -- never a
+        // static: the server may be serving several clients at once, each cancellable on its own.
+        private static void ThrowIfCancelled(CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException(CancelledMessage);
+        }
+
         // ===== Pending-action count =====
 
         private static int _modalNestingCount;
@@ -76,13 +93,34 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         internal static Control UiThreadWindow => (Control) Program.MainWindow ?? Program.StartWindow;
 
+        /// <summary>
+        /// A <see cref="Control.Invoke(Delegate)"/> that can be abandoned: posts <paramref name="action"/> onto
+        /// <paramref name="control"/>'s thread and waits for it, but gives up (throwing) if the calling client
+        /// disconnects. A plain Invoke would park forever on a UI thread that is not pumping -- and because the pipe
+        /// server has a single thread, a call parked there locks out every later request with no way to get in. Must
+        /// be called off the UI thread (the caller checks InvokeRequired).
+        /// </summary>
+        internal static void InvokeCancelable(Control control, Action action, CancellationToken cancellationToken)
+        {
+            var done = new ManualResetEventSlim(false);
+            // The posted delegate can outlive an abandoned wait, so it must not touch anything that goes out of scope
+            // here: it only runs the action (which captures its own exception) and signals.
+            control.BeginInvoke((Action) (() =>
+            {
+                try { action(); }
+                finally { done.Set(); }
+            }));
+            while (!done.Wait(POLL_MILLIS))
+                ThrowIfCancelled(cancellationToken);
+        }
+
         // ===== The three entry points =====
 
         /// <summary>Posts <paramref name="action"/> onto <paramref name="hwnd"/>'s UI thread and waits until it
         /// finishes, or until it opens/leaves an interactive modal (Completed = false, with that modal's message).</summary>
-        public static ActionResult PerformAction(IntPtr hwnd, Action action)
+        public static ActionResult PerformAction(IntPtr hwnd, Action action, CancellationToken cancellationToken)
         {
-            return PerformActionAndWait(hwnd, action, null);
+            return PerformActionAndWait(hwnd, action, null, cancellationToken);
         }
 
         /// <summary>Accepts or cancels the dialog at <paramref name="hwndDlg"/>: posts <paramref name="dismissAction"/>
@@ -92,17 +130,17 @@ namespace pwiz.Skyline.ToolsUI
         /// safe off the dialog's own thread) BEFORE calling this and passes a Win32 gesture as <paramref name="dismissAction"/>
         /// -- a SENT BM_CLICK for a button (so a click that opens a nested modal blocks on the dialog's UI thread,
         /// counted, rather than pinning the pipe thread) or a POSTED Enter where the modal loop must translate it.</summary>
-        public static ActionResult OkDialog(IntPtr hwndDlg, Action dismissAction)
+        public static ActionResult OkDialog(IntPtr hwndDlg, Action dismissAction, CancellationToken cancellationToken)
         {
-            return PerformActionAndWait(hwndDlg, dismissAction, DismissedAndDrained(hwndDlg));
+            return PerformActionAndWait(hwndDlg, dismissAction, DismissedAndDrained(hwndDlg), cancellationToken);
         }
 
         /// <summary>Runs <paramref name="function"/> on <paramref name="hwnd"/>'s UI thread and returns its result;
         /// throws if a modal got in the way (the read did not complete).</summary>
-        public static T CallFunction<T>(IntPtr hwnd, Func<T> function)
+        public static T CallFunction<T>(IntPtr hwnd, Func<T> function, CancellationToken cancellationToken)
         {
             T result = default(T);
-            var actionResult = PerformActionAndWait(hwnd, () => { result = function(); }, null);
+            var actionResult = PerformActionAndWait(hwnd, () => { result = function(); }, null, cancellationToken);
             if (!actionResult.Completed)
                 throw new InvalidOperationException(actionResult.Message);
             return result;
@@ -128,12 +166,13 @@ namespace pwiz.Skyline.ToolsUI
         /// holds; and trips the watchdog after <see cref="NO_PROGRESS_LIMIT"/> message-loop pumps with no LongWaitDlg
         /// and no completion. Must be called off the UI thread.
         /// </summary>
-        private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition)
+        private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition,
+            CancellationToken cancellationToken)
         {
             // On the caller thread, FIRST: snapshot what the wait compares against, BEFORE running anything, so an
             // effect of either action is seen as new.
             int startCount = ModalNestingCount;
-            var startWindows = new HashSet<IntPtr>(NativeDialog.GetTopLevelWindows().Select(w => w.Hwnd));
+            var startWindows = new HashSet<IntPtr>(NativeDialog.GetTopLevelWindows(cancellationToken).Select(w => w.Hwnd));
             PruneModalsNotOpen(startWindows);
 
             var control = Control.FromHandle(hwnd) ?? UiThreadWindow;
@@ -174,7 +213,12 @@ namespace pwiz.Skyline.ToolsUI
             int noProgress = 0;
             while (true)
             {
-                var openModals = GetOpenModals();
+                // The client that asked for this gave up and disconnected: stop waiting and throw. The posted action
+                // is left running (a LongWaitDlg keeps working, its delegate still counted) -- only this wait is
+                // abandoned, which is what frees the pipe server to serve this client's next request.
+                ThrowIfCancelled(cancellationToken);
+
+                var openModals = GetOpenModals(cancellationToken);
                 // A new interactive modal (one not open at the start) means an action opened, or left open, a dialog:
                 // record its pre-show count so a later OkDialog can wait the count back to it, then stop.
                 var newModal = openModals
@@ -240,17 +284,18 @@ namespace pwiz.Skyline.ToolsUI
         // enumeration of the modal windows is the sole source (see NativeDialog.GetModalDialogs), so there is no
         // Form<->handle pairing and no Form.Handle read that would trip the cross-thread check; safe off the poll
         // thread.
-        internal static IList<IFormElement> GetOpenModals()
+        internal static IList<IFormElement> GetOpenModals(CancellationToken cancellationToken)
         {
-            return NativeDialog.GetModalDialogs().ToList();
+            return NativeDialog.GetModalDialogs(cancellationToken).ToList();
         }
 
         // The message of the first interactive modal currently blocking the UI (an alert/error text or a dialog's
         // body/caption), or null if none blocks (every open modal is a progress dialog). Used by the form gate
         // (UiElement.VerifyFormInteractable).
-        internal static string BlockingAlertMessage()
+        internal static string BlockingAlertMessage(CancellationToken cancellationToken)
         {
-            return GetOpenModals().Where(m => m.IsInteractiveModal).Select(m => m.DetailedMessage).FirstOrDefault();
+            return GetOpenModals(cancellationToken).Where(m => m.IsInteractiveModal)
+                .Select(m => m.DetailedMessage).FirstOrDefault();
         }
 
         // ===== Interactive-modal pre-show-count tracker =====

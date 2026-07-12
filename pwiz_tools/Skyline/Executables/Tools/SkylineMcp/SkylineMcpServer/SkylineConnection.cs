@@ -25,6 +25,7 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using SkylineTool;
 
 namespace SkylineMcpServer;
@@ -154,6 +155,17 @@ public class SkylineConnection : IJsonToolService, IDisposable
     }
 
     /// <summary>
+    /// Abandons a call that has waited too long: cancelling the response read releases the pipe handle so that
+    /// disposing this connection really does disconnect, which is what tells Skyline to stop waiting. See
+    /// <see cref="SkylineJsonToolClient.CancellationToken"/>.
+    /// </summary>
+    public CancellationToken CancellationToken
+    {
+        get => _client.CancellationToken;
+        set => _client.CancellationToken = value;
+    }
+
+    /// <summary>
     /// Delegates to the client and captures the diagnostic log.
     /// </summary>
     private T CallClient<T>(Func<SkylineJsonToolClient, T> action)
@@ -275,7 +287,13 @@ public class SkylineConnection : IJsonToolService, IDisposable
 
     private static (SkylineConnection Connection, string Error) TryConnectToInstance(ConnectionInfo info)
     {
-        var pipe = new NamedPipeClientStream(".", info.PipeName, PipeDirection.InOut);
+        // PipeOptions.Asynchronous so the response read is real overlapped I/O and can be CANCELLED. That is what
+        // lets a call that has run too long be abandoned: cancelling the read releases the pipe handle, so disposing
+        // the connection actually disconnects it -- and Skyline, seeing the disconnect, abandons the call. A pipe
+        // opened for synchronous I/O cannot do this: Windows holds the handle open until the pending blocking read
+        // returns, so the connection would never really drop and Skyline would keep waiting.
+        var pipe = new NamedPipeClientStream(".", info.PipeName, PipeDirection.InOut,
+            PipeOptions.Asynchronous);
         try
         {
             pipe.Connect(5000);
