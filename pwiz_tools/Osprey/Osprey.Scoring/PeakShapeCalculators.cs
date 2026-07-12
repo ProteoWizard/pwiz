@@ -200,13 +200,14 @@ namespace pwiz.Osprey.Scoring
     /// as a follow-up TODO, not this change. Note the apex here is the
     /// override/CWT-supplied apex (see <see cref="PeakApexCalc"/>), NOT a recomputed
     /// local max over the reference XIC, so a supplied apex that sits below a
-    /// reference-XIC edge yields a negative edge slope and the mean can be negative.
-    /// For -1 &lt; s &lt; 0, <c>log10(s + 1)</c> is a well-defined negative (a correctly
-    /// low sharpness for a peak whose apex is below its edges); for s &lt;= 0 near or
-    /// below -1 the non-finite result is coerced to 0 on the parquet write (the
-    /// <c>Finite</c> guard here, <c>is_finite</c> in Rust), identically in both
-    /// implementations, so cross-impl parity holds and such a peak falls back to the
-    /// invalid-peak sentinel value.
+    /// reference-XIC edge yields a negative edge slope and the mean sharpness can be
+    /// negative. The value is therefore floored at 0 BEFORE the log
+    /// (<c>log10(max(s, 0) + 1)</c>): flooring the input keeps the log argument &gt;= 1
+    /// so the feature is always finite and &gt;= 0, and a negative-sharpness peak (apex
+    /// below its edges -- a degenerate shape) collapses to 0. Flooring the RESULT
+    /// instead (<c>max(0, log10(s + 1))</c>) would NOT work: <c>log10</c> of a
+    /// non-positive number is NaN and <c>Math.Max(0, NaN)</c> is NaN. Applied
+    /// identically in Rust for parity.
     /// </summary>
     internal sealed class PeakSharpnessCalc : DetailedOspreyFeatureCalculator
     {
@@ -242,7 +243,13 @@ namespace pwiz.Osprey.Scoring
                     rightSlope = (apexVal - refInten[reference.End]) / dt;
             }
             double sharpness = (leftSlope + rightSlope) * 0.5;
-            return Math.Log10(sharpness + 1.0);   // see PeakApexCalc: condition the heavy intensity tail
+            // Floor the sharpness at 0 BEFORE the log (see class doc): the apex is a
+            // CWT/override lookup, not the recomputed XIC max, so the mean slope can be
+            // negative, and log10(sharpness + 1) is non-finite for sharpness <= -1.
+            // Flooring the INPUT (not the result -- Math.Max(0, log10(neg)) is still NaN)
+            // guarantees the argument is >= 1, so the value is always finite and >= 0,
+            // matching Skyline's Math.Max(0, Math.Log10(area)) intent.
+            return Math.Log10(Math.Max(sharpness, 0.0) + 1.0);
         }
     }
 }

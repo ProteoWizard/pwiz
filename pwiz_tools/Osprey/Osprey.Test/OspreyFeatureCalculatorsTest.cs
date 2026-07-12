@@ -94,6 +94,17 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(3).Calculate(context, empty), TOLERANCE);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(4).Calculate(context, empty), TOLERANCE);
             Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(5).Calculate(context, empty), TOLERANCE);
+
+            // Negative sharpness: the supplied apex (index 3, value 10) sits BELOW both
+            // edges (90) -- possible because the apex is a CWT/override lookup, not the
+            // XIC max. Raw mean slope = ((10-90)/2 + (10-90)/2) / 2 = -40. peak_sharpness
+            // floors that at 0 before the log (log10(max(-40,0)+1) = 0) rather than
+            // producing a non-finite value from log10 of a negative argument.
+            var invFrag = new double[] { 0, 90, 50, 10, 50, 90, 2, 0, 0, 0 };
+            var invPeak = new FakePeakData(
+                new List<XicData> { new XicData(0, rts, invFrag) }, bounds);
+            context.ClearByproducts();
+            Assert.AreEqual(0.0, OspreyFeatureCalculators.Get(5).Calculate(context, invPeak), TOLERANCE);
         }
 
         /// <summary>
