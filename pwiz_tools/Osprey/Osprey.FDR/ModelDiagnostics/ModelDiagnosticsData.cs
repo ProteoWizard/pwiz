@@ -82,15 +82,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public bool ModelDegenerate { get; set; }
         public List<FeatureRow> Model { get; set; }
         /// <summary>
-        /// The second-pass model (feature table + composite score histogram),
-        /// present whenever the second pass retrained Percolator on the
-        /// post-reconciliation reported pool -- i.e. any run where Stage 6
-        /// reconciliation rescored entries. Null on a single-pass run (no
-        /// reconciliation). The Model tab
-        /// offers a Pass 1 / Pass 2 selector when this is present. Shares
-        /// <see cref="FeatureHistEdges"/> with pass 1 (same standardized bins).
+        /// The complete pass-2 (final reported pool) bundle -- every pass-dependent
+        /// card recomputed on the post-compaction, second-pass-q-valued pool -- so the
+        /// report's top-level Pass 1 / Pass 2 switch can re-source the whole page at
+        /// once. Null on a single-pass run (no reconciliation), which hides the switch.
+        /// Its structural half (<see cref="Pass2Data.Model"/> /
+        /// <see cref="Pass2Data.DensityRatio"/> / <see cref="Pass2Data.WinFraction"/>)
+        /// is present only when the second pass RETRAINED Percolator; under
+        /// <c>OSPREY_PASS2_QVALUE=transfer</c> it is null and the report's structural
+        /// cards degrade to a "pass-2 model n/a" note, while the q-driven half still
+        /// renders. Built by the end-of-run writer (MergeNodeTask) via
+        /// <see cref="BuildPass2"/>. Shares <see cref="FeatureHistEdges"/> with pass 1
+        /// (same standardized bins).
         /// </summary>
-        public ModelPass ModelPass2 { get; set; }
+        public Pass2Data Pass2 { get; set; }
         /// <summary>
         /// Shared bin edges for the per-feature standardized-value histograms
         /// (<see cref="FeatureRow.TargetHist"/> / <see cref="FeatureRow.DecoyHist"/>),
@@ -145,6 +150,48 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public bool Degenerate { get; set; }
             public List<FeatureRow> Features { get; set; }
             public ScoreHistogram Scores { get; set; }
+        }
+
+        /// <summary>
+        /// The complete pass-2 (final reported pool) bundle behind the report's
+        /// top-level Pass 1 / Pass 2 switch: every pass-dependent card recomputed on
+        /// the post-compaction, second-pass-q-valued pool. Split into a STRUCTURAL half
+        /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived), because
+        /// the two become available under different second-pass modes:
+        /// <list type="bullet">
+        /// <item>Retrain (<c>OSPREY_PASS2_QVALUE=percolator</c>): a second Percolator
+        /// model exists, so BOTH halves are built.</item>
+        /// <item>Confidence transfer (<c>OSPREY_PASS2_QVALUE=transfer</c>): no retrained
+        /// model, so the structural half is null (the report's Model / Density /
+        /// Competition cards show a "pass-2 model n/a" note) while the q-driven half --
+        /// which needs only the transferred q -- still renders.</item>
+        /// </list>
+        /// </summary>
+        public sealed class Pass2Data
+        {
+            // ----- structural half (null under confidence-transfer mode) -----
+            /// <summary>The second-pass model: feature table, composite separation, and
+            /// composite score histogram (the Density plot's source). Null when the second
+            /// pass did not retrain (transfer mode). Shares
+            /// <see cref="FeatureHistEdges"/> with pass 1.</summary>
+            public ModelPass Model { get; set; }
+            /// <summary>Non-parametric null-alignment density ratios over the pass-2
+            /// composite scores. Null when <see cref="Model"/> is (transfer mode).</summary>
+            public DensityRatioData DensityRatio { get; set; }
+            /// <summary>Paired decoy-win fraction over the pass-2 reported pool. Null when
+            /// <see cref="Model"/> is (transfer mode).</summary>
+            public WinFractionData WinFraction { get; set; }
+
+            // ----- q-driven half (present whenever a second-pass q exists) -----
+            /// <summary>FDR-calibration views (experiment + per-run) for the reported pool.
+            /// Empty when the pool carries no entrapment (nothing to calibrate against).</summary>
+            public List<FdpView> FdpViews { get; set; }
+            /// <summary>Identification-yield curve (both precursor-q scopes) on the reported pool.</summary>
+            public IdYieldData IdYield { get; set; }
+            /// <summary>Cross-run detection reproducibility on the reported pool.</summary>
+            public CrossRunDetection CrossRun { get; set; }
+            /// <summary>Per-file passing precursor counts on the reported pool.</summary>
+            public List<FileSummaryRow> PerFile { get; set; }
         }
 
         /// <summary>One row of the trained-model feature-contribution table.</summary>
@@ -480,7 +527,6 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 FdrLevel = fdrLevel.ToString(),
                 FileCount = perFileEntries.Count,
                 Model = new List<FeatureRow>(),
-                PerFile = new List<FileSummaryRow>(),
             };
 
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
@@ -489,38 +535,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
                 out int nWithClass, out int nWithoutClass);
 
-            // Per-file passing summary at the run-level peptide FDR (kept separate
-            // from the reduction so the same reduction serves pass 1 and pass 2).
-            // Non-decoy passing entries split into real targets vs entrapment
-            // (p_target) by the library base-id class, so the table mirrors the
-            // top-line target / decoy / entrapment breakdown.
-            foreach (var kvp in perFileEntries)
-            {
-                int fileTargets = 0, fileDecoys = 0, fileEntrap = 0;
-                foreach (var e in kvp.Value)
-                {
-                    // Gate on the run-level q for the CONFIGURED FDR level (precursor /
-                    // peptide / both), the same value the pipeline reports on -- not a
-                    // hardcoded peptide q, which would miscount a precursor-controlled run.
-                    if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
-                        continue;
-                    if (e.IsDecoy)
-                    {
-                        fileDecoys++;
-                        continue;
-                    }
-                    uint baseId = e.EntryId & BASE_ID_MASK;
-                    if (haveManifest && classByBaseId.TryGetValue(baseId, out var cls)
-                        && cls == EntrapmentClass.PTarget)
-                        fileEntrap++;
-                    else
-                        fileTargets++;
-                }
-                data.PerFile.Add(new FileSummaryRow
-                {
-                    File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys, Entrapment = fileEntrap,
-                });
-            }
+            // Per-file passing summary at the run-level FDR (kept separate from the
+            // reduction so the same reduction serves pass 1 and pass 2). Factored into
+            // BuildPerFile so pass 2 reports the same table on the reported pool.
+            data.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
             foreach (var p in precs)
             {
                 switch (p.Class)
@@ -580,9 +598,104 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return data;
         }
 
+        /// <summary>
+        /// Build the complete pass-2 (final reported pool) bundle behind the report's
+        /// top-level Pass 1 / Pass 2 switch. Called by the end-of-run writer
+        /// (MergeNodeTask) with the post-compaction, second-pass-q-valued pool
+        /// (<c>RescoredEntries</c>) -- the same pool the pass-2 FDRBench TSV is written
+        /// from -- so the HTML pass-2 cards and stock FDRBench see the identical
+        /// peptides and q-values. The classification / pairing / ratio inputs come
+        /// from the searched library exactly as pass 1 (see ModelDiagnosticsReport).
+        ///
+        /// The STRUCTURAL half (Model / DensityRatio / WinFraction) is built only when
+        /// the second pass RETRAINED Percolator (<paramref name="pass2Contributions"/>
+        /// non-null); under <c>OSPREY_PASS2_QVALUE=transfer</c> there is no retrained
+        /// model, so it stays null and the report's Model / Density / Competition cards
+        /// degrade to a "pass-2 model n/a" note. The Q-DRIVEN half (FdpViews / IdYield /
+        /// CrossRun / PerFile) is always built from the reported pool (FdpViews is empty
+        /// when the pool carries no entrapment).
+        /// </summary>
+        public static Pass2Data BuildPass2(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            FeatureContributions pass2Contributions,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            IReadOnlyDictionary<uint, uint> pairByBaseId,
+            double entrapmentRatio,
+            double runFdr,
+            FdrLevel fdrLevel)
+        {
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                out _, out _);
+
+            var pass2 = new Pass2Data
+            {
+                // Q-driven half: available whenever a second pass produced reported
+                // q-values (retrain OR confidence transfer). Entrapment-independent
+                // except FdpViews (which is empty without an entrapment pool).
+                PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel),
+                IdYield = BuildIdYield(precs),
+                CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                    entrapmentRatio, runFdr, fdrLevel),
+                FdpViews = BuildPass2FdpViews(perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio),
+            };
+
+            // Structural half: only when the second pass retrained on the reported pool.
+            // BuildModelPass2 returns null when contributions are null (transfer mode),
+            // which leaves DensityRatio / WinFraction null too -- the report's structural
+            // cards then show their n/a note under the top-level Pass 2 mode.
+            pass2.Model = BuildModelPass2(perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
+            if (pass2.Model != null)
+            {
+                bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
+                pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+                pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
+            }
+            return pass2;
+        }
+
         // Mask clearing the decoy high bit from an EntryId to get the shared
         // target/decoy library base-id (same convention as FdrBenchInputWriter).
         private const uint BASE_ID_MASK = 0x7FFFFFFF;
+
+        // Per-file passing precursor counts at the run-level FDR for the CONFIGURED
+        // level (precursor / peptide / both) via EffectiveRunQvalue -- the value the
+        // pipeline reports on, not a hardcoded peptide q. Non-decoy passing entries
+        // split into real targets vs entrapment (p_target) by the library base-id
+        // class, mirroring the top-line breakdown. Shared by pass 1 (Build) and pass 2
+        // (BuildPass2) so both passes label their per-file table with the same rule.
+        private static List<FileSummaryRow> BuildPerFile(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest,
+            double runFdr, FdrLevel fdrLevel)
+        {
+            var perFile = new List<FileSummaryRow>();
+            foreach (var kvp in perFileEntries)
+            {
+                int fileTargets = 0, fileDecoys = 0, fileEntrap = 0;
+                foreach (var e in kvp.Value)
+                {
+                    if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
+                        continue;
+                    if (e.IsDecoy)
+                    {
+                        fileDecoys++;
+                        continue;
+                    }
+                    uint baseId = e.EntryId & BASE_ID_MASK;
+                    if (haveManifest && classByBaseId.TryGetValue(baseId, out var cls)
+                        && cls == EntrapmentClass.PTarget)
+                        fileEntrap++;
+                    else
+                        fileTargets++;
+                }
+                perFile.Add(new FileSummaryRow
+                {
+                    File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys, Entrapment = fileEntrap,
+                });
+            }
+            return perFile;
+        }
 
         // Build the feature-contribution table rows (most-influential first) from a
         // trained model, carrying each feature's per-class histogram when collected.

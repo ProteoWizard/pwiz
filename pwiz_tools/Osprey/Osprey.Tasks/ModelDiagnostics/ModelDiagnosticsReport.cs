@@ -153,30 +153,25 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 BuildClassificationFromLibrary(config, libraryById, logInfo,
                     out classByBaseId, out pairByBaseId, out entrapmentRatio);
 
-                // Pass-2 FDR calibration views from the reported pool (when it carries entrapment).
-                var pass2Views = ModelDiagnosticsData.BuildPass2FdpViews(
-                    perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio);
-                if (pass2Views.Count > 0)
-                {
-                    if (data.FdpViews == null)
-                        data.FdpViews = new List<ModelDiagnosticsData.FdpView>();
-                    data.FdpViews.AddRange(pass2Views);
-                }
-
-                // Pass-2 model view (feature table + composite) whenever the second
-                // pass retrained Percolator on the reported pool (any reconciled run);
-                // null otherwise.
-                data.ModelPass2 = ModelDiagnosticsData.BuildModelPass2(
-                    perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
+                // Build the complete pass-2 (final reported pool) bundle -- every
+                // pass-dependent card recomputed on this post-compaction, second-pass
+                // q-valued pool -- so the page's top-level Pass 1 / Pass 2 switch can
+                // re-source the whole page. The structural half is null under
+                // confidence-transfer mode (pass2Contributions == null); the q-driven
+                // half is always built (FdpViews empty without an entrapment pool).
+                data.Pass2 = ModelDiagnosticsData.BuildPass2(
+                    perFileEntries, pass2Contributions, classByBaseId, pairByBaseId,
+                    entrapmentRatio, config.RunFdr, config.FdrLevel);
 
                 string outPath = RenderAndWrite(data, config);
                 // Consume the FirstJoin -> MergeNode hand-off sidecar unconditionally
                 // once the report is finalized (deleting it in every path avoids
                 // leaving a stray .data.json in the output directory).
                 TryDelete(sidecarPath);
+                int pass2ViewCount = data.Pass2?.FdpViews?.Count ?? 0;
                 logInfo(string.Format(
                     @"[MODEL-DIAGNOSTICS] finalized report ({0} pass-2 FDR view(s); pass-2 model {1}); re-wrote: {2}",
-                    pass2Views.Count, data.ModelPass2 != null ? @"included" : @"n/a", outPath));
+                    pass2ViewCount, data.Pass2?.Model != null ? @"included" : @"n/a", outPath));
             }
             catch (Exception ex)
             {
