@@ -299,6 +299,15 @@ namespace pwiz.Osprey.Tasks
             // in [ABSOLUTE_MIN_CALIBRATION_POINTS, MinCalibrationPoints) silently fell
             // back to uncalibrated tolerances where Rust fitted a LOESS -- issue #4401.
             int sampleSize = config.RtCalibration.CalibrationSampleSize;
+            // OSPREY_CAL_SAMPLE_SIZE experimental override: the default ladder samples 100K
+            // and stops once >= MinCalibrationPoints (200) clear -- a MINIMAL sufficient
+            // calibration. On a rich file the true peptides are a small fraction of a large
+            // library (e.g. ~34K present in a 3.17M-entry library), so a 100K random sample
+            // holds only ~1K present peptides and yields only a few hundred anchors. This
+            // override lets us test whether a larger sample surfaces proportionally more
+            // near-zero-FDR anchors (0 = use the config default, no change).
+            if (OspreyEnvironment.CalSampleSizeOverride > 0)
+                sampleSize = OspreyEnvironment.CalSampleSizeOverride;
             double retryFactor = config.RtCalibration.CalibrationRetryFactor;
             int maxAttempts = ComputeMaxAttempts(sampleSize, retryFactor, nTotalTargets);
             int currentSampleSize = sampleSize;
@@ -1828,6 +1837,14 @@ namespace pwiz.Osprey.Tasks
             // MS1 precursor mass error at apex for MS1 mass calibration.
             double? ms1Error = ComputeMs1MassError(entry, ms1Spectra, apexRt, config);
 
+            // Median-polish library cosine (OSPREY_CAL_MEDIANPOLISH lever): the dominant
+            // full-search Percolator feature, computed over the same peak-cropped top-N
+            // XICs the calibrator already extracted -- the crop mirrors the full search's
+            // CoelutionScorer.ScoreCandidate. Off by default (no compute, no output change).
+            double medianPolishCosine = 0.0;
+            if (OspreyEnvironment.CalMedianPolishFeature)
+                medianPolishCosine = ComputeCalibrationMedianPolishCosine(entry, xics, bestPeak);
+
             return new CalibrationMatch
             {
                 EntryId = entry.Id,
@@ -1839,6 +1856,7 @@ namespace pwiz.Osprey.Tasks
                 Top6MatchedApex = top6Matched,
                 XcorrScore = xcorrApex,
                 IsotopeCosine = 0.0,
+                MedianPolishCosine = medianPolishCosine,
                 DiscriminantScore = bestCorrSum,
                 QValue = 1.0,
                 Ms2MassErrors = ms2Errors.ToArray(),
@@ -1887,6 +1905,49 @@ namespace pwiz.Osprey.Tasks
                 }
             }
             return (bestPeak, bestCorrSum);
+        }
+
+        /// <summary>
+        /// Median-polish library cosine for a calibration candidate: crops the top-N
+        /// fragment XICs to the chosen peak and runs the same Tukey median-polish + library
+        /// cosine the full search uses (CoelutionScorer.ScoreCandidate, maxIter=10, tol=0.01).
+        /// XicData.FragmentIndex carries the raw entry.Fragments index, which LibCosine maps
+        /// back to library intensities. Returns 0.0 when the peak is too short (&lt; 3 scans)
+        /// or the fit is degenerate. Only called under the OSPREY_CAL_MEDIANPOLISH lever.
+        /// </summary>
+        private static double ComputeCalibrationMedianPolishCosine(
+            LibraryEntry entry, List<XicData> xics, XICPeakBounds bestPeak)
+        {
+            if (xics == null || xics.Count < 2 || bestPeak == null)
+                return 0.0;
+            int peakLen = bestPeak.EndIndex - bestPeak.StartIndex + 1;
+            if (peakLen < 3)
+                return 0.0;
+
+            double[] fullRts = xics[0].RetentionTimes;
+            if (bestPeak.StartIndex < 0 || bestPeak.EndIndex >= fullRts.Length)
+                return 0.0;
+
+            var peakRts = new double[peakLen];
+            for (int s = 0; s < peakLen; s++)
+                peakRts[s] = fullRts[bestPeak.StartIndex + s];
+
+            var peakXics = new List<KeyValuePair<int, double[]>>(xics.Count);
+            foreach (var xic in xics)
+            {
+                double[] src = xic.Intensities;
+                if (src == null || bestPeak.EndIndex >= src.Length)
+                    continue;
+                var slice = new double[peakLen];
+                for (int s = 0; s < peakLen; s++)
+                    slice[s] = src[bestPeak.StartIndex + s];
+                peakXics.Add(new KeyValuePair<int, double[]>(xic.FragmentIndex, slice));
+            }
+            if (peakXics.Count < 2)
+                return 0.0;
+
+            var polish = TukeyMedianPolish.Compute(peakXics, peakRts, 10, 0.01);
+            return TukeyMedianPolish.LibCosine(polish, entry.Fragments);
         }
 
         /// <summary>

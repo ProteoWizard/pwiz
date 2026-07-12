@@ -23,6 +23,7 @@
 
 using System;
 using System.Collections.Generic;
+using pwiz.Osprey.Core;
 using pwiz.Osprey.ML;
 
 namespace pwiz.Osprey.Scoring
@@ -42,6 +43,12 @@ namespace pwiz.Osprey.Scoring
         public byte Top6MatchedApex { get; set; }
         public double XcorrScore { get; set; }
         public double IsotopeCosine { get; set; }
+        /// <summary>
+        /// Median-polish library cosine over the peak-cropped calibration XICs (the
+        /// dominant full-search Percolator feature). Populated only when the
+        /// OSPREY_CAL_MEDIANPOLISH lever is on; 0.0 otherwise.
+        /// </summary>
+        public double MedianPolishCosine { get; set; }
         public double DiscriminantScore { get; set; }
         public double QValue { get; set; }
         /// <summary>MS2 fragment mass errors at apex spectrum (in config units).</summary>
@@ -79,9 +86,10 @@ namespace pwiz.Osprey.Scoring
 
         // Feature names in ExtractFeatureMatrix column order. Surfaced in the
         // --verbose calibration training report (the calibration analog of the
-        // Percolator feature-contribution table).
+        // Percolator feature-contribution table). The 5th (median_polish_cosine) is
+        // only used when the OSPREY_CAL_MEDIANPOLISH lever adds it as a column.
         private static readonly string[] s_featureNames =
-            { @"coelution_corr", @"libcosine_apex", @"top6_matched", @"xcorr" };
+            { @"coelution_corr", @"libcosine_apex", @"top6_matched", @"xcorr", @"median_polish_cosine" };
 
         /// <summary>
         /// Train LDA on calibration matches and score them using 3-fold cross-validation.
@@ -733,7 +741,10 @@ namespace pwiz.Osprey.Scoring
         /// </summary>
         private static Matrix ExtractFeatureMatrix(CalibrationMatch[] matches, bool useIsotopeFeature)
         {
-            const int nFeatures = 4;
+            // median_polish_cosine is an optional 5th feature (OSPREY_CAL_MEDIANPOLISH).
+            // Default off keeps the matrix at the 4 legacy features -> output byte-identical.
+            bool useMedianPolish = OspreyEnvironment.CalMedianPolishFeature;
+            int nFeatures = useMedianPolish ? 5 : 4;
             double[] data = new double[matches.Length * nFeatures];
 
             for (int i = 0; i < matches.Length; i++)
@@ -744,6 +755,8 @@ namespace pwiz.Osprey.Scoring
                 data[offset + 1] = Math.Max(0.0, Math.Min(1.0, m.LibcosineApex));
                 data[offset + 2] = Math.Max(0.0, Math.Min(1.0, m.Top6MatchedApex / 6.0));
                 data[offset + 3] = Math.Max(0.0, Math.Min(1.0, m.XcorrScore / 3.0));
+                if (useMedianPolish)
+                    data[offset + 4] = Math.Max(0.0, Math.Min(1.0, m.MedianPolishCosine)); // already 0..1
             }
 
             return new Matrix(data, matches.Length, nFeatures);
