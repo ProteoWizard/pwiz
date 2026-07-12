@@ -55,23 +55,6 @@ namespace pwiz.Skyline.ToolsUI
         private const int POLL_MILLIS = 30;
         private const int NO_PROGRESS_LIMIT = 10;
 
-        // ===== Request cancellation =====
-
-        // What an abandoned call throws. Skyline keeps doing whatever it started -- only the wait is abandoned -- so
-        // point the caller at the progress dialog it can now go cancel.
-        private static string CancelledMessage =>
-            LlmInstruction.Format(
-                @"The request was abandoned because the calling client disconnected. Skyline is still doing the work it started. Reconnect and use skyline_get_open_forms to find the progress dialog, then cancel it with skyline_dismiss_with_cancel_button.");
-
-        // Throws if the client that asked for this work has disconnected. Called from every wait, which is what makes
-        // a parked call abandonable. The token is the REQUEST's, carried in from the element being driven -- never a
-        // static: the server may be serving several clients at once, each cancellable on its own.
-        private static void ThrowIfCancelled(CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested)
-                throw new OperationCanceledException(CancelledMessage);
-        }
-
         // ===== Pending-action count =====
 
         private static int _modalNestingCount;
@@ -96,9 +79,9 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         /// A <see cref="Control.Invoke(Delegate)"/> that can be abandoned: posts <paramref name="action"/> onto
         /// <paramref name="control"/>'s thread and waits for it, but gives up (throwing) if the calling client
-        /// disconnects. A plain Invoke would park forever on a UI thread that is not pumping -- and because the pipe
-        /// server has a single thread, a call parked there locks out every later request with no way to get in. Must
-        /// be called off the UI thread (the caller checks InvokeRequired).
+        /// disconnects. A plain Invoke would park forever on a UI thread that is not pumping -- and because a call
+        /// parked there holds its pipe server thread, it would lock out every later request from that client with no
+        /// way to get in. Must be called off the UI thread (the caller checks InvokeRequired).
         /// </summary>
         internal static void InvokeCancelable(Control control, Action action, CancellationToken cancellationToken)
         {
@@ -110,8 +93,8 @@ namespace pwiz.Skyline.ToolsUI
                 try { action(); }
                 finally { done.Set(); }
             }));
-            while (!done.Wait(POLL_MILLIS))
-                ThrowIfCancelled(cancellationToken);
+            // Waits on the event AND the token, so a disconnect wakes it at once -- no polling. Throws when cancelled.
+            done.Wait(cancellationToken);
         }
 
         // ===== The three entry points =====
@@ -215,8 +198,9 @@ namespace pwiz.Skyline.ToolsUI
             {
                 // The client that asked for this gave up and disconnected: stop waiting and throw. The posted action
                 // is left running (a LongWaitDlg keeps working, its delegate still counted) -- only this wait is
-                // abandoned, which is what frees the pipe server to serve this client's next request.
-                ThrowIfCancelled(cancellationToken);
+                // abandoned, which is what frees the pipe server to serve this client's next request. No message: the
+                // connection it would have gone back on is already gone.
+                cancellationToken.ThrowIfCancellationRequested();
 
                 var openModals = GetOpenModals(cancellationToken);
                 // A new interactive modal (one not open at the start) means an action opened, or left open, a dialog:
