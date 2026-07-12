@@ -109,9 +109,19 @@ namespace pwiz.Osprey.Scoring
     }
 
     /// <summary>
-    /// peak_apex: the reference-XIC intensity at the (clamped) peak apex index.
-    /// A direct lookup of the override/CWT-supplied apex -- NOT a recomputed local
-    /// max over [start, end] (Rust pipeline.rs:6547 uses peak.apex_intensity).
+    /// peak_apex: log10 of the reference-XIC intensity at the (clamped) peak apex
+    /// index. The apex intensity is a direct lookup of the override/CWT-supplied
+    /// apex -- NOT a recomputed local max over [start, end] (Rust pipeline.rs:6547
+    /// uses peak.apex_intensity). Rationale for the <c>log10(x + 1)</c> conditioning:
+    /// raw peak intensity is heavy-tailed across four orders of magnitude, so the
+    /// single experiment-wide Percolator standardizer maps a lone high-intensity DIA
+    /// interference to a z-score of 100-300 that dominates the linear discriminant
+    /// and lets intensity outliers (a random mix of target / decoy / entrapment)
+    /// hijack the top of the ranking. Log conditioning compresses the tail so the
+    /// standardized value stays in a sane range, matching Skyline mProphet's
+    /// <c>MQuestIntensityCalc</c> (which returns <c>Math.Max(0, Math.Log10(area))</c>).
+    /// A linear SVM cannot learn this transform on its own, so it must be applied in
+    /// the feature. Applied identically in Rust to preserve cross-impl parity.
     /// </summary>
     internal sealed class PeakApexCalc : DetailedOspreyFeatureCalculator
     {
@@ -124,14 +134,19 @@ namespace pwiz.Osprey.Scoring
         protected override double Calculate(OspreyScoringContext context, IOspreyDetailedPeakData peakData)
         {
             var reference = PeakShapeReference.GetOrCompute(context, peakData);
-            return reference.Valid ? reference.ApexValue : 0.0;
+            // log10(x + 1): x >= 0, maps 0 -> 0 (keeps the invalid-peak sentinel).
+            return reference.Valid ? Math.Log10(reference.ApexValue + 1.0) : 0.0;
         }
     }
 
     /// <summary>
-    /// peak_area: trapezoidal integration of the reference XIC over [start, end).
-    /// Matches Rust trapezoidal_area(ref_xic[si..=ei]). Accumulated strictly
-    /// left-to-right (f64 addition is non-associative).
+    /// peak_area: log10 of the trapezoidal integration of the reference XIC over
+    /// [start, end). The raw area is <c>trapezoidal_area(ref_xic[si..=ei])</c>,
+    /// accumulated strictly left-to-right (f64 addition is non-associative). The
+    /// <c>log10(x + 1)</c> conditioning (applied identically in Rust for parity) is
+    /// for the same heavy-tailed-intensity reason as <see cref="PeakApexCalc"/> (this
+    /// is a PIN feature for the experiment-wide Percolator model only; it does not
+    /// feed quantification, which uses <c>bounds_area</c>).
     /// </summary>
     internal sealed class PeakAreaCalc : DetailedOspreyFeatureCalculator
     {
@@ -156,14 +171,34 @@ namespace pwiz.Osprey.Scoring
                 double avgHeight = (refInten[i] + refInten[i + 1]) * 0.5;
                 area += avgHeight * dt;
             }
-            return area;
+            return Math.Log10(area + 1.0);   // see PeakApexCalc: condition the heavy intensity tail
         }
     }
 
     /// <summary>
-    /// peak_sharpness: mean of the left and right slopes on the reference XIC,
-    /// using the same apex position as peak_apex. Matches Rust
-    /// pipeline.rs:5212-5234 (edge guards strict, dt threshold strict &gt; 1e-10).
+    /// peak_sharpness: log10 of the mean of the left and right slopes on the
+    /// reference XIC, using the same apex position as peak_apex. The raw mean slope
+    /// follows Rust pipeline.rs:5212-5234 (edge guards strict, dt threshold strict
+    /// &gt; 1e-10); the <c>log10(x + 1)</c> conditioning is applied identically in
+    /// Rust for parity.
+    ///
+    /// Why log this one too (it needs more justification than apex/area, which are
+    /// intensities by definition): the slopes are computed at LINEAR scale from the
+    /// raw XIC intensities -- <c>(apexIntensity - edgeIntensity) / dt</c> -- so the
+    /// peak-curve shape assessment is unchanged and linear. But the RESULT is an
+    /// ABSOLUTE slope (intensity per minute), which scales ~linearly with peak
+    /// intensity: a 2x more intense peak of the same shape has ~2x steeper slopes.
+    /// So as defined this is an intensity-MAGNITUDE feature, not a scale-free shape
+    /// descriptor -- it carries the same heavy tail as apex/area and demonstrably
+    /// participated in the same intensity hijack (a lone high-intensity DIA
+    /// interference standardized to z ~= 190 on this feature). log10 conditions only
+    /// the final magnitude for the single experiment-wide standardizer (monotonic, so
+    /// a sharper peak still ranks above a broader one at equal intensity); leaving it
+    /// linear would keep the heavy tail and re-introduce part of the hijack. A truly
+    /// scale-free shape sharpness would instead normalize the slope by the apex
+    /// (<c>slope / apex</c>) and stay linear -- a separate feature redesign, tracked
+    /// as a follow-up TODO, not this change. Both slopes are &gt;= 0 (apex is the
+    /// maximum), so the mean is &gt;= 0.
     /// </summary>
     internal sealed class PeakSharpnessCalc : DetailedOspreyFeatureCalculator
     {
@@ -198,7 +233,8 @@ namespace pwiz.Osprey.Scoring
                 if (dt > 1e-10)
                     rightSlope = (apexVal - refInten[reference.End]) / dt;
             }
-            return (leftSlope + rightSlope) * 0.5;
+            double sharpness = (leftSlope + rightSlope) * 0.5;
+            return Math.Log10(sharpness + 1.0);   // see PeakApexCalc: condition the heavy intensity tail
         }
     }
 }

@@ -21,6 +21,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
@@ -71,13 +72,16 @@ namespace pwiz.Osprey.Test
             double area = OspreyFeatureCalculators.Get(4).Calculate(context, peakData);
             double sharpness = OspreyFeatureCalculators.Get(5).Calculate(context, peakData);
 
-            // peak_apex: reference XIC (frag1) intensity at apex index 3 = 90.
-            Assert.AreEqual(90.0, apex, TOLERANCE);
+            // The three intensity-scale features are log-conditioned (log10(x + 1))
+            // so a heavy intensity tail cannot dominate the experiment-wide Percolator
+            // standardizer; raw values below are the pre-log quantities.
+            // peak_apex: reference XIC (frag1) intensity at apex index 3 = 90 -> log10(91).
+            Assert.AreEqual(Math.Log10(91.0), apex, TOLERANCE);
             // peak_area: trapezoid over [1,5) with dt = 1:
-            // (10+50)/2 + (50+90)/2 + (90+50)/2 + (50+10)/2 = 30+70+70+30 = 200.
-            Assert.AreEqual(200.0, area, TOLERANCE);
-            // peak_sharpness: left (90-10)/(3-1)=40, right (90-10)/(5-3)=40, mean 40.
-            Assert.AreEqual(40.0, sharpness, TOLERANCE);
+            // (10+50)/2 + (50+90)/2 + (90+50)/2 + (50+10)/2 = 30+70+70+30 = 200 -> log10(201).
+            Assert.AreEqual(Math.Log10(201.0), area, TOLERANCE);
+            // peak_sharpness: left (90-10)/(3-1)=40, right (90-10)/(5-3)=40, mean 40 -> log10(41).
+            Assert.AreEqual(Math.Log10(41.0), sharpness, TOLERANCE);
 
             // The three calculators expose the parity-critical PIN names.
             Assert.AreEqual("peak_apex", OspreyFeatureCalculators.Get(3).Name);
