@@ -600,36 +600,42 @@ public static class SkylineTools
         });
     }
 
-    [McpServerTool(Name = "skyline_invoke_menu_item"),
-     Description("Invoke a Skyline main-menu item by its visible path, e.g. " +
+    [McpServerTool(Name = "skyline_click_main_menu_item"),
+     Description("Click an item on the MAIN Skyline window's menu bar by its visible path, e.g. " +
         "'File > Import > Peptide Search'. Segments are separated by '>' and matched against each " +
         "menu item's visible text (the mnemonic '&' and a trailing ellipsis are ignored) or its " +
         "control name, case-insensitively. The click is posted asynchronously, so a menu item that " +
-        "opens a dialog returns immediately; call skyline_get_open_forms to find the resulting form.")]
-    public static string InvokeMenuItem(
+        "opens a dialog returns immediately; call skyline_get_open_forms to find the resulting form. " +
+        "For a menu on any OTHER window -- a form's toolbar, or a control's right-click menu -- use " +
+        "skyline_click_control_menu_item.")]
+    public static string ClickMainMenuItem(
         [Description("Menu path with '>'-separated segments, e.g. 'File > Import > Peptide Search'")] string menuPath)
     {
         return Invoke(connection =>
         {
-            var result = connection.InvokeMenuItem(menuPath);
-            return DescribeAction(result, $"Invoked menu item: {menuPath}");
+            var result = connection.ClickMainMenuItem(menuPath);
+            return DescribeAction(result, $"Clicked menu item: {menuPath}");
         });
     }
 
-    [McpServerTool(Name = "skyline_click_toolstrip_item"),
-     Description("Click an item on a form's toolbar / menu strip by its path, e.g. " +
-        "'Reports > Replicates' (the 'Reports' toolbar button, then 'Replicates' in its dropdown). " +
-        "Each level's dropdown is opened first so items built on demand -- which skyline_click_form_button " +
-        "cannot reach -- are present before matching. Segments are '>'-separated and matched by item " +
-        "name or visible text. Use for the Document Grid 'Reports' dropdown, the Pivot Editor dropdown, etc.")]
-    public static string ClickToolStripItem(
+    [McpServerTool(Name = "skyline_click_control_menu_item"),
+     Description("Click an item on a menu belonging to a form, or to a control on it, by its path, e.g. " +
+        "'Reports > Replicates' (the 'Reports' toolbar button, then 'Replicates' in its dropdown). Which menu " +
+        "is meant follows from 'control': leave it EMPTY for the form's own menu (its menu bar, else its first " +
+        "toolbar, else its right-click menu); name a TOOLBAR to click an item on that toolbar; name any OTHER " +
+        "control (a grid, a tree, a graph) to click an item on that control's RIGHT-CLICK menu. Each level's " +
+        "dropdown is opened first so items built on demand -- which skyline_click_form_button cannot reach -- are " +
+        "present before matching. Segments are '>'-separated and matched by item name or visible text. Use for " +
+        "the Document Grid 'Reports' dropdown, a graph's right-click menu, etc.")]
+    public static string ClickControlMenuItem(
         [Description("Form identifier from skyline_get_open_forms (TypeName:Title)")] string formId,
-        [Description("Toolbar/menu path with '>'-separated segments, e.g. 'Reports > Replicates'")] string menuPath)
+        [Description("Control that owns the menu, from skyline_get_controls. Empty for the form's own menu.")] string control,
+        [Description("Menu path with '>'-separated segments, e.g. 'Reports > Replicates'")] string menuPath)
     {
         return Invoke(connection =>
         {
-            var result = connection.ClickToolStripItem(formId, menuPath);
-            return DescribeAction(result, $"Clicked toolbar item '{menuPath}' on {formId}.");
+            var result = connection.ClickControlMenuItem(formId, control, menuPath);
+            return DescribeAction(result, $"Clicked menu item '{menuPath}' on {formId}.");
         });
     }
 
@@ -1438,10 +1444,10 @@ public static class SkylineTools
         if (result.Completed)
             return doneMessage;
         // When the action left a dialog open, name it so the caller can drive it directly (get_controls /
-        // set_value / accept / click) without a get_open_forms round-trip.
+        // set_value / dismiss / click) without a get_open_forms round-trip.
         string formHint = string.IsNullOrEmpty(result.FormId)
             ? " poll skyline_get_open_forms for any dialog it opened."
-            : $" it left form '{result.FormId}' open; drive it with get_controls / set_form_value / accept / click.";
+            : $" it left form '{result.FormId}' open; drive it with get_controls / set_form_value / dismiss / click.";
         return string.IsNullOrEmpty(result.Message)
             ? $"{doneMessage} This did not complete;{formHint}"
             : $"{doneMessage} This did not complete: {result.Message}.{formHint}";

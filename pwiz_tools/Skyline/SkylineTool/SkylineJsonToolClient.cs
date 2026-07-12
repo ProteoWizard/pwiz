@@ -125,9 +125,9 @@ namespace SkylineTool
         }
 
         // UI interaction
-        public ActionResult InvokeMenuItem(string menuPath) { return CallTyped<ActionResult>(nameof(InvokeMenuItem), menuPath); }
+        public ActionResult ClickMainMenuItem(string menuPath) { return CallTyped<ActionResult>(nameof(ClickMainMenuItem), menuPath); }
         public ActionResult ClickFormButton(string formId, string button) { return CallTyped<ActionResult>(nameof(ClickFormButton), formId, button); }
-        public ActionResult ClickToolStripItem(string formId, string menuPath) { return CallTyped<ActionResult>(nameof(ClickToolStripItem), formId, menuPath); }
+        public ActionResult ClickControlMenuItem(string formId, string control, string menuPath) { return CallTyped<ActionResult>(nameof(ClickControlMenuItem), formId, control, menuPath); }
         public ActionResult SetFormValue(string formId, string controlId, string value) { return CallTyped<ActionResult>(nameof(SetFormValue), formId, controlId, value); }
         public string GetFormValue(string formId, string controlId) { return Call(nameof(GetFormValue), formId, controlId); }
         public string[] GetOptions(string formId, string controlId) { return CallTyped<string[]>(nameof(GetOptions), formId, controlId); }
@@ -137,7 +137,6 @@ namespace SkylineTool
         public ActionResult DismissWithButton(string formId, string button) { return CallTyped<ActionResult>(nameof(DismissWithButton), formId, button); }
         public ActionResult DismissWithCancelButton(string formId) { return CallTyped<ActionResult>(nameof(DismissWithCancelButton), formId); }
         public ActionResult DismissWithAcceptButton(string formId) { return CallTyped<ActionResult>(nameof(DismissWithAcceptButton), formId); }
-        public void InvokeContextMenuItem(string formId, string controlSelector, string itemText) { Call(nameof(InvokeContextMenuItem), formId, controlSelector, itemText); }
 
         // 1-arg methods
         public string GetSelectedElementLocator(string elementType)

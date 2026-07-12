@@ -34,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
     /// <summary>
     /// Exercises the generic form-automation verbs of the AI Connector (<see cref="JsonUiService"/>)
     /// against the first steps of the PRM tutorial's "Import Peptide Search" flow:
-    ///   * <see cref="JsonUiService.InvokeMenuItem"/> -- "File > Import > Peptide Search".
+    ///   * <see cref="JsonToolServer.ClickMainMenuItem"/> -- "File > Import > Peptide Search".
     ///   * <see cref="JsonToolServer.ClickFormButton"/> -- the "Add Files" button, which opens the
     ///     native "Add Input Files" dialog (a dialog owned by the modal wizard).
     ///   * <see cref="JsonToolServer.SetFormValue"/> + ClickFormButton -- select two files and Open,
@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestFunctional
             // 1) Open the wizard through the menu, using the menu's own localized text.
             string menuPath = null;
             RunUI(() => menuPath = BuildLocalizedMenuPath(@"importPeptideSearchMenuItem"));
-            JsonUiService.InvokeMenuItem(menuPath);
+            Program.MainJsonToolServer.ClickMainMenuItem(menuPath);
             var wizard = WaitForOpenForm<ImportPeptideSearchDlg>();
             string wizardId = FormIdOfType(nameof(ImportPeptideSearchDlg));
 
@@ -81,10 +81,10 @@ namespace pwiz.SkylineTestFunctional
 
             // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,
             // click Open". A native dialog has no caption-addressable buttons, so it is confirmed with the
-            // accept action (the connector's way to press its default button) rather than ClickFormButton.
+            // dismiss action (the connector's way to press its default button) rather than ClickFormButton.
             Program.MainJsonToolServer.SetFormValue(addFilesId, @"FileName",
                 QuotePaths(new[] { file1, file2 }));
-            JsonUiService.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"accept", null);
+            JsonUiService.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"dismiss", null);
 
             // The wizard's search-file list now holds both files.
             WaitForConditionUI(() => wizard.BuildPepSearchLibControl.SearchFilenames.Length == 2);

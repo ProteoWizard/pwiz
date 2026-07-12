@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
         {
             string mainFormId = GetConnectorForm<SkylineWindow>();
             // Peptide Settings is modal, so it blocks the main window while it is up.
-            string settingsId = ResolveModal(Connector.InvokeMenuItem(
+            string settingsId = ResolveModal(Connector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>(@"settingsToolStripMenuItem", @"peptideSettingsMenuItem")));
             try
             {

@@ -139,7 +139,7 @@ namespace TestPerf
 
             // Open the Start Page (File > Start). This opens a dialog rather than completing, so resolve the page it
             // opened straight from the menu action's ActionResult.FormId (ResolveModal) instead of waiting for it.
-            var startPage = ResolveModal(Connector.InvokeMenuItem(
+            var startPage = ResolveModal(Connector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "startPageMenuItem")));
             PauseForScreenShot(startPage, "Start Page -- Import DIA Peptide Search"); // s-01
 
@@ -304,16 +304,16 @@ namespace TestPerf
         {
             // Import Document opens the native Open dialog (a dialog), so it does not complete; resolve it from the
             // menu action's ActionResult, then accept it to import.
-            var importDlg = ResolveModal(Connector.InvokeMenuItem(MenuPath<SkylineWindow>(
+            var importDlg = ResolveModal(Connector.ClickMainMenuItem(MenuPath<SkylineWindow>(
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem")));
             Connector.SetFormValue(importDlg, "FileName", GetTestPath("PRTC.sky"));
             Connector.DismissWithAcceptButton(importDlg);
             PauseForScreenShot(GetConnectorForm<SkylineWindow>(), "Targets with PRTC added"); // s-10
 
             // Save blocks in a modal "Saving..." progress dialog until the (large) document is written; the
-            // connector's InvokeMenuItem rides through that progress dialog and is expected to complete, so the
+            // connector's menu click rides through that progress dialog and is expected to complete, so the
             // save is finished on return.
-            AssertComplete(Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
+            AssertComplete(Connector.ClickMainMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace TestPerf
             // Import Results opens a dialog (so it does not complete): either a conditional "no decoys -- add
             // them?" prompt or the Import Results dialog. Because the menu-item verb returns only once one of them
             // is up, query the open forms directly (no WaitForCondition) and decline the decoy prompt if present.
-            Connector.InvokeMenuItem(MenuPath<SkylineWindow>(
+            Connector.ClickMainMenuItem(MenuPath<SkylineWindow>(
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importResultsMenuItem"));
             var decoyPrompt = Connector.GetOpenForms().FirstOrDefault(f => Equals(f.Type, nameof(MultiButtonMsgDlg)));
             if (decoyPrompt != null)
@@ -356,7 +356,7 @@ namespace TestPerf
             // import is a prime place to find the assumption failing.
             AssertComplete(Connector.DismissWithAcceptButton(nameDlg));
             // Save (rides its "Saving..." progress dialog); expected to complete.
-            AssertComplete(Connector.InvokeMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
+            AssertComplete(Connector.ClickMainMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
         }
 
         /// <summary>
@@ -408,14 +408,14 @@ namespace TestPerf
             // "Peak Areas - CV Histogram", which is how the connector finds it among the open graphs.
             // Showing the CV Histogram graph is a docked graph (not a modal), so the menu-item verb is expected
             // to complete; the graph is then resolvable immediately.
-            AssertComplete(Connector.InvokeMenuItem(MenuPath<ViewMenu>(
+            AssertComplete(Connector.ClickMainMenuItem(MenuPath<ViewMenu>(
                 "viewToolStripMenuItem", "peakAreasMenuItem", "areaCVHistogramMenuItem")));
             var cvHistogram = GetConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
             PauseForScreenShot(cvHistogram, "Peak Areas -- CV Histogram"); // s-12
 
-            // Raise the CV-cutoff line to 30% through the histogram's right-click Properties dialog. (The
-            // context-menu verb is void; it opens the properties dialog, resolved immediately below.)
-            Connector.InvokeContextMenuItem(cvHistogram, string.Empty,
+            // Raise the CV-cutoff line to 30% through the histogram's right-click Properties dialog. The graph has no
+            // menu bar and no toolbar, so naming no control reaches its RIGHT-CLICK menu -- the only menu it has.
+            Connector.ClickControlMenuItem(cvHistogram, string.Empty,
                 GetLocalizedText<PeakAreasContextMenu>("areaPropsContextMenuItem"));
             var cvProperties = GetConnectorForm<AreaCVToolbarProperties>();
             AssertComplete(Connector.SetFormValue(cvProperties, GetLocalizedText<AreaCVToolbarProperties>("label2"), "30")); // CV cutoff
@@ -425,7 +425,7 @@ namespace TestPerf
 
             // 2.2 Refine > Advanced opens the RefineDlg (a dialog), so the menu-item verb does not complete -- resolve
             // the dialog from its ActionResult.FormId.
-            var refine = ResolveModal(Connector.InvokeMenuItem(
+            var refine = ResolveModal(Connector.ClickMainMenuItem(
                 MenuPath<RefineMenu>("refineToolStripMenuItem", "refineAdvancedMenuItem")));
             SelectTab(refine, GetLocalizedText<RefineDlg>("tabDocument"));
             AssertComplete(Connector.SetFormValue(refine, GetLocalizedText<RefineDlg>("label1"), "2")); // Min peptides per protein
@@ -446,7 +446,7 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveModal(Connector.InvokeMenuItem(
+            var saveDlg = ResolveModal(Connector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
             Connector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
             Connector.DismissWithAcceptButton(saveDlg);
@@ -467,7 +467,7 @@ namespace TestPerf
             // read directly and set as the "Proteins to keep" text (the caption-less multiline box is paired with
             // the label before it in tab order -- "Proteins to keep:"). "Names" is the default match mode; select
             // it to match the tutorial.
-            var acceptProteins = ResolveModal(Connector.InvokeMenuItem(
+            var acceptProteins = ResolveModal(Connector.ClickMainMenuItem(
                 MenuPath<RefineMenu>("refineToolStripMenuItem", "acceptProteinsMenuItem")));
             AssertComplete(Connector.SetFormValue(acceptProteins, GetLocalizedText<RefineProteinListDlg>("label1"),
                 File.ReadAllText(GetTestPath("target_proteins.txt"))));
@@ -493,7 +493,7 @@ namespace TestPerf
             // caption-less and paired with the label before each in tab order ("Max peptide peak rank:" and
             // "Max transition peak rank:"). The other Results-tab options are left at their defaults, as the
             // tutorial notes they would not change this document.
-            var refine = ResolveModal(Connector.InvokeMenuItem(
+            var refine = ResolveModal(Connector.ClickMainMenuItem(
                 MenuPath<RefineMenu>("refineToolStripMenuItem", "refineAdvancedMenuItem")));
             SelectTab(refine, GetLocalizedText<RefineDlg>("tabResults"));
             AssertComplete(Connector.SetFormValue(refine, GetLocalizedText<RefineDlg>("label8"), "2"));           // max peptide peak rank
@@ -506,13 +506,13 @@ namespace TestPerf
             WaitForDocumentLoaded();
 
             // Expand all proteins (a synchronous menu action) -- expected to complete.
-            AssertComplete(Connector.InvokeMenuItem(MenuPath<EditMenu>(
+            AssertComplete(Connector.ClickMainMenuItem(MenuPath<EditMenu>(
                 "editToolStripMenuItem", "expandAllToolStripMenuItem", "expandProteinsMenuItem")));
             PauseForScreenShot(GetConnectorForm<SkylineWindow>(), "Targets -- SRM peptide targets"); // s-19
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveModal(Connector.InvokeMenuItem(
+            var saveDlg = ResolveModal(Connector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
             Connector.SetFormValue(saveDlg, "FileName", GetTestPath("SRM_targets.sky"));
             Connector.DismissWithAcceptButton(saveDlg);

@@ -20,6 +20,7 @@
 
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -27,9 +28,9 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Verifies that <see cref="JsonUiService.InvokeMenuItem"/> reaches an item in a main-menu submenu
+    /// Verifies that <see cref="JsonToolServer.ClickMainMenuItem"/> reaches an item in a main-menu submenu
     /// that is built on demand: the "View &gt; Live Reports &gt; Group Comparisons" submenu rebuilds its
-    /// items (even "Add...") on DropDownOpening, so InvokeMenuItem must open each level before matching.
+    /// items (even "Add...") on DropDownOpening, so the walk must open each level before matching.
     /// </summary>
     [TestClass]
     public class LazyMenuConnectorTest : AbstractFunctionalTest
@@ -42,12 +43,15 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Drive the verb through the running JSON tool server (torn down with the window).
+            RunUI(() => Program.StartToolService());
+
             // "Add..." under Group Comparisons exists only after the submenu's DropDownOpening builds it;
-            // reaching it confirms InvokeMenuItem opens each submenu level. Its click opens the dialog.
-            JsonUiService.InvokeMenuItem(@"View > Live Reports > Group Comparisons > Add");
+            // reaching it confirms the menu walk opens each submenu level. Its click opens the dialog.
+            Program.MainJsonToolServer.ClickMainMenuItem(@"View > Live Reports > Group Comparisons > Add");
             var editGroupComparisonDlg = WaitForOpenForm<EditGroupComparisonDlg>();
             Assert.IsNotNull(editGroupComparisonDlg,
-                @"InvokeMenuItem did not reach the lazily-built 'Add' item under Group Comparisons.");
+                @"ClickMainMenuItem did not reach the lazily-built 'Add' item under Group Comparisons.");
             OkDialog(editGroupComparisonDlg, () => editGroupComparisonDlg.DialogResult = DialogResult.Cancel);
         }
     }

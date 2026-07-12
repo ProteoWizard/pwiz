@@ -27,20 +27,47 @@ namespace pwiz.Skyline.ToolsUI
         public abstract string FormId { get; }
         /// <summary>The form's visible title, for naming a captured-image file.</summary>
         public abstract string Title { get; }
-        /// <summary>The form's controls as ControlInfo, each path parented onto the form (the get_controls verb).</summary>
-        public abstract ControlInfo[] GetControls();
-        /// <summary>Clicks a control on the form by its visible label, returning whether the click completed or
-        /// left a dialog open. (To confirm a form or dialog use the accept action, and to dismiss it use Close --
-        /// neither keys on a localized button caption.)</summary>
-        public abstract ActionResult ClickButton(string button);
+        // ---- Driving the window: the same for a managed form and a native dialog ---------------------
+        //
+        // These used to be abstract, implemented twice. They are not: both kinds expose their contents the same way
+        // (EnumerateChildren -> UiElement.FindElement), and both act through the same UiActions -- so "click the
+        // button with this caption" is one method, not two. The only thing that differed was the marshaling, and
+        // that is now handled by the window itself: InvokeOnUiThread dispatches to a managed form's own thread, and
+        // for a native dialog it runs inline (its reads are Win32, safe on any thread). So the code below reads the
+        // same and does the right thing for both.
+
+        /// <summary>The form's controls as ControlInfo, each path parented onto the form (the get_controls verb) --
+        /// which is exactly the get_children action performed on the window itself.</summary>
+        public ControlInfo[] GetControls()
+        {
+            return UiActions.GetChildren.Call(this);
+        }
+
+        /// <summary>Clicks a control on the form by its visible label, returning whether the click completed or left
+        /// a dialog open. The control is resolved on the window's own thread (so a missing one fails HERE, with a
+        /// message naming what it looked for), then clicked through the Click action, which posts the gesture and
+        /// waits it out. (To confirm or dismiss a form or dialog use the dismiss action, or the DismissWith... verbs
+        /// -- none of which keys on a localized button caption.)</summary>
+        public ActionResult ClickButton(string button)
+        {
+            var element = InvokeOnUiThread(() => FindElement(button, UiActions.Click));
+            return (ActionResult) UiActions.Click.Invoke(element, null);
+        }
+
         /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name), returning whether the
-        /// set completed or left a dialog open.</summary>
+        /// set completed or left a dialog open. The one verb that genuinely differs: a managed form addresses a
+        /// control (or a grid cell) by id, a native dialog has only its file-name field and ignores the id.</summary>
         public abstract ActionResult SetValue(string controlId, string value);
+
         /// <summary>Dismisses the form/dialog by clicking the button with the given caption, then waits until it has
         /// closed and reports whether it completed. For a choice that is neither the default nor the cancel button
-        /// (e.g. "No" on a "replace it?" message box). A native file dialog has no caption-addressable button, so it
-        /// throws -- accept it with <see cref="DismissWithAcceptButton"/>.</summary>
-        public abstract ActionResult DismissWithButton(string button);
+        /// (e.g. "No" on a "replace it?" message box). The click is posted; the empty-action OkDialog then rides the
+        /// shared wait until the window has closed and the nesting count has drained.</summary>
+        public ActionResult DismissWithButton(string button)
+        {
+            ClickButton(button);
+            return OkDialog(() => { });
+        }
         /// <summary>Accepts the form/dialog -- the equivalent of pressing its default button (a managed form clicks
         /// its AcceptButton, a native dialog does its OK gesture), so confirming never keys on a localized caption --
         /// then waits until it has closed and reports whether it completed.</summary>
@@ -49,25 +76,42 @@ namespace pwiz.Skyline.ToolsUI
         /// waits until it has closed and reports whether it completed. The dismissing counterpart of
         /// <see cref="DismissWithAcceptButton"/>.</summary>
         public abstract ActionResult DismissWithCancelButton();
-        /// <summary>Resolves the path against this form and performs the action in the form's thread context.</summary>
-        public abstract object PerformAction(UiElementPath path, UiAction action, object value);
+        /// <summary>Resolves the path against this window and performs the action. Resolving and gating happen on the
+        /// window's own thread (a control's gates read window handles); the action then supplies its own threading --
+        /// a gesture posts itself and waits it out, a read runs inside the dialog-watch -- so perform_action behaves
+        /// exactly like the named verbs above, which go through the same actions.</summary>
+        public object PerformAction(UiElementPath path, UiAction action, object value)
+        {
+            var element = InvokeOnUiThread(() =>
+                JsonUiService.RequireAction(JsonUiService.ResolvePath(path, this), action));
+            return action.Invoke(element, value);
+        }
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
         /// the caller has done the screen-capture pre-flight).</summary>
         public abstract System.Drawing.Bitmap CaptureImage();
 
         // ---- Window-state queries the modal-watch (UiServiceDispatcher) asks each form about itself ----
 
-        /// <summary>Whether this is an interactive modal the caller would drive (a managed non-progress modal --
-        /// Modal and not a LongWaitDlg -- or a native dialog) rather than a progress/wait dialog the work itself
-        /// drives (a LongWaitDlg), which the watch rides through instead of stopping on.</summary>
-        public abstract bool IsInteractiveModal { get; }
+        /// <summary>Whether the window is modal -- it blocks the window that opened it until it goes away.</summary>
+        public abstract bool IsModal { get; }
+
+        /// <summary>Whether the window will go away BY ITSELF, without anyone dismissing it -- a LongWaitDlg, which
+        /// closes when the work it is reporting on finishes. Nothing else does: every other form stands there until
+        /// it is dismissed.
+        ///
+        /// <para>This is the distinction the connector's wait turns on. A modal that is NOT transient
+        /// (<c>IsModal &amp;&amp; !IsTransient</c>) is a stop: the wait reports it and hands control straight back to
+        /// the caller, who must drive it. A transient one is ridden through -- waiting for it is the right thing to
+        /// do, because it will finish on its own.</para></summary>
+        public abstract bool IsTransient { get; }
         /// <summary>Whether the form/dialog is still on screen (a managed form: not disposed, handle created and
         /// visible; a native dialog: its window is visible). Must be read on the owning UI thread for a managed
         /// form. Its negation is "dismissed".</summary>
         public abstract bool IsOpen { get; }
-        /// <summary>Whether this is a busy progress form (an <see cref="ILongWaitForm"/> mid-operation) the
-        /// message-loop watchdog rides through; false for a native dialog.</summary>
-        public abstract bool IsBusy { get; }
+        /// <summary>Whether this is a progress form actively reporting work in flight (an
+        /// <see cref="ILongWaitForm"/> mid-operation). It is what tells the message-loop watchdog that a wait is
+        /// getting somewhere -- work IS advancing -- rather than stuck; false for a native dialog.</summary>
+        public abstract bool IsProgressing { get; }
         /// <summary>The detailed message this form shows when it blocks the UI: a managed form's composed alert
         /// text (CommonFormEx.DetailedMessage) else its caption; a native dialog's message-body text else its
         /// caption. Read on the owning UI thread for a managed form.</summary>
@@ -77,6 +121,9 @@ namespace pwiz.Skyline.ToolsUI
         /// as the modal-watch can identify or capture the window without reading Form.Handle off its UI thread
         /// (which would trip the cross-thread check).</summary>
         public IntPtr Hwnd { get; }
+
+        // A top-level window IS its own form, so the window a gesture on it is marshaled through is itself.
+        internal override IntPtr FormHwnd => Hwnd;
 
         protected ActionResult OkDialog(Action action)
         {
@@ -93,41 +140,20 @@ namespace pwiz.Skyline.ToolsUI
             return DialogWatcher.PerformAction(Hwnd, action, CancellationToken);
         }
 
+        // Both reads resolve the control and read it in ONE trip to the form's thread (CallFunction puts us there),
+        // so the raw CallNow is what to use -- not Call, which would marshal a second time. Going through the action
+        // rather than the element's method directly means the named verb returns exactly what the generic get_value /
+        // get_options return, and needs no cast to the capability interface to do it.
         public virtual string GetFormValue(string controlId)
         {
-            return CallFunction(() => FindElement(controlId, UiActions.GetValue).Value?.ToString());
+            return CallFunction(() =>
+                UiActions.GetValue.CallNow(FindElement(controlId, UiActions.GetValue))?.ToString());
         }
 
         public virtual string[] GetOptions(string controlId)
         {
             return CallFunction(() =>
-                ((IOptionsElement)FindElement(controlId, UiActions.GetOptions)).GetOptions().ToArray());
-        }
-
-        /// <summary>Clicks an item on a control's right-click menu. The control is addressed the way get_controls
-        /// addresses one (by its <paramref name="controlSelector"/> label or type), or -- when that is empty -- the
-        /// form's own context menu (a graph's, say, which no named child owns). <paramref name="itemText"/> is the
-        /// item's visible text, or a '&gt;'-separated path into a submenu. Resolving and clicking both happen on the
-        /// form's UI thread, inside the watched action: building a context menu has side effects, and an item that
-        /// opens a modal blocks there, so the wait reports it rather than hanging.</summary>
-        public ActionResult InvokeContextMenuItem(string controlSelector, string itemText)
-        {
-            if (string.IsNullOrEmpty(itemText))
-                throw new ArgumentException(new LlmInstruction(@"An item text is required."));
-            return PerformAction(() =>
-            {
-                UiElementPath itemPath = new UiElementPath(null, null, null, ContextMenuElement.TypeName);
-                foreach (var segment in itemText.Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries))
-                    itemPath = new UiElementPath(itemPath, segment.Trim(), null, null);
-                var control = string.IsNullOrEmpty(controlSelector)
-                    ? this
-                    : FindElement(controlSelector, UiActions.GetChildren);
-                // Not "as IClickableElement ... !": an item that does not exist, or one that cannot be clicked, must
-                // say so. RequireAction throws the same message the other verbs do; a null-forgiving cast would throw
-                // a NullReferenceException out of this posted action instead, surfacing as an "Unexpected Error".
-                var menuItem = JsonUiService.RequireAction(control.GetDescendant(itemPath), UiActions.Click);
-                ((IClickableElement) menuItem).ClickNow();
-            });
+                UiActions.GetOptions.CallNow(FindElement(controlId, UiActions.GetOptions)));
         }
 
         /// <summary>Every top-level window of this process that is a managed Form (visible) or a native modal dialog,
@@ -142,10 +168,10 @@ namespace pwiz.Skyline.ToolsUI
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
                 if (windowProcessId != processId)
                     continue;
-                if (Control.FromHandle(hwnd) is Form form)
+                if (Control.FromHandle(hwnd) is Form)
                 {
                     if (User32.IsWindowVisible(hwnd))
-                        yield return new StandaloneForm(form, hwnd, cancellationToken);
+                        yield return NewStandaloneWindow(hwnd, cancellationToken);
                 }
                 else yield return NativeDialog.MakeNativeDialog(hwnd, cancellationToken);
             }
@@ -156,9 +182,15 @@ namespace pwiz.Skyline.ToolsUI
         // thread), or returns nothing for a truly native window (a generic NativeDialog).
         internal static StandaloneWindow NewStandaloneWindow(IntPtr hwnd, CancellationToken cancellationToken)
         {
-            return Control.FromHandle(hwnd) is Form form
-                ? (StandaloneWindow)new StandaloneForm(form, hwnd, cancellationToken)
-                : NativeDialog.MakeNativeDialog(hwnd, cancellationToken);
+            switch (Control.FromHandle(hwnd))
+            {
+                case Form form:
+                    return StandaloneForm.Create(form, hwnd, cancellationToken);
+                case { } control:
+                    throw new ArgumentException(new LlmInstruction($@"{control.GetType().Name} is not a form"));
+                default:
+                    return NativeDialog.MakeNativeDialog(hwnd, cancellationToken);
+            }
         }
 
         /// <summary>The handles of this process's modal dialog windows -- visible, enabled, top-level windows whose

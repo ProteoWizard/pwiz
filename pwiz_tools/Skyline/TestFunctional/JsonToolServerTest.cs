@@ -1868,7 +1868,7 @@ namespace pwiz.SkylineTestFunctional
                 CommandArgs.ARG_OPEN + newPath,
                 CommandArgs.ARG_REFINE_MIN_PEPTIDES + @"100",
                 CommandArgs.ARG_OUT + combinedPath);
-            AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath);
+            AssertEx.AreEqual(combinedPath, SkylineWindow.DocumentFilePath, combinedResult);
             AssertEx.AreEqual(0, SkylineWindow.Document.MoleculeGroupCount);
             Assert.IsTrue(File.Exists(combinedPath));
 
@@ -1997,7 +1997,7 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
             try
             {
                 AssertEx.ThrowsException<Exception>(() =>
-                    server.InvokeMenuItem("File > Save"));
+                    server.ClickMainMenuItem("File > Save"));
             }
             finally
             {
@@ -2011,7 +2011,7 @@ NKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVAR
             try
             {
                 AssertEx.ThrowsException<Exception>(() =>
-                    server.InvokeMenuItem(@"File > Save"));
+                    server.ClickMainMenuItem(@"File > Save"));
                 AssertEx.ThrowsException<Exception>(() =>
                     server.PerformAction(treeId, @"check_item", @"Peptides"));
             }

@@ -73,7 +73,7 @@ namespace pwiz.Skyline.ToolsUI
         // A GESTURE, though, does go through the dialog's UI thread (DialogWatcher marshals it there), so it is
         // counted like any other action and a modal it raises is detected by the wait -- which is how a native
         // button's click can now report the dialog it opened, the way a managed button's does.
-        internal override IntPtr GestureThreadHwnd => Hwnd;
+        internal override IntPtr FormHwnd => Hwnd;
     }
 
     /// <summary>A push button on a native dialog -- a message box's "Yes"/"No"/"OK", a file dialog's Open/Save or

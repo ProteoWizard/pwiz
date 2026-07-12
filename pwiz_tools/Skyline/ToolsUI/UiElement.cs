@@ -17,6 +17,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using JetBrains.Annotations;
+using Newtonsoft.Json.Linq;
+using NHibernate.Hql.Ast.ANTLR.Tree;
+using NHibernate.Linq.Visitors;
+using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,15 +37,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using JetBrains.Annotations;
-using Newtonsoft.Json.Linq;
-using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.SystemUtil;
-using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
-using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -103,303 +105,6 @@ namespace pwiz.Skyline.ToolsUI
     /// options that are available to select or check.</summary>
     public interface IOptionsElement { IEnumerable<string> GetOptions(); }
 
-    // ---- Actions --------------------------------------------------------------------------------
-
-    /// <summary>
-    /// One thing the connector can ask a <see cref="UiElement"/> to do (the verbs ClickFormButton,
-    /// SetFormValue, the grid verbs, and the generic perform_action all act through these). An action is a
-    /// singleton object -- see <see cref="UiActions"/> for the set of them -- that knows its wire
-    /// <see cref="SnakeCaseName"/>, the gates the connector must honor before performing it
-    /// (<see cref="MustBeEnabled"/> -- a user could not act on a control they
-    /// cannot see or that is disabled), and whether it <see cref="ReturnsValue"/> (a value action is run
-    /// synchronously; a void action is posted fire-and-forget). It decides whether it
-    /// <see cref="AppliesTo"/> an element (usually: the
-    /// element is the right kind -- it implements the action's capability interface) and how to
-    /// <see cref="Invoke"/> it (by calling that interface's method). This inverts the old per-element switch
-    /// over an action enum: a new control kind declares its capabilities by implementing interfaces, and a
-    /// new action is usually just one <see cref="UiActions"/> entry.
-    /// </summary>
-    public abstract class UiAction
-    {
-        protected UiAction(string name)
-        {
-            Name = name;
-            SnakeCaseName = UiActions.ToSnakeCase(name);
-        }
-
-        /// <summary>The PascalCase action name; <see cref="SnakeCaseName"/> is the snake_case wire form.</summary>
-        public string Name { get; }
-        public string SnakeCaseName { get; }
-
-        /// <summary>One line describing what the action does, surfaced by get_actions so a caller does not have
-        /// to guess. LLM-facing instruction text (see <see cref="LlmInstruction"/>), not for display to users.</summary>
-        public LlmInstruction Description { get; private set; }
-
-        /// <summary>What to pass as the action's value, or null when it takes none (also surfaced by
-        /// get_actions). LLM-facing instruction text (see <see cref="LlmInstruction"/>).</summary>
-        public LlmInstruction ValueDescription { get; private set; }
-
-        /// <summary>Sets the self-documentation (returns this so it chains onto a <see cref="UiActions"/>
-        /// definition). The descriptions are passed as <see cref="LlmInstruction"/> so that every unlocalized
-        /// LLM-facing string is greppable for a future localization pass.</summary>
-        public UiAction Describe(LlmInstruction description, LlmInstruction valueDescription = default)
-        {
-            Description = description;
-            ValueDescription = valueDescription;
-            return this;
-        }
-
-        /// <summary>This action as the <see cref="ActionInfo"/> get_actions reports.</summary>
-        public ActionInfo ToActionInfo() => new ActionInfo
-        {
-            Name = SnakeCaseName,
-            Description = Description,
-            ValueDescription = ValueDescription,
-        };
-
-        /// <summary>Whether the element must be visible / enabled for the action to be performed -- the gates
-        /// a user faces. A pure read (get_value, get_actions, get_children, get_grid_text) clears these, so a
-        /// disabled or off-screen control can still be inspected; a mutation or click leaves them set.</summary>
-        public bool MustBeEnabled { get; internal set; } = true;
-
-        /// <summary>Whether the action produces a result the caller waits for (get_value, get_grid_text,
-        /// get_actions, get_children). Drives the threading: a value action is run synchronously, inside the
-        /// dialog-watch so it does not hang if a modal is up; a void action (a click, a value set) is posted
-        /// fire-and-forget, so a gesture that opens a modal does not block and the modal is driven by later
-        /// commands -- the same way clicking a main-menu item already works.</summary>
-        public bool ReturnsValue { get; internal set; }
-
-        /// <summary>Whether this action is meaningful for the element -- usually whether the element is the
-        /// kind the action targets (it implements the action's capability interface).</summary>
-        public abstract bool AppliesTo(UiElement element);
-
-        /// <summary>Whether the action can currently be performed on the element: it applies and the element
-        /// passes the visible/enabled gates the action requires.</summary>
-        public bool IsEnabled(UiElement element) =>
-            AppliesTo(element)
-            && (!MustBeEnabled || element.IsEnabled);
-
-        /// <summary>The action ITSELF, run ON the element's UI thread: a raw gesture (a click, a value set) or a raw
-        /// read. It does NO threading and NO gating -- it assumes the caller has already put it on the right thread
-        /// and checked the gates. This is the one place a kind of element says what the action means; the threading
-        /// belongs to <see cref="Invoke"/>, so no element decides its own.</summary>
-        public abstract object InvokeNow(UiElement element, object argument);
-
-        /// <summary>The action WITH the threading it needs, called from the connector's worker (pipe/test) thread.
-        /// A read runs on the element's UI thread and returns its value. A gesture is gated, posted onto the
-        /// element's UI thread and waited out, so it returns an <see cref="ActionResult"/> saying whether it
-        /// completed or left a dialog open -- meaning an action behaves the same reached through perform_action or a
-        /// named verb. Overridden ONLY by an action that must run off the UI thread because it owns its own wait
-        /// (Accept -- see UiActions). Must be called off the UI thread.</summary>
-        public virtual object Invoke(UiElement element, object argument)
-        {
-            return ReturnsValue
-                ? element.InvokeOnUiThread(() => InvokeNow(element, argument))
-                : element.PerformGesture(() => InvokeNow(element, argument));
-        }
-    }
-
-    /// <summary>
-    /// The set of <see cref="UiAction"/> singletons (these replace the former enum members) and the lookup
-    /// over them. Every action's Invoke is just a method call on a capability interface, so they are all
-    /// built from the generic <see cref="SimpleActionImpl{T,TArg}"/> -- no per-action class.
-    /// </summary>
-    public static class UiActions
-    {
-        // PascalCase -> snake_case ("GetActions" -> "get_actions").
-        public static string ToSnakeCase(string name)
-        {
-            var sb = new System.Text.StringBuilder();
-            for (int i = 0; i < name.Length; i++)
-            {
-                if (i > 0 && char.IsUpper(name[i]))
-                    sb.Append('_');
-                sb.Append(char.ToLowerInvariant(name[i]));
-            }
-
-            return sb.ToString();
-        }
-
-        /// <summary>An action that targets element kind <typeparamref name="T"/> (a capability interface or
-        /// an element type) and whose Invoke is a single call <c>func(element, argument)</c> -- so an action
-        /// needs no class of its own, just an entry below. The argument is handed to the func as
-        /// <typeparamref name="TArg"/> (the JSON value is already a string or the raw object; an action that
-        /// wants an int or a cell parses it inside its func).</summary>
-        private class SimpleActionImpl<T, TArg> : UiAction
-        {
-            private readonly Func<T, TArg, object> _invoke;
-
-            public SimpleActionImpl(string name, Func<T, TArg, object> invoke, bool mustBeEnabled) : base(name)
-            {
-                _invoke = invoke;
-                // Visible and enabled gates move together: a read clears both, a mutation/click leaves both set.
-                MustBeEnabled = mustBeEnabled;
-            }
-
-            public override bool AppliesTo(UiElement element) => element is T;
-
-            public override object InvokeNow(UiElement element, object argument)
-            {
-                if (!(element is T typed))
-                    throw new ArgumentException(LlmInstruction.Format(
-                        @"The action '{0}' does not apply to this control.", SnakeCaseName));
-                return _invoke(typed, argument is TArg arg ? arg : default(TArg));
-            }
-        }
-
-        /// <summary>An action that OWNS ITS THREADING -- so Invoke runs it exactly where it was called, on the
-        /// worker thread, instead of marshaling it onto the element's UI thread. Accept is the only one: it dismisses
-        /// a form and waits for it to close (DialogWatcher.OkDialog posts the dismiss gesture onto the form's thread
-        /// and waits there), which must run OFF that thread -- marshaling it onto the thread it then waits on would
-        /// deadlock.</summary>
-        private sealed class SelfThreadedActionImpl<T, TArg> : SimpleActionImpl<T, TArg>
-        {
-            public SelfThreadedActionImpl(string name, Func<T, TArg, object> invoke, bool mustBeEnabled)
-                : base(name, invoke, mustBeEnabled)
-            {
-            }
-
-            public override object Invoke(UiElement element, object argument) => InvokeNow(element, argument);
-        }
-
-        private static UiAction SelfThreadedAction<T, TArg>(string name, Func<T, TArg, object> invoke) =>
-            new SelfThreadedActionImpl<T, TArg>(name, invoke, true);
-
-        // get_actions / get_children apply to every element (not one capability kind), so they target the
-        // base UiElement type; they are reads (mustBeEnabled: false, and SimpleFunction marks them as
-        // returning a value).
-        public static readonly UiAction GetActions = SimpleFunction<UiElement>(
-                @"GetActions", e => e.SupportedActions.Select(a => a.ToActionInfo()).ToArray())
-            .Describe(new LlmInstruction(@"List the actions this control supports, each with a description and the value it takes."));
-
-        public static readonly UiAction GetChildren = SimpleFunction<UiElement>(
-                @"GetChildren", e => e.GetControlsNow())
-            .Describe(new LlmInstruction(@"List this element's child controls; each one's path can be used directly in a later call."));
-
-        // A void action (click, value set, item check, ...) gates and posts its change fire-and-forget inside
-        // the element's method (see UiElement.PerformGesture); only a value action (get_value, get_grid_text)
-        // runs synchronously on the UI thread and returns a value -- see UiAction.ReturnsValue.
-        public static readonly UiAction Click = SimpleAction<IClickableElement>(
-                @"Click", e => { e.ClickNow(); return null; })
-            .Describe(new LlmInstruction(@"Click this control (a button, menu/list item, checkbox, ...)."));
-
-        public static readonly UiAction GetValue = SimpleFunction<UiElement>(
-                @"GetValue", e => UiElement.ConvertValue(e.Value))
-            .Describe(new LlmInstruction(@"Get this control's current value (null, a bool, a number, or a string)."));
-
-        public static readonly UiAction SetValue = SimpleAction<IValueElement, object>(
-                @"SetValue", (e, value) => { e.SetValueNow(UiElement.ConvertValue(value)); return null; })
-            .Describe(new LlmInstruction(@"Set this control's value."), new LlmInstruction(@"the new value -- a bool, a number, or a string"));
-
-        public static readonly UiAction CheckItem = SimpleAction<ICheckItemsElement, string>(
-                @"CheckItem", (e, item) => { e.SetItemCheckedNow(item, true); return null; })
-            .Describe(new LlmInstruction(@"Check the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
-
-        public static readonly UiAction UncheckItem = SimpleAction<ICheckItemsElement, string>(
-                @"UncheckItem", (e, item) => { e.SetItemCheckedNow(item, false); return null; })
-            .Describe(new LlmInstruction(@"Uncheck the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
-
-        public static readonly UiAction SelectItem = SimpleAction<ISelectItemsElement, string>(
-                @"SelectItem", (e, item) => { e.SetItemSelectedNow(item, true); return null; })
-            .Describe(new LlmInstruction(@"Select the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
-
-        public static readonly UiAction UnselectItem = SimpleAction<ISelectItemsElement, string>(
-                @"UnselectItem", (e, item) => { e.SetItemSelectedNow(item, false); return null; })
-            .Describe(new LlmInstruction(@"Deselect the list/tree item with the given text."), new LlmInstruction(@"the item's visible text"));
-
-        public static readonly UiAction SetSelectedIndex = SimpleAction<ISelectItemsElement, object>(
-                @"SetSelectedIndex", (e, arg) => { e.SetSelectedIndexNow(UiValue.ToInt(arg)); return null; })
-            .Describe(new LlmInstruction(@"Select the list item at the given index (clears any other selection)."), new LlmInstruction(@"the zero-based index"));
-
-        public static readonly UiAction GetOptions = SimpleFunction<IOptionsElement>(
-                @"GetOptions", e => e.GetOptions().ToArray())
-            .Describe(new LlmInstruction(@"List all the choices this control offers (a combo box, list box, or checked list box), regardless of which are selected or checked."));
-
-        public static readonly UiAction GetGridText = SimpleFunction<GridElement>(
-                @"GetGridText", e => e.GetGridText())
-            .Describe(new LlmInstruction(@"Get the whole grid as tab-separated text -- the column headers then every row."));
-
-        public static readonly UiAction SetGridText = SimpleAction<GridElement, string>(
-                @"SetGridText", (e, text) => { e.SetGridTextNow(text); return null; })
-            .Describe(new LlmInstruction(@"Paste tab-separated text into the grid starting at the current cell."), new LlmInstruction(@"the tab-separated text (it fills down and to the right)"));
-
-        public static readonly UiAction SetCurrentCellAddress = SimpleAction<GridElement, object>(
-                @"SetCurrentCellAddress", (e, arg) => { var cell = UiValue.ToColumnRow(arg); e.SetCurrentCellAddressNow(cell[0], cell[1]); return null; })
-            .Describe(new LlmInstruction(@"Move the grid's current cell (do this before set_grid_text or opening a cell's menu)."), new LlmInstruction(@"a [column, row] array, e.g. [0, 1]"));
-
-        public static readonly UiAction Expand = SimpleAction<IExpandCollapseElement, object>(
-                @"Expand", (e, path) => { e.ExpandNow(path); return null; })
-            .Describe(new LlmInstruction(@"Expand a tree node by its path."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0]"));
-
-        public static readonly UiAction Collapse = SimpleAction<IExpandCollapseElement, object>(
-                @"Collapse", (e, path) => { e.CollapseNow(path); return null; })
-            .Describe(new LlmInstruction(@"Collapse a tree node by its path."), new LlmInstruction(@"a path array of child names/indexes, e.g. [""Peptides"", 0]"));
-
-        public static readonly UiAction SelectTab = SimpleAction<ISelectTabElement, string>(
-                @"SelectTab", (e, tab) => { e.SelectTabNow(tab); return null; })
-            .Describe(new LlmInstruction(@"Select the tab with the given text."), new LlmInstruction(@"the tab's visible text"));
-
-        // Accepts a form/dialog: with no button it presses the default (accept) button; with a caption it clicks that
-        // button, waiting for the form to close either way. THE ONE SELF-THREADED ACTION (see SelfThreadedActionImpl):
-        // the dismiss verbs ride DialogWatcher.OkDialog, which posts the gesture onto the form's UI thread and waits
-        // there for the form to close -- so this must run OFF that thread. Marshaling it on, as every other action is
-        // marshaled, would have it wait on the very thread it is running on.
-        public static readonly UiAction Accept = SelfThreadedAction<StandaloneWindow, string>(@"Accept",
-                (e, button) => string.IsNullOrEmpty(button) ? e.DismissWithAcceptButton() : e.DismissWithButton(button))
-            .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button; pass a button's caption to click that one instead."));
-
-        // Pastes the given text into a control that can paste (text box, grid, Targets tree, main window) --
-        // for the tutorial paste steps, without touching the clipboard.
-        public static readonly UiAction Paste = SimpleAction<IClipboardElement, string>(@"Paste", (e, text) => { e.PasteNow(text); return null; })
-            .Describe(new LlmInstruction(@"Paste text into this element (a text box, a grid, the Targets tree, or the main Skyline window) without using the clipboard."), new LlmInstruction(@"the text to paste"));
-
-        // Selects everything in a control that can paste -- e.g. before a paste, to replace the contents.
-        public static readonly UiAction SelectAll = SimpleAction<IClipboardElement>(@"SelectAll", e => { e.SelectAllNow(); return null; })
-            .Describe(new LlmInstruction(@"Select all the content of this element (a text box, a grid, the Targets tree, or the main Skyline window) -- e.g. before paste, to replace it."));
-
-        // Renames the tree's selected node in place -- e.g. the MethodEdit tutorial's "Type 'Primary
-        // Peptides' and press Enter" on a peptide group. Select the node first.
-        public static readonly UiAction RenameNode = SimpleAction<IRenameNodeElement, string>(
-                @"RenameNode", (e, value) => { e.RenameNodeNow(value); return null; })
-            .Describe(new LlmInstruction(@"Rename the tree's selected node in place (select the node first)."), new LlmInstruction(@"the new name"));
-
-        // Every action, in get_actions / get_children listing order (the universal ones first).
-        public static readonly UiAction[] AllActions =
-        {
-            GetActions, GetChildren, Click, GetValue, SetValue, GetOptions, CheckItem, UncheckItem, SelectItem,
-            UnselectItem, SetSelectedIndex, GetGridText, SetGridText, SetCurrentCellAddress, Expand,
-            Collapse, SelectTab, Accept, Paste, SelectAll, RenameNode
-        };
-
-        // The action with the given wire name, matched case- and underscore-insensitively, or null.
-        public static UiAction ByName(string name)
-        {
-            var normalized = (name ?? string.Empty).Replace(@"_", string.Empty).Trim();
-            return AllActions.FirstOrDefault(action =>
-                string.Equals(action.Name, normalized, StringComparison.OrdinalIgnoreCase));
-        }
-
-        public static UiAction SimpleFunction<T>(string name, Func<T, object> action)
-        {
-            return SimpleFunction<T, object>(name, (element, arg) => action(element));
-        }
-
-        // A mutation/click action: its func is the element's own method, which returns the ActionResult of its
-        // self-owned wait (see UiElement.PerformGesture / IFormElement.Accept). mustBeEnabled: the gate stays set.
-        public static UiAction SimpleAction<T>(string name, Func<T, object> action)
-        {
-            return SimpleAction<T, object>(name, (element, _) => action(element));
-        }
-
-        public static UiAction SimpleFunction<T, TArg>(string name, Func<T, TArg, object> action)
-        {
-            return new SimpleActionImpl<T, TArg>(name, action, false) { ReturnsValue = true };
-        }
-        public static UiAction SimpleAction<T, TArg>(string name, Func<T, TArg, object> action)
-        {
-            return new SimpleActionImpl<T, TArg>(name, action, true);
-        }
-}
 
     /// <summary>
     /// A connector-facing view of one UI element on a form. Subclasses wrap a specific kind of control
@@ -703,17 +408,23 @@ namespace pwiz.Skyline.ToolsUI
         /// the UI thread via <see cref="InvokeOnUiThread{T}"/> inside the dialog-watch instead.</summary>
         internal ActionResult PerformGesture(Action gesture)
         {
-            return JsonUiService.WaitForGesture(GestureThreadHwnd, () =>
+            return JsonUiService.WaitForGesture(FormHwnd, () =>
             {
                 VerifyInteractable();
                 gesture();
             }, CancellationToken);
         }
 
-        // The window handle whose UI thread this element's gestures run on -- its form's, captured safely (never a
-        // live off-thread Control.Handle read). IntPtr.Zero for a form-less element, which WaitForGesture marshals
-        // through the main window.
-        internal virtual IntPtr GestureThreadHwnd => IntPtr.Zero;
+        /// <summary>The handle of the top-level window this element belongs to -- whose UI thread its gestures run
+        /// on. Captured safely when the element is built, never read live off-thread from Control.Handle (which would
+        /// trip the cross-thread check).
+        ///
+        /// <para>ABSTRACT on purpose. As a virtual returning IntPtr.Zero it answered WRONGLY, and silently, for any
+        /// element that forgot to override it: the gesture was then marshaled through the MAIN window instead of the
+        /// element's own form -- which is right only by luck, and only for a form that IS the main window.
+        /// ContextMenuElement had in fact never overridden it. Abstract turns that into a compile error, so a new
+        /// kind of element must say which window it lives on rather than defaulting to a wrong answer.</para></summary>
+        internal abstract IntPtr FormHwnd { get; }
 
         /// <summary>The actions this element supports, for discovery via GetActions / GetControls: every
         /// action that <see cref="UiAction.AppliesTo"/> this element (it is the kind the action targets).
@@ -869,6 +580,21 @@ namespace pwiz.Skyline.ToolsUI
             var normalized = text.Replace(@"&", string.Empty).Trim().TrimEnd('.', '…', '：', ':', ' ').Trim();
             return normalized.Length == 0 ? text : normalized;
         }
+
+        /// <summary>The menu a '&gt;'-separated menu path is matched against FOR THIS ELEMENT -- what the
+        /// click-toolstrip-item verb walks. It is what makes one verb reach every kind of menu:
+        ///
+        /// <list type="bullet">
+        /// <item>a <see cref="ToolStripElement"/> (a menu bar, a toolbar) IS the menu -- it returns itself;</item>
+        /// <item>a form (<see cref="ContainerElement"/>) offers its menu BAR, else its first toolbar, else its own
+        /// right-click menu;</item>
+        /// <item>any other control (<see cref="ControlElement"/>) offers its RIGHT-CLICK menu -- which is the only
+        /// menu a grid, a tree or a graph has.</item>
+        /// </list>
+        ///
+        /// <para>Null for an element with no menu at all (a native dialog). Must be read on the UI thread: resolving
+        /// a context menu BUILDS it.</para></summary>
+        public virtual ToolStripElement MainToolStrip => null;
     }
 
     // ---- Form-bound elements --------------------------------------------------------------------
@@ -879,7 +605,7 @@ namespace pwiz.Skyline.ToolsUI
     /// runs inline), it knows its <see cref="FormElement"/>, so it both marshals and gates through that form: a
     /// form on its own thread (e.g. a BackgroundThreadLongWaitDlg) is driven through its own message loop, not
     /// the main window's, and a modal blocking the form stops the element being acted on.</summary>
-    internal abstract class UiComponent : UiElement
+    public abstract class UiComponent : UiElement
     {
         protected UiComponent(CancellationToken cancellationToken) : base(cancellationToken) { }
 
@@ -891,9 +617,9 @@ namespace pwiz.Skyline.ToolsUI
         // Marshaled through the element's own form, NOT the main window: a form on its own thread (e.g. a
         // BackgroundThreadLongWaitDlg) runs its message loop there, so its controls must be touched through that
         // form's Invoke -- reading them from the main window's thread trips the cross-thread check. This must stay in
-        // step with GestureThreadHwnd below (which routes the WRITES to the same thread); if a read marshals to one
-        // thread and a gesture to another, the reads are the ones that break, and only for a form that is not the
-        // main window. FormElement?.Form is null (falling back to the main window) only before the form is wired up.
+        // step with FormHwnd below (which routes the WRITES to the same thread); if a read marshals to one thread and
+        // a gesture to another, the reads are the ones that break, and only for a form that is not the main window.
+        // FormElement?.Form is null (falling back to the main window) only before the form is wired up.
         public override T InvokeOnUiThread<T>(Func<T> func) =>
             JsonUiService.InvokeOnUiThread(func, FormElement?.Form, CancellationToken);
 
@@ -902,7 +628,7 @@ namespace pwiz.Skyline.ToolsUI
         internal override Form OwningForm => FormElement?.Form;
 
         // The stored form used only to decide whether PerformGesture is already on the form's thread (see base).
-        internal override IntPtr GestureThreadHwnd => FormElement?.Hwnd ?? IntPtr.Zero;
+        internal override IntPtr FormHwnd => FormElement?.Hwnd ?? IntPtr.Zero;
     }
 
     // ---- Control-backed elements ----------------------------------------------------------------
@@ -910,7 +636,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>Base for an element backed by a WinForms <see cref="Control"/>. Every control is clickable
     /// (see <see cref="Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
     /// capability interface.</summary>
-    internal abstract class ControlElement : UiComponent, IClickableElement
+    public abstract class ControlElement : UiComponent, IClickableElement
     {
         protected ControlElement(Control control, CancellationToken cancellationToken) : base(cancellationToken)
         {
@@ -1007,6 +733,11 @@ namespace pwiz.Skyline.ToolsUI
         /// control's own <see cref="System.Windows.Forms.Control.ContextMenuStrip"/> (a graph populates its own
         /// menu); a grid and the Targets tree, whose menus are built/owned elsewhere, override this. Runs on
         /// the UI thread.</summary>
+        // A plain control's only menu is the one you get by right-clicking it -- which is the ONLY menu a grid, a
+        // tree or a graph has. A ToolStripElement overrides this to return itself, and a container to prefer its
+        // menu bar / toolbar.
+        public override ToolStripElement MainToolStrip => ToolStripElement.ForContextMenu(this);
+
         public virtual ContextMenuStrip BuildContextMenu()
         {
             // A graph (this control is a ZedGraphControl, or a graph form is just its graph) populates its own menu.
@@ -1060,6 +791,8 @@ namespace pwiz.Skyline.ToolsUI
                     @"Could not raise {0} on {1}.", methodName, typeof(TDeclaring).Name));
             method.Invoke(target, new[] { eventArgs });
         }
+
+        
     }
 
     /// <summary>Base for an element backed by a strongly-typed control, so subclasses use the control as
@@ -1104,6 +837,30 @@ namespace pwiz.Skyline.ToolsUI
 
 
         public override IEnumerable<UiElement> EnumerateChildren() => GetDescendants(Control);
+
+        // A form's menu BAR (File, Edit, ...) if it has one; failing that its first toolbar; failing both it has no
+        // menu strip of its own, so a menu path is matched against its right-click menu instead (the base).
+        //
+        // DESCENDANTS, not children: a toolbar need not be a direct child of the form. The Document Grid's "Reports"
+        // strip is its nav bar, which sits inside the DataboundGridControl -- and a UserControl is a boundary the
+        // children walk stops at, so a direct-children search would miss it and fall through to a context menu the
+        // form does not have. The MainMenuStrip is itself one of the form's controls, so it is already in the walk:
+        // pick it out by identity rather than building a second element for the same strip.
+        public override ToolStripElement MainToolStrip
+        {
+            get
+            {
+                var mainMenu = (Control as Form)?.MainMenuStrip;
+                ToolStripElement firstToolbar = null;
+                foreach (var toolStrip in SelfAndDescendants().OfType<ToolStripElement>())
+                {
+                    if (mainMenu != null && ReferenceEquals(toolStrip.Control, mainMenu))
+                        return toolStrip;
+                    firstToolbar = firstToolbar ?? toolStrip;
+                }
+                return firstToolbar ?? base.MainToolStrip;
+            }
+        }
     }
 
     /// <summary>A WinForms top-level form, addressed by a formId. It is a <see cref="ContainerElement"/> (it
@@ -1111,7 +868,7 @@ namespace pwiz.Skyline.ToolsUI
     /// a managed formId to this and call its methods, which marshal to the UI thread (and watch for a dialog
     /// a mutation pops) so the connector drives a form the same way whether or not it is native. It is the
     /// factory (<see cref="ElementFor"/>) for the elements in its tree, tagging each with itself.</summary>
-    internal sealed class StandaloneForm : StandaloneWindow, IClipboardElement
+    public class StandaloneForm : StandaloneWindow
     {
         // Wraps a managed form, reading its window handle now. Must be built on the form's own UI thread -- reading
         // Form.Handle off it trips the cross-thread check -- which the assertion enforces. Off that thread, build it
@@ -1133,9 +890,20 @@ namespace pwiz.Skyline.ToolsUI
         // Wraps a managed form whose window handle is already known (e.g. from a Win32 modal-window enumeration, or
         // recorded when the modal was shown), so the element can be built off the form's UI thread without touching
         // Form.Handle.
-        public StandaloneForm(Form form, IntPtr hwnd, CancellationToken cancellationToken) : base(cancellationToken, hwnd)
+        protected StandaloneForm(Form form, IntPtr hwnd, CancellationToken cancellationToken) : base(cancellationToken, hwnd)
         {
             Form = form;
+        }
+
+        public static StandaloneForm Create(Form form, IntPtr hwnd, CancellationToken cancellationToken)
+        {
+            switch (form)
+            {
+                case SkylineWindow skylineWindow:
+                    return new SkylineStandaloneForm(skylineWindow, hwnd, cancellationToken);
+                default:
+                    return new StandaloneForm(form, hwnd, cancellationToken);
+            }
         }
 
         public Form Form { get; }
@@ -1158,28 +926,18 @@ namespace pwiz.Skyline.ToolsUI
         // without flipping their managed Control.Enabled, so IsEnabled below stays true and would miss it.
         internal override Form OwningForm => Form;
 
-        // Gestures on the form itself run on the form's own thread, like its reads.
-        internal override IntPtr GestureThreadHwnd => Hwnd;
 
-        // Window-state queries (IFormElement) answered from this element's Form.
-        public override bool IsInteractiveModal => Form.Modal && !(Form is LongWaitDlg);
+        // Window-state queries answered from this element's Form.
+        public override bool IsModal => Form.Modal;
+        // A LongWaitDlg is the one form that closes ITSELF -- when the work it reports on finishes. Every other form
+        // stands there until it is dismissed.
+        public override bool IsTransient => Form is LongWaitDlg;
         public override bool IsOpen => !Form.IsDisposed && Form.IsHandleCreated && Form.Visible;
-        public override bool IsBusy => Form is ILongWaitForm { IsBusy: true };
+        public override bool IsProgressing => Form is ILongWaitForm { IsBusy: true };
         public override string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
 
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
         // other form has no window-level clipboard gesture, so refuse it with a clear message.
-        public void PasteNow(string text) => RequireSkylineWindow().Paste(text);
-
-        public void SelectAllNow() => RequireSkylineWindow().SelectAll();
-
-        private SkylineWindow RequireSkylineWindow()
-        {
-            if (Form is SkylineWindow skylineWindow)
-                return skylineWindow;
-            throw new ArgumentException(LlmInstruction.Format(
-                @"This is only supported for the main Skyline window, not '{0}'.", FormId));
-        }
 
         /// <summary>Builds the <see cref="UiElement"/> for a control in this form's tree, choosing the
         /// subclass by the control's kind and tagging it with this form. Returns null for a control that is
@@ -1220,7 +978,10 @@ namespace pwiz.Skyline.ToolsUI
                 // DataboundGridControl is a UserControl you walk into to reach this grid and its nav bar.
                 case BoundDataGridView boundDataGridView: return new BoundGridElement(boundDataGridView, token);
                 case DataGridView dataGridView: return new GridElement(dataGridView, token);
-                case ToolStrip toolStrip: return new ToolStripElement(toolStrip, token);
+                // A toolstrip (a menu bar, a toolbar, a grid's nav bar) stays an element of its own: it is what a
+                // caller names when it asks for a menu item on a particular strip, and MainToolStrip finds the
+                // form's menu bar among these.
+                case ToolStrip toolStrip: return ToolStripElement.ForToolStrip(toolStrip, token);
                 // A UserControl (including a DataboundGridControl) is a boundary that owns its (flattened)
                 // children; everything else that contains controls is transparent. A nested Form (rare as a
                 // child) is treated as a plain container under this form's token.
@@ -1238,35 +999,6 @@ namespace pwiz.Skyline.ToolsUI
 
         public override string FormId => JsonUiService.GetFormId(Form);
         public override string Title => JsonUiService.GetFormTitle(Form);
-
-        // A value read: run inside the dialog-watch so it does not hang if a modal is up (GetControlsNow does
-        // its own UI-thread marshaling).
-        public override ControlInfo[] GetControls()
-        {
-            ControlInfo[] result = null;
-            JsonUiService.RunWithDialogWatch(() =>
-            {
-                result = GetControlsNow();
-                return true;
-            }, CancellationToken);
-            return result;
-        }
-
-        // Clicks a button (or any clickable) on the form by its caption. Resolve the target synchronously on
-        // the UI thread (so a missing control fails here); the element's Click then gates the form and control
-        // and posts the click. Each element knows how to click itself (a button via BM_CLICK so an
-        // AutoCheck=false checkbox still toggles; a menu/toolbar item or tile via PerformClick; a tab by
-        // selecting it). This named/convenience verb waits out the posted gesture (the count settling, or a
-        // modal it opens appearing) so it returns only once the click has taken effect -- the same wait the
-        // generic perform_action (UiActions.Click) now uses too. Must be called off the UI thread.
-        public override ActionResult ClickButton(string button)
-        {
-            // Resolve the control on the UI thread (so a missing control fails here), then click it: Click posts the
-            // gesture onto this form's thread and waits it out itself, reporting whether the click completed or left a
-            // dialog open -- the same self-owned wait perform_action uses.
-            var element = InvokeOnUiThread(() => FindElement(button, UiActions.Click));
-            return (ActionResult) UiActions.Click.Invoke(element, null);
-        }
 
         // Sets a control's value (or a grid cell) on the form. The target is resolved synchronously on the UI
         // thread (so a missing control fails here); the element's set-value then gates it and applies the value.
@@ -1319,16 +1051,6 @@ namespace pwiz.Skyline.ToolsUI
             return true;
         }
 
-        // Clicks the named button and waits for the form to close -- for a choice a managed form offers as a caption
-        // button that is neither its accept nor its cancel button. ClickButton posts the click; the empty-action
-        // OkDialog then rides the shared wait until the form has closed and the count has drained. Must be called off
-        // the UI thread.
-        public override ActionResult DismissWithButton(string button)
-        {
-            ClickButton(button);
-            return OkDialog(() => { });
-        }
-
         // Accepts the form by clicking its default (accept) button -- what pressing Enter does -- so the connector
         // confirms without matching a localized caption. Rides DialogWatcher.OkDialog's shared wait: on this form's
         // UI thread it gates the form and clicks the default button (a blocked form or one with no default button
@@ -1360,16 +1082,6 @@ namespace pwiz.Skyline.ToolsUI
                 else
                     Form.Close();
             });
-        }
-
-        public override object PerformAction(UiElementPath path, UiAction action, object value)
-        {
-            // Resolve + verify on the UI thread (a control's gates read window handles), then run the action: a
-            // mutation/click posts itself onto this form's thread and waits it out (see UiElement.PerformGesture),
-            // so perform_action matches the named verbs; a read runs inside the dialog-watch.
-            var element = InvokeOnUiThread(() =>
-                JsonUiService.RequireAction(JsonUiService.ResolvePath(path, this), action));
-            return JsonUiService.ExecuteAction(action, element, value);
         }
 
         // How long to wait (ms), and how often to re-check, for the form to reach the foreground before
@@ -1405,16 +1117,6 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        /// <summary>Invokes a menu item on this form's main menu by its '>'-separated path (e.g. "File &gt;
-        /// Import &gt; Peptide Search"), returning whether the click completed or left a dialog open.</summary>
-        public ActionResult InvokeMenuItem(string menuPath)
-        {
-            if (Form.MainMenuStrip == null)
-                throw new ArgumentException(new LlmInstruction(@"This form has no main menu."));
-            return new ToolStripElement(Form.MainMenuStrip, CancellationToken) { FormElement = this }.ClickMenuItem(menuPath)
-                ?? throw new ArgumentException(LlmInstruction.Format(@"Menu item not found: {0}.", menuPath));
-        }
-
         public override string Name => Form.Name;
         public override Type ElementType => Form.GetType();
 
@@ -1425,6 +1127,69 @@ namespace pwiz.Skyline.ToolsUI
         // Structure is the container's job (see FormContainer): the form owns no walk of its own.
         public override IEnumerable<UiElement> EnumerateChildren() => FormContainer.EnumerateChildren();
         public override UiElement GetChild(UiElementPath path) => FormContainer.GetChild(path);
+
+        // Menus, like structure, are the container's job: it holds the form's controls, so it is what knows the
+        // form's menu bar and toolbars (see ContainerElement.MainToolStrip).
+        public override ToolStripElement MainToolStrip => FormContainer.MainToolStrip;
+    }
+
+    /// <summary>The MAIN Skyline window. It is the one form with window-level clipboard gestures: paste puts content
+    /// INTO the document (the tutorial steps that say to paste a transition list, a protein list, a peptide list),
+    /// and select-all selects the document's targets. No other form has anything to paste into at the window level.
+    ///
+    /// <para>Which is why <see cref="IClipboardElement"/> lives HERE and not on <see cref="StandaloneForm"/>. It used
+    /// to be on the base, where EVERY form advertised paste / select_all through get_actions and then threw "only
+    /// supported for the main Skyline window" when a caller took it up -- a capability the element claimed and did
+    /// not have. Now the type tells the truth, and no other form offers them at all.</para></summary>
+    public sealed class SkylineStandaloneForm : StandaloneForm, IClipboardElement
+    {
+        public SkylineStandaloneForm(SkylineWindow skylineWindow, IntPtr hwnd, CancellationToken cancellationToken)
+            : base(skylineWindow, hwnd, cancellationToken)
+        {
+        }
+
+        public SkylineWindow SkylineWindow => (SkylineWindow) Form;
+
+        public void PasteNow(string text) => SkylineWindow.Paste(text);
+
+        public void SelectAllNow() => SkylineWindow.SelectAll();
+
+        public ToolStripElement MainMenuStrip
+        {
+            get
+            {
+                return (ToolStripElement) ElementFor(SkylineWindow.MainMenuStrip);
+            }
+        }
+
+        public void SetUndoRedoPosition(int index)
+        {
+            JsonUiService.RequireMainWindow();
+            if (index == 0)
+                return; // Already at current state
+
+            var undoMgr = SkylineWindow.GetUndoManager();
+            if (index < 0)
+            {
+                // Undo: index -1 = undo top (stack index 0), -2 = undo 2 deep, etc.
+                int stackIndex = -index - 1;
+                if (stackIndex >= undoMgr.UndoCount)
+                    throw new ArgumentOutOfRangeException(nameof(index),
+                        LlmInstruction.Format(@"Undo index {0} is out of range. Only {1} undo steps available.",
+                            index, undoMgr.UndoCount));
+                undoMgr.UndoRestore(stackIndex);
+            }
+            else
+            {
+                // Redo: index +1 = redo top (stack index 0), +2 = redo 2 deep, etc.
+                int stackIndex = index - 1;
+                if (stackIndex >= undoMgr.RedoCount)
+                    throw new ArgumentOutOfRangeException(nameof(index),
+                        LlmInstruction.Format(@"Redo index {0} is out of range. Only {1} redo steps available.",
+                            index, undoMgr.RedoCount));
+                undoMgr.RedoRestore(stackIndex);
+            }
+        }
     }
 
     /// <summary>A push button (or any ButtonBase) -- clicked with BM_CLICK, which fires the Click handler
@@ -1886,12 +1651,49 @@ namespace pwiz.Skyline.ToolsUI
     /// finding each segment by its visible text and opening each level's dropdown so lazily-built items are
     /// present. Both InvokeMenuItem (over the main menu strip) and ClickToolStripItem (over a form's
     /// toolbars) drive it through this.</summary>
-    internal sealed class ToolStripElement : ControlElement
+    public sealed class ToolStripElement : ControlElement
     {
+        // The ToolStrip this element walks -- or null when it walks its OWNER's right-click menu instead. A context
+        // menu is not a control: it does not exist until it is built (BuildContextMenu raises Opening so the
+        // on-demand items appear), so there is no ToolStrip to point at, only the control that owns it. Both are
+        // walked as a list of ToolStripItems, which is what lets one menu path resolve against either.
         private readonly ToolStrip _toolStrip;
-        public ToolStripElement(ToolStrip toolStrip, CancellationToken cancellationToken) : base(toolStrip, cancellationToken) { _toolStrip = toolStrip; }
-        public override IEnumerable<UiElement> EnumerateChildren() =>
-            _toolStrip.Items.Cast<ToolStripItem>().Select(item => (UiElement) new ToolStripItemElement(item, FormElement, CancellationToken));
+
+        private ToolStripElement(Control control, ToolStrip toolStrip, ControlElement owner,
+            CancellationToken cancellationToken) : base(control, cancellationToken)
+        {
+            _toolStrip = toolStrip;
+            Owner = owner;
+        }
+
+        /// <summary>A real toolstrip -- a form's menu bar, a toolbar, a grid's nav bar.</summary>
+        public static ToolStripElement ForToolStrip(ToolStrip toolStrip, CancellationToken cancellationToken)
+        {
+            return new ToolStripElement(toolStrip, toolStrip, null, cancellationToken);
+        }
+
+        /// <summary>A control's RIGHT-CLICK menu, presented as a toolstrip so a menu path resolves against it in
+        /// exactly the same way -- which is what lets one verb reach a menu bar, a toolbar and a context menu.</summary>
+        public static ToolStripElement ForContextMenu(ControlElement owner)
+        {
+            return new ToolStripElement(owner.Control, null, owner, owner.CancellationToken)
+                { FormElement = owner.FormElement };
+        }
+
+        /// <summary>The control whose context menu this is; null when this is a real toolstrip.</summary>
+        public ControlElement Owner { get; }
+
+        // It IS the menu, so a menu path is matched against it directly.
+        public override ToolStripElement MainToolStrip => this;
+
+        public override IEnumerable<UiElement> EnumerateChildren()
+        {
+            var items = _toolStrip != null ? _toolStrip.Items : Owner.BuildContextMenu()?.Items;
+            if (items == null)
+                return Enumerable.Empty<UiElement>();
+            return items.Cast<ToolStripItem>()
+                .Select(item => (UiElement) new ToolStripItemElement(item, FormElement, CancellationToken));
+        }
 
         /// <summary>Resolves a '>'-separated menu/toolbar path (e.g. "Reports &gt; Replicates") to its leaf
         /// item element within this toolstrip, opening each non-leaf level's dropdown so items built on demand
@@ -1925,21 +1727,20 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        /// <summary>Resolves and clicks the menu/toolbar item the path names: finds it (and gates the form and
-        /// item) synchronously on the UI thread, then posts its click fire-and-forget so an item that opens a
-        /// modal does not block. Returns false (clicking nothing) when the path is not in this toolstrip, so a
-        /// caller can try the next toolstrip on the form. Throws if the form is blocked or the item disabled.</summary>
-        // Returns the click's ActionResult, or null when the menu path does not resolve to an item on this
-        // toolstrip (so a caller trying several toolstrips can move on to the next).
-        public ActionResult ClickMenuItem(string menuPath)
+        /// <summary>Resolves the menu/toolbar item the path names and clicks it. Must be called on this
+        /// toolstrip's UI thread: walking the path opens each level's dropdown, so items built on demand (the
+        /// Document Grid's Reports list) exist by the time the next segment is matched. Throws if the form is
+        /// blocked, if the path names no item on this strip, or if the item is disabled.</summary>
+        public void ClickMenuItemNow(string menuPath)
         {
-            var leaf = InvokeOnUiThread(() => ResolveMenuItem(menuPath));
-            if (leaf == null)
-                return null;
-            // Click the item: its Click posts onto the form's own thread (gating the form and the item) and waits the
-            // gesture out itself (the count settling, or a modal it opens appearing), so the named menu/toolbar verbs
-            // return only once the click has taken effect.
-            return (ActionResult) UiActions.Click.Invoke(leaf, null);
+            // InvokeNow does no gating (its caller owns that), so gate here. The FORM gate comes first, before the
+            // menu is walked at all: a modal blocking the window puts every item out of reach, so the path is
+            // immaterial, and walking it would open dropdowns on a window the user could not touch.
+            VerifyInteractable();
+            var leaf = ResolveMenuItem(menuPath) ?? throw new ArgumentException(LlmInstruction.Format(
+                @"Menu item not found: {0}. Use skyline_get_controls to see what is there.", menuPath));
+            leaf.VerifyInteractable();
+            UiActions.Click.InvokeNow(leaf, null);
         }
 
         // Splits a menu/toolbar path into its segments (separators '>', '|', '/'). Throws if empty.
@@ -2198,6 +1999,11 @@ namespace pwiz.Skyline.ToolsUI
         public override IEnumerable<UiElement> EnumerateChildren() =>
             _owner.BuildContextMenu().Items.Cast<ToolStripItem>()
                 .Select(item => (UiElement) new ToolStripItemElement(item, _owner.FormElement, CancellationToken));
+
+        internal override IntPtr FormHwnd
+        {
+            get { return _owner.FormHwnd; }
+        }
     }
 
     /// <summary>A TabControl -- select one of its tabs by the tab's text (select_tab). The tab pages

@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     ///   * <see cref="JsonToolServer.ClickFormButton"/> on a CheckBox -- the Audit Log "Enable audit
     ///     logging" checkbox (AutoCheck=false, acts on its Click handler, so SetFormValue would not
     ///     toggle it but clicking it does);
-    ///   * <see cref="JsonUiService.ClickToolStripItem"/> -- the Document Grid "Reports" dropdown,
+    ///   * <see cref="JsonToolServer.ClickControlMenuItem"/> -- the Document Grid "Reports" dropdown,
     ///     whose items are built on demand and so are not reachable by ClickFormButton;
     ///   * a select_tab action on a TabControl -- selecting a Peptide Settings tab by its text.
     /// Forms are found by type name and controls/items matched by visible text, so the test is
@@ -98,8 +98,8 @@ namespace pwiz.SkylineTestFunctional
             return auditLogForm;
         }
 
-        // ClickToolStripItem walks the Document Grid "Reports" dropdown (items built on demand)
-        // to switch the displayed report.
+        // ClickControlMenuItem with no control names the form's own menu, which for the Document Grid is its
+        // nav-bar toolstrip; it walks the "Reports" dropdown (items built on demand) to switch the report.
         private void ClickToolStripDropDownItem()
         {
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
@@ -107,13 +107,13 @@ namespace pwiz.SkylineTestFunctional
             string gridId = JsonUiService.GetOpenForms()
                 .First(form => form.Type == nameof(DocumentGridForm)).Id;
 
-            JsonUiService.ClickToolStripItem(gridId, @"Reports > Proteins");
+            Program.MainJsonToolServer.ClickControlMenuItem(gridId, string.Empty, @"Reports > Proteins");
             WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Proteins");
 
-            JsonUiService.ClickToolStripItem(gridId, @"Reports > Peptides");
+            Program.MainJsonToolServer.ClickControlMenuItem(gridId, string.Empty, @"Reports > Peptides");
             WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Peptides");
             RunUI(() => Assert.AreEqual(@"Peptides", documentGrid.BindingListSource.ViewInfo.Name,
-                @"ClickToolStripItem did not switch the Document Grid report."));
+                @"ClickControlMenuItem did not switch the Document Grid report."));
         }
 
         // A select_tab action on the (caption-less) TabControl selects a tab by its visible text.

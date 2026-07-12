@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
@@ -35,7 +34,7 @@ namespace pwiz.Skyline.ToolsUI
     /// it to finish or for a modal dialog to appear. Three entry points, all keyed on a window handle:
     /// <list type="bullet">
     /// <item><see cref="PerformAction"/> -- post an action (a click, a set-value) and return when it finishes or
-    /// leaves an interactive modal open.</item>
+    /// leaves open a modal that will not go away by itself.</item>
     /// <item><see cref="OkDialog"/> -- accept/cancel a dialog: post its dismiss gesture, then wait until that
     /// window has closed AND the nesting count has drained back to the level its opener left.</item>
     /// <item><see cref="CallFunction{T}"/> -- run a value-producing read and return its result, throwing if a modal
@@ -43,8 +42,8 @@ namespace pwiz.Skyline.ToolsUI
     /// </list>
     /// All three funnel through <see cref="PerformActionAndWait"/>, which BeginInvokes the action onto the window's
     /// thread (capturing the sync context, the nesting count, and the open windows there, before running it) and
-    /// then waits: it stops and records a new interactive modal, rides a busy <c>ILongWaitForm</c>, completes when
-    /// the action has finished and the caller's wait condition holds, and trips a message-loop-progress watchdog.
+    /// then waits: it stops and records a new modal that must be dismissed, rides through a transient one (a LongWaitDlg
+    /// reporting progress), completes when the action has finished and the wait condition holds, and trips a watchdog.
     /// The action is counted in <see cref="ModalNestingCount"/> while it runs, so one that blocks in a modal loop
     /// keeps the count elevated. Every method must be called off the UI thread.
     /// </summary>
@@ -100,16 +99,21 @@ namespace pwiz.Skyline.ToolsUI
         // ===== The three entry points =====
 
         /// <summary>Posts <paramref name="action"/> onto <paramref name="hwnd"/>'s UI thread and waits until it
-        /// finishes, or until it opens/leaves an interactive modal (Completed = false, with that modal's message).</summary>
+        /// finishes, or until it opens/leaves a modal that must be dismissed (Completed = false, with that modal's message).</summary>
         public static ActionResult PerformAction(IntPtr hwnd, Action action, CancellationToken cancellationToken)
         {
             return PerformActionAndWait(hwnd, action, null, cancellationToken);
         }
 
+        public static ActionResult PerformAction(Control control, Action action, CancellationToken cancellationToken)
+        {
+            return PerformActionAndWait(control, action, null, cancellationToken);
+        }
+
         /// <summary>Accepts or cancels the dialog at <paramref name="hwndDlg"/>: posts <paramref name="dismissAction"/>
         /// onto its UI thread, then waits until that window has closed AND the nesting count has dropped back to the
         /// level recorded when the dialog was shown -- i.e. the action that opened it has returned -- stopping early
-        /// on a new modal or the watchdog. A native dialog resolves the control to drive (its UI-Automation lookup,
+        /// on a new modal or the watchdog. A native dialog resolves the control to drive (a Win32 lookup,
         /// safe off the dialog's own thread) BEFORE calling this and passes a Win32 gesture as <paramref name="dismissAction"/>
         /// -- a SENT BM_CLICK for a button (so a click that opens a nested modal blocks on the dialog's UI thread,
         /// counted, rather than pinning the pipe thread) or a POSTED Enter where the modal loop must translate it.</summary>
@@ -123,9 +127,7 @@ namespace pwiz.Skyline.ToolsUI
         public static T CallFunction<T>(IntPtr hwnd, Func<T> function, CancellationToken cancellationToken)
         {
             T result = default(T);
-            var actionResult = PerformActionAndWait(hwnd, () => { result = function(); }, null, cancellationToken);
-            if (!actionResult.Completed)
-                throw new InvalidOperationException(actionResult.Message);
+            EnsureCompleted(PerformActionAndWait(hwnd, () => { result = function(); }, null, cancellationToken));
             return result;
         }
 
@@ -140,6 +142,13 @@ namespace pwiz.Skyline.ToolsUI
 
         // ===== The shared wait =====
 
+
+        private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition,
+            CancellationToken cancellationToken)
+        {
+            return PerformActionAndWait(Control.FromHandle(hwnd) ?? UiThreadWindow, action, waitCondition,
+                cancellationToken);
+        }
         /// <summary>
         /// Snapshots -- on the caller thread, FIRST -- the nesting count and open top-level windows (pruning the
         /// pre-show tracker to them), then BeginInvokes <paramref name="action"/> onto <paramref name="hwnd"/>'s UI
@@ -149,16 +158,15 @@ namespace pwiz.Skyline.ToolsUI
         /// holds; and trips the watchdog after <see cref="NO_PROGRESS_LIMIT"/> message-loop pumps with no LongWaitDlg
         /// and no completion. Must be called off the UI thread.
         /// </summary>
-        private static ActionResult PerformActionAndWait(IntPtr hwnd, Action action, Func<bool> waitCondition,
+        private static ActionResult PerformActionAndWait(Control control, Action action, Func<bool> waitCondition,
             CancellationToken cancellationToken)
         {
             // On the caller thread, FIRST: snapshot what the wait compares against, BEFORE running anything, so an
             // effect of either action is seen as new.
             int startCount = ModalNestingCount;
-            var startWindows = new HashSet<IntPtr>(NativeDialog.GetTopLevelWindows(cancellationToken).Select(w => w.Hwnd));
+            var startWindows = new HashSet<IntPtr>(StandaloneWindow.GetTopLevelWindows(cancellationToken).Select(w => w.Hwnd));
             PruneModalsNotOpen(startWindows);
 
-            var control = Control.FromHandle(hwnd) ?? UiThreadWindow;
             // syncContext / actionDone / actionError are set on the UI thread (the posted delegate) and read on this
             // thread; guard them with lockObj, and have the delegate Pulse it so the wait below wakes on a state
             // change rather than only on the poll timeout.
@@ -203,10 +211,12 @@ namespace pwiz.Skyline.ToolsUI
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var openModals = GetOpenModals(cancellationToken);
-                // A new interactive modal (one not open at the start) means an action opened, or left open, a dialog:
-                // record its pre-show count so a later OkDialog can wait the count back to it, then stop.
+                // A new modal that will NOT go away by itself (one not open at the start) means an action opened, or
+                // left open, a dialog someone has to deal with: record its pre-show count so a later OkDialog can wait
+                // the count back to it, then stop and report it. A TRANSIENT modal -- a LongWaitDlg -- is not a stop:
+                // it closes when its work finishes, so the wait rides through it rather than handing it to the caller.
                 var newModal = openModals
-                    .FirstOrDefault(m => m.IsInteractiveModal && !startWindows.Contains(m.Hwnd));
+                    .FirstOrDefault(m => m.IsModal && !m.IsTransient && !startWindows.Contains(m.Hwnd));
                 if (newModal != null)
                 {
                     RecordModalPreShowCount(newModal, startCount);
@@ -235,10 +245,10 @@ namespace pwiz.Skyline.ToolsUI
                     {
                         ctx.Send(_ => done = waitCondition(), null);
                         // A returning Send that did not satisfy the condition is one message-loop pump with no
-                        // completion; count it toward the watchdog unless a busy LongWaitDlg shows the work advancing.
+                        // completion; count it toward the watchdog unless a LongWaitDlg reporting progress shows work advancing.
                         if (!done)
                         {
-                            if (openModals.Any(m => m.IsBusy))
+                            if (openModals.Any(m => m.IsProgressing))
                                 noProgress = 0;
                             else if (++noProgress >= NO_PROGRESS_LIMIT)
                                 throw new InvalidOperationException(new LlmInstruction(GestureTimeoutMessage));
@@ -278,7 +288,7 @@ namespace pwiz.Skyline.ToolsUI
         // (UiElement.VerifyFormInteractable).
         internal static string BlockingAlertMessage(CancellationToken cancellationToken)
         {
-            return GetOpenModals(cancellationToken).Where(m => m.IsInteractiveModal)
+            return GetOpenModals(cancellationToken).Where(m => m.IsModal && !m.IsTransient)
                 .Select(m => m.DetailedMessage).FirstOrDefault();
         }
 
@@ -321,6 +331,14 @@ namespace pwiz.Skyline.ToolsUI
                     if (entry.Key == hwnd)
                         return entry.Value;
             return null;
+        }
+
+        public static void EnsureCompleted(ActionResult actionResult)
+        {
+            if (!actionResult.Completed)
+            {
+                throw new InvalidOperationException(actionResult.Message);
+            }
         }
     }
 }

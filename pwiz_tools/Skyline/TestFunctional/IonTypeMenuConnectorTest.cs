@@ -20,6 +20,7 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
@@ -48,10 +49,12 @@ namespace pwiz.SkylineTestFunctional
         {
             // The Ion Types submenu is only shown for proteomic documents; enable it the way showing a
             // proteomic spectrum does (a loaded peptide document has already done this in normal use).
+            // The verbs are driven through the running JSON tool server (torn down with the window).
             RunUI(() =>
             {
                 SkylineWindow.SetUIMode(SrmDocument.DOCUMENT_TYPE.proteomic);
                 SkylineWindow.ViewMenu.EnableProteomicIons(true);
+                Program.StartToolService();
             });
 
             // Change 1: the main window is now discoverable through GetOpenForms and resolvable as a form.
@@ -79,13 +82,13 @@ namespace pwiz.SkylineTestFunctional
             // Change 2: the menu walk reaches the ion-type checkbox hosted in the Ion Types submenu and
             // clicking it toggles the backing setting. Start from a known state so the toggle has direction.
             RunUI(() => Settings.Default.ShowBIons = false);
-            JsonUiService.InvokeMenuItem(@"View > Libraries > Ion Types > B");
+            Program.MainJsonToolServer.ClickMainMenuItem(@"View > Libraries > Ion Types > B");
             WaitForConditionUI(() => Settings.Default.ShowBIons);
             RunUI(() => Assert.IsTrue(Settings.Default.ShowBIons,
                 @"Clicking the hosted 'B' ion-type button did not turn b-ions on."));
 
             // Clicking it again toggles it back off (the button is a checkbox).
-            JsonUiService.InvokeMenuItem(@"View > Libraries > Ion Types > B");
+            Program.MainJsonToolServer.ClickMainMenuItem(@"View > Libraries > Ion Types > B");
             WaitForConditionUI(() => !Settings.Default.ShowBIons);
             RunUI(() => Assert.IsFalse(Settings.Default.ShowBIons,
                 @"Clicking the hosted 'B' ion-type button again did not turn b-ions back off."));

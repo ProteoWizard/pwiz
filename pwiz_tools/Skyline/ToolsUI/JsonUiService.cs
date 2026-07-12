@@ -308,25 +308,28 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
-        // Level 3: Complete UI operations - Generic form interaction
-
-        /// <summary>
-        /// Invokes a main-menu item by its visible path (see <see cref="IJsonToolService"/>). The
-        /// item is located on the UI thread (throwing if absent), then its click is posted with
-        /// BeginInvoke so a menu item that opens a modal dialog does not block the caller.
-        /// </summary>
-        public static ActionResult InvokeMenuItem(string menuPath, CancellationToken cancellationToken = default(CancellationToken))
+        public static ActionResult InvokeOnMainWindow(Action<SkylineStandaloneForm> action, CancellationToken cancellationToken)
         {
-            // There is no main menu while the StartPage is showing (the main window does not exist
-            // yet). Fail with a clear message rather than dereferencing a null main window.
-            if (Program.MainWindow == null)
-                throw new InvalidOperationException(
-                    @"Cannot invoke a menu item: the main Skyline window is not open yet (the StartPage may be showing).");
-            // The main menu is the main window's; drive it through that form's element model. Build the element on
-            // the UI thread (it reads the window handle), then InvokeMenuItem drives it from this thread.
-            var mainWindow = InvokeOnUiThread(() => new StandaloneForm(Program.MainWindow, cancellationToken));
-            return mainWindow.InvokeMenuItem(menuPath);
+            var mainWindow = RequireMainWindow();
+            return DialogWatcher.PerformAction(mainWindow, () =>
+            {
+                var skylineStandaloneWindow =
+                    new SkylineStandaloneForm(mainWindow, mainWindow.Handle, cancellationToken);
+                action(skylineStandaloneWindow);
+            }, cancellationToken);
         }
+
+        public static ActionResult InvokeOnForm(string formId, Action<StandaloneWindow> action,
+            CancellationToken cancellationToken)
+        {
+            var window = ResolveForm(formId, cancellationToken);
+            return DialogWatcher.PerformAction(window.Hwnd, () =>
+            {
+                action(window);
+            }, cancellationToken);
+        }
+
+        // Level 3: Complete UI operations - Generic form interaction
 
         // Populates a ContextMenuStrip the way right-clicking the graph would: it invokes the graph's
         // ContextMenuBuilder handlers (which add the Skyline-specific items) with a point at the
@@ -345,27 +348,6 @@ namespace pwiz.Skyline.ToolsUI
             // does) before the builder repopulates it.
             menuStrip.Items.Clear();
             builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
-        }
-
-        /// <summary>
-        /// Clicks an item on a form's ToolStrip (toolbar / menu strip) by its path, e.g.
-        /// "Reports &gt; Replicates" -- the toolbar button "Reports" then the "Replicates" item in its
-        /// dropdown. Each level's dropdown is opened first so that items built on demand (which are not
-        /// in the static DropDownItems, e.g. the Document Grid's Reports list) are present before the
-        /// item is matched. Each segment is matched by item name or visible text, like InvokeMenuItem.
-        /// </summary>
-        public static ActionResult ClickToolStripItem(string formId, string menuPath, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            ValidateFormIdFormat(formId);
-            // The path-walk, matching, gating, and click all live in ToolStripElement.ClickMenuItem; the first
-            // segment is a top-level item on one of the form's toolstrips, so try each until one has it (a null
-            // result means that toolstrip did not have it -- move on). Stops at the first that clicks it.
-            var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
-            var toolStrips = InvokeOnUiThread(() =>
-                formElement.SelfAndDescendants().OfType<ToolStripElement>().ToList());
-            var result = toolStrips.Select(toolStrip => toolStrip.ClickMenuItem(menuPath)).FirstOrDefault(r => r != null);
-            return result ?? throw new ArgumentException(LlmInstruction.Format(
-                @"Toolbar item not found on form {0}: {1}.", formId, menuPath));
         }
 
         /// <summary>
@@ -442,15 +424,13 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(path.GetRoot().Text, cancellationToken).PerformAction(path, uiAction, value);
         }
 
-        // Runs a resolved action. UiAction.Invoke owns the threading (it marshals a gesture onto the element's UI
-        // thread, gates it, and waits it out; a read it runs there and returns the value), so there is nothing to
-        // dispatch here -- except that a READ additionally runs inside the dialog-watch, so producing it does not
-        // hang behind a modal. perform_action therefore behaves exactly like the named verbs, which invoke the same
-        // actions. Must be called off the UI thread.
+        // Runs a resolved action. There is nothing to dispatch: UiAction.Invoke owns the threading, and each KIND of
+        // action already knows the threading it needs -- a gesture is gated, posted onto the element's UI thread and
+        // waited out; a UiFunction runs on that thread inside the dialog-watch and returns its value; Accept runs
+        // here, on the caller's thread, because it waits for a form to close. So perform_action behaves exactly like
+        // the named verbs, which invoke the same actions. Must be called off the UI thread.
         internal static object ExecuteAction(UiAction action, UiElement element, object value)
         {
-            if (action.ReturnsValue)
-                return RunWithDialogWatch(() => action.Invoke(element, value), element.CancellationToken);
             return action.Invoke(element, value);
         }
 
@@ -948,7 +928,7 @@ namespace pwiz.Skyline.ToolsUI
                     var dockState = form.DockState;
                     if (dockState == DockState.Hidden || dockState == DockState.Unknown)
                         continue;
-                    result.Add(new StandaloneForm(form, cancellationToken));
+                    result.Add(StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken));
                 }
                 return (IList<StandaloneWindow>) result;
             }, null, cancellationToken);

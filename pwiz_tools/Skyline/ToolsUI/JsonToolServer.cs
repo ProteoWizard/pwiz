@@ -17,21 +17,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections;
-using System.ComponentModel;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.IO.Pipes;using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Xml;
-using System.Xml.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -42,12 +31,25 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.AuditLog;
 using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.ElementLocators;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Pipes;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading;
+using System.Xml;
+using System.Xml.Serialization;
 using JSON_RPC = SkylineTool.JsonToolConstants.JSON_RPC;
 
 namespace pwiz.Skyline.ToolsUI
@@ -606,34 +608,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void SetUndoRedoPosition(int index)
         {
-            JsonUiService.RequireMainWindow();
-            if (index == 0)
-                return; // Already at current state
-
-            Program.MainWindow.Invoke(new Action(() =>
-            {
-                var undoMgr = Program.MainWindow.GetUndoManager();
-                if (index < 0)
-                {
-                    // Undo: index -1 = undo top (stack index 0), -2 = undo 2 deep, etc.
-                    int stackIndex = -index - 1;
-                    if (stackIndex >= undoMgr.UndoCount)
-                        throw new ArgumentOutOfRangeException(nameof(index),
-                            LlmInstruction.Format(@"Undo index {0} is out of range. Only {1} undo steps available.",
-                                index, undoMgr.UndoCount));
-                    undoMgr.UndoRestore(stackIndex);
-                }
-                else
-                {
-                    // Redo: index +1 = redo top (stack index 0), +2 = redo 2 deep, etc.
-                    int stackIndex = index - 1;
-                    if (stackIndex >= undoMgr.RedoCount)
-                        throw new ArgumentOutOfRangeException(nameof(index),
-                            LlmInstruction.Format(@"Redo index {0} is out of range. Only {1} redo steps available.",
-                                index, undoMgr.RedoCount));
-                    undoMgr.RedoRestore(stackIndex);
-                }
-            }));
+            InvokeOnMainWindow(mainWindow => mainWindow.SetUndoRedoPosition(index));
         }
 
         public TutorialListItem[] GetAvailableTutorials()
@@ -859,18 +834,18 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ReorderElements(string[] elementLocators)
         {
-            JsonUiService.InvokeOnUiThread(() =>
+            InvokeOnMainWindow(mainWindow =>
             {
                 var orderedElements = elementLocators.Select(locator =>
                     ElementRefs.FromObjectReference(ElementLocator.Parse(locator))).ToList();
-                lock (Program.MainWindow.GetDocumentChangeLock())
+                lock (mainWindow.SkylineWindow.GetDocumentChangeLock())
                 {
-                    var originalDocument = Program.MainWindow.Document;
+                    var originalDocument = mainWindow.SkylineWindow.Document;
                     var reorderer = new ElementReorderer(CancellationToken.None, originalDocument);
                     var newDocument = reorderer.SetNewOrder(orderedElements);
                     if (!ReferenceEquals(newDocument, originalDocument))
                     {
-                        Program.MainWindow.ModifyDocument(
+                        mainWindow.SkylineWindow.ModifyDocument(
                             ToolsUIResources.ToolService_ReorderElements_Elements_reordered_by_external_tool,
                             doc =>
                             {
@@ -890,9 +865,11 @@ namespace pwiz.Skyline.ToolsUI
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            JsonUiService.InvokeOnUiThread(() =>
-                Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
-                    @"Insert small molecule transition list"));
+            InvokeOnMainWindow(mainWindow =>
+            {
+                mainWindow.SkylineWindow.InsertSmallMoleculeTransitionList(textCSV,
+                    @"Insert small molecule transition list");
+            });
         }
 
         public void ImportFasta(string textFasta, string keepEmptyProteins = null)
@@ -918,6 +895,44 @@ namespace pwiz.Skyline.ToolsUI
         private StandaloneWindow ResolveForm(string formId)
         {
             return JsonUiService.ResolveForm(formId, _requestCancellation.Value?.Token ?? CancellationToken.None);
+        }
+
+        private ActionResult InvokeOnMainWindow(Action<SkylineStandaloneForm> action)
+        {
+            return JsonUiService.InvokeOnMainWindow(action, RequestCancellation);
+        }
+
+        private T CallOnMainWindow<T>(Func<SkylineStandaloneForm, T> function)
+        {
+            T result = default;
+            EnsureCompleted(InvokeOnMainWindow(mainWindow=>result = function(mainWindow)));
+            return result;
+        }
+
+        private static void EnsureCompleted(ActionResult actionResult)
+        {
+            DialogWatcher.EnsureCompleted(actionResult);
+        }
+
+        private ActionResult InvokeOnForm<TForm>(string formId, Action<TForm> action)
+        {
+            return JsonUiService.InvokeOnForm(formId, standaloneWindow =>
+            {
+                if (!(standaloneWindow is TForm form))
+                {
+                    throw new ArgumentException(new LlmInstruction(
+                        $@"{formId} is a {standaloneWindow.GetType().Name} but needs to be a {typeof(TForm).Name}"));
+                }
+
+                action(form);
+            }, RequestCancellation);
+        }
+
+        private TResult CallOnForm<TForm, TResult>(string formId, Func<TForm, TResult> func)
+        {
+            TResult result = default;
+            EnsureCompleted(InvokeOnForm<TForm>(formId, form=>result = func(form)));
+            return result;
         }
 
         public void SetSelectedElement(string elementLocatorString, string additionalLocators = null)
@@ -950,9 +965,9 @@ namespace pwiz.Skyline.ToolsUI
             return JsonUiService.PerformAction(path, action, value, RequestCancellation);
         }
 
-        public ActionResult InvokeMenuItem(string menuPath)
+        public ActionResult ClickMainMenuItem(string menuPath)
         {
-            return JsonUiService.InvokeMenuItem(menuPath, RequestCancellation);
+            return InvokeOnMainWindow(mainWindow => mainWindow.MainMenuStrip.ClickMenuItemNow(menuPath));
         }
 
         public ActionResult ClickFormButton(string formId, string button)
@@ -960,9 +975,26 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(formId).ClickButton(button);
         }
 
-        public ActionResult ClickToolStripItem(string formId, string menuPath)
+        public ActionResult ClickControlMenuItem(string formId, string control, string menuPath)
         {
-            return JsonUiService.ClickToolStripItem(formId, menuPath, RequestCancellation);
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+            {
+                // Which menu is meant follows from what "control" names, and MainToolStrip is exactly that dispatch:
+                // the form itself gives its menu bar (else its first toolbar, else its right-click menu), a toolstrip
+                // gives itself, and any other control gives its right-click menu -- the only menu it has. Look the
+                // control up by GetChildren, not Click: what OWNS a menu (a grid, a tree, a graph) need not itself
+                // be clickable.
+                var element = string.IsNullOrEmpty(control)
+                    ? (UiElement) form
+                    : form.FindElement(control, UiActions.GetChildren);
+                var menuStrip = element.MainToolStrip;
+                if (menuStrip == null)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
+                        @"'{0}' has no menu to click an item on.", element.Label ?? element.ElementType.Name));
+                }
+                menuStrip.ClickMenuItemNow(menuPath);
+            });
         }
 
         public ActionResult SetFormValue(string formId, string controlId, string value)
@@ -992,7 +1024,10 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetGridText(string formId, string gridId)
         {
-            return JsonUiService.GetGridText(formId, gridId);
+            return CallOnForm(formId, (StandaloneForm form) =>
+            {
+                return form.FindGrid(gridId).GetGridText();
+            });
         }
 
 
@@ -1009,11 +1044,6 @@ namespace pwiz.Skyline.ToolsUI
         public ActionResult DismissWithCancelButton(string formId)
         {
             return ResolveForm(formId).DismissWithCancelButton();
-        }
-
-        public void InvokeContextMenuItem(string formId, string controlSelector, string itemText)
-        {
-            ResolveForm(formId).InvokeContextMenuItem(controlSelector, itemText);
         }
 
         public string GetGraphData(string graphId, string filePath = null)

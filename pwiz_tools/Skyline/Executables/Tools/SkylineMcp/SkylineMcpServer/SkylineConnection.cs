@@ -106,14 +106,13 @@ public class SkylineConnection : IJsonToolService, IDisposable
     public void SetUndoRedoPosition(int index) { CallClientVoid(c => c.SetUndoRedoPosition(index)); }
     public string GetDocumentSettings(string filePath) { return CallClient(c => c.GetDocumentSettings(filePath)); }
     public string GetDefaultSettings(string filePath) { return CallClient(c => c.GetDefaultSettings(filePath)); }
-    public ActionResult InvokeMenuItem(string menuPath) { return CallClient(c => c.InvokeMenuItem(menuPath)); }
+    public ActionResult ClickMainMenuItem(string menuPath) { return CallClient(c => c.ClickMainMenuItem(menuPath)); }
     public ActionResult DismissWithAcceptButton(string formId) { return CallClient(c => c.DismissWithAcceptButton(formId)); }
     public ActionResult DismissWithCancelButton(string formId) { return CallClient(c => c.DismissWithCancelButton(formId)); }
     public ActionResult DismissWithButton(string formId, string button) { return CallClient(c => c.DismissWithButton(formId, button)); }
 
     // 2-arg methods
-    public ActionResult ClickToolStripItem(string formId, string menuPath) { return CallClient(c => c.ClickToolStripItem(formId, menuPath)); }
-    public void InvokeContextMenuItem(string formId, string controlSelector, string itemText) { CallClientVoid(c => c.InvokeContextMenuItem(formId, controlSelector, itemText)); }
+    public ActionResult ClickControlMenuItem(string formId, string control, string menuPath) { return CallClient(c => c.ClickControlMenuItem(formId, control, menuPath)); }
     public LocationEntry[] GetLocations(string level, string rootLocator = null) { return CallClient(c => c.GetLocations(level, rootLocator)); }
     public void SetSelectedElement(string elementLocator, string additionalLocators = null) { CallClientVoid(c => c.SetSelectedElement(elementLocator, additionalLocators)); }
     public string GetGraphData(string graphId, string filePath = null) { return CallClient(c => c.GetGraphData(graphId, filePath)); }

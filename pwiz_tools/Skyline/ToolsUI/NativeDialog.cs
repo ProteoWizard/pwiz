@@ -95,14 +95,16 @@ namespace pwiz.Skyline.ToolsUI
         public override Type ElementType => GetType();
         public override bool IsEnabled => User32.IsWindowEnabled(Hwnd);
 
-        // ---- Window-state queries (IFormElement) the modal-watch asks of a native dialog, all via Win32 (never
-        // UI Automation, which can deadlock when queried from the UI thread the dialog's modal loop is running on).
-        /// <summary>A native dialog is always an interactive stop the caller would drive (never a progress dialog).</summary>
-        public override bool IsInteractiveModal => true;
+        // ---- Window-state queries the modal-watch asks of a native dialog, all via Win32 -----------
+        /// <summary>A native dialog blocks the window that opened it.</summary>
+        public override bool IsModal => true;
+        /// <summary>A native dialog never closes itself -- it stands there until it is dismissed. (Windows has no
+        /// native equivalent of a LongWaitDlg here: every "#32770" the connector meets is a stop.)</summary>
+        public override bool IsTransient => false;
         /// <summary>Whether the dialog window is still visible.</summary>
         public override bool IsOpen => User32.IsWindowVisible(Hwnd);
-        /// <summary>A native dialog is never an ILongWaitForm busy progress form.</summary>
-        public override bool IsBusy => false;
+        /// <summary>A native dialog is never a progress form reporting work in flight.</summary>
+        public override bool IsProgressing => false;
         /// <summary>The dialog's message body (its Static-control text) else its caption.</summary>
         public override string DetailedMessage => NativeBodyText(Hwnd) ?? User32.GetWindowText(Hwnd);
 
@@ -277,16 +279,6 @@ namespace pwiz.Skyline.ToolsUI
                 () => GetOpenDialogs(cancellationToken).OfType<T>().FirstOrDefault());
         }
 
-        /// <summary>Dismisses the dialog by clicking the button with the given caption (found among the dialog's
-        /// child buttons), then waits until the dialog has closed -- e.g. "No" on a "replace it?" message box. A file
-        /// dialog's commit button is DirectUI (not a child button), so this throws "no button" for one; accept a file
-        /// dialog with <see cref="DismissWithAcceptButton"/> instead. Must be called off the UI thread.</summary>
-        public override ActionResult DismissWithButton(string button)
-        {
-            ClickButton(button);
-            return OkDialog(() => { });
-        }
-
         /// <summary>Accepts the dialog by pressing Enter, which activates its default button. OkDialog runs the Win32
         /// gesture on the dialog's UI thread and waits until it closes -- the SAME machinery a managed form's accept
         /// uses. Enter is POSTED, so the dialog's modal loop translates it into accept (a synchronous send would
@@ -315,19 +307,6 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "Dialog:Open …".</summary>
         public override string FormId => DialogTypeName + @":" + Title;
 
-        public override ControlInfo[] GetControls() => GetControlsNow();
-
-        // Clicks the dialog's button whose caption matches -- how the connector gets past a confirm box ("Yes"), or
-        // presses a file dialog's Open/Save. Resolved and clicked through the element model, so the click WAITS: it
-        // reports whether it completed or left a dialog open (the Save dialog's "replace it?" prompt), where the old
-        // UI-Automation version could only post the click and tell the caller to go and poll. Caption matching is
-        // case- and '&'-mnemonic-insensitive (see UiElement.TextMatches).
-        public override ActionResult ClickButton(string button)
-        {
-            var element = FindElement(button, UiActions.Click);
-            return (ActionResult) UiActions.Click.Invoke(element, null);
-        }
-
         // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base refuses, and
         // the file dialogs override SetValueCore to type the path. The value is typed synchronously and has no
         // follow-on work, so the set is complete on return.
@@ -342,12 +321,6 @@ namespace pwiz.Skyline.ToolsUI
         {
             throw new ArgumentException(LlmInstruction.Format(
                 @"Setting values is not supported for native dialog {0}.", FormId));
-        }
-
-        public override object PerformAction(UiElementPath path, UiAction action, object value)
-        {
-            var element = JsonUiService.RequireAction(JsonUiService.ResolvePath(path, this), action);
-            return action.Invoke(element, value);
         }
 
         public override System.Drawing.Bitmap CaptureImage() => JsonUiService.CaptureNativeWindow(Hwnd);

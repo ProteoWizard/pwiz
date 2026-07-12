@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             var saveAsMenu = MenuPath<SkylineWindow>(@"fileToolStripMenuItem", @"saveAsMenuItem");
 
             // 1) First Save As: save to a name that does not exist yet -- no confirmation.
-            Connector.InvokeMenuItem(saveAsMenu);
+            Connector.ClickMainMenuItem(saveAsMenu);
             var fileDialogId = WaitForNativeFileDialog();
             AssertComplete(Connector.SetFormValue(fileDialogId, @"FileName", savePath));
             AssertComplete(Connector.DismissWithAcceptButton(fileDialogId));
@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
             // 2) Save As over the existing file: accepting the file dialog raises the native "replace?" message
             // box. The interface must SURFACE it (report not-completed and name it) rather than hang.
             int modalNestingCount = Connector.ModalNestingCount();
-            var actionResult = Connector.InvokeMenuItem(saveAsMenu);
+            var actionResult = Connector.ClickMainMenuItem(saveAsMenu);
             Assert.IsFalse(actionResult.Completed);
             fileDialogId = actionResult.FormId;
             Assert.IsNotNull(fileDialogId);
