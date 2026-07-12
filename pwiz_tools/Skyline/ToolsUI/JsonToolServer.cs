@@ -915,7 +915,7 @@ namespace pwiz.Skyline.ToolsUI
                         @"Import properties from MCP")));
         }
 
-        private WindowElement ResolveForm(string formId)
+        private StandaloneWindow ResolveForm(string formId)
         {
             return JsonUiService.ResolveForm(formId, _requestCancellation.Value?.Token ?? CancellationToken.None);
         }
@@ -972,12 +972,12 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetFormValue(string formId, string controlId)
         {
-            return JsonUiService.GetFormValue(formId, controlId);
+            return ResolveForm(formId).GetFormValue(controlId);
         }
 
         public string[] GetOptions(string formId, string controlId)
         {
-            return JsonUiService.GetOptions(formId, controlId);
+            return ResolveForm(formId).GetOptions(controlId);
         }
 
         public ActionResult SetGridText(string formId, string controlId, string text)
@@ -1013,7 +1013,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public void InvokeContextMenuItem(string formId, string controlSelector, string itemText)
         {
-            JsonUiService.InvokeContextMenuItem(formId, controlSelector, itemText, RequestCancellation);
+            ResolveForm(formId).InvokeContextMenuItem(controlSelector, itemText);
         }
 
         public string GetGraphData(string graphId, string filePath = null)

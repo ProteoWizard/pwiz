@@ -1088,6 +1088,7 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>ToolsUIResources.resx</DependentUpon>
     </Compile>
+    <Compile Include="ToolsUI\StandaloneWindow.cs" />
     <Compile Include="Util\AnnotatedDouble.cs" />
     <Compile Include="Util\DataGridViewPasteHandler.cs" />
     <Compile Include="Util\ScoredPeakValue.cs" />

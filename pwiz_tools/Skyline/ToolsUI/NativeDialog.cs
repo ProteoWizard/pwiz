@@ -24,7 +24,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Automation;
-using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
@@ -61,7 +60,7 @@ namespace pwiz.Skyline.ToolsUI
     /// file dialogs (<see cref="NativeFileDialog"/>) specialize it with the file-name field: set_value types
     /// a path and the accept gesture differs by surface.
     /// </summary>
-    public class NativeDialog : WindowElement
+    public class NativeDialog : StandaloneWindow
     {
         protected const string DIALOG_CLASS_NAME = @"#32770"; // Win32 dialog window class
         private const int DEFAULT_TIMEOUT_MILLIS = 30 * 1000;
@@ -109,75 +108,10 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The dialog's message body (its Static-control text) else its caption.</summary>
         public override string DetailedMessage => NativeBodyText(Hwnd) ?? User32.GetWindowText(Hwnd);
 
-        /// <summary>The handles of this process's modal dialog windows -- visible, enabled, top-level windows whose
-        /// owner window is disabled (the signature of a modal blocking its owner), managed OR native. Pure Win32,
-        /// so it is safe off the UI thread (the connector's cheap "did a new modal appear" check).</summary>
-        private static IList<IntPtr> EnumModalWindowHandles()
-        {
-            var processId = (uint) Process.GetCurrentProcess().Id;
-            return User32.EnumWindows().Where(hwnd =>
-            {
-                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                return windowProcessId == processId && IsModalDialogWindow(hwnd);
-            }).ToList();
-        }
-
-        /// <summary>Whether the window is a modal dialog blocking its owner -- visible and enabled, with an owner
-        /// window that is disabled (the signature of a modal). Pure Win32, so it is safe off the UI thread.</summary>
-        private static bool IsModalDialogWindow(IntPtr hwnd)
-        {
-            if (!User32.IsWindowVisible(hwnd) || !User32.IsWindowEnabled(hwnd))
-                return false;
-            var owner = User32.GetOwner(hwnd);
-            return owner != IntPtr.Zero && !User32.IsWindowEnabled(owner);
-        }
-
         /// <summary>Wraps a raw modal window handle (one with no managed Form) as a generic native dialog, for the
         /// modal-watch's Win32-only queries. Not a UI-Automation-driven file dialog -- see <see cref="Create"/>.</summary>
-        private static NativeDialog ForModalWindow(IntPtr handle, CancellationToken cancellationToken) =>
+        public static NativeDialog MakeNativeDialog(IntPtr handle, CancellationToken cancellationToken) =>
             new NativeDialog(handle, cancellationToken);
-
-        // Wraps a top-level window handle as the connector form abstraction that drives it: Control.FromHandle
-        // resolves a managed WinForms form (a FormElement built with the handle already in hand -- safe off the UI
-        // thread), or returns nothing for a truly native window (a generic NativeDialog).
-        internal static WindowElement WrapWindow(IntPtr hwnd, CancellationToken cancellationToken)
-        {
-            return Control.FromHandle(hwnd) is Form form
-                ? (WindowElement) new FormElement(form, hwnd, cancellationToken)
-                : ForModalWindow(hwnd, cancellationToken);
-        }
-
-        /// <summary>Every modal dialog currently open in this process, each wrapped as the connector form abstraction
-        /// that drives it. A single Win32 enumeration (<see cref="EnumModalWindowHandles"/>) is the sole source, so
-        /// managed and native modals are discovered the same way (see <see cref="WrapWindow"/>). Going handle -> Form
-        /// avoids reading Form.Handle (which trips the cross-thread check) and needs no Form<->handle pairing, so it is
-        /// safe off the UI thread -- both the enumeration and Control.FromHandle are a lookup, never a UI touch.</summary>
-        public static IEnumerable<WindowElement> GetModalDialogs(CancellationToken cancellationToken)
-        {
-            return EnumModalWindowHandles().Select(hwnd => WrapWindow(hwnd, cancellationToken));
-        }
-
-        /// <summary>Every top-level window of this process that is a managed Form (visible) or a native modal dialog,
-        /// each wrapped as the connector form abstraction that drives it. Enumerated purely from Win32 + a
-        /// Control.FromHandle lookup, so it is safe on any thread. Top-level only -- a form docked inside the main
-        /// window is a child window and does not appear here (see
-        /// <see cref="JsonUiService.GetOpenFormElements"/>).</summary>
-        public static IEnumerable<WindowElement> GetTopLevelWindows(CancellationToken cancellationToken)
-        {
-            var processId = (uint) Process.GetCurrentProcess().Id;
-            foreach (var hwnd in User32.EnumWindows())
-            {
-                User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                if (windowProcessId != processId)
-                    continue;
-                if (Control.FromHandle(hwnd) is Form form)
-                {
-                    if (User32.IsWindowVisible(hwnd))
-                        yield return new FormElement(form, hwnd, cancellationToken);
-                }
-                else yield return ForModalWindow(hwnd, cancellationToken);
-            }
-        }
 
         // The message body of a native dialog box (a Win32 #32770, e.g. MessageBox.Show), read from its child
         // controls, or null when none is found. The body is a "Static" control with text -- the icon's Static has

@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
                 @"Selecting and clicking did not check the Replicates item in the Applies-to list."));
 
             // GetFormValue on the CheckedListBox returns the checked items' text, one per line.
-            Assert.AreEqual(@"Replicates", JsonUiService.GetFormValue(dlgId, @"Applies to"),
+            Assert.AreEqual(@"Replicates", Program.MainJsonToolServer.GetFormValue(dlgId, @"Applies to"), 
                 @"GetFormValue did not return the checked Applies-to items.");
 
             // Clicking it again toggles it back off (it is still the selected item).

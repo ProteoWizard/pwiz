@@ -268,9 +268,9 @@ namespace pwiz.Skyline.ToolsUI
         // enumeration of the modal windows is the sole source (see NativeDialog.GetModalDialogs), so there is no
         // Form<->handle pairing and no Form.Handle read that would trip the cross-thread check; safe off the poll
         // thread.
-        internal static IList<WindowElement> GetOpenModals(CancellationToken cancellationToken)
+        internal static IList<StandaloneWindow> GetOpenModals(CancellationToken cancellationToken)
         {
-            return NativeDialog.GetModalDialogs(cancellationToken).ToList();
+            return StandaloneWindow.GetModalDialogs(cancellationToken).ToList();
         }
 
         // The message of the first interactive modal currently blocking the UI (an alert/error text or a dialog's
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // Records a newly appeared interactive modal's pre-show count, unless one is already recorded for it.
-        internal static void RecordModalPreShowCount(WindowElement modal, int preShowCount)
+        internal static void RecordModalPreShowCount(StandaloneWindow modal, int preShowCount)
         {
             lock (_modalPreShowCounts)
                 if (_modalPreShowCounts.All(e => e.Key != modal.Hwnd))
@@ -311,7 +311,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // The recorded pre-show count for a modal (by its window handle), or null when it is not a tracked
         // interactive modal -- surfaced in each FormInfo (get_open_forms) so a caller can confirm the tracker state.
-        internal static int? TryGetPreShowActionCount(WindowElement modal) => TryGetPreShowActionCount(modal.Hwnd);
+        internal static int? TryGetPreShowActionCount(StandaloneWindow modal) => TryGetPreShowActionCount(modal.Hwnd);
 
         // The recorded pre-show count for a window handle, or null when it is untracked.
         internal static int? TryGetPreShowActionCount(IntPtr hwnd)

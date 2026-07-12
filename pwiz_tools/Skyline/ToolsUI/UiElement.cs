@@ -17,6 +17,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using JetBrains.Annotations;
+using Newtonsoft.Json.Linq;
+using NHibernate.Hql.Ast.ANTLR.Tree;
+using pwiz.Common.DataBinding.Controls;
+using pwiz.Common.SystemUtil;
+using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Controls;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,15 +36,6 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
-using JetBrains.Annotations;
-using Newtonsoft.Json.Linq;
-using pwiz.Common.DataBinding.Controls;
-using pwiz.Common.SystemUtil;
-using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline.Controls;
-using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
-using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -47,7 +48,11 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>An element a click acts on (a button, a menu item, a custom clickable tile). The element
     /// marshals its own gesture -- a posted BM_CLICK, a PerformClick on the UI thread -- and waits it out, so
     /// Click is called from the connector's worker thread and returns whether it completed or left a dialog open.</summary>
-    public interface IClickableElement { ActionResult Click(); }
+    public interface IClickableElement
+    {
+        ActionResult Click();
+        void ClickNow();
+    }
 
     /// <summary>An element whose items are checked/unchecked by their visible text (a CheckedListBox, a
     /// TreeView, a ListView, the pick-list pop-up).</summary>
@@ -301,7 +306,7 @@ namespace pwiz.Skyline.ToolsUI
         // button, waiting for the form to close either way. The default case keys on no caption. Like every mutation
         // it just calls the element's own method (which rides DialogWatcher's wait and returns the ActionResult), so
         // it needs no special dispatch.
-        public static readonly UiAction Accept = SimpleAction<WindowElement, string>(@"Accept",
+        public static readonly UiAction Accept = SimpleAction<StandaloneWindow, string>(@"Accept",
                 (e, button) => string.IsNullOrEmpty(button) ? e.DismissWithAcceptButton() : e.DismissWithButton(button))
             .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button; pass a button's caption to click that one instead."));
 
@@ -526,10 +531,17 @@ namespace pwiz.Skyline.ToolsUI
         public UiElement FindElement(string text, UiAction action)
         {
             if (!string.IsNullOrEmpty(text))
-                return FindElementOrNull(text, action)
-                    ?? throw new ArgumentException(LlmInstruction.Format(
+            {
+                var element = FindElementOrNull(text, action);
+                if (element == null)
+                {
+                    throw new ArgumentException(LlmInstruction.Format(
                         @"No control matching '{0}' supports the action '{1}'. Use skyline_get_controls to list the controls.",
                         text, action.SnakeCaseName));
+                }
+
+                return element;
+            }
             // Empty text means "the single element that supports the action".
             var candidates = SelfAndDescendants().Where(action.AppliesTo).ToList();
             if (candidates.Count == 0)
@@ -735,11 +747,13 @@ namespace pwiz.Skyline.ToolsUI
             {
                 if (path.Index < 0 || path.Index >= candidates.Count)
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"No {0} at index {1}; the parent has {2} of that type.", path.Type, path.Index.Value, candidates.Count));
+                        @"No {0} at index {1}; the parent has {2} of that type.", path.Type, path.Index.Value,
+                        candidates.Count));
                 var indexed = candidates[path.Index.Value];
                 if (path.Text != null && !indexed.MatchesText(path.Text, false))
                     throw new ArgumentException(LlmInstruction.Format(
-                        @"The {0} at index {1} does not match the Text '{2}' in the path.", path.Type, path.Index.Value, path.Text));
+                        @"The {0} at index {1} does not match the Text '{2}' in the path.", path.Type, path.Index.Value,
+                        path.Text));
                 return indexed;
             }
 
@@ -752,8 +766,31 @@ namespace pwiz.Skyline.ToolsUI
                         ?? PreferInteractable(candidates.Where(child => child.MatchesText(path.Text, false)));
             else
                 match = PreferInteractable(candidates);
-            return match ?? throw new ArgumentException(new LlmInstruction(
-                @"No control found matching the path. Use skyline_get_controls to list the controls."));
+            if (match == null)
+            {
+                throw new ArgumentException(new LlmInstruction(
+                    @"No control found matching the path. Use skyline_get_controls to list the controls."));
+            }
+            return match;
+        }
+
+        public virtual UiElement GetDescendant(UiElementPath path)
+        {
+            var segments = new List<UiElementPath>();
+            for (var parent = path; parent != null; parent = parent.Parent)
+            {
+                segments.Add(parent);
+            }
+
+            segments.Reverse();
+
+            var descendant = this;
+            foreach (var segment in segments)
+            {
+                descendant = descendant.GetChild(segment);
+            }
+
+            return descendant;
         }
 
         // The first enabled element, or -- when none is enabled -- the first one (so a legitimately disabled
@@ -816,9 +853,9 @@ namespace pwiz.Skyline.ToolsUI
         protected UiComponent(CancellationToken cancellationToken) : base(cancellationToken) { }
 
         /// <summary>The form this element belongs to -- the root of the element tree it was built in. Set once
-        /// when the element is created: by <see cref="FormElement.ElementFor"/> for a control (the FormElement
+        /// when the element is created: by <see cref="StandaloneForm.ElementFor"/> for a control (the FormElement
         /// sets its own to itself), or in the constructor of a <see cref="ToolStripItemElement"/>.</summary>
-        public FormElement FormElement { get; internal set; }
+        public StandaloneForm FormElement { get; internal set; }
 
         // The element's form gates acting on it (a modal blocking the form); a control narrows this to its own
         // hosting form (which also catches a disabled ancestor).
@@ -889,14 +926,17 @@ namespace pwiz.Skyline.ToolsUI
         // guessed point, which is fragile), so it reports that it cannot be clicked. A subclass with a more
         // direct gesture overrides Click: a button uses BM_CLICK (to bypass PerformClick's gates), a
         // ToolStripItem / native dialog button drives its own.
-        public virtual ActionResult Click() => PerformGesture(() =>
+        public virtual ActionResult Click() => PerformGesture(ClickNow);
+
+        public virtual void ClickNow()
         {
             if (!(Control is IButtonControl button))
                 throw new ArgumentException(LlmInstruction.Format(
                     @"The control '{0}' cannot be clicked: it is not a button. Set its value, or act on the button/menu item that triggers it.",
                     Label ?? NullIfEmpty(Name) ?? ElementType.Name));
             button.PerformClick();
-        });
+
+        }
 
         // A button-like control carries its own caption in Text -- including a custom IButtonControl tile
         // such as a StartPage ActionBoxControl, whose Text is its visible caption ("Blank Document"). A
@@ -990,101 +1030,16 @@ namespace pwiz.Skyline.ToolsUI
         public new T Control => (T) base.Control;
     }
 
-    /// <summary>A top-level window the connector addresses by a formId: a WinForms form
-    /// (<see cref="FormElement"/>) or a native common dialog (<see cref="NativeDialog"/>). JsonUiService
-    /// resolves a formId to one of these and drives it entirely through this interface, so no verb
-    /// special-cases a native dialog. Each implementation runs its work in its own thread context: a managed
-    /// form marshals to the UI thread and can watch for a dialog the work pops; a native dialog -- whose UI
-    /// thread is busy in its own modal loop -- runs on the calling (pipe) thread and cannot be watched.</summary>
-    public abstract class WindowElement : UiElement
-    {
-        protected WindowElement(CancellationToken cancellationToken, IntPtr hwnd) : base(cancellationToken)
-        {
-            Hwnd = hwnd;
-        }
-        /// <summary>The "TypeName:Title" id this form is addressed by (matches skyline_get_open_forms).</summary>
-        public abstract string FormId { get; }
-        /// <summary>The form's visible title, for naming a captured-image file.</summary>
-        public abstract string Title { get; }
-        /// <summary>The form's controls as ControlInfo, each path parented onto the form (the get_controls verb).</summary>
-        public abstract ControlInfo[] GetControls();
-        /// <summary>Clicks a control on the form by its visible label, returning whether the click completed or
-        /// left a dialog open. (To confirm a form or dialog use the accept action, and to dismiss it use Close --
-        /// neither keys on a localized button caption.)</summary>
-        public abstract ActionResult ClickButton(string button);
-        /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name), returning whether the
-        /// set completed or left a dialog open.</summary>
-        public abstract ActionResult SetValue(string controlId, string value);
-        /// <summary>Dismisses the form/dialog by clicking the button with the given caption, then waits until it has
-        /// closed and reports whether it completed. For a choice that is neither the default nor the cancel button
-        /// (e.g. "No" on a "replace it?" message box). A native file dialog has no caption-addressable button, so it
-        /// throws -- accept it with <see cref="DismissWithAcceptButton"/>.</summary>
-        public abstract ActionResult DismissWithButton(string button);
-        /// <summary>Accepts the form/dialog -- the equivalent of pressing its default button (a managed form clicks
-        /// its AcceptButton, a native dialog does its OK gesture), so confirming never keys on a localized caption --
-        /// then waits until it has closed and reports whether it completed.</summary>
-        public abstract ActionResult DismissWithAcceptButton();
-        /// <summary>Cancels the form/dialog -- presses its cancel button (or closes it when it has none) -- then
-        /// waits until it has closed and reports whether it completed. The dismissing counterpart of
-        /// <see cref="DismissWithAcceptButton"/>.</summary>
-        public abstract ActionResult DismissWithCancelButton();
-        /// <summary>Resolves the path against this form and performs the action in the form's thread context.</summary>
-        public abstract object PerformAction(UiElementPath path, UiAction action, object value);
-        /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
-        /// the caller has done the screen-capture pre-flight).</summary>
-        public abstract System.Drawing.Bitmap CaptureImage();
-
-        // ---- Window-state queries the modal-watch (UiServiceDispatcher) asks each form about itself ----
-
-        /// <summary>Whether this is an interactive modal the caller would drive (a managed non-progress modal --
-        /// Modal and not a LongWaitDlg -- or a native dialog) rather than a progress/wait dialog the work itself
-        /// drives (a LongWaitDlg), which the watch rides through instead of stopping on.</summary>
-        public abstract bool IsInteractiveModal { get; }
-        /// <summary>Whether the form/dialog is still on screen (a managed form: not disposed, handle created and
-        /// visible; a native dialog: its window is visible). Must be read on the owning UI thread for a managed
-        /// form. Its negation is "dismissed".</summary>
-        public abstract bool IsOpen { get; }
-        /// <summary>Whether this is a busy progress form (an <see cref="ILongWaitForm"/> mid-operation) the
-        /// message-loop watchdog rides through; false for a native dialog.</summary>
-        public abstract bool IsBusy { get; }
-        /// <summary>The detailed message this form shows when it blocks the UI: a managed form's composed alert
-        /// text (CommonFormEx.DetailedMessage) else its caption; a native dialog's message-body text else its
-        /// caption. Read on the owning UI thread for a managed form.</summary>
-        public abstract string DetailedMessage { get; }
-        /// <summary>This form's/dialog's top-level window handle. Captured up front (a managed form reads it on
-        /// its UI thread when the element is built; a native dialog is identified by it), so off-thread code such
-        /// as the modal-watch can identify or capture the window without reading Form.Handle off its UI thread
-        /// (which would trip the cross-thread check).</summary>
-        public IntPtr Hwnd { get; }
-
-        protected ActionResult OkDialog(Action action)
-        {
-            return DialogWatcher.OkDialog(Hwnd, action, CancellationToken);
-        }
-    }
-
     /// <summary>A Form or a UserControl -- a boundary that owns its (flattened) children. It has no action
     /// of its own; it exists so the walk can list and descend into the controls it contains. Every other
     /// container (Panel, GroupBox, ...) is transparent (its controls are pulled up to the nearest Form or
     /// UserControl), so the only things that need a container element are these two. A Form is a
-    /// <see cref="FormElement"/> (a container that is also an addressable <see cref="WindowElement"/>).</summary>
+    /// <see cref="StandaloneForm"/> (a container that is also an addressable <see cref="StandaloneWindow"/>).</summary>
     internal class ContainerElement : ControlElement
     {
         public ContainerElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
 
-        public override IEnumerable<UiElement> EnumerateChildren() => FlattenChildren(Control);
-
-        // This container's child elements for the form walk, FLATTENED. A control the form recognizes as an
-        // element (FormElement.ElementFor) is yielded as that element -- and tagged with the same FormElement:
-        // a UserControl as a ContainerElement that owns its own
-        // (likewise flattened) children, and a grid/list/tree/toolstrip as a leaf the caller walks into via
-        // its own children. A control ElementFor does not recognize (a Panel, GroupBox, SplitContainer, a
-        // TabPage, ...) is transparent -- its controls are pulled up so every control is a direct child of
-        // the form (or of the nearest UserControl). A TabControl is kept (so its tabs can be selected via
-        // select_tab) and its tab contents are flattened up to this level too. Recognizing the kind (rather
-        // than guessing from Control.Count) keeps a complex control with internal child controls -- a
-        // DataGridView, with its scroll bars -- a single element instead of dissolving it into its parts.
-        private IEnumerable<UiElement> FlattenChildren(Control container)
+        protected IEnumerable<UiElement> GetDescendants(Control container)
         {
             // Walk the children in TAB order (Control.TabIndex), not the z-order the Controls collection is in,
             // so an adjacent label -> field pair is reported one right after the other. OrderBy is stable, so
@@ -1102,23 +1057,26 @@ namespace pwiz.Skyline.ToolsUI
                 // Recurse through a transparent container (no element of its own), and through a TabControl
                 // (kept above) to flatten its tab contents up alongside it.
                 if (element == null || control is TabControl)
-                    foreach (var inner in FlattenChildren(control))
+                    foreach (var inner in GetDescendants(control))
                         yield return inner;
             }
         }
+
+
+        public override IEnumerable<UiElement> EnumerateChildren() => GetDescendants(Control);
     }
 
     /// <summary>A WinForms top-level form, addressed by a formId. It is a <see cref="ContainerElement"/> (it
-    /// owns the form's flattened controls) that also implements <see cref="WindowElement"/>: the verbs resolve
+    /// owns the form's flattened controls) that also implements <see cref="StandaloneWindow"/>: the verbs resolve
     /// a managed formId to this and call its methods, which marshal to the UI thread (and watch for a dialog
     /// a mutation pops) so the connector drives a form the same way whether or not it is native. It is the
     /// factory (<see cref="ElementFor"/>) for the elements in its tree, tagging each with itself.</summary>
-    internal sealed class FormElement : WindowElement, IClipboardElement
+    internal sealed class StandaloneForm : StandaloneWindow, IClipboardElement
     {
         // Wraps a managed form, reading its window handle now. Must be built on the form's own UI thread -- reading
         // Form.Handle off it trips the cross-thread check -- which the assertion enforces. Off that thread, build it
         // with the handle already in hand (the two-argument constructor).
-        public FormElement(Form form, CancellationToken cancellationToken) : this(form, form.Handle, cancellationToken)
+        public StandaloneForm(Form form, CancellationToken cancellationToken) : this(form, form.Handle, cancellationToken)
         {
             Assume.IsFalse(form.InvokeRequired);
         }
@@ -1126,7 +1084,7 @@ namespace pwiz.Skyline.ToolsUI
         // Wraps a managed form whose window handle is already known (e.g. from a Win32 modal-window enumeration, or
         // recorded when the modal was shown), so the element can be built off the form's UI thread without touching
         // Form.Handle.
-        public FormElement(Form form, IntPtr hwnd, CancellationToken cancellationToken) : base(cancellationToken, hwnd)
+        public StandaloneForm(Form form, IntPtr hwnd, CancellationToken cancellationToken) : base(cancellationToken, hwnd)
         {
             Form = form;
         }
@@ -1398,6 +1356,16 @@ namespace pwiz.Skyline.ToolsUI
         public override bool IsEnabled
         {
             get { return Form.Enabled; }
+        }
+
+        public override IEnumerable<UiElement> EnumerateChildren()
+        {
+            return ElementFor(Form).EnumerateChildren();
+        }
+
+        public override UiElement GetChild(UiElementPath path)
+        {
+            return ElementFor(Form).GetChild(path);
         }
     }
 
@@ -1943,7 +1911,7 @@ namespace pwiz.Skyline.ToolsUI
     internal sealed class ToolStripItemElement : UiComponent, IClickableElement
     {
         private readonly ToolStripItem _item;
-        public ToolStripItemElement(ToolStripItem item, FormElement formElement, CancellationToken cancellationToken)
+        public ToolStripItemElement(ToolStripItem item, StandaloneForm formElement, CancellationToken cancellationToken)
             : base(cancellationToken)
         {
             _item = item;
@@ -2003,7 +1971,8 @@ namespace pwiz.Skyline.ToolsUI
         }
         // Marshaling through, and gating by, this item's form are inherited from UiComponent.
 
-        public ActionResult Click() => PerformGesture(() => _item.PerformClick());
+        public ActionResult Click() => PerformGesture(ClickNow);
+        public void ClickNow() => _item.PerformClick();
 
         // Opens / closes this item's dropdown (a menu/toolbar dropdown item), so a menu walk can populate
         // items built on DropDownOpening before matching the next path segment. A no-op for a leaf item.
