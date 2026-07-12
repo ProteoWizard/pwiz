@@ -36,6 +36,14 @@ namespace pwiz.Osprey.Scoring
     {
         public uint EntryId { get; set; }
         public bool IsDecoy { get; set; }
+        /// <summary>
+        /// True when this target-side entry is an FDRBench entrapment sequence
+        /// (a known-absent shuffle competing as a target). Populated only when
+        /// the run's library carries entrapment markers; used for the --verbose
+        /// anchor-purity (entrapment-FDP) diagnostic, never for scoring or
+        /// selection, so it does not affect calibration output.
+        /// </summary>
+        public bool IsEntrapment { get; set; }
         public string Sequence { get; set; }
         public uint ScanNumber { get; set; }
         public double CorrelationScore { get; set; }

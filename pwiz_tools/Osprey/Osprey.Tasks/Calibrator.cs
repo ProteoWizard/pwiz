@@ -161,6 +161,14 @@ namespace pwiz.Osprey.Tasks
 
         private readonly PipelineContext _ctx;
 
+        // Full-library entrapment composition for the --verbose anchor-purity
+        // (entrapment-FDP) diagnostic. Computed once per file in RunCalibration, only
+        // when Verbose. _libTargetSideCount is all IsDecoy==false entries (real Target +
+        // entrapment PTarget); _libEntrapmentCount is the PTarget subset. The FDRBench
+        // ratio is r = entrapment / (target-side - entrapment). Zero on a plain library.
+        private long _libTargetSideCount;
+        private long _libEntrapmentCount;
+
         internal Calibrator(PipelineContext ctx)
         {
             _ctx = ctx;
@@ -208,16 +216,37 @@ namespace pwiz.Osprey.Tasks
             // Target count drives the retry ladder's max_attempts derivation below
             // (Rust pipeline.rs:708-714).
             int nTotalTargets = 0;
+            // --verbose anchor-purity diagnostic: tally the full-library entrapment
+            // composition once, so RunLdaAndCollectPoints can report the entrapment-FDP of
+            // the selected anchors against the FDRBench ratio r. Verbose-gated so a normal
+            // run pays nothing for the per-entry accession scan.
+            bool tallyEntrapment = OspreyOutput.Verbose;
+            _libTargetSideCount = 0;
+            _libEntrapmentCount = 0;
             foreach (var entry in library)
             {
                 if (!entry.IsDecoy)
                 {
                     nTotalTargets++;
+                    if (tallyEntrapment)
+                    {
+                        _libTargetSideCount++;
+                        if (EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds))
+                            _libEntrapmentCount++;
+                    }
                     if (entry.RetentionTime < libMinRt)
                         libMinRt = entry.RetentionTime;
                     if (entry.RetentionTime > libMaxRt)
                         libMaxRt = entry.RetentionTime;
                 }
+            }
+            if (tallyEntrapment && _libEntrapmentCount > 0)
+            {
+                long realTargets = _libTargetSideCount - _libEntrapmentCount;
+                double rLib = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
+                _ctx.LogVerbose(string.Format(
+                    "Calibration entrapment library: {0} target-side entries = {1} real targets + {2} entrapment (FDRBench r = {3:F3})",
+                    _libTargetSideCount, realTargets, _libEntrapmentCount, rLib));
             }
 
             foreach (var spectrum in spectra)
@@ -1068,6 +1097,20 @@ namespace pwiz.Osprey.Tasks
                 "[COUNT] Calibration pass {0} LDA winners [{1}]: {2} target wins, {3} decoy wins at 1% FDR",
                 passNumber, fileName, nTargetWins, nDecoyWins));
 
+            // --verbose anchor-purity (entrapment-FDP) diagnostic: of the target-side
+            // anchors that clear the calibration q-gate, how many are FDRBench entrapment
+            // (known-absent shuffles)? This is an INDEPENDENT check on whether the per-run
+            // q<=1% gate actually controls the true error rate -- entrapment are targets in
+            // the target-decoy competition, so they are invisible to the reported q. Only
+            // emitted when the library carries entrapment markers (_libEntrapmentCount>0).
+            if (OspreyOutput.Verbose && _libEntrapmentCount > 0)
+            {
+                long realTargets = _libTargetSideCount - _libEntrapmentCount;
+                double rLib = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
+                foreach (string line in BuildAnchorPurityReport(matchArray, rLib, fileName, passNumber))
+                    _ctx.LogVerbose(line);
+            }
+
             // Cross-implementation diagnostic: dump per-entry LDA discriminant + q-value
             // sorted by entry_id for stable diff with rust_lda_scores.txt. Gated by
             // OSPREY_DUMP_LDA_SCORES; exits after write when OSPREY_LDA_SCORES_ONLY is set.
@@ -1088,6 +1131,71 @@ namespace pwiz.Osprey.Tasks
 
             libRtsDetected = libRts;
             measuredRtsDetected = measuredRts;
+        }
+
+        /// <summary>
+        /// Build the --verbose anchor-purity (entrapment-FDP) report for one calibration
+        /// pass: at each q threshold in a sweep (0.1/1/2/5/10%), among the target-side
+        /// anchors that clear that gate, how many are FDRBench entrapment (known-absent
+        /// shuffles)? Reports the raw entrapment fraction plus the ratio-corrected
+        /// lower-bound and combined FDP estimators (see docs/fractional-entrapment.md), so
+        /// the reader can read the yield-vs-true-FDP curve and compare it against the
+        /// claimed q. Purely informational; anchor selection is unaffected.
+        /// </summary>
+        private static IEnumerable<string> BuildAnchorPurityReport(
+            CalibrationMatch[] matchArray, double rLib, string fileName, int passNumber)
+        {
+            // The scored candidate pool (all target-side entries that produced a peak and
+            // entered the LDA) is the denominator context: it shows how many entrapment were
+            // in contention before the gate rejected them.
+            int poolT = 0, poolE = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.IsDecoy)
+                    continue;
+                if (m.IsEntrapment)
+                    poolE++;
+                else poolT++;
+            }
+            var lines = new List<string>
+            {
+                string.Format(
+                    "=== Calibration anchor purity [{0} pass {1}] (FDRBench r={2:F3}) ===",
+                    fileName, passNumber, rLib),
+                string.Format(
+                    "  scored pool: {0} target-side = {1} target + {2} entrapment (peaks entered LDA)",
+                    poolT + poolE, poolT, poolE),
+            };
+            // q-sweep: each threshold is a point on the yield-vs-entrapment-FDP curve, so a
+            // single run shows how far the gate could loosen before the true FDP degrades
+            // (informs any rank/floor or looser-q anchor-selection change).
+            foreach (double q in new[] { 0.001, 0.01, 0.02, 0.05, 0.10 })
+                lines.Add(AnchorPurityLine(matchArray, q, rLib,
+                    string.Format("q<={0,5:0.0%}", q)));
+            return lines;
+        }
+
+        /// <summary>One anchor-purity line at a q threshold: target vs entrapment anchor
+        /// counts and the raw / lower-bound / combined entrapment-FDP.</summary>
+        private static string AnchorPurityLine(
+            CalibrationMatch[] matchArray, double qThreshold, double rLib, string label)
+        {
+            int nT = 0, nE = 0;
+            foreach (var m in matchArray)
+            {
+                if (m.IsDecoy || m.QValue > qThreshold)
+                    continue;
+                if (m.IsEntrapment)
+                    nE++;
+                else nT++;
+            }
+            int total = nT + nE;
+            double rawFrac = total > 0 ? (double)nE / total : 0.0;
+            double fdpLower = (total > 0 && rLib > 0) ? nE / (rLib * total) : 0.0;
+            double fdpCombined = (total > 0 && rLib > 0) ? (1.0 + 1.0 / rLib) * nE / total : 0.0;
+            return string.Format(
+                "  {0}: {1} anchors = {2} target + {3} entrapment | entrapment-frac {4:P2} | FDP lower {5:P2} combined {6:P2}",
+                label, total, nT, nE, rawFrac, fdpLower, fdpCombined);
         }
 
         /// <summary>
@@ -1849,6 +1957,11 @@ namespace pwiz.Osprey.Tasks
             {
                 EntryId = entry.Id,
                 IsDecoy = entry.IsDecoy,
+                // Entrapment class recovered from the library accessions (FDRBench
+                // _p_target marker). Pure diagnostic tag for the --verbose anchor-purity
+                // report; unused by scoring/selection, so it leaves output unchanged. On a
+                // library with no entrapment markers this is simply always false.
+                IsEntrapment = EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
                 Sequence = entry.Sequence,
                 ScanNumber = apexSpectrum.ScanNumber,
                 CorrelationScore = bestCorrSum,
