@@ -569,7 +569,10 @@ namespace pwiz.Osprey.Test
             Assert.IsNotNull(noEnt.CrossRun);
             Assert.AreEqual(1, noEnt.PerFile[0].Targets);
 
-            // --- The Pass2 bundle survives the sidecar Newtonsoft round-trip with pass 1.
+            // --- The Pass2 bundle survives a Newtonsoft round-trip (camelCase +
+            // NaN-as-literal) -- the same serialization robustness the HTML embed relies
+            // on. (Pass2 itself is built at MergeNode and serialized only into the HTML,
+            // never through the FirstJoin->MergeNode data sidecar, which carries pass 1.)
             var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
             data.Pass2 = retrain;
             var settings = new JsonSerializerSettings
