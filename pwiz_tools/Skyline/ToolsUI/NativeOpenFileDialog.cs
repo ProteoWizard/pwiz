@@ -90,7 +90,7 @@ namespace pwiz.Skyline.ToolsUI
         public override ActionResult DismissWithAcceptButton()
         {
             var handle = new IntPtr(GetFileNameEdit().Current.NativeWindowHandle);
-            return DialogWatcher.OkDialog(WindowHandle, () => PostEnter(handle), CancellationToken);
+            return OkDialog(() => PostEnter(handle));
         }
 
         private AutomationElement GetFileNameEdit()

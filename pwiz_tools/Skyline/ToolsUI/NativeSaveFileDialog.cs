@@ -89,7 +89,7 @@ namespace pwiz.Skyline.ToolsUI
         public override ActionResult DismissWithAcceptButton()
         {
             var handle = GetSaveButtonHandle();
-            return DialogWatcher.OkDialog(WindowHandle, () => SendClick(handle), CancellationToken);
+            return OkDialog(() => SendClick(handle));
         }
 
         // The file-name Edit is the class "Edit" control inside the file-name control host. Find it by

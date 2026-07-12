@@ -140,8 +140,13 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>The cancellation of the request being served on the calling thread, or
         /// <see cref="CancellationToken.None"/> when the caller is not a request (in-process, no client to
         /// disconnect). Every IJsonToolService method here reads this FIRST and hands it to whatever it builds, so
-        /// the token travels with the work instead of being looked up from a static deep inside it.</summary>
-        internal static CancellationToken RequestCancellation =>
+        /// the token travels with the work instead of being looked up from a static deep inside it.
+        ///
+        /// <para>PRIVATE on purpose, and it must stay that way: it is only meaningful on the thread serving the
+        /// request. Read from anywhere else -- a UI thread, a worker a verb spun up -- it quietly returns None, and
+        /// the work it guards would silently become uncancellable. Only the verbs below may read it; everything
+        /// deeper takes the token as a parameter.</para></summary>
+        private static CancellationToken RequestCancellation =>
             _requestCancellation.Value?.Token ?? CancellationToken.None;
 
         // How often the watchdog peeks the pipe while a request is in flight: free enough to run continuously, quick
@@ -303,9 +308,7 @@ namespace pwiz.Skyline.ToolsUI
         private string HandleRequestWatchingForDisconnect(NamedPipeServerStream pipe, byte[] requestBytes)
         {
             using var cancellation = new CancellationTokenSource();
-            // Publish it for this thread: the verbs read it (RequestCancellation) and hand it to every element they
-            // build. The watchdog runs on ANOTHER thread, so it is given the source directly.
-            _requestCancellation.Value = cancellation;
+            // The watchdog runs on ANOTHER thread, so it is given the source directly rather than reading it below.
             var watchdog = new Thread(() => WatchForDisconnect(pipe, cancellation))
             {
                 Name = @"JsonToolServerDisconnectWatchdog-" + _pipeName,
@@ -314,17 +317,20 @@ namespace pwiz.Skyline.ToolsUI
             watchdog.Start();
             try
             {
+                // Publish it for this thread: the verbs read it (RequestCancellation) and hand it to every element
+                // they build. Set and cleared inside the try/finally, so a verb that throws leaves nothing behind.
+                _requestCancellation.Value = cancellation;
                 return HandleRequest(requestBytes);
             }
             finally
             {
+                _requestCancellation.Value = null;
                 // Cancelling is ALSO how the watchdog is told the request is over -- on every path, not just a
                 // disconnect. Nothing reads the token by now (the call has returned), so cancelling it costs nothing
                 // and saves a second signal. Then WAIT for the watchdog before the source is disposed: it may be in
                 // the middle of cancelling, and cancelling a disposed source throws, on a thread with no one to catch it.
                 cancellation.Cancel();
                 watchdog.Join();
-                _requestCancellation.Value = null;
             }
         }
 
@@ -909,6 +915,11 @@ namespace pwiz.Skyline.ToolsUI
                         @"Import properties from MCP")));
         }
 
+        private WindowElement ResolveForm(string formId)
+        {
+            return JsonUiService.ResolveForm(formId, _requestCancellation.Value?.Token ?? CancellationToken.None);
+        }
+
         public void SetSelectedElement(string elementLocatorString, string additionalLocators = null)
         {
             JsonUiService.SetSelection(elementLocatorString, additionalLocators);
@@ -921,7 +932,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public int ModalNestingCount()
         {
-            return JsonUiService.ModalNestingCount;
+            return DialogWatcher.ModalNestingCount;
         }
 
         public FormInfo[] GetOpenForms()
@@ -931,7 +942,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public ControlInfo[] GetControls(string formId)
         {
-            return JsonUiService.ResolveForm(formId, RequestCancellation).GetControls();
+            return ResolveForm(formId).GetControls();
         }
 
         public object PerformAction(UiElementPath path, string action, object value)
@@ -946,7 +957,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public ActionResult ClickFormButton(string formId, string button)
         {
-            return JsonUiService.ResolveForm(formId, RequestCancellation).ClickButton(button);
+            return ResolveForm(formId).ClickButton(button);
         }
 
         public ActionResult ClickToolStripItem(string formId, string menuPath)
@@ -956,7 +967,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public ActionResult SetFormValue(string formId, string controlId, string value)
         {
-            return JsonUiService.ResolveForm(formId, RequestCancellation).SetValue(controlId, value);
+            return ResolveForm(formId).SetValue(controlId, value);
         }
 
         public string GetFormValue(string formId, string controlId)
@@ -987,17 +998,17 @@ namespace pwiz.Skyline.ToolsUI
 
         public ActionResult DismissWithAcceptButton(string formId)
         {
-            return JsonUiService.ResolveForm(formId, RequestCancellation).DismissWithAcceptButton();
+            return ResolveForm(formId).DismissWithAcceptButton();
         }
 
         public ActionResult DismissWithButton(string formId, string button)
         {
-            return JsonUiService.ResolveForm(formId, RequestCancellation).DismissWithButton(button);
+            return ResolveForm(formId).DismissWithButton(button);
         }
 
         public ActionResult DismissWithCancelButton(string formId)
         {
-            return JsonUiService.ResolveForm(formId, RequestCancellation).DismissWithCancelButton();
+            return ResolveForm(formId).DismissWithCancelButton();
         }
 
         public void InvokeContextMenuItem(string formId, string controlSelector, string itemText)

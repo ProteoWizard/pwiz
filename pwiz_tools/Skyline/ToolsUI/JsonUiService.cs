@@ -19,12 +19,10 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -103,18 +101,6 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// The number of fire-and-forget actions (posted by <see cref="BeginInvokeOnUiThread"/>, or wrapped by
-        /// <see cref="UiServiceDispatcher"/>) that have been posted but have not yet finished running -- the public
-        /// (IJsonToolService) accessor, forwarding to the count state that now lives on
-        /// <see cref="UiServiceDispatcher"/>. Incremented when an action is posted and decremented when its delegate
-        /// returns -- so an action that opens a modal dialog stays counted until that modal closes (its delegate is
-        /// blocked in the modal's message loop). It is therefore usually equal to the number of modal dialogs the
-        /// connector's actions have raised and left open, and a caller can poll it to wait until pending
-        /// sets/clicks have actually been applied.
-        /// </summary>
-        public static int ModalNestingCount => DialogWatcher.ModalNestingCount;
-
-        /// <summary>
         /// Posts an action to the UI thread fire-and-forget (BeginInvoke, not Invoke): the caller returns at
         /// once and does not wait for or observe the result. Used for a void action (a click, a value set)
         /// so a gesture that opens a modal dialog does not block -- the modal is driven by later commands,
@@ -180,12 +166,6 @@ namespace pwiz.Skyline.ToolsUI
             // message rather than hanging behind it -- DialogWatcher.CallFunction. IntPtr.Zero resolves to no managed
             // control, so it targets the UI-thread window (main window / StartPage).
             return DialogWatcher.CallFunction(IntPtr.Zero, work, cancellationToken);
-        }
-
-        public static void RunWithDialogWatch(Action work,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            RunWithDialogWatch(() => { work(); return true; }, cancellationToken);
         }
 
         // The wait a named/convenience method runs for its gesture: post <paramref name="postGesture"/> onto the
@@ -687,10 +667,10 @@ namespace pwiz.Skyline.ToolsUI
         // window has the id.
         /// <summary>Resolves a formId to the element that drives it, built with the CANCELLATION OF THE REQUEST that
         /// asked for it: every marshal and wait the returned element (and the tree under it) performs can then be
-        /// abandoned when that client disconnects. Callers get the token from
-        /// <see cref="JsonToolServer.RequestCancellation"/>, which is per-thread -- the server may be serving several
-        /// clients at once.</summary>
-        public static IFormElement ResolveForm(string formId, CancellationToken cancellationToken)
+        /// abandoned when that client disconnects. The token comes from the JsonToolServer verb that is serving the
+        /// request -- it reads it on its own thread (the only thread it means anything on) and passes it in here.
+        /// In-process callers, which have no client to disconnect, pass CancellationToken.None.</summary>
+        public static WindowElement ResolveForm(string formId, CancellationToken cancellationToken)
         {
             ValidateFormIdFormat(formId);
             // The form is the root of its path; record it so get_controls parents the controls onto it.
@@ -996,7 +976,7 @@ namespace pwiz.Skyline.ToolsUI
         /// fetched. The docked forms are child windows (not top-level), so they are read through the main window's
         /// DockPanel, which must be on its UI thread -- hence the single Invoke, paid only when reached (a caller
         /// that finds its match among the top-level windows never triggers it).</summary>
-        public static IEnumerable<IFormElement> GetOpenFormElements(CancellationToken cancellationToken)
+        public static IEnumerable<WindowElement> GetOpenFormElements(CancellationToken cancellationToken)
         {
             foreach (var window in NativeDialog.GetTopLevelWindows(cancellationToken))
                 yield return window;
@@ -1009,17 +989,17 @@ namespace pwiz.Skyline.ToolsUI
         // up. Callable from any thread: the docked forms are child windows read through the main window's DockPanel,
         // which must be on its UI thread, so this Invokes the read (and the FormElement construction, which captures
         // each handle) onto that thread. Hidden/unknown-state docked forms are skipped (not on screen).
-        private static IList<IFormElement> GetDockedForms(CancellationToken cancellationToken)
+        private static IList<WindowElement> GetDockedForms(CancellationToken cancellationToken)
         {
             var mainWindow = Program.MainWindow;
             if (mainWindow == null)
-                return new List<IFormElement>();
+                return new List<WindowElement>();
             // Through InvokeOnUiThread (not a raw Invoke) so a client that disconnects can abandon this: it is the
             // first UI-thread hop most verbs make (form lookup), and a call parked here would hold the single-threaded
             // pipe server against every later request.
             return InvokeOnUiThread(() =>
             {
-                var result = new List<IFormElement>();
+                var result = new List<WindowElement>();
                 foreach (var form in mainWindow.DockPanel.Contents.OfType<DockableFormEx>())
                 {
                     var dockState = form.DockState;
@@ -1027,7 +1007,7 @@ namespace pwiz.Skyline.ToolsUI
                         continue;
                     result.Add(new FormElement(form, cancellationToken));
                 }
-                return (IList<IFormElement>) result;
+                return (IList<WindowElement>) result;
             }, null, cancellationToken);
         }
 
@@ -1038,7 +1018,7 @@ namespace pwiz.Skyline.ToolsUI
         /// any thread and reads the docked forms through the main window's own Invoke, so this may be called from
         /// any thread (the caller need not marshal it onto the UI thread).
         /// </summary>
-        private static IFormElement FindFormById(string formId, CancellationToken cancellationToken)
+        private static WindowElement FindFormById(string formId, CancellationToken cancellationToken)
         {
             ValidateFormIdFormat(formId);
             foreach (var window in GetOpenFormElements(cancellationToken))

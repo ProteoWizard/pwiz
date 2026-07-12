@@ -301,7 +301,7 @@ namespace pwiz.Skyline.ToolsUI
         // button, waiting for the form to close either way. The default case keys on no caption. Like every mutation
         // it just calls the element's own method (which rides DialogWatcher's wait and returns the ActionResult), so
         // it needs no special dispatch.
-        public static readonly UiAction Accept = SimpleAction<IFormElement, string>(@"Accept",
+        public static readonly UiAction Accept = SimpleAction<WindowElement, string>(@"Accept",
                 (e, button) => string.IsNullOrEmpty(button) ? e.DismissWithAcceptButton() : e.DismissWithButton(button))
             .Describe(new LlmInstruction(@"Accept the dialog -- its default/OK button; pass a button's caption to click that one instead."));
 
@@ -646,25 +646,9 @@ namespace pwiz.Skyline.ToolsUI
             return EnumerateChildren().SelectMany(child => child.SelfAndDescendants()).Prepend(this);
         }
 
-        // --- UI-thread marshaling ----------------------------------------------------------------------
-        // Runs work on the thread that owns this element's window. A control-backed element marshals through
-        // its form, because a form created on its own thread (e.g. a BackgroundThreadLongWaitDlg) runs its
-        // message loop there, not on the main window's thread -- so its controls must be touched through its
-        // own Invoke/BeginInvoke, not the main window's (see ControlElement). The base marshals through the
-        // main window (or the startup synchronization context), the right choice for an element with no form
-        // of its own.
-
-        /// <summary>Runs a void action synchronously on this element's UI thread (exceptions propagate).</summary>
-        public virtual void InvokeOnUiThread(Action action) =>
-            JsonUiService.InvokeOnUiThread(action, null, CancellationToken);
-
         /// <summary>Runs a function synchronously on this element's UI thread and returns its result.</summary>
         public virtual T InvokeOnUiThread<T>(Func<T> func) =>
             JsonUiService.InvokeOnUiThread(func, null, CancellationToken);
-
-        /// <summary>Posts a void action to this element's UI thread fire-and-forget (it is counted in
-        /// <see cref="JsonUiService.ModalNestingCount"/> until it finishes).</summary>
-        public virtual void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action);
 
         /// <summary>The gate-and-gesture a mutating or clicking method owns: it posts the gate + gesture onto the
         /// element's form thread and waits it out (via <see cref="JsonUiService.WaitForGesture"/> /
@@ -835,16 +819,6 @@ namespace pwiz.Skyline.ToolsUI
         /// when the element is created: by <see cref="FormElement.ElementFor"/> for a control (the FormElement
         /// sets its own to itself), or in the constructor of a <see cref="ToolStripItemElement"/>.</summary>
         public FormElement FormElement { get; internal set; }
-
-        // Marshaled through the element's own form, not the main window: a form on its own thread runs its
-        // message loop there, so the element must be touched through that form's Invoke/BeginInvoke.
-        // FormElement?.Form is null (so the dispatch falls back to the main window) only before the form is
-        // wired up; a FormElement's own form is itself.
-        public override void InvokeOnUiThread(Action action) =>
-            JsonUiService.InvokeOnUiThread(action, FormElement?.Form, CancellationToken);
-        public override T InvokeOnUiThread<T>(Func<T> func) =>
-            JsonUiService.InvokeOnUiThread(func, FormElement?.Form, CancellationToken);
-        public override void BeginInvokeOnUiThread(Action action) => JsonUiService.BeginInvokeOnUiThread(action, FormElement?.Form);
 
         // The element's form gates acting on it (a modal blocking the form); a control narrows this to its own
         // hosting form (which also catches a disabled ancestor).
@@ -1022,69 +996,78 @@ namespace pwiz.Skyline.ToolsUI
     /// special-cases a native dialog. Each implementation runs its work in its own thread context: a managed
     /// form marshals to the UI thread and can watch for a dialog the work pops; a native dialog -- whose UI
     /// thread is busy in its own modal loop -- runs on the calling (pipe) thread and cannot be watched.</summary>
-    public interface IFormElement
+    public abstract class WindowElement : UiElement
     {
+        protected WindowElement(CancellationToken cancellationToken, IntPtr hwnd) : base(cancellationToken)
+        {
+            Hwnd = hwnd;
+        }
         /// <summary>The "TypeName:Title" id this form is addressed by (matches skyline_get_open_forms).</summary>
-        string FormId { get; }
+        public abstract string FormId { get; }
         /// <summary>The form's visible title, for naming a captured-image file.</summary>
-        string Title { get; }
+        public abstract string Title { get; }
         /// <summary>The form's controls as ControlInfo, each path parented onto the form (the get_controls verb).</summary>
-        ControlInfo[] GetControls();
+        public abstract ControlInfo[] GetControls();
         /// <summary>Clicks a control on the form by its visible label, returning whether the click completed or
         /// left a dialog open. (To confirm a form or dialog use the accept action, and to dismiss it use Close --
         /// neither keys on a localized button caption.)</summary>
-        ActionResult ClickButton(string button);
+        public abstract ActionResult ClickButton(string button);
         /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name), returning whether the
         /// set completed or left a dialog open.</summary>
-        ActionResult SetValue(string controlId, string value);
+        public abstract ActionResult SetValue(string controlId, string value);
         /// <summary>Dismisses the form/dialog by clicking the button with the given caption, then waits until it has
         /// closed and reports whether it completed. For a choice that is neither the default nor the cancel button
         /// (e.g. "No" on a "replace it?" message box). A native file dialog has no caption-addressable button, so it
         /// throws -- accept it with <see cref="DismissWithAcceptButton"/>.</summary>
-        ActionResult DismissWithButton(string button);
+        public abstract ActionResult DismissWithButton(string button);
         /// <summary>Accepts the form/dialog -- the equivalent of pressing its default button (a managed form clicks
         /// its AcceptButton, a native dialog does its OK gesture), so confirming never keys on a localized caption --
         /// then waits until it has closed and reports whether it completed.</summary>
-        ActionResult DismissWithAcceptButton();
+        public abstract ActionResult DismissWithAcceptButton();
         /// <summary>Cancels the form/dialog -- presses its cancel button (or closes it when it has none) -- then
         /// waits until it has closed and reports whether it completed. The dismissing counterpart of
         /// <see cref="DismissWithAcceptButton"/>.</summary>
-        ActionResult DismissWithCancelButton();
+        public abstract ActionResult DismissWithCancelButton();
         /// <summary>Resolves the path against this form and performs the action in the form's thread context.</summary>
-        object PerformAction(UiElementPath path, UiAction action, object value);
+        public abstract object PerformAction(UiElementPath path, UiAction action, object value);
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
         /// the caller has done the screen-capture pre-flight).</summary>
-        System.Drawing.Bitmap CaptureImage();
+        public abstract System.Drawing.Bitmap CaptureImage();
 
         // ---- Window-state queries the modal-watch (UiServiceDispatcher) asks each form about itself ----
 
         /// <summary>Whether this is an interactive modal the caller would drive (a managed non-progress modal --
         /// Modal and not a LongWaitDlg -- or a native dialog) rather than a progress/wait dialog the work itself
         /// drives (a LongWaitDlg), which the watch rides through instead of stopping on.</summary>
-        bool IsInteractiveModal { get; }
+        public abstract bool IsInteractiveModal { get; }
         /// <summary>Whether the form/dialog is still on screen (a managed form: not disposed, handle created and
         /// visible; a native dialog: its window is visible). Must be read on the owning UI thread for a managed
         /// form. Its negation is "dismissed".</summary>
-        bool IsOpen { get; }
+        public abstract bool IsOpen { get; }
         /// <summary>Whether this is a busy progress form (an <see cref="ILongWaitForm"/> mid-operation) the
         /// message-loop watchdog rides through; false for a native dialog.</summary>
-        bool IsBusy { get; }
+        public abstract bool IsBusy { get; }
         /// <summary>The detailed message this form shows when it blocks the UI: a managed form's composed alert
         /// text (CommonFormEx.DetailedMessage) else its caption; a native dialog's message-body text else its
         /// caption. Read on the owning UI thread for a managed form.</summary>
-        string DetailedMessage { get; }
+        public abstract string DetailedMessage { get; }
         /// <summary>This form's/dialog's top-level window handle. Captured up front (a managed form reads it on
         /// its UI thread when the element is built; a native dialog is identified by it), so off-thread code such
         /// as the modal-watch can identify or capture the window without reading Form.Handle off its UI thread
         /// (which would trip the cross-thread check).</summary>
-        IntPtr Hwnd { get; }
+        public IntPtr Hwnd { get; }
+
+        protected ActionResult OkDialog(Action action)
+        {
+            return DialogWatcher.OkDialog(Hwnd, action, CancellationToken);
+        }
     }
 
     /// <summary>A Form or a UserControl -- a boundary that owns its (flattened) children. It has no action
     /// of its own; it exists so the walk can list and descend into the controls it contains. Every other
     /// container (Panel, GroupBox, ...) is transparent (its controls are pulled up to the nearest Form or
     /// UserControl), so the only things that need a container element are these two. A Form is a
-    /// <see cref="FormElement"/> (a container that is also an addressable <see cref="IFormElement"/>).</summary>
+    /// <see cref="FormElement"/> (a container that is also an addressable <see cref="WindowElement"/>).</summary>
     internal class ContainerElement : ControlElement
     {
         public ContainerElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
@@ -1126,40 +1109,35 @@ namespace pwiz.Skyline.ToolsUI
     }
 
     /// <summary>A WinForms top-level form, addressed by a formId. It is a <see cref="ContainerElement"/> (it
-    /// owns the form's flattened controls) that also implements <see cref="IFormElement"/>: the verbs resolve
+    /// owns the form's flattened controls) that also implements <see cref="WindowElement"/>: the verbs resolve
     /// a managed formId to this and call its methods, which marshal to the UI thread (and watch for a dialog
     /// a mutation pops) so the connector drives a form the same way whether or not it is native. It is the
     /// factory (<see cref="ElementFor"/>) for the elements in its tree, tagging each with itself.</summary>
-    internal sealed class FormElement : ContainerElement, IFormElement, IClipboardElement
+    internal sealed class FormElement : WindowElement, IClipboardElement
     {
         // Wraps a managed form, reading its window handle now. Must be built on the form's own UI thread -- reading
         // Form.Handle off it trips the cross-thread check -- which the assertion enforces. Off that thread, build it
         // with the handle already in hand (the two-argument constructor).
-        public FormElement(Form form, CancellationToken cancellationToken) : base(form, cancellationToken)
+        public FormElement(Form form, CancellationToken cancellationToken) : this(form, form.Handle, cancellationToken)
         {
-            FormElement = this;
             Assume.IsFalse(form.InvokeRequired);
-            _hwnd = form.Handle;
         }
 
         // Wraps a managed form whose window handle is already known (e.g. from a Win32 modal-window enumeration, or
         // recorded when the modal was shown), so the element can be built off the form's UI thread without touching
         // Form.Handle.
-        public FormElement(Form form, IntPtr hwnd, CancellationToken cancellationToken) : base(form, cancellationToken)
+        public FormElement(Form form, IntPtr hwnd, CancellationToken cancellationToken) : base(cancellationToken, hwnd)
         {
-            FormElement = this;
-            _hwnd = hwnd;
+            Form = form;
         }
 
-        private readonly IntPtr _hwnd;
-        public IntPtr Hwnd => _hwnd;
-        internal Form Form => (Form) Control;
+        public Form Form { get; }
 
         // Window-state queries (IFormElement) answered from this element's Form.
-        public bool IsInteractiveModal => Form.Modal && !(Form is LongWaitDlg);
-        public bool IsOpen => !Form.IsDisposed && Form.IsHandleCreated && Form.Visible;
-        public bool IsBusy => Form is ILongWaitForm { IsBusy: true };
-        public string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
+        public override bool IsInteractiveModal => Form.Modal && !(Form is LongWaitDlg);
+        public override bool IsOpen => !Form.IsDisposed && Form.IsHandleCreated && Form.Visible;
+        public override bool IsBusy => Form is ILongWaitForm { IsBusy: true };
+        public override string DetailedMessage => (Form as CommonFormEx)?.DetailedMessage ?? Form.Text;
 
         // Only the main Skyline window pastes / selects all at the window level (into/over the document); any
         // other form has no window-level clipboard gesture, so refuse it with a clear message.
@@ -1230,12 +1208,12 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        public string FormId => JsonUiService.GetFormId(Form);
-        public string Title => JsonUiService.GetFormTitle(Form);
+        public override string FormId => JsonUiService.GetFormId(Form);
+        public override string Title => JsonUiService.GetFormTitle(Form);
 
         // A value read: run inside the dialog-watch so it does not hang if a modal is up (GetControlsNow does
         // its own UI-thread marshaling).
-        public ControlInfo[] GetControls()
+        public override ControlInfo[] GetControls()
         {
             ControlInfo[] result = null;
             JsonUiService.RunWithDialogWatch(() =>
@@ -1253,7 +1231,7 @@ namespace pwiz.Skyline.ToolsUI
         // selecting it). This named/convenience verb waits out the posted gesture (the count settling, or a
         // modal it opens appearing) so it returns only once the click has taken effect -- the same wait the
         // generic perform_action (UiActions.Click) now uses too. Must be called off the UI thread.
-        public ActionResult ClickButton(string button)
+        public override ActionResult ClickButton(string button)
         {
             // Resolve the control on the UI thread (so a missing control fails here), then click it: Click posts the
             // gesture onto this form's thread and waits it out itself, reporting whether the click completed or left a
@@ -1269,7 +1247,7 @@ namespace pwiz.Skyline.ToolsUI
         // waits out the posted gesture (the count settling, or a modal a validation / confirmation raises
         // appearing) so it returns only once the value has taken effect -- the same wait the generic
         // perform_action (UiActions.SetValue) now uses too. Must be called off the UI thread.
-        public ActionResult SetValue(string controlId, string value)
+        public override ActionResult SetValue(string controlId, string value)
         {
             if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
             {
@@ -1317,10 +1295,10 @@ namespace pwiz.Skyline.ToolsUI
         // button that is neither its accept nor its cancel button. ClickButton posts the click; the empty-action
         // OkDialog then rides the shared wait until the form has closed and the count has drained. Must be called off
         // the UI thread.
-        public ActionResult DismissWithButton(string button)
+        public override ActionResult DismissWithButton(string button)
         {
             ClickButton(button);
-            return DialogWatcher.OkDialog(Hwnd, () => { }, CancellationToken);
+            return OkDialog(() => { });
         }
 
         // Accepts the form by clicking its default (accept) button -- what pressing Enter does -- so the connector
@@ -1328,9 +1306,9 @@ namespace pwiz.Skyline.ToolsUI
         // UI thread it gates the form and clicks the default button (a blocked form or one with no default button
         // fails, surfaced to the caller); the wait completes once the form has closed AND the count has ridden back
         // to its opener's pre-show level, stopping on a modal the accept opens. Must be called off the UI thread.
-        public ActionResult DismissWithAcceptButton()
+        public override ActionResult DismissWithAcceptButton()
         {
-            return DialogWatcher.OkDialog(Hwnd, () =>
+            return OkDialog(() =>
             {
                 VerifyInteractable();
                 IButtonControl acceptButton = Form.AcceptButton;
@@ -1338,12 +1316,12 @@ namespace pwiz.Skyline.ToolsUI
                     throw new ArgumentException(LlmInstruction.Format(
                         @"The form '{0}' has no default (accept) button.", FormId));
                 acceptButton.PerformClick();
-            }, CancellationToken);
+            });
         }
 
         // Like DismissWithAcceptButton, but clicks the form's cancel button (or closes the form when it has none),
         // the same way. Must be called off the UI thread.
-        public ActionResult DismissWithCancelButton()
+        public override ActionResult DismissWithCancelButton()
         {
             return DialogWatcher.OkDialog(Hwnd, () =>
             {
@@ -1356,7 +1334,7 @@ namespace pwiz.Skyline.ToolsUI
             }, CancellationToken);
         }
 
-        public object PerformAction(UiElementPath path, UiAction action, object value)
+        public override object PerformAction(UiElementPath path, UiAction action, object value)
         {
             // Resolve + verify on the UI thread (a control's gates read window handles), then run the action: a
             // mutation/click posts itself onto this form's thread and waits it out (see UiElement.PerformGesture),
@@ -1379,7 +1357,7 @@ namespace pwiz.Skyline.ToolsUI
         // polls until the form's top-level window is actually the foreground window -- stopping the moment it
         // is, or after the cap if activation was refused. Capturing before the form is on top would leave any
         // window still over it to be redacted (a cyan block) by CaptureAndRedact.
-        public System.Drawing.Bitmap CaptureImage()
+        public override System.Drawing.Bitmap CaptureImage()
         {
             var topLevelHandle = InvokeOnUiThread(() =>
             {
@@ -1407,6 +1385,19 @@ namespace pwiz.Skyline.ToolsUI
                 throw new ArgumentException(new LlmInstruction(@"This form has no main menu."));
             return new ToolStripElement(Form.MainMenuStrip, CancellationToken) { FormElement = this }.ClickMenuItem(menuPath)
                 ?? throw new ArgumentException(LlmInstruction.Format(@"Menu item not found: {0}.", menuPath));
+        }
+
+        public override string Name
+        {
+            get { return Form.Name; }
+        }
+        public override Type ElementType
+        {
+            get { return Form.GetType(); }
+        }
+        public override bool IsEnabled
+        {
+            get { return Form.Enabled; }
         }
     }
 
