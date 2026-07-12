@@ -1025,8 +1025,21 @@ namespace pwiz.Osprey.Tasks
         {
             // Train LDA + 1% FDR target-decoy competition.
             var swLda = Stopwatch.StartNew();
-            int nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false);
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(
+                matchArray, false, out CalibrationTrainingReport calReport);
             swLda.Stop();
+
+            // --verbose: dump the calibration LDA's seed, per-iteration refinement trace,
+            // per-feature contribution, and 1% / 0.1% q yield -- the calibration analog of
+            // the Percolator feature-contribution report.
+            if (OspreyOutput.Verbose && calReport != null)
+            {
+                foreach (string line in calReport.ToReportLines(
+                    string.Format(@"{0} pass {1}", fileName, passNumber)))
+                {
+                    _ctx.LogVerbose(line);
+                }
+            }
 
             int nTargetWins = 0;
             int nDecoyWins = 0;
