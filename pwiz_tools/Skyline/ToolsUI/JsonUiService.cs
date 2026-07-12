@@ -442,15 +442,15 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(path.GetRoot().Text, cancellationToken).PerformAction(path, uiAction, value);
         }
 
-        // Runs a resolved action. A value read (get_value, get_grid_text, get_actions, get_children) runs inside the
-        // dialog-watch so producing it does not hang behind a modal. A mutation/click owns its own wait -- the
-        // element's method posts the gesture onto the form's UI thread and waits it out (UiElement.PerformGesture),
-        // or an accept rides DialogWatcher.OkDialog -- so it is run here, on the caller thread, and returns its
-        // ActionResult. Either way perform_action matches the named verbs. Must be called off the UI thread.
+        // Runs a resolved action. UiAction.Invoke owns the threading (it marshals a gesture onto the element's UI
+        // thread, gates it, and waits it out; a read it runs there and returns the value), so there is nothing to
+        // dispatch here -- except that a READ additionally runs inside the dialog-watch, so producing it does not
+        // hang behind a modal. perform_action therefore behaves exactly like the named verbs, which invoke the same
+        // actions. Must be called off the UI thread.
         internal static object ExecuteAction(UiAction action, UiElement element, object value)
         {
             if (action.ReturnsValue)
-                return RunWithDialogWatch(() => action.Invoke(element, value));
+                return RunWithDialogWatch(() => action.Invoke(element, value), element.CancellationToken);
             return action.Invoke(element, value);
         }
 
@@ -499,11 +499,13 @@ namespace pwiz.Skyline.ToolsUI
 
         public static FormInfo[] GetOpenForms(CancellationToken cancellationToken = default(CancellationToken))
         {
+            // The main window and the forms docked in it all live on the main window's thread, so they are read in
+            // one trip there. Every OTHER form is read below, on its own thread -- see why there.
+            var dockedForms = new HashSet<Form>();
             var results = InvokeOnUiThread(() =>
             {
                 var skylineWindow = Program.MainWindow;
                 var formInfos = new List<FormInfo>();
-                var dockedForms = new HashSet<Form>();
                 // The main window does not exist while the StartPage is showing; skip the docked
                 // forms in that case and just enumerate the open forms below (the StartPage and any
                 // of its dialogs appear there).
@@ -538,14 +540,22 @@ namespace pwiz.Skyline.ToolsUI
                     }
                 }
 
-                // Enumerate non-docked forms (dialogs, popups)
-                foreach (var form in FormUtil.OpenForms)
+                return formInfos;
+            }, null, cancellationToken);
+
+            // Every other WinForms form -- a dialog, a popup -- read through ITS OWN form, not the main window's: a
+            // form that runs its own message loop on its own thread (a BackgroundThreadLongWaitDlg) owns its controls
+            // there, so reading Visible / Text / Handle for it from the main window's thread is a cross-thread touch.
+            // It throws only when a debugger is attached (Control.CheckForIllegalCrossThreadCalls defaults to
+            // Debugger.IsAttached), which is exactly why this went unnoticed -- see ConnectorFormThreadingTest, which
+            // turns the check on.
+            foreach (var form in FormUtil.OpenForms)
+            {
+                if (form == Program.MainWindow || dockedForms.Contains(form))
+                    continue;
+                try
                 {
-                    if (form == skylineWindow || dockedForms.Contains(form))
-                        continue;
-                    if (!form.Visible)
-                        continue;
-                    formInfos.Add(new FormInfo
+                    var formInfo = InvokeOnUiThread(() => !form.Visible ? null : new FormInfo
                     {
                         Type = form.GetType().Name,
                         Title = GetFormTitle(form),
@@ -553,10 +563,16 @@ namespace pwiz.Skyline.ToolsUI
                         DockState = @"Dialog",
                         Id = GetFormId(form),
                         ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(form.Handle),
-                    });
+                    }, form, cancellationToken);
+                    if (formInfo != null)
+                        results.Add(formInfo);
                 }
-                return formInfos;
-            });
+                catch (Exception)
+                {
+                    // The form can close between the enumeration and the read -- skip a vanishing one rather than
+                    // failing the whole GetOpenForms for a caller polling during a close (as the native loop does).
+                }
+            }
 
             // Native common dialogs (e.g. the Open/Save file dialog) are not WinForms forms and
             // so never appear in FormUtil.OpenForms. Enumerate them via UI Automation. This runs

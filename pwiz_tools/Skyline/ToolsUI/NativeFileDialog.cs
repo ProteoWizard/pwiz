@@ -19,7 +19,10 @@
  */
 
 using System;
+using System.Linq;
 using System.Threading;
+using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -44,9 +47,29 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         public abstract void EnterPath(string path);
 
-        // A file dialog is not introspected as a set of child controls; it is driven entirely at the form
-        // level -- set_value types the path (its controlId is ignored, a file dialog has the one file-name
-        // field) and the accept action commits it (the cancel verb cancels).
+        /// <summary>The control id of this dialog's file-name Edit -- 1148 for the Open dialog's classic combo,
+        /// 1001 for the Save dialog's DirectUI-hosted field.</summary>
+        protected abstract int FileNameControlId { get; }
+
+        /// <summary>The dialog's file-name field, found by its CONTROL ID and WAITED FOR until it is actually shown.
+        ///
+        /// <para>Both halves matter. By control id, because the field is not "the dialog's only text box": the
+        /// address bar carries a second, collapsed Edit. And waited for, because a native dialog becomes
+        /// discoverable -- its window exists, GetOpenForms reports it, and it classifies as a file dialog -- a moment
+        /// BEFORE the shell has finished showing and populating it. Typing into the field in that window does
+        /// nothing: the shell overwrites the text as it finishes initializing, and the dialog then accepts an empty
+        /// name. So a caller driving a dialog the instant it appears (which is exactly what the connector and the
+        /// tests do) MUST wait for the field to be visible first.</para></summary>
+        protected NativeTextBox FileNameTextBox =>
+            PollUntil(MillisTimeout, @"the dialog's file name field", () =>
+            {
+                var hwnd = FindDescendant(NativeControl.EDIT_CLASS, FileNameControlId);
+                return hwnd != IntPtr.Zero && User32.IsWindowVisible(hwnd)
+                    ? new NativeTextBox(hwnd, CancellationToken)
+                    : null;
+            });
+
+        // set_value types the path: its controlId is ignored, because a file dialog has the one field to set.
         protected override void SetValueCore(string value) => EnterPath(value);
     }
 }

@@ -229,12 +229,6 @@
     <Reference Include="Accessibility">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="UIAutomationClient">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="UIAutomationTypes">
-      <RequiredTargetFramework>3.0</RequiredTargetFramework>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\FilesTree\FileSystemHealthMonitor.cs" />
@@ -1411,6 +1405,7 @@
     <Compile Include="ToolsUI\DialogWatcher.cs" />
     <Compile Include="ToolsUI\UiElement.cs" />
     <Compile Include="ToolsUI\NativeFileDialog.cs" />
+    <Compile Include="ToolsUI\NativeControl.cs" />
     <Compile Include="ToolsUI\NativeDialog.cs" />
     <Compile Include="ToolsUI\NativeFolderBrowserDialog.cs" />
     <Compile Include="ToolsUI\NativeOpenFileDialog.cs" />

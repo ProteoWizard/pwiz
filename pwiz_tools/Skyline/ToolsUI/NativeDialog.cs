@@ -23,7 +23,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Windows.Automation;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
@@ -67,7 +66,6 @@ namespace pwiz.Skyline.ToolsUI
         private const int POLL_INTERVAL_MILLIS = 100;
         private const int VK_RETURN = 0x0D;
 
-        private AutomationElement _dialogElement;
 
         protected NativeDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(cancellationToken, windowHandle)
         {
@@ -127,73 +125,145 @@ namespace pwiz.Skyline.ToolsUI
                 .FirstOrDefault();
         }
 
-        protected AutomationElement DialogElement =>
-            _dialogElement ??= AutomationElement.FromHandle(Hwnd);
-
         /// <summary>
-        /// Returns the automation wrapper for the given native dialog element: a file-dialog subclass when
-        /// it is one, otherwise a generic <see cref="NativeDialog"/>. Null only when the element is not a
-        /// "#32770" dialog (or its handle is gone).
+        /// The wrapper that drives the "#32770" at <paramref name="handle"/>: a file-dialog subclass when it is
+        /// one, otherwise a generic <see cref="NativeDialog"/>. Null when the window is not a dialog (or is gone).
+        ///
+        /// <para>Every test is a window-manager read (a control id, a window class), so classifying is safe from any
+        /// thread and cannot deadlock -- which the UI-Automation version it replaces could, queried from the UI
+        /// thread the dialog's modal loop runs on.</para>
         /// </summary>
-        public static NativeDialog Create(AutomationElement dialog, CancellationToken cancellationToken)
+        public static NativeDialog Create(IntPtr handle, CancellationToken cancellationToken)
         {
-            IntPtr handle;
-            try
-            {
-                if (dialog.Current.ClassName != DIALOG_CLASS_NAME)
-                    return null;
-                handle = new IntPtr(dialog.Current.NativeWindowHandle);
-            }
-            catch (ElementNotAvailableException)
-            {
+            if (handle == IntPtr.Zero || User32.GetClassName(handle) != DIALOG_CLASS_NAME)
                 return null;
-            }
-            if (handle == IntPtr.Zero)
-                return null;
-            if (NativeOpenFileDialog.IsOpenFileDialog(dialog))
+            if (NativeOpenFileDialog.IsOpenFileDialog(handle))
                 return new NativeOpenFileDialog(handle, cancellationToken);
-            // Check Save after Open: the modern Open dialog has the classic file-name combo
-            // (AutomationId 1148) that IsOpenFileDialog keys on; the Save dialog does not, so the
-            // two never both match.
-            if (NativeSaveFileDialog.IsSaveFileDialog(dialog))
+            // Check Save after Open: the modern Open dialog has the classic file-name combo (control id 1148) that
+            // IsOpenFileDialog keys on; the Save dialog does not, so the two never both match.
+            if (NativeSaveFileDialog.IsSaveFileDialog(handle))
                 return new NativeSaveFileDialog(handle, cancellationToken);
-            // The classic Browse-For-Folder dialog (a folder tree, no file-name combo) -- checked after the
-            // file dialogs, whose navigation pane also has a tree but which match first on their combo.
-            if (NativeFolderBrowserDialog.IsFolderBrowserDialog(dialog))
+            // The classic Browse-For-Folder dialog (a folder tree, no file-name field) -- checked after the file
+            // dialogs, whose navigation pane also has a tree but which match first on their file-name field.
+            if (NativeFolderBrowserDialog.IsFolderBrowserDialog(handle))
                 return new NativeFolderBrowserDialog(handle, cancellationToken);
-            // Any other "#32770" (a message box such as the Save dialog's "replace it?" confirm, or any
-            // other Windows dialog) is driven generically by the base class -- it lists the buttons and
-            // clicks one by caption.
+            // Any other "#32770" (a message box such as the Save dialog's "replace it?" confirm, or any other
+            // Windows dialog) is driven generically by the base class -- it lists its buttons and clicks one by
+            // caption.
             return new NativeDialog(handle, cancellationToken);
         }
 
-        /// <summary>
-        /// Returns automation wrappers for the native dialogs currently open in this process,
-        /// found via UI Automation.
-        /// </summary>
+        /// <summary>The native dialogs currently open in this process, each wrapped as the class that drives it.</summary>
         public static IList<NativeDialog> GetOpenDialogs(CancellationToken cancellationToken)
         {
             var result = new List<NativeDialog>();
             var seen = new HashSet<IntPtr>();
-            foreach (var element in FindDialogElements())
+            foreach (var hwnd in FindDialogHandles())
             {
-                NativeDialog automation;
-                try
-                {
-                    automation = Create(element, cancellationToken);
-                }
-                catch (Exception)
-                {
-                    // A dialog can vanish mid-enumeration -- it is closing (e.g. a message box just dismissed) --
-                    // and classifying it (Create's UI-Automation queries) then throws. Skip it: a window we cannot
-                    // even classify is one we cannot drive, and it is on its way out. Without this, a caller polling
-                    // GetOpenForms while a dialog closes would see the whole call throw.
-                    continue;
-                }
-                if (automation != null && automation.Hwnd != IntPtr.Zero && seen.Add(automation.Hwnd))
-                    result.Add(automation);
+                // A dialog can vanish mid-enumeration -- it is closing (e.g. a message box just dismissed). Every
+                // read below then simply reports the window as gone rather than throwing, but classify defensively
+                // anyway: a window we cannot classify is one we cannot drive, and it is on its way out.
+                var dialog = Create(hwnd, cancellationToken);
+                if (dialog != null && seen.Add(hwnd))
+                    result.Add(dialog);
             }
             return result;
+        }
+
+        // ---- Win32 control lookup (what UI Automation used to do) -----------------------------------
+
+        /// <summary>The dialog's descendant windows of the given class, in window order -- the dialog's real
+        /// controls. A modern file dialog's DirectUI content (navigation pane, file list, breadcrumb) is drawn
+        /// rather than windowed, so it has no handles and never appears here; the controls the connector drives
+        /// (the file-name field, the commit and cancel buttons) all do.</summary>
+        protected IEnumerable<IntPtr> FindDescendants(string className)
+        {
+            return User32.EnumChildWindows(Hwnd).Where(hwnd => User32.GetClassName(hwnd) == className);
+        }
+
+        /// <summary>The dialog's descendant of the given class carrying the given control id, or IntPtr.Zero. The
+        /// class matters: the Save dialog's file-name Edit and the address bar's breadcrumb BOTH carry control id
+        /// 1001, but the breadcrumb is a ToolbarWindow32 -- so class + id is unambiguous where the id alone is not
+        /// (which is why the UI-Automation version had to walk to a DirectUI host to disambiguate).</summary>
+        protected IntPtr FindDescendant(string className, int controlId)
+        {
+            return FindDescendants(className)
+                .FirstOrDefault(hwnd => User32.GetDlgCtrlID(hwnd) == controlId);
+        }
+
+        /// <summary>Whether the dialog has ANY descendant carrying the given control id, whatever its class -- how
+        /// the Open dialog recognizes itself. Its file-name combo is a stack of three windows (a ComboBoxEx32, the
+        /// ComboBox inside it, and the Edit inside that) and which of them carries the id varies by dialog flavour:
+        /// the plain Open dialog puts it on all three, the multiselect one ("Add Input Files") does not put it on
+        /// the Edit. So the id alone -- not id + class -- is what identifies the dialog.</summary>
+        protected bool HasDescendantWithControlId(int controlId)
+        {
+            return User32.EnumChildWindows(Hwnd).Any(hwnd => User32.GetDlgCtrlID(hwnd) == controlId);
+        }
+
+        /// <summary>Whether the dialog has a descendant of the given class AND control id -- how the Save dialog
+        /// recognizes its file-name Edit, whose id (1001) the address bar's breadcrumb also carries (but as a
+        /// ToolbarWindow32, so the class separates them).</summary>
+        protected bool HasDescendant(string className, int controlId)
+        {
+            return FindDescendant(className, controlId) != IntPtr.Zero;
+        }
+
+        /// <summary>The dialog's descendant of the given class and control id, or a clear failure. Found by ID, not
+        /// by walking the visible children: a dialog is discoverable (its window exists) a moment before it is
+        /// SHOWN, and until then every one of its controls reports itself invisible -- so a lookup that filtered on
+        /// visibility would intermittently find nothing. The id is stable from the moment the control is created.</summary>
+        protected IntPtr RequireDescendant(string className, int controlId, string description)
+        {
+            var hwnd = FindDescendant(className, controlId);
+            if (hwnd == IntPtr.Zero)
+                throw new InvalidOperationException(LlmInstruction.Format(
+                    @"The native dialog '{0}' has no {1}.", FormId, description));
+            return hwnd;
+        }
+
+        /// <summary>The dialog's button with the given control id (IDOK, IDCANCEL) -- a commit button found WITHOUT
+        /// matching a localized caption.</summary>
+        protected NativeButton RequireButton(int controlId, string description)
+        {
+            return new NativeButton(RequireDescendant(NativeControl.BUTTON_CLASS, controlId, description + @" button"),
+                CancellationToken);
+        }
+
+        // The dialog's controls, as elements: its VISIBLE Button / Edit / Static descendants. Visible is what
+        // separates a dialog's real controls from the hidden scratch windows both file dialogs carry (the
+        // collapsed address-bar Edit, a hidden Help button) -- and what a user can act on, which is the rule the
+        // rest of the connector follows.
+        public override IEnumerable<UiElement> EnumerateChildren()
+        {
+            foreach (var hwnd in User32.EnumChildWindows(Hwnd))
+            {
+                if (!User32.IsWindowVisible(hwnd))
+                    continue;
+                var element = ElementFor(hwnd);
+                if (element != null)
+                    yield return element;
+            }
+        }
+
+        // The element for a native child window, or null for one that is not something a caller can act on or read
+        // (the DirectUI hosts, the shell view, the scroll bars).
+        private NativeControl ElementFor(IntPtr hwnd)
+        {
+            switch (User32.GetClassName(hwnd))
+            {
+                case NativeControl.BUTTON_CLASS:
+                    return new NativeButton(hwnd, CancellationToken);
+                case NativeControl.EDIT_CLASS:
+                    return new NativeTextBox(hwnd, CancellationToken);
+                case NativeControl.STATIC_CLASS:
+                    // A Static with no text is an icon or a spacer, not a label.
+                    return string.IsNullOrEmpty(User32.GetWindowText(hwnd))
+                        ? null
+                        : (NativeControl) new NativeLabel(hwnd, CancellationToken);
+                default:
+                    return null;
+            }
         }
 
         /// <summary>
@@ -217,16 +287,13 @@ namespace pwiz.Skyline.ToolsUI
             return OkDialog(() => { });
         }
 
-        /// <summary>Accepts the dialog by pressing Enter, which activates its default button. Its target control is
-        /// resolved HERE, on the CALLER (pipe) thread, where UI Automation is safe (off the dialog's own UI thread);
-        /// DialogWatcher.OkDialog then runs the Win32 gesture on the dialog's UI thread and waits until it closes --
-        /// the SAME machinery a managed form's accept uses. Enter is POSTED, so the dialog's modal loop translates it
-        /// into accept (a synchronous send would bypass that -- see PostEnter). The file dialogs override this with
-        /// the gesture their DirectUI surface needs. Must be called off the UI thread.</summary>
+        /// <summary>Accepts the dialog by pressing Enter, which activates its default button. OkDialog runs the Win32
+        /// gesture on the dialog's UI thread and waits until it closes -- the SAME machinery a managed form's accept
+        /// uses. Enter is POSTED, so the dialog's modal loop translates it into accept (a synchronous send would
+        /// bypass that -- see PostEnter). The file dialogs override this with the gesture their surface needs.</summary>
         public override ActionResult DismissWithAcceptButton()
         {
-            var handle = new IntPtr(DialogElement.Current.NativeWindowHandle);
-            return OkDialog(() => PostEnter(handle));
+            return OkDialog(() => PostEnter(Hwnd));
         }
 
         /// <summary>Cancels the dialog by sending WM_CLOSE on its own UI thread (which dismisses it the way the
@@ -239,71 +306,31 @@ namespace pwiz.Skyline.ToolsUI
             return OkDialog(() => User32.SendMessage(Hwnd, User32.WinMessageType.WM_CLOSE, IntPtr.Zero, IntPtr.Zero));
         }
 
-        // ---- IFormElement: drive the dialog the way JsonUiService drives any form -------------------
-        // Everything runs on the calling (pipe) thread: the dialog runs its own modal loop on the UI thread,
-        // so marshalling to it (or into RunWithDialogWatch's background work) would deadlock. The dialog's
-        // gestures post Win32 messages / drive UI Automation, which are safe from any thread.
+        // ---- Driven exactly the way JsonUiService drives a managed form ----------------------------
+        // Its controls are NativeControl elements (see EnumerateChildren), so the shared element machinery --
+        // GetControlsNow, FindElement, the Click/SetValue actions -- does all the work, and none of these verbs
+        // special-cases a native dialog any more. Reads are Win32 and run on the calling thread; a gesture is
+        // marshaled onto the dialog's UI thread and waited out, so it is counted and a modal it raises is seen.
 
-        /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "FileDialog:Open …".</summary>
+        /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "Dialog:Open …".</summary>
         public override string FormId => DialogTypeName + @":" + Title;
-            
+
         public override ControlInfo[] GetControls() => GetControlsNow();
 
-        // The dialog's text and its push buttons, so a caller can read the prompt and see which choices it
-        // offers. The buttons are clicked by caption (ClickFormButton) or with the accept/close actions; the
-        // text rows are informational. (A file dialog's modern controls are DirectUI and mostly not direct
-        // children, so this is typically empty for one -- it is driven by set_value + accept instead.)
-        public override ControlInfo[] GetControlsNow()
-        {
-            var result = new List<ControlInfo>();
-            foreach (var text in FindChildren(ControlType.Text))
-            {
-                var content = text.Current.Name;
-                if (!string.IsNullOrEmpty(content))
-                    result.Add(new ControlInfo { Path = new UiElementPath(null, content, null, @"Text") });
-            }
-            foreach (var button in FindChildren(ControlType.Button))
-                result.Add(new ControlInfo
-                {
-                    Path = new UiElementPath(null, button.Current.Name, null, @"Button"),
-                    Enabled = button.Current.IsEnabled,
-                });
-            return result.ToArray();
-        }
-
-        // Clicks the dialog's button whose caption matches -- e.g. how the connector gets past a confirm box
-        // ("Yes"). Posts BM_CLICK (does not send it): the click may dismiss the dialog and unwind a nested
-        // modal loop, so a synchronous send could wedge the caller (see NativeSaveFileDialog.Accept). Caption
-        // matching is case- and '&'-mnemonic-insensitive; the caller reads the localized caption from
-        // get_controls.
+        // Clicks the dialog's button whose caption matches -- how the connector gets past a confirm box ("Yes"), or
+        // presses a file dialog's Open/Save. Resolved and clicked through the element model, so the click WAITS: it
+        // reports whether it completed or left a dialog open (the Save dialog's "replace it?" prompt), where the old
+        // UI-Automation version could only post the click and tell the caller to go and poll. Caption matching is
+        // case- and '&'-mnemonic-insensitive (see UiElement.TextMatches).
         public override ActionResult ClickButton(string button)
         {
-            var buttons = FindChildren(ControlType.Button).ToList();
-            var match = buttons.FirstOrDefault(b => CaptionMatches(b.Current.Name, button));
-            if (match == null)
-                throw new ArgumentException(LlmInstruction.Format(
-                    @"The dialog '{0}' has no button '{1}'. Its buttons are: {2}.",
-                    FormId, button, string.Join(@", ", buttons.Select(b => b.Current.Name))));
-            // Capture the button handle and the dialog id BEFORE posting: the click may close the dialog (a
-            // message box's OK/Yes/No does), after which its UI-Automation element is gone and FormId (Title) would
-            // throw ElementNotAvailableException.
-            var buttonHandle = new IntPtr(match.Current.NativeWindowHandle);
-            var formId = FormId;
-            User32.PostMessageA(buttonHandle, User32.WinMessageType.BM_CLICK, 0, 0);
-            // The click is posted (not waited on): a native dialog is not part of the modal-nesting count, so
-            // completion cannot be confirmed. Report it as not completed with a note to poll.
-            return new ActionResult
-            {
-                Completed = false,
-                Message = LlmInstruction.Format(
-                    @"Posted the click of '{0}' to native dialog '{1}'; poll skyline_get_open_forms for the result.",
-                    button, formId)
-            };
+            var element = FindElement(button, UiActions.Click);
+            return (ActionResult) UiActions.Click.Invoke(element, null);
         }
 
-        // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base
-        // refuses, and the file dialogs override SetValueCore to type the path. The value is typed synchronously
-        // and has no follow-on work, so the set is complete on return.
+        // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base refuses, and
+        // the file dialogs override SetValueCore to type the path. The value is typed synchronously and has no
+        // follow-on work, so the set is complete on return.
         public override ActionResult SetValue(string controlId, string value)
         {
             VerifyNotBlocked();
@@ -337,16 +364,6 @@ namespace pwiz.Skyline.ToolsUI
             User32.SetForegroundWindow(Hwnd);
         }
 
-        /// <summary>
-        /// Accepts the dialog by posting Enter to the given control. Posting the key is more
-        /// reliable than invoking the default button through UI Automation (the dialog is a
-        /// DirectUI surface).
-        /// </summary>
-        protected void PressEnter(AutomationElement element)
-        {
-            PostEnter(new IntPtr(element.Current.NativeWindowHandle));
-        }
-
         // Posts Enter (key down then up) to a control. Enter MUST be POSTED, not sent: the dialog's modal message
         // loop translates a queued VK_RETURN into its default action (IsDialogMessage) -- a synchronous send, calling
         // the control's wndproc directly, bypasses that and does not accept the dialog. (Unlike BM_CLICK, which acts
@@ -367,99 +384,35 @@ namespace pwiz.Skyline.ToolsUI
             User32.SendMessage(buttonHandle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
         }
 
-        /// <summary>Waits for a descendant control of the dialog with the given AutomationId.</summary>
-        protected AutomationElement WaitForElement(string automationId)
-        {
-            return WaitForElement(
-                new PropertyCondition(AutomationElement.AutomationIdProperty, automationId),
-                @"dialog control with AutomationId " + automationId);
-        }
-
-        /// <summary>Waits for a descendant control of the dialog matching the given condition.</summary>
-        protected AutomationElement WaitForElement(Condition condition, string description)
-        {
-            return PollUntil(MillisTimeout, description,
-                () => DialogElement.FindFirst(TreeScope.Descendants, condition));
-        }
-
         /// <summary>
-        /// Finds the open native dialogs (window class "#32770") of the current process by
-        /// enumerating top-level windows with Win32 EnumWindows. A common file dialog is an *owned*
-        /// top-level window (not a child window), and EnumWindows enumerates owned windows -- so this
-        /// finds a dialog owned by a nested modal form (e.g. the "Add Input Files" dialog owned by
-        /// the Import Peptide Search wizard), which a UI Automation child walk from the desktop root
-        /// misses because such a dialog is nested below its owner in the automation tree. EnumWindows
-        /// visits only top-level windows, never the control subtree, so it stays cheap.
+        /// The open native dialogs (window class "#32770") of the current process, by Win32 EnumWindows. A common
+        /// file dialog is an *owned* top-level window (not a child window), and EnumWindows enumerates owned
+        /// windows -- so this finds a dialog owned by a nested modal form (e.g. the "Add Input Files" dialog owned
+        /// by the Import Peptide Search wizard). EnumWindows visits only top-level windows, never the control
+        /// subtree, so it stays cheap.
         /// </summary>
-        private static IList<AutomationElement> FindDialogElements()
+        private static IEnumerable<IntPtr> FindDialogHandles()
         {
-            var processId = (uint)Process.GetCurrentProcess().Id;
-            var dialogHandles = User32.EnumWindows().Where(hwnd =>
+            var processId = (uint) Process.GetCurrentProcess().Id;
+            return User32.EnumWindows().Where(hwnd =>
             {
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                return windowProcessId == processId && GetWindowClassName(hwnd) == DIALOG_CLASS_NAME;
-            }).ToList();
-
-            var result = new List<AutomationElement>();
-            foreach (var hwnd in dialogHandles)
-            {
-                try
-                {
-                    var element = AutomationElement.FromHandle(hwnd);
-                    if (element != null)
-                        result.Add(element);
-                }
-                catch (ElementNotAvailableException)
-                {
-                    // Window closed between enumeration and binding; skip it.
-                }
-                catch (ArgumentException)
-                {
-                    // Handle no longer valid; skip it.
-                }
-            }
-            return result;
+                return windowProcessId == processId && User32.GetClassName(hwnd) == DIALOG_CLASS_NAME;
+            });
         }
 
-        private static string GetWindowClassName(IntPtr hwnd) => User32.GetClassName(hwnd);
-
-        private static TResult PollUntil<TResult>(int millisTimeout, string description, Func<TResult> find)
+        protected static TResult PollUntil<TResult>(int millisTimeout, string description, Func<TResult> find)
             where TResult : class
         {
             var stopwatch = Stopwatch.StartNew();
             while (true)
             {
-                // UI Automation can briefly throw while a window is being created or torn down.
-                TResult value = null;
-                try
-                {
-                    value = find();
-                }
-                catch (ElementNotAvailableException)
-                {
-                    // Retry below.
-                }
+                var value = find();
                 if (value != null)
                     return value;
                 if (stopwatch.ElapsedMilliseconds > millisTimeout)
                     throw new TimeoutException(string.Format(@"Timed out after {0} ms waiting for {1}.", millisTimeout, description));
                 Thread.Sleep(POLL_INTERVAL_MILLIS);
-            }
-        }
-
-        // The dialog's direct children of the given control type (its buttons, its text). A message box's
-        // buttons and text are direct children of the "#32770"; a modern file dialog's are DirectUI and
-        // nested, so this returns few or none for one.
-        private IEnumerable<AutomationElement> FindChildren(ControlType controlType)
-        {
-            try
-            {
-                return DialogElement.FindAll(TreeScope.Children,
-                    new PropertyCondition(AutomationElement.ControlTypeProperty, controlType)).Cast<AutomationElement>();
-            }
-            catch (ElementNotAvailableException)
-            {
-                return Enumerable.Empty<AutomationElement>();
             }
         }
 

@@ -242,6 +242,22 @@ namespace pwiz.Common.SystemUtil.PInvoke
             return GetClassName(hwnd, buffer, buffer.Capacity) > 0 ? buffer.ToString() : string.Empty;
         }
 
+        /// <summary>The control id of a child window -- for a control in a dialog this is the same number UI
+        /// Automation reports as its AutomationId, so a control UIA finds by AutomationId can be found by this
+        /// instead, with no UIA at all.</summary>
+        [DllImport("user32.dll")]
+        public static extern int GetDlgCtrlID(IntPtr hwndCtl);
+
+        /// <summary>The parent window of <paramref name="hwnd"/>, for telling apart two controls that share a
+        /// control id by where they sit in the window tree.</summary>
+        [DllImport("user32.dll")]
+        public static extern IntPtr GetParent(IntPtr hwnd);
+
+        /// <summary>Sets a window's text (a WM_SETTEXT send), e.g. to type a path into a native dialog's
+        /// file-name field. Blocks until the owning thread pumps it, so it is safe to call from any thread.</summary>
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        public static extern bool SetWindowText(IntPtr hwnd, string text);
+
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
 

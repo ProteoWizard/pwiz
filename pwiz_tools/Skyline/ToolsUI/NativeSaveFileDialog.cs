@@ -19,125 +19,65 @@
  */
 
 using System;
-using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Automation;
-using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
     /// Drives the native Windows common Save file dialog (the modern Vista-style dialog shown by
-    /// <see cref="System.Windows.Forms.SaveFileDialog"/>), using UI Automation to locate controls and
-    /// Win32 window messages to drive them. See <see cref="NativeDialog"/> for the threading
-    /// contract and how to obtain an instance.
+    /// <see cref="System.Windows.Forms.SaveFileDialog"/>), through its real Win32 child windows. See
+    /// <see cref="NativeDialog"/> for how an instance is obtained.
     ///
-    /// Unlike the Open dialog, the Save dialog does NOT expose the classic file-name combo
-    /// (AutomationId 1148), and its file-name field and Save button do NOT support the UI Automation
-    /// Value / Invoke patterns -- they are DirectUI-hosted. They are, however, real Win32 child
-    /// windows: the file name is a class "Edit" control (AutomationId 1001) inside an "AppControlHost"
-    /// (AutomationId "FileNameControlHost"), and the Save button is a class "Button" with the standard
-    /// IDOK control id (1). So the file name is set with WM_SETTEXT and the dialog accepted with
-    /// BM_CLICK (Cancel is the inherited WM_CLOSE).
+    /// Unlike the Open dialog, the Save dialog does not have the classic file-name combo (control id 1148); its
+    /// file-name field sits inside the DirectUI surface. Both are nonetheless real Win32 child windows -- the file
+    /// name is a class "Edit" with control id 1001, and the Save button a class "Button" with the standard IDOK
+    /// control id (1) -- so the file name is set with WM_SETTEXT and the dialog accepted with BM_CLICK.
     /// </summary>
     public class NativeSaveFileDialog : NativeFileDialog
     {
-        // Host of the file-name Edit. Its presence identifies the modern Save dialog (the Open dialog
-        // uses the classic combo instead), and the Edit's own AutomationId (1001) is shared by the
-        // address-bar breadcrumb, so we locate the Edit by host + class rather than by that id.
-        private const string FILE_NAME_HOST_ID = @"FileNameControlHost";
-        private const string ACCEPT_BUTTON_ID = @"1"; // IDOK ("Save")
-        private const string EDIT_CLASS_NAME = @"Edit";
-        private const string BUTTON_CLASS_NAME = @"Button";
+        // The Save dialog's file-name Edit. Its control id (1001) is shared with the address bar's breadcrumb, but
+        // the breadcrumb is a ToolbarWindow32 -- so class + id identifies the Edit unambiguously, and nothing has to
+        // walk to the DirectUI host that owns it.
+        private const int FILE_NAME_EDIT_ID = 1001;
+        private const int IDOK = 1; // the Save button
+
+        protected override int FileNameControlId => FILE_NAME_EDIT_ID;
 
         public NativeSaveFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
         }
 
         /// <summary>
-        /// Returns true if the given native dialog is a modern Save file dialog, identified by its
-        /// file-name control host. Mutually exclusive with
-        /// <see cref="NativeOpenFileDialog.IsOpenFileDialog"/> (the Open dialog has the classic
-        /// combo, the Save dialog has this host).
+        /// Whether the "#32770" is a modern Save file dialog, identified by its file-name Edit. Mutually exclusive
+        /// with <see cref="NativeOpenFileDialog.IsOpenFileDialog"/>, which is checked first: the Open dialog has the
+        /// classic combo (control id 1148) and this one does not.
         /// </summary>
-        public static bool IsSaveFileDialog(AutomationElement dialog)
+        public static bool IsSaveFileDialog(IntPtr hwnd)
         {
-            try
-            {
-                return dialog.FindFirst(TreeScope.Descendants,
-                    new PropertyCondition(AutomationElement.AutomationIdProperty, FILE_NAME_HOST_ID)) != null;
-            }
-            catch (ElementNotAvailableException)
-            {
-                return false;
-            }
+            return new NativeSaveFileDialog(hwnd, CancellationToken.None)
+                .HasDescendant(NativeControl.EDIT_CLASS, FILE_NAME_EDIT_ID);
         }
 
         /// <summary>Types a single file path into the dialog's file name box without accepting.</summary>
         public override void EnterPath(string path)
         {
             BringToForeground();
-            SetWindowText(GetFileNameEditHandle(), path);
+            FileNameTextBox.SetText(path);
         }
 
-        /// <summary>Accepts by clicking the Save button. Resolves its handle here (UI Automation, off the dialog's UI
-        /// thread), then OkDialog SENDS BM_CLICK on the dialog's OWN thread and waits for the dialog to close: clicking
-        /// Save can raise a nested modal (the overwrite-confirm prompt), and running the send on the UI thread lets
-        /// that modal's loop run there -- the send blocks in it, keeping the action counted and letting the wait
-        /// detect the prompt -- instead of pinning the pipe thread a cross-thread send would.</summary>
+        /// <summary>Accepts by clicking the Save button. OkDialog SENDS BM_CLICK on the dialog's OWN thread and
+        /// waits for the dialog to close: clicking Save can raise a nested modal (the overwrite-confirm prompt), and
+        /// running the send on the UI thread lets that modal's loop run there -- the send blocks in it, keeping the
+        /// action counted and letting the wait detect the prompt -- instead of pinning the pipe thread, as a
+        /// cross-thread send would.</summary>
         public override ActionResult DismissWithAcceptButton()
         {
-            var handle = GetSaveButtonHandle();
-            return OkDialog(() => SendClick(handle));
+            var saveButton = AcceptButton;
+            return OkDialog(saveButton.ClickNow);
         }
 
-        // The file-name Edit is the class "Edit" control inside the file-name control host. Find it by
-        // host then class -- its AutomationId (1001) alone is ambiguous (the address-bar breadcrumb
-        // shares it).
-        private IntPtr GetFileNameEditHandle()
-        {
-            var host = WaitForElement(FILE_NAME_HOST_ID);
-            var edit = host.FindFirst(TreeScope.Descendants,
-                new PropertyCondition(AutomationElement.ClassNameProperty, EDIT_CLASS_NAME));
-            if (edit == null)
-                throw new InvalidOperationException(@"Could not find the file name edit control in the save dialog.");
-            return GetNativeHandle(edit, @"file name edit");
-        }
-
-        private IntPtr GetSaveButtonHandle()
-        {
-            var button = WaitForElement(
-                new AndCondition(
-                    new PropertyCondition(AutomationElement.AutomationIdProperty, ACCEPT_BUTTON_ID),
-                    new PropertyCondition(AutomationElement.ClassNameProperty, BUTTON_CLASS_NAME)),
-                @"save button");
-            return GetNativeHandle(button, @"save button");
-        }
-
-        private static IntPtr GetNativeHandle(AutomationElement element, string description)
-        {
-            var handle = new IntPtr(element.Current.NativeWindowHandle);
-            if (handle == IntPtr.Zero)
-                throw new InvalidOperationException(
-                    string.Format(@"The save dialog's {0} has no native window handle.", description));
-            return handle;
-        }
-
-        // Sets a control's text with WM_SETTEXT. lParam points at the (Unicode) string; this runs
-        // in-process with the dialog (the JSON tool server is hosted inside Skyline), so a pointer
-        // allocated here is valid in the receiving control's process.
-        private static void SetWindowText(IntPtr handle, string text)
-        {
-            var lParam = Marshal.StringToHGlobalUni(text);
-            try
-            {
-                User32.SendMessage(handle, User32.WinMessageType.WM_SETTEXT, IntPtr.Zero, lParam);
-            }
-            finally
-            {
-                Marshal.FreeHGlobal(lParam);
-            }
-        }
+        // The Save button, by its control id rather than its (localized) caption.
+        private NativeButton AcceptButton => RequireButton(IDOK, @"Save");
     }
 }

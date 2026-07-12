@@ -19,9 +19,10 @@
  */
 
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Automation;
+
 using pwiz.Common.SystemUtil.PInvoke;
 using SkylineTool;
 
@@ -47,22 +48,14 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// Returns true if the given "#32770" dialog is the classic Browse-For-Folder dialog, identified by its
-        /// folder Tree. The Open/Save file dialogs also have a tree (their navigation pane) but are matched
-        /// first by their file-name combo (see <see cref="NativeDialog.Create"/>), so only the folder browser
-        /// reaches this check.
+        /// Whether the "#32770" is the classic Browse-For-Folder dialog, identified by its folder tree. The
+        /// Open/Save file dialogs also have a tree (their navigation pane) but are matched first by their
+        /// file-name field (see <see cref="NativeDialog.Create"/>), so only the folder browser reaches this check.
         /// </summary>
-        public static bool IsFolderBrowserDialog(AutomationElement dialog)
+        public static bool IsFolderBrowserDialog(IntPtr hwnd)
         {
-            try
-            {
-                return dialog.FindFirst(TreeScope.Descendants,
-                    new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Tree)) != null;
-            }
-            catch (ElementNotAvailableException)
-            {
-                return false;
-            }
+            return new NativeFolderBrowserDialog(hwnd, CancellationToken.None)
+                .FindDescendants(NativeControl.TREE_CLASS).Any();
         }
 
         // set_value selects the folder at the given path in the tree. BFFM_SETSELECTION must be SENT (not
@@ -82,14 +75,13 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Accepts by clicking OK (found by its control id, not a localized caption). Resolves its handle here (UI
-        // Automation, off the dialog's UI thread); OkDialog SENDS BM_CLICK on the dialog's UI thread and waits for the
-        // dialog to close. The click closes the dialog and unwinds its modal loop; run on the dialog's own thread it
-        // does not wedge the caller a cross-thread send would.
+        // Accepts by clicking OK (found by its control id, not a localized caption). OkDialog SENDS BM_CLICK on the
+        // dialog's UI thread and waits for the dialog to close. The click closes the dialog and unwinds its modal
+        // loop; run on the dialog's own thread it does not wedge the caller, as a cross-thread send would.
         public override ActionResult DismissWithAcceptButton()
         {
-            var handle = new IntPtr(WaitForElement(IDOK.ToString()).Current.NativeWindowHandle);
-            return OkDialog(() => SendClick(handle));
+            var okButton = RequireButton(IDOK, @"OK");
+            return OkDialog(okButton.ClickNow);
         }
     }
 }

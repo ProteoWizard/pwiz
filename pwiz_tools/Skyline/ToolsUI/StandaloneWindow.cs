@@ -1,5 +1,6 @@
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 using System;
 using System.Collections.Generic;
@@ -103,24 +104,36 @@ namespace pwiz.Skyline.ToolsUI
                 ((IOptionsElement)FindElement(controlId, UiActions.GetOptions)).GetOptions().ToArray());
         }
 
+        /// <summary>Clicks an item on a control's right-click menu. The control is addressed the way get_controls
+        /// addresses one (by its <paramref name="controlSelector"/> label or type), or -- when that is empty -- the
+        /// form's own context menu (a graph's, say, which no named child owns). <paramref name="itemText"/> is the
+        /// item's visible text, or a '&gt;'-separated path into a submenu. Resolving and clicking both happen on the
+        /// form's UI thread, inside the watched action: building a context menu has side effects, and an item that
+        /// opens a modal blocks there, so the wait reports it rather than hanging.</summary>
         public ActionResult InvokeContextMenuItem(string controlSelector, string itemText)
         {
+            if (string.IsNullOrEmpty(itemText))
+                throw new ArgumentException(new LlmInstruction(@"An item text is required."));
             return PerformAction(() =>
             {
                 UiElementPath itemPath = new UiElementPath(null, null, null, ContextMenuElement.TypeName);
                 foreach (var segment in itemText.Split(new[] { '>', '|', '/' }, StringSplitOptions.RemoveEmptyEntries))
                     itemPath = new UiElementPath(itemPath, segment.Trim(), null, null);
-                var control = string.IsNullOrEmpty(controlSelector) ? this : FindElement(controlSelector, UiActions.GetChildren);
-                var menuItem = control.GetDescendant(itemPath) as IClickableElement;
-                menuItem!.ClickNow();
+                var control = string.IsNullOrEmpty(controlSelector)
+                    ? this
+                    : FindElement(controlSelector, UiActions.GetChildren);
+                // Not "as IClickableElement ... !": an item that does not exist, or one that cannot be clicked, must
+                // say so. RequireAction throws the same message the other verbs do; a null-forgiving cast would throw
+                // a NullReferenceException out of this posted action instead, surfacing as an "Unexpected Error".
+                var menuItem = JsonUiService.RequireAction(control.GetDescendant(itemPath), UiActions.Click);
+                ((IClickableElement) menuItem).ClickNow();
             });
         }
 
         /// <summary>Every top-level window of this process that is a managed Form (visible) or a native modal dialog,
-        /// each wrapped as the connector form abstraction that drives it. Enumerated purely from Win32 + a
+        /// each wrapped as the connector window abstraction that drives it. Enumerated purely from Win32 + a
         /// Control.FromHandle lookup, so it is safe on any thread. Top-level only -- a form docked inside the main
-        /// window is a child window and does not appear here (see
-        /// <see cref="JsonUiService.GetOpenFormElements"/>).</summary>
+        /// window is a child window and does not appear here (JsonUiService.GetOpenFormElements adds those).</summary>
         public static IEnumerable<StandaloneWindow> GetTopLevelWindows(CancellationToken cancellationToken)
         {
             var processId = (uint)Process.GetCurrentProcess().Id;
@@ -161,11 +174,12 @@ namespace pwiz.Skyline.ToolsUI
             }).ToList();
         }
 
-        /// <summary>Every modal dialog currently open in this process, each wrapped as the connector form abstraction
+        /// <summary>Every modal dialog currently open in this process, each wrapped as the connector window abstraction
         /// that drives it. A single Win32 enumeration (<see cref="EnumModalWindowHandles"/>) is the sole source, so
-        /// managed and native modals are discovered the same way (see <see cref="WrapWindow"/>). Going handle -> Form
-        /// avoids reading Form.Handle (which trips the cross-thread check) and needs no Form<->handle pairing, so it is
-        /// safe off the UI thread -- both the enumeration and Control.FromHandle are a lookup, never a UI touch.</summary>
+        /// managed and native modals are discovered the same way (see <see cref="NewStandaloneWindow"/>). Going
+        /// handle -> Form avoids reading Form.Handle (which trips the cross-thread check) and needs no Form/handle
+        /// pairing, so it is safe off the UI thread -- both the enumeration and Control.FromHandle are a lookup,
+        /// never a UI touch.</summary>
         public static IEnumerable<StandaloneWindow> GetModalDialogs(CancellationToken cancellationToken)
         {
             return EnumModalWindowHandles().Select(hwnd => NewStandaloneWindow(hwnd, cancellationToken));

@@ -329,6 +329,7 @@
     <Compile Include="MultiSampleImportPeakBoundariesTest.cs" />
     <Compile Include="NativeFileDialogTest.cs" />
     <Compile Include="ConnectorDisconnectTest.cs" />
+    <Compile Include="ConnectorFormThreadingTest.cs" />
     <Compile Include="NativeMessageBoxTest.cs" />
     <Compile Include="NeutralLossModificationDisplayTest.cs" />
     <Compile Include="NoQuantitativeTransitionsTest.cs" />
