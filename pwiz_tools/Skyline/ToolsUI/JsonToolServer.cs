@@ -302,41 +302,39 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private string HandleRequestWatchingForDisconnect(NamedPipeServerStream pipe, byte[] requestBytes)
         {
-            using (var cancellation = new CancellationTokenSource())
-            using (var requestDone = new ManualResetEventSlim(false))
+            using var cancellation = new CancellationTokenSource();
+            // Publish it for this thread: the verbs read it (RequestCancellation) and hand it to every element they
+            // build. The watchdog runs on ANOTHER thread, so it is given the source directly.
+            _requestCancellation.Value = cancellation;
+            var watchdog = new Thread(() => WatchForDisconnect(pipe, cancellation))
             {
-                // Publish it for this thread: the verbs read it (RequestCancellation) and hand it to every element
-                // they build. The watchdog runs on ANOTHER thread, so it is given the source directly.
-                _requestCancellation.Value = cancellation;
-                var watchdog = new Thread(() => WatchForDisconnect(pipe, cancellation, requestDone))
-                {
-                    Name = @"JsonToolServerDisconnectWatchdog-" + _pipeName,
-                    IsBackground = true
-                };
-                watchdog.Start();
-                try
-                {
-                    return HandleRequest(requestBytes);
-                }
-                finally
-                {
-                    // Stop the watchdog and WAIT for it before the source is disposed (the using below): it may be in
-                    // the middle of cancelling, and cancelling a disposed source throws -- on a thread with no one to
-                    // catch it. It parks on requestDone, so it returns as soon as this is set.
-                    requestDone.Set();
-                    watchdog.Join();
-                    _requestCancellation.Value = null;
-                }
+                Name = @"JsonToolServerDisconnectWatchdog-" + _pipeName,
+                IsBackground = true
+            };
+            watchdog.Start();
+            try
+            {
+                return HandleRequest(requestBytes);
+            }
+            finally
+            {
+                // Cancelling is ALSO how the watchdog is told the request is over -- on every path, not just a
+                // disconnect. Nothing reads the token by now (the call has returned), so cancelling it costs nothing
+                // and saves a second signal. Then WAIT for the watchdog before the source is disposed: it may be in
+                // the middle of cancelling, and cancelling a disposed source throws, on a thread with no one to catch it.
+                cancellation.Cancel();
+                watchdog.Join();
+                _requestCancellation.Value = null;
             }
         }
 
-        // Peeks the pipe until the request finishes or the client goes away, abandoning the request in the latter
-        // case. Takes the source it cancels as an argument: it runs on its own thread, so it cannot read the
-        // request thread's thread-local.
-        private static void WatchForDisconnect(NamedPipeServerStream pipe, CancellationTokenSource cancellation,
-            ManualResetEventSlim requestDone)
+        // Peeks the pipe until the client goes away (abandoning the request) or the request ends -- which the request
+        // thread signals by cancelling the source, so this parks on the token itself and wakes the moment either
+        // happens. Takes the source as an argument: it runs on its own thread, so it cannot read the request thread's
+        // thread-local.
+        private static void WatchForDisconnect(NamedPipeServerStream pipe, CancellationTokenSource cancellation)
         {
-            while (!requestDone.Wait(DISCONNECT_POLL_MILLIS))
+            while (!cancellation.Token.WaitHandle.WaitOne(DISCONNECT_POLL_MILLIS))
             {
                 if (IsClientConnected(pipe))
                     continue;
