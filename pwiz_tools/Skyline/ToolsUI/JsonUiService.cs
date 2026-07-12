@@ -193,6 +193,105 @@ namespace pwiz.Skyline.ToolsUI
                 @"This requires the main Skyline window, which is not available while the start page is showing."));
         }
 
+        // ---- Document / selection reads shared by both tool servers -------------------------------------
+        // These live here, not on ToolService, so that JsonToolServer does not need a ToolService to answer them:
+        // the JSON server can be started on its own (see Program.StartToolService), before the main window even
+        // exists, while the legacy ToolService is started only when an interactive tool runs.
+
+        /// <summary>The path of the open document, or null when none is open (or the main window does not exist).</summary>
+        public static string GetDocumentPath()
+        {
+            return Program.MainWindow?.DocumentFilePath;
+        }
+
+        /// <summary>The text of the selected node in the Targets tree -- what the selection "reads as".</summary>
+        public static string GetSelectionText()
+        {
+            string name = null;
+            InvokeOnUiThread(() => name = RequireMainWindow().SequenceTree.SelectedNode.Text);
+            return name;
+        }
+
+        /// <summary>The name of the replicate the chromatogram graphs are showing.</summary>
+        public static string GetReplicateName()
+        {
+            string name = null;
+            InvokeOnUiThread(() => name = RequireMainWindow().SelectedGraphChromName);
+            return name;
+        }
+
+        /// <summary>The element locator of the current selection at the given level ("replicate", "molecule", ...),
+        /// or null when nothing is selected at that level.</summary>
+        public static string GetSelectedElementLocator(string elementType)
+        {
+            ElementRef result = null;
+            Exception exception = null;
+            InvokeOnUiThread(() =>
+            {
+                try
+                {
+                    result = GetSelectedElementRefNow(elementType);
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+            });
+            if (exception != null)
+            {
+                throw new TargetInvocationException(exception);
+            }
+            return result?.ToString();
+        }
+
+        private static ElementRef GetSelectedElementRefNow(string elementType)
+        {
+            var mainWindow = RequireMainWindow();
+            var document = mainWindow.DocumentUI;
+
+            SrmDocument.Level nodeLevel;
+            if (elementType == ReplicateRef.PROTOTYPE.ElementType)
+            {
+                if (!document.Settings.HasResults)
+                {
+                    return null;
+                }
+
+                return ReplicateRef.FromChromatogramSet(document.Settings.MeasuredResults
+                    .Chromatograms[mainWindow.ComboResults.SelectedIndex]);
+            }
+
+            if (elementType == TransitionRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Transitions;
+            }
+            else if (elementType == PrecursorRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.TransitionGroups;
+            }
+            else if (elementType == MoleculeRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Molecules;
+            }
+            else if (elementType == MoleculeGroupRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.MoleculeGroups;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format(
+                    ToolsUIResources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
+            }
+
+            var selectedPath = mainWindow.SelectedPath;
+            if (selectedPath.Length <= (int) nodeLevel)
+            {
+                return null;
+            }
+            var elementRefs = new ElementRefs(document);
+            return elementRefs.GetNodeRef(selectedPath.GetPathTo((int) nodeLevel));
+        }
+
         public static TextWriter CreateImmediateWindowTee(TextWriter capture, string header)
         {
             RequireMainWindow();

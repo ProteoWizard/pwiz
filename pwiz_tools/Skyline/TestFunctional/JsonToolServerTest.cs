@@ -77,8 +77,7 @@ namespace pwiz.SkylineTestFunctional
             OpenDocument(DOCUMENT_NAME);
 
             string testGuid = @"test-" + Guid.NewGuid();
-            var toolService = new ToolService(testGuid);
-            var server = new JsonToolServer(toolService, testGuid);
+            var server = new JsonToolServer(testGuid);
 
             // Read-only tools
             TestDispatch(server);

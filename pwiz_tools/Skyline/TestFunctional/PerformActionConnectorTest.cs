@@ -107,9 +107,12 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.ThrowsException<System.Exception>(() =>
                 JsonUiService.PerformAction(namePath, @"check_item", @"x"));
 
-            // click: close the dialog by clicking its Cancel button, located by label.
-            OkDialog(defineAnnotationDlg, () =>
-                JsonUiService.PerformAction(new UiElementPath(formPath, @"Cancel", null, null), @"click", null));
+            // click: close the dialog by clicking its Cancel button, located by label. NOT inside an OkDialog
+            // action: that runs on the UI thread, and a connector action posts its gesture to that thread and
+            // waits for it -- from the thread itself, that deadlocks. Click from this (test) thread, the way a
+            // connector client does, then wait for the dialog the click closed.
+            JsonUiService.PerformAction(new UiElementPath(formPath, @"Cancel", null, null), @"click", null);
+            WaitForClosedForm(defineAnnotationDlg);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);
         }

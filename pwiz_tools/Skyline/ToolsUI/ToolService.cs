@@ -561,70 +561,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSelectedElementLocator(string elementType)
         {
-            ElementRef result = null;
-            Exception exception = null;
-            JsonUiService.InvokeOnUiThread(() => 
-            {
-                try
-                {
-                    result = GetSelectedElementRefNow(elementType);
-                }
-                catch (Exception e)
-                {
-                    exception = e;
-                }
-            });
-            if (exception != null)
-            {
-                throw new TargetInvocationException(exception);
-            }
-            return result?.ToString();
-        }
-
-        private ElementRef GetSelectedElementRefNow(string elementType)
-        {
-            var document = Program.MainWindow.DocumentUI;
-
-            SrmDocument.Level nodeLevel;
-            if (elementType == ReplicateRef.PROTOTYPE.ElementType)
-            {
-                if (!document.Settings.HasResults)
-                {
-                    return null;
-                }
-
-                return ReplicateRef.FromChromatogramSet(document.Settings.MeasuredResults
-                    .Chromatograms[Program.MainWindow.ComboResults.SelectedIndex]);
-            }
-
-            if (elementType == TransitionRef.PROTOTYPE.ElementType)
-            {
-                nodeLevel = SrmDocument.Level.Transitions;
-            }
-            else if (elementType == PrecursorRef.PROTOTYPE.ElementType)
-            {
-                nodeLevel = SrmDocument.Level.TransitionGroups;
-            }
-            else if (elementType == MoleculeRef.PROTOTYPE.ElementType)
-            {
-                nodeLevel = SrmDocument.Level.Molecules;
-            }
-            else if (elementType == MoleculeGroupRef.PROTOTYPE.ElementType)
-            {
-                nodeLevel = SrmDocument.Level.MoleculeGroups;
-            }
-            else
-            {
-                throw new ArgumentException(string.Format(ToolsUIResources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
-            }
-
-            var selectedPath = Program.MainWindow.SelectedPath;
-            if (selectedPath.Length <= (int)nodeLevel)
-            {
-                return null;
-            }
-            var elementRefs = new ElementRefs(document);
-            return elementRefs.GetNodeRef(selectedPath.GetPathTo((int)nodeLevel));
+            return JsonUiService.GetSelectedElementLocator(elementType);
         }
 
         public string StartMcpConnection(string alwaysAtStartup)

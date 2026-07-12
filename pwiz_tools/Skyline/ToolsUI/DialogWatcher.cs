@@ -161,6 +161,19 @@ namespace pwiz.Skyline.ToolsUI
         private static ActionResult PerformActionAndWait(Control control, Action action, Func<bool> waitCondition,
             CancellationToken cancellationToken)
         {
+            // Called ON the control's own UI thread this cannot work, ever: the action is posted to that thread and
+            // then WAITED for, so the post cannot run until the wait returns and the wait cannot return until the
+            // post runs. That is a hang with no clue as to why -- the deadlocked thread is the one that would have
+            // run the work. Say so instead. (It is how a caller drives the connector from the wrong place: a test
+            // running a verb inside RunUI or the action of an OkDialog, both of which run on the UI thread.)
+            if (!control.InvokeRequired)
+            {
+                throw new InvalidOperationException(
+                    "A connector action cannot be performed from the UI thread it must run on: it would deadlock " +
+                    "waiting for itself. Call it from a worker thread (in a test, off the test thread rather than " +
+                    "inside RunUI or an OkDialog action).");
+            }
+
             // On the caller thread, FIRST: snapshot what the wait compares against, BEFORE running anything, so an
             // effect of either action is seen as new.
             int startCount = ModalNestingCount;

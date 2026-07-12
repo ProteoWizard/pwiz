@@ -122,7 +122,6 @@ namespace pwiz.Skyline.ToolsUI
             public JsonRpcException(int code, string message) : base(message) { Code = code; }
         }
 
-        private readonly ToolService _toolService;
         private readonly string _pipeName;
         private readonly Thread _serverThread;
         private readonly Dictionary<string, MethodInfo> _methods;
@@ -157,10 +156,14 @@ namespace pwiz.Skyline.ToolsUI
 
         public string PipeName { get { return _pipeName; } }
 
-        public JsonToolServer(ToolService toolService, string legacyToolServiceName)
+        /// <summary>
+        /// The JSON server stands alone: it needs no <see cref="ToolService"/> (the legacy BinaryFormatter
+        /// service), only the name the two of them derive their pipe names from -- so it can be started by
+        /// itself, before the main window exists (see Program.StartToolService).
+        /// </summary>
+        public JsonToolServer(string toolServiceName)
         {
-            _toolService = toolService;
-            _pipeName = JsonToolConstants.GetJsonPipeName(legacyToolServiceName);
+            _pipeName = JsonToolConstants.GetJsonPipeName(toolServiceName);
             _serverThread = new Thread(ServerLoop) { IsBackground = true };
 
             // Build method dictionary from IJsonToolService interface, mapped to
@@ -471,7 +474,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetDocumentPath()
         {
-            return _toolService.GetDocumentPath().ToForwardSlashPath();
+            return JsonUiService.GetDocumentPath().ToForwardSlashPath();
         }
 
         public string GetVersion()
@@ -481,7 +484,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSelectionText()
         {
-            return _toolService.GetDocumentLocationName();
+            return JsonUiService.GetSelectionText();
         }
 
         public SelectionInfo GetSelection()
@@ -491,7 +494,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetReplicateName()
         {
-            return _toolService.GetReplicateName();
+            return JsonUiService.GetReplicateName();
         }
 
         public string[] GetReplicateNames()
@@ -505,7 +508,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetProcessId()
         {
-            return _toolService.GetProcessId().ToString();
+            return Process.GetCurrentProcess().Id.ToString();
         }
 
         public string[] GetSettingsListTypes()
@@ -520,7 +523,7 @@ namespace pwiz.Skyline.ToolsUI
             {
                 return null;
             }
-            string docPath = _toolService.GetDocumentPath();
+            string docPath = JsonUiService.GetDocumentPath();
 
             string groupsLabel, moleculesLabel;
             if (doc.DocumentType == SrmDocument.DOCUMENT_TYPE.small_molecules)
@@ -630,7 +633,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public string GetSelectedElementLocator(string elementType)
         {
-            return _toolService.GetSelectedElementLocator(elementType);
+            return JsonUiService.GetSelectedElementLocator(elementType);
         }
 
         string IJsonToolService.RunCommand(string[] args) => RunCommandImpl(args, false);

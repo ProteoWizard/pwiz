@@ -335,7 +335,9 @@ namespace pwiz.Skyline
                 // Start the tool service before the main window is created, so the JSON/MCP server can
                 // introspect and drive the StartPage too (the main window does not exist while the
                 // StartPage is showing). UI-thread marshaling goes through InvokeOnUiThread /
-                // BeginInvokeOnUiThread, which target whichever of those windows is currently up.
+                // BeginInvokeOnUiThread, which target whichever of those windows is currently up. Only the JSON
+                // server actually comes up here: with no main window yet there is nothing for the legacy
+                // ToolService to bind to, and nothing needs it until an external tool is run.
                 MainToolServiceName = Guid.NewGuid().ToString();
                 if (Settings.Default.EnableMcpAutoConnect)
                 {
@@ -385,10 +387,6 @@ namespace pwiz.Skyline
                 {
                     ReportExceptionUI(x, new StackTrace(1, true));
                 }
-
-                // Now that the main window exists, let the tool service (which may have been
-                // started earlier, before the StartPage) push document-change notifications.
-                AttachToolServiceToMainWindow();
 
 //                ConcurrencyVisualizer.StartEvents(MainWindow);
 
@@ -580,51 +578,43 @@ namespace pwiz.Skyline
             return SendGa4AnalyticsHit(out _, useDebugUrl);
         }
 
-        // Whether the tool service is currently subscribed to the main window's
-        // DocumentChangedEvent. The service can start before the main window exists (while the
-        // StartPage is showing), so the subscription is deferred until the window is available.
-        private static bool _toolServiceDocumentChangeSubscribed;
-
+        /// <summary>
+        /// Starts the JSON tool server -- the connector / MCP surface -- and, when there is a main window, the
+        /// legacy BinaryFormatter <see cref="ToolService"/> alongside it. The two are independent: the JSON server
+        /// needs nothing from the legacy one, so it can run BEFORE the main window exists (while the StartPage is
+        /// showing), which is what lets the MCP introspect and drive the StartPage.
+        ///
+        /// <para>The legacy service, by contrast, is inseparable from the main window -- it pushes that window's
+        /// document-change notifications -- so it starts if and only if the window is there to subscribe to. That
+        /// is no restriction in practice: the only thing that needs it is an external tool with a
+        /// $(SkylineConnection) argument (see ToolDescriptionRunUI), which is run from the main window.</para>
+        /// </summary>
         public static void StartToolService()
         {
-            if (MainToolService == null)
+            if (MainJsonToolServer == null)
+            {
+                MainJsonToolServer = new JsonToolServer(MainToolServiceName);
+                MainJsonToolServer.Start();
+            }
+            if (MainWindow != null && MainToolService == null)
             {
                 MainToolService = new ToolService(MainToolServiceName);
                 MainToolService.RunAsync();
-
-                MainJsonToolServer = new JsonToolServer(MainToolService, MainToolServiceName);
-                MainJsonToolServer.Start();
+                MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
             }
-            AttachToolServiceToMainWindow();
-        }
-
-        // Subscribes the tool service to the main window's document-change event once the window
-        // exists. The service may be started before the window (while the StartPage is showing), so
-        // this is also called right after the window is created. No-op if the service has not been
-        // started, the window does not exist yet, or the subscription is already in place.
-        public static void AttachToolServiceToMainWindow()
-        {
-            if (MainToolService == null || _toolServiceDocumentChangeSubscribed || MainWindow == null)
-                return;
-            MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
-            _toolServiceDocumentChangeSubscribed = true;
         }
 
         public static void StopToolService()
         {
+            if (MainJsonToolServer != null)
+            {
+                MainJsonToolServer.Dispose();
+                MainJsonToolServer = null;
+            }
             if (MainToolService != null)
             {
-                if (MainJsonToolServer != null)
-                {
-                    MainJsonToolServer.Dispose();
-                    MainJsonToolServer = null;
-                }
-
-                if (_toolServiceDocumentChangeSubscribed && MainWindow != null)
-                {
+                if (MainWindow != null)
                     MainWindow.DocumentChangedEvent -= DocumentChangedEventHandler;
-                    _toolServiceDocumentChangeSubscribed = false;
-                }
                 MainToolService.Stop();
                 MainToolService = null;
             }
