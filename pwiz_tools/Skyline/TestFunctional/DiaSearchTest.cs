@@ -477,7 +477,9 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (testDetails.SearchEngine != SearchEngine.MSAmanda)
+                // All engines reaching here may still need the generic download-confirmation
+                // dialog handled (MSAmanda and MSFragger's Java/Crux deps are on-demand on net8);
+                // excluding an engine leaves its "Download <engine>" dialog open -> 10s timeout.
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)
@@ -769,7 +771,9 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                if (testDetails.SearchEngine != SearchEngine.MSAmanda)
+                // All engines reaching here may still need the generic download-confirmation
+                // dialog handled (MSAmanda and MSFragger's Java/Crux deps are on-demand on net8);
+                // excluding an engine leaves its "Download <engine>" dialog open -> 10s timeout.
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)

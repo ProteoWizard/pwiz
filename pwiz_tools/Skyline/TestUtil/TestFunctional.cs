@@ -31,7 +31,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+#if NET472
 using Excel;
+#else
+using ExcelDataReader;
+#endif
 using JetBrains.Annotations;
 // using Microsoft.Diagnostics.Runtime; only needed for stack dump logic, which is currently disabled
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -651,8 +655,26 @@ namespace pwiz.SkylineTestUtil
             SetClipboardText(GetExcelFileText(filePath, page, columns, hasHeader));
         }
 
+#if !NET472
+        private static bool _excelCodePagesRegistered;
+
+        // Modern ExcelDataReader throws NotSupportedException ("No data is available for
+        // encoding 1252.") on net8 when reading legacy .xls (BIFF) files unless the code-pages
+        // provider is registered first. .NET Framework registered these by default; net8 does not.
+        private static void EnsureExcelCodePagesRegistered()
+        {
+            if (_excelCodePagesRegistered)
+                return;
+            System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+            _excelCodePagesRegistered = true;
+        }
+#endif
+
         protected static string GetExcelFileText(string filePath, string page, int columns, bool hasHeader)
         {
+#if !NET472
+            EnsureExcelCodePagesRegistered();
+#endif
             bool[] legacyFileValues = new[] {false};
             if (filePath.EndsWith(".xls"))
             {
@@ -2524,6 +2546,13 @@ namespace pwiz.SkylineTestUtil
 
         private static bool AreEquivalentAuditLogs(string expected, string actual)
         {
+            // First accept audit logs that differ only in tiny embedded floating-point values
+            // (e.g. a regression slope) between net8 (64-bit SSE2) and net472 (32-bit x87).
+            // Non-numeric text and integer tokens must still match exactly, so this only masks
+            // last-few-ULP noise, never a real regression. See
+            // AssertEx.AreAuditLogsEquivalentWithNumericTolerance for the exact rules.
+            if (AssertEx.AreAuditLogsEquivalentWithNumericTolerance(expected, actual, out _))
+                return true;
             try
             {
                 // Asserts that the files are the same other than generated GUIDs and timestamps

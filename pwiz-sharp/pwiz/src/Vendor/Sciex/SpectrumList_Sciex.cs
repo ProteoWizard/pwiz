@@ -83,18 +83,16 @@ public sealed class SpectrumList_Sciex : SpectrumListBase, IVendorCentroidingSpe
             int n = Math.Min(times.Length, intensities.Length);
             for (int i = 0; i < n; i++)
             {
+                // cpp SpectrumList_ABI::createIndex drops empty cycles purely on the per-cycle
+                // BPC (fallback TIC) intensity being > 0 — it does NOT read each spectrum. An
+                // earlier port revision added a per-cycle exp.GetSpectrum(...) peak probe here to
+                // "approximate" ignoreZeroIntensityPoints, but that reads the file's entire
+                // spectral payload at index-build time — on EVERY open, including GraphFullScan's
+                // scan-load reopen — which made opening a large TripleTOF MS1 .wiff exceed the
+                // full-scan graph's load timeout on .NET 8. The probe was also redundant:
+                // intensities[i] is the cycle's base-peak (or TIC) value, so intensities[i] > 0
+                // already guarantees the spectrum has a point > 0. Match cpp: intensity check only.
                 if (intensities[i] <= 0) continue;
-
-                // Cpp also requires the spectrum to have non-zero peaks (ignoreZeroIntensityPoints=true).
-                // Approximate with a per-cycle peak presence check via GetSpectrum.
-                var probe = exp.GetSpectrum(i + 1, addZeros: false, centroid: false);
-                bool hasPeaks = false;
-                if (probe is not null)
-                {
-                    var ys = probe.YValues;
-                    for (int k = 0; k < ys.Length; k++) if (ys[k] > 0) { hasPeaks = true; break; }
-                }
-                if (!hasPeaks) continue;
 
                 if (!sortedByTime.TryGetValue(times[i], out var list))
                 {

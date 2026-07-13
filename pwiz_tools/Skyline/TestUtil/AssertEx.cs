@@ -1044,6 +1044,162 @@ namespace pwiz.SkylineTestUtil
             return false; // Could not account for difference
         }
 
+        // Tolerances used only by AreAuditLogsEquivalentWithNumericTolerance to absorb the
+        // tiny last-few-ULP differences between net8's 64-bit SSE2 math and net472's 32-bit
+        // x87 math (typically ~1e-15). They are deliberately far tighter than any meaningful
+        // change (which is >= ~1e-3), so a real regression still fails the comparison.
+        private const double AUDIT_LOG_NUMERIC_RELATIVE_TOLERANCE = 1e-9;
+        private const double AUDIT_LOG_NUMERIC_ABSOLUTE_FLOOR = 1e-12;
+
+        // Matches a numeric literal: optional leading '-', an integer part, an optional
+        // fractional part, and an optional exponent. Quotes around a number (e.g. "0.151...")
+        // are not part of the match, so they are compared as ordinary non-numeric text.
+        private static readonly Regex NUMERIC_TOKEN_REGEX =
+            new Regex(@"-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?", RegexOptions.Compiled);
+
+        /// <summary>
+        /// Compares two audit-log texts line-by-line, tolerating only tiny floating-point
+        /// differences in embedded numeric tokens. Every non-numeric character and every
+        /// integer token must match exactly; only non-integer (float) tokens are allowed to
+        /// differ, and then only within a very tight relative/absolute tolerance. This lets
+        /// tutorials whose audit log records a computed value (e.g. a regression slope) pass
+        /// when net8 and net472 produce the same value to within a few ULP, while still
+        /// catching any real change (counts, indices, text, or a numeric change larger than
+        /// the noise floor).
+        /// </summary>
+        /// <returns>True if the two texts are equivalent under these rules.</returns>
+        public static bool AreAuditLogsEquivalentWithNumericTolerance(string expected, string actual, out string failureMessage)
+        {
+            failureMessage = string.Empty;
+            if (string.Equals(expected, actual, StringComparison.Ordinal))
+                return true; // Identical, nothing to reconcile
+
+            var expectedLines = SplitIntoLines(expected);
+            var actualLines = SplitIntoLines(actual);
+            if (expectedLines.Count != actualLines.Count)
+            {
+                // A differing line count is a real diff, not floating-point noise.
+                failureMessage = string.Format(
+                    "Audit logs differ in line count: expected {0} lines, actual {1} lines",
+                    expectedLines.Count, actualLines.Count);
+                return false;
+            }
+
+            for (var i = 0; i < expectedLines.Count; i++)
+            {
+                if (!LineEquivalentWithinNumericTolerance(expectedLines[i], actualLines[i], out var lineFailure))
+                {
+                    failureMessage = string.Format("Line {0}: {1}", i + 1, lineFailure);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static List<string> SplitIntoLines(string text)
+        {
+            var lines = new List<string>();
+            using (var reader = new StringReader(text))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    lines.Add(line);
+            }
+            return lines;
+        }
+
+        // Two lines are equivalent iff the non-numeric spans between numeric tokens match
+        // exactly (same order and count) and each corresponding numeric-token pair is
+        // numerically equal within tolerance.
+        private static bool LineEquivalentWithinNumericTolerance(string expected, string actual, out string failureMessage)
+        {
+            failureMessage = string.Empty;
+            if (string.Equals(expected, actual, StringComparison.Ordinal))
+                return true;
+
+            var expectedTokens = NUMERIC_TOKEN_REGEX.Matches(expected);
+            var actualTokens = NUMERIC_TOKEN_REGEX.Matches(actual);
+            if (expectedTokens.Count != actualTokens.Count)
+            {
+                failureMessage = "different count of numeric tokens";
+                return false;
+            }
+
+            var expectedPos = 0;
+            var actualPos = 0;
+            for (var i = 0; i < expectedTokens.Count; i++)
+            {
+                var expectedMatch = expectedTokens[i];
+                var actualMatch = actualTokens[i];
+
+                // The non-numeric span preceding this token must match exactly (this includes
+                // any surrounding quotes, so a change in wording or quoting is still a diff).
+                var expectedGap = expected.Substring(expectedPos, expectedMatch.Index - expectedPos);
+                var actualGap = actual.Substring(actualPos, actualMatch.Index - actualPos);
+                if (!string.Equals(expectedGap, actualGap, StringComparison.Ordinal))
+                {
+                    failureMessage = "non-numeric text differs";
+                    return false;
+                }
+
+                if (!NumericTokensEquivalent(expectedMatch.Value, actualMatch.Value, out failureMessage))
+                    return false;
+
+                expectedPos = expectedMatch.Index + expectedMatch.Length;
+                actualPos = actualMatch.Index + actualMatch.Length;
+            }
+
+            // The trailing non-numeric span (after the last token) must also match exactly.
+            if (!string.Equals(expected.Substring(expectedPos), actual.Substring(actualPos), StringComparison.Ordinal))
+            {
+                failureMessage = "non-numeric text differs";
+                return false;
+            }
+
+            return true;
+        }
+
+        private static bool NumericTokensEquivalent(string expectedToken, string actualToken, out string failureMessage)
+        {
+            failureMessage = string.Empty;
+            if (string.Equals(expectedToken, actualToken, StringComparison.Ordinal))
+                return true;
+
+            // Integer tokens (no decimal point and no exponent) must match exactly, so a change
+            // like "3 peptides" vs "4 peptides" or a shifted index is never masked as noise.
+            if (IsIntegerToken(expectedToken) || IsIntegerToken(actualToken))
+            {
+                failureMessage = string.Format("integer token '{0}' does not match '{1}'", expectedToken, actualToken);
+                return false;
+            }
+
+            // Non-integer (float) tokens: accept when within a tight relative/absolute tolerance.
+            if (double.TryParse(expectedToken, NumberStyles.Float, CultureInfo.InvariantCulture, out var expectedValue) &&
+                double.TryParse(actualToken, NumberStyles.Float, CultureInfo.InvariantCulture, out var actualValue))
+            {
+                var diff = Math.Abs(expectedValue - actualValue);
+                var tolerance = Math.Max(AUDIT_LOG_NUMERIC_ABSOLUTE_FLOOR,
+                    AUDIT_LOG_NUMERIC_RELATIVE_TOLERANCE * Math.Max(Math.Abs(expectedValue), Math.Abs(actualValue)));
+                if (diff <= tolerance)
+                    return true;
+                failureMessage = string.Format("decimal value '{0}' does not match '{1}' to within tolerance {2}",
+                    expectedToken, actualToken, tolerance);
+                return false;
+            }
+
+            // If a token doesn't parse as a number on either side, fall back to exact string
+            // match (which we already know fails, since the tokens are not string-equal).
+            failureMessage = string.Format("token '{0}' does not match '{1}'", expectedToken, actualToken);
+            return false;
+        }
+
+        private static bool IsIntegerToken(string token)
+        {
+            // An integer token has neither a decimal point nor an exponent marker.
+            return token.IndexOf('.') < 0 && token.IndexOf('e') < 0 && token.IndexOf('E') < 0;
+        }
+
         public class ColumnTolerances
         {
             private readonly ColumnToleranceValue _defaultTolerance;

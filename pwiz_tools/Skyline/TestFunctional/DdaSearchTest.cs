@@ -1216,10 +1216,11 @@ namespace pwiz.SkylineTestFunctional
                     }
                 }
 
-                // Every engine except MSFragger (handled above) uses the generic download
-                // confirmation dialog. On net8 MSAmanda became an on-demand download too, so
-                // it must go through this path rather than being excluded.
-                if (TestSettings.SearchEngine != SearchEngine.MSFragger)
+                // Every engine reaching this point may still need the generic download-
+                // confirmation dialog handled. MSFragger's binary is downloaded by
+                // MsFraggerDownloadDlg above, but its Java and Crux dependencies still come
+                // through here; MSAmanda and the other engines download their tool here too
+                // (all on-demand on net8). Excluding any engine leaves its dialog unhandled.
                 {
                     var downloaderDlg = TryWaitForOpenForm<MultiButtonMsgDlg>(2000);
                     if (downloaderDlg != null)

@@ -176,7 +176,15 @@ public sealed class ReaderList : IReader
 
     private static string ReadHeadOnce(string filename, int maxBytes)
     {
-        using var stream = File.OpenRead(filename);
+        // Share read AND write: a vendor SDK (Clearcore2 for Sciex .wiff) or Skyline itself
+        // can hold the file open with write access while we sniff the head. File.OpenRead
+        // requests FileShare.Read only, which the OS rejects with "used by another process"
+        // when an existing handle has write access it isn't allowed to share — this is what
+        // broke GraphFullScan's scan-load reopen on .NET 8 (the ScanProvider already has the
+        // .wiff open through a live MsDataFileImpl/Clearcore2 handle). cpp's std::ifstream
+        // head-read opens with FILE_SHARE_READ | FILE_SHARE_WRITE and never collided; match it.
+        using var stream = new FileStream(filename, FileMode.Open, FileAccess.Read,
+            FileShare.ReadWrite | FileShare.Delete);
         byte[] buffer = new byte[maxBytes];
         int read = stream.ReadAtLeast(buffer, maxBytes, throwOnEndOfStream: false);
         return System.Text.Encoding.UTF8.GetString(buffer, 0, read);

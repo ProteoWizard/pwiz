@@ -202,14 +202,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         GraphSummary.GraphPanes = new[] {new RTPeptideGraphPane(GraphSummary)};
                     }
                     break;
-#if NET472
                 case GraphTypeSummary.schedule:
                     if (!(GraphSummary.GraphPanes.FirstOrDefault() is RTScheduleGraphPane))
                     {
                         GraphSummary.GraphPanes = new[] {new RTScheduleGraphPane(GraphSummary, GraphSummary.GraphControl)};
                     }
                     break;
-#endif
             }
         }
 

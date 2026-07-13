@@ -68,11 +68,43 @@ namespace pwiz.Common.DataBinding
         private static string FrameworkRoundTrip(double value, IFormatProvider provider)
         {
             var g15 = value.ToString(@"G15", provider);
-            if (double.TryParse(g15, NumberStyles.Float, provider, out var roundTripped) && roundTripped == value)
+            // .NET Framework performed the "R" round-trip check with its own decimal->double conversion,
+            // which was accurate only to within one ULP. .NET 8's parser is correctly rounded, so a strict
+            // equality check rejects some 15-digit forms that .NET Framework accepted -- e.g. .NET Framework
+            // kept "500.477375" for the double whose shortest net8 form is 500.47737500000005. Accept the
+            // shorter G15 form when it lands within one ULP of the value so the emulated output matches the
+            // historical net472 string. (Values that need 16-17 digits, such as exact binary fractions, are
+            // two or more ULPs from their G15 form and still correctly escalate to G17.)
+            if (double.TryParse(g15, NumberStyles.Float, provider, out var roundTripped) && WithinOneUlp(value, roundTripped))
             {
                 return g15;
             }
             return value.ToString(@"G17", provider);
+        }
+
+        /// <summary>
+        /// Returns true if <paramref name="candidate"/> is equal to or an adjacent representable double of
+        /// <paramref name="value"/> (i.e. within one ULP). The Int64 bit patterns of same-signed doubles are
+        /// ordered, so adjacent values differ by exactly one; opposite signs are never treated as adjacent.
+        /// </summary>
+        private static bool WithinOneUlp(double value, double candidate)
+        {
+            if (candidate == value)
+            {
+                return true;
+            }
+            if (double.IsNaN(value) || double.IsNaN(candidate) ||
+                double.IsInfinity(value) || double.IsInfinity(candidate))
+            {
+                return false;
+            }
+            var valueBits = BitConverter.DoubleToInt64Bits(value);
+            var candidateBits = BitConverter.DoubleToInt64Bits(candidate);
+            if ((valueBits < 0) != (candidateBits < 0))
+            {
+                return false;
+            }
+            return Math.Abs(valueBits - candidateBits) <= 1;
         }
 
         private static string FrameworkRoundTrip(float value, IFormatProvider provider)

@@ -74,11 +74,15 @@
     <PackageReference Include="log4net" Version="2.0.17" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
+    <!-- Modern ExcelDataReader (namespace ExcelDataReader) replaces the Framework-only
+         Excel.4.5 v2.1 fork (namespace Excel), which NREs in AsDataSet() at runtime on net8.
+         The .DataSet package supplies the AsDataSet() extension; System.Text.Encoding.CodePages
+         supplies CodePagesEncodingProvider, required to read legacy .xls (BIFF) files on net8. -->
+    <PackageReference Include="ExcelDataReader" Version="3.7.0" />
+    <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="8.0.0" />
     <Reference Include="Microsoft.Diagnostics.Runtime">
       <HintPath>..\..\Shared\Lib\Microsoft.Diagnostics.Runtime\lib\net40\Microsoft.Diagnostics.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Excel.4.5">
-      <HintPath>..\..\Shared\Lib\ExcelDataReader\Excel.4.5.dll</HintPath>
     </Reference>
     <Reference Include="DigitalRune.Windows.Docking">
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
