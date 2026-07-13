@@ -1533,8 +1533,9 @@ function renderCalModel(){
     buildFeatureTable(host,rows,{});   // static (no per-row click) -- cal features carry no per-feature histogram
   else if(!calIsBad(f))
     H(host,"p",{class:"note"},"No calibration feature model for this file.");
-  // Composite calibration-discriminant distribution (reuse classHist; cal target/decoy
-  // are calibration classes, so suppress the entrapment p_target/p_decoy series).
+  // Composite calibration-discriminant distribution (reuse classHist; cal target/decoy are the
+  // calibration classes). The entrapment p_target/p_decoy series ARE shown when present, so a
+  // contaminated anchor set is visible -- hence noEntrapment:false below.
   const scoreHost="calScoreChart", scoreLeg="calScoreLegend";
   if(f.scores && f.scores.binEdges && f.scores.binEdges.length>1 && !calIsBad(f))
     classHist(f.scores,scoreHost,scoreLeg,false,
@@ -1586,7 +1587,10 @@ function drawCalFdp(f){
   const maxq=fdp.q[fdp.q.length-1]||1;
   drawFdpPanel(H(wrap,"div",{}),fdp,0.02,"zoom  q in [0, 2%]",series,off);
   drawFdpPanel(H(wrap,"div",{}),fdp,Math.max(0.02,maxq),"full extent",series,off);
-  const i1=opIdx(fdp,0.01), kp=document.getElementById("calFdpKpis");kp.innerHTML="";
+  // CAL uses a FIXED q-grid containing exactly 0.01, so index it directly. opIdx (the "last point
+  // strictly below q") is for the data-driven search curve; on this fixed grid it lands one point
+  // low (0.0075), disagreeing with the C# Summary card's Array.IndexOf(grid,0.01).
+  const i1=(fdp.q.indexOf(0.01)>=0?fdp.q.indexOf(0.01):opIdx(fdp,0.01)), kp=document.getElementById("calFdpKpis");kp.innerHTML="";
   kpi(kp,"anchors @1% cal-q",fmt(fdp.nTargetAccepted[i1],0),"");
   kpi(kp,"combined FDP @1% cal-q",pct(fdp.combined[i1],2),cls(fdp.combined[i1],0.01));
   if(fdp.paired)kpi(kp,"paired FDP @1% cal-q",pct(fdp.paired[i1],2),cls(fdp.paired[i1],0.01));

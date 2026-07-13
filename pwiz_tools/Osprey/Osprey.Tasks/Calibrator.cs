@@ -1095,8 +1095,20 @@ namespace pwiz.Osprey.Tasks
         {
             // Train LDA + 1% FDR target-decoy competition.
             var swLda = Stopwatch.StartNew();
-            int nPassing = CalibrationScorer.TrainAndScoreCalibration(
-                matchArray, false, out calReport);
+            // Only build the training report when it will actually be consumed: --verbose dumps it
+            // below, --model-diagnostics feeds it to the CAL view. On a normal run use the plain
+            // overload so the per-iteration confident-positive competition (CountPassingTargets) is
+            // not paid for a report nobody reads.
+            int nPassing;
+            if (OspreyOutput.Verbose || _ctx.Config.ModelDiagnostics)
+            {
+                nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false, out calReport);
+            }
+            else
+            {
+                nPassing = CalibrationScorer.TrainAndScoreCalibration(matchArray, false);
+                calReport = null;
+            }
             swLda.Stop();
 
             // --verbose: dump the calibration LDA's seed, per-iteration refinement trace,
@@ -2162,11 +2174,13 @@ namespace pwiz.Osprey.Tasks
             {
                 EntryId = entry.Id,
                 IsDecoy = entry.IsDecoy,
-                // Entrapment class recovered from the library accessions (FDRBench
-                // _p_target marker). Pure diagnostic tag for the --verbose anchor-purity
-                // report; unused by scoring/selection, so it leaves output unchanged. On a
-                // library with no entrapment markers this is simply always false.
-                IsEntrapment = EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
+                // Entrapment class recovered from the library accessions (FDRBench _p_target
+                // marker). Pure diagnostic tag for the --verbose / --model-diagnostics anchor-purity
+                // report; unused by scoring/selection, so output is unchanged. Gated on those
+                // diagnostics so a normal run pays nothing for the per-entry accession scan (mirrors
+                // the library-composition tally gate). False when the tag is not being collected.
+                IsEntrapment = (OspreyOutput.Verbose || _ctx.Config.ModelDiagnostics) &&
+                               EntrapmentLibraryClassifier.IsEntrapment(entry.ProteinIds),
                 Sequence = entry.Sequence,
                 ScanNumber = apexSpectrum.ScanNumber,
                 CorrelationScore = bestCorrSum,

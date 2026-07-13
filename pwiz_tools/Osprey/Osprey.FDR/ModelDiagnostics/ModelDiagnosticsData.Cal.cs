@@ -296,9 +296,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (scores == null || classes == null || scores.Length == 0)
                 return h;
 
-            var sorted = scores.Where(s => !double.IsNaN(s)).OrderBy(s => s).ToArray();
+            var sorted = scores.Where(s => !double.IsNaN(s)).ToArray();
             if (sorted.Length == 0)
                 return h;
+            Array.Sort(sorted); // Array.Sort OK: plain double[] (NaN pre-filtered) is totally ordered; used only for percentile lookup
             double lo = CalPercentile(sorted, 0.005);
             double hi = CalPercentile(sorted, 0.999);
             if (!(hi > lo))

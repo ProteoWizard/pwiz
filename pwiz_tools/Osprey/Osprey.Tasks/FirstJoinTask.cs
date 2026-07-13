@@ -629,11 +629,23 @@ namespace pwiz.Osprey.Tasks
                 return null;
 
             var files = new List<ModelDiagnosticsData.CalFileRow>(perFileEntries.Count);
+            var omitted = new List<string>();
             foreach (var kvp in perFileEntries)
             {
                 if (byFile.TryGetValue(kvp.Key, out var row) && row != null)
                     files.Add(row);
+                else
+                    omitted.Add(kvp.Key);
             }
+            // A file with no captured calibration diagnostics (calibration failed / was skipped, or a
+            // distributed run that did not persist matches) would otherwise vanish from the CAL
+            // selector -- exactly the file a reviewer most wants to spot. Surface the omission rather
+            // than dropping it silently. (A fuller fix is a placeholder "bad" row in the selector.)
+            if (omitted.Count > 0)
+                ctx.LogWarning(string.Format(
+                    "CAL view: {0} of {1} file(s) have no captured calibration diagnostics and are " +
+                    "omitted from the calibration report: [{2}]",
+                    omitted.Count, perFileEntries.Count, string.Join(", ", omitted)));
             if (files.Count == 0)
                 return null;
 
