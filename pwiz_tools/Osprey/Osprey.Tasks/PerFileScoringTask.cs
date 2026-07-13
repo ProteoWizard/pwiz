@@ -365,13 +365,7 @@ namespace pwiz.Osprey.Tasks
             // combination -- a non-Percolator FdrMethod, OSPREY_FDR_PROJECTION=0, or the
             // resident-pool consumers (--model-diagnostics / FDRBench pass 1, which walk
             // the full pre-compaction FdrEntry pool) -- still needs the fat stubs here.
-            bool needsResidentPool =
-                ctx.Config.ExpectReconciledInput ||
-                !OspreyEnvironment.UseFdrProjection ||
-                ctx.Config.FdrMethod != FdrMethod.Percolator ||
-                ctx.Config.ModelDiagnostics ||
-                (!string.IsNullOrEmpty(ctx.Config.OutputFdrBench) && ctx.Config.FdrBenchPass == 1) ||
-                OspreyEnvironment.Pass2TransferQ;
+            bool needsResidentPool = NeedsResidentPool(ctx.Config);
 
             FdrProjectionSet projections = null;
             int totalScored = 0;
@@ -565,37 +559,95 @@ namespace pwiz.Osprey.Tasks
             // so it should not emit a file-parallelism decision line.
             ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
 
+            // Lean on resume too (#4400): a pure straight-through resume (all files
+            // skipped) used to rematerialize the full fat FdrEntry stub buffer + PIN
+            // features here -- ~53 GB across 82 files, the exact cost #4400 removed for
+            // the Run path -- because this path had no lean branch. Mirror Run: stream
+            // 32 B FdrProjection rows from each parquet unless an opt-in output genuinely
+            // needs the resident pool. FirstJoin consumes the projection set identically
+            // whether Run or this path produced it.
+            bool needsResidentPool = NeedsResidentPool(config);
+            FdrProjectionSet projections = null;
+
             var swAllFiles = Stopwatch.StartNew();
             if (config.InputFiles != null)
             {
-                // Sequential in InputFiles order to match Run's "collect in
-                // original order" -- downstream FirstJoin iterates perFileEntries.
-                foreach (string inputFile in config.InputFiles)
+                var builder = needsResidentPool ? null : new FdrProjectionSet.Builder();
+                // Per-file progress so this all-files load is not a silent multi-minute
+                // stall on a large resume (the phase that looked hung on the 82-file run).
+                using (var loadProgress = new ProgressReporter(@"Loading scored entries", config.InputFiles.Count))
                 {
-                    string fileName = Path.GetFileNameWithoutExtension(inputFile);
-                    string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
-                    // Strict load: CanRehydrate already certified these outputs
-                    // valid, so a failure is a genuine fault, not a "fall back to
-                    // rescore" case -- TryLoadStubsAndCalibration logs it as an
-                    // error (no misleading "will rescore" warning). Fail loudly;
-                    // Rehydrate must not compute.
-                    var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx, resumeStrict: true);
-                    if (stubs == null)
+                    int fileIdx = 0;
+                    // Sequential in InputFiles order to match Run's "collect in original
+                    // order" -- downstream FirstJoin iterates perFileEntries.
+                    foreach (string inputFile in config.InputFiles)
                     {
-                        ctx.ExitCode = 1;
-                        return false;
+                        string fileName = Path.GetFileNameWithoutExtension(inputFile);
+                        string scoresPath = ParquetScoreCache.GetScoresPath(inputFile);
+                        if (needsResidentPool)
+                        {
+                            // Fat path: an opt-in output reads every entry's resident
+                            // features. Strict load: CanRehydrate already certified these
+                            // outputs valid, so a null is a genuine fault, not a "fall back
+                            // to rescore" case. Fail loudly; Rehydrate must not compute.
+                            var stubs = TryLoadStubsAndCalibration(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx, resumeStrict: true);
+                            if (stubs == null)
+                            {
+                                ctx.ExitCode = 1;
+                                return false;
+                            }
+                            perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                        }
+                        else
+                        {
+                            // Lean path: calibration + isolation still load (cheap); the
+                            // scores stream straight into the projection, no fat stub or
+                            // feature vector allocated. Byte-identical to the fat path
+                            // (TestFdrProjectionBuilderMatchesBuildFromEntries + mode2).
+                            LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
+                            try
+                            {
+                                builder.BeginFile(fileName);
+                                ParquetScoreCache.ReadFdrStubScalars(scoresPath,
+                                    (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                                        builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
+                                builder.EndFile();
+                            }
+                            catch (Exception ex)
+                            {
+                                ctx.LogError(string.Format(
+                                    @"  Resume rehydrate: failed to load valid-on-disk scores from {0}: {1}",
+                                    scoresPath, ex.Message));
+                                ctx.ExitCode = 1;
+                                return false;
+                            }
+                            // Empty stub list on the lean path (mirrors Run), so the file-
+                            // count guard + ScoredEntries consumers still see one entry per
+                            // scored file.
+                            perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
+                        }
+                        perFileParquetPaths[fileName] = scoresPath;
+                        loadProgress.Report(++fileIdx);
                     }
-                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
-                    perFileParquetPaths[fileName] = scoresPath;
                 }
+                if (builder != null)
+                    projections = builder.Build();
             }
             swAllFiles.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
 
-            int totalScored = 0;
-            foreach (var kvp in perFileEntries)
-                totalScored += kvp.Value.Count;
+            int totalScored;
+            if (projections != null)
+            {
+                totalScored = projections.TotalRows;
+            }
+            else
+            {
+                totalScored = 0;
+                foreach (var kvp in perFileEntries)
+                    totalScored += kvp.Value.Count;
+            }
 
             ctx.LogInfo(string.Empty);
             ctx.LogInfo(string.Format(
@@ -603,7 +655,7 @@ namespace pwiz.Osprey.Tasks
                 totalScored, nFiles));
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, projections);
         }
 
         /// <summary>
@@ -1258,6 +1310,77 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
+        /// lean streamed <see cref="FdrProjection"/> set (#4400). True when an opt-in
+        /// output reads every entry's in-memory features/scores (--model-diagnostics,
+        /// FDRBench pass 1, OSPREY_PASS2_QVALUE=transfer), when the projection path is off
+        /// (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR), or on the reconciled-input
+        /// worker join. Shared by <see cref="Run"/> and <see cref="RehydrateFromOwnOutputs"/>
+        /// so the compute and resume paths make the identical lean/fat choice -- otherwise a
+        /// pure resume rebuilds the ~53 GB fat buffer #4400 dropped for straight-through.
+        /// </summary>
+        private static bool NeedsResidentPool(OspreyConfig config)
+        {
+            return config.ExpectReconciledInput ||
+                   !OspreyEnvironment.UseFdrProjection ||
+                   config.FdrMethod != FdrMethod.Percolator ||
+                   config.ModelDiagnostics ||
+                   (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
+                   OspreyEnvironment.Pass2TransferQ;
+        }
+
+        /// <summary>
+        /// Load a resumed file's RT calibration + gap-fill isolation m/z coverage from its
+        /// sibling <c>calibration.json</c> into the shared maps, so a cached-calibration
+        /// file gets the same filter input a fresh ProcessFile computes (mirrors Rust's
+        /// isolation_intervals_from_cal). Independent of the stub/projection load, so both
+        /// the fat (<see cref="TryLoadStubsAndCalibration"/>) and lean resume paths reuse it.
+        /// A failure is logged and swallowed -- calibration is an enrichment, not a gate.
+        /// </summary>
+        private static void LoadCalibrationAndIsolation(
+            string scoresPath,
+            string fileName,
+            ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
+            ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            PipelineContext ctx)
+        {
+            try
+            {
+                string parquetDir = Path.GetDirectoryName(Path.GetFullPath(scoresPath));
+                if (parquetDir != null)
+                {
+                    string calStemPath = Path.Combine(parquetDir, fileName);
+                    string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
+                    if (File.Exists(calPath))
+                    {
+                        var calParams = CalibrationIO.LoadCalibration(calPath);
+                        if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
+                        {
+                            var mp = calParams.RtCalibration.ModelParams;
+                            var rtCal = RTCalibration.FromModelParams(
+                                mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
+                                calParams.RtCalibration.ResidualSD);
+                            perFileCalibrations[fileName] = rtCal;
+                        }
+
+                        // Rehydrate the gap-fill m/z coverage from the isolation_scheme
+                        // block too (independent of RT cal), so a resumed / cached-
+                        // calibration file gets the same filter input a fresh ProcessFile
+                        // computes. Mirrors Rust's isolation_intervals_from_cal (pipeline.rs).
+                        var isoIntervals = IsolationIntervalsFromWindows(
+                            calParams.Metadata?.IsolationScheme?.Windows);
+                        if (isoIntervals != null)
+                            perFileIsolationMz[fileName] = isoIntervals;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
+            }
+        }
+
+        /// <summary>
         /// Best-effort load of one file's stubs + PIN features from a
         /// <c>.scores.parquet</c> plus the calibration sibling. Returns
         /// the stub list on success or <c>null</c> on a stub/feature read
@@ -1312,41 +1435,7 @@ namespace pwiz.Osprey.Tasks
                 return null;
             }
 
-            try
-            {
-                string parquetDir = Path.GetDirectoryName(Path.GetFullPath(scoresPath));
-                if (parquetDir != null)
-                {
-                    string calStemPath = Path.Combine(parquetDir, fileName);
-                    string calPath = CalibrationIO.CalibrationPathForInput(calStemPath, parquetDir);
-                    if (File.Exists(calPath))
-                    {
-                        var calParams = CalibrationIO.LoadCalibration(calPath);
-                        if (calParams.RtCalibration != null && calParams.RtCalibration.ModelParams != null)
-                        {
-                            var mp = calParams.RtCalibration.ModelParams;
-                            var rtCal = RTCalibration.FromModelParams(
-                                mp.LibraryRts, mp.FittedRts, mp.AbsResiduals,
-                                calParams.RtCalibration.ResidualSD);
-                            perFileCalibrations[fileName] = rtCal;
-                        }
-
-                        // Rehydrate the gap-fill m/z coverage from the
-                        // isolation_scheme block too (independent of RT cal), so a
-                        // resumed / cached-calibration file gets the same filter
-                        // input a fresh ProcessFile computes. Mirrors Rust's
-                        // isolation_intervals_from_cal (pipeline.rs).
-                        var isoIntervals = IsolationIntervalsFromWindows(
-                            calParams.Metadata?.IsolationScheme?.Windows);
-                        if (isoIntervals != null)
-                            perFileIsolationMz[fileName] = isoIntervals;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ctx.LogWarning(string.Format(@"  Failed to load calibration for {0}: {1}", fileName, ex.Message));
-            }
+            LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
             return stubs;
         }
 
