@@ -70,6 +70,15 @@ nav button.on{color:var(--accent);border-bottom-color:var(--accent)}
   background-repeat:no-repeat;background-position:right 11px center}
 .calpick select:hover{border-color:var(--accent)}
 .calpick .flag{color:var(--warn);font-size:11.5px;font-weight:600}
+/* Prev/Next steppers flanking the file <select>: a browser dropdown can't be
+   arrow-stepped like a WinForms combo, so these let a reviewer click through all
+   files without opening the list. Sized to match the select height; disabled at
+   the ends (selection clamps, no wrap). */
+.calpick .step{background:var(--panel);border:1px solid var(--line);color:var(--muted);font:inherit;
+  font-size:12px;line-height:1;padding:6px 9px;border-radius:8px;cursor:pointer;box-shadow:var(--shadow);
+  user-select:none}
+.calpick .step:hover:not(:disabled){color:var(--ink);border-color:var(--accent)}
+.calpick .step:disabled{opacity:.4;cursor:default}
 /* CAL mode swaps a tab's Percolator content for its calibration content: when the
    tab section carries .calon, its direct Percolator children (cards / selectors /
    descriptions / print blocks) hide and the .calbox calibration container shows.
@@ -461,9 +470,12 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
   <div class="calbox" id="calSummaryBox">
     <div class="card">
       <h2>Per-file calibration corrections</h2>
-      <p class="desc">The calibration correction Osprey applied to each input file: MS1/MS2 mass offsets and
-        tolerances, the RT alignment fit, and the anchor-set size / entrapment. <b>Click a row</b> to open that
-        file's calibration Model page. Rows in <b style="color:var(--bad)">red</b> failed to calibrate.</p>
+      <p class="desc">An at-a-glance per-file health scan of the calibration Osprey applied to each input file:
+        anchor-set size, the residual MS1/MS2 mass error (mean&nbsp;±&nbsp;sd), the RT alignment fit (R²) and its
+        post-cal RT window. Cells that sit far from the pack (median&nbsp;±&nbsp;3·MAD) are shown in
+        <b style="color:var(--warn)">amber</b>; rows in <b style="color:var(--bad)">red</b> failed to calibrate.
+        <b>Click a row</b> to open that file's calibration Model page — the full distributions live on the
+        Model / FDR / Reproducibility tabs.</p>
       <div id="calSummaryTable"></div>
     </div>
   </div>
@@ -1471,15 +1483,24 @@ function renderCal(){
 // on the shared CAL.sel index. Rebuilt each renderCal so a jumpToCalFile selection or
 // a re-entry reflects the current index.
 function buildCalPickers(){
+  const last=CAL.files.length-1;
   [["calModelPick","Model"],["calFdrPick","FDR"]].forEach(([host])=>{
     const p=document.getElementById(host);if(!p)return;p.innerHTML="";
     H(p,"label",{for:host+"Sel"},"File");
+    // Prev stepper: move the shared index back one file (clamped at the first file).
+    const prev=H(p,"button",{class:"step",type:"button",title:"Previous file","aria-label":"Previous file"},"◀");
+    if(CAL.sel<=0)prev.setAttribute("disabled","");
+    prev.onclick=()=>{setCalFile(CAL.sel-1);};
     const sel=H(p,"select",{id:host+"Sel"});
     CAL.files.forEach((f,i)=>{const o=H(sel,"option",{value:String(i)},
       (i+1)+". "+calFileName(i)+(calIsBad(f)?"  ⚠ not calibrated":""));
       if(i===CAL.sel)o.setAttribute("selected","");});
     sel.value=String(CAL.sel);
     sel.onchange=()=>{setCalFile(+sel.value);};
+    // Next stepper: move the shared index forward one file (clamped at the last file).
+    const next=H(p,"button",{class:"step",type:"button",title:"Next file","aria-label":"Next file"},"▶");
+    if(CAL.sel>=last)next.setAttribute("disabled","");
+    next.onclick=()=>{setCalFile(CAL.sel+1);};
     // A compact flag when the selected file failed to calibrate.
     if(calIsBad(CAL.files[CAL.sel]))H(p,"span",{class:"flag"},"⚠ this file did not calibrate");
   });
@@ -1601,7 +1622,11 @@ function renderCalRepro(){
   const panels=[
     {title:"MS1 mass error ("+unit+")",val:f=>num(f.ms1Mean),err:f=>num(f.ms1Sd),fmt:v=>fmt(v,2),zero:true},
     {title:"MS2 mass error ("+unit+")",val:f=>num(f.ms2Mean),err:f=>num(f.ms2Sd),fmt:v=>fmt(v,2),zero:true},
-    {title:"RT fit R²",val:f=>num(f.rtRSquared),fmt:v=>fmt(v,3)},
+    // R² values cluster near 1 (e.g. 0.997-0.998), so the generic 2-decimal y-tick
+    // format collapses every tick to "1" and even 3 decimals makes adjacent ticks
+    // identical. Give this panel a 4-decimal y-axis (0.9972 / 0.9976 / ...) and a
+    // data-tight y-range (tightY) so the per-file variation near 1 is actually visible.
+    {title:"RT fit R²",val:f=>num(f.rtRSquared),fmt:v=>fmt(v,4),yfmt:v=>fmt(v,4),tightY:true},
     {title:"RT residual SD (min)",val:f=>num(f.rtResidualSd),fmt:v=>fmt(v,3)},
     {title:"calibration peptides",val:f=>num(f.calPeptides),fmt:v=>fmt(v,0)},
     {title:"anchor FDP",val:f=>num(f.anchorFdp),fmt:v=>pct(v,1),isPct:true},
@@ -1620,13 +1645,15 @@ function drawCalScatter(grid,p,files,N,num){
   files.forEach(f=>{const v=p.val(f);if(isNaN(v))return;any=true;const e=p.err?p.err(f):0,ee=isNaN(e)?0:e;
     lo=Math.min(lo,v-ee);hi=Math.max(hi,v+ee);});
   if(!any){H(cell,"p",{class:"note"},"No data.");return;}
-  if(p.zero||p.isPct){lo=Math.min(lo,0);hi=Math.max(hi,0);}
-  if(lo===hi){lo-=1;hi+=1;}
-  const pad=(hi-lo)*0.08;lo-=pad;hi+=pad;
+  if((p.zero||p.isPct)&&!p.tightY){lo=Math.min(lo,0);hi=Math.max(hi,0);}
+  if(lo===hi){const e=Math.max(Math.abs(lo)*1e-3,1e-3);lo-=e;hi+=e;}
+  // A data-tight panel (e.g. R² clustered near 1) uses a small pad so the spread
+  // fills the plot; the generic panels keep the wider 8% breathing room.
+  const pad=(hi-lo)*(p.tightY?0.15:0.08);lo-=pad;hi+=pad;
   const xd=[0.5,N+0.5];
   const xt=N<=20?Array.from({length:N},(_,i)=>i+1):null;
   const sc=axes(s,box,xd,[lo,hi],{xticks:xt,xfmt:v=>String(Math.round(v)),
-    yfmt:v=>p.isPct?pct(v,hi<0.1?1:0):(Math.abs(v)>=1000?trim(v):(+v.toFixed(2)).toString())});
+    yfmt:p.yfmt?p.yfmt:v=>p.isPct?pct(v,hi<0.1?1:0):(Math.abs(v)>=1000?trim(v):(+v.toFixed(2)).toString())});
   if(lo<=0&&hi>=0)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(0),y2:sc.y(0),stroke:COL.muted,"stroke-dasharray":"3 3",opacity:.5});
   // Robust outlier flag: median +/- 3*MAD -> amber points, so they read at a glance.
   const vals=files.map(p.val).filter(v=>!isNaN(v)).sort((a,b)=>a-b);
@@ -1653,24 +1680,54 @@ function drawCalScatter(grid,p,files,N,num){
 }
 
 // ---------- CAL Summary tab: per-file corrections table (clickable rows) ----------
+// Compact, scannable per-file health scan. The detailed distributions live on the
+// Model / FDR / Reproducibility tabs; Summary is the at-a-glance overview, so it drops
+// the old "sea of numbers" (separate mean / sd / tol columns per mass channel plus
+// nPoints / residSD) in favour of:
+//   File | Anchors | [Entrapment | FDP]* | MS1 error | MS2 error | RT fit R² | RT window
+// Each mass channel folds mean±sd into one "0.9 ± 1.5 ppm" cell (the post-cal tolerance
+// half-window it drove lives on the per-file Model tab, not here). RT window = the
+// post-cal ± half-window (rtToleranceMin), and RT fit R² is the fit-quality proxy that
+// replaces the old resid-SD / nPoints pair. [Entrapment | FDP] only appear when the
+// calibration anchor set carries entrapment. * = conditional columns.
 function renderCalSummary(){
   const host=document.getElementById("calSummaryTable");if(!host)return;host.innerHTML="";
-  const files=CAL.files, unit=CAL.unit;
+  const files=CAL.files, unit=CAL.unit, hasEnt=CAL.hasEnt;
+  const num=v=>(v==null||isNaN(v))?NaN:Number(v);
+  // Per-column robust outlier bounds (median ± 3·MAD) so a file that sits far from the
+  // pack in any single metric is highlighted without the reviewer reading every number.
+  const bounds=sel=>{const vs=files.map(sel).filter(v=>!isNaN(v)).sort((a,b)=>a-b);
+    if(vs.length<4)return null;const med=vs[vs.length>>1];
+    const d=vs.map(v=>Math.abs(v-med)).sort((a,b)=>a-b);const mad=d[d.length>>1]*1.4826;
+    if(!(mad>0))return null;return {lo:med-3*mad,hi:med+3*mad};};
+  const bMs1=bounds(f=>num(f.ms1Mean)), bMs2=bounds(f=>num(f.ms2Mean)),
+        bR2=bounds(f=>num(f.rtRSquared)), bWin=bounds(f=>num(f.rtToleranceMin)),
+        bFdp=bounds(f=>num(f.anchorFdp));
+  const out=(b,v)=>!!b&&!isNaN(v)&&(v<b.lo||v>b.hi);
   const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
-  const cols=[["File","l"],["CalPeptides",""],["Entrapment",""],["AnchorFDP",""],
-    ["MS1 mean/sd/tol ("+unit+")",""],["MS2 mean/sd/tol ("+unit+")",""],["RT R²/resSD/tol/n",""]];
+  const cols=[["File","l"],["Anchors",""]];
+  if(hasEnt){cols.push(["Entrapment",""]);cols.push(["FDP",""]);}
+  cols.push(["MS1 error ("+unit+")",""],["MS2 error ("+unit+")",""],
+            ["RT fit (R²)",""],["RT window (±min)",""]);
   cols.forEach(h=>H(htr,"th",{class:h[1]},h[0]));
   const tb=H(t,"tbody",{});
-  const tri=(a,b,c,fa,fb,fc)=>fmt(a,fa)+" / "+fmt(b,fb)+" / "+fmt(c,fc);
+  // "mean ± sd unit" in one cell (– when the mean is missing).
+  const meanSd=(m,sd)=>isNaN(num(m))?"–":fmt(m,1)+" ± "+fmt(num(sd),1)+" "+unit;
+  // Mark a cell as an outlier: bold + amber so a bad file pops out of the scan.
+  const mark=(td,bad)=>{if(bad){td.style.color="var(--warn)";td.style.fontWeight="700";}};
   files.forEach((f,i)=>{const bad=calIsBad(f);
     const tr=H(tb,"tr",{class:"clk callink"+(bad?" neg":"")});
     H(tr,"td",{class:"l"},(i+1)+". "+calFileName(i)+(bad?"  ⚠":""));
     H(tr,"td",{class:"num"},fmt(f.calPeptides,0));
-    H(tr,"td",{class:"num"},fmt(f.entrapment,0));
-    H(tr,"td",{class:"num"},isNaN(Number(f.anchorFdp))?"–":pct(f.anchorFdp,1));
-    H(tr,"td",{class:"num"},tri(f.ms1Mean,f.ms1Sd,f.ms1Tol,2,2,1));
-    H(tr,"td",{class:"num"},tri(f.ms2Mean,f.ms2Sd,f.ms2Tol,2,2,1));
-    H(tr,"td",{class:"num"},fmt(f.rtRSquared,3)+" / "+fmt(f.rtResidualSd,3)+" / "+fmt(f.rtToleranceMin,2)+" / "+fmt(f.rtNPoints,0));
+    if(hasEnt){
+      H(tr,"td",{class:"num"},fmt(f.entrapment,0));
+      const tf=H(tr,"td",{class:"num"},isNaN(num(f.anchorFdp))?"–":pct(f.anchorFdp,1));
+      mark(tf,out(bFdp,num(f.anchorFdp)));
+    }
+    const t1=H(tr,"td",{class:"num"},meanSd(f.ms1Mean,f.ms1Sd));mark(t1,out(bMs1,num(f.ms1Mean)));
+    const t2=H(tr,"td",{class:"num"},meanSd(f.ms2Mean,f.ms2Sd));mark(t2,out(bMs2,num(f.ms2Mean)));
+    const tr2=H(tr,"td",{class:"num"},fmt(f.rtRSquared,3));mark(tr2,out(bR2,num(f.rtRSquared)));
+    const tw=H(tr,"td",{class:"num"},fmt(f.rtToleranceMin,2));mark(tw,out(bWin,num(f.rtToleranceMin)));
     tr.onclick=()=>jumpToCalFile(i);
   });
   if(!files.length)H(host,"p",{class:"note"},"No per-file calibration data.");
