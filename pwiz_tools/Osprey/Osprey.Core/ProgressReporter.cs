@@ -147,15 +147,18 @@ namespace pwiz.Osprey.Core
                 }
                 else if (percent < 100 && now - _lastReportSeconds >= _heartbeatSeconds)
                 {
-                    // Frozen-percent heartbeat: a phase advancing slower than 1% per
-                    // _heartbeatSeconds would otherwise print nothing until it crosses the
-                    // next whole percent, so the console looks hung. Reprint the current
-                    // percent with elapsed time -- reassurance the run is alive, and
-                    // pathological slowness becomes visible in real time. percent may have
-                    // crept up since the last line (still < 1 over the report interval), so
-                    // print it, not the stale _lastPercent.
-                    OspreyOutput.Out.WriteLine("{0}  {1}% ({2} elapsed)",
-                        _indent, percent, FormatElapsed(_stopwatch.Elapsed));
+                    // Slow-phase heartbeat: when progress is under 1% per _heartbeatSeconds
+                    // the integer percent freezes, so switch to FINER granularity -- a
+                    // fractional percent plus the running item count -- so a genuinely
+                    // moving job shows a moving number (real progress), not just a ticking
+                    // clock. Elapsed still surfaces pathological slowness. Fast phases
+                    // advance the whole percent within the report interval and never reach
+                    // this idle window, so they stay clutter-free. NOTE: this only fires
+                    // when the phase calls Report; a phase that blocks inside one bulk
+                    // operation (no Report calls) needs to be wrapped in a reporter first.
+                    double pctExact = _total > 0 ? 100.0 * current / _total : 100.0;
+                    OspreyOutput.Out.WriteLine("{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)",
+                        _indent, pctExact, current, _total, FormatElapsed(_stopwatch.Elapsed));
                     _lastPercent = percent;
                     _lastReportSeconds = now;
                 }
