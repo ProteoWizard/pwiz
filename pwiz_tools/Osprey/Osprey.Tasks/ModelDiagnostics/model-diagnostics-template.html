@@ -1633,6 +1633,12 @@ function drawCalScatter(grid,p,files,N,num){
   const med=vals.length?vals[vals.length>>1]:NaN;
   const mad=vals.length?(()=>{const d=vals.map(v=>Math.abs(v-med)).sort((a,b)=>a-b);return d[d.length>>1];})():NaN;
   const isOut=v=>!isNaN(mad)&&mad>0&&Math.abs(v-med)>3*mad*1.4826;
+  // Connect the per-file points in file order (drawn under the markers) so a value far
+  // from the pack and any run-to-run drift -- e.g. mass error creeping up then snapping
+  // back to zero after an instrument recalibration -- read at a glance, like a QC trend.
+  {const pts=[];files.forEach((f,i)=>{const v=p.val(f);if(isNaN(v))return;
+    pts.push(sc.x(i+1)+","+sc.y(Math.max(lo,Math.min(hi,v))));});
+   if(pts.length>1)E(s,"polyline",{points:pts.join(" "),fill:"none",stroke:COL.target,"stroke-width":1.3,opacity:.5});}
   files.forEach((f,i)=>{const v=p.val(f);if(isNaN(v))return;const cx=sc.x(i+1),cy=sc.y(Math.max(lo,Math.min(hi,v)));
     if(p.err){const e=num(p.err(f));if(!isNaN(e)&&e>0){
       E(s,"line",{x1:cx,x2:cx,y1:sc.y(Math.max(lo,v-e)),y2:sc.y(Math.min(hi,v+e)),stroke:COL.target,opacity:.35,"stroke-width":1});}}
