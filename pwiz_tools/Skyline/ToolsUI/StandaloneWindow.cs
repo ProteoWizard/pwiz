@@ -38,15 +38,16 @@ namespace pwiz.Skyline.ToolsUI
             return UiActions.GetChildren.Call(this);
         }
 
-        /// <summary>Clicks a control on the form by its visible label, returning whether the click completed or left
-        /// a dialog open. The control is resolved on the window's own thread (so a missing one fails HERE, with a
-        /// message naming what it looked for), then clicked through the Click action, which posts the gesture and
-        /// waits it out. (To confirm or dismiss a form or dialog use the dismiss action, or the DismissWith... verbs
-        /// -- none of which keys on a localized button caption.)</summary>
+        /// <summary>Clicks a control on the form by its visible label, returning whether the click completed or left a
+        /// dialog open. ONE trip to the window's thread does the lot -- find the control and click it, with InvokeNow
+        /// gating it. A control that is missing, blocked or disabled throws out of the posted delegate, and the wait
+        /// re-throws it here. (To confirm or dismiss a form or dialog use the DismissWith... verbs -- none of which
+        /// keys on a localized button caption.)</summary>
         public ActionResult ClickButton(string button)
         {
-            var element = InvokeOnUiThread(() => FindElement(button, UiActions.Click));
-            return (ActionResult) UiActions.Click.Invoke(element, null);
+            return DialogWatcher.PerformAction(Hwnd,
+                () => UiActions.Click.InvokeNow(FindElement(button, UiActions.Click), null),
+                CancellationToken);
         }
 
         /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name), returning whether the

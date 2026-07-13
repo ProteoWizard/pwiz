@@ -108,7 +108,7 @@ namespace pwiz.Skyline.ToolsUI
         // Its window text is its VALUE, not its label -- otherwise a file dialog's file-name box would answer to
         // whatever path happens to be typed in it.
         public override string Label => null;
-        public override object Value => User32.GetWindowText(Hwnd);
+        public override object GetValueNow() => User32.GetWindowText(Hwnd);
 
         public void SetValueNow(object value) => SetText(value?.ToString() ?? string.Empty);
 

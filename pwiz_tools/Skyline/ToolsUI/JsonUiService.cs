@@ -489,9 +489,22 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Every window a connector caller can address, as the FormInfo the get_open_forms verb reports --
         /// the same set <see cref="GetOpenFormElements"/> enumerates and <see cref="FindFormById"/> matches an id
-        /// against, so a form that is listed here can always be resolved. Each window describes ITSELF
-        /// (StandaloneWindow.GetFormInfo), which is also what marshals the read onto that window's own thread.</summary>
+        /// against, so a form that is listed here can always be resolved.
+        ///
+        /// <para>ONE trip to the main window describes them all. Nearly every form lives on the main window's thread,
+        /// so from there each can report itself in full (see StandaloneWindow.GetFormInfo, which fills in only what
+        /// the calling thread may read). Describing each form through ITS OWN window instead would post a message to
+        /// a window that may be closing -- and a destroyed window drops the message, so the read would never
+        /// return.</para></summary>
         public static FormInfo[] GetOpenForms(CancellationToken cancellationToken = default)
+        {
+            var mainWindow = Program.MainWindow;
+            return mainWindow == null
+                ? DescribeOpenForms(cancellationToken)   // no main window yet (the StartPage): read from here
+                : InvokeOnControl(mainWindow, () => DescribeOpenForms(cancellationToken), cancellationToken);
+        }
+
+        private static FormInfo[] DescribeOpenForms(CancellationToken cancellationToken)
         {
             var results = new List<FormInfo>();
             foreach (var window in GetOpenFormElements(cancellationToken))

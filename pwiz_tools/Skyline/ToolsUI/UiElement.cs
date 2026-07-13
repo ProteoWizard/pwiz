@@ -153,7 +153,7 @@ namespace pwiz.Skyline.ToolsUI
         public abstract bool IsEnabled { get; }
 
         /// <summary>The managed form this element belongs to, whose modal-block / enabled state gates acting on
-        /// the element (see <see cref="VerifyInteractable"/>). Null for an element with no managed form of its
+        /// the element (see <see cref="VerifyEnabled"/>). Null for an element with no managed form of its
         /// own (a native dialog) -- then only the element's own enabled state is checked.</summary>
         internal virtual Form OwningForm => null;
 
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.ToolsUI
         /// checks the form (if any) and the element's own <see cref="IsEnabled"/>; a control narrows the second
         /// check to the control. Called by <see cref="UiAction.Invoke"/> on the element's UI thread (the modal
         /// check reads a window handle).</summary>
-        public virtual void VerifyInteractable()
+        public virtual void VerifyEnabled()
         {
             VerifyFormInteractable(OwningForm, CancellationToken);
             if (!IsEnabled)
@@ -210,11 +210,16 @@ namespace pwiz.Skyline.ToolsUI
             return form;
         }
 
-        /// <summary>The element's current value in its natural form (e.g. a grid cell's underlying object),
-        /// or null when the control has no value. <see cref="ConvertValue"/> normalizes it to null / bool /
-        /// double / string at the point it is exposed to the connector -- as get_value and echoed in each
-        /// <see cref="ControlInfo"/> -- so this property itself need not be one of those types.</summary>
-        public virtual object Value => null;
+        /// <summary>The element's current value in its natural form (e.g. a grid cell's underlying object), or null
+        /// when the control has no value. <see cref="ConvertValue"/> normalizes it to null / bool / double / string
+        /// at the point it is exposed to the connector -- as get_value, and echoed in each
+        /// <see cref="ControlInfo"/> -- so this need not be one of those types.
+        ///
+        /// <para>ON the control's thread, like every "...Now": a read reaches this only through
+        /// <see cref="UiActions.GetValue"/> (a <see cref="UiFunction{TResult}"/>, which has already marshaled) or
+        /// through <see cref="GetControlsNow"/> (itself already there). A METHOD, not a property, so that merely
+        /// looking at an element in the debugger does not touch a control from the debugger's thread.</para></summary>
+        public virtual object GetValueNow() => null;
 
 
         /// <summary>Coerces an arbitrary value to the only types the connector exchanges: null stays null,
@@ -406,11 +411,7 @@ namespace pwiz.Skyline.ToolsUI
         /// through <see cref="CallFunction{TResult}"/> instead.</summary>
         internal ActionResult PerformGesture(Action gesture)
         {
-            return DialogWatcher.PerformAction(FormHwnd, () =>
-            {
-                VerifyInteractable();
-                gesture();
-            }, CancellationToken);
+            return DialogWatcher.PerformAction(FormHwnd, gesture, CancellationToken);
         }
 
         /// <summary>The read counterpart of <see cref="PerformGesture"/>, marshaled the same way: ONE trip, straight
@@ -451,7 +452,7 @@ namespace pwiz.Skyline.ToolsUI
         /// walk is one level at a time -- GetControls and the get_children action both return this; descend by
         /// calling GetChildren on a child. Each child's Index is its position among the siblings of its same
         /// Type, so adding a control of another Type never shifts it.</summary>
-        public virtual ControlInfo[] GetControlsNow() => InvokeOnUiThread(() =>
+        public virtual ControlInfo[] GetControlsNow()
         {
             var indexByType = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var result = new List<ControlInfo>();
@@ -464,11 +465,11 @@ namespace pwiz.Skyline.ToolsUI
                     Path = child.PathSegment(typeIndex).ChangeParent(Path),
                     Name = NullIfEmpty(child.Name),
                     Enabled = child.IsEnabled,
-                    Value = ConvertValue(child.Value),
+                    Value = ConvertValue(child.GetValueNow()),
                 });
             }
             return result.ToArray();
-        });
+        }
 
         /// <summary>The single child the <paramref name="path"/>'s leaf segment names, with its Parent
         /// ignored (the caller has resolved the chain down to this element). A segment with no selector is
@@ -682,7 +683,7 @@ namespace pwiz.Skyline.ToolsUI
         // Control.Enabled reflects a disabled ancestor too. The form gate already covered a disabled form.
         // Visibility is not checked: we only ever build an element for a control that was visible, and a control
         // that goes hidden mid-action (e.g. a menu whose dropdown has closed) should still be acted on.
-        public override void VerifyInteractable()
+        public override void VerifyEnabled()
         {
             VerifyFormInteractable(OwningForm, CancellationToken);
             if (!Control.Enabled)
@@ -934,7 +935,7 @@ namespace pwiz.Skyline.ToolsUI
         public override T InvokeOnUiThread<T>(Func<T> func) =>
             JsonUiService.InvokeOnControl(Form, func, CancellationToken);
 
-        // The form gates itself: VerifyInteractable checks (through VerifyFormInteractable) that no modal is blocking
+        // The form gates itself: VerifyEnabled checks (through VerifyFormInteractable) that no modal is blocking
         // this window. That check MUST be the Win32 one -- a modal calls EnableWindow(false) on the windows it blocks
         // without flipping their managed Control.Enabled, so IsEnabled below stays true and would miss it.
         internal override Form OwningForm => Form;
@@ -1013,25 +1014,25 @@ namespace pwiz.Skyline.ToolsUI
         public override string FormId => JsonUiService.GetFormId(Form);
         public override string Title => JsonUiService.GetFormTitle(Form);
 
-        // Sets a control's value (or a grid cell) on the form. The target is resolved synchronously on the UI
-        // thread (so a missing control fails here); the element's set-value then gates it and applies the value.
-        // A grid cell ("grid[column,row]") moves the current cell there and pastes, reusing the grid path so a
-        // DataboundGridControl stays in sync; a field is matched by its own Label. This named/convenience verb
-        // waits out the posted gesture (the count settling, or a modal a validation / confirmation raises
-        // appearing) so it returns only once the value has taken effect -- the same wait the generic
-        // perform_action (UiActions.SetValue) now uses too. Must be called off the UI thread.
+        // Sets a control's value (or a grid cell) on the form, in ONE trip to the form's thread: find the target,
+        // gate it, set it. A grid cell ("grid[column,row]") moves the current cell there and then pastes, reusing the
+        // one grid element so a DataboundGridControl stays in sync; anything else is matched by its own Label. A
+        // control that is missing, blocked or disabled throws out of the posted delegate and the wait re-throws it
+        // here. The wait returns only once the value has taken effect (the count settling, or a modal that a
+        // validation raises appearing). Must be called off the UI thread.
         public override ActionResult SetValue(string controlId, string value)
         {
-            if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
+            return DialogWatcher.PerformAction(Hwnd, () =>
             {
-                // Resolve the grid on the UI thread, then move the current cell there and paste -- each self-waits;
-                // reusing the grid path keeps a DataboundGridControl in sync.
-                var gridElement = InvokeOnUiThread(() => FindGrid(gridName));
-                UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
-                return (ActionResult) UiActions.SetGridText.Invoke(gridElement, value);
-            }
-            var element = InvokeOnUiThread(() => FindElement(controlId, UiActions.SetValue));
-            return (ActionResult) UiActions.SetValue.Invoke(element, value);
+                if (TryParseGridCell(controlId, out var gridName, out var column, out var row))
+                {
+                    var gridElement = FindGrid(gridName);
+                    UiActions.SetCurrentCellAddress.InvokeNow(gridElement, new[] { column, row });
+                    UiActions.SetGridText.InvokeNow(gridElement, value);
+                    return;
+                }
+                UiActions.SetValue.InvokeNow(FindElement(controlId, UiActions.SetValue), value);
+            }, CancellationToken);
         }
 
         // Finds the grid to act on: the one named controlId, or -- when controlId is null/empty -- the single
@@ -1073,7 +1074,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             return OkDialog(() =>
             {
-                VerifyInteractable();
+                VerifyEnabled();
                 IButtonControl acceptButton = Form.AcceptButton;
                 if (acceptButton == null)
                     throw new ArgumentException(LlmInstruction.Format(
@@ -1088,7 +1089,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             return OkDialog(() =>
             {
-                VerifyInteractable();
+                VerifyEnabled();
                 var cancelButton = Form.CancelButton;
                 if (cancelButton != null)
                     cancelButton.PerformClick();
@@ -1145,28 +1146,40 @@ namespace pwiz.Skyline.ToolsUI
         // form's menu bar and toolbars (see ContainerElement.MainToolStrip).
         public override ToolStripElement MainToolStrip => FormContainer.MainToolStrip;
 
-        // Read on the form's OWN thread: every field here comes off the managed Form (its Text, its DockState), and
-        // a form running its own message loop (a BackgroundThreadLongWaitDlg) owns those on that thread -- reading
-        // them from the caller's thread is a cross-thread touch. It goes unpunished at run time (Control.Text is read
-        // inside a MultithreadSafeCallScope, which suppresses the check), which is exactly why it has to be marshaled
-        // deliberately here rather than left to whoever calls it. See ConnectorFormThreadingTest.
+        /// <summary>
+        /// Describes this form, WITHOUT marshaling anywhere. It reports what the CALLING thread may legitimately
+        /// read, and leaves the rest empty: the identifying fields (type, title, id, nesting count) are safe from
+        /// any thread, but DockState, HasGraph and DetailedMessage all walk into the form's own state and belong to
+        /// the thread that owns it. Called ON that thread (InvokeRequired false) it fills in everything.
+        ///
+        /// <para>Not marshaled here on purpose. The caller decides where this runs -- JsonUiService.GetOpenForms
+        /// makes ONE trip to the main window and describes every form there, so nearly every form is complete and
+        /// nothing is posted to a form that may be closing. A form on its OWN message loop (a
+        /// BackgroundThreadLongWaitDlg) is the only one that comes back partial, and it is a progress dialog:
+        /// there is nothing on it worth the round trip.</para>
+        /// </summary>
         public override FormInfo GetFormInfo()
         {
-            return InvokeOnUiThread(() => new FormInfo
+            var formInfo = new FormInfo
             {
                 Type = Form.GetType().Name,
                 Title = JsonUiService.GetFormTitle(Form),
                 Id = JsonUiService.GetFormId(Form),
                 ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(Hwnd),
-                DockState = GetDockState(),
-                // What the form SAYS -- an alert's text -- so a caller listing the forms can see that one is in the
-                // way, and why, without capturing an image of it. Only for a form that says something beyond its
-                // own title (a CommonFormEx: an alert, an error); a plain form's DetailedMessage IS its title.
-                DetailedMessage = Form is CommonFormEx
-                    ? JsonUiService.TruncateDetail(DetailedMessage)
-                    : null,
-                HasGraph = Form is DockableFormEx dockableForm && null != JsonUiService.TryGetZedGraphControl(dockableForm)
-            });
+            };
+            if (Form.InvokeRequired)
+                return formInfo;    // another thread owns this form: report only what is safe to read from here
+
+            formInfo.DockState = GetDockState();
+            formInfo.HasGraph = Form is DockableFormEx dockableForm &&
+                                null != JsonUiService.TryGetZedGraphControl(dockableForm);
+            // What the form SAYS -- an alert's text -- so a caller listing the forms can see that one is in the way,
+            // and why, without capturing an image of it. Only for a form that says something beyond its own title (a
+            // CommonFormEx: an alert, an error); a plain form's DetailedMessage IS its title.
+            formInfo.DetailedMessage = Form is CommonFormEx
+                ? JsonUiService.TruncateDetail(DetailedMessage)
+                : null;
+            return formInfo;
         }
 
         protected override string GetDockState()
@@ -1267,7 +1280,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly CheckBox _checkBox;
         public CheckBoxElement(CheckBox checkBox, CancellationToken cancellationToken) : base(checkBox, cancellationToken) { _checkBox = checkBox; }
-        public override object Value => InvokeOnUiThread(() => (object) _checkBox.Checked);
+        public override object GetValueNow() => _checkBox.Checked;
         public void SetValueNow(object value) => _checkBox.Checked = UiValue.ParseBool(value);
     }
 
@@ -1276,7 +1289,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly RadioButton _radioButton;
         public RadioButtonElement(RadioButton radioButton, CancellationToken cancellationToken) : base(radioButton, cancellationToken) { _radioButton = radioButton; }
-        public override object Value => InvokeOnUiThread(() => (object) _radioButton.Checked);
+        public override object GetValueNow() => _radioButton.Checked;
         public void SetValueNow(object value) => _radioButton.Checked = UiValue.ParseBool(value);
     }
 
@@ -1285,7 +1298,7 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly TextBoxBase _textBox;
         public TextBoxElement(TextBoxBase textBox, CancellationToken cancellationToken) : base(textBox, cancellationToken) { _textBox = textBox; }
-        public override object Value => InvokeOnUiThread(() => (object) _textBox.Text);
+        public override object GetValueNow() => _textBox.Text;
         // A multi-line box parses/lays out on CRLF (what Enter inserts), so normalize bare newlines.
         public void SetValueNow(object value) =>
             _textBox.Text = _textBox.Multiline ? UiValue.NormalizeNewlines(value?.ToString()) : value?.ToString();
@@ -1303,8 +1316,8 @@ namespace pwiz.Skyline.ToolsUI
     {
         private readonly ComboBox _comboBox;
         public ComboBoxElement(ComboBox comboBox, CancellationToken cancellationToken) : base(comboBox, cancellationToken) { _comboBox = comboBox; }
-        public override object Value => InvokeOnUiThread(() => (object) _comboBox.GetItemText(_comboBox.SelectedItem));
-        public IEnumerable<string> GetOptions() => InvokeOnUiThread(() => ListItems.GetOptions(_comboBox));
+        public override object GetValueNow() => _comboBox.GetItemText(_comboBox.SelectedItem);
+        public IEnumerable<string> GetOptions() => ListItems.GetOptions(_comboBox);
         public void SetValueNow(object value)
         {
             var text = value?.ToString();
@@ -1325,7 +1338,7 @@ namespace pwiz.Skyline.ToolsUI
         public void SetSelectedIndexNow(int index) => ListItems.SetSelectedIndex(Control, index);
         public void SetItemSelectedNow(string item, bool isSelected) => ListItems.SetSelected(Control, item, isSelected);
         // Every choice the list offers (get_options), regardless of selection/checked state.
-        public virtual IEnumerable<string> GetOptions() => InvokeOnUiThread(() => ListItems.GetOptions(Control));
+        public virtual IEnumerable<string> GetOptions() => ListItems.GetOptions(Control);
     }
 
     /// <summary>A CheckedListBox. Besides the ListControl actions, an item is checked/unchecked by its text
@@ -1335,8 +1348,8 @@ namespace pwiz.Skyline.ToolsUI
         ICheckItemsElement
     {
         public CheckedListBoxElement(CheckedListBox control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
-        public override object Value => InvokeOnUiThread(() => (object)
-            string.Join(Environment.NewLine, Control.CheckedItems.Cast<object>().Select(Control.GetItemText)));
+        public override object GetValueNow() =>
+            string.Join(Environment.NewLine, Control.CheckedItems.Cast<object>().Select(Control.GetItemText));
         public void SetItemCheckedNow(string item, bool isChecked) => ListItems.SetChecked(Control, item, isChecked);
         // A click toggles the checked state of the selected item, the way a user's click/space does (move to
         // the item first with set_selected_index). A CheckedListBox is not an IButtonControl, so the base gesture
@@ -1488,16 +1501,16 @@ namespace pwiz.Skyline.ToolsUI
         public PopupPickListElement(ListBox control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         private PopupPickList PickList => (PopupPickList) Control.FindForm();
         public override Type ElementType => typeof(CheckedListBox);
-        public override object Value => InvokeOnUiThread(() =>
+        public override object GetValueNow()
         {
             var pickList = PickList;
             var names = pickList.ItemNames.ToList();
-            return (object) string.Join(Environment.NewLine,
+            return string.Join(Environment.NewLine,
                 Enumerable.Range(0, names.Count).Where(pickList.GetItemChecked).Select(i => names[i]));
-        });
+        }
         // The pop-up's choices are the PickList's own item names (its ListBox items are not the display text),
         // so read them there -- and return ALL of them (get_options), not just the checked ones that Value reports.
-        public override IEnumerable<string> GetOptions() => InvokeOnUiThread(() => PickList.ItemNames.ToList());
+        public override IEnumerable<string> GetOptions() => PickList.ItemNames.ToList();
         public void SetItemCheckedNow(string item, bool isChecked) => PickList.SetItemChecked(FindPickListIndex(item), isChecked);
         // A click toggles the selected item's check, like a user's click/space (move to the item first with
         // set_selected_index). Not an IButtonControl, so override ClickNow (not Click) -- see CheckedListBoxElement.
@@ -1784,13 +1797,12 @@ namespace pwiz.Skyline.ToolsUI
         /// blocked, if the path names no item on this strip, or if the item is disabled.</summary>
         public void ClickMenuItemNow(string menuPath)
         {
-            // InvokeNow does no gating (its caller owns that), so gate here. The FORM gate comes first, before the
-            // menu is walked at all: a modal blocking the window puts every item out of reach, so the path is
-            // immaterial, and walking it would open dropdowns on a window the user could not touch.
-            VerifyInteractable();
+            // Gate the FORM before the menu is walked at all: a modal blocking the window puts every item out of
+            // reach, so the path is immaterial, and walking it would open dropdowns on a window the user could not
+            // touch. (The item itself is gated by Click.InvokeNow.)
+            VerifyEnabled();
             var leaf = ResolveMenuItem(menuPath) ?? throw new ArgumentException(LlmInstruction.Format(
                 @"Menu item not found: {0}. Use skyline_get_controls to see what is there.", menuPath));
-            leaf.VerifyInteractable();
             UiActions.Click.InvokeNow(leaf, null);
         }
 
@@ -1902,7 +1914,7 @@ namespace pwiz.Skyline.ToolsUI
         // the whole grid is read/written in bulk with get_grid_text / set_grid_text. The value is null when
         // there is no current cell. This is the cell's raw underlying value; ConvertValue normalizes it for
         // the connector at the point it is exposed (get_value, ControlInfo), not here.
-        public override object Value => InvokeOnUiThread(() => _dataGridView.CurrentCell?.Value);
+        public override object GetValueNow() => _dataGridView.CurrentCell?.Value;
 
         public void SetValueNow(object value)
         {
@@ -1929,7 +1941,7 @@ namespace pwiz.Skyline.ToolsUI
 
         // Reads a plain DataGridView as tab-separated text: the column headers followed by every data row
         // (each cell shown as the user sees it).
-        public virtual string GetGridText() => InvokeOnUiThread(() =>
+        public virtual string GetGridText()
         {
             var visibleColumns = VisibleColumns();
             var lines = new List<string>
@@ -1943,7 +1955,7 @@ namespace pwiz.Skyline.ToolsUI
                 lines.Add(TextUtil.ToEscapedTSV(visibleColumns.Select(col => CellDisplayText(gridRow.Cells[col.Index]))));
             }
             return TextUtil.LineSeparate(lines);
-        });
+        }
 
         // Pastes starting at the current cell -- the anchor a user would have clicked. Move the current cell
         // first with SetCurrentCellAddress; the text may be a multi-cell TSV block (it fills down/right).
@@ -2013,13 +2025,13 @@ namespace pwiz.Skyline.ToolsUI
         public BoundGridElement(BoundDataGridView boundDataGridView, CancellationToken cancellationToken) : base(boundDataGridView, cancellationToken) { }
         private BindingListSource BindingListSource => DataGridView.DataSource as BindingListSource;
 
-        public override string GetGridText() => InvokeOnUiThread(() =>
+        public override string GetGridText()
         {
             var bindingListSource = BindingListSource;
             return bindingListSource == null
                 ? base.GetGridText() // not bound yet -- read the cells directly
                 : bindingListSource.ViewContext.GetCopyAllText(DataGridView, bindingListSource);
-        });
+        }
 
         protected override void SetGridTextCore(string text)
         {

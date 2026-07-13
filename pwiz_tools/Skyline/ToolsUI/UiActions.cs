@@ -89,20 +89,31 @@ namespace pwiz.Skyline.ToolsUI
             AppliesTo(element)
             && (!MustBeEnabled || element.IsEnabled);
 
-        /// <summary>The action ITSELF, run ON the element's UI thread: a raw gesture (a click, a value set) or a raw
-        /// read. It does NO threading and NO gating -- it assumes the caller has already put it on the right thread
-        /// and checked the gates. This is the one place a kind of element says what the action means; the threading
-        /// belongs to <see cref="Invoke"/>, so no element decides its own.</summary>
-        public abstract object InvokeNow(UiElement element, object argument);
+        /// <summary>The action ON the element's UI thread: GATE the element, then do the thing. It does no threading
+        /// -- it assumes the caller has already put it on the right thread -- but it DOES gate, so a caller that has
+        /// marshaled itself (a verb running inside one DialogWatcher.PerformAction) gets the gates for free and
+        /// cannot forget them. The gate is <see cref="MustBeEnabled"/>: a gesture requires an enabled control, a
+        /// read clears it (a greyed-out field can still be inspected).</summary>
+        public object InvokeNow(UiElement element, object argument)
+        {
+            if (MustBeEnabled)
+                element.VerifyEnabled();
+            return InvokeNowCore(element, argument);
+        }
+
+        /// <summary>The action ITSELF, ungated and unmarshaled -- the one place a kind of element says what the
+        /// action MEANS. Everything around it (the gates, the threading) belongs to <see cref="InvokeNow"/> and
+        /// <see cref="Invoke"/>, so no element decides its own.</summary>
+        protected abstract object InvokeNowCore(UiElement element, object argument);
 
         /// <summary>The action WITH the threading it needs, called from the connector's worker (pipe/test) thread.
-        /// The base is the GESTURE case -- the common one: gate the element, post the gesture onto its UI thread and
-        /// wait it out, so it returns an <see cref="ActionResult"/> saying whether it completed or left a dialog
-        /// open. An action that needs different threading says so by BEING a different kind of action, rather than
-        /// by setting a flag the base has to branch on: a read is a <see cref="UiFunction{T}"/>, and Accept, which
-        /// waits for a form to close and so must run off that form's thread, is the one self-threaded action (see
-        /// UiActions). Either way an action behaves the same reached through perform_action or a named verb. Must be
-        /// called off the UI thread.</summary>
+        /// The base is the GESTURE case -- the common one: post the gesture onto the element's UI thread and wait it
+        /// out, so it returns an <see cref="ActionResult"/> saying whether it completed or left a dialog open (the
+        /// gating happens there, in <see cref="InvokeNow"/>). An action that needs different threading says so by
+        /// BEING a different kind of action, rather than by setting a flag the base has to branch on: a read is a
+        /// <see cref="UiFunction{T}"/>, and Dismiss, which waits for a form to close and so must run off that form's
+        /// thread, is the one self-threaded action (see UiActions). Either way an action behaves the same reached
+        /// through perform_action or a named verb. Must be called off the UI thread.</summary>
         public virtual object Invoke(UiElement element, object argument)
         {
             return element.PerformGesture(() => InvokeNow(element, argument));
@@ -146,7 +157,7 @@ namespace pwiz.Skyline.ToolsUI
             return element.CallFunction(() => CallNow(element));
         }
 
-        public override object InvokeNow(UiElement element, object argument) => CallNow(element);
+        protected override object InvokeNowCore(UiElement element, object argument) => CallNow(element);
 
         public override object Invoke(UiElement element, object argument) => Call(element);
     }
@@ -194,7 +205,7 @@ namespace pwiz.Skyline.ToolsUI
 
             public override bool AppliesTo(UiElement element) => null != _toElement(element);
 
-            public override object InvokeNow(UiElement element, object argument)
+            protected override object InvokeNowCore(UiElement element, object argument)
             {
                 var typed = _toElement(element);
                 if (typed == null)
@@ -257,7 +268,7 @@ namespace pwiz.Skyline.ToolsUI
 
             public override bool AppliesTo(UiElement element) => element is StandaloneWindow;
 
-            public override object InvokeNow(UiElement element, object argument)
+            protected override object InvokeNowCore(UiElement element, object argument)
             {
                 var window = (StandaloneWindow) element;
                 var button = argument as string;
@@ -286,7 +297,7 @@ namespace pwiz.Skyline.ToolsUI
             .Describe(new LlmInstruction(@"Click this control (a button, menu/list item, checkbox, ...)."));
 
         public static readonly UiFunction<object> GetValue = SimpleFunction<UiElement, object>(
-                @"GetValue", e => UiElement.ConvertValue(e.Value))
+                @"GetValue", e => UiElement.ConvertValue(e.GetValueNow()))
             .Describe(new LlmInstruction(@"Get this control's current value (null, a bool, a number, or a string)."));
 
         public static readonly UiAction SetValue = SimpleAction<IValueElement, object>(

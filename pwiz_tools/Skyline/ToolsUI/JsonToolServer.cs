@@ -1034,24 +1034,16 @@ namespace pwiz.Skyline.ToolsUI
 
         public ActionResult SetGridText(string formId, string controlId, string text)
         {
-            // Inside InvokeOnForm this already runs ON the grid's UI thread, so it performs the RAW gesture --
-            // which does no gating of its own (see UiAction.InvokeNow), hence the VerifyInteractable.
+            // Inside InvokeOnForm this already runs ON the grid's UI thread, so it goes straight to InvokeNow --
+            // which gates the grid on the way through.
             return InvokeOnForm<StandaloneForm>(formId, form =>
-            {
-                var grid = form.FindGrid(controlId);
-                grid.VerifyInteractable();
-                grid.SetGridTextNow(text ?? string.Empty);
-            });
+                UiActions.SetGridText.InvokeNow(form.FindGrid(controlId), text ?? string.Empty));
         }
 
         public ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
             return InvokeOnForm<StandaloneForm>(formId, form =>
-            {
-                var grid = form.FindGrid(controlId);
-                grid.VerifyInteractable();
-                grid.SetCurrentCellAddressNow(column, row);
-            });
+                UiActions.SetCurrentCellAddress.InvokeNow(form.FindGrid(controlId), new[] { column, row }));
         }
 
         public string GetGridText(string formId, string gridId)
