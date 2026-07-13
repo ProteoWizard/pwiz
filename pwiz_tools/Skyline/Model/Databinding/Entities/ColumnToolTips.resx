@@ -1772,6 +1772,9 @@ higher than the other extent.</value>
   <data name="UnimodIds">
     <value>The modified sequence where modifications are referred to by their unimod id, e.g. "C(unimod:4)". If the modification does not have a unimod id, then its full name is used instead.</value>
   </data>
+  <data name="UniquelyLocalizing">
+    <value>True when this product ion is produced only by the current modification placement, uniquely localizing the modification.</value>
+  </data>
   <data name="User">
     <value>User who made the change</value>
   </data>

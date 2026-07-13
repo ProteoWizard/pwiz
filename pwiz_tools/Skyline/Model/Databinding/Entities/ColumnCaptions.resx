@@ -1635,6 +1635,9 @@
   <data name="UnimodIds">
     <value>Unimod Ids</value>
   </data>
+  <data name="UniquelyLocalizing">
+    <value>Uniquely Localizing</value>
+  </data>
   <data name="User">
     <value>User</value>
   </data>

@@ -175,6 +175,18 @@ namespace pwiz.Skyline.Model.Databinding.Entities
             return _siteDeterminingIonAnalyzer;
         }
 
+        /// <summary>
+        /// True iff the given product ion is produced only by this peptide's current modification
+        /// placement, uniquely localizing an ambiguous modification. Reuses the memoized
+        /// <see cref="SiteDeterminingIonAnalyzer"/>. Returns false for small molecules / peptides
+        /// that are not localizable.
+        /// </summary>
+        public bool IsUniquelyLocalizing(Model.Transition transition)
+        {
+            var analyzer = GetSiteDeterminingIonAnalyzer();
+            return analyzer != null && analyzer.IsUniqueToPrecursor(transition);
+        }
+
         [Obsolete("use MoleculeName instead")]  // It's a molecule, not an ion
         public string IonName
         {

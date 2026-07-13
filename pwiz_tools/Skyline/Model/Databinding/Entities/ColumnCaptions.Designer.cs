@@ -4613,7 +4613,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
                 return ResourceManager.GetString("UnimodIds", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to Uniquely Localizing.
+        /// </summary>
+        public static string UniquelyLocalizing {
+            get {
+                return ResourceManager.GetString("UniquelyLocalizing", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to User.
         /// </summary>

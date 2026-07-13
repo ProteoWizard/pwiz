@@ -4756,7 +4756,16 @@ namespace pwiz.Skyline.Model.Databinding.Entities {
                 return ResourceManager.GetString("UnimodIds", resourceCulture);
             }
         }
-        
+
+        /// <summary>
+        ///   Looks up a localized string similar to True when this product ion is produced only by the current modification placement, uniquely localizing the modification..
+        /// </summary>
+        public static string UniquelyLocalizing {
+            get {
+                return ResourceManager.GetString("UniquelyLocalizing", resourceCulture);
+            }
+        }
+
         /// <summary>
         ///   Looks up a localized string similar to User who made the change.
         /// </summary>

@@ -19,11 +19,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Databinding;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Localization;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -101,6 +104,51 @@ namespace pwiz.SkylineTestFunctional
             TestResolvablePeptide();
             TestUnresolvablePeptide();
             TestNonLocalizablePeptide();
+            TestUniquelyLocalizingColumn();
+        }
+
+        /// <summary>
+        /// Verifies the reporting <see cref="pwiz.Skyline.Model.Databinding.Entities.Transition"/>
+        /// column <c>UniquelyLocalizing</c>: for every transition of the resolvable precursor it
+        /// must match <see cref="SiteDeterminingIonAnalyzer.IsUniqueToPrecursor"/>, and in
+        /// particular it is TRUE for the hand-picked uniquely-localizing b3 ion and FALSE for the
+        /// shared b7 ion. Assertions are on booleans only.
+        /// </summary>
+        private void TestUniquelyLocalizingColumn()
+        {
+            var doc = SkylineWindow.Document;
+            var dataSchema = SkylineDataSchema.MemoryDataSchema(doc, DataSchemaLocalizer.INVARIANT);
+            var tgPath = FindTransitionGroupPath(doc, RESOLVABLE_SEQ);
+            Assert.IsNotNull(tgPath, "Could not find precursor for sequence {0}", RESOLVABLE_SEQ);
+            var tranGroupNode = (TransitionGroupDocNode) doc.FindNode(tgPath);
+            var pepNode = FindPeptide(doc, RESOLVABLE_SEQ);
+            var analyzer = new SiteDeterminingIonAnalyzer(doc.Settings, pepNode);
+
+            bool sawUnique = false, sawShared = false;
+            foreach (var tranNode in tranGroupNode.Transitions)
+            {
+                var tran = tranNode.Transition;
+                var tranPath = new IdentityPath(tgPath, tran);
+                var entity = new pwiz.Skyline.Model.Databinding.Entities.Transition(dataSchema, tranPath);
+                bool expected = analyzer.IsUniqueToPrecursor(tran);
+                Assert.AreEqual(expected, entity.UniquelyLocalizing,
+                    "UniquelyLocalizing column should match the analyzer for {0}", tran);
+
+                if (tran.IonType == IonType.b && tran.Ordinal == UNIQUE_B_ORDINAL)
+                {
+                    Assert.IsTrue(entity.UniquelyLocalizing,
+                        "b3 spans only the modified serine and should be uniquely localizing");
+                    sawUnique = true;
+                }
+                if (tran.IonType == IonType.b && tran.Ordinal == SHARED_B_ORDINAL)
+                {
+                    Assert.IsFalse(entity.UniquelyLocalizing,
+                        "b7 spans both candidates and should not be uniquely localizing");
+                    sawShared = true;
+                }
+            }
+            Assert.IsTrue(sawUnique, "Document did not contain the b3 ion");
+            Assert.IsTrue(sawShared, "Document did not contain the b7 ion");
         }
 
         /// <summary>
