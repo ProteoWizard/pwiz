@@ -107,19 +107,15 @@ namespace pwiz.Skyline.ToolsUI
 
 
     /// <summary>
-    /// A connector-facing view of one UI element on a form. Subclasses wrap a specific kind of control
-    /// (or a ToolStrip item) and declare the actions they support by implementing the matching capability
-    /// interfaces (<see cref="IClickableElement"/>, <see cref="ICheckItemsElement"/>, ...); each
-    /// <see cref="UiAction"/> targets one of those interfaces (or, for the universal verbs like get_value /
-    /// set_value, the <see cref="UiElement"/> base), so the verbs act polymorphically instead of
-    /// switching on WinForms types. Each element also knows its own <see cref="Label"/> (the visible text
-    /// that identifies it) and its children (<see cref="EnumerateChildren"/>), so matching and form
-    /// enumeration are a single recursive walk.
+    /// A connector-facing view of one UI element. A subclass declares what it supports by implementing capability
+    /// interfaces (<see cref="IClickableElement"/>, <see cref="ICheckItemsElement"/>, ...), and each
+    /// <see cref="UiAction"/> targets one of those -- so the verbs act polymorphically instead of switching on
+    /// WinForms types. An element also knows its <see cref="Label"/> (the visible text it is matched by) and its
+    /// children (<see cref="EnumerateChildren"/>), so matching and enumeration are one recursive walk.
     ///
-    /// Most elements wrap a WinForms <see cref="Control"/> (see <see cref="ControlElement"/>), but the base
-    /// is public and control-agnostic so a non-WinForms surface can present itself the same way -- a native
-    /// dialog (<see cref="NativeDialog"/>) is itself a UiElement whose children dispatch to UI
-    /// Automation rather than to a Control.
+    /// <para>Most elements wrap a WinForms <see cref="Control"/> (<see cref="ControlElement"/>), but the base is
+    /// control-agnostic, so a non-WinForms surface presents itself the same way: a <see cref="NativeDialog"/> and
+    /// its <see cref="NativeControl"/> children are UiElements backed by Win32 window handles.</para>
     /// </summary>
     public abstract class UiElement
     {
@@ -417,18 +413,16 @@ namespace pwiz.Skyline.ToolsUI
             }, CancellationToken);
         }
 
-        /// <summary>The read a value-producing method owns -- the counterpart of <see cref="PerformGesture"/>, and it
-        /// marshals the same way: ONE trip, straight onto this element's own form thread (<see cref="FormHwnd"/>),
-        /// inside the dialog-watch so the read gives up rather than hanging behind a modal blocking that form.
+        /// <summary>The read counterpart of <see cref="PerformGesture"/>, marshaled the same way: ONE trip, straight
+        /// onto this element's own form thread (<see cref="FormHwnd"/>), inside the dialog-watch so it gives up
+        /// rather than hanging behind a modal blocking that form.
         ///
-        /// <para>One trip is the point. Dialog-watching onto the MAIN UI thread and hopping to the element's form
-        /// from there marshals twice, and the second hop is a BLOCKING wait made ON the main UI thread: for a form
-        /// running its own message loop (a BackgroundThreadLongWaitDlg) that parks the main thread, which then stops
-        /// pumping -- so the watch's own Send to it cannot run either, and the read hangs instead of answering.
-        /// Posting to the form's thread directly has neither problem.</para>
+        /// <para>One trip, not two: dialog-watching onto the MAIN UI thread and hopping to the element's form from
+        /// there makes the second hop a BLOCKING wait ON the main thread, which then stops pumping -- so the watch's
+        /// own Send to it cannot run either, and the read hangs.</para>
         ///
-        /// <para>Must be called off the UI thread. No gating: a read clears the visible/enabled gates (a disabled
-        /// control can still be inspected, as a user can read a greyed-out field).</para></summary>
+        /// <para>Must be called off the UI thread. Ungated: a disabled control can still be inspected, as a user can
+        /// read a greyed-out field.</para></summary>
         internal TResult CallFunction<TResult>(Func<TResult> read)
         {
             return DialogWatcher.CallFunction(FormHwnd, read, CancellationToken);
@@ -1701,8 +1695,7 @@ namespace pwiz.Skyline.ToolsUI
     /// <summary>A ToolStrip (menu strip / toolbar) -- its items are its children. It owns the logic for
     /// matching a '>'-separated menu/toolbar path to an item: <see cref="ResolveMenuItem"/> walks the path,
     /// finding each segment by its visible text and opening each level's dropdown so lazily-built items are
-    /// present. Both InvokeMenuItem (over the main menu strip) and ClickToolStripItem (over a form's
-    /// toolbars) drive it through this.</summary>
+    /// present. Both ClickMainMenuItem and ClickControlMenuItem drive it through this.</summary>
     public sealed class ToolStripElement : ControlElement
     {
         // The ToolStrip this element walks -- or null when it walks its OWNER's right-click menu instead. A context

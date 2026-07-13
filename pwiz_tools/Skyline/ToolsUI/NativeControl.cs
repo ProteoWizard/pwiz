@@ -31,9 +31,8 @@ namespace pwiz.Skyline.ToolsUI
     /// A control on a native dialog (<see cref="NativeDialog"/>) -- a real Win32 child window, wrapped as a
     /// <see cref="UiElement"/> so a native dialog's contents are walked, matched and acted on by exactly the same
     /// machinery as a managed form's controls. Everything it needs is a window-manager read (class, control id,
-    /// text, enabled), so unlike UI Automation -- which this replaces -- it is safe to call from ANY thread,
-    /// including the UI thread the dialog's modal loop is running on. That is why a native dialog no longer needs
-    /// a threading contract of its own.
+    /// text, enabled), so it is safe to call from ANY thread -- including the UI thread the dialog's modal loop
+    /// is running on. That is why a native dialog needs no threading contract of its own.
     ///
     /// <para>Each kind reports the ElementType of the managed control it is the native counterpart of (a button is
     /// a <see cref="Button"/>, a text field a <see cref="TextBox"/>), so a caller reading get_controls cannot tell

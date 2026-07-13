@@ -320,7 +320,7 @@ namespace SkylineTool
     }
 
     /// <summary>
-    /// The outcome of a UI action verb (InvokeMenuItem, ClickFormButton, SetFormValue, Accept, Cancel).
+    /// The outcome of a UI action verb (ClickMainMenuItem, ClickFormButton, SetFormValue, DismissWith...).
     /// </summary>
     public class ActionResult
     {

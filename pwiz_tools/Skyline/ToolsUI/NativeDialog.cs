@@ -26,39 +26,22 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// Base class for driving a single native Windows dialog (window class "#32770", such as the
-    /// common Open/Save file dialog) using UI Automation. An instance wraps one open dialog,
-    /// identified by its window handle. A native dialog is not a WinForms form, so it does not
-    /// appear in FormUtil.OpenForms and cannot be introspected or driven the way the rest of
-    /// Skyline's UI is; UI Automation reaches it the same way a user would.
+    /// One open native Windows dialog (window class "#32770" -- a message box, or the common Open/Save/folder
+    /// dialog), identified by its window handle. Not a WinForms form, so it is absent from FormUtil.OpenForms and
+    /// none of the managed element model reaches it: it is driven entirely by Win32 (EnumChildWindows to find its
+    /// controls, WM_SETTEXT / BM_CLICK / WM_CLOSE to act on them). Those are window-manager calls, so they are safe
+    /// from ANY thread -- which matters, because the dialog's modal loop is running on the UI thread.
     ///
-    /// This is shared product code with two consumers: the functional test framework
-    /// (AbstractFunctionalTest.OpenDocument) and the Skyline MCP server's UI interaction layer.
+    /// <para>Concrete: this class alone drives any "#32770" (list its buttons, click one by caption, accept by its
+    /// default button, cancel by WM_CLOSE). <see cref="NativeFileDialog"/> adds the file-name field. Obtain one
+    /// from <see cref="GetOpenDialogs"/> or <see cref="Create"/>, which picks the subclass.</para>
     ///
-    /// A native dialog is modal and runs its own message loop on the Skyline UI thread, so the
-    /// action that displays it does not return until the dialog closes and must therefore be posted
-    /// to the UI thread (e.g. with BeginInvoke). While the dialog is up the UI thread keeps pumping
-    /// that modal loop, so messages and posted actions still run there. The methods here drive an
-    /// already-open dialog by posting Win32 messages and through UI Automation, so they do not care
-    /// which thread they are called from -- a consumer may run them on a background thread (the test
-    /// thread or the MCP pipe thread) or post them back onto the UI thread, whose modal loop pumps
-    /// them.
-    ///
-    /// Use <see cref="WaitForDialog{T}"/> or <see cref="GetOpenDialogs"/> to obtain an instance;
-    /// <see cref="Create"/> chooses the subclass that matches a given dialog element.
-    ///
-    /// A dialog is a <see cref="UiElement"/>: it presents to the connector exactly like any other form (it
-    /// is listed by GetOpenForms and addressed by a path whose Text is its id). This base class is concrete
-    /// and drives any "#32770" generically: it lists the dialog's text and push buttons, clicks a button by
-    /// its caption, accepts by pressing the default button, and cancels by sending WM_CLOSE -- enough
-    /// for a message box (e.g. the Save dialog's "replace it?" confirm) or any other Windows dialog. The
-    /// file dialogs (<see cref="NativeFileDialog"/>) specialize it with the file-name field: set_value types
-    /// a path and the accept gesture differs by surface.
+    /// <para>A dialog is a <see cref="UiElement"/>, so it presents to the connector like any other form -- listed
+    /// by GetOpenForms, addressed by a path whose Text is its id.</para>
     /// </summary>
     public class NativeDialog : StandaloneWindow
     {
@@ -110,7 +93,7 @@ namespace pwiz.Skyline.ToolsUI
         public override string DetailedMessage => NativeBodyText(Hwnd) ?? User32.GetWindowText(Hwnd);
 
         /// <summary>Wraps a raw modal window handle (one with no managed Form) as a generic native dialog, for the
-        /// modal-watch's Win32-only queries. Not a UI-Automation-driven file dialog -- see <see cref="Create"/>.</summary>
+        /// modal-watch's Win32-only queries. NOT classified as a file dialog -- see <see cref="Create"/>.</summary>
         public static NativeDialog MakeNativeDialog(IntPtr handle, CancellationToken cancellationToken) =>
             new NativeDialog(handle, cancellationToken);
 
@@ -133,8 +116,7 @@ namespace pwiz.Skyline.ToolsUI
         /// one, otherwise a generic <see cref="NativeDialog"/>. Null when the window is not a dialog (or is gone).
         ///
         /// <para>Every test is a window-manager read (a control id, a window class), so classifying is safe from any
-        /// thread and cannot deadlock -- which the UI-Automation version it replaces could, queried from the UI
-        /// thread the dialog's modal loop runs on.</para>
+        /// thread: it cannot deadlock against the modal loop running on the UI thread.</para>
         /// </summary>
         public static NativeDialog Create(IntPtr handle, CancellationToken cancellationToken)
         {
@@ -173,7 +155,7 @@ namespace pwiz.Skyline.ToolsUI
             return result;
         }
 
-        // ---- Win32 control lookup (what UI Automation used to do) -----------------------------------
+        // ---- Win32 control lookup ----------------------------------------------------------------
 
         /// <summary>The dialog's descendant windows of the given class, in window order -- the dialog's real
         /// controls. A modern file dialog's DirectUI content (navigation pane, file list, breadcrumb) is drawn
@@ -186,8 +168,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>The dialog's descendant of the given class carrying the given control id, or IntPtr.Zero. The
         /// class matters: the Save dialog's file-name Edit and the address bar's breadcrumb BOTH carry control id
-        /// 1001, but the breadcrumb is a ToolbarWindow32 -- so class + id is unambiguous where the id alone is not
-        /// (which is why the UI-Automation version had to walk to a DirectUI host to disambiguate).</summary>
+        /// 1001, and only the class tells them apart (the breadcrumb is a ToolbarWindow32).</summary>
         protected IntPtr FindDescendant(string className, int controlId)
         {
             return FindDescendants(className)
@@ -290,8 +271,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>Cancels the dialog by sending WM_CLOSE on its own UI thread (which dismisses it the way the
-        /// title-bar close button would -- more reliable than invoking the Cancel button through UI Automation on a
-        /// DirectUI surface), riding the shared wait until it closes. A message box with no cancel/close affordance
+        /// title-bar close button would), riding the shared wait until it closes. A message box with no cancel/close affordance
         /// (a Yes/No box) ignores WM_CLOSE -- dismiss such a box with <see cref="DismissWithButton"/>. Must be called
         /// off the UI thread.</summary>
         public override ActionResult DismissWithCancelButton()
@@ -359,17 +339,13 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>
-        /// The open native dialogs (window class "#32770") of the current process, by Win32 EnumWindows. A common
-        /// file dialog is an *owned* top-level window (not a child window), and EnumWindows enumerates owned
-        /// windows -- so this finds a dialog owned by a nested modal form (e.g. the "Add Input Files" dialog owned
-        /// by the Import Peptide Search wizard). EnumWindows visits only top-level windows, never the control
-        /// subtree, so it stays cheap.
+        /// The process's open "#32770" windows, by EnumWindows -- which enumerates OWNED top-level windows, so this
+        /// finds a dialog owned by a nested modal form (the "Add Input Files" dialog owned by the Import Peptide
+        /// Search wizard).
         ///
-        /// <para>Only a SHOWN dialog counts. A common dialog's window exists for a moment before it is shown, and
-        /// in that window it has no controls yet -- so <see cref="Create"/> would see no file-name field and
-        /// classify a file dialog as a generic one, which cannot be typed into. Reporting it only once it is
-        /// visible means a caller that waits for the dialog to appear gets one it can actually drive, and matches
-        /// what <see cref="IsOpen"/> already says an open dialog is.</para>
+        /// <para>Only a SHOWN dialog counts: a common dialog's window exists for a moment before it is shown, and
+        /// has no controls yet -- so <see cref="Create"/> would find no file-name field and classify a file dialog
+        /// as a generic one, which cannot be typed into.</para>
         /// </summary>
         private static IEnumerable<IntPtr> FindDialogHandles()
         {

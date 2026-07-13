@@ -12,11 +12,9 @@ using System.Windows.Forms;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>A top-level window the connector addresses by a formId: a WinForms form
-    /// (<see cref="StandaloneForm"/>) or a native common dialog (<see cref="NativeDialog"/>). JsonUiService
-    /// resolves a formId to one of these and drives it entirely through this interface, so no verb
-    /// special-cases a native dialog. Each implementation runs its work in its own thread context: a managed
-    /// form marshals to the UI thread and can watch for a dialog the work pops; a native dialog -- whose UI
-    /// thread is busy in its own modal loop -- runs on the calling (pipe) thread and cannot be watched.</summary>
+    /// (<see cref="StandaloneForm"/>) or a native dialog (<see cref="NativeDialog"/>). JsonUiService.ResolveForm
+    /// resolves a formId to one of these, and every verb drives both through this class -- none special-cases a
+    /// native dialog.</summary>
     public abstract class StandaloneWindow : UiElement
     {
         protected StandaloneWindow(CancellationToken cancellationToken, IntPtr hwnd) : base(cancellationToken)
@@ -27,14 +25,11 @@ namespace pwiz.Skyline.ToolsUI
         public abstract string FormId { get; }
         /// <summary>The form's visible title, for naming a captured-image file.</summary>
         public abstract string Title { get; }
-        // ---- Driving the window: the same for a managed form and a native dialog ---------------------
+        // ---- Driving the window: one implementation, right for both kinds ----------------------------
         //
-        // These used to be abstract, implemented twice. They are not: both kinds expose their contents the same way
-        // (EnumerateChildren -> UiElement.FindElement), and both act through the same UiActions -- so "click the
-        // button with this caption" is one method, not two. The only thing that differed was the marshaling, and
-        // that is now handled by the window itself: InvokeOnUiThread dispatches to a managed form's own thread, and
-        // for a native dialog it runs inline (its reads are Win32, safe on any thread). So the code below reads the
-        // same and does the right thing for both.
+        // Both kinds expose their contents the same way (EnumerateChildren -> FindElement) and act through the same
+        // UiActions, so these need no override. The marshaling is the window's own: InvokeOnUiThread dispatches to a
+        // managed form's thread, and runs inline for a native dialog (its reads are Win32, safe on any thread).
 
         /// <summary>The form's controls as ControlInfo, each path parented onto the form (the get_controls verb) --
         /// which is exactly the get_children action performed on the window itself.</summary>
@@ -90,7 +85,7 @@ namespace pwiz.Skyline.ToolsUI
         /// the caller has done the screen-capture pre-flight).</summary>
         public abstract System.Drawing.Bitmap CaptureImage();
 
-        // ---- Window-state queries the modal-watch (UiServiceDispatcher) asks each form about itself ----
+        // ---- Window-state queries the modal-watch asks each window about itself ----
 
         /// <summary>Whether the window is modal -- it blocks the window that opened it until it goes away.</summary>
         public abstract bool IsModal { get; }

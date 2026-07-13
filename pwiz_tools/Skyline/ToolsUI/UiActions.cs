@@ -26,16 +26,14 @@ using SkylineTool;
 namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
-    /// One thing the connector can ask a <see cref="UiElement"/> to do (the verbs ClickFormButton,
-    /// SetFormValue, the grid verbs, and the generic perform_action all act through these). An action is a
-    /// singleton object -- see <see cref="UiActions"/> for the set of them -- that knows its wire
-    /// <see cref="SnakeCaseName"/> and the gates the connector must honor before performing it
-    /// (<see cref="MustBeEnabled"/> -- a user could not act on a control they cannot see or that is disabled). It
-    /// decides whether it <see cref="AppliesTo"/> an element (usually: the
-    /// element is the right kind -- it implements the action's capability interface) and how to
-    /// <see cref="Invoke"/> it (by calling that interface's method). This inverts the old per-element switch
-    /// over an action enum: a new control kind declares its capabilities by implementing interfaces, and a
-    /// new action is usually just one <see cref="UiActions"/> entry.
+    /// One thing the connector can ask a <see cref="UiElement"/> to do -- ClickFormButton, SetFormValue, the grid
+    /// verbs and the generic perform_action all act through these. An action is a singleton (see
+    /// <see cref="UiActions"/> for the set) that knows its wire <see cref="SnakeCaseName"/>, whether it
+    /// <see cref="AppliesTo"/> an element (does it implement the action's capability interface?), the gates it
+    /// requires (<see cref="MustBeEnabled"/>), and how to <see cref="Invoke"/> it.
+    ///
+    /// <para>So a new control kind declares what it can do by implementing interfaces, and a new action is usually
+    /// one <see cref="UiActions"/> entry -- no per-element switch.</para>
     /// </summary>
     public abstract class UiAction
     {

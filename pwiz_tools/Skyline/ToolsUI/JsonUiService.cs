@@ -481,17 +481,12 @@ namespace pwiz.Skyline.ToolsUI
             return results.ToArray();
         }
 
-        // Resolves a formId to the window it addresses -- a WinForms form (FormElement) or a native common
-        // dialog (NativeDialog) -- so every verb drives both through IFormElement and none special-cases a
-        // native dialog. Native dialogs are matched first, on this (pipe) thread: they are non-managed windows
-        // enumerated via UI Automation cross-thread (no Control to marshal through), which runs alongside their
-        // modal loop rather than on it. A managed form is then found (also off the UI thread). Throws if no open
-        // window has the id.
-        /// <summary>Resolves a formId to the element that drives it, built with the CANCELLATION OF THE REQUEST that
-        /// asked for it: every marshal and wait the returned element (and the tree under it) performs can then be
-        /// abandoned when that client disconnects. The token comes from the JsonToolServer verb that is serving the
-        /// request -- it reads it on its own thread (the only thread it means anything on) and passes it in here.
-        /// In-process callers, which have no client to disconnect, pass CancellationToken.None.</summary>
+        /// <summary>Resolves a formId to the window it addresses -- a managed form (StandaloneForm) or a native
+        /// dialog (NativeDialog), so no verb special-cases a native dialog. Throws if no open window has the id.
+        ///
+        /// <para>Built with the CANCELLATION OF THE REQUEST that asked for it, so every marshal and wait the
+        /// returned element (and the tree under it) makes can be abandoned when that client disconnects. The token
+        /// comes from the JsonToolServer verb serving the request; in-process callers pass None.</para></summary>
         public static StandaloneWindow ResolveForm(string formId, CancellationToken cancellationToken)
         {
             ValidateFormIdFormat(formId);
@@ -676,16 +671,10 @@ namespace pwiz.Skyline.ToolsUI
             return graph.MasterPane.GetImage(graph.MasterPane.IsAntiAlias);
         }
 
-        // Shared pre-flight for the image-capture tools (form and graph variants).
-        // Runs format validation on the pipe thread, guards against there being no
-        // UI thread to marshal to, and runs the type-specific existence check on the
-        // UI thread -- in that order so that bad input throws ArgumentException
-        // regardless of environment. Optionally runs the screen-capture availability
-        // check (form variants only). Returns null when the caller may proceed, or an
-        // LLM-facing message the caller must surface. Throws ArgumentException
-        // for bad input (id format wrong, referenced form not found, wrong form
-        // type) -- those are caller-contract violations and must reach the
-        // caller regardless of environment.
+        // Shared pre-flight for the image-capture tools. Returns null when the caller may proceed, or an LLM-facing
+        // message it must surface. Bad input (id format, form not found, wrong form type) throws ArgumentException
+        // instead -- a caller-contract violation, which must reach the caller whatever the environment, so the
+        // validation runs BEFORE the screen-capture availability check.
         private static string CheckImageToolPreflight(string id, Action ensureExistsOnUi, bool requiresScreenCapture)
         {
             ValidateFormIdFormat(id);
