@@ -796,7 +796,21 @@ namespace pwiz.Skyline.ToolsUI
         private static StandaloneWindow FindFormById(string formId, CancellationToken cancellationToken)
         {
             ValidateFormIdFormat(formId);
-            var window = FindFormWithId(formId, cancellationToken);
+            StandaloneWindow window = null;
+            if (Program.MainWindow == null)
+            {
+                window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId);
+            }
+            else
+            {
+                // The docked forms can only be read on the main window's UI thread. A plain Invoke: the UI thread
+                // pumps whenever it is busy for long (a LongWaitDlg runs a modal message loop), so this always gets
+                // dispatched, and there is nothing here worth the dialog-watch.
+                Program.MainWindow.Invoke(new Action(() =>
+                    window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId) ??
+                             GetFormWithId(GetDockedForms(cancellationToken), formId)));
+            }
+
             if (window != null)
             {
                 return window;
@@ -805,30 +819,6 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.Format(
                 @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
                 formId));
-        }
-
-        // The docked forms can only be read on the main window's UI thread, so unless the caller is already there
-        // this makes the hop. A plain Invoke: the UI thread pumps whenever it is busy for long (a LongWaitDlg runs a
-        // modal message loop), so this always gets dispatched, and there is nothing here worth the dialog-watch.
-        private static StandaloneWindow FindFormWithId(string formId, CancellationToken cancellationToken)
-        {
-            var mainWindow = Program.MainWindow;
-            if (mainWindow == null)
-            {
-                return GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId);
-            }
-
-            Func<StandaloneWindow> findNow = () =>
-                GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId) ??
-                GetFormWithId(GetDockedForms(cancellationToken), formId);
-            if (!mainWindow.InvokeRequired)
-            {
-                return findNow();
-            }
-
-            StandaloneWindow window = null;
-            mainWindow.Invoke(new Action(() => window = findNow()));
-            return window;
         }
 
         private static StandaloneWindow GetFormWithId(IEnumerable<StandaloneWindow> windows, string formId)
