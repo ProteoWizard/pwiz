@@ -343,6 +343,15 @@ namespace SkylineTool
         /// string -- and returns null), and "get_value" (returns the control's current value, which is
         /// null or one of those same three types). The typed verbs (e.g.
         /// <see cref="ClickFormButton"/>) remain for the common cases.
+        ///
+        /// <para>Why a general method exists at all: <paramref name="action"/> is a NAME, not a method, so a new
+        /// action costs a new UiAction in Skyline and nothing else. It is reachable over the wire the moment
+        /// Skyline ships it -- no new interface method, no new MCP tool, no rebuilt and reinstalled MCP server --
+        /// and a client discovers it at run time by asking the control "get_actions", which reports what it
+        /// supports and what each action takes. A TYPED verb, by contrast, has to be added here, in
+        /// SkylineJsonToolClient, in SkylineConnection and in SkylineTools, and the MCP shipped again. That is
+        /// what the <c>UiAction</c> indirection buys: the action set can grow on Skyline's release cadence
+        /// instead of the MCP's.</para>
         /// </summary>
         object PerformAction(UiElementPath path, string action, object value);
 
