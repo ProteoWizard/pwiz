@@ -879,6 +879,11 @@ namespace pwiz.Skyline.ToolsUI
             });
         }
 
+        // TODO: hangs the connection if this raises a dialog (the empty-protein prompt). InvokeOnUiThread is a plain
+        // Invoke: the delegate does not return while a modal is up, so it does not either -- and it holds the pipe
+        // server's one thread while it waits, so nothing else can get in, not even the verb that would dismiss the
+        // dialog. Route through DialogWatcher (as InvokeOnMainWindow does), which posts, waits cancellably, and
+        // reports the dialog instead of blocking on it.
         public void ImportFasta(string textFasta, string keepEmptyProteins = null)
         {
             bool? keepEmpty = keepEmptyProteins == null ? (bool?)null : bool.Parse(keepEmptyProteins);
@@ -890,6 +895,7 @@ namespace pwiz.Skyline.ToolsUI
                     keepEmpty));
         }
 
+        // TODO: hangs the connection if this raises a dialog (see ImportFasta).
         public void ImportProperties(string csvText)
         {
             JsonUiService.InvokeOnUiThread(() =>
@@ -1242,6 +1248,7 @@ namespace pwiz.Skyline.ToolsUI
             return selector.GetSelectedItems(settings);
         }
 
+        // TODO: hangs the connection if this raises a dialog (see ImportFasta).
         public void SelectSettingsListItems(string listType, string[] itemNames)
         {
             var selector = ResolveDocumentSelector(listType);
@@ -2066,6 +2073,11 @@ namespace pwiz.Skyline.ToolsUI
         /// SkylineWindow UI methods, providing LongWaitDlg progress and proper
         /// DocumentFilePath/clean-state management.
         /// </summary>
+        // TODO: any of these Invokes hangs the connection if what it runs raises a dialog -- an --in whose raw files
+        // have moved puts up MissingFileDlg, and the Invoke does not return while it is up, holding the pipe server's
+        // one thread so nothing can dismiss it (see ImportFasta). Route through DialogWatcher, which posts, waits
+        // cancellably, and reports the dialog. Note the command itself must stay OFF the UI thread: it waits here for
+        // the background loaders, and a loader reports progress with a blocking Invoke to the UI thread.
         private class SkylineWindowDocumentOperations : IDocumentOperations
         {
             public bool Dirty

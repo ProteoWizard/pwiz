@@ -55,12 +55,13 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Dismisses the form/dialog by clicking the button with the given caption, then waits until it has
         /// closed and reports whether it completed. For a choice that is neither the default nor the cancel button
-        /// (e.g. "No" on a "replace it?" message box). The click is posted; the empty-action OkDialog then rides the
-        /// shared wait until the window has closed and the nesting count has drained.</summary>
+        /// (e.g. "No" on a "replace it?" message box). The click IS the OkDialog's action, so it runs on the window's
+        /// own thread inside the shared wait -- which then rides it until the window has closed and the nesting count
+        /// has drained, and reports any dialog the click raised instead of timing out waiting for a window that is
+        /// never going to close.</summary>
         public ActionResult DismissWithButton(string button)
         {
-            ClickButton(button);
-            return OkDialog(() => { });
+            return OkDialog(() => UiActions.Click.InvokeNow(FindElement(button, UiActions.Click), null));
         }
         /// <summary>Accepts the form/dialog -- the equivalent of pressing its default button (a managed form clicks
         /// its AcceptButton, a native dialog does its OK gesture), so confirming never keys on a localized caption --

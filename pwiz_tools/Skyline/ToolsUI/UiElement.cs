@@ -952,7 +952,11 @@ namespace pwiz.Skyline.ToolsUI
             {
                 case CheckBox checkBox: return new CheckBoxElement(checkBox, token);
                 case RadioButton radioButton: return new RadioButtonElement(radioButton, token);
-                case ButtonBase button: return new ButtonElement(button, token);
+                // A button is clicked through IButtonControl (Button is the only ButtonBase that implements it --
+                // a checkbox and a radio button are handled above, each with the click it actually has). Anything
+                // else deriving from ButtonBase is a control we would not know how to click, so it falls through
+                // to the default: not an element at all, rather than one whose click cannot work.
+                case ButtonBase button when button is IButtonControl: return new ButtonElement(button, token);
                 case ComboBox comboBox: return new ComboBoxElement(comboBox, token);
                 case TextBoxBase textBox: return new TextBoxElement(textBox, token);
                 case TabControl tabControl: return new TabElement(tabControl, token);
@@ -1235,40 +1239,47 @@ namespace pwiz.Skyline.ToolsUI
         }
     }
 
-    /// <summary>A push button (or any ButtonBase) -- clicked with BM_CLICK, which fires the Click handler
-    /// like a real mouse click (even for an AutoCheck=false checkbox) and bypasses PerformClick's gates.</summary>
+    /// <summary>A button -- an IButtonControl, clicked through its own handler by the inherited gesture
+    /// (PerformClick), the same way a form's accept button is clicked. Its base for the caption-bearing
+    /// controls: a button, a checkbox and a radio button all carry their label in Text.</summary>
     internal class ButtonElement : ControlElement
     {
         public ButtonElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
         public override string Label => Control.Text;
-        // BM_CLICK is POSTED (not sent) cross-thread: like a real user click it returns to the message
-        // loop at once. A click that opens a modal dialog must not block the worker thread until that
-        // modal closes -- SendMessage would, because the button's WndProc runs the modal loop before it
-        // returns, which pins the worker and wedges the single-threaded JsonTool server behind the modal.
-        // The main thread runs the posted click when it next pumps; the resulting dialog is then driven by
-        // later commands, exactly like the asynchronous main-menu path. PerformClick (the base gesture) would
-        // NOT do -- hence overriding ClickNow, so Click and ClickNow cannot disagree about how a button clicks.
-        public override void ClickNow() =>
-            User32.PostMessageA(Control.Handle, User32.WinMessageType.BM_CLICK, 0, 0);
     }
 
-    /// <summary>A checkbox: clickable (toggles via its handler -- from ButtonElement) and value-settable
-    /// (sets the checked state).</summary>
-    internal sealed class CheckBoxElement : ButtonElement, IValueElement
+    /// <summary>A checkbox or radio button. Neither is an IButtonControl, so neither can be clicked the way a
+    /// button is; they are clicked with BM_CLICK, which their wndproc cannot tell from a real mouse click -- it
+    /// runs the Click handler and honors AutoCheck = false. (A control in the DIA-to-SRM tutorial does its job
+    /// only for that message, which is why this is not a PerformClick.)
+    ///
+    /// <para>SENT, not posted: UiAction.Invoke has already put us on the control's own UI thread, so a click that
+    /// opens a modal blocks there, inside the counted delegate, and the wait reports that dialog -- where a posted
+    /// click would return as though it had finished, before its handler had even run.</para></summary>
+    internal abstract class CheckableElement : ButtonElement, IValueElement
+    {
+        protected CheckableElement(Control control, CancellationToken cancellationToken) : base(control, cancellationToken) { }
+        public override void ClickNow() =>
+            User32.SendMessage(Control.Handle, User32.WinMessageType.BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+        public abstract void SetValueNow(object value);
+    }
+
+    /// <summary>A checkbox: clickable (toggles through its handler) and value-settable (sets the checked state).</summary>
+    internal sealed class CheckBoxElement : CheckableElement
     {
         private readonly CheckBox _checkBox;
         public CheckBoxElement(CheckBox checkBox, CancellationToken cancellationToken) : base(checkBox, cancellationToken) { _checkBox = checkBox; }
         public override object GetValueNow() => _checkBox.Checked;
-        public void SetValueNow(object value) => _checkBox.Checked = UiValue.ParseBool(value);
+        public override void SetValueNow(object value) => _checkBox.Checked = UiValue.ParseBool(value);
     }
 
     /// <summary>A radio button: clicking/setting it checks it (WinForms unchecks its siblings).</summary>
-    internal sealed class RadioButtonElement : ButtonElement, IValueElement
+    internal sealed class RadioButtonElement : CheckableElement
     {
         private readonly RadioButton _radioButton;
         public RadioButtonElement(RadioButton radioButton, CancellationToken cancellationToken) : base(radioButton, cancellationToken) { _radioButton = radioButton; }
         public override object GetValueNow() => _radioButton.Checked;
-        public void SetValueNow(object value) => _radioButton.Checked = UiValue.ParseBool(value);
+        public override void SetValueNow(object value) => _radioButton.Checked = UiValue.ParseBool(value);
     }
 
     /// <summary>A text box -- a caption-less field named by its adjacent label.</summary>
