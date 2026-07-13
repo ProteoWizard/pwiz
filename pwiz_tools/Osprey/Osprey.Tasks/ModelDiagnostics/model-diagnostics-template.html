@@ -1538,7 +1538,7 @@ function renderCalModel(){
   const scoreHost="calScoreChart", scoreLeg="calScoreLegend";
   if(f.scores && f.scores.binEdges && f.scores.binEdges.length>1 && !calIsBad(f))
     classHist(f.scores,scoreHost,scoreLeg,false,
-      {noEntrapment:true,targetName:"calibration target",decoyName:"calibration decoy"});
+      {noEntrapment:false,targetName:"calibration target",decoyName:"calibration decoy"});
   else naChart(scoreHost,scoreLeg,"No calibration discriminant distribution for this file.");
   document.getElementById("calScoreHdr").textContent="Calibration discriminant score distribution — "+calFileName(CAL.sel);
   // Print-only: every file's composite discriminant (the dropdown shows one on screen).
@@ -1547,7 +1547,7 @@ function renderCalModel(){
       const cell=H(pall,"div",{class:"calfilecell"});
       H(cell,"h3",{style:"font-size:12.5px;margin:6px 0 2px;font-weight:600"},(i+1)+". "+calFileName(i));
       const cid="calPrintScore"+i;H(cell,"div",{class:"chartbox",id:cid});
-      classHist(cf.scores,cid,null,false,{noEntrapment:true,targetName:"cal target",decoyName:"cal decoy"});});
+      classHist(cf.scores,cid,null,false,{noEntrapment:false,targetName:"cal target",decoyName:"cal decoy"});});
   }
 }
 
