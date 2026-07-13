@@ -232,7 +232,7 @@ namespace pwiz.SkylineTestFunctional
 
             TestSettings = new DdaTestSettings
             {
-                SearchEngine = SearchSettingsControl.SearchEngine.Sage,
+                SearchEngine = SearchEngine.Sage,
                 FragmentIons = "b,y",
                 Ms2Analyzer = "Default",
                 PrecursorTolerance = new MzTolerance(15, MzTolerance.Units.ppm),
