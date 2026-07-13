@@ -65,10 +65,6 @@ namespace pwiz.Skyline.ToolsUI
         public override string Label => User32.GetWindowText(Hwnd);
         public override bool IsEnabled => User32.IsWindowEnabled(Hwnd);
 
-        // Reads are pure Win32, so they run inline on the calling thread -- no marshal. (Marshaling them onto the
-        // dialog's UI thread would be pointless, and it is the thread the modal loop is blocked in.)
-        public override T InvokeOnUiThread<T>(Func<T> func) => func();
-
         // A GESTURE, though, does go through the dialog's UI thread (DialogWatcher marshals it there), so it is
         // counted like any other action and a modal it raises is detected by the wait -- which is how a native
         // button's click can now report the dialog it opened, the way a managed button's does.

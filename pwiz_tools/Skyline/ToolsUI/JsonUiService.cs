@@ -27,10 +27,8 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -52,9 +50,6 @@ namespace pwiz.Skyline.ToolsUI
         private const string EXT_PNG = @".png";
         private const string GRAPH_FILE_PREFIX = @"skyline-graph";
 
-        // How often a marshaled call re-checks that the window it posted to still exists (see InvokeOnControl).
-        private const int INVOKE_POLL_MILLIS = 30;
-
         // How much of a window's message GetOpenForms reports. Enough to see WHAT is in the way and why; a form list
         // is a summary, and the whole text is there for the asking (get_form_image, or the message an action throws).
         private const int MAX_DETAIL_CHARS = 200;
@@ -74,18 +69,34 @@ namespace pwiz.Skyline.ToolsUI
         // Level 1: Primitives - UI thread marshaling
 
         /// <summary>
-        /// Executes an action on THE UI THREAD -- the main window's, or the StartPage's before it exists. Runs
-        /// inline when already on that thread. Exceptions are re-thrown wrapped, so the original stack survives.
+        /// Executes an action on THE UI THREAD -- the main window's, or the StartPage's before it exists. Exceptions
+        /// are re-thrown wrapped, so the original stack survives the hop.
         ///
-        /// <para>This targets the one UI thread and nothing else. A form running its OWN message loop (a
-        /// BackgroundThreadLongWaitDlg) must be touched through that form's Invoke instead -- which is what
-        /// <see cref="UiElement.InvokeOnUiThread{T}"/> does, through <see cref="InvokeOnControl{T}"/>. A caller
-        /// that wants a particular form should be going through a form-scoped verb (JsonToolServer's InvokeOnForm
-        /// / InvokeOnMainWindow), which also brings the dialog-watch and the request's cancellation with it.</para>
+        /// <para>It targets the one UI thread and nothing else, and it is not the way to drive a FORM: a verb that
+        /// knows which window it is working with goes through a form-scoped helper (JsonToolServer's InvokeOnForm /
+        /// InvokeOnMainWindow, or UiElement's PerformAction / CallFunction), which puts the work on THAT window's
+        /// thread and brings the dialog-watch and the request's cancellation with it. What is left for this is the
+        /// handful of reads and sets that are about Skyline itself rather than any window -- the selection, the UI
+        /// mode, the document.</para>
         /// </summary>
         public static void InvokeOnUiThread(Action action)
         {
-            InvokeOnControl(DialogWatcher.UiThreadWindow, action, CancellationToken.None);
+            Exception caught = null;
+            RequireMainOrStart().Invoke(new Action(() =>
+            {
+                try
+                {
+                    action();
+                }
+                catch (Exception ex)
+                {
+                    caught = ex;
+                }
+            }));
+            if (caught is ArgumentException argEx)
+                throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
+            if (caught != null)
+                ExceptionUtil.WrapAndThrowException(caught);
         }
 
         /// <summary>Executes a function on the UI thread and returns its result (see
@@ -96,71 +107,6 @@ namespace pwiz.Skyline.ToolsUI
             InvokeOnUiThread(() => { result = func(); });
             return result;
         }
-
-        /// <summary>
-        /// The raw marshal onto a PARTICULAR control's UI thread, for the element model -- a UiElement's form may
-        /// be running its own message loop, so its controls must be touched through ITS Invoke, not the main
-        /// window's. Verbs do not call this: they go through <see cref="InvokeOnUiThread(System.Action)"/> or a
-        /// form-scoped JsonToolServer helper.
-        ///
-        /// <para>The marshal waits on the posted delegate AND on <paramref name="cancellationToken"/>, rather than
-        /// making a raw <see cref="Control.Invoke(System.Delegate)"/>: a call parked on a UI thread that is not
-        /// pumping (it is stuck behind a LongWaitDlg) must still be abandonable when the request's client goes
-        /// away. The posted delegate can outlive an abandoned wait, so it captures its own exception and touches
-        /// nothing that goes out of scope here.</para>
-        /// </summary>
-        internal static void InvokeOnControl(Control control, Action action, CancellationToken cancellationToken)
-        {
-            if (control == null || !control.IsHandleCreated || control.IsDisposed)
-                control = DialogWatcher.UiThreadWindow;
-            Exception caught = null;
-            void Run()
-            {
-                try { action(); }
-                catch (Exception ex) { caught = ex; }
-            }
-            if (control != null && control.InvokeRequired)
-            {
-                // NOT disposed: the posted delegate outlives an abandoned wait and still signals this, so the event
-                // has to stay alive for it (it is collected once the delegate is done with it).
-                var done = new ManualResetEventSlim(false);
-                control.BeginInvoke((Action) (() =>
-                {
-                    try { Run(); }
-                    finally { done.Set(); }
-                }));
-                // Wait for the posted delegate, giving up if the window it was posted to goes away. BeginInvoke posts
-                // a message to that control's HWND; if the window is DESTROYED before the message is dispatched -- a
-                // form closing while it is being described, which is exactly the race GetOpenForms runs -- the message
-                // is dropped and the delegate NEVER runs. Waiting on the event alone would then wait forever, on a UI
-                // thread that is pumping perfectly well. Throw instead, so a caller enumerating forms skips the one
-                // that vanished. (The token is the other way out: the client disconnected.)
-                while (!done.Wait(INVOKE_POLL_MILLIS, cancellationToken))
-                {
-                    if (!control.IsHandleCreated || control.IsDisposed)
-                        throw new InvalidOperationException(@"The form closed while it was being read.");
-                }
-            }
-            else
-            {
-                Run();
-            }
-            // Re-thrown wrapped (ArgumentException preserved) so the action's stack survives the hop.
-            if (caught is ArgumentException argEx)
-                throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
-            if (caught != null)
-                ExceptionUtil.WrapAndThrowException(caught);
-        }
-
-        /// <summary>Runs a function on a particular control's UI thread and returns its result (see
-        /// <see cref="InvokeOnControl"/>).</summary>
-        internal static T InvokeOnControl<T>(Control control, Func<T> func, CancellationToken cancellationToken)
-        {
-            T result = default(T);
-            InvokeOnControl(control, () => { result = func(); }, cancellationToken);
-            return result;
-        }
-
 
         // Level 2: UI patterns
 
@@ -176,6 +122,12 @@ namespace pwiz.Skyline.ToolsUI
         {
             return Program.MainWindow ?? throw new InvalidOperationException(LlmInstruction.Format(
                 @"This requires the main Skyline window, which is not available while the start page is showing."));
+        }
+
+        public static FormEx RequireMainOrStart()
+        {
+            return (FormEx) Program.MainWindow ?? Program.StartWindow ?? throw new InvalidOperationException(LlmInstruction.Format(
+                @"Neither the main Skyline window nor the Start Page are showing"));
         }
 
         // ---- Document / selection reads shared by both tool servers -------------------------------------
@@ -434,16 +386,6 @@ namespace pwiz.Skyline.ToolsUI
             builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
         }
 
-        // Runs a resolved action. There is nothing to dispatch: UiAction.Invoke owns the threading, and each KIND of
-        // action already knows the threading it needs -- a gesture is gated, posted onto the element's UI thread and
-        // waited out; a UiFunction runs on that thread inside the dialog-watch and returns its value; Accept runs
-        // here, on the caller's thread, because it waits for a form to close. So perform_action behaves exactly like
-        // the named verbs, which invoke the same actions. Must be called off the UI thread.
-        internal static object ExecuteAction(UiAction action, UiElement element, object value)
-        {
-            return action.Invoke(element, value);
-        }
-
         // Verifies the resolved element supports the action (it is the kind the action targets); the
         // interactable gate is applied later by UiAction.Invoke. Returns the element; throws a clear error
         // (listing the element's actions) if the action does not apply.
@@ -498,20 +440,27 @@ namespace pwiz.Skyline.ToolsUI
         /// return.</para></summary>
         public static FormInfo[] GetOpenForms(CancellationToken cancellationToken = default)
         {
-            var mainWindow = Program.MainWindow;
-            return mainWindow == null
-                ? DescribeOpenForms(cancellationToken)   // no main window yet (the StartPage): read from here
-                : InvokeOnControl(mainWindow, () => DescribeOpenForms(cancellationToken), cancellationToken);
+            if (Program.MainWindow == null)
+            {
+                return DescribeForms(StandaloneWindow.GetTopLevelWindows(cancellationToken)).ToArray();
+            }
+
+            FormInfo[] openForms = null;
+            InvokeOnMainWindow(_ =>
+            {
+                openForms = DescribeForms(StandaloneWindow.GetTopLevelWindows(cancellationToken).Concat(GetDockedForms(cancellationToken))).ToArray();
+            }, cancellationToken);
+            return openForms;
         }
 
-        private static FormInfo[] DescribeOpenForms(CancellationToken cancellationToken)
+        private static IEnumerable<FormInfo> DescribeForms(IEnumerable<StandaloneWindow> forms)
         {
-            var results = new List<FormInfo>();
-            foreach (var window in GetOpenFormElements(cancellationToken))
+            foreach (var form in forms)
             {
+                FormInfo formInfo = null;
                 try
                 {
-                    results.Add(window.GetFormInfo());
+                    formInfo = form.GetFormInfo();
                 }
                 catch (Exception exception) when (!(exception is OperationCanceledException))
                 {
@@ -519,8 +468,12 @@ namespace pwiz.Skyline.ToolsUI
                     // failing the whole GetOpenForms for a caller polling while a dialog closes. (A cancellation is
                     // the client giving up on the request, so that one is not swallowed.)
                 }
+
+                if (formInfo != null)
+                {
+                    yield return formInfo;
+                }
             }
-            return results.ToArray();
         }
 
         /// <summary>Resolves a formId to the window it addresses -- a managed form (StandaloneForm) or a native
@@ -815,46 +768,23 @@ namespace pwiz.Skyline.ToolsUI
             return null;
         }
 
-        /// <summary>Every window a connector caller can address, each wrapped as the connector form abstraction
-        /// that drives it: the top-level windows (see <see cref="NativeDialog.GetTopLevelWindows"/>) plus, when the
-        /// main Skyline window is up, the forms docked inside it. Lazy -- the top-level windows are yielded first
-        /// (Win32-only, no marshal), and only if the caller keeps enumerating past them is the docked-form list
-        /// fetched. The docked forms are child windows (not top-level), so they are read through the main window's
-        /// DockPanel, which must be on its UI thread -- hence the single Invoke, paid only when reached (a caller
-        /// that finds its match among the top-level windows never triggers it).</summary>
-        public static IEnumerable<StandaloneWindow> GetOpenFormElements(CancellationToken cancellationToken)
-        {
-            foreach (var window in StandaloneWindow.GetTopLevelWindows(cancellationToken))
-                yield return window;
-
-            foreach (var docked in GetDockedForms(cancellationToken))
-                yield return docked;
-        }
-
         // The forms docked in the main Skyline window, each as a FormElement, or empty when the main window is not
         // up. Callable from any thread: the docked forms are child windows read through the main window's DockPanel,
         // which must be on its UI thread, so this Invokes the read (and the FormElement construction, which captures
         // each handle) onto that thread. Hidden/unknown-state docked forms are skipped (not on screen).
         private static IList<StandaloneWindow> GetDockedForms(CancellationToken cancellationToken)
         {
-            var mainWindow = Program.MainWindow;
-            if (mainWindow == null)
-                return new List<StandaloneWindow>();
-            // Through InvokeOnControl (not a raw Invoke) so a client that disconnects can abandon this: it is the
-            // first UI-thread hop most verbs make (form lookup), and a call parked here would hold the single-threaded
-            // pipe server against every later request.
-            return InvokeOnControl(null, () =>
+            Assume.IsNotNull(Program.MainWindow);
+            Assume.IsFalse(Program.MainWindow.InvokeRequired);
+            var result = new List<StandaloneWindow>();
+            foreach (var form in Program.MainWindow.DockPanel.Contents.OfType<DockableFormEx>())
             {
-                var result = new List<StandaloneWindow>();
-                foreach (var form in mainWindow.DockPanel.Contents.OfType<DockableFormEx>())
-                {
-                    var dockState = form.DockState;
-                    if (dockState == DockState.Hidden || dockState == DockState.Unknown)
-                        continue;
-                    result.Add(StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken));
-                }
-                return (IList<StandaloneWindow>) result;
-            }, cancellationToken);
+                var dockState = form.DockState;
+                if (dockState == DockState.Hidden || dockState == DockState.Unknown)
+                    continue;
+                result.Add(StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken));
+            }
+            return result;
         }
 
         /// <summary>
@@ -867,13 +797,32 @@ namespace pwiz.Skyline.ToolsUI
         private static StandaloneWindow FindFormById(string formId, CancellationToken cancellationToken)
         {
             ValidateFormIdFormat(formId);
-            foreach (var window in GetOpenFormElements(cancellationToken))
-                if (window is StandaloneForm formElement && formElement.FormId == formId)
-                    return formElement;
+            StandaloneWindow window = null;
+            if (Program.MainWindow == null)
+            {
+                window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId);
+            }
+            else
+            {
+                DialogWatcher.PerformAction(Program.MainWindow, () =>
+                {
+                    window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId) ?? GetFormWithId(GetDockedForms(cancellationToken), formId);
+                }, cancellationToken);
+            }
+
+            if (window != null)
+            {
+                return window;
+            }
 
             throw new ArgumentException(LlmInstruction.Format(
                 @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
                 formId));
+        }
+
+        private static StandaloneWindow GetFormWithId(IEnumerable<StandaloneWindow> windows, string formId)
+        {
+            return windows.FirstOrDefault(window => window.FormId == formId);
         }
 
         /// <summary>

@@ -19,8 +19,6 @@
  */
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
-using NHibernate.Hql.Ast.ANTLR.Tree;
-using NHibernate.Linq.Visitors;
 using pwiz.Common.DataBinding.Controls;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -395,12 +393,6 @@ namespace pwiz.Skyline.ToolsUI
             return EnumerateChildren().SelectMany(child => child.SelfAndDescendants()).Prepend(this);
         }
 
-        /// <summary>Runs a function synchronously on this element's UI thread and returns its result. The base
-        /// element has no form of its own, so it marshals through the UI-thread window (the main window, or the
-        /// StartPage before it); an element that belongs to a form overrides this with that form.</summary>
-        public virtual T InvokeOnUiThread<T>(Func<T> func) =>
-            JsonUiService.InvokeOnControl(null, func, CancellationToken);
-
         /// <summary>The gate-and-gesture a mutating or clicking method owns: it posts the gate + gesture onto the
         /// element's form thread and waits it out (<see cref="DialogWatcher.PerformAction(IntPtr,Action,CancellationToken)"/>),
         /// returning whether it completed or left a dialog open -- so
@@ -409,12 +401,12 @@ namespace pwiz.Skyline.ToolsUI
         /// it; a blocked/disabled control throws out of the posted delegate and the wait re-throws it to the caller
         /// (fail-fast). Must be called off the UI thread. A read does not use this: it returns a value, so it goes
         /// through <see cref="CallFunction{TResult}"/> instead.</summary>
-        internal ActionResult PerformGesture(Action gesture)
+        internal ActionResult PerformAction(Action gesture)
         {
             return DialogWatcher.PerformAction(FormHwnd, gesture, CancellationToken);
         }
 
-        /// <summary>The read counterpart of <see cref="PerformGesture"/>, marshaled the same way: ONE trip, straight
+        /// <summary>The read counterpart of <see cref="PerformAction"/>, marshaled the same way: ONE trip, straight
         /// onto this element's own form thread (<see cref="FormHwnd"/>), inside the dialog-watch so it gives up
         /// rather than hanging behind a modal blocking that form.
         ///
@@ -627,15 +619,6 @@ namespace pwiz.Skyline.ToolsUI
         /// when the element is created: by <see cref="StandaloneForm.ElementFor"/> for a control, or in the
         /// constructor of a <see cref="ToolStripItemElement"/>.</summary>
         public StandaloneForm FormElement { get; internal set; }
-
-        // Marshaled through the element's own form, NOT the main window: a form on its own thread (e.g. a
-        // BackgroundThreadLongWaitDlg) runs its message loop there, so its controls must be touched through that
-        // form's Invoke -- reading them from the main window's thread trips the cross-thread check. This must stay in
-        // step with FormHwnd below (which routes the WRITES to the same thread); if a read marshals to one thread and
-        // a gesture to another, the reads are the ones that break, and only for a form that is not the main window.
-        // FormElement?.Form is null (falling back to the main window) only before the form is wired up.
-        public override T InvokeOnUiThread<T>(Func<T> func) =>
-            JsonUiService.InvokeOnControl(FormElement?.Form, func, CancellationToken);
 
         // The element's form gates acting on it (a modal blocking the form); a control narrows this to its own
         // hosting form (which also catches a disabled ancestor).
@@ -930,11 +913,6 @@ namespace pwiz.Skyline.ToolsUI
         private ContainerElement _formContainer;
         private ContainerElement FormContainer => _formContainer ??= (ContainerElement) ElementFor(Form);
 
-        // The form's own UI thread -- NOT the main window's. A form created on its own thread (a
-        // BackgroundThreadLongWaitDlg) runs its message loop there, so its controls must be read through its Invoke.
-        public override T InvokeOnUiThread<T>(Func<T> func) =>
-            JsonUiService.InvokeOnControl(Form, func, CancellationToken);
-
         // The form gates itself: VerifyEnabled checks (through VerifyFormInteractable) that no modal is blocking
         // this window. That check MUST be the Win32 one -- a modal calls EnableWindow(false) on the windows it blocks
         // without flipping their managed Control.Enabled, so IsEnabled below stays true and would miss it.
@@ -1113,22 +1091,22 @@ namespace pwiz.Skyline.ToolsUI
         // window still over it to be redacted (a cyan block) by CaptureAndRedact.
         public override System.Drawing.Bitmap CaptureImage()
         {
-            var topLevelHandle = InvokeOnUiThread(() =>
+            var topLevelHandle = DialogWatcher.CallFunction(Hwnd, () =>
             {
                 ScreenCapture.ActivateForm(Form);
                 return (FormUtil.FindTopLevelOwner(Form) ?? Form).Handle;
-            });
+            }, CancellationToken);
             for (int waited = 0;
                  waited < ACTIVATE_SETTLE_MAX_MILLIS && User32.GetForegroundWindow() != topLevelHandle;
                  waited += ACTIVATE_POLL_MILLIS)
                 Thread.Sleep(ACTIVATE_POLL_MILLIS);
-            return InvokeOnUiThread(() =>
+            return DialogWatcher.CallFunction(Hwnd, () =>
             {
                 // Flush any pending repaint so the screen grab reflects the form's current state rather than a
                 // stale frame (e.g. a wizard page captured mid-transition still showing the previous page).
                 Form.Update();
                 return ScreenCapture.CaptureAndRedact(ScreenCapture.GetWindowRectangle(Form), Form);
-            });
+            }, CancellationToken);
         }
 
         public override string Name => Form.Name;

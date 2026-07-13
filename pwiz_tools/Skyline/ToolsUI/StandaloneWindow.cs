@@ -28,8 +28,8 @@ namespace pwiz.Skyline.ToolsUI
         // ---- Driving the window: one implementation, right for both kinds ----------------------------
         //
         // Both kinds expose their contents the same way (EnumerateChildren -> FindElement) and act through the same
-        // UiActions, so these need no override. The marshaling is the window's own: InvokeOnUiThread dispatches to a
-        // managed form's thread, and runs inline for a native dialog (its reads are Win32, safe on any thread).
+        // UiActions, so these need no override. Nor do they marshal: DialogWatcher puts the work on the window's own
+        // thread (Hwnd), so the element model itself never touches a UI thread it is not already on.
 
         /// <summary>The form's controls as ControlInfo, each path parented onto the form (the get_controls verb) --
         /// which is exactly the get_children action performed on the window itself.</summary>
@@ -45,9 +45,7 @@ namespace pwiz.Skyline.ToolsUI
         /// keys on a localized button caption.)</summary>
         public ActionResult ClickButton(string button)
         {
-            return DialogWatcher.PerformAction(Hwnd,
-                () => UiActions.Click.InvokeNow(FindElement(button, UiActions.Click), null),
-                CancellationToken);
+            return PerformAction(() => UiActions.Click.InvokeNow(FindElement(button, UiActions.Click), null));
         }
 
         /// <summary>Sets a control's value (or a grid cell, or a native dialog's file name), returning whether the
@@ -72,14 +70,13 @@ namespace pwiz.Skyline.ToolsUI
         /// waits until it has closed and reports whether it completed. The dismissing counterpart of
         /// <see cref="DismissWithAcceptButton"/>.</summary>
         public abstract ActionResult DismissWithCancelButton();
-        /// <summary>Resolves the path against this window and performs the action. Resolving and gating happen on the
-        /// window's own thread (a control's gates read window handles); the action then supplies its own threading --
-        /// a gesture posts itself and waits it out, a read runs inside the dialog-watch -- so perform_action behaves
-        /// exactly like the named verbs above, which go through the same actions.</summary>
+        /// <summary>Resolves the path against this window and performs the action. Resolving is a READ, so it runs on
+        /// the window's thread inside the dialog-watch (a control's gates read window handles); the action then
+        /// supplies its own threading -- a gesture posts itself and waits it out, a read runs inside the dialog-watch
+        /// -- so perform_action behaves exactly like the named verbs above, which go through the same actions.</summary>
         public object PerformAction(UiElementPath path, UiAction action, object value)
         {
-            var element = InvokeOnUiThread(() =>
-                JsonUiService.RequireAction(JsonUiService.ResolvePath(path, this), action));
+            var element = CallFunction(() => JsonUiService.RequireAction(JsonUiService.ResolvePath(path, this), action));
             return action.Invoke(element, value);
         }
         /// <summary>Captures the form's image to a bitmap the caller disposes (no permission/format checks --
@@ -124,11 +121,6 @@ namespace pwiz.Skyline.ToolsUI
         protected ActionResult OkDialog(Action action)
         {
             return DialogWatcher.OkDialog(Hwnd, action, CancellationToken);
-        }
-
-        protected ActionResult PerformAction(Action action)
-        {
-            return DialogWatcher.PerformAction(Hwnd, action, CancellationToken);
         }
 
         // Both reads resolve the control and read it in ONE trip to the form's thread (CallFunction puts us there),

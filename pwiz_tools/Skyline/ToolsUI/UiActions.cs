@@ -116,7 +116,7 @@ namespace pwiz.Skyline.ToolsUI
         /// through perform_action or a named verb. Must be called off the UI thread.</summary>
         public virtual object Invoke(UiElement element, object argument)
         {
-            return element.PerformGesture(() => InvokeNow(element, argument));
+            return element.PerformAction(() => InvokeNow(element, argument));
         }
     }
 
