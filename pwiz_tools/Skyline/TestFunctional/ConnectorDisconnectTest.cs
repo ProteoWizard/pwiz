@@ -23,8 +23,11 @@ using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
 using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline;
+using pwiz.Skyline.Controls;
 using pwiz.SkylineTestUtil;
 using SkylineTool;
 
@@ -32,15 +35,22 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Verifies that a client which gives up on a long call and disconnects frees the pipe server, so the NEXT call
-    /// gets through. This matters because the JSON pipe server is single-instance and serves one request at a time:
-    /// a verb parked waiting on a long Skyline operation (a big document load riding its LongWaitDlg) would otherwise
-    /// pin the server thread and lock out every later request -- including the very request that would cancel the
-    /// dialog. The disconnect is the cancel signal: Skyline peeks the pipe, sees the client is gone, and abandons the
-    /// waiting call. Whatever Skyline was doing keeps right on going; only the wait is abandoned.
+    /// gets through. The call here is a menu item that starts a long operation and shows a LongWaitDlg for it: the
+    /// click blocks on the UI thread until the work is done, so the verb that posted it parks in the DialogWatcher
+    /// wait for the whole operation. The JSON pipe server is single-instance and serves one request at a time, so
+    /// that one parked verb would otherwise lock out every later request -- and the caller may well want those:
+    /// Skyline is working and making progress, and the model may not want to wait it out, or may want to look at
+    /// Skyline while it runs. The disconnect is the cancel signal: Skyline peeks the pipe, sees the client is gone,
+    /// and abandons the waiting call. The operation keeps right on going; only the wait is abandoned.
     /// </summary>
     [TestClass]
     public class ConnectorDisconnectTest : McpConnectorTest
     {
+        private const string MENU_ITEM_TEXT = "Long Operation Test";
+
+        // Set to let the long operation finish. Nothing else ends it, so every exit path must set it.
+        private readonly ManualResetEventSlim _releaseWork = new ManualResetEventSlim(false);
+
         [TestMethod]
         public void TestConnectorDisconnect()
         {
@@ -51,18 +61,12 @@ namespace pwiz.SkylineTestFunctional
         {
             StartToolService();
             string pipeName = Program.MainJsonToolServer.PipeName;
-            // Resolve the form to read BEFORE blocking the UI thread (this read needs it too).
-            string mainFormId = GetOpenFormId<SkylineWindow>();
-
-            // Block the UI thread, the way a long document load does while its LongWaitDlg works: any connector verb
-            // posted behind it now parks in the DialogWatcher wait loop and cannot finish.
-            var releaseUi = new ManualResetEventSlim(false);
-            SkylineWindow.BeginInvoke((Action) (() => releaseUi.Wait(TimeSpan.FromMinutes(2))));
+            RunUI(AddLongOperationMenuItem);
             try
             {
                 var stopwatch = Stopwatch.StartNew();
 
-                // A client asks for something that cannot finish, waits a moment, then gives up and disconnects.
+                // A client starts the long operation, watches Skyline work on it, then gives up and disconnects.
                 // The request is written raw and the response never read, so closing the pipe really does close it:
                 // a client blocked in a synchronous read cannot be disconnected by disposing the stream under it
                 // (Windows holds the handle open until the pending ReadFile returns), which is why the MCP client
@@ -72,22 +76,28 @@ namespace pwiz.SkylineTestFunctional
                     pipeA.Connect(5000);
                     pipeA.ReadMode = PipeTransmissionMode.Message;
                     var request = Encoding.UTF8.GetBytes(
-                        @"{""jsonrpc"":""2.0"",""method"":""GetControls"",""params"":[""" + mainFormId + @"""],""id"":1}");
+                        @"{""jsonrpc"":""2.0"",""method"":""ClickMainMenuItem"",""params"":[""" + MENU_ITEM_TEXT +
+                        @"""],""id"":1}");
                     pipeA.Write(request, 0, request.Length);
                     pipeA.Flush();
-                    Thread.Sleep(1000); // let the server thread get into the wait
+                    // The dialog is up: the click is now blocked on the UI thread inside the operation, and the
+                    // server thread that posted it is parked in the wait for it.
+                    WaitForOpenForm<LongWaitDlg>();
                 }   // dispose == the client giving up, which is the cancel signal
 
-                // The server must now be free. GetVersion needs no UI thread, so it can be served even though the UI
-                // thread is STILL blocked -- proving the server thread is no longer parked in the abandoned call.
-                // Without disconnect-cancellation this connect-and-call would never be served (single instance, and
-                // the one server thread still stuck inside the abandoned verb).
+                // The server must now be free, WHILE the operation it abandoned is still running. GetVersion needs no
+                // UI thread, so it can be served even though the UI thread is still inside the operation -- proving
+                // the server thread is no longer parked in the abandoned call. Without disconnect-cancellation this
+                // connect-and-call would not be served until the operation finished (single instance, and the one
+                // server thread still stuck inside the abandoned verb).
                 using (var clientB = ConnectClient(pipeName))
                 {
                     string version = clientB.GetVersion();
                     Assert.IsFalse(string.IsNullOrEmpty(version),
                         @"The pipe server did not serve a new client after the previous one disconnected.");
                 }
+                Assert.IsNotNull(FindOpenForm<LongWaitDlg>(),
+                    @"The abandoned operation should have kept running -- only the wait for it is abandoned.");
 
                 stopwatch.Stop();
                 Assert.IsTrue(stopwatch.ElapsedMilliseconds < 30 * 1000,
@@ -96,8 +106,34 @@ namespace pwiz.SkylineTestFunctional
             }
             finally
             {
-                releaseUi.Set();
+                _releaseWork.Set();
             }
+            WaitForClosedForm<LongWaitDlg>();
+        }
+
+        /// <summary>
+        /// Adds a main-menu item whose click runs a long operation behind a LongWaitDlg -- the way any long Skyline
+        /// operation runs, with the UI thread inside the dialog's modal message loop (still pumping) until the work
+        /// on its own thread is done. The work reports progress, so it reads as advancing rather than hung.
+        /// </summary>
+        private void AddLongOperationMenuItem()
+        {
+            var menuItem = new ToolStripMenuItem(MENU_ITEM_TEXT);
+            menuItem.Click += (sender, args) =>
+            {
+                using (var longWaitDlg = new LongWaitDlg { Message = MENU_ITEM_TEXT })
+                {
+                    longWaitDlg.PerformWork(SkylineWindow, 0, broker =>
+                    {
+                        IProgressStatus status = new ProgressStatus(MENU_ITEM_TEXT);
+                        for (int percent = 0; !_releaseWork.Wait(100) && !broker.IsCanceled; percent++)
+                        {
+                            broker.UpdateProgress(status = status.ChangePercentComplete(percent % 100));
+                        }
+                    });
+                }
+            };
+            SkylineWindow.MainMenuStrip.Items.Add(menuItem);
         }
 
         private static SkylineJsonToolClient ConnectClient(string pipeName)

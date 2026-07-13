@@ -808,10 +808,8 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         // The docked forms can only be read on the main window's UI thread, so unless the caller is already there
-        // this makes the hop -- through DialogWatcher, so the read can be ABANDONED. A plain Control.Invoke could not
-        // be: it would park behind whatever is keeping the UI thread busy (a document load riding its LongWaitDlg)
-        // and hold the pipe server's one thread there even after the client that asked for this gave up and
-        // disconnected, locking out every later request (see ConnectorDisconnectTest).
+        // this makes the hop. A plain Invoke: the UI thread pumps whenever it is busy for long (a LongWaitDlg runs a
+        // modal message loop), so this always gets dispatched, and there is nothing here worth the dialog-watch.
         private static StandaloneWindow FindFormWithId(string formId, CancellationToken cancellationToken)
         {
             var mainWindow = Program.MainWindow;
@@ -823,9 +821,14 @@ namespace pwiz.Skyline.ToolsUI
             Func<StandaloneWindow> findNow = () =>
                 GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId) ??
                 GetFormWithId(GetDockedForms(cancellationToken), formId);
-            return mainWindow.InvokeRequired
-                ? DialogWatcher.CallFunction(mainWindow, findNow, cancellationToken)
-                : findNow();
+            if (!mainWindow.InvokeRequired)
+            {
+                return findNow();
+            }
+
+            StandaloneWindow window = null;
+            mainWindow.Invoke(new Action(() => window = findNow()));
+            return window;
         }
 
         private static StandaloneWindow GetFormWithId(IEnumerable<StandaloneWindow> windows, string formId)

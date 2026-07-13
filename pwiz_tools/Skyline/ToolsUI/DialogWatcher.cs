@@ -106,13 +106,8 @@ namespace pwiz.Skyline.ToolsUI
         /// throws if a modal got in the way (the read did not complete).</summary>
         public static T CallFunction<T>(IntPtr hwnd, Func<T> function, CancellationToken cancellationToken)
         {
-            return CallFunction(Control.FromHandle(hwnd) ?? UiThreadWindow, function, cancellationToken);
-        }
-
-        public static T CallFunction<T>(Control control, Func<T> function, CancellationToken cancellationToken)
-        {
             T result = default(T);
-            EnsureCompleted(PerformActionAndWait(control, () => { result = function(); }, null, cancellationToken));
+            EnsureCompleted(PerformActionAndWait(hwnd, () => { result = function(); }, null, cancellationToken));
             return result;
         }
 
