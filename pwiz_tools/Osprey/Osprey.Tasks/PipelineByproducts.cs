@@ -24,6 +24,7 @@
 using System.Collections.Generic;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR;
 using pwiz.Osprey.FDR.Reconciliation;
 
 namespace pwiz.Osprey.Tasks
@@ -60,6 +61,22 @@ namespace pwiz.Osprey.Tasks
     {
         public IReadOnlyDictionary<string, RTCalibration> Value { get; }
         public PerFileCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
+    }
+
+    /// <summary>
+    /// Per-file isolation-window m/z intervals (half-open <c>[Lo, Hi)</c>) from
+    /// Stages 2-4 -- the gap-fill m/z filter's per-file coverage map. Straight
+    /// through, each file's list is built from its extracted isolation windows
+    /// (<c>center +/- width/2</c>); on an HPC merge node (no mzML) it is
+    /// rehydrated from the <c>isolation_scheme</c> block in calibration.json.
+    /// Always published non-null (empty when no scheme is available), so the
+    /// byproduct exists for every run. Parallels <see cref="PerFileCalibrations"/>
+    /// and is keyed by the same bare file stem.
+    /// </summary>
+    internal sealed class PerFileIsolationMz
+    {
+        public IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> Value { get; }
+        public PerFileIsolationMz(IReadOnlyDictionary<string, IReadOnlyList<(double Lo, double Hi)>> value) { Value = value; }
     }
 
     /// <summary>Map of file name to its on-disk <c>.scores.parquet</c> path.</summary>
@@ -171,6 +188,20 @@ namespace pwiz.Osprey.Tasks
         public ScoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
     }
 
+    /// <summary>
+    /// The lean first-pass projection built straight from each file's .scores.parquet,
+    /// bypassing the fat <see cref="FdrEntry"/> stub buffer entirely (issue #4397:
+    /// rematerializing 191M stubs to convert them into 32 B rows cost ~53 GB).
+    /// <c>Value</c> is null when the run needs the resident stub pool instead
+    /// (--model-diagnostics / FDRBench pass 1) or on the rehydrate/merge paths, which
+    /// still publish fat stubs via <see cref="ScoredEntries"/>.
+    /// </summary>
+    internal sealed class FdrProjections
+    {
+        public FdrProjectionSet Value { get; }
+        public FdrProjections(FdrProjectionSet value) { Value = value; }
+    }
+
     /// <summary>The buffer after FirstJoin's first-pass FDR + compaction.</summary>
     internal sealed class CompactedEntries : PerFileEntries
     {
@@ -181,5 +212,43 @@ namespace pwiz.Osprey.Tasks
     internal sealed class RescoredEntries : PerFileEntries
     {
         public RescoredEntries(List<KeyValuePair<string, List<FdrEntry>>> value) : base(value) { }
+    }
+
+    /// <summary>
+    /// The FROZEN 1st-pass Percolator model (fold weights + biases + feature
+    /// standardizer, carried on <see cref="PercolatorResults"/>), captured at
+    /// first-pass FDR time. Published only under the OSPREY_PASS2_QVALUE=transfer
+    /// path so the merge-node 2nd-pass step can re-score reconciled features with
+    /// this frozen model (TRIC-style confidence transfer) instead of retraining a
+    /// decoy-depleted 2nd-pass SVM. Absent (never published) on the default
+    /// percolator path. See ai/todos/active/TODO-20260710_osprey_pass2_recalibration_fix.md.
+    /// </summary>
+    internal sealed class FirstPassPercolatorModel
+    {
+        public PercolatorResults Results { get; set; }
+    }
+
+    /// <summary>
+    /// The FULL 1st-pass-population score-&gt;q lookup table (each entry's raw
+    /// averaged-model score paired with its unbiased 1st-pass effective q),
+    /// captured at first-pass FDR time BEFORE compaction -- so it retains the
+    /// high-q failing/decoy region that the compacted reported pool no longer
+    /// holds. <see cref="ScoresDesc"/> is sorted by score descending; the parallel
+    /// <see cref="QDesc"/> is q as a monotone NON-INCREASING function of score --
+    /// i.e. q is non-decreasing as you walk <see cref="ScoresDesc"/> from high to
+    /// low score (a higher score is a better ID, so a lower q). Published only under
+    /// OSPREY_PASS2_QVALUE=transfer; the merge-node 2nd-pass transfer maps each
+    /// frozen-model reconciled score to a q via THIS table instead of one rebuilt
+    /// from the decoy-depleted compacted entries. Absent (never published) on the
+    /// default percolator path.
+    /// </summary>
+    internal sealed class FirstPassScoreQTable
+    {
+        /// <summary>Raw averaged-model scores, sorted descending.</summary>
+        public double[] ScoresDesc { get; set; }
+        /// <summary>Effective q parallel to <see cref="ScoresDesc"/>; q is a monotone
+        /// non-increasing function of score, so this array is non-decreasing as
+        /// <see cref="ScoresDesc"/> descends (higher score -&gt; lower q).</summary>
+        public double[] QDesc { get; set; }
     }
 }

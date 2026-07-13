@@ -71,6 +71,34 @@ namespace pwiz.Osprey.Tasks
         }
 
         /// <summary>
+        /// Resolve the FDRBench output path for a given pass, honoring
+        /// <see cref="OspreyConfig.FdrBenchPass"/> as a bitmask of
+        /// <see cref="OspreyConfig.FDRBENCH_PASS_1"/> / <see cref="OspreyConfig.FDRBENCH_PASS_2"/>.
+        /// Returns <c>null</c> when no <c>--fdrbench</c> path is set or the pass was not requested,
+        /// so a caller can guard with a single null check. When only one pass is requested the
+        /// exact <c>--fdrbench</c> path is used (backward compatible); when both are requested each
+        /// pass gets a <c>.pass1</c> / <c>.pass2</c> stem suffix so the two do not overwrite.
+        /// </summary>
+        /// <param name="config">The run config (supplies the path and the pass bitmask).</param>
+        /// <param name="pass"><see cref="OspreyConfig.FDRBENCH_PASS_1"/> or
+        /// <see cref="OspreyConfig.FDRBENCH_PASS_2"/>.</param>
+        public static string PathForPass(OspreyConfig config, int pass)
+        {
+            if (string.IsNullOrEmpty(config.OutputFdrBench) || (config.FdrBenchPass & pass) == 0)
+                return null;
+
+            // Single pass -> exact path. Both requested -> suffix each stem so they coexist.
+            if (config.FdrBenchPass != (OspreyConfig.FDRBENCH_PASS_1 | OspreyConfig.FDRBENCH_PASS_2))
+                return config.OutputFdrBench;
+
+            string dir = Path.GetDirectoryName(config.OutputFdrBench);
+            string stem = Path.GetFileNameWithoutExtension(config.OutputFdrBench);
+            string ext = Path.GetExtension(config.OutputFdrBench);
+            string name = stem + @".pass" + pass.ToString(CultureInfo.InvariantCulture) + ext;
+            return string.IsNullOrEmpty(dir) ? name : Path.Combine(dir, name);
+        }
+
+        /// <summary>
         /// Write the FDRBench peptide / precursor-level input TSV to <paramref name="path"/>.
         ///
         /// With <paramref name="perRun"/> = false, rows are deduplicated to one per precursor

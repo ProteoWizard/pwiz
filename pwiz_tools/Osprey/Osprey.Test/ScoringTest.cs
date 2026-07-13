@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -288,9 +289,9 @@ namespace pwiz.Osprey.Test
             var entry = new LibraryEntry(1, "PEPTIDE", "PEPTIDE", 2, 500.0, 10.0);
             entry.Fragments = new List<LibraryFragment>
             {
-                new LibraryFragment { Mz = 300.0, RelativeIntensity = 100.0f, Annotation = new FragmentAnnotation() },
-                new LibraryFragment { Mz = 400.0, RelativeIntensity = 50.0f, Annotation = new FragmentAnnotation() },
-                new LibraryFragment { Mz = 500.0, RelativeIntensity = 75.0f, Annotation = new FragmentAnnotation() }
+                new LibraryFragment { Mz = 300.0, RelativeIntensity = 100.0f, Annotation = new FragmentAnnotation { IonType = IonType.Unknown, Charge = 1 } },
+                new LibraryFragment { Mz = 400.0, RelativeIntensity = 50.0f, Annotation = new FragmentAnnotation { IonType = IonType.Unknown, Charge = 1 } },
+                new LibraryFragment { Mz = 500.0, RelativeIntensity = 75.0f, Annotation = new FragmentAnnotation { IonType = IonType.Unknown, Charge = 1 } }
             };
 
             var spectrum = new Spectrum
@@ -1272,6 +1273,201 @@ namespace pwiz.Osprey.Test
             // 10 ppm of 500 = 0.005 Da
             Assert.IsTrue(SpectralScorer.HasMatch(500.002, spectrumMzs, ppmTolerance));
             Assert.IsFalse(SpectralScorer.HasMatch(500.01, spectrumMzs, ppmTolerance));
+        }
+
+        #endregion
+
+        #region Sparse XCorr cache (issue #4398)
+
+        /// <summary>
+        /// The sparse HRAM cache must be BIT-IDENTICAL to the dense f32 cache it
+        /// replaced -- not merely close. It defers the sliding-window subtraction and
+        /// recomputes each probed bin on demand, so any drift here silently moves
+        /// every XCorr in an Astral run away from the golden.
+        ///
+        /// Checks every bin (not just the ones a library entry would probe) and then
+        /// the end-to-end scorer entry points.
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrCacheMatchesDenseCache()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+
+            // Deterministic pseudo-spectrum: peaks spread across the range, with a
+            // pair inside one +/-75-bin window and a pair at the clamped edges, since
+            // those are where the prefix-sum bounds math can diverge.
+            var mzs = new List<double>();
+            var intensities = new List<float>();
+            for (int i = 0; i < 400; i++)
+            {
+                mzs.Add(150.0 + i * 4.37);
+                intensities.Add((float)(1000.0 + (i * 7919) % 5000));
+            }
+            mzs.Add(150.001);       // first bins
+            intensities.Add(8000f);
+            mzs.Add(150.02);        // adjacent to the first, inside its window
+            intensities.Add(3000f);
+            mzs.Add(1999.98);       // last bins
+            intensities.Add(6000f);
+
+            // Binning is order-independent, so the peaks need not be sorted by m/z.
+            var spectrum = new Spectrum
+            {
+                Mzs = mzs.ToArray(),
+                Intensities = intensities.ToArray()
+            };
+
+            float[] dense = scorer.PreprocessSpectrumForXcorrF32(spectrum);
+            var scratch = new XcorrScratch(nBins);
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(spectrum, scratch);
+
+            Assert.AreEqual(nBins, sparse.NBins);
+            Assert.IsTrue(sparse.PeakCount > 0 && sparse.PeakCount < nBins / 10,
+                string.Format("Sparse cache should be sparse: {0} of {1} bins", sparse.PeakCount, nBins));
+
+            for (int bin = 0; bin < nBins; bin++)
+            {
+                float expected = dense[bin];
+                float actual = sparse.CenteredAt(bin);
+                // Bit-exact: compare raw bits, not AreEqual with a delta.
+                // (SingleToInt32Bits is not available on net472.)
+                Assert.AreEqual(SingleBits(expected), SingleBits(actual),
+                    string.Format("Bin {0}: dense {1:R} != sparse {2:R}", bin, expected, actual));
+            }
+
+            // End to end: the two scoring entry points must agree exactly.
+            var entry = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
+            foreach (double mz in new[] { 150.001, 175.5, 400.25, 500.0, 700.75, 1200.5, 1999.98 })
+                entry.Fragments.Add(new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f });
+
+            double denseScore = scorer.XcorrFromPreprocessed(dense, entry, new bool[nBins]);
+            double sparseScore = scorer.XcorrFromSparse(sparse, entry, new bool[nBins]);
+            Assert.AreEqual(denseScore, sparseScore, 0.0, "XcorrFromSparse must match XcorrFromPreprocessed exactly");
+        }
+
+        /// <summary>
+        /// The sparse cache must handle an empty spectrum and out-of-range bins the
+        /// same way the dense cache did (all zeros, no exception).
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrCacheEmptySpectrum()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+            var scratch = new XcorrScratch(nBins);
+
+            var empty = new Spectrum { Mzs = new double[0], Intensities = new float[0] };
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(empty, scratch);
+
+            Assert.AreEqual(0, sparse.PeakCount);
+            Assert.AreEqual(nBins, sparse.NBins);
+            Assert.AreEqual(0f, sparse.CenteredAt(0));
+            Assert.AreEqual(0f, sparse.CenteredAt(nBins / 2));
+            Assert.AreEqual(0f, sparse.CenteredAt(-1));
+            Assert.AreEqual(0f, sparse.CenteredAt(nBins));
+
+            var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
+            entry.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+            Assert.AreEqual(0.0, scorer.XcorrFromSparse(sparse, entry, new bool[nBins]), 0.0);
+        }
+
+        /// <summary>
+        /// The sparse path must dedup fragments sharing a bin exactly as the dense
+        /// path does, and must leave <c>visitedBins</c> fully cleared so the array can
+        /// be reused across every candidate in a window.
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrDedupAndVisitedBinsReset()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+            var scratch = new XcorrScratch(nBins);
+
+            var spectrum = new Spectrum
+            {
+                Mzs = new[] { 499.99, 500.0, 500.01, 600.0 },
+                Intensities = new[] { 5000.0f, 10000.0f, 5000.0f, 2000.0f }
+            };
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(spectrum, scratch);
+
+            // HRAM bins are 0.02 Th, so 500.001 and 500.009 land in the same bin.
+            var twoFrags = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
+            twoFrags.Fragments.Add(new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f });
+            twoFrags.Fragments.Add(new LibraryFragment { Mz = 500.009, RelativeIntensity = 1.0f });
+
+            var oneFrag = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
+            oneFrag.Fragments.Add(new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f });
+
+            Assert.AreEqual(scorer.BinConfig.MzToBin(500.001), scorer.BinConfig.MzToBin(500.009),
+                "Test premise: both fragments must fall in the same HRAM bin");
+
+            var visitedBins = new bool[nBins];
+            double scoreTwo = scorer.XcorrFromSparse(sparse, twoFrags, visitedBins);
+            double scoreOne = scorer.XcorrFromSparse(sparse, oneFrag, visitedBins);
+            Assert.AreEqual(scoreOne, scoreTwo, 0.0, "Two fragments in one bin must score as one (dedup)");
+
+            foreach (bool visited in visitedBins)
+                Assert.IsFalse(visited, "visitedBins must be fully cleared for reuse by the next candidate");
+        }
+
+        /// <summary>
+        /// The sparse cache's bit-exactness rests on every retained bin being strictly
+        /// positive and finite: that is what makes "skip the zeros" a per-step additive
+        /// identity (x + 0.0 == x) rather than a reassociation of the sum. Pathological
+        /// intensities cannot break it, because BOTH paths run the same
+        /// ApplyWindowingNormalizationD, which drops them identically -- NaN > threshold
+        /// is false, so the bin stays 0.0 and is never retained. Pins that shared-filter
+        /// property rather than trusting it.
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrCacheHandlesPathologicalIntensities()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+            var scratch = new XcorrScratch(nBins);
+
+            var spectrum = new Spectrum
+            {
+                Mzs = new[] { 300.0, 400.0, 500.0, 600.0, 700.0, 800.0 },
+                Intensities = new[]
+                {
+                    1000.0f, float.NaN, -500.0f, float.PositiveInfinity, 2000.0f, 0.0f
+                }
+            };
+
+            float[] dense = scorer.PreprocessSpectrumForXcorrF32(spectrum);
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(spectrum, scratch);
+
+            for (int bin = 0; bin < nBins; bin++)
+            {
+                Assert.AreEqual(SingleBits(dense[bin]), SingleBits(sparse.CenteredAt(bin)),
+                    string.Format("Bin {0}: dense {1:R} != sparse {2:R}",
+                        bin, dense[bin], sparse.CenteredAt(bin)));
+            }
+        }
+
+        /// <summary>
+        /// Reinterprets a float's storage as an int, in place and without allocating.
+        /// The all-bins parity tests call this twice per bin over 100,001 bins, so a
+        /// <c>BitConverter.GetBytes</c> round-trip would churn ~400 k byte[4]s.
+        /// <c>BitConverter.SingleToInt32Bits</c> would do, but does not exist on net472.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct FloatBits
+        {
+            [FieldOffset(0)] public float Single;
+            [FieldOffset(0)] public int Bits;
+        }
+
+        /// <summary>
+        /// Raw IEEE-754 bits of a float, for bit-exact comparison. Distinguishes
+        /// <c>+0.0</c> from <c>-0.0</c> and preserves NaN payloads, which
+        /// <c>Assert.AreEqual(float, float)</c> would not.
+        /// </summary>
+        private static int SingleBits(float value)
+        {
+            return new FloatBits { Single = value }.Bits;
         }
 
         #endregion

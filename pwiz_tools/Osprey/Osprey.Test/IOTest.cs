@@ -816,15 +816,10 @@ namespace pwiz.Osprey.Test
                         Assert.AreEqual(orig.Fragments[f].Annotation.Charge,
                             copy.Fragments[f].Annotation.Charge);
 
-                        var origNl = orig.Fragments[f].Annotation.NeutralLoss;
-                        var copyNl = copy.Fragments[f].Annotation.NeutralLoss;
-                        if (origNl == null)
-                            Assert.IsNull(copyNl);
-                        else
-                        {
-                            Assert.IsNotNull(copyNl);
-                            Assert.AreEqual(origNl.Mass, copyNl.Mass, 1e-10);
-                        }
+                        Assert.AreEqual(orig.Fragments[f].Annotation.HasNeutralLoss,
+                            copy.Fragments[f].Annotation.HasNeutralLoss);
+                        Assert.AreEqual(orig.Fragments[f].Annotation.NeutralLossMass,
+                            copy.Fragments[f].Annotation.NeutralLossMass, 1e-10);
                     }
 
                     // Check modification details
@@ -1023,6 +1018,114 @@ namespace pwiz.Osprey.Test
                 if (File.Exists(tempPath))
                     File.Delete(tempPath);
             }
+        }
+
+        [TestMethod]
+        public void TestLibraryCacheNeutralLossCollapse()
+        {
+            // A Custom neutral-loss mass within 1e-6 of a named loss must serialize
+            // to the named tag (byte-identity with the legacy reference-type writer)
+            // and read back as the named code -- the most byte-sensitive
+            // WriteNeutralLoss branch, which the round-trip test does not exercise.
+            var entry = new LibraryEntry(1, "PEPTIDER", "PEPTIDER", 2, 500.0, 10.0);
+            entry.Fragments = new List<LibraryFragment>
+            {
+                new LibraryFragment
+                {
+                    Mz = 200.0,
+                    RelativeIntensity = 1.0f,
+                    Annotation = new FragmentAnnotation
+                    {
+                        IonType = IonType.B,
+                        Ordinal = 1,
+                        Charge = 1,
+                        NeutralLoss = NeutralLossCode.Custom,
+                        CustomLossMass = NeutralLoss.H2OMass
+                    }
+                }
+            };
+
+            string tempPath = Path.Combine(Path.GetTempPath(),
+                "osprey_nl_" + Guid.NewGuid().ToString("N") + ".libcache");
+            try
+            {
+                LibraryCache.SaveCache(tempPath, new List<LibraryEntry> { entry }, "hash");
+                var loaded = LibraryCache.LoadCache(tempPath);
+                Assert.AreEqual(1, loaded.Count);
+                var ann = loaded[0].Fragments[0].Annotation;
+                Assert.AreEqual(NeutralLossCode.H2O, ann.NeutralLoss);
+                Assert.AreEqual(NeutralLoss.H2OMass, ann.NeutralLossMass, 1e-10);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                    File.Delete(tempPath);
+            }
+        }
+
+        [TestMethod]
+        public void TestLibraryStringInterning()
+        {
+            // Two entries repeat the same values across every interned field.
+            var e0 = MakeInternEntry(1, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+            var e1 = MakeInternEntry(2, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+
+            // A third entry with a null protein list, an empty gene list, and a
+            // null modification name -- interning must leave these untouched, not throw.
+            var e2 = new LibraryEntry(3, FreshCopy("PEPTIDEK"), FreshCopy("PEPTIDEK"), 2, 600.0, 8.0);
+            e2.ProteinIds = null;
+            e2.GeneNames = new List<string>();
+            e2.Modifications = new List<Modification> { new Modification { Position = 0, Name = null } };
+
+            var entries = new List<LibraryEntry> { e0, e1, e2 };
+
+            // Pre-condition: the repeated values are DISTINCT instances (the char-array
+            // copies defeat the compiler's literal interning), so AreSame below proves
+            // LibraryStringInterner shared them -- not the CLR string pool.
+            Assert.AreNotSame(e0.Sequence, e1.Sequence);
+            Assert.AreNotSame(e0.ProteinIds[0], e1.ProteinIds[0]);
+
+            LibraryStringInterner.InternInPlace(entries);
+
+            // Values are unchanged on every interned field...
+            Assert.AreEqual("PEPTIDER", e0.Sequence);
+            Assert.AreEqual("M[16]PEPTIDER", e0.ModifiedSequence);
+            Assert.AreEqual("P12345", e0.ProteinIds[0]);
+            Assert.AreEqual("GENEA", e0.GeneNames[0]);
+            Assert.AreEqual("Oxidation", e0.Modifications[0].Name);
+
+            // ...but duplicates now share one instance, for each interned field.
+            Assert.AreSame(e0.Sequence, e1.Sequence);
+            Assert.AreSame(e0.ModifiedSequence, e1.ModifiedSequence);
+            Assert.AreSame(e0.ProteinIds[0], e1.ProteinIds[0]);
+            Assert.AreSame(e0.GeneNames[0], e1.GeneNames[0]);
+            Assert.AreSame(e0.Modifications[0].Name, e1.Modifications[0].Name);
+
+            // The null/empty entry is untouched (no NRE).
+            Assert.IsNull(e2.ProteinIds);
+            Assert.AreEqual(0, e2.GeneNames.Count);
+            Assert.IsNull(e2.Modifications[0].Name);
+            Assert.AreEqual("PEPTIDEK", e2.Sequence);
+        }
+
+        // Fresh instance with the same characters, so the compiler's literal
+        // interning does not pre-share it before LibraryStringInterner runs.
+        private static string FreshCopy(string s)
+        {
+            return new string(s.ToCharArray());
+        }
+
+        private static LibraryEntry MakeInternEntry(uint id, string seq, string modSeq,
+            string protein, string gene, string modName)
+        {
+            var e = new LibraryEntry(id, FreshCopy(seq), FreshCopy(modSeq), 2, 500.0, 10.0);
+            e.ProteinIds = new List<string> { FreshCopy(protein) };
+            e.GeneNames = new List<string> { FreshCopy(gene) };
+            e.Modifications = new List<Modification>
+            {
+                new Modification { Position = 1, Name = FreshCopy(modName) }
+            };
+            return e;
         }
 
         #endregion
@@ -1413,6 +1516,136 @@ namespace pwiz.Osprey.Test
         }
 
         /// <summary>
+        /// Issue #4374 risk #2 (the highest-value new test): the 2nd-pass projection
+        /// bakes each survivor's <c>ParquetIndex</c> from
+        /// <see cref="Pass2FdrSidecar.BuildReconciledIdentityToRow"/>, then the streaming
+        /// score pass reads the feature row at that index. This must resolve the EXACT
+        /// vector the resident 2nd pass binds via
+        /// <see cref="Pass2FdrSidecar.LoadReconciledFeaturesByIdentity"/> +
+        /// <c>MapFeaturesByIdentity</c>. Writes a reconciled-parquet fixture whose rows
+        /// arrive in NON-sorted identity order plus a gap-fill-style row that interleaves
+        /// into the <c>(entry_id, charge, scan_number)</c> sort, each carrying a DISTINCT
+        /// 21-feature vector, then asserts:
+        /// <list type="bullet">
+        /// <item><c>featRows[rowMap[identity]] == featByIdentity[identity]</c> for every
+        /// identity (risk #2) -- so the streamed feature lookup is byte-identical to the
+        /// resident identity binding; distinct vectors make a mis-mapping observable;</item>
+        /// <item>within each <c>(entry_id, charge)</c> group the baked row increases with
+        /// scan (risk #3) -- what keeps the scan-omitted projection sort
+        /// <c>(EntryId, Charge, ParquetIndex)</c> equal to the legacy
+        /// <c>(EntryId, Charge, ScanNumber, ParquetIndex)</c> order.</item>
+        /// </list>
+        /// </summary>
+        [TestMethod]
+        public void TestBuildReconciledIdentityToRowMatchesFeatureBinding()
+        {
+            string path = Path.GetTempFileName() + ".parquet";
+            try
+            {
+                // Deliberately unsorted, with two charges of entry 100 and a second
+                // (later-scan) row for entry 101 that interleaves into the reconciled
+                // (entry_id, charge, scan_number) sort -- a gap-fill-style append.
+                var entryIds = new uint[] { 101, 100, 100, 101, 100 };
+                var charges = new byte[] { 2, 3, 2, 2, 2 };
+                var scans = new uint[] { 2200, 1500, 1100, 1200, 1300 };
+
+                var entries = new List<CoelutionScoredEntry>();
+                for (int i = 0; i < entryIds.Length; i++)
+                {
+                    entries.Add(new CoelutionScoredEntry
+                    {
+                        EntryId = entryIds[i],
+                        IsDecoy = false,
+                        Sequence = "PEPTIDE",
+                        ModifiedSequence = "PEPTIDE",
+                        Charge = charges[i],
+                        ScanNumber = scans[i],
+                        FileName = "recon.mzML",
+                        PeakBounds = new XICPeakBounds { StartRt = 4.0, EndRt = 5.0 },
+                        // Distinct feature vector per row so a wrong identity->row map
+                        // surfaces as a value mismatch, not a silent pass.
+                        Features = new CoelutionFeatureSet
+                        {
+                            CoelutionSum = 10.0 + i,
+                            CoelutionMax = 20.0 + i,
+                            NCoelutingFragments = (byte)(3 + i),
+                            PeakApex = 100.0 + i,
+                            PeakArea = 200.0 + i,
+                            PeakSharpness = 0.3 + i,
+                            Xcorr = 50.0 + i,
+                            ConsecutiveIons = (byte)(1 + i),
+                            ExplainedIntensity = 0.50 + i * 0.01,
+                            MassAccuracyMean = -0.5 - i,
+                            AbsMassAccuracyMean = 0.5 + i,
+                            RtDeviation = 0.1 + i,
+                            AbsRtDeviation = 0.1 + i,
+                            Ms1PrecursorCoelution = 0.80 + i * 0.01,
+                            Ms1IsotopeCosine = 0.90 + i * 0.01,
+                            MedianPolishCosine = 0.88 + i * 0.001,
+                            MedianPolishResidualRatio = 0.15 + i * 0.001,
+                            SgWeightedXcorr = 2.3 + i,
+                            SgWeightedCosine = 0.87 + i * 0.001,
+                            MedianPolishMinFragmentR2 = 0.70 + i * 0.001,
+                            MedianPolishResidualCorrelation = 0.30 + i * 0.001,
+                        },
+                    });
+                }
+
+                // WriteScoresParquet re-sorts (entry_id, charge, scan_number) and assigns
+                // ParquetIndex = row -- exactly the reconciled write path.
+                ParquetScoreCache.WriteScoresParquet(path, entries, null);
+
+                var rowMap = Pass2FdrSidecar.BuildReconciledIdentityToRow(path);
+                var featByIdentity = Pass2FdrSidecar.LoadReconciledFeaturesByIdentity(path);
+                var featRows = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
+
+                Assert.AreEqual(entryIds.Length, rowMap.Count);
+                Assert.AreEqual(entryIds.Length, featByIdentity.Count);
+                Assert.AreEqual(entryIds.Length, featRows.Count);
+
+                // Risk #2: the baked row addresses the identity's own feature vector, so
+                // the streamed lookup equals the resident identity binding byte-for-byte.
+                foreach (var kvp in featByIdentity)
+                {
+                    Assert.IsTrue(rowMap.TryGetValue(kvp.Key, out uint row),
+                        "every bound identity must resolve to a reconciled row");
+                    Assert.IsTrue((int)row < featRows.Count, "baked row in range");
+                    CollectionAssert.AreEqual(kvp.Value, featRows[(int)row],
+                        "the baked row must address the identity's own feature vector");
+                }
+
+                // Risk #3: within each (entry_id, charge) group the reconciled row is
+                // scan-monotonic -- what validates the scan-omitted projection sort.
+                var groups = new Dictionary<(uint, byte), List<(uint scan, uint row)>>();
+                for (int i = 0; i < entryIds.Length; i++)
+                {
+                    uint row = rowMap[(entryIds[i], charges[i], scans[i])];
+                    var key = (entryIds[i], charges[i]);
+                    if (!groups.TryGetValue(key, out var list))
+                    {
+                        list = new List<(uint, uint)>();
+                        groups[key] = list;
+                    }
+                    list.Add((scans[i], row));
+                }
+                foreach (var kv in groups)
+                {
+                    var list = kv.Value;
+                    list.Sort((a, b) => a.scan.CompareTo(b.scan));
+                    for (int k = 1; k < list.Count; k++)
+                    {
+                        Assert.IsTrue(list[k].row > list[k - 1].row,
+                            "reconciled row must increase with scan within a (entry_id, charge) group");
+                    }
+                }
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        /// <summary>
         /// Verifies GetScoresPath returns the expected path.
         /// </summary>
         [TestMethod]
@@ -1695,7 +1928,7 @@ namespace pwiz.Osprey.Test
                         IonType = IonType.B,
                         Ordinal = 3,
                         Charge = 1,
-                        NeutralLoss = NeutralLoss.H2O
+                        NeutralLoss = NeutralLossCode.H2O
                     }
                 },
                 new LibraryFragment
@@ -1707,7 +1940,8 @@ namespace pwiz.Osprey.Test
                         IonType = IonType.Y,
                         Ordinal = 5,
                         Charge = 2,
-                        NeutralLoss = NeutralLoss.Custom(98.0)
+                        NeutralLoss = NeutralLossCode.Custom,
+                        CustomLossMass = 98.0
                     }
                 }
             };
@@ -1880,6 +2114,101 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(BitConverter.DoubleToInt64Bits(entries[i].RunProteinQvalue),
                                     BitConverter.DoubleToInt64Bits(loaded[i].RunProteinQvalue));
                 }
+            }
+            finally
+            {
+                try { Directory.Delete(dir, true); } catch (IOException) { }
+            }
+        }
+
+        /// <summary>
+        /// Two-phase 1st-pass sidecar write (issue #4355 struct-shrink S1, risk R2):
+        /// a phase-1 partial write (every record's run_protein_qvalue held at the 1.0
+        /// placeholder) followed by <see cref="FdrScoresSidecar.PatchRunProteinQvalues"/>
+        /// must produce a file that is BYTE-IDENTICAL to a single-phase reference write
+        /// whose records already carried the finalized run_protein_qvalue. The map is
+        /// entry_id-keyed and deliberately built out of record order (and the records
+        /// carry non-sequential entry_ids) to prove the patch locates each record's
+        /// [52..60] by entry_id, not by position.
+        /// </summary>
+        [TestMethod]
+        public void TestFdrScoresSidecarTwoPhasePatchMatchesSinglePhase()
+        {
+            string dir = Path.Combine(Path.GetTempPath(), "fdr_sidecar_2ph_" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(dir);
+            try
+            {
+                // Finalized records with a distinct real run_protein_qvalue each (the
+                // last arg). entry_ids are non-sequential so a positional patch would
+                // land the wrong value.
+                var real = new List<FdrScoreRecord>
+                {
+                    new FdrScoreRecord(10, -3.5, 0.001, 0.0011, 0.0012, 0.0013, 0.02, 0.0042),
+                    new FdrScoreRecord(7,  -3.4, 0.002, 0.0021, 0.0022, 0.0023, 0.05, 0.0123),
+                    new FdrScoreRecord(42, -3.3, 0.003, 0.0031, 0.0032, 0.0033, 0.08, 0.95),
+                    new FdrScoreRecord(3,  -3.2, 0.004, 0.0041, 0.0042, 0.0043, 0.11, 1.0),
+                };
+
+                // Phase-1 partial records: identical EXCEPT run_protein_qvalue = 1.0.
+                var partial = new List<FdrScoreRecord>(real.Count);
+                foreach (var r in real)
+                {
+                    partial.Add(new FdrScoreRecord(
+                        r.EntryId, r.Score, r.RunPrecursorQvalue, r.RunPeptideQvalue,
+                        r.ExperimentPrecursorQvalue, r.ExperimentPeptideQvalue, r.Pep, 1.0));
+                }
+
+                // Map entry_id -> finalized run_protein_qvalue, inserted out of record
+                // order to prove entry_id-keyed (order-independent) patching.
+                var runProteinByEntryId = new Dictionary<uint, double>
+                {
+                    { 42, 0.95 },
+                    { 3, 1.0 },
+                    { 10, 0.0042 },
+                    { 7, 0.0123 },
+                };
+
+                string refPath = Path.Combine(dir, "ref.1st-pass.fdr_scores.bin");
+                string twoPhasePath = Path.Combine(dir, "twophase.1st-pass.fdr_scores.bin");
+
+                // Single-phase reference (the pre-S1 write): records carry the real value.
+                FdrScoresSidecar.Write(refPath, real, FdrScoresSidecar.Pass.FirstPass);
+
+                // Two-phase: phase-1 partial + phase-2 [52..60] patch.
+                FdrScoresSidecar.Write(twoPhasePath, partial, FdrScoresSidecar.Pass.FirstPass);
+                Assert.IsTrue(FdrScoresSidecar.PatchRunProteinQvalues(
+                    twoPhasePath, runProteinByEntryId, FdrScoresSidecar.Pass.FirstPass));
+
+                // The finalized two-phase file must be byte-for-byte identical to the
+                // single-phase reference (risk R2 -- what mode3 compares cross-process).
+                byte[] refBytes = File.ReadAllBytes(refPath);
+                byte[] twoPhaseBytes = File.ReadAllBytes(twoPhasePath);
+                CollectionAssert.AreEqual(refBytes, twoPhaseBytes,
+                    "Two-phase (partial + [52..60] patch) sidecar diverged from the single-phase write");
+
+                // Sanity: the patch actually finalized run_protein_qvalue (a pre-patch
+                // read would have seen the 1.0 placeholder for entries 10/7/42).
+                var loaded = new List<FdrEntry>
+                {
+                    MakeFdrEntry(10, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(7, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(42, 0.0, 0.0, 0.0),
+                    MakeFdrEntry(3, 0.0, 0.0, 0.0),
+                };
+                Assert.IsTrue(FdrScoresSidecar.TryRead(twoPhasePath, loaded, FdrScoresSidecar.Pass.FirstPass));
+                var byId = new Dictionary<uint, FdrEntry>();
+                foreach (var e in loaded)
+                    byId[e.EntryId] = e;
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.0042),
+                                BitConverter.DoubleToInt64Bits(byId[10].RunProteinQvalue));
+                Assert.AreEqual(BitConverter.DoubleToInt64Bits(0.95),
+                                BitConverter.DoubleToInt64Bits(byId[42].RunProteinQvalue));
+
+                // A patch with the wrong pass byte must be rejected and leave bytes intact.
+                Assert.IsFalse(FdrScoresSidecar.PatchRunProteinQvalues(
+                    twoPhasePath, runProteinByEntryId, FdrScoresSidecar.Pass.SecondPass));
+                CollectionAssert.AreEqual(refBytes, File.ReadAllBytes(twoPhasePath),
+                    "A rejected patch must not modify the sidecar");
             }
             finally
             {
