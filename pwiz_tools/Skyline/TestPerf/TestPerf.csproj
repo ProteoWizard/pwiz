@@ -191,6 +191,7 @@
     <Compile Include="PerfTicAreaTest.cs" />
     <Compile Include="PerfUniquePeptidesTest.cs" />
     <Compile Include="PerfWatersSonarTest.cs" />
+    <Compile Include="DiaFragPipeTutorialTest.cs" />
     <Compile Include="DiaToSrmTutorialTest.cs" />
     <Compile Include="OrbiPrmTutorialTest.cs" />
     <Compile Include="PerfSciexPrmCeOptTest.cs" />
