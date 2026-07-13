@@ -14,7 +14,7 @@ targets['Skyline'] = \
     }
 }
 
-targets['OspreyWindowsNetPerfRegressionTests'] = {'master': {"ProteoWizard_OspreyWindowsNetPerfRegressionTests": "OspreySharp Windows .NET Perf Regression Tests"}}
+targets['OspreyWindowsNetPerfRegressionTests'] = {} # Nightly perf tests for Osprey disbled until PR cadence slows down; {'master': {"ProteoWizard_OspreyWindowsNetPerfRegressionTests": "Osprey Windows .NET Perf Regression Tests"}}
 
 targets['Core'] = {}
 targets['Container'] = {}
@@ -35,7 +35,7 @@ matchPaths = [
     ("pwiz_tools/Bumbershoot/.*", targets['Bumbershoot']),
     ("pwiz_tools/Skyline/.*", merge(targets['Skyline'], targets['Container'])),
     ("pwiz_tools/Shared/.*", merge(targets['Skyline'], targets['Bumbershoot'], targets['Container'])),
-    ("pwiz_tools/OspreySharp/.*", targets['OspreyWindowsNetPerfRegressionTests']),
+    ("pwiz_tools/Osprey/.*", targets['OspreyWindowsNetPerfRegressionTests']),
     ("pwiz_tools/.*", targets['All']),
     ("Jamroot.jam", targets['All'])
 ]

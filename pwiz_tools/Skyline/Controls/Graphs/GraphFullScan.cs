@@ -1335,7 +1335,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
             {
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
-                if (transition.Source != _msDataFileScanHelper.Source)
+                if (!TransitionAppliesToScan(transition))
                     continue;
                 targetPane.GraphObjList.Add(CreateExtractionBox(transition));
             }
@@ -1347,7 +1347,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < _msDataFileScanHelper.ScanProvider.Transitions.Length; i++)
             {
                 var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
-                if (transition.Source != _msDataFileScanHelper.Source)
+                if (!TransitionAppliesToScan(transition))
                     continue;
                 var labelBuilder = new StringBuilder(transition.Name);
                 if (massErrors != null && showMassError)
@@ -1893,6 +1893,25 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         /// <summary>
+        /// True if the transition belongs to the scan currently being displayed: same chromatogram
+        /// source and same polarity. The displayed transition list can include co-displayed precursors
+        /// of the opposite polarity (e.g. a molecule with both [M+H]+ and [M-H]- precursors), and those
+        /// must be ignored everywhere transitions are enumerated for a single scan (issue #4240).
+        /// All spectra of the displayed scan share one polarity (ion-mobility filtering only selects an
+        /// IM-range subset, never changes polarity), so the scan polarity is simply the first spectrum's.
+        /// </summary>
+        private bool TransitionAppliesToScan(TransitionFullScanInfo transition)
+        {
+            if (transition.Source != _msDataFileScanHelper.Source)
+            {
+                return false;
+            }
+            var spectra = _msDataFileScanHelper.MsDataSpectra;
+            var negativeScan = spectra?.Length > 0 && spectra[0].NegativeCharge;
+            return transition.PrecursorMz.IsNegative == negativeScan;
+        }
+
+        /// <summary>
         /// Create stick graph of a single scan in a specific pane.
         /// </summary>
         private void CreateSingleScanInPane(MSGraphPane targetPane, out double[] massErrors)
@@ -1911,14 +1930,12 @@ namespace pwiz.Skyline.Controls.Graphs
             // Assign each point to a transition point list, or else the default point list.
             IList<double> mzs;
             IList<double> intensities;
-            bool negativeScan;
             var spectra = _msDataFileScanHelper.MsDataSpectra;
 
             if (spectra.Length == 1 && spectra[0].IonMobilities == null)
             {
                 mzs = spectra[0].Mzs;
                 intensities = spectra[0].Intensities;
-                negativeScan = spectra[0].NegativeCharge;
             }
             else
             {
@@ -1927,7 +1944,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 intensities = new List<double>();
 
                 var fullScans = _msDataFileScanHelper.GetFilteredScans(out var ionMobilityFilterMin, out var ionMobilityFilterMax);
-                negativeScan = fullScans.Any() && fullScans.First().NegativeCharge;
 
                 double minMz;
                 var indices = new int[fullScans.Length];
@@ -1947,10 +1963,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int j = 0; j < _msDataFileScanHelper.ScanProvider.Transitions.Length; j++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[j];
-                    // Polarity should match, because these are the spectra used for extraction
-                    Assume.IsTrue(transition.PrecursorMz.IsNegative == negativeScan);
-                    if (transition.Source != _msDataFileScanHelper.Source ||
-                        !transition.MatchMz(mz))
+                    if (!TransitionAppliesToScan(transition) || !transition.MatchMz(mz))
                         continue;
                     assignedPointList = pointLists[j];
                     break;
@@ -2001,7 +2014,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int i = 0; i < pointLists.Length; i++)
                 {
                     var transition = _msDataFileScanHelper.ScanProvider.Transitions[i];
-                    if (transition.Source != _msDataFileScanHelper.Source)
+                    if (!TransitionAppliesToScan(transition))
                         continue;
                     var item = new SpectrumItem(pointLists[i], GetTransitionColor(transition), _msDataFileScanHelper.ScanProvider.Transitions[i].Name, 2);
                     var curveItem = _graphHelper.GraphControl.AddGraphItem(targetPane, item, false);
@@ -2038,7 +2051,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int i = 0; i < mzs.Count; i++)     //accumulate errors for each spectrum point
                 {
                     _msDataFileScanHelper.ScanProvider.Transitions.ToList()
-                        .FindAll(t => t.Source == _msDataFileScanHelper.Source && t.MatchMz(mzs[i]))
+                        .FindAll(t => TransitionAppliesToScan(t) && t.MatchMz(mzs[i]))
                         .ForEach(t => meanErrorsMap[t.Id].AddPoint(mzs[i], intensities[i]));
                 }
                 //move results to the output array
@@ -2131,6 +2144,13 @@ namespace pwiz.Skyline.Controls.Graphs
             comboBoxScanType.Enabled = false;
             lblScanId.Text = string.Empty;
             leftButton.Enabled = rightButton.Enabled = false;
+            // The mobilogram lives in its own pane separate from the heatmap, so clear it here
+            // on every clear path or a stale mobilogram lingers after the heatmap is emptied.
+            if (_mobilogramPane != null)
+            {
+                _mobilogramPane.CurveList.Clear();
+                _mobilogramPane.GraphObjList.Clear();
+            }
             graphControl.MasterPane.Title.Text = _msDataFileScanHelper.FileName;
             graphControl.MasterPane.Title.IsVisible = true;
         }
@@ -2915,7 +2935,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int t = 0; t < transitions.Length; t++)
                 {
                     var tr = transitions[t];
-                    if (tr.Source != _msDataFileScanHelper.Source || !tr.ExtractionWidth.HasValue)
+                    if (!TransitionAppliesToScan(tr) || !tr.ExtractionWidth.HasValue)
                         continue;
                     double halfWidth = tr.ExtractionWidth.Value / 2;
                     intervals.Add((tr.ProductMz.Value - halfWidth, tr.ProductMz.Value + halfWidth, t));
@@ -3417,7 +3437,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!_showIonSeriesAnnotations && !hasMatchedIons && _msDataFileScanHelper.ScanProvider != null)
             {
                 var matchedTransition = _msDataFileScanHelper.ScanProvider.Transitions.FirstOrDefault(
-                    t => t.Source == _msDataFileScanHelper.Source && t.MatchMz(mz));
+                    t => TransitionAppliesToScan(t) && t.MatchMz(mz));
                 if (matchedTransition != null)
                     table.AddDetailRow(GraphsResources.GraphFullScan_ToolTip_Transition, matchedTransition.Name, rt);
             }

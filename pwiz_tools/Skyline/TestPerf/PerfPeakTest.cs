@@ -129,7 +129,7 @@ namespace TestPerf // Note: tests in the "TestPerf" namespace only run when the 
             }
         }
 
-        [TestMethod, Timeout(7200000)]
+        [TestMethod, Timeout(7200000), NoParallelTesting(TestExclusionReason.RESOURCE_INTENSIVE)]
         public void TestPeakPerf()
         {
             // RunPerfTests = true;

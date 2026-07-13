@@ -1,0 +1,354 @@
+/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ * AI assistance: Claude Code (Claude Opus 4.6) <noreply .at. anthropic.com>
+ *
+ * Copyright 2026 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using pwiz.Common.Properties;
+using Sprache;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+
+namespace pwiz.Common.DataBinding.Filtering
+{
+    /// <summary>
+    /// Handles parsing a filter string into a list of <see cref="FilterClause"/> and
+    /// serializing a list of <see cref="FilterClause"/> back to a filter string.
+    /// </summary>
+    public class FilterClauseSerializer
+    {
+        private readonly ColumnDescriptor _rootColumn;
+        private readonly Regex _regexNumber;
+
+        public FilterClauseSerializer(ColumnDescriptor rootColumn)
+        {
+            _rootColumn = rootColumn;
+            CultureInfo = _rootColumn.DataSchema.DataSchemaLocalizer.FormatProvider;
+            var decimalSeparator = Regex.Escape(CultureInfo.NumberFormat.NumberDecimalSeparator);
+            // Accept either a leading-digit form (5, 5., 5.5) or a leading-decimal form (.5), matching
+            // NumberStyles.Float, so an operand like ".5" parses without needing quotes.
+            _regexNumber = new Regex(@"-?(?:[0-9]+(?:" + decimalSeparator + @"[0-9]*)?|" + decimalSeparator + @"[0-9]+)([Ee][+-]?[0-9]+)?");
+        }
+
+        public CultureInfo CultureInfo
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Returns a list of filter clauses as a human-readable string that can be parsed back.
+        /// FilterSpecs within a clause are joined by " and ", clauses by " or ". A clause with more
+        /// than one spec is wrapped in parentheses when there is more than one clause, e.g.
+        /// "(a and b) or c". The operand-less blank tests render against the empty string:
+        /// "Column = ''" for is-blank and the not-equals form for is-not-blank.
+        /// </summary>
+        public string ToFilterString(IList<FilterClause> clauses)
+        {
+            if (clauses == null || clauses.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            var parts = new List<string>();
+            foreach (var clause in clauses)
+            {
+                var part = FormatClause(clause);
+                if (clause.FilterSpecs.Count > 1 && clauses.Count > 1)
+                {
+                    part = @"(" + part + @")";
+                }
+                parts.Add(part);
+            }
+            return string.Join(@" or ", parts);
+        }
+
+        /// <summary>
+        /// Parses a filter string into a list of <see cref="FilterClause"/>.
+        /// </summary>
+        public List<FilterClause> ParseFilterString(string filterString)
+        {
+            if (string.IsNullOrWhiteSpace(filterString))
+            {
+                return new List<FilterClause>();
+            }
+
+            var result = CreateFilterParser().TryParse(filterString);
+            if (!result.WasSuccessful)
+            {
+                throw new FormatException(string.Format(
+                    Resources.FilterClauseSerializer_ParseFilterString_Invalid_filter_string___0_, filterString));
+            }
+            return result.Value;
+        }
+
+        private string FormatClause(FilterClause clause)
+        {
+            return string.Join(@" and ", clause.FilterSpecs.Select(FormatFilterSpec));
+        }
+
+        private string FormatFilterSpec(FilterSpec spec)
+        {
+            var sb = new StringBuilder();
+            sb.Append(QuoteColumnIfNeeded(spec.Column));
+            sb.Append(@" ");
+            // The operand-less blank tests have no readable operator symbol (their OpSymbol falls back
+            // to an internal token like "isnullorblank"), so render them as a comparison against the
+            // empty string. This keeps the output in the readable "<column> <operator> <value>" form;
+            // ParseFilterString maps "= ''" / "<> ''" back to the blank operators.
+            if (Equals(spec.Operation, FilterOperations.OP_IS_BLANK))
+            {
+                sb.Append(FilterOperations.OP_EQUALS.OpSymbol);
+                sb.Append(@" ''");
+            }
+            else if (Equals(spec.Operation, FilterOperations.OP_IS_NOT_BLANK))
+            {
+                sb.Append(FilterOperations.OP_NOT_EQUALS.OpSymbol);
+                sb.Append(@" ''");
+            }
+            else
+            {
+                sb.Append(spec.Operation.OpSymbol);
+                if (spec.Operation.HasOperand())
+                {
+                    sb.Append(@" ");
+                    sb.Append(FormatOperandTokens(GetOperandTokens(spec)));
+                }
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Converts a <see cref="FilterSpec"/>'s operand to a list of string tokens
+        /// by resolving its column and using <see cref="IFilterHandler.OperandToTokens"/>.
+        /// Falls back to splitting the invariant text if the column cannot be resolved.
+        /// </summary>
+        private IList<string> GetOperandTokens(FilterSpec spec)
+        {
+            var column = FilterClause.FindColumn(_rootColumn, spec.ColumnId);
+            if (column == null)
+            {
+                return new[] { spec.Predicate.InvariantOperandText ?? string.Empty};
+            }
+
+            return column.GetFilterHandler().OperandToTokens(spec.Operation, CultureInfo, spec.Predicate.GetOperandValue(column));
+        }
+
+        /// <summary>
+        /// Converts a list of parsed string tokens into the invariant operand text for
+        /// <see cref="FilterPredicate"/> by resolving the column and using
+        /// <see cref="IFilterHandler.ParseOperandTokens"/> and <see cref="IFilterHandler.OperandToString"/>.
+        /// Falls back to joining the tokens if the column cannot be resolved.
+        /// </summary>
+        private string TokensToInvariantText(PropertyPath columnId, IFilterOperation operation, IList<string> tokens)
+        {
+            var column = FilterClause.FindColumn(_rootColumn, columnId);
+            if (column != null)
+            {
+                var handler = column.GetFilterHandler();
+                var operand = handler.ParseOperandTokens(operation, CultureInfo, tokens);
+                return handler.SerializeOperand(operation, operand);
+            }
+            return string.Join(@", ", tokens);
+        }
+
+        /// <summary>
+        /// Formats a list of string tokens into filter string syntax.
+        /// Numbers are unquoted, strings are single-quoted.
+        /// Multiple values use square bracket syntax.
+        /// </summary>
+        private string FormatOperandTokens(IList<string> tokens)
+        {
+            if (tokens.Count == 1)
+            {
+                return FormatSingleToken(tokens[0]);
+            }
+            // Join with the culture's CSV separator (";" in comma-decimal locales) so the item
+            // delimiter never collides with the decimal separator inside a value (e.g. French "422,5").
+            var itemSeparator = ListColumnValue.GetCsvSeparator(CultureInfo) + @" ";
+            return @"[" + string.Join(itemSeparator, tokens.Select(FormatSingleToken)) + @"]";
+        }
+
+        /// <summary>
+        /// Formats a single token value for filter string syntax.
+        /// Values that look like numbers are unquoted; others are single-quoted.
+        /// </summary>
+        private string FormatSingleToken(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return @"''";
+            }
+
+            var match = _regexNumber.Match(value);
+            if (match.Success && match.Index == 0 && match.Length == value.Length)
+            {
+                return value;
+            }
+            return @"'" + value.Replace(@"'", @"''") + @"'";
+        }
+
+        /// <summary>
+        /// Quote column names with double quotes if needed.
+        /// </summary>
+        private static string QuoteColumnIfNeeded(string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return @"""""";
+            }
+            if (value.Any(c => char.IsWhiteSpace(c) || c == '"' || c == '(' || c == ')'))
+            {
+                return @"""" + value.Replace(@"""", @"""""") + @"""";
+            }
+            return value;
+        }
+
+        private Parser<List<FilterClause>> CreateFilterParser()
+        {
+            // Whitespace parser
+            var ws = Parse.WhiteSpace.Many();
+
+            // Double-quoted string for column names: "..." where "" represents a literal "
+            var escapedDoubleQuote = Parse.String(@"""""").Return('"');
+            var doubleQuotedChar = escapedDoubleQuote.Or(Parse.CharExcept('"'));
+            var doubleQuotedString = Parse.Char('"')
+                .Then(_ => doubleQuotedChar.Many().Text())
+                .Then(content => Parse.Char('"').Return(content));
+
+            // Unquoted identifier for column names: no whitespace, parens, or quotes
+            var unquotedIdentifier = Parse.CharExcept(c => char.IsWhiteSpace(c) || c == '"' || c == '\'' || c == '(' || c == ')', @"identifier char")
+                .AtLeastOnce().Text();
+
+            // Column name identifier (double-quoted or unquoted)
+            var identifier = doubleQuotedString.Or(unquotedIdentifier);
+
+            // Single-quoted string for operand values: '...' where '' represents a literal '
+            var escapedSingleQuote = Parse.String(@"''").Return('\'');
+            var singleQuotedChar = escapedSingleQuote.Or(Parse.CharExcept('\''));
+            var singleQuotedString = Parse.Char('\'')
+                .Then(_ => singleQuotedChar.Many().Text())
+                .Then(content => Parse.Char('\'').Return(content));
+
+            // Unquoted number for operand values: optional minus, digits, optional decimal
+            var unquotedNumber = Parse.Regex(_regexNumber);
+
+            // Single operand token (string literal or number text)
+            var singleToken = singleQuotedString.Or(unquotedNumber);
+
+            // Array of tokens: [value1, value2, ...] delimited by the culture's CSV separator
+            // (";" in comma-decimal locales) so it cannot collide with a decimal comma in a value.
+            var listSeparator = ListColumnValue.GetCsvSeparator(CultureInfo);
+            var arrayTokens = Parse.Char('[')
+                .Then(_ => ws)
+                .Then(_ => singleToken.DelimitedBy(ws.Then(_ => Parse.Char(listSeparator)).Then(_ => ws)))
+                .Then(values => ws.Then(_ => Parse.Char(']'))
+                    .Return((IList<string>)values.ToList()));
+
+            // Operand: single token (as one-element list) or array
+            var operandTokens = arrayTokens.Or(singleToken.Select(s => (IList<string>)new List<string> { s }));
+
+            // Operator names
+            var opSymbols = FilterOperations.ListOperations()
+                .Where(op => !string.IsNullOrEmpty(op.OpSymbol))
+                .Select(op => op.OpSymbol)
+                .OrderByDescending(name => name.Length)
+                .ToList();
+
+            // Operator parser - try each operator name
+            var operatorParser = opSymbols
+                .Select(name => Parse.String(name).Text())
+                .Aggregate((a, b) => a.Or(b));
+
+            // FilterSpec: identifier operator operand?
+            var filterSpec = identifier
+                .Then(column => ws.Then(_ => operatorParser)
+                    .Then(opSymbol =>
+                    {
+                        var op = FilterOperations.GetOperationBySymbol(opSymbol);
+                        var columnId = PropertyPath.Parse(column);
+                        if (!op.HasOperand())
+                        {
+                            return Parse.Return(new FilterSpec(columnId,
+                                new FilterPredicate(op, null)));
+                        }
+                        return ws.Then(_ => operandTokens)
+                            .Select(tokens =>
+                            {
+                                // "= ''" / "<> ''" (a single empty-string operand) are the readable
+                                // rendering of the operand-less blank tests; map them back accordingly.
+                                // This intentionally treats an equals/not-equals empty-string operand as
+                                // is-blank/is-not-blank, which also matches null values (blank means
+                                // null-or-empty) -- slightly wider than a literal OP_EQUALS "" (non-null
+                                // empty only). That is the intended semantics here; a distinct "equals the
+                                // empty string" is not separately expressible (or needed) in this syntax.
+                                // A non-empty value containing quotes (e.g. "''''''") is not empty, so it
+                                // stays a normal equals comparison.
+                                if (tokens.Count == 1 && string.IsNullOrEmpty(tokens[0]))
+                                {
+                                    if (Equals(op, FilterOperations.OP_EQUALS))
+                                    {
+                                        return new FilterSpec(columnId, new FilterPredicate(FilterOperations.OP_IS_BLANK, null));
+                                    }
+                                    if (Equals(op, FilterOperations.OP_NOT_EQUALS))
+                                    {
+                                        return new FilterSpec(columnId, new FilterPredicate(FilterOperations.OP_IS_NOT_BLANK, null));
+                                    }
+                                }
+                                return new FilterSpec(columnId,
+                                    new FilterPredicate(op, TokensToInvariantText(columnId, op, tokens)));
+                            });
+                    }));
+
+            // FilterSpec possibly wrapped in parentheses
+            var parenFilterSpec = Parse.Char('(')
+                .Then(_ => ws)
+                .Then(_ => filterSpec)
+                .Then(spec => ws.Then(_ => Parse.Char(')')).Return(spec));
+
+            // A single spec or parenthesized spec
+            var singleOrParenSpec = parenFilterSpec.Or(filterSpec);
+
+            // FilterClause: specs joined by " and "
+            var andKeyword = ws.Then(_ => Parse.String(@"and")).Then(_ => ws);
+            var filterClause = singleOrParenSpec
+                .Then(first => andKeyword.Then(_ => singleOrParenSpec).Many()
+                    .Select(rest => new FilterClause(new[] { first }.Concat(rest))));
+
+            // FilterClause possibly wrapped in parentheses
+            var parenClause = Parse.Char('(')
+                .Then(_ => ws)
+                .Then(_ => filterClause)
+                .Then(clause => ws.Then(_ => Parse.Char(')')).Return(clause));
+
+            // A single clause or parenthesized clause
+            // Try filterClause first so that "(spec1) and (spec2)" is parsed as a single clause with multiple specs,
+            // rather than "(spec1)" being parsed as a parenthesized clause.
+            var singleOrParenClause = filterClause.Or(parenClause);
+
+            // Full filter: clauses joined by " or "
+            var orKeyword = ws.Then(_ => Parse.String(@"or")).Then(_ => ws);
+            return singleOrParenClause
+                .Then(first => orKeyword.Then(_ => singleOrParenClause).Many()
+                    .Select(rest => new[] { first }.Concat(rest).ToList()))
+                .End();
+        }
+    }
+}
