@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
@@ -105,8 +106,13 @@ namespace pwiz.Skyline.ToolsUI
         /// throws if a modal got in the way (the read did not complete).</summary>
         public static T CallFunction<T>(IntPtr hwnd, Func<T> function, CancellationToken cancellationToken)
         {
+            return CallFunction(Control.FromHandle(hwnd) ?? UiThreadWindow, function, cancellationToken);
+        }
+
+        public static T CallFunction<T>(Control control, Func<T> function, CancellationToken cancellationToken)
+        {
             T result = default(T);
-            EnsureCompleted(PerformActionAndWait(hwnd, () => { result = function(); }, null, cancellationToken));
+            EnsureCompleted(PerformActionAndWait(control, () => { result = function(); }, null, cancellationToken));
             return result;
         }
 
@@ -220,9 +226,13 @@ namespace pwiz.Skyline.ToolsUI
                 bool actionRan;
                 Exception err;
                 lock (lockObj) { ctx = syncContext; actionRan = actionDone; err = actionError; }
-                // If the action threw on the UI thread, surface it now -- nothing else to wait for.
+                // If the action threw on the UI thread, surface it now -- nothing else to wait for. Rethrown AS
+                // ITSELF (ExceptionDispatchInfo keeps the type, the message and the original stack): what the action
+                // threw is what the verb means to say, and a caller -- a test, or the pipe server turning it into a
+                // JSON-RPC error -- keys on the type. Wrapping it in a TargetInvocationException would throw that
+                // away for every type not on WrapAndThrowException's list (ArgumentException among them).
                 if (err != null)
-                    ExceptionUtil.WrapAndThrowException(err);
+                    ExceptionDispatchInfo.Capture(err).Throw();
 
                 if (ctx != null)
                 {

@@ -23,6 +23,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
@@ -69,8 +70,8 @@ namespace pwiz.Skyline.ToolsUI
         // Level 1: Primitives - UI thread marshaling
 
         /// <summary>
-        /// Executes an action on THE UI THREAD -- the main window's, or the StartPage's before it exists. Exceptions
-        /// are re-thrown wrapped, so the original stack survives the hop.
+        /// Executes an action on THE UI THREAD -- the main window's, or the StartPage's before it exists. What the
+        /// action throws is re-thrown AS ITSELF, with its original stack, so the hop is invisible to the caller.
         ///
         /// <para>It targets the one UI thread and nothing else, and it is not the way to drive a FORM: a verb that
         /// knows which window it is working with goes through a form-scoped helper (JsonToolServer's InvokeOnForm /
@@ -93,10 +94,10 @@ namespace pwiz.Skyline.ToolsUI
                     caught = ex;
                 }
             }));
-            if (caught is ArgumentException argEx)
-                throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
+            // Rethrown AS ITSELF -- type, message and original stack (see DialogWatcher.PerformActionAndWait, which
+            // does the same). What the action threw is what the verb means to say, and callers key on the type.
             if (caught != null)
-                ExceptionUtil.WrapAndThrowException(caught);
+                ExceptionDispatchInfo.Capture(caught).Throw();
         }
 
         /// <summary>Executes a function on the UI thread and returns its result (see
@@ -790,25 +791,12 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>
         /// Finds a managed form by its TypeName:Title identifier -- the main window, a form docked in it, or an
         /// open dialog -- and returns it as the already-built <see cref="StandaloneForm"/> (its window handle already
-        /// captured). Matches against <see cref="GetOpenFormElements"/>, which enumerates the top-level windows off
-        /// any thread and reads the docked forms through the main window's own Invoke, so this may be called from
-        /// any thread (the caller need not marshal it onto the UI thread).
+        /// captured). Matches the same set <see cref="GetOpenForms"/> reports, and may be called from any thread.
         /// </summary>
         private static StandaloneWindow FindFormById(string formId, CancellationToken cancellationToken)
         {
             ValidateFormIdFormat(formId);
-            StandaloneWindow window = null;
-            if (Program.MainWindow == null)
-            {
-                window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId);
-            }
-            else
-            {
-                Program.MainWindow.Invoke(new Action(() =>
-                    window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId) ??
-                             GetFormWithId(GetDockedForms(cancellationToken), formId)));
-            }
-
+            var window = FindFormWithId(formId, cancellationToken);
             if (window != null)
             {
                 return window;
@@ -817,6 +805,27 @@ namespace pwiz.Skyline.ToolsUI
             throw new ArgumentException(LlmInstruction.Format(
                 @"Form not found: {0}. Use skyline_get_open_forms to see available forms.",
                 formId));
+        }
+
+        // The docked forms can only be read on the main window's UI thread, so unless the caller is already there
+        // this makes the hop -- through DialogWatcher, so the read can be ABANDONED. A plain Control.Invoke could not
+        // be: it would park behind whatever is keeping the UI thread busy (a document load riding its LongWaitDlg)
+        // and hold the pipe server's one thread there even after the client that asked for this gave up and
+        // disconnected, locking out every later request (see ConnectorDisconnectTest).
+        private static StandaloneWindow FindFormWithId(string formId, CancellationToken cancellationToken)
+        {
+            var mainWindow = Program.MainWindow;
+            if (mainWindow == null)
+            {
+                return GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId);
+            }
+
+            Func<StandaloneWindow> findNow = () =>
+                GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId) ??
+                GetFormWithId(GetDockedForms(cancellationToken), formId);
+            return mainWindow.InvokeRequired
+                ? DialogWatcher.CallFunction(mainWindow, findNow, cancellationToken)
+                : findNow();
         }
 
         private static StandaloneWindow GetFormWithId(IEnumerable<StandaloneWindow> windows, string formId)
