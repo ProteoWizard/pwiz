@@ -57,6 +57,31 @@ nav button.on{color:var(--accent);border-bottom-color:var(--accent)}
 /* Graceful "n/a for this pass" note replacing a card's chart under the top-level
    Pass 2 mode when the 2nd pass used confidence transfer (no retrained model). */
 .na{color:var(--muted);font-size:13px;padding:18px 4px;font-style:italic}
+/* CAL (calibration) per-file picker. There is no <select> precedent elsewhere in
+   this report (every other selector is a .vbtns button row), but the calibration
+   view has one row per input file (82-500), too many for a button row, so it gets a
+   real dropdown, styled to match the dark theme. Drives the CAL Model + FDR cards. */
+.calpick{display:flex;align-items:center;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.calpick label{color:var(--muted);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.calpick select{background:var(--panel);border:1px solid var(--line);color:var(--ink);font:inherit;
+  font-size:12.5px;font-weight:550;padding:6px 30px 6px 12px;border-radius:8px;cursor:pointer;box-shadow:var(--shadow);
+  max-width:520px;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M0 0l5 6 5-6z' fill='%239aa4b0'/></svg>");
+  background-repeat:no-repeat;background-position:right 11px center}
+.calpick select:hover{border-color:var(--accent)}
+.calpick .flag{color:var(--warn);font-size:11.5px;font-weight:600}
+/* CAL mode swaps a tab's Percolator content for its calibration content: when the
+   tab section carries .calon, its direct Percolator children (cards / selectors /
+   descriptions / print blocks) hide and the .calbox calibration container shows.
+   Keeps the existing per-tab markup untouched (no wrapping / restructuring). */
+.calbox{display:none}
+.tab.calon .calbox{display:block}
+.tab.calon>.card:not(.calbox),.tab.calon>.vbtns:not(.calbox),
+.tab.calon>.desc:not(.calbox),.tab.calon>.print-only:not(.calbox){display:none}
+/* Clickable per-file marker (Reproducibility scatter points / Summary rows) so a
+   reviewer can jump straight to an outlier file's Model page. */
+.callink{cursor:pointer}
+.callink:hover{opacity:.75}
 .tab{display:none} .tab.on{display:block}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;
   padding:18px;box-shadow:var(--shadow);margin-bottom:18px}
@@ -154,6 +179,14 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
   /* Hide the single interactive FDR view (the print-only block shows all four). */
   #fdpChart,#fdpKpis,#fdpLegend,#fdpNote{display:none!important}
   .featcell{break-inside:avoid}
+  /* CAL: the on-screen dropdown shows one file; for print, hide the single-file
+     interactive cards and expand #calPrintAll (every file's cards) instead. */
+  .calpick{display:none!important}
+  .calfilecell{break-inside:avoid;margin-bottom:14px}
+  /* In CAL mode, the .calbox is display:block via .tab.calon; ensure its own
+     print-only per-file block shows and the single-file interactive cards hide. */
+  .tab.calon .cal-single{display:none!important}
+  .tab.calon .print-only{display:block!important}
 }
 </style>
 </head>
@@ -199,6 +232,38 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       a time on click; printed here in full).</p>
     <div id="featPrintAll" class="featgrid"></div>
   </div>
+  <!-- CAL (calibration) content for the Model tab: per-file cal-LDA feature table +
+       composite calibration-discriminant histogram. Shown only when the top-level
+       pass switch is on CAL (see setCalMode). -->
+  <div class="calbox" id="calModelBox">
+    <div class="calpick" id="calModelPick"></div>
+    <div class="cal-single">
+      <div class="card">
+        <h2>Calibration discriminant &mdash; feature contributions</h2>
+        <p class="desc">The per-file calibration LDA (the linear model that scores each precursor for its use as an
+          alignment anchor), decomposed into each feature's percent contribution to the calibration-target vs
+          calibration-decoy separation &mdash; the calibration analog of the trained scoring model above.
+          Rows in <b style="color:var(--bad)">red</b> have a coefficient whose sign is opposite the feature's
+          expected direction.</p>
+        <div id="calModelNa" class="na" style="display:none"></div>
+        <div id="calModelTable"></div>
+      </div>
+      <div class="card">
+        <h2 id="calScoreHdr">Calibration discriminant score distribution</h2>
+        <p class="desc">Composite calibration-discriminant score for the selected file's calibration targets vs
+          decoys, with a normal curve fit to the decoys &mdash; the calibration analog of the composite model-score
+          view. A well-separated pair means the anchor selection had a clean signal to calibrate on.</p>
+        <div class="legend" id="calScoreLegend"></div>
+        <div class="chartbox" id="calScoreChart"></div>
+      </div>
+    </div>
+    <div class="card print-only" id="calModelPrintCard">
+      <h2>Per-file calibration discriminant distributions</h2>
+      <p class="desc">Every file's composite calibration-discriminant distribution (the interactive report shows one
+        at a time via the dropdown; printed here in full).</p>
+      <div id="calModelPrintAll"></div>
+    </div>
+  </div>
 </section>
 
 <section class="tab" data-tab="density">
@@ -222,6 +287,15 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="legend" id="ratioLegend"></div>
     <div class="chartbox" id="ratioChart"></div>
     <p class="note" id="ratioNote"></p>
+  </div>
+  <!-- CAL: no target/decoy-null density analog for the calibration model -->
+  <div class="calbox" id="calDensityBox">
+    <div class="card">
+      <h2>Score density by class</h2>
+      <div class="na">Not applicable for calibration. Calibration is a pre-search per-file anchor-selection artifact
+        (no experiment-wide target/decoy-null density to align). See the <b>Model</b> tab for each file's calibration
+        discriminant distribution, and <b>FDR calibration</b> for the entrapment FDP of the anchor set.</div>
+    </div>
   </div>
 </section>
 
@@ -254,6 +328,37 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       experiment-wide curve saturates once the real population is found &mdash; a yield that never plateaus
       is itself an FDR-control tell.</p>
     <div class="chartbox" id="yieldChart"></div>
+  </div>
+  <!-- CAL content for the FDR tab: the selected file's entrapment-FDP-vs-cal-q curve
+       (hidden when no entrapment) + anchor yield curve. Shares the cal-file index
+       with the Model tab via the same dropdown. -->
+  <div class="calbox" id="calFdrBox">
+    <div class="calpick" id="calFdrPick"></div>
+    <div class="cal-single">
+      <div class="card" id="calFdpCard">
+        <h2>Calibration FDR &mdash; cal-q vs true FDP</h2>
+        <p class="desc">Entrapment-measured true false-discovery proportion of the selected file's calibration
+          anchor set versus its calibration q-value. This is the calibration analog of the search FDR calibration:
+          it asks whether the anchors used to align this file were themselves controlled. Hidden for files with no
+          entrapment in the anchor set. Each has a [0,&nbsp;2%] zoom (FDP axis auto-scaled) and a full-extent panel.</p>
+        <div class="kpis" id="calFdpKpis"></div>
+        <div class="legend" id="calFdpLegend"></div>
+        <div class="chartbox" id="calFdpChart"></div>
+        <p class="note" id="calFdpNote"></p>
+      </div>
+      <div class="card" id="calYieldCard">
+        <h2>Anchor yield</h2>
+        <p class="desc">Accepted calibration anchors (real targets) for the selected file as the cal q-value
+          threshold sweeps. A yield that keeps climbing without plateauing admits weak, non-reproducing anchors.</p>
+        <div class="chartbox" id="calYieldChart"></div>
+      </div>
+    </div>
+    <div class="card print-only" id="calFdrPrintCard">
+      <h2>Per-file calibration FDR</h2>
+      <p class="desc">Every file's calibration FDP + anchor yield (the interactive report shows one at a time via
+        the dropdown; printed here in full).</p>
+      <div id="calFdrPrintAll"></div>
+    </div>
   </div>
 </section>
 
@@ -300,6 +405,20 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="chartbox" id="unionFdpChart"></div>
     <p class="note" id="unionFdpNote"></p>
   </div>
+  <!-- CAL content for the Reproducibility tab: an ALL-FILES overview (not per-file
+       selection) to spot an outlier file across 82-500 files. Per-file scalars are
+       plotted against file index; each point is clickable and jumps to that file's
+       Model page (jumpToCalFile). -->
+  <div class="calbox" id="calReproBox">
+    <div class="card">
+      <h2>Per-file calibration overview</h2>
+      <p class="desc">Every input file's key calibration scalars on one axis (file index on the x-axis) so an
+        <b>outlier file</b> stands out across the whole dataset &mdash; a large MS1/MS2 mass error, a poor RT fit,
+        a thin anchor set, or an elevated anchor FDP. <b>Click any point</b> to jump straight to that file's
+        calibration Model page with the file pre-selected. Mass panels are in <span id="calReproUnit"></span>.</p>
+      <div id="calReproCharts"></div>
+    </div>
+  </div>
 </section>
 
 <section class="tab" data-tab="competition">
@@ -314,6 +433,15 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <div class="chartbox" id="wfChart"></div>
     <p class="note" id="wfNote"></p>
   </div>
+  <!-- CAL: no paired target/decoy competition analog for the calibration model -->
+  <div class="calbox" id="calCompetitionBox">
+    <div class="card">
+      <h2>Paired decoy-win fraction</h2>
+      <div class="na">Not applicable for calibration. The calibration model has no paired target&ndash;decoy
+        competition (base_id pairing) to score a within-pair coin. Use the <b>Model</b> tab for each file's
+        calibration discriminant separation, and <b>FDR calibration</b> for the anchor-set FDP.</div>
+    </div>
+  </div>
 </section>
 
 <section class="tab" data-tab="summary">
@@ -327,6 +455,17 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
     <h2>Per-file passing precursors</h2>
     <p class="desc" id="fileDesc">Precursors passing the run-level FDR, per input file.</p>
     <div id="fileTable"></div>
+  </div>
+  <!-- CAL content for the Summary tab: a per-file corrections TABLE. Rows clickable;
+       clicking jumps to that file's calibration Model page (jumpToCalFile). -->
+  <div class="calbox" id="calSummaryBox">
+    <div class="card">
+      <h2>Per-file calibration corrections</h2>
+      <p class="desc">The calibration correction Osprey applied to each input file: MS1/MS2 mass offsets and
+        tolerances, the RT alignment fit, and the anchor-set size / entrapment. <b>Click a row</b> to open that
+        file's calibration Model page. Rows in <b style="color:var(--bad)">red</b> failed to calibrate.</p>
+      <div id="calSummaryTable"></div>
+    </div>
   </div>
 </section>
 
@@ -373,16 +512,22 @@ function esc(s){return String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">
 // ---------- tabs ----------
 const TABS=[["model","Model"],["density","Density"],["fdr","FDR calibration"],["repro","Reproducibility"],["competition","Competition"],["summary","Summary"]];
 const nav=document.getElementById("nav");
+const navBtns={};   // tab name -> its nav button (for programmatic activation)
 TABS.forEach((t,i)=>{const tab=document.querySelector('.tab[data-tab="'+t[0]+'"]');
   // The FDR tab is always shown: it carries the always-present Identification yield
   // curve; its entrapment-only "q vs true FDP" card hides itself when there is no
   // entrapment (see drawFdpCard).
-  const b=H(nav,"button",{},t[1]);
-  b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
-    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
-    b.classList.add("on");tab.classList.add("on");};
+  const b=H(nav,"button",{},t[1]);navBtns[t[0]]=b;
+  b.onclick=()=>activateTab(t[0]);
   if(i===0)b.classList.add("on"),tab.classList.add("on");
 });
+// Activate a tab by name (also used by jumpToCalFile for cross-tab links).
+function activateTab(name){
+  document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+  const b=navBtns[name],tab=document.querySelector('.tab[data-tab="'+name+'"]');
+  if(b)b.classList.add("on");if(tab)tab.classList.add("on");
+}
 
 // ---------- axis helpers ----------
 function axes(s,box,xd,yd,opt){
@@ -403,7 +548,7 @@ function axes(s,box,xd,yd,opt){
 function ticks(a,b,n){const step=nice((b-a)/n);const out=[];let v=Math.ceil(a/step)*step;for(;v<=b+1e-9;v+=step)out.push(+v.toFixed(10));return out;}
 function nice(x){const p=Math.pow(10,Math.floor(Math.log10(Math.abs(x)||1)));const f=x/p;return (f<1.5?1:f<3?2:f<7?5:10)*p;}
 function trim(v){return Math.abs(v)>=1000?v.toLocaleString():(+v.toFixed(3)).toString();}
-function legend(node,items){node.innerHTML="";items.forEach(it=>{const s=H(node,"span",{});
+function legend(node,items){if(!node)return;node.innerHTML="";items.forEach(it=>{const s=H(node,"span",{});
   H(s,"i",{class:it.line?"ln":"",style:"background:"+it.color});H(s,"span",{},it.name);
   if(it.toggle){s.onclick=()=>{s.classList.toggle("off");it.toggle(s.classList.contains("off"));};}});}
 
@@ -452,22 +597,70 @@ function naChart(hostId,legId,msgHtml){
   if(legId){const l=document.getElementById(legId);if(l)l.innerHTML="";}
 }
 
-// Pass switch UI (right of the tab bar); hidden unless a second pass ran.
+// ========== CAL (calibration) mode ==========
+// CAL is a THIRD selectable mode in the top-level pass switch, shown only when a
+// per-file calibration bundle (D.cal) is present. Unlike Pass 1/2 (which re-source
+// the same Percolator cards), CAL is pass-INDEPENDENT: it is a pre-search per-file
+// anchor-selection artifact. When CAL is active, each tab swaps its Percolator
+// content for calibration content (Model / FDR = per-file via a shared dropdown;
+// Reproducibility = all-files overview; Summary = per-file corrections table;
+// Density / Competition = "n/a for calibration"). See renderCal / setCalMode.
+const HAS_CAL = !!(D.cal && D.cal.files && D.cal.files.length);
+// One shared UI state object so more cross-tab links / selectors are easy to add.
+const CAL = {
+  files: HAS_CAL ? D.cal.files : [],
+  unit:  (D.cal && D.cal.massUnit) || "ppm",
+  hasEnt:!!(D.cal && D.cal.hasEntrapment),
+  sel:   0,          // shared cal-file index (Model + FDR dropdowns stay in sync)
+  on:    false       // CAL mode active (the third pass-switch button)
+};
+
+// Pass switch UI (right of the tab bar). Shown when a second pass ran OR a
+// calibration bundle is present (the CAL button lives on the same switch).
 (function(){const sel=document.getElementById("passSel");
-  if(PASSES.length<2){sel.style.display="none";return;}
+  if(PASSES.length<2 && !HAS_CAL){sel.style.display="none";return;}
   H(sel,"span",{class:"lbl"},"pass");
-  PASSES.forEach((b,k)=>{const btn=H(sel,"button",{class:k===0?"on":""},b.label);
+  const passBtns=[];
+  PASSES.forEach((b,k)=>{const btn=H(sel,"button",{class:k===0?"on":""},b.label);passBtns.push(btn);
     btn.title = b.pass===2
       ? (b.hasStructural ? "2nd-pass Percolator retrain on the final reported pool"
                          : "2nd-pass confidence transfer (no retrain): q-driven cards only")
       : "1st-pass pre-compaction training pool";
-    btn.onclick=()=>{if(PI===k)return;PI=k;
-      sel.querySelectorAll("button").forEach(x=>x.classList.remove("on"));btn.classList.add("on");
-      renderPass();};});
+    btn.onclick=()=>selectPass(k);});
+  let calBtn=null;
+  if(HAS_CAL){calBtn=H(sel,"button",{},"CAL");
+    calBtn.title="Per-file calibration diagnostics (pre-search anchor selection): mass / RT corrections, "+
+      "calibration discriminant, and anchor-set FDR";
+    calBtn.onclick=()=>selectCal();}
+  // Switch to a numeric Percolator pass (leaves CAL mode if it was active).
+  window.selectPass=function(k){
+    if(!CAL.on && PI===k)return;
+    PI=k;CAL.on=false;
+    passBtns.forEach((x,j)=>x.classList.toggle("on",j===k));
+    if(calBtn)calBtn.classList.remove("on");
+    renderPass();
+  };
+  // Switch to CAL mode.
+  window.selectCal=function(){
+    if(CAL.on)return;
+    CAL.on=true;
+    passBtns.forEach(x=>x.classList.remove("on"));
+    if(calBtn)calBtn.classList.add("on");
+    renderPass();
+  };
 })();
 
+// Toggle every tab section between Percolator (.calon off) and calibration (.calon on)
+// content. The .calbox CSS rule does the actual show/hide of the two content blocks.
+function setCalMode(on){
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("calon",on));
+}
+
 // Re-source every pass-dependent card for the active pass (called on load + toggle).
+// Branches to the calibration renderers when CAL mode is active.
 function renderPass(){
+  setCalMode(CAL.on);
+  if(CAL.on){renderCal();return;}
   const b=B();
   renderModelTab(b);
   renderDensityTab(b);
@@ -475,6 +668,28 @@ function renderPass(){
   renderReproTab(b);
   renderCompetitionTab(b);
   renderPerFile(b);
+}
+
+// Shared feature-contribution table (Feature | Coefficient | Contribution bar).
+// Used by the trained-model tab and, unchanged, by the CAL per-file calibration-LDA
+// table. opts.onRowClick(row) may return a per-row click handler (or null) -> a .clk
+// row wired to it; opts.emptyNote overrides the empty-table message.
+function buildFeatureTable(host,rows,opts){
+  opts=opts||{};
+  const maxP=Math.max(1,...rows.map(r=>Math.abs(r.percent)||0));
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+  [["Feature","l"],["Coefficient",""],["Contribution",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const tb=H(t,"tbody",{});
+  rows.forEach(r=>{const handler=opts.onRowClick?opts.onRowClick(r):null;
+    const tr=H(tb,"tr",{class:(r.unexpected?"neg ":"")+(handler?"clk":"")});
+    H(tr,"td",{class:"l"},r.label);
+    H(tr,"td",{class:"num"},fmt(r.coefficient,4));
+    const td=H(tr,"td",{class:"num bar"});
+    H(td,"i",{style:"width:"+(Math.abs(r.percent)/maxP*100).toFixed(1)+"%"});
+    H(td,"span",{},pct(r.percent/100,1));
+    if(handler)tr.onclick=()=>handler(tr);
+  });
+  if(!rows.length && opts.emptyNote)H(host,"p",{class:"note"},opts.emptyNote);
 }
 
 // (Re)render the Model tab for the active pass: feature table, print grid, and the
@@ -494,19 +709,7 @@ function renderModelTab(b){
   }
   na.style.display="none";wrap.style.display="";
   const rows=b.features||[];const host=document.getElementById("modelTable");host.innerHTML="";
-  const maxP=Math.max(1,...rows.map(r=>Math.abs(r.percent)||0));
-  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
-  [["Feature","l"],["Coefficient",""],["Contribution",""]].forEach(h=>H(htr,"th",{class:h[1]},h[0]));
-  const tb=H(t,"tbody",{});
-  const clickable=r=>HAS_FEATHIST && r.targetHist;
-  rows.forEach(r=>{const tr=H(tb,"tr",{class:(r.unexpected?"neg ":"")+(clickable(r)?"clk":"")});
-    H(tr,"td",{class:"l"},r.label);
-    H(tr,"td",{class:"num"},fmt(r.coefficient,4));
-    const td=H(tr,"td",{class:"num bar"});
-    H(td,"i",{style:"width:"+(Math.abs(r.percent)/maxP*100).toFixed(1)+"%"});
-    H(td,"span",{},pct(r.percent/100,1));
-    if(clickable(r))tr.onclick=()=>selectFeature(r,tr);
-  });
+  buildFeatureTable(host,rows,{onRowClick:r=>(HAS_FEATHIST&&r.targetHist)?(tr=>selectFeature(r,tr)):null});
   if(b.modelDegenerate)H(host,"p",{class:"note"},"Composite separation is degenerate; percentages unavailable.");
   if(!rows.length)H(host,"p",{class:"note"},"Model table unavailable — the first-pass model was not retrained on this run (resumed / rehydrated).");
 
@@ -630,13 +833,17 @@ function featureHist(hostId,legId,r){
   draw();
 }
 
-// ---------- shared class histogram builder (H0 = the pass's ScoreHistogram) ----------
-function classHist(H0,hostId,legId,normalize){
+// ---------- shared class histogram builder (H0 = a ScoreHistogram) ----------
+// opt (optional): {noEntrapment} to suppress the p_target/p_decoy series (used by the
+// CAL calibration-discriminant view, whose target/decoy are calibration classes, not
+// the experiment's entrapment pool); {targetName,decoyName} to relabel the two series.
+function classHist(H0,hostId,legId,normalize,opt){
+  opt=opt||{};
   if(!H0||!H0.binEdges||H0.binEdges.length<2){document.getElementById(hostId).textContent="No score data.";return;}
   const edges=H0.binEdges, nb=edges.length-1;
-  const series=[{k:"target",name:"target",color:COL.target,v:H0.target},
-                {k:"decoy",name:"decoy",color:COL.decoy,v:H0.decoy}];
-  if(D.hasEntrapment){series.push({k:"ptarget",name:"entrapment (p_target)",color:COL.ptarget,v:H0.pTarget});
+  const series=[{k:"target",name:opt.targetName||"target",color:COL.target,v:H0.target},
+                {k:"decoy",name:opt.decoyName||"decoy",color:COL.decoy,v:H0.decoy}];
+  if(D.hasEntrapment && !opt.noEntrapment){series.push({k:"ptarget",name:"entrapment (p_target)",color:COL.ptarget,v:H0.pTarget});
                       series.push({k:"pdecoy",name:"p_decoy",color:COL.pdecoy,v:H0.pDecoy});}
   const width=(i)=>edges[i+1]-edges[i];
   const dens=series.map(s=>{const tot=s.v.reduce((a,b)=>a+b,0)||1;
@@ -788,6 +995,48 @@ const fdrScopeKey=()=>fdrScope===0?"experiment":"run";
 const fdrScopeName=()=>fdrScope===0?"experiment-wide":"per-run";
 const opIdx=(f,q)=>Math.max(0,Math.min(lowerB(f.q,q)-1,f.q.length-1));
 
+// One FDP-calibration panel (Osprey q on x, estimated true FDP on y, y=x reference).
+// Extracted to module scope so BOTH the search FDR card and the CAL per-file
+// calibration-FDR card can draw it. series/off are passed in (FDP_SERIES/fdpOff for
+// search; a CAL-local pair for calibration) so the two cards keep independent legend
+// toggles. Behavior is identical to the previous nested drawPanel.
+function drawFdpPanel(parent,f,xmax,title,series,off){
+  const W=560,Hh=330,box={l:62,t:28,w:W-80,h:Hh-66};
+  const s=svg(W,Hh);parent.appendChild(s);
+  // FDP axis auto-scaled to the in-window curve (non-proportional zoom, so a
+  // gendecoy-style FDP well above q stays on-pane). The FDP at the smallest
+  // q-values is a tiny-n_t transient (the first accepted target can sit at
+  // combined = 100%); scale to the settled curve by ignoring the first ~2% of
+  // accepted targets in the window, else that spike pins the axis to 100%.
+  let nWin=0;
+  for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax)break;nWin=f.nTargetAccepted[i];}
+  const nMin=nWin*0.02;
+  let ymax=xmax;
+  series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;
+    for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax)break;if(f.nTargetAccepted[i]<nMin)continue;if(a[i]>ymax)ymax=a[i];}});
+  ymax=Math.min(1.0,ymax*1.15);
+  E(s,"text",{x:box.l+box.w/2,y:16,"text-anchor":"middle",class:"axtitle"}).textContent=title+"  (FDP axis to "+pct(ymax,1)+")";
+  const sc=axes(s,box,[0,xmax],[0,ymax],{xlab:"Osprey q-value",ylab:"estimated true FDP",xfmt:v=>pct(v,v<0.05?1:0),yfmt:v=>pct(v,1)});
+  const dx=Math.min(xmax,ymax);
+  E(s,"line",{x1:sc.x(0),y1:sc.y(0),x2:sc.x(dx),y2:sc.y(dx),stroke:COL.muted,"stroke-dasharray":"5 4","stroke-width":1});
+  E(s,"line",{x1:sc.x(D.runFdr),y1:box.t,x2:sc.x(D.runFdr),y2:box.t+box.h,stroke:COL.muted,"stroke-dasharray":"2 3",opacity:.55});
+  series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;
+    let path="",started=false;const pts=[];
+    for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax*1.001)break;if(f.nTargetAccepted[i]<nMin)continue;const X=sc.x(f.q[i]),Y=sc.y(Math.min(a[i],ymax));
+      path+=(started?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1)+" ";started=true;pts.push([X,Y]);}
+    E(s,"path",{d:path,fill:"none",stroke:se.color,"stroke-width":1.5});
+    const step=Math.max(1,Math.floor(pts.length/55));
+    for(let k=0;k<pts.length;k+=step)E(s,"circle",{cx:pts[k][0],cy:pts[k][1],r:2.2,fill:"none",stroke:se.color,"stroke-width":0.9});
+  });
+  const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+  ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const q=((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*xmax;
+    let i=Math.min(lowerB(f.q,q),f.q.length-1);
+    let html="<b>q = "+pct(f.q[i],2)+"</b> · "+fmt(f.nTargetAccepted[i],0)+" targets";
+    series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+pct(a[i],2);});
+    showTip(ev,html);});
+  ov.addEventListener("mouseleave",hideTip);
+}
+
 // Rebuild the FDR tab for the active pass: the shared scope selector, the FDP
 // calibration card (entrapment only), and the yield card (always).
 function renderFdrTab(b){
@@ -818,47 +1067,11 @@ function drawFdpCard(b){
   card.style.display="";if(scopeCard)scopeCard.style.display="";
   const host=document.getElementById("fdpChart");host.innerHTML="";
   const series=FDP_SERIES, off=fdpOff;
-  function drawPanel(parent,f,xmax,title){
-    const W=560,Hh=330,box={l:62,t:28,w:W-80,h:Hh-66};
-    const s=svg(W,Hh);parent.appendChild(s);
-    // FDP axis auto-scaled to the in-window curve (non-proportional zoom, so a
-    // gendecoy-style FDP well above q stays on-pane). The FDP at the smallest
-    // q-values is a tiny-n_t transient (the first accepted target can sit at
-    // combined = 100%); scale to the settled curve by ignoring the first ~2% of
-    // accepted targets in the window, else that spike pins the axis to 100%.
-    let nWin=0;
-    for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax)break;nWin=f.nTargetAccepted[i];}
-    const nMin=nWin*0.02;
-    let ymax=xmax;
-    series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;
-      for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax)break;if(f.nTargetAccepted[i]<nMin)continue;if(a[i]>ymax)ymax=a[i];}});
-    ymax=Math.min(1.0,ymax*1.15);
-    E(s,"text",{x:box.l+box.w/2,y:16,"text-anchor":"middle",class:"axtitle"}).textContent=title+"  (FDP axis to "+pct(ymax,1)+")";
-    const sc=axes(s,box,[0,xmax],[0,ymax],{xlab:"Osprey q-value",ylab:"estimated true FDP",xfmt:v=>pct(v,v<0.05?1:0),yfmt:v=>pct(v,1)});
-    const dx=Math.min(xmax,ymax);
-    E(s,"line",{x1:sc.x(0),y1:sc.y(0),x2:sc.x(dx),y2:sc.y(dx),stroke:COL.muted,"stroke-dasharray":"5 4","stroke-width":1});
-    E(s,"line",{x1:sc.x(D.runFdr),y1:box.t,x2:sc.x(D.runFdr),y2:box.t+box.h,stroke:COL.muted,"stroke-dasharray":"2 3",opacity:.55});
-    series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;
-      let path="",started=false;const pts=[];
-      for(let i=0;i<f.q.length;i++){if(f.q[i]>xmax*1.001)break;if(f.nTargetAccepted[i]<nMin)continue;const X=sc.x(f.q[i]),Y=sc.y(Math.min(a[i],ymax));
-        path+=(started?"L":"M")+X.toFixed(1)+" "+Y.toFixed(1)+" ";started=true;pts.push([X,Y]);}
-      E(s,"path",{d:path,fill:"none",stroke:se.color,"stroke-width":1.5});
-      const step=Math.max(1,Math.floor(pts.length/55));
-      for(let k=0;k<pts.length;k+=step)E(s,"circle",{cx:pts[k][0],cy:pts[k][1],r:2.2,fill:"none",stroke:se.color,"stroke-width":0.9});
-    });
-    const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
-    ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();const q=((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*xmax;
-      let i=Math.min(lowerB(f.q,q),f.q.length-1);
-      let html="<b>q = "+pct(f.q[i],2)+"</b> · "+fmt(f.nTargetAccepted[i],0)+" targets";
-      series.forEach(se=>{const a=f[se.key];if(!a||off[se.k])return;html+="<br><span style='color:"+se.color+"'>■</span> "+se.name+": "+pct(a[i],2);});
-      showTip(ev,html);});
-    ov.addEventListener("mouseleave",hideTip);
-  }
   // Draw the two panels (zoom + full) for the scope-selected view f.
   const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
   const maxq=f.q[f.q.length-1]||1;
-  drawPanel(H(wrap,"div",{}),f,0.02,"zoom  q in [0, 2%]");
-  drawPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent");
+  drawFdpPanel(H(wrap,"div",{}),f,0.02,"zoom  q in [0, 2%]",series,off);
+  drawFdpPanel(H(wrap,"div",{}),f,Math.max(0.02,maxq),"full extent",series,off);
   const i1=opIdx(f,0.01);const kp=document.getElementById("fdpKpis");kp.innerHTML="";
   kpi(kp,"discoveries @1% q",fmt(f.nTargetAccepted[i1],0),"");
   kpi(kp,"combined FDP @1% q",pct(f.combined[i1],2),cls(f.combined[i1],0.01));
@@ -885,9 +1098,30 @@ function drawFdpCard(b){
         (fv.paired?" &middot; paired "+pct(fv.paired[j1],2):"")+" &middot; lower "+pct(fv.lowerBound[j1],2)});
     const wrap2=H(blk,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
     const mq=fv.q[fv.q.length-1]||1;
-    drawPanel(H(wrap2,"div",{}),fv,0.02,"zoom  q in [0, 2%]");
-    drawPanel(H(wrap2,"div",{}),fv,Math.max(0.02,mq),"full extent");
+    drawFdpPanel(H(wrap2,"div",{}),fv,0.02,"zoom  q in [0, 2%]",series,off);
+    drawFdpPanel(H(wrap2,"div",{}),fv,Math.max(0.02,mq),"full extent",series,off);
   });
+}
+
+// One yield curve (q on x, accepted-target count on y, with the run-FDR marker).
+// Extracted so both the search Identification-yield card and the CAL anchor-yield card
+// share it. host = the chart container element; scopeName = the x-axis qualifier;
+// ylab = the y-axis / tooltip noun ("accepted targets" | "accepted anchors").
+function drawYieldCurve(host,q,t,scopeName,ylab){
+  host.innerHTML="";
+  const W=680,Hh=300,box={l:60,t:14,w:W-78,h:Hh-56};
+  const s=svg(W,Hh);host.appendChild(s);
+  const xmax=0.1, ymax=Math.max(1,...t)*1.08;
+  const sc=axes(s,box,[0,xmax],[0,ymax],{xlab:"reported q-value ("+scopeName+")",ylab:ylab,xfmt:v=>pct(v,0),yfmt:v=>trim(v)});
+  E(s,"line",{x1:sc.x(D.runFdr),y1:box.t,x2:sc.x(D.runFdr),y2:box.t+box.h,stroke:COL.muted,"stroke-dasharray":"2 3",opacity:.7});
+  let path="";q.forEach((qq,i)=>{path+=(i?"L":"M")+sc.x(qq).toFixed(1)+" "+sc.y(t[i]).toFixed(1)+" ";});
+  E(s,"path",{d:path,fill:"none",stroke:COL.accent,"stroke-width":2});
+  const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
+  ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
+    const qv=((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*xmax;
+    let i=Math.min(lowerB(q,qv),q.length-1);if(i<0)i=0;
+    showTip(ev,"<b>q = "+pct(q[i],2)+"</b> ("+scopeName+")<br>"+fmt(t[i],0)+" "+ylab);});
+  ov.addEventListener("mouseleave",hideTip);
 }
 
 // The always-present Identification yield curve for the active pass at the FDR tab's
@@ -896,21 +1130,8 @@ function drawYield(b){
   const y=b.idYield, card=document.getElementById("yieldCard");
   if(!y||!y.q){if(card)card.style.display="none";return;}
   if(card)card.style.display="";
-  const t=(fdrScope===0?y.targetsExperiment:y.targetsRun)||[], name=fdrScopeName();
-  const host=document.getElementById("yieldChart");host.innerHTML="";
-  const W=680,Hh=300,box={l:60,t:14,w:W-78,h:Hh-56};
-  const s=svg(W,Hh);host.appendChild(s);
-  const xmax=0.1, ymax=Math.max(1,...t)*1.08;
-  const sc=axes(s,box,[0,xmax],[0,ymax],{xlab:"reported q-value ("+name+")",ylab:"accepted targets",xfmt:v=>pct(v,0),yfmt:v=>trim(v)});
-  E(s,"line",{x1:sc.x(D.runFdr),y1:box.t,x2:sc.x(D.runFdr),y2:box.t+box.h,stroke:COL.muted,"stroke-dasharray":"2 3",opacity:.7});
-  let path="";y.q.forEach((qq,i)=>{path+=(i?"L":"M")+sc.x(qq).toFixed(1)+" "+sc.y(t[i]).toFixed(1)+" ";});
-  E(s,"path",{d:path,fill:"none",stroke:COL.accent,"stroke-width":2});
-  const ov=E(s,"rect",{x:box.l,y:box.t,width:box.w,height:box.h,fill:"transparent"});
-  ov.addEventListener("mousemove",ev=>{const rb=s.getBoundingClientRect();
-    const q=((ev.clientX-rb.left)/rb.width*W-box.l)/box.w*xmax;
-    let i=Math.min(lowerB(y.q,q),y.q.length-1);if(i<0)i=0;
-    showTip(ev,"<b>q = "+pct(y.q[i],2)+"</b> ("+name+")<br>"+fmt(t[i],0)+" accepted targets");});
-  ov.addEventListener("mouseleave",hideTip);
+  const t=(fdrScope===0?y.targetsExperiment:y.targetsRun)||[];
+  drawYieldCurve(document.getElementById("yieldChart"),y.q,t,fdrScopeName(),"accepted targets");
 }
 function cls(v,q){return v==null?"":(v<=q*1.15?"good":v<=q*1.6?"warn":"bad");}
 // Flag a paired-coin fraction by its distance from a fair 50%, and a real-vs-
@@ -1219,6 +1440,259 @@ function renderPerFile(b){
 
 function kpi(host,label,val,c){const d=H(host,"div",{class:"kpi"});H(d,"div",{class:"v "+(c||"")},val);H(d,"div",{class:"k"},label);}
 function lowerB(a,v){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;if(a[m]<v)lo=m+1;else hi=m;}return lo;}
+
+// ============================================================================
+// CAL (calibration) renderers. Entered from renderPass() when CAL.on is true.
+// Model + FDR are per-file (shared CAL.sel dropdown); Reproducibility is an
+// all-files overview (clickable -> jumpToCalFile); Summary is a per-file
+// corrections table (clickable rows); Density + Competition are n/a notes.
+// The n/a note markup is static, so renderCal only has to (re)build the four
+// data-driven tabs. Charts reuse the shared helpers (classHist, buildFeatureTable,
+// drawFdpPanel, drawYieldCurve, axes) so the calibration view matches the rest of
+// the report exactly.
+// ============================================================================
+const CAL_FDP_SERIES=[{k:"lower",name:"lower-bound FDP",color:COL.ptarget,key:"lowerBound"},
+                      {k:"combined",name:"combined FDP",color:COL.target,key:"combined"},
+                      {k:"paired",name:"paired FDP",color:COL.pdecoy,key:"paired"}];
+const calFdpOff={lower:false,combined:false,paired:false};
+const calFileName=i=>{const f=CAL.files[i];return f?(f.file||("file "+(i+1))):("file "+(i+1));};
+const calIsBad=f=>!!(f&&(f.degenerate||f.calibrated===false));
+
+function renderCal(){
+  buildCalPickers();
+  renderCalModel();
+  renderCalFdr();
+  renderCalRepro();
+  renderCalSummary();
+  // Density + Competition CAL boxes are static n/a markup -- nothing to render.
+}
+
+// Build both per-file <select> dropdowns (Model + FDR) from CAL.files, kept in sync
+// on the shared CAL.sel index. Rebuilt each renderCal so a jumpToCalFile selection or
+// a re-entry reflects the current index.
+function buildCalPickers(){
+  [["calModelPick","Model"],["calFdrPick","FDR"]].forEach(([host])=>{
+    const p=document.getElementById(host);if(!p)return;p.innerHTML="";
+    H(p,"label",{for:host+"Sel"},"File");
+    const sel=H(p,"select",{id:host+"Sel"});
+    CAL.files.forEach((f,i)=>{const o=H(sel,"option",{value:String(i)},
+      (i+1)+". "+calFileName(i)+(calIsBad(f)?"  ⚠ not calibrated":""));
+      if(i===CAL.sel)o.setAttribute("selected","");});
+    sel.value=String(CAL.sel);
+    sel.onchange=()=>{setCalFile(+sel.value);};
+    // A compact flag when the selected file failed to calibrate.
+    if(calIsBad(CAL.files[CAL.sel]))H(p,"span",{class:"flag"},"⚠ this file did not calibrate");
+  });
+}
+
+// Change the shared cal-file index and re-render the two per-file tabs (Model + FDR).
+// The all-files Reproducibility overview and the Summary table are file-independent, so
+// they don't need rebuilding here (only their selection highlight, refreshed cheaply).
+function setCalFile(i){
+  if(i<0||i>=CAL.files.length)return;
+  CAL.sel=i;
+  buildCalPickers();
+  renderCalModel();
+  renderCalFdr();
+  highlightCalSelection();
+}
+
+// ---------- CAL Model tab: per-file cal-LDA feature table + composite discriminant ----------
+function renderCalModel(){
+  const f=CAL.files[CAL.sel];
+  const na=document.getElementById("calModelNa"), host=document.getElementById("calModelTable");
+  host.innerHTML="";na.style.display="none";
+  if(!f){na.style.display="";na.innerHTML="No calibration data for this file.";return;}
+  if(calIsBad(f)){na.style.display="";
+    na.innerHTML="<b>"+esc(calFileName(CAL.sel))+" did not calibrate.</b> "+
+      "The calibration model for this file is degenerate (too few usable anchors or no separable signal), "+
+      "so no feature contributions or discriminant distribution are available.";}
+  const rows=f.features||[];
+  if(rows.length && !calIsBad(f))
+    buildFeatureTable(host,rows,{});   // static (no per-row click) -- cal features carry no per-feature histogram
+  else if(!calIsBad(f))
+    H(host,"p",{class:"note"},"No calibration feature model for this file.");
+  // Composite calibration-discriminant distribution (reuse classHist; cal target/decoy
+  // are calibration classes, so suppress the entrapment p_target/p_decoy series).
+  const scoreHost="calScoreChart", scoreLeg="calScoreLegend";
+  if(f.scores && f.scores.binEdges && f.scores.binEdges.length>1 && !calIsBad(f))
+    classHist(f.scores,scoreHost,scoreLeg,false,
+      {noEntrapment:true,targetName:"calibration target",decoyName:"calibration decoy"});
+  else naChart(scoreHost,scoreLeg,"No calibration discriminant distribution for this file.");
+  document.getElementById("calScoreHdr").textContent="Calibration discriminant score distribution — "+calFileName(CAL.sel);
+  // Print-only: every file's composite discriminant (the dropdown shows one on screen).
+  const pall=document.getElementById("calModelPrintAll");if(pall){pall.innerHTML="";
+    CAL.files.forEach((cf,i)=>{if(calIsBad(cf)||!cf.scores||!cf.scores.binEdges)return;
+      const cell=H(pall,"div",{class:"calfilecell"});
+      H(cell,"h3",{style:"font-size:12.5px;margin:6px 0 2px;font-weight:600"},(i+1)+". "+calFileName(i));
+      const cid="calPrintScore"+i;H(cell,"div",{class:"chartbox",id:cid});
+      classHist(cf.scores,cid,null,false,{noEntrapment:true,targetName:"cal target",decoyName:"cal decoy"});});
+  }
+}
+
+// ---------- CAL FDR tab: per-file cal-FDP curve (entrapment only) + anchor yield ----------
+function renderCalFdr(){
+  const f=CAL.files[CAL.sel];
+  drawCalFdp(f);
+  drawCalYield(f);
+  buildCalFdrPrintAll();
+}
+// Print-only: every file's cal-FDP (when it has entrapment) + anchor yield, so the PDF
+// captures all files though the screen dropdown shows one. Built once per renderCalFdr.
+function buildCalFdrPrintAll(){
+  const pall=document.getElementById("calFdrPrintAll");if(!pall)return;pall.innerHTML="";
+  CAL.files.forEach((f,i)=>{
+    const hasFdp=!!(f.fdp&&f.fdp.q&&f.fdp.q.length), hasY=!!(f.yield&&f.yield.q&&f.yield.q.length);
+    if(!hasFdp&&!hasY)return;
+    const blk=H(pall,"div",{class:"calfilecell"});
+    H(blk,"h3",{style:"font-size:12.5px;margin:8px 0 3px;font-weight:600"},(i+1)+". "+calFileName(i));
+    if(hasFdp){const wrap=H(blk,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+      const mq=f.fdp.q[f.fdp.q.length-1]||1;
+      drawFdpPanel(H(wrap,"div",{}),f.fdp,0.02,"zoom  q in [0, 2%]",CAL_FDP_SERIES,{lower:false,combined:false,paired:false});
+      drawFdpPanel(H(wrap,"div",{}),f.fdp,Math.max(0.02,mq),"full extent",CAL_FDP_SERIES,{lower:false,combined:false,paired:false});}
+    else H(blk,"div",{style:"color:var(--muted);font-size:11px"},"No entrapment in this file's anchor set.");
+    if(hasY){const yh=H(blk,"div",{class:"chartbox"});
+      drawYieldCurve(yh,f.yield.q,f.yield.targetsRun||[],"per-file","accepted anchors");}
+  });
+}
+function drawCalFdp(f){
+  const card=document.getElementById("calFdpCard"), host=document.getElementById("calFdpChart");
+  const fdp=f?f.fdp:null;
+  if(!fdp||!fdp.q||!fdp.q.length){if(card)card.style.display="none";return;}
+  card.style.display="";host.innerHTML="";
+  const series=CAL_FDP_SERIES, off=calFdpOff;
+  const wrap=H(host,"div",{style:"display:flex;gap:14px;flex-wrap:wrap"});
+  const maxq=fdp.q[fdp.q.length-1]||1;
+  drawFdpPanel(H(wrap,"div",{}),fdp,0.02,"zoom  q in [0, 2%]",series,off);
+  drawFdpPanel(H(wrap,"div",{}),fdp,Math.max(0.02,maxq),"full extent",series,off);
+  const i1=opIdx(fdp,0.01), kp=document.getElementById("calFdpKpis");kp.innerHTML="";
+  kpi(kp,"anchors @1% cal-q",fmt(fdp.nTargetAccepted[i1],0),"");
+  kpi(kp,"combined FDP @1% cal-q",pct(fdp.combined[i1],2),cls(fdp.combined[i1],0.01));
+  if(fdp.paired)kpi(kp,"paired FDP @1% cal-q",pct(fdp.paired[i1],2),cls(fdp.paired[i1],0.01));
+  kpi(kp,"lower-bound @1% cal-q",pct(fdp.lowerBound[i1],2),"");
+  kpi(kp,"max cal-q",pct(maxq,1),"");
+  document.getElementById("calFdpNote").innerHTML=
+    "Entrapment-measured true FDP of "+esc(calFileName(CAL.sel))+"'s calibration anchor set vs its calibration q-value. "+
+    "The dashed line is y=x (perfect calibration); the curve above it means the anchor q is anti-conservative there. "+
+    "Entrapment DB ratio r = "+fmt(fdp.entrapmentRatio,2)+"."+
+    (fdp.pairedSuppressedPartial?" <b>Paired FDP omitted</b> at this entrapment ratio.":"");
+  legend(document.getElementById("calFdpLegend"),
+    series.filter(se=>fdp[se.key]).map(se=>({name:se.name,color:se.color,toggle:o=>{off[se.k]=o;drawCalFdp(f);}})));
+}
+function drawCalYield(f){
+  const card=document.getElementById("calYieldCard"), y=f?f.yield:null;
+  if(!y||!y.q||!y.q.length){if(card)card.style.display="none";return;}
+  card.style.display="";
+  // CAL yield only populates TargetsRun (per-file, no experiment-wide scope).
+  drawYieldCurve(document.getElementById("calYieldChart"),y.q,y.targetsRun||[],"per-file","accepted anchors");
+}
+
+// ---------- CAL Reproducibility tab: all-files scalar overview (clickable) ----------
+// One small scatter/series per key per-file scalar, file index on x. Each point is a
+// .callink -> jumpToCalFile(i). A file whose value sits far from the pack is the outlier
+// a reviewer is hunting for across 82-500 files.
+function renderCalRepro(){
+  const unit=CAL.unit;
+  const uSpan=document.getElementById("calReproUnit");if(uSpan)uSpan.textContent=unit;
+  const host=document.getElementById("calReproCharts");if(!host)return;host.innerHTML="";
+  const files=CAL.files, N=files.length;
+  const num=v=>(v==null||isNaN(v))?NaN:Number(v);
+  // Each panel: {title, val(f), err(f)?, fmt, bad(f)?}. err draws a +/- band (mean+-sd).
+  const panels=[
+    {title:"MS1 mass error ("+unit+")",val:f=>num(f.ms1Mean),err:f=>num(f.ms1Sd),fmt:v=>fmt(v,2),zero:true},
+    {title:"MS2 mass error ("+unit+")",val:f=>num(f.ms2Mean),err:f=>num(f.ms2Sd),fmt:v=>fmt(v,2),zero:true},
+    {title:"RT fit R²",val:f=>num(f.rtRSquared),fmt:v=>fmt(v,3)},
+    {title:"RT residual SD (min)",val:f=>num(f.rtResidualSd),fmt:v=>fmt(v,3)},
+    {title:"calibration peptides",val:f=>num(f.calPeptides),fmt:v=>fmt(v,0)},
+    {title:"anchor FDP",val:f=>num(f.anchorFdp),fmt:v=>pct(v,1),isPct:true},
+  ];
+  const grid=H(host,"div",{class:"grid2"});
+  panels.forEach(p=>drawCalScatter(grid,p,files,N,num));
+}
+function drawCalScatter(grid,p,files,N,num){
+  const cell=H(grid,"div",{});
+  H(cell,"h3",{style:"font-size:12.5px;margin:0 0 4px;font-weight:600"},p.title);
+  const box0=H(cell,"div",{class:"chartbox"});
+  const W=540,Hh=190,box={l:52,t:12,w:W-66,h:Hh-46};
+  const s=svg(W,Hh);box0.appendChild(s);
+  // y-range over finite values (+/- err), always including 0 for mass-error / pct panels.
+  let lo=Infinity,hi=-Infinity,any=false;
+  files.forEach(f=>{const v=p.val(f);if(isNaN(v))return;any=true;const e=p.err?p.err(f):0,ee=isNaN(e)?0:e;
+    lo=Math.min(lo,v-ee);hi=Math.max(hi,v+ee);});
+  if(!any){H(cell,"p",{class:"note"},"No data.");return;}
+  if(p.zero||p.isPct){lo=Math.min(lo,0);hi=Math.max(hi,0);}
+  if(lo===hi){lo-=1;hi+=1;}
+  const pad=(hi-lo)*0.08;lo-=pad;hi+=pad;
+  const xd=[0.5,N+0.5];
+  const xt=N<=20?Array.from({length:N},(_,i)=>i+1):null;
+  const sc=axes(s,box,xd,[lo,hi],{xticks:xt,xfmt:v=>String(Math.round(v)),
+    yfmt:v=>p.isPct?pct(v,hi<0.1?1:0):(Math.abs(v)>=1000?trim(v):(+v.toFixed(2)).toString())});
+  if(lo<=0&&hi>=0)E(s,"line",{x1:box.l,x2:box.l+box.w,y1:sc.y(0),y2:sc.y(0),stroke:COL.muted,"stroke-dasharray":"3 3",opacity:.5});
+  // Robust outlier flag: median +/- 3*MAD -> amber points, so they read at a glance.
+  const vals=files.map(p.val).filter(v=>!isNaN(v)).sort((a,b)=>a-b);
+  const med=vals.length?vals[vals.length>>1]:NaN;
+  const mad=vals.length?(()=>{const d=vals.map(v=>Math.abs(v-med)).sort((a,b)=>a-b);return d[d.length>>1];})():NaN;
+  const isOut=v=>!isNaN(mad)&&mad>0&&Math.abs(v-med)>3*mad*1.4826;
+  files.forEach((f,i)=>{const v=p.val(f);if(isNaN(v))return;const cx=sc.x(i+1),cy=sc.y(Math.max(lo,Math.min(hi,v)));
+    if(p.err){const e=num(p.err(f));if(!isNaN(e)&&e>0){
+      E(s,"line",{x1:cx,x2:cx,y1:sc.y(Math.max(lo,v-e)),y2:sc.y(Math.min(hi,v+e)),stroke:COL.target,opacity:.35,"stroke-width":1});}}
+    const bad=calIsBad(f), out=isOut(v);
+    const c=E(s,"circle",{cx:cx,cy:cy,r:bad?3.4:3,
+      fill:bad?COL.decoy:(out?COL.warn:COL.target),class:"callink"});
+    c.addEventListener("mousemove",ev=>showTip(ev,"<b>"+(i+1)+". "+esc(calFileName(i))+"</b><br>"+
+      p.title+": "+p.fmt(v)+(out?"  ⚠ outlier":"")+(bad?"<br>⚠ not calibrated":"")+"<br><i>click to open Model</i>"));
+    c.addEventListener("mouseleave",hideTip);
+    c.addEventListener("click",()=>jumpToCalFile(i));
+  });
+}
+
+// ---------- CAL Summary tab: per-file corrections table (clickable rows) ----------
+function renderCalSummary(){
+  const host=document.getElementById("calSummaryTable");if(!host)return;host.innerHTML="";
+  const files=CAL.files, unit=CAL.unit;
+  const t=H(host,"table",{});const htr=H(H(t,"thead",{}),"tr",{});
+  const cols=[["File","l"],["CalPeptides",""],["Entrapment",""],["AnchorFDP",""],
+    ["MS1 mean/sd/tol ("+unit+")",""],["MS2 mean/sd/tol ("+unit+")",""],["RT R²/resSD/tol/n",""]];
+  cols.forEach(h=>H(htr,"th",{class:h[1]},h[0]));
+  const tb=H(t,"tbody",{});
+  const tri=(a,b,c,fa,fb,fc)=>fmt(a,fa)+" / "+fmt(b,fb)+" / "+fmt(c,fc);
+  files.forEach((f,i)=>{const bad=calIsBad(f);
+    const tr=H(tb,"tr",{class:"clk callink"+(bad?" neg":"")});
+    H(tr,"td",{class:"l"},(i+1)+". "+calFileName(i)+(bad?"  ⚠":""));
+    H(tr,"td",{class:"num"},fmt(f.calPeptides,0));
+    H(tr,"td",{class:"num"},fmt(f.entrapment,0));
+    H(tr,"td",{class:"num"},isNaN(Number(f.anchorFdp))?"–":pct(f.anchorFdp,1));
+    H(tr,"td",{class:"num"},tri(f.ms1Mean,f.ms1Sd,f.ms1Tol,2,2,1));
+    H(tr,"td",{class:"num"},tri(f.ms2Mean,f.ms2Sd,f.ms2Tol,2,2,1));
+    H(tr,"td",{class:"num"},fmt(f.rtRSquared,3)+" / "+fmt(f.rtResidualSd,3)+" / "+fmt(f.rtToleranceMin,2)+" / "+fmt(f.rtNPoints,0));
+    tr.onclick=()=>jumpToCalFile(i);
+  });
+  if(!files.length)H(host,"p",{class:"note"},"No per-file calibration data.");
+}
+
+// Refresh only the selection highlight in the Summary table (cheap; called on cal-file
+// change so the row for the newly-selected file is marked without a full rebuild).
+function highlightCalSelection(){
+  const tb=document.querySelector("#calSummaryTable tbody");if(!tb)return;
+  Array.from(tb.children).forEach((tr,i)=>tr.classList.toggle("sel",i===CAL.sel));
+}
+
+// ---------- Cross-tab link: jump to a cal file's page (the key CAL UI feature) ----------
+// Enter CAL mode, activate targetTab (default the Model tab), set the shared cal-file
+// index (syncing the dropdown), re-render, and scroll the tab into view. Wired from the
+// Reproducibility scatter points and the Summary table rows; designed so more links are
+// trivial to add (any element -> jumpToCalFile(i[, "fdr"|"summary"|...])).
+function jumpToCalFile(i,targetTab){
+  targetTab=targetTab||"model";
+  if(typeof selectCal==="function")selectCal();   // ensure CAL mode (no-op if already on)
+  activateTab(targetTab);
+  CAL.sel=Math.max(0,Math.min(i,CAL.files.length-1));
+  // renderPass() (via selectCal) already rendered CAL; re-sync the just-set file so the
+  // dropdown + per-file cards reflect the target (selectCal ran before CAL.sel changed).
+  setCalFile(CAL.sel);
+  const tab=document.querySelector('.tab[data-tab="'+targetTab+'"]');
+  if(tab&&tab.scrollIntoView)tab.scrollIntoView({behavior:"smooth",block:"start"});
+}
 
 // Initial render of every pass-dependent card for the default pass (Pass 1).
 renderPass();
