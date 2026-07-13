@@ -209,4 +209,113 @@ public class MzxmlRoundTripTests
         }
         finally { try { File.Delete(path); } catch { } }
     }
+
+    /// <summary>
+    /// Some converters (ReAdW / old TPP) emit indexed mzXML with NO <c>&lt;/scan&gt;</c> end
+    /// tags — each <c>&lt;scan&gt;</c> opens straight after the prior scan's <c>&lt;peaks&gt;</c>,
+    /// so as pure XML every scan is nested inside the one before it. The lazy reader must serve
+    /// each scan from its own indexed byte offset in O(scan size), NOT descend through the entire
+    /// remaining nesting to EOF on every read (which made a real 55k-scan MRM file take ~50 min
+    /// and silently stall Skyline's import). This builds such a file at a scale where the old
+    /// O(N^2) behavior blows a generous time budget, and checks each scan still decodes its own
+    /// peaks under out-of-order access.
+    /// </summary>
+    [TestMethod]
+    public void Lazy_MzxmlWithNoScanEndTags_ReadsEachScanBounded()
+    {
+        // n is chosen large enough that the old O(N^2) "descend to EOF on every read" behavior
+        // blows the time budget on any machine, while the bounded read stays well under a second.
+        const int n = 12000;
+        string path = Path.Combine(Path.GetTempPath(), $"noclose-mzxml-{System.Guid.NewGuid():N}.mzXML");
+        try
+        {
+            File.WriteAllBytes(path, BuildUnclosedIndexedMzxml(n));
+
+            var footer = MzxmlIndexFooter.TryRead(path);
+            Assert.IsNotNull(footer, "Index footer of the no-</scan> file must validate (probed offsets point at <scan num=...>).");
+            Assert.AreEqual(n, footer.Value.ScanOffsets.Length);
+
+            var rt = new MSData();
+            new Pwiz.Data.MsData.Readers.MzxmlReaderAdapter().Read(path, rt);
+            Assert.IsInstanceOfType(rt.Run.SpectrumList, typeof(SpectrumList_Mzxml),
+                "Adapter didn't take the lazy path on the indexed no-</scan> mzXML");
+            var sl = rt.Run.SpectrumList!;
+            Assert.AreEqual(n, sl.Count);
+
+            // A single early-scan read must not walk the whole file: on the old code this one call
+            // alone read ~all N scans. Also verify it returns THIS scan's peaks, not a later one's.
+            var s0 = sl.GetSpectrum(0, getBinaryData: true);
+            Assert.AreEqual("scan=1", s0.Id);
+            Assert.AreEqual(100.0, s0.GetMZArray()!.Data[0], 1e-3);
+            Assert.AreEqual(1000.0, s0.GetIntensityArray()!.Data[0], 1e-3);
+
+            // Out-of-order spot checks across the file.
+            foreach (int i in new[] { n - 1, n / 2, 7, 1 })
+            {
+                var s = sl.GetSpectrum(i, getBinaryData: true);
+                Assert.AreEqual($"scan={i + 1}", s.Id);
+                Assert.AreEqual(100.0 + i, s.GetMZArray()!.Data[0], 1e-3, $"m/z mismatch at scan {i}");
+                Assert.AreEqual(1000.0 + i, s.GetIntensityArray()!.Data[0], 1e-3, $"intensity mismatch at scan {i}");
+            }
+
+            // Full sequential walk must stay linear. Budget is deliberately generous (the fix does
+            // this in well under a second); the old O(N^2) path took tens of seconds at this scale.
+            var swWalk = System.Diagnostics.Stopwatch.StartNew();
+            for (int i = 0; i < n; i++)
+                _ = sl.GetSpectrum(i, getBinaryData: true);
+            swWalk.Stop();
+            Assert.IsTrue(swWalk.ElapsedMilliseconds < 10_000,
+                $"Full walk of {n} scans took {swWalk.ElapsedMilliseconds} ms — expected O(N), suspect the per-scan read is over-reading to EOF again.");
+        }
+        finally { try { File.Delete(path); } catch { } }
+    }
+
+    /// <summary>
+    /// Builds a minimal indexed mzXML with <paramref name="n"/> single-peak MRM scans and, crucially,
+    /// NO <c>&lt;/scan&gt;</c> end tags, with an <c>&lt;index&gt;</c>/<c>&lt;indexOffset&gt;</c> footer
+    /// whose offsets point at each <c>&lt;scan num="i"&gt;</c>. Scan i carries one m/z-int pair
+    /// (100+i, 1000+i) as a big-endian 32-bit peaks payload. All markup is ASCII, so string index
+    /// equals byte offset.
+    /// </summary>
+    private static byte[] BuildUnclosedIndexedMzxml(int n)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append("<?xml version=\"1.0\" encoding=\"ISO-8859-1\"?>\n");
+        sb.Append("<mzXML xmlns=\"http://sashimi.sourceforge.net/schema_revision/mzXML_2.0\">\n");
+        sb.Append(" <msRun scanCount=\"").Append(n).Append("\">\n");
+
+        var offsets = new long[n];
+        for (int i = 0; i < n; i++)
+        {
+            offsets[i] = sb.Length;            // byte offset of the '<' in "<scan"
+            int num = i + 1;
+            string peaks = EncodeBigEndian32Pair(100.0f + i, 1000.0f + i);
+            sb.Append("  <scan num=\"").Append(num).Append('"')
+              .Append(" msLevel=\"2\" peaksCount=\"1\" scanType=\"MRM\"")
+              .Append(" retentionTime=\"PT").Append((i * 0.1).ToString(System.Globalization.CultureInfo.InvariantCulture)).Append("S\">\n")
+              .Append("        <precursorMz>").Append((500.0 + i).ToString(System.Globalization.CultureInfo.InvariantCulture)).Append("</precursorMz>\n")
+              .Append("        <peaks precision=\"32\" byteOrder=\"network\" pairOrder=\"m/z-int\">")
+              .Append(peaks).Append("</peaks>\n");   // NOTE: no </scan>
+        }
+        sb.Append("</msRun>\n");
+
+        long indexOffset = sb.Length;
+        sb.Append("  <index name=\"scan\">\n");
+        for (int i = 0; i < n; i++)
+            sb.Append("    <offset id=\"").Append(i + 1).Append("\">").Append(offsets[i]).Append("</offset>\n");
+        sb.Append("  </index>\n");
+        sb.Append("  <indexOffset>").Append(indexOffset).Append("</indexOffset>\n");
+        sb.Append("  <sha1>0000000000000000000000000000000000000000</sha1>\n");
+        sb.Append("</mzXML>\n");
+
+        return System.Text.Encoding.ASCII.GetBytes(sb.ToString());
+    }
+
+    private static string EncodeBigEndian32Pair(float mz, float intensity)
+    {
+        var bytes = new byte[8];
+        System.Buffers.Binary.BinaryPrimitives.WriteSingleBigEndian(bytes.AsSpan(0, 4), mz);
+        System.Buffers.Binary.BinaryPrimitives.WriteSingleBigEndian(bytes.AsSpan(4, 4), intensity);
+        return System.Convert.ToBase64String(bytes);
+    }
 }

@@ -78,6 +78,10 @@ public sealed class SpectrumList_Mzxml : SpectrumListBase
         return map.TryGetValue(id, out int idx) ? idx : _offsets.Length;
     }
 
+    // Reused scratch buffer for the per-scan byte slice (grown on demand). Guarded by
+    // _streamLock along with _stream, so no separate synchronization is needed.
+    private byte[] _scanBuf = System.Array.Empty<byte>();
+
     /// <inheritdoc/>
     public override Spectrum GetSpectrum(int index, bool getBinaryData = false)
     {
@@ -96,7 +100,7 @@ public sealed class SpectrumList_Mzxml : SpectrumListBase
             // header). XmlReader.ReadToFollowing trips on the unmatched close tags. Mirror cpp's
             // SpectrumList_mzXML::seekToScan which scan-forwards the raw byte stream until it
             // finds "<scan" before handing the cursor to the XML parser.
-            _stream.Position = SeekToScanTag(_stream, _offsets[index]);
+            long start = SeekToScanTag(_stream, _offsets[index]);
 
             var settings = new XmlReaderSettings
             {
@@ -104,11 +108,57 @@ public sealed class SpectrumList_Mzxml : SpectrumListBase
                 CloseInput = false,
                 ConformanceLevel = ConformanceLevel.Fragment,
             };
-            using var xr = XmlReader.Create(_stream, settings);
-            if (!xr.ReadToFollowing("scan"))
-                throw new InvalidDataException($"No <scan> element at offset {_offsets[index]} in {_filename}");
 
-            var spec = _context.ReadOneScan(xr, getBinaryData);
+            // Bound the parse to THIS scan's byte range [start, nextScanOffset). Some converters
+            // (ReAdW / old TPP) emit mzXML with NO </scan> end tags at all — every <scan> opens
+            // immediately after the prior scan's <peaks>, so as pure XML each scan is nested inside
+            // the one before it. Handing the raw stream to XmlReader made ReadOneScan's
+            // "next <scan>" handler descend (via ReadSubtree/Skip) through the entire remaining
+            // nesting to EOF on EVERY read — turning a full-file walk into O(N^2) (a 55k-scan MRM
+            // file took ~50 min instead of seconds). cpp's SpectrumList_mzXML stops at the next
+            // <scan> boundary; since every scan is separately indexed, slicing at the next scan's
+            // recorded offset reproduces that boundary and can't over-read.
+            //
+            // The last scan has no successor offset. It's read straight from the file stream: it
+            // self-terminates at </msRun> (or EOF) since there's no following <scan> to over-skip,
+            // so it stays O(scan size) without slurping the (potentially large) <index> footer.
+            System.Xml.XmlReader xr;
+            MemoryStream? ms = null;
+            if (index + 1 < _offsets.Length && _offsets[index + 1] > start)
+            {
+                int len = (int)System.Math.Min(_offsets[index + 1] - start, int.MaxValue);
+                if (_scanBuf.Length < len)
+                    _scanBuf = new byte[len];
+                _stream.Position = start;
+                int filled = 0;
+                while (filled < len)
+                {
+                    int got = _stream.Read(_scanBuf, filled, len - filled);
+                    if (got <= 0) break;
+                    filled += got;
+                }
+                ms = new MemoryStream(_scanBuf, 0, filled, writable: false);
+                xr = XmlReader.Create(ms, settings);
+            }
+            else
+            {
+                _stream.Position = start;
+                xr = XmlReader.Create(_stream, settings);
+            }
+
+            Spectrum spec;
+            try
+            {
+                if (!xr.ReadToFollowing("scan"))
+                    throw new InvalidDataException($"No <scan> element at offset {_offsets[index]} in {_filename}");
+
+                spec = _context.ReadOneScan(xr, getBinaryData);
+            }
+            finally
+            {
+                xr.Dispose();
+                ms?.Dispose();
+            }
             // The index records id only; index numbers must be stamped from our
             // position in the offset table since mzXML <scan num="..."> values
             // can be non-contiguous (e.g. some Thermo workflows skip numbers).
