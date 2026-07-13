@@ -74,6 +74,7 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
             IReadOnlyDictionary<uint, LibraryEntry> libraryById,
+            ModelDiagnosticsData.CalibrationData cal,
             OspreyConfig config,
             Action<string> logInfo)
         {
@@ -88,6 +89,11 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
                 var data = ModelDiagnosticsData.Build(
                     perFileEntries, contributions, classByBaseId, pairByBaseId,
                     entrapmentRatio, config.RunFdr, config.FdrLevel);
+                // The CAL view: per-file calibration diagnostics captured at Stage 3
+                // (null when none were captured -- a resumed run, or no files calibrated).
+                // Serialized into the pass-1 data sidecar below, so it round-trips into
+                // WritePass2AndFinalize's reloaded object graph and survives to the final page.
+                data.Cal = cal;
                 // On a resumed / rehydrated run the first-pass SVM is not retrained
                 // (q-values come from sidecars), so there is no trained model to show.
                 // Surface it rather than silently emitting a blank Model tab.

@@ -28,6 +28,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.Scoring;
 
 namespace pwiz.Osprey.Tasks
@@ -108,6 +109,14 @@ namespace pwiz.Osprey.Tasks
             // the calibration actually used" semantics.
             public double[] LibRts;
             public double[] MeasuredRts;
+            // The scored calibration match set (all classes: target / decoy /
+            // p_target / p_decoy) and the trained LDA report for THIS pass,
+            // carried forward only when --model-diagnostics is on so
+            // RunCalibration can build the CAL-view per-file diagnostics from
+            // the ACCEPTED pass. Null on a normal run (the model-diagnostics
+            // gate below leaves them unset, so a default run pays nothing).
+            public CalibrationMatch[] DiagnosticMatches;
+            public CalibrationTrainingReport DiagnosticReport;
         }
 
         /// <summary>
@@ -193,12 +202,18 @@ namespace pwiz.Osprey.Tasks
             out MzCalibrationResult ms1Calibration,
             out MzCalibrationResult ms2Calibration,
             out int numSampledPrecursors,
-            out double initialRtTolerance)
+            out double initialRtTolerance,
+            out ModelDiagnosticsData.CalFileRow calDiagnostics)
         {
             var config = context.Config;
             // Default to 0 so early returns / exception paths leave the
             // metadata caller in a known state. Overwritten on success.
             numSampledPrecursors = 0;
+            // The CAL-view per-file diagnostics row, built from the ACCEPTED pass
+            // only when --model-diagnostics is on. Null on every failure/fallback
+            // path and on a normal run; the caller only consumes it under
+            // config.ModelDiagnostics.
+            calDiagnostics = null;
             // The wide pre-calibration RT tolerance (the "before" number in the
             // console summary's before-vs-after RT window). Defaults to 0 to keep the
             // out-parameter assigned on any early exit before the initial tolerance is
@@ -218,9 +233,10 @@ namespace pwiz.Osprey.Tasks
             int nTotalTargets = 0;
             // --verbose anchor-purity diagnostic: tally the full-library entrapment
             // composition once, so RunLdaAndCollectPoints can report the entrapment-FDP of
-            // the selected anchors against the FDRBench ratio r. Verbose-gated so a normal
-            // run pays nothing for the per-entry accession scan.
-            bool tallyEntrapment = OspreyOutput.Verbose;
+            // the selected anchors against the FDRBench ratio r. Also computed under
+            // --model-diagnostics, which needs the same ratio r for the CAL-view FDP curve.
+            // Gated so a normal run pays nothing for the per-entry accession scan.
+            bool tallyEntrapment = OspreyOutput.Verbose || config.ModelDiagnostics;
             _libTargetSideCount = 0;
             _libEntrapmentCount = 0;
             foreach (var entry in library)
@@ -411,6 +427,7 @@ namespace pwiz.Osprey.Tasks
                 CalibrationMatch[] matchArray = null;
                 List<double> libRtsDetected = null;
                 List<double> measuredRtsDetected = null;
+                CalibrationTrainingReport calReport = null;
 
                 if (accumulated.Count == 0)
                 {
@@ -423,7 +440,7 @@ namespace pwiz.Osprey.Tasks
                     matchArray = BuildSortedMatchArray(accumulated);
                     RunLdaAndCollectPoints(
                         1, matchArray, accumulated, context.FileName,
-                        out libRtsDetected, out measuredRtsDetected);
+                        out libRtsDetected, out measuredRtsDetected, out calReport);
                     nConfident = libRtsDetected.Count;
                 }
 
@@ -494,7 +511,8 @@ namespace pwiz.Osprey.Tasks
 
                 var pass1 = FitCalibrationPass(
                     1, matchArray, accumulated, libRtsDetected, measuredRtsDetected,
-                    config, decision.EffectiveMinPoints);
+                    config, decision.EffectiveMinPoints,
+                    config.ModelDiagnostics ? calReport : null);
 
                 // A thin fit that lands somewhere the range mapping cannot justify is
                 // worse than no fit: it would re-centre every search window on a wrong
@@ -640,6 +658,12 @@ namespace pwiz.Osprey.Tasks
                             }
                             ms1Calibration = pass2.Ms1Calibration;
                             ms2Calibration = pass2.Ms2Calibration;
+                            // CAL-view diagnostics from the ACCEPTED (pass 2) fit:
+                            // its narrowed RT half-window is the tolerance actually
+                            // used, the wide initial window is the "before" number.
+                            if (config.ModelDiagnostics)
+                                calDiagnostics = BuildCalDiagnostics(
+                                    context, pass2, refinedTolerance, initialTolerance);
                             return pass2.Calibration;
                         }
                         _ctx.LogInfo(string.Format(
@@ -656,6 +680,12 @@ namespace pwiz.Osprey.Tasks
 
                 ms1Calibration = pass1.Ms1Calibration;
                 ms2Calibration = pass1.Ms2Calibration;
+                // CAL-view diagnostics from the ACCEPTED (pass 1) fit: pass1Tolerance
+                // is the RT half-window that will search this file (pass 2 was skipped
+                // or rejected), initialTolerance is the pre-calibration "before" number.
+                if (config.ModelDiagnostics)
+                    calDiagnostics = BuildCalDiagnostics(
+                        context, pass1, pass1Tolerance, initialTolerance);
                 return pass1.Calibration;
             }
 
@@ -904,7 +934,7 @@ namespace pwiz.Osprey.Tasks
             var matchArray = BuildSortedMatchArray(refined);
             RunLdaAndCollectPoints(
                 2, matchArray, refined, context.FileName,
-                out var libRtsDetected, out var measuredRtsDetected);
+                out var libRtsDetected, out var measuredRtsDetected, out var calReport);
 
             if (libRtsDetected.Count < ABSOLUTE_MIN_CALIBRATION_POINTS)
             {
@@ -933,7 +963,8 @@ namespace pwiz.Osprey.Tasks
             return FitCalibrationPass(
                 2, matchArray, refined, libRtsDetected, measuredRtsDetected,
                 context.Config,
-                Math.Min(libRtsDetected.Count, context.Config.RtCalibration.MinCalibrationPoints));
+                Math.Min(libRtsDetected.Count, context.Config.RtCalibration.MinCalibrationPoints),
+                context.Config.ModelDiagnostics ? calReport : null);
         }
 
         /// <summary>
@@ -1059,12 +1090,13 @@ namespace pwiz.Osprey.Tasks
             Dictionary<uint, AccumulatedMatch> accumulated,
             string fileName,
             out List<double> libRtsDetected,
-            out List<double> measuredRtsDetected)
+            out List<double> measuredRtsDetected,
+            out CalibrationTrainingReport calReport)
         {
             // Train LDA + 1% FDR target-decoy competition.
             var swLda = Stopwatch.StartNew();
             int nPassing = CalibrationScorer.TrainAndScoreCalibration(
-                matchArray, false, out CalibrationTrainingReport calReport);
+                matchArray, false, out calReport);
             swLda.Stop();
 
             // --verbose: dump the calibration LDA's seed, per-iteration refinement trace,
@@ -1248,7 +1280,8 @@ namespace pwiz.Osprey.Tasks
             List<double> libRtsDetected,
             List<double> measuredRtsDetected,
             OspreyConfig config,
-            int minLoessPoints)
+            int minLoessPoints,
+            CalibrationTrainingReport calReport = null)
         {
             // Aggregate MS1 + MS2 mass errors from passing targets only
             // (same LDA + competition + S/N survivors as the RT points;
@@ -1323,6 +1356,12 @@ namespace pwiz.Osprey.Tasks
                     Ms2Calibration = ms2Cal,
                     LibRts = libRts,
                     MeasuredRts = measuredRts,
+                    // Carry the scored matches + trained report forward only when
+                    // --model-diagnostics is on (calReport non-null); RunCalibration
+                    // builds the CAL-view diagnostics from the accepted pass. On a
+                    // normal run calReport is null, so these stay null (no cost).
+                    DiagnosticMatches = calReport != null ? matchArray : null,
+                    DiagnosticReport = calReport,
                 };
             }
             catch (Exception ex)
@@ -1332,6 +1371,133 @@ namespace pwiz.Osprey.Tasks
                     passNumber, ex.Message));
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Shape the accepted calibration pass into the CAL-view per-file diagnostics
+        /// row for the <c>--model-diagnostics</c> HTML report. Reads the trained LDA
+        /// report (feature names / weights / class means), the scored calibration
+        /// matches (score / q / class), the MS1 / MS2 mass corrections, and the RT-fit
+        /// scalars off <paramref name="accepted"/>, plus the entrapment ratio r from the
+        /// full-library composition tallied in <see cref="RunCalibration"/>. The heavy
+        /// per-match arrays are binned to small histograms / swept curves immediately by
+        /// <see cref="ModelDiagnosticsData.BuildCalFile"/>, so only the compact row is
+        /// retained. Called only under <c>config.ModelDiagnostics</c>; on a normal run
+        /// the accepted pass carries no diagnostic payload and this is never invoked.
+        /// </summary>
+        private ModelDiagnosticsData.CalFileRow BuildCalDiagnostics(
+            ScoringContext context,
+            CalibrationPassResult accepted,
+            double rtToleranceMin,
+            double rtWindowBefore)
+        {
+            var report = accepted.DiagnosticReport;
+            var matches = accepted.DiagnosticMatches;
+            // The pass carries no diagnostic payload (calReport was null, or the accepted
+            // pass predates the model-diagnostics plumbing): nothing to shape.
+            if (report == null || matches == null)
+                return null;
+
+            // FDRBench entrapment ratio r = entrapment / (target-side - entrapment),
+            // from the full-library composition tallied at the top of RunCalibration
+            // (tallyEntrapment fires under --model-diagnostics). Zero on a plain library.
+            long realTargets = _libTargetSideCount - _libEntrapmentCount;
+            double r = realTargets > 0 ? (double)_libEntrapmentCount / realTargets : 0.0;
+            bool hasEntrapment = _libEntrapmentCount > 0;
+
+            // Per-match (score, q, class) triples for the composite-score histogram and
+            // the entrapment-FDP / yield sweep. class 0=target, 1=decoy, 2=p_target,
+            // 3=p_decoy (BuildCalFile's contract).
+            int n = matches.Length;
+            var scores = new double[n];
+            var qs = new double[n];
+            var classes = new int[n];
+            for (int i = 0; i < n; i++)
+            {
+                var m = matches[i];
+                scores[i] = m.DiscriminantScore;
+                qs[i] = m.QValue;
+                classes[i] = m.IsDecoy
+                    ? (m.IsEntrapment ? 3 : 1)
+                    : (m.IsEntrapment ? 2 : 0);
+            }
+
+            var ms1Cal = accepted.Ms1Calibration;
+            var ms2Cal = accepted.Ms2Calibration;
+            var stats = accepted.Stats;
+
+            // Mass-error unit shared by both channels ("ppm" or "Th"); ms1 is authoritative,
+            // ms2 covers an uncalibrated ms1 that defaulted its unit.
+            string massUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
+
+            var input = new ModelDiagnosticsData.CalFileInput
+            {
+                File = context.FileName,
+                // A real fit was accepted here (both return sites run past a successful
+                // FitCalibrationPass); the fallback / no-fit paths return null earlier.
+                Calibrated = true,
+
+                FeatureNames = report.FeatureNames,
+                Weights = report.FinalWeights,
+                MeanTarget = report.FeatureMeanTarget,
+                MeanDecoy = report.FeatureMeanDecoy,
+                Degenerate = IsDegenerateCalibrationModel(report),
+
+                MatchScores = scores,
+                MatchQ = qs,
+                MatchClass = classes,
+
+                EntrapmentRatio = r,
+                HasEntrapment = hasEntrapment,
+                MassUnit = massUnit,
+
+                Ms1Mean = ms1Cal?.Mean ?? 0.0,
+                Ms1Sd = ms1Cal?.SD ?? 0.0,
+                Ms1Count = ms1Cal?.Count ?? 0,
+                Ms1Tol = ms1Cal?.AdjustedTolerance ?? 0.0,
+                Ms2Mean = ms2Cal?.Mean ?? 0.0,
+                Ms2Sd = ms2Cal?.SD ?? 0.0,
+                Ms2Count = ms2Cal?.Count ?? 0,
+                Ms2Tol = ms2Cal?.AdjustedTolerance ?? 0.0,
+
+                RtNPoints = stats.NPoints,
+                RtResidualSd = stats.ResidualSD,
+                RtRSquared = stats.RSquared,
+                RtMad = stats.MAD,
+                RtToleranceMin = rtToleranceMin,
+                RtWindowBefore = rtWindowBefore,
+            };
+
+            return ModelDiagnosticsData.BuildCalFile(input);
+        }
+
+        /// <summary>
+        /// Whether the trained calibration LDA collapsed to a degenerate model: the
+        /// refinement never iterated past the single-feature baseline, its last iteration
+        /// found every CV fold singular, or exactly one feature carries a non-zero weight.
+        /// Any of these leaves the composite discriminant driven by one feature, which the
+        /// Model card flags. Pure over the report; no side effects.
+        /// </summary>
+        private static bool IsDegenerateCalibrationModel(CalibrationTrainingReport report)
+        {
+            // Baseline single feature kept -- no multi-feature refinement ran.
+            if (report.Iterations.Count == 0)
+                return true;
+            // Every fold's LDA was singular on the final iteration.
+            var last = report.Iterations[report.Iterations.Count - 1];
+            if (last.AllFoldsFailed)
+                return true;
+            // Only one feature carries the discriminant.
+            var weights = report.FinalWeights;
+            if (weights == null)
+                return true;
+            int nonZero = 0;
+            foreach (double w in weights)
+            {
+                if (Math.Abs(w) > double.Epsilon)
+                    nonZero++;
+            }
+            return nonZero <= 1;
         }
 
         /// <summary>

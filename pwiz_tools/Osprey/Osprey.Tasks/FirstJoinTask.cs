@@ -28,6 +28,7 @@ using System.IO;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.FDR.Reconciliation;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
@@ -597,8 +598,64 @@ namespace pwiz.Osprey.Tasks
             if (config.ModelDiagnostics)
             {
                 var libraryById = ctx.Get<LibraryById>().Value;
-                ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, config, ctx.LogInfo);
+                var cal = BuildCalibrationData(ctx, perFileEntries);
+                ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
             }
+        }
+
+        /// <summary>
+        /// Assemble the CAL-view <see cref="ModelDiagnosticsData.CalibrationData"/> for
+        /// the report from the per-file calibration diagnostics
+        /// (<see cref="PerFileCalibrationDiagnostics"/>) PerFileScoringTask captured at
+        /// Stage 3. The rows are ordered by <paramref name="perFileEntries"/> (input-file
+        /// order) so the report's file selector matches the rest of the page. Returns
+        /// <c>null</c> when no rows were captured (a resumed / rehydrated run, or none of
+        /// the files calibrated), which hides the CAL tab. HasEntrapment is true when any
+        /// row carries an entrapment FDP curve; MassUnit is the per-run unit the byproduct
+        /// stashed at capture (the row does not carry it).
+        /// </summary>
+        private static ModelDiagnosticsData.CalibrationData BuildCalibrationData(
+            PipelineContext ctx,
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+        {
+            IReadOnlyDictionary<string, ModelDiagnosticsData.CalFileRow> byFile = null;
+            string massUnit = null;
+            if (ctx.TryGet<PerFileCalibrationDiagnostics>(out var diag) && diag != null)
+            {
+                byFile = diag.Value;
+                massUnit = diag.MassUnit;
+            }
+            if (byFile == null || byFile.Count == 0)
+                return null;
+
+            var files = new List<ModelDiagnosticsData.CalFileRow>(perFileEntries.Count);
+            foreach (var kvp in perFileEntries)
+            {
+                if (byFile.TryGetValue(kvp.Key, out var row) && row != null)
+                    files.Add(row);
+            }
+            if (files.Count == 0)
+                return null;
+
+            bool hasEntrapment = false;
+            foreach (var row in files)
+            {
+                if (row.Fdp != null)
+                {
+                    hasEntrapment = true;
+                    break;
+                }
+            }
+
+            return new ModelDiagnosticsData.CalibrationData
+            {
+                Files = files,
+                HasEntrapment = hasEntrapment,
+                // Per-run unit stashed on the byproduct at capture (the row does not carry
+                // it); default "ppm" if a run somehow recorded none.
+                MassUnit = !string.IsNullOrEmpty(massUnit) ? massUnit : @"ppm",
+                FileCount = files.Count,
+            };
         }
 
         /// <summary>
