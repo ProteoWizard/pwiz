@@ -2015,17 +2015,7 @@ namespace pwiz.Skyline.ToolsUI
             // message instead of a NullReferenceException, and do not let the MCP run a command the user
             // could not run yet.
             JsonUiService.RequireMainWindow();
-            // NOT inside the dialog-watch, which would run the command ON the UI thread. A command must not: it waits
-            // for the background loaders to finish the document it opens (SkylineWindowDocumentOperations), and a
-            // loader reports its progress with a BLOCKING Invoke to the UI thread (SkylineWindow.UpdateProgress ->
-            // RunUIAction). A command holding that thread would deadlock against the loader it is waiting for -- the
-            // libraries would never load, so the document would never be loaded. It runs here, on the caller's thread,
-            // and reaches the UI only through the document operations, which marshal what they need.
-            return RunCommandCore(args, silent);
-        }
 
-        private string RunCommandCore(string[] args, bool silent)
-        {
             var capture = new StringWriter();
             string argsDisplay = string.Join(@" ", args);
             TextWriter output;
