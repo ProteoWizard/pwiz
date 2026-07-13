@@ -97,14 +97,17 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Enable MS1 filtering", doc =>
             {
                 var transitionSettings = doc.Settings.TransitionSettings;
-                // A QIT (low resolution) mass analyzer only supports a single isotope peak
-                bool highRes = TransitionFullScan.IsHighResAnalyzer(analyzer);
-                // Clear first so the precursor mass analyzer is reset before reapplying
+                var resMz = analyzer == FullScanMassAnalyzerType.orbitrap || analyzer == FullScanMassAnalyzerType.ft_icr
+                    ? TransitionFullScan.DEFAULT_RES_MZ
+                    : (double?) null;
+                // Set the requested precursor mass analyzer first; this enables MS1 filtering with a
+                // single isotope peak
                 var fullScan = transitionSettings.FullScan
-                    .ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null)
-                    .ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, highRes ? 3 : 1, IsotopeEnrichmentsList.GetDefault());
-                if (!highRes)
-                    fullScan = fullScan.ChangePrecursorResolution(analyzer, TransitionFullScan.DEFAULT_RES_QIT, null);
+                    .ChangePrecursorResolution(analyzer, TransitionFullScan.DEFAULT_RES_VALUES[(int) analyzer], resMz);
+                // A QIT (low resolution) mass analyzer only supports a single isotope peak; ask for
+                // more peaks only when the analyzer is high resolution
+                if (TransitionFullScan.IsHighResAnalyzer(analyzer))
+                    fullScan = fullScan.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, IsotopeEnrichmentsList.GetDefault());
                 var filter = transitionSettings.Filter.ChangePeptideIonTypes(new[] { IonType.precursor });
                 return doc.ChangeSettings(doc.Settings.ChangeTransitionSettings(
                     transitionSettings.ChangeFullScan(fullScan).ChangeFilter(filter)));
