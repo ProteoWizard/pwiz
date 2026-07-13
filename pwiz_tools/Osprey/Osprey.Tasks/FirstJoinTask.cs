@@ -222,6 +222,14 @@ namespace pwiz.Osprey.Tasks
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo,
                 string.Format(@"Stage 5 start: {0} files loaded (stubs), before first-pass FDR", perFileEntries.Count));
 
+            // The line above reports GC.GetTotalMemory(false) -- allocated-since-last-GC,
+            // so it carries whatever garbage scoring left behind, and two runs doing
+            // identical work can differ by tens of GB on GC timing alone. This one forces
+            // a collection first, so it is the LIVE set entering first-pass FDR: the only
+            // number that answers whether the run fits in a given box.
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"stage5-start-live",
+                string.Format(@"(post-GC, entering first-pass FDR, files={0})", perFileEntries.Count));
+
             // Phase 4 (issue #4355): first-pass Percolator reloads each entry's PIN
             // features on demand -- one file at a time, from that file's
             // .scores.parquet by ParquetIndex -- keeping only scalar scores
@@ -256,18 +264,35 @@ namespace pwiz.Osprey.Tasks
             // opt-in output is requested, take the resident (legacy) path so those reports
             // still emit. Both are off the default output path, so byte-identity is
             // unaffected (the regression gate never sets either).
+            // OSPREY_PASS2_QVALUE=transfer also needs the resident first-pass pool: it
+            // captures the frozen 1st-pass model and builds the FULL pre-compaction
+            // score->q table (BuildFullPopulationScoreQTable, below), both of which read
+            // every entry's in-memory Stage-4 features -- exactly what the projection path
+            // streams and drops. The regression gate never sets the env var, so byte-identity
+            // on the default percolator path is unaffected (same rationale as --model-diagnostics).
             bool needsResidentFirstPassPool = config.ModelDiagnostics ||
-                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1);
+                (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
+                OspreyEnvironment.Pass2TransferQ;
             if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
                 !needsResidentFirstPassPool)
             {
                 // Null unless PerFileScoring took the lean path and streamed the rows
                 // straight from parquet (issue #4397); RunFirstPassProjection then builds
                 // from the fat stubs instead.
-                var prebuiltProjections = ctx.Get<FdrProjections>().Value;
+                //
+                // Consume, not Get: this is the projection set's only consumer, and the
+                // byproduct cache is process-lifetime. Leaving it published pinned ~5.7 GiB
+                // (191 M rows x 32 B) plus the interned peptide table through reconciliation
+                // and the blib write -- memory that scales with total scored entries across
+                // all files, exactly what streaming the projection was meant to stop paying
+                // for. Consume drops the pipeline's reference up front so no later path,
+                // including the StopAfterStage5 early return below, can retain it (#4405).
+                var prebuiltProjections = ctx.Consume<FdrProjections>().Value;
                 var survivors = RunFirstPassProjection(
                     perFileEntries, perFileParquetPaths, fullLibrary, config, ctx, loadFileFeatures,
                     prebuiltProjections);
+                prebuiltProjections = null;
+
                 if (survivors == null)
                     return false;  // StopAfterStage5 sidecar failure; ExitCode already set
                 perFileEntries = survivors;
@@ -280,8 +305,29 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                     swFdr.Elapsed.TotalSeconds));
                 ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"first-pass-fdr-live",
+                    string.Format(@"(post-GC, resident pool, files={0})", perFileEntries.Count));
 
                 LogFirstPassResultsAndDump(perFileEntries, config, ctx, featureContributions);
+
+                // OSPREY_PASS2_QVALUE=transfer: build the score->q lookup table NOW, from
+                // the FULL pre-compaction 1st-pass population -- every entry (passing,
+                // failing, target, decoy) still carries its in-memory Stage-4 features and
+                // its unbiased 1st-pass q-values here. The frozen model was published as a
+                // byproduct during RunFdr above. Publishing the full-population table lets
+                // the merge-node 2nd-pass transfer map reconciled-feature scores through a
+                // table that RETAINS the high-q failing/decoy region -- the region compaction
+                // strips out, and whose absence would collapse the transfer's q. Off by
+                // default (byproduct never published on the percolator path).
+                if (OspreyEnvironment.Pass2TransferQ &&
+                    ctx.TryGet<FirstPassPercolatorModel>(out var frozenForTable) &&
+                    frozenForTable?.Results != null)
+                {
+                    var scoreQTable = Pass2FdrSidecar.BuildFullPopulationScoreQTable(
+                        perFileEntries, frozenForTable.Results, loadFileFeatures, ctx);
+                    if (scoreQTable != null)
+                        ctx.Publish(scoreQTable);
+                }
 
                 // First-pass protein FDR: runs on the full pre-compaction
                 // peptide pool so target and decoy proteins compete on a
@@ -1236,11 +1282,33 @@ namespace pwiz.Osprey.Tasks
             // so the engine streams PIN features per file from parquet (issue #4355
             // Phase 4). The 2nd-pass caller (Pass2FdrSidecar) leaves it null and
             // pre-reloads features onto the stubs, so the engine reads them resident.
+
+            // OSPREY_PASS2_QVALUE=transfer: on the FIRST-pass run only, publish the trained
+            // model (FoldWeights / FoldBiases / Standardizer) as a byproduct so the
+            // merge-node 2nd-pass step can re-score reconciled features with this FROZEN
+            // model instead of retraining. Null (a pure no-op in the engine) on the default
+            // percolator path and on the 2nd-pass run, so scoring stays byte-identical.
+            Action<PercolatorResults> captureModel = null;
+            if (OspreyEnvironment.Pass2TransferQ &&
+                string.Equals(passLabel, @"First-pass", StringComparison.Ordinal))
+            {
+                // Publish is add-only (throws on a duplicate key); guard so a first pass
+                // that somehow ran twice in one process degrades to a no-op rather than a
+                // raw ArgumentException. The passLabel gate already makes this unreachable
+                // on normal paths.
+                captureModel = results =>
+                {
+                    if (!ctx.TryGet<FirstPassPercolatorModel>(out _))
+                        ctx.Publish(new FirstPassPercolatorModel { Results = results });
+                };
+            }
+
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 perFileEntries, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, out var contributions,
-                BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures);
+                BuildPercolatorDiagnostics(ctx.Diagnostics), passLabel, loadFileFeatures,
+                captureModel);
             if (aborted)
             {
                 // A diagnostic-only (*Only) Stage 5 dump fired. The FDR engine left
@@ -1445,6 +1513,8 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(@"[TIMING] Percolator/Simple FDR: {0:F1}s",
                 swFdr.Elapsed.TotalSeconds));
             ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"after first-pass Percolator FDR");
+            ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"first-pass-fdr-live",
+                string.Format(@"(post-GC, projection path, rows={0})", projections.TotalRows));
 
             LogFirstPassResultsProjection(projections, sink, config, ctx);
 

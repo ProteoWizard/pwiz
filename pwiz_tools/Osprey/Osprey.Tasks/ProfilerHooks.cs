@@ -98,6 +98,30 @@ namespace pwiz.Osprey.Tasks
         /// Log peak working set and managed heap size to the given
         /// writer. Cheap to call; suitable for per-stage and end-of-run
         /// snapshots.
+        ///
+        /// NONE OF THESE NUMBERS IS A LIVE SET. Read them with the caveats below,
+        /// or use <see cref="LogManagedHeapAfterGcIfEnabled"/>, which forces a
+        /// collection first and is the only probe here that answers "will this fit".
+        ///
+        /// <c>managed_heap</c> is <c>GC.GetTotalMemory(false)</c>: bytes allocated
+        /// since the last collection, WITHOUT forcing one. It therefore includes
+        /// uncollected garbage, and two runs doing identical work can differ by tens
+        /// of GB purely on whether a gen-2 happened to land before the probe.
+        ///
+        /// <c>working_set</c> is resident memory, but Server GC expands heaps until it
+        /// nears the high-memory-load threshold (~90% of physical) before collecting,
+        /// so on a large box the working set reflects available RAM at least as much
+        /// as demand. Peak working set is close to useless for sizing.
+        ///
+        /// The net8.0 <c>GCMemoryInfo</c> triple is measured AS OF THE LAST GC,
+        /// not now -- <c>GC.GetGCMemoryInfo()</c> with no argument returns the most
+        /// recent collection's snapshot. Hence the <c>_last_gc</c> suffixes. Do NOT
+        /// subtract them from the live figures above: <c>working_set - gc_committed</c>
+        /// mixes a current value with a stale one and can go negative (it did, by
+        /// 10 GB, on an 82-file run).
+        ///   gc_committed_last_gc  - bytes the GC had committed from the OS.
+        ///   gc_heap_last_gc       - heap size, including fragmentation.
+        ///   gc_fragmented_last_gc - free bytes stranded between live objects.
         /// </summary>
         public static void LogMemoryStats(Action<string> log, string label)
         {
@@ -109,17 +133,29 @@ namespace pwiz.Osprey.Tasks
             long curWs = proc.WorkingSet64;
             long managed = GC.GetTotalMemory(false);
 
+            const double gb = 1024.0 * 1024.0 * 1024.0;
+            string gcDetail = string.Empty;
+#if NETCOREAPP || NET5_0_OR_GREATER
+            var gcInfo = GC.GetGCMemoryInfo();
+            gcDetail = string.Format(CultureInfo.InvariantCulture,
+                ", gc_committed_last_gc={0:F2} GB, gc_heap_last_gc={1:F2} GB, gc_fragmented_last_gc={2:F2} GB",
+                gcInfo.TotalCommittedBytes / gb,
+                gcInfo.HeapSizeBytes / gb,
+                gcInfo.FragmentedBytes / gb);
+#endif
+
             log(string.Format(CultureInfo.InvariantCulture,
-                "[MEM {0}] working_set={1:F2} GB (peak={2:F2} GB), managed_heap={3:F2} GB, peak_paged={4:F2} GB, gen2_count={5}, loh_count={6}",
+                "[MEM {0}] working_set={1:F2} GB (peak={2:F2} GB), managed_heap={3:F2} GB, peak_paged={4:F2} GB, gen2_count={5}, loh_count={6}{7}",
                 label,
-                curWs / (1024.0 * 1024.0 * 1024.0),
-                peakWs / (1024.0 * 1024.0 * 1024.0),
-                managed / (1024.0 * 1024.0 * 1024.0),
-                peakPaged / (1024.0 * 1024.0 * 1024.0),
+                curWs / gb,
+                peakWs / gb,
+                managed / gb,
+                peakPaged / gb,
                 GC.CollectionCount(2),
                 // Large Object Heap collection count is same as gen-2 in
                 // standard GC; report it explicitly to document intent.
-                GC.CollectionCount(2)));
+                GC.CollectionCount(2),
+                gcDetail));
         }
 
         /// <summary>
