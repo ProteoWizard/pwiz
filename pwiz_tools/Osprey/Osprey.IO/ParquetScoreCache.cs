@@ -871,6 +871,29 @@ namespace pwiz.Osprey.IO
             return allCandidates;
         }
 
+        /// <summary>
+        /// Footer-only probe of a scores parquet: the total row count and whether
+        /// the <c>cwt_candidates</c> column is present, read from the Parquet
+        /// metadata WITHOUT decoding any column data. Lets Stage 6 validate that
+        /// every file's stub <see cref="FdrEntry.ParquetIndex"/> is in range (the
+        /// reconciliation all-or-nothing gate) without holding all files'
+        /// candidate lists resident -- the streaming counterpart of
+        /// <see cref="LoadCwtCandidatesFromParquet"/>, whose per-file result count
+        /// equals the returned <c>RowCount</c> when the column is present and 0 when
+        /// it is absent (that method returns an empty list for a missing column).
+        /// </summary>
+        public static (long RowCount, bool HasCwtCandidatesField) ProbeCwtRowMetadata(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                long rowCount = reader.Metadata?.NumRows ?? 0L;
+                var fieldsByName = BuildFieldLookup(reader);
+                bool hasCwt = fieldsByName.ContainsKey(FIELD_CWT_CANDIDATES.Name);
+                return (rowCount, hasCwt);
+            }
+        }
+
         #endregion
 
         #region Load PIN Features

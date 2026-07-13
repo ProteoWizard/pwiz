@@ -264,8 +264,14 @@ namespace pwiz.Osprey.Tasks
             OspreyConfig config)
         {
             IReadOnlyDictionary<(string File, int Index), ReconcileAction> reconciliationActions = null;
-            var perFileCwtCandidates = CwtCandidateLoader.Load(
-                perFileEntries, perFileParquetPaths, _ctx.LogWarning);
+            // Metadata-only gate: confirm every file's stubs are in range of its
+            // parquet's row count WITHOUT decoding or holding any file's CWT
+            // candidates. The former eager all-files load held every run's candidate
+            // lists at once -- the buffer that OOM'd the 82-file Stage-6 planning
+            // phase; the planner below now streams each file's candidates on demand
+            // and releases them before the next file.
+            bool allCwtInRange = CwtCandidateLoader.ValidateAllInRange(
+                perFileEntries, perFileParquetPaths, _ctx.LogWarning, out int cwtValidFileCount);
             var perFileForPlan = new List<KeyValuePair<string,
                 IReadOnlyList<FdrEntry>>>(perFileEntries.Count);
             foreach (var kvp in perFileEntries)
@@ -273,13 +279,13 @@ namespace pwiz.Osprey.Tasks
                 perFileForPlan.Add(new KeyValuePair<string,
                     IReadOnlyList<FdrEntry>>(kvp.Key, kvp.Value));
             }
-            if (perFileCwtCandidates.Count == perFileEntries.Count
-                && consensus.Count > 0)
+            if (allCwtInRange && consensus.Count > 0)
             {
                 reconciliationActions = ReconciliationPlanner.Plan(
                     consensus,
                     perFileForPlan,
-                    perFileCwtCandidates,
+                    fileName => CwtCandidateLoader.LoadOneFile(
+                        fileName, perFileParquetPaths, _ctx.LogWarning),
                     refinedCalibrations,
                     perFileCalibrations,
                     config.Reconciliation.ConsensusFdr);
@@ -295,7 +301,7 @@ namespace pwiz.Osprey.Tasks
             {
                 _ctx.LogInfo(string.Format(
                     @"Reconciliation: skipped (CWT candidates loaded for {0}/{1} files)",
-                    perFileCwtCandidates.Count, perFileEntries.Count));
+                    cwtValidFileCount, perFileEntries.Count));
             }
 
             // Stage 6 cross-impl bisection dump for the planner output. Fires
