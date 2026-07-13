@@ -2015,12 +2015,13 @@ namespace pwiz.Skyline.ToolsUI
             // message instead of a NullReferenceException, and do not let the MCP run a command the user
             // could not run yet.
             JsonUiService.RequireMainWindow();
-            // Run the command inside the dialog-watch: if it pops a blocking dialog, throw that dialog's message (the
-            // alert/error text, or any other dialog's title) instead of hanging on the modal. IntPtr.Zero is no
-            // managed window, so it runs on the UI-thread window (the main window). RequestCancellation makes the
-            // wait abandonable: a command is the longest thing a client can start, so it is the one it is most
-            // likely to give up on.
-            return DialogWatcher.CallFunction(IntPtr.Zero, () => RunCommandCore(args, silent), RequestCancellation);
+            // NOT inside the dialog-watch, which would run the command ON the UI thread. A command must not: it waits
+            // for the background loaders to finish the document it opens (SkylineWindowDocumentOperations), and a
+            // loader reports its progress with a BLOCKING Invoke to the UI thread (SkylineWindow.UpdateProgress ->
+            // RunUIAction). A command holding that thread would deadlock against the loader it is waiting for -- the
+            // libraries would never load, so the document would never be loaded. It runs here, on the caller's thread,
+            // and reaches the UI only through the document operations, which marshal what they need.
+            return RunCommandCore(args, silent);
         }
 
         private string RunCommandCore(string[] args, bool silent)
