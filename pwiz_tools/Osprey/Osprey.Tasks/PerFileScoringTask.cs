@@ -32,6 +32,7 @@ using System.Threading.Tasks;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 
@@ -95,6 +96,7 @@ namespace pwiz.Osprey.Tasks
         public override IEnumerable<Type> Publishes => new[]
         {
             typeof(FullLibrary), typeof(LibraryById), typeof(PerFileCalibrations),
+            typeof(PerFileCalibrationDiagnostics),
             typeof(PerFileIsolationMz), typeof(PerFileParquetPaths),
             typeof(RescoreBundle), typeof(ScoredEntries),
             // Must be declared, not just published: PipelineContext builds its
@@ -115,6 +117,17 @@ namespace pwiz.Osprey.Tasks
             = new List<KeyValuePair<string, List<FdrEntry>>>();
         private ConcurrentDictionary<string, RTCalibration> _perFileCalibrations
             = new ConcurrentDictionary<string, RTCalibration>();
+        // Per-file CAL-view calibration diagnostics for the --model-diagnostics HTML
+        // report, keyed by file name in input order (mirrors _perFileCalibrations).
+        // Empty on a normal run: only populated on the compute path when
+        // config.ModelDiagnostics is on. Published as PerFileCalibrationDiagnostics.
+        private ConcurrentDictionary<string, ModelDiagnosticsData.CalFileRow> _perFileCalibrationDiagnostics
+            = new ConcurrentDictionary<string, ModelDiagnosticsData.CalFileRow>();
+        // The per-run mass-error unit ("ppm" / "Th") for the CAL view, recorded from the
+        // first calibrated file (identical across files in a run). Null until then;
+        // published on PerFileCalibrationDiagnostics. Volatile: written under the parallel
+        // per-file fan-out, read once at publish.
+        private volatile string _calibrationMassUnit;
         private ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> _perFileIsolationMz
             = new ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>>();
         private Dictionary<string, string> _perFileParquetPaths
@@ -628,6 +641,13 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new FullLibrary(_fullLibrary));
             ctx.Publish(new LibraryById(_libraryById));
             ctx.Publish(new PerFileCalibrations(_perFileCalibrations));
+            // CAL-view per-file diagnostics for --model-diagnostics. Harvested directly
+            // onto the instance field by ProcessFile (compute path only), so it is
+            // published from the field rather than a Finalize local. Empty on a normal
+            // run and on the rehydrate/resume paths (no calibration matches to shape) --
+            // FirstJoinTask reads it only under config.ModelDiagnostics and tolerates
+            // empty. See TODO-20260712 for the HPC-split persistence caveat.
+            ctx.Publish(new PerFileCalibrationDiagnostics(_perFileCalibrationDiagnostics, _calibrationMassUnit));
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
@@ -1429,7 +1449,23 @@ namespace pwiz.Osprey.Tasks
             MultiProgressReporter.Current?.BeginSegment();
             RTCalibration rtCalibration = ResolveCalibration(
                 inputFile, fileName, fullLibrary, spectra, ms1Spectra, isolationWindows,
-                context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal, ctx);
+                context, config, out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+                out ModelDiagnosticsData.CalFileRow calDiagnostics, ctx);
+
+            // Harvest the CAL-view per-file diagnostics for the --model-diagnostics
+            // HTML report. Only non-null on the compute path under config.ModelDiagnostics;
+            // FirstJoinTask assembles these into ModelDiagnosticsData.Cal. Keyed by file
+            // name in input order, mirroring the per-file calibration harvest below. The
+            // ConcurrentDictionary field tolerates the parallel per-file fan-out.
+            if (calDiagnostics != null)
+            {
+                _perFileCalibrationDiagnostics[fileName] = calDiagnostics;
+                // Record the per-run mass-error unit from the mass calibration (the
+                // CalFileRow does not carry it -- it is a per-run scalar). ms1 is
+                // authoritative; ms2 covers an uncalibrated ms1 that defaulted its unit.
+                if (_calibrationMassUnit == null)
+                    _calibrationMassUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
+            }
 
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
@@ -1603,11 +1639,15 @@ namespace pwiz.Osprey.Tasks
             List<IsolationWindow> isolationWindows,
             ScoringContext context, OspreyConfig config,
             out MzCalibrationResult ms2Cal, out MzCalibrationResult ms1Cal,
+            out ModelDiagnosticsData.CalFileRow calDiagnostics,
             PipelineContext ctx)
         {
             RTCalibration rtCalibration = null;
             ms2Cal = MzCalibrationResult.Uncalibrated();
             ms1Cal = MzCalibrationResult.Uncalibrated();
+            // CAL-view per-file diagnostics for --model-diagnostics; null on the cached-JSON
+            // load path (no calibration matches available) and on a normal run.
+            calDiagnostics = null;
             // The wide pre-calibration RT tolerance (the "before" number in the
             // console calibration summary). Set by the compute path below; stays 0
             // when calibration is loaded from a cached JSON (no summary emitted then).
@@ -1672,7 +1712,7 @@ namespace pwiz.Osprey.Tasks
                 rtCalibration = new Calibrator(ctx).RunCalibration(
                     fullLibrary, spectra, ms1Spectra, context,
                     out ms1Cal, out ms2Cal, out numSampledPrecursorsForMetadata,
-                    out calInitialRtTolerance);
+                    out calInitialRtTolerance, out calDiagnostics);
                 swCal.Stop();
                 int nPoints = rtCalibration != null ? rtCalibration.Stats().NPoints : 0;
                 ctx.LogInfo(string.Format(

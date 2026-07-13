@@ -53,7 +53,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
     /// histograms, thinned q/FDP curves), so the embedded JSON stays small even
     /// for an Astral-scale run.
     /// </summary>
-    public sealed class ModelDiagnosticsData
+    public sealed partial class ModelDiagnosticsData
     {
         // ----- run metadata -----
         public string GeneratedUtc { get; set; }
