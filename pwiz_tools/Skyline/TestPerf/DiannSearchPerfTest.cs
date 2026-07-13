@@ -171,11 +171,6 @@ namespace TestPerf
 
         protected override void DoTest()
         {
-            // TEMPORARY fast-iteration mode: skip the 20-min search+import and just open
-            // the already-imported document so we can iterate on the volcano-plot setup
-            // and screenshot capture. Toggle to false to run the full pipeline.
-            const bool FastIterateVolcanoOnly = false;
-
             // Pull SkylineWindow above whatever shell/terminal launched the test so the
             // early screenshots aren't covered. Setting TopMost briefly bypasses Windows'
             // focus-stealing prevention; flipping it off restores normal z-order behaviour
@@ -187,26 +182,6 @@ namespace TestPerf
                 SkylineWindow.Activate();
                 SkylineWindow.TopMost = false;
             });
-
-            if (FastIterateVolcanoOnly)
-            {
-                var skyPath = Path.Combine(DocDir, @"DiannSearchPerf.sky");
-                AssertEx.IsTrue(File.Exists(skyPath),
-                    $@"No imported document at {skyPath} — run the full pipeline once before flipping FastIterateVolcanoOnly on.");
-                var t0 = DateTime.Now;
-                RunUI(() => SkylineWindow.OpenFile(skyPath));
-                Console.WriteLine($@"[FAST] OpenFile took {(DateTime.Now - t0).TotalSeconds:0.0}s");
-                var t1 = DateTime.Now;
-                WaitForDocumentLoaded(5 * 60 * 1000);
-                Console.WriteLine($@"[FAST] WaitForDocumentLoaded took {(DateTime.Now - t1).TotalSeconds:0.0}s");
-                var t2 = DateTime.Now;
-                BuildAndShowVolcanoPlot();
-                Console.WriteLine($@"[FAST] BuildAndShowVolcanoPlot took {(DateTime.Now - t2).TotalSeconds:0.0}s");
-                var t3 = DateTime.Now;
-                BuildAndShowSpeciesBoxPlot();
-                Console.WriteLine($@"[FAST] BuildAndShowSpeciesBoxPlot took {(DateTime.Now - t3).TotalSeconds:0.0}s");
-                return;
-            }
 
             // The .quant files ship in the zip as the persistent baseline. The first file's
             // .quant is deleted so the wizard performs a real search (and removed again after
@@ -650,16 +625,18 @@ namespace TestPerf
                 pane.AxisChange(g);
             }
 
-            // Render to the same tutorial folder as the volcano screenshot. TutorialPath
-            // resolves to <repo>/pwiz_tools/Skyline/Documentation/Tutorials/<CoverShotName>/<lang>/.
-            if (!string.IsNullOrEmpty(TutorialPath))
+            // Capture as the next sequential tutorial screenshot (s-15, immediately after the
+            // s-14 volcano). Skyline has no built-in per-category distribution plot, and showing
+            // a custom non-modal Form to screenshot it competes with the capture machinery and
+            // hangs (see above). Instead, render the pane to a bitmap and hand it to the normal
+            // PauseForScreenShot flow via processShot: it captures SkylineWindow but substitutes
+            // our plot, saving it to the auto-numbered slot. PauseForScreenShot itself no-ops
+            // unless screenshots are being recorded, so nothing is written on ordinary runs.
+            using (var bmp = pane.GetImage(720, 480, 96))
             {
-                Directory.CreateDirectory(TutorialPath);
-                var boxPlotPath = Path.Combine(TutorialPath, @"s-02-boxplot.png");
-                using (var bmp = pane.GetImage(720, 480, 96))
-                {
-                    bmp.Save(boxPlotPath, System.Drawing.Imaging.ImageFormat.Png);
-                }
+                PauseForScreenShot(SkylineWindow,
+                    @"Per-species log2 fold-change distribution (HYE benchmark)",
+                    processShot: shot => bmp);
             }
         }
 
