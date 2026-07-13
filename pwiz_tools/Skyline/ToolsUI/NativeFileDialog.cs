@@ -28,11 +28,10 @@ namespace pwiz.Skyline.ToolsUI
 {
     /// <summary>
     /// Base for the native common file dialogs -- Open (<see cref="NativeOpenFileDialog"/>) and
-    /// Save (<see cref="NativeSaveFileDialog"/>). Both are "#32770" dialogs that take a file name
-    /// and then accept or cancel, but they expose their file-name field differently, so the
-    /// path-entry gesture is abstract. Like every native dialog they report the generic
-    /// <see cref="NativeDialog.DialogTypeName"/> "Dialog" (their file-dialog nature is not knowable the
-    /// instant the window appears -- see that property -- so it is not baked into the form id).
+    /// Save (<see cref="NativeSaveFileDialog"/>). Both are "#32770" dialogs that take a file name and then accept or
+    /// cancel, but they expose their file-name field differently, so the path-entry gesture is abstract. Each says
+    /// which it is in its <see cref="NativeDialog.DialogTypeName"/>, so it is distinguishable from the message box a
+    /// file dialog raises -- which carries the file dialog's own caption.
     /// </summary>
     public abstract class NativeFileDialog : NativeDialog
     {

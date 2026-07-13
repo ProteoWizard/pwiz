@@ -59,15 +59,21 @@ namespace pwiz.Skyline.ToolsUI
         public int MillisTimeout { get; set; } = DEFAULT_TIMEOUT_MILLIS;
 
         /// <summary>
-        /// Short identifier for the kind of dialog, used as the first half of <see cref="FormId"/>. It is always
-        /// "Dialog": a subclass overrides this ONLY for a kind that can be told the instant the window appears,
-        /// before any of its children exist. The file/folder dialogs cannot -- classifying them needs their
-        /// (lazily-created) DirectUI children -- so they keep "Dialog". Baking a lagging classification into the id
-        /// would make it unstable: the connector reports the modal the moment it is shown (a file dialog then still
-        /// looks like a generic "Dialog"), and a later ResolveForm would see a different id. Callers tell a native
-        /// dialog apart by <see cref="FormInfo.IsNative"/> and its caption, not this.
+        /// Which KIND of native dialog this is -- reported as <see cref="FormInfo.SubType"/>. The kinds the connector
+        /// knows say so ("OpenFileDialog", "SaveFileDialog", "FolderBrowserDialog"); every other "#32770" it meets in
+        /// practice is a "MessageBox".
+        ///
+        /// <para>This is what tells a file dialog apart from the message box it raises -- the box carries the file
+        /// dialog's OWN caption ("Path does not exist" comes up titled "Save As"), so the two are identical in type,
+        /// title and id. It is NOT part of the id for exactly that reason: an id must be stable from the moment the
+        /// window is reported, and this cannot be (it is read from children that exist a moment later). See
+        /// <see cref="ResolveForm"/>, which breaks an id tie by taking the TOPMOST window -- the box, which is the
+        /// one in the way.</para>
         /// </summary>
-        public virtual string DialogTypeName => @"Dialog";
+        public virtual string DialogTypeName => @"MessageBox";
+
+        /// <summary>Every native dialog reports the one type; <see cref="DialogTypeName"/> says which kind.</summary>
+        public const string TYPE_NAME = @"Dialog";
 
         /// <summary>The dialog window's caption.</summary>
         public override string Title => User32.GetWindowText(Hwnd);
@@ -97,7 +103,7 @@ namespace pwiz.Skyline.ToolsUI
         public static NativeDialog MakeNativeDialog(IntPtr handle, CancellationToken cancellationToken) =>
             new NativeDialog(handle, cancellationToken);
 
-        // The message body of a native dialog box (a Win32 #32770, e.g. MessageBox.Show), read from its child
+        // The message body of a native dialog box (a Win32 #32770, e.g. a system message box), read from its child
         // controls, or null when none is found. The body is a "Static" control with text -- the icon's Static has
         // none -- so among the Static children with non-empty text, take the LONGEST, so the message wins over any
         // short label. In-process, so GetWindowText reads the static's text directly.
@@ -285,8 +291,9 @@ namespace pwiz.Skyline.ToolsUI
         // special-cases a native dialog any more. Reads are Win32 and run on the calling thread; a gesture is
         // marshaled onto the dialog's UI thread and waited out, so it is counted and a modal it raises is seen.
 
-        /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "Dialog:Open …".</summary>
-        public override string FormId => DialogTypeName + @":" + Title;
+        /// <summary>The id this dialog is addressed by (see skyline_get_open_forms): "Dialog:Save As". The prefix is
+        /// the CONSTANT type, never the kind -- see <see cref="DialogTypeName"/> for why the kind cannot be in an id.</summary>
+        public override string FormId => TYPE_NAME + @":" + Title;
 
         // A native dialog takes a value only as its file name (a Save dialog, an Open dialog); the base refuses, and
         // the file dialogs override SetValueCore to type the path. The value is typed synchronously and has no
@@ -389,11 +396,13 @@ namespace pwiz.Skyline.ToolsUI
         {
             return new FormInfo
             {
-                Type = DialogTypeName,
+                Type = TYPE_NAME,
+                SubType = DialogTypeName,
                 Title = Title,
                 HasGraph = false,
                 DockState = @"Dialog",
                 Id = FormId,
+                DetailedMessage = JsonUiService.TruncateDetail(DetailedMessage),
                 IsNative = true,
             };
         }

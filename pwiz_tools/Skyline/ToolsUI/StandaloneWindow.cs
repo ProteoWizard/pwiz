@@ -176,9 +176,13 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // Wraps a top-level window handle as the connector form abstraction that drives it: Control.FromHandle
-        // resolves a managed WinForms form (a FormElement built with the handle already in hand -- safe off the UI
-        // thread), or returns nothing for a truly native window (a generic NativeDialog).
+        // Wraps a top-level window handle as the connector window abstraction that drives it: Control.FromHandle
+        // resolves a managed WinForms form (built with the handle already in hand -- safe off the UI thread), or it
+        // is a native window, which NativeDialog.Create classifies. CLASSIFY, do not just wrap: the kind is half of
+        // the FormId, so a window enumerated here must come back with the same id it has anywhere else (a Save
+        // dialog is "SaveFileDialog:Save As" here as well as in GetOpenDialogs) -- otherwise the id a wait reports
+        // in ActionResult.FormId would not resolve. Create returns null for a window that is not a dialog at all,
+        // which is then driven generically.
         internal static StandaloneWindow NewStandaloneWindow(IntPtr hwnd, CancellationToken cancellationToken)
         {
             switch (Control.FromHandle(hwnd))
@@ -188,7 +192,8 @@ namespace pwiz.Skyline.ToolsUI
                 case { } control:
                     throw new ArgumentException(new LlmInstruction($@"{control.GetType().Name} is not a form"));
                 default:
-                    return NativeDialog.MakeNativeDialog(hwnd, cancellationToken);
+                    return NativeDialog.Create(hwnd, cancellationToken)
+                           ?? NativeDialog.MakeNativeDialog(hwnd, cancellationToken);
             }
         }
 

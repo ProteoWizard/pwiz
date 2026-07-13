@@ -54,18 +54,15 @@ namespace pwiz.SkylineTestFunctional
             // Drive the verb through the running JSON tool server (torn down with the window).
             RunUI(() => Program.StartToolService());
 
-            // The work pops a modal alert on the UI thread; RunWithAlertWatch (running on this test
-            // thread) must detect it and throw with the alert text rather than block. The test cares only
-            // that it throws with the alert's text, not what exception type carries it.
+            // The work pops a modal alert on the UI thread; the dialog-watch (running on this test thread) must
+            // detect it and throw with the alert's text rather than block. The test cares only that it throws with
+            // that text, not what exception type carries it. CallFunction already runs the work ON the UI thread,
+            // so the work shows the alert directly.
             AssertEx.ThrowsException<Exception>(
                 () => DialogWatcher.CallFunction(IntPtr.Zero, () =>
                 {
-                    JsonUiService.InvokeOnUiThread(() =>
-                    {
-                        using (var dlg = new AlertDlg(alertMessage, MessageBoxButtons.OK))
-                            dlg.ShowDialog(SkylineWindow);
-                        return true;
-                    });
+                    using (var dlg = new AlertDlg(alertMessage, MessageBoxButtons.OK))
+                        dlg.ShowDialog(SkylineWindow);
                     return true;
                 }, CancellationToken.None),
                 thrown => AssertEx.Contains(thrown.Message, alertMessage));
@@ -82,20 +79,18 @@ namespace pwiz.SkylineTestFunctional
             // orphaned work thread.
             OkDialog(alert, alert.ClickOk);
 
-            // A NATIVE message box (a Win32 #32770 with no managed Form, e.g. from MessageBox.Show) must surface
-            // its message BODY -- not its caption -- through the dialog-watch. The work pops the box on the UI
-            // thread (blocking it); the dialog-watch (on this test thread) detects the native modal and throws
-            // with the body text read from the box's child controls.
+            // A NATIVE message box (a Win32 #32770 with no managed Form) must surface its message BODY -- not its
+            // caption -- through the dialog-watch. The work pops the box on the UI thread (blocking it); the
+            // dialog-watch (on this test thread) detects the native modal and throws with the body text read from
+            // the box's child controls.
             const string nativeBody = @"The native message box body the connector should surface";
             const string nativeCaption = @"AlertWatchNativeBoxCaption";
             AssertEx.ThrowsException<Exception>(
                 () => DialogWatcher.CallFunction(IntPtr.Zero, () =>
                 {
-                    JsonUiService.InvokeOnUiThread(() =>
-                    {
-                        MessageBox.Show(SkylineWindow, nativeBody, nativeCaption, MessageBoxButtons.OK);
-                        return true;
-                    });
+                    // A managed MessageDlg would not produce the raw Win32 box whose body text this test exists to
+                    // prove the connector can read.
+                    MessageBox.Show(SkylineWindow, nativeBody, nativeCaption, MessageBoxButtons.OK); // Purposely using MessageBox here
                     return true;
                 }, CancellationToken.None),
                 thrown =>

@@ -153,8 +153,10 @@ namespace TestPerf
             // first shows a "You must save this document before importing a peptide search" message (OK/Cancel);
             // accepting it (OK) brings up the native Save As dialog. Save as DIA_to_SRM_Tutorial.sky and the wizard
             // opens. Each of these gestures opens the NEXT dialog rather than completing, so none is AssertComplete.
+            // The tile's click is POSTED, and the prompt is then shown by the startup frame -- so it is not up when
+            // the click returns. WAIT for it (GetOpenFormId does not).
             Connector.ClickFormButton(startPage, StartupResources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search);
-            Connector.DismissWithAcceptButton(GetOpenFormId<MultiButtonMsgDlg>());
+            Connector.DismissWithAcceptButton(WaitForConnectorForm<MultiButtonMsgDlg>());
 
             // The Start Page tile sets DialogResult and returns; the "must save" prompt and this Save dialog are then
             // shown by the startup frame (StartupActions), NOT by a counted connector gesture -- so accepting the
@@ -200,10 +202,10 @@ namespace TestPerf
             // will create a template document with no imported results and asks whether to continue; the
             // multi-injection GPF results are imported later (Step 1.9). Accept() presses the prompt's default
             // (Yes) without keying on a localized caption.
-            // Next opens the "no results files, continue?" prompt (a dialog), so it does not complete; accepting
-            // that prompt advances the wizard, which we DO expect to complete.
+            // Next's click is POSTED, so the prompt is not up when it returns -- WAIT for the prompt. Accepting it
+            // advances the wizard, which we DO expect to complete.
             Connector.ClickFormButton(wizard, WizardNextButton);
-            AssertComplete(Connector.DismissWithAcceptButton(GetOpenFormId<MultiButtonMsgDlg>()));
+            AssertComplete(Connector.DismissWithAcceptButton(WaitForConnectorForm<MultiButtonMsgDlg>()));
 
             // 1.3 Add Modifications: no modifications were used in the search, so just move on. No WaitForControl --
             // the accept above is assumed to have settled the Add Modifications page.

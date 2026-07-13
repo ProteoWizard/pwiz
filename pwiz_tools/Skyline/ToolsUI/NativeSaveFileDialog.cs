@@ -42,6 +42,8 @@ namespace pwiz.Skyline.ToolsUI
         private const int FILE_NAME_EDIT_ID = 1001;
         private const int IDOK = 1; // the Save button
 
+        public override string DialogTypeName => @"SaveFileDialog";
+
         protected override int FileNameControlId => FILE_NAME_EDIT_ID;
 
         public NativeSaveFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)

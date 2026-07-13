@@ -300,13 +300,28 @@ namespace SkylineTool
     public class FormInfo
     {
         public string Type { get; set; }
+        /// <summary>
+        /// What KIND of that type this window is, when several very different windows share one type. Every native
+        /// dialog is a "Dialog", so its SubType says which one -- "OpenFileDialog", "SaveFileDialog",
+        /// "FolderBrowserDialog", "MessageBox" -- and that is how a file dialog is told apart from the message box
+        /// it raises, which carries the file dialog's own caption. Null when the type says it all.
+        ///
+        /// <para>It is deliberately NOT part of <see cref="Id"/>: an id has to be stable from the moment the window
+        /// is reported, and what a window IS can be learned a moment later than that it exists.</para>
+        /// </summary>
+        public string SubType { get; set; }
         public string Title { get; set; }
         public bool HasGraph { get; set; }
         public string DockState { get; set; }
         public string Id { get; set; }
         /// <summary>
-        /// True for native operating-system windows (e.g. the common Open/Save file dialog)
-        /// that are driven through UI Automation rather than as WinForms forms.
+        /// What the window SAYS -- a message box's body, an alert's text -- truncated. It is what tells a caller
+        /// whether a form is IN THE WAY and why, without having to capture an image of it.
+        /// </summary>
+        public string DetailedMessage { get; set; }
+        /// <summary>
+        /// True for native operating-system windows (e.g. the common Open/Save file dialog), which are driven
+        /// through Win32 rather than as WinForms forms.
         /// </summary>
         public bool IsNative { get; set; }
         /// <summary>

@@ -598,7 +598,7 @@ namespace pwiz.Skyline
             }
             if (MainWindow != null && MainToolService == null)
             {
-                MainToolService = new ToolService(MainToolServiceName);
+                MainToolService = new ToolService(MainToolServiceName, MainWindow);
                 MainToolService.RunAsync();
                 MainWindow.DocumentChangedEvent += DocumentChangedEventHandler;
             }

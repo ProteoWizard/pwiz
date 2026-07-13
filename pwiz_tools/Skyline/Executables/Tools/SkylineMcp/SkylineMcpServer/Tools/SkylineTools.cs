@@ -508,14 +508,18 @@ public static class SkylineTools
     }
 
     [McpServerTool(Name = "skyline_get_open_forms"),
-     Description("Enumerate all open forms in the Skyline window. Returns tab-separated lines " +
-        "with form type, title, whether it contains a ZedGraph graph, dock state, a stable " +
-        "identifier in TypeName:Title format (e.g., 'GraphSummary:Peak Areas - Replicate Comparison'), " +
-        "and whether the form is a native OS window. " +
+     Description("Enumerate all open forms in the Skyline window. Returns tab-separated lines with form type, " +
+        "SubType, title, whether it contains a ZedGraph graph, dock state, a stable identifier in TypeName:Title " +
+        "format (e.g., 'GraphSummary:Peak Areas - Replicate Comparison'), whether the form is a native OS window, " +
+        "and Message. " +
         "Use the identifier with skyline_get_graph_data, skyline_get_graph_image, and skyline_get_form_image. " +
         "DockState values: Floating, Document, DockTop/Left/Bottom/Right, DockTopAutoHide/etc., Dialog. " +
-        "IsNative=True marks native common dialogs such as the Open/Save file dialog (Type 'FileDialog'); " +
-        "skyline_get_form_image works for these too.")]
+        "IsNative=True marks a native OS dialog, whose Type is always 'Dialog'; its SubType says which kind -- " +
+        "'OpenFileDialog', 'SaveFileDialog', 'FolderBrowserDialog' or 'MessageBox'. That matters because a file " +
+        "dialog's error box carries the file dialog's own caption, so both share one Id: SubType tells them apart, " +
+        "and a verb addressing that Id acts on the TOPMOST (the box -- the one in the way). " +
+        "Message is what a window SAYS (a message box's body, an alert's text), truncated -- read it to see whether " +
+        "a form is blocking you and why, without capturing an image. skyline_get_form_image works for these too.")]
     public static string GetOpenForms()
     {
         return Invoke(connection =>
@@ -525,9 +529,10 @@ public static class SkylineTools
                 return "No forms are currently open in Skyline.";
 
             var sb = new StringBuilder();
-            sb.AppendLine("Type\tTitle\tHasGraph\tDockState\tId\tIsNative");
+            sb.AppendLine("Type\tSubType\tTitle\tHasGraph\tDockState\tId\tIsNative\tMessage");
             foreach (var form in forms)
-                sb.AppendLine($"{form.Type}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t{form.Id}\t{form.IsNative}");
+                sb.AppendLine($"{form.Type}\t{form.SubType}\t{form.Title}\t{form.HasGraph}\t{form.DockState}\t" +
+                              $"{form.Id}\t{form.IsNative}\t{form.DetailedMessage}");
             return sb.ToString().TrimEnd();
         });
     }

@@ -37,6 +37,8 @@ namespace pwiz.Skyline.ToolsUI
         // across Windows versions and locales, and its presence tells the Open dialog from every other "#32770".
         private const int FILE_NAME_COMBO_ID = 1148;
 
+        public override string DialogTypeName => @"OpenFileDialog";
+
         protected override int FileNameControlId => FILE_NAME_COMBO_ID;
 
         public NativeOpenFileDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)

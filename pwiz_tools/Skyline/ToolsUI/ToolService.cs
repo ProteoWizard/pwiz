@@ -57,8 +57,11 @@ namespace pwiz.Skyline.ToolsUI
         private  readonly Dictionary<string, DocumentChangeSender> _documentChangeSenders = 
             new Dictionary<string,DocumentChangeSender>();
 
-        public ToolService(string serviceName) : base(serviceName)
+        private readonly SkylineWindow _skylineWindow;
+
+        public ToolService(string serviceName, SkylineWindow skylineWindow) : base(serviceName)
         {
+            _skylineWindow = skylineWindow;
         }
 
         /// <summary>
@@ -111,21 +114,21 @@ namespace pwiz.Skyline.ToolsUI
         public DocumentLocation GetDocumentLocation()
         {
             DocumentLocation documentLocation = null;
-            JsonUiService.InvokeOnUiThread(() =>
+            Program.MainWindow.Invoke(new Action(() =>
             {
-                if (!Program.MainWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
+                if (!_skylineWindow.SelectedPath.Equals(new IdentityPath(SequenceTree.NODE_INSERT_ID)))
                 {
-                    documentLocation = new DocumentLocation(Program.MainWindow.SequenceTree.SelectedPath.ToGlobalIndexList());
-                    if (Program.MainWindow.Document.Settings.HasResults)
+                    documentLocation = new DocumentLocation(_skylineWindow.SequenceTree.SelectedPath.ToGlobalIndexList());
+                    if (_skylineWindow.Document.Settings.HasResults)
                     {
                         var chromatogramSet =
-                            Program.MainWindow.Document.Settings.MeasuredResults.Chromatograms[
-                                Program.MainWindow.SelectedResultsIndex];
+                            _skylineWindow.Document.Settings.MeasuredResults.Chromatograms[
+                                _skylineWindow.SelectedResultsIndex];
                         documentLocation = documentLocation.SetChromFileId(
                             chromatogramSet.MSDataFileInfos.First().FileId.GlobalIndex);
                     }
                 }
-            });
+            }));
             return documentLocation;
         }
 
@@ -136,7 +139,7 @@ namespace pwiz.Skyline.ToolsUI
         [Obsolete]
         public void SetDocumentLocation(DocumentLocation documentLocation)
         {
-            JsonUiService.InvokeOnUiThread(() =>
+            Program.MainWindow.Invoke(new Action(() =>
             {
                 if (documentLocation == null)
                     Program.MainWindow.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID));
@@ -145,20 +148,20 @@ namespace pwiz.Skyline.ToolsUI
                     Bookmark bookmark = Bookmark.ToBookmark(documentLocation, Program.MainWindow.DocumentUI);
                     Program.MainWindow.NavigateToBookmark(bookmark);
                 }
-            });
+            }));
         }
 
         public string GetDocumentLocationName()
         {
             string name = null;
-            JsonUiService.InvokeOnUiThread(() => name = Program.MainWindow.SequenceTree.SelectedNode.Text);
+            Program.MainWindow.Invoke(new Action(() => name = _skylineWindow.SequenceTree.SelectedNode.Text));
             return name;
         }
 
         public string GetReplicateName()
         {
             string name = null;
-            JsonUiService.InvokeOnUiThread(() => name = Program.MainWindow.SelectedGraphChromName);
+            Program.MainWindow.Invoke(new Action(() => name = _skylineWindow.SelectedGraphChromName));
             return name;
         }
 
@@ -264,7 +267,7 @@ namespace pwiz.Skyline.ToolsUI
         /// <returns>Path to document file.</returns>
         public string GetDocumentPath()
         {
-            return Program.MainWindow?.DocumentFilePath;
+            return Program.MainWindow.DocumentFilePath;
         }
 
         /// <summary>
@@ -290,20 +293,20 @@ namespace pwiz.Skyline.ToolsUI
 
         public void ImportFasta(string textFasta)
         {
-            JsonUiService.InvokeOnUiThread(() =>
+            Program.MainWindow.Invoke(new Action(() =>
             {
-                Program.MainWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
+                _skylineWindow.ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
                     false, ToolsUIResources.ToolService_ImportFasta_Insert_proteins, new SkylineWindow.ImportFastaInfo(false, textFasta));
-            });
+            }));
         }
 
         public void InsertSmallMoleculeTransitionList(string textCSV)
         {
-            JsonUiService.InvokeOnUiThread(() =>
+            Program.MainWindow.Invoke(new Action(() =>
             {
-                Program.MainWindow.InsertSmallMoleculeTransitionList(textCSV,
+                _skylineWindow.InsertSmallMoleculeTransitionList(textCSV,
                     Resources.ToolService_InsertSmallMoleculeTransitionList_Insert_Small_Molecule_Transition_List);
-            });
+            }));
         }
 
         public void AddSpectralLibrary(string libraryName, string libraryPath)
@@ -316,13 +319,13 @@ namespace pwiz.Skyline.ToolsUI
             }
 
             // CONSIDER: Add this Library Spec to Settings.Default.SpectralLibraryList?
-            JsonUiService.InvokeOnUiThread(() =>
+            Program.MainWindow.Invoke(new Action(() =>
             {
-                Program.MainWindow.ModifyDocument(ToolsUIResources.LibrarySpec_Add_spectral_library, doc =>
+                _skylineWindow.ModifyDocument(ToolsUIResources.LibrarySpec_Add_spectral_library, doc =>
                     doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(
                         lib.LibrarySpecs.Union(new[] { librarySpec }).ToArray()))), AuditLogEntry.SettingsLogFunction);
                 Settings.Default.SpectralLibraryList.Add(librarySpec);
-            });
+            }));
         }
 
         private readonly object _documentChangeSendersLock = new object();
@@ -381,11 +384,11 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     catch (TimeoutException)
                     {
-                        var error = @"No response from " + documentChangeSender.Value.Name;
-                        Program.MainWindow.BeginInvoke((Action)(() =>
+                        var error = @"No response from " + documentChangeSender.Value.Name; 
+                        _skylineWindow.BeginInvoke(new Action(() =>
                         {
-                            Program.MainWindow.ShowImmediateWindow();
-                            Program.MainWindow.ImmediateWindow.WriteLine(error);
+                            _skylineWindow.ShowImmediateWindow();
+                            _skylineWindow.ImmediateWindow.WriteLine(error);
                         }));
                         if (!documentChangeSender.Value.CountTimeout(MAX_TIMEOUT_COUNT))
                         {
@@ -469,17 +472,17 @@ namespace pwiz.Skyline.ToolsUI
         public void DeleteElements(string[] elementLocatorStrings)
         {
             var elementLocators = elementLocatorStrings.Select(ElementLocator.Parse).ToList();
-            JsonUiService.InvokeOnUiThread(() =>
+            _skylineWindow.Invoke(new Action(() =>
             {
                 DeleteElementsNow(elementLocators);
-            });
+            }));
         }
 
         private void DeleteElementsNow(IEnumerable<ElementLocator> elementLocators)
         {
-            lock (Program.MainWindow.GetDocumentChangeLock())
+            lock (_skylineWindow.GetDocumentChangeLock())
             {
-                var originalDocument = Program.MainWindow.Document;
+                var originalDocument = _skylineWindow.Document;
                 var document = originalDocument;
                 var nodeRefs = new List<NodeRef>();
                 foreach (var elementLocator in elementLocators)
@@ -502,31 +505,31 @@ namespace pwiz.Skyline.ToolsUI
                     return;
                 }
 
-                DeleteNodesAction.DeleteIdentityPaths(Program.MainWindow, identityPathsToDelete);
+                DeleteNodesAction.DeleteIdentityPaths(_skylineWindow, identityPathsToDelete);
             }
         }
 
         public void ImportProperties(string csvText)
         {
-            JsonUiService.InvokeOnUiThread(() =>
+            _skylineWindow.Invoke(new Action(() =>
             {
-                Program.MainWindow.ImportAnnotations(new StringReader(csvText),
-                    new MessageInfo(MessageType.imported_annotations, Program.MainWindow.Document.DocumentType,
+                _skylineWindow.ImportAnnotations(new StringReader(csvText),
+                    new MessageInfo(MessageType.imported_annotations, _skylineWindow.Document.DocumentType,
                         ToolsUIResources.ToolService_ImportProperties_Import_Properties_from_external_tool));
-            });
+            }));
         }
 
         public void ImportPeakBoundaries(string csvText)
         {
-            JsonUiService.InvokeOnUiThread(() =>
+            _skylineWindow.Invoke(new Action(() =>
             {
-                lock (Program.MainWindow.GetDocumentChangeLock())
+                lock (_skylineWindow.GetDocumentChangeLock())
                 {
-                    var originalDocument = Program.MainWindow.DocumentUI;
+                    var originalDocument = _skylineWindow.DocumentUI;
                     var document = originalDocument;
                     using (var longWaitDlg = new LongWaitDlg())
                     {
-                        longWaitDlg.PerformWork(Program.MainWindow, 1000, progressMonitor =>
+                        longWaitDlg.PerformWork(_skylineWindow, 1000, progressMonitor =>
                         {
                             document = LocalizationHelper.CallWithCulture(CultureInfo.InvariantCulture, () =>
                             {
@@ -540,7 +543,7 @@ namespace pwiz.Skyline.ToolsUI
                             throw new OperationCanceledException();
                         }
                     }
-                    Program.MainWindow.ModifyDocument(
+                    _skylineWindow.ModifyDocument(
                         ToolsUIResources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool,
                         doc =>
                         {
@@ -553,15 +556,78 @@ namespace pwiz.Skyline.ToolsUI
                             return document;
                         }, docPair =>
                             AuditLogEntry.CreateSingleMessageEntry(new MessageInfo(MessageType.imported_peak_boundaries,
-                                Program.MainWindow.DocumentUI.DocumentType,
+                                _skylineWindow.DocumentUI.DocumentType,
                                 ToolsUIResources.ToolService_ImportPeakBoundaries_Import_peak_boundaries_from_external_tool)));
                 }
-            });
+            }));
         }
 
         public string GetSelectedElementLocator(string elementType)
         {
-            return JsonUiService.GetSelectedElementLocator(elementType);
+            ElementRef result = null;
+            Exception exception = null;
+            _skylineWindow.Invoke(new Action(() => 
+            {
+                try
+                {
+                    result = GetSelectedElementRefNow(elementType);
+                }
+                catch (Exception e)
+                {
+                    exception = e;
+                }
+            }));
+            if (exception != null)
+            {
+                throw new TargetInvocationException(exception);
+            }
+            return result?.ToString();
+        }
+
+        private ElementRef GetSelectedElementRefNow(string elementType)
+        {
+            var document = _skylineWindow.DocumentUI;
+
+            SrmDocument.Level nodeLevel;
+            if (elementType == ReplicateRef.PROTOTYPE.ElementType)
+            {
+                if (!document.Settings.HasResults)
+                {
+                    return null;
+                }
+
+                return ReplicateRef.FromChromatogramSet(document.Settings.MeasuredResults
+                    .Chromatograms[_skylineWindow.ComboResults.SelectedIndex]);
+            }
+
+            if (elementType == TransitionRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Transitions;
+            }
+            else if (elementType == PrecursorRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.TransitionGroups;
+            }
+            else if (elementType == MoleculeRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.Molecules;
+            }
+            else if (elementType == MoleculeGroupRef.PROTOTYPE.ElementType)
+            {
+                nodeLevel = SrmDocument.Level.MoleculeGroups;
+            }
+            else
+            {
+                throw new ArgumentException(string.Format(ToolsUIResources.ToolService_GetSelectedElementRefNow_Unsupported_element_type___0__, elementType));
+            }
+
+            var selectedPath = _skylineWindow.SelectedPath;
+            if (selectedPath.Length <= (int)nodeLevel)
+            {
+                return null;
+            }
+            var elementRefs = new ElementRefs(document);
+            return elementRefs.GetNodeRef(selectedPath.GetPathTo((int)nodeLevel));
         }
 
         public string StartMcpConnection(string alwaysAtStartup)

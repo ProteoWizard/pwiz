@@ -43,6 +43,8 @@ namespace pwiz.Skyline.ToolsUI
         private const int BFFM_SETSELECTIONW = 0x0400 + 103; // WM_USER + 103
         private const int IDOK = 1; // the dialog's OK button carries this control id as its AutomationId
 
+        public override string DialogTypeName => @"FolderBrowserDialog";
+
         public NativeFolderBrowserDialog(IntPtr windowHandle, CancellationToken cancellationToken) : base(windowHandle, cancellationToken)
         {
         }

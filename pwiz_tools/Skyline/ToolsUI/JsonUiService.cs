@@ -52,6 +52,25 @@ namespace pwiz.Skyline.ToolsUI
         private const string EXT_PNG = @".png";
         private const string GRAPH_FILE_PREFIX = @"skyline-graph";
 
+        // How often a marshaled call re-checks that the window it posted to still exists (see InvokeOnControl).
+        private const int INVOKE_POLL_MILLIS = 30;
+
+        // How much of a window's message GetOpenForms reports. Enough to see WHAT is in the way and why; a form list
+        // is a summary, and the whole text is there for the asking (get_form_image, or the message an action throws).
+        private const int MAX_DETAIL_CHARS = 200;
+
+        /// <summary>What a window says, cut down to fit in a form listing (see <see cref="FormInfo.DetailedMessage"/>).
+        /// Newlines collapse to spaces so one form stays one line.</summary>
+        internal static string TruncateDetail(string message)
+        {
+            if (string.IsNullOrEmpty(message))
+                return null;
+            var oneLine = Regex.Replace(message, @"\s+", @" ").Trim();
+            return oneLine.Length <= MAX_DETAIL_CHARS
+                ? oneLine
+                : oneLine.Substring(0, MAX_DETAIL_CHARS) + @"...";
+        }
+
         // Level 1: Primitives - UI thread marshaling
 
         /// <summary>
@@ -110,7 +129,17 @@ namespace pwiz.Skyline.ToolsUI
                     try { Run(); }
                     finally { done.Set(); }
                 }));
-                done.Wait(cancellationToken);    // wakes at once on a disconnect -- no polling
+                // Wait for the posted delegate, giving up if the window it was posted to goes away. BeginInvoke posts
+                // a message to that control's HWND; if the window is DESTROYED before the message is dispatched -- a
+                // form closing while it is being described, which is exactly the race GetOpenForms runs -- the message
+                // is dropped and the delegate NEVER runs. Waiting on the event alone would then wait forever, on a UI
+                // thread that is pumping perfectly well. Throw instead, so a caller enumerating forms skips the one
+                // that vanished. (The token is the other way out: the client disconnected.)
+                while (!done.Wait(INVOKE_POLL_MILLIS, cancellationToken))
+                {
+                    if (!control.IsHandleCreated || control.IsDisposed)
+                        throw new InvalidOperationException(@"The form closed while it was being read.");
+                }
             }
             else
             {
@@ -484,6 +513,12 @@ namespace pwiz.Skyline.ToolsUI
         /// <summary>Resolves a formId to the window it addresses -- a managed form (StandaloneForm) or a native
         /// dialog (NativeDialog), so no verb special-cases a native dialog. Throws if no open window has the id.
         ///
+        /// <para>An id can name more than one open window: a file dialog's message box carries the file dialog's own
+        /// caption, so both are "Dialog:Save As" (see <see cref="NativeDialog.DialogTypeName"/>). The TOPMOST wins --
+        /// which is the box, the one actually in the way and the one a user would have to deal with first. That falls
+        /// out of the enumeration: EnumWindows walks top-level windows in Z-ORDER, topmost first, so the first match
+        /// is the topmost. Load-bearing, so do not reorder these walks.</para>
+        ///
         /// <para>Built with the CANCELLATION OF THE REQUEST that asked for it, so every marshal and wait the
         /// returned element (and the tree under it) makes can be abandoned when that client disconnects. The token
         /// comes from the JsonToolServer verb serving the request; in-process callers pass None.</para></summary>
@@ -492,7 +527,7 @@ namespace pwiz.Skyline.ToolsUI
             ValidateFormIdFormat(formId);
             // The form is the root of its path; record it so get_controls parents the controls onto it.
             var formPath = new UiElementPath(null, formId, null, @"Form");
-            foreach (var dialog in NativeDialog.GetOpenDialogs(cancellationToken))
+            foreach (var dialog in NativeDialog.GetOpenDialogs(cancellationToken))   // topmost first
                 if (dialog.FormId == formId)
                 {
                     dialog.Path = formPath;

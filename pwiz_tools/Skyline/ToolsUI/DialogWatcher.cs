@@ -257,11 +257,12 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        // The message the watchdog throws: about NO_PROGRESS_LIMIT message-loop pumps with no completion and no
-        // progress dialog, which points at a slow Skyline operation not showing a LongWaitDlg.
+        // The message the watchdog throws. It says only what is known. NOT that a dialog may be open: a dialog would
+        // have been REPORTED (Completed = false, naming it) rather than timed out on -- so suggesting the caller go
+        // look for one points at the one thing that is provably not the case.
         private static string GestureTimeoutMessage =>
             LlmInstruction.Format(
-                @"Timed out after an actively-pumping Skyline message loop made no progress with no long-wait (progress) dialog showing. This usually means a Skyline operation is slow but is not surfacing a LongWaitDlg. If a dialog is open, drive it with skyline_get_open_forms and the accept/cancel/click verbs.");
+                @"Timed out: The operation did not finish, but Skyline is not making any progress.");
 
         // ===== Modal-dialog detection and messages =====
 

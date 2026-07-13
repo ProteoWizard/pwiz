@@ -1159,6 +1159,12 @@ namespace pwiz.Skyline.ToolsUI
                 Id = JsonUiService.GetFormId(Form),
                 ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(Hwnd),
                 DockState = GetDockState(),
+                // What the form SAYS -- an alert's text -- so a caller listing the forms can see that one is in the
+                // way, and why, without capturing an image of it. Only for a form that says something beyond its
+                // own title (a CommonFormEx: an alert, an error); a plain form's DetailedMessage IS its title.
+                DetailedMessage = Form is CommonFormEx
+                    ? JsonUiService.TruncateDetail(DetailedMessage)
+                    : null,
                 HasGraph = Form is DockableFormEx dockableForm && null != JsonUiService.TryGetZedGraphControl(dockableForm)
             });
         }
