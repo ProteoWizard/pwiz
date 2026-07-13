@@ -33,12 +33,15 @@ using SkylineTool;
 namespace pwiz.SkylineTestUtil
 {
     /// <summary>
-    /// Base class for tutorial tests that drive Skyline through the in-process <see cref="IJsonToolService"/>
-    /// -- the same API an external MCP client uses -- rather than directly through ShowDialog / RunUI. Besides
-    /// reproducing a tutorial, such a test verifies that the connector is capable enough to run the tutorial
-    /// end-to-end; a step that cannot be expressed through the connector is a gap to add to it.
+    /// Base class for a test that drives Skyline through the in-process <see cref="IJsonToolService"/> -- the same
+    /// API an external MCP client uses -- rather than directly through ShowDialog / RunUI. Everything such a test
+    /// does goes through <see cref="Connector"/>, so it verifies the connector is capable enough to do it: a step
+    /// that cannot be expressed through the connector is a gap to add to it.
+    ///
+    /// <para>Two kinds of test live on this: the verb tests (one per connector capability) and the TUTORIAL tests,
+    /// which reproduce a published tutorial end-to-end through the connector (and capture its screenshots).</para>
     /// </summary>
-    public abstract class McpTutorialTest : AbstractFunctionalTestEx
+    public abstract class McpConnectorTest : AbstractFunctionalTestEx
     {
         /// <summary>
         /// The running JSON tool service -- the same <see cref="IJsonToolService"/> an external MCP client
@@ -148,11 +151,11 @@ namespace pwiz.SkylineTestUtil
         /// waiting -- the counterpart to <see cref="WaitForConnectorForm{TForm}"/> for when a preceding action was
         /// expected to have already opened it. Fails if it is not open yet, revealing an action that did not open
         /// its dialog synchronously.</summary>
-        protected string GetConnectorForm<TForm>() where TForm : Form =>
-            GetConnectorForm(typeof(TForm).Name);
+        protected string GetOpenFormId<TForm>() where TForm : Form =>
+            GetOpenFormId(typeof(TForm).Name);
 
-        /// <summary>Resolves a form by its connector type name right now (see <see cref="GetConnectorForm{TForm}"/>).</summary>
-        protected string GetConnectorForm(string typeName) =>
+        /// <summary>Resolves a form by its connector type name right now (see <see cref="GetOpenFormId{TForm}"/>).</summary>
+        protected string GetOpenFormId(string typeName) =>
             ResolveNow(form => form.Type == typeName, "a form of type " + typeName);
 
         /// <summary>Resolves the summary graph whose title contains <paramref name="titleSubstring"/> right now

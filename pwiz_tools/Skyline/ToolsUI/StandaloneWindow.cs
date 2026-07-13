@@ -130,11 +130,6 @@ namespace pwiz.Skyline.ToolsUI
             return DialogWatcher.OkDialog(Hwnd, action, CancellationToken);
         }
 
-        protected T CallFunction<T>(Func<T> func)
-        {
-            return DialogWatcher.CallFunction(Hwnd, func, CancellationToken);
-        }
-
         protected ActionResult PerformAction(Action action)
         {
             return DialogWatcher.PerformAction(Hwnd, action, CancellationToken);
@@ -166,14 +161,23 @@ namespace pwiz.Skyline.ToolsUI
             foreach (var hwnd in User32.EnumWindows())
             {
                 User32.GetWindowThreadProcessId(hwnd, out var windowProcessId);
-                if (windowProcessId != processId)
+                if (windowProcessId != processId || !User32.IsWindowVisible(hwnd))
                     continue;
                 if (Control.FromHandle(hwnd) is Form)
                 {
-                    if (User32.IsWindowVisible(hwnd))
-                        yield return NewStandaloneWindow(hwnd, cancellationToken);
+                    yield return NewStandaloneWindow(hwnd, cancellationToken);
                 }
-                else yield return NativeDialog.MakeNativeDialog(hwnd, cancellationToken);
+                else
+                {
+                    // A non-managed top-level window is only a window the connector can drive when it is a native
+                    // DIALOG. The process has other unmanaged top-level windows (message-only and helper windows,
+                    // each with no caption), and wrapping those would list them as forms with the id "Dialog:" that
+                    // nothing can resolve. Create returns null for anything that is not a "#32770", and picks the
+                    // subclass that drives the ones that are (Open / Save / folder browser).
+                    var dialog = NativeDialog.Create(hwnd, cancellationToken);
+                    if (dialog != null)
+                        yield return dialog;
+                }
             }
         }
 
@@ -227,5 +231,11 @@ namespace pwiz.Skyline.ToolsUI
             return owner != IntPtr.Zero && !User32.IsWindowEnabled(owner);
         }
 
+        public abstract FormInfo GetFormInfo();
+
+        protected virtual string GetDockState()
+        {
+            return @"Dialog";
+        }
     }
 }

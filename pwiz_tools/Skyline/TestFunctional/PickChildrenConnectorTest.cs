@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestFunctional
     /// image-only ToolStrip item matched by its tooltip).
     /// </summary>
     [TestClass]
-    public class PickChildrenConnectorTest : AbstractFunctionalTest
+    public class PickChildrenConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestPickChildrenConnector()
@@ -51,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
-            RunUI(() => Program.StartToolService());
+            StartToolService();
 
             // Insert a single peptide so the Targets tree has a precursor with child transitions. The
             // protein name contains '|' (a UniProt-style "sp|ACC|NAME") so the test also exercises that
@@ -79,13 +79,12 @@ namespace pwiz.SkylineTestFunctional
                     groupNode.Text, peptideNode.Text, precursorNode.Text);
             });
 
-            string treeFormId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(SequenceTreeForm)).Id;
+            string treeFormId = GetOpenFormId<SequenceTreeForm>();
 
             // Select the precursor node; Pick Children acts on the selection, so the node must be in it.
             var targetsTree = new UiElementPath(
                 new UiElementPath(null, treeFormId, null, @"Form"), null, null, @"SequenceTree");
-            JsonUiService.PerformAction(targetsTree, @"select_item", precursorPath);
+            Connector.PerformAction(targetsTree, @"select_item", precursorPath);
             RunUI(() =>
             {
                 Assert.IsTrue(precursorNode.IsInSelection, @"Precursor node was not put into the selection.");
@@ -99,11 +98,10 @@ namespace pwiz.SkylineTestFunctional
             // Right-click > Pick Children opens the (modeless) pick-list popup, via the tree's context
             // menu (a path of Type "ContextMenu" on the tree), with the item matched by visible text.
             var treeContextMenu = new UiElementPath(targetsTree, null, null, @"ContextMenu");
-            JsonUiService.PerformAction(
+            Connector.PerformAction(
                 new UiElementPath(treeContextMenu, @"Pick Children", null, null), @"click", null);
             var popup = WaitForOpenForm<PopupPickList>();
-            string popupId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(PopupPickList)).Id;
+            string popupId = GetOpenFormId<PopupPickList>();
 
             // Toggle the checked state of the first transition by its visible label.
             string label = null;
@@ -119,12 +117,12 @@ namespace pwiz.SkylineTestFunctional
             // Type and driven with check_item / uncheck_item exactly like one.
             var pickList = new UiElementPath(
                 new UiElementPath(null, popupId, null, @"Form"), null, null, @"CheckedListBox");
-            JsonUiService.PerformAction(pickList, wasChecked ? @"uncheck_item" : @"check_item", label);
+            Connector.PerformAction(pickList, wasChecked ? @"uncheck_item" : @"check_item", label);
             RunUI(() => Assert.AreEqual(!wasChecked, popup.GetItemChecked(0),
                 @"check_item/uncheck_item did not toggle the pick-list item."));
 
             // Commit with the green-check "OK" button (image-only ToolStrip item, matched by tooltip).
-            Program.MainJsonToolServer.ClickFormButton(popupId, @"OK");
+            Connector.ClickFormButton(popupId, @"OK");
             WaitForClosedForm(popup);
 
             int transitionsAfter = 0;

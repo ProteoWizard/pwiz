@@ -30,13 +30,13 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Verifies the native common file dialog (the OpenFileDialog) end to end: it is visible to
-    /// the MCP UI-introspection layer (enumerated by <see cref="JsonUiService.GetOpenForms"/> as a
+    /// the MCP UI-introspection layer (enumerated by <see cref="JsonToolServer.GetOpenForms"/> as a
     /// native form, and captured by <see cref="JsonUiService.GetFormImage"/> by its reported id
     /// even though it is not a WinForms form), it can be dismissed, and a file can be opened
     /// through it with <see cref="NativeOpenFileDialog.EnterPathAndAccept"/>.
     /// </summary>
     [TestClass]
-    public class NativeFileDialogTest : AbstractFunctionalTest
+    public class NativeFileDialogTest : McpConnectorTest
     {
         [TestMethod]
         public void TestNativeFileDialog()
@@ -46,6 +46,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Every verb below is driven through the running JSON tool server (torn down with the window).
+            StartToolService();
+
             RunUI(() => Settings.Default.AllowMcpScreenCapture = true);
 
             var documentBefore = SkylineWindow.Document;
@@ -55,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             var fileDialog = NativeDialog.WaitForDialog<NativeOpenFileDialog>();
 
             // GetOpenForms includes the native dialog, flagged as native.
-            var nativeForms = JsonUiService.GetOpenForms().Where(form => form.IsNative).ToArray();
+            var nativeForms = Connector.GetOpenForms().Where(form => form.IsNative).ToArray();
             Assert.AreEqual(1, nativeForms.Length,
                 @"Expected exactly one native form while the Open dialog is showing.");
             var nativeForm = nativeForms[0];

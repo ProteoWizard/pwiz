@@ -963,9 +963,26 @@ namespace pwiz.Skyline.ToolsUI
             return ResolveForm(formId).GetControls();
         }
 
+        /// <summary>
+        /// The most general way to interact with a control, menu item, or list item (see
+        /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="path"/> refers to, then perform
+        /// <paramref name="action"/> on it. The action determines the value and return types: "get_actions" ->
+        /// ActionInfo[] (name + description + the value it takes); "get_children" -> ControlInfo[] (each Path already
+        /// parented onto this element, so it can be used as-is); "click" -> null; "set_value" -> null; "get_value" ->
+        /// the value (null, bool, double, or string).
+        /// </summary>
         public object PerformAction(UiElementPath path, string action, object value)
         {
-            return JsonUiService.PerformAction(path, action, value, RequestCancellation);
+            if (path == null)
+                throw new ArgumentException(new LlmInstruction(@"A path is required."));
+            var uiAction = UiActions.ByName(action) ?? throw new ArgumentException(LlmInstruction.Format(
+                @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
+            // The path's root names a form; resolve it (managed or native) and let it perform the action in its own
+            // thread context (a managed form on the UI thread inside the dialog-watch; a native dialog on this calling
+            // thread). get_actions/get_children are ordinary reads -- the action's Invoke returns the element's
+            // SupportedActions / GetChildren(), whose child paths are parented onto the resolved element (its Path was
+            // recorded in ResolvePath) so the caller can use them directly.
+            return ResolveForm(path.GetRoot().Text).PerformAction(path, uiAction, value);
         }
 
         public ActionResult ClickMainMenuItem(string menuPath)
@@ -1017,20 +1034,29 @@ namespace pwiz.Skyline.ToolsUI
 
         public ActionResult SetGridText(string formId, string controlId, string text)
         {
-            return JsonUiService.SetGridText(formId, controlId, text, RequestCancellation);
+            // Inside InvokeOnForm this already runs ON the grid's UI thread, so it performs the RAW gesture --
+            // which does no gating of its own (see UiAction.InvokeNow), hence the VerifyInteractable.
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+            {
+                var grid = form.FindGrid(controlId);
+                grid.VerifyInteractable();
+                grid.SetGridTextNow(text ?? string.Empty);
+            });
         }
 
         public ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row)
         {
-            return JsonUiService.SetCurrentCellAddress(formId, controlId, column, row, RequestCancellation);
+            return InvokeOnForm<StandaloneForm>(formId, form =>
+            {
+                var grid = form.FindGrid(controlId);
+                grid.VerifyInteractable();
+                grid.SetCurrentCellAddressNow(column, row);
+            });
         }
 
         public string GetGridText(string formId, string gridId)
         {
-            return CallOnForm(formId, (StandaloneForm form) =>
-            {
-                return form.FindGrid(gridId).GetGridText();
-            });
+            return CallOnForm(formId, (StandaloneForm form) => form.FindGrid(gridId).GetGridText());
         }
 
 
@@ -1993,10 +2019,12 @@ namespace pwiz.Skyline.ToolsUI
             // message instead of a NullReferenceException, and do not let the MCP run a command the user
             // could not run yet.
             JsonUiService.RequireMainWindow();
-            // Run on a background thread; if the command pops a blocking dialog, throw its message (the
-            // alert/error text, or any other dialog's title) instead of blocking on the modal.
-            // See JsonUiService.RunWithDialogWatch.
-            return JsonUiService.RunWithDialogWatch(() => RunCommandCore(args, silent));
+            // Run the command inside the dialog-watch: if it pops a blocking dialog, throw that dialog's message (the
+            // alert/error text, or any other dialog's title) instead of hanging on the modal. IntPtr.Zero is no
+            // managed window, so it runs on the UI-thread window (the main window). RequestCancellation makes the
+            // wait abandonable: a command is the longest thing a client can start, so it is the one it is most
+            // likely to give up on.
+            return DialogWatcher.CallFunction(IntPtr.Zero, () => RunCommandCore(args, silent), RequestCancellation);
         }
 
         private string RunCommandCore(string[] args, bool silent)

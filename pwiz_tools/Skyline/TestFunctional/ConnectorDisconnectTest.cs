@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
     /// waiting call. Whatever Skyline was doing keeps right on going; only the wait is abandoned.
     /// </summary>
     [TestClass]
-    public class ConnectorDisconnectTest : McpTutorialTest
+    public class ConnectorDisconnectTest : McpConnectorTest
     {
         [TestMethod]
         public void TestConnectorDisconnect()
@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
             StartToolService();
             string pipeName = Program.MainJsonToolServer.PipeName;
             // Resolve the form to read BEFORE blocking the UI thread (this read needs it too).
-            string mainFormId = GetConnectorForm<SkylineWindow>();
+            string mainFormId = GetOpenFormId<SkylineWindow>();
 
             // Block the UI thread, the way a long document load does while its LongWaitDlg works: any connector verb
             // posted behind it now parks in the DialogWatcher wait loop and cannot finish.

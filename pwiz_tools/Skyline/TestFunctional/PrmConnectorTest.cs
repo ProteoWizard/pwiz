@@ -32,7 +32,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the generic form-automation verbs of the AI Connector (<see cref="JsonUiService"/>)
+    /// Exercises the generic form-automation verbs of the AI Connector (<see cref="JsonToolServer"/>)
     /// against the first steps of the PRM tutorial's "Import Peptide Search" flow:
     ///   * <see cref="JsonToolServer.ClickMainMenuItem"/> -- "File > Import > Peptide Search".
     ///   * <see cref="JsonToolServer.ClickFormButton"/> -- the "Add Files" button, which opens the
@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
     /// The menu path is read from the live (localized) menu so the test is translation-proof.
     /// </summary>
     [TestClass]
-    public class PrmConnectorTest : AbstractFunctionalTest
+    public class PrmConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestPrmConnector()
@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
-            RunUI(() => Program.StartToolService());
+            StartToolService();
 
             // The Import Peptide Search wizard bases its file dialog on the document's folder, so the
             // document must be saved. The two input files only need to exist (the dialog has
@@ -68,23 +68,23 @@ namespace pwiz.SkylineTestFunctional
             // 1) Open the wizard through the menu, using the menu's own localized text.
             string menuPath = null;
             RunUI(() => menuPath = BuildLocalizedMenuPath(@"importPeptideSearchMenuItem"));
-            Program.MainJsonToolServer.ClickMainMenuItem(menuPath);
+            Connector.ClickMainMenuItem(menuPath);
             var wizard = WaitForOpenForm<ImportPeptideSearchDlg>();
-            string wizardId = FormIdOfType(nameof(ImportPeptideSearchDlg));
+            string wizardId = GetOpenFormId<ImportPeptideSearchDlg>();
 
             // 2) Click "Add Files" -> the native "Add Input Files" dialog appears.
             // Wait for it the way the AI Connector would: poll GetOpenForms (the discovery method
             // IJsonToolService exposes) until the native FileDialog shows up, rather than the
             // internal NativeDialog helper.
-            Program.MainJsonToolServer.ClickFormButton(wizardId, @"Add Files");
-            string addFilesId = WaitForNativeFileDialogId();
+            Connector.ClickFormButton(wizardId, @"Add Files");
+            string addFilesId = WaitForNativeFileDialog();
 
             // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,
             // click Open". A native dialog has no caption-addressable buttons, so it is confirmed with the
             // dismiss action (the connector's way to press its default button) rather than ClickFormButton.
-            Program.MainJsonToolServer.SetFormValue(addFilesId, @"FileName",
+            Connector.SetFormValue(addFilesId, @"FileName",
                 QuotePaths(new[] { file1, file2 }));
-            JsonUiService.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"dismiss", null);
+            Connector.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"dismiss", null);
 
             // The wizard's search-file list now holds both files.
             WaitForConditionUI(() => wizard.BuildPepSearchLibControl.SearchFilenames.Length == 2);
@@ -127,21 +127,5 @@ namespace pwiz.SkylineTestFunctional
             return string.Join(@" ", paths.Select(p => @"""" + p + @""""));
         }
 
-        private static string FormIdOfType(string typeName)
-        {
-            var form = JsonUiService.GetOpenForms().FirstOrDefault(f => f.Type == typeName);
-            Assert.IsNotNull(form, @"Open form not found of type: " + typeName);
-            return form.Id;
-        }
-
-        // Polls GetOpenForms -- the discovery method the AI Connector (IJsonToolService) exposes --
-        // until the native file dialog appears, and returns its form id.
-        private static string WaitForNativeFileDialogId()
-        {
-            string id = null;
-            WaitForCondition(() => null != (id = JsonUiService.GetOpenForms()
-                .FirstOrDefault(form => form.IsNative)?.Id));
-            return id;
-        }
     }
 }

@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     /// hosted control so a button like "B" can be clicked by its visible text -- toggling ShowBIons.
     /// </summary>
     [TestClass]
-    public class IonTypeMenuConnectorTest : AbstractFunctionalTest
+    public class IonTypeMenuConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestIonTypeMenuConnector()
@@ -58,12 +58,12 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Change 1: the main window is now discoverable through GetOpenForms and resolvable as a form.
-            var mainWindowForm = JsonUiService.GetOpenForms()
+            var mainWindowForm = Connector.GetOpenForms()
                 .FirstOrDefault(form => form.Type == nameof(SkylineWindow));
             Assert.IsNotNull(mainWindowForm, @"The main Skyline window should be listed by GetOpenForms.");
             var mainWindowPath = new UiElementPath(null, mainWindowForm.Id, null, @"Form");
             // Resolving it and walking its controls should not throw and should find the main menu strip.
-            var children = (ControlInfo[]) JsonUiService.PerformAction(mainWindowPath, @"get_children", null);
+            var children = (ControlInfo[]) Connector.PerformAction(mainWindowPath, @"get_children", null);
             Assert.IsTrue(children.Length > 0, @"get_children on the main window should return its controls.");
 
             // get_children can now inspect the Ion Types submenu: EnumerateChildren opens the dropdown so its
@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             var ionTypes = new UiElementPath(
                 new UiElementPath(new UiElementPath(menuStrip, @"View", null, null), @"Libraries", null, null),
                 @"Ion Types", null, null);
-            var ionButtons = (ControlInfo[]) JsonUiService.PerformAction(ionTypes, @"get_children", null);
+            var ionButtons = (ControlInfo[]) Connector.PerformAction(ionTypes, @"get_children", null);
             var ionButtonLabels = ionButtons.Select(button => button.Path?.Text).ToArray();
             foreach (var ionType in new[] { @"A", @"B", @"C", @"X", @"Y", @"Z" })
                 CollectionAssert.Contains(ionButtonLabels, ionType,
@@ -82,13 +82,13 @@ namespace pwiz.SkylineTestFunctional
             // Change 2: the menu walk reaches the ion-type checkbox hosted in the Ion Types submenu and
             // clicking it toggles the backing setting. Start from a known state so the toggle has direction.
             RunUI(() => Settings.Default.ShowBIons = false);
-            Program.MainJsonToolServer.ClickMainMenuItem(@"View > Libraries > Ion Types > B");
+            Connector.ClickMainMenuItem(@"View > Libraries > Ion Types > B");
             WaitForConditionUI(() => Settings.Default.ShowBIons);
             RunUI(() => Assert.IsTrue(Settings.Default.ShowBIons,
                 @"Clicking the hosted 'B' ion-type button did not turn b-ions on."));
 
             // Clicking it again toggles it back off (the button is a checkbox).
-            Program.MainJsonToolServer.ClickMainMenuItem(@"View > Libraries > Ion Types > B");
+            Connector.ClickMainMenuItem(@"View > Libraries > Ion Types > B");
             WaitForConditionUI(() => !Settings.Default.ShowBIons);
             RunUI(() => Assert.IsFalse(Settings.Default.ShowBIons,
                 @"Clicking the hosted 'B' ion-type button again did not turn b-ions back off."));

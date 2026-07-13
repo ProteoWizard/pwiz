@@ -37,11 +37,11 @@ namespace pwiz.SkylineTestFunctional
     ///     control the label labels (the Name TextBox), not the label itself;
     ///   * checking an item in the "Applies to" CheckedListBox the way a user does -- a set_selected_index
     ///     action to the item, then a click that toggles the selected item's check;
-    ///   * <see cref="JsonUiService.GetFormValue"/> reads the CheckedListBox's checked items.
+    ///   * <see cref="JsonToolServer.GetFormValue"/> reads the CheckedListBox's checked items.
     /// Matched by the English label/item text, so the test runs in en.
     /// </summary>
     [TestClass]
-    public class ClickCheckedListConnectorTest : AbstractFunctionalTest
+    public class ClickCheckedListConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestClickCheckedListConnector()
@@ -52,26 +52,25 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
-            RunUI(() => Program.StartToolService());
+            StartToolService();
 
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
+            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
 
             // SetFormValue against the "Name" LABEL sets the editable field it labels (the Name
             // TextBox, AnnotationName), not the label itself.
-            Program.MainJsonToolServer.SetFormValue(dlgId, @"Name", @"ConnectorAnnotation");
+            Connector.SetFormValue(dlgId, @"Name", @"ConnectorAnnotation");
             RunUI(() => Assert.AreEqual(@"ConnectorAnnotation", defineAnnotationDlg.AnnotationName,
                 @"SetFormValue did not set the Name field through its label."));
 
             // SetFormValue into the multi-line value-list TextBox: newline-separated text becomes
             // separate list values (bare '\n' is normalized to the CRLF the dialog splits on). The
             // Values box is enabled only for a Value List, so set the type first.
-            Program.MainJsonToolServer.SetFormValue(dlgId, @"Type", @"Value List");
-            Program.MainJsonToolServer.SetFormValue(dlgId, @"Values", "Healthy\nDiseased");
+            Connector.SetFormValue(dlgId, @"Type", @"Value List");
+            Connector.SetFormValue(dlgId, @"Values", "Healthy\nDiseased");
             RunUI(() => CollectionAssert.AreEqual(new[] { @"Healthy", @"Diseased" },
                 defineAnnotationDlg.Items.ToArray(),
                 @"SetFormValue did not set the multi-line value list as separate values."));
@@ -97,8 +96,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Check it the way a user does: select the item, then click the CheckedListBox (a click
             // toggles the selected item's check).
-            JsonUiService.PerformAction(appliesTo, @"set_selected_index", replicatesIndex.ToString());
-            JsonUiService.PerformAction(appliesTo, @"click", null);
+            Connector.PerformAction(appliesTo, @"set_selected_index", replicatesIndex.ToString());
+            Connector.PerformAction(appliesTo, @"click", null);
             WaitForConditionUI(() =>
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate));
             RunUI(() => Assert.IsTrue(
@@ -106,11 +105,11 @@ namespace pwiz.SkylineTestFunctional
                 @"Selecting and clicking did not check the Replicates item in the Applies-to list."));
 
             // GetFormValue on the CheckedListBox returns the checked items' text, one per line.
-            Assert.AreEqual(@"Replicates", Program.MainJsonToolServer.GetFormValue(dlgId, @"Applies to"), 
+            Assert.AreEqual(@"Replicates", Connector.GetFormValue(dlgId, @"Applies to"), 
                 @"GetFormValue did not return the checked Applies-to items.");
 
             // Clicking it again toggles it back off (it is still the selected item).
-            JsonUiService.PerformAction(appliesTo, @"click", null);
+            Connector.PerformAction(appliesTo, @"click", null);
             WaitForConditionUI(() =>
                 !defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate));
             RunUI(() => Assert.IsFalse(

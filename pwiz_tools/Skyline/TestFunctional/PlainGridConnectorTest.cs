@@ -21,6 +21,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -28,13 +29,13 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonUiService.GetGridText"/> and <see cref="JsonUiService.SetGridText"/> on
+    /// Exercises <see cref="JsonToolServer.GetGridText"/> and <see cref="JsonToolServer.SetGridText"/> on
     /// a plain <see cref="DataGridView"/> (not a DataboundGridControl): the "Rules" grid in the Rule Set
     /// Editor. The form has two grids, so the grid is chosen by control name; the Pattern column is
     /// found by its column Name so the test is translation-proof.
     /// </summary>
     [TestClass]
-    public class PlainGridConnectorTest : AbstractFunctionalTest
+    public class PlainGridConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestPlainGridConnector()
@@ -44,11 +45,13 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // The grid verbs are exercised through the running JSON tool server (torn down with the window).
+            StartToolService();
+
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() => documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules));
             var ruleSetEditor = ShowDialog<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule);
-            string editorId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(MetadataRuleSetEditor)).Id;
+            string editorId = GetOpenFormId<MetadataRuleSetEditor>();
 
             // The visible index of the "Pattern" column (matched by its column Name, not its header).
             var rulesGrid = (DataGridView)ruleSetEditor.Controls.Find(@"dataGridViewRules", true).First();
@@ -62,13 +65,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(patternColumn >= 0);
 
             // GetGridText reads the plain grid -- its header row names the Pattern column.
-            string gridText = JsonUiService.GetGridText(editorId, @"dataGridViewRules");
+            string gridText = Connector.GetGridText(editorId, @"dataGridViewRules");
             StringAssert.Contains(gridText.Split('\n')[0], @"Pattern");
 
             // Move to the Pattern cell of the first row, then SetGridText types "D" there, like a user
             // editing it.
-            JsonUiService.SetCurrentCellAddress(editorId, @"dataGridViewRules", patternColumn, 0);
-            JsonUiService.SetGridText(editorId, @"dataGridViewRules", @"D");
+            Connector.SetCurrentCellAddress(editorId, @"dataGridViewRules", patternColumn, 0);
+            Connector.SetGridText(editorId, @"dataGridViewRules", @"D");
             RunUI(() => Assert.AreEqual(@"D", rulesGrid.Rows[0].Cells[@"colPattern"].Value?.ToString(),
                 @"SetGridText did not set the Pattern cell in the plain rules grid."));
 

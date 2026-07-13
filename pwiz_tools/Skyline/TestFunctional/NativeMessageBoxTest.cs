@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
     /// button) replaces the file.
     /// </summary>
     [TestClass]
-    public class NativeMessageBoxTest : McpTutorialTest
+    public class NativeMessageBoxTest : McpConnectorTest
     {
         [TestMethod]
         public void TestNativeMessageBox()

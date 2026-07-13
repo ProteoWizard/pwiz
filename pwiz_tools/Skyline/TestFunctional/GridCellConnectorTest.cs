@@ -39,13 +39,13 @@ namespace pwiz.SkylineTestFunctional
     /// <summary>
     /// Exercises acting on a particular grid cell through the current cell:
     ///   * <see cref="JsonToolServer.SetFormValue"/> with a "grid[column,row]" controlId sets a cell;
-    ///   * <see cref="JsonUiService.SetCurrentCellAddress"/> moves to a cell, then a <see cref="UiElementPath"/>
+    ///   * <see cref="JsonToolServer.SetCurrentCellAddress"/> moves to a cell, then a <see cref="UiElementPath"/>
     ///     whose Type is "ContextMenu" on the grid invokes that cell's right-click context menu (here,
     ///     sorting a Document Grid column descending).
     /// Menu items are matched by their visible text.
     /// </summary>
     [TestClass]
-    public class GridCellConnectorTest : AbstractFunctionalTest
+    public class GridCellConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestGridCellConnector()
@@ -56,7 +56,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
-            RunUI(() => Program.StartToolService());
+            StartToolService();
 
             SetFormValueIntoGridCell();
             InvokeGridCellContextMenu();
@@ -68,8 +68,7 @@ namespace pwiz.SkylineTestFunctional
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             RunUI(() => documentSettingsDlg.SelectTab(DocumentSettingsDlg.TABS.metadata_rules));
             var ruleSetEditor = ShowDialog<MetadataRuleSetEditor>(documentSettingsDlg.AddMetadataRule);
-            string editorId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(MetadataRuleSetEditor)).Id;
+            string editorId = GetOpenFormId<MetadataRuleSetEditor>();
 
             var rulesGrid = (DataGridView)ruleSetEditor.Controls.Find(@"dataGridViewRules", true).First();
             int patternColumn = -1;
@@ -81,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsTrue(patternColumn >= 0);
 
-            Program.MainJsonToolServer.SetFormValue(editorId, $@"dataGridViewRules[{patternColumn},0]", @"D");
+            Connector.SetFormValue(editorId, $@"dataGridViewRules[{patternColumn},0]", @"D");
             RunUI(() => Assert.AreEqual(@"D", rulesGrid.Rows[0].Cells[@"colPattern"].Value?.ToString(),
                 @"SetFormValue did not set the grid cell named by the locator."));
 
@@ -106,13 +105,12 @@ namespace pwiz.SkylineTestFunctional
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
             RunUI(() => documentGrid.ChooseView(Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
             WaitForConditionUI(() => documentGrid.IsComplete);
-            string gridId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(DocumentGridForm)).Id;
+            string gridId = GetOpenFormId<DocumentGridForm>();
 
             // Move to the first column (row 0), then choose Sort Descending from that cell's context menu
             // -- the grid's context menu acts on the current cell. The DataboundGridControl is a container;
             // its inner grid (a DataGridView) owns the context menu, so the path walks into it.
-            JsonUiService.SetCurrentCellAddress(gridId, string.Empty, 0, 0);
+            Connector.SetCurrentCellAddress(gridId, string.Empty, 0, 0);
             var gridContextMenu = new UiElementPath(
                 new UiElementPath(
                     new UiElementPath(
@@ -120,11 +118,11 @@ namespace pwiz.SkylineTestFunctional
                     null, null, @"DataGridView"),
                 null, null, @"ContextMenu");
             var sortDescending = new UiElementPath(gridContextMenu, @"Sort Descending", null, null);
-            JsonUiService.PerformAction(sortDescending, @"click", null);
+            Connector.PerformAction(sortDescending, @"click", null);
             WaitForConditionUI(() => documentGrid.IsComplete);
 
             // The first column is now sorted descending: read it back and check the order.
-            string gridText = JsonUiService.GetGridText(gridId, string.Empty);
+            string gridText = Connector.GetGridText(gridId, string.Empty);
             var firstColumn = gridText
                 .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
                 .Skip(1) // header

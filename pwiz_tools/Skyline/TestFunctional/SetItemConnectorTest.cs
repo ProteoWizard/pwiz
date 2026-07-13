@@ -39,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
     /// Matched by the English item/node text, so the test runs in en.
     /// </summary>
     [TestClass]
-    public class SetItemConnectorTest : AbstractFunctionalTest
+    public class SetItemConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestSetItemConnector()
@@ -49,6 +49,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Every verb below is driven through the running JSON tool server (torn down with the window).
+            StartToolService();
+
             TestCheckedListBox();
             TestTreeView();
         }
@@ -60,23 +63,22 @@ namespace pwiz.SkylineTestFunctional
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
+            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
             var appliesTo = new UiElementPath(
                 new UiElementPath(null, dlgId, null, @"Form"), @"Applies to", null, null);
 
             // check_item / uncheck_item set the "Replicates" item's check explicitly (idempotent).
-            JsonUiService.PerformAction(appliesTo, @"check_item", @"Replicates");
+            Connector.PerformAction(appliesTo, @"check_item", @"Replicates");
             RunUI(() => Assert.IsTrue(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
                 @"check_item did not check the Replicates item."));
-            JsonUiService.PerformAction(appliesTo, @"uncheck_item", @"Replicates");
+            Connector.PerformAction(appliesTo, @"uncheck_item", @"Replicates");
             RunUI(() => Assert.IsFalse(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
                 @"uncheck_item did not uncheck the Replicates item."));
 
             // select_item highlights an item (separate from checking it).
-            JsonUiService.PerformAction(appliesTo, @"select_item", @"Peptides");
+            Connector.PerformAction(appliesTo, @"select_item", @"Peptides");
             RunUI(() =>
             {
                 var checkedListBox = (CheckedListBox)defineAnnotationDlg.Controls
@@ -99,8 +101,7 @@ namespace pwiz.SkylineTestFunctional
 
             var viewEditor = ShowDialog<Common.DataBinding.Controls.Editor.ViewEditor>(
                 documentGrid.NavBar.CustomizeView);
-            string editorId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(Common.DataBinding.Controls.Editor.ViewEditor)).Id;
+            string editorId = GetOpenFormId<Common.DataBinding.Controls.Editor.ViewEditor>();
 
             var tree = viewEditor.ChooseColumnsTab.AvailableFieldsTree;
             string parentText = null, childText = null;
@@ -122,24 +123,24 @@ namespace pwiz.SkylineTestFunctional
                 new UiElementPath(
                     new UiElementPath(null, editorId, null, @"Form"), null, null, @"ChooseColumnsTab"),
                 null, null, @"TreeView");
-            JsonUiService.PerformAction(treeId, @"check_item", nodePath);
+            Connector.PerformAction(treeId, @"check_item", nodePath);
             RunUI(() =>
             {
                 var node = tree.Nodes[0].Nodes.Cast<TreeNode>().First(n => n.Text == childText);
                 Assert.IsTrue(node.Checked, @"check_item did not check the tree node " + nodePath);
             });
 
-            JsonUiService.PerformAction(treeId, @"select_item", nodePath);
+            Connector.PerformAction(treeId, @"select_item", nodePath);
             RunUI(() => Assert.AreEqual(childText, tree.SelectedNode?.Text,
                 @"select_item did not select the tree node."));
 
             // expand / collapse a node by a path whose segments are a child's text or its index. Collapse
             // the root by its index (0), then expand it again by its text.
             RunUI(() => tree.Nodes[0].Expand());
-            JsonUiService.PerformAction(treeId, @"collapse", new object[] { 0 });
+            Connector.PerformAction(treeId, @"collapse", new object[] { 0 });
             RunUI(() => Assert.IsFalse(tree.Nodes[0].IsExpanded,
                 @"collapse did not collapse the root node addressed by index."));
-            JsonUiService.PerformAction(treeId, @"expand", new object[] { parentText });
+            Connector.PerformAction(treeId, @"expand", new object[] { parentText });
             RunUI(() => Assert.IsTrue(tree.Nodes[0].IsExpanded,
                 @"expand did not expand the root node addressed by text."));
 

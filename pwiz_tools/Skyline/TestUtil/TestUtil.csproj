@@ -158,7 +158,7 @@
   <ItemGroup>
     <Compile Include="AbstractFunctionalTestEx.cs" />
     <Compile Include="AbstractUnitTestEx.cs" />
-    <Compile Include="McpTutorialTest.cs" />
+    <Compile Include="McpConnectorTest.cs" />
     <Compile Include="AlphaColorPickerButton.cs">
       <SubType>Component</SubType>
     </Compile>

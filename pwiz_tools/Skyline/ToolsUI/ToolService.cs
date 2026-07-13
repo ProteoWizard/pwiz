@@ -381,12 +381,12 @@ namespace pwiz.Skyline.ToolsUI
                     }
                     catch (TimeoutException)
                     {
-                        var error = @"No response from " + documentChangeSender.Value.Name; 
-                        JsonUiService.BeginInvokeOnUiThread(() =>
+                        var error = @"No response from " + documentChangeSender.Value.Name;
+                        Program.MainWindow.BeginInvoke((Action)(() =>
                         {
                             Program.MainWindow.ShowImmediateWindow();
                             Program.MainWindow.ImmediateWindow.WriteLine(error);
-                        });
+                        }));
                         if (!documentChangeSender.Value.CountTimeout(MAX_TIMEOUT_COUNT))
                         {
                             deadSenders.Add(documentChangeSender.Key);

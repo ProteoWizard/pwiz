@@ -37,7 +37,7 @@ namespace pwiz.SkylineTestFunctional
     /// clipboard, e.g. Google Antigravity, needs).
     /// </summary>
     [TestClass]
-    public class ClipboardConnectorTest : AbstractFunctionalTest
+    public class ClipboardConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestClipboardConnector()
@@ -47,21 +47,23 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Every verb below is driven through the running JSON tool server (torn down with the window).
+            StartToolService();
+
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
+            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
             var namePath = new UiElementPath(new UiElementPath(null, dlgId, null, @"Form"), @"Name", null, null);
 
             // paste into the empty name box inserts the text (no clipboard).
-            JsonUiService.PerformAction(namePath, @"paste", @"FirstName");
+            Connector.PerformAction(namePath, @"paste", @"FirstName");
             WaitForConditionUI(() => NameTextBox(defineAnnotationDlg).Text == @"FirstName");
 
             // select_all then paste replaces the whole content (rather than appending).
-            JsonUiService.PerformAction(namePath, @"select_all", null);
-            JsonUiService.PerformAction(namePath, @"paste", @"SecondName");
+            Connector.PerformAction(namePath, @"select_all", null);
+            Connector.PerformAction(namePath, @"paste", @"SecondName");
             WaitForConditionUI(() => NameTextBox(defineAnnotationDlg).Text == @"SecondName");
             RunUI(() => Assert.AreEqual(@"SecondName", NameTextBox(defineAnnotationDlg).Text,
                 @"select_all + paste should have replaced the box's contents."));

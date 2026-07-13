@@ -40,15 +40,15 @@ namespace TestPerf
 {
     /// <summary>
     /// Tutorial test for "Using DIA Data to Create SRM Methods" (Skyline Webinar 22). It performs every
-    /// tutorial action through the in-process <see cref="IJsonToolService"/> (see <see cref="McpTutorialTest"/>)
+    /// tutorial action through the in-process <see cref="IJsonToolService"/> (see <see cref="McpConnectorTest"/>)
     /// -- both to reproduce the tutorial and to verify the connector is capable enough to run it end-to-end.
     ///
     /// The screenshots it captures (with IsPauseForScreenShots) are written to the draft tutorial folder
-    /// (see <see cref="McpTutorialTest.TutorialDocumentationFolder"/>); the matching HTML is at
+    /// (see <see cref="McpConnectorTest.TutorialDocumentationFolder"/>); the matching HTML is at
     /// Documentation\Tutorial-Drafts\DIAtoSRM\en\index.html.
     /// </summary>
     [TestClass]
-    public class DiaToSrmTutorialTest : McpTutorialTest
+    public class DiaToSrmTutorialTest : McpConnectorTest
     {
         // While this tutorial is a draft, its screenshots live under Documentation\Tutorial-Drafts. Removing
         // this override (and moving the HTML folder) publishes it to Documentation\Tutorials.
@@ -154,7 +154,7 @@ namespace TestPerf
             // accepting it (OK) brings up the native Save As dialog. Save as DIA_to_SRM_Tutorial.sky and the wizard
             // opens. Each of these gestures opens the NEXT dialog rather than completing, so none is AssertComplete.
             Connector.ClickFormButton(startPage, StartupResources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search);
-            Connector.DismissWithAcceptButton(GetConnectorForm<MultiButtonMsgDlg>());
+            Connector.DismissWithAcceptButton(GetOpenFormId<MultiButtonMsgDlg>());
 
             // The Start Page tile sets DialogResult and returns; the "must save" prompt and this Save dialog are then
             // shown by the startup frame (StartupActions), NOT by a counted connector gesture -- so accepting the
@@ -163,7 +163,7 @@ namespace TestPerf
             Connector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial.sky"));
             Connector.DismissWithAcceptButton(saveDlg);
 
-            return GetConnectorForm<ImportPeptideSearchDlg>();
+            return GetOpenFormId<ImportPeptideSearchDlg>();
         }
 
         /// <summary>
@@ -203,7 +203,7 @@ namespace TestPerf
             // Next opens the "no results files, continue?" prompt (a dialog), so it does not complete; accepting
             // that prompt advances the wizard, which we DO expect to complete.
             Connector.ClickFormButton(wizard, WizardNextButton);
-            AssertComplete(Connector.DismissWithAcceptButton(GetConnectorForm<MultiButtonMsgDlg>()));
+            AssertComplete(Connector.DismissWithAcceptButton(GetOpenFormId<MultiButtonMsgDlg>()));
 
             // 1.3 Add Modifications: no modifications were used in the search, so just move on. No WaitForControl --
             // the accept above is assumed to have settled the Add Modifications page.
@@ -266,7 +266,7 @@ namespace TestPerf
             // from the localized EnumNames resource, so it matches exactly in any language. Min peptides per
             // protein stays at its default of 1 (the connector does not yet address the NumericUpDown holding it).
             // Gap: clicking Finish completes the gesture, but the FASTA digestion that raises Associate Proteins
-            // runs asynchronously afterward, so the dialog is not open on return -- wait for it (not GetConnectorForm).
+            // runs asynchronously afterward, so the dialog is not open on return -- wait for it (not GetOpenFormId).
             var associate = WaitForConnectorForm<AssociateProteinsDlg>();
             // The checkbox and the shared-peptides combo have no caption the connector can match (each option's
             // label is a plain Label shadowed by a "?" help link, and the checkbox's caption is a separate
@@ -298,7 +298,7 @@ namespace TestPerf
             AssertComplete(Connector.DismissWithAcceptButton(associate));
 
             // Capture the populated Targets view of the main window (assumed built by the accept above).
-            PauseForScreenShot(GetConnectorForm<SkylineWindow>(), "Targets populated"); // s-09
+            PauseForScreenShot(GetOpenFormId<SkylineWindow>(), "Targets populated"); // s-09
         }
 
         /// <summary>
@@ -314,7 +314,7 @@ namespace TestPerf
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem")));
             Connector.SetFormValue(importDlg, "FileName", GetTestPath("PRTC.sky"));
             Connector.DismissWithAcceptButton(importDlg);
-            PauseForScreenShot(GetConnectorForm<SkylineWindow>(), "Targets with PRTC added"); // s-10
+            PauseForScreenShot(GetOpenFormId<SkylineWindow>(), "Targets with PRTC added"); // s-10
 
             // Save blocks in a modal "Saving..." progress dialog until the (large) document is written; the
             // connector's menu click rides through that progress dialog and is expected to complete, so the
@@ -341,7 +341,7 @@ namespace TestPerf
 
             // Import Results: each subfolder of the chosen directory becomes a replicate whose data files are
             // its injections. Choose that option (s-11), then OK opens the native folder browser.
-            var importResults = GetConnectorForm<ImportResultsDlg>();
+            var importResults = GetOpenFormId<ImportResultsDlg>();
             AssertComplete(Connector.ClickFormButton(importResults, GetLocalizedText<ImportResultsDlg>("radioCreateMultipleMulti")));
             PauseForScreenShot(importResults, "Import Results -- multi-injection replicates in directories"); // s-11
             // Accepting Import Results opens the native Browse-For-Folder dialog; resolve it from the accept's
@@ -390,7 +390,7 @@ namespace TestPerf
             // menu bar and no toolbar, so naming no control reaches its RIGHT-CLICK menu -- the only menu it has.
             Connector.ClickControlMenuItem(cvHistogram, string.Empty,
                 GetLocalizedText<PeakAreasContextMenu>("areaPropsContextMenuItem"));
-            var cvProperties = GetConnectorForm<AreaCVToolbarProperties>();
+            var cvProperties = GetOpenFormId<AreaCVToolbarProperties>();
             AssertComplete(Connector.SetFormValue(cvProperties, GetLocalizedText<AreaCVToolbarProperties>("label2"), "30")); // CV cutoff
             AssertComplete(Connector.DismissWithAcceptButton(cvProperties));
             var cvHistogram30 = GetConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
@@ -487,7 +487,7 @@ namespace TestPerf
             // Expand all proteins (a synchronous menu action) -- expected to complete.
             AssertComplete(Connector.ClickMainMenuItem(MenuPath<EditMenu>(
                 "editToolStripMenuItem", "expandAllToolStripMenuItem", "expandProteinsMenuItem")));
-            PauseForScreenShot(GetConnectorForm<SkylineWindow>(), "Targets -- SRM peptide targets"); // s-19
+            PauseForScreenShot(GetOpenFormId<SkylineWindow>(), "Targets -- SRM peptide targets"); // s-19
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.

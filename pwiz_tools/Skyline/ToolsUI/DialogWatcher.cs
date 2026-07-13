@@ -75,27 +75,6 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         internal static Control UiThreadWindow => (Control) Program.MainWindow ?? Program.StartWindow;
 
-        /// <summary>
-        /// A <see cref="Control.Invoke(Delegate)"/> that can be abandoned: posts <paramref name="action"/> onto
-        /// <paramref name="control"/>'s thread and waits for it, but gives up (throwing) if the calling client
-        /// disconnects. A plain Invoke would park forever on a UI thread that is not pumping -- and because a call
-        /// parked there holds its pipe server thread, it would lock out every later request from that client with no
-        /// way to get in. Must be called off the UI thread (the caller checks InvokeRequired).
-        /// </summary>
-        internal static void InvokeCancelable(Control control, Action action, CancellationToken cancellationToken)
-        {
-            var done = new ManualResetEventSlim(false);
-            // The posted delegate can outlive an abandoned wait, so it must not touch anything that goes out of scope
-            // here: it only runs the action (which captures its own exception) and signals.
-            control.BeginInvoke((Action) (() =>
-            {
-                try { action(); }
-                finally { done.Set(); }
-            }));
-            // Waits on the event AND the token, so a disconnect wakes it at once -- no polling. Throws when cancelled.
-            done.Wait(cancellationToken);
-        }
-
         // ===== The three entry points =====
 
         /// <summary>Posts <paramref name="action"/> onto <paramref name="hwnd"/>'s UI thread and waits until it

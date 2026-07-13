@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     /// Pivot Editor (a ColumnListView). The item is matched by text, like a ListBox.
     /// </summary>
     [TestClass]
-    public class PivotListViewConnectorTest : AbstractFunctionalTest
+    public class PivotListViewConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestPivotListViewConnector()
@@ -48,6 +48,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Every verb below is driven through the running JSON tool server (torn down with the window).
+            StartToolService();
+
             RunUI(() => SkylineWindow.SequenceTree.SelectPath(new IdentityPath(SequenceTree.NODE_INSERT_ID)));
             RunDlg<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg, pasteDlg =>
             {
@@ -62,8 +65,7 @@ namespace pwiz.SkylineTestFunctional
 
             // The Pivot Editor's available-columns list is a ListView (ColumnListView).
             var pivotEditor = ShowDialog<PivotEditor>(() => documentGrid.NavBar.ShowPivotDialog(true));
-            string pivotId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(PivotEditor)).Id;
+            string pivotId = GetOpenFormId<PivotEditor>();
 
             string columnText = null;
             RunUI(() => columnText = pivotEditor.AvailableColumnList.Items[0].Text);
@@ -72,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             // The available-columns list has no caption; address it by its type ("ListView").
             var listView = new UiElementPath(
                 new UiElementPath(null, pivotId, null, @"Form"), null, null, @"ListView");
-            JsonUiService.PerformAction(listView, @"select_item", columnText);
+            Connector.PerformAction(listView, @"select_item", columnText);
             RunUI(() => Assert.IsTrue(
                 pivotEditor.AvailableColumnList.SelectedItems.Cast<ListViewItem>().Any(i => i.Text == columnText),
                 @"select_item did not select the list-view item."));

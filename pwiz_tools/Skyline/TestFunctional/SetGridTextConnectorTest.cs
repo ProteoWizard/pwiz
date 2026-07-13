@@ -37,16 +37,16 @@ namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
     /// Exercises three AI Connector verbs on the Document Grid:
-    ///   * <see cref="JsonUiService.SetGridText"/> pastes tab/newline-separated text into a
+    ///   * <see cref="JsonToolServer.SetGridText"/> pastes tab/newline-separated text into a
     ///     <see cref="DataboundGridControl"/> grid at an anchor cell -- like a Ctrl-V, but without the
     ///     system clipboard;
-    ///   * <see cref="JsonUiService.GetGridText"/> reads the whole grid back as tab-separated text;
+    ///   * <see cref="JsonToolServer.GetGridText"/> reads the whole grid back as tab-separated text;
     ///   * <see cref="JsonToolServer.DismissWithCancelButton"/> closes the grid form.
     /// The grid is found with a null controlId/gridId (the Document Grid form has a single grid), and
     /// the "Note" column is targeted by its visible index, so the test is translation-proof.
     /// </summary>
     [TestClass]
-    public class SetGridTextConnectorTest : AbstractFunctionalTest
+    public class SetGridTextConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestSetGridTextConnector()
@@ -57,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
-            RunUI(() => Program.StartToolService());
+            StartToolService();
 
             // Two peptides whose Note column we will fill by pasting.
             RunUI(() => SkylineWindow.NewDocument());
@@ -77,8 +77,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => documentGrid.ChooseView(
                 Resources.SkylineViewContext_GetDocumentGridRowSources_Peptides));
             WaitForConditionUI(() => documentGrid.IsComplete);
-            string gridId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(DocumentGridForm)).Id;
+            string gridId = GetOpenFormId<DocumentGridForm>();
 
             // The "Note" column is editable; find its index among the visible columns -- that is the
             // column coordinate SetGridText expects.
@@ -95,8 +94,9 @@ namespace pwiz.SkylineTestFunctional
 
             // Move to the Note column at row 0, then paste two newline-separated values starting there.
             // controlId is null because the Document Grid form has a single grid.
-            JsonUiService.SetCurrentCellAddress(gridId, null, noteColumn, 0);
-            JsonUiService.SetGridText(gridId, null, TextUtil.LineSeparate(@"First note", @"Second note"));
+            Connector.SetCurrentCellAddress(gridId, null, noteColumn, 0);
+            Connector.SetGridText(gridId, null,
+                TextUtil.LineSeparate(@"First note", @"Second note"));
             WaitForConditionUI(() => documentGrid.IsComplete);
 
             var notes = SkylineWindow.Document.Peptides.Select(pep => pep.Note).ToArray();
@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestFunctional
 
             // GetGridText returns the whole grid as tab-separated text: a header row plus the two
             // peptide rows, including the notes just pasted. gridId is null (single grid on the form).
-            string gridText = JsonUiService.GetGridText(gridId, null);
+            string gridText = Connector.GetGridText(gridId, null);
             var lines = gridText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
             Assert.AreEqual(3, lines.Length, @"GetGridText should return a header row plus two peptide rows.");
             StringAssert.Contains(lines[0], @"Note", @"GetGridText header row is missing the Note column.");
@@ -114,8 +114,8 @@ namespace pwiz.SkylineTestFunctional
 
             // DismissWithCancelButton closes the (floating) Document Grid (it has no cancel button, so it just
             // closes) and waits for it to go; GetOpenForms then no longer lists it.
-            Program.MainJsonToolServer.DismissWithCancelButton(gridId);
-            WaitForCondition(() => JsonUiService.GetOpenForms().All(form => form.Type != nameof(DocumentGridForm)));
+            Connector.DismissWithCancelButton(gridId);
+            WaitForCondition(() => Connector.GetOpenForms().All(form => form.Type != nameof(DocumentGridForm)));
         }
     }
 }

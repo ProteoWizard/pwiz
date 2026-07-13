@@ -394,25 +394,44 @@ namespace pwiz.Skyline.ToolsUI
             return EnumerateChildren().SelectMany(child => child.SelfAndDescendants()).Prepend(this);
         }
 
-        /// <summary>Runs a function synchronously on this element's UI thread and returns its result.</summary>
+        /// <summary>Runs a function synchronously on this element's UI thread and returns its result. The base
+        /// element has no form of its own, so it marshals through the UI-thread window (the main window, or the
+        /// StartPage before it); an element that belongs to a form overrides this with that form.</summary>
         public virtual T InvokeOnUiThread<T>(Func<T> func) =>
-            JsonUiService.InvokeOnUiThread(func, null, CancellationToken);
+            JsonUiService.InvokeOnControl(null, func, CancellationToken);
 
         /// <summary>The gate-and-gesture a mutating or clicking method owns: it posts the gate + gesture onto the
-        /// element's form thread and waits it out (via <see cref="JsonUiService.WaitForGesture"/> /
-        /// <see cref="DialogWatcher.PerformAction"/>), returning whether it completed or left a dialog open -- so
+        /// element's form thread and waits it out (<see cref="DialogWatcher.PerformAction(IntPtr,Action,CancellationToken)"/>),
+        /// returning whether it completed or left a dialog open -- so
         /// every mutation returns only once it has taken effect, exactly like the named verbs. A gesture that opens a
         /// modal blocks on the form thread, keeping its action counted until the modal closes, so the wait surfaces
         /// it; a blocked/disabled control throws out of the posted delegate and the wait re-throws it to the caller
-        /// (fail-fast). Must be called off the UI thread. A read does not use this: it returns a value, so it runs on
-        /// the UI thread via <see cref="InvokeOnUiThread{T}"/> inside the dialog-watch instead.</summary>
+        /// (fail-fast). Must be called off the UI thread. A read does not use this: it returns a value, so it goes
+        /// through <see cref="CallFunction{TResult}"/> instead.</summary>
         internal ActionResult PerformGesture(Action gesture)
         {
-            return JsonUiService.WaitForGesture(FormHwnd, () =>
+            return DialogWatcher.PerformAction(FormHwnd, () =>
             {
                 VerifyInteractable();
                 gesture();
             }, CancellationToken);
+        }
+
+        /// <summary>The read a value-producing method owns -- the counterpart of <see cref="PerformGesture"/>, and it
+        /// marshals the same way: ONE trip, straight onto this element's own form thread (<see cref="FormHwnd"/>),
+        /// inside the dialog-watch so the read gives up rather than hanging behind a modal blocking that form.
+        ///
+        /// <para>One trip is the point. Dialog-watching onto the MAIN UI thread and hopping to the element's form
+        /// from there marshals twice, and the second hop is a BLOCKING wait made ON the main UI thread: for a form
+        /// running its own message loop (a BackgroundThreadLongWaitDlg) that parks the main thread, which then stops
+        /// pumping -- so the watch's own Send to it cannot run either, and the read hangs instead of answering.
+        /// Posting to the form's thread directly has neither problem.</para>
+        ///
+        /// <para>Must be called off the UI thread. No gating: a read clears the visible/enabled gates (a disabled
+        /// control can still be inspected, as a user can read a greyed-out field).</para></summary>
+        internal TResult CallFunction<TResult>(Func<TResult> read)
+        {
+            return DialogWatcher.CallFunction(FormHwnd, read, CancellationToken);
         }
 
         /// <summary>The handle of the top-level window this element belongs to -- whose UI thread its gestures run
@@ -621,7 +640,7 @@ namespace pwiz.Skyline.ToolsUI
         // a gesture to another, the reads are the ones that break, and only for a form that is not the main window.
         // FormElement?.Form is null (falling back to the main window) only before the form is wired up.
         public override T InvokeOnUiThread<T>(Func<T> func) =>
-            JsonUiService.InvokeOnUiThread(func, FormElement?.Form, CancellationToken);
+            JsonUiService.InvokeOnControl(FormElement?.Form, func, CancellationToken);
 
         // The element's form gates acting on it (a modal blocking the form); a control narrows this to its own
         // hosting form (which also catches a disabled ancestor).
@@ -919,7 +938,7 @@ namespace pwiz.Skyline.ToolsUI
         // The form's own UI thread -- NOT the main window's. A form created on its own thread (a
         // BackgroundThreadLongWaitDlg) runs its message loop there, so its controls must be read through its Invoke.
         public override T InvokeOnUiThread<T>(Func<T> func) =>
-            JsonUiService.InvokeOnUiThread(func, Form, CancellationToken);
+            JsonUiService.InvokeOnControl(Form, func, CancellationToken);
 
         // The form gates itself: VerifyInteractable checks (through VerifyFormInteractable) that no modal is blocking
         // this window. That check MUST be the Win32 one -- a modal calls EnableWindow(false) on the windows it blocks
@@ -1102,7 +1121,7 @@ namespace pwiz.Skyline.ToolsUI
             var topLevelHandle = InvokeOnUiThread(() =>
             {
                 ScreenCapture.ActivateForm(Form);
-                return (Common.SystemUtil.FormUtil.FindTopLevelOwner(Form) ?? Form).Handle;
+                return (FormUtil.FindTopLevelOwner(Form) ?? Form).Handle;
             });
             for (int waited = 0;
                  waited < ACTIVATE_SETTLE_MAX_MILLIS && User32.GetForegroundWindow() != topLevelHandle;
@@ -1131,6 +1150,34 @@ namespace pwiz.Skyline.ToolsUI
         // Menus, like structure, are the container's job: it holds the form's controls, so it is what knows the
         // form's menu bar and toolbars (see ContainerElement.MainToolStrip).
         public override ToolStripElement MainToolStrip => FormContainer.MainToolStrip;
+
+        // Read on the form's OWN thread: every field here comes off the managed Form (its Text, its DockState), and
+        // a form running its own message loop (a BackgroundThreadLongWaitDlg) owns those on that thread -- reading
+        // them from the caller's thread is a cross-thread touch. It goes unpunished at run time (Control.Text is read
+        // inside a MultithreadSafeCallScope, which suppresses the check), which is exactly why it has to be marshaled
+        // deliberately here rather than left to whoever calls it. See ConnectorFormThreadingTest.
+        public override FormInfo GetFormInfo()
+        {
+            return InvokeOnUiThread(() => new FormInfo
+            {
+                Type = Form.GetType().Name,
+                Title = JsonUiService.GetFormTitle(Form),
+                Id = JsonUiService.GetFormId(Form),
+                ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(Hwnd),
+                DockState = GetDockState(),
+                HasGraph = Form is DockableFormEx dockableForm && null != JsonUiService.TryGetZedGraphControl(dockableForm)
+            });
+        }
+
+        protected override string GetDockState()
+        {
+            if (Form is DockableFormEx dockableFormEx)
+            {
+                return dockableFormEx.DockState.ToString();
+            }
+
+            return base.GetDockState();
+        }
     }
 
     /// <summary>The MAIN Skyline window. It is the one form with window-level clipboard gestures: paste puts content
@@ -1189,6 +1236,11 @@ namespace pwiz.Skyline.ToolsUI
                             index, undoMgr.RedoCount));
                 undoMgr.RedoRestore(stackIndex);
             }
+        }
+
+        protected override string GetDockState()
+        {
+            return @"Main";
         }
     }
 

@@ -32,7 +32,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Verifies <see cref="JsonUiService.RunWithDialogWatch{T}"/>: when connector work (e.g.
+    /// Verifies <see cref="DialogWatcher.CallFunction{T}"/>: when connector work (e.g.
     /// RunCommand or SetFormValue) pops a modal alert, the call returns immediately by throwing with
     /// the alert's text, instead of blocking on the dialog. The alert is left open for the caller to
     /// dismiss. Also verifies <see cref="JsonToolServer.ClickMainMenuItem"/> fails fast while a modal
@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             // thread) must detect it and throw with the alert text rather than block. The test cares only
             // that it throws with the alert's text, not what exception type carries it.
             AssertEx.ThrowsException<Exception>(
-                () => JsonUiService.RunWithDialogWatch(() =>
+                () => DialogWatcher.CallFunction(IntPtr.Zero, () =>
                 {
                     JsonUiService.InvokeOnUiThread(() =>
                     {
@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
                         return true;
                     });
                     return true;
-                }),
+                }, CancellationToken.None),
                 thrown => AssertEx.Contains(thrown.Message, alertMessage));
 
             // The alert is still open and blocking the main window. ClickMainMenuItem must fail fast --
@@ -84,12 +84,12 @@ namespace pwiz.SkylineTestFunctional
 
             // A NATIVE message box (a Win32 #32770 with no managed Form, e.g. from MessageBox.Show) must surface
             // its message BODY -- not its caption -- through the dialog-watch. The work pops the box on the UI
-            // thread (blocking it); RunWithDialogWatch (on this test thread) detects the native modal and throws
+            // thread (blocking it); the dialog-watch (on this test thread) detects the native modal and throws
             // with the body text read from the box's child controls.
             const string nativeBody = @"The native message box body the connector should surface";
             const string nativeCaption = @"AlertWatchNativeBoxCaption";
             AssertEx.ThrowsException<Exception>(
-                () => JsonUiService.RunWithDialogWatch(() =>
+                () => DialogWatcher.CallFunction(IntPtr.Zero, () =>
                 {
                     JsonUiService.InvokeOnUiThread(() =>
                     {
@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
                         return true;
                     });
                     return true;
-                }),
+                }, CancellationToken.None),
                 thrown =>
                 {
                     AssertEx.Contains(thrown.Message, nativeBody);              // the BODY was surfaced

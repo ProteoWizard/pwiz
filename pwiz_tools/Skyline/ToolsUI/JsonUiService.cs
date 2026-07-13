@@ -27,6 +27,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Alerts;
@@ -54,22 +55,43 @@ namespace pwiz.Skyline.ToolsUI
         // Level 1: Primitives - UI thread marshaling
 
         /// <summary>
-        /// Executes an action on the UI thread. Exceptions propagate to the caller via wrapping to preserve
-        /// the original stack trace. <paramref name="dispatcher"/> is the control to marshal through -- a
-        /// form on its own thread when given (see <see cref="UiElement.InvokeOnUiThread(System.Action)"/>),
-        /// otherwise (null) the main window. Most callers go through the <see cref="UiElement"/> methods. Delegates
-        /// the raw <see cref="Control.Invoke(System.Delegate)"/> to <see cref="UiServiceDispatcher"/>, which owns
-        /// the marshal, and adds the exception wrapping here.
+        /// Executes an action on THE UI THREAD -- the main window's, or the StartPage's before it exists. Runs
+        /// inline when already on that thread. Exceptions are re-thrown wrapped, so the original stack survives.
+        ///
+        /// <para>This targets the one UI thread and nothing else. A form running its OWN message loop (a
+        /// BackgroundThreadLongWaitDlg) must be touched through that form's Invoke instead -- which is what
+        /// <see cref="UiElement.InvokeOnUiThread{T}"/> does, through <see cref="InvokeOnControl{T}"/>. A caller
+        /// that wants a particular form should be going through a form-scoped verb (JsonToolServer's InvokeOnForm
+        /// / InvokeOnMainWindow), which also brings the dialog-watch and the request's cancellation with it.</para>
         /// </summary>
-        public static void InvokeOnUiThread(Action action, Control dispatcher = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+        public static void InvokeOnUiThread(Action action)
         {
-            // A plain synchronous marshal: through the given control (a form on its own thread), or the UI-thread
-            // window, or -- when already on that thread, or before any window exists -- run inline. The action's
-            // exception is caught and re-thrown wrapped (ArgumentException preserved) so its stack survives. The
-            // marshal is cancellable (not a raw Control.Invoke): it is the first UI-thread hop most verbs make, so a
-            // call parked here on a UI thread that is not pumping must still be abandonable when its client goes away.
-            var control = dispatcher;
+            InvokeOnControl(DialogWatcher.UiThreadWindow, action, CancellationToken.None);
+        }
+
+        /// <summary>Executes a function on the UI thread and returns its result (see
+        /// <see cref="InvokeOnUiThread(System.Action)"/>).</summary>
+        public static T InvokeOnUiThread<T>(Func<T> func)
+        {
+            T result = default(T);
+            InvokeOnUiThread(() => { result = func(); });
+            return result;
+        }
+
+        /// <summary>
+        /// The raw marshal onto a PARTICULAR control's UI thread, for the element model -- a UiElement's form may
+        /// be running its own message loop, so its controls must be touched through ITS Invoke, not the main
+        /// window's. Verbs do not call this: they go through <see cref="InvokeOnUiThread(System.Action)"/> or a
+        /// form-scoped JsonToolServer helper.
+        ///
+        /// <para>The marshal waits on the posted delegate AND on <paramref name="cancellationToken"/>, rather than
+        /// making a raw <see cref="Control.Invoke(System.Delegate)"/>: a call parked on a UI thread that is not
+        /// pumping (it is stuck behind a LongWaitDlg) must still be abandonable when the request's client goes
+        /// away. The posted delegate can outlive an abandoned wait, so it captures its own exception and touches
+        /// nothing that goes out of scope here.</para>
+        /// </summary>
+        internal static void InvokeOnControl(Control control, Action action, CancellationToken cancellationToken)
+        {
             if (control == null || !control.IsHandleCreated || control.IsDisposed)
                 control = DialogWatcher.UiThreadWindow;
             Exception caught = null;
@@ -79,103 +101,37 @@ namespace pwiz.Skyline.ToolsUI
                 catch (Exception ex) { caught = ex; }
             }
             if (control != null && control.InvokeRequired)
-                DialogWatcher.InvokeCancelable(control, Run, cancellationToken);
+            {
+                // NOT disposed: the posted delegate outlives an abandoned wait and still signals this, so the event
+                // has to stay alive for it (it is collected once the delegate is done with it).
+                var done = new ManualResetEventSlim(false);
+                control.BeginInvoke((Action) (() =>
+                {
+                    try { Run(); }
+                    finally { done.Set(); }
+                }));
+                done.Wait(cancellationToken);    // wakes at once on a disconnect -- no polling
+            }
             else
+            {
                 Run();
+            }
+            // Re-thrown wrapped (ArgumentException preserved) so the action's stack survives the hop.
             if (caught is ArgumentException argEx)
                 throw new ArgumentException(argEx.Message, argEx.ParamName, argEx);
             if (caught != null)
                 ExceptionUtil.WrapAndThrowException(caught);
         }
 
-        /// <summary>
-        /// Executes a function on the UI thread and returns the result. Must be called from a background thread
-        /// (pipe server thread). Exceptions propagate to the caller raw.
-        /// </summary>
-        public static T InvokeOnUiThread<T>(Func<T> func, Control dispatcher = null,
-            CancellationToken cancellationToken = default(CancellationToken))
+        /// <summary>Runs a function on a particular control's UI thread and returns its result (see
+        /// <see cref="InvokeOnControl"/>).</summary>
+        internal static T InvokeOnControl<T>(Control control, Func<T> func, CancellationToken cancellationToken)
         {
             T result = default(T);
-            InvokeOnUiThread(() => { result = func(); }, dispatcher, cancellationToken);
+            InvokeOnControl(control, () => { result = func(); }, cancellationToken);
             return result;
         }
 
-        /// <summary>
-        /// Posts an action to the UI thread fire-and-forget (BeginInvoke, not Invoke): the caller returns at
-        /// once and does not wait for or observe the result. Used for a void action (a click, a value set)
-        /// so a gesture that opens a modal dialog does not block -- the modal is driven by later commands,
-        /// the same way the main-menu-item path posts its click. Posted on the same (main-window) queue as
-        /// <see cref="InvokeOnUiThread"/>, so a later synchronous read sees this action's
-        /// effect (the queue is FIFO). The action is counted in <see cref="ModalNestingCount"/> from when
-        /// it is posted until its delegate returns. Must be called off the UI thread.
-        /// </summary>
-        public static void BeginInvokeOnUiThread(Action action, Control dispatcher = null)
-        {
-            DialogWatcher.IncrementModalNestingCount();
-            void Run()
-            {
-                try
-                {
-                    action();
-                }
-                catch (Exception exception)
-                {
-                    // A void action is posted fire-and-forget, so there is no caller frame to catch a failure;
-                    // it would otherwise reach the global handler as an "Unexpected Error". Show it as a normal
-                    // MessageDlg instead -- its message and stack are then also readable by the connector's form
-                    // gate (see BlockingAlertMessage), so the next command can report what went wrong.
-                    MessageDlg.ShowException((IWin32Window) dispatcher ?? Program.MainWindow, exception);
-                }
-                finally { DialogWatcher.DecrementModalNestingCount(); }
-            }
-            // A form on its own thread (e.g. BackgroundThreadLongWaitDlg) is posted to through its own BeginInvoke;
-            // otherwise the UI-thread window (main window, or StartPage before it). Before either exists, a
-            // background thread, so a service can still act during startup.
-            var control = dispatcher;
-            if (control == null || !control.IsHandleCreated || control.IsDisposed)
-                control = DialogWatcher.UiThreadWindow;
-            try
-            {
-                if (control != null)
-                    control.BeginInvoke((Action) Run);
-                else
-                    ActionUtil.RunAsync(Run, @"JsonTool command");
-            }
-            catch
-            {
-                // Posting failed, so the action will never run and is not pending after all.
-                DialogWatcher.DecrementModalNestingCount();
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Runs <paramref name="work"/> on a background thread and waits for it, but never hangs behind a
-        /// MODAL dialog that blocks one of this process's windows and that it cannot get past. A
-        /// <see cref="LongWaitDlg"/> is the exception: it is a progress dialog the work itself drives, so the
-        /// watch keeps waiting for it. Any other blocking modal throws its message (see
-        /// <see cref="BlockingAlertMessage"/>) -- a CommonAlertDlg's or ReportErrorDlg's text, or any other
-        /// dialog's title (a managed caption or a native Open/Save dialog's window title) -- so the caller
-        /// sees what is in the way (and can drive it: GetOpenForms / SetFormValue / ClickFormButton / accept).
-        /// Used by verbs that can pop a dialog (RunCommand, the value reads, ...). Must be called off the UI thread.
-        /// </summary>
-        public static T RunWithDialogWatch<T>(Func<T> work,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            // Run the value-producing work on the UI-thread window and return its result, throwing a blocking modal's
-            // message rather than hanging behind it -- DialogWatcher.CallFunction. IntPtr.Zero resolves to no managed
-            // control, so it targets the UI-thread window (main window / StartPage).
-            return DialogWatcher.CallFunction(IntPtr.Zero, work, cancellationToken);
-        }
-
-        // The wait a named/convenience method runs for its gesture: post <paramref name="postGesture"/> onto the
-        // window at <paramref name="hwnd"/> (the target form's own UI thread) and wait until it finishes or leaves an
-        // interactive modal open (DialogWatcher.PerformAction). Must be called off the UI thread.
-        internal static ActionResult WaitForGesture(IntPtr hwnd, Action postGesture,
-            CancellationToken cancellationToken = default(CancellationToken))
-        {
-            return DialogWatcher.PerformAction(hwnd, postGesture, cancellationToken);
-        }
 
         // Level 2: UI patterns
 
@@ -449,80 +405,6 @@ namespace pwiz.Skyline.ToolsUI
             builder(zedGraph, menuStrip, centerPoint, default(ZedGraphControl.ContextMenuObjectState));
         }
 
-        /// <summary>
-        /// Pastes tab-separated <paramref name="text"/> into a grid on a form, starting at its current
-        /// cell -- move there first with <see cref="SetCurrentCellAddress"/> (the anchor a user would click). The
-        /// text may be a multi-cell TSV block (it fills down and to the right). Works for a
-        /// DataboundGridControl (e.g. the Document Grid) and for a plain DataGridView (e.g. the Rule Set
-        /// Editor's rules grid). See <see cref="IJsonToolService"/>.
-        /// </summary>
-        public static ActionResult SetGridText(string formId, string controlId, string text, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            ValidateFormIdFormat(formId);
-            // Resolve the grid on the form's own thread, then paste: SetGridText posts onto that thread and waits the
-            // paste out itself (the count settling, or a type-conversion alert the paste raises appearing, which the
-            // caller then drives), returning only once the paste has taken effect.
-            var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
-            var gridElement = formElement.InvokeOnUiThread(() => formElement.FindGrid(controlId));
-            return (ActionResult) UiActions.SetGridText.Invoke(gridElement, text ?? string.Empty);
-        }
-
-        /// <summary>
-        /// Moves the current cell of a grid on a form (move there before pasting with
-        /// <see cref="SetGridText"/> or opening the cell's context menu). <paramref name="column"/> is the
-        /// visible-column index and <paramref name="row"/> is the row index -- the same indices the grid
-        /// reports columns and rows in. See <see cref="IJsonToolService"/>.
-        /// </summary>
-        public static ActionResult SetCurrentCellAddress(string formId, string controlId, int column, int row, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            ValidateFormIdFormat(formId);
-            // Resolve the grid on the form's own thread, then move the current cell: SetCurrentCellAddress posts onto
-            // that thread and waits the move out itself (the count settling), returning only once the cell has moved.
-            var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
-            var gridElement = formElement.InvokeOnUiThread(() => formElement.FindGrid(controlId));
-            return (ActionResult) UiActions.SetCurrentCellAddress.Invoke(gridElement, new[] { column, row });
-        }
-
-        /// <summary>
-        /// Returns all the text in a grid on a form -- the column headers followed by every data row --
-        /// as tab-separated columns and newline-separated rows. Works for a DataboundGridControl (the
-        /// same content as Copy All) and for a plain DataGridView. See <see cref="IJsonToolService"/>.
-        /// </summary>
-        public static string GetGridText(string formId, string gridId)
-        {
-            ValidateFormIdFormat(formId);
-            // A value read: run it synchronously inside the dialog-watch so it does not hang if a modal is up.
-            string text = null;
-            RunWithDialogWatch(() =>
-            {
-                text = OnFormThread(formId, formElement => formElement.FindGrid(gridId).GetGridText());
-                return true;
-            });
-            return text;
-        }
-
-        /// <summary>
-        /// The most general way to interact with a control, menu item, or list item (see
-        /// <see cref="IJsonToolService"/>): resolve the element the <paramref name="path"/> refers to,
-        /// then perform <paramref name="action"/> on it. The action determines the value and return types:
-        /// "get_actions" -> ActionInfo[] (name + description + the value it takes); "get_children" ->
-        /// ControlInfo[] (each Path already parented onto this element, so it can be used as-is); "click" ->
-        /// null; "set_value" -> null; "get_value" -> the value (null, bool, double, or string).
-        /// </summary>
-        public static object PerformAction(UiElementPath path, string action, object value, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            if (path == null)
-                throw new ArgumentException(new LlmInstruction(@"A path is required."));
-            var uiAction = UiActions.ByName(action) ?? throw new ArgumentException(LlmInstruction.Format(
-                @"Unsupported action '{0}'. Use get_actions to list the actions a control supports.", action));
-            // The path's root names a form; resolve it (managed or native) and let it perform the action in its
-            // own thread context (a managed form on the UI thread inside the dialog-watch; a native dialog on
-            // this calling thread). get_actions/get_children are ordinary reads -- the action's Invoke returns
-            // the element's SupportedActions / GetChildren(), whose child paths are parented onto the resolved
-            // element (its Path was recorded in ResolvePath) so the caller can use them directly.
-            return ResolveForm(path.GetRoot().Text, cancellationToken).PerformAction(path, uiAction, value);
-        }
-
         // Runs a resolved action. There is nothing to dispatch: UiAction.Invoke owns the threading, and each KIND of
         // action already knows the threading it needs -- a gesture is gated, posted onto the element's UI thread and
         // waited out; a UiFunction runs on that thread inside the dialog-watch and returns its value; Accept runs
@@ -576,106 +458,24 @@ namespace pwiz.Skyline.ToolsUI
 
         // Level 3: Complete UI operations - Graphs
 
-        public static FormInfo[] GetOpenForms(CancellationToken cancellationToken = default(CancellationToken))
+        /// <summary>Every window a connector caller can address, as the FormInfo the get_open_forms verb reports --
+        /// the same set <see cref="GetOpenFormElements"/> enumerates and <see cref="FindFormById"/> matches an id
+        /// against, so a form that is listed here can always be resolved. Each window describes ITSELF
+        /// (StandaloneWindow.GetFormInfo), which is also what marshals the read onto that window's own thread.</summary>
+        public static FormInfo[] GetOpenForms(CancellationToken cancellationToken = default)
         {
-            // The main window and the forms docked in it all live on the main window's thread, so they are read in
-            // one trip there. Every OTHER form is read below, on its own thread -- see why there.
-            var dockedForms = new HashSet<Form>();
-            var results = InvokeOnUiThread(() =>
-            {
-                var skylineWindow = Program.MainWindow;
-                var formInfos = new List<FormInfo>();
-                // The main window does not exist while the StartPage is showing; skip the docked
-                // forms in that case and just enumerate the open forms below (the StartPage and any
-                // of its dialogs appear there).
-                if (skylineWindow != null)
-                {
-                    // The main window itself, so its id (and thus its menus/toolbars) is discoverable.
-                    formInfos.Add(new FormInfo
-                    {
-                        Type = skylineWindow.GetType().Name,
-                        Title = GetFormTitle(skylineWindow),
-                        HasGraph = false,
-                        DockState = @"Main",
-                        Id = GetFormId(skylineWindow),
-                        ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(skylineWindow.Handle),
-                    });
-                    foreach (var form in skylineWindow.DockPanel.Contents.OfType<DockableFormEx>())
-                    {
-                        dockedForms.Add(form);
-                        var dockState = form.DockState;
-                        if (dockState == DockState.Hidden || dockState == DockState.Unknown)
-                            continue;
-                        var zedGraph = TryGetZedGraphControl(form);
-                        formInfos.Add(new FormInfo
-                        {
-                            Type = form.GetType().Name,
-                            Title = GetFormTitle(form),
-                            HasGraph = zedGraph != null,
-                            DockState = dockState.ToString(),
-                            Id = GetFormId(form),
-                            ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(form.Handle),
-                        });
-                    }
-                }
-
-                return formInfos;
-            }, null, cancellationToken);
-
-            // Every other WinForms form -- a dialog, a popup -- read through ITS OWN form, not the main window's: a
-            // form that runs its own message loop on its own thread (a BackgroundThreadLongWaitDlg) owns its controls
-            // there, so reading Visible / Text / Handle for it from the main window's thread is a cross-thread touch.
-            // It throws only when a debugger is attached (Control.CheckForIllegalCrossThreadCalls defaults to
-            // Debugger.IsAttached), which is exactly why this went unnoticed -- see ConnectorFormThreadingTest, which
-            // turns the check on.
-            foreach (var form in FormUtil.OpenForms)
-            {
-                if (form == Program.MainWindow || dockedForms.Contains(form))
-                    continue;
-                try
-                {
-                    var formInfo = InvokeOnUiThread(() => !form.Visible ? null : new FormInfo
-                    {
-                        Type = form.GetType().Name,
-                        Title = GetFormTitle(form),
-                        HasGraph = false,
-                        DockState = @"Dialog",
-                        Id = GetFormId(form),
-                        ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(form.Handle),
-                    }, form, cancellationToken);
-                    if (formInfo != null)
-                        results.Add(formInfo);
-                }
-                catch (Exception)
-                {
-                    // The form can close between the enumeration and the read -- skip a vanishing one rather than
-                    // failing the whole GetOpenForms for a caller polling during a close (as the native loop does).
-                }
-            }
-
-            // Native common dialogs (e.g. the Open/Save file dialog) are not WinForms forms and
-            // so never appear in FormUtil.OpenForms. Enumerate them via UI Automation. This runs
-            // on the pipe thread, NOT inside InvokeOnUiThread: when such a dialog is modal the UI
-            // thread is busy in the dialog's own message loop, and querying it from that thread
-            // can deadlock.
-            foreach (var dialog in NativeDialog.GetOpenDialogs(cancellationToken))
+            var results = new List<FormInfo>();
+            foreach (var window in GetOpenFormElements(cancellationToken))
             {
                 try
                 {
-                    results.Add(new FormInfo
-                    {
-                        Type = dialog.DialogTypeName,
-                        Title = dialog.Title,
-                        HasGraph = false,
-                        DockState = @"Dialog",
-                        Id = dialog.FormId,
-                        IsNative = true,
-                    });
+                    results.Add(window.GetFormInfo());
                 }
-                catch (Exception)
+                catch (Exception exception) when (!(exception is OperationCanceledException))
                 {
-                    // The dialog can close between enumeration and reading its title/id (UI Automation) -- skip a
-                    // vanishing one rather than failing the whole GetOpenForms for a caller polling during a close.
+                    // A form can close between the enumeration and the read -- skip the vanishing one rather than
+                    // failing the whole GetOpenForms for a caller polling while a dialog closes. (A cancellation is
+                    // the client giving up on the request, so that one is not swallowed.)
                 }
             }
             return results.ToArray();
@@ -708,19 +508,6 @@ namespace pwiz.Skyline.ToolsUI
             var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
             formElement.Path = formPath;
             return formElement;
-        }
-
-        // Resolves the managed form named by formId and runs func against it on that form's own UI thread --
-        // the correct thread even for a form created on its own background thread (e.g. a
-        // BackgroundThreadLongWaitDlg), whose controls must be touched through its message loop, not the main
-        // window's (see UiElement.InvokeOnUiThread). The form lookup runs on the calling thread; func then runs on
-        // the form's thread, where it walks/reads the control tree. Must be called off the UI thread.
-        private static T OnFormThread<T>(string formId, Func<StandaloneForm, T> func, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            // Find the form (any thread); it is already built (with its handle). Run func on the form's OWN thread:
-            // its controls must be touched through that form's Invoke.
-            var formElement = (StandaloneForm) FindFormById(formId, cancellationToken);
-            return InvokeOnUiThread(() => func(formElement), formElement.Form);
         }
 
         public static string GetGraphData(string graphId, string filePath, CancellationToken cancellationToken = default(CancellationToken))
@@ -1000,7 +787,7 @@ namespace pwiz.Skyline.ToolsUI
         /// that finds its match among the top-level windows never triggers it).</summary>
         public static IEnumerable<StandaloneWindow> GetOpenFormElements(CancellationToken cancellationToken)
         {
-            foreach (var window in NativeDialog.GetTopLevelWindows(cancellationToken))
+            foreach (var window in StandaloneWindow.GetTopLevelWindows(cancellationToken))
                 yield return window;
 
             foreach (var docked in GetDockedForms(cancellationToken))
@@ -1016,10 +803,10 @@ namespace pwiz.Skyline.ToolsUI
             var mainWindow = Program.MainWindow;
             if (mainWindow == null)
                 return new List<StandaloneWindow>();
-            // Through InvokeOnUiThread (not a raw Invoke) so a client that disconnects can abandon this: it is the
+            // Through InvokeOnControl (not a raw Invoke) so a client that disconnects can abandon this: it is the
             // first UI-thread hop most verbs make (form lookup), and a call parked here would hold the single-threaded
             // pipe server against every later request.
-            return InvokeOnUiThread(() =>
+            return InvokeOnControl(null, () =>
             {
                 var result = new List<StandaloneWindow>();
                 foreach (var form in mainWindow.DockPanel.Contents.OfType<DockableFormEx>())
@@ -1030,7 +817,7 @@ namespace pwiz.Skyline.ToolsUI
                     result.Add(StandaloneWindow.NewStandaloneWindow(form.Handle, cancellationToken));
                 }
                 return (IList<StandaloneWindow>) result;
-            }, null, cancellationToken);
+            }, cancellationToken);
         }
 
         /// <summary>

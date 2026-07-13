@@ -18,14 +18,15 @@
  * limitations under the License.
  */
 
+using pwiz.Common.SystemUtil.PInvoke;
+using pwiz.Skyline.Util.Extensions;
+using SkylineTool;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline.Util.Extensions;
-using SkylineTool;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Window;
 
 namespace pwiz.Skyline.ToolsUI
 {
@@ -406,6 +407,19 @@ namespace pwiz.Skyline.ToolsUI
         private static string StripMnemonic(string text)
         {
             return (text ?? string.Empty).Replace(@"&", string.Empty).Trim();
+        }
+
+        public override FormInfo GetFormInfo()
+        {
+            return new FormInfo
+            {
+                Type = DialogTypeName,
+                Title = Title,
+                HasGraph = false,
+                DockState = @"Dialog",
+                Id = FormId,
+                IsNative = true,
+            };
         }
     }
 }

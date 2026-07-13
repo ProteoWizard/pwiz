@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestFunctional
     /// window instead of failing.</para>
     /// </summary>
     [TestClass]
-    public class ConnectorFormThreadingTest : McpTutorialTest
+    public class ConnectorFormThreadingTest : McpConnectorTest
     {
         private const string OWN_THREAD_TITLE = "Connector Own Thread Form";
         private const string TEXT_BOX_LABEL = "Own thread field";
@@ -149,7 +149,7 @@ namespace pwiz.SkylineTestFunctional
         /// refuse, naming the dialog that is blocking it -- not click a dead accept button and wait.</summary>
         private void RefuseToDriveABlockedForm()
         {
-            string mainFormId = GetConnectorForm<SkylineWindow>();
+            string mainFormId = GetOpenFormId<SkylineWindow>();
             // Peptide Settings is modal, so it blocks the main window while it is up.
             string settingsId = ResolveModal(Connector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>(@"settingsToolStripMenuItem", @"peptideSettingsMenuItem")));

@@ -38,7 +38,7 @@ namespace pwiz.SkylineTestFunctional
     /// it, a list with its item action, and a button with its click action.
     /// </summary>
     [TestClass]
-    public class GetControlsConnectorTest : AbstractFunctionalTest
+    public class GetControlsConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestGetControlsConnector()
@@ -50,16 +50,15 @@ namespace pwiz.SkylineTestFunctional
         {
             // Drive the verbs through the running JSON tool server (Program.MainJsonToolServer), the same
             // path an external MCP client uses; it is torn down with the window (SkylineWindow.OnHandleDestroyed).
-            RunUI(() => Program.StartToolService());
+            StartToolService();
 
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(
                 documentSettingsDlg.EditAnnotationList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
-            string dlgId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(DefineAnnotationDlg)).Id;
+            string dlgId = GetOpenFormId<DefineAnnotationDlg>();
 
-            var controls = Program.MainJsonToolServer.GetControls(dlgId);
+            var controls = Connector.GetControls(dlgId);
             Assert.IsTrue(controls.Length > 0, @"GetControls returned nothing.");
 
             // GetControls reports each control's Path -- already parented onto the form, so it can be passed
@@ -92,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // The snake_case names of the actions get_actions reports for the element at the given path.
-        private static string[] ActionNames(UiElementPath path) =>
-            ((ActionInfo[]) JsonUiService.PerformAction(path, @"get_actions", null)).Select(a => a.Name).ToArray();
+        private string[] ActionNames(UiElementPath path) =>
+            ((ActionInfo[]) Connector.PerformAction(path, @"get_actions", null)).Select(a => a.Name).ToArray();
     }
 }

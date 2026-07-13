@@ -33,10 +33,10 @@ namespace pwiz.SkylineTestFunctional
     /// is "ContextMenu" (a menu that, unlike the main menu, is built on demand by the graph's
     /// ContextMenuBuilder). It toggles the Peak Areas graph's "Log Scale" item and verifies the backing
     /// setting changed. The item is matched by its visible text, and the graph is located the way the
-    /// connector would -- via <see cref="JsonUiService.GetOpenForms"/>.
+    /// connector would -- via <see cref="JsonToolServer.GetOpenForms"/>.
     /// </summary>
     [TestClass]
-    public class ContextMenuConnectorTest : AbstractFunctionalTest
+    public class ContextMenuConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestContextMenuConnector()
@@ -47,6 +47,9 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Every verb below is driven through the running JSON tool server (torn down with the window).
+            StartToolService();
+
             RunUI(() => SkylineWindow.OpenFile(
                 TestFilesDir.GetTestPath("ABSciex4000_Study9-1_Site19_CalCurves only.sky")));
             WaitForDocumentLoaded();
@@ -66,12 +69,12 @@ namespace pwiz.SkylineTestFunctional
             // Find the graph the way the AI Connector would -- by enumerating open forms -- then drive its
             // context menu through a path: the graph form's context menu (Type "ContextMenu"), then its
             // item by its visible text.
-            string graphId = JsonUiService.GetOpenForms()
+            string graphId = Connector.GetOpenForms()
                 .First(form => form.Type == @"GraphSummary" && form.HasGraph).Id;
             var contextMenu = new UiElementPath(
                 new UiElementPath(null, graphId, null, @"Form"), null, null, @"ContextMenu");
             var logScaleItem = new UiElementPath(contextMenu, @"Log Scale", null, null);
-            JsonUiService.PerformAction(logScaleItem, @"click", null);
+            Connector.PerformAction(logScaleItem, @"click", null);
 
             // The menu item has CheckOnClick=true, so the click flipped it from unchecked to checked,
             // turning the log scale on.

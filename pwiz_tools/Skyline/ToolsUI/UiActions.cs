@@ -139,17 +139,13 @@ namespace pwiz.Skyline.ToolsUI
         public abstract TResult CallNow(UiElement element);
 
         /// <summary>The read WITH the threading it needs, from the connector's worker thread -- the typed
-        /// counterpart of <see cref="Invoke"/>.
-        ///
-        /// <para>The nesting is load-bearing: the dialog-watch is OUTSIDE, so a read gives up rather than hanging
-        /// behind a modal that is blocking the form; the hop onto the element's own UI thread is INSIDE it, because
-        /// for a form running its own message loop (a BackgroundThreadLongWaitDlg) that is not the main window's
-        /// thread. Reversing them would either read the wrong thread or hang.</para></summary>
+        /// counterpart of <see cref="Invoke"/>. It is ONE trip onto the element's own form thread, inside the
+        /// dialog-watch, so the read gives up rather than hanging behind a modal blocking that form (see
+        /// <see cref="UiElement.CallFunction{TResult}"/>, which is what a gesture's PerformGesture is to a
+        /// write).</summary>
         public virtual TResult Call(UiElement element)
         {
-            return JsonUiService.RunWithDialogWatch(
-                () => element.InvokeOnUiThread(() => CallNow(element)),
-                element.CancellationToken);
+            return element.CallFunction(() => CallNow(element));
         }
 
         public override object InvokeNow(UiElement element, object argument) => CallNow(element);

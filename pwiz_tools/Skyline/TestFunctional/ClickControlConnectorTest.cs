@@ -44,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
     /// translation-proof where it uses control names and runs in en otherwise.
     /// </summary>
     [TestClass]
-    public class ClickControlConnectorTest : AbstractFunctionalTest
+    public class ClickControlConnectorTest : McpConnectorTest
     {
         [TestMethod]
         public void TestClickControlConnector()
@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
-            RunUI(() => Program.StartToolService());
+            StartToolService();
 
             // Start from a fresh document so its audit log has no entries -- toggling the checkbox in
             // either direction then does not raise the "this will clear the audit log" confirmation.
@@ -87,11 +87,10 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => SkylineWindow.ShowAuditLog());
             var auditLogForm = WaitForOpenForm<AuditLogForm>();
-            string auditFormId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(AuditLogForm)).Id;
+            string auditFormId = GetOpenFormId<AuditLogForm>();
 
             bool before = SkylineWindow.Document.Settings.DataSettings.AuditLogging;
-            Program.MainJsonToolServer.ClickFormButton(auditFormId, @"Enable audit logging");
+            Connector.ClickFormButton(auditFormId, @"Enable audit logging");
             WaitForConditionUI(() => SkylineWindow.Document.Settings.DataSettings.AuditLogging != before);
             RunUI(() => Assert.AreNotEqual(before, SkylineWindow.Document.Settings.DataSettings.AuditLogging,
                 @"ClickFormButton did not toggle the Enable audit logging checkbox."));
@@ -104,13 +103,12 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => SkylineWindow.ShowDocumentGrid(true));
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
-            string gridId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(DocumentGridForm)).Id;
+            string gridId = GetOpenFormId<DocumentGridForm>();
 
-            Program.MainJsonToolServer.ClickControlMenuItem(gridId, string.Empty, @"Reports > Proteins");
+            Connector.ClickControlMenuItem(gridId, string.Empty, @"Reports > Proteins");
             WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Proteins");
 
-            Program.MainJsonToolServer.ClickControlMenuItem(gridId, string.Empty, @"Reports > Peptides");
+            Connector.ClickControlMenuItem(gridId, string.Empty, @"Reports > Peptides");
             WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Peptides");
             RunUI(() => Assert.AreEqual(@"Peptides", documentGrid.BindingListSource.ViewInfo.Name,
                 @"ClickControlMenuItem did not switch the Document Grid report."));
@@ -120,13 +118,12 @@ namespace pwiz.SkylineTestFunctional
         private void ClickTab()
         {
             var peptideSettings = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            string settingsId = JsonUiService.GetOpenForms()
-                .First(form => form.Type == nameof(PeptideSettingsUI)).Id;
+            string settingsId = GetOpenFormId<PeptideSettingsUI>();
 
             RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Digest);
             var tabControl = new UiElementPath(
                 new UiElementPath(null, settingsId, null, @"Form"), null, null, @"TabControl");
-            JsonUiService.PerformAction(tabControl, @"select_tab", @"Quantification");
+            Connector.PerformAction(tabControl, @"select_tab", @"Quantification");
             WaitForConditionUI(() => peptideSettings.SelectedTab == PeptideSettingsUI.TABS.Quantification);
             RunUI(() => Assert.AreEqual(PeptideSettingsUI.TABS.Quantification, peptideSettings.SelectedTab,
                 @"select_tab did not select the Quantification tab."));
