@@ -804,10 +804,9 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                DialogWatcher.PerformAction(Program.MainWindow, () =>
-                {
-                    window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId) ?? GetFormWithId(GetDockedForms(cancellationToken), formId);
-                }, cancellationToken);
+                Program.MainWindow.Invoke(new Action(() =>
+                    window = GetFormWithId(StandaloneWindow.GetTopLevelWindows(cancellationToken), formId) ??
+                             GetFormWithId(GetDockedForms(cancellationToken), formId)));
             }
 
             if (window != null)
