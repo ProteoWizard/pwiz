@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR;
+using pwiz.Osprey.FDR.ModelDiagnostics;
 using pwiz.Osprey.FDR.Reconciliation;
 
 namespace pwiz.Osprey.Tasks
@@ -61,6 +62,35 @@ namespace pwiz.Osprey.Tasks
     {
         public IReadOnlyDictionary<string, RTCalibration> Value { get; }
         public PerFileCalibrations(IReadOnlyDictionary<string, RTCalibration> value) { Value = value; }
+    }
+
+    /// <summary>
+    /// Per-file CAL-view calibration diagnostics for the <c>--model-diagnostics</c>
+    /// HTML report, captured during Stage 3 calibration and keyed by file name in
+    /// input order (parallels <see cref="PerFileCalibrations"/>). Empty on a normal
+    /// run and on the rehydrate / resume / HPC-worker paths, where the per-file
+    /// calibration MATCHES are not available (only the small calibration.json is
+    /// reloaded), so the rows cannot be reconstructed -- FirstJoinTask reads this
+    /// only under <c>config.ModelDiagnostics</c> and tolerates an empty map.
+    ///
+    /// <see cref="MassUnit"/> is the per-run mass-error unit ("ppm" or "Th") the CAL
+    /// view labels its MS1/MS2 axes with. It is captured alongside the rows because
+    /// <see cref="ModelDiagnosticsData.CalFileRow"/> deliberately does not carry it (it
+    /// is a per-run scalar on <see cref="ModelDiagnosticsData.CalibrationData"/>, and
+    /// the resolution mode that fixes it is resolved per-file at scoring time, not
+    /// derivable from config at the join). Null until the first calibrated file records
+    /// it; defaults to "ppm" downstream.
+    /// </summary>
+    internal sealed class PerFileCalibrationDiagnostics
+    {
+        public IReadOnlyDictionary<string, ModelDiagnosticsData.CalFileRow> Value { get; }
+        public string MassUnit { get; }
+        public PerFileCalibrationDiagnostics(
+            IReadOnlyDictionary<string, ModelDiagnosticsData.CalFileRow> value, string massUnit)
+        {
+            Value = value;
+            MassUnit = massUnit;
+        }
     }
 
     /// <summary>

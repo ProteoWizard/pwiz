@@ -1229,6 +1229,135 @@ namespace pwiz.Osprey.Test
                     nWithLowQ, nPassing));
         }
 
+        /// <summary>
+        /// The --verbose calibration training report (the out-CalibrationTrainingReport
+        /// overload) must capture a coherent picture of the training run: a seed feature,
+        /// final model weights, per-feature target/decoy means, a stop reason, the 1% / 0.1%
+        /// yield, and a per-feature contribution decomposition whose shares sum to 100%.
+        /// Also verifies the report is a pure read-out -- the overload returns the same
+        /// nPassing as the plain call on the same input.
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationTrainingReport()
+        {
+            var matches = BuildSyntheticCalibrationMatches();
+            var matchesCopy = BuildSyntheticCalibrationMatches();
+
+            int nPassingPlain = CalibrationScorer.TrainAndScoreCalibration(matchesCopy, false);
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(
+                matches, false, out CalibrationTrainingReport report);
+
+            Assert.AreEqual(nPassingPlain, nPassing,
+                "Report overload must return the same nPassing as the plain overload");
+            Assert.IsNotNull(report, "Report must be populated for a non-empty match set");
+
+            // Structural completeness.
+            Assert.AreEqual(4, report.FeatureNames.Length, "Expected 4 calibration features");
+            Assert.IsNotNull(report.FinalWeights, "Final weights must be captured");
+            Assert.AreEqual(4, report.FinalWeights.Length);
+            Assert.AreEqual(4, report.FeatureMeanTarget.Length);
+            Assert.AreEqual(4, report.FeatureMeanDecoy.Length);
+            Assert.IsFalse(string.IsNullOrEmpty(report.StopReason), "A stop reason must be recorded");
+            Assert.IsTrue(report.SeedFeatureIndex >= 0 && report.SeedFeatureIndex < 4,
+                string.Format("Seed feature index out of range: {0}", report.SeedFeatureIndex));
+
+            // Counts are consistent with the input (200 target / 200 decoy).
+            Assert.AreEqual(200, report.NTargets);
+            Assert.AreEqual(200, report.NDecoys);
+            Assert.AreEqual(400, report.NTotal);
+
+            // Yield is monotone across thresholds and matches nPassing at 1%.
+            Assert.IsTrue(report.NTargetsAt1Pct >= report.NTargetsAtTenthPct,
+                "1% target yield must be >= 0.1% yield");
+            int nWithLowQ = 0;
+            foreach (var m in matches)
+                if (!m.IsDecoy && m.QValue <= 0.01)
+                    nWithLowQ++;
+            Assert.AreEqual(nWithLowQ, report.NTargetsAt1Pct,
+                "Report 1% yield must match the targets with q<=0.01");
+
+            // Contribution decomposition: for well-separated targets/decoys the composite
+            // is non-degenerate, so the report emits a contribution line per feature whose
+            // shares sum to ~100%. Parse the shares out of the formatted table.
+            var lines = new List<string>(report.ToReportLines("unit-test"));
+            double shareSum = 0;
+            int shareRows = 0;
+            foreach (string line in lines)
+            {
+                // A contribution row starts (after indent) with a known feature name and
+                // ends with "<number>%". Other lines carrying '%' (seed FDR, iteration
+                // cutoffs, the yield line) do not start with a feature name, so they are
+                // excluded -- this isolates exactly the 4 feature rows.
+                string trimmed = line.TrimStart();
+                bool isFeatureRow = false;
+                foreach (string fname in report.FeatureNames)
+                {
+                    if (trimmed.StartsWith(fname + " "))
+                    {
+                        isFeatureRow = true;
+                        break;
+                    }
+                }
+                if (!isFeatureRow)
+                    continue;
+                int pctIdx = line.IndexOf('%');
+                string beforePct = line.Substring(0, pctIdx);
+                int sp = beforePct.LastIndexOf(' ');
+                string token = beforePct.Substring(sp + 1);
+                if (double.TryParse(token, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out double share))
+                {
+                    shareSum += share;
+                    shareRows++;
+                }
+            }
+            Assert.AreEqual(4, shareRows, "Expected a contribution share row per feature");
+            Assert.IsTrue(Math.Abs(shareSum - 100.0) < 0.5,
+                string.Format("Feature shares should sum to ~100%, got {0:F2}", shareSum));
+        }
+
+        /// <summary>
+        /// Build a synthetic 200-pair calibration match set (120 well-separated "good"
+        /// targets, 80 noisy, 200 noise decoys) suitable for exercising the iterative LDA.
+        /// Deterministic (fixed seed) so tests are reproducible.
+        /// </summary>
+        private static CalibrationMatch[] BuildSyntheticCalibrationMatches()
+        {
+            var rng = new Random(12345);
+            int nPairs = 200;
+            var matches = new CalibrationMatch[nPairs * 2];
+            for (int p = 0; p < nPairs; p++)
+            {
+                uint baseId = (uint)(p + 1);
+                bool isGoodTarget = p < 120;
+                double corr = isGoodTarget ? 3.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 2.0;
+                double libcos = isGoodTarget ? 0.6 + rng.NextDouble() * 0.3 : rng.NextDouble() * 0.4;
+                double top6 = isGoodTarget ? 4.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 3.0;
+                double xcorr = isGoodTarget ? 0.5 + rng.NextDouble() * 1.5 : rng.NextDouble() * 0.5;
+                matches[p * 2] = new CalibrationMatch
+                {
+                    EntryId = baseId,
+                    IsDecoy = false,
+                    Sequence = string.Format("PEPTIDE{0}K", p),
+                    CorrelationScore = corr,
+                    LibcosineApex = libcos,
+                    Top6MatchedApex = (byte)Math.Min(6, (int)top6),
+                    XcorrScore = xcorr
+                };
+                matches[p * 2 + 1] = new CalibrationMatch
+                {
+                    EntryId = baseId | 0x80000000,
+                    IsDecoy = true,
+                    Sequence = string.Format("DECOY_PEPTIDE{0}K", p),
+                    CorrelationScore = rng.NextDouble() * 2.0,
+                    LibcosineApex = rng.NextDouble() * 0.3,
+                    Top6MatchedApex = (byte)(rng.Next(4)),
+                    XcorrScore = rng.NextDouble() * 0.4
+                };
+            }
+            return matches;
+        }
+
         // Helper: Pearson correlation for test use
         private static double ComputePearson(double[] x, double[] y)
         {
