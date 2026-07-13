@@ -24,7 +24,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using pwiz.Common.SystemUtil;
