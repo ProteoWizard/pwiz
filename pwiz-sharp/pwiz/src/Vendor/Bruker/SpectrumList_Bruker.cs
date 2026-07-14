@@ -21,6 +21,8 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
     private readonly IReadOnlyList<BrukerIndexEntry> _index;
     private readonly bool _owns;
     private readonly bool _combineIonMobilitySpectra;
+    private readonly bool _passEntireDiaPasefFrame;
+    private readonly bool _includeIsolationArrays;
 
     /// <summary>Which Bruker sub-format this list is backed by.</summary>
     public BrukerFormat Format => _data.Format;
@@ -84,14 +86,18 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
         bool owns = true,
         bool combineIonMobilitySpectra = false,
         int preferOnlyMsLevel = 0,
-        bool sortAndJitter = false)
+        bool sortAndJitter = false,
+        bool passEntireDiaPasefFrame = false,
+        bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(data);
         _data = data;
         _owns = owns;
         _combineIonMobilitySpectra = combineIonMobilitySpectra;
         _sortAndJitter = sortAndJitter;
-        _index = data.BuildSpectrumIndex(combineIonMobilitySpectra, preferOnlyMsLevel);
+        _passEntireDiaPasefFrame = passEntireDiaPasefFrame;
+        _includeIsolationArrays = includeIsolationArrays;
+        _index = data.BuildSpectrumIndex(combineIonMobilitySpectra, preferOnlyMsLevel, _passEntireDiaPasefFrame);
     }
 
     /// <inheritdoc/>
@@ -116,7 +122,7 @@ public sealed class SpectrumList_Bruker : SpectrumListBase, IVendorCentroidingSp
     {
         var entry = _index[index];
         var spec = new Spectrum { Index = index, Id = entry.Id };
-        _data.FillSpectrum(spec, entry, getBinaryData, preferCentroid, _sortAndJitter);
+        _data.FillSpectrum(spec, entry, getBinaryData, preferCentroid, _sortAndJitter, _includeIsolationArrays);
         return spec;
     }
 

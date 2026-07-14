@@ -69,6 +69,18 @@ public sealed class Reader_Bruker : IReader
         bool combineIms = config?.CombineIonMobilitySpectra ?? CombineIonMobilitySpectra;
         bool sortAndJitter = config?.SortAndJitter ?? false;
         bool peakPicking = config?.PeakPicking ?? false;
+        // diaPASEF whole-frame emission: one combined spectrum per frame (all isolation windows'
+        // peaks + per-peak isolation arrays), mirroring pwiz C++ SpectrumList_Bruker.cpp:432-490.
+        // includeIsolationArrays adds the two scanning-quadrupole m/z arrays (only used by the
+        // whole-frame path). Both are honored only for TDF diaPASEF combined mode.
+        bool passEntireDiaPasefFrame = config?.PassEntireDiaPasefFrame ?? false;
+        bool includeIsolationArrays = config?.IncludeIsolationArrays ?? false;
+        // TODO(diagonal-autodetect): pwiz C++ (TimsData.cpp:308-311) auto-enables passEntire for
+        // DiagonalPASEF/MiDIA when (maxNumScans - maxWindowsPerGroup) < 10. Not ported here: the
+        // ReaderConfig flag is a plain bool so we cannot distinguish an explicit false (e.g.
+        // Skyline's IsolationSchemeReader passes passEntireDiaPasefFrame:false) from a default,
+        // and auto-overriding it would change isolation-scheme detection on diagonal data. Standard
+        // diaPASEF (the failing tests) sets the flag explicitly, so the core fix does not need it.
         var format = DetectFormat(filename);
         if (format != BrukerFormat.Tdf && format != BrukerFormat.Tsf && format != BrukerFormat.Baf)
             throw new NotSupportedException(
@@ -82,7 +94,8 @@ public sealed class Reader_Bruker : IReader
         var data = BrukerData.Create(analysisDir);
         try
         {
-            ReadImpl(result, data, analysisDir, preferOnlyMsLevel, combineIms, sortAndJitter, peakPicking);
+            ReadImpl(result, data, analysisDir, preferOnlyMsLevel, combineIms, sortAndJitter, peakPicking,
+                passEntireDiaPasefFrame, includeIsolationArrays);
         }
         catch
         {
@@ -92,7 +105,7 @@ public sealed class Reader_Bruker : IReader
 #endif
     }
 
-    private static void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel, bool combineIonMobilitySpectra, bool sortAndJitter, bool peakPicking)
+    private static void ReadImpl(MSData result, IBrukerData data, string analysisDir, int preferOnlyMsLevel, bool combineIonMobilitySpectra, bool sortAndJitter, bool peakPicking, bool passEntireDiaPasefFrame, bool includeIsolationArrays)
     {
         result.CVs.AddRange(MSData.DefaultCVList);
         result.Id = Path.GetFileNameWithoutExtension(analysisDir);
@@ -123,7 +136,9 @@ public sealed class Reader_Bruker : IReader
             data, owns: true,
             combineIonMobilitySpectra: combineIonMobilitySpectra,
             preferOnlyMsLevel: preferOnlyMsLevel,
-            sortAndJitter: sortAndJitter)
+            sortAndJitter: sortAndJitter,
+            passEntireDiaPasefFrame: passEntireDiaPasefFrame,
+            includeIsolationArrays: includeIsolationArrays)
         { Dp = dpReader };
         result.Run.SpectrumList = spectrumList;
 

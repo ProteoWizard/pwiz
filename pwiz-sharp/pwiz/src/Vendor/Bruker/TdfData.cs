@@ -20,6 +20,10 @@ internal sealed class TdfData : IBrukerData
     private long _cachedFrameId = -1;
     private FrameProxy? _cachedFrame;
     private bool _disposed;
+    // Per-window-group isolation info for diaPASEF whole-frame (passEntire) emission, built lazily
+    // from the DiaFrameMsMsWindows table. Mirrors pwiz C++ TimsData.cpp isolationMz*ByScanNumber /
+    // activeScansByWindowGroup / isolationMzRange* (TimsData.cpp:305-354, :594-597).
+    private Dictionary<int, WgIso>? _wgIso;
 
     public TdfData(string analysisDirectory, bool useRecalibratedState)
     {
@@ -144,7 +148,23 @@ internal sealed class TdfData : IBrukerData
         public DiaFrameWindow? DiaWindow;
         public PasefPrecursorInfo? PasefPrecursor;
         public bool Combined;  // true when combineIonMobilitySpectra
+        public bool WholeFrame;   // true for passEntire diaPASEF (one spectrum per frame/window group)
+        public int WindowGroup;   // diaPASEF window group (set when WholeFrame)
     }
+
+    /// <summary>
+    /// Precomputed diaPASEF isolation info for one window group, used by the whole-frame
+    /// (passEntire) path. <c>ActiveScans</c> is the union of every window's scan range in the
+    /// group (ascending; gaps between windows are excluded). <c>IsoLowByScan</c> /
+    /// <c>IsoHighByScan</c> are indexed by absolute scan number. <c>RangeLow</c> / <c>RangeHigh</c>
+    /// are the overall isolation m/z span of the group.
+    /// </summary>
+    private sealed record WgIso(
+        int[] ActiveScans,
+        double[] IsoLowByScan,
+        double[] IsoHighByScan,
+        double RangeLow,
+        double RangeHigh);
 
     private static BrukerIndexEntry MakeCombinedEntry(int idx, TdfFrame frame, int scanBegin, int scanEnd, Tag tag)
     {
@@ -159,7 +179,7 @@ internal sealed class TdfData : IBrukerData
         return new BrukerIndexEntry { Index = idx, Id = id, Tag = tag, MsLevel = frame.MsMsType == MsMsType.Ms1 ? 1 : 2 };
     }
 
-    public IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(bool combineIonMobilitySpectra, int preferOnlyMsLevel)
+    public IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(bool combineIonMobilitySpectra, int preferOnlyMsLevel, bool passEntireDiaPasefFrame)
     {
         var index = new List<BrukerIndexEntry>();
         var diaByFrame = HasDiaPasefData
@@ -195,6 +215,25 @@ internal sealed class TdfData : IBrukerData
                             new Tag { Frame = frame, ScanBegin = p.ScanBegin, ScanEnd = lastScan, PasefPrecursor = p, Combined = true }));
                     }
                     continue;
+                }
+
+                // DIA-PASEF whole-frame (passEntire): one combined spectrum per frame covering all
+                // active scans of its window group, with per-peak isolation arrays. Mirrors pwiz C++
+                // isPassEntireDiaPasefFrame (SpectrumList_Bruker.cpp:432-490, TimsData.cpp:1035-1116).
+                if (passEntireDiaPasefFrame && frame.MsMsType != MsMsType.Ms1 &&
+                    diaByFrame.TryGetValue(frame.FrameId, out var wholeFrameWindows) && wholeFrameWindows.Count > 0)
+                {
+                    int wg = wholeFrameWindows[0].WindowGroup;
+                    if (GetWgIsoCache().TryGetValue(wg, out var iso) && iso.ActiveScans.Length > 0)
+                    {
+                        int sb = iso.ActiveScans[0];
+                        int se = iso.ActiveScans[^1];
+                        index.Add(MakeCombinedEntry(
+                            index.Count, frame, sb, se,
+                            new Tag { Frame = frame, ScanBegin = sb, ScanEnd = se, Combined = true, WholeFrame = true, WindowGroup = wg }));
+                        continue;
+                    }
+                    // Fall through to per-window emission if the window group has no isolation info.
                 }
 
                 // DIA-PASEF: one combined spectrum per isolation window.
@@ -281,12 +320,20 @@ internal sealed class TdfData : IBrukerData
 
     // ---------- spectrum fill ----------
 
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter = false)
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
         var tag = (Tag)entry.Tag;
         var frame = tag.Frame;
+
+        // diaPASEF whole-frame (passEntire): dedicated emission path so the existing per-window
+        // path below is left unchanged.
+        if (tag.WholeFrame)
+        {
+            FillWholeFrameSpectrum(spec, tag, getBinaryData, includeIsolationArrays, sortAndJitter);
+            return;
+        }
 
         // pwiz C++ centroid+combineIMS path emits a longer native id with frame/scan range so
         // each merged spectrum is uniquely addressable. Non-centroid path keeps the short
@@ -667,6 +714,251 @@ internal sealed class TdfData : IBrukerData
         }
         meanMobility = mobSorted;
         return (mzSorted, intSorted);
+    }
+
+    // ---------- diaPASEF whole-frame (passEntire) ----------
+
+    private void FillWholeFrameSpectrum(Spectrum spec, Tag tag, bool getBinaryData, bool includeIsolationArrays, bool sortAndJitter)
+    {
+        var frame = tag.Frame;
+        var wgi = GetWgIsoCache()[tag.WindowGroup];
+
+        spec.Params.Set(CVID.MS_ms_level, 2);
+        spec.Params.Set(CVID.MS_MSn_spectrum);
+        spec.Params.Set(frame.Polarity == IonPolarity.Positive
+            ? CVID.MS_positive_scan : CVID.MS_negative_scan);
+        spec.Params.Set(CVID.MS_base_peak_intensity, frame.MaxIntensity);
+        spec.Params.Set(CVID.MS_total_ion_current, frame.SummedIntensities);
+        // TIMS combined data is always centroid (pwiz C++ SpectrumList_Bruker.cpp:434).
+        spec.Params.Set(CVID.MS_centroid_spectrum);
+
+        // Ion mobility limits over the merged active-scan range (pwiz C++ SpectrumList_Bruker.cpp:386-387).
+        var bounds = _tims.ScanNumberToOneOverK0(frame.FrameId, new[] { (double)tag.ScanBegin, (double)tag.ScanEnd });
+        double imLower = Math.Min(bounds[0], bounds[1]);
+        double imUpper = Math.Max(bounds[0], bounds[1]);
+        spec.Params.UserParams.Add(new UserParam("ion mobility lower limit",
+            imLower.ToString("R", CultureInfo.InvariantCulture), "xsd:double",
+            CVID.MS_volt_second_per_square_centimeter));
+        spec.Params.UserParams.Add(new UserParam("ion mobility upper limit",
+            imUpper.ToString("R", CultureInfo.InvariantCulture), "xsd:double",
+            CVID.MS_volt_second_per_square_centimeter));
+
+        var scan = new Scan();
+        scan.Set(CVID.MS_scan_start_time, frame.RetentionTimeSeconds, CVID.UO_second);
+        scan.UserParams.Add(new UserParam("windowGroup",
+            tag.WindowGroup.ToString(CultureInfo.InvariantCulture)));
+        var (mzLow, mzHigh) = _meta.MzAcquisitionRange;
+        if (mzHigh > 0)
+            scan.ScanWindows.Add(new ScanWindow(mzLow, mzHigh, CVID.MS_m_z));
+
+        spec.ScanList.Set(CVID.MS_sum_of_spectra);
+        spec.ScanList.Scans.Add(scan);
+
+        AddWholeFramePrecursor(spec, wgi);
+
+        var (mz, intensity) = ReadWholeFrameActiveScans(frame, wgi, includeIsolationArrays, sortAndJitter,
+            out var meanMobility, out var isoLowArr, out var isoHighArr);
+        spec.DefaultArrayLength = mz.Length;
+        if (getBinaryData)
+        {
+            spec.SetMZIntensityArrays(mz, intensity, CVID.MS_number_of_detector_counts);
+            if (meanMobility.Length == mz.Length && mz.Length > 0)
+            {
+                // Whole-frame is centroid, so use the inverse-reduced accession (pwiz C++
+                // SpectrumList_Bruker.cpp:438). This is also the accession Skyline recognizes.
+                var mobArr = new BinaryDataArray();
+                mobArr.Set(CVID.MS_mean_inverse_reduced_ion_mobility_array, "", CVID.MS_volt_second_per_square_centimeter);
+                mobArr.Data.AddRange(meanMobility);
+                spec.BinaryDataArrays.Add(mobArr);
+            }
+            if (includeIsolationArrays && isoLowArr.Length == mz.Length && mz.Length > 0)
+            {
+                // Per-peak scanning-quadrupole isolation bounds (pwiz C++ SpectrumList_Bruker.cpp:445-457).
+                var lowArr = new BinaryDataArray();
+                lowArr.Set(CVID.MS_scanning_quadrupole_position_lower_bound_m_z_array, "", CVID.MS_m_z);
+                lowArr.Data.AddRange(isoLowArr);
+                spec.BinaryDataArrays.Add(lowArr);
+                var highArr = new BinaryDataArray();
+                highArr.Set(CVID.MS_scanning_quadrupole_position_upper_bound_m_z_array, "", CVID.MS_m_z);
+                highArr.Data.AddRange(isoHighArr);
+                spec.BinaryDataArrays.Add(highArr);
+            }
+        }
+    }
+
+    private static void AddWholeFramePrecursor(Spectrum spec, WgIso wgi)
+    {
+        var precursor = new Precursor();
+        // Declare the overall window-group isolation range (pwiz C++ SpectrumList_Bruker.cpp:353-363);
+        // the per-peak isolation arrays carry the fine detail. Robust range-based value is used
+        // rather than the C++ sort-order-dependent re-derivation at :460-468.
+        double half = (wgi.RangeHigh - wgi.RangeLow) / 2.0;
+        double target = wgi.RangeLow + half;
+        precursor.IsolationWindow.Set(CVID.MS_isolation_window_target_m_z, target, CVID.MS_m_z);
+        if (half > 0)
+        {
+            precursor.IsolationWindow.Set(CVID.MS_isolation_window_lower_offset, half, CVID.MS_m_z);
+            precursor.IsolationWindow.Set(CVID.MS_isolation_window_upper_offset, half, CVID.MS_m_z);
+        }
+        // No selectedIon (isolation reported in arrays) and no collision energy (CE varies within
+        // the frame) - matches pwiz C++ isPassEntireDiaPasefFrame handling (:343-344, :366-367).
+        precursor.Activation.Set(CVID.MS_collision_induced_dissociation);
+        spec.Precursors.Add(precursor);
+    }
+
+    /// <summary>
+    /// Whole-frame combined peak reader: concatenates the peaks of every active scan of the frame's
+    /// window group (m/z, intensity, per-peak 1/K0, and optionally per-peak isolation low/high),
+    /// mirroring pwiz C++ TimsSpectrum::getCombinedSpectrumData activeScansOnly path
+    /// (TimsData.cpp:1036-1116). Output arrays are aligned: <c>mz[i] / intensity[i] / mobility[i] /
+    /// isoLow[i] / isoHigh[i]</c>.
+    /// </summary>
+    private (double[] Mz, double[] Intensity) ReadWholeFrameActiveScans(
+        TdfFrame frame, WgIso wgi, bool includeIsolationArrays, bool sortAndJitter,
+        out double[] meanMobility, out double[] isoLow, out double[] isoHigh)
+    {
+        var proxy = GetFrame(frame.FrameId, frame.NumScans);
+        var activeScans = wgi.ActiveScans;
+
+        int total = 0;
+        foreach (var s in activeScans)
+            if (s < frame.NumScans) total += proxy.NumPeaks(s);
+        if (total == 0)
+        {
+            meanMobility = Array.Empty<double>();
+            isoLow = Array.Empty<double>();
+            isoHigh = Array.Empty<double>();
+            return (Array.Empty<double>(), Array.Empty<double>());
+        }
+
+        // 1/K0 for each active scan (single batched native call).
+        var scanArgs = new double[activeScans.Length];
+        for (int i = 0; i < activeScans.Length; i++) scanArgs[i] = activeScans[i];
+        var invK0PerScan = _tims.ScanNumberToOneOverK0(frame.FrameId, scanArgs);
+
+        var mzArr = new double[total];
+        var intArr = new double[total];
+        var mobArr = new double[total];
+        var isoLowArr = includeIsolationArrays ? new double[total] : Array.Empty<double>();
+        var isoHighArr = includeIsolationArrays ? new double[total] : Array.Empty<double>();
+        int write = 0;
+        for (int k = 0; k < activeScans.Length; k++)
+        {
+            int s = activeScans[k];
+            if (s >= frame.NumScans) continue;
+            double k0 = invK0PerScan[k];
+            double sLow = wgi.IsoLowByScan[s];
+            double sHigh = wgi.IsoHighByScan[s];
+            var mzs = proxy.GetScanMzs(s);
+            var ints = proxy.GetScanIntensities(s);
+            for (int i = 0; i < mzs.Length; i++)
+            {
+                mzArr[write] = mzs[i];
+                intArr[write] = ints[i];
+                mobArr[write] = k0;
+                if (includeIsolationArrays)
+                {
+                    isoLowArr[write] = sLow;
+                    isoHighArr[write] = sHigh;
+                }
+                write++;
+            }
+        }
+
+        if (!sortAndJitter)
+        {
+            // Production mode: keep peaks in scan-by-scan order (no merge / sort / jitter),
+            // matching ReadCombinedScanRangePeaks.
+            meanMobility = mobArr;
+            isoLow = isoLowArr;
+            isoHigh = isoHighArr;
+            return (mzArr, intArr);
+        }
+
+        // Reference-parity mode: co-sort every array by m/z then jitter duplicate m/z by 1e-8 per
+        // consecutive entry (pwiz C++ getCombinedSpectrumData at TimsData.cpp:1112-1147).
+        var idx = Enumerable.Range(0, total).OrderBy(i => mzArr[i]).ToArray();
+        var mzSorted = new double[total];
+        var intSorted = new double[total];
+        var mobSorted = new double[total];
+        var isoLowSorted = includeIsolationArrays ? new double[total] : Array.Empty<double>();
+        var isoHighSorted = includeIsolationArrays ? new double[total] : Array.Empty<double>();
+        for (int i = 0; i < total; i++)
+        {
+            int src = idx[i];
+            mzSorted[i] = mzArr[src];
+            intSorted[i] = intArr[src];
+            mobSorted[i] = mobArr[src];
+            if (includeIsolationArrays)
+            {
+                isoLowSorted[i] = isoLowArr[src];
+                isoHighSorted[i] = isoHighArr[src];
+            }
+        }
+        for (int i = 1; i < total; i++)
+        {
+            if (mzSorted[i - 1] == mzSorted[i])
+            {
+                int startI = i - 1;
+                for (; i < total && mzSorted[startI] == mzSorted[i]; i++)
+                    mzSorted[i] += 1e-8 * (i - startI);
+            }
+        }
+        meanMobility = mobSorted;
+        isoLow = isoLowSorted;
+        isoHigh = isoHighSorted;
+        return (mzSorted, intSorted);
+    }
+
+    /// <summary>
+    /// Lazily builds per-window-group isolation info (active scans + per-scan isolation m/z low/high
+    /// + overall range) from the <c>DiaFrameMsMsWindows</c> table. Mirrors the tables pwiz C++
+    /// builds once at open (TimsData.cpp:305-354, :594-597).
+    /// </summary>
+    private Dictionary<int, WgIso> GetWgIsoCache()
+    {
+        if (_wgIso is not null) return _wgIso;
+
+        int scanCount = _meta.MaxNumScans + 1;
+        var byGroup = new Dictionary<int, List<(int ScanBegin, int ScanEnd, double IsoLow, double IsoHigh)>>();
+        foreach (var w in _meta.EnumerateDiaWindowGroups())
+        {
+            // EnumerateDiaWindowGroups reports scan numbers in the InvK0 fields; InvK0End is already
+            // inclusive (ScanNumEnd - 1). See TdfMetadata.EnumerateDiaWindowGroups.
+            int scanBegin = (int)w.InvK0Begin;
+            int scanEnd = (int)w.InvK0End;
+            double isoLow = w.IsolationMz - w.IsolationWidth / 2.0;
+            double isoHigh = w.IsolationMz + w.IsolationWidth / 2.0;
+            if (!byGroup.TryGetValue(w.WindowGroup, out var list))
+                byGroup.Add(w.WindowGroup, list = new List<(int, int, double, double)>());
+            list.Add((scanBegin, scanEnd, isoLow, isoHigh));
+        }
+
+        var result = new Dictionary<int, WgIso>(byGroup.Count);
+        foreach (var kvp in byGroup)
+        {
+            var isoLowByScan = new double[scanCount];
+            var isoHighByScan = new double[scanCount];
+            var activeScans = new List<int>();
+            double rangeLow = double.MaxValue, rangeHigh = 0.0;
+            foreach (var (scanBegin, scanEnd, isoLow, isoHigh) in kvp.Value)
+            {
+                for (int s = scanBegin; s <= scanEnd && s < scanCount; s++)
+                {
+                    if (s < 0) continue;
+                    isoLowByScan[s] = isoLow;
+                    isoHighByScan[s] = isoHigh;
+                    activeScans.Add(s);
+                }
+                rangeLow = Math.Min(rangeLow, isoLow);
+                rangeHigh = Math.Max(rangeHigh, isoHigh);
+            }
+            activeScans.Sort();
+            result.Add(kvp.Key, new WgIso(activeScans.ToArray(), isoLowByScan, isoHighByScan, rangeLow, rangeHigh));
+        }
+
+        _wgIso = result;
+        return _wgIso;
     }
 
     private FrameProxy GetFrame(long frameId, int numScans)

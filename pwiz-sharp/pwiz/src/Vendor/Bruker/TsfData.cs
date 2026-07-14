@@ -63,9 +63,10 @@ internal sealed class TsfData : IBrukerData
         public TsfFrame Frame = null!;
     }
 
-    public IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(bool combineIonMobilitySpectra, int preferOnlyMsLevel)
+    public IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(bool combineIonMobilitySpectra, int preferOnlyMsLevel, bool passEntireDiaPasefFrame)
     {
         _ = combineIonMobilitySpectra; // TSF has no mobility dimension; flag is a no-op here.
+        _ = passEntireDiaPasefFrame;   // TSF has no diaPASEF whole-frame mode.
         var index = new List<BrukerIndexEntry>();
         foreach (var frame in _meta.EnumerateFrames(preferOnlyMsLevel))
         {
@@ -83,10 +84,11 @@ internal sealed class TsfData : IBrukerData
 
     // ---------- spectrum fill ----------
 
-    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter = false)
+    public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter = false, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        _ = includeIsolationArrays; // TSF has no diaPASEF isolation arrays.
         var tag = (Tag)entry.Tag;
         var frame = tag.Frame;
 

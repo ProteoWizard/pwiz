@@ -1305,6 +1305,12 @@ namespace pwiz.ProteowizardWrapper
                     case eIonMobilityUnits.inverse_K0_Vsec_per_cm2:
                         data = TryGetIonMobilityData(s, CVID.MS_mean_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
                         if (data == null)
+                            // pwiz-sharp's combined non-centroid Bruker reader labels the mean 1/K0
+                            // array as MS_mean_ion_mobility_array (MS:1002816, unit Vs/cm2), where the
+                            // C++ reader always used MS_mean_inverse_reduced_ion_mobility_array. Same
+                            // payload (per-peak 1/K0), so accept it here too for the inverse-K0 case.
+                            data = TryGetIonMobilityData(s, CVID.MS_mean_ion_mobility_array, ref _cvidIonMobility);
+                        if (data == null)
                             data = TryGetIonMobilityData(s, CVID.MS_raw_inverse_reduced_ion_mobility_array, ref _cvidIonMobility);
                         break;
 //                    default:

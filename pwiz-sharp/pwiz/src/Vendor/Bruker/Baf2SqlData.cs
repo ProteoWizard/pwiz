@@ -237,9 +237,10 @@ internal sealed class Baf2SqlData : IBrukerData
 
     /// <inheritdoc/>
     public IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(
-        bool combineIonMobilitySpectra, int preferOnlyMsLevel)
+        bool combineIonMobilitySpectra, int preferOnlyMsLevel, bool passEntireDiaPasefFrame)
     {
         _ = combineIonMobilitySpectra; // BAF has no mobility dimension.
+        _ = passEntireDiaPasefFrame;   // BAF has no diaPASEF whole-frame mode.
         var index = new List<BrukerIndexEntry>(_rows.Count);
         foreach (var row in _rows)
         {
@@ -260,10 +261,11 @@ internal sealed class Baf2SqlData : IBrukerData
 
     /// <inheritdoc/>
     public void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData,
-        bool preferCentroid, bool sortAndJitter)
+        bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays = false)
     {
         ArgumentNullException.ThrowIfNull(spec);
         ArgumentNullException.ThrowIfNull(entry);
+        _ = includeIsolationArrays; // BAF has no diaPASEF isolation arrays.
         var row = (BafRow)entry.Tag;
 
         spec.Params.Set(CVID.MS_ms_level, row.MsLevel);

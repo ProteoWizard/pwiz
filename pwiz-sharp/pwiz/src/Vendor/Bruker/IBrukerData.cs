@@ -55,14 +55,17 @@ public interface IBrukerData : IDisposable
     /// </summary>
     IReadOnlyList<BrukerIndexEntry> BuildSpectrumIndex(
         bool combineIonMobilitySpectra,
-        int preferOnlyMsLevel);
+        int preferOnlyMsLevel,
+        bool passEntireDiaPasefFrame);
 
     /// <summary>
     /// Populates <paramref name="spec"/> with all metadata for the entry and, if
     /// <paramref name="getBinaryData"/> is true, its peak arrays. The existing <c>Index</c> /
-    /// <c>Id</c> on <paramref name="spec"/> are left untouched.
+    /// <c>Id</c> on <paramref name="spec"/> are left untouched. When
+    /// <paramref name="includeIsolationArrays"/> is true (only meaningful for TDF whole-frame
+    /// diaPASEF spectra), the two scanning-quadrupole isolation m/z arrays are emitted.
     /// </summary>
-    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter);
+    void FillSpectrum(Spectrum spec, BrukerIndexEntry entry, bool getBinaryData, bool preferCentroid, bool sortAndJitter, bool includeIsolationArrays);
 
     /// <summary>
     /// Yields one point per frame for the TIC / BPC chromatograms, honoring
