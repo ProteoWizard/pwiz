@@ -1,5 +1,5 @@
 /*
- * Author: David Shteynberg <dshteyn .at. proteinms.net>,
+ * Author: David Shteynberg <dshteynberg .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2025 University of Washington - Seattle, WA
@@ -672,7 +672,7 @@ namespace pwiz.SkylineTest
             return CreateTestDocumentInternal(CreatePeptideDocNodes(peptideList).ToArray());
         }
 
-        private static SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
+        private SrmDocument CreateTestDocumentInternal(PeptideDocNode[] nodePepArray)
         {
             var doc = new SrmDocument(SrmSettingsList.GetDefault());
 
@@ -685,7 +685,7 @@ namespace pwiz.SkylineTest
         }
 
         private readonly IEnumerable<string> SIMPLE_PRECURSOR_TABLE_ANSWER =
-            new [] {
+            new[] {
                 "sequence	mods	mod_sites	charge",
                 "LGGNEQVTR			2",
                 "GAGSSEPVTGLDAK			2",
@@ -705,7 +705,7 @@ namespace pwiz.SkylineTest
             };
         private readonly IEnumerable<string> MIXED_PRECURSOR_TABLE_ANSWER =
             new[] {
-                "sequence	mods	mod_sites	charge",                
+                "sequence	mods	mod_sites	charge",
                 "LGGNEQVTR			2",
                 "GAGSSEPVTGLDAK			2",
                 "VEATFGVDESNAK			2",

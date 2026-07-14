@@ -63,50 +63,111 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public class Setting : IAuditLogObject
         {
-            public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue)
+            public Setting(string name, int defaultValue, int minValue = int.MinValue, int maxValue = int.MaxValue, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
 
-            public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue)
+            public Setting(string name, double defaultValue, double minValue = double.MinValue, double maxValue = double.MaxValue, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 _value = DefaultValue = defaultValue;
                 MinValue = minValue;
                 MaxValue = maxValue;
             }
 
-            public Setting(string name, bool defaultValue)
+            public Setting(string name, bool defaultValue, string description = null)
             {
                 Name = name;
+                Description = description == null ? name : description;
                 _value = DefaultValue = defaultValue;
                 MinValue = false;
                 MaxValue = true;
             }
-
-            public Setting(string name, string defaultValue = null, IEnumerable<string> validValues = null)
+            public Setting(string name)
             {
                 Name = name;
+                Description = name;
+                _value = string.Empty;
+                MinValue = string.Empty;
+            }
+            public Setting(string name, string defaultValue, string description = null)
+            {
+                Name = name;
+                Description = description == null ? name : description;
+                MinValue = string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
+            }
+
+            public Setting(string name, string defaultValue, IEnumerable<string> validValues, string description = null)
+            {
+                Name = name;
+                Description = description == null ? name : description;
                 MinValue = string.Empty;
                 _value = DefaultValue = defaultValue ?? string.Empty;
                 ValidValues = validValues;
             }
 
+            public Setting(string name, string defaultValue, Func<string, bool> validate, string description = null)
+            {
+                Name = name;
+                Description = description == null ? name : description;
+                MinValue = string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
+                TemplateValidate = validate;
+            }
+            /// <summary>
+            /// First string is old value, second string is additional value, output is new setting
+            /// </summary>
+            public Func<string, string, string> OtherAction
+            { get; private set; }
+
+            public string OtherSettingName { get; private set; }
+
+            /// <summary>
+            /// Allows to change another Setting based on the value of this setting and the action
+            /// </summary>
+            /// <param name="name"></param>
+            /// <param name="defaultValue"></param>
+            /// <param name="validValues"></param>
+            /// <param name="otherSettingName">Second setting changed by this setting changing and applying action.</param>
+            /// <param name="otherAction"></param>
+            /// <param name="description"></param>
+            public Setting(string name, string defaultValue, IEnumerable<string> validValues, string otherSettingName, Func<string, string, string> otherAction, string description = null)
+            {
+                Name = name;
+                Description = description == null ? name : description;
+                MinValue = string.Empty;
+                _value = DefaultValue = defaultValue ?? string.Empty;
+                ValidValues = validValues;
+                OtherSettingName = otherSettingName;
+                OtherAction = otherAction;
+            }
+
             public Setting(Setting other, object newValue = null)
             {
                 Name = other.Name;
+                Description = other.Description;
                 MinValue = other.MinValue;
                 MaxValue = other.MaxValue;
                 _value = DefaultValue = newValue ?? other.Value;
                 ValidValues = other.ValidValues;
+                OtherSettingName = other.OtherSettingName;
+                OtherAction = other.OtherAction;
+                TemplateValidate = other.TemplateValidate;
             }
             
             public string Name { get; }
+            public string Description { get; }
             public object MinValue { get; }
             public object MaxValue { get; }
+
+            public bool IsValid { get; private set; } = true;
 
             public IEnumerable<string> ValidValues { get; }
 
@@ -119,15 +180,28 @@ namespace pwiz.Skyline.Model
 
             public object DefaultValue { get; }
             public bool IsDefault => Equals(DefaultValue, _value);
-
+            public Func<string, bool> TemplateValidate { get; private set; }
             public object Validate(object value)
             {
                 // incoming value must either be a string or value type must stay the same
                 Assume.IsTrue(value is string || value?.GetType() == _value?.GetType());
-
+                IsValid = false;
                 if (value == null)
+                {
+                    IsValid = true;
                     return null;
+                }
 
+                if (TemplateValidate != null)
+                {
+                    if (!TemplateValidate(value.ToString()))
+                        throw new ArgumentException(string.Format(
+                            ModelResources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1_,
+                            value, Name));
+
+                    IsValid = true;
+                    return value;
+                }
                 // CONSIDER: worth an extra case to handle incoming values that are already int/double?
                 switch (MinValue)
                 {
@@ -136,6 +210,7 @@ namespace pwiz.Skyline.Model
                             throw new ArgumentOutOfRangeException(string.Format(
                                 Resources.CommandArgs_ParseArgsInternal_Error____0___is_not_a_valid_value_for__1___It_must_be_one_of_the_following___2_,
                                 value, Name, string.Join(@", ", ValidValues)));
+                        IsValid = true;
                         return value;
 
                     case bool b:
@@ -143,6 +218,7 @@ namespace pwiz.Skyline.Model
                             throw new ArgumentException(string.Format(
                                 ModelResources.Setting_Validate_The_value___0___is_not_valid_for_the_argument__1__which_must_be_either__True__or__False__,
                                 value, Name));
+                        IsValid = true;
                         return tmpb;
 
                     case int minValue:
@@ -154,6 +230,7 @@ namespace pwiz.Skyline.Model
                             throw new ArgumentOutOfRangeException(string.Format(
                                 Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
                                 value, Name, minValue, MaxValue));
+                        IsValid = true;
                         return tmpi32;
 
                     case double minValue:
@@ -165,6 +242,7 @@ namespace pwiz.Skyline.Model
                             throw new ArgumentOutOfRangeException(string.Format(
                                 Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__,
                                 value, Name, minValue, MaxValue));
+                        IsValid = true;
                         return tmpd;
 
                     default:
