@@ -473,7 +473,9 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       <p class="desc">An at-a-glance per-file health scan of the calibration Osprey applied to each input file:
         anchor-set size, the residual MS1/MS2 mass error (mean&nbsp;±&nbsp;sd), the RT alignment fit (R²) and its
         post-cal RT window. Cells that sit far from the pack (median&nbsp;±&nbsp;3·MAD) are shown in
-        <b style="color:var(--warn)">amber</b>; rows in <b style="color:var(--bad)">red</b> failed to calibrate.
+        <b style="color:var(--warn)">amber</b>. A row in <b style="color:var(--bad)">red</b> did not calibrate;
+        a <b style="color:var(--warn)">· single-feature</b> tag marks a file that calibrated successfully but whose
+        anchor-scoring model reduced to one feature.
         <b>Click a row</b> to open that file's calibration Model page — the full distributions live on the
         Model / FDR / Reproducibility tabs.</p>
       <div id="calSummaryTable"></div>
@@ -1468,7 +1470,15 @@ const CAL_FDP_SERIES=[{k:"lower",name:"lower-bound FDP",color:COL.ptarget,key:"l
                       {k:"paired",name:"paired FDP",color:COL.pdecoy,key:"paired"}];
 const calFdpOff={lower:false,combined:false,paired:false};
 const calFileName=i=>{const f=CAL.files[i];return f?(f.file||("file "+(i+1))):("file "+(i+1));};
-const calIsBad=f=>!!(f&&(f.degenerate||f.calibrated===false));
+// Two DISTINCT calibration states (the data carries them as independent booleans):
+//   calNotCalibrated -- no RT/mass fit was accepted for the file; a genuine failure (red).
+//   calDegenerate    -- the fit WAS accepted, but the calibration-phase LDA collapsed to a
+//                       single feature (a valid, if minimal, anchor-scoring model). Amber
+//                       note, NOT a failure -- the file calibrated successfully.
+// calibrated===false is the only true-failure signal; the degenerate flag only ever rides
+// along on a successful fit, so it must never be rendered as "did not calibrate".
+const calNotCalibrated=f=>!!(f&&f.calibrated===false);
+const calDegenerate=f=>!!(f&&f.degenerate&&f.calibrated!==false);
 
 function renderCal(){
   buildCalPickers();
@@ -1493,7 +1503,7 @@ function buildCalPickers(){
     prev.onclick=()=>{setCalFile(CAL.sel-1);};
     const sel=H(p,"select",{id:host+"Sel"});
     CAL.files.forEach((f,i)=>{const o=H(sel,"option",{value:String(i)},
-      (i+1)+". "+calFileName(i)+(calIsBad(f)?"  ⚠ not calibrated":""));
+      (i+1)+". "+calFileName(i)+(calNotCalibrated(f)?"  ⚠ not calibrated":calDegenerate(f)?"  · single-feature model":""));
       if(i===CAL.sel)o.setAttribute("selected","");});
     sel.value=String(CAL.sel);
     sel.onchange=()=>{setCalFile(+sel.value);};
@@ -1501,8 +1511,11 @@ function buildCalPickers(){
     const next=H(p,"button",{class:"step",type:"button",title:"Next file","aria-label":"Next file"},"▶");
     if(CAL.sel>=last)next.setAttribute("disabled","");
     next.onclick=()=>{setCalFile(CAL.sel+1);};
-    // A compact flag when the selected file failed to calibrate.
-    if(calIsBad(CAL.files[CAL.sel]))H(p,"span",{class:"flag"},"⚠ this file did not calibrate");
+    // A compact flag for the selected file's calibration state: red for a genuine failure,
+    // amber for a successful-but-degenerate (single-feature) calibration.
+    const selF=CAL.files[CAL.sel];
+    if(calNotCalibrated(selF))H(p,"span",{class:"flag",style:"color:var(--bad)"},"⚠ this file did not calibrate");
+    else if(calDegenerate(selF))H(p,"span",{class:"flag"},"· single-feature calibration model");
   });
 }
 
@@ -1524,27 +1537,35 @@ function renderCalModel(){
   const na=document.getElementById("calModelNa"), host=document.getElementById("calModelTable");
   host.innerHTML="";na.style.display="none";
   if(!f){na.style.display="";na.innerHTML="No calibration data for this file.";return;}
-  if(calIsBad(f)){na.style.display="";
+  const failed=calNotCalibrated(f), degen=calDegenerate(f);
+  if(failed){na.style.display="";
     na.innerHTML="<b>"+esc(calFileName(CAL.sel))+" did not calibrate.</b> "+
-      "The calibration model for this file is degenerate (too few usable anchors or no separable signal), "+
-      "so no feature contributions or discriminant distribution are available.";}
+      "No RT/mass fit was accepted for this file, so no feature contributions or "+
+      "discriminant distribution are available.";}
   const rows=f.features||[];
-  if(rows.length && !calIsBad(f))
+  // A degenerate file DID calibrate: show its (single-feature) contribution table with a note,
+  // rather than hiding it behind a failure message. Only a genuine no-fit suppresses the table.
+  if(rows.length && !failed){
     buildFeatureTable(host,rows,{});   // static (no per-row click) -- cal features carry no per-feature histogram
-  else if(!calIsBad(f))
+    if(degen)H(host,"p",{class:"note"},
+      "This file calibrated successfully, but its calibration-phase LDA reduced to the single "+
+      "feature shown at 100% above; the other features carried no separable signal across folds. "+
+      "A single-feature anchor discriminant still produced a valid RT/mass calibration for this file.");
+  }
+  else if(!failed)
     H(host,"p",{class:"note"},"No calibration feature model for this file.");
   // Composite calibration-discriminant distribution (reuse classHist; cal target/decoy are the
   // calibration classes). The entrapment p_target/p_decoy series ARE shown when present, so a
   // contaminated anchor set is visible -- hence noEntrapment:false below.
   const scoreHost="calScoreChart", scoreLeg="calScoreLegend";
-  if(f.scores && f.scores.binEdges && f.scores.binEdges.length>1 && !calIsBad(f))
+  if(f.scores && f.scores.binEdges && f.scores.binEdges.length>1 && !failed)
     classHist(f.scores,scoreHost,scoreLeg,false,
       {noEntrapment:false,targetName:"calibration target",decoyName:"calibration decoy"});
   else naChart(scoreHost,scoreLeg,"No calibration discriminant distribution for this file.");
   document.getElementById("calScoreHdr").textContent="Calibration discriminant score distribution — "+calFileName(CAL.sel);
   // Print-only: every file's composite discriminant (the dropdown shows one on screen).
   const pall=document.getElementById("calModelPrintAll");if(pall){pall.innerHTML="";
-    CAL.files.forEach((cf,i)=>{if(calIsBad(cf)||!cf.scores||!cf.scores.binEdges)return;
+    CAL.files.forEach((cf,i)=>{if(calNotCalibrated(cf)||!cf.scores||!cf.scores.binEdges)return;
       const cell=H(pall,"div",{class:"calfilecell"});
       H(cell,"h3",{style:"font-size:12.5px;margin:6px 0 2px;font-weight:600"},(i+1)+". "+calFileName(i));
       const cid="calPrintScore"+i;H(cell,"div",{class:"chartbox",id:cid});
@@ -1673,11 +1694,14 @@ function drawCalScatter(grid,p,files,N,num){
   files.forEach((f,i)=>{const v=p.val(f);if(isNaN(v))return;const cx=sc.x(i+1),cy=sc.y(Math.max(lo,Math.min(hi,v)));
     if(p.err){const e=num(p.err(f));if(!isNaN(e)&&e>0){
       E(s,"line",{x1:cx,x2:cx,y1:sc.y(Math.max(lo,v-e)),y2:sc.y(Math.min(hi,v+e)),stroke:COL.target,opacity:.35,"stroke-width":1});}}
-    const bad=calIsBad(f), out=isOut(v);
-    const c=E(s,"circle",{cx:cx,cy:cy,r:bad?3.4:3,
-      fill:bad?COL.decoy:(out?COL.warn:COL.target),class:"callink"});
+    // Red is reserved for a genuine calibration failure (calibrated===false). A degenerate
+    // (single-feature) file DID calibrate, so it is drawn as a normal point -- it still gets
+    // the amber outlier ring if it sits far from the pack on this metric, same as any file.
+    const failed=calNotCalibrated(f), degen=calDegenerate(f), out=isOut(v);
+    const c=E(s,"circle",{cx:cx,cy:cy,r:failed?3.4:3,
+      fill:failed?COL.decoy:(out?COL.warn:COL.target),class:"callink"});
     c.addEventListener("mousemove",ev=>showTip(ev,"<b>"+(i+1)+". "+esc(calFileName(i))+"</b><br>"+
-      p.title+": "+p.fmt(v)+(out?"  ⚠ outlier":"")+(bad?"<br>⚠ not calibrated":"")+"<br><i>click to open Model</i>"));
+      p.title+": "+p.fmt(v)+(out?"  ⚠ outlier":"")+(failed?"<br>⚠ not calibrated":degen?"<br>· single-feature model":"")+"<br><i>click to open Model</i>"));
     c.addEventListener("mouseleave",hideTip);
     c.addEventListener("click",()=>jumpToCalFile(i));
   });
@@ -1719,9 +1743,12 @@ function renderCalSummary(){
   const meanSd=(m,sd)=>isNaN(num(m))?"–":fmt(m,1)+" ± "+fmt(num(sd),1)+" "+unit;
   // Mark a cell as an outlier: bold + amber so a bad file pops out of the scan.
   const mark=(td,bad)=>{if(bad){td.style.color="var(--warn)";td.style.fontWeight="700";}};
-  files.forEach((f,i)=>{const bad=calIsBad(f);
-    const tr=H(tb,"tr",{class:"clk callink"+(bad?" neg":"")});
-    H(tr,"td",{class:"l"},(i+1)+". "+calFileName(i)+(bad?"  ⚠":""));
+  files.forEach((f,i)=>{const failed=calNotCalibrated(f), degen=calDegenerate(f);
+    const tr=H(tb,"tr",{class:"clk callink"+(failed?" neg":"")});
+    const fileTd=H(tr,"td",{class:"l"},(i+1)+". "+calFileName(i)+(failed?"  ⚠":""));
+    // Degenerate-but-calibrated: keep it visible with an amber "single-feature" tag, but NOT
+    // the red failure row. (.flag is scoped to .calpick, so style the tag inline here.)
+    if(degen)H(fileTd,"span",{style:"margin-left:6px;color:var(--warn);font-weight:600"},"· single-feature");
     H(tr,"td",{class:"num"},fmt(f.calPeptides,0));
     if(hasEnt){
       H(tr,"td",{class:"num"},fmt(f.entrapment,0));
