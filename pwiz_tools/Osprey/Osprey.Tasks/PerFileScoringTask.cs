@@ -479,9 +479,14 @@ namespace pwiz.Osprey.Tasks
             // so it should not emit a file-parallelism decision line.
             ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
 
+            // Compute the reconciled-2nd-pass-bundle predicate ONCE here and thread it to
+            // both the loader (lean/fat choice) and the hydrator, so a sidecar appearing
+            // between two separate disk reads cannot make them disagree (lean empty stubs
+            // + a firing bundle hydrator). Static on a real merge node; belt-and-suspenders.
+            bool hasReconSidecars = AllHaveReconSidecars(config);
             var swAllFiles = Stopwatch.StartNew();
             var projections = LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths,
-                perFileCalibrations, perFileIsolationMz, ctx);
+                perFileCalibrations, perFileIsolationMz, hasReconSidecars, ctx);
             swAllFiles.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
@@ -517,7 +522,7 @@ namespace pwiz.Osprey.Tasks
             //
             // The disk state determines the hydration shape, not the CLI
             // flag (Phase C principle: mechanism-driven, not flag-driven).
-            if (!HydrateRescoreBundleIfPresent(config, perFileEntries, ctx))
+            if (!HydrateRescoreBundleIfPresent(config, perFileEntries, hasReconSidecars, ctx))
                 return false;
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
@@ -612,6 +617,21 @@ namespace pwiz.Osprey.Tasks
                             // scores stream straight into the projection, no fat stub or
                             // feature vector allocated. Byte-identical to the fat path
                             // (TestFdrProjectionBuilderMatchesBuildFromEntries + mode2).
+                            // Fail-fast corruption guard: the fat path threw on
+                            // features.Count != stubs.Count; streaming scalars never loads
+                            // features, so restore that check up front via a footer-only
+                            // probe (no feature memory). A foreign/truncated parquet missing
+                            // the feature schema stops the run here rather than surfacing at
+                            // a murkier point downstream. NOT applied to Run's fresh-compute
+                            // lean path (#4400), whose parquets this same run just wrote.
+                            if (!ParquetScoreCache.HasPinFeatureColumns(scoresPath))
+                            {
+                                ctx.LogError(string.Format(
+                                    @"  Resume rehydrate: {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
+                                    scoresPath));
+                                ctx.ExitCode = 1;
+                                return false;
+                            }
                             LoadCalibrationAndIsolation(scoresPath, fileName, perFileCalibrations, perFileIsolationMz, ctx);
                             try
                             {
@@ -1070,6 +1090,7 @@ namespace pwiz.Osprey.Tasks
             Dictionary<string, string> perFileParquetPaths,
             ConcurrentDictionary<string, RTCalibration> perFileCalibrations,
             ConcurrentDictionary<string, IReadOnlyList<(double Lo, double Hi)>> perFileIsolationMz,
+            bool hasReconSidecars,
             PipelineContext ctx)
         {
             // --task FirstPassFDR: load per-file FdrEntry stubs directly from
@@ -1096,7 +1117,7 @@ namespace pwiz.Osprey.Tasks
             // the merge needs the resident pool (an opt-in feature output) or is a
             // reconciled 2nd-pass bundle hydration (AllHaveReconSidecars -- FirstJoin
             // skips Percolator there and HydrateReconciliationOverlay reads the fat stubs).
-            var builder = (!NeedsResidentPool(config) && !AllHaveReconSidecars(config))
+            var builder = (!NeedsResidentPool(config) && !hasReconSidecars)
                 ? new FdrProjectionSet.Builder()
                 : null;
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
@@ -1114,6 +1135,17 @@ namespace pwiz.Osprey.Tasks
                 {
                     // Lean: stream 32 B projection rows straight from the parquet; no
                     // fat FdrEntry stub or 21-float feature vector is ever allocated.
+                    // Fail-fast corruption guard: the fat branch below throws on
+                    // features.Count != stubs.Count; streaming scalars never loads
+                    // features, so restore that check up front via a footer-only probe
+                    // (no feature memory). A merge node pointed at a foreign/truncated
+                    // parquet missing the feature schema stops here rather than surfacing
+                    // downstream. The scores-group hash check above (ValidateScoresParquetGroup)
+                    // catches a wrong-library parquet; this catches a same-library corrupt one.
+                    if (!ParquetScoreCache.HasPinFeatureColumns(parquetPath))
+                        throw new InvalidDataException(string.Format(
+                            @"--input-scores: parquet {0} is missing the PIN feature columns -- it is not a valid Osprey scores parquet. Delete it and re-run so it is regenerated.",
+                            parquetPath));
                     builder.BeginFile(fileName);
                     ParquetScoreCache.ReadFdrStubScalars(parquetPath,
                         (entryId, charge, isDecoy, coelutionSum, modseq) =>
@@ -1234,10 +1266,10 @@ namespace pwiz.Osprey.Tasks
         private bool HydrateRescoreBundleIfPresent(
             OspreyConfig config,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            bool hasReconSidecars,
             PipelineContext ctx)
         {
-            bool allHave1stPassAndRecon = AllHaveReconSidecars(config);
-            if (allHave1stPassAndRecon)
+            if (hasReconSidecars)
             {
                 try
                 {

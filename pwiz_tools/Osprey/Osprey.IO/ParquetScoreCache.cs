@@ -894,6 +894,30 @@ namespace pwiz.Osprey.IO
             }
         }
 
+        /// <summary>
+        /// Footer-only check that a scores parquet carries the PIN feature columns,
+        /// reading the schema WITHOUT decoding any column data. The lean resume /
+        /// HPC-merge paths stream only the scalar stub columns
+        /// (<see cref="ReadFdrStubScalars"/>) and never materialize the 21-float
+        /// feature vectors, so they lose the fat path's implicit
+        /// <c>features.Count == stubs.Count</c> corruption guard (which throws when
+        /// <see cref="LoadPinFeaturesFromParquet"/> yields zero rows because the
+        /// feature schema is absent). This restores an equivalent fail-fast up front
+        /// without paying the feature-load memory the lean path exists to avoid.
+        /// Presence of the first PIN feature column is decisive: parquet keeps every
+        /// column in a row group the same length, so a present column has the stub
+        /// row count, and an absent one is exactly the desync the fat path rejected.
+        /// </summary>
+        public static bool HasPinFeatureColumns(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                return fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]);
+            }
+        }
+
         #endregion
 
         #region Load PIN Features

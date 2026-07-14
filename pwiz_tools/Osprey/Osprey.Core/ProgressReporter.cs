@@ -23,6 +23,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace pwiz.Osprey.Core
 {
@@ -157,8 +158,9 @@ namespace pwiz.Osprey.Core
                     // when the phase calls Report; a phase that blocks inside one bulk
                     // operation (no Report calls) needs to be wrapped in a reporter first.
                     double pctExact = _total > 0 ? 100.0 * current / _total : 100.0;
-                    OspreyOutput.Out.WriteLine("{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)",
-                        _indent, pctExact, current, _total, FormatElapsed(_stopwatch.Elapsed));
+                    OspreyOutput.Out.WriteLine(string.Format(CultureInfo.InvariantCulture,
+                        "{0}  {1:0.00}% ({2:N0}/{3:N0}, {4} elapsed)",
+                        _indent, pctExact, current, _total, FormatElapsed(_stopwatch.Elapsed)));
                     _lastPercent = percent;
                     _lastReportSeconds = now;
                 }
@@ -188,10 +190,10 @@ namespace pwiz.Osprey.Core
         private static string FormatElapsed(TimeSpan elapsed)
         {
             if (elapsed.TotalHours >= 1)
-                return string.Format("{0}h{1:00}m", (int)elapsed.TotalHours, elapsed.Minutes);
+                return string.Format(CultureInfo.InvariantCulture, "{0}h{1:00}m", (int)elapsed.TotalHours, elapsed.Minutes);
             if (elapsed.TotalMinutes >= 1)
-                return string.Format("{0}m{1:00}s", (int)elapsed.TotalMinutes, elapsed.Seconds);
-            return string.Format("{0}s", (int)elapsed.TotalSeconds);
+                return string.Format(CultureInfo.InvariantCulture, "{0}m{1:00}s", (int)elapsed.TotalMinutes, elapsed.Seconds);
+            return string.Format(CultureInfo.InvariantCulture, "{0}s", (int)elapsed.TotalSeconds);
         }
     }
 }

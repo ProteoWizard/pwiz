@@ -29,6 +29,9 @@ using System.IO;
 using System.IO.Compression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Parquet;
+using Parquet.Data;
+using Parquet.Schema;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.Reconciliation;
@@ -1489,6 +1492,13 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(0u, stubs[0].ParquetIndex);
                 Assert.AreEqual(1u, stubs[1].ParquetIndex);
 
+                // A valid Osprey parquet must pass the lean-path feature-presence
+                // guard (else the resume/HPC-merge fail-fast would reject every real
+                // run). This also pins the writer's first feature column name to the
+                // PIN_FEATURE_NAMES[0] the probe checks -- a rename desync between them
+                // would silently break both.
+                Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(path));
+
                 // Read PIN features
                 var features = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
                 Assert.AreEqual(3, features.Count);
@@ -1508,6 +1518,40 @@ namespace pwiz.Osprey.Test
                     { "osprey.version", "2.0.0" },
                 };
                 Assert.IsFalse(ParquetScoreCache.ValidateMetadata(path, wrongMeta));
+            }
+            finally
+            {
+                TryDeleteFile(path);
+            }
+        }
+
+        /// <summary>
+        /// A parquet that carries the scalar stub columns but NOT the PIN feature
+        /// columns (a foreign or truncated scores file) must fail the lean-path
+        /// feature-presence guard, so the resume / HPC-merge paths abort up front
+        /// instead of streaming scalars from an untrustworthy file. Writes a minimal
+        /// single-column parquet lacking the feature schema and asserts the footer
+        /// probe reports it. Paired with the positive assertion in
+        /// <see cref="TestParquetScoreCacheRoundTrip"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestHasPinFeatureColumnsRejectsFeaturelessParquet()
+        {
+            string path = Path.GetTempFileName() + ".parquet";
+            try
+            {
+                var entryIdField = new DataField<uint>("entry_id");
+                var schema = new ParquetSchema(entryIdField);
+                using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
+                using (var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult())
+                using (var group = writer.CreateRowGroup())
+                {
+                    group.WriteColumnAsync(new DataColumn(entryIdField, new[] { 1u, 2u, 3u }))
+                        .GetAwaiter().GetResult();
+                }
+
+                Assert.IsFalse(ParquetScoreCache.HasPinFeatureColumns(path),
+                    "A parquet without the PIN feature columns must be rejected by the lean-path guard.");
             }
             finally
             {

@@ -40,94 +40,91 @@ namespace pwiz.Osprey.Tasks
     /// them before the next file. This replaces the former eager <c>Load</c> that
     /// decoded and held EVERY file's candidate lists at once -- the all-runs buffer
     /// that OOM'd the 82-file Stage-6 planning phase on a 64 GB box. A file whose
-    /// parquet is missing, fails to load, or has an out-of-range max index fails the
-    /// gate (with a warning), which the caller treats as "no reconciliation
-    /// planning" -- the same decision the eager loader produced, byte-identical.
+    /// parquet is missing, fails to decode, or has an out-of-range max index ABORTS the
+    /// run (fail-fast) with a clear error naming the file to delete + regenerate: a
+    /// corrupt Stage-4 output must stop the pipeline, never silently produce partial or
+    /// feature-degraded reconciliation. Byte-identical on valid inputs.
     /// </summary>
     internal static class CwtCandidateLoader
     {
         /// <summary>
-        /// Validate -- via a footer-only metadata probe, decoding no CWT blobs and
-        /// holding nothing resident -- that EVERY file's post-compaction stubs have
-        /// a <see cref="FdrEntry.ParquetIndex"/> in range of its scores parquet's
-        /// row count. This is the reconciliation all-or-nothing gate the caller
-        /// reads (reconciliation runs only when every file passes); returns true
-        /// only then, and reports the passing count via <paramref name="validFileCount"/>
-        /// for the "loaded for X/Y files" log on a partial failure. The valid/invalid
-        /// decision and the two warning messages mirror the former eager loader
-        /// exactly, so the gate is byte-identical -- only the residency changes.
+        /// Fail-fast validation -- via a footer-only metadata probe, decoding no CWT
+        /// blobs and holding nothing resident -- that EVERY file's post-compaction
+        /// stubs have a <see cref="FdrEntry.ParquetIndex"/> in range of its scores
+        /// parquet's row count, and that the parquet is present and readable. THROWS
+        /// <see cref="InvalidDataException"/> (naming every offending file) if any file
+        /// is missing, unreadable, or out of range -- a corrupt Stage-4 output stops the
+        /// run before Stage 6 rather than silently reconciling only the good files. A
+        /// footer-clean file whose CWT blob column still fails to decode is caught during
+        /// planning by <see cref="LoadOneFile"/>, which throws the same way.
         /// </summary>
-        internal static bool ValidateAllInRange(
+        internal static void ValidateAllInRange(
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            Action<string> logWarning,
-            out int validFileCount)
+            IReadOnlyDictionary<string, string> perFileParquetPaths)
         {
-            validFileCount = 0;
+            var invalid = new List<string>();
             foreach (var kvp in perFileEntries)
             {
-                // Missing path / file: the former eager loader silently omitted the
-                // file (no warning), which failed the all-files gate. Keep that.
                 if (!perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath) ||
                     !File.Exists(parquetPath))
+                {
+                    invalid.Add(string.Format(@"{0} (scores parquet missing)", kvp.Key));
                     continue;
+                }
 
                 long effectiveRowCount;
                 try
                 {
                     var probe = ParquetScoreCache.ProbeCwtRowMetadata(parquetPath);
-                    // LoadCwtCandidatesFromParquet yields an empty list (count 0)
-                    // when the cwt_candidates column is absent, so a file lacking it
-                    // reads as zero rows here -- matching the former bounds check.
+                    // LoadCwtCandidatesFromParquet yields an empty list (count 0) when
+                    // the cwt_candidates column is absent, so a file lacking it reads as
+                    // zero rows here -- and thus fails the in-range check below.
                     effectiveRowCount = probe.HasCwtCandidatesField ? probe.RowCount : 0L;
                 }
                 catch (Exception ex)
                 {
-                    logWarning(string.Format(
-                        @"Failed to load CWT candidates for {0}: {1}",
-                        kvp.Key, ex.Message));
+                    invalid.Add(string.Format(@"{0} (unreadable: {1})", kvp.Key, ex.Message));
                     continue;
                 }
 
-                // The planner indexes CWT lists by entry.ParquetIndex (mirrors Rust
-                // at reconciliation.rs:672). effectiveRowCount is the parquet's raw
-                // Stage-4 row count; kvp.Value.Count is the post-first-pass-compaction
-                // stub count. They are not equal by design -- what we validate is that
-                // every stub's ParquetIndex falls within the parquet's rows.
+                // The planner indexes CWT lists by entry.ParquetIndex (mirrors Rust at
+                // reconciliation.rs:672). effectiveRowCount is the parquet's raw Stage-4
+                // row count; kvp.Value.Count is the post-compaction stub count -- unequal
+                // by design. What must hold is that every stub's ParquetIndex is in range.
                 uint maxIdx = MaxParquetIndex(kvp.Value);
                 if (kvp.Value.Count > 0 && maxIdx >= effectiveRowCount)
-                {
-                    logWarning(string.Format(
-                        @"CWT candidate row count out of range for {0}: " +
-                        @"max stub ParquetIndex={1}, parquet has {2} rows -- " +
-                        @"skipping reconciliation planning for this file",
+                    invalid.Add(string.Format(
+                        @"{0} (max stub ParquetIndex {1} >= {2} parquet rows)",
                         kvp.Key, maxIdx, effectiveRowCount));
-                    continue;
-                }
-                validFileCount++;
             }
-            return validFileCount == perFileEntries.Count;
+
+            if (invalid.Count > 0)
+                throw new InvalidDataException(string.Format(
+                    @"Reconciliation planning aborted: {0} of {1} file(s) have missing or corrupt CWT " +
+                    @"candidates and cannot be reconciled: [{2}]. Delete the affected .scores.parquet " +
+                    @"file(s) and re-run so they are regenerated.",
+                    invalid.Count, perFileEntries.Count, string.Join(@"; ", invalid)));
         }
 
         /// <summary>
         /// Load and convert ONE file's CWT candidate lists (indexed by
-        /// <see cref="FdrEntry.ParquetIndex"/>) for the planner to consume and
-        /// release before moving to the next file -- the streaming replacement for
-        /// the former eager all-files load. Returns an empty list when the parquet
-        /// path is unknown, missing, or fails to decode; the planner then falls back
-        /// to no candidates for that file (its entries keep their current peak), the
-        /// same fallback its per-entry bounds guard already applies. The all-files
-        /// in-range gate is enforced up front by <see cref="ValidateAllInRange"/>,
-        /// so on the planning path this is the happy-path loader.
+        /// <see cref="FdrEntry.ParquetIndex"/>) for the planner to consume and release
+        /// before moving to the next file -- the streaming replacement for the former
+        /// eager all-files load. THROWS <see cref="InvalidDataException"/> if the parquet
+        /// is missing or its CWT blob column fails to decode (a corrupt Stage-4 output),
+        /// so the run fails fast rather than silently reconciling with this file's peaks
+        /// kept. The cheap missing / out-of-range cases are already caught up front by
+        /// <see cref="ValidateAllInRange"/>; this catches a footer-clean-but-corrupt blob.
         /// </summary>
         internal static IReadOnlyList<IReadOnlyList<CwtCandidate>> LoadOneFile(
             string fileName,
-            IReadOnlyDictionary<string, string> perFileParquetPaths,
-            Action<string> logWarning)
+            IReadOnlyDictionary<string, string> perFileParquetPaths)
         {
             if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath) ||
                 !File.Exists(parquetPath))
-                return Array.Empty<IReadOnlyList<CwtCandidate>>();
+                throw new InvalidDataException(string.Format(
+                    @"Reconciliation planning aborted: scores parquet for {0} is missing. Delete any " +
+                    @"partial outputs and re-run so it is regenerated.", fileName));
 
             try
             {
@@ -139,10 +136,10 @@ namespace pwiz.Osprey.Tasks
             }
             catch (Exception ex)
             {
-                logWarning(string.Format(
-                    @"Failed to load CWT candidates for {0}: {1}",
-                    fileName, ex.Message));
-                return Array.Empty<IReadOnlyList<CwtCandidate>>();
+                throw new InvalidDataException(string.Format(
+                    @"Reconciliation planning aborted: failed to decode CWT candidates from {0}: {1}. " +
+                    @"The scores parquet is corrupt -- delete it and re-run to regenerate.",
+                    parquetPath, ex.Message));
             }
         }
 
