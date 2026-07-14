@@ -1515,7 +1515,7 @@ function buildCalPickers(){
     // amber for a successful-but-degenerate (single-feature) calibration.
     const selF=CAL.files[CAL.sel];
     if(calNotCalibrated(selF))H(p,"span",{class:"flag",style:"color:var(--bad)"},"⚠ this file did not calibrate");
-    else if(calDegenerate(selF))H(p,"span",{class:"flag"},"· single-feature calibration model");
+    else if(calDegenerate(selF))H(p,"span",{class:"flag"},"· single-feature model");
   });
 }
 
