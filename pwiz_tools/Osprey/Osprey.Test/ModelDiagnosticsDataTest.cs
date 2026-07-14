@@ -159,6 +159,21 @@ namespace pwiz.Osprey.Test
             Assert.IsTrue(batch.WinFraction.HasEntrapment);
             Assert.AreEqual(2, batch.Model.Count);
             Assert.IsTrue(batch.NTarget > 0 && batch.NPTarget > 0 && batch.NDecoy > 0);
+
+            // Degrade path: a plain target+decoy run with NO manifest (null classByBaseId /
+            // pairByBaseId) -- the accumulator must still byte-match the batch build there.
+            var batchNM = ModelDiagnosticsData.Build(perFileEntries, contrib, null, null, r, runFdr, level);
+            var accNM = new ModelDiagnosticsData.Accumulator(runNames, null, null, r, runFdr, level);
+            for (int fi = 0; fi < perFileEntries.Count; fi++)
+                foreach (var e in perFileEntries[fi].Value)
+                    accNM.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+            Assert.AreEqual(
+                JsonConvert.SerializeObject(batchNM, settings),
+                JsonConvert.SerializeObject(accNM.Build(contrib), settings),
+                @"streaming accumulator must byte-match the batch build on the no-manifest degrade path");
+            Assert.IsFalse(batchNM.HasEntrapment, @"no manifest -> is_decoy-only split, no entrapment");
         }
 
         /// <summary>

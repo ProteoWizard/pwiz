@@ -45,10 +45,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// per-file counts and cross-run sets are tallies/sets keyed on identity; the win-fraction
         /// reduction is a per-base_id max. The shared downstream builders (score histogram,
         /// density ratio, id-yield, FDP views, cross-run views, win fraction) then consume only
-        /// the reduced state. So the streamed reduction reproduces the resident reduction
+        /// the reduced state and are order-safe (they sort, or are pure counts/sets) with ONE
+        /// order-sensitive step: BuildScoreHistogram's decoy mean/std accumulate floating-point
+        /// sums, which are not associative. Those stay bit-identical only because both paths
+        /// enumerate the reduced best-per-precursor set in the SAME order -- FdrProjectionSet
+        /// (BuildFromEntries / the streaming Builder, element-for-element parity) preserves the
+        /// resident per-file FdrEntry row order, and the score pass walks perFile in the same
+        /// nested order the batch ReduceToPrecs walks perFileEntries, so _best.Values enumerates
+        /// identically. So the streamed reduction reproduces the resident reduction
         /// element-for-element, while the 340M-row pre-compaction pool that OOM'd an 82-file
         /// --model-diagnostics run at the join is never materialized -- the accumulator holds only
-        /// ~unique-precursor / ~base_id-sized maps.
+        /// ~unique-precursor / ~base_id-sized maps. (A future change that reorders projection rows
+        /// within a file would threaten this last invariant -- keep the row order stable.)
         /// </summary>
         public sealed class Accumulator
         {
