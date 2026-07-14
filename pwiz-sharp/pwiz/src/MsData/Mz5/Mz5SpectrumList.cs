@@ -66,10 +66,9 @@ public sealed class Mz5SpectrumList : SpectrumListBase
 
             // SpectrumIndex: one offset per spectrum (end-exclusive into
             // SpectrumMZ + SpectrumIntensity). The on-disk type is the
-            // writer's native unsigned long — 4 bytes on Windows, 8 on
-            // Linux — so we ask HDF5 for fixed 64-bit on read and let it
-            // widen for us. (cpp does a manual 32-bit-wraparound fixup;
-            // HDF5's type-conversion is the portable equivalent.)
+            // writer's native unsigned long (4 bytes on Windows, 8 on
+            // Linux). ReadUlongIndex widens to 64-bit and reconstructs the
+            // 32-bit wraparound the writer baked in (cpp parity).
             _spectrumEndOffsets = conn.Has(Mz5Datasets.SpectrumIndex)
                 ? ReadIndex(conn, Mz5Datasets.SpectrumIndex, _meta.Length)
                 : new ulong[_meta.Length];
@@ -276,8 +275,9 @@ public sealed class Mz5SpectrumList : SpectrumListBase
     /// <summary>Shared cumulative-offset-index reader for both SpectrumIndex
     /// and ChromatogramIndex. Both datasets are typed as the writer's native
     /// unsigned long (4 bytes on Win, 8 on Linux); we request NATIVE_UINT64
-    /// so HDF5 widens 32-bit stored values transparently. Internal so
-    /// <see cref="Mz5ChromatogramList"/> can reuse it.</summary>
+    /// so HDF5 widens the stored values, then reconstruct the true 64-bit
+    /// offsets from any 32-bit wraparound the writer baked in (see below).
+    /// Internal so <see cref="Mz5ChromatogramList"/> can reuse it.</summary>
     internal static ulong[] ReadUlongIndex(Mz5Connection conn, Mz5Datasets ds, int expectedCount)
     {
         string name = Mz5Configuration.DatasetName(ds);
@@ -300,6 +300,26 @@ public sealed class Mz5SpectrumList : SpectrumListBase
                                      H5P.DEFAULT, (IntPtr)p) < 0)
                             throw new System.IO.IOException($"H5D.read failed for '{name}'");
                     }
+                }
+
+                // mz5 writes these cumulative offsets as the writer's native unsigned long,
+                // which is 32-bit on Windows -- so a file whose total peak count exceeds 2^32
+                // wraps each stored offset mod 2^32. HDF5 only zero-extends the already-
+                // truncated value; it cannot undo the wrap. Reconstruct the true monotonic
+                // 64-bit offsets exactly as SpectrumList_mz5.cpp:181-193 does. This is a no-op
+                // for genuinely monotonic 64-bit indices from a Linux writer.
+                int n = (int)dims[0];
+                ulong overflowCorrection = 0, last = 0;
+                for (int i = 0; i < n; i++)
+                {
+                    ulong current = buf[i] + overflowCorrection;
+                    if (last > current)
+                    {
+                        overflowCorrection += 0x0100000000UL; // assumes no single scan has > 4GB of peak data
+                        current = buf[i] + overflowCorrection;
+                    }
+                    buf[i] = current;
+                    last = current;
                 }
             }
             return buf;

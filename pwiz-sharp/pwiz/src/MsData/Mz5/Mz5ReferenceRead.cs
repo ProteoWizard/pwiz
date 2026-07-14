@@ -374,7 +374,12 @@ public sealed class Mz5ReferenceRead
     /// using the start/end ranges from <paramref name="list"/>.</summary>
     private void FillParamContainer(ParamContainer pc, ParamListMZ5 list)
     {
-        // CVParams
+        // CVParams. cpp ReferenceRead_mz5::fill clears each target sub-list before repopulating
+        // (guarded by a non-empty stored range), replacing any pre-seeded params (e.g. the unitless
+        // MS_time_array that setTimeIntensityArrays emplaces). Without this we append and the seed
+        // shadows the real MS_time_array(units=UO_minute), so the time unit reads back CVID_Unknown.
+        if (list.CVParamEndID > list.CVParamStartID)
+            pc.CVParams.Clear();
         for (uint i = list.CVParamStartID; i < list.CVParamEndID; i++)
         {
             if (i >= _cvParams.Length) break;
@@ -388,6 +393,8 @@ public sealed class Mz5ReferenceRead
             pc.CVParams.Add(cv);
         }
         // UserParams
+        if (list.UserParamEndID > list.UserParamStartID)
+            pc.UserParams.Clear();
         for (uint i = list.UserParamStartID; i < list.UserParamEndID; i++)
         {
             if (i >= _userParams.Length) break;
@@ -402,6 +409,8 @@ public sealed class Mz5ReferenceRead
             pc.UserParams.Add(new UserParam(name, value, type) { Units = CVIDByRef(raw.UnitCVRefID) });
         }
         // ParamGroup refs
+        if (list.RefParamGroupEndID > list.RefParamGroupStartID)
+            pc.ParamGroups.Clear();
         for (uint i = list.RefParamGroupStartID; i < list.RefParamGroupEndID; i++)
         {
             if (i >= _refParams.Length) break;
