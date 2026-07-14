@@ -284,6 +284,25 @@
     </Content>
   </ItemGroup>
 
+  <!-- BullseyeSharp (managed pwiz-sharp port; its AssemblyName is "bullseye-sharp", so it emits
+       bullseye-sharp.exe). Skyline's Hardklor feature-detection pipeline shells out to it to match
+       MS1 features against MS2 scans, expecting bullseye-sharp.exe next to Skyline in the bin dir
+       (resolved via PathEx.ResolveBundledExe). Reference the project so it builds first; the Content
+       include below deploys its output. net8-only: the net472 build gets the legacy BullseyeSharp.exe
+       from pwiz_tools\Skyline\BullseyeSharp\BullseyeSharp.csproj via the Jam toolchain. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <ProjectReference Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\BullseyeSharp.csproj"
+                      ReferenceOutputAssembly="false"
+                      Private="false" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows' And Exists('..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net8.0')">
+    <Content Include="..\..\pwiz-sharp\Tools\BullseyeSharp\src\bin\$(Configuration)\net8.0\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
   <!-- SkylineCmd.exe launcher - command-line tests (e.g. CmdLineAssociateProteinsTest)
        shell out to it expecting it next to Skyline in the bin dir. Reference it so it
        builds first. net8-only: the net472 build gets SkylineCmd from the Jam toolchain. -->

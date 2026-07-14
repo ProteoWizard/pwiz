@@ -47,7 +47,14 @@ namespace TestPerf
             TestFilesPersistent = new[] { "2021_0810_Eclipse_LiPExp_05_SS3.raw" }; // List of files that we'd like to unzip alongside parent zipFile, and (re)use in place
             UnzipTestFiles();
 
+#if NET472
             var processStartInfo =  new ProcessStartInfo(@"BullseyeSharp")
+#else
+            // net8: BullseyeSharp ships as the managed pwiz-sharp tool "bullseye-sharp.exe" bundled
+            // next to Skyline (and, via Content propagation, next to this test assembly). Resolve its
+            // absolute path because net8 Process.Start won't locate a bare exe name via the cwd.
+            var processStartInfo =  new ProcessStartInfo(PathEx.ResolveBundledExe(@"bullseye-sharp"))
+#endif
             {
                 Arguments = $@"""{GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk")}"" ""{GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3.raw")}"" ""{GetDataPath("testMatch.ms2")}"" ""{GetDataPath("testNoMatch.ms2")}""",
                 CreateNoWindow = true,
