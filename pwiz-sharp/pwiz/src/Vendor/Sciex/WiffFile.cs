@@ -597,9 +597,40 @@ internal sealed class WiffSpectrum : AbstractWiffSpectrum
     public override int PrecursorCharge => _info.ParentChargeState;
     public override double CollisionEnergy => Math.Abs(_info.CollisionEnergy);
     public override WiffActivation Activation => WiffActivation.CID;
-    public override double IsolationLowerOffset => 0;
-    public override double IsolationUpperOffset => 0;
+    public override double IsolationLowerOffset => IsolationHalfWidth;
+    public override double IsolationUpperOffset => IsolationHalfWidth;
     public override double ElectronKineticEnergy => 0;
+
+    // cpp WiffFile.cpp:759-776 (getHasIsolationInfo + getIsolationInfo): a legacy WIFF exposes the
+    // isolation-window WIDTH (not offsets) via the first MassRangeInfo entry cast to
+    // FragmentBasedScanMassRange. cpp sets centerMz = ParentMZ (= PrecursorMz here) and emits
+    // symmetric offsets of IsolationWindow/2 on each side (SpectrumList_ABI.cpp:200-208). Only
+    // Product/Precursor experiments carry isolation info; return 0 otherwise so the offset CV
+    // params are omitted (matching cpp's getHasIsolationInfo guard). The legacy WiffSpectrum never
+    // implemented these (they returned 0), so Skyline saw no isolation range for SWATH .wiff and
+    // threw "Missing isolation range"; the wiff2 path (Wiff2Spectrum) already computes them.
+    private double IsolationHalfWidth
+    {
+        get
+        {
+            if (_experimentType != WiffExperimentType.Product && _experimentType != WiffExperimentType.Precursor)
+                return 0;
+            try
+            {
+                if (_exp.Details?.MassRangeInfo is { Length: > 0 } ranges
+                    && ranges[0] is FragmentBasedScanMassRange fb
+                    && fb.IsolationWindow > 0)
+                {
+                    return fb.IsolationWindow / 2.0;
+                }
+            }
+            catch
+            {
+                // Not all experiments expose IsolationWindow; fall through to 0.
+            }
+            return 0;
+        }
+    }
 
     public override double StartTimeMinutes
     {
