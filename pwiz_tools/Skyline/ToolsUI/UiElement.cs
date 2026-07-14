@@ -993,8 +993,8 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        public override string FormId => JsonUiService.GetFormId(Form);
-        public override string Title => JsonUiService.GetFormTitle(Form);
+        public override string FormId => JsonUiService.GetFormId(Form, Hwnd);
+        public override string Title => JsonUiService.GetFormTitle(Form, Hwnd);
 
         // Sets a control's value (or a grid cell) on the form, in ONE trip to the form's thread: find the target,
         // gate it, set it. A grid cell ("grid[column,row]") moves the current cell there and then pastes, reusing the
@@ -1145,8 +1145,8 @@ namespace pwiz.Skyline.ToolsUI
             var formInfo = new FormInfo
             {
                 Type = Form.GetType().Name,
-                Title = JsonUiService.GetFormTitle(Form),
-                Id = JsonUiService.GetFormId(Form),
+                Title = JsonUiService.GetFormTitle(Form, Hwnd),
+                Id = JsonUiService.GetFormId(Form, Hwnd),
                 ModalNestingCount = DialogWatcher.TryGetPreShowActionCount(Hwnd),
             };
             if (Form.InvokeRequired)

@@ -19,6 +19,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -240,7 +241,18 @@ namespace pwiz.Skyline.ToolsUI
                     bool done = actionRan;
                     if (waitCondition != null)
                     {
-                        ctx.Send(_ => done = waitCondition(), null);
+                        try
+                        {
+                            ctx.Send(_ => done = waitCondition(), null);
+                        }
+                        catch (InvalidAsynchronousStateException)
+                        {
+                            // The thread that owned the window is gone -- which is the case for a dialog that runs its
+                            // own message loop on its own thread (a BackgroundThreadLongWaitDlg): dismissing it ends
+                            // that loop, and the thread exits. There is nowhere left to judge the condition, and
+                            // nothing left to wait for: a window whose thread no longer exists is closed.
+                            done = true;
+                        }
                         // A returning Send that did not satisfy the condition is one message-loop pump with no
                         // completion; count it toward the watchdog unless a LongWaitDlg reporting progress shows work advancing.
                         if (!done)
