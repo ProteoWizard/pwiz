@@ -1537,12 +1537,16 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestHasPinFeatureColumnsRejectsFeaturelessParquet()
         {
-            string path = Path.GetTempFileName() + ".parquet";
-            try
+            // FileSaver owns the scratch file's lifecycle: write the fixture to its
+            // sibling temp, probe that, and never Commit() -- Dispose discards the temp
+            // (no leaked temp file, cleaned up even if an assertion throws).
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_haspin_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new FileSaver(dest))
             {
                 var entryIdField = new DataField<uint>("entry_id");
                 var schema = new ParquetSchema(entryIdField);
-                using (var stream = new FileStream(path, FileMode.Create, FileAccess.Write))
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
                 using (var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult())
                 using (var group = writer.CreateRowGroup())
                 {
@@ -1550,12 +1554,8 @@ namespace pwiz.Osprey.Test
                         .GetAwaiter().GetResult();
                 }
 
-                Assert.IsFalse(ParquetScoreCache.HasPinFeatureColumns(path),
+                Assert.IsFalse(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName),
                     "A parquet without the PIN feature columns must be rejected by the lean-path guard.");
-            }
-            finally
-            {
-                TryDeleteFile(path);
             }
         }
 
