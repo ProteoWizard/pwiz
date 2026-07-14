@@ -31,7 +31,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the AI McpConnector verbs that drive controls beyond plain Buttons:
+    /// Exercises the AI Connector verbs that drive controls beyond plain Buttons:
     ///   * <see cref="JsonToolServer.ClickFormButton"/> on a CheckBox -- the Audit Log "Enable audit
     ///     logging" checkbox (AutoCheck=false, acts on its Click handler, so SetFormValue would not
     ///     toggle it but clicking it does);

@@ -35,7 +35,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises three AI McpConnector verbs on the Document Grid:
+    /// Exercises three AI Connector verbs on the Document Grid:
     ///   * <see cref="JsonToolServer.SetGridText"/> pastes tab/newline-separated text into a
     ///     <see cref="DataboundGridControl"/> grid at an anchor cell -- like a Ctrl-V, but without the
     ///     system clipboard;

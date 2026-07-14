@@ -31,7 +31,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises AI McpConnector behaviors on the Define Annotation dialog:
+    /// Exercises AI Connector behaviors on the Define Annotation dialog:
     ///   * <see cref="JsonToolServer.SetFormValue"/> matched against a label ("Name") sets the editable
     ///     control the label labels (the Name TextBox), not the label itself;
     ///   * checking an item in the "Applies to" CheckedListBox the way a user does -- a set_selected_index

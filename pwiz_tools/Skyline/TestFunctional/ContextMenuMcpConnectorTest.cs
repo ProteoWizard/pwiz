@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
 
-            // Find the graph the way the AI McpConnector would -- by enumerating open forms -- then drive its
+            // Find the graph the way the AI Connector would -- by enumerating open forms -- then drive its
             // context menu through a path: the graph form's context menu (Type "ContextMenu"), then its
             // item by its visible text.
             string graphId = McpConnector.GetOpenForms()

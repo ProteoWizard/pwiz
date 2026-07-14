@@ -30,7 +30,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the clipboard verbs of the AI McpConnector on a text box (where the connector can verify the
+    /// Exercises the clipboard verbs of the AI Connector on a text box (where the connector can verify the
     /// result): paste inserts text without using the clipboard, and select_all then paste replaces the whole
     /// content -- the gesture a tutorial paste step relies on (and which a client that cannot touch the
     /// clipboard, e.g. Google Antigravity, needs).

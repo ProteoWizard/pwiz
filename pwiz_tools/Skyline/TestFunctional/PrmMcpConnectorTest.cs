@@ -31,7 +31,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the generic form-automation verbs of the AI McpConnector (<see cref="JsonToolServer"/>)
+    /// Exercises the generic form-automation verbs of the AI Connector (<see cref="JsonToolServer"/>)
     /// against the first steps of the PRM tutorial's "Import Peptide Search" flow:
     ///   * <see cref="JsonToolServer.ClickMainMenuItem"/> -- "File > Import > Peptide Search".
     ///   * <see cref="JsonToolServer.ClickFormButton"/> -- the "Add Files" button, which opens the
@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestFunctional
             string wizardId = GetOpenFormId<ImportPeptideSearchDlg>();
 
             // 2) Click "Add Files" -> the native "Add Input Files" dialog appears.
-            // Wait for it the way the AI McpConnector would: poll GetOpenForms (the discovery method
+            // Wait for it the way the AI Connector would: poll GetOpenForms (the discovery method
             // IJsonToolService exposes) until the native FileDialog shows up, rather than the
             // internal NativeDialog helper.
             McpConnector.ClickFormButton(wizardId, @"Add Files");

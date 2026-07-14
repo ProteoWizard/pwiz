@@ -29,7 +29,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises driving the main Skyline window's menus through the AI McpConnector. The View > Libraries >
+    /// Exercises driving the main Skyline window's menus through the AI Connector. The View > Libraries >
     /// Ion Types submenu is not built from ordinary menu items: it hosts an <c>IonTypeSelectionPanel</c>
     /// (a ToolStripControlHost) whose ion types (A/B/C/X/Y/Z...) are checkbox-buttons. The test verifies that
     /// (1) the main window is now discoverable/resolvable as a form, and (2) the menu walk descends into the
