@@ -78,6 +78,23 @@ namespace pwiz.Osprey.Core
         /// </summary>
         public static readonly bool ExitAfterCalibration = IsSet(@"OSPREY_EXIT_AFTER_CALIBRATION");
 
+        /// <summary>
+        /// OSPREY_CAL_MEDIANPOLISH=1: add median-polish cosine (the dominant full-search
+        /// Percolator feature) as a 5th calibration-LDA feature, computed over the
+        /// peak-cropped calibration XICs. Experimental lever for raising the calibration
+        /// peak-selection yield; default OFF keeps the calibration output byte-identical
+        /// and perf-neutral (the feature is neither computed nor scored when unset).
+        /// </summary>
+        public static readonly bool CalMedianPolishFeature = IsSetAndNotZero(@"OSPREY_CAL_MEDIANPOLISH");
+
+        /// <summary>
+        /// OSPREY_CAL_SAMPLE_SIZE: override the calibration library sample size (targets
+        /// sampled per attempt). Default 0 = use the configured CalibrationSampleSize
+        /// (100K). Experimental lever for testing whether a larger sample surfaces
+        /// proportionally more near-zero-FDR calibration anchors on rich files.
+        /// </summary>
+        public static readonly int CalSampleSizeOverride = ParseIntOrZero(@"OSPREY_CAL_SAMPLE_SIZE");
+
         // Note: the OSPREY_EXIT_AFTER_SCORING env var that used to live here
         // was retired in favor of the --task PerFileScoring CLI flag. See the HPC
         // scoring split work in AnalysisPipeline.Run. ExitAfterCalibration

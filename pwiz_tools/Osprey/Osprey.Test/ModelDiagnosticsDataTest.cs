@@ -51,6 +51,7 @@ namespace pwiz.Osprey.Test
             TestFeatureTableContributions();
             TestBaseIdClassificationAndInvalidDrop();
             TestPass2FdpViews();
+            TestBuildPass2();
             TestSidecarRoundTrip();
             TestFeatureHistograms();
             TestModelPass2();
@@ -58,6 +59,97 @@ namespace pwiz.Osprey.Test
             TestIdYieldPerScope();
             TestCrossRunDetection();
             TestPassingSetHonorsFdrLevel();
+            TestCalibrationBuildCalFile();
+        }
+
+        /// <summary>
+        /// BuildCalFile shapes one file's raw calibration ingredients into a CalFileRow:
+        /// the LDA contribution table (weighted share, sorted, reds a negative row), the
+        /// class-binned composite score histogram, the entrapment-FDP-vs-q curve + anchor
+        /// yield swept from the per-match (q, class) arrays, and the scalar corrections.
+        /// </summary>
+        private static void TestCalibrationBuildCalFile()
+        {
+            // 3 features: coelution dominates, xcorr helps, top6 has a NEGATIVE weighted
+            // contribution (separates decoys up) -> must sort last and flag Unexpected.
+            var inp = new ModelDiagnosticsData.CalFileInput
+            {
+                File = @"fileA",
+                Calibrated = true,
+                FeatureNames = new[] { @"coelution_corr", @"top6_matched", @"xcorr" },
+                Weights = new[] { 1.0, 0.5, 0.4 },
+                MeanTarget = new[] { 0.8, 0.30, 0.6 },
+                MeanDecoy = new[] { 0.3, 0.40, 0.2 }, // top6 gap negative -> weighted<0
+                Degenerate = false,
+                EntrapmentRatio = 1.0,
+                HasEntrapment = true,
+                MassUnit = @"ppm",
+                Ms1Mean = 0.9, Ms1Sd = 1.5, Ms1Count = 350, Ms1Tol = 5.4,
+                Ms2Mean = 0.05, Ms2Sd = 1.6, Ms2Count = 3000, Ms2Tol = 4.8,
+                RtNPoints = 503, RtResidualSd = 0.22, RtRSquared = 0.9977, RtMad = 0.13,
+                RtToleranceMin = 0.58, RtWindowBefore = 4.77,
+            };
+            // 10 target anchors at q=0.005, 2 entrapment at q=0.008, 5 decoys (excluded from FDP),
+            // plus a target + entrapment that only clear q<=5%.
+            var scores = new List<double>();
+            var qs = new List<double>();
+            var cls = new List<int>();
+            for (int i = 0; i < 10; i++) { scores.Add(2.0 + 0.01 * i); qs.Add(0.005); cls.Add(0); }
+            for (int i = 0; i < 2; i++) { scores.Add(1.0 + 0.01 * i); qs.Add(0.008); cls.Add(2); }
+            for (int i = 0; i < 5; i++) { scores.Add(-1.0 - 0.01 * i); qs.Add(0.001); cls.Add(1); }
+            scores.Add(0.5); qs.Add(0.05); cls.Add(0);
+            scores.Add(0.4); qs.Add(0.05); cls.Add(2);
+            inp.MatchScores = scores.ToArray();
+            inp.MatchQ = qs.ToArray();
+            inp.MatchClass = cls.ToArray();
+
+            var row = ModelDiagnosticsData.BuildCalFile(inp);
+
+            // scalars pass through
+            Assert.AreEqual(@"fileA", row.File);
+            Assert.IsTrue(row.Calibrated);
+            Assert.AreEqual(0.9, row.Ms1Mean, 1e-9);
+            Assert.AreEqual(503, row.RtNPoints);
+            Assert.AreEqual(0.9977, row.RtRSquared, 1e-9);
+
+            // feature contributions: coelution is the largest share, top6 is last + reds.
+            Assert.AreEqual(3, row.Features.Count);
+            Assert.AreEqual(@"coelution_corr", row.Features[0].Label);
+            var top6 = row.Features.First(f => f.Label == @"top6_matched");
+            Assert.IsTrue(top6.Weighted < 0, @"top6 has a negative weighted contribution");
+            Assert.IsTrue(top6.Unexpected, @"negative weighted contribution reds the row");
+            Assert.AreEqual(@"top6_matched", row.Features[row.Features.Count - 1].Label,
+                @"smallest |contribution| sorts last");
+            double sumPercent = row.Features.Sum(f => f.Percent);
+            Assert.AreEqual(100.0, sumPercent, 1e-6, @"contribution shares sum to 100%");
+
+            // composite score histogram: right class totals, decoys excluded from target etc.
+            Assert.AreEqual(11, row.Scores.Target.Sum(), @"10 + 1 target anchors");
+            Assert.AreEqual(5, row.Scores.Decoy.Sum());
+            Assert.AreEqual(3, row.Scores.PTarget.Sum(), @"2 + 1 entrapment");
+            Assert.AreEqual(5L, row.Scores.DecoyN);
+
+            // yield + FDP swept over the grid: at q<=1% -> 10 target, 2 entrapment; r=1 -> combined = 2*frac.
+            int oneIdx = row.Yield.Q.ToList().IndexOf(0.01);
+            Assert.IsTrue(oneIdx >= 0);
+            Assert.AreEqual(10, row.Yield.TargetsRun[oneIdx]);
+            Assert.AreEqual(10, row.CalPeptides);
+            Assert.AreEqual(2, row.Entrapment);
+            Assert.AreEqual(2.0 * 2 / 12, row.AnchorFdp, 1e-9, @"combined FDP = (1+1/r)*N_E/total at r=1");
+            Assert.IsNotNull(row.Fdp);
+            Assert.AreEqual(2.0 * 2 / 12, row.Fdp.Combined[oneIdx], 1e-9);
+            Assert.AreEqual(2.0 / (1.0 * 12), row.Fdp.LowerBound[oneIdx], 1e-9);
+            // at q<=5% the extra target+entrapment are admitted: 11 target, 3 entrapment.
+            int fiveIdx = row.Yield.Q.ToList().IndexOf(0.05);
+            Assert.AreEqual(11, row.Yield.TargetsRun[fiveIdx]);
+            Assert.AreEqual(11, row.Fdp.NTargetAccepted[fiveIdx], @"NTargetAccepted holds accepted targets");
+
+            // no-entrapment file: FDP card suppressed, yield still present.
+            inp.HasEntrapment = false;
+            var row2 = ModelDiagnosticsData.BuildCalFile(inp);
+            Assert.IsNull(row2.Fdp);
+            Assert.IsNotNull(row2.Yield);
+            Assert.IsTrue(double.IsNaN(row2.AnchorFdp));
         }
 
         // The "passing at run FDR" set (per-file Summary counts AND cross-run detection)
@@ -493,6 +585,99 @@ namespace pwiz.Osprey.Test
                 Wrap(new List<FdrEntry> { Entry(1, false, 5, 0.001, "T", 2) }),
                 new Dictionary<uint, EntrapmentClass> { { 1u, EntrapmentClass.Target } }, null, 1.0);
             Assert.AreEqual(0, noEntrap.Count);
+        }
+
+        // The complete pass-2 bundle (BuildPass2) behind the report's top-level Pass 1
+        // / Pass 2 switch: every pass-dependent card recomputed on the reported pool.
+        // The STRUCTURAL half (Model / DensityRatio / WinFraction) is present only when
+        // the second pass RETRAINED (contributions non-null); under confidence-transfer
+        // (contributions null) it degrades to null while the Q-DRIVEN half (FdpViews /
+        // IdYield / CrossRun / PerFile) still builds. FdpViews is empty without an
+        // entrapment pool. The bundle survives the sidecar round-trip alongside pass 1.
+        private static void TestBuildPass2()
+        {
+            // A reported pool with entrapment: 8 real targets (+ their decoys, so the
+            // structural density / win-fraction have both sides) and 2 entrapment.
+            var entries = new List<FdrEntry>();
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            for (int i = 0; i < 8; i++)
+            {
+                entries.Add(Entry((uint)(100 + i), false, 8 - i, 0.001 * (i + 1), "T" + i, 2));
+                entries.Add(Entry((uint)(100 + i) | DECOY_BIT, true, 1.0 + 0.1 * i, 0.5, "D" + i, 2));
+                cls[(uint)(100 + i)] = EntrapmentClass.Target;
+            }
+            AddEntrap(entries, cls, 200, 5.5, 0.003, "P0");
+            AddEntrap(entries, cls, 201, 1.5, 0.005, "P1");
+
+            // Retrain contributions (same 2-feature shape as TestModelPass2).
+            var infos = new[]
+            {
+                new OspreyFeatureInfo("f0", "Feature Zero", false),
+                new OspreyFeatureInfo("f1", "Feature One", false),
+            };
+            var acc = new FeatureContributions.Accumulator(2, true);
+            for (int i = 0; i < 10; i++) acc.Add(new[] { 2.0, 0.5 }, false);
+            for (int i = 0; i < 10; i++) acc.Add(new[] { -1.0, 0.0 }, true);
+            var contrib = acc.Build(new List<double[]> { new[] { 2.0, -1.0 } }, infos);
+
+            // --- Retrain path: structural AND q-driven halves both present.
+            var retrain = ModelDiagnosticsData.BuildPass2(
+                Wrap(entries), contrib, cls, null, 1.0, 0.01, FdrLevel.Peptide);
+            Assert.IsNotNull(retrain.Model);                    // retrained -> structural present
+            Assert.IsNotNull(retrain.Model.Scores);
+            Assert.IsNotNull(retrain.DensityRatio);
+            Assert.IsNotNull(retrain.WinFraction);
+            Assert.IsNotNull(retrain.IdYield);                  // q-driven
+            Assert.IsNotNull(retrain.CrossRun);
+            Assert.AreEqual(1, retrain.PerFile.Count);
+            Assert.AreEqual(2, retrain.FdpViews.Count);         // experiment + per-run
+            Assert.IsTrue(retrain.FdpViews.All(v => v.Pass == 2));
+
+            // --- Transfer path: contributions null -> structural half degrades to null,
+            // q-driven half (which needs only the transferred q) still builds.
+            var transfer = ModelDiagnosticsData.BuildPass2(
+                Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
+            Assert.IsNull(transfer.Model);                      // no retrain -> structural n/a
+            Assert.IsNull(transfer.DensityRatio);
+            Assert.IsNull(transfer.WinFraction);
+            Assert.IsNotNull(transfer.IdYield);
+            Assert.IsNotNull(transfer.CrossRun);
+            Assert.AreEqual(2, transfer.FdpViews.Count);        // entrapment pool -> FDP views exist
+            // The mode changes only the structural half: the q-driven half is identical.
+            Assert.AreEqual(retrain.PerFile[0].Targets, transfer.PerFile[0].Targets);
+
+            // --- No entrapment: FdpViews empty, entrapment-free q-driven cards remain.
+            var plain = new List<FdrEntry>
+            {
+                Entry(1, false, 5, 0.001, "A", 2),
+                Entry(1 | DECOY_BIT, true, 1, 0.5, "DA", 2),
+            };
+            var noEnt = ModelDiagnosticsData.BuildPass2(Wrap(plain), null,
+                new Dictionary<uint, EntrapmentClass> { { 1u, EntrapmentClass.Target } },
+                null, 1.0, 0.01, FdrLevel.Peptide);
+            Assert.AreEqual(0, noEnt.FdpViews.Count);
+            Assert.IsNotNull(noEnt.IdYield);
+            Assert.IsNotNull(noEnt.CrossRun);
+            Assert.AreEqual(1, noEnt.PerFile[0].Targets);
+
+            // --- The Pass2 bundle survives a Newtonsoft round-trip (camelCase +
+            // NaN-as-literal) -- the same serialization robustness the HTML embed relies
+            // on. (Pass2 itself is built at MergeNode and serialized only into the HTML,
+            // never through the FirstJoin->MergeNode data sidecar, which carries pass 1.)
+            var data = ModelDiagnosticsData.Build(Wrap(entries), null, cls, null, 1.0, 0.01, FdrLevel.Peptide);
+            data.Pass2 = retrain;
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                FloatFormatHandling = FloatFormatHandling.Symbol,
+                FloatParseHandling = FloatParseHandling.Double,
+            };
+            var back = JsonConvert.DeserializeObject<ModelDiagnosticsData>(
+                JsonConvert.SerializeObject(data, settings), settings);
+            Assert.IsNotNull(back.Pass2);
+            Assert.IsNotNull(back.Pass2.Model);
+            Assert.AreEqual(retrain.FdpViews.Count, back.Pass2.FdpViews.Count);
+            Assert.AreEqual(retrain.Model.Features.Count, back.Pass2.Model.Features.Count);
         }
 
         // The pass-1 data model must survive a Newtonsoft round-trip (camelCase +

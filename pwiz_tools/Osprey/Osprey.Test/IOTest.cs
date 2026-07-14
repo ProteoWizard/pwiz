@@ -29,6 +29,9 @@ using System.IO;
 using System.IO.Compression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
+using Parquet;
+using Parquet.Data;
+using Parquet.Schema;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
 using pwiz.Osprey.FDR.Reconciliation;
@@ -1410,8 +1413,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParquetScoreCacheRoundTrip()
         {
-            string path = Path.GetTempFileName() + ".parquet";
-            try
+            // FileSaver owns the scratch file's lifecycle: write + read back through
+            // its sibling temp and never Commit() -- Dispose discards it (no leaked
+            // GetTempFileName file, cleaned up even if an assertion throws).
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_roundtrip_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new FileSaver(dest))
             {
                 // Create test entries
                 var entries = new List<CoelutionScoredEntry>();
@@ -1468,11 +1475,11 @@ namespace pwiz.Osprey.Test
                 };
 
                 // Write
-                ParquetScoreCache.WriteScoresParquet(path, entries, metadata);
-                Assert.IsTrue(File.Exists(path), "Parquet file should exist");
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, metadata);
+                Assert.IsTrue(File.Exists(saver.SafeName), "Parquet file should exist");
 
                 // Read FDR stubs
-                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(saver.SafeName);
                 Assert.AreEqual(3, stubs.Count);
                 Assert.AreEqual(100u, stubs[0].EntryId);
                 Assert.AreEqual(101u, stubs[1].EntryId);
@@ -1489,8 +1496,15 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(0u, stubs[0].ParquetIndex);
                 Assert.AreEqual(1u, stubs[1].ParquetIndex);
 
+                // A valid Osprey parquet must pass the lean-path feature-presence
+                // guard (else the resume/HPC-merge fail-fast would reject every real
+                // run). This also pins the writer's first feature column name to the
+                // PIN_FEATURE_NAMES[0] the probe checks -- a rename desync between them
+                // would silently break both.
+                Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName));
+
                 // Read PIN features
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName);
                 Assert.AreEqual(3, features.Count);
                 Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES, features[0].Length);
                 // Check first entry features
@@ -1502,16 +1516,46 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(2.6, features[1][6], 0.001);
 
                 // Validate metadata
-                Assert.IsTrue(ParquetScoreCache.ValidateMetadata(path, metadata));
+                Assert.IsTrue(ParquetScoreCache.ValidateMetadata(saver.SafeName, metadata));
                 var wrongMeta = new Dictionary<string, string>
                 {
                     { "osprey.version", "2.0.0" },
                 };
-                Assert.IsFalse(ParquetScoreCache.ValidateMetadata(path, wrongMeta));
+                Assert.IsFalse(ParquetScoreCache.ValidateMetadata(saver.SafeName, wrongMeta));
             }
-            finally
+        }
+
+        /// <summary>
+        /// A parquet that carries the scalar stub columns but NOT the PIN feature
+        /// columns (a foreign or truncated scores file) must fail the lean-path
+        /// feature-presence guard, so the resume / HPC-merge paths abort up front
+        /// instead of streaming scalars from an untrustworthy file. Writes a minimal
+        /// single-column parquet lacking the feature schema and asserts the footer
+        /// probe reports it. Paired with the positive assertion in
+        /// <see cref="TestParquetScoreCacheRoundTrip"/>.
+        /// </summary>
+        [TestMethod]
+        public void TestHasPinFeatureColumnsRejectsFeaturelessParquet()
+        {
+            // FileSaver owns the scratch file's lifecycle: write the fixture to its
+            // sibling temp, probe that, and never Commit() -- Dispose discards the temp
+            // (no leaked temp file, cleaned up even if an assertion throws).
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_haspin_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new FileSaver(dest))
             {
-                TryDeleteFile(path);
+                var entryIdField = new DataField<uint>("entry_id");
+                var schema = new ParquetSchema(entryIdField);
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var writer = ParquetWriter.CreateAsync(schema, stream).GetAwaiter().GetResult())
+                using (var group = writer.CreateRowGroup())
+                {
+                    group.WriteColumnAsync(new DataColumn(entryIdField, new[] { 1u, 2u, 3u }))
+                        .GetAwaiter().GetResult();
+                }
+
+                Assert.IsFalse(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName),
+                    "A parquet without the PIN feature columns must be rejected by the lean-path guard.");
             }
         }
 
