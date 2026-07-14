@@ -1150,25 +1150,33 @@ namespace pwiz.Osprey.FDR
             // per-entry math and the per-file iteration order match the
             // PercolatorEntry streaming loop exactly, so finalScores + the
             // contribution sums are byte-for-byte identical.
+            // Per-file progress so this full-population score pass (~15 min silent at
+            // 344M rows on the 82-file first-pass join) shows movement; the heartbeat
+            // covers a slow single file. Console-only -- never touches finalScores /
+            // the sink, so byte-identity is unaffected.
             int gi = 0;
-            foreach (var kvp in perFile)
+            using (var scoreProgress = new ProgressReporter(string.Format(@"Scoring {0} entries", n), n))
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                var projRows = kvp.Value;
-                for (int r = 0; r < projRows.Count; r++)
+                foreach (var kvp in perFile)
                 {
-                    var proj = projRows[r];
-                    double[] featRow = ResolveFeatureRow(
-                        rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
-                    Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
-                    standardizer.TransformSlice(featureBuf);
-                    double score = avgBias;
-                    for (int j = 0; j < nFeatures; j++)
-                        score += avgWeights[j] * featureBuf[j];
-                    finalScores[gi] = score;
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    var projRows = kvp.Value;
+                    for (int r = 0; r < projRows.Count; r++)
+                    {
+                        var proj = projRows[r];
+                        double[] featRow = ResolveFeatureRow(
+                            rows, proj.ParquetIndex, proj.CoelutionSum, nFeatures);
+                        Array.Copy(featRow, 0, featureBuf, 0, nFeatures);
+                        standardizer.TransformSlice(featureBuf);
+                        double score = avgBias;
+                        for (int j = 0; j < nFeatures; j++)
+                            score += avgWeights[j] * featureBuf[j];
+                        finalScores[gi] = score;
 
-                    contribAcc.Add(featureBuf, proj.IsDecoy);
-                    gi++;
+                        contribAcc.Add(featureBuf, proj.IsDecoy);
+                        gi++;
+                    }
+                    scoreProgress.Report(gi);
                 }
             }
 
