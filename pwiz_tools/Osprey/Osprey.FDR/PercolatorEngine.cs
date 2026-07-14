@@ -734,6 +734,9 @@ namespace pwiz.Osprey.FDR
             //    supplied, so SelectBestPerPrecursor never dereferences the entries arg
             //    -- passing an empty list is exactly what lets this path avoid the
             //    full-N PercolatorEntry buffer the FdrEntry streaming path allocates.
+            // Phase marker: the dedup + subsample over all N rows is a multi-minute
+            // silent span on an 82-file join; announce it so the console is not blank.
+            logInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
             int[] bestIdx;
             int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
                 labels, entryIds, peptides, Array.Empty<PercolatorEntry>(), maxTrain,
@@ -784,6 +787,8 @@ namespace pwiz.Osprey.FDR
             }
 
             var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
+            logInfo(string.Format(@"Loading training-subset feature vectors from {0} file(s)...",
+                subsetByFile.Count));
             foreach (var kvp in subsetByFile)
             {
                 IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
