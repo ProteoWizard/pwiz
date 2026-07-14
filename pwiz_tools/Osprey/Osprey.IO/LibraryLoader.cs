@@ -62,18 +62,39 @@ namespace pwiz.Osprey.IO
                 ArtifactPaths.ResolveCacheDir(path),
                 Path.GetFileName(path) + ".libcache");
 
-            // Try loading from binary cache first
+            // Reuse the binary cache only when it was built from the SAME
+            // version of the source library. The library's identity hash
+            // (file name + size + mtime, the same recipe .scores.parquet uses)
+            // is stamped into the cache header on write and checked here on
+            // read. A cache built from a different build at this path -- an
+            // in-place rebuild, or a timestamp-preserving swap that a mtime
+            // check would miss -- is ignored and rebuilt, since its decoys and
+            // pairing no longer match the current manifest. Compute the hash
+            // once and reuse it for both the read check and the save below.
+            // A null hash (source missing) skips the check and trusts the
+            // cache, since it is then the only copy available.
+            bool sourceExists = !string.IsNullOrEmpty(path) && File.Exists(path);
+            string libraryHash = sourceExists ? config.Identity.LibraryIdentityHash() : null;
             if (File.Exists(cachePath))
             {
                 try
                 {
-                    var cached = LibraryCache.LoadCache(cachePath);
+                    LibraryCache.LibraryCacheStatus status;
+                    var cached = LibraryCache.LoadCache(cachePath, libraryHash, out status);
                     if (cached != null && cached.Count > 0)
                     {
                         logInfo(string.Format(
                             "Loaded {0} library entries from cache '{1}'",
                             cached.Count, cachePath));
+                        LibraryStringInterner.InternInPlace(cached, logInfo);
                         return cached;
+                    }
+                    if (status == LibraryCache.LibraryCacheStatus.IdentityMismatch)
+                    {
+                        logInfo(string.Format(
+                            "Library cache '{0}' was built from a different version of the " +
+                            "source library; ignoring the stale cache and rebuilding from source.",
+                            cachePath));
                     }
                 }
                 catch (Exception ex)
@@ -113,7 +134,8 @@ namespace pwiz.Osprey.IO
             // Save binary cache for next run
             try
             {
-                LibraryCache.SaveCache(cachePath, entries);
+                // libraryHash is non-null here: the source existed to parse.
+                LibraryCache.SaveCache(cachePath, entries, libraryHash);
                 logInfo(string.Format(
                     "Saved library cache ({0} entries) to '{1}'",
                     entries.Count, cachePath));
@@ -122,6 +144,11 @@ namespace pwiz.Osprey.IO
             {
                 logWarning(string.Format("Failed to save library cache: {0}", ex.Message));
             }
+
+            // Intern after the cache is written (the cache bytes are identical
+            // either way) so the resident set shares one instance per distinct
+            // string.
+            LibraryStringInterner.InternInPlace(entries, logInfo);
 
             return entries;
         }

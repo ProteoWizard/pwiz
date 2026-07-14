@@ -479,18 +479,12 @@ namespace pwiz.Osprey.Scoring
                 }
                 else
                 {
-                    // For other ion types, keep as-is
+                    // For other ion types, keep as-is (annotation copied by value).
                     result.Add(new LibraryFragment
                     {
                         Mz = frag.Mz,
                         RelativeIntensity = frag.RelativeIntensity,
-                        Annotation = new FragmentAnnotation
-                        {
-                            IonType = annotation.IonType,
-                            Ordinal = annotation.Ordinal,
-                            Charge = annotation.Charge,
-                            NeutralLoss = annotation.NeutralLoss
-                        }
+                        Annotation = annotation
                     });
                     continue;
                 }
@@ -501,21 +495,20 @@ namespace pwiz.Osprey.Scoring
                 double? mz = CalculateFragmentMz(
                     newIonType, newOrdinal, annotation.Charge,
                     decoySequence, modMasses,
-                    annotation.NeutralLoss != null ? annotation.NeutralLoss.Mass : null);
+                    annotation.HasNeutralLoss ? annotation.NeutralLossMass : null);
 
                 if (mz.HasValue)
                 {
+                    // Swap b<->y ion type and ordinal; charge and neutral loss
+                    // (code + custom mass) carry over from the target fragment.
+                    var newAnnotation = annotation;
+                    newAnnotation.IonType = newIonType;
+                    newAnnotation.Ordinal = (byte)newOrdinal;
                     result.Add(new LibraryFragment
                     {
                         Mz = mz.Value,
                         RelativeIntensity = frag.RelativeIntensity,
-                        Annotation = new FragmentAnnotation
-                        {
-                            IonType = newIonType,
-                            Ordinal = (byte)newOrdinal,
-                            Charge = annotation.Charge,
-                            NeutralLoss = annotation.NeutralLoss
-                        }
+                        Annotation = newAnnotation
                     });
                 }
             }

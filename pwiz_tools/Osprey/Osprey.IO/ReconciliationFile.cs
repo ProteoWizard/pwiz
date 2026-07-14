@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
+using pwiz.Osprey.Core;
 
 namespace pwiz.Osprey.IO
 {
@@ -62,31 +63,46 @@ namespace pwiz.Osprey.IO
         ///     empty <see cref="FileStems"/> list; the worker falls back
         ///     to its <c>OspreyConfig.InputFiles</c> stems in that case,
         ///     preserving v1 behavior.
+        /// v3: added <c>first_pass_base_ids</c>, the JOIN-WIDE set of base_ids
+        ///     that survived first-pass compaction. FirstJoin computes it with
+        ///     every file in memory; a per-file HPC rescore worker uses it to
+        ///     compact to exactly the set the in-memory straight-through pipeline
+        ///     used, instead of recomputing a PER-FILE subset that drops cross-file
+        ///     entries (regression mode3 divergence). Required in v3 (see Load).
+        ///     NOTE: the Rust reconciliation_io.rs needs the matching field to keep
+        ///     cross-impl byte parity.
         /// </summary>
-        public const int CurrentFormatVersion = 2;
+        public const int CurrentFormatVersion = 3;
 
         [JsonProperty("file_stems", Order = 0)]
         public List<string> FileStems { get; set; }
 
-        [JsonProperty("forced_integration_actions", Order = 1)]
+        /// <summary>
+        /// Join-wide first-pass passing base_ids (sorted ascending for
+        /// deterministic, byte-parity output). See v3 note above.
+        /// </summary>
+        [JsonProperty("first_pass_base_ids", Order = 1)]
+        public uint[] FirstPassBaseIds { get; set; }
+
+        [JsonProperty("forced_integration_actions", Order = 2)]
         public List<ForcedIntegrationEntry> ForcedIntegrationActions { get; set; }
 
-        [JsonProperty("format_version", Order = 2)]
+        [JsonProperty("format_version", Order = 3)]
         public int FormatVersion { get; set; }
 
-        [JsonProperty("gap_fill_targets", Order = 3)]
+        [JsonProperty("gap_fill_targets", Order = 4)]
         public List<GapFillEntry> GapFillTargets { get; set; }
 
-        [JsonProperty("library_hash", Order = 4)]
+        [JsonProperty("library_hash", Order = 5)]
         public string LibraryHash { get; set; }
 
-        [JsonProperty("refined_rt_calibration", Order = 5, NullValueHandling = NullValueHandling.Include)]
+        [JsonProperty("refined_rt_calibration", Order = 6, NullValueHandling = NullValueHandling.Include)]
         public RefinedRtCalibrationJson RefinedRtCalibration { get; set; }
 
-        [JsonProperty("search_hash", Order = 6)]
+        [JsonProperty("search_hash", Order = 7)]
         public string SearchHash { get; set; }
 
-        [JsonProperty("use_cwt_peak_actions", Order = 7)]
+        [JsonProperty("use_cwt_peak_actions", Order = 8)]
         public List<UseCwtPeakEntry> UseCwtPeakActions { get; set; }
 
         /// <summary>
@@ -125,6 +141,18 @@ namespace pwiz.Osprey.IO
                     "Reconciliation file {0} has format_version {1} but file_stems is missing " +
                     "or empty; v{1} envelopes are required to carry the planner's full join " +
                     "file set.",
+                    path, CurrentFormatVersion));
+            }
+            // v3 required: the join-wide first-pass base_id set. A per-file HPC
+            // worker MUST have this to compact to the same set as the in-memory
+            // pipeline; without it the worker would recompute a per-file subset
+            // and silently diverge (regression mode3). Fail loudly instead.
+            if (parsed.FirstPassBaseIds == null)
+            {
+                throw new InvalidDataException(string.Format(
+                    "Reconciliation file {0} has format_version {1} but first_pass_base_ids is " +
+                    "missing; v{1} envelopes are required to carry the join-wide first-pass " +
+                    "base_id set.",
                     path, CurrentFormatVersion));
             }
             return parsed;
@@ -171,7 +199,7 @@ namespace pwiz.Osprey.IO
             // promoted to the destination on Commit; on exception, the
             // using-block disposes FileSaver which deletes the temp
             // without touching the destination. See
-            // Osprey.IO.FileSaver for details.
+            // Osprey.Core.FileSaver for details.
             using (var saver = new FileSaver(path))
             {
                 File.WriteAllText(saver.SafeName, json);

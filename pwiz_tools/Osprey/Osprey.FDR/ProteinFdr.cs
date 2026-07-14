@@ -131,7 +131,7 @@ namespace pwiz.Osprey.FDR
 
     /// <summary>
     /// The computed artifacts of a first-pass protein-FDR run, returned by
-    /// <see cref="ProteinFdr.RunFirstPassProteinFdr"/> so the caller can log
+    /// <c>ProteinFdr.RunFirstPassProteinFdr</c> so the caller can log
     /// summary counts and emit the Stage-6 diagnostic dump WITHOUT recomputing
     /// parsimony / FDR. The run has already propagated <c>RunProteinQvalue</c>
     /// onto the stubs; these are the same intermediate objects it used.
@@ -252,7 +252,7 @@ namespace pwiz.Osprey.FDR
             foreach (var kvp in proteinToPeptides)
             {
                 var sortedPeptides = new List<string>(kvp.Value);
-                sortedPeptides.Sort(StringComparer.Ordinal);
+                sortedPeptides.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical "|"-joined set key; equal peptide strings are byte-identical so tie order does not change the key
                 string key = string.Join("|", sortedPeptides);
 
                 List<string> accessions;
@@ -278,23 +278,102 @@ namespace pwiz.Osprey.FDR
                 var peptideSet = new HashSet<string>(kvp.Key.Split('|'), StringComparer.Ordinal);
                 groups.Add(new KeyValuePair<HashSet<string>, List<string>>(peptideSet, kvp.Value));
             }
-            groups.Sort((a, b) => b.Key.Count.CompareTo(a.Key.Count));
+            // Array.Sort OK: subset elimination below only removes a group when its count is
+            // STRICTLY less than a retained group's, so equal-count groups never eliminate one
+            // another and the retained SET is invariant under tie order. Tie hazard, conversion
+            // deferred: equal-count groups' relative order still sets their GroupId assignment
+            // in Step 4, which is the same GroupId-order class as the #4362 canonical incident.
+            // Left byte-identical here; the parsimony rewrite (#4357) is the right place to pin
+            // a stable secondary key. Not a #4362 approved U-site.
+            groups.Sort((a, b) => b.Key.Count.CompareTo(a.Key.Count)); // Array.Sort OK: (see above) retained SET is tie-invariant; GroupId-order tie hazard deferred to #4357
 
-            // Step 3: Subset elimination
-            var retained = new List<KeyValuePair<HashSet<string>, List<string>>>();
+            // Step 3: Subset elimination — rarest-peptide candidate scan (issue #4357).
+            //
+            // The naive form scanned every already-retained group for each group,
+            // which is O(groups^2 x peptides) — tens of seconds to minutes at
+            // SEA-AD scale (tens of thousands of protein groups). A proper superset
+            // of group A must contain ALL of A's peptides, hence A's rarest peptide.
+            // So we index peptide -> retained-group indices INCREMENTALLY (only
+            // groups already appended to retained), and for each A test only the
+            // retained groups sharing A's rarest peptide. This prunes only groups
+            // that provably cannot be supersets, so it drops exactly the same
+            // groups in exactly the same order as the pairwise scan — byte-identical
+            // protein grouping — while running near-linearly.
+            //
+            // Invariants (see issue #4357): the DESCENDING sort above is left
+            // untouched (its unstable tie order is part of the golden output);
+            // groups are iterated in that order and non-subsets appended to
+            // retained in that same order (retained order == gid in Step 4); and
+            // the drop test is the identical proper-subset predicate against
+            // already-retained groups only.
+
+            // Global peptide -> group-count over ALL groups, used only to pick each
+            // group's rarest peptide (the pivot minimizing the candidate set). This
+            // choice does not affect correctness, only which peptide's candidate
+            // list is scanned.
+            var peptideGroupCount = new Dictionary<string, int>(StringComparer.Ordinal);
             foreach (var group in groups)
             {
-                bool isSubset = false;
-                foreach (var larger in retained)
+                foreach (string peptide in group.Key)
                 {
-                    if (group.Key.Count < larger.Key.Count && group.Key.IsSubsetOf(larger.Key))
+                    int count;
+                    peptideGroupCount.TryGetValue(peptide, out count);
+                    peptideGroupCount[peptide] = count + 1;
+                }
+            }
+
+            var retained = new List<KeyValuePair<HashSet<string>, List<string>>>();
+            // peptide -> indices into retained of groups (already appended) containing it.
+            var peptideToRetained = new Dictionary<string, List<int>>(StringComparer.Ordinal);
+            foreach (var group in groups)
+            {
+                var peptideSet = group.Key;
+
+                // Pick the rarest peptide of this group as the pivot: any proper
+                // superset must contain it, so its (typically short) candidate list
+                // is sufficient to find every possible superset.
+                string pivot = null;
+                int pivotCount = int.MaxValue;
+                foreach (string peptide in peptideSet)
+                {
+                    int count = peptideGroupCount[peptide];
+                    if (count < pivotCount)
                     {
-                        isSubset = true;
-                        break;
+                        pivotCount = count;
+                        pivot = peptide;
                     }
                 }
+
+                bool isSubset = false;
+                List<int> candidates;
+                if (pivot != null && peptideToRetained.TryGetValue(pivot, out candidates))
+                {
+                    foreach (int candidateIdx in candidates)
+                    {
+                        var larger = retained[candidateIdx];
+                        if (peptideSet.Count < larger.Key.Count && peptideSet.IsSubsetOf(larger.Key))
+                        {
+                            isSubset = true;
+                            break;
+                        }
+                    }
+                }
+
                 if (!isSubset)
+                {
+                    int idx = retained.Count;
                     retained.Add(group);
+                    foreach (string peptide in peptideSet)
+                    {
+                        List<int> list;
+                        if (!peptideToRetained.TryGetValue(peptide, out list))
+                        {
+                            list = new List<int>();
+                            peptideToRetained[peptide] = list;
+                        }
+                        list.Add(idx);
+                    }
+                }
             }
 
             // Step 4: Assign group IDs and build peptide -> group mapping
@@ -524,7 +603,7 @@ namespace pwiz.Osprey.FDR
                 // joined with semicolons (matches the Rust port and the
                 // Stage 7 diagnostic dump).
                 var sortedAccs = new List<string>(group.Accessions);
-                sortedAccs.Sort(StringComparer.Ordinal);
+                sortedAccs.Sort(StringComparer.Ordinal); // Array.Sort OK: sorted only to build a canonical ";"-joined sortKey; equal accession strings are byte-identical so tie order does not change the key
                 string sortKey = string.Join(";", sortedAccs);
 
                 bool hasT = targetScore.TryGetValue(group.Id, out double t);
@@ -751,6 +830,128 @@ namespace pwiz.Osprey.FDR
 
             // Return the computed artifacts so the caller can log summary counts
             // and emit the Stage-6 diagnostic dump without recomputing them.
+            return new FirstPassProteinFdrResult(
+                detectedPeptides, parsimony, bestScores, proteinFdr);
+        }
+
+        /// <summary>
+        /// Projection-buffer counterpart of
+        /// <see cref="CollectBestPeptideScores(IList{KeyValuePair{string, List{FdrEntry}}})"/>
+        /// (issue #4355 struct-shrink S0): reduce the thin <see cref="FdrProjection"/>
+        /// rows to the per-peptide best (max) SVM score and best (min) run peptide
+        /// q-value. <see cref="FdrProjection.Score"/> + IsDecoy stay resident on the
+        /// lean struct; the run peptide q-value now comes from the parallel
+        /// <paramref name="outputs"/> array (it is no longer a struct field). The
+        /// modified sequence is materialized from <paramref name="peptideById"/>. The
+        /// resulting dictionary is byte-identical to the FdrEntry path (the max/min
+        /// reductions are order-independent, and a modified sequence maps to a single
+        /// target/decoy label).
+        /// </summary>
+        public static Dictionary<string, PeptideScore> CollectBestPeptideScores(
+            IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
+            string[] peptideById,
+            FdrProjectionOutputs outputs)
+        {
+            var best = new Dictionary<string, PeptideScore>();
+            for (int f = 0; f < perFileProjections.Count; f++)
+            {
+                var rows = perFileProjections[f].Value;
+                for (int r = 0; r < rows.Count; r++)
+                {
+                    var proj = rows[r];
+                    double runPeptideQvalue = outputs.RunPeptideQvalue(f, r);
+                    string modseq = peptideById[proj.PeptideId];
+                    PeptideScore ps;
+                    if (best.TryGetValue(modseq, out ps))
+                    {
+                        if (proj.Score > ps.Score)
+                            ps.Score = proj.Score;
+                        if (runPeptideQvalue < ps.BestQvalue)
+                            ps.BestQvalue = runPeptideQvalue;
+                    }
+                    else
+                    {
+                        best[modseq] = new PeptideScore
+                        {
+                            Score = proj.Score,
+                            IsDecoy = proj.IsDecoy,
+                            BestQvalue = runPeptideQvalue
+                        };
+                    }
+                }
+            }
+
+            if (FdrDiagnostics.DumpBestPeptideScores)
+                FdrDiagnostics.WriteBestPeptideScoresDump(best);
+
+            return best;
+        }
+
+        /// <summary>
+        /// Projection-buffer counterpart of <see cref="PropagateProteinQvalues"/>:
+        /// write the run protein q-value into the parallel <paramref name="outputs"/>
+        /// array for every row from the parsimony result, keyed by the materialized
+        /// modified sequence (issue #4355 struct-shrink S0 -- the value is no longer a
+        /// struct field). <see cref="FdrEntry.ExperimentProteinQvalue"/> has no
+        /// projection slot (it stays at its 1.0 default until the Stage 7 second pass,
+        /// on the reloaded survivor stubs), so this only sets the run-level value --
+        /// matching the first-pass call's <c>setExperiment: false</c>.
+        /// </summary>
+        public static void PropagateRunProteinQvalues(
+            IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
+            string[] peptideById,
+            ProteinFdrResult proteinFdr,
+            FdrProjectionOutputs outputs)
+        {
+            for (int f = 0; f < perFileProjections.Count; f++)
+            {
+                var rows = perFileProjections[f].Value;
+                for (int i = 0; i < rows.Count; i++)
+                {
+                    double q;
+                    if (!proteinFdr.PeptideQvalues.TryGetValue(peptideById[rows[i].PeptideId], out q))
+                        q = 1.0;
+                    outputs.SetRunProteinQvalue(f, i, q);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Projection-buffer counterpart of
+        /// <see cref="RunFirstPassProteinFdr(IList{KeyValuePair{string, List{FdrEntry}}}, IList{LibraryEntry}, OspreyConfig)"/>.
+        /// Builds the detected-peptide set + per-peptide best scores from the
+        /// projection rows (materializing modified sequences from
+        /// <paramref name="peptideById"/>), runs the identical parsimony +
+        /// picked-protein FDR (those helpers are peptide-string-keyed and never
+        /// touch the buffer), and writes the run protein q-value into
+        /// <paramref name="outputs"/> for every row (issue #4355 struct-shrink S0 --
+        /// it is no longer a struct field). Byte-identical to the FdrEntry path.
+        /// </summary>
+        public static FirstPassProteinFdrResult RunFirstPassProteinFdr(
+            IList<KeyValuePair<string, List<FdrProjection>>> perFileProjections,
+            string[] peptideById,
+            FdrProjectionOutputs outputs,
+            IList<LibraryEntry> fullLibrary,
+            OspreyConfig config)
+        {
+            var detectedPeptides = new HashSet<string>(StringComparer.Ordinal);
+            for (int f = 0; f < perFileProjections.Count; f++)
+            {
+                var rows = perFileProjections[f].Value;
+                for (int r = 0; r < rows.Count; r++)
+                {
+                    if (!rows[r].IsDecoy && outputs.RunPeptideQvalue(f, r) <= config.RunFdr)
+                        detectedPeptides.Add(peptideById[rows[r].PeptideId]);
+                }
+            }
+
+            var parsimony = BuildProteinParsimony(
+                fullLibrary, config.SharedPeptides, detectedPeptides);
+            var bestScores = CollectBestPeptideScores(perFileProjections, peptideById, outputs);
+            var proteinFdr = ComputeProteinFdr(parsimony, bestScores, config.RunFdr);
+
+            PropagateRunProteinQvalues(perFileProjections, peptideById, proteinFdr, outputs);
+
             return new FirstPassProteinFdrResult(
                 detectedPeptides, parsimony, bestScores, proteinFdr);
         }

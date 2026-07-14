@@ -36,8 +36,6 @@ namespace pwiz.Osprey.FDR.Reconciliation
     /// </summary>
     public static class ReconciliationPlanner
     {
-        private const string DECOY_PREFIX = @"DECOY_";
-
         // Minimum RT tolerance floor (minutes) accommodates scan-resolution rounding.
         private const double MIN_RT_TOLERANCE = 0.1;
 
@@ -56,8 +54,11 @@ namespace pwiz.Osprey.FDR.Reconciliation
         private const int SIGMA_CLIP_MIN_SURVIVORS = 20;
 
         /// <summary>
-        /// Plan inter-replicate peak reconciliation for all entries across all
-        /// runs.
+        /// Plan inter-replicate peak reconciliation for all entries across all runs.
+        /// In-memory / test overload: takes the per-file CWT candidate lists as a
+        /// materialized dictionary and adapts it to the streaming overload below.
+        /// Production (Stage 6) uses the streaming overload so it never holds all
+        /// files' candidates resident.
         /// </summary>
         /// <returns>
         /// A dictionary keyed by (fileName, entryIndex) for entries that need
@@ -72,12 +73,46 @@ namespace pwiz.Osprey.FDR.Reconciliation
             IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal,
             double experimentFdr)
         {
+            if (perFileCwtCandidates == null)
+                throw new ArgumentNullException(nameof(perFileCwtCandidates));
+            return Plan(consensus, perFileEntries,
+                fileName => perFileCwtCandidates.TryGetValue(fileName, out var fileCwt)
+                    ? fileCwt
+                    : null,
+                perFileRefinedCal, perFileOriginalCal, experimentFdr);
+        }
+
+        /// <summary>
+        /// Plan inter-replicate peak reconciliation for all entries across all runs.
+        /// Streaming entry point: <paramref name="loadFileCwt"/> supplies one file's
+        /// CWT candidate lists (indexed by <see cref="FdrEntry.ParquetIndex"/>) on
+        /// demand -- it is called once per file inside the per-file loop and its
+        /// result falls out of scope before the next file, so no more than one file's
+        /// candidates are resident at a time (the streaming fix for the 82-file
+        /// Stage-6 planning OOM). It may return null for a file with no candidates
+        /// (treated as empty). The cross-file inputs (the passing-base-id set, the
+        /// consensus map) never touch CWT candidates, so the streamed result is
+        /// element-for-element identical to loading them all up front.
+        /// </summary>
+        /// <returns>
+        /// A dictionary keyed by (fileName, entryIndex) for entries that need
+        /// re-scoring. Entries absent from the map implicitly retain their
+        /// current peak (ReconcileAction.Keep).
+        /// </returns>
+        public static IReadOnlyDictionary<(string File, int Index), ReconcileAction> Plan(
+            IReadOnlyList<PeptideConsensusRT> consensus,
+            IReadOnlyList<KeyValuePair<string, IReadOnlyList<FdrEntry>>> perFileEntries,
+            Func<string, IReadOnlyList<IReadOnlyList<CwtCandidate>>> loadFileCwt,
+            IReadOnlyDictionary<string, RTCalibration> perFileRefinedCal,
+            IReadOnlyDictionary<string, RTCalibration> perFileOriginalCal,
+            double experimentFdr)
+        {
             if (consensus == null)
                 throw new ArgumentNullException(nameof(consensus));
             if (perFileEntries == null)
                 throw new ArgumentNullException(nameof(perFileEntries));
-            if (perFileCwtCandidates == null)
-                throw new ArgumentNullException(nameof(perFileCwtCandidates));
+            if (loadFileCwt == null)
+                throw new ArgumentNullException(nameof(loadFileCwt));
             if (perFileRefinedCal == null)
                 throw new ArgumentNullException(nameof(perFileRefinedCal));
             if (perFileOriginalCal == null)
@@ -111,7 +146,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 }
                 else
                 {
-                    peptideMads.Sort();
+                    peptideMads.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant
                     int mid = peptideMads.Count / 2;
                     globalWithinPeptideMadLib = peptideMads.Count % 2 == 0
                         ? 0.5 * (peptideMads[mid - 1] + peptideMads[mid])
@@ -119,13 +154,18 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 }
             }
 
-            // Passing precursors: (base_sequence, charge) where any of the
+            // Passing precursors keyed on (base_id, charge) where any of the
             // four q-values passes at experimentFdr. Rationale at
-            // reconciliation.rs:516-528 — blib admits a precursor if ANY
-            // level passes, so reconciliation must include them in every
-            // file to keep per-file boundaries self-consistent. Decoys are
-            // picked up by the paired-decoy logic below.
-            var passingPrecursors = new HashSet<(string, byte)>();
+            // reconciliation.rs:560-576 — blib admits a precursor if ANY level
+            // passes, so reconciliation must include them in every file to keep
+            // per-file boundaries self-consistent. We key on
+            // base_id = EntryId & 0x7FFFFFFF (plus charge) rather than
+            // modified_sequence so paired decoys are recognised regardless of
+            // whether their modified_sequence carries a DECOY_ prefix: a target
+            // and its library-supplied decoy (Carafe / FDRBench manifest) share
+            // the same base_id by construction. Mirrors Rust plan_reconciliation
+            // and the base_id linkage already used by ConsensusRts.Compute.
+            var passingBaseIds = new HashSet<(uint, byte)>();
             foreach (var fileKvp in perFileEntries)
             {
                 foreach (var entry in fileKvp.Value)
@@ -136,7 +176,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                         Math.Min(entry.RunPrecursorQvalue, entry.RunPeptideQvalue),
                         Math.Min(entry.ExperimentPrecursorQvalue, entry.ExperimentPeptideQvalue));
                     if (bestQ <= experimentFdr)
-                        passingPrecursors.Add((entry.ModifiedSequence, entry.Charge));
+                        passingBaseIds.Add((entry.EntryId & 0x7FFFFFFFu, entry.Charge));
                 }
             }
 
@@ -186,8 +226,9 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     Math.Max(globalWithinPeptideMadLib * MAD_TO_SIGMA * SIGMA_FACTOR, MIN_RT_TOLERANCE),
                     fileCalToleranceCeiling);
 
-                if (!perFileCwtCandidates.TryGetValue(fileName, out var fileCwt))
-                    fileCwt = emptyCwt;
+                // Load this file's CWT candidates on demand and release them at
+                // the end of the iteration -- one file resident at a time.
+                var fileCwt = loadFileCwt(fileName) ?? emptyCwt;
 
                 for (int entryIdx = 0; entryIdx < entries.Count; entryIdx++)
                 {
@@ -198,12 +239,12 @@ namespace pwiz.Osprey.FDR.Reconciliation
                     if (!consensusMap.TryGetValue(key, out var consensusEntry))
                         continue;
 
-                    // Only reconcile precursors that passed experiment-FDR
-                    // (or paired decoys). base_sequence strips DECOY_.
-                    string baseSeq = entry.ModifiedSequence.StartsWith(DECOY_PREFIX, StringComparison.Ordinal)
-                        ? entry.ModifiedSequence.Substring(DECOY_PREFIX.Length)
-                        : entry.ModifiedSequence;
-                    if (!passingPrecursors.Contains((baseSeq, entry.Charge)))
+                    // Only reconcile precursors that passed experiment-FDR (or
+                    // their paired decoys). Pair by base_id (EntryId & 0x7FFFFFFF)
+                    // so a library-supplied decoy whose modified_sequence has no
+                    // DECOY_ prefix is still recognised -- see the passingBaseIds
+                    // rationale above.
+                    if (!passingBaseIds.Contains((entry.EntryId & 0x7FFFFFFFu, entry.Charge)))
                         continue;
 
                     double expectedRt = cal.Predict(consensusEntry.ConsensusLibraryRt);
@@ -314,7 +355,7 @@ namespace pwiz.Osprey.FDR.Reconciliation
                 return all[all.Length / 2];
             }
 
-            clipped.Sort();
+            clipped.Sort(); // Array.Sort OK: median of a single primitive (double) list, no parallel data; tie order is irrelevant
             return clipped[clipped.Count / 2];
         }
     }

@@ -258,36 +258,34 @@ namespace pwiz.Osprey.IO
                 }
             }
 
-            // Write to a temp file first, then move to final path (safe NAS writes)
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                string.Format("osprey_{0}_{1}", System.Diagnostics.Process.GetCurrentProcess().Id,
-                    Path.GetFileName(path)));
-
-            using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-            using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
+            // Write to a sibling temp file first, then atomically rename into
+            // the final path (safe NAS writes): the temp lives in the SAME
+            // directory as the destination, so the promote is an in-volume
+            // rename rather than a cross-volume copy that could truncate.
+            using (var saver = new FileSaver(path))
             {
-                writer.CompressionMethod = CompressionMethod.Zstd;
-
-                // Set custom metadata if provided
-                if (metadata != null && metadata.Count > 0)
-                    writer.CustomMetadata = metadata;
-
-                using (var group = writer.CreateRowGroup())
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
                 {
-                    var columns = BuildRowGroupColumns(
-                        entryIds, isDecoys, sequences, modifiedSequences, charges,
-                        precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
-                        boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
-                        fragmentIntensities, refXicRts, refXicIntensities,
-                        featureFields, featureArrays);
-                    WriteRowGroupColumns(group, columns, n);
-                }
-            }
+                    writer.CompressionMethod = CompressionMethod.Zstd;
 
-            // Move temp to final destination
-            if (File.Exists(path))
-                File.Delete(path);
-            File.Move(tempPath, path);
+                    // Set custom metadata if provided
+                    if (metadata != null && metadata.Count > 0)
+                        writer.CustomMetadata = metadata;
+
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        var columns = BuildRowGroupColumns(
+                            entryIds, isDecoys, sequences, modifiedSequences, charges,
+                            precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
+                            boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
+                            fragmentIntensities, refXicRts, refXicIntensities,
+                            featureFields, featureArrays);
+                        WriteRowGroupColumns(group, columns, n);
+                    }
+                }
+                saver.Commit();
+            }
         }
 
         /// <summary>
@@ -452,32 +450,32 @@ namespace pwiz.Osprey.IO
                 }
             }
 
-            string tempPath = Path.Combine(Path.GetTempPath(),
-                string.Format("osprey_{0}_{1}", System.Diagnostics.Process.GetCurrentProcess().Id,
-                    Path.GetFileName(path)));
-
-            using (var stream = new FileStream(tempPath, FileMode.Create, FileAccess.Write))
-            using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
+            // Write to a sibling temp file first, then atomically rename into
+            // the final path (safe NAS writes): the temp lives in the SAME
+            // directory as the destination, so the promote is an in-volume
+            // rename rather than a cross-volume copy that could truncate.
+            using (var saver = new FileSaver(path))
             {
-                writer.CompressionMethod = CompressionMethod.Zstd;
-                if (metadata != null && metadata.Count > 0)
-                    writer.CustomMetadata = metadata;
-
-                using (var group = writer.CreateRowGroup())
+                using (var stream = new FileStream(saver.SafeName, FileMode.Create, FileAccess.Write))
+                using (var writer = RunSync(ParquetWriter.CreateAsync(schema, stream)))
                 {
-                    var columns = BuildRowGroupColumns(
-                        entryIds, isDecoys, sequences, modifiedSequences, charges,
-                        precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
-                        boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
-                        fragmentIntensities, refXicRts, refXicIntensities,
-                        featureFields, featureArrays);
-                    WriteRowGroupColumns(group, columns, n);
-                }
-            }
+                    writer.CompressionMethod = CompressionMethod.Zstd;
+                    if (metadata != null && metadata.Count > 0)
+                        writer.CustomMetadata = metadata;
 
-            if (File.Exists(path))
-                File.Delete(path);
-            File.Move(tempPath, path);
+                    using (var group = writer.CreateRowGroup())
+                    {
+                        var columns = BuildRowGroupColumns(
+                            entryIds, isDecoys, sequences, modifiedSequences, charges,
+                            precursorMzs, proteinIds, scanNumbers, apexRts, startRts, endRts,
+                            boundsAreas, boundsSnrs, fileNames, cwtCandidates, fragmentMzs,
+                            fragmentIntensities, refXicRts, refXicIntensities,
+                            featureFields, featureArrays);
+                        WriteRowGroupColumns(group, columns, n);
+                    }
+                }
+                saver.Commit();
+            }
         }
 
         /// <summary>
@@ -774,6 +772,58 @@ namespace pwiz.Osprey.IO
         }
 
         /// <summary>
+        /// Streams the scalar stub columns of a <c>.scores.parquet</c> without allocating a
+        /// single <see cref="FdrEntry"/>. Reads exactly the five columns the first-pass
+        /// FdrProjection needs -- entry_id, charge, is_decoy, coelution_sum,
+        /// modified_sequence -- and invokes <paramref name="onRow"/> once per row in the
+        /// same order as <see cref="LoadFdrStubsFromParquet"/>, applying the identical
+        /// "skip this row group when entry_id/is_decoy are absent" rule. The caller's
+        /// running row count therefore equals that method's <c>ParquetIndex</c>.
+        ///
+        /// Exists because rematerializing the whole 191M-row stub buffer just to convert it
+        /// into 32 B projection rows cost ~53 GB on an 82-file Astral run. Osprey.IO must
+        /// not depend on Osprey.FDR, so the projection row is assembled by the caller from
+        /// these scalars rather than returned from here.
+        /// </summary>
+        public static void ReadFdrStubScalars(string path,
+            Action<uint, byte, bool, double, string> onRow)
+        {
+            if (onRow == null)
+                throw new ArgumentNullException(nameof(onRow));
+
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                for (int g = 0; g < reader.RowGroupCount; g++)
+                {
+                    using (var groupReader = reader.OpenRowGroupReader(g))
+                    {
+                        var entryIdCol = ReadColumnByName<uint[]>(groupReader, fieldsByName, FIELD_ENTRY_ID.Name);
+                        var isDecoyCol = ReadColumnByName<bool[]>(groupReader, fieldsByName, FIELD_IS_DECOY.Name);
+                        var chargeCol = ReadColumnByName<byte[]>(groupReader, fieldsByName, FIELD_CHARGE.Name);
+                        var modseqCol = ReadColumnByName<string[]>(groupReader, fieldsByName, FIELD_MODIFIED_SEQUENCE.Name);
+                        var coelutionCol = ReadColumnByName<double[]>(groupReader, fieldsByName, FIELD_COELUTION_SUM.Name);
+
+                        if (entryIdCol == null || isDecoyCol == null)
+                            continue;
+
+                        int rowCount = entryIdCol.Length;
+                        for (int row = 0; row < rowCount; row++)
+                        {
+                            onRow(
+                                entryIdCol[row],
+                                chargeCol != null ? chargeCol[row] : (byte)0,
+                                isDecoyCol[row],
+                                coelutionCol != null ? coelutionCol[row] : 0.0,
+                                modseqCol != null ? modseqCol[row] : string.Empty);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// Load only the <c>cwt_candidates</c> column from a Parquet cache,
         /// returning one <see cref="CwtCandidate"/> list per row in the same
         /// order as <see cref="LoadFdrStubsFromParquet"/>. Used by Stage 6
@@ -819,6 +869,53 @@ namespace pwiz.Osprey.IO
                 }
             }
             return allCandidates;
+        }
+
+        /// <summary>
+        /// Footer-only probe of a scores parquet: the total row count and whether
+        /// the <c>cwt_candidates</c> column is present, read from the Parquet
+        /// metadata WITHOUT decoding any column data. Lets Stage 6 validate that
+        /// every file's stub <see cref="FdrEntry.ParquetIndex"/> is in range (the
+        /// reconciliation all-or-nothing gate) without holding all files'
+        /// candidate lists resident -- the streaming counterpart of
+        /// <see cref="LoadCwtCandidatesFromParquet"/>, whose per-file result count
+        /// equals the returned <c>RowCount</c> when the column is present and 0 when
+        /// it is absent (that method returns an empty list for a missing column).
+        /// </summary>
+        public static (long RowCount, bool HasCwtCandidatesField) ProbeCwtRowMetadata(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                long rowCount = reader.Metadata?.NumRows ?? 0L;
+                var fieldsByName = BuildFieldLookup(reader);
+                bool hasCwt = fieldsByName.ContainsKey(FIELD_CWT_CANDIDATES.Name);
+                return (rowCount, hasCwt);
+            }
+        }
+
+        /// <summary>
+        /// Footer-only check that a scores parquet carries the PIN feature columns,
+        /// reading the schema WITHOUT decoding any column data. The lean resume /
+        /// HPC-merge paths stream only the scalar stub columns
+        /// (<see cref="ReadFdrStubScalars"/>) and never materialize the 21-float
+        /// feature vectors, so they lose the fat path's implicit
+        /// <c>features.Count == stubs.Count</c> corruption guard (which throws when
+        /// <see cref="LoadPinFeaturesFromParquet"/> yields zero rows because the
+        /// feature schema is absent). This restores an equivalent fail-fast up front
+        /// without paying the feature-load memory the lean path exists to avoid.
+        /// Presence of the first PIN feature column is decisive: parquet keeps every
+        /// column in a row group the same length, so a present column has the stub
+        /// row count, and an absent one is exactly the desync the fat path rejected.
+        /// </summary>
+        public static bool HasPinFeatureColumns(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                return fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]);
+            }
         }
 
         #endregion

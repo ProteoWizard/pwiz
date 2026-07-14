@@ -375,8 +375,12 @@ namespace pwiz.Osprey.IO
 
             if (maxIntensity > 0f)
             {
-                foreach (var f in fragments)
+                for (int i = 0; i < fragments.Count; i++)
+                {
+                    var f = fragments[i];
                     f.RelativeIntensity /= maxIntensity;
+                    fragments[i] = f;
+                }
             }
 
             return fragments;

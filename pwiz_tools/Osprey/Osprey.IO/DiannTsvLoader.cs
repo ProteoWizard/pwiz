@@ -150,17 +150,19 @@ namespace pwiz.Osprey.IO
             if (!string.IsNullOrEmpty(fragChargeStr))
                 byte.TryParse(fragChargeStr, out fragmentCharge);
 
-            NeutralLoss neutralLoss = null;
+            NeutralLossCode lossCode = NeutralLossCode.None;
+            double lossMass = 0.0;
             string lossStr = GetFieldOrNull(fields, cols.FragmentLossType);
             if (!string.IsNullOrEmpty(lossStr))
-                neutralLoss = NeutralLoss.Parse(lossStr);
+                (lossCode, lossMass) = NeutralLoss.Parse(lossStr);
 
             var annotation = new FragmentAnnotation
             {
                 IonType = ionType,
                 Ordinal = ordinal,
                 Charge = fragmentCharge,
-                NeutralLoss = neutralLoss
+                NeutralLoss = lossCode,
+                CustomLossMass = lossMass
             };
 
             // Protein and gene info

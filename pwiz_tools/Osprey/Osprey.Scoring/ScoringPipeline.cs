@@ -169,10 +169,17 @@ namespace pwiz.Osprey.Scoring
                 // best-peak picks per Stellar file.
                 double mad = context.OriginalRtMad ?? rtCalibration.Stats().MAD;
                 double robustSd = mad * 1.4826;
-                double rtToleranceMad = robustSd * 3.0;
-                rtToleranceGlobal = Math.Max(
-                    config.RtCalibration.MinRtTolerance,
-                    Math.Min(config.RtCalibration.MaxRtTolerance, rtToleranceMad));
+                // Shared definition of the final search-window half-width so the
+                // scoring path, the persisted calibration JSON, and the console
+                // calibration summary all report the same number (issue #4364).
+                // The floor widens for a calibration fitted from few points: a MAD
+                // measured from a thin set can be small by luck, and clamping it to
+                // the configured 0.5 min would pair a tight window with a fit that
+                // does not support one (issue #4401). No-op at n >= MinCalibrationPoints.
+                rtToleranceGlobal = RTCalibration.SearchWindowHalfWidth(
+                    mad, rtCalibration.Stats().NPoints,
+                    config.RtCalibration.MinRtTolerance, config.RtCalibration.MaxRtTolerance,
+                    config.RtCalibration.MinCalibrationPoints);
                 rtSigmaGlobal = Math.Max(robustSd * 5.0, 0.1);
                 if (OspreyOutput.Verbose) _logInfo(string.Format(
                     "Coelution search RT tolerance: {0:F2} min (3*MAD*1.4826, MAD={1:F3}{2})",
@@ -273,9 +280,15 @@ namespace pwiz.Osprey.Scoring
                 {
                     var window = windowsToScore[wIdx];
                     var swWindow = Stopwatch.StartNew();
+                    // When calibration failed, centre the window on the library/mzML RT
+                    // range mapping instead of the raw library RT. The tolerance above
+                    // is still FallbackRtTolerance -- the map predicts, it does not
+                    // narrow (issue #4401). Identity, hence a no-op, when the two RT
+                    // scales already agree.
                     var windowEntries = coelutionScorer.ScoreWindow(
                         window, fullLibrary, spectraByWindowKey, ms1Spectra,
-                        rtCalibration, ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
+                        rtCalibration ?? context.FallbackRtMap,
+                        ms1Calibration, rtToleranceGlobal, rtSigmaGlobal,
                         scorer, context);
                     swWindow.Stop();
 
@@ -357,7 +370,7 @@ namespace pwiz.Osprey.Scoring
             {
                 var sortedRts = new List<double>(spectra.Count);
                 foreach (var s in spectra) sortedRts.Add(s.RetentionTime);
-                sortedRts.Sort();
+                sortedRts.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to dedup and take the median spacing; tie order is irrelevant
                 // Dedup adjacent identicals
                 int writeIdx = 0;
                 for (int i = 0; i < sortedRts.Count; i++)
@@ -377,7 +390,7 @@ namespace pwiz.Osprey.Scoring
                     var intervals = new List<double>(sortedRts.Count - 1);
                     for (int i = 1; i < sortedRts.Count; i++)
                         intervals.Add(sortedRts[i] - sortedRts[i - 1]);
-                    intervals.Sort();
+                    intervals.Sort(); // Array.Sort OK: single primitive (double) list, sorted only to take the median interval; tie order is irrelevant
                     rtNeighborhood = 5.0 * intervals[intervals.Count / 2];
                 }
             }
@@ -573,7 +586,9 @@ namespace pwiz.Osprey.Scoring
             // un-sorted order), so an unsorted dedup output cascades into
             // SVM working-set divergence and ~190-precursor / ~270-peptide
             // first-pass FDR drift on Stellar Single.
-            deduped.Sort((a, b) => a.EntryId.CompareTo(b.EntryId));
+            // Array.Sort OK: entries are deduplicated by pair so each EntryId is unique;
+            // the comparator never returns 0 and the unstable-sort tie path is unreachable.
+            deduped.Sort((a, b) => a.EntryId.CompareTo(b.EntryId)); // Array.Sort OK: (see above) EntryId is unique per deduped entry, so the comparator never ties
 
             int removed = entries.Count - deduped.Count;
             if (removed > 0)

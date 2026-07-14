@@ -41,9 +41,9 @@ namespace pwiz.Osprey.Scoring
     ///
     /// RESOLUTION-MODE CACHE TYPE: the call MUST go through
     /// <see cref="IResolutionStrategy.ScoreXcorr"/>; Unit reads
-    /// preprocessed.Doubles (f64), HRAM reads preprocessed.Floats (f32 narrowed on
-    /// store). Never re-preprocess or assume f64. Per net8.0-canonical parity, gate
-    /// on net8.0.
+    /// preprocessed.Doubles (f64), HRAM reads preprocessed.Sparse (the centered value
+    /// recovered on demand and narrowed to f32, as the old dense f32 cache stored it).
+    /// Never re-preprocess or assume f64. Per net8.0-canonical parity, gate on net8.0.
     ///
     /// PERF: the shared <see cref="OspreyScoringContext.XcorrScratchPool"/> is
     /// threaded into ScoreXcorr so HRAM scoring avoids per-call 100K-bin LOH

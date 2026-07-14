@@ -31,9 +31,9 @@ namespace pwiz.Osprey.Scoring
     /// A single set of scratch buffers reused across XCorr calls to avoid
     /// per-call LOH allocation on HRAM (NBins ~100K, ~800 KB per array).
     ///
-    /// All preprocessing math runs in f64 on these buffers; the per-
-    /// spectrum cache that feeds the dot product is f32 and is owned by
-    /// the caller (see <c>SpectralScorer.PreprocessSpectrumForXcorrInto</c>).
+    /// All preprocessing math runs in f64 on these buffers; the HRAM per-
+    /// spectrum cache that feeds the dot product is the sparse form built by
+    /// <c>SpectralScorer.PreprocessSpectrumForXcorrSparse</c> (issue #4398).
     /// The f64 scratch is shared between the calibration path
     /// (XcorrAtScan) and the HRAM main-search cache build path, so a
     /// single rented scratch services both.
@@ -72,10 +72,8 @@ namespace pwiz.Osprey.Scoring
     public sealed class XcorrScratchPool
     {
         private readonly ConcurrentBag<XcorrScratch> _scratchBag = new ConcurrentBag<XcorrScratch>();
-        private readonly ConcurrentBag<float[]> _binsBag = new ConcurrentBag<float[]>();
         private readonly int _nBins;
         private int _scratchAllocCount;
-        private int _binsAllocCount;
 
         public XcorrScratchPool(int nBins)
         {
@@ -86,9 +84,6 @@ namespace pwiz.Osprey.Scoring
 
         /// <summary>Number of scratch sets ever allocated (high-water mark).</summary>
         public int ScratchAllocCount { get { return _scratchAllocCount; } }
-
-        /// <summary>Number of single-buffer arrays ever allocated.</summary>
-        public int BinsAllocCount { get { return _binsAllocCount; } }
 
         public XcorrScratch Rent()
         {
@@ -110,47 +105,10 @@ namespace pwiz.Osprey.Scoring
                 return;
             Array.Clear(s.Binned, 0, s.Binned.Length);
             Array.Clear(s.VisitedBins, 0, s.VisitedBins.Length);
-            // BinnedF is zeroed by callers on each preprocess call so it does
-            // not need post-window zeroing here (would just duplicate work).
+            // Windowed / Prefix / Preprocessed are fully overwritten on every
+            // preprocess call, so zeroing them here would only duplicate work.
             _scratchBag.Add(s);
         }
 
-        /// <summary>
-        /// Rent a single <c>float[NBins]</c> buffer used to hold a
-        /// preprocessed spectrum across the lifetime of one window. The
-        /// caller is responsible for fully overwriting the returned array
-        /// (the preprocessing pipeline does so); no zeroing happens on
-        /// rent or return. Used by <c>HramStrategy.PreprocessWindowSpectra</c>
-        /// to build the per-window <c>float[][]</c> cache without
-        /// allocating through the LOH on every window. f32 matches Rust
-        /// upstream maccoss/osprey to halve cache memory vs f64.
-        /// </summary>
-        public float[] RentBins()
-        {
-            float[] buf;
-            if (_binsBag.TryTake(out buf))
-                return buf;
-            Interlocked.Increment(ref _binsAllocCount);
-            return new float[_nBins];
-        }
-
-        public void ReturnBins(float[] buf)
-        {
-            if (buf == null || buf.Length != _nBins)
-                return;
-            _binsBag.Add(buf);
-        }
-
-        /// <summary>
-        /// Convenience: return every non-null entry of a preprocessed
-        /// window cache. Used by <c>ScoreWindow</c> in its finally block.
-        /// </summary>
-        public void ReturnBinsArray(float[][] arrays)
-        {
-            if (arrays == null)
-                return;
-            foreach (var a in arrays)
-                ReturnBins(a);
-        }
     }
 }
