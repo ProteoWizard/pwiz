@@ -178,6 +178,10 @@ namespace pwiz.Skyline.ToolsUI
             {
                 control.BeginInvoke((Action) (() =>
                 {
+                    // Nearly always the one the UI thread's message loop installed. The fallback is for the gap in
+                    // between two of them: the StartPage runs its own loop (ShowDialog), and choosing an action there
+                    // ENDS that loop -- uninstalling its context -- before Application.Run starts the main window's
+                    // and installs the next. A thread pumping in that gap has none.
                     var ctx = SynchronizationContext.Current as WindowsFormsSynchronizationContext ?? new WindowsFormsSynchronizationContext();
                     lock (lockObj) { syncContext = ctx; Monitor.Pulse(lockObj); }
                     try { action?.Invoke(); }
