@@ -1150,7 +1150,12 @@ namespace pwiz.Osprey.FDR
             // per-entry math and the per-file iteration order match the
             // PercolatorEntry streaming loop exactly, so finalScores + the
             // contribution sums are byte-for-byte identical.
+            // Per-file progress so this full-population score pass (~15 min silent at
+            // 344M rows on the 82-file first-pass join) shows movement; the heartbeat
+            // covers a slow single file. Console-only -- never touches finalScores /
+            // the sink, so byte-identity is unaffected.
             int gi = 0;
+            var scoreProgress = new ProgressReporter(string.Format(@"Scoring {0} entries", n), n);
             foreach (var kvp in perFile)
             {
                 IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
@@ -1170,7 +1175,9 @@ namespace pwiz.Osprey.FDR
                     contribAcc.Add(featureBuf, proj.IsDecoy);
                     gi++;
                 }
+                scoreProgress.Report(gi);
             }
+            scoreProgress.Dispose();
 
             var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
             EmitFeatureContributions(contributions);
