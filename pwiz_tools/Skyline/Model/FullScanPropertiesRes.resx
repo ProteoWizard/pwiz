@@ -133,6 +133,12 @@
   <data name="Description_PrecursorMz" xml:space="preserve">
     <value>Precursor m/z of the selected MS/MS spectrum.</value>
   </data>
+  <data name="OtherMetadata" xml:space="preserve">
+    <value>Other Metadata</value>
+  </data>
+  <data name="Description_OtherMetadata" xml:space="preserve">
+    <value>Parameters the data file reports that Skyline does not interpret into its own fields.</value>
+  </data>
   <data name="Charge" xml:space="preserve">
     <value>Charge</value>
   </data>
