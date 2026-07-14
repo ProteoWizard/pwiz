@@ -450,64 +450,19 @@ namespace pwiz.Skyline.ToolsUI
         {
             // Walked once, and kept in the order it came back (Z-order, topmost first -- load-bearing; see ResolveForm).
             var topLevelWindows = StandaloneWindow.GetTopLevelWindows(cancellationToken).ToList();
-            return DescribeThroughMainWindow(topLevelWindows, cancellationToken) ??
-                   DescribeForms(topLevelWindows).ToArray();
+            FormInfo[] openForms = null;
+            var asyncResult = Program.MainWindow?.BeginInvoke(new Action(() =>
+            {
+                openForms = topLevelWindows.Concat(GetDockedForms(cancellationToken))
+                    .Select(form => form.GetFormInfo()).ToArray();
+            }));
+            asyncResult?.AsyncWaitHandle.WaitOne(MAIN_THREAD_TIMEOUT_MILLIS);
+            return openForms ?? topLevelWindows.Select(form => form.GetFormInfo()).ToArray();
         }
 
         // How long to give the main thread to describe the forms before describing them here instead. A thread that is
         // pumping runs the work at once; one that has not in this long is busy with something long.
         private const int MAIN_THREAD_TIMEOUT_MILLIS = 2000;
-
-        /// <summary>The forms as the MAIN THREAD sees them -- every one of them, described in full, in one trip: the
-        /// forms all live on that thread, so from there each reports itself completely (DockState, HasGraph, the rest),
-        /// and the ones docked in the main window can be reached at all. Or null when that thread did not get to it in
-        /// time, and the caller must settle for what can be read without it.
-        ///
-        /// <para>Because sometimes it never would. Skyline runs one operation with the work on the MAIN thread and only
-        /// its dialog on a thread of its own -- a long grid paste (LongOperationRunner, behind a
-        /// BackgroundThreadLongWaitDlg). While it runs, the main thread does not pump, so this trip would not come back
-        /// until the paste finished, and the caller could not see the very dialog that would let it CANCEL the paste.
-        /// Hence POSTED AND WAITED FOR WITH A TIMEOUT rather than Invoked: an Invoke would just wait. (And rather than
-        /// asking first whether the thread is busy -- the paste is queued before its dialog appears, so an answer of
-        /// "idle" can be stale by the time the work is posted behind it.)</para>
-        ///
-        /// <para>The abandoned delegate is harmless: it only reads, and it runs whenever the thread gets to it.</para>
-        /// </summary>
-        private static FormInfo[] DescribeThroughMainWindow(IList<StandaloneWindow> topLevelWindows,
-            CancellationToken cancellationToken)
-        {
-            var mainWindow = Program.MainWindow;
-            if (mainWindow == null || !mainWindow.IsHandleCreated)
-                return null;
-
-            FormInfo[] openForms = null;
-            var described = mainWindow.BeginInvoke(new Action(() =>
-                openForms = DescribeForms(topLevelWindows.Concat(GetDockedForms(cancellationToken))).ToArray()));
-            return described.AsyncWaitHandle.WaitOne(MAIN_THREAD_TIMEOUT_MILLIS) ? openForms : null;
-        }
-
-        private static IEnumerable<FormInfo> DescribeForms(IEnumerable<StandaloneWindow> forms)
-        {
-            foreach (var form in forms)
-            {
-                FormInfo formInfo = null;
-                try
-                {
-                    formInfo = form.GetFormInfo();
-                }
-                catch (Exception exception) when (!(exception is OperationCanceledException))
-                {
-                    // A form can close between the enumeration and the read -- skip the vanishing one rather than
-                    // failing the whole GetOpenForms for a caller polling while a dialog closes. (A cancellation is
-                    // the client giving up on the request, so that one is not swallowed.)
-                }
-
-                if (formInfo != null)
-                {
-                    yield return formInfo;
-                }
-            }
-        }
 
         /// <summary>Resolves a formId to the window it addresses -- a managed form (StandaloneForm) or a native
         /// dialog (NativeDialog), so no verb special-cases a native dialog. Throws if no open window has the id.
@@ -778,12 +733,12 @@ namespace pwiz.Skyline.ToolsUI
             // WM_GETTEXT to the owning thread and waits for it to pump -- and a form is owned by another thread
             // exactly when a BackgroundThreadLongWaitDlg is up, which is when the MAIN thread is busy and NOT pumping,
             // so reading the main window's title (or any other form's) would never come back. (Reading Handle is no
-            // better: its getter throws when the cross-thread check is on.) Read the caption of the handle the caller
-            // already has, which sends nothing and so cannot wait on anyone. For a top-level form the caption IS its
-            // Text, so the title -- and the id built from it -- come out the same either way.
+            // better: its getter throws when the cross-thread check is on.) Go to the handle the caller already has:
+            // User32.GetWindowText reads another thread's window rather than asking it, so it cannot wait. For a
+            // top-level form the caption IS its Text, so the title -- and the id built from it -- are the same either way.
             if (form.InvokeRequired)
             {
-                var caption = hwnd != IntPtr.Zero ? User32.GetWindowTextNoWait(hwnd) : null;
+                var caption = hwnd != IntPtr.Zero ? User32.GetWindowText(hwnd) : null;
                 return !string.IsNullOrEmpty(caption) ? caption : form.GetType().Name;
             }
             if (form is DockableFormEx dockable)

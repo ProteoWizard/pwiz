@@ -264,39 +264,38 @@ namespace pwiz.Common.SystemUtil.PInvoke
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int GetWindowTextLength(IntPtr hWnd);
 
-        /// <summary>
-        /// The full text (caption / control text) of a window, or empty if it has none. Sizes the buffer to the
-        /// window's text length (GetWindowTextLength) up front, so the complete text is always returned.
-        /// </summary>
-        public static string GetWindowText(IntPtr hwnd)
-        {
-            var sb = new StringBuilder(GetWindowTextLength(hwnd) + 1);
-            GetWindowText(hwnd, sb, sb.Capacity);
-            return sb.ToString();
-        }
-
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern int InternalGetWindowText(IntPtr hwnd, StringBuilder text, int maxCount);
 
         private const int MAX_WINDOW_TEXT = 1024;
 
         /// <summary>
-        /// The caption of a window owned by ANOTHER thread, read without waiting for that thread.
+        /// The full text (caption / control text) of a window, or empty if it has none.
         ///
-        /// <para><see cref="GetWindowText(System.IntPtr)"/> cannot do this: for a window of the CALLING process it
-        /// SENDS WM_GETTEXT, so it waits for as long as the owning thread is busy -- and the times we must read
-        /// another thread's window are exactly the times a thread is busy. InternalGetWindowText reads the caption the
-        /// window already has (what DefWindowProc stored when WM_SETTEXT arrived), sending nothing, so it always
-        /// returns at once.</para>
+        /// <para>OUR OWN THREAD's window is asked for its text: GetWindowText sends it WM_GETTEXT, which on this
+        /// thread is just a call into its wndproc, so the text is whatever the window computes -- what a control such
+        /// as an edit box holds, not merely a caption. The buffer is sized to the window's text length up front, so
+        /// the whole of it comes back.</para>
         ///
-        /// <para>It is what a window's caption IS, not what a WM_GETTEXT handler would compute -- fine for a form,
-        /// whose Text goes to the window through SetWindowText, and the reason this is for windows, not controls.</para>
+        /// <para>ANOTHER THREAD's window cannot be asked, only read: the send would wait for that thread to pump, and
+        /// the times we read another thread's window are exactly the times a thread is busy and never will (the main
+        /// thread, while a BackgroundThreadLongWaitDlg reports on the long paste it is running). So take the text the
+        /// window already has -- what DefWindowProc stored when WM_SETTEXT arrived -- which sends nothing and cannot
+        /// wait. That is a window's CAPTION, so it is right for a form and empty for the kind of control that keeps
+        /// its own text; those are read from the thread that owns them (UiAction.Invoke puts a gesture there first).</para>
         /// </summary>
-        public static string GetWindowTextNoWait(IntPtr hwnd)
+        public static string GetWindowText(IntPtr hwnd)
         {
-            var sb = new StringBuilder(MAX_WINDOW_TEXT);
-            int length = InternalGetWindowText(hwnd, sb, sb.Capacity);
-            return length > 0 ? sb.ToString() : null;
+            if (GetWindowThreadProcessId(hwnd, out _) == (uint) Kernel32.GetCurrentThreadId())
+            {
+                var text = new StringBuilder(GetWindowTextLength(hwnd) + 1);
+                GetWindowText(hwnd, text, text.Capacity);
+                return text.ToString();
+            }
+
+            var caption = new StringBuilder(MAX_WINDOW_TEXT);
+            InternalGetWindowText(hwnd, caption, caption.Capacity);
+            return caption.ToString();
         }
 
 
