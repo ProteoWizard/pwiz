@@ -1865,8 +1865,15 @@ namespace pwiz.Osprey.Tasks
             PipelineContext ctx)
         {
             var survivors = new List<KeyValuePair<string, List<FdrEntry>>>(projections.PerFile.Count);
+            // Per-file progress: reloading each file's survivor stubs from parquet + the 1st-pass
+            // sidecar was the ~70 s silent "First-pass compaction" gap at 82 files. Console-only.
+            var reloadProgress = new ProgressReporter(
+                string.Format(@"Reloading first-pass survivors from {0} file(s)", projections.PerFile.Count),
+                projections.PerFile.Count);
+            int reloadDone = 0;
             foreach (var kvp in projections.PerFile)
             {
+                reloadProgress.Report(++reloadDone);
                 string fileName = kvp.Key;
                 if (!perFileParquetPaths.TryGetValue(fileName, out string parquetPath))
                 {
@@ -1917,6 +1924,7 @@ namespace pwiz.Osprey.Tasks
                 });
                 survivors.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
             }
+            reloadProgress.Dispose();
             return survivors;
         }
     }
