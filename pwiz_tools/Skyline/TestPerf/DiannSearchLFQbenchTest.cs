@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
@@ -41,7 +40,7 @@ namespace TestPerf
     /// wrapper on the Navarro et al. 2016 LFQbench HYE124 dataset (PXD002952), specifically
     /// the TripleTOF 6600 / 64-variable-window subset that was the headline configuration
     /// in the paper. Outputs from this run feed directly into the same LFQbench R pipeline
-    /// the Navarro paper used (<see cref="O:Skyline.scripts.generateReport.R"/>), so the
+    /// the Navarro paper used (<c>Skyline/scripts/generateReport.R</c>), so the
     /// per-species plots are visually + statistically comparable to the paper figures.
     ///
     /// <para>Not auto-run because the .wiff.scan sidecars are ~6 GB each — total ~36 GB

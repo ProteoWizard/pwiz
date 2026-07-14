@@ -25,10 +25,8 @@ using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
-using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Controls.GroupComparison;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -39,7 +37,6 @@ using pwiz.Skyline.Model.GroupComparison;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace TestPerf
@@ -544,9 +541,8 @@ namespace TestPerf
 
         /// <summary>
         /// ProteoBench's HYE dataset mixes Human / Yeast / E.coli at engineered ratios
-        /// so that Condition_B / Condition_A log2 fold-changes equal 0 / −1 / +2
-        /// <summary>
-        /// Per-species box plot — the other canonical HYE benchmark visualization. Reads
+        /// so that Condition_B / Condition_A log2 fold-changes equal 0 / -1 / +2.
+        /// Per-species box plot - the other canonical HYE benchmark visualization. Reads
         /// the same per-peptide log2(B/A) values used by <see cref="AssertPerSpeciesLog2FoldChanges"/>,
         /// renders a box-and-whisker per species in a ZedGraph form, marks the expected
         /// value with a horizontal tick. Lets viewers see central tendency + spread per
@@ -562,7 +558,7 @@ namespace TestPerf
             // non-modal — capture hangs). Render directly to a PNG via ZedGraph and drop
             // it in the screenshot folder next to the volcano. This bypasses
             // PauseForScreenShot entirely but produces a publication-quality plot.
-            var pane = new ZedGraph.GraphPane(new System.Drawing.RectangleF(0, 0, 720, 480),
+            var pane = new ZedGraph.GraphPane(new RectangleF(0, 0, 720, 480),
                 @"Per-species log2(Condition B / A) — HYE benchmark", string.Empty, string.Empty);
             pane.Title.Text = @"log2 fold change distribution per species";
             pane.XAxis.Title.Text = @"Species";
