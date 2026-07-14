@@ -648,7 +648,9 @@ namespace pwiz.ProteowizardWrapper
         /// When true, <see cref="GetSpectrum(int)"/> collects the spectrum's uninterpreted
         /// mzML CV/user parameters into <see cref="SpectrumMetadata.OtherParams"/> for display.
         /// Off by default so the bulk import/extraction path pays neither the per-spectrum
-        /// cost nor the retained memory; the full-scan viewer turns it on for the one scan it shows.
+        /// cost nor the retained memory. The full-scan viewer turns it on for the spectra it
+        /// reads while open, which is the scan on display plus any the user steps to or that
+        /// are prefetched in the background - never a bulk pass over the file.
         /// </summary>
         public bool CaptureOtherParams { get; set; }
 
