@@ -67,7 +67,6 @@ namespace pwiz.Common.SystemUtil.PInvoke
             // ReSharper disable InconsistentNaming IdentifierTypo
             PBM_SETSTATE = 0x0410,
             WM_SETREDRAW = 0x000B,
-            WM_GETTEXT = 0x000D,
             WM_SETTEXT = 0x000C,
             WM_PAINT = 0x000F,
             WM_CLOSE = 0x0010,
@@ -276,26 +275,28 @@ namespace pwiz.Common.SystemUtil.PInvoke
             return sb.ToString();
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SendMessageTimeout(IntPtr hwnd, uint msg, IntPtr wParam, StringBuilder lParam,
-            uint flags, uint millisTimeout, out IntPtr result);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern int InternalGetWindowText(IntPtr hwnd, StringBuilder text, int maxCount);
 
-        private const uint SMTO_ABORTIFHUNG = 0x0002;
         private const int MAX_WINDOW_TEXT = 1024;
 
         /// <summary>
-        /// The text of a window whose thread may not be pumping, or null if it did not answer in time.
-        /// <see cref="GetWindowText(System.IntPtr)"/> cannot be used for that: for a window of the CALLING process it
-        /// sends WM_GETTEXT and waits, so it hangs for as long as that thread is busy. This sends the same message
-        /// with a timeout (and SMTO_ABORTIFHUNG, which fails at once against a thread that is already known hung), so
-        /// a caller can read what it can and get on with it.
+        /// The caption of a window owned by ANOTHER thread, read without waiting for that thread.
+        ///
+        /// <para><see cref="GetWindowText(System.IntPtr)"/> cannot do this: for a window of the CALLING process it
+        /// SENDS WM_GETTEXT, so it waits for as long as the owning thread is busy -- and the times we must read
+        /// another thread's window are exactly the times a thread is busy. InternalGetWindowText reads the caption the
+        /// window already has (what DefWindowProc stored when WM_SETTEXT arrived), sending nothing, so it always
+        /// returns at once.</para>
+        ///
+        /// <para>It is what a window's caption IS, not what a WM_GETTEXT handler would compute -- fine for a form,
+        /// whose Text goes to the window through SetWindowText, and the reason this is for windows, not controls.</para>
         /// </summary>
-        public static string GetWindowTextTimeout(IntPtr hwnd, uint millisTimeout)
+        public static string GetWindowTextNoWait(IntPtr hwnd)
         {
             var sb = new StringBuilder(MAX_WINDOW_TEXT);
-            var sent = SendMessageTimeout(hwnd, (uint) WinMessageType.WM_GETTEXT, (IntPtr) sb.Capacity, sb,
-                SMTO_ABORTIFHUNG, millisTimeout, out _);
-            return sent == IntPtr.Zero ? null : sb.ToString();
+            int length = InternalGetWindowText(hwnd, sb, sb.Capacity);
+            return length > 0 ? sb.ToString() : null;
         }
 
 

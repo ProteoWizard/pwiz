@@ -772,22 +772,18 @@ namespace pwiz.Skyline.ToolsUI
         /// Returns the display title for a form, used both in GetOpenForms output
         /// and in FindFormById matching.
         /// </summary>
-        // How long to wait on another thread for a form's title, before reporting the form without one. Long enough
-        // that a thread merely between messages answers; short enough not to hold up a listing of the open forms.
-        private const uint TITLE_TIMEOUT_MILLIS = 500;
-
         internal static string GetFormTitle(Form form, IntPtr hwnd = default(IntPtr))
         {
             // ANOTHER thread owns this form: do not read Text, and do not read Handle either. Control.Text SENDS
             // WM_GETTEXT to the owning thread and waits for it to pump -- and a form is owned by another thread
             // exactly when a BackgroundThreadLongWaitDlg is up, which is when the MAIN thread is busy and NOT pumping,
             // so reading the main window's title (or any other form's) would never come back. (Reading Handle is no
-            // better: its getter throws when the cross-thread check is on.) Ask Win32 for the caption of the handle
-            // the caller already has, with a timeout. For a top-level form the caption IS its Text, so the title --
-            // and the id built from it -- come out the same either way.
+            // better: its getter throws when the cross-thread check is on.) Read the caption of the handle the caller
+            // already has, which sends nothing and so cannot wait on anyone. For a top-level form the caption IS its
+            // Text, so the title -- and the id built from it -- come out the same either way.
             if (form.InvokeRequired)
             {
-                var caption = hwnd != IntPtr.Zero ? User32.GetWindowTextTimeout(hwnd, TITLE_TIMEOUT_MILLIS) : null;
+                var caption = hwnd != IntPtr.Zero ? User32.GetWindowTextNoWait(hwnd) : null;
                 return !string.IsNullOrEmpty(caption) ? caption : form.GetType().Name;
             }
             if (form is DockableFormEx dockable)
