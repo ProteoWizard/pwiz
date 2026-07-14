@@ -1760,7 +1760,7 @@ function renderCalSummary(){
     const t2=H(tr,"td",{class:"num"},meanSd(f.ms2Mean,f.ms2Sd));mark(t2,out(bMs2,num(f.ms2Mean)));
     const tr2=H(tr,"td",{class:"num"},fmt(f.rtRSquared,3));mark(tr2,out(bR2,num(f.rtRSquared)));
     const tw=H(tr,"td",{class:"num"},fmt(f.rtToleranceMin,2));mark(tw,out(bWin,num(f.rtToleranceMin)));
-    tr.onclick=()=>jumpToCalFile(i);
+    wireJump(tr,i);   // click-to-jump, but a drag (text selection) does not navigate
   });
   if(!files.length)H(host,"p",{class:"note"},"No per-file calibration data.");
 }
@@ -1777,20 +1777,56 @@ function highlightCalSelection(){
 // index (syncing the dropdown), re-render, and scroll the tab into view. Wired from the
 // Reproducibility scatter points and the Summary table rows; designed so more links are
 // trivial to add (any element -> jumpToCalFile(i[, "fdr"|"summary"|...])).
-function jumpToCalFile(i,targetTab){
+function activeTabName(){const t=document.querySelector('.tab.on');return t?t.getAttribute("data-tab"):null;}
+
+// A click that navigates must not eat a text selection: jump only when the pointer barely
+// moved between mousedown and click (a real click, not a drag-select) and no text range is
+// selected inside the element. Shared by the Summary rows; reusable for any future link.
+function wireJump(el,i,targetTab){
+  let mx=0,my=0;
+  el.addEventListener("mousedown",e=>{mx=e.clientX;my=e.clientY;});
+  el.addEventListener("click",e=>{
+    if(Math.abs(e.clientX-mx)>5||Math.abs(e.clientY-my)>5)return;               // dragged: selecting text
+    const sel=window.getSelection&&window.getSelection();
+    if(sel&&!sel.isCollapsed&&sel.anchorNode&&el.contains(sel.anchorNode))return; // active selection in-row
+    jumpToCalFile(i,targetTab);
+  });
+}
+
+function jumpToCalFile(i,targetTab,fromPop){
   targetTab=targetTab||"model";
+  // Push a browser-history entry so Back returns to the page we left (e.g. the Summary tab)
+  // scrolled where it was. Skipped when we ARE the Back navigation (fromPop) to avoid a loop.
+  if(!fromPop){try{
+    history.replaceState({calNav:true,tab:activeTabName(),sel:CAL.sel,y:window.scrollY},"");
+    history.pushState({calNav:true,tab:targetTab,sel:i,y:0},"");
+  }catch(_){/* file:// history can throw; navigation still works without Back support */}}
   if(typeof selectCal==="function")selectCal();   // ensure CAL mode (no-op if already on)
   activateTab(targetTab);
   CAL.sel=Math.max(0,Math.min(i,CAL.files.length-1));
   // renderPass() (via selectCal) already rendered CAL; re-sync the just-set file so the
   // dropdown + per-file cards reflect the target (selectCal ran before CAL.sel changed).
   setCalFile(CAL.sel);
-  const tab=document.querySelector('.tab[data-tab="'+targetTab+'"]');
-  if(tab&&tab.scrollIntoView)tab.scrollIntoView({behavior:"smooth",block:"start"});
+  // On a forward jump, scroll the target tab into view. On a Back restore, the popstate
+  // handler restores the saved scroll position instead, so don't fight it here.
+  if(!fromPop){const tab=document.querySelector('.tab[data-tab="'+targetTab+'"]');
+    if(tab&&tab.scrollIntoView)tab.scrollIntoView({behavior:"smooth",block:"start"});}
 }
 
 // Initial render of every pass-dependent card for the default pass (Pass 1).
 renderPass();
+
+// Browser Back/forward support for the cross-tab jump links. We manage scroll ourselves
+// (manual) and seed a baseline entry for the initial view, so the first Back after a jump
+// restores the tab + file + scroll position captured at jump time rather than leaving the page.
+if(history.scrollRestoration)history.scrollRestoration="manual";
+try{history.replaceState({calNav:true,tab:activeTabName(),sel:CAL.sel,y:0},"");}catch(_){}
+window.addEventListener("popstate",e=>{
+  const st=e.state; if(!st||!st.calNav||!st.tab)return;
+  jumpToCalFile(st.sel==null?CAL.sel:st.sel, st.tab, true);   // fromPop: restore without re-pushing
+  // Restore scroll after the tab swap + re-render settles (two frames for layout).
+  requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,st.y||0)));
+});
 
 // Print / Save-as-PDF: the @media print stylesheet stacks every tab, forces the
 // light palette, expands the feature table, and swaps the single interactive FDR
