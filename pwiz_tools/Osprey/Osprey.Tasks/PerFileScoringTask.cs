@@ -372,18 +372,28 @@ namespace pwiz.Osprey.Tasks
 
             if (needsResidentPool)
             {
-                foreach (string fileName in scoredFileNames)
+                // Per-file progress: loading every file's fat FdrEntry stubs from parquet
+                // ran ~15 min silent (~53 GB) at the 82-file join. Console-only, never
+                // touches the stubs, so the loaded pool is byte-identical.
+                using (var loadProgress = new ProgressReporter(
+                    string.Format(@"Loading scored entries from {0} file(s)", scoredFileNames.Count),
+                    scoredFileNames.Count))
                 {
-                    string parquetPath = perFileParquetPaths[fileName];
-                    // A scored file always has a parquet here; the sole exception is
-                    // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
-                    // returns an empty result without writing one. Skip that case so
-                    // the run still stops cleanly at the "no scored entries" gate
-                    // below rather than throwing on a missing file.
-                    if (!File.Exists(parquetPath))
-                        continue;
-                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                        fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
+                    int loadDone = 0;
+                    foreach (string fileName in scoredFileNames)
+                    {
+                        loadProgress.Report(++loadDone);
+                        string parquetPath = perFileParquetPaths[fileName];
+                        // A scored file always has a parquet here; the sole exception is
+                        // the OSPREY_EXIT_AFTER_CALIBRATION bench short-circuit, which
+                        // returns an empty result without writing one. Skip that case so
+                        // the run still stops cleanly at the "no scored entries" gate
+                        // below rather than throwing on a missing file.
+                        if (!File.Exists(parquetPath))
+                            continue;
+                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                            fileName, ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath)));
+                    }
                 }
                 foreach (var kvp in perFileEntries)
                     totalScored += kvp.Value.Count;
@@ -399,21 +409,31 @@ namespace pwiz.Osprey.Tasks
                 // is element-for-element identical to BuildFromEntries (pinned by
                 // TestFdrProjectionBuilderMatchesBuildFromEntries).
                 var builder = new FdrProjectionSet.Builder();
-                foreach (string fileName in scoredFileNames)
+                // Per-file progress: streaming 32 B projection rows from each parquet is
+                // the lean path, but reading 82 files still ran minutes silent. Console-only,
+                // never touches the streamed rows, so the projection is byte-identical.
+                using (var streamProgress = new ProgressReporter(
+                    string.Format(@"Streaming projection from {0} file(s)", scoredFileNames.Count),
+                    scoredFileNames.Count))
                 {
-                    string parquetPath = perFileParquetPaths[fileName];
-                    if (!File.Exists(parquetPath))
-                        continue;
-                    builder.BeginFile(fileName);
-                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
-                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
-                            builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
-                    builder.EndFile();
-                    // Keep the per-file key and ordering so ScoredEntries consumers and
-                    // the file-count guard below still see one entry per scored file;
-                    // the stub lists themselves stay empty on this path.
-                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
-                        fileName, new List<FdrEntry>()));
+                    int streamDone = 0;
+                    foreach (string fileName in scoredFileNames)
+                    {
+                        streamProgress.Report(++streamDone);
+                        string parquetPath = perFileParquetPaths[fileName];
+                        if (!File.Exists(parquetPath))
+                            continue;
+                        builder.BeginFile(fileName);
+                        ParquetScoreCache.ReadFdrStubScalars(parquetPath,
+                            (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                                builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
+                        builder.EndFile();
+                        // Keep the per-file key and ordering so ScoredEntries consumers and
+                        // the file-count guard below still see one entry per scored file;
+                        // the stub lists themselves stay empty on this path.
+                        perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(
+                            fileName, new List<FdrEntry>()));
+                    }
                 }
                 projections = builder.Build();
                 totalScored = projections.TotalRows;
@@ -579,7 +599,14 @@ namespace pwiz.Osprey.Tasks
             // 32 B FdrProjection rows from each parquet unless an opt-in output genuinely
             // needs the resident pool. FirstJoin consumes the projection set identically
             // whether Run or this path produced it.
-            bool needsResidentPool = NeedsResidentPool(config);
+            //
+            // --model-diagnostics is the one resume-only exception to Run's lean choice:
+            // Run streams the report off the first-pass Percolator score pass (the streaming
+            // Accumulator), but a resume SKIPS that score pass (sidecar q-values), so FirstJoin's
+            // resume path emits the report via the batch ModelDiagnosticsReport.Write, which reads
+            // the RESIDENT per-file entries. Force the fat pool here so that report is populated
+            // (matches pre-lean behavior); the compute Run path stays lean.
+            bool needsResidentPool = NeedsResidentPool(config) || config.ModelDiagnostics;
             FdrProjectionSet projections = null;
 
             var swAllFiles = Stopwatch.StartNew();
@@ -731,9 +758,10 @@ namespace pwiz.Osprey.Tasks
             ctx.Publish(new PerFileIsolationMz(_perFileIsolationMz));
             ctx.Publish(new PerFileParquetPaths(_perFileParquetPaths));
             ctx.Publish(new ScoredEntries(_perFileEntries));
-            // Lean first-pass rows (issue #4397). Null on the rehydrate/merge paths and
-            // on --model-diagnostics / FDRBench pass 1, which publish fat stubs above;
-            // FirstJoinTask falls back to ScoredEntries whenever this is null.
+            // Lean first-pass rows (issue #4397). Null on the rehydrate/merge paths (including
+            // a --model-diagnostics resume, which needs resident entries for the batch report)
+            // and on FDRBench pass 1 / OSPREY_PASS2_QVALUE=transfer, which publish fat stubs
+            // above; FirstJoinTask falls back to ScoredEntries whenever this is null.
             ctx.Publish(new FdrProjections(projections));
             ctx.Publish(new RescoreBundle(_rescoreInputs));
 
@@ -1387,19 +1415,25 @@ namespace pwiz.Osprey.Tasks
         /// <summary>
         /// Whether Stage 5 needs the resident fat-stub first-pass pool rather than the
         /// lean streamed <see cref="FdrProjection"/> set (#4400). True when an opt-in
-        /// output reads every entry's in-memory features/scores (--model-diagnostics,
-        /// FDRBench pass 1, OSPREY_PASS2_QVALUE=transfer), when the projection path is off
+        /// output reads every entry's in-memory features/scores (FDRBench pass 1,
+        /// OSPREY_PASS2_QVALUE=transfer), when the projection path is off
         /// (OSPREY_FDR_PROJECTION=0 / non-Percolator FDR), or on the reconciled-input
         /// worker join. Shared by <see cref="Run"/> and <see cref="RehydrateFromOwnOutputs"/>
         /// so the compute and resume paths make the identical lean/fat choice -- otherwise a
         /// pure resume rebuilds the ~53 GB fat buffer #4400 dropped for straight-through.
+        ///
+        /// --model-diagnostics is NOT here: it streams its pass-1 report off the projection
+        /// path via a ModelDiagnosticsData.Accumulator fed by the score-pass sink (mirrors the
+        /// FirstJoinTask join-gate that already dropped it), folding each pre-compaction row into
+        /// the reduced report rather than holding the whole-run pool resident -- which peaked
+        /// ~100 GB on an 82-file mdiag run. The reductions are order-independent, so the streamed
+        /// report is byte-identical to the resident build.
         /// </summary>
         private static bool NeedsResidentPool(OspreyConfig config)
         {
             return config.ExpectReconciledInput ||
                    !OspreyEnvironment.UseFdrProjection ||
                    config.FdrMethod != FdrMethod.Percolator ||
-                   config.ModelDiagnostics ||
                    (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
                    OspreyEnvironment.Pass2TransferQ;
         }

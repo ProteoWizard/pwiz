@@ -73,6 +73,27 @@ namespace pwiz.Osprey.FDR
                     throw new ArgumentOutOfRangeException(nameof(level));
             }
         }
+
+        /// <summary>
+        /// Effective experiment-level q-value for the FDR control level, matching
+        /// <see cref="FdrEntry.EffectiveExperimentQvalue"/> exactly. Used by the
+        /// streaming <c>--model-diagnostics</c> accumulator's cross-run experiment
+        /// gate, where the entry is off the struct and only these q-values are live.
+        /// </summary>
+        public double EffectiveExperimentQvalue(FdrLevel level)
+        {
+            switch (level)
+            {
+                case FdrLevel.Precursor:
+                    return ExperimentPrecursorQvalue;
+                case FdrLevel.Peptide:
+                    return ExperimentPeptideQvalue;
+                case FdrLevel.Both:
+                    return Math.Max(ExperimentPrecursorQvalue, ExperimentPeptideQvalue);
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(level));
+            }
+        }
     }
 
     /// <summary>

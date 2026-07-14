@@ -824,7 +824,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 foreach (var e in kvp.Value)
                 {
                     uint baseId = e.EntryId & BASE_ID_MASK;
-                    EntrapmentClass cls = Classify(e, baseId, classByBaseId, haveManifest,
+                    EntrapmentClass cls = Classify(e.IsDecoy, baseId, classByBaseId, haveManifest,
                         ref wc, ref woc);
                     uint pairIdx = 0;
                     bool hasPair = pairByBaseId != null &&
@@ -873,7 +873,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return best.Values.ToList();
         }
 
-        private static EntrapmentClass Classify(FdrEntry e, uint baseId,
+        private static EntrapmentClass Classify(bool isDecoy, uint baseId,
             IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest,
             ref int nWithClass, ref int nWithoutClass)
         {
@@ -885,18 +885,18 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             if (haveManifest && classByBaseId.TryGetValue(baseId, out var cls))
             {
                 nWithClass++;
-                if (!e.IsDecoy)
+                if (!isDecoy)
                     return cls;                    // Target or PTarget
                 // Decoy side inherits its target's partition.
                 return cls == EntrapmentClass.PTarget
                     ? EntrapmentClass.PDecoy : EntrapmentClass.Decoy;
             }
             if (!haveManifest)
-                return e.IsDecoy ? EntrapmentClass.Decoy : EntrapmentClass.Target;
+                return isDecoy ? EntrapmentClass.Decoy : EntrapmentClass.Target;
             // Base-id not in the classification map. A decoy is still definitely a
             // decoy (e.g. an unpaired decoy-side entry whose target-side base-id
             // isn't present) -- classify and don't count it as unclassified.
-            if (e.IsDecoy)
+            if (isDecoy)
                 return EntrapmentClass.Decoy;
             // A non-decoy we genuinely cannot class as target vs entrapment: exclude
             // it from the entrapment FDP (Unknown) and count it, so a real coverage
@@ -1477,6 +1477,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 }
             }
 
+            return BuildWinFractionFromReduced(bt, tClass);
+        }
+
+        // Assemble the win-fraction curves from the reduced per-base_id best
+        // target/decoy scores (<paramref name="bt"/> = base_id -> [tScore, dScore]) and
+        // target-side class (<paramref name="tClass"/>). Shared by the batch
+        // <see cref="BuildWinFraction"/> and the streaming --model-diagnostics
+        // accumulator, which build the identical (bt, tClass) reduction from
+        // perFileEntries vs streamed projection rows respectively (both a max over
+        // scores, so the two reductions agree regardless of visitation order).
+        private static WinFractionData BuildWinFractionFromReduced(
+            Dictionary<uint, double[]> bt, Dictionary<uint, EntrapmentClass> tClass)
+        {
             var realWin = new List<KeyValuePair<double, bool>>();   // (winnerScore, decoyWon)
             var entWin = new List<KeyValuePair<double, bool>>();
             foreach (var pair in bt)
