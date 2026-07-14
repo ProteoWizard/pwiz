@@ -1112,7 +1112,8 @@ namespace pwiz.Osprey.FDR
             bool[] labels, uint[] entryIds, string[] peptides, string[] fileNames,
             PercolatorResults trainResults, PercolatorConfig config,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
-            IFdrOutputSink sink)
+            IFdrOutputSink sink,
+            Action<FeatureContributions> captureContributions = null)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -1144,7 +1145,13 @@ namespace pwiz.Osprey.FDR
             var standardizer = trainResults.Standardizer;
             var finalScores = new double[n];
             var featureBuf = new double[nFeatures];
-            var contribAcc = new FeatureContributions.Accumulator(nFeatures);
+            // Collect the per-feature target/decoy standardized-value histograms when
+            // --model-diagnostics asked for them (config.CollectFeatureHistograms == ModelDiagnostics,
+            // set in BuildProjectionPercolatorConfig). The full-population Add loop below feeds the
+            // identical standardized featureBuf the resident path bins, so the Model tab's
+            // per-feature distributions are byte-identical to the resident build's; off the
+            // production path this stays a plain (no-histogram) accumulator.
+            var contribAcc = new FeatureContributions.Accumulator(nFeatures, config.CollectFeatureHistograms);
 
             // Streaming score pass over the projection, one file at a time. The
             // per-entry math and the per-file iteration order match the
@@ -1182,6 +1189,10 @@ namespace pwiz.Osprey.FDR
 
             var contributions = contribAcc.Build(trainResults.FoldWeights, config.FeatureInfos);
             EmitFeatureContributions(contributions);
+            // Surface the trained model's contributions to the caller (the projection-path
+            // --model-diagnostics report reads them). No-op (null) on every path that does not
+            // request them; a pure hand-off, so scoring stays byte-identical.
+            captureContributions?.Invoke(contributions);
 
             double[] peps, runPrecursorQvalues, runPeptideQvalues,
                      expPrecursorQvalues, expPeptideQvalues;

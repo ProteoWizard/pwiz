@@ -60,6 +60,105 @@ namespace pwiz.Osprey.Test
             TestCrossRunDetection();
             TestPassingSetHonorsFdrLevel();
             TestCalibrationBuildCalFile();
+            TestStreamingAccumulatorMatchesBatch();
+        }
+
+        // The streaming pass-1 accumulator (fed per-row off the projection score-pass sink so an
+        // 82-file --model-diagnostics run need not hold the resident pre-compaction pool) must
+        // produce a byte-identical data model to the batch Build over the resident pool. A 3-file
+        // entrapment fixture populates EVERY card -- real targets + decoys, entrapment + p_decoys,
+        // pair indices, a precursor seen across files (cross-file best-per-precursor merge),
+        // q-failing entries + distinct run vs experiment q (cross-run gates), and a trained model
+        // (Model tab). Both paths serialize under the sidecar settings and must match exactly.
+        private static void TestStreamingAccumulatorMatchesBatch()
+        {
+            var cls = new Dictionary<uint, EntrapmentClass>();
+            var pair = new Dictionary<uint, uint>();
+            var f1 = new List<FdrEntry>();
+            var f2 = new List<FdrEntry>();
+            var f3 = new List<FdrEntry>();
+            for (int i = 0; i < 6; i++)
+            {
+                uint tid = (uint)(100 + i);
+                // Real target + decoy, seen in f1 AND f2 with different scores/q so the cross-file
+                // best-per-precursor reduction (max score, min q) is exercised; f3 keeps the first 3.
+                f1.Add(Entry(tid, false, 8.0 - i, 0.001 * (i + 1), "T" + i, 2));
+                f1.Add(Entry(tid | DECOY_BIT, true, 1.0 + 0.1 * i, 0.5, "D" + i, 2));
+                f2.Add(Entry(tid, false, 7.5 - i, 0.002 * (i + 1), "T" + i, 2));
+                f2.Add(Entry(tid | DECOY_BIT, true, 1.2 + 0.1 * i, 0.5, "D" + i, 2));
+                cls[tid] = EntrapmentClass.Target;
+                pair[tid] = (uint)i;
+                if (i < 3)
+                    f3.Add(Entry(tid, false, 6.0 - i, 0.001 * (i + 1), "T" + i, 2));
+            }
+            // Entrapment (p_target) + p_decoy, paired by index to the targets above.
+            for (int i = 0; i < 4; i++)
+            {
+                uint pid = (uint)(200 + i);
+                f1.Add(Entry(pid, false, 5.5 - i, 0.003 + 0.001 * i, "P" + i, 2));
+                f1.Add(Entry(pid | DECOY_BIT, true, 0.9 + 0.05 * i, 0.5, "PD" + i, 2));
+                cls[pid] = EntrapmentClass.PTarget;
+                pair[pid] = (uint)i;
+            }
+            // A precursor whose run q passes but experiment q fails, in two runs (experiment gate).
+            f2.Add(EntryRunExp(300, 0.001, 0.20, "G"));
+            f3.Add(EntryRunExp(300, 0.001, 0.20, "G"));
+            cls[300] = EntrapmentClass.Target;
+
+            var perFileEntries = WrapFiles(f1, f2, f3);
+            const double r = 1.0, runFdr = 0.01;
+            const FdrLevel level = FdrLevel.Peptide;
+
+            // A trained model so the Model tab (feature table + per-feature histograms) is compared.
+            var infos = new[]
+            {
+                new OspreyFeatureInfo("f0", "Feature Zero", false),
+                new OspreyFeatureInfo("f1", "Feature One", false),
+            };
+            var facc = new FeatureContributions.Accumulator(2, true);
+            for (int i = 0; i < 10; i++) facc.Add(new[] { 2.0, 0.5 }, false);
+            for (int i = 0; i < 10; i++) facc.Add(new[] { -1.0, 0.0 }, true);
+            var contrib = facc.Build(new List<double[]> { new[] { 2.0, -1.0 } }, infos);
+
+            // Batch build (the resident-path oracle).
+            var batch = ModelDiagnosticsData.Build(perFileEntries, contrib, cls, pair, r, runFdr, level);
+
+            // Streaming build: feed each row through the accumulator in nested (file, row) order,
+            // exactly as the projection score-pass sink does (protein q is unused, so pass 0).
+            var runNames = perFileEntries.Select(kv => kv.Key).ToArray();
+            var acc = new ModelDiagnosticsData.Accumulator(runNames, cls, pair, r, runFdr, level);
+            for (int fi = 0; fi < perFileEntries.Count; fi++)
+            {
+                foreach (var e in perFileEntries[fi].Value)
+                {
+                    acc.Add(fi, e.ModifiedSequence, e.Charge, e.EntryId, e.IsDecoy, e.Score,
+                        new FdrQValues(e.RunPrecursorQvalue, e.RunPeptideQvalue,
+                            e.ExperimentPrecursorQvalue, e.ExperimentPeptideQvalue, 0.0));
+                }
+            }
+            var streamed = acc.Build(contrib);
+
+            // Byte-identity under the sidecar settings the HTML embed round-trips through.
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                FloatFormatHandling = FloatFormatHandling.Symbol,
+                FloatParseHandling = FloatParseHandling.Double,
+            };
+            Assert.AreEqual(
+                JsonConvert.SerializeObject(batch, settings),
+                JsonConvert.SerializeObject(streamed, settings),
+                @"streaming --model-diagnostics accumulator must byte-match the resident batch build");
+
+            // Guard against a vacuous all-null match: the fixture must actually populate the cards.
+            Assert.IsTrue(batch.HasEntrapment);
+            Assert.IsNotNull(batch.FdpViews);
+            Assert.IsTrue(batch.FdpViews.Count > 0);
+            Assert.IsNotNull(batch.CrossRun);
+            Assert.IsNotNull(batch.WinFraction);
+            Assert.IsTrue(batch.WinFraction.HasEntrapment);
+            Assert.AreEqual(2, batch.Model.Count);
+            Assert.IsTrue(batch.NTarget > 0 && batch.NPTarget > 0 && batch.NDecoy > 0);
         }
 
         /// <summary>

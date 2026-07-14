@@ -259,19 +259,25 @@ namespace pwiz.Osprey.Tasks
             // legacy compacted buffer does -- the blast radius is confined to this
             // pre-compaction span. Falls back to the legacy FdrEntry-buffer path
             // (the byte-identity oracle) when the flag is off or FdrMethod != Percolator.
-            // --model-diagnostics and FDRBench pass-1 (#4377) both read the full
-            // pre-compaction first-pass pool resident (decoys + entrapment, with scores) --
-            // exactly what the projection path drops to bound memory -- so when either
-            // opt-in output is requested, take the resident (legacy) path so those reports
-            // still emit. Both are off the default output path, so byte-identity is
-            // unaffected (the regression gate never sets either).
+            // FDRBench pass-1 (#4377) reads the full pre-compaction first-pass pool resident
+            // (decoys + entrapment, with scores) -- exactly what the projection path drops to
+            // bound memory -- so when it is requested, take the resident (legacy) path so that
+            // report still emits. Off the default output path, so byte-identity is unaffected
+            // (the regression gate never sets it).
             // OSPREY_PASS2_QVALUE=transfer also needs the resident first-pass pool: it
             // captures the frozen 1st-pass model and builds the FULL pre-compaction
             // score->q table (BuildFullPopulationScoreQTable, below), both of which read
             // every entry's in-memory Stage-4 features -- exactly what the projection path
             // streams and drops. The regression gate never sets the env var, so byte-identity
-            // on the default percolator path is unaffected (same rationale as --model-diagnostics).
-            bool needsResidentFirstPassPool = config.ModelDiagnostics ||
+            // on the default percolator path is unaffected.
+            // --model-diagnostics is NOT here: it now STREAMS its pass-1 report off the
+            // projection path via a ModelDiagnosticsData.Accumulator fed by the score-pass sink
+            // (RunFirstPassProjection below), folding each pre-compaction row into the reduced
+            // report structures rather than holding the whole-run FdrEntry pool resident -- which
+            // OOM'd an 82-file run at the join. The reductions are order-independent, so the
+            // streamed report is byte-identical to the resident build, and it stays off the
+            // default output path.
+            bool needsResidentFirstPassPool =
                 (!string.IsNullOrEmpty(config.OutputFdrBench) && config.FdrBenchPass == 1) ||
                 OspreyEnvironment.Pass2TransferQ;
             if (OspreyEnvironment.UseFdrProjection && config.FdrMethod == FdrMethod.Percolator &&
@@ -598,7 +604,7 @@ namespace pwiz.Osprey.Tasks
             if (config.ModelDiagnostics)
             {
                 var libraryById = ctx.Get<LibraryById>().Value;
-                var cal = BuildCalibrationData(ctx, perFileEntries);
+                var cal = BuildCalibrationData(ctx, perFileEntries.ConvertAll(kv => kv.Key));
                 ModelDiagnosticsReport.Write(perFileEntries, contributions, libraryById, cal, config, ctx.LogInfo);
             }
         }
@@ -607,7 +613,7 @@ namespace pwiz.Osprey.Tasks
         /// Assemble the CAL-view <see cref="ModelDiagnosticsData.CalibrationData"/> for
         /// the report from the per-file calibration diagnostics
         /// (<see cref="PerFileCalibrationDiagnostics"/>) PerFileScoringTask captured at
-        /// Stage 3. The rows are ordered by <paramref name="perFileEntries"/> (input-file
+        /// Stage 3. The rows are ordered by <paramref name="orderedFileNames"/> (input-file
         /// order) so the report's file selector matches the rest of the page. Returns
         /// <c>null</c> when no rows were captured (a resumed / rehydrated run, or none of
         /// the files calibrated), which hides the CAL tab. HasEntrapment is true when any
@@ -616,7 +622,7 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private static ModelDiagnosticsData.CalibrationData BuildCalibrationData(
             PipelineContext ctx,
-            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries)
+            IReadOnlyList<string> orderedFileNames)
         {
             IReadOnlyDictionary<string, ModelDiagnosticsData.CalFileRow> byFile = null;
             string massUnit = null;
@@ -628,14 +634,14 @@ namespace pwiz.Osprey.Tasks
             if (byFile == null || byFile.Count == 0)
                 return null;
 
-            var files = new List<ModelDiagnosticsData.CalFileRow>(perFileEntries.Count);
+            var files = new List<ModelDiagnosticsData.CalFileRow>(orderedFileNames.Count);
             var omitted = new List<string>();
-            foreach (var kvp in perFileEntries)
+            foreach (var name in orderedFileNames)
             {
-                if (byFile.TryGetValue(kvp.Key, out var row) && row != null)
+                if (byFile.TryGetValue(name, out var row) && row != null)
                     files.Add(row);
                 else
-                    omitted.Add(kvp.Key);
+                    omitted.Add(name);
             }
             // A file with no captured calibration diagnostics (calibration failed / was skipped, or a
             // distributed run that did not persist matches) would otherwise vanish from the CAL
@@ -645,7 +651,7 @@ namespace pwiz.Osprey.Tasks
                 ctx.LogWarning(string.Format(
                     "CAL view: {0} of {1} file(s) have no captured calibration diagnostics and are " +
                     "omitted from the calibration report: [{2}]",
-                    omitted.Count, perFileEntries.Count, string.Join(", ", omitted)));
+                    omitted.Count, orderedFileNames.Count, string.Join(", ", omitted)));
             if (files.Count == 0)
                 return null;
 
@@ -668,6 +674,27 @@ namespace pwiz.Osprey.Tasks
                 MassUnit = !string.IsNullOrEmpty(massUnit) ? massUnit : @"ppm",
                 FileCount = files.Count,
             };
+        }
+
+        /// <summary>
+        /// Build the streaming <see cref="ModelDiagnosticsData.Accumulator"/> that the projection
+        /// path's score-pass sink folds each pre-compaction row into, so the pass-1
+        /// <c>--model-diagnostics</c> report emits without the resident FdrEntry pool. Derives the
+        /// entrapment classification from the searched library -- the same source and one-time
+        /// logging as the resident <see cref="ModelDiagnosticsReport.Write"/> path -- and seeds the
+        /// accumulator with the input-file order (from the projection) plus the run FDR level.
+        /// </summary>
+        private static ModelDiagnosticsData.Accumulator BuildModelDiagnosticsAccumulator(
+            FdrProjectionSet projections, OspreyConfig config, PipelineContext ctx)
+        {
+            var libraryById = ctx.Get<LibraryById>().Value;
+            ModelDiagnosticsReport.BuildClassificationFromLibrary(config, libraryById, ctx.LogInfo,
+                out var classByBaseId, out var pairByBaseId, out var entrapmentRatio);
+            var runNames = new string[projections.PerFile.Count];
+            for (int i = 0; i < runNames.Length; i++)
+                runNames[i] = projections.PerFile[i].Key;
+            return new ModelDiagnosticsData.Accumulator(
+                runNames, classByBaseId, pairByBaseId, entrapmentRatio, config.RunFdr, config.FdrLevel);
         }
 
         /// <summary>
@@ -1563,13 +1590,26 @@ namespace pwiz.Osprey.Tasks
                 return 0;
             }
 
-            var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar);
+            // --model-diagnostics: build the streaming report accumulator (entrapment
+            // classification from the searched library) and hand it to the score-pass sink, which
+            // folds every pre-compaction row into it; capture the trained model for the Model tab.
+            // Null off the report path, so byte-neutral there.
+            var mdiagAccumulator = config.ModelDiagnostics
+                ? BuildModelDiagnosticsAccumulator(projections, config, ctx)
+                : null;
+            FeatureContributions mdiagContributions = null;
+            Action<FeatureContributions> captureContributions = null;
+            if (mdiagAccumulator != null)
+                captureContributions = c => mdiagContributions = c;
+
+            var sink = new FdrStoringSink(projections, config, @"First-pass", FlushPartialSidecar,
+                mdiagAccumulator);
             var swFdr = Stopwatch.StartNew();
             bool aborted = PercolatorEngine.RunPercolatorFdr(
                 projections, config,
                 OspreyFeatureCalculators.BuildFeatureInfos(ParquetScoreCache.PIN_FEATURE_NAMES),
                 ctx.LogInfo, sink, BuildPercolatorDiagnostics(ctx.Diagnostics),
-                @"First-pass", loadFileFeatures);
+                @"First-pass", loadFileFeatures, captureContributions);
             swFdr.Stop();
             var outputs = sink.Outputs;
             if (aborted)
@@ -1586,6 +1626,19 @@ namespace pwiz.Osprey.Tasks
                 string.Format(@"(post-GC, projection path, rows={0})", projections.TotalRows));
 
             LogFirstPassResultsProjection(projections, sink, config, ctx);
+
+            // --model-diagnostics: emit the pass-1 HTML report from the streamed accumulator.
+            // Placed here -- after first-pass Percolator, BEFORE first-pass protein FDR -- to
+            // match the resident path's report point (LogFirstPassResultsAndDump runs before
+            // RunFirstPassProteinFdr), so neither build reads a protein q the report does not use.
+            // The CAL view comes from the Stage-3 per-file byproduct; the Model tab from the
+            // captured first-pass contributions.
+            if (mdiagAccumulator != null)
+            {
+                var cal = BuildCalibrationData(ctx, projections.PerFile.ConvertAll(kv => kv.Key));
+                ModelDiagnosticsReport.WriteFromAccumulator(
+                    mdiagAccumulator, mdiagContributions, cal, config, ctx.LogInfo);
+            }
 
             // First-pass protein FDR over the projection (sets RunProteinQvalue on
             // every row). The Stage-6 diagnostic dump reads the returned artifacts,

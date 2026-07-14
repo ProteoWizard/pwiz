@@ -216,7 +216,8 @@ namespace pwiz.Osprey.FDR
             IFdrOutputSink sink,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass",
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            Action<FeatureContributions> captureContributions = null)
         {
             // The lean FdrProjection no longer stores the q-value outputs (issue #4355
             // struct-shrink S0): the score pass hands them to this per-pass sink (the
@@ -275,7 +276,7 @@ namespace pwiz.Osprey.FDR
                 passLabel, n));
             bool streamingAbort = RunStreamingIntoProjection(
                 projections.PerFile, peptideById, percConfig, logInfo, passLabel,
-                loadFileFeatures, sink);
+                loadFileFeatures, sink, captureContributions);
             if (streamingAbort)
                 return true;
 
@@ -673,7 +674,8 @@ namespace pwiz.Osprey.FDR
             Action<string> logInfo,
             string passLabel,
             Func<string, IReadOnlyList<double[]>> loadFileFeatures,
-            IFdrOutputSink sink)
+            IFdrOutputSink sink,
+            Action<FeatureContributions> captureContributions = null)
         {
             if (loadFileFeatures == null)
                 throw new InvalidOperationException(
@@ -834,7 +836,7 @@ namespace pwiz.Osprey.FDR
             //    arrays already built above.
             PercolatorFdr.ScoreProjectionAndComputeFdrInPlace(
                 perFile, labels, entryIds, peptides, fileNames, trainResults, percConfig,
-                loadFileFeatures, sink);
+                loadFileFeatures, sink, captureContributions);
             return false;
         }
 
