@@ -25,6 +25,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.BiblioSpec;
 using pwiz.Common.Chemistry;
@@ -206,6 +207,17 @@ namespace pwiz.Skyline.Model.DdaSearch
                     FileEx.SafeDelete(outputMzidGz);
 
                     string spectrumPath = rawFileName.GetFilePath();
+
+                    // The standalone MS Amanda derives a scan number from each spectrum's mzML native id
+                    // and silently skips any spectrum it cannot parse one from ("Cannot parse scan number").
+                    // DIA-Umpire pseudo-spectra use "merged=N" native ids (pwiz DiaUmpire.cpp), which MS Amanda
+                    // cannot parse, so it reads 0 spectra, writes an empty result, and the downstream BlibBuild
+                    // fails with "No spectra were found for the new library". Normalize such ids to
+                    // "scan=<1-based index>" first. (The retired in-process MS Amanda read spectra by index and
+                    // never needed this, so this is a net8-only path and cannot affect net472.)
+                    if (SpectrumFileNeedsScanRewrite(spectrumPath))
+                        RewriteSpectrumIdsToScanNumbers(spectrumPath);
+
                     string outputMzid = Path.ChangeExtension(spectrumPath, @".mzid");
                     // MSAmanda requires the -e settings file to have a .xml extension ("Only .xml files
                     // are accepted!"), so a Path.GetTempFileName() .tmp file is rejected. Use a temp path
@@ -297,6 +309,95 @@ namespace pwiz.Skyline.Model.DdaSearch
             UpdateProgress(_progressStatus);
 
             return _success;
+        }
+
+        // Captures the opening <spectrum ...> tag's id attribute as three groups:
+        // (1) everything up to and including id=", (2) the id value, (3) the closing ".
+        private static readonly Regex SPECTRUM_ID_REGEX =
+            new Regex("(<spectrum\\b[^>]*?\\bid=\")([^\"]*)(\")", RegexOptions.Compiled);
+
+        // MS Amanda parses a scan number by looking for "scan=" in the native id (e.g. the Thermo
+        // "controllerType=0 controllerNumber=1 scan=5" or a bare "scan=5"), or a purely numeric id.
+        private static bool NativeIdHasScanNumber(string nativeId)
+        {
+            if (string.IsNullOrEmpty(nativeId))
+                return false;
+            if (nativeId.IndexOf(@"scan=", StringComparison.Ordinal) >= 0)
+                return true;
+            return nativeId.All(char.IsDigit);
+        }
+
+        /// <summary>
+        /// Peek the first &lt;spectrum&gt; native id and report whether MS Amanda would be unable to
+        /// parse a scan number from it (so the file must be rewritten before searching). Streams the
+        /// file, so it is safe on large (32-bit process) inputs.
+        /// </summary>
+        private static bool SpectrumFileNeedsScanRewrite(string mzmlPath)
+        {
+            using (var reader = new StreamReader(mzmlPath))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    var m = SPECTRUM_ID_REGEX.Match(line);
+                    if (!m.Success)
+                        continue;
+                    return !NativeIdHasScanNumber(m.Groups[2].Value);
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Rewrite every spectrum's native id in <paramref name="mzmlPath"/> to "scan=&lt;1-based index&gt;"
+        /// so MS Amanda can ingest it, writing the result back in place. The index byte-offset table is
+        /// dropped (the ids change length), producing a valid non-indexed mzML that pwiz-sharp (BlibBuild)
+        /// and MS Amanda both read. Streams line-by-line to stay memory-safe on large files.
+        /// </summary>
+        private static void RewriteSpectrumIdsToScanNumbers(string mzmlPath)
+        {
+            string tempPath = mzmlPath + @".scannum.tmp";
+            int scanNumber = 0;
+            using (var reader = new StreamReader(mzmlPath))
+            using (var writer = new StreamWriter(tempPath, false, new UTF8Encoding(false)) { NewLine = "\n" })
+            {
+                writer.WriteLine(@"<?xml version=""1.0"" encoding=""utf-8""?>");
+                bool started = false;
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (!started)
+                    {
+                        // Skip the xml declaration and the <indexedmzML> wrapper; start at <mzML ...>.
+                        int mzmlIdx = line.IndexOf(@"<mzML ", StringComparison.Ordinal);
+                        if (mzmlIdx < 0)
+                            continue;
+                        started = true;
+                        if (mzmlIdx > 0)
+                            line = line.Substring(mzmlIdx);
+                    }
+
+                    line = SPECTRUM_ID_REGEX.Replace(line, m =>
+                    {
+                        scanNumber++;
+                        return m.Groups[1].Value + @"scan=" +
+                               scanNumber.ToString(CultureInfo.InvariantCulture) + m.Groups[3].Value;
+                    });
+
+                    // Stop at </mzML>, dropping the trailing <indexList>/<fileChecksum> and the
+                    // </indexedmzML> close: the rewritten file is deliberately non-indexed.
+                    int endIdx = line.IndexOf(@"</mzML>", StringComparison.Ordinal);
+                    if (endIdx >= 0)
+                    {
+                        writer.WriteLine(line.Substring(0, endIdx + @"</mzML>".Length));
+                        break;
+                    }
+                    writer.WriteLine(line);
+                }
+            }
+
+            FileEx.SafeDelete(mzmlPath);
+            File.Move(tempPath, mzmlPath);
         }
 
         private void DeleteIntermediateFiles()
