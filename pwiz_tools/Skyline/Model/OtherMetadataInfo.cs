@@ -133,7 +133,8 @@ namespace pwiz.Skyline.Model
         /// are shown exactly as the file reported them; that is the intended fallback, since the CV
         /// can attach units (hertz, kelvin, pascal, nanometer...) that Skyline has no convention for.
         /// The percent/fraction units are left out on purpose: <see cref="Formats.Percent"/> scales by
-        /// 100, which would misreport a value the file already expressed as a percentage.
+        /// 100, which would misreport a value the file already expressed as a percentage. Likewise
+        /// the second, whose values would take Skyline's minutes convention.
         /// </summary>
         private static readonly IDictionary<string, string> UNIT_FORMATS = new Dictionary<string, string>
         {
@@ -142,7 +143,6 @@ namespace pwiz.Skyline.Model
             { @"UO:0000222", Formats.Mz },              // kilodalton
             { @"UO:0000002", Formats.Mz },              // mass unit
             { @"UO:0000031", Formats.RETENTION_TIME },  // minute
-            { @"UO:0000010", Formats.RETENTION_TIME },  // second
             { @"UO:0000028", Formats.IonMobility },     // millisecond (drift time)
             { @"MS:1002814", Formats.OneOverK0 },       // volt-second per square centimeter
             { @"UO:0000324", Formats.CCS },             // square angstrom
@@ -165,15 +165,34 @@ namespace pwiz.Skyline.Model
             {
                 return string.Empty;
             }
-            var value = term.Value;
-            // mzML writes numbers in the invariant culture; a value we can format is reformatted to
-            // Skyline's convention for that unit, and then displayed in the user's culture.
-            if (term.UnitAccession != null && UNIT_FORMATS.TryGetValue(term.UnitAccession, out var format) &&
-                double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
-            {
-                value = number.ToString(format, CultureInfo.CurrentCulture);
-            }
+            var value = FormatValue(term);
             return string.IsNullOrEmpty(term.Unit) ? value : TextUtil.SpaceSeparate(value, term.Unit);
+        }
+
+        /// <summary>
+        /// Applies Skyline's display convention for the term's unit, falling back to the value exactly
+        /// as the file wrote it when there is no convention for that unit, when the value is not a
+        /// number, or when the convention would round a real measurement away to zero. That last case
+        /// is not hypothetical: intensities are shown as whole counts, so a relative intensity of
+        /// 0.4213 would otherwise read as "0" in a display whose purpose is fidelity to the file.
+        /// </summary>
+        private static string FormatValue(SpectrumMetadataTerm term)
+        {
+            // mzML writes numbers in the invariant culture; the formatted value is then displayed
+            // in the user's culture.
+            if (term.UnitAccession == null || !UNIT_FORMATS.TryGetValue(term.UnitAccession, out var format) ||
+                !double.TryParse(term.Value, NumberStyles.Float, CultureInfo.InvariantCulture, out var number))
+            {
+                return term.Value;
+            }
+            var formatted = number.ToString(format, CultureInfo.CurrentCulture);
+            if (number != 0 &&
+                double.TryParse(formatted, NumberStyles.Float, CultureInfo.CurrentCulture, out var rounded) &&
+                rounded == 0)
+            {
+                return term.Value;
+            }
+            return formatted;
         }
 
         /// <summary>

@@ -1605,19 +1605,27 @@ namespace pwiz.ProteowizardWrapper
             using var scans = scanList.scans;
             foreach (var scan in scans)
             {
-                using (var scanCvParams = scan.cvParams)
+                // The wrappers these enumerations hand out own native memory, so each is disposed
+                // rather than left for the finalizer.
+                using (scan)
                 {
-                    AddCvParams(terms, seen, scanCvParams);
-                }
-                using (var scanUserParams = scan.userParams)
-                {
-                    AddUserParams(terms, seen, scanUserParams);
-                }
-                using var scanWindows = scan.scanWindows;
-                foreach (var window in scanWindows)
-                {
-                    using var windowCvParams = window.cvParams;
-                    AddCvParams(terms, seen, windowCvParams);
+                    using (var scanCvParams = scan.cvParams)
+                    {
+                        AddCvParams(terms, seen, scanCvParams);
+                    }
+                    using (var scanUserParams = scan.userParams)
+                    {
+                        AddUserParams(terms, seen, scanUserParams);
+                    }
+                    using var scanWindows = scan.scanWindows;
+                    foreach (var window in scanWindows)
+                    {
+                        using (window)
+                        {
+                            using var windowCvParams = window.cvParams;
+                            AddCvParams(terms, seen, windowCvParams);
+                        }
+                    }
                 }
             }
             return terms;
@@ -1627,21 +1635,24 @@ namespace pwiz.ProteowizardWrapper
         {
             foreach (CVParam param in cvParams)
             {
-                if (param.empty() || INTERPRETED_CVIDS.Contains(param.cvid))
+                using (param)
                 {
-                    continue;
+                    if (param.empty() || INTERPRETED_CVIDS.Contains(param.cvid))
+                    {
+                        continue;
+                    }
+                    var termInfo = CV.cvTermInfo(param.cvid);
+                    if (!seen.Add(termInfo.id))
+                    {
+                        continue;
+                    }
+                    string value = param.value == null ? string.Empty : param.value.ToString();
+                    bool hasUnit = param.units != CVID.CVID_Unknown;
+                    string unit = hasUnit ? param.unitsName : null;
+                    string unitAccession = hasUnit ? CV.cvTermInfo(param.units).id : null;
+                    terms.Add(new SpectrumMetadataTerm(termInfo.id, param.name, value, unit, unitAccession,
+                        CleanDefinition(termInfo.def)));
                 }
-                var termInfo = CV.cvTermInfo(param.cvid);
-                if (!seen.Add(termInfo.id))
-                {
-                    continue;
-                }
-                string value = param.value == null ? string.Empty : param.value.ToString();
-                bool hasUnit = param.units != CVID.CVID_Unknown;
-                string unit = hasUnit ? param.unitsName : null;
-                string unitAccession = hasUnit ? CV.cvTermInfo(param.units).id : null;
-                terms.Add(new SpectrumMetadataTerm(termInfo.id, param.name, value, unit, unitAccession,
-                    CleanDefinition(termInfo.def)));
             }
         }
 
@@ -1649,17 +1660,20 @@ namespace pwiz.ProteowizardWrapper
         {
             foreach (UserParam param in userParams)
             {
-                if (param.empty() || INTERPRETED_USER_PARAMS.Contains(param.name))
+                using (param)
                 {
-                    continue;
+                    if (param.empty() || INTERPRETED_USER_PARAMS.Contains(param.name))
+                    {
+                        continue;
+                    }
+                    if (!seen.Add(param.name))
+                    {
+                        continue;
+                    }
+                    string value = param.value == null ? string.Empty : param.value.ToString();
+                    var unitInfo = param.units == CVID.CVID_Unknown ? null : CV.cvTermInfo(param.units);
+                    terms.Add(new SpectrumMetadataTerm(param.name, param.name, value, unitInfo?.name, unitInfo?.id));
                 }
-                if (!seen.Add(param.name))
-                {
-                    continue;
-                }
-                string value = param.value == null ? string.Empty : param.value.ToString();
-                var unitInfo = param.units == CVID.CVID_Unknown ? null : CV.cvTermInfo(param.units);
-                terms.Add(new SpectrumMetadataTerm(param.name, param.name, value, unitInfo?.name, unitInfo?.id));
             }
         }
 

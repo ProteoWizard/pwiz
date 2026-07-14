@@ -311,14 +311,20 @@ namespace pwiz.Skyline.Model.Results
                         };
                     dataFile = DataFilePath.OpenMsDataFile(openMsDataFileParams);
                 }
-                // Only collect the uninterpreted mzML CV/user parameters when a display consumer asked
-                // for them (see CaptureOtherParams); other ScanProvider users must not pay the cost.
-                dataFile.CaptureOtherParams = CaptureOtherParams;
                 if (centroidedMs1 == null && centroidedMs2 == null)
                     _dataFile = dataFile;
                 _dataFileCentroidedMap.Add(centroidedMapKey, dataFile);
             }
-            return _dataFileCentroidedMap[centroidedMapKey];
+            var openDataFile = _dataFileCentroidedMap[centroidedMapKey];
+            if (openDataFile != null)
+            {
+                // Only collect the uninterpreted mzML CV/user parameters when a display consumer asked
+                // for them (see CaptureOtherParams); other ScanProvider users must not pay the cost.
+                // Applied on every call rather than at open, since a consumer may set the flag after the
+                // file is open, or adopt a reader that another provider opened with it off.
+                openDataFile.CaptureOtherParams = CaptureOtherParams;
+            }
+            return openDataFile;
         }
 
         public string FindDataFilePath()
