@@ -1637,8 +1637,11 @@ namespace pwiz.ProteowizardWrapper
                     continue;
                 }
                 string value = param.value == null ? string.Empty : param.value.ToString();
-                string unit = param.units == CVID.CVID_Unknown ? null : param.unitsName;
-                terms.Add(new SpectrumMetadataTerm(termInfo.id, param.name, value, unit, CleanDefinition(termInfo.def)));
+                bool hasUnit = param.units != CVID.CVID_Unknown;
+                string unit = hasUnit ? param.unitsName : null;
+                string unitAccession = hasUnit ? CV.cvTermInfo(param.units).id : null;
+                terms.Add(new SpectrumMetadataTerm(termInfo.id, param.name, value, unit, unitAccession,
+                    CleanDefinition(termInfo.def)));
             }
         }
 
@@ -1655,8 +1658,8 @@ namespace pwiz.ProteowizardWrapper
                     continue;
                 }
                 string value = param.value == null ? string.Empty : param.value.ToString();
-                string unit = param.units == CVID.CVID_Unknown ? null : CV.cvTermInfo(param.units).name;
-                terms.Add(new SpectrumMetadataTerm(param.name, param.name, value, unit));
+                var unitInfo = param.units == CVID.CVID_Unknown ? null : CV.cvTermInfo(param.units);
+                terms.Add(new SpectrumMetadataTerm(param.name, param.name, value, unitInfo?.name, unitInfo?.id));
             }
         }
 

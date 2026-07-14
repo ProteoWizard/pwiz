@@ -412,6 +412,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Parameters the data file reports that Skyline does not interpret into its own fields..
+        /// </summary>
+        internal static string Description_OtherMetadata {
+            get {
+                return ResourceManager.GetString("Description_OtherMetadata", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Ion polarity of the scan (positive or negative)..
         /// </summary>
         internal static string Description_Polarity {
@@ -426,15 +435,6 @@ namespace pwiz.Skyline.Model {
         internal static string Description_PrecursorMz {
             get {
                 return ResourceManager.GetString("Description_PrecursorMz", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Parameters the data file reports that Skyline does not interpret into its own fields..
-        /// </summary>
-        internal static string Description_RawMetadata {
-            get {
-                return ResourceManager.GetString("Description_RawMetadata", resourceCulture);
             }
         }
 
@@ -718,6 +718,15 @@ namespace pwiz.Skyline.Model {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Other Metadata.
+        /// </summary>
+        internal static string OtherMetadata {
+            get {
+                return ResourceManager.GetString("OtherMetadata", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Polarity.
         /// </summary>
         internal static string Polarity {
@@ -750,15 +759,6 @@ namespace pwiz.Skyline.Model {
         internal static string PrecursorMz {
             get {
                 return ResourceManager.GetString("PrecursorMz", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Raw Metadata.
-        /// </summary>
-        internal static string RawMetadata {
-            get {
-                return ResourceManager.GetString("RawMetadata", resourceCulture);
             }
         }
 

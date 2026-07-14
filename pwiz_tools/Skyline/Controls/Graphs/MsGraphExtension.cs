@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         /// <summary>
         /// Replaces the property sheet's selected object while preserving which expandable nodes
-        /// (categories such as "Raw Metadata", and sub-objects such as Instrument) the user had
+        /// (categories such as "Other Metadata", and sub-objects such as Instrument) the user had
         /// expanded, so navigating between spectra does not collapse them.
         /// </summary>
         public void SetSelectedObjectPreservingExpansion(object propertiesObject)

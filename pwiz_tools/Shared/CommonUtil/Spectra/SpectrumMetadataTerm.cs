@@ -27,12 +27,14 @@ namespace pwiz.Common.Spectra
     /// </summary>
     public class SpectrumMetadataTerm
     {
-        public SpectrumMetadataTerm(string accession, string name, string value, string unit, string definition = null)
+        public SpectrumMetadataTerm(string accession, string name, string value, string unit,
+            string unitAccession = null, string definition = null)
         {
             Accession = accession;
             Name = name;
             Value = value;
             Unit = unit;
+            UnitAccession = unitAccession;
             Definition = definition;
         }
 
@@ -61,6 +63,13 @@ namespace pwiz.Common.Spectra
         public string Unit { get; }
 
         /// <summary>
+        /// The unit's CV accession (e.g. "MS:1000040" for m/z), or null when the term
+        /// carries no unit. This, rather than the English <see cref="Unit"/> label, is what
+        /// display code keys on to recognize a unit it has a formatting convention for.
+        /// </summary>
+        public string UnitAccession { get; }
+
+        /// <summary>
         /// The controlled-vocabulary definition of the term (e.g. "The intensity of the
         /// greatest peak in the mass spectrum."), shown as explanatory help text. Null for
         /// user params, which have no ontology definition.
@@ -69,8 +78,8 @@ namespace pwiz.Common.Spectra
 
         protected bool Equals(SpectrumMetadataTerm other)
         {
-            return Accession == other.Accession && Name == other.Name &&
-                   Value == other.Value && Unit == other.Unit && Definition == other.Definition;
+            return Accession == other.Accession && Name == other.Name && Value == other.Value &&
+                   Unit == other.Unit && UnitAccession == other.UnitAccession && Definition == other.Definition;
         }
 
         public override bool Equals(object obj)
@@ -89,6 +98,7 @@ namespace pwiz.Common.Spectra
                 hashCode = (hashCode * 397) ^ (Name != null ? Name.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Value != null ? Value.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Unit != null ? Unit.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (UnitAccession != null ? UnitAccession.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (Definition != null ? Definition.GetHashCode() : 0);
                 return hashCode;
             }
