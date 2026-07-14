@@ -64,7 +64,8 @@ namespace pwiz.Osprey.FDR
             out FeatureContributions contributions,
             PercolatorDiagnosticsConfig diagnostics = null,
             string passLabel = @"First-pass",
-            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null)
+            Func<string, IReadOnlyList<double[]>> loadFileFeatures = null,
+            Action<PercolatorResults> captureModel = null)
         {
             contributions = null;
             int numFeatures = featureInfos.Length;
@@ -122,6 +123,13 @@ namespace pwiz.Osprey.FDR
             // (the --model-diagnostics report reads them). Computed already; this
             // is a pure hand-off, no behavior change on any production path.
             contributions = results.FeatureContributions;
+
+            // Frozen-model capture hook (OSPREY_PASS2_QVALUE=transfer): the caller
+            // can grab the trained model (FoldWeights / FoldBiases / Standardizer)
+            // here so a later 2nd-pass step re-scores reconciled features with this
+            // FROZEN 1st-pass model instead of retraining. No-op (null) on every
+            // default percolator run, so scoring stays byte-identical.
+            captureModel?.Invoke(results);
 
             // A diagnostic-only (*Only) dump fired inside the engine; it left the
             // run as a pure no-op and signalled here. Stop without scoring the
@@ -726,6 +734,9 @@ namespace pwiz.Osprey.FDR
             //    supplied, so SelectBestPerPrecursor never dereferences the entries arg
             //    -- passing an empty list is exactly what lets this path avoid the
             //    full-N PercolatorEntry buffer the FdrEntry streaming path allocates.
+            // Phase marker: the dedup + subsample over all N rows is a multi-minute
+            // silent span on an 82-file join; announce it so the console is not blank.
+            logInfo(string.Format(@"Selecting training subset from {0} scored entries...", n));
             int[] bestIdx;
             int[] trainSubsetGlobalIdx = PercolatorFdr.BuildTrainingSubset(
                 labels, entryIds, peptides, Array.Empty<PercolatorEntry>(), maxTrain,
@@ -776,6 +787,8 @@ namespace pwiz.Osprey.FDR
             }
 
             var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
+            logInfo(string.Format(@"Loading training-subset feature vectors from {0} file(s)...",
+                subsetByFile.Count));
             foreach (var kvp in subsetByFile)
             {
                 IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);

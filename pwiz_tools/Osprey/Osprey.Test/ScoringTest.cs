@@ -24,6 +24,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
@@ -1228,6 +1229,135 @@ namespace pwiz.Osprey.Test
                     nWithLowQ, nPassing));
         }
 
+        /// <summary>
+        /// The --verbose calibration training report (the out-CalibrationTrainingReport
+        /// overload) must capture a coherent picture of the training run: a seed feature,
+        /// final model weights, per-feature target/decoy means, a stop reason, the 1% / 0.1%
+        /// yield, and a per-feature contribution decomposition whose shares sum to 100%.
+        /// Also verifies the report is a pure read-out -- the overload returns the same
+        /// nPassing as the plain call on the same input.
+        /// </summary>
+        [TestMethod]
+        public void TestCalibrationTrainingReport()
+        {
+            var matches = BuildSyntheticCalibrationMatches();
+            var matchesCopy = BuildSyntheticCalibrationMatches();
+
+            int nPassingPlain = CalibrationScorer.TrainAndScoreCalibration(matchesCopy, false);
+            int nPassing = CalibrationScorer.TrainAndScoreCalibration(
+                matches, false, out CalibrationTrainingReport report);
+
+            Assert.AreEqual(nPassingPlain, nPassing,
+                "Report overload must return the same nPassing as the plain overload");
+            Assert.IsNotNull(report, "Report must be populated for a non-empty match set");
+
+            // Structural completeness.
+            Assert.AreEqual(4, report.FeatureNames.Length, "Expected 4 calibration features");
+            Assert.IsNotNull(report.FinalWeights, "Final weights must be captured");
+            Assert.AreEqual(4, report.FinalWeights.Length);
+            Assert.AreEqual(4, report.FeatureMeanTarget.Length);
+            Assert.AreEqual(4, report.FeatureMeanDecoy.Length);
+            Assert.IsFalse(string.IsNullOrEmpty(report.StopReason), "A stop reason must be recorded");
+            Assert.IsTrue(report.SeedFeatureIndex >= 0 && report.SeedFeatureIndex < 4,
+                string.Format("Seed feature index out of range: {0}", report.SeedFeatureIndex));
+
+            // Counts are consistent with the input (200 target / 200 decoy).
+            Assert.AreEqual(200, report.NTargets);
+            Assert.AreEqual(200, report.NDecoys);
+            Assert.AreEqual(400, report.NTotal);
+
+            // Yield is monotone across thresholds and matches nPassing at 1%.
+            Assert.IsTrue(report.NTargetsAt1Pct >= report.NTargetsAtTenthPct,
+                "1% target yield must be >= 0.1% yield");
+            int nWithLowQ = 0;
+            foreach (var m in matches)
+                if (!m.IsDecoy && m.QValue <= 0.01)
+                    nWithLowQ++;
+            Assert.AreEqual(nWithLowQ, report.NTargetsAt1Pct,
+                "Report 1% yield must match the targets with q<=0.01");
+
+            // Contribution decomposition: for well-separated targets/decoys the composite
+            // is non-degenerate, so the report emits a contribution line per feature whose
+            // shares sum to ~100%. Parse the shares out of the formatted table.
+            var lines = new List<string>(report.ToReportLines("unit-test"));
+            double shareSum = 0;
+            int shareRows = 0;
+            foreach (string line in lines)
+            {
+                // A contribution row starts (after indent) with a known feature name and
+                // ends with "<number>%". Other lines carrying '%' (seed FDR, iteration
+                // cutoffs, the yield line) do not start with a feature name, so they are
+                // excluded -- this isolates exactly the 4 feature rows.
+                string trimmed = line.TrimStart();
+                bool isFeatureRow = false;
+                foreach (string fname in report.FeatureNames)
+                {
+                    if (trimmed.StartsWith(fname + " "))
+                    {
+                        isFeatureRow = true;
+                        break;
+                    }
+                }
+                if (!isFeatureRow)
+                    continue;
+                int pctIdx = line.IndexOf('%');
+                string beforePct = line.Substring(0, pctIdx);
+                int sp = beforePct.LastIndexOf(' ');
+                string token = beforePct.Substring(sp + 1);
+                if (double.TryParse(token, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out double share))
+                {
+                    shareSum += share;
+                    shareRows++;
+                }
+            }
+            Assert.AreEqual(4, shareRows, "Expected a contribution share row per feature");
+            Assert.IsTrue(Math.Abs(shareSum - 100.0) < 0.5,
+                string.Format("Feature shares should sum to ~100%, got {0:F2}", shareSum));
+        }
+
+        /// <summary>
+        /// Build a synthetic 200-pair calibration match set (120 well-separated "good"
+        /// targets, 80 noisy, 200 noise decoys) suitable for exercising the iterative LDA.
+        /// Deterministic (fixed seed) so tests are reproducible.
+        /// </summary>
+        private static CalibrationMatch[] BuildSyntheticCalibrationMatches()
+        {
+            var rng = new Random(12345);
+            int nPairs = 200;
+            var matches = new CalibrationMatch[nPairs * 2];
+            for (int p = 0; p < nPairs; p++)
+            {
+                uint baseId = (uint)(p + 1);
+                bool isGoodTarget = p < 120;
+                double corr = isGoodTarget ? 3.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 2.0;
+                double libcos = isGoodTarget ? 0.6 + rng.NextDouble() * 0.3 : rng.NextDouble() * 0.4;
+                double top6 = isGoodTarget ? 4.0 + rng.NextDouble() * 2.0 : rng.NextDouble() * 3.0;
+                double xcorr = isGoodTarget ? 0.5 + rng.NextDouble() * 1.5 : rng.NextDouble() * 0.5;
+                matches[p * 2] = new CalibrationMatch
+                {
+                    EntryId = baseId,
+                    IsDecoy = false,
+                    Sequence = string.Format("PEPTIDE{0}K", p),
+                    CorrelationScore = corr,
+                    LibcosineApex = libcos,
+                    Top6MatchedApex = (byte)Math.Min(6, (int)top6),
+                    XcorrScore = xcorr
+                };
+                matches[p * 2 + 1] = new CalibrationMatch
+                {
+                    EntryId = baseId | 0x80000000,
+                    IsDecoy = true,
+                    Sequence = string.Format("DECOY_PEPTIDE{0}K", p),
+                    CorrelationScore = rng.NextDouble() * 2.0,
+                    LibcosineApex = rng.NextDouble() * 0.3,
+                    Top6MatchedApex = (byte)(rng.Next(4)),
+                    XcorrScore = rng.NextDouble() * 0.4
+                };
+            }
+            return matches;
+        }
+
         // Helper: Pearson correlation for test use
         private static double ComputePearson(double[] x, double[] y)
         {
@@ -1272,6 +1402,201 @@ namespace pwiz.Osprey.Test
             // 10 ppm of 500 = 0.005 Da
             Assert.IsTrue(SpectralScorer.HasMatch(500.002, spectrumMzs, ppmTolerance));
             Assert.IsFalse(SpectralScorer.HasMatch(500.01, spectrumMzs, ppmTolerance));
+        }
+
+        #endregion
+
+        #region Sparse XCorr cache (issue #4398)
+
+        /// <summary>
+        /// The sparse HRAM cache must be BIT-IDENTICAL to the dense f32 cache it
+        /// replaced -- not merely close. It defers the sliding-window subtraction and
+        /// recomputes each probed bin on demand, so any drift here silently moves
+        /// every XCorr in an Astral run away from the golden.
+        ///
+        /// Checks every bin (not just the ones a library entry would probe) and then
+        /// the end-to-end scorer entry points.
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrCacheMatchesDenseCache()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+
+            // Deterministic pseudo-spectrum: peaks spread across the range, with a
+            // pair inside one +/-75-bin window and a pair at the clamped edges, since
+            // those are where the prefix-sum bounds math can diverge.
+            var mzs = new List<double>();
+            var intensities = new List<float>();
+            for (int i = 0; i < 400; i++)
+            {
+                mzs.Add(150.0 + i * 4.37);
+                intensities.Add((float)(1000.0 + (i * 7919) % 5000));
+            }
+            mzs.Add(150.001);       // first bins
+            intensities.Add(8000f);
+            mzs.Add(150.02);        // adjacent to the first, inside its window
+            intensities.Add(3000f);
+            mzs.Add(1999.98);       // last bins
+            intensities.Add(6000f);
+
+            // Binning is order-independent, so the peaks need not be sorted by m/z.
+            var spectrum = new Spectrum
+            {
+                Mzs = mzs.ToArray(),
+                Intensities = intensities.ToArray()
+            };
+
+            float[] dense = scorer.PreprocessSpectrumForXcorrF32(spectrum);
+            var scratch = new XcorrScratch(nBins);
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(spectrum, scratch);
+
+            Assert.AreEqual(nBins, sparse.NBins);
+            Assert.IsTrue(sparse.PeakCount > 0 && sparse.PeakCount < nBins / 10,
+                string.Format("Sparse cache should be sparse: {0} of {1} bins", sparse.PeakCount, nBins));
+
+            for (int bin = 0; bin < nBins; bin++)
+            {
+                float expected = dense[bin];
+                float actual = sparse.CenteredAt(bin);
+                // Bit-exact: compare raw bits, not AreEqual with a delta.
+                // (SingleToInt32Bits is not available on net472.)
+                Assert.AreEqual(SingleBits(expected), SingleBits(actual),
+                    string.Format("Bin {0}: dense {1:R} != sparse {2:R}", bin, expected, actual));
+            }
+
+            // End to end: the two scoring entry points must agree exactly.
+            var entry = new LibraryEntry(1, "PEPTIDEK", "PEPTIDEK", 2, 500.0, 10.0);
+            foreach (double mz in new[] { 150.001, 175.5, 400.25, 500.0, 700.75, 1200.5, 1999.98 })
+                entry.Fragments.Add(new LibraryFragment { Mz = mz, RelativeIntensity = 1.0f });
+
+            double denseScore = scorer.XcorrFromPreprocessed(dense, entry, new bool[nBins]);
+            double sparseScore = scorer.XcorrFromSparse(sparse, entry, new bool[nBins]);
+            Assert.AreEqual(denseScore, sparseScore, 0.0, "XcorrFromSparse must match XcorrFromPreprocessed exactly");
+        }
+
+        /// <summary>
+        /// The sparse cache must handle an empty spectrum and out-of-range bins the
+        /// same way the dense cache did (all zeros, no exception).
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrCacheEmptySpectrum()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+            var scratch = new XcorrScratch(nBins);
+
+            var empty = new Spectrum { Mzs = new double[0], Intensities = new float[0] };
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(empty, scratch);
+
+            Assert.AreEqual(0, sparse.PeakCount);
+            Assert.AreEqual(nBins, sparse.NBins);
+            Assert.AreEqual(0f, sparse.CenteredAt(0));
+            Assert.AreEqual(0f, sparse.CenteredAt(nBins / 2));
+            Assert.AreEqual(0f, sparse.CenteredAt(-1));
+            Assert.AreEqual(0f, sparse.CenteredAt(nBins));
+
+            var entry = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
+            entry.Fragments.Add(new LibraryFragment { Mz = 500.0, RelativeIntensity = 1.0f });
+            Assert.AreEqual(0.0, scorer.XcorrFromSparse(sparse, entry, new bool[nBins]), 0.0);
+        }
+
+        /// <summary>
+        /// The sparse path must dedup fragments sharing a bin exactly as the dense
+        /// path does, and must leave <c>visitedBins</c> fully cleared so the array can
+        /// be reused across every candidate in a window.
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrDedupAndVisitedBinsReset()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+            var scratch = new XcorrScratch(nBins);
+
+            var spectrum = new Spectrum
+            {
+                Mzs = new[] { 499.99, 500.0, 500.01, 600.0 },
+                Intensities = new[] { 5000.0f, 10000.0f, 5000.0f, 2000.0f }
+            };
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(spectrum, scratch);
+
+            // HRAM bins are 0.02 Th, so 500.001 and 500.009 land in the same bin.
+            var twoFrags = new LibraryEntry(1, "TEST", "TEST", 2, 300.0, 10.0);
+            twoFrags.Fragments.Add(new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f });
+            twoFrags.Fragments.Add(new LibraryFragment { Mz = 500.009, RelativeIntensity = 1.0f });
+
+            var oneFrag = new LibraryEntry(2, "TEST2", "TEST2", 2, 300.0, 10.0);
+            oneFrag.Fragments.Add(new LibraryFragment { Mz = 500.001, RelativeIntensity = 1.0f });
+
+            Assert.AreEqual(scorer.BinConfig.MzToBin(500.001), scorer.BinConfig.MzToBin(500.009),
+                "Test premise: both fragments must fall in the same HRAM bin");
+
+            var visitedBins = new bool[nBins];
+            double scoreTwo = scorer.XcorrFromSparse(sparse, twoFrags, visitedBins);
+            double scoreOne = scorer.XcorrFromSparse(sparse, oneFrag, visitedBins);
+            Assert.AreEqual(scoreOne, scoreTwo, 0.0, "Two fragments in one bin must score as one (dedup)");
+
+            foreach (bool visited in visitedBins)
+                Assert.IsFalse(visited, "visitedBins must be fully cleared for reuse by the next candidate");
+        }
+
+        /// <summary>
+        /// The sparse cache's bit-exactness rests on every retained bin being strictly
+        /// positive and finite: that is what makes "skip the zeros" a per-step additive
+        /// identity (x + 0.0 == x) rather than a reassociation of the sum. Pathological
+        /// intensities cannot break it, because BOTH paths run the same
+        /// ApplyWindowingNormalizationD, which drops them identically -- NaN > threshold
+        /// is false, so the bin stays 0.0 and is never retained. Pins that shared-filter
+        /// property rather than trusting it.
+        /// </summary>
+        [TestMethod]
+        public void TestSparseXcorrCacheHandlesPathologicalIntensities()
+        {
+            var scorer = new SpectralScorer(BinConfig.HRAM());
+            int nBins = scorer.BinConfig.NBins;
+            var scratch = new XcorrScratch(nBins);
+
+            var spectrum = new Spectrum
+            {
+                Mzs = new[] { 300.0, 400.0, 500.0, 600.0, 700.0, 800.0 },
+                Intensities = new[]
+                {
+                    1000.0f, float.NaN, -500.0f, float.PositiveInfinity, 2000.0f, 0.0f
+                }
+            };
+
+            float[] dense = scorer.PreprocessSpectrumForXcorrF32(spectrum);
+            SparseXcorrSpectrum sparse = scorer.PreprocessSpectrumForXcorrSparse(spectrum, scratch);
+
+            for (int bin = 0; bin < nBins; bin++)
+            {
+                Assert.AreEqual(SingleBits(dense[bin]), SingleBits(sparse.CenteredAt(bin)),
+                    string.Format("Bin {0}: dense {1:R} != sparse {2:R}",
+                        bin, dense[bin], sparse.CenteredAt(bin)));
+            }
+        }
+
+        /// <summary>
+        /// Reinterprets a float's storage as an int, in place and without allocating.
+        /// The all-bins parity tests call this twice per bin over 100,001 bins, so a
+        /// <c>BitConverter.GetBytes</c> round-trip would churn ~400 k byte[4]s.
+        /// <c>BitConverter.SingleToInt32Bits</c> would do, but does not exist on net472.
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct FloatBits
+        {
+            [FieldOffset(0)] public float Single;
+            [FieldOffset(0)] public int Bits;
+        }
+
+        /// <summary>
+        /// Raw IEEE-754 bits of a float, for bit-exact comparison. Distinguishes
+        /// <c>+0.0</c> from <c>-0.0</c> and preserves NaN payloads, which
+        /// <c>Assert.AreEqual(float, float)</c> would not.
+        /// </summary>
+        private static int SingleBits(float value)
+        {
+            return new FloatBits { Single = value }.Bits;
         }
 
         #endregion

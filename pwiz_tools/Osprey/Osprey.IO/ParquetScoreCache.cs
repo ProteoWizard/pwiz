@@ -871,6 +871,53 @@ namespace pwiz.Osprey.IO
             return allCandidates;
         }
 
+        /// <summary>
+        /// Footer-only probe of a scores parquet: the total row count and whether
+        /// the <c>cwt_candidates</c> column is present, read from the Parquet
+        /// metadata WITHOUT decoding any column data. Lets Stage 6 validate that
+        /// every file's stub <see cref="FdrEntry.ParquetIndex"/> is in range (the
+        /// reconciliation all-or-nothing gate) without holding all files'
+        /// candidate lists resident -- the streaming counterpart of
+        /// <see cref="LoadCwtCandidatesFromParquet"/>, whose per-file result count
+        /// equals the returned <c>RowCount</c> when the column is present and 0 when
+        /// it is absent (that method returns an empty list for a missing column).
+        /// </summary>
+        public static (long RowCount, bool HasCwtCandidatesField) ProbeCwtRowMetadata(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                long rowCount = reader.Metadata?.NumRows ?? 0L;
+                var fieldsByName = BuildFieldLookup(reader);
+                bool hasCwt = fieldsByName.ContainsKey(FIELD_CWT_CANDIDATES.Name);
+                return (rowCount, hasCwt);
+            }
+        }
+
+        /// <summary>
+        /// Footer-only check that a scores parquet carries the PIN feature columns,
+        /// reading the schema WITHOUT decoding any column data. The lean resume /
+        /// HPC-merge paths stream only the scalar stub columns
+        /// (<see cref="ReadFdrStubScalars"/>) and never materialize the 21-float
+        /// feature vectors, so they lose the fat path's implicit
+        /// <c>features.Count == stubs.Count</c> corruption guard (which throws when
+        /// <see cref="LoadPinFeaturesFromParquet"/> yields zero rows because the
+        /// feature schema is absent). This restores an equivalent fail-fast up front
+        /// without paying the feature-load memory the lean path exists to avoid.
+        /// Presence of the first PIN feature column is decisive: parquet keeps every
+        /// column in a row group the same length, so a present column has the stub
+        /// row count, and an absent one is exactly the desync the fat path rejected.
+        /// </summary>
+        public static bool HasPinFeatureColumns(string path)
+        {
+            using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var reader = RunSync(ParquetReader.CreateAsync(stream)))
+            {
+                var fieldsByName = BuildFieldLookup(reader);
+                return fieldsByName.ContainsKey(PIN_FEATURE_NAMES[0]);
+            }
+        }
+
         #endregion
 
         #region Load PIN Features

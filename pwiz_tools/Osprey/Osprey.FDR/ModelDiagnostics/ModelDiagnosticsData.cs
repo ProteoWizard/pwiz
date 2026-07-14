@@ -53,7 +53,7 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
     /// histograms, thinned q/FDP curves), so the embedded JSON stays small even
     /// for an Astral-scale run.
     /// </summary>
-    public sealed class ModelDiagnosticsData
+    public sealed partial class ModelDiagnosticsData
     {
         // ----- run metadata -----
         public string GeneratedUtc { get; set; }
@@ -82,15 +82,20 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         public bool ModelDegenerate { get; set; }
         public List<FeatureRow> Model { get; set; }
         /// <summary>
-        /// The second-pass model (feature table + composite score histogram),
-        /// present whenever the second pass retrained Percolator on the
-        /// post-reconciliation reported pool -- i.e. any run where Stage 6
-        /// reconciliation rescored entries. Null on a single-pass run (no
-        /// reconciliation). The Model tab
-        /// offers a Pass 1 / Pass 2 selector when this is present. Shares
-        /// <see cref="FeatureHistEdges"/> with pass 1 (same standardized bins).
+        /// The complete pass-2 (final reported pool) bundle -- every pass-dependent
+        /// card recomputed on the post-compaction, second-pass-q-valued pool -- so the
+        /// report's top-level Pass 1 / Pass 2 switch can re-source the whole page at
+        /// once. Null on a single-pass run (no reconciliation), which hides the switch.
+        /// Its structural half (<see cref="Pass2Data.Model"/> /
+        /// <see cref="Pass2Data.DensityRatio"/> / <see cref="Pass2Data.WinFraction"/>)
+        /// is present only when the second pass RETRAINED Percolator; under
+        /// <c>OSPREY_PASS2_QVALUE=transfer</c> it is null and the report's structural
+        /// cards degrade to a "pass-2 model n/a" note, while the q-driven half still
+        /// renders. Built by the end-of-run writer (MergeNodeTask) via
+        /// <see cref="BuildPass2"/>. Shares <see cref="FeatureHistEdges"/> with pass 1
+        /// (same standardized bins).
         /// </summary>
-        public ModelPass ModelPass2 { get; set; }
+        public Pass2Data Pass2 { get; set; }
         /// <summary>
         /// Shared bin edges for the per-feature standardized-value histograms
         /// (<see cref="FeatureRow.TargetHist"/> / <see cref="FeatureRow.DecoyHist"/>),
@@ -119,6 +124,19 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         // ReSharper disable once CollectionNeverQueried.Global
         public List<FileSummaryRow> PerFile { get; set; }
         public IdYieldData IdYield { get; set; }
+        /// <summary>
+        /// Cross-run detection reproducibility (entrapment-free FDR QC): per-run
+        /// detected-precursor counts and their cumulative union / intersection over
+        /// runs, plus the histogram of precursors by the number of runs they are
+        /// detected in. Real precursors reproduce across replicate runs while
+        /// FDR-escaping false precursors do not, so a runaway union / collapsing
+        /// intersection and a growing "detected in only one run" bump read FDR trouble
+        /// with no decoy or entrapment model -- the picture that works on the ordinary
+        /// target+decoy libraries most users run. Built unconditionally from the
+        /// reported per-file passing REAL-target precursors (unique per modified
+        /// sequence + charge; decoys and entrapment excluded as in <see cref="IdYield"/>).
+        /// </summary>
+        public CrossRunDetection CrossRun { get; set; }
 
         /// <summary>
         /// A trained model for one FDR pass: its feature-contribution table, the
@@ -132,6 +150,48 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public bool Degenerate { get; set; }
             public List<FeatureRow> Features { get; set; }
             public ScoreHistogram Scores { get; set; }
+        }
+
+        /// <summary>
+        /// The complete pass-2 (final reported pool) bundle behind the report's
+        /// top-level Pass 1 / Pass 2 switch: every pass-dependent card recomputed on
+        /// the post-compaction, second-pass-q-valued pool. Split into a STRUCTURAL half
+        /// (score/model-derived) and a Q-DRIVEN half (reported-pool q-derived), because
+        /// the two become available under different second-pass modes:
+        /// <list type="bullet">
+        /// <item>Retrain (<c>OSPREY_PASS2_QVALUE=percolator</c>): a second Percolator
+        /// model exists, so BOTH halves are built.</item>
+        /// <item>Confidence transfer (<c>OSPREY_PASS2_QVALUE=transfer</c>): no retrained
+        /// model, so the structural half is null (the report's Model / Density /
+        /// Competition cards show a "pass-2 model n/a" note) while the q-driven half --
+        /// which needs only the transferred q -- still renders.</item>
+        /// </list>
+        /// </summary>
+        public sealed class Pass2Data
+        {
+            // ----- structural half (null under confidence-transfer mode) -----
+            /// <summary>The second-pass model: feature table, composite separation, and
+            /// composite score histogram (the Density plot's source). Null when the second
+            /// pass did not retrain (transfer mode). Shares
+            /// <see cref="FeatureHistEdges"/> with pass 1.</summary>
+            public ModelPass Model { get; set; }
+            /// <summary>Non-parametric null-alignment density ratios over the pass-2
+            /// composite scores. Null when <see cref="Model"/> is (transfer mode).</summary>
+            public DensityRatioData DensityRatio { get; set; }
+            /// <summary>Paired decoy-win fraction over the pass-2 reported pool. Null when
+            /// <see cref="Model"/> is (transfer mode).</summary>
+            public WinFractionData WinFraction { get; set; }
+
+            // ----- q-driven half (present whenever a second-pass q exists) -----
+            /// <summary>FDR-calibration views (experiment + per-run) for the reported pool.
+            /// Empty when the pool carries no entrapment (nothing to calibrate against).</summary>
+            public List<FdpView> FdpViews { get; set; }
+            /// <summary>Identification-yield curve (both precursor-q scopes) on the reported pool.</summary>
+            public IdYieldData IdYield { get; set; }
+            /// <summary>Cross-run detection reproducibility on the reported pool.</summary>
+            public CrossRunDetection CrossRun { get; set; }
+            /// <summary>Per-file passing precursor counts on the reported pool.</summary>
+            public List<FileSummaryRow> PerFile { get; set; }
         }
 
         /// <summary>One row of the trained-model feature-contribution table.</summary>
@@ -298,11 +358,114 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             public int Entrapment { get; set; }
         }
 
-        /// <summary>Cumulative accepted-target count vs q-value threshold (the yield curve).</summary>
+        /// <summary>
+        /// Cumulative accepted real-target precursor count vs the reported q-value
+        /// threshold (the yield curve), at each precursor-q scope over one shared
+        /// <see cref="Q"/> grid. The report's scope selector switches between the two
+        /// curves: the experiment-wide q pooled across runs (what <c>--fdrbench</c>
+        /// emits) and the per-run q. Both are entrapment-independent.
+        /// </summary>
         public sealed class IdYieldData
         {
             public double[] Q { get; set; }
-            public int[] Targets { get; set; }
+            /// <summary>Accepted targets vs the experiment-wide precursor q (pooled across runs).</summary>
+            public int[] TargetsExperiment { get; set; }
+            /// <summary>Accepted targets vs the per-run precursor q.</summary>
+            public int[] TargetsRun { get; set; }
+        }
+
+        /// <summary>
+        /// Cross-run detection reproducibility, read off run-to-run membership with no
+        /// decoy or entrapment model. Built from the reported per-file passing
+        /// precursors (identity = modified sequence + charge, in input-file order):
+        /// real precursors reproduce across replicate runs, FDR-escaping false ones do
+        /// not, so a runaway <see cref="CrossRunView.CumUnion"/> / collapsing
+        /// <see cref="CrossRunView.CumIntersection"/> and a growing "detected in only one
+        /// run" bump in <see cref="CrossRunView.RunCountHistogram"/> surface FDR trouble
+        /// that the entrapment FDP needs a special library to see.
+        /// </summary>
+        public sealed class CrossRunDetection
+        {
+            /// <summary>Input-file names, in input order (the x for the per-run curves).</summary>
+            public string[] RunNames { get; set; }
+            /// <summary>
+            /// Membership gated on the RUN-level q only -- the per-run picture. False
+            /// positives are ~random per run, so they land at k=1 and inflate the union
+            /// (the run-vs-global FDR gap; Collins/Rosenberger 2017).
+            /// </summary>
+            public CrossRunView PerRun { get; set; }
+            /// <summary>
+            /// Membership gated on BOTH the run-level AND experiment-wide q
+            /// (max(run q, experiment q) &lt;= run FDR) -- locally AND globally credible.
+            /// The experiment-wide q controls the dataset-wide multiple testing, so a
+            /// single-run false positive (small run q but large experiment q) drops out
+            /// entirely: the union saturates and the k=1 bump collapses relative to
+            /// <see cref="PerRun"/>. That contrast is the point of the toggle.
+            /// </summary>
+            public CrossRunView Experiment { get; set; }
+        }
+
+        /// <summary>
+        /// One reproducibility view (per-run bars, cumulative union / intersection,
+        /// at-least-half floor, run-count histogram, mean/std) under a single q-gating
+        /// rule. The report holds two of these -- run-level and experiment-wide -- and a
+        /// tab toggle switches all the cross-run plots between them.
+        /// </summary>
+        public sealed class CrossRunView
+        {
+            /// <summary>Detected precursors passing the gate in each run (the bars).</summary>
+            public int[] PerRunCount { get; set; }
+            /// <summary>|union of detected precursors over runs 1..i| -- total unique seen so far (monotone up).</summary>
+            public int[] CumUnion { get; set; }
+            /// <summary>|intersection over runs 1..i| -- detected in every run so far (monotone down).</summary>
+            public int[] CumIntersection { get; set; }
+            /// <summary>Precursors detected in at least ceil(N/2) of the N runs (the reproducibility floor line).</summary>
+            public int AtLeastHalf { get; set; }
+            /// <summary>Index k-1 =&gt; number of precursors detected in exactly k runs (k = 1..N).</summary>
+            public int[] RunCountHistogram { get; set; }
+            /// <summary>Mean of <see cref="PerRunCount"/> (annotation).</summary>
+            public double MeanPerRun { get; set; }
+            /// <summary>Population standard deviation of <see cref="PerRunCount"/> (annotation).</summary>
+            public double StdPerRun { get; set; }
+            /// <summary>
+            /// Companion run-count histogram for the ENTRAPMENT (p_target) precursors under
+            /// the SAME gate as this view (index k-1 =&gt; entrapment precursors detected in
+            /// exactly k runs), or null when no entrapment library is present. The real-target
+            /// <see cref="RunCountHistogram"/> excludes entrapment; this is the parallel tally
+            /// of the deliberately-false padding, overlaid as a second series. Entrapment is a
+            /// KNOWN false set that does not reproduce, so it should pile at low k -- where it
+            /// rises marks where the real-target histogram's mass is most likely false.
+            /// </summary>
+            public int[] EntrapmentRunCountHistogram { get; set; }
+            /// <summary>
+            /// Entrapment-measured FDP of the precursors detected in exactly k runs
+            /// (index k-1), or null when no entrapment library is present. Combines the per-k
+            /// real-target count (<see cref="RunCountHistogram"/>) and entrapment count
+            /// (<see cref="EntrapmentRunCountHistogram"/>) through the FDRBench combined
+            /// estimator at the library ratio r ((1 + 1/r) * n_p / (n_t + n_p)); NaN in an
+            /// empty k-slice. On the experiment-wide view the k=1 entry is the adjudicator for
+            /// the exp-q-surviving singletons: ~nominal (~run FDR) =&gt; they are real rare /
+            /// donor-specific biology; well above nominal =&gt; the experiment-wide q is itself
+            /// accepting too many 1-hit-wonders (a calibration failure one level up).
+            /// </summary>
+            public double[] EntrapmentFdpByRunCount { get; set; }
+            /// <summary>
+            /// |union of ENTRAPMENT precursors over runs 1..i| (index i-1), the entrapment
+            /// companion to <see cref="CumUnion"/>, or null with no entrapment. The direct
+            /// empirical input to <see cref="UnionFdp"/>.
+            /// </summary>
+            public int[] CumUnionEntrapment { get; set; }
+            /// <summary>
+            /// Entrapment-measured FDP of the ACCUMULATED UNION over runs 1..i (index i-1),
+            /// combining <see cref="CumUnion"/> and <see cref="CumUnionEntrapment"/> through the
+            /// FDRBench combined estimator at the library ratio r, or null with no entrapment.
+            /// This is the direct empirical "union FDP vs number of runs" curve: false positives
+            /// are ~random per run, so under the run-level gate the union accretes fresh FPs and
+            /// this rises with i (Collins/Rosenberger 2017); the experiment-wide gate bounds the
+            /// dataset-wide error, so its curve stays far flatter. The run-vs-experiment gap at
+            /// i = N quantifies "how anti-conservative is per-run FDR at this run count".
+            /// </summary>
+            public double[] UnionFdp { get; set; }
         }
 
         // A precursor reduced to the fields the diagnostics need.
@@ -343,7 +506,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
         /// present -- FDRBench's 1-fold estimators use r = 1.
         /// </param>
         /// <param name="runFdr">The configured run-level FDR (for the summary counts).</param>
-        /// <param name="fdrLevel">Display name of the FDR level used.</param>
+        /// <param name="fdrLevel">
+        /// The FDR control level the run was reported at (Precursor / Peptide / Both).
+        /// Decides which run-level q gates the "passing" set (via
+        /// <see cref="FdrEntry.EffectiveRunQvalue"/>), so the per-file and cross-run
+        /// counts match what the pipeline actually reported -- not a hardcoded scope.
+        /// </param>
         public static ModelDiagnosticsData Build(
             IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             FeatureContributions contributions,
@@ -351,15 +519,14 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             IReadOnlyDictionary<uint, uint> pairByBaseId,
             double entrapmentRatio,
             double runFdr,
-            string fdrLevel)
+            FdrLevel fdrLevel)
         {
             var data = new ModelDiagnosticsData
             {
                 RunFdr = runFdr,
-                FdrLevel = fdrLevel ?? string.Empty,
+                FdrLevel = fdrLevel.ToString(),
                 FileCount = perFileEntries.Count,
                 Model = new List<FeatureRow>(),
-                PerFile = new List<FileSummaryRow>(),
             };
 
             bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
@@ -368,35 +535,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
                 out int nWithClass, out int nWithoutClass);
 
-            // Per-file passing summary at the run-level peptide FDR (kept separate
-            // from the reduction so the same reduction serves pass 1 and pass 2).
-            // Non-decoy passing entries split into real targets vs entrapment
-            // (p_target) by the library base-id class, so the table mirrors the
-            // top-line target / decoy / entrapment breakdown.
-            foreach (var kvp in perFileEntries)
-            {
-                int fileTargets = 0, fileDecoys = 0, fileEntrap = 0;
-                foreach (var e in kvp.Value)
-                {
-                    if (e.RunPeptideQvalue > runFdr)
-                        continue;
-                    if (e.IsDecoy)
-                    {
-                        fileDecoys++;
-                        continue;
-                    }
-                    uint baseId = e.EntryId & BASE_ID_MASK;
-                    if (haveManifest && classByBaseId.TryGetValue(baseId, out var cls)
-                        && cls == EntrapmentClass.PTarget)
-                        fileEntrap++;
-                    else
-                        fileTargets++;
-                }
-                data.PerFile.Add(new FileSummaryRow
-                {
-                    File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys, Entrapment = fileEntrap,
-                });
-            }
+            // Per-file passing summary at the run-level FDR (kept separate from the
+            // reduction so the same reduction serves pass 1 and pass 2). Factored into
+            // BuildPerFile so pass 2 reports the same table on the reported pool.
+            data.PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel);
             foreach (var p in precs)
             {
                 switch (p.Class)
@@ -429,8 +571,16 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             // binning pass. Pass 1 only (the Density tab shows the pass-1 densities).
             data.DensityRatio = BuildDensityRatio(data.Scores, data.HasEntrapment);
 
-            // ---- id-yield curve (accepted targets vs q) ----
+            // ---- id-yield curve (accepted targets vs q, both precursor-q scopes) ----
             data.IdYield = BuildIdYield(precs);
+
+            // ---- cross-run detection reproducibility (entrapment-free FDR QC) ----
+            // From the reported per-file passing REAL-target precursors (entrapment
+            // excluded, like the id-yield curve, so a run's reproducibility picture is
+            // not polluted by the deliberately-non-reproducing entrapment padding).
+            // Built unconditionally (no manifest needed for a plain target+decoy run).
+            data.CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                entrapmentRatio, runFdr, fdrLevel);
 
             // ---- paired decoy-win fraction ----
             data.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
@@ -448,9 +598,104 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             return data;
         }
 
+        /// <summary>
+        /// Build the complete pass-2 (final reported pool) bundle behind the report's
+        /// top-level Pass 1 / Pass 2 switch. Called by the end-of-run writer
+        /// (MergeNodeTask) with the post-compaction, second-pass-q-valued pool
+        /// (<c>RescoredEntries</c>) -- the same pool the pass-2 FDRBench TSV is written
+        /// from -- so the HTML pass-2 cards and stock FDRBench see the identical
+        /// peptides and q-values. The classification / pairing / ratio inputs come
+        /// from the searched library exactly as pass 1 (see ModelDiagnosticsReport).
+        ///
+        /// The STRUCTURAL half (Model / DensityRatio / WinFraction) is built only when
+        /// the second pass RETRAINED Percolator (<paramref name="pass2Contributions"/>
+        /// non-null); under <c>OSPREY_PASS2_QVALUE=transfer</c> there is no retrained
+        /// model, so it stays null and the report's Model / Density / Competition cards
+        /// degrade to a "pass-2 model n/a" note. The Q-DRIVEN half (FdpViews / IdYield /
+        /// CrossRun / PerFile) is always built from the reported pool (FdpViews is empty
+        /// when the pool carries no entrapment).
+        /// </summary>
+        public static Pass2Data BuildPass2(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            FeatureContributions pass2Contributions,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId,
+            IReadOnlyDictionary<uint, uint> pairByBaseId,
+            double entrapmentRatio,
+            double runFdr,
+            FdrLevel fdrLevel)
+        {
+            bool haveManifest = classByBaseId != null && classByBaseId.Count > 0;
+            var precs = ReduceToPrecs(perFileEntries, classByBaseId, pairByBaseId, haveManifest,
+                out _, out _);
+
+            var pass2 = new Pass2Data
+            {
+                // Q-driven half: available whenever a second pass produced reported
+                // q-values (retrain OR confidence transfer). Entrapment-independent
+                // except FdpViews (which is empty without an entrapment pool).
+                PerFile = BuildPerFile(perFileEntries, classByBaseId, haveManifest, runFdr, fdrLevel),
+                IdYield = BuildIdYield(precs),
+                CrossRun = BuildCrossRunDetection(perFileEntries, classByBaseId, haveManifest,
+                    entrapmentRatio, runFdr, fdrLevel),
+                FdpViews = BuildPass2FdpViews(perFileEntries, classByBaseId, pairByBaseId, entrapmentRatio),
+            };
+
+            // Structural half: only when the second pass retrained on the reported pool.
+            // BuildModelPass2 returns null when contributions are null (transfer mode),
+            // which leaves DensityRatio / WinFraction null too -- the report's structural
+            // cards then show their n/a note under the top-level Pass 2 mode.
+            pass2.Model = BuildModelPass2(perFileEntries, pass2Contributions, classByBaseId, pairByBaseId);
+            if (pass2.Model != null)
+            {
+                bool hasEntrapment = precs.Any(p => p.Class == EntrapmentClass.PTarget);
+                pass2.DensityRatio = BuildDensityRatio(pass2.Model.Scores, hasEntrapment);
+                pass2.WinFraction = BuildWinFraction(perFileEntries, classByBaseId, haveManifest);
+            }
+            return pass2;
+        }
+
         // Mask clearing the decoy high bit from an EntryId to get the shared
         // target/decoy library base-id (same convention as FdrBenchInputWriter).
         private const uint BASE_ID_MASK = 0x7FFFFFFF;
+
+        // Per-file passing precursor counts at the run-level FDR for the CONFIGURED
+        // level (precursor / peptide / both) via EffectiveRunQvalue -- the value the
+        // pipeline reports on, not a hardcoded peptide q. Non-decoy passing entries
+        // split into real targets vs entrapment (p_target) by the library base-id
+        // class, mirroring the top-line breakdown. Shared by pass 1 (Build) and pass 2
+        // (BuildPass2) so both passes label their per-file table with the same rule.
+        private static List<FileSummaryRow> BuildPerFile(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest,
+            double runFdr, FdrLevel fdrLevel)
+        {
+            var perFile = new List<FileSummaryRow>();
+            foreach (var kvp in perFileEntries)
+            {
+                int fileTargets = 0, fileDecoys = 0, fileEntrap = 0;
+                foreach (var e in kvp.Value)
+                {
+                    if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
+                        continue;
+                    if (e.IsDecoy)
+                    {
+                        fileDecoys++;
+                        continue;
+                    }
+                    uint baseId = e.EntryId & BASE_ID_MASK;
+                    if (haveManifest && classByBaseId.TryGetValue(baseId, out var cls)
+                        && cls == EntrapmentClass.PTarget)
+                        fileEntrap++;
+                    else
+                        fileTargets++;
+                }
+                perFile.Add(new FileSummaryRow
+                {
+                    File = kvp.Key, Targets = fileTargets, Decoys = fileDecoys, Entrapment = fileEntrap,
+                });
+            }
+            return perFile;
+        }
 
         // Build the feature-contribution table rows (most-influential first) from a
         // trained model, carrying each feature's per-class histogram when collected.
@@ -960,21 +1205,242 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
         private static IdYieldData BuildIdYield(List<Prec> precs)
         {
-            // Cumulative accepted real-target precursors as the reported-q
-            // threshold sweeps [0, 0.1]. Uses a fixed grid so the JSON is small.
-            var qs = precs.Where(p => !p.IsDecoy && p.Class != EntrapmentClass.PTarget
-                                       && p.Class != EntrapmentClass.PDecoy)
-                          .Select(p => p.QExpPrecursor).OrderBy(q => q).ToArray();
+            // Cumulative accepted real-target precursors as the reported-q threshold
+            // sweeps [0, 0.1], at BOTH precursor-q scopes so the report's scope
+            // selector can switch between them (experiment-wide = what --fdrbench
+            // emits; per-run = the per-file picture). Real targets only (entrapment
+            // excluded), and a fixed grid so the JSON stays small.
+            var reals = precs.Where(p => !p.IsDecoy && p.Class != EntrapmentClass.PTarget
+                                          && p.Class != EntrapmentClass.PDecoy).ToList();
+            var qExp = reals.Select(p => p.QExpPrecursor).OrderBy(q => q).ToArray();
+            var qRun = reals.Select(p => p.QRunPrecursor).OrderBy(q => q).ToArray();
             const int steps = 100;
             var grid = new double[steps];
-            var counts = new int[steps];
+            var cExp = new int[steps];
+            var cRun = new int[steps];
             for (int i = 0; i < steps; i++)
             {
                 double thr = 0.10 * (i + 1) / steps;
                 grid[i] = thr;
-                counts[i] = UpperBound(qs, thr);
+                cExp[i] = UpperBound(qExp, thr);
+                cRun[i] = UpperBound(qRun, thr);
             }
-            return new IdYieldData { Q = grid, Targets = counts };
+            return new IdYieldData { Q = grid, TargetsExperiment = cExp, TargetsRun = cRun };
+        }
+
+        // Build the cross-run detection reproducibility model from the reported
+        // per-file passing REAL-target precursors: for each run, the set of UNIQUE
+        // real-target precursors (modified sequence + charge, deduped per file)
+        // passing the run-level peptide FDR. Decoys are excluded by is_decoy (which
+        // also drops p_decoys) and entrapment (p_target) is excluded via the manifest
+        // classification, mirroring BuildIdYield -- so the reproducibility picture
+        // reflects real detections, not the deliberately-non-reproducing entrapment
+        // padding. This is the real-target counterpart of the Summary per-file Targets
+        // column (that column counts passing rows; here each precursor is counted once).
+        // Cumulative union / intersection are walked in input-file order; the run-count
+        // histogram tallies how many runs each detected precursor appears in.
+        // Entrapment-independent (no manifest needed for a plain target+decoy run).
+        private static CrossRunDetection BuildCrossRunDetection(
+            IReadOnlyList<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
+            IReadOnlyDictionary<uint, EntrapmentClass> classByBaseId, bool haveManifest,
+            double entrapmentRatio, double runFdr, FdrLevel fdrLevel)
+        {
+            int n = perFileEntries.Count;
+            var runNames = new string[n];
+            // Two parallel per-run membership sets over the SAME real-target precursors:
+            //   run-scoped        = run-level q passes (the per-run picture);
+            //   experiment-scoped = max(run q, experiment q) passes, i.e. locally AND
+            //                       globally credible -- a subset that drops single-run
+            //                       false positives (small run q, large experiment q).
+            // The experiment-wide q controls the dataset-wide multiple testing
+            // (Collins/Rosenberger 2017), so its union saturates and its k=1 bump shrinks.
+            var runSets = new List<HashSet<string>>(n);
+            var expSets = new List<HashSet<string>>(n);
+            // The ENTRAPMENT (p_target) precursors' own membership under the SAME two gates,
+            // tallied in parallel (excluded from the real-target sets above). This is the
+            // known-false reference: its run-count histogram is the second series, and per k
+            // it adjudicates the real-target set's FDP -- see ComputeCrossRunView.
+            var entRunSets = new List<HashSet<string>>(n);
+            var entExpSets = new List<HashSet<string>>(n);
+            bool anyEntrapment = false;
+            for (int i = 0; i < n; i++)
+            {
+                var kvp = perFileEntries[i];
+                runNames[i] = kvp.Key;
+                var runSet = new HashSet<string>(StringComparer.Ordinal);
+                var expSet = new HashSet<string>(StringComparer.Ordinal);
+                var entRunSet = new HashSet<string>(StringComparer.Ordinal);
+                var entExpSet = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var e in kvp.Value)
+                {
+                    // Decoys (and p_decoys, which carry is_decoy) never enter either tally.
+                    if (e.IsDecoy)
+                        continue;
+                    // Gate on the CONFIGURED FDR level (the value the pipeline reports on),
+                    // matching the Summary per-file loop -- not a hardcoded peptide q.
+                    if (e.EffectiveRunQvalue(fdrLevel) > runFdr)
+                        continue;
+                    string key = e.ModifiedSequence + "|" + e.Charge;   // same key as ReduceToPrecs
+                    bool expOk = e.EffectiveExperimentQvalue(fdrLevel) <= runFdr; // max(run q, exp q) <= FDR
+                    // Entrapment (p_target) is a known false set that by design does not
+                    // reproduce: route it to its own sets so it can't inflate the real-target
+                    // k=1 bump, then reuse it as the FDP reference for the real set.
+                    bool isEntrap = haveManifest && classByBaseId != null
+                        && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var cls)
+                        && cls == EntrapmentClass.PTarget;
+                    if (isEntrap)
+                    {
+                        entRunSet.Add(key);
+                        if (expOk)
+                            entExpSet.Add(key);
+                        anyEntrapment = true;
+                    }
+                    else
+                    {
+                        runSet.Add(key);
+                        if (expOk)
+                            expSet.Add(key);
+                    }
+                }
+                runSets.Add(runSet);
+                expSets.Add(expSet);
+                entRunSets.Add(entRunSet);
+                entExpSets.Add(entExpSet);
+            }
+
+            // Only overlay the entrapment adjudication when the run actually carries
+            // entrapment; a plain target+decoy run leaves the entrapment fields null (the
+            // template gates its second series and FDP readout on their presence).
+            double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
+            return new CrossRunDetection
+            {
+                RunNames = runNames,
+                PerRun = ComputeCrossRunView(runSets, anyEntrapment ? entRunSets : null, n, r),
+                Experiment = ComputeCrossRunView(expSets, anyEntrapment ? entExpSets : null, n, r),
+            };
+        }
+
+        // Reduce a list of per-run detected-precursor sets (input-file order) to one
+        // reproducibility view: per-run bars, cumulative union (monotone up) and
+        // intersection (monotone down, seeded by run 0), the run-count histogram
+        // (index k-1 => precursors in exactly k runs), the at-least-half floor, and the
+        // per-run mean/std. Shared by the run-scoped and experiment-scoped views.
+        // entRunSets (the entrapment membership under the SAME gate, or null on a plain
+        // target+decoy run) adds the entrapment run-count overlay and the per-k
+        // entrapment-measured FDP at the library ratio r.
+        private static CrossRunView ComputeCrossRunView(List<HashSet<string>> perRunSets,
+            List<HashSet<string>> entRunSets, int n, double r)
+        {
+            var perRunCount = new int[n];
+            var cumUnion = new int[n];
+            var cumIntersection = new int[n];
+            var union = new HashSet<string>(StringComparer.Ordinal);
+            HashSet<string> inter = null;               // running intersection (seeded by run 0)
+            for (int i = 0; i < n; i++)
+            {
+                var set = perRunSets[i];
+                perRunCount[i] = set.Count;
+                union.UnionWith(set);
+                cumUnion[i] = union.Count;
+                if (inter == null)
+                    inter = new HashSet<string>(set, StringComparer.Ordinal);
+                else
+                    inter.IntersectWith(set);
+                cumIntersection[i] = inter.Count;
+            }
+
+            var hist = TallyRunCountHistogram(perRunSets, n);
+            int half = (n + 1) / 2;                     // ceil(n/2)
+            int atLeastHalf = 0;
+            // Start at max(half, 1): hist is indexed k-1, so k must be >= 1. Guards the
+            // degenerate n == 0 case (half == 0) from indexing hist[-1].
+            for (int k = Math.Max(half, 1); k <= n; k++)
+                atLeastHalf += hist[k - 1];
+
+            double mean = 0;
+            for (int i = 0; i < n; i++) mean += perRunCount[i];
+            if (n > 0) mean /= n;
+            double varSum = 0;
+            for (int i = 0; i < n; i++) { double d = perRunCount[i] - mean; varSum += d * d; }
+            double std = n > 0 ? Math.Sqrt(varSum / n) : 0;
+
+            var view = new CrossRunView
+            {
+                PerRunCount = perRunCount,
+                CumUnion = cumUnion,
+                CumIntersection = cumIntersection,
+                AtLeastHalf = atLeastHalf,
+                RunCountHistogram = hist,
+                MeanPerRun = mean,
+                StdPerRun = std,
+            };
+
+            // Entrapment adjudication overlay: the known-false set's own run-count
+            // histogram, plus the FDRBench combined FDP of each k-slice (real targets
+            // n_t = hist[k], entrapment n_p = entHist[k]). The k=1 entry on the
+            // experiment view answers whether the exp-q-surviving singletons are real
+            // rare biology (FDP ~ nominal) or over-admitted 1-hit-wonders (FDP >> nominal).
+            if (entRunSets != null)
+            {
+                var entHist = TallyRunCountHistogram(entRunSets, n);
+                var fdp = new double[n];
+                for (int k = 0; k < n; k++)
+                {
+                    int nt = hist[k], np = entHist[k];
+                    // Combined estimator (FDRBench / Wen et al. 2025), the same one the
+                    // FDR-calibration tab uses: (1 + 1/r) * n_p / (n_t + n_p). NaN in an
+                    // empty k-slice (no precursors detected in exactly k runs).
+                    fdp[k] = nt + np > 0 ? (1.0 + 1.0 / r) * np / (nt + np) : double.NaN;
+                }
+                view.EntrapmentRunCountHistogram = entHist;
+                view.EntrapmentFdpByRunCount = fdp;
+
+                // Phase C: "union FDP vs number of runs". Accumulate the entrapment union
+                // in input-file order (parallel to the real-target cumUnion built above) and
+                // report the FDRBench combined FDP of the accumulated union at each prefix
+                // i = 1..n. Under the run-level gate false positives are ~random per run, so
+                // the union accretes fresh FPs and this climbs with i; the experiment-wide
+                // gate bounds the dataset-wide error, so its curve stays far flatter. The
+                // gap at i = n is the empirical Collins/Rosenberger run-vs-global FDR effect.
+                var cumUnionEnt = new int[n];
+                var unionFdp = new double[n];
+                var entUnion = new HashSet<string>(StringComparer.Ordinal);
+                for (int i = 0; i < n; i++)
+                {
+                    entUnion.UnionWith(entRunSets[i]);
+                    cumUnionEnt[i] = entUnion.Count;
+                    int ntU = cumUnion[i], npU = cumUnionEnt[i];
+                    unionFdp[i] = ntU + npU > 0 ? (1.0 + 1.0 / r) * npU / (ntU + npU) : double.NaN;
+                }
+                view.CumUnionEntrapment = cumUnionEnt;
+                view.UnionFdp = unionFdp;
+            }
+
+            return view;
+        }
+
+        // Histogram of how many runs each precursor is detected in (index k-1 => detected
+        // in exactly k runs), tallied over per-run membership sets in input-file order.
+        // The run-count slice of a CrossRunView, factored out so the entrapment overlay
+        // reuses the identical tally.
+        private static int[] TallyRunCountHistogram(List<HashSet<string>> perRunSets, int n)
+        {
+            var runCount = new Dictionary<string, int>(StringComparer.Ordinal);
+            foreach (var set in perRunSets)
+            {
+                foreach (var key in set)
+                {
+                    runCount.TryGetValue(key, out int c);
+                    runCount[key] = c + 1;
+                }
+            }
+            var hist = new int[n];
+            foreach (var c in runCount.Values)
+            {
+                if (c >= 1 && c <= n)
+                    hist[c - 1]++;
+            }
+            return hist;
         }
 
         private static WinFractionData BuildWinFraction(

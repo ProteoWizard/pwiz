@@ -1724,7 +1724,7 @@ namespace pwiz.Osprey
 
         /// <summary>
         /// Dump the per-(file, entry) <see cref="ReconcileAction"/> map
-        /// produced by <see cref="ReconciliationPlanner.Plan"/> to
+        /// produced by <c>ReconciliationPlanner.Plan</c> to
         /// <c>cs_stage6_reconciliation.tsv</c>. Used for cross-impl parity
         /// of the planner output -- pairs with the Rust
         /// <c>dump_stage6_reconciliation</c> helper. Columns:
