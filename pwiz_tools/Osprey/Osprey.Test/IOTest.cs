@@ -1413,8 +1413,12 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestParquetScoreCacheRoundTrip()
         {
-            string path = Path.GetTempFileName() + ".parquet";
-            try
+            // FileSaver owns the scratch file's lifecycle: write + read back through
+            // its sibling temp and never Commit() -- Dispose discards it (no leaked
+            // GetTempFileName file, cleaned up even if an assertion throws).
+            string dest = Path.Combine(Path.GetTempPath(),
+                @"osprey_roundtrip_" + Path.GetRandomFileName() + @".parquet");
+            using (var saver = new FileSaver(dest))
             {
                 // Create test entries
                 var entries = new List<CoelutionScoredEntry>();
@@ -1471,11 +1475,11 @@ namespace pwiz.Osprey.Test
                 };
 
                 // Write
-                ParquetScoreCache.WriteScoresParquet(path, entries, metadata);
-                Assert.IsTrue(File.Exists(path), "Parquet file should exist");
+                ParquetScoreCache.WriteScoresParquet(saver.SafeName, entries, metadata);
+                Assert.IsTrue(File.Exists(saver.SafeName), "Parquet file should exist");
 
                 // Read FDR stubs
-                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(path);
+                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(saver.SafeName);
                 Assert.AreEqual(3, stubs.Count);
                 Assert.AreEqual(100u, stubs[0].EntryId);
                 Assert.AreEqual(101u, stubs[1].EntryId);
@@ -1497,10 +1501,10 @@ namespace pwiz.Osprey.Test
                 // run). This also pins the writer's first feature column name to the
                 // PIN_FEATURE_NAMES[0] the probe checks -- a rename desync between them
                 // would silently break both.
-                Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(path));
+                Assert.IsTrue(ParquetScoreCache.HasPinFeatureColumns(saver.SafeName));
 
                 // Read PIN features
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(path);
+                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(saver.SafeName);
                 Assert.AreEqual(3, features.Count);
                 Assert.AreEqual(ParquetScoreCache.NUM_PIN_FEATURES, features[0].Length);
                 // Check first entry features
@@ -1512,16 +1516,12 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(2.6, features[1][6], 0.001);
 
                 // Validate metadata
-                Assert.IsTrue(ParquetScoreCache.ValidateMetadata(path, metadata));
+                Assert.IsTrue(ParquetScoreCache.ValidateMetadata(saver.SafeName, metadata));
                 var wrongMeta = new Dictionary<string, string>
                 {
                     { "osprey.version", "2.0.0" },
                 };
-                Assert.IsFalse(ParquetScoreCache.ValidateMetadata(path, wrongMeta));
-            }
-            finally
-            {
-                TryDeleteFile(path);
+                Assert.IsFalse(ParquetScoreCache.ValidateMetadata(saver.SafeName, wrongMeta));
             }
         }
 
