@@ -313,6 +313,12 @@ namespace pwiz.Osprey.Tasks.ModelDiagnostics
             if (libraryById == null)
                 return;
 
+            // Label this phase so it is not silent: classifying the searched library
+            // (6.3M entries on the 82-file Astral run) for model diagnostics ran for
+            // minutes at the top of first-pass FDR. Console-only, never affects the
+            // classification.
+            logInfo(string.Format(@"Classifying {0} library entries for model diagnostics...",
+                libraryById.Count));
             var pairing = EntrapmentPairing.Build(libraryById, config.DecoyPairingManifestPath);
 
             int nTarget = 0, nPTarget = 0;

@@ -475,8 +475,15 @@ namespace pwiz.Osprey.Tasks
             // before second-pass FDR via the cache path).
             var swReloadFeats = Stopwatch.StartNew();
             int nReloaded = 0;
+            // Per-file progress: reloading each file's reconciled PIN features from parquet
+            // ran ~10 min silent before 2nd-pass Percolator. Console-only.
+            var reloadProgress = new ProgressReporter(
+                string.Format(@"Reloading reconciled features from {0} file(s)", perFileEntries.Count),
+                perFileEntries.Count);
+            int reloadIdx = 0;
             foreach (var kvp in perFileEntries)
             {
+                reloadProgress.Report(++reloadIdx);
                 if (!perFileParquetPaths.TryGetValue(kvp.Key, out string parquetPath))
                 {
                     // No first-join parquet was produced (or mapped) for this
@@ -528,6 +535,7 @@ namespace pwiz.Osprey.Tasks
                 }
                 nReloaded += nMapped;
             }
+            reloadProgress.Dispose();
             swReloadFeats.Stop();
             ctx.LogInfo(string.Format(
                 "[TIMING] Reloaded PIN features for {0} entries: {1:F1}s",

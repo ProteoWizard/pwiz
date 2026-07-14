@@ -789,17 +789,25 @@ namespace pwiz.Osprey.FDR
             }
 
             var subsetByFile = PercolatorFdr.GroupIndicesByFileName(subsetEntries);
-            logInfo(string.Format(@"Loading training-subset feature vectors from {0} file(s)...",
-                subsetByFile.Count));
-            foreach (var kvp in subsetByFile)
+            // Per-file progress: loading the training-subset feature vectors from every file
+            // ran ~5 min silent before cross-validation. Console-only, never touches the
+            // loaded features, so training is byte-identical.
+            using (var loadProgress = new ProgressReporter(
+                string.Format(@"Loading training-subset feature vectors from {0} file(s)", subsetByFile.Count),
+                subsetByFile.Count))
             {
-                IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
-                foreach (int k in kvp.Value)
+                int loadDone = 0;
+                foreach (var kvp in subsetByFile)
                 {
-                    var entry = subsetEntries[k];
-                    entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
-                        rows, entry.ParquetIndex, entry.CoelutionSum,
-                        percConfig.FeatureInfos.Length).Clone();
+                    loadProgress.Report(++loadDone);
+                    IReadOnlyList<double[]> rows = loadFileFeatures(kvp.Key);
+                    foreach (int k in kvp.Value)
+                    {
+                        var entry = subsetEntries[k];
+                        entry.Features = (double[])PercolatorFdr.ResolveFeatureRow(
+                            rows, entry.ParquetIndex, entry.CoelutionSum,
+                            percConfig.FeatureInfos.Length).Clone();
+                    }
                 }
             }
 

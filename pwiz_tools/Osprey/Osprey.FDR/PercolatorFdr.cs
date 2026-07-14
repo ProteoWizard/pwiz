@@ -951,6 +951,13 @@ namespace pwiz.Osprey.FDR
             out double[] expPeptideQvalues)
         {
             int n = finalScores.Length;
+            // Phase markers for the large-population first-pass q-value computation, which ran
+            // ~9 min silent at 344M rows after the score pass (several bulk sub-steps, not one
+            // loop). Gated on a large n so fast runs (tests, Stellar) stay clutter-free;
+            // console-only, never affects the q-values.
+            bool logQvaluePhases = n > 2_000_000;
+            if (logQvaluePhases)
+                OspreyOutput.Out.WriteLine(@"Competing target/decoy and estimating PEP...");
 
             // PEP via global target-decoy competition. CompeteAll returns
             // winners sorted by score-descending (matches the direct-path
@@ -996,6 +1003,8 @@ namespace pwiz.Osprey.FDR
                 peps[idx] = pepEstimator.PosteriorError(finalScores[idx]);
 
             // Per-run precursor + peptide q-values (each file independently).
+            if (logQvaluePhases)
+                OspreyOutput.Out.WriteLine(@"  Per-run precursor + peptide q-values...");
             runPrecursorQvalues = ComputePerRunPrecursorQvalues(
                 finalScores, labels, entryIds, fileNames);
             runPeptideQvalues = ComputePerRunPeptideQvalues(
@@ -1003,6 +1012,8 @@ namespace pwiz.Osprey.FDR
 
             // Experiment-level q-values: single-file shortcut matches
             // direct-path semantics.
+            if (logQvaluePhases)
+                OspreyOutput.Out.WriteLine(@"  Experiment-level q-values...");
             var uniqueFiles = new HashSet<string>(fileNames);
             bool isSingleFile = uniqueFiles.Count <= 1;
             if (isSingleFile)
