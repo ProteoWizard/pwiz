@@ -57,7 +57,7 @@ namespace pwiz.Skyline.ToolsUI
 
     /// <summary>An element whose value can be SET -- a text box, a combo box, a check/radio state, a grid cell, a
     /// native dialog's file-name field. Only these support set_value. (Reading a value is not a capability: every
-    /// element answers <see cref="UiElement.Value"/>, with null for one that has none.)</summary>
+    /// element answers <see cref="UiElement.GetValueNow"/>, with null for one that has none.)</summary>
     public interface IValueElement
     {
         void SetValueNow(object value);
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>The gate-and-gesture a mutating or clicking method owns: it posts the gate + gesture onto the
-        /// element's form thread and waits it out (<see cref="DialogWatcher.PerformAction(IntPtr,Action,CancellationToken)"/>),
+        /// element's form thread and waits it out (<c>DialogWatcher.PerformAction</c>),
         /// returning whether it completed or left a dialog open -- so
         /// every mutation returns only once it has taken effect, exactly like the named verbs. A gesture that opens a
         /// modal blocks on the form thread, keeping its action counted until the modal closes, so the wait surfaces
@@ -631,7 +631,7 @@ namespace pwiz.Skyline.ToolsUI
     // ---- Control-backed elements ----------------------------------------------------------------
 
     /// <summary>Base for an element backed by a WinForms <see cref="Control"/>. Every control is clickable
-    /// (see <see cref="Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
+    /// (see <see cref="UiActions.Click"/>); a subclass adds value/list/grid capabilities by implementing the matching
     /// capability interface.</summary>
     public abstract class ControlElement : UiComponent, IClickableElement
     {

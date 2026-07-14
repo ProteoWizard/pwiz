@@ -93,11 +93,11 @@ namespace TestPerf
         {
             // File > Open opens the native Open dialog, so the menu click does not complete -- take the dialog
             // straight from the action's ActionResult.FormId.
-            var openDlg = ResolveModal(Connector.ClickMainMenuItem(
+            var openDlg = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "openMenuItem")));
-            Connector.SetFormValue(openDlg, "FileName",
+            McpConnector.SetFormValue(openDlg, "FileName",
                 GetTestPath(Path.Combine("backup", "skyline_files", "fragpipe.sky")));
-            Connector.DismissWithAcceptButton(openDlg);
+            McpConnector.DismissWithAcceptButton(openDlg);
 
             // A big document (75 MB of XML, 10 replicates) loads behind a progress dialog; wait it out.
             WaitForDocumentLoaded(10 * 60 * 1000);
@@ -113,9 +113,9 @@ namespace TestPerf
             FindPeptide(peptideSequence);
 
             // Peak Areas > Replicate Comparison is a docked graph, not a dialog, so the menu click completes.
-            AssertComplete(Connector.ClickMainMenuItem(MenuPath<ViewMenu>(
+            AssertComplete(McpConnector.ClickMainMenuItem(MenuPath<ViewMenu>(
                 "viewToolStripMenuItem", "peakAreasMenuItem", "areaReplicateComparisonMenuItem")));
-            var peakAreas = GetConnectorGraph(GraphsResources.SkylineWindow_CreateGraphPeakArea_Peak_Areas);
+            var peakAreas = GetMcpConnectorGraph(GraphsResources.SkylineWindow_CreateGraphPeakArea_Peak_Areas);
 
             // The tutorial has the reader confirm, through the graph's right-click menu, that the areas are raw --
             // Normalized To is "Default (None)". The graph has no menu bar and no toolbar, so naming NO control
@@ -125,7 +125,7 @@ namespace TestPerf
             var defaultNone = string.Format(
                 QuantificationStrings.SkylineWindow_MakeNormalizeToMenuItem_Default___0__,
                 NormalizationMethod.NONE.NormalizeToCaption);
-            Connector.ClickControlMenuItem(peakAreas, string.Empty, string.Join(@" > ",
+            McpConnector.ClickControlMenuItem(peakAreas, string.Empty, string.Join(@" > ",
                 GetLocalizedText<PeakAreasContextMenu>("areaNormalizeContextMenuItem"), defaultNone));
 
             PauseForScreenShot(peakAreas, "Peak areas across the samples: " + peptideSequence);
@@ -138,17 +138,17 @@ namespace TestPerf
         /// </summary>
         private void FindPeptide(string peptideSequence)
         {
-            AssertComplete(Connector.ClickMainMenuItem(
+            AssertComplete(McpConnector.ClickMainMenuItem(
                 MenuPath<EditMenu>("editToolStripMenuItem", "findPeptideMenuItem")));
-            var findDlg = WaitForConnectorForm<FindNodeDlg>();
+            var findDlg = WaitForMcpConnectorForm<FindNodeDlg>();
 
-            AssertComplete(Connector.SetFormValue(findDlg,
+            AssertComplete(McpConnector.SetFormValue(findDlg,
                 GetLocalizedText<FindNodeDlg>("label1"), peptideSequence));   // "Find what:"
-            AssertComplete(Connector.ClickFormButton(findDlg,
+            AssertComplete(McpConnector.ClickFormButton(findDlg,
                 GetLocalizedText<FindNodeDlg>("btnFindNext")));
             WaitForConditionUI(() => SkylineWindow.SelectedNode?.Text == peptideSequence);
 
-            Connector.DismissWithCancelButton(findDlg);   // its cancel button is captioned "Close"
+            McpConnector.DismissWithCancelButton(findDlg);   // its cancel button is captioned "Close"
         }
     }
 }

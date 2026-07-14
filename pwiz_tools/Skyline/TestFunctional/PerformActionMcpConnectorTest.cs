@@ -21,7 +21,6 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -37,10 +36,10 @@ namespace pwiz.SkylineTestFunctional
     /// echoed from GetControls, and performs set_value, get_value, and click.
     /// </summary>
     [TestClass]
-    public class PerformActionConnectorTest : McpConnectorTest
+    public class PerformActionMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestPerformActionConnector()
+        public void TestPerformActionMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -62,25 +61,25 @@ namespace pwiz.SkylineTestFunctional
 
             // set_value: locate the name box by the label that names it, set its value.
             var namePath = new UiElementPath(formPath, @"Name", null, null);
-            Connector.PerformAction(namePath, @"set_value", @"MyAnnotation");
+            McpConnector.PerformAction(namePath, @"set_value", @"MyAnnotation");
             RunUI(() => Assert.AreEqual(@"MyAnnotation", NameTextBox(defineAnnotationDlg).Text,
                 @"PerformAction set_value did not set the name box."));
 
             // get_value reads it back (the return is typed per the action -- a string here).
-            Assert.AreEqual(@"MyAnnotation", (string) Connector.PerformAction(namePath, @"get_value", null),
+            Assert.AreEqual(@"MyAnnotation", (string) McpConnector.PerformAction(namePath, @"get_value", null),
                 @"PerformAction get_value did not return the name box value.");
 
             // get_actions: every control lists what it supports (an ActionInfo[] -- name + description).
-            var actions = ((ActionInfo[]) Connector.PerformAction(namePath, @"get_actions", null))
+            var actions = ((ActionInfo[]) McpConnector.PerformAction(namePath, @"get_actions", null))
                 .Select(a => a.Name).ToArray();
             CollectionAssert.Contains(actions, @"set_value");
             CollectionAssert.Contains(actions, @"get_children");
-            Assert.IsTrue(((ActionInfo[]) Connector.PerformAction(namePath, @"get_actions", null))
+            Assert.IsTrue(((ActionInfo[]) McpConnector.PerformAction(namePath, @"get_actions", null))
                 .All(a => !string.IsNullOrEmpty(a.Description)), @"Every reported action should have a description.");
 
             // get_children: returns the children as ControlInfo[], each Path already parented onto the
             // element it was queried on (the form here), so it can be used directly.
-            var formChildren = (ControlInfo[]) Connector.PerformAction(formPath, @"get_children", null);
+            var formChildren = (ControlInfo[]) McpConnector.PerformAction(formPath, @"get_children", null);
             Assert.IsTrue(formChildren.Length > 0, @"Expected the form to report child controls.");
             Assert.IsTrue(formChildren.All(c => c.Path.Parent != null && c.Path.Parent.Text == dlgId),
                 @"Each child returned by get_children should be parented onto the form.");
@@ -89,28 +88,28 @@ namespace pwiz.SkylineTestFunctional
             // under a Form parent with nothing else (the way the MCP tool sends a form-only target)
             // returns the form's own children.
             var formViaParent = new UiElementPath(formPath, null, null, null);
-            var childrenViaParent = (ControlInfo[]) Connector.PerformAction(formViaParent, @"get_children", null);
+            var childrenViaParent = (ControlInfo[]) McpConnector.PerformAction(formViaParent, @"get_children", null);
             Assert.AreEqual(formChildren.Length, childrenViaParent.Length,
                 @"get_children with no selectors under a Form should resolve to the form itself.");
 
             // Round-trip: the Path GetControls returns is already parented onto the form, so it resolves the
             // same control as-is (no re-parenting), and Name is echoed.
-            var nameInfo = Connector.GetControls(dlgId)
+            var nameInfo = McpConnector.GetControls(dlgId)
                 .First(c => c.Path.Type == @"TextBox" && c.Path.Text == @"Name");
             Assert.IsNotNull(nameInfo.Path.Parent, @"GetControls should return a path parented onto the form.");
             Assert.IsFalse(string.IsNullOrEmpty(nameInfo.Name), @"Expected GetControls to echo the control Name.");
-            Assert.AreEqual(@"MyAnnotation", (string) Connector.PerformAction(nameInfo.Path, @"get_value", null),
+            Assert.AreEqual(@"MyAnnotation", (string) McpConnector.PerformAction(nameInfo.Path, @"get_value", null),
                 @"PerformAction did not resolve the control by the Path GetControls returned.");
 
             // An unsupported action on a control reports a clear error rather than acting.
             AssertEx.ThrowsException<System.Exception>(() =>
-                Connector.PerformAction(namePath, @"check_item", @"x"));
+                McpConnector.PerformAction(namePath, @"check_item", @"x"));
 
             // click: close the dialog by clicking its Cancel button, located by label. NOT inside an OkDialog
             // action: that runs on the UI thread, and a connector action posts its gesture to that thread and
             // waits for it -- from the thread itself, that deadlocks. Click from this (test) thread, the way a
             // connector client does, then wait for the dialog the click closed.
-            Connector.PerformAction(new UiElementPath(formPath, @"Cancel", null, null), @"click", null);
+            McpConnector.PerformAction(new UiElementPath(formPath, @"Cancel", null, null), @"click", null);
             WaitForClosedForm(defineAnnotationDlg);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
             OkDialog(documentSettingsDlg, () => documentSettingsDlg.DialogResult = DialogResult.Cancel);

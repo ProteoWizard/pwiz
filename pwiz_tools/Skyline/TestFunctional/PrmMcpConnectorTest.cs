@@ -23,7 +23,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -32,7 +31,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the generic form-automation verbs of the AI Connector (<see cref="JsonToolServer"/>)
+    /// Exercises the generic form-automation verbs of the AI McpConnector (<see cref="JsonToolServer"/>)
     /// against the first steps of the PRM tutorial's "Import Peptide Search" flow:
     ///   * <see cref="JsonToolServer.ClickMainMenuItem"/> -- "File > Import > Peptide Search".
     ///   * <see cref="JsonToolServer.ClickFormButton"/> -- the "Add Files" button, which opens the
@@ -42,10 +41,10 @@ namespace pwiz.SkylineTestFunctional
     /// The menu path is read from the live (localized) menu so the test is translation-proof.
     /// </summary>
     [TestClass]
-    public class PrmConnectorTest : McpConnectorTest
+    public class PrmMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestPrmConnector()
+        public void TestPrmMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -58,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
             // The Import Peptide Search wizard bases its file dialog on the document's folder, so the
             // document must be saved. The two input files only need to exist (the dialog has
             // CheckPathExists=true) -- they are added to a list, not parsed, at this stage.
-            var savePath = TestContext.GetTestResultsPath(@"PrmConnector.sky");
+            var savePath = TestContext.GetTestResultsPath(@"PrmMcpConnector.sky");
             var file1 = TestContext.GetTestResultsPath(@"search1.perc.xml");
             var file2 = TestContext.GetTestResultsPath(@"search2.perc.xml");
             File.WriteAllText(file1, string.Empty);
@@ -68,23 +67,23 @@ namespace pwiz.SkylineTestFunctional
             // 1) Open the wizard through the menu, using the menu's own localized text.
             string menuPath = null;
             RunUI(() => menuPath = BuildLocalizedMenuPath(@"importPeptideSearchMenuItem"));
-            Connector.ClickMainMenuItem(menuPath);
+            McpConnector.ClickMainMenuItem(menuPath);
             var wizard = WaitForOpenForm<ImportPeptideSearchDlg>();
             string wizardId = GetOpenFormId<ImportPeptideSearchDlg>();
 
             // 2) Click "Add Files" -> the native "Add Input Files" dialog appears.
-            // Wait for it the way the AI Connector would: poll GetOpenForms (the discovery method
+            // Wait for it the way the AI McpConnector would: poll GetOpenForms (the discovery method
             // IJsonToolService exposes) until the native FileDialog shows up, rather than the
             // internal NativeDialog helper.
-            Connector.ClickFormButton(wizardId, @"Add Files");
+            McpConnector.ClickFormButton(wizardId, @"Add Files");
             string addFilesId = WaitForNativeFileDialog();
 
             // 3) Select the two files and Open -- the tutorial's "hold Ctrl, click the two files,
             // click Open". A native dialog has no caption-addressable buttons, so it is confirmed with the
             // dismiss action (the connector's way to press its default button) rather than ClickFormButton.
-            Connector.SetFormValue(addFilesId, @"FileName",
+            McpConnector.SetFormValue(addFilesId, @"FileName",
                 QuotePaths(new[] { file1, file2 }));
-            Connector.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"dismiss", null);
+            McpConnector.PerformAction(new UiElementPath(null, addFilesId, null, @"Form"), @"dismiss", null);
 
             // The wizard's search-file list now holds both files.
             WaitForConditionUI(() => wizard.BuildPepSearchLibControl.SearchFilenames.Length == 2);

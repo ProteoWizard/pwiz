@@ -23,7 +23,6 @@ using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
@@ -36,7 +35,7 @@ using pwiz.SkylineTestUtil;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises three AI Connector verbs on the Document Grid:
+    /// Exercises three AI McpConnector verbs on the Document Grid:
     ///   * <see cref="JsonToolServer.SetGridText"/> pastes tab/newline-separated text into a
     ///     <see cref="DataboundGridControl"/> grid at an anchor cell -- like a Ctrl-V, but without the
     ///     system clipboard;
@@ -46,10 +45,10 @@ namespace pwiz.SkylineTestFunctional
     /// the "Note" column is targeted by its visible index, so the test is translation-proof.
     /// </summary>
     [TestClass]
-    public class SetGridTextConnectorTest : McpConnectorTest
+    public class SetGridTextMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestSetGridTextConnector()
+        public void TestSetGridTextMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -94,8 +93,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Move to the Note column at row 0, then paste two newline-separated values starting there.
             // controlId is null because the Document Grid form has a single grid.
-            Connector.SetCurrentCellAddress(gridId, null, noteColumn, 0);
-            Connector.SetGridText(gridId, null,
+            McpConnector.SetCurrentCellAddress(gridId, null, noteColumn, 0);
+            McpConnector.SetGridText(gridId, null,
                 TextUtil.LineSeparate(@"First note", @"Second note"));
             WaitForConditionUI(() => documentGrid.IsComplete);
 
@@ -105,7 +104,7 @@ namespace pwiz.SkylineTestFunctional
 
             // GetGridText returns the whole grid as tab-separated text: a header row plus the two
             // peptide rows, including the notes just pasted. gridId is null (single grid on the form).
-            string gridText = Connector.GetGridText(gridId, null);
+            string gridText = McpConnector.GetGridText(gridId, null);
             var lines = gridText.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
             Assert.AreEqual(3, lines.Length, @"GetGridText should return a header row plus two peptide rows.");
             StringAssert.Contains(lines[0], @"Note", @"GetGridText header row is missing the Note column.");
@@ -114,8 +113,8 @@ namespace pwiz.SkylineTestFunctional
 
             // DismissWithCancelButton closes the (floating) Document Grid (it has no cancel button, so it just
             // closes) and waits for it to go; GetOpenForms then no longer lists it.
-            Connector.DismissWithCancelButton(gridId);
-            WaitForCondition(() => Connector.GetOpenForms().All(form => form.Type != nameof(DocumentGridForm)));
+            McpConnector.DismissWithCancelButton(gridId);
+            WaitForCondition(() => McpConnector.GetOpenForms().All(form => form.Type != nameof(DocumentGridForm)));
         }
     }
 }

@@ -19,10 +19,8 @@
  */
 
 using System;
-using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {

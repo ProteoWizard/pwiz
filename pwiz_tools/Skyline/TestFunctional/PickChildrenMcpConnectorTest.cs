@@ -18,9 +18,7 @@
  * limitations under the License.
  */
 
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -40,10 +38,10 @@ namespace pwiz.SkylineTestFunctional
     /// image-only ToolStrip item matched by its tooltip).
     /// </summary>
     [TestClass]
-    public class PickChildrenConnectorTest : McpConnectorTest
+    public class PickChildrenMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestPickChildrenConnector()
+        public void TestPickChildrenMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -84,7 +82,7 @@ namespace pwiz.SkylineTestFunctional
             // Select the precursor node; Pick Children acts on the selection, so the node must be in it.
             var targetsTree = new UiElementPath(
                 new UiElementPath(null, treeFormId, null, @"Form"), null, null, @"SequenceTree");
-            Connector.PerformAction(targetsTree, @"select_item", precursorPath);
+            McpConnector.PerformAction(targetsTree, @"select_item", precursorPath);
             RunUI(() =>
             {
                 Assert.IsTrue(precursorNode.IsInSelection, @"Precursor node was not put into the selection.");
@@ -98,7 +96,7 @@ namespace pwiz.SkylineTestFunctional
             // Right-click > Pick Children opens the (modeless) pick-list popup, via the tree's context
             // menu (a path of Type "ContextMenu" on the tree), with the item matched by visible text.
             var treeContextMenu = new UiElementPath(targetsTree, null, null, @"ContextMenu");
-            Connector.PerformAction(
+            McpConnector.PerformAction(
                 new UiElementPath(treeContextMenu, @"Pick Children", null, null), @"click", null);
             var popup = WaitForOpenForm<PopupPickList>();
             string popupId = GetOpenFormId<PopupPickList>();
@@ -117,12 +115,12 @@ namespace pwiz.SkylineTestFunctional
             // Type and driven with check_item / uncheck_item exactly like one.
             var pickList = new UiElementPath(
                 new UiElementPath(null, popupId, null, @"Form"), null, null, @"CheckedListBox");
-            Connector.PerformAction(pickList, wasChecked ? @"uncheck_item" : @"check_item", label);
+            McpConnector.PerformAction(pickList, wasChecked ? @"uncheck_item" : @"check_item", label);
             RunUI(() => Assert.AreEqual(!wasChecked, popup.GetItemChecked(0),
                 @"check_item/uncheck_item did not toggle the pick-list item."));
 
             // Commit with the green-check "OK" button (image-only ToolStrip item, matched by tooltip).
-            Connector.ClickFormButton(popupId, @"OK");
+            McpConnector.ClickFormButton(popupId, @"OK");
             WaitForClosedForm(popup);
 
             int transitionsAfter = 0;

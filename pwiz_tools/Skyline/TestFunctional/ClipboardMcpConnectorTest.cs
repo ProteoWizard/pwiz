@@ -21,32 +21,32 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
+using SkylineTool;
 
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises <see cref="JsonToolServer.SetFormValue"/> on plain controls, addressed by the visible
-    /// text that names them: a text box by its "Name" label and a combo box by its "Type" label (the
-    /// labels resolve to the caption-less fields they name). Runs in en (matches the English labels).
+    /// Exercises the clipboard verbs of the AI McpConnector on a text box (where the connector can verify the
+    /// result): paste inserts text without using the clipboard, and select_all then paste replaces the whole
+    /// content -- the gesture a tutorial paste step relies on (and which a client that cannot touch the
+    /// clipboard, e.g. Google Antigravity, needs).
     /// </summary>
     [TestClass]
-    public class SetFormValueConnectorTest : McpConnectorTest
+    public class ClipboardMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestSetFormValueConnector()
+        public void TestClipboardMcpConnector()
         {
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            // Drive the inlined verb(s) through the running JSON tool server (torn down with the window).
+            // Every verb below is driven through the running JSON tool server (torn down with the window).
             StartToolService();
 
             var documentSettingsDlg = ShowDialog<DocumentSettingsDlg>(SkylineWindow.ShowDocumentSettingsDialog);
@@ -54,16 +54,18 @@ namespace pwiz.SkylineTestFunctional
                 documentSettingsDlg.EditAnnotationList);
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             string dlgId = GetOpenFormId<DefineAnnotationDlg>();
+            var namePath = new UiElementPath(new UiElementPath(null, dlgId, null, @"Form"), @"Name", null, null);
 
-            // The name box has no caption of its own; "Name" matches the label that names it.
-            Connector.SetFormValue(dlgId, @"Name", @"MyAnnotation");
-            RunUI(() => Assert.AreEqual(@"MyAnnotation", NameTextBox(defineAnnotationDlg).Text,
-                @"SetFormValue did not set the name box via its 'Name' label."));
+            // paste into the empty name box inserts the text (no clipboard).
+            McpConnector.PerformAction(namePath, @"paste", @"FirstName");
+            WaitForConditionUI(() => NameTextBox(defineAnnotationDlg).Text == @"FirstName");
 
-            // The type combo, addressed by its "Type" label, picks the item by its visible text.
-            Connector.SetFormValue(dlgId, @"Type", @"Number");
-            RunUI(() => Assert.AreEqual(@"Number", TypeComboBox(defineAnnotationDlg).Text,
-                @"SetFormValue did not select 'Number' in the type combo via its 'Type' label."));
+            // select_all then paste replaces the whole content (rather than appending).
+            McpConnector.PerformAction(namePath, @"select_all", null);
+            McpConnector.PerformAction(namePath, @"paste", @"SecondName");
+            WaitForConditionUI(() => NameTextBox(defineAnnotationDlg).Text == @"SecondName");
+            RunUI(() => Assert.AreEqual(@"SecondName", NameTextBox(defineAnnotationDlg).Text,
+                @"select_all + paste should have replaced the box's contents."));
 
             OkDialog(defineAnnotationDlg, () => defineAnnotationDlg.DialogResult = DialogResult.Cancel);
             OkDialog(editListDlg, () => editListDlg.DialogResult = DialogResult.Cancel);
@@ -72,8 +74,5 @@ namespace pwiz.SkylineTestFunctional
 
         private static TextBox NameTextBox(DefineAnnotationDlg dlg) =>
             (TextBox) dlg.Controls.Find(@"tbxName", true).First();
-
-        private static ComboBox TypeComboBox(DefineAnnotationDlg dlg) =>
-            (ComboBox) dlg.Controls.Find(@"comboType", true).First();
     }
 }

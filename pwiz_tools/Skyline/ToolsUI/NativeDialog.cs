@@ -67,7 +67,7 @@ namespace pwiz.Skyline.ToolsUI
         /// dialog's OWN caption ("Path does not exist" comes up titled "Save As"), so the two are identical in type,
         /// title and id. It is NOT part of the id for exactly that reason: an id must be stable from the moment the
         /// window is reported, and this cannot be (it is read from children that exist a moment later). See
-        /// <see cref="ResolveForm"/>, which breaks an id tie by taking the TOPMOST window -- the box, which is the
+        /// <see cref="JsonUiService.ResolveForm"/>, which breaks an id tie by taking the TOPMOST window -- the box, which is the
         /// one in the way.</para>
         /// </summary>
         public virtual string DialogTypeName => @"MessageBox";
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Cancels the dialog by sending WM_CLOSE on its own UI thread (which dismisses it the way the
         /// title-bar close button would), riding the shared wait until it closes. A message box with no cancel/close affordance
-        /// (a Yes/No box) ignores WM_CLOSE -- dismiss such a box with <see cref="DismissWithButton"/>. Must be called
+        /// (a Yes/No box) ignores WM_CLOSE -- dismiss such a box with <see cref="StandaloneWindow.DismissWithButton"/>. Must be called
         /// off the UI thread.</summary>
         public override ActionResult DismissWithCancelButton()
         {

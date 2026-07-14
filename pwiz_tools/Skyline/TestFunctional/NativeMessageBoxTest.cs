@@ -52,7 +52,7 @@ namespace pwiz.SkylineTestFunctional
             StartToolService();
 
             // No TestFilesZip is set for this test, so there is no TestFilesDir; use the (writable) test results
-            // folder for the document, the same way PrmConnectorTest does.
+            // folder for the document, the same way PrmMcpConnectorTest does.
             var savePath = TestContext.GetTestResultsPath(@"MyDocument.sky");
             // Start from a clean slate so the FIRST save has no file to replace (a leftover from an earlier run
             // would otherwise raise the replace-confirm box on the first save, before the test expects it).
@@ -61,40 +61,40 @@ namespace pwiz.SkylineTestFunctional
             var saveAsMenu = MenuPath<SkylineWindow>(@"fileToolStripMenuItem", @"saveAsMenuItem");
 
             // 1) First Save As: save to a name that does not exist yet -- no confirmation.
-            Connector.ClickMainMenuItem(saveAsMenu);
+            McpConnector.ClickMainMenuItem(saveAsMenu);
             var fileDialogId = WaitForNativeFileDialog();
-            AssertComplete(Connector.SetFormValue(fileDialogId, @"FileName", savePath));
-            AssertComplete(Connector.DismissWithAcceptButton(fileDialogId));
-            WaitForCondition(() => !Connector.GetOpenForms().Any(form => form.IsNative));
+            AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
+            AssertComplete(McpConnector.DismissWithAcceptButton(fileDialogId));
+            WaitForCondition(() => !McpConnector.GetOpenForms().Any(form => form.IsNative));
             WaitForConditionUI(() => Equals(SkylineWindow.DocumentFilePath, savePath));
 
             // 2) Save As over the existing file: accepting the file dialog raises the native "replace?" message
             // box. The interface must SURFACE it (report not-completed and name it) rather than hang.
-            int modalNestingCount = Connector.ModalNestingCount();
-            var actionResult = Connector.ClickMainMenuItem(saveAsMenu);
+            int modalNestingCount = McpConnector.ModalNestingCount();
+            var actionResult = McpConnector.ClickMainMenuItem(saveAsMenu);
             Assert.IsFalse(actionResult.Completed);
             fileDialogId = actionResult.FormId;
             Assert.IsNotNull(fileDialogId);
             Assert.AreEqual(modalNestingCount, GetModalNestingCount(fileDialogId));
-            AssertComplete(Connector.SetFormValue(fileDialogId, @"FileName", savePath));
-            actionResult = Connector.DismissWithAcceptButton(fileDialogId);
+            AssertComplete(McpConnector.SetFormValue(fileDialogId, @"FileName", savePath));
+            actionResult = McpConnector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);
             Assert.IsNotNull(actionResult.FormId);
             Assert.IsNotNull(actionResult.Message);
-            var buttons = Connector.GetControls(actionResult.FormId).Where(control => control.Path.Type == nameof(System.Windows.Forms.Button)).ToList();
+            var buttons = McpConnector.GetControls(actionResult.FormId).Where(control => control.Path.Type == nameof(System.Windows.Forms.Button)).ToList();
             Assert.AreEqual(2, buttons.Count);
             // Press "No" (decline to overwrite the file): the MessageBox closes and the file dialog stays open
-            AssertComplete(Connector.DismissWithButton(actionResult.FormId, buttons[1].Path.Text));
-            actionResult = Connector.DismissWithAcceptButton(fileDialogId);
+            AssertComplete(McpConnector.DismissWithButton(actionResult.FormId, buttons[1].Path.Text));
+            actionResult = McpConnector.DismissWithAcceptButton(fileDialogId);
             Assert.IsFalse(actionResult.Completed);
             Assert.IsNotNull(actionResult.FormId);
             Assert.IsNotNull(actionResult.Message);
-            buttons = Connector.GetControls(actionResult.FormId).Where(control => control.Path.Type == nameof(System.Windows.Forms.Button)).ToList();
+            buttons = McpConnector.GetControls(actionResult.FormId).Where(control => control.Path.Type == nameof(System.Windows.Forms.Button)).ToList();
             Assert.AreEqual(2, buttons.Count);
-            AssertComplete(Connector.DismissWithButton(actionResult.FormId, buttons[0].Path.Text));
-            WaitForConditionUI(() => modalNestingCount == Connector.ModalNestingCount());
+            AssertComplete(McpConnector.DismissWithButton(actionResult.FormId, buttons[0].Path.Text));
+            WaitForConditionUI(() => modalNestingCount == McpConnector.ModalNestingCount());
 
-            var nativeForms = Connector.GetOpenForms().Where(form => form.IsNative).ToList();
+            var nativeForms = McpConnector.GetOpenForms().Where(form => form.IsNative).ToList();
             Assert.AreEqual(0, nativeForms.Count);
         }
 

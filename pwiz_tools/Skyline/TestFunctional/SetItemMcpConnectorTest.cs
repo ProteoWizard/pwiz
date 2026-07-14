@@ -25,7 +25,6 @@ using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 using SkylineTool;
 
@@ -39,10 +38,10 @@ namespace pwiz.SkylineTestFunctional
     /// Matched by the English item/node text, so the test runs in en.
     /// </summary>
     [TestClass]
-    public class SetItemConnectorTest : McpConnectorTest
+    public class SetItemMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestSetItemConnector()
+        public void TestSetItemMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -68,17 +67,17 @@ namespace pwiz.SkylineTestFunctional
                 new UiElementPath(null, dlgId, null, @"Form"), @"Applies to", null, null);
 
             // check_item / uncheck_item set the "Replicates" item's check explicitly (idempotent).
-            Connector.PerformAction(appliesTo, @"check_item", @"Replicates");
+            McpConnector.PerformAction(appliesTo, @"check_item", @"Replicates");
             RunUI(() => Assert.IsTrue(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
                 @"check_item did not check the Replicates item."));
-            Connector.PerformAction(appliesTo, @"uncheck_item", @"Replicates");
+            McpConnector.PerformAction(appliesTo, @"uncheck_item", @"Replicates");
             RunUI(() => Assert.IsFalse(
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate),
                 @"uncheck_item did not uncheck the Replicates item."));
 
             // select_item highlights an item (separate from checking it).
-            Connector.PerformAction(appliesTo, @"select_item", @"Peptides");
+            McpConnector.PerformAction(appliesTo, @"select_item", @"Peptides");
             RunUI(() =>
             {
                 var checkedListBox = (CheckedListBox)defineAnnotationDlg.Controls
@@ -123,24 +122,24 @@ namespace pwiz.SkylineTestFunctional
                 new UiElementPath(
                     new UiElementPath(null, editorId, null, @"Form"), null, null, @"ChooseColumnsTab"),
                 null, null, @"TreeView");
-            Connector.PerformAction(treeId, @"check_item", nodePath);
+            McpConnector.PerformAction(treeId, @"check_item", nodePath);
             RunUI(() =>
             {
                 var node = tree.Nodes[0].Nodes.Cast<TreeNode>().First(n => n.Text == childText);
                 Assert.IsTrue(node.Checked, @"check_item did not check the tree node " + nodePath);
             });
 
-            Connector.PerformAction(treeId, @"select_item", nodePath);
+            McpConnector.PerformAction(treeId, @"select_item", nodePath);
             RunUI(() => Assert.AreEqual(childText, tree.SelectedNode?.Text,
                 @"select_item did not select the tree node."));
 
             // expand / collapse a node by a path whose segments are a child's text or its index. Collapse
             // the root by its index (0), then expand it again by its text.
             RunUI(() => tree.Nodes[0].Expand());
-            Connector.PerformAction(treeId, @"collapse", new object[] { 0 });
+            McpConnector.PerformAction(treeId, @"collapse", new object[] { 0 });
             RunUI(() => Assert.IsFalse(tree.Nodes[0].IsExpanded,
                 @"collapse did not collapse the root node addressed by index."));
-            Connector.PerformAction(treeId, @"expand", new object[] { parentText });
+            McpConnector.PerformAction(treeId, @"expand", new object[] { parentText });
             RunUI(() => Assert.IsTrue(tree.Nodes[0].IsExpanded,
                 @"expand did not expand the root node addressed by text."));
 

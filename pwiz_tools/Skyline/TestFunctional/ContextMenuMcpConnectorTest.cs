@@ -36,10 +36,10 @@ namespace pwiz.SkylineTestFunctional
     /// connector would -- via <see cref="JsonToolServer.GetOpenForms"/>.
     /// </summary>
     [TestClass]
-    public class ContextMenuConnectorTest : McpConnectorTest
+    public class ContextMenuMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestContextMenuConnector()
+        public void TestContextMenuMcpConnector()
         {
             TestFilesZip = @"TestFunctional\PeakAreaDotpGraphTest.zip";
             RunFunctionalTest();
@@ -66,15 +66,15 @@ namespace pwiz.SkylineTestFunctional
             });
             WaitForGraphs();
 
-            // Find the graph the way the AI Connector would -- by enumerating open forms -- then drive its
+            // Find the graph the way the AI McpConnector would -- by enumerating open forms -- then drive its
             // context menu through a path: the graph form's context menu (Type "ContextMenu"), then its
             // item by its visible text.
-            string graphId = Connector.GetOpenForms()
+            string graphId = McpConnector.GetOpenForms()
                 .First(form => form.Type == @"GraphSummary" && form.HasGraph).Id;
             var contextMenu = new UiElementPath(
                 new UiElementPath(null, graphId, null, @"Form"), null, null, @"ContextMenu");
             var logScaleItem = new UiElementPath(contextMenu, @"Log Scale", null, null);
-            Connector.PerformAction(logScaleItem, @"click", null);
+            McpConnector.PerformAction(logScaleItem, @"click", null);
 
             // The menu item has CheckOnClick=true, so the click flipped it from unchecked to checked,
             // turning the log scale on.

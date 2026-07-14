@@ -57,7 +57,7 @@ namespace pwiz.Skyline.ToolsUI
 
         /// <summary>Sets the self-documentation. Called through the chaining <c>Describe</c> in
         /// <see cref="UiActions"/>, which is an extension method so that it returns the action's CONCRETE type -- an
-        /// instance method could only return UiAction, and a <see cref="UiFunction{TElement,TResult}"/> would lose
+        /// instance method could only return UiAction, and a <see cref="UiFunction{TResult}"/> would lose
         /// its result type the moment it was described. The descriptions are <see cref="LlmInstruction"/> so that
         /// every unlocalized LLM-facing string is greppable for a future localization pass.</summary>
         internal void SetDescription(LlmInstruction description, LlmInstruction valueDescription)
@@ -143,7 +143,7 @@ namespace pwiz.Skyline.ToolsUI
         }
 
         /// <summary>The read itself, ON the element's UI thread (the caller has already marshaled). The typed
-        /// counterpart of <see cref="InvokeNow"/>, which is just this boxed -- a C# override cannot narrow the
+        /// counterpart of <see cref="UiAction.InvokeNow"/>, which is just this boxed -- a C# override cannot narrow the
         /// return type, so the typed pair is a separate name rather than an override.</summary>
         public abstract TResult CallNow(UiElement element);
 

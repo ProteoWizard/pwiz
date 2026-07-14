@@ -141,11 +141,11 @@ namespace TestPerf
             // The tutorial begins by reverting to default settings, but the test starts from a clean default
             // document so that step is unnecessary here (and it is not a numbered screenshot). Just ensure the
             // Proteomics interface, the way the protein icon in the corner indicates.
-            Connector.SetUiMode("proteomic");
+            McpConnector.SetUiMode("proteomic");
 
             // Open the Start Page (File > Start). This opens a dialog rather than completing, so resolve the page it
             // opened straight from the menu action's ActionResult.FormId (ResolveModal) instead of waiting for it.
-            var startPage = ResolveModal(Connector.ClickMainMenuItem(
+            var startPage = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "startPageMenuItem")));
             PauseForScreenShot(startPage, "Start Page -- Import DIA Peptide Search"); // s-01
 
@@ -155,15 +155,15 @@ namespace TestPerf
             // opens. Each of these gestures opens the NEXT dialog rather than completing, so none is AssertComplete.
             // The tile's click is POSTED, and the prompt is then shown by the startup frame -- so it is not up when
             // the click returns. WAIT for it (GetOpenFormId does not).
-            Connector.ClickFormButton(startPage, StartupResources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search);
-            Connector.DismissWithAcceptButton(WaitForConnectorForm<MultiButtonMsgDlg>());
+            McpConnector.ClickFormButton(startPage, StartupResources.StartPage_PopulateWizardPanel_Import_DIA_Peptide_Search);
+            McpConnector.DismissWithAcceptButton(WaitForMcpConnectorForm<MultiButtonMsgDlg>());
 
             // The Start Page tile sets DialogResult and returns; the "must save" prompt and this Save dialog are then
             // shown by the startup frame (StartupActions), NOT by a counted connector gesture -- so accepting the
             // prompt completes (its window is gone) before the Save dialog appears. Wait for it rather than assume it.
             var saveDlg = WaitForNativeFileDialog();
-            Connector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial.sky"));
-            Connector.DismissWithAcceptButton(saveDlg);
+            McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial.sky"));
+            McpConnector.DismissWithAcceptButton(saveDlg);
 
             return GetOpenFormId<ImportPeptideSearchDlg>();
         }
@@ -179,11 +179,11 @@ namespace TestPerf
             // the path to the EncyclopeDIA .elib. Controls are addressed by their localized captions, pulled
             // from the resources so the test works in any UI language. Each connector verb waits out its posted
             // action, so the next sees its effect.
-            AssertComplete(Connector.ClickFormButton(wizard, GetLocalizedText<BuildPeptideSearchLibraryControl>("radioExistingLibrary")));
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<BuildPeptideSearchLibraryControl>("lblLibraryPath"),
+            AssertComplete(McpConnector.ClickFormButton(wizard, GetLocalizedText<BuildPeptideSearchLibraryControl>("radioExistingLibrary")));
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<BuildPeptideSearchLibraryControl>("lblLibraryPath"),
                 GetTestPath("CSF_GPFLib_QRcombined.elib")));
             PauseForScreenShot(wizard, "Build Spectral Library -- use existing library"); // s-02
-            AssertComplete(Connector.ClickFormButton(wizard, GetLocalizedText<ImportPeptideSearchDlg>("btnNext")));
+            AssertComplete(McpConnector.ClickFormButton(wizard, GetLocalizedText<ImportPeptideSearchDlg>("btnNext")));
 
             // Extract Chromatograms page: nothing to add here (results are imported later), so just capture it.
             // Clicking Next above loaded the library and swaps this page in; the experiment assumes the click has
@@ -204,42 +204,42 @@ namespace TestPerf
             // (Yes) without keying on a localized caption.
             // Next's click is POSTED, so the prompt is not up when it returns -- WAIT for the prompt. Accepting it
             // advances the wizard, which we DO expect to complete.
-            Connector.ClickFormButton(wizard, WizardNextButton);
-            AssertComplete(Connector.DismissWithAcceptButton(WaitForConnectorForm<MultiButtonMsgDlg>()));
+            McpConnector.ClickFormButton(wizard, WizardNextButton);
+            AssertComplete(McpConnector.DismissWithAcceptButton(WaitForMcpConnectorForm<MultiButtonMsgDlg>()));
 
             // 1.3 Add Modifications: no modifications were used in the search, so just move on. No WaitForControl --
             // the accept above is assumed to have settled the Add Modifications page.
             PauseForScreenShot(wizard, "Add Modifications"); // s-04
-            AssertComplete(Connector.ClickFormButton(wizard, WizardNextButton));
+            AssertComplete(McpConnector.ClickFormButton(wizard, WizardNextButton));
 
             // 1.4 Configure Transition Settings. Text fields (charges/types/m-z/tolerance/counts) are
             // language-neutral and addressed by their localized labels; the two ion-range combo boxes are set
             // by their (currently English) item text -- see the localization note at the bottom of this file.
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblPrecursorCharges"), "2, 3"));
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonCharges"), "1, 2"));
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonTypes"), "y, b"));
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label1"), "ion 3"));     // product ions from
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label2"), "last ion"));  // product ions to
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label3"), "50"));        // min m/z
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label6"), "2000"));      // max m/z
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblTolerance"), 0.005.ToString(CultureInfo.CurrentCulture)));
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonCount"), "8"));    // pick N product ions
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblPrecursorCharges"), "2, 3"));
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonCharges"), "1, 2"));
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonTypes"), "y, b"));
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label1"), "ion 3"));     // product ions from
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label2"), "last ion"));  // product ions to
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label3"), "50"));        // min m/z
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("label6"), "2000"));      // max m/z
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblTolerance"), 0.005.ToString(CultureInfo.CurrentCulture)));
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonCount"), "8"));    // pick N product ions
             // The min-product-ions box sits between two unit labels; the connector pairs a caption-less field
             // with the label before it in tab order, which here is "product ions" (lblIonCountUnits), not the
             // "min product ions" suffix label that follows the box.
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonCountUnits"), "3"));
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<TransitionSettingsControl>("lblIonCountUnits"), "3"));
             PauseForScreenShot(wizard, "Configure Transition Settings"); // s-05
-            AssertComplete(Connector.ClickFormButton(wizard, WizardNextButton));
+            AssertComplete(McpConnector.ClickFormButton(wizard, WizardNextButton));
 
             // 1.5 Configure Full-Scan Settings: the defining DIA choices are a Centroided product mass analyzer
             // and the Results-only isolation scheme (set below). The mass-accuracy value and the "use only scans
             // within N minutes of MS/MS IDs" retention-time filter are left at the DIA wizard's defaults: their
             // fields are relabeled at runtime / have split unit labels, so they are not cleanly addressable by
             // caption yet (a remaining item to wire up, possibly needing a connector tweak).
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<FullScanSettingsControl>("label22"), "Centroided"));        // product mass analyzer
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<FullScanSettingsControl>("labelIsolationScheme"), "Results only"));
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<FullScanSettingsControl>("label22"), "Centroided"));        // product mass analyzer
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<FullScanSettingsControl>("labelIsolationScheme"), "Results only"));
             PauseForScreenShot(wizard, "Configure Full-Scan Settings"); // s-06
-            AssertComplete(Connector.ClickFormButton(wizard, WizardNextButton));
+            AssertComplete(McpConnector.ClickFormButton(wizard, WizardNextButton));
         }
 
         /// <summary>
@@ -251,17 +251,17 @@ namespace TestPerf
         {
             // 1.6 Import FASTA (required): Trypsin [KR | P] / 0 missed cleavages (enzyme names are settings, not
             // localized), then browse to the human FASTA through the native Open dialog.
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<ImportFastaControl>("label3"), "Trypsin [KR | P]"));   // enzyme
-            AssertComplete(Connector.SetFormValue(wizard, GetLocalizedText<ImportFastaControl>("label2"), "0"));                  // max missed cleavages
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<ImportFastaControl>("label3"), "Trypsin [KR | P]"));   // enzyme
+            AssertComplete(McpConnector.SetFormValue(wizard, GetLocalizedText<ImportFastaControl>("label2"), "0"));                  // max missed cleavages
             // Browse opens the native Open dialog (a dialog, so it does not complete); accept it to load the FASTA.
-            Connector.ClickFormButton(wizard, GetLocalizedText<ImportFastaControl>("browseFastaBtn"));
+            McpConnector.ClickFormButton(wizard, GetLocalizedText<ImportFastaControl>("browseFastaBtn"));
             var fastaDlg = WaitForNativeFileDialog();
-            Connector.SetFormValue(fastaDlg, "FileName", GetTestPath("uniprot_human_25apr2019.fasta"));
-            Connector.DismissWithAcceptButton(fastaDlg);
+            McpConnector.SetFormValue(fastaDlg, "FileName", GetTestPath("uniprot_human_25apr2019.fasta"));
+            McpConnector.DismissWithAcceptButton(fastaDlg);
             PauseForScreenShot(wizard, "Import FASTA"); // s-07
 
             // Finish the wizard. Building peptides from the FASTA brings up the Associate Proteins dialog.
-            Connector.ClickFormButton(wizard, WizardFinishButton);
+            McpConnector.ClickFormButton(wizard, WizardFinishButton);
 
             // 1.7 Associate Proteins: create protein groups first (which relabels the shared-peptides options to
             // their grouped form), then drop shared (non-unique) peptides. The combo item text comes straight
@@ -269,7 +269,7 @@ namespace TestPerf
             // protein stays at its default of 1 (the connector does not yet address the NumericUpDown holding it).
             // Gap: clicking Finish completes the gesture, but the FASTA digestion that raises Associate Proteins
             // runs asynchronously afterward, so the dialog is not open on return -- wait for it (not GetOpenFormId).
-            var associate = WaitForConnectorForm<AssociateProteinsDlg>();
+            var associate = WaitForMcpConnectorForm<AssociateProteinsDlg>();
             // The checkbox and the shared-peptides combo have no caption the connector can match (each option's
             // label is a plain Label shadowed by a "?" help link, and the checkbox's caption is a separate
             // sibling). So identify them the way a connector client reading the tutorial would -- by their type
@@ -283,21 +283,21 @@ namespace TestPerf
             // the PerformAction escape hatch, which stays fire-and-forget (no ActionResult to AssertComplete). It
             // has no completion signal, so each is wrapped in WaitForAction to wait the posted gesture out -- without
             // it, the next poll races an in-flight gesture (GetControls returns null mid-gesture).
-            var groupProteinsCheckBox = Connector.GetControls(associate).First(control => Equals(control.Path.Type, @"CheckBox")).Path;
-            WaitForAction(() => Connector.PerformAction(groupProteinsCheckBox, @"set_value", "true"));
+            var groupProteinsCheckBox = McpConnector.GetControls(associate).First(control => Equals(control.Path.Type, @"CheckBox")).Path;
+            WaitForAction(() => McpConnector.PerformAction(groupProteinsCheckBox, @"set_value", "true"));
             // Drop shared (non-unique) peptides via the dialog's only combo box; the value is the localized
             // EnumNames resource, so it matches in any language. Address it by type and position only (clearing
             // the path's Text) -- the way a client would target "the only combo box" -- because enabling
             // grouping re-lays-out the dialog and changes the label the combo would otherwise be matched by.
-            var sharedPeptidesCombo = Connector.GetControls(associate)
+            var sharedPeptidesCombo = McpConnector.GetControls(associate)
                 .Single(control => Equals(control.Path.Type, @"ComboBox")).Path.ChangeText(null);
-            WaitForAction(() => Connector.PerformAction(sharedPeptidesCombo, @"set_value", EnumNames.SharedPeptidesGroup_Removed));
+            WaitForAction(() => McpConnector.PerformAction(sharedPeptidesCombo, @"set_value", EnumNames.SharedPeptidesGroup_Removed));
             // Each option change recomputes the parsimony on a background thread and DISABLES the OK button while it
             // works; Accept would otherwise click a still-disabled OK (a no-op that leaves the dialog open yet
             // reports complete), so wait for the OK button to re-enable first.
             WaitForControlEnabled(associate, @"Button");
             PauseForScreenShot(associate, "Associate Proteins"); // s-08
-            AssertComplete(Connector.DismissWithAcceptButton(associate));
+            AssertComplete(McpConnector.DismissWithAcceptButton(associate));
 
             // Capture the populated Targets view of the main window (assumed built by the accept above).
             PauseForScreenShot(GetOpenFormId<SkylineWindow>(), "Targets populated"); // s-09
@@ -312,16 +312,16 @@ namespace TestPerf
         {
             // Import Document opens the native Open dialog (a dialog), so it does not complete; resolve it from the
             // menu action's ActionResult, then accept it to import.
-            var importDlg = ResolveModal(Connector.ClickMainMenuItem(MenuPath<SkylineWindow>(
+            var importDlg = ResolveModal(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>(
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importDocumentMenuItem")));
-            Connector.SetFormValue(importDlg, "FileName", GetTestPath("PRTC.sky"));
-            Connector.DismissWithAcceptButton(importDlg);
+            McpConnector.SetFormValue(importDlg, "FileName", GetTestPath("PRTC.sky"));
+            McpConnector.DismissWithAcceptButton(importDlg);
             PauseForScreenShot(GetOpenFormId<SkylineWindow>(), "Targets with PRTC added"); // s-10
 
             // Save blocks in a modal "Saving..." progress dialog until the (large) document is written; the
             // connector's menu click rides through that progress dialog and is expected to complete, so the
             // save is finished on return.
-            AssertComplete(Connector.ClickMainMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
+            AssertComplete(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
         }
 
         /// <summary>
@@ -335,28 +335,28 @@ namespace TestPerf
             // Import Results opens a dialog (so it does not complete): either a conditional "no decoys -- add
             // them?" prompt or the Import Results dialog. Because the menu-item verb returns only once one of them
             // is up, query the open forms directly (no WaitForCondition) and decline the decoy prompt if present.
-            Connector.ClickMainMenuItem(MenuPath<SkylineWindow>(
+            McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>(
                 "fileToolStripMenuItem", "importToolStripMenuItem", "importResultsMenuItem"));
-            var decoyPrompt = Connector.GetOpenForms().FirstOrDefault(f => Equals(f.Type, nameof(MultiButtonMsgDlg)));
+            var decoyPrompt = McpConnector.GetOpenForms().FirstOrDefault(f => Equals(f.Type, nameof(MultiButtonMsgDlg)));
             if (decoyPrompt != null)
-                Connector.ClickFormButton(decoyPrompt.Id, UiElement.NormalizeLabel(MultiButtonMsgDlg.BUTTON_NO));
+                McpConnector.ClickFormButton(decoyPrompt.Id, UiElement.NormalizeLabel(MultiButtonMsgDlg.BUTTON_NO));
 
             // Import Results: each subfolder of the chosen directory becomes a replicate whose data files are
             // its injections. Choose that option (s-11), then OK opens the native folder browser.
             var importResults = GetOpenFormId<ImportResultsDlg>();
-            AssertComplete(Connector.ClickFormButton(importResults, GetLocalizedText<ImportResultsDlg>("radioCreateMultipleMulti")));
+            AssertComplete(McpConnector.ClickFormButton(importResults, GetLocalizedText<ImportResultsDlg>("radioCreateMultipleMulti")));
             PauseForScreenShot(importResults, "Import Results -- multi-injection replicates in directories"); // s-11
             // Accepting Import Results opens the native Browse-For-Folder dialog; resolve it from the accept's
             // ActionResult.FormId (its LibA/LibB/LibC subfolders are the replicates). The connector selects the
             // folder by path; its controlId is ignored.
-            var folderDlg = ResolveModal(Connector.DismissWithAcceptButton(importResults));
-            Connector.SetFormValue(folderDlg, @"Folder", MzmlReplicateFolder);
+            var folderDlg = ResolveModal(McpConnector.DismissWithAcceptButton(importResults));
+            McpConnector.SetFormValue(folderDlg, @"Folder", MzmlReplicateFolder);
 
             // Accepting the folder dialog opens the ImportResultsNameDlg; resolve it from that accept's
             // ActionResult.FormId. The replicate names share a common prefix; keep the full folder names (Do not
             // remove), then OK.
-            var nameDlg = ResolveModal(Connector.DismissWithAcceptButton(folderDlg));
-            AssertComplete(Connector.ClickFormButton(nameDlg, GetLocalizedText<ImportResultsNameDlg>("radioDontRemove")));
+            var nameDlg = ResolveModal(McpConnector.DismissWithAcceptButton(folderDlg));
+            AssertComplete(McpConnector.ClickFormButton(nameDlg, GetLocalizedText<ImportResultsNameDlg>("radioDontRemove")));
             // Accept closes the dialog and starts the (slow) chromatogram extraction from the gas-phase runs. Its
             // progress dialog is transient, so the accept completes as soon as that dialog goes away -- but the
             // extraction itself keeps running in the background. Everything downstream reads PEAK AREAS (the CV
@@ -364,10 +364,10 @@ namespace TestPerf
             // chromatograms have not loaded yet has no CV at all -- so refining here would silently drop EVERY
             // peptide. Wait the extraction out. It is the heavy step of the tutorial (tens of GB of gas-phase
             // runs), hence the long timeout.
-            AssertComplete(Connector.DismissWithAcceptButton(nameDlg));
+            AssertComplete(McpConnector.DismissWithAcceptButton(nameDlg));
             WaitForDocumentLoaded(60 * 60 * 1000);
             // Save (rides its "Saving..." progress dialog); expected to complete.
-            AssertComplete(Connector.ClickMainMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
+            AssertComplete(McpConnector.ClickMainMenuItem(MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveMenuItem")));
         }
 
         /// <summary>
@@ -383,27 +383,27 @@ namespace TestPerf
             // "Peak Areas - CV Histogram", which is how the connector finds it among the open graphs.
             // Showing the CV Histogram graph is a docked graph (not a modal), so the menu-item verb is expected
             // to complete; the graph is then resolvable immediately.
-            AssertComplete(Connector.ClickMainMenuItem(MenuPath<ViewMenu>(
+            AssertComplete(McpConnector.ClickMainMenuItem(MenuPath<ViewMenu>(
                 "viewToolStripMenuItem", "peakAreasMenuItem", "areaCVHistogramMenuItem")));
-            var cvHistogram = GetConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
+            var cvHistogram = GetMcpConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
             PauseForScreenShot(cvHistogram, "Peak Areas -- CV Histogram"); // s-12
 
             // Raise the CV-cutoff line to 30% through the histogram's right-click Properties dialog. The graph has no
             // menu bar and no toolbar, so naming no control reaches its RIGHT-CLICK menu -- the only menu it has.
-            Connector.ClickControlMenuItem(cvHistogram, string.Empty,
+            McpConnector.ClickControlMenuItem(cvHistogram, string.Empty,
                 GetLocalizedText<PeakAreasContextMenu>("areaPropsContextMenuItem"));
             var cvProperties = GetOpenFormId<AreaCVToolbarProperties>();
-            AssertComplete(Connector.SetFormValue(cvProperties, GetLocalizedText<AreaCVToolbarProperties>("label2"), "30")); // CV cutoff
-            AssertComplete(Connector.DismissWithAcceptButton(cvProperties));
-            var cvHistogram30 = GetConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
+            AssertComplete(McpConnector.SetFormValue(cvProperties, GetLocalizedText<AreaCVToolbarProperties>("label2"), "30")); // CV cutoff
+            AssertComplete(McpConnector.DismissWithAcceptButton(cvProperties));
+            var cvHistogram30 = GetMcpConnectorGraph(GraphsResources.Extensions_CustomToString_CV_Histogram);
             PauseForScreenShot(cvHistogram30, "CV Histogram -- 30% cutoff"); // s-13
 
             // 2.2 Refine > Advanced opens the RefineDlg (a dialog), so the menu-item verb does not complete -- resolve
             // the dialog from its ActionResult.FormId.
-            var refine = ResolveModal(Connector.ClickMainMenuItem(
+            var refine = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<RefineMenu>("refineToolStripMenuItem", "refineAdvancedMenuItem")));
             SelectTab(refine, GetLocalizedText<RefineDlg>("tabDocument"));
-            AssertComplete(Connector.SetFormValue(refine, GetLocalizedText<RefineDlg>("label1"), "2")); // Min peptides per protein
+            AssertComplete(McpConnector.SetFormValue(refine, GetLocalizedText<RefineDlg>("label1"), "2")); // Min peptides per protein
             PauseForScreenShot(refine, "Refine -- Document tab"); // s-14
 
             // Consistency tab: keep only peptides under 30% CV across the replicates. The other options the
@@ -411,12 +411,12 @@ namespace TestPerf
             // type is "Products" (the sole transition type present, so RefineDlg leaves that combo disabled),
             // Normalize to defaults to "None", and Summed transitions defaults to "all".
             SelectTab(refine, GetLocalizedText<RefineDlg>("tabConsistency"));
-            AssertComplete(Connector.SetFormValue(refine, GetLocalizedText<RefineDlg>("labelCV"), "30")); // CV cutoff %
+            AssertComplete(McpConnector.SetFormValue(refine, GetLocalizedText<RefineDlg>("labelCV"), "30")); // CV cutoff %
             PauseForScreenShot(refine, "Refine -- Consistency tab"); // s-15
             // Accept runs the refine (dropping the peptides/proteins that fail the filters, possibly via a progress
             // dialog). Accept completes when the dialog closes, but the refine's background reintegration keeps
             // loading -- Gap: Save As below requires a fully-loaded document, so wait for that load here.
-            AssertComplete(Connector.DismissWithAcceptButton(refine));
+            AssertComplete(McpConnector.DismissWithAcceptButton(refine));
             WaitForDocumentLoaded();
 
             // The consistency filter drops every peptide whose CV it cannot compute, so a document whose peak areas
@@ -427,10 +427,10 @@ namespace TestPerf
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveModal(Connector.ClickMainMenuItem(
+            var saveDlg = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
-            Connector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
-            Connector.DismissWithAcceptButton(saveDlg);
+            McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("DIA_to_SRM_Tutorial-filtered.sky"));
+            McpConnector.DismissWithAcceptButton(saveDlg);
         }
 
         /// <summary>
@@ -448,11 +448,11 @@ namespace TestPerf
             // read directly and set as the "Proteins to keep" text (the caption-less multiline box is paired with
             // the label before it in tab order -- "Proteins to keep:"). "Names" is the default match mode; select
             // it to match the tutorial.
-            var acceptProteins = ResolveModal(Connector.ClickMainMenuItem(
+            var acceptProteins = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<RefineMenu>("refineToolStripMenuItem", "acceptProteinsMenuItem")));
-            AssertComplete(Connector.SetFormValue(acceptProteins, GetLocalizedText<RefineProteinListDlg>("label1"),
+            AssertComplete(McpConnector.SetFormValue(acceptProteins, GetLocalizedText<RefineProteinListDlg>("label1"),
                 File.ReadAllText(GetTestPath("target_proteins.txt"))));
-            AssertComplete(Connector.ClickFormButton(acceptProteins, GetLocalizedText<RefineProteinListDlg>("proteinNames"))); // match by Names
+            AssertComplete(McpConnector.ClickFormButton(acceptProteins, GetLocalizedText<RefineProteinListDlg>("proteinNames"))); // match by Names
             PauseForScreenShot(acceptProteins, "Accept Proteins -- paste protein list"); // s-16
 
             // OK checks the pasted names against the document; because some target proteins are not in the
@@ -460,13 +460,13 @@ namespace TestPerf
             // so it does not complete; resolve the prompt immediately.
             // Gap: OK checks the pasted names against the document on a background pass, then raises the "not in
             // document" prompt asynchronously -- so it is not open on return; wait for it.
-            Connector.ClickFormButton(acceptProteins, GetLocalizedText<RefineProteinListDlg>("btnOk"));
-            var notInDocument = WaitForConnectorForm<MultiButtonMsgDlg>();
+            McpConnector.ClickFormButton(acceptProteins, GetLocalizedText<RefineProteinListDlg>("btnOk"));
+            var notInDocument = WaitForMcpConnectorForm<MultiButtonMsgDlg>();
             PauseForScreenShot(notInDocument, "Proteins not in document"); // s-17
             // Accept (OK) dismisses the prompt, which lets Accept Proteins run the refine that drops the unlisted
             // proteins. Same gap as RefineByCv: the refine's background reintegration keeps loading after Accept
             // returns, so wait for the document before the next refine.
-            AssertComplete(Connector.DismissWithAcceptButton(notInDocument));
+            AssertComplete(McpConnector.DismissWithAcceptButton(notInDocument));
             WaitForDocumentLoaded();
 
             // 3.2 Peptide ranked intensity filtering: Refine > Advanced, Results tab -- keep each protein's 2 best
@@ -474,29 +474,29 @@ namespace TestPerf
             // caption-less and paired with the label before each in tab order ("Max peptide peak rank:" and
             // "Max transition peak rank:"). The other Results-tab options are left at their defaults, as the
             // tutorial notes they would not change this document.
-            var refine = ResolveModal(Connector.ClickMainMenuItem(
+            var refine = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<RefineMenu>("refineToolStripMenuItem", "refineAdvancedMenuItem")));
             SelectTab(refine, GetLocalizedText<RefineDlg>("tabResults"));
-            AssertComplete(Connector.SetFormValue(refine, GetLocalizedText<RefineDlg>("label8"), "2"));           // max peptide peak rank
-            AssertComplete(Connector.SetFormValue(refine, GetLocalizedText<RefineDlg>("labelMaxPeakRank"), "5")); // max transition peak rank
+            AssertComplete(McpConnector.SetFormValue(refine, GetLocalizedText<RefineDlg>("label8"), "2"));           // max peptide peak rank
+            AssertComplete(McpConnector.SetFormValue(refine, GetLocalizedText<RefineDlg>("labelMaxPeakRank"), "5")); // max transition peak rank
             PauseForScreenShot(refine, "Refine -- Results tab"); // s-18
             // Accept runs the refine (dropping the lower-ranked peptides/transitions, possibly via a progress
             // dialog); its background reintegration keeps loading after Accept returns, so wait for the document
             // before the Save As below (which requires a fully-loaded document).
-            AssertComplete(Connector.DismissWithAcceptButton(refine));
+            AssertComplete(McpConnector.DismissWithAcceptButton(refine));
             WaitForDocumentLoaded();
 
             // Expand all proteins (a synchronous menu action) -- expected to complete.
-            AssertComplete(Connector.ClickMainMenuItem(MenuPath<EditMenu>(
+            AssertComplete(McpConnector.ClickMainMenuItem(MenuPath<EditMenu>(
                 "editToolStripMenuItem", "expandAllToolStripMenuItem", "expandProteinsMenuItem")));
             PauseForScreenShot(GetOpenFormId<SkylineWindow>(), "Targets -- SRM peptide targets"); // s-19
 
             // Save As opens the native Save dialog (a dialog), so the menu-item verb does not complete -- resolve the
             // dialog from its ActionResult.FormId.
-            var saveDlg = ResolveModal(Connector.ClickMainMenuItem(
+            var saveDlg = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>("fileToolStripMenuItem", "saveAsMenuItem")));
-            Connector.SetFormValue(saveDlg, "FileName", GetTestPath("SRM_targets.sky"));
-            Connector.DismissWithAcceptButton(saveDlg);
+            McpConnector.SetFormValue(saveDlg, "FileName", GetTestPath("SRM_targets.sky"));
+            McpConnector.DismissWithAcceptButton(saveDlg);
         }
 
         // NOTE on localization of combo boxes: the connector's ComboBox.SetValue matches an item by its exact

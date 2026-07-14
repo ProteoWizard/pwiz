@@ -18,7 +18,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Text;
@@ -44,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
     /// and abandons the waiting call. The operation keeps right on going; only the wait is abandoned.
     /// </summary>
     [TestClass]
-    public class ConnectorDisconnectTest : McpConnectorTest
+    public class McpConnectorDisconnectTest : McpConnectorTest
     {
         private const string MENU_ITEM_TEXT = "Long Operation Test";
 
@@ -52,7 +51,7 @@ namespace pwiz.SkylineTestFunctional
         private readonly ManualResetEventSlim _releaseWork = new ManualResetEventSlim(false);
 
         [TestMethod]
-        public void TestConnectorDisconnect()
+        public void TestMcpConnectorDisconnect()
         {
             RunFunctionalTest();
         }
@@ -121,17 +120,16 @@ namespace pwiz.SkylineTestFunctional
             var menuItem = new ToolStripMenuItem(MENU_ITEM_TEXT);
             menuItem.Click += (sender, args) =>
             {
-                using (var longWaitDlg = new LongWaitDlg { Message = MENU_ITEM_TEXT })
+                using var longWaitDlg = new LongWaitDlg();
+                longWaitDlg.Message = MENU_ITEM_TEXT;
+                longWaitDlg.PerformWork(SkylineWindow, 0, broker =>
                 {
-                    longWaitDlg.PerformWork(SkylineWindow, 0, broker =>
+                    IProgressStatus status = new ProgressStatus(MENU_ITEM_TEXT);
+                    for (int percent = 0; !_releaseWork.Wait(100) && !broker.IsCanceled; percent++)
                     {
-                        IProgressStatus status = new ProgressStatus(MENU_ITEM_TEXT);
-                        for (int percent = 0; !_releaseWork.Wait(100) && !broker.IsCanceled; percent++)
-                        {
-                            broker.UpdateProgress(status = status.ChangePercentComplete(percent % 100));
-                        }
-                    });
-                }
+                        broker.UpdateProgress(status = status.ChangePercentComplete(percent % 100));
+                    }
+                });
             };
             SkylineWindow.MainMenuStrip.Items.Add(menuItem);
         }

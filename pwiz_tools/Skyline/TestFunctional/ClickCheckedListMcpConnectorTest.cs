@@ -21,7 +21,6 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -32,7 +31,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises AI Connector behaviors on the Define Annotation dialog:
+    /// Exercises AI McpConnector behaviors on the Define Annotation dialog:
     ///   * <see cref="JsonToolServer.SetFormValue"/> matched against a label ("Name") sets the editable
     ///     control the label labels (the Name TextBox), not the label itself;
     ///   * checking an item in the "Applies to" CheckedListBox the way a user does -- a set_selected_index
@@ -41,10 +40,10 @@ namespace pwiz.SkylineTestFunctional
     /// Matched by the English label/item text, so the test runs in en.
     /// </summary>
     [TestClass]
-    public class ClickCheckedListConnectorTest : McpConnectorTest
+    public class ClickCheckedListMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestClickCheckedListConnector()
+        public void TestClickCheckedListMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -62,15 +61,15 @@ namespace pwiz.SkylineTestFunctional
 
             // SetFormValue against the "Name" LABEL sets the editable field it labels (the Name
             // TextBox, AnnotationName), not the label itself.
-            Connector.SetFormValue(dlgId, @"Name", @"ConnectorAnnotation");
-            RunUI(() => Assert.AreEqual(@"ConnectorAnnotation", defineAnnotationDlg.AnnotationName,
+            McpConnector.SetFormValue(dlgId, @"Name", @"McpConnectorAnnotation");
+            RunUI(() => Assert.AreEqual(@"McpConnectorAnnotation", defineAnnotationDlg.AnnotationName,
                 @"SetFormValue did not set the Name field through its label."));
 
             // SetFormValue into the multi-line value-list TextBox: newline-separated text becomes
             // separate list values (bare '\n' is normalized to the CRLF the dialog splits on). The
             // Values box is enabled only for a Value List, so set the type first.
-            Connector.SetFormValue(dlgId, @"Type", @"Value List");
-            Connector.SetFormValue(dlgId, @"Values", "Healthy\nDiseased");
+            McpConnector.SetFormValue(dlgId, @"Type", @"Value List");
+            McpConnector.SetFormValue(dlgId, @"Values", "Healthy\nDiseased");
             RunUI(() => CollectionAssert.AreEqual(new[] { @"Healthy", @"Diseased" },
                 defineAnnotationDlg.Items.ToArray(),
                 @"SetFormValue did not set the multi-line value list as separate values."));
@@ -96,8 +95,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Check it the way a user does: select the item, then click the CheckedListBox (a click
             // toggles the selected item's check).
-            Connector.PerformAction(appliesTo, @"set_selected_index", replicatesIndex.ToString());
-            Connector.PerformAction(appliesTo, @"click", null);
+            McpConnector.PerformAction(appliesTo, @"set_selected_index", replicatesIndex.ToString());
+            McpConnector.PerformAction(appliesTo, @"click", null);
             WaitForConditionUI(() =>
                 defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate));
             RunUI(() => Assert.IsTrue(
@@ -105,11 +104,11 @@ namespace pwiz.SkylineTestFunctional
                 @"Selecting and clicking did not check the Replicates item in the Applies-to list."));
 
             // GetFormValue on the CheckedListBox returns the checked items' text, one per line.
-            Assert.AreEqual(@"Replicates", Connector.GetFormValue(dlgId, @"Applies to"), 
+            Assert.AreEqual(@"Replicates", McpConnector.GetFormValue(dlgId, @"Applies to"), 
                 @"GetFormValue did not return the checked Applies-to items.");
 
             // Clicking it again toggles it back off (it is still the selected item).
-            Connector.PerformAction(appliesTo, @"click", null);
+            McpConnector.PerformAction(appliesTo, @"click", null);
             WaitForConditionUI(() =>
                 !defineAnnotationDlg.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate));
             RunUI(() => Assert.IsFalse(

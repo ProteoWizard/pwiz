@@ -42,13 +42,13 @@ namespace pwiz.SkylineTestFunctional
     /// window instead of failing.</para>
     /// </summary>
     [TestClass]
-    public class ConnectorFormThreadingTest : McpConnectorTest
+    public class McpConnectorFormThreadingTest : McpConnectorTest
     {
-        private const string OWN_THREAD_TITLE = "Connector Own Thread Form";
+        private const string OWN_THREAD_TITLE = "McpConnector Own Thread Form";
         private const string TEXT_BOX_LABEL = "Own thread field";
 
         [TestMethod]
-        public void TestConnectorFormThreading()
+        public void TestMcpConnectorFormThreading()
         {
             RunFunctionalTest();
         }
@@ -96,10 +96,10 @@ namespace pwiz.SkylineTestFunctional
                 // Skyline windows are all their own types), so its type alone identifies it. Enumerating it at all
                 // exercises GetOpenForms, which reads each form through ITS OWN thread -- reading this one's Handle
                 // from the main window's thread throws (the cross-thread check is on, above).
-                string formId = WaitForConnectorForm(nameof(Form));
+                string formId = WaitForMcpConnectorForm(nameof(Form));
                 Assert.AreEqual(nameof(Form) + @":" + OWN_THREAD_TITLE, formId);
 
-                var controls = Connector.GetControls(formId);
+                var controls = McpConnector.GetControls(formId);
                 Assert.IsTrue(controls.Any(c => Equals(c.Path.Type, nameof(ThreadRecordingTextBox))),
                     @"The own-thread form's TextBox was not read back.");
 
@@ -108,13 +108,13 @@ namespace pwiz.SkylineTestFunctional
                 // MultithreadSafeCallScope, which SUPPRESSES that check, so a wrong-thread read of it quietly
                 // succeeds. (The walk also touches Controls/Items/cells, which have no such guarantee.)
                 textBox.ReadOnThreadId = 0;
-                Assert.AreEqual(@"initial", Connector.GetFormValue(formId, TEXT_BOX_LABEL));
+                Assert.AreEqual(@"initial", McpConnector.GetFormValue(formId, TEXT_BOX_LABEL));
                 Assert.AreEqual(formThreadId, textBox.ReadOnThreadId,
                     @"The own-thread form's TextBox was read on the wrong thread (the main window's, not its own).");
 
                 // And a write, which routes by a different path (the gesture thread) than the read.
-                AssertComplete(Connector.SetFormValue(formId, TEXT_BOX_LABEL, @"typed from the connector"));
-                Assert.AreEqual(@"typed from the connector", Connector.GetFormValue(formId, TEXT_BOX_LABEL));
+                AssertComplete(McpConnector.SetFormValue(formId, TEXT_BOX_LABEL, @"typed from the connector"));
+                Assert.AreEqual(@"typed from the connector", McpConnector.GetFormValue(formId, TEXT_BOX_LABEL));
             }
             finally
             {
@@ -151,14 +151,14 @@ namespace pwiz.SkylineTestFunctional
         {
             string mainFormId = GetOpenFormId<SkylineWindow>();
             // Peptide Settings is modal, so it blocks the main window while it is up.
-            string settingsId = ResolveModal(Connector.ClickMainMenuItem(
+            string settingsId = ResolveModal(McpConnector.ClickMainMenuItem(
                 MenuPath<SkylineWindow>(@"settingsToolStripMenuItem", @"peptideSettingsMenuItem")));
             try
             {
                 string message = null;
                 try
                 {
-                    Connector.DismissWithAcceptButton(mainFormId);
+                    McpConnector.DismissWithAcceptButton(mainFormId);
                 }
                 catch (Exception exception)
                 {
@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestFunctional
             }
             finally
             {
-                AssertComplete(Connector.DismissWithCancelButton(settingsId));
+                AssertComplete(McpConnector.DismissWithCancelButton(settingsId));
             }
         }
     }

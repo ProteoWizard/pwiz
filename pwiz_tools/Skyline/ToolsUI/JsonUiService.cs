@@ -431,8 +431,8 @@ namespace pwiz.Skyline.ToolsUI
         // Level 3: Complete UI operations - Graphs
 
         /// <summary>Every window a connector caller can address, as the FormInfo the get_open_forms verb reports --
-        /// the same set <see cref="GetOpenFormElements"/> enumerates and <see cref="FindFormById"/> matches an id
-        /// against, so a form that is listed here can always be resolved.
+        /// the same set <see cref="FindFormById"/> matches an id against, so a form that is listed here can always
+        /// be resolved.
         ///
         /// <para>Normally ONE trip to the main window describes them all: every form lives on its thread, so from
         /// there each can report itself in full. Describing each form through ITS OWN window instead would post a

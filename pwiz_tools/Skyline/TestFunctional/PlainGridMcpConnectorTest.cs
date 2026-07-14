@@ -21,7 +21,6 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
@@ -35,10 +34,10 @@ namespace pwiz.SkylineTestFunctional
     /// found by its column Name so the test is translation-proof.
     /// </summary>
     [TestClass]
-    public class PlainGridConnectorTest : McpConnectorTest
+    public class PlainGridMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestPlainGridConnector()
+        public void TestPlainGridMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -65,13 +64,13 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(patternColumn >= 0);
 
             // GetGridText reads the plain grid -- its header row names the Pattern column.
-            string gridText = Connector.GetGridText(editorId, @"dataGridViewRules");
+            string gridText = McpConnector.GetGridText(editorId, @"dataGridViewRules");
             StringAssert.Contains(gridText.Split('\n')[0], @"Pattern");
 
             // Move to the Pattern cell of the first row, then SetGridText types "D" there, like a user
             // editing it.
-            Connector.SetCurrentCellAddress(editorId, @"dataGridViewRules", patternColumn, 0);
-            Connector.SetGridText(editorId, @"dataGridViewRules", @"D");
+            McpConnector.SetCurrentCellAddress(editorId, @"dataGridViewRules", patternColumn, 0);
+            McpConnector.SetGridText(editorId, @"dataGridViewRules", @"D");
             RunUI(() => Assert.AreEqual(@"D", rulesGrid.Rows[0].Cells[@"colPattern"].Value?.ToString(),
                 @"SetGridText did not set the Pattern cell in the plain rules grid."));
 

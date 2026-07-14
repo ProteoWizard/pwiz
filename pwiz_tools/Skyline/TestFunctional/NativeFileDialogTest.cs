@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
             var fileDialog = NativeDialog.WaitForDialog<NativeOpenFileDialog>();
 
             // GetOpenForms includes the native dialog, flagged as native.
-            var nativeForms = Connector.GetOpenForms().Where(form => form.IsNative).ToArray();
+            var nativeForms = McpConnector.GetOpenForms().Where(form => form.IsNative).ToArray();
             Assert.AreEqual(1, nativeForms.Length,
                 @"Expected exactly one native form while the Open dialog is showing.");
             var nativeForm = nativeForms[0];

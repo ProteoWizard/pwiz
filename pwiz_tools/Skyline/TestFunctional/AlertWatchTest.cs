@@ -49,7 +49,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            const string alertMessage = @"Connector alert-watch test message";
+            const string alertMessage = @"McpConnector alert-watch test message";
 
             // Drive the verb through the running JSON tool server (torn down with the window).
             RunUI(() => Program.StartToolService());

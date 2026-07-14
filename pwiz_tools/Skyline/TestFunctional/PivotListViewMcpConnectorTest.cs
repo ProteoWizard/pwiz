@@ -26,7 +26,6 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 using SkylineTool;
@@ -38,10 +37,10 @@ namespace pwiz.SkylineTestFunctional
     /// Pivot Editor (a ColumnListView). The item is matched by text, like a ListBox.
     /// </summary>
     [TestClass]
-    public class PivotListViewConnectorTest : McpConnectorTest
+    public class PivotListViewMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestPivotListViewConnector()
+        public void TestPivotListViewMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -74,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             // The available-columns list has no caption; address it by its type ("ListView").
             var listView = new UiElementPath(
                 new UiElementPath(null, pivotId, null, @"Form"), null, null, @"ListView");
-            Connector.PerformAction(listView, @"select_item", columnText);
+            McpConnector.PerformAction(listView, @"select_item", columnText);
             RunUI(() => Assert.IsTrue(
                 pivotEditor.AvailableColumnList.SelectedItems.Cast<ListViewItem>().Any(i => i.Text == columnText),
                 @"select_item did not select the list-view item."));

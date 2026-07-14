@@ -21,7 +21,6 @@
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
@@ -38,10 +37,10 @@ namespace pwiz.SkylineTestFunctional
     /// it, a list with its item action, and a button with its click action.
     /// </summary>
     [TestClass]
-    public class GetControlsConnectorTest : McpConnectorTest
+    public class GetControlsMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestGetControlsConnector()
+        public void TestGetControlsMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -58,7 +57,7 @@ namespace pwiz.SkylineTestFunctional
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(editListDlg.AddItem);
             string dlgId = GetOpenFormId<DefineAnnotationDlg>();
 
-            var controls = Connector.GetControls(dlgId);
+            var controls = McpConnector.GetControls(dlgId);
             Assert.IsTrue(controls.Length > 0, @"GetControls returned nothing.");
 
             // GetControls reports each control's Path -- already parented onto the form, so it can be passed
@@ -92,6 +91,6 @@ namespace pwiz.SkylineTestFunctional
 
         // The snake_case names of the actions get_actions reports for the element at the given path.
         private string[] ActionNames(UiElementPath path) =>
-            ((ActionInfo[]) Connector.PerformAction(path, @"get_actions", null)).Select(a => a.Name).ToArray();
+            ((ActionInfo[]) McpConnector.PerformAction(path, @"get_actions", null)).Select(a => a.Name).ToArray();
     }
 }

@@ -33,10 +33,10 @@ namespace pwiz.SkylineTestFunctional
     /// items (even "Add...") on DropDownOpening, so the walk must open each level before matching.
     /// </summary>
     [TestClass]
-    public class LazyMenuConnectorTest : AbstractFunctionalTest
+    public class LazyMenuMcpConnectorTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestLazyMenuConnector()
+        public void TestLazyMenuMcpConnector()
         {
             RunFunctionalTest();
         }

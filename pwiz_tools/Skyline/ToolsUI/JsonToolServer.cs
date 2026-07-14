@@ -20,7 +20,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using NHibernate.Hql.Ast.ANTLR.Tree;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Controls;
@@ -364,7 +363,7 @@ namespace pwiz.Skyline.ToolsUI
                 if (!pipe.IsConnected)
                     return false;
                 var handle = pipe.SafePipeHandle;
-                if (handle == null || handle.IsInvalid || handle.IsClosed)
+                if (handle.IsInvalid || handle.IsClosed)
                     return false;
                 return Kernel32.PeekNamedPipe(handle.DangerousGetHandle(),
                     IntPtr.Zero, 0, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
@@ -1015,7 +1014,7 @@ namespace pwiz.Skyline.ToolsUI
                 // control up by GetChildren, not Click: what OWNS a menu (a grid, a tree, a graph) need not itself
                 // be clickable.
                 var element = string.IsNullOrEmpty(control)
-                    ? (UiElement) form
+                    ? form
                     : form.FindElement(control, UiActions.GetChildren);
                 var menuStrip = element.MainToolStrip;
                 if (menuStrip == null)

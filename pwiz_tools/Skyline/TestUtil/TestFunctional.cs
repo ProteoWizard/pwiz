@@ -2162,7 +2162,7 @@ namespace pwiz.SkylineTestUtil
         /// used by JsonTutorialTest so a tutorial can be captured through the JSON tool service rather than the
         /// screen-grab path.
         /// </summary>
-        protected void SaveConnectorScreenShot(Func<Bitmap> captureImage)
+        protected void SaveMcpConnectorScreenShot(Func<Bitmap> captureImage)
         {
             if (IsRecordingScreenShots)
             {

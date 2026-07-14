@@ -18,10 +18,8 @@
  * limitations under the License.
  */
 
-using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls.AuditLog;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.Model.AuditLog;
@@ -33,7 +31,7 @@ using SkylineTool;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Exercises the AI Connector verbs that drive controls beyond plain Buttons:
+    /// Exercises the AI McpConnector verbs that drive controls beyond plain Buttons:
     ///   * <see cref="JsonToolServer.ClickFormButton"/> on a CheckBox -- the Audit Log "Enable audit
     ///     logging" checkbox (AutoCheck=false, acts on its Click handler, so SetFormValue would not
     ///     toggle it but clicking it does);
@@ -44,10 +42,10 @@ namespace pwiz.SkylineTestFunctional
     /// translation-proof where it uses control names and runs in en otherwise.
     /// </summary>
     [TestClass]
-    public class ClickControlConnectorTest : McpConnectorTest
+    public class ClickControlMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestClickControlConnector()
+        public void TestClickControlMcpConnector()
         {
             // Toggling audit logging modifies the document without a normal audit-log entry; suppress
             // the strict test-only audit-log check the same way LiveReportsTutorialTest does.
@@ -90,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             string auditFormId = GetOpenFormId<AuditLogForm>();
 
             bool before = SkylineWindow.Document.Settings.DataSettings.AuditLogging;
-            Connector.ClickFormButton(auditFormId, @"Enable audit logging");
+            McpConnector.ClickFormButton(auditFormId, @"Enable audit logging");
             WaitForConditionUI(() => SkylineWindow.Document.Settings.DataSettings.AuditLogging != before);
             RunUI(() => Assert.AreNotEqual(before, SkylineWindow.Document.Settings.DataSettings.AuditLogging,
                 @"ClickFormButton did not toggle the Enable audit logging checkbox."));
@@ -105,10 +103,10 @@ namespace pwiz.SkylineTestFunctional
             var documentGrid = WaitForOpenForm<DocumentGridForm>();
             string gridId = GetOpenFormId<DocumentGridForm>();
 
-            Connector.ClickControlMenuItem(gridId, string.Empty, @"Reports > Proteins");
+            McpConnector.ClickControlMenuItem(gridId, string.Empty, @"Reports > Proteins");
             WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Proteins");
 
-            Connector.ClickControlMenuItem(gridId, string.Empty, @"Reports > Peptides");
+            McpConnector.ClickControlMenuItem(gridId, string.Empty, @"Reports > Peptides");
             WaitForConditionUI(() => documentGrid.BindingListSource.ViewInfo?.Name == @"Peptides");
             RunUI(() => Assert.AreEqual(@"Peptides", documentGrid.BindingListSource.ViewInfo.Name,
                 @"ClickControlMenuItem did not switch the Document Grid report."));
@@ -123,7 +121,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => peptideSettings.SelectedTab = PeptideSettingsUI.TABS.Digest);
             var tabControl = new UiElementPath(
                 new UiElementPath(null, settingsId, null, @"Form"), null, null, @"TabControl");
-            Connector.PerformAction(tabControl, @"select_tab", @"Quantification");
+            McpConnector.PerformAction(tabControl, @"select_tab", @"Quantification");
             WaitForConditionUI(() => peptideSettings.SelectedTab == PeptideSettingsUI.TABS.Quantification);
             RunUI(() => Assert.AreEqual(PeptideSettingsUI.TABS.Quantification, peptideSettings.SelectedTab,
                 @"select_tab did not select the Quantification tab."));

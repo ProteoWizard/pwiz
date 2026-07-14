@@ -23,7 +23,6 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
 using pwiz.Skyline.Util.Extensions;
-using SkylineTool;
 
 namespace pwiz.Skyline.ToolsUI
 {

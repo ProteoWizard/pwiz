@@ -25,7 +25,6 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil.PInvoke;
-using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using SkylineTool;
 
@@ -35,14 +34,14 @@ namespace pwiz.Skyline.ToolsUI
     /// Runs one unit of connector work on a window's own UI thread and watches, from the caller (pipe) thread, for
     /// it to finish or for a modal dialog to appear. Three entry points, all keyed on a window handle:
     /// <list type="bullet">
-    /// <item><see cref="PerformAction"/> -- post an action (a click, a set-value) and return when it finishes or
+    /// <item><c>PerformAction</c> -- post an action (a click, a set-value) and return when it finishes or
     /// leaves open a modal that will not go away by itself.</item>
     /// <item><see cref="OkDialog"/> -- accept/cancel a dialog: post its dismiss gesture, then wait until that
     /// window has closed AND the nesting count has drained back to the level its opener left.</item>
     /// <item><see cref="CallFunction{T}"/> -- run a value-producing read and return its result, throwing if a modal
     /// got in the way.</item>
     /// </list>
-    /// All three funnel through <see cref="PerformActionAndWait"/>, which BeginInvokes the action onto the window's
+    /// All three funnel through <c>PerformActionAndWait</c>, which BeginInvokes the action onto the window's
     /// thread (capturing the sync context, the nesting count, and the open windows there, before running it) and
     /// then waits: it stops and records a new modal that must be dismissed, rides through a transient one (a LongWaitDlg
     /// reporting progress), completes when the action has finished and the wait condition holds, and trips a watchdog.
@@ -61,7 +60,8 @@ namespace pwiz.Skyline.ToolsUI
         private static int _modalNestingCount;
 
         /// <summary>The number of posted actions currently executing (including those blocked in a modal loop) --
-        /// the connector's live modal-nesting depth. See <see cref="JsonUiService.ModalNestingCount"/>.</summary>
+        /// the connector's live modal-nesting depth, which a dialog records when it appears and reports as
+        /// <see cref="FormInfo.ModalNestingCount"/>.</summary>
         public static int ModalNestingCount => Volatile.Read(ref _modalNestingCount);
 
         internal static void IncrementModalNestingCount() => Interlocked.Increment(ref _modalNestingCount);
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.ToolsUI
         }
         /// <summary>
         /// Snapshots -- on the caller thread, FIRST -- the nesting count and open top-level windows (pruning the
-        /// pre-show tracker to them), then BeginInvokes <paramref name="action"/> onto <paramref name="hwnd"/>'s UI
+        /// pre-show tracker to them), then BeginInvokes <paramref name="action"/> onto <paramref name="control"/>'s UI
         /// thread and waits it out. The hop also captures that thread's sync context (for the watchdog). The wait
         /// returns Completed = false on a new interactive modal (recording its pre-show count); re-throws an exception
         /// <paramref name="action"/> raised; returns Completed = true once it has run and <paramref name="waitCondition"/>
@@ -149,10 +149,7 @@ namespace pwiz.Skyline.ToolsUI
             // running a verb inside RunUI or the action of an OkDialog, both of which run on the UI thread.)
             if (!control.InvokeRequired)
             {
-                throw new InvalidOperationException(
-                    "A connector action cannot be performed from the UI thread it must run on: it would deadlock " +
-                    "waiting for itself. Call it from a worker thread (in a test, off the test thread rather than " +
-                    "inside RunUI or an OkDialog action).");
+                throw new InvalidOperationException(@"Wrong thread");
             }
 
             // On the caller thread, FIRST: snapshot what the wait compares against, BEFORE running anything, so an

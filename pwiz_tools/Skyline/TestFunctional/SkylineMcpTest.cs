@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestFunctional
 
         private const int EXPECTED_TOOL_COUNT = 58;
 
-        // The version stamped into the committed SkylineAiConnector.zip: both
+        // The version stamped into the committed SkylineAiMcpConnector.zip: both
         // tool-inf/info.properties (what the Tool Store shows) and the bundled
         // binaries. This is intentionally a hand-entered constant, NOT the running
         // Skyline version. Skyline's version is day-of-year derived and changes
@@ -64,7 +64,7 @@ namespace pwiz.SkylineTestFunctional
         // discipline gate that catches a forgotten rebuild. (A stale ZIP once
         // shipped stamped 26.1.1.077 while its own info.properties Requires line
         // demanded 26.1.1.083 - a ZIP that fails its own stated requirement.)
-        // When you rebuild SkylineAiConnector.zip, update this to match.
+        // When you rebuild SkylineAiMcpConnector.zip, update this to match.
         private const string EXPECTED_ZIP_VERSION = "26.1.1.189";
 
         // Short FASTA for a quick import test
@@ -85,9 +85,9 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
         private void TestToolInstallation()
         {
             string zipPath = TestContext.GetProjectDirectory(
-                @"Executables\Tools\SkylineMcp\SkylineAiConnector\SkylineAiConnector.zip");
+                @"Executables\Tools\SkylineMcp\SkylineAiMcpConnector\SkylineAiMcpConnector.zip");
             if (!File.Exists(zipPath))
-                Assert.Inconclusive(@"SkylineAiConnector.zip not found - build SkylineMcp solution first");
+                Assert.Inconclusive(@"SkylineAiMcpConnector.zip not found - build SkylineMcp solution first");
 
             // Remove existing tools first (separate dialog to avoid save prompt)
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, dlg =>
@@ -95,7 +95,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
                 dlg.RemoveAllTools();
                 dlg.OkDialog();
             });
-            const string expectedToolName = "AI Connector";
+            const string expectedToolName = "AI McpConnector";
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, dlg =>
             {
                 dlg.InstallZipTool(zipPath);
@@ -114,14 +114,14 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             // e.g. a binary rebuilt from current source but packaged with an old info.properties -
             // which every other assertion here sails past because they only exercise the binary.
             string infoPropertiesPath = Path.Combine(ToolDescriptionHelpers.GetToolsDirectory(),
-                @"SkylineAiConnector", @"tool-inf", @"info.properties");
+                @"SkylineAiMcpConnector", @"tool-inf", @"info.properties");
             Assert.IsTrue(File.Exists(infoPropertiesPath),
                 @"Installed tool-inf/info.properties not found at " + infoPropertiesPath);
             string zipVersion = new ExternalToolProperties(infoPropertiesPath).Version;
             AssertEx.AreEqual(EXPECTED_ZIP_VERSION, zipVersion,
                 TextUtil.LineSeparate(
-                    @"SkylineAiConnector.zip version does not match EXPECTED_ZIP_VERSION.",
-                    @"Rebuild SkylineAiConnector (which restamps info.properties from AssemblyInfo.cs)" +
+                    @"SkylineAiMcpConnector.zip version does not match EXPECTED_ZIP_VERSION.",
+                    @"Rebuild SkylineAiMcpConnector (which restamps info.properties from AssemblyInfo.cs)" +
                     @" and update EXPECTED_ZIP_VERSION to match the new build."));
         }
 
@@ -131,7 +131,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             // ToolInstaller uses the ZIP filename (without extension) as directory name
             string mcpServerPath = Path.Combine(
                 ToolDescriptionHelpers.GetToolsDirectory(),
-                @"SkylineAiConnector", @"mcp-server", @"SkylineMcpServer.exe");
+                @"SkylineAiMcpConnector", @"mcp-server", @"SkylineMcpServer.exe");
             if (!File.Exists(mcpServerPath))
                 Assert.Inconclusive(@"SkylineMcpServer.exe not found in installed tools");
 
@@ -294,7 +294,7 @@ RREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN";
             Assert.IsTrue(missingTools.Length == 0 && unexpectedTools.Length == 0,
                 TextUtil.LineSeparate(
                     @"Advertised MCP tool set does not match the [McpServerTool] attributes in SkylineTools.cs.",
-                    @"If the ZIP predates a tool change, rebuild SkylineAiConnector.zip.",
+                    @"If the ZIP predates a tool change, rebuild SkylineAiMcpConnector.zip.",
                     @"Missing (declared in source but not advertised by the ZIP server): " + string.Join(@", ", missingTools),
                     @"Unexpected (advertised by the ZIP server but not declared in source): " + string.Join(@", ", unexpectedTools)));
 

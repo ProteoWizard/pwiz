@@ -35,7 +35,7 @@ namespace pwiz.SkylineTestUtil
     /// <summary>
     /// Base class for a test that drives Skyline through the in-process <see cref="IJsonToolService"/> -- the same
     /// API an external MCP client uses -- rather than directly through ShowDialog / RunUI. Everything such a test
-    /// does goes through <see cref="Connector"/>, so it verifies the connector is capable enough to do it: a step
+    /// does goes through <see cref="McpConnector"/>, so it verifies the connector is capable enough to do it: a step
     /// that cannot be expressed through the connector is a gap to add to it.
     ///
     /// <para>Two kinds of test live on this: the verb tests (one per connector capability) and the TUTORIAL tests,
@@ -47,7 +47,7 @@ namespace pwiz.SkylineTestUtil
         /// The running JSON tool service -- the same <see cref="IJsonToolService"/> an external MCP client
         /// drives. Call <see cref="StartToolService"/> once (e.g. at the top of DoTest) before using it.
         /// </summary>
-        protected IJsonToolService Connector => Program.MainJsonToolServer;
+        protected IJsonToolService McpConnector => Program.MainJsonToolServer;
 
         /// <summary>
         /// Starts the in-process JSON tool service (idempotent) and publishes its connection-*.json discovery
@@ -72,14 +72,14 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Waits until a form of the given WinForms type appears among the connector's open forms
         /// (<see cref="IJsonToolService.GetOpenForms"/> -- the connector's own discovery method), then returns its
-        /// form id (a string) the test drives with Connector.ClickFormButton / SetFormValue / DismissWith... -- an
+        /// form id (a string) the test drives with McpConnector.ClickFormButton / SetFormValue / DismissWith... -- an
         /// MCP client has no in-process form object.
         /// </summary>
-        protected string WaitForConnectorForm<TForm>() where TForm : Form =>
-            WaitForConnectorForm(typeof(TForm).Name);
+        protected string WaitForMcpConnectorForm<TForm>() where TForm : Form =>
+            WaitForMcpConnectorForm(typeof(TForm).Name);
 
-        /// <summary>Waits for a form by its connector type name (see <see cref="WaitForConnectorForm{TForm}"/>).</summary>
-        protected string WaitForConnectorForm(string typeName) =>
+        /// <summary>Waits for a form by its connector type name (see <see cref="WaitForMcpConnectorForm{TForm}"/>).</summary>
+        protected string WaitForMcpConnectorForm(string typeName) =>
             ResolveWhenOpen(form => form.Type == typeName);
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestUtil
         /// title, e.g. "...CV Histogram", "...Scheduling") -- and returns its form id. Pass the
         /// localized graph name (a GraphsResources string) so it matches in any UI language.
         /// </summary>
-        protected string WaitForConnectorGraph(string titleSubstring) =>
+        protected string WaitForMcpConnectorGraph(string titleSubstring) =>
             ResolveWhenOpen(form => form.Type == @"GraphSummary" && form.HasGraph
                                     && true == form.Title?.Contains(titleSubstring));
 
@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestUtil
         private string ResolveWhenOpen(Func<FormInfo, bool> predicate)
         {
             string id = null;
-            WaitForCondition(() => null != (id = Connector.GetOpenForms().FirstOrDefault(predicate)?.Id));
+            WaitForCondition(() => null != (id = McpConnector.GetOpenForms().FirstOrDefault(predicate)?.Id));
             return id;
         }
 
@@ -131,11 +131,11 @@ namespace pwiz.SkylineTestUtil
         /// Resolves the modal dialog a connector action just opened, straight from the <see cref="ActionResult"/> it
         /// returned: asserts the action left a modal open (Completed=false, its id in <see cref="ActionResult.FormId"/>)
         /// and returns its form id (a string) -- so the caller drives it without a
-        /// <see cref="WaitForConnectorForm{TForm}"/> / GetOpenForms round-trip and without keying on a form type. Use
+        /// <see cref="WaitForMcpConnectorForm{TForm}"/> / GetOpenForms round-trip and without keying on a form type. Use
         /// for an action whose own gesture blocks in the new modal's message loop and so names it: a menu-item click
         /// that shows a dialog, or a native/managed dialog accept that raises a follow-on. An action that merely POSTS
         /// its click (a managed button) or whose dialog appears on a later background pass or a separate startup frame
-        /// does NOT name it -- wait for that one with <see cref="WaitForConnectorForm{TForm}"/> instead.
+        /// does NOT name it -- wait for that one with <see cref="WaitForMcpConnectorForm{TForm}"/> instead.
         /// </summary>
         protected static string ResolveModal(ActionResult actionResult)
         {
@@ -148,7 +148,7 @@ namespace pwiz.SkylineTestUtil
         }
 
         /// <summary>Resolves a form of the given WinForms type from the connector's open forms RIGHT NOW, without
-        /// waiting -- the counterpart to <see cref="WaitForConnectorForm{TForm}"/> for when a preceding action was
+        /// waiting -- the counterpart to <see cref="WaitForMcpConnectorForm{TForm}"/> for when a preceding action was
         /// expected to have already opened it. Fails if it is not open yet, revealing an action that did not open
         /// its dialog synchronously.</summary>
         protected string GetOpenFormId<TForm>() where TForm : Form =>
@@ -159,8 +159,8 @@ namespace pwiz.SkylineTestUtil
             ResolveNow(form => form.Type == typeName, "a form of type " + typeName);
 
         /// <summary>Resolves the summary graph whose title contains <paramref name="titleSubstring"/> right now
-        /// (the immediate counterpart to <see cref="WaitForConnectorGraph"/>).</summary>
-        protected string GetConnectorGraph(string titleSubstring) =>
+        /// (the immediate counterpart to <see cref="WaitForMcpConnectorGraph"/>).</summary>
+        protected string GetMcpConnectorGraph(string titleSubstring) =>
             ResolveNow(form => form.Type == @"GraphSummary" && form.HasGraph && true == form.Title?.Contains(titleSubstring),
                 "a graph whose title contains '" + titleSubstring + "'");
 
@@ -176,7 +176,7 @@ namespace pwiz.SkylineTestUtil
 
         private string ResolveNow(Func<FormInfo, bool> predicate, string description)
         {
-            var id = Connector.GetOpenForms().FirstOrDefault(predicate)?.Id;
+            var id = McpConnector.GetOpenForms().FirstOrDefault(predicate)?.Id;
             Assert.IsNotNull(id, "Expected {0} to be open already, but it was not.", description);
             return id;
         }
@@ -195,7 +195,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     // GetControls can return null while the form is mid-gesture / re-laying-out; treat that (and a
                     // no-match) as "not ready yet" and keep polling.
-                    return Connector.GetControls(formId)?.Any(control => Equals(control.Path.Type, controlType)) ?? false;
+                    return McpConnector.GetControls(formId)?.Any(control => Equals(control.Path.Type, controlType)) ?? false;
                 }
                 catch (InvalidOperationException)
                 {
@@ -221,7 +221,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     // GetControls can return null while the dialog is mid-recompute; treat null (and a disabled or
                     // missing control) as "not ready yet" and keep polling.
-                    return Connector.GetControls(formId)?.FirstOrDefault(control => Equals(control.Path.Type, controlType))?.Enabled == true;
+                    return McpConnector.GetControls(formId)?.FirstOrDefault(control => Equals(control.Path.Type, controlType))?.Enabled == true;
                 }
                 catch (InvalidOperationException)
                 {
@@ -236,15 +236,15 @@ namespace pwiz.SkylineTestUtil
         /// returns to the value it had before. The count is incremented synchronously as the action is posted
         /// and decremented when its delegate returns, so this reliably waits out the click / value-set. For an
         /// action that DOES open a dialog (which stays counted until the dialog closes), wait for the dialog
-        /// with <see cref="WaitForConnectorForm{TForm}"/> instead. A dismissing action (an Accept/Cancel that
+        /// with <see cref="WaitForMcpConnectorForm{TForm}"/> instead. A dismissing action (an Accept/Cancel that
         /// closes a dialog) settles the count BELOW the captured value -- the dialog's blocked opener delegate
         /// completes on dismissal -- so this waits for &lt;= that value rather than an exact match.
         /// </summary>
         protected void WaitForAction(Action action)
         {
-            int before = Connector.ModalNestingCount();
+            int before = McpConnector.ModalNestingCount();
             action();
-            WaitForCondition(() => Connector.ModalNestingCount() <= before);
+            WaitForCondition(() => McpConnector.ModalNestingCount() <= before);
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace pwiz.SkylineTestUtil
         {
             var tabControl = new UiElementPath(
                 new UiElementPath(null, formId, null, @"Form"), null, null, @"TabControl");
-            Connector.PerformAction(tabControl, @"select_tab", tabText);
+            McpConnector.PerformAction(tabControl, @"select_tab", tabText);
         }
 
         /// <summary>
@@ -267,9 +267,9 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void PauseForScreenShot(string formId, string description = null)
         {
-            SaveConnectorScreenShot(() =>
+            SaveMcpConnectorScreenShot(() =>
             {
-                var image = Connector.GetFormImageBytes(formId);
+                var image = McpConnector.GetFormImageBytes(formId);
                 return image.Data == null ? null : new Bitmap(new MemoryStream(image.Data));
             });
         }

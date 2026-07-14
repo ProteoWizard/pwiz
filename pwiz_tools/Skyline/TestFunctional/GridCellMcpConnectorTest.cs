@@ -22,7 +22,6 @@ using System;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Databinding;
 using pwiz.Skyline.EditUI;
@@ -45,10 +44,10 @@ namespace pwiz.SkylineTestFunctional
     /// Menu items are matched by their visible text.
     /// </summary>
     [TestClass]
-    public class GridCellConnectorTest : McpConnectorTest
+    public class GridCellMcpConnectorTest : McpConnectorTest
     {
         [TestMethod]
-        public void TestGridCellConnector()
+        public void TestGridCellMcpConnector()
         {
             RunFunctionalTest();
         }
@@ -80,7 +79,7 @@ namespace pwiz.SkylineTestFunctional
             });
             Assert.IsTrue(patternColumn >= 0);
 
-            Connector.SetFormValue(editorId, $@"dataGridViewRules[{patternColumn},0]", @"D");
+            McpConnector.SetFormValue(editorId, $@"dataGridViewRules[{patternColumn},0]", @"D");
             RunUI(() => Assert.AreEqual(@"D", rulesGrid.Rows[0].Cells[@"colPattern"].Value?.ToString(),
                 @"SetFormValue did not set the grid cell named by the locator."));
 
@@ -110,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
             // Move to the first column (row 0), then choose Sort Descending from that cell's context menu
             // -- the grid's context menu acts on the current cell. The DataboundGridControl is a container;
             // its inner grid (a DataGridView) owns the context menu, so the path walks into it.
-            Connector.SetCurrentCellAddress(gridId, string.Empty, 0, 0);
+            McpConnector.SetCurrentCellAddress(gridId, string.Empty, 0, 0);
             var gridContextMenu = new UiElementPath(
                 new UiElementPath(
                     new UiElementPath(
@@ -118,11 +117,11 @@ namespace pwiz.SkylineTestFunctional
                     null, null, @"DataGridView"),
                 null, null, @"ContextMenu");
             var sortDescending = new UiElementPath(gridContextMenu, @"Sort Descending", null, null);
-            Connector.PerformAction(sortDescending, @"click", null);
+            McpConnector.PerformAction(sortDescending, @"click", null);
             WaitForConditionUI(() => documentGrid.IsComplete);
 
             // The first column is now sorted descending: read it back and check the order.
-            string gridText = Connector.GetGridText(gridId, string.Empty);
+            string gridText = McpConnector.GetGridText(gridId, string.Empty);
             var firstColumn = gridText
                 .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)
                 .Skip(1) // header
