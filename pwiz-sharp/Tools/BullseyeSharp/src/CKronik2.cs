@@ -540,11 +540,14 @@ namespace Pwiz.Tools.BullseyeSharp
                     f.Write(vPeps[i].charge + "\t");
                     f.Write(vPeps[i].monoMass + "\t");
                     f.Write(vPeps[i].basePeak + "\t");
-                    f.Write(vPeps[i].intensity + "\t");
-                    f.Write(vPeps[i].sumIntensity + "\t");
-                    f.Write(vPeps[i].firstRTime + "\t");
-                    f.Write(vPeps[i].lastRTime + "\t");
-                    f.Write(vPeps[i].rTime + "\t");
+                    // net8's default float ToString() is shortest-round-trip (8-9 digits) vs
+                    // net472's ~7; the expected .bs.kro baseline was written by the net472-era
+                    // tool. Pin these float columns to G7 so the managed net8 output matches.
+                    f.Write(vPeps[i].intensity.ToString("G7") + "\t");
+                    f.Write(vPeps[i].sumIntensity.ToString("G7") + "\t");
+                    f.Write(vPeps[i].firstRTime.ToString("G7") + "\t");
+                    f.Write(vPeps[i].lastRTime.ToString("G7") + "\t");
+                    f.Write(vPeps[i].rTime.ToString("G7") + "\t");
                     f.Write(vPeps[i].xCorr + "\t");
                     f.WriteLine(bSkyline ? $"{vPeps[i].mods}\t{vPeps[i].bestScan}\t{vPeps[i].averagineHK}" : vPeps[i].mods);
                 }

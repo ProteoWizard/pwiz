@@ -1413,7 +1413,7 @@ namespace pwiz.SkylineTestUtil
         /// <summary>
         /// Compare two DSV files, accounting for possible L10N differences
         /// </summary>
-        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders, int[] ignoredColumns = null)
+        public static void AreEquivalentDsvFiles(string path1, string path2, bool hasHeaders, int[] ignoredColumns = null, double relativeTolerance = 0)
         {
             var lines1 = File.ReadAllLines(path1);
             var lines2 = File.ReadAllLines(path2);
@@ -1469,6 +1469,22 @@ namespace pwiz.SkylineTestUtil
                                 Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, @"_dot_");
                         }
                         same = Equals(Dotted(cols1[colNum]), Dotted(cols2[colNum]));
+                    }
+
+                    if (!same && relativeTolerance > 0)
+                    {
+                        // Numeric columns can drift in the last significant digit between frameworks
+                        // (net8 vs net472 float32 accumulation/FMA order). Accept a relative tolerance.
+                        bool TryParseNum(string s, out double d)
+                        {
+                            return double.TryParse(s, NumberStyles.Float, CultureInfo.CurrentCulture, out d) ||
+                                   double.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out d);
+                        }
+                        if (TryParseNum(cols1[colNum], out var d1) && TryParseNum(cols2[colNum], out var d2))
+                        {
+                            var scale = Math.Max(Math.Abs(d1), Math.Abs(d2));
+                            same = Math.Abs(d1 - d2) <= relativeTolerance * scale;
+                        }
                     }
 
                     if (!same)
@@ -1645,6 +1661,19 @@ namespace pwiz.SkylineTestUtil
                                             {
                                                 continue; // e.g. 5432 vs 5433 but not 1 vs 2
                                             }
+                                        }
+                                    }
+                                    else if (precTarget == -1 || precActual == -1)
+                                    {
+                                        // One side is a bare integer, the other a decimal/scientific form
+                                        // (e.g. net472's %.7g "1.130326e+07" or "177994" vs net8's
+                                        // "11303264"/"177993.96875"). Same value, formatted differently;
+                                        // accept a small RELATIVE difference (7-sig-fig formatting) but keep
+                                        // small values strict so real errors still fail (5 vs 5.4 fails).
+                                        var max = Math.Max(Math.Abs(dTarget), Math.Abs(dActual));
+                                        if (max != 0 && Math.Abs(dTarget - dActual) / max <= 1e-5)
+                                        {
+                                            continue;
                                         }
                                     }
                                     else

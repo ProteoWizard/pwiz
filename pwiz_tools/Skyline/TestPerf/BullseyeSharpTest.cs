@@ -74,10 +74,13 @@ namespace TestPerf
             });
 
             // Now compare our output to the official output, ignoring differences like time stamps, or file paths
-            AssertEx.AreEquivalentDsvFiles(GetDataPath("expected\\2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"), 
-                GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"), 
+            AssertEx.AreEquivalentDsvFiles(GetDataPath("expected\\2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"),
+                GetDataPath("2021_0810_Eclipse_LiPExp_05_SS3_MS1_3sn.hk.bs.kro"),
                 true, // Has headers
-                new []{0}); // Ignore differences in column 0 (file path)
+                new []{0}, // Ignore differences in column 0 (file path)
+                // The G7-formatted float columns can differ in the last significant digit vs the
+                // net472-era baseline (float32 accumulation/FMA order); accept a small relative tolerance.
+                relativeTolerance: 5e-6);
 
             void CompareMS2Files(string expected, string actual)
             {
