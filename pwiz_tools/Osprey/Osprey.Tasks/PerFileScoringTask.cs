@@ -480,15 +480,23 @@ namespace pwiz.Osprey.Tasks
             ctx.RunPlan.EffectiveFileParallelism = ResolveFileParallelism(config, nFiles, null);
 
             var swAllFiles = Stopwatch.StartNew();
-            LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths,
+            var projections = LoadJoinOnlyScores(config, perFileEntries, perFileParquetPaths,
                 perFileCalibrations, perFileIsolationMz, ctx);
             swAllFiles.Stop();
             ctx.LogInfo(string.Format(@"[TIMING] All files processed: {0:F1}s",
                 swAllFiles.Elapsed.TotalSeconds));
 
-            int totalScored = 0;
-            foreach (var kvp in perFileEntries)
-                totalScored += kvp.Value.Count;
+            int totalScored;
+            if (projections != null)
+            {
+                totalScored = projections.TotalRows;
+            }
+            else
+            {
+                totalScored = 0;
+                foreach (var kvp in perFileEntries)
+                    totalScored += kvp.Value.Count;
+            }
 
             ctx.LogInfo(string.Empty);
             ctx.LogInfo(string.Format(
@@ -513,7 +521,7 @@ namespace pwiz.Osprey.Tasks
                 return false;
 
             return FinalizeAndCheck(ctx, perFileEntries, perFileCalibrations,
-                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored);
+                perFileIsolationMz, perFileParquetPaths, nFiles, totalScored, projections);
         }
 
         /// <summary>
@@ -1056,7 +1064,7 @@ namespace pwiz.Osprey.Tasks
         /// <paramref name="perFileEntries"/>, <paramref name="perFileParquetPaths"/>,
         /// and <paramref name="perFileCalibrations"/>.
         /// </summary>
-        private void LoadJoinOnlyScores(
+        private FdrProjectionSet LoadJoinOnlyScores(
             OspreyConfig config,
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             Dictionary<string, string> perFileParquetPaths,
@@ -1081,6 +1089,16 @@ namespace pwiz.Osprey.Tasks
             ctx.LogInfo(string.Format(
                 @"--input-scores: loading {0} per-file score parquet(s)",
                 config.InputScores.Count));
+            // Lean on the HPC merge/join too (#4400): a large first-pass merge node
+            // loading every worker's .scores.parquet used to rebuild the full fat
+            // FdrEntry stubs + PIN features (~53 GB at 82 files) -- the same Stage-5
+            // blowup the resume path had. Stream 32 B FdrProjection rows instead, unless
+            // the merge needs the resident pool (an opt-in feature output) or is a
+            // reconciled 2nd-pass bundle hydration (AllHaveReconSidecars -- FirstJoin
+            // skips Percolator there and HydrateReconciliationOverlay reads the fat stubs).
+            var builder = (!NeedsResidentPool(config) && !AllHaveReconSidecars(config))
+                ? new FdrProjectionSet.Builder()
+                : null;
             for (int fileIdx = 0; fileIdx < config.InputScores.Count; fileIdx++)
             {
                 string parquetPath = config.InputScores[fileIdx];
@@ -1092,21 +1110,35 @@ namespace pwiz.Osprey.Tasks
                     RescoreHydration.SyntheticInputFromParquet(parquetPath)) ?? string.Empty;
                 ctx.LogInfo(string.Format(@"===== Loading file {0}/{1}: {2} (from {3}) =====",
                     fileIdx + 1, config.InputScores.Count, fileName, parquetPath));
-                var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
-                // Stage 5+ (Percolator SVM) requires the 21 PIN features
-                // on each FdrEntry. Load them in lockstep with the stubs
-                // and bind by row index (parquet rows are stable).
-                var features = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
-                if (features.Count != stubs.Count)
+                if (builder != null)
                 {
-                    throw new InvalidDataException(string.Format(
-                        @"--input-scores: parquet {0} has {1} stubs but {2} feature rows",
-                        parquetPath, stubs.Count, features.Count));
+                    // Lean: stream 32 B projection rows straight from the parquet; no
+                    // fat FdrEntry stub or 21-float feature vector is ever allocated.
+                    builder.BeginFile(fileName);
+                    ParquetScoreCache.ReadFdrStubScalars(parquetPath,
+                        (entryId, charge, isDecoy, coelutionSum, modseq) =>
+                            builder.AddRow(entryId, charge, isDecoy, coelutionSum, modseq));
+                    builder.EndFile();
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, new List<FdrEntry>()));
                 }
-                for (int j = 0; j < stubs.Count; j++)
-                    stubs[j].Features = features[j];
-                ctx.LogInfo(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
-                perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                else
+                {
+                    // Fat: Stage 5+ (Percolator SVM) requires the 21 PIN features on each
+                    // FdrEntry (or the reconciled-bundle overlay reads the stubs). Load
+                    // them in lockstep with the stubs and bind by row index (rows stable).
+                    var stubs = ParquetScoreCache.LoadFdrStubsFromParquet(parquetPath);
+                    var features = ParquetScoreCache.LoadPinFeaturesFromParquet(parquetPath);
+                    if (features.Count != stubs.Count)
+                    {
+                        throw new InvalidDataException(string.Format(
+                            @"--input-scores: parquet {0} has {1} stubs but {2} feature rows",
+                            parquetPath, stubs.Count, features.Count));
+                    }
+                    for (int j = 0; j < stubs.Count; j++)
+                        stubs[j].Features = features[j];
+                    ctx.LogInfo(string.Format(@"  Loaded {0} FDR stubs + features", stubs.Count));
+                    perFileEntries.Add(new KeyValuePair<string, List<FdrEntry>>(fileName, stubs));
+                }
                 perFileParquetPaths[fileName] = parquetPath;
 
                 // Best-effort calibration JSON load for Stage 6
@@ -1159,6 +1191,7 @@ namespace pwiz.Osprey.Tasks
             }
             if (ctx.Diagnostics?.CalibrationOnly ?? false)
                 OspreyDiagnosticsLog.ExitAfterDump(@"OSPREY_CALIBRATION_ONLY");
+            return builder?.Build();
         }
 
         /// <summary>
@@ -1203,17 +1236,7 @@ namespace pwiz.Osprey.Tasks
             List<KeyValuePair<string, List<FdrEntry>>> perFileEntries,
             PipelineContext ctx)
         {
-            bool allHave1stPassAndRecon = true;
-            foreach (var parquetPath in config.InputScores)
-            {
-                string syntheticInput = RescoreHydration.SyntheticInputFromParquet(parquetPath);
-                if (!File.Exists(FdrScoresSidecar.Pass1Path(syntheticInput))
-                    || !File.Exists(ReconciliationFile.PathForInput(syntheticInput)))
-                {
-                    allHave1stPassAndRecon = false;
-                    break;
-                }
-            }
+            bool allHave1stPassAndRecon = AllHaveReconSidecars(config);
             if (allHave1stPassAndRecon)
             {
                 try
@@ -1248,6 +1271,26 @@ namespace pwiz.Osprey.Tasks
                     _rescoreInputs.TotalActions,
                     _rescoreInputs.RefinedCalibrations.Count,
                     _rescoreInputs.TotalGapFillTargets));
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// True when EVERY <c>--input-scores</c> parquet has both its first-pass
+        /// <c>.fdr_scores.bin</c> and its <c>.reconciliation.json</c> sidecar -- the
+        /// signature of a reconciled 2nd-pass merge whose <see cref="HydrateRescoreBundleIfPresent"/>
+        /// overlays q-values onto the resident stubs (FirstJoin skips Percolator there).
+        /// <see cref="LoadJoinOnlyScores"/> reads this to keep the fat pool on that path,
+        /// since the lean projection would drop the stubs the overlay needs.
+        /// </summary>
+        private static bool AllHaveReconSidecars(OspreyConfig config)
+        {
+            foreach (var parquetPath in config.InputScores)
+            {
+                string syntheticInput = RescoreHydration.SyntheticInputFromParquet(parquetPath);
+                if (!File.Exists(FdrScoresSidecar.Pass1Path(syntheticInput))
+                    || !File.Exists(ReconciliationFile.PathForInput(syntheticInput)))
+                    return false;
             }
             return true;
         }
