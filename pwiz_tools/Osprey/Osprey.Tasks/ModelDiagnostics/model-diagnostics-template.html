@@ -137,7 +137,7 @@ svg{display:block;max-width:100%;height:auto;font:11px ui-monospace,Menlo,Consol
 .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
 .legend i.ln{height:3px;border-radius:2px;width:16px}
 .axis line,.axis path{stroke:var(--hair);stroke-width:1;shape-rendering:crispEdges}
-.grid line{stroke:var(--grid);stroke-width:1;shape-rendering:crispEdges}
+.grid line{stroke:var(--line);stroke-width:1;shape-rendering:crispEdges}
 .axis text{fill:var(--muted)} .axtitle{fill:var(--muted);font-size:11.5px}
 .tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;
   border-radius:7px;font-size:11.5px;opacity:0;transition:opacity .08s;z-index:9;white-space:nowrap;
@@ -474,8 +474,8 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
         anchor-set size, the residual MS1/MS2 mass error (mean&nbsp;±&nbsp;sd), the RT alignment fit (R²) and its
         post-cal RT window. Cells that sit far from the pack (median&nbsp;±&nbsp;3·MAD) are shown in
         <b style="color:var(--warn)">amber</b>. A row in <b style="color:var(--bad)">red</b> did not calibrate;
-        a <b style="color:var(--warn)">· single-feature</b> tag marks a file that calibrated successfully but whose
-        anchor-scoring model reduced to one feature.
+        an amber <b style="color:var(--warn)">⚠</b> after a file name marks a file that calibrated successfully but
+        whose anchor-scoring model reduced to a single feature (hover it for details).
         <b>Click a row</b> to open that file's calibration Model page — the full distributions live on the
         Model / FDR / Reproducibility tabs.</p>
       <div id="calSummaryTable"></div>
@@ -1746,9 +1746,10 @@ function renderCalSummary(){
   files.forEach((f,i)=>{const failed=calNotCalibrated(f), degen=calDegenerate(f);
     const tr=H(tb,"tr",{class:"clk callink"+(failed?" neg":"")});
     const fileTd=H(tr,"td",{class:"l"},(i+1)+". "+calFileName(i)+(failed?"  ⚠":""));
-    // Degenerate-but-calibrated: keep it visible with an amber "single-feature" tag, but NOT
-    // the red failure row. (.flag is scoped to .calpick, so style the tag inline here.)
-    if(degen)H(fileTd,"span",{style:"margin-left:6px;color:var(--warn);font-weight:600"},"· single-feature");
+    // Degenerate-but-calibrated: a compact amber warning glyph with a fly-over (title) so it
+    // does not wrap and inflate the row; the red failure row is reserved for a genuine no-fit.
+    if(degen)H(fileTd,"span",{style:"margin-left:5px;color:var(--warn);cursor:help",
+      title:"This file calibrated successfully, but its calibration-phase model reduced to a single feature (no separable multi-feature signal). Click the row for the Model tab."},"⚠");
     H(tr,"td",{class:"num"},fmt(f.calPeptides,0));
     if(hasEnt){
       H(tr,"td",{class:"num"},fmt(f.entrapment,0));
