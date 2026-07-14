@@ -548,12 +548,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
             public override object GetValue(SpectrumClass spectrumClass)
             {
-                return spectrumClass.CvValues.TryGetValue(ColumnName, out var value) ? value : null;
+                return spectrumClass.CvValues.TryGetValue(ColumnName, out var value) ? value?.RawValue : null;
             }
 
             public override void SetValue(SpectrumClass spectrumClass, object value)
             {
-                spectrumClass.CvValues[ColumnName] = value;
+                spectrumClass.CvValues[ColumnName] = value == null ? null : new CvParameterValue(value);
             }
 
             public override string GetLocalizedColumnName(CultureInfo cultureInfo)
