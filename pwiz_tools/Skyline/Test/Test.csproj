@@ -198,7 +198,6 @@
     <Compile Include="MassListIonsTest.cs" />
     <Compile Include="MatchExpressionTest.cs" />
     <Compile Include="OnDemandFeatureCalculatorTest.cs" />
-    <Compile Include="OtherMetadataInfoTest.cs" />
     <Compile Include="FeatureTooltipTest.cs" />
     <Compile Include="CommandLinePeakBoundaryTest.cs" />
     <Compile Include="PeptideTest.cs" />
