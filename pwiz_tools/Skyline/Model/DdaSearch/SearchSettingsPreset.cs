@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Model.DdaSearch
         MSFragger,
         Comet,
         Tide,
+        Sage,
         Hardklor
     }
 

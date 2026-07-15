@@ -537,6 +537,9 @@
   <data name="searchEngineComboBox.Items4" xml:space="preserve">
     <value>Tide-Search</value>
   </data>
+  <data name="searchEngineComboBox.Items5" xml:space="preserve">
+    <value>Sage</value>
+  </data>
   <data name="searchEngineComboBox.Location" type="System.Drawing.Point, System.Drawing">
     <value>16, 73</value>
   </data>

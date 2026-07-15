@@ -235,6 +235,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return EnsureRequiredFilesDownloaded(CometSearchEngine.FilesToDownload);
                 case SearchEngine.Tide:
                     return EnsureRequiredFilesDownloaded(TideSearchEngine.FilesToDownload);
+                case SearchEngine.Sage:
+                    return EnsureRequiredFilesDownloaded(SageSearchEngine.FilesToDownload);
                 case SearchEngine.Hardklor:
                 case SearchEngine.MSAmanda:
                     return true;
@@ -258,6 +260,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return CometSearchEngine.FilesToDownload;
                 case SearchEngine.Tide:
                     return TideSearchEngine.FilesToDownload;
+                case SearchEngine.Sage:
+                    return SageSearchEngine.FilesToDownload;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -288,6 +292,8 @@ namespace pwiz.Skyline.FileUI.PeptideSearch
                     return new CometSearchEngine(CutoffScore);
                 case SearchEngine.Tide:
                     return new TideSearchEngine(CutoffScore);
+                case SearchEngine.Sage:
+                    return new SageSearchEngine(CutoffScore);
                 case SearchEngine.Hardklor:
                     return new HardklorSearchEngine(ImportPeptideSearch);
                 default:
