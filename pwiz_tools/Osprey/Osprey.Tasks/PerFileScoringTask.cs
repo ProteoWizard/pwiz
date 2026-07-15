@@ -1714,6 +1714,19 @@ namespace pwiz.Osprey.Tasks
                 fullLibrary, spectra, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
 
+            // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
+            // work targets. Here scoredEntries still hold every heavy per-entry array
+            // (Features / CwtCandidates / FragmentMzs / FragmentIntensities /
+            // ReferenceXic*), and the spectra + library are still resident. Those arrays
+            // are dropped a few lines below (the #4355 write-then-null), so the later
+            // perfile-scored-live probe captures only the post-release floor and CANNOT
+            // show them -- a forced-GC snapshot never captures unreferenced objects.
+            // Deliberately a direct SnapshotReady-gated capture (NOT via a forced-GC [MEM]
+            // boundary): a no-op on the batch (no profiler attached), fires only under
+            // Profile-Osprey.ps1 -MemoryProfile, and dotMemory forces its own GC so the
+            // captured live set is the true retained peak (arrays are live here, so kept).
+            ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
+
             // Optional: write per-entry feature TSV for comparison against Rust's PIN output
             if (config.WritePin)
             {
