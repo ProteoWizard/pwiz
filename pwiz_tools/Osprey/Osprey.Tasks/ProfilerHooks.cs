@@ -129,6 +129,15 @@ namespace pwiz.Osprey.Tasks
         /// [MEM ...] layer and the real 82-file batch run are unaffected. Isolated in a
         /// non-inlineable method so a missing JetBrains assembly is caught here rather
         /// than tripping JIT of the caller (same shape as the MeasureProfiler wrappers).
+        ///
+        /// This guards ONLY on <see cref="SnapshotReady"/> (profiler attached), NOT on
+        /// <see cref="MemoryLoggingEnabled"/>: that is what keeps it safe on normal runs
+        /// (nothing is attached there). Callers that want the snapshot to line up with a
+        /// <c>[MEM ...]</c> line must themselves gate on <see cref="MemoryLoggingEnabled"/>
+        /// and call at a post-GC point. The sole caller,
+        /// <see cref="LogManagedHeapAfterGcIfEnabled"/>, does both -- and its own
+        /// <c>GC.Collect()</c> pair (not dotMemory's implicit pre-snapshot GC) is what
+        /// makes the captured live set reconcile with the logged floor.
         /// </summary>
         public static void CaptureRetentionSnapshot(string name)
         {
