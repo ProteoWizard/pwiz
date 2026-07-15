@@ -564,10 +564,15 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
                 // A controlled-vocabulary term shows its friendly name with the accession as the precise
                 // cue, e.g. "base peak intensity (MS:1000505)"; a userParam (name == accession) shows just
-                // its name.
+                // its name. The parenthesized format is localizable (a locale may use different
+                // parentheses) and resolved in the requested culture.
                 return Equals(_name, _accession)
                     ? _name
-                    : string.Format(CultureInfo.CurrentCulture, @"{0} ({1})", _name, _accession);
+                    : string.Format(cultureInfo,
+                        SpectraResources.ResourceManager.GetString(
+                            nameof(SpectraResources.CvParamColumn_GetLocalizedColumnName_Name_Accession), cultureInfo)
+                        ?? @"{0} ({1})",
+                        _name, _accession);
             }
 
             public override bool Equals(object obj)

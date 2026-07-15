@@ -70,6 +70,15 @@ namespace pwiz.Skyline.Model.Results.Spectra {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} ({1}).
+        /// </summary>
+        public static string CvParamColumn_GetLocalizedColumnName_Name_Accession {
+            get {
+                return ResourceManager.GetString("CvParamColumn_GetLocalizedColumnName_Name_Accession", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to MS1.
         /// </summary>
         public static string SpectrumClassColumn_Ms1Precursors_MS1 {

@@ -122,6 +122,10 @@
     <value>{0} Spectra</value>
     <comment>Example: 20 Spectra</comment>
   </data>
+  <data name="CvParamColumn_GetLocalizedColumnName_Name_Accession" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>Friendly name followed by its CV accession, e.g. "base peak intensity (MS:1000505)". Translators may substitute locale-appropriate parentheses.</comment>
+  </data>
   <data name="SpectrumClassColumn_Ms1Precursors_MS1" xml:space="preserve">
     <value>MS1</value>
   </data>
