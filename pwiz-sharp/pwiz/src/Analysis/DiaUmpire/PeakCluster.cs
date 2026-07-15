@@ -412,15 +412,19 @@ public class PeakCurveClusteringCorrKDtree
         float lowmz = InstrumentParameter.GetMzByPPM(peakA.TargetMz - 1e-4f, 1, _parameter.MS1PPM);
         float highmz = InstrumentParameter.GetMzByPPM(peakA.TargetMz + 1e-4f + ((float)_maxNoOfClusters / _startCharge), 1, -_parameter.MS1PPM);
 
-        // Build the candidate list sorted by TargetMz (cpp uses boost::container::flat_multimap).
+        // Candidate isotope partners lie in a narrow m/z window above the target and a narrow RT
+        // window around its apex. _searchablePeakCurves is pre-sorted by TargetMz (shared across all
+        // jobs), so binary-search the [lowmz, highmz] slice and scan only that instead of every curve
+        // -- the flat O(N) scan per target curve made the whole step O(N^2) (cpp uses an R-tree). The
+        // slice is already m/z-sorted, so the result matches the old collect-then-sort exactly.
         var peakCurveListMZ = new List<PeakCurve>();
-        foreach (var pc in _searchablePeakCurves)
+        for (int mzScan = LowerBoundByTargetMz(_searchablePeakCurves, lowmz); mzScan < _searchablePeakCurves.Count; mzScan++)
         {
+            var pc = _searchablePeakCurves[mzScan];
+            if (pc.TargetMz > highmz) break;
             if (pc.ApexRT < lowrt || pc.ApexRT > highrt) continue;
-            if (pc.TargetMz < lowmz || pc.TargetMz > highmz) continue;
             peakCurveListMZ.Add(pc);
         }
-        peakCurveListMZ.Sort((a, b) => a.TargetMz.CompareTo(b.TargetMz));
 
         float aRange = peakA.EndRT() - peakA.StartRT();
 
@@ -564,7 +568,7 @@ public class PeakCurveClusteringCorrKDtree
         }
     }
 
-    private static int LowerBoundByTargetMz(List<PeakCurve> sorted, float value)
+    private static int LowerBoundByTargetMz(IReadOnlyList<PeakCurve> sorted, float value)
     {
         int lo = 0, hi = sorted.Count;
         while (lo < hi)

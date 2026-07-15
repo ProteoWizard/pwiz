@@ -1227,9 +1227,12 @@ public sealed class DiaUmpire : System.IDisposable
                 endCharge = Config.InstrumentParameters.MS2EndCharge;
             }
 
-            // pwiz-sharp PeakCurveClusteringCorrKDtree takes a flat list rather than an R-tree.
-            // Slice down to curves whose ApexRT could contribute (cpp's R-tree gives this for free).
-            var searchable = peakCurves;
+            // Sort the searchable curves by m/z once (shared across all clustering jobs) so each job
+            // can binary-search its narrow candidate m/z window instead of scanning every curve. The
+            // old flat O(N) scan per target curve made this step O(N^2) over ~1e6 curves (cpp avoids
+            // it with an R-tree). Results are unchanged: same candidate set, same m/z ordering.
+            var searchable = new List<PeakCurve>(peakCurves);
+            searchable.Sort((a, b) => a.TargetMz.CompareTo(b.TargetMz));
             var chiSquaredGof = new ChiSquareGOF(maxNoPeakCluster);
             var clusterMutex = new object();
             var clusterJobs = new List<PeakCurveClusteringCorrKDtree>();
