@@ -55,6 +55,28 @@ namespace pwiz.Osprey.Core
         public List<string> GeneNames { get; set; }
         public bool IsDecoy { get; set; }
 
+        /// <summary>
+        /// Shared read-only empty lists for entries that carry no modifications /
+        /// proteins / genes. Millions of library entries have none (a 3.1M-entry
+        /// HeLa library has ~2.2M unmodified peptides), and handing each a fresh
+        /// empty <see cref="List{T}"/> wastes a list header + backing array apiece
+        /// (~100-150 MB resident). Loaders assign these sentinels instead of
+        /// <c>new List&lt;&gt;()</c> for the empty case (the constructor keeps
+        /// fresh lists so directly-built entries can still be mutated in place).
+        ///
+        /// SAFE ONLY because production never mutates a loaded entry's
+        /// Modifications / ProteinIds / GeneNames list IN PLACE: every touch is a
+        /// full reassignment (DiannTsvLoader, BlibLoader, LibraryCache,
+        /// DecoyGenerator), and the only <c>.Add</c> calls are on freshly-assigned
+        /// lists (DecoyGenerator) or in tests. Do NOT <c>.Add</c>/<c>.Clear</c>
+        /// these in place -- assign a fresh list first. (Grep-verified 2026-07-15;
+        /// the regression golden stays byte-identical because only object identity,
+        /// not any value, changes.)
+        /// </summary>
+        public static readonly List<Modification> EmptyModifications = new List<Modification>();
+        /// <summary><see cref="EmptyModifications"/> for the string lists (ProteinIds / GeneNames).</summary>
+        public static readonly List<string> EmptyStringList = new List<string>();
+
         public LibraryEntry(uint id, string sequence, string modifiedSequence,
             byte charge, double precursorMz, double retentionTime)
         {
@@ -64,6 +86,11 @@ namespace pwiz.Osprey.Core
             Charge = charge;
             PrecursorMz = precursorMz;
             RetentionTime = retentionTime;
+            // Fresh mutable lists: callers that construct an entry directly and
+            // then .Add() to it (tests, and any future in-memory builder) rely on
+            // these being their own instances. The shared EmptyModifications /
+            // EmptyStringList sentinels are assigned only by the LOADERS, at their
+            // count==0 branches where nothing ever mutates them (see LibraryCache).
             Modifications = new List<Modification>();
             Fragments = new List<LibraryFragment>();
             ProteinIds = new List<string>();

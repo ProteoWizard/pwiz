@@ -220,9 +220,12 @@ namespace pwiz.Osprey.IO
                     bool rtCalibrated = r.ReadByte() != 0;
                     bool isDecoy = r.ReadByte() != 0;
 
-                    // Modifications
+                    // Modifications (share one empty sentinel when none -- the
+                    // .Add loop below runs zero times, so it is never mutated).
                     uint nMods = r.ReadUInt32();
-                    var modifications = new List<Modification>((int)nMods);
+                    var modifications = nMods == 0
+                        ? LibraryEntry.EmptyModifications
+                        : new List<Modification>((int)nMods);
                     for (uint mi = 0; mi < nMods; mi++)
                     {
                         int position = (int)r.ReadUInt32();
@@ -268,15 +271,19 @@ namespace pwiz.Osprey.IO
                         });
                     }
 
-                    // Protein IDs
+                    // Protein IDs / gene names (share one empty sentinel when none --
+                    // the .Add loops run zero times, so the sentinel is never mutated).
                     uint nProteins = r.ReadUInt32();
-                    var proteinIds = new List<string>((int)nProteins);
+                    var proteinIds = nProteins == 0
+                        ? LibraryEntry.EmptyStringList
+                        : new List<string>((int)nProteins);
                     for (uint pi = 0; pi < nProteins; pi++)
                         proteinIds.Add(ReadString(r));
 
-                    // Gene names
                     uint nGenes = r.ReadUInt32();
-                    var geneNames = new List<string>((int)nGenes);
+                    var geneNames = nGenes == 0
+                        ? LibraryEntry.EmptyStringList
+                        : new List<string>((int)nGenes);
                     for (uint gi = 0; gi < nGenes; gi++)
                         geneNames.Add(ReadString(r));
 
