@@ -891,6 +891,14 @@ namespace pwiz.Osprey.Tasks
                 decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
                     library, config, ctx.LogInfo, out List<LibraryEntry> validTargets);
                 library = validTargets;
+                // Intern the freshly-minted decoy strings. Targets were interned at
+                // load (LibraryLoader), but DecoyGenerator mints new "DECOY_"+accession
+                // ProteinIds (DecoyGenerator.cs:153) never re-interned, so every decoy
+                // peptide of a protein holds a duplicate copy (huge proteins --
+                // titin/obscurin/nebulin -- dominate the "String duplicates" retention
+                // view). Interning collapses them to one shared instance per distinct
+                // value. Identity-only change; the regression golden stays byte-identical.
+                LibraryStringInterner.InternInPlace(decoys, ctx.LogInfo);
             }
             else
             {
@@ -1676,6 +1684,20 @@ namespace pwiz.Osprey.Tasks
                 if (_calibrationMassUnit == null)
                     _calibrationMassUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
             }
+
+            // Calibration-phase memory boundary (companion to the perfile-scoring-peak
+            // capture below). The [MEM] line's working_set peak is the calibration
+            // high-water mark before scoring pushes it higher; its managed_heap is taken
+            // WITHOUT a forced GC, so the ~3.3 GB dense XCorr cache
+            // (Calibrator.PreprocessWindowsForXcorr) -- released inside ResolveCalibration
+            // but not yet collected here -- is still counted, sizing the calibration peak.
+            // The paired retention snapshot forces its own GC first (dotMemory), so it
+            // captures the post-calibration FLOOR that scoring inherits (library + spectra)
+            // rather than the transient cache. Both are no-ops off a profiling run
+            // (OSPREY_LOG_MEMORY unset / no dotMemory attached), so the batch and the
+            // regression golden are unaffected; the per-file fan-out reaches this per file.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"post-calibration");
+            ProfilerHooks.CaptureRetentionSnapshot(@"post-calibration");
 
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
