@@ -103,7 +103,10 @@ namespace ImageComparer.Core
 
             while (!string.IsNullOrEmpty(currentDirectory))
             {
-                if (Directory.Exists(Path.Combine(currentDirectory, ".git")))
+                // A regular checkout has a ".git" directory; a linked worktree has a ".git"
+                // FILE containing a "gitdir:" pointer. Accept either as the repository root.
+                var gitPath = Path.Combine(currentDirectory, ".git");
+                if (Directory.Exists(gitPath) || File.Exists(gitPath))
                 {
                     return currentDirectory;
                 }
