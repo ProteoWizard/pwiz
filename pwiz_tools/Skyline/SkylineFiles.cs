@@ -1169,6 +1169,7 @@ namespace pwiz.Skyline
             }
 
             SrmDocument document = Document;
+            RenamedDocumentLibrary renamedLibrary = null;
 
             try
             {
@@ -1188,12 +1189,23 @@ namespace pwiz.Skyline
                             // before serializing. This ensures the saved file references
                             // the library by its new name (including on each precursor's
                             // spectrum header info) so that re-opening it does not require
-                            // a slow settings update.
+                            // a slow settings update. The copied library files are committed
+                            // (and the open document is updated) only after the .sky file has
+                            // been written successfully, so that cancelling or failing the save
+                            // leaves neither the open document nor the library files changed.
+                            var documentToSave = document;
                             if (!Equals(DocumentFilePath, fileName))
-                                document = SaveDocumentLibraryAs(fileName);
+                            {
+                                renamedLibrary = RenameDocumentLibraryAs(document, fileName);
+                                if (renamedLibrary != null)
+                                    documentToSave = renamedLibrary.Document;
+                            }
 
-                            document.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
+                            documentToSave.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
 
+                            // The .sky file was written successfully. Commit the renamed library files
+                            // and then the .sky file itself.
+                            renamedLibrary?.Commit();
                             saver.Commit();
                         });
 
@@ -1207,11 +1219,41 @@ namespace pwiz.Skyline
             {
                 return false;
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
                 var message = TextUtil.LineSeparate(string.Format(SkylineResources.SkylineWindow_SaveDocument_Failed_writing_to__0__, fileName), ex.Message);
                 MessageDlg.ShowWithException(this, message, ex);
                 return false;
+            }
+            finally
+            {
+                // On success the library files were already committed above, and this disposes the
+                // (already committed) savers harmlessly. On cancel or failure it deletes the copied files.
+                renamedLibrary?.Dispose();
+            }
+
+            // The save succeeded. Now that the .sky file has been written, update the open document to
+            // reference the renamed library. Deferring this until after a successful save avoids leaving
+            // the open document pointing at a renamed library when the save is cancelled or fails.
+            if (renamedLibrary != null)
+            {
+                if (!SetDocument(renamedLibrary.Document, document))
+                {
+                    // A background loader changed the document while it was being saved (rare).
+                    // Reapply the library rename to the current document.
+                    SrmDocument docOriginal, docNew;
+                    do
+                    {
+                        docOriginal = Document;
+                        docNew = ChangeDocumentLibraryName(docOriginal, fileName);
+                    }
+                    while (!SetDocument(docNew, docOriginal));
+                    document = docNew;
+                }
+                else
+                {
+                    document = renamedLibrary.Document;
+                }
             }
 
             DocumentFilePath = fileName;
@@ -1295,9 +1337,17 @@ namespace pwiz.Skyline
         /// updated document (which has also been set as the current document), or the current
         /// document unchanged if there is no document-specific library to rename.
         /// </summary>
-        private SrmDocument SaveDocumentLibraryAs(string newDocFilePath)
+        /// <summary>
+        /// If the document has a document-specific spectral library and this is a "Save As" to a new
+        /// name, copies the library files to the new name and returns a <see cref="RenamedDocumentLibrary"/>
+        /// holding the copied (not yet committed) files together with the document renamed to reference
+        /// the library by its new name. Returns null when there is no library to rename.
+        /// The caller must <see cref="RenamedDocumentLibrary.Commit"/> the returned object only after the
+        /// .sky file has been written successfully; disposing it without committing deletes the copied
+        /// files, so cancelling or failing the save leaves the library files unchanged.
+        /// </summary>
+        private RenamedDocumentLibrary RenameDocumentLibraryAs(SrmDocument document, string newDocFilePath)
         {
-            var document = Document;
             string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
             string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
@@ -1308,42 +1358,68 @@ namespace pwiz.Skyline
                 || !File.Exists(oldDocLibFile)
                 || Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
             {
-                return document;
+                return null;
             }
 
-            using (var saverLib = new FileSaver(newDocLibFile))
+            var fileSavers = new List<FileSaver>();
+            try
             {
-                FileSaver saverRedundant = null;
+                var saverLib = new FileSaver(newDocLibFile);
+                fileSavers.Add(saverLib);
+                saverLib.CopyFile(oldDocLibFile);
                 if (File.Exists(oldRedundantDocLibFile))
                 {
-                    string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(newDocFilePath);
-                    saverRedundant = new FileSaver(newRedundantDocLibFile);
+                    var saverRedundant = new FileSaver(BiblioSpecLiteSpec.GetRedundantName(newDocFilePath));
+                    fileSavers.Add(saverRedundant);
+                    saverRedundant.CopyFile(oldRedundantDocLibFile);
                 }
-                using (saverRedundant)
-                {
-                    saverLib.CopyFile(oldDocLibFile);
-                    if (saverRedundant != null)
-                    {
-                        saverRedundant.CopyFile(oldRedundantDocLibFile);
-                    }
-                    saverLib.Commit();
-                    if (saverRedundant != null)
-                    {
-                        saverRedundant.Commit();
-                    }
-                }
+            }
+            catch
+            {
+                foreach (var fileSaver in fileSavers)
+                    fileSaver.Dispose();
+                throw;
             }
 
-            // Update the document library settings to point to the new library, and rename the
-            // library on each precursor's spectrum header info to match.
-            SrmDocument docOriginal, docNew;
-            do
+            // Rename the document library settings to point to the new library, and rename the library
+            // on each precursor's spectrum header info to match. The document is not applied to the open
+            // window here; the caller does that only after the .sky file has been written successfully.
+            return new RenamedDocumentLibrary(ChangeDocumentLibraryName(document, newDocFilePath), fileSavers);
+        }
+
+        /// <summary>
+        /// Holds the copied but not yet committed document-specific spectral library files produced for a
+        /// "Save As", together with the document whose library settings and precursor spectrum header info
+        /// have been renamed to match the new file name. <see cref="Commit"/> renames the copied files into
+        /// place and must be called only after the .sky file has been written successfully. Disposing without
+        /// committing deletes the copied files.
+        /// </summary>
+        private class RenamedDocumentLibrary : IDisposable
+        {
+            private readonly List<FileSaver> _fileSavers;
+
+            public RenamedDocumentLibrary(SrmDocument document, IEnumerable<FileSaver> fileSavers)
             {
-                docOriginal = Document;
-                docNew = ChangeDocumentLibraryName(docOriginal, newDocFilePath);
+                Document = document;
+                _fileSavers = fileSavers.ToList();
             }
-            while (!SetDocument(docNew, docOriginal));
-            return docNew;
+
+            /// <summary>
+            /// The document renamed to reference the copied library by its new name.
+            /// </summary>
+            public SrmDocument Document { get; }
+
+            public void Commit()
+            {
+                foreach (var fileSaver in _fileSavers)
+                    fileSaver.Commit();
+            }
+
+            public void Dispose()
+            {
+                foreach (var fileSaver in _fileSavers)
+                    fileSaver.Dispose();
+            }
         }
 
         /// <summary>
