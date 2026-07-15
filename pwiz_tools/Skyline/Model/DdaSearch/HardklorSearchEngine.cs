@@ -189,7 +189,14 @@ namespace pwiz.Skyline.Model.DdaSearch
             string exeName;
             var paramsFilename = GenerateHardklorConfigFile(skylineWorkingDirectory, input);
 
+#if NET472
             exeName = @"Hardklor";
+#else
+            // net8: Hardklor.exe is the native pwiz tool bundled next to Skyline (see Skyline.csproj).
+            // Resolve its absolute path here because net8 Process.Start won't locate a bare exe name
+            // via the working directory.
+            exeName = PathEx.ResolveBundledExe(@"Hardklor");
+#endif
             args = $@"""{paramsFilename}""";
             description = DdaSearchResources.HardklorSearchEngine_Run_Searching_for_peptide_like_features;
             return exeName;

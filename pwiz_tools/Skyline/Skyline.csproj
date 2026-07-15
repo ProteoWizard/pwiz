@@ -303,6 +303,21 @@
     </Content>
   </ItemGroup>
 
+  <!-- Hardklor (native x64 C++ feature-detection tool). Skyline's Hardklor/Bullseye pipeline
+       shells out to Hardklor.exe next to Skyline in the bin dir (resolved via
+       PathEx.ResolveBundledExe). Unlike the managed tools above, Hardklor is C++ and cannot be
+       built by `dotnet build`, so it is produced by a separate VS MSBuild step that builds
+       Executables\Hardklor\Hardklor.vcxproj before this project (see pwiz_tools\Skyline\build.bat).
+       This Content include deploys the pre-built exe when present. net8-only: the net472 build
+       gets Hardklor.exe from the Jam toolchain. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows' And Exists('Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe')">
+    <Content Include="Executables\Hardklor\bin\x64\$(Configuration)\Hardklor.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Hardklor.exe</Link>
+      <Visible>false</Visible>
+    </Content>
+  </ItemGroup>
+
   <!-- SkylineCmd.exe launcher - command-line tests (e.g. CmdLineAssociateProteinsTest)
        shell out to it expecting it next to Skyline in the bin dir. Reference it so it
        builds first. net8-only: the net472 build gets SkylineCmd from the Jam toolchain. -->

@@ -109,6 +109,17 @@ dotnet --version
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 (set ERROR_TEXT=dotnet not on PATH & goto error)
 
+REM # ------------------------------------------------------------------------
+REM # Native Hardklor.exe (C++). `dotnet build` (the .NET SDK MSBuild) cannot
+REM # build a C++ vcxproj, so build it here with VS MSBuild (located via
+REM # vswhere). The vcxproj is x64, static, self-extracts its bundled zlib/expat
+REM # sources, and drops Hardklor.exe under Executables\Hardklor\bin\x64\%CONFIG%.
+REM # Skyline.csproj deploys that exe next to Skyline via a Content include so the
+REM # Hardklor/Bullseye feature-detection pipeline can shell out to it.
+REM # ------------------------------------------------------------------------
+call :build_hardklor
+if %EXIT% NEQ 0 goto error
+
 for %%P in (%BUILD_TARGET%) do call :restore_one "%%~P"
 if %EXIT% NEQ 0 goto error
 
@@ -172,6 +183,20 @@ goto :eof
 echo ##teamcity[progressMessage 'dotnet build %~1 (%CONFIG%)']
 dotnet build "%~1" -f net8.0-windows --no-restore -nologo %MSBUILD_PROPS%
 if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=dotnet build %~1 failed")
+goto :eof
+
+:build_hardklor
+echo ##teamcity[progressMessage 'MSBuild Hardklor.vcxproj (%CONFIG%^|x64)']
+set "VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+if not exist "%VSWHERE%" (set EXIT=1 & set "ERROR_TEXT=vswhere.exe not found; Visual Studio with C++ tools is required to build native Hardklor.exe" & goto :eof)
+set "VSINSTALL="
+for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do set "VSINSTALL=%%i"
+if not defined VSINSTALL (set EXIT=1 & set "ERROR_TEXT=No Visual Studio install with C++ tools (VC.Tools.x86.x64) found for native Hardklor build" & goto :eof)
+set "HK_MSBUILD=%VSINSTALL%\MSBuild\Current\Bin\amd64\MSBuild.exe"
+if not exist "%HK_MSBUILD%" set "HK_MSBUILD=%VSINSTALL%\MSBuild\Current\Bin\MSBuild.exe"
+if not exist "%HK_MSBUILD%" (set EXIT=1 & set "ERROR_TEXT=VS MSBuild.exe not found under %VSINSTALL%" & goto :eof)
+"%HK_MSBUILD%" "%SCRIPT_DIR%\Executables\Hardklor\Hardklor.vcxproj" -p:Configuration=%CONFIG% -p:Platform=x64 -m -nologo -v:minimal
+if errorlevel 1 (set EXIT=1 & set "ERROR_TEXT=MSBuild Hardklor.vcxproj failed")
 goto :eof
 
 :error
