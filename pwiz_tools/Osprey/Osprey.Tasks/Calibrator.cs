@@ -908,7 +908,7 @@ namespace pwiz.Osprey.Tasks
         private CalibrationPassResult RunRefinementPass(
             List<LibraryEntry> sampledEntries,
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
-            Dictionary<int, double[][]> preprocessedByWindowKey,
+            Dictionary<int, float[][]> preprocessedByWindowKey,
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             double rtSlope, double rtIntercept, double tolerance,
@@ -1521,26 +1521,21 @@ namespace pwiz.Osprey.Tasks
         /// still uses the resolution-mode bins.
         /// Calibration preprocess runs in pure f32 to match Rust upstream
         /// maccoss/osprey's native f32 XCorr path (cross-impl parity at
-        /// F10 rounding noise, vs ~4e-6 drift under f64). f32 values are
-        /// widened to double[] here so the downstream XcorrFromPreprocessed
-        /// path is unchanged; the widening is lossless (f32 is a subset of
-        /// f64) and preserves the f32 bit pattern for the final sum.
+        /// F10 rounding noise, vs ~4e-6 drift under f64). The f32 cache is
+        /// stored as-is (float[][]) and summed via the f32 XcorrFromPreprocessed
+        /// overload, which promotes each bin to double at the accumulation --
+        /// bit-identical to widening to double[] up front (float->double is exact
+        /// and unique) but at half the footprint (~3.3 GB -> ~1.65 GB on Astral).
         /// </summary>
-        private Dictionary<int, double[][]> PreprocessWindowsForXcorr(
+        private Dictionary<int, float[][]> PreprocessWindowsForXcorr(
             Dictionary<int, List<Spectrum>> spectraByWindowKey)
         {
-            var preprocessedByWindowKey = new Dictionary<int, double[][]>();
+            var preprocessedByWindowKey = new Dictionary<int, float[][]>();
             foreach (var kvp in spectraByWindowKey)
             {
-                var pp = new double[kvp.Value.Count][];
+                var pp = new float[kvp.Value.Count][];
                 for (int i = 0; i < kvp.Value.Count; i++)
-                {
-                    float[] f32pp = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
-                    var widened = new double[f32pp.Length];
-                    for (int k = 0; k < f32pp.Length; k++)
-                        widened[k] = f32pp[k];
-                    pp[i] = widened;
-                }
+                    pp[i] = s_calXcorrScorer.PreprocessSpectrumForXcorrF32(kvp.Value[i]);
                 preprocessedByWindowKey[kvp.Key] = pp;
             }
             return preprocessedByWindowKey;
@@ -1557,7 +1552,7 @@ namespace pwiz.Osprey.Tasks
                 int passNumber,
                 List<LibraryEntry> sampledEntries,
                 Dictionary<int, List<Spectrum>> spectraByWindowKey,
-                Dictionary<int, double[][]> preprocessedByWindowKey,
+                Dictionary<int, float[][]> preprocessedByWindowKey,
                 List<MS1Spectrum> ms1Spectra,
                 ScoringContext context,
                 double rtSlope, double rtIntercept, double tolerance,
@@ -1891,7 +1886,7 @@ namespace pwiz.Osprey.Tasks
         private CalibrationMatch ScoreCalibrationEntry(
             LibraryEntry entry,
             Dictionary<int, List<Spectrum>> spectraByWindowKey,
-            Dictionary<int, double[][]> preprocessedByWindowKey,
+            Dictionary<int, float[][]> preprocessedByWindowKey,
             List<MS1Spectrum> ms1Spectra,
             ScoringContext context,
             double rtSlope, double rtIntercept, double initialTolerance,
@@ -1989,7 +1984,7 @@ namespace pwiz.Osprey.Tasks
             // Track window indices for preprocessed XCorr lookup.
             var candidateSpectra = new List<Spectrum>();
             var candidateWindowIndices = new List<int>();
-            double[][] windowPreprocessed = null;
+            float[][] windowPreprocessed = null;
             preprocessedByWindowKey.TryGetValue(resolvedWindowKey, out windowPreprocessed);
             for (int si = 0; si < windowSpectra.Count; si++)
             {
