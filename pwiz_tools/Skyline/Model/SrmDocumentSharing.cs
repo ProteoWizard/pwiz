@@ -40,6 +40,16 @@ namespace pwiz.Skyline.Model
     {
         public const string EXT = ".zip";
         public const string EXT_SKY_ZIP = ".sky.zip";
+
+        /// <summary>
+        /// Extensions of the files that need random access when a document is opened (.skyd is the
+        /// chromatogram cache, .blib are BiblioSpec spectral libraries). These are stored
+        /// UNCOMPRESSED in a shared .zip so the document can be opened directly from the .zip
+        /// without extracting them, and <see cref="pwiz.Skyline.Util.RandomAccessZipFile"/> checks
+        /// that they are all stored before opening in place.
+        /// </summary>
+        public static readonly string[] RandomAccessExtensions = { @".skyd", @".blib" };
+
         private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
         {
@@ -652,7 +662,11 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    _zip.AddFile(path, string.Empty);
+                    var entry = _zip.AddFile(path, string.Empty);
+                    // Store the files that need random access (.skyd, .blib) UNCOMPRESSED so the
+                    // document can be opened directly from the .zip without extracting them.
+                    if (RandomAccessExtensions.Contains(Path.GetExtension(fileName), StringComparer.OrdinalIgnoreCase))
+                        entry.CompressionMethod = CompressionMethod.None;
                 }
             }
 
