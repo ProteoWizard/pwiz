@@ -45,37 +45,15 @@ namespace pwiz.Osprey.Core
         public uint Id { get; set; }
         public string Sequence { get; set; }
         public string ModifiedSequence { get; set; }
-        public List<Modification> Modifications { get; set; }
+        public IReadOnlyList<Modification> Modifications { get; set; }
         public byte Charge { get; set; }
         public double PrecursorMz { get; set; }
         public double RetentionTime { get; set; }
         public bool RtCalibrated { get; set; }
-        public List<LibraryFragment> Fragments { get; set; }
-        public List<string> ProteinIds { get; set; }
-        public List<string> GeneNames { get; set; }
+        public IReadOnlyList<LibraryFragment> Fragments { get; set; }
+        public IReadOnlyList<string> ProteinIds { get; set; }
+        public IReadOnlyList<string> GeneNames { get; set; }
         public bool IsDecoy { get; set; }
-
-        /// <summary>
-        /// Shared read-only empty lists for entries that carry no modifications /
-        /// proteins / genes. Millions of library entries have none (a 3.1M-entry
-        /// HeLa library has ~2.2M unmodified peptides), and handing each a fresh
-        /// empty <see cref="List{T}"/> wastes a list header + backing array apiece
-        /// (~100-150 MB resident). Loaders assign these sentinels instead of
-        /// <c>new List&lt;&gt;()</c> for the empty case (the constructor keeps
-        /// fresh lists so directly-built entries can still be mutated in place).
-        ///
-        /// SAFE ONLY because production never mutates a loaded entry's
-        /// Modifications / ProteinIds / GeneNames list IN PLACE: every touch is a
-        /// full reassignment (DiannTsvLoader, BlibLoader, LibraryCache,
-        /// DecoyGenerator), and the only <c>.Add</c> calls are on freshly-assigned
-        /// lists (DecoyGenerator) or in tests. Do NOT <c>.Add</c>/<c>.Clear</c>
-        /// these in place -- assign a fresh list first. (Grep-verified 2026-07-15;
-        /// the regression golden stays byte-identical because only object identity,
-        /// not any value, changes.)
-        /// </summary>
-        public static readonly List<Modification> EmptyModifications = new List<Modification>();
-        /// <summary><see cref="EmptyModifications"/> for the string lists (ProteinIds / GeneNames).</summary>
-        public static readonly List<string> EmptyStringList = new List<string>();
 
         public LibraryEntry(uint id, string sequence, string modifiedSequence,
             byte charge, double precursorMz, double retentionTime)
@@ -86,15 +64,20 @@ namespace pwiz.Osprey.Core
             Charge = charge;
             PrecursorMz = precursorMz;
             RetentionTime = retentionTime;
-            // Fresh mutable lists: callers that construct an entry directly and
-            // then .Add() to it (tests, and any future in-memory builder) rely on
-            // these being their own instances. The shared EmptyModifications /
-            // EmptyStringList sentinels are assigned only by the LOADERS, at their
-            // count==0 branches where nothing ever mutates them (see LibraryCache).
-            Modifications = new List<Modification>();
-            Fragments = new List<LibraryFragment>();
-            ProteinIds = new List<string>();
-            GeneNames = new List<string>();
+            // Default to shared empty arrays. The four collection members are
+            // immutable containers (IReadOnlyList) that every producer -- the
+            // loaders, DecoyGenerator, tests -- fully REASSIGNS (an interned
+            // array, or a build-then-assign list); nothing mutates a member
+            // after assignment. Array.Empty caches one zero-length instance per
+            // element type, so the millions of entries with no modifications /
+            // proteins / genes (a 3.1M-entry HeLa library has ~2.2M unmodified
+            // peptides) share it instead of each owning a fresh empty list
+            // header + backing array. Values are unchanged, so the regression
+            // golden stays byte-identical.
+            Modifications = Array.Empty<Modification>();
+            Fragments = Array.Empty<LibraryFragment>();
+            ProteinIds = Array.Empty<string>();
+            GeneNames = Array.Empty<string>();
         }
 
         /// <summary>

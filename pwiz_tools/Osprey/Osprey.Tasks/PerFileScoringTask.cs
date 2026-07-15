@@ -888,17 +888,13 @@ namespace pwiz.Osprey.Tasks
             }
             else if (!librarySuppliesDecoys)
             {
+                // GenerateAllWithCollisionDetection interns the freshly-minted
+                // decoy strings ("DECOY_"+accession / modified sequence) through
+                // its own pool and logs the collapse summary; no post-pass
+                // interning is needed here.
                 decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
                     library, config, ctx.LogInfo, out List<LibraryEntry> validTargets);
                 library = validTargets;
-                // Intern the freshly-minted decoy strings. Targets were interned at
-                // load (LibraryLoader), but DecoyGenerator mints new "DECOY_"+accession
-                // ProteinIds (DecoyGenerator.cs:153) never re-interned, so every decoy
-                // peptide of a protein holds a duplicate copy (huge proteins --
-                // titin/obscurin/nebulin -- dominate the "String duplicates" retention
-                // view). Interning collapses them to one shared instance per distinct
-                // value. Identity-only change; the regression golden stays byte-identical.
-                LibraryStringInterner.InternInPlace(decoys, ctx.LogInfo);
             }
             else
             {

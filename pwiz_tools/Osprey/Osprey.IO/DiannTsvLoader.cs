@@ -53,18 +53,18 @@ namespace pwiz.Osprey.IO
         /// <summary>
         /// Load library entries from a DIA-NN TSV file.
         /// </summary>
-        public List<LibraryEntry> Load(string path)
+        public List<LibraryEntry> Load(string path, Action<string> logInfo = null)
         {
             using (var reader = new StreamReader(path))
             {
-                return ParseReader(reader);
+                return ParseReader(reader, logInfo);
             }
         }
 
         /// <summary>
         /// Parse library entries from a text reader (for testability).
         /// </summary>
-        public List<LibraryEntry> ParseReader(TextReader reader)
+        public List<LibraryEntry> ParseReader(TextReader reader, Action<string> logInfo = null)
         {
             string headerLine = reader.ReadLine();
             if (headerLine == null)
@@ -87,8 +87,13 @@ namespace pwiz.Osprey.IO
                 ParseRow(fields, cols, rowNum, precursorMap);
             }
 
-            // Convert to LibraryEntry list
+            // Convert to LibraryEntry list. Intern the repeated strings
+            // (sequences, modification names, protein / gene accessions) as the
+            // interned arrays are filled, so no member is mutated after
+            // assignment. One pool per load call; only object identity changes,
+            // so output is unchanged.
             var entries = new List<LibraryEntry>(precursorMap.Count);
+            var interner = new LibraryStringInterner();
             uint id = 0;
 
             foreach (var data in precursorMap.Values)
@@ -96,21 +101,59 @@ namespace pwiz.Osprey.IO
                 if (data.Fragments.Count < _minFragments)
                     continue;
 
-                var modifications = ParseModifications(data.ModifiedSequence);
+                var modifications = BuildInternedModifications(
+                    ParseModifications(data.ModifiedSequence), interner);
 
-                var entry = new LibraryEntry(id, data.Sequence, data.ModifiedSequence,
+                var entry = new LibraryEntry(id,
+                    interner.Intern(data.Sequence),
+                    interner.Intern(data.ModifiedSequence),
                     data.Charge, data.PrecursorMz, data.RetentionTime);
                 entry.Modifications = modifications;
-                entry.Fragments = data.Fragments;
-                entry.ProteinIds = data.ProteinIds;
-                entry.GeneNames = data.GeneNames;
+                entry.Fragments = data.Fragments.ToArray();
+                entry.ProteinIds = InternToArray(data.ProteinIds, interner);
+                entry.GeneNames = InternToArray(data.GeneNames, interner);
                 entry.IsDecoy = data.IsDecoy;
 
                 entries.Add(entry);
                 id++;
             }
 
+            interner.LogSummary(logInfo);
             return entries;
+        }
+
+        /// <summary>
+        /// Intern each modification's <see cref="Modification.Name"/> and return
+        /// the mods as an array (empty -> shared empty array). Values other than
+        /// string identity are unchanged.
+        /// </summary>
+        private static Modification[] BuildInternedModifications(
+            List<Modification> mods, LibraryStringInterner interner)
+        {
+            if (mods == null || mods.Count == 0)
+                return Array.Empty<Modification>();
+            var result = new Modification[mods.Count];
+            for (int i = 0; i < mods.Count; i++)
+            {
+                var m = mods[i];
+                m.Name = interner.Intern(m.Name);
+                result[i] = m;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Intern each element of <paramref name="list"/> and return them as an
+        /// array (empty / null -> shared empty array).
+        /// </summary>
+        private static string[] InternToArray(List<string> list, LibraryStringInterner interner)
+        {
+            if (list == null || list.Count == 0)
+                return Array.Empty<string>();
+            var result = new string[list.Count];
+            for (int i = 0; i < list.Count; i++)
+                result[i] = interner.Intern(list[i]);
+            return result;
         }
 
         private void ParseRow(string[] fields, ColumnIndices cols, int rowNum,

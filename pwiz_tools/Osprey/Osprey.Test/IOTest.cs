@@ -27,6 +27,7 @@ using System.Data.SQLite;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 using Parquet;
@@ -803,8 +804,8 @@ namespace pwiz.Osprey.Test
                     Assert.AreEqual(orig.IsDecoy, copy.IsDecoy);
                     Assert.AreEqual(orig.Fragments.Count, copy.Fragments.Count);
                     Assert.AreEqual(orig.Modifications.Count, copy.Modifications.Count);
-                    CollectionAssert.AreEqual(orig.ProteinIds, copy.ProteinIds);
-                    CollectionAssert.AreEqual(orig.GeneNames, copy.GeneNames);
+                    CollectionAssert.AreEqual(orig.ProteinIds.ToArray(), copy.ProteinIds.ToArray());
+                    CollectionAssert.AreEqual(orig.GeneNames.ToArray(), copy.GeneNames.ToArray());
 
                     // Check fragment details
                     for (int f = 0; f < orig.Fragments.Count; f++)
@@ -1069,26 +1070,22 @@ namespace pwiz.Osprey.Test
         [TestMethod]
         public void TestLibraryStringInterning()
         {
-            // Two entries repeat the same values across every interned field.
-            var e0 = MakeInternEntry(1, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
-            var e1 = MakeInternEntry(2, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+            // The interner is an instance pool the loaders route every string
+            // through as they build each entry's arrays. Build two entries that
+            // repeat the same values across every interned field, sharing one
+            // pool, and a third with a null value / empty arrays.
+            var interner = new LibraryStringInterner();
+            var e0 = MakeInternEntry(interner, 1, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
+            var e1 = MakeInternEntry(interner, 2, "PEPTIDER", "M[16]PEPTIDER", "P12345", "GENEA", "Oxidation");
 
-            // A third entry with a null protein list, an empty gene list, and a
-            // null modification name -- interning must leave these untouched, not throw.
-            var e2 = new LibraryEntry(3, FreshCopy("PEPTIDEK"), FreshCopy("PEPTIDEK"), 2, 600.0, 8.0);
-            e2.ProteinIds = null;
-            e2.GeneNames = new List<string>();
-            e2.Modifications = new List<Modification> { new Modification { Position = 0, Name = null } };
-
-            var entries = new List<LibraryEntry> { e0, e1, e2 };
-
-            // Pre-condition: the repeated values are DISTINCT instances (the char-array
-            // copies defeat the compiler's literal interning), so AreSame below proves
-            // LibraryStringInterner shared them -- not the CLR string pool.
-            Assert.AreNotSame(e0.Sequence, e1.Sequence);
-            Assert.AreNotSame(e0.ProteinIds[0], e1.ProteinIds[0]);
-
-            LibraryStringInterner.InternInPlace(entries);
+            // A third entry with a null protein element, empty gene array, and a
+            // null modification name -- interning must leave these unchanged, not throw.
+            var e2 = new LibraryEntry(3,
+                interner.Intern(FreshCopy("PEPTIDEK")), interner.Intern(FreshCopy("PEPTIDEK")),
+                2, 600.0, 8.0);
+            e2.ProteinIds = new[] { interner.Intern(null) };
+            e2.GeneNames = Array.Empty<string>();
+            e2.Modifications = new[] { new Modification { Position = 0, Name = interner.Intern(null) } };
 
             // Values are unchanged on every interned field...
             Assert.AreEqual("PEPTIDER", e0.Sequence);
@@ -1097,7 +1094,10 @@ namespace pwiz.Osprey.Test
             Assert.AreEqual("GENEA", e0.GeneNames[0]);
             Assert.AreEqual("Oxidation", e0.Modifications[0].Name);
 
-            // ...but duplicates now share one instance, for each interned field.
+            // ...but duplicates share one instance, for each interned field.
+            // (The char-array copies in MakeInternEntry defeat the compiler's
+            // literal interning, so AreSame proves the pool shared them -- not
+            // the CLR string pool.)
             Assert.AreSame(e0.Sequence, e1.Sequence);
             Assert.AreSame(e0.ModifiedSequence, e1.ModifiedSequence);
             Assert.AreSame(e0.ProteinIds[0], e1.ProteinIds[0]);
@@ -1105,28 +1105,30 @@ namespace pwiz.Osprey.Test
             Assert.AreSame(e0.Modifications[0].Name, e1.Modifications[0].Name);
 
             // The null/empty entry is untouched (no NRE).
-            Assert.IsNull(e2.ProteinIds);
+            Assert.IsNull(e2.ProteinIds[0]);
             Assert.AreEqual(0, e2.GeneNames.Count);
             Assert.IsNull(e2.Modifications[0].Name);
             Assert.AreEqual("PEPTIDEK", e2.Sequence);
         }
 
         // Fresh instance with the same characters, so the compiler's literal
-        // interning does not pre-share it before LibraryStringInterner runs.
+        // interning does not pre-share it before the interner runs.
         private static string FreshCopy(string s)
         {
             return new string(s.ToCharArray());
         }
 
-        private static LibraryEntry MakeInternEntry(uint id, string seq, string modSeq,
-            string protein, string gene, string modName)
+        private static LibraryEntry MakeInternEntry(LibraryStringInterner interner, uint id,
+            string seq, string modSeq, string protein, string gene, string modName)
         {
-            var e = new LibraryEntry(id, FreshCopy(seq), FreshCopy(modSeq), 2, 500.0, 10.0);
-            e.ProteinIds = new List<string> { FreshCopy(protein) };
-            e.GeneNames = new List<string> { FreshCopy(gene) };
-            e.Modifications = new List<Modification>
+            var e = new LibraryEntry(id,
+                interner.Intern(FreshCopy(seq)), interner.Intern(FreshCopy(modSeq)),
+                2, 500.0, 10.0);
+            e.ProteinIds = new[] { interner.Intern(FreshCopy(protein)) };
+            e.GeneNames = new[] { interner.Intern(FreshCopy(gene)) };
+            e.Modifications = new[]
             {
-                new Modification { Position = 1, Name = FreshCopy(modName) }
+                new Modification { Position = 1, Name = interner.Intern(FreshCopy(modName)) }
             };
             return e;
         }

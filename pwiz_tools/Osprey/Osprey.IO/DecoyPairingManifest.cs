@@ -430,7 +430,7 @@ namespace pwiz.Osprey.IO
         // Cheap ordinal equality on two protein-ID lists. Used to decide
         // whether the manifest's clean accessions would actually change
         // the library entry (skip the rewrite when they match).
-        private static bool ProteinListsEqual(IList<string> a, IList<string> b)
+        private static bool ProteinListsEqual(IReadOnlyList<string> a, IReadOnlyList<string> b)
         {
             if (a == null)
                 return b == null || b.Count == 0;
