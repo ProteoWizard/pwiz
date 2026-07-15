@@ -312,19 +312,35 @@ namespace pwiz.Skyline.Model
                 foreach (var dataFile in DocLib.LibraryFiles.FilePaths)
                 {
                     var msDataFilePath = new MsDataFilePath(dataFile);
-                    SpectrumSourceFiles[dataFile] = new FoundResultsFilePossibilities(msDataFilePath.GetFileNameWithoutExtension());
+                    var noExtName = msDataFilePath.GetFileNameWithoutExtension();
+
+                    // A caller may have pre-populated SpectrumSourceFiles (e.g. DiannSearchDlg
+                    // seeds the files it just searched). The pre-population key may not match
+                    // the blib's storage form — DIA-NN libraries store ".raw" filenames with
+                    // extension but ".mzML" filenames without — so accept either as a match.
+                    string lookupKey;
+                    if (SpectrumSourceFiles.ContainsKey(dataFile))
+                        lookupKey = dataFile;
+                    else if (SpectrumSourceFiles.ContainsKey(noExtName))
+                        lookupKey = noExtName;
+                    else
+                    {
+                        SpectrumSourceFiles[dataFile] = new FoundResultsFilePossibilities(noExtName);
+                        lookupKey = dataFile;
+                    }
 
                     // If a matching file is already in the document, then don't include
                     // this library spectrum source in the set of files to find.
                     if (measuredResults != null && measuredResults.FindMatchingMSDataFile(MsDataFileUri.Parse(dataFile)) != null)
                         continue;
 
-                    if (File.Exists(dataFile) && DataSourceUtil.IsDataSource(dataFile))
+                    if (SpectrumSourceFiles[lookupKey].ExactMatch == null &&
+                        File.Exists(dataFile) && DataSourceUtil.IsDataSource(dataFile))
                     {
                         // We've found the dataFile in the exact location
                         // specified in the document library, so just add it
                         // to the "FOUND" list.
-                        SpectrumSourceFiles[dataFile].ExactMatch = msDataFilePath.ToString();
+                        SpectrumSourceFiles[lookupKey].ExactMatch = msDataFilePath.ToString();
                     }
                 }
                 DocLib.ReadStream.CloseStream();
