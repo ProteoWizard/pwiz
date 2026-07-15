@@ -335,7 +335,8 @@ namespace pwiz.Skyline
                     longWaitDlg.ProgressValue = 0;
                     longWaitDlg.PerformWork(parentWindow ?? this, 500, progressMonitor =>
                     {
-                        using var fileStream = File.OpenRead(path);
+                        // The .sky may live inside an in-place .sky.zip (path like <zip>\doc.sky).
+                        using var fileStream = new FilePath(path).OpenRead();
                         using var progressStream = new ProgressStream(fileStream);
                         progressStream.SetProgressMonitor(progressMonitor, new ProgressStatus(Path.GetFileName(path)), true);
                         using var hashingStream = new HashingStream(progressStream, true);
