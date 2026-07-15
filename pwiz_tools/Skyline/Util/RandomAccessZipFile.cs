@@ -84,6 +84,40 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Finds the entry whose in-zip path matches <paramref name="entryPath"/>, comparing on the
+        /// full path with separators normalized to '/', case-insensitively. Returns null if none.
+        /// </summary>
+        public ZipEntryInfo FindEntry(string entryPath)
+        {
+            var normalized = NormalizeEntryPath(entryPath);
+            foreach (var entry in Entries)
+            {
+                if (string.Equals(NormalizeEntryPath(entry.FileName), normalized, StringComparison.OrdinalIgnoreCase))
+                    return entry;
+            }
+            return null;
+        }
+
+        private static string NormalizeEntryPath(string path)
+        {
+            return path.Replace('\\', '/').TrimStart('/');
+        }
+
+        /// <summary>
+        /// Returns the absolute offset in the .zip file where a stored entry's data begins (reads
+        /// the local header). Combined with <see cref="ZipEntryInfo.UncompressedSize"/> this gives
+        /// the byte range that can be handed to code (e.g. a SQLite VFS) that reads the file in place.
+        /// </summary>
+        public long GetStoredEntryDataOffset(ZipEntryInfo entry)
+        {
+            if (!entry.IsStored)
+                throw new InvalidOperationException(
+                    $@"Zip entry '{entry.FileName}' is compressed and has no contiguous byte range.");
+            using (var stream = new FileStream(ZipPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                return ReadLocalDataOffset(stream, entry.LocalHeaderOffset);
+        }
+
+        /// <summary>
         /// Returns true if every entry whose extension is one of <paramref name="extensions"/>
         /// (each including the leading dot, e.g. ".skyd") is stored UNCOMPRESSED. This is the test
         /// for whether a document could be opened in place from the .zip: all the files that need

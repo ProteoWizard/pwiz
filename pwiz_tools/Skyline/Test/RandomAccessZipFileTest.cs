@@ -194,6 +194,62 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(new RandomAccessZipFile(bad).AreEntriesStored(".blib"), "blib alone is stored");
         }
 
+        [TestMethod]
+        public void TestFilePath()
+        {
+            TestContext.EnsureTestResultsDir();
+            string zipPath = TestContext.GetTestResultsPath("filepath.zip");
+            var storedBytes = MakeRandomBytes(50000, seed: 11);
+            var skyText = Encoding.UTF8.GetBytes(string.Concat(Enumerable_Repeat("<peptide/>\n", 2000)));
+            using (var zf = new ZipFile(Encoding.UTF8))
+            {
+                var s = zf.AddEntry("data.skyd", storedBytes); s.CompressionMethod = CompressionMethod.None;
+                zf.AddEntry("doc.sky", skyText); // deflated
+                zf.Save(zipPath);
+            }
+
+            // The zip file itself is an ordinary path, not "in" a zip.
+            Assert.IsFalse(new FilePath(zipPath).IsInZipFile);
+            Assert.IsTrue(new FilePath(zipPath).Exists());
+
+            var storedPath = new FilePath(zipPath + @"\data.skyd");
+            var skyPath = new FilePath(zipPath + @"\doc.sky");
+            var missingPath = new FilePath(zipPath + @"\nope.skyd");
+
+            Assert.IsTrue(storedPath.IsInZipFile);
+            Assert.IsTrue(storedPath.Exists());
+            Assert.IsTrue(skyPath.Exists());
+            Assert.IsFalse(missingPath.Exists());
+
+            // GetLastWriteTime returns the outermost .zip's time.
+            Assert.AreEqual(File.GetLastWriteTime(zipPath), storedPath.GetLastWriteTime());
+
+            // Stored entry: a seekable, in-place, byte-identical read.
+            using (var stream = storedPath.OpenRead())
+            {
+                Assert.IsTrue(stream.CanSeek, "stored entry stream should be seekable");
+                Assert.AreEqual(storedBytes.Length, stream.Length);
+                CollectionAssert.AreEqual(storedBytes, ReadAll(stream));
+            }
+            // Compressed entry: decompressed, byte-identical.
+            using (var stream = skyPath.OpenRead())
+                CollectionAssert.AreEqual(skyText, ReadAll(stream));
+
+            // Byte range for the SQLite VFS: stored yes (and it points at the right bytes), compressed no.
+            Assert.IsTrue(storedPath.TryGetZipByteRange(out var zp, out var ofs, out var len));
+            Assert.AreEqual(zipPath, zp);
+            Assert.AreEqual(storedBytes.Length, len);
+            Assert.IsTrue(ofs > 0);
+            using (var fs = new FileStream(zipPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                fs.Seek(ofs, SeekOrigin.Begin);
+                var buf = new byte[len];
+                RandomAccessZipFile.ReadExactly(fs, buf, 0, (int) len);
+                CollectionAssert.AreEqual(storedBytes, buf, "byte range did not point at the entry data");
+            }
+            Assert.IsFalse(skyPath.TryGetZipByteRange(out _, out _, out _));
+        }
+
         private static byte[] MakeRandomBytes(int count, int seed)
         {
             var rnd = new Random(seed);

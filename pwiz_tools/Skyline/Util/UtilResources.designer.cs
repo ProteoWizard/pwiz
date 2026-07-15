@@ -562,6 +562,12 @@ namespace pwiz.Skyline.Util {
         /// <summary>
         ///   Looks up a localized string similar to The file {0} has been modified, since it was first opened..
         /// </summary>
+        public static string FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_ {
+            get {
+                return ResourceManager.GetString("FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_", resourceCulture);
+            }
+        }
+
         public static string PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened {
             get {
                 return ResourceManager.GetString("PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" +

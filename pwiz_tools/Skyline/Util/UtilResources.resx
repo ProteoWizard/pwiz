@@ -269,6 +269,9 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" xml:space="preserve">
     <value>The file {0} has been modified, since it was first opened.</value>
   </data>
+  <data name="FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_" xml:space="preserve">
+    <value>The entry {0} was not found in the zip file {1}.</value>
+  </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Uploading_File" xml:space="preserve">
     <value>Uploading File</value>
   </data>
