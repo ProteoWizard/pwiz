@@ -101,7 +101,9 @@ namespace pwiz.Osprey.Scoring
             // for entry 10110 had Rust intensity = 0 (peak shifted
             // out of tolerance after a single calibration) but C#
             // intensity = 8873 (peak still in range because the
-            // accumulated calibration moved a different peak in).
+            // accumulated calibration moved a different peak in). The sole
+            // exception is the gated consumeInputMzs free below, which the
+            // Stage-6 rescore path never enables.
             List<Spectrum> calibratedSpectra;
             if (ms2Calibration.Calibrated)
             {

@@ -1684,7 +1684,7 @@ namespace pwiz.Osprey.Tasks
             // Calibration-phase memory boundary (companion to the perfile-scoring-peak
             // capture below). The [MEM] line's working_set peak is the calibration
             // high-water mark before scoring pushes it higher; its managed_heap is taken
-            // WITHOUT a forced GC, so the ~3.3 GB dense XCorr cache
+            // WITHOUT a forced GC, so the ~1.65 GB float[][] dense XCorr cache
             // (Calibrator.PreprocessWindowsForXcorr) -- released inside ResolveCalibration
             // but not yet collected here -- is still counted, sizing the calibration peak.
             // The paired retention snapshot forces its own GC first (dotMemory), so it
