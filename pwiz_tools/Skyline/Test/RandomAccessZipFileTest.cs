@@ -164,6 +164,36 @@ namespace pwiz.SkylineTest
                 new PooledZipEntryStream(pool, zip2, compressed, null));
         }
 
+        [TestMethod]
+        public void TestAreEntriesStored()
+        {
+            TestContext.EnsureTestResultsDir();
+            string good = TestContext.GetTestResultsPath("openable.zip");
+            string bad = TestContext.GetTestResultsPath("not_openable.zip");
+            var incompressible = MakeRandomBytes(20000, seed: 3);
+
+            // "good": .skyd and .blib stored uncompressed; .sky deflated (doesn't matter).
+            using (var zf = new ZipFile(Encoding.UTF8))
+            {
+                var a = zf.AddEntry("doc.skyd", incompressible); a.CompressionMethod = CompressionMethod.None;
+                var b = zf.AddEntry("lib.blib", incompressible); b.CompressionMethod = CompressionMethod.None;
+                zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 4000)));
+                zf.Save(good);
+            }
+            // "bad": .skyd is deflated, so it cannot be read in place.
+            using (var zf = new ZipFile(Encoding.UTF8))
+            {
+                zf.AddEntry("doc.skyd", Encoding.UTF8.GetBytes(new string('y', 40000)));
+                var b = zf.AddEntry("lib.blib", incompressible); b.CompressionMethod = CompressionMethod.None;
+                zf.Save(bad);
+            }
+
+            Assert.IsTrue(new RandomAccessZipFile(good).AreEntriesStored(".skyd", ".blib"), "all stored");
+            Assert.IsFalse(new RandomAccessZipFile(bad).AreEntriesStored(".skyd", ".blib"), ".skyd deflated");
+            // Extensions not asked about are ignored: the bad zip's .blib is stored.
+            Assert.IsTrue(new RandomAccessZipFile(bad).AreEntriesStored(".blib"), "blib alone is stored");
+        }
+
         private static byte[] MakeRandomBytes(int count, int seed)
         {
             var rnd = new Random(seed);

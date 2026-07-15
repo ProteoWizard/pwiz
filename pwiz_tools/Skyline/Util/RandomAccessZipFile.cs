@@ -84,6 +84,27 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Returns true if every entry whose extension is one of <paramref name="extensions"/>
+        /// (each including the leading dot, e.g. ".skyd") is stored UNCOMPRESSED. This is the test
+        /// for whether a document could be opened in place from the .zip: all the files that need
+        /// random access must be stored, so they can be read without extraction. Entries with other
+        /// extensions (e.g. the linearly-read ".sky") do not matter.
+        /// </summary>
+        public bool AreEntriesStored(params string[] extensions)
+        {
+            foreach (var entry in Entries)
+            {
+                var ext = Path.GetExtension(entry.FileName);
+                foreach (var e in extensions)
+                {
+                    if (string.Equals(ext, e, StringComparison.OrdinalIgnoreCase) && !entry.IsStored)
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Opens a random-access read-only stream over a stored (uncompressed) entry,
         /// reading its bytes in place from the .zip file. Each call opens its own file
         /// handle so multiple entry streams can be read concurrently.
