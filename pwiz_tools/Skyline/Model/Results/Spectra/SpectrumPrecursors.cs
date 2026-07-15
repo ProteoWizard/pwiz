@@ -18,23 +18,24 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
+using pwiz.Common.DataBinding.Filtering;
 using pwiz.Common.Spectra;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results.Spectra
 {
-    [TypeConverter(typeof(Converter))]
-    [Filterable]
+    [FilterHandler(typeof(FilterHandler))]
     public class SpectrumPrecursors : IFormattable
     {
         private ImmutableList<SpectrumPrecursor> _precursors;
+
         public SpectrumPrecursors(IEnumerable<SpectrumPrecursor> precursors)
         {
             _precursors = SortedByMz(precursors);
@@ -98,24 +99,8 @@ namespace pwiz.Skyline.Model.Results.Spectra
             {
                 throw new FormatException(string.Format(@"Unable to convert '{0}' to a list of precursors", s), formatException);
             }
-        }
 
-        public class Converter : TypeConverter
-        {
-            public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-            {
-                return sourceType == typeof(string) || base.CanConvertFrom(context, sourceType);
-            }
 
-            public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-            {
-                if (!(value is string stringValue))
-                {
-                    return base.ConvertFrom(context, culture, value);
-                }
-
-                return Parse(culture, stringValue);
-            }
         }
 
         private static ImmutableList<SpectrumPrecursor> SortedByMz(IEnumerable<SpectrumPrecursor> precursors)
@@ -131,6 +116,24 @@ namespace pwiz.Skyline.Model.Results.Spectra
             }
             // list was already sorted
             return list;
+        }
+
+        private class FilterHandler : ListFilterHandler
+        {
+            public FilterHandler() : base(NumericFilterHandler.INSTANCE)
+            {
+            }
+
+            protected override IListColumnValue ToListValue(object columnValue)
+            {
+                var spectrumPrecursors = columnValue as SpectrumPrecursors;
+                if (spectrumPrecursors == null)
+                {
+                    return null;
+                }
+
+                return ListColumnValue.FromItems(spectrumPrecursors._precursors.Select(precursor => precursor.PrecursorMz.RawValue));
+            }
         }
     }
 }

@@ -27,6 +27,7 @@
 #include <boost/type_index.hpp>
 #include <pwiz/data/proteome/AminoAcid.hpp>
 #include <boost/range/algorithm/find.hpp>
+#include <set>
 //#include "pwiz/data/msdata/MSDataFile.hpp"
 
 namespace BiblioSpec
@@ -683,7 +684,8 @@ class DiaNNSpecLibReader::Impl
 #ifdef USE_PARQUET_READER
             unique_ptr<parquet::arrow::FileReader> reader_;
             vector<string> columnNames_; // and order
-            vector<int> columnIndices_;
+            vector<int> columnIndices_; // -1 means "missing column, tolerated by ignore_missing_column"
+            io::ignore_column ignore_policy_ = io::ignore_no_column;
             int64_t numRowGroups_;
             int64_t rowIndex_ = 0;
             int64_t rowGroup_ = -1;
@@ -745,6 +747,7 @@ class DiaNNSpecLibReader::Impl
             void close() {}
             template<class ...ColNames> void read_header(io::ignore_column ignore_policy, ColNames...cols) {}
             bool has_column(const std::string& name) const { return false; }
+            void assert_present_except(const std::set<std::string>&) const {}
             template<class ...ColType> bool read_row(ColType& ...cols) { return false; }
             void seek_begin() {}
             uint64_t num_rows() const { return 0; }
@@ -753,7 +756,7 @@ class DiaNNSpecLibReader::Impl
             {
                 table_.reset();
                 columnArrays_.clear();
-                reader_.release();
+                reader_.reset();
             }
 
             void read_header_helper(int fieldIndex, const char* columnName)
@@ -765,9 +768,10 @@ class DiaNNSpecLibReader::Impl
             void read_header_helper(const std::shared_ptr<arrow::Schema>& schema, const char* columnName)
             {
                 int fieldIndex = schema->GetFieldIndex(columnName);
-                if (fieldIndex < 0)
+                if (fieldIndex < 0 && !(ignore_policy_ & io::ignore_missing_column))
                     Verbosity::error("file %s does not have a column called %s", filepath_.c_str(), columnName);
 
+                // -1 marks the slot as missing-but-tolerated; read_row will plug in a default.
                 read_header_helper(fieldIndex, columnName);
             }
 
@@ -781,6 +785,7 @@ class DiaNNSpecLibReader::Impl
             template<class ...ColNames>
             void read_header(io::ignore_column ignore_policy, ColNames...cols)
             {
+                ignore_policy_ = ignore_policy;
                 std::shared_ptr<arrow::Schema> schema;
                 auto got_schema = reader_->GetSchema(&schema);
                 if (!got_schema.ok())
@@ -788,7 +793,21 @@ class DiaNNSpecLibReader::Impl
 
                 read_header_helper(schema, cols...);
 
-                auto got_table = reader_->ReadTable(columnIndices_ , &table_);
+                // Guard against ALL requested columns being missing: Arrow's ReadTable
+                // treats an empty index vector as "read every column", which combined
+                // with read_column's nullptr fallback would silently emit default-valued
+                // rows for the entire library instead of failing.
+                if (!columnIndices_.empty() &&
+                    std::all_of(columnIndices_.begin(), columnIndices_.end(),
+                                [](int i) { return i < 0; }))
+                {
+                    Verbosity::error("file %s has none of the requested columns", filepath_.c_str());
+                }
+
+                // Arrow's ReadTable rejects -1 indices, so pass only the real columns.
+                std::vector<int> presentIndices;
+                for (int idx : columnIndices_) if (idx >= 0) presentIndices.push_back(idx);
+                auto got_table = reader_->ReadTable(presentIndices, &table_);
                 if (!got_table.ok())
                     Verbosity::error("cannot read table from %s: %s", filepath_.c_str(), got_table.message().c_str());
             }
@@ -799,38 +818,58 @@ class DiaNNSpecLibReader::Impl
                 return boost::range::find(column_names, name) != column_names.end();
             }
 
+            /// Error out if any column declared in read_header() but NOT in `optional`
+            /// was actually missing (sentinel -1 in columnIndices_). Lets the caller
+            /// scope ignore_missing_column to a small allowlist of optional fields.
+            void assert_present_except(const std::set<std::string>& optional) const
+            {
+                for (size_t i = 0; i < columnIndices_.size(); ++i)
+                {
+                    if (columnIndices_[i] < 0 && !optional.count(columnNames_[i]))
+                        Verbosity::error("file %s missing required column %s",
+                            filepath_.c_str(), columnNames_[i].c_str());
+                }
+            }
+
+            // For missing-but-tolerated columns columnArrays_[i] is nullptr — write a default.
             void read_column(std::size_t i, int& t) const
             {
+                if (!columnArrays_[i]) { t = 0; return; }
                 const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
                 t = intArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, int64_t& t) const
             {
+                if (!columnArrays_[i]) { t = 0; return; }
                 const auto& intArray = std::static_pointer_cast<arrow::Int64Array>(columnArrays_[i]);
                 t = intArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, float& t) const
             {
+                if (!columnArrays_[i]) { t = 0.0f; return; }
                 const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
                 t = fpArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, double& t) const
             {
+                if (!columnArrays_[i]) { t = 0.0; return; }
                 const auto& fpArray = std::static_pointer_cast<arrow::FloatArray>(columnArrays_[i]);
                 t = fpArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, std::string_view& t) const
             {
+                if (!columnArrays_[i]) { t = std::string_view{}; return; }
                 const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
                 t = strArray->Value(rowIndex_);
             }
 
             void read_column(std::size_t i, std::string& t) const
             {
+                if (!columnArrays_[i]) { t.clear(); return; }
                 const auto& strArray = std::static_pointer_cast<arrow::StringArray>(columnArrays_[i]);
                 t = strArray->Value(rowIndex_);
             }
@@ -857,7 +896,9 @@ class DiaNNSpecLibReader::Impl
                         return false;
 
                     rowIndex_ = 0;
-                    auto got_row_group = reader_->ReadRowGroup(rowGroup_, columnIndices_, &table_);
+                    std::vector<int> presentIndices;
+                    for (int idx : columnIndices_) if (idx >= 0) presentIndices.push_back(idx);
+                    auto got_row_group = reader_->ReadRowGroup(rowGroup_, presentIndices, &table_);
                     if (!got_row_group.ok())
                         Verbosity::error("cannot read row group %d from %s", rowGroup_, filepath_.c_str());
 
@@ -866,7 +907,9 @@ class DiaNNSpecLibReader::Impl
 
                     columnArrays_.clear();
                     for (size_t i = 0; i < columnNames_.size(); ++i)
-                        columnArrays_.emplace_back(get_arrow_column_chunk(table_, columnNames_[i]));
+                        columnArrays_.emplace_back(columnIndices_[i] >= 0
+                            ? get_arrow_column_chunk(table_, columnNames_[i])
+                            : nullptr); // missing-but-tolerated; read_column returns default
                 }
 
                 read_row_helper(0, cols...);
@@ -916,6 +959,16 @@ class DiaNNSpecLibReader::Impl
                 parquetReader_->read_header(ignore_policy, std::forward<ColNames>(cols)...);
         }
 
+        /// After a read_header() call with io::ignore_missing_column, fail loudly if any
+        /// requested column outside `optional` was actually missing. Keeps the tolerance
+        /// scoped to the names the caller declares as optional, instead of silently
+        /// accepting any schema mismatch.
+        void assert_present_except(const std::set<std::string>& optional) const
+        {
+            if (csvReader_) return; // CSV reader keeps the strict-by-name semantics already
+            parquetReader_->assert_present_except(optional);
+        }
+
         bool has_column(const std::string& name) const
         {
             if (csvReader_)
@@ -949,6 +1002,116 @@ class DiaNNSpecLibReader::Impl
             return parquetReader_->num_rows();
         }
     };
+
+    // Populate `lib` from a DIA-NN v2+ report-lib.parquet file (one row per fragment).
+    // Decoy rows are skipped; only target precursors are loaded.
+    void loadSpecLibFromParquet(const string& filepath, Library& lib)
+    {
+        Reader<16> reader;
+        reader.open_file(filepath);
+        // DIA-NN 1.9.1 doesn't emit a Flags column — tolerate the missing column and let
+        // read_column default the flags to 0 for those rows. (The Flags bits aren't
+        // consumed downstream in BiblioSpec anyway.) Every OTHER column is required:
+        // a future DIA-NN release that renames or drops e.g. Modified.Sequence should
+        // surface a clean error here rather than silently filling rows with defaults.
+        reader.read_header(io::ignore_extra_column | io::ignore_missing_column,
+            "Precursor.Id", "Modified.Sequence", "Precursor.Charge", "Precursor.Mz",
+            "RT", "IM", "Q.Value", "Decoy", "Proteotypic", "Flags",
+            "Product.Mz", "Relative.Intensity", "Fragment.Type",
+            "Fragment.Charge", "Fragment.Series.Number", "Fragment.Loss.Type");
+        const std::set<std::string> optionalColumns = { "Flags" };
+        reader.assert_present_except(optionalColumns);
+
+        std::string precursorId, modSeq, fragType, fragLoss;
+        int64_t charge, decoy, proteotypic, flags, fragCharge, fragSeries;
+        float precursorMz, rt, im, qvalue, productMz, relInten;
+
+        std::string lastPrecursorId;
+        size_t currentIdx = std::numeric_limits<size_t>::max();
+
+        while (reader.read_row(precursorId, modSeq, charge, precursorMz,
+                               rt, im, qvalue, decoy, proteotypic, flags,
+                               productMz, relInten, fragType, fragCharge, fragSeries, fragLoss))
+        {
+            if (decoy != 0)
+                continue;
+
+            if (precursorId != lastPrecursorId)
+            {
+                lib.entries.emplace_back();
+                currentIdx = lib.entries.size() - 1;
+                auto& e = lib.entries[currentIdx];
+                e.lib = &lib;
+                e.name = precursorId;
+                e.target.index = static_cast<int>(currentIdx);
+                e.target.charge = static_cast<int>(charge);
+                e.target.length = static_cast<int>(modSeq.size());
+                e.target.mz = precursorMz;
+                e.target.iRT = rt;
+                e.target.sRT = 0.0f;
+                e.target.iIM = im;
+                e.target.sIM = 0.0f;
+                e.target.lib_qvalue = qvalue;
+                e.proteotypic = static_cast<int>(proteotypic);
+                e.entry_flags = static_cast<int>(flags);
+                lib.precursors.push_back(precursorId);
+                lastPrecursorId = precursorId;
+            }
+
+            int ftype = fragType.empty() ? 0 : fragType[0];
+
+            int ltype = loss_none;
+            if (fragLoss.empty() || fragLoss == "noloss") ltype = loss_none;
+            else if (fragLoss == "H2O") ltype = loss_H2O;
+            else if (fragLoss == "NH3") ltype = loss_NH3;
+            else if (fragLoss == "CO") ltype = loss_CO;
+            else if (fragLoss == "N") ltype = loss_N;
+            else ltype = loss_other;
+
+            lib.entries[currentIdx].target.fragments.emplace_back(
+                productMz, relInten,
+                static_cast<int>(fragCharge),
+                ftype,
+                static_cast<int>(fragSeries),
+                ltype);
+        }
+        reader.close();
+
+        lib.iRT_min = std::numeric_limits<double>::max();
+        lib.iRT_max = std::numeric_limits<double>::lowest();
+        for (auto& e : lib.entries)
+        {
+            e.lib = &lib;
+            lib.entryByModPeptideAndCharge.emplace(e.name, std::ref(e));
+            lib.iRT_min = std::min(lib.iRT_min, (double)e.target.iRT);
+            lib.iRT_max = std::max(lib.iRT_max, (double)e.target.iRT);
+
+            // Normalize fragment intensities to max=1 and sort descending — matches the
+            // canonical layout in the binary .skyline.speclib. DIA-NN writes pre-normalized
+            // intensities to parquet for predicted libraries, but raw observed intensities
+            // for MBR/analyzed libraries; either way this pass is idempotent.
+            auto& frags = e.target.fragments;
+            if (!frags.empty())
+            {
+                float maxInten = 0;
+                for (const auto& f : frags) maxInten = std::max(maxInten, f.height);
+                if (maxInten > 0)
+                    for (auto& f : frags) f.height /= maxInten;
+                std::stable_sort(frags.begin(), frags.end(),
+                    [](const Product& a, const Product& b) { return a.height > b.height; });
+            }
+        }
+        if (lib.entries.empty())
+            lib.iRT_min = lib.iRT_max = 0.0;
+
+        lib.from_speclib = true;
+        // Skip assemble_elution_groups/elution_group_index: their outputs (eg, elution_groups,
+        // co_elution[_index]) are not consumed by parseFile() or getSpectrum(), and the upstream
+        // to_eg() helper assumes a populated UniMod table that the parquet path doesn't provide.
+
+        Verbosity::status("Spectral library (parquet) loaded: %d precursors.",
+                          (int) lib.entries.size());
+    }
 };
 
 DiaNNSpecLibReader::DiaNNSpecLibReader(BlibBuilder& maker, const char* specLibFile, const ProgressIndicator* parent_progress)
@@ -975,10 +1138,36 @@ DiaNNSpecLibReader::~DiaNNSpecLibReader()
 bool DiaNNSpecLibReader::parseFile()
 {
     {
-        ifstream specLibStream(impl_->specLibFile_, ios::binary);
-        if (!specLibStream)
-            Verbosity::error("failed to open stream for speclib %s", impl_->specLibFile_);
-        impl_->specLib.read(specLibStream);
+        // Prefer DIA-NN v2's report-lib.parquet over the binary .skyline.speclib sibling
+        // (or the user passes the parquet directly). Fall back to the binary path otherwise.
+        string libParquetPath;
+#ifdef USE_PARQUET_READER
+        string specLibStr = impl_->specLibFile_;
+        if (bal::iends_with(specLibStr, ".parquet.skyline.speclib"))
+        {
+            string candidate = specLibStr.substr(0, specLibStr.size() - (sizeof(".skyline.speclib") - 1));
+            if (bfs::exists(candidate) && Impl::Reader<1>::is_parquet(candidate))
+                libParquetPath = candidate;
+        }
+        else if (bal::iends_with(specLibStr, ".parquet"))
+        {
+            if (bfs::exists(specLibStr) && Impl::Reader<1>::is_parquet(specLibStr))
+                libParquetPath = specLibStr;
+        }
+#endif
+
+        if (!libParquetPath.empty())
+        {
+            Verbosity::status("Reading library entries from parquet %s.", libParquetPath.c_str());
+            impl_->loadSpecLibFromParquet(libParquetPath, impl_->specLib);
+        }
+        else
+        {
+            ifstream specLibStream(impl_->specLibFile_, ios::binary);
+            if (!specLibStream)
+                Verbosity::error("failed to open stream for speclib %s", impl_->specLibFile_);
+            impl_->specLib.read(specLibStream);
+        }
         Verbosity::status("Read %d entries from speclib.", impl_->specLib.entries.size());
     }
     string specLibFile = impl_->specLibFile_;
@@ -1016,6 +1205,8 @@ bool DiaNNSpecLibReader::parseFile()
         diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.parquet.skyline.speclib", ".parquet");
     if (diannReportFilepath == specLibFile)
         diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.skyline.speclib", ".parquet");
+    if (diannReportFilepath == specLibFile)
+        diannReportFilepath = bal::replace_last_copy(specLibFile, "-lib.parquet", ".parquet");
 
     // special case for FragPipe
     if (specLibFilePath.filename().string() == "library.tsv.speclib" ||
@@ -1171,6 +1362,7 @@ bool DiaNNSpecLibReader::parseFile()
 
     Verbosity::status("Reading %d rows from report.", reader.num_rows());
     readAddProgress_ = parentProgress_->newNestedIndicator(reader.num_rows());
+    int missingFromSpeclibCount = 0;
     while (reader.read_row(run, fileName, proteinGrp, precursorId, globalQValue, redundantPSM.score, redundantPSM.rt, redundantPSM.rtStart, redundantPSM.rtEnd, redundantPSM.ionMobility))
     {
         string precursorIdStr(precursorId);
@@ -1181,7 +1373,11 @@ bool DiaNNSpecLibReader::parseFile()
             if (bal::starts_with(proteinGrp, "contaminant_"))
                 continue;
 
-            throw BlibException(false, "could not find precursorId '%s' in speclib; is '%s' the correct report TSV file?", precursorId, bfs::path(diannReportFilepath).filename().string().c_str());
+            // DIA-NN may report precursors that are not in the spectral library (e.g. some
+            // identifications without confident predicted spectra). Skip them rather than
+            // erroring out; we still validate at the end that *some* report rows matched.
+            ++missingFromSpeclibCount;
+            continue;
         }
 
         bfs::path currentRunFilepath = bal::replace_all_copy(string(fileName), "\\", "/"); // backslash to slash should work on both Linux and Windows
@@ -1234,6 +1430,12 @@ bool DiaNNSpecLibReader::parseFile()
         readAddProgress_->increment();
     }
     reader.close();
+
+    if (missingFromSpeclibCount > 0)
+        Verbosity::warn("Skipped %d report rows whose precursors were not in the spectral library.", missingFromSpeclibCount);
+    if (psms_.empty() && missingFromSpeclibCount > 0)
+        throw BlibException(false, "no report rows matched the spectral library; is '%s' the correct report file for '%s'?",
+            bfs::path(diannReportFilepath).filename().string().c_str(), bfs::path(impl_->specLibFile_).filename().string().c_str());
 
     filteredOutPsmCount_ = speclib.entries.size() - psms_.size();
 

@@ -1,0 +1,107 @@
+<html><head>
+<meta charset="utf-8">
+<title>Osprey command-line usage</title>
+<meta name="description" content="Command-line usage for Osprey, the C# (.NET 8) implementation of Mike MacCoss's peptide-centric DIA search tool: search and FDR arguments, protein inference, and the four distributed HPC --task workers (PerFileScoring, FirstPassFDR, PerFileRescoring, SecondPassFDR).">
+<style>
+body { font: .875em/1.35 'Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; max-width: 70em; }
+h1 { font-size: 1.6em; font-weight: 600; color: #000; margin: 0 0 .3em; }
+.RowType { font-size: 1.769em; line-height: 1.3em; font-family: 'Segoe UI Semibold','Segoe UI','Lucida Grande',Verdana,Arial,Helvetica,sans-serif; color: #000; }
+table { border: 1px solid #bbb; border-collapse: collapse; margin-top: 20px; margin-bottom: 20px; }
+th { background-color: #ededed; color: #636363; text-align: left; padding: 10px 8px; font-weight: bold; border: 1px solid #bbb; }
+td { color: #2a2a2a; vertical-align: top; padding: 10px 8px; border: 1px solid #bbb; }
+pre { background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 4px; padding: 10px; font-family: Consolas,'Courier New',monospace; font-size: .92em; white-space: pre-wrap; }
+code { font-family: Consolas,'Courier New',monospace; }
+a { color: #1565c0; }
+</style>
+</head><body>
+<h1>Osprey command-line usage</h1>
+<p>Osprey is Mike MacCoss's peptide-centric DIA search tool, implemented in C# (.NET 8). (The original Rust prototype is <a href="https://github.com/maccoss/osprey">maccoss/osprey</a>.) It reads DIA mzML files plus a spectral library and writes a BiblioSpecLite (<code>.blib</code>) library of FDR-controlled results that imports directly into Skyline. It runs as a standalone executable on Windows and Linux.</p>
+<p>For the pipeline overview, per-stage detail, and how the four distributed HPC tasks split and join, see the workflow diagram: <a href="https://raw.githack.com/ProteoWizard/pwiz/master/pwiz_tools/Osprey/Osprey-workflow.html">Osprey-workflow.html</a>. The argument tables below are generated from the command-line declarations, so they always match the build; run <code>Osprey --help</code> for the same reference as text.</p>
+<p>Osprey - Peptide-centric DIA analysis (.NET port of Osprey)</p><p>USAGE: osprey -i <file1.mzML> [file2.mzML ...] -l <library.tsv> -o <output.blib></p><div class="RowType">General I/O</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>-i</nobr>,&nbsp;<nobr>--input</nobr>&nbsp;&lt;file1.mzML&nbsp;...&gt;</td><td>Input mzML file(s)</td></tr>
+<tr><td><nobr>-l</nobr>, <nobr>--library</nobr> &lt;library.tsv|.blib&gt;</td><td>Spectral library (.tsv, .blib)</td></tr>
+<tr><td><nobr>-o</nobr>,&nbsp;<nobr>--output</nobr>&nbsp;&lt;output.blib&gt;</td><td>Output blib file</td></tr>
+<tr><td><nobr>--work-dir</nobr>&nbsp;&lt;dir&gt;</td><td>Write derived artifacts AND the spectra cache here (so input data can be <nobr>read-only</nobr>); default: beside input</td></tr>
+<tr><td><nobr>--output-dir</nobr>&nbsp;&lt;dir&gt;</td><td>Directory for derived artifacts (overrides <nobr>--work-dir</nobr>)</td></tr>
+<tr><td><nobr>--cache-dir</nobr>&nbsp;&lt;dir&gt;</td><td>Directory for the .spectra.bin cache (overrides <nobr>--work-dir</nobr>)</td></tr>
+<tr><td><nobr>--report</nobr>&nbsp;&lt;report.tsv&gt;</td><td>Write TSV report to file</td></tr>
+</table>
+<div class="RowType">Scoring &amp; Tolerance</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--resolution</nobr> &lt;unit | hram | auto&gt;</td><td>Resolution mode (default: auto)</td></tr>
+<tr><td><nobr>--fragment-tolerance</nobr>&nbsp;&lt;value&gt;</td><td>Fragment m/z tolerance (default: 10)</td></tr>
+<tr><td><nobr>--fragment-unit</nobr> &lt;ppm | mz&gt;</td><td>Fragment tolerance unit (default: ppm)</td></tr>
+<tr><td><nobr>--no-prefilter</nobr></td><td>Disable coelution signal <nobr>pre-filter</nobr></td></tr>
+</table>
+<div class="RowType">FDR &amp; Protein Inference</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--run-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td><nobr>Run-level</nobr> FDR threshold (default: 0.01)</td></tr>
+<tr><td><nobr>--experiment-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td><nobr>Experiment-level</nobr> FDR threshold (default: 0.01)</td></tr>
+<tr><td><nobr>--reconciliation-compaction-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td>Peptide <nobr>q-value</nobr> gate for <nobr>first-pass</nobr> compaction (default: 0.01 = <nobr>run-fdr</nobr>; loosen e.g. to 0.05 to broaden the reconciliation pool)</td></tr>
+<tr><td><nobr>--protein-fdr</nobr>&nbsp;&lt;threshold&gt;</td><td><nobr>Protein-level</nobr> FDR threshold (optional)</td></tr>
+<tr><td><nobr>--fdr-method</nobr> &lt;percolator | simple&gt;</td><td>FDR method (default: percolator)</td></tr>
+<tr><td><nobr>--fdr-level</nobr> &lt;precursor | peptide | both&gt;</td><td>FDR level (default: precursor)</td></tr>
+<tr><td><nobr>--shared-peptides</nobr> &lt;all | razor | unique&gt;</td><td>Shared peptide handling (default: all)</td></tr>
+<tr><td><nobr>--fdrbench</nobr>&nbsp;&lt;input.tsv&gt;</td><td>Write an <nobr>FDRBench-compatible</nobr> input TSV to this path. The level is taken from <nobr>--fdr-level</nobr> (peptide; precursor and both emit <nobr>precursor-level</nobr>). Includes every reported (<nobr>compaction-surviving</nobr>) target, i.e. the peptides actually written to the output, regardless of <nobr>q-value</nobr>, with the raw SVM discriminant as &#39;score&#39;, so FDRBench can compute <nobr>true-FDR</nobr> via entrapment counting without truncation at Osprey&#39;s threshold.</td></tr>
+<tr><td><nobr>--fdrbench-per-run</nobr></td><td>With <nobr>--fdrbench</nobr>: emit one row per (precursor, run) using <nobr>run-level</nobr> <nobr>q-values</nobr> (adds a &#39;run&#39; column). Default is one row per precursor using <nobr>experiment-level</nobr> <nobr>q-values</nobr>.</td></tr>
+<tr><td><nobr>--fdrbench-pass</nobr> &lt;1 | 2 | both&gt;</td><td>With <nobr>--fdrbench</nobr>: which FDR pass to emit. 2 (default) = the <nobr>post-compaction</nobr> <nobr>second-pass</nobr> survivors written to the blib (the FDR of what Osprey reports). 1 = the full <nobr>pre-compaction</nobr> <nobr>first-pass</nobr> pool (every scored target, regardless of q) with <nobr>first-pass</nobr> <nobr>q-values</nobr>, matching Rust osprey&#39;s write_fdrbench_peptide_input (the assumption the <nobr>second-pass</nobr> output rests on). both = emit both in one run, writing the <nobr>--fdrbench</nobr> path with .pass1 / .pass2 stem suffixes.</td></tr>
+</table>
+<div class="RowType">Decoys</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--decoys-in-library</nobr></td><td>Trust decoys already in the spectral library instead of generating reverse decoys. Hard error if none are recognised.</td></tr>
+<tr><td><nobr>--decoy-pairing-manifest</nobr>&nbsp;&lt;manifest.tsv&gt;</td><td>FDRBench <nobr>5-column</nobr> pairing manifest (TSV), used with <nobr>--decoys-in-library</nobr></td></tr>
+<tr><td><nobr>--write-pin</nobr></td><td>Write PIN files for external tools</td></tr>
+</table>
+<div class="RowType">Performance</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--parallel-files</nobr>&nbsp;[&lt;N&gt;]</td><td>Input files scored concurrently (OUTER). Absent: one at a time (default). No value: auto from free RAM and cores. &lt;N&gt;: exactly N regardless of RAM/cores. Distinct from <nobr>--threads</nobr>.</td></tr>
+<tr><td><nobr>--threads</nobr>&nbsp;&lt;count&gt;</td><td><nobr>Per-file</nobr> <nobr>main-search</nobr> threads (INNER; default: all cores), divided across files run concurrently by <nobr>--parallel-files</nobr></td></tr>
+</table>
+<div class="RowType">Distributed / HPC</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--task</nobr> &lt;PerFileScoring | FirstPassFDR | PerFileRescoring | SecondPassFDR&gt;</td><td>HPC: run exactly one pipeline task (one node = one task). Omit for the full pipeline.</td></tr>
+<tr><td><nobr>--input-scores</nobr> &lt;paths|dir&gt;</td><td>HPC: one or more .scores.parquet files, or a single directory (<nobr>non-recursive</nobr>). Mutex with <nobr>--input</nobr>.</td></tr>
+</table>
+<div class="RowType">Logging</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>--timestamp</nobr></td><td>Prefix each output line with [yyyy/MM/dd HH:mm:ss]</td></tr>
+<tr><td><nobr>--memstamp</nobr></td><td>Prefix each output line with managed and private memory in MB (pair with <nobr>--timestamp</nobr> for perfviz)</td></tr>
+<tr><td><nobr>--log-file</nobr>&nbsp;&lt;path&gt;</td><td>Write all output to this file instead of stderr</td></tr>
+<tr><td><nobr>--perf-stats</nobr></td><td>Emit <nobr>machine-parseable</nobr> [COUNT]/[TIMING]/[<nobr>STAGE-WALL</nobr>] lines for perf tools (off by default)</td></tr>
+<tr><td><nobr>--verbose</nobr></td><td>Show <nobr>implementer-grade</nobr> detail (e.g. <nobr>per-fold</nobr> Percolator iterations) hidden by default</td></tr>
+</table>
+<div class="RowType">Diagnostics &amp; Info</div>
+<table>
+<tr><th>Argument</th><th>Description</th></tr>
+<tr><td><nobr>-d</nobr>,&nbsp;<nobr>--diagnostics</nobr></td><td>Write <nobr>cross-impl</nobr> bisection dumps (OSPREY_DUMP_* bundle)</td></tr>
+<tr><td><nobr>--model-diagnostics</nobr></td><td>Write a <nobr>self-contained</nobr> interactive HTML report of the trained scoring model and FDR calibration</td></tr>
+<tr><td><nobr>-h</nobr>,&nbsp;<nobr>--help</nobr></td><td>Show this help message ([ascii|unicode|sections|html|&lt;Section&gt;])</td></tr>
+<tr><td><nobr>-v</nobr>,&nbsp;<nobr>--version</nobr></td><td>Show version</td></tr>
+</table>
+<p>EXAMPLES:</p><p>  osprey -i sample.mzML -l library.tsv -o results.blib</p><p>  osprey -i *.mzML -l library.tsv -o results.blib --resolution hram</p><p>HPC SPLIT (one node = one --task): see --task / --input-scores above.</p><div class="RowType">Distributed execution (HPC)</div>
+<p>Run with no <code>--task</code> for the whole pipeline in one process. For distributed (HPC / workflow-engine) execution the pipeline splits at its join / fan-out boundaries into four single-task workers &mdash; one node = one <code>--task</code>: <code>PerFileScoring</code> (split, per file) &rarr; <code>FirstPassFDR</code> (join, all files) &rarr; <code>PerFileRescoring</code> (split, per file) &rarr; <code>SecondPassFDR</code> (merge node). Pass the same <code>--library</code> and search options to every task; the parquet integrity check rejects inputs whose search/library hash does not match.</p>
+<pre>
+# split 1 - one process per mzML (writes &lt;stem&gt;.scores.parquet, &lt;stem&gt;.calibration.json beside each input)
+Osprey --task PerFileScoring -i s1.mzML -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+
+# join 1 - one process over ALL parquets (pass a directory so the order is deterministic)
+Osprey --task FirstPassFDR --input-scores ./scores_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   writes beside each parquet: &lt;stem&gt;.1st-pass.fdr_scores.bin, &lt;stem&gt;.reconciliation.json
+
+# split 2 - one process per file (parquet + its two sidecars co-located)
+Osprey --task PerFileRescoring --input-scores s1.scores.parquet -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+#   writes: &lt;stem&gt;.scores-reconciled.parquet
+
+# join 2 - one process over ALL reconciled parquets (writes out.blib)
+Osprey --task SecondPassFDR --input-scores ./reconciled_dir -l hela.tsv -o out.blib --resolution unit --protein-fdr 0.01
+</pre>
+<p><code>--input-scores</code> takes a directory (globbed and sorted internally) or an explicit file list (used in the order given). First-join reconciliation is order-sensitive, so for the join tasks pass a directory or a deterministically sorted list. The rehydration sidecars must travel with their parquet into each worker's working directory. Let the scheduler do the fan-out (one file per split process) rather than <code>--parallel-files</code>, which is the single-node multi-file mode.</p>
+</body></html>

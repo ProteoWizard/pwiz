@@ -29,6 +29,7 @@ using System.Web;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
 using pwiz.Common.Collections;
+using pwiz.Common.CommandLine;
 using pwiz.Common.DataBinding.Documentation;
 using pwiz.Common.SystemUtil;
 using pwiz.CommonMsData;
@@ -44,16 +45,36 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.CommonMsData.RemoteApi.WatersConnect;
 using pwiz.Skyline.Model.Results.Scoring;
+using pwiz.Skyline.Model.Serialization;
 using pwiz.Skyline.Model.Tools;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using static pwiz.Skyline.Model.Proteome.ProteinAssociation;
+// The generic CLI-argument framework now lives in PortableUtil. These file-scoped aliases
+// keep the 100+ argument declarations below (and DocArgument/RefineArgument/ToolArgument)
+// compiling unchanged against the Skyline-typed instantiations.
+using Argument = pwiz.Common.CommandLine.Argument<pwiz.Skyline.CommandArgs>;
+using ArgumentGroup = pwiz.Common.CommandLine.ArgumentGroup<pwiz.Skyline.CommandArgs>;
 
 namespace pwiz.Skyline
 {
     public class CommandArgs
     {
+        // Installs Skyline's text and behavior into the PortableUtil CLI-argument framework
+        // seams. Runs before any argument parsing, usage rendering, or value-exception is
+        // thrown (the first access to any CommandArgs static member triggers this, and every
+        // such path touches a static member first).
+        static CommandArgs()
+        {
+            ArgUsage.Provider = new SkylineArgUsageProvider();
+            ArgUsage.IsRemoteUrl = IsRemoteUrl;
+            ArgUsage.IsWrappableListType = ve => WRAPPABLE_LIST_TYPE_VALUES.Contains(ve);
+            // Keep Skyline's usage HTML byte-identical to the committed goldens by using the
+            // same encoder it always has (HttpUtility); PortableUtil defaults to WebUtility.
+            ArgUsage.HtmlEncode = HttpUtility.HtmlEncode;
+        }
+
         // Argument value descriptions
         private static readonly Func<string> PATH_TO_FILE = () => CommandArgUsage.CommandArgs_PATH_TO_FILE_path_to_file;
 
@@ -183,6 +204,21 @@ namespace pwiz.Skyline
         // Synonym for --out
         public static readonly Argument ARG_SAVE_AS = new DocArgument(@"save-as", PATH_TO_DOCUMENT,
             (c, p) => { c.SaveFile = p.ValueFullPath; });
+        // Per-invocation override for the on-disk transition compact format, so headless/
+        // automation saves are deterministic without depending on the persisted user setting.
+        public static readonly Argument ARG_SAVE_COMPACT_FORMAT = new DocArgument(@"save-compact-format",
+            CompactFormatOption.ALL_VALUES.Select(o => o.Name).ToArray(),
+            (c, p) =>
+            {
+                // Match case-insensitively but culture-invariantly. HasValueChecking bypasses the
+                // default value check (CurrentCultureIgnoreCase), which would mishandle a value like
+                // "LARGEFILESONLY" in Turkish locale; validate explicitly with OrdinalIgnoreCase here.
+                var option = CompactFormatOption.ALL_VALUES.FirstOrDefault(
+                    o => string.Equals(o.Name, p.Value, StringComparison.OrdinalIgnoreCase));
+                if (option == null)
+                    throw new ValueInvalidException(ARG_SAVE_COMPACT_FORMAT, p.Value, ARG_SAVE_COMPACT_FORMAT.Values);
+                c.SaveCompactFormat = option;
+            }) { HasValueChecking = true };
         public static readonly Argument ARG_NEW = new DocArgument(@"new", PATH_TO_DOCUMENT, (c, p) =>
         {
             c.CreateNewFile = true;
@@ -234,15 +270,15 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_HELP = new Argument(@"help",
             new[] { ARG_VALUE_ASCII, ARG_VALUE_NO_BORDERS, ARG_VALUE_SECTIONS },
             (c, p) => c.Usage(p.Value)) {OptionalValue = true, HasValueChecking = true};
-        public const string ARG_VALUE_ASCII = "ascii";
-        public const string ARG_VALUE_NO_BORDERS = "no-borders";
+        public const string ARG_VALUE_ASCII = ArgUsage.FORMAT_ASCII;
+        public const string ARG_VALUE_NO_BORDERS = ArgUsage.FORMAT_NO_BORDERS;
         public const string ARG_VALUE_SECTIONS = "sections";
         public static readonly Argument ARG_VERSION = new Argument(@"version", (c, p) => c.Version());
         public static readonly Argument ARG_VERBOSE_ERRORS =
             new Argument(@"verbose-errors", (c, p) => c._out.IsVerboseExceptions = true);
 
         private static readonly ArgumentGroup GROUP_GENERAL_IO = new ArgumentGroup(() => CommandArgUsage.CommandArgs_GROUP_GENERAL_IO_General_input_output, true,
-            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_NEW, ARG_OVERWRITE,
+            ARG_IN, ARG_OPEN, ARG_SAVE, ARG_SAVE_SETTINGS, ARG_OUT, ARG_SAVE_AS, ARG_SAVE_COMPACT_FORMAT, ARG_NEW, ARG_OVERWRITE,
             ARG_DISCARD_CHANGES, ARG_SHARE_ZIP, ARG_SHARE_TYPE, ARG_BATCH, ARG_DIR, ARG_TIMESTAMP, ARG_MEMSTAMP,
             ARG_LOG_FILE, ARG_HELP, ARG_VERSION, ARG_VERBOSE_ERRORS)
         {
@@ -271,6 +307,14 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            // --save-compact-format only affects a document that is saved in this run. Warn (rather
+            // than silently ignore) if it is given without a save target, so automation isn't misled.
+            // This is a non-fatal warning: it must not change the exit status.
+            if (SaveCompactFormat != null && !Saving)
+            {
+                WarnArgRequirement(ARG_SAVE_COMPACT_FORMAT, ARG_SAVE, ARG_OUT, ARG_SAVE_AS);
+            }
+
             // Use the original file as the output file, if not told otherwise.
             if (Saving && string.IsNullOrEmpty(SaveFile))
             {
@@ -286,6 +330,8 @@ namespace pwiz.Skyline
         public bool DiscardChanges { get; private set; }
         public bool OverwriteExisting { get; private set; }
         public string SaveFile { get; private set; }
+        // Null means "use the persisted CompactFormatOption setting" (default behavior)
+        public CompactFormatOption SaveCompactFormat { get; private set; }
         private bool _saving;
         public bool Saving
         {
@@ -1582,7 +1628,7 @@ namespace pwiz.Skyline
             (c, p) => c.FullScanProductMassAnalyzerType = p);
         public static readonly Argument ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME = new DocArgument(
                 @"full-scan-isolation-scheme",
-                () => Argument.ValuesToExample(GetDisplayNames(Settings.Default.IsolationSchemeList)
+                () => ArgumentBase.ValuesToExample(GetDisplayNames(Settings.Default.IsolationSchemeList)
                     .Append(CommandArgUsage.CommandArgs_ARG_FULL_SCAN_PRODUCT_ISOLATION_SCHEME_path_to_result_file_to_import_the_isolation_scheme)),
                 (c, p) => c.FullScanProductIsolationScheme = p.Value)
             { WrapValue = true };
@@ -1618,7 +1664,7 @@ namespace pwiz.Skyline
         public static readonly Argument ARG_PEPTIDE_UNIQUE_BY = DocArgument.FromEnumType<PeptideFilter.PeptideUniquenessConstraint>(@"pep-unique-by",
             (c, p) => c.PeptideDigestUniquenessConstraint = p);
         public static readonly Argument ARG_BGPROTEOME_NAME = new DocArgument(@"background-proteome-name",
-                () => Argument.ValuesToExample(Settings.Default.BackgroundProteomeList.Select(p => p.Name)
+                () => ArgumentBase.ValuesToExample(Settings.Default.BackgroundProteomeList.Select(p => p.Name)
                     .Append(SkylineResources.CommandArgs_ARG_BGPROTEOME_NAME_name_to_give_protdb_imported_by___background_proteome_file)),
                 (c, p) => c.BackgroundProteomeName = p.Value)
             { WrapValue = true };
@@ -2410,26 +2456,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private class ParaUsageBlock : IUsageBlock
-        {
-            public ParaUsageBlock(string text)
-            {
-                Text = text;
-            }
-
-            public string Text { get; private set; }
-
-            public string ToString(int width, string formatType)
-            {
-                return ConsoleTable.ParaToString(width, Text, true);
-            }
-
-            public string ToHtmlString()
-            {
-                return @"<p>" + Text + @"</p>";
-            }
-        }
-
         public static IEnumerable<IUsageBlock> UsageBlocks
         {
             get
@@ -2614,7 +2640,7 @@ namespace pwiz.Skyline
 
             foreach (string s in args)
             {
-                var pair = Argument.Parse(s);
+                var pair = ArgumentBase.Parse(s);
                 if (!ProcessArgument(pair))
                     return false;
             }
@@ -2702,180 +2728,6 @@ namespace pwiz.Skyline
         private void ErrorArgsExclusive(Argument arg1, Argument arg2)
         {
             WriteLine(ErrorArgsExclusiveText(arg1, arg2));
-        }
-
-        public class Argument
-        {
-            private const string ARG_PREFIX = "--";
-
-            public Argument(string name, Func<CommandArgs, NameValuePair, bool> processValue)
-            {
-                Name = name;
-                ProcessValue = processValue;
-            }
-
-            public Argument(string name, Action<CommandArgs, NameValuePair> processValue)
-                : this(name, (c, p) =>
-                {
-                    processValue(c, p);
-                    return true;
-                })
-            {
-            }
-
-            public Argument(string name, Func<string> valueExample, Func<CommandArgs, NameValuePair, bool> processValue)
-                : this(name, processValue)
-            {
-                ValueExample = valueExample;
-            }
-
-            public Argument(string name, Func<string> valueExample, Action<CommandArgs, NameValuePair> processValue)
-                : this(name, valueExample, (c, p) =>
-                {
-                    processValue(c, p);
-                    return true;
-                })
-            {
-            }
-
-            public Argument(string name, string[] values, Func<CommandArgs, NameValuePair, bool> processValue)
-                : this(name, () => ValuesToExample(values), processValue)
-            {
-                _fixedValues = values;
-            }
-
-            public Argument(string name, string[] values, Action<CommandArgs, NameValuePair> processValue)
-                : this(name, values, (c, p) =>
-                {
-                    processValue(c, p);
-                    return true;
-                })
-            {
-            }
-
-            public Argument(string name, Func<string[]> values, Func<CommandArgs, NameValuePair, bool> processValue)
-                : this(name, () => ValuesToExample(values()), processValue)
-            {
-                _dynamicValues = values;
-            }
-
-            public Argument(string name, Func<string[]> values, Action<CommandArgs, NameValuePair> processValue)
-                : this(name, values, (c, p) =>
-                {
-                    processValue(c, p);
-                    return true;
-                })
-            {
-            }
-
-            private string[] _fixedValues;
-            private Func<string[]> _dynamicValues;
-
-            public Func<CommandArgs, NameValuePair, bool> ProcessValue;
-
-            public string Name { get; private set; }
-            public string AppliesTo { get; set; }
-            public string Description
-            {
-                get { return CommandArgUsage.ResourceManager.GetString(@"_" + Name.Replace('-', '_')); }
-            }
-            public Func<string> ValueExample { get; private set; }
-            public string[] Values
-            {
-                get
-                {
-                    return _dynamicValues?.Invoke() ?? _fixedValues;
-                }
-            }
-            public bool WrapValue { get; set; }
-            public bool OptionalValue { get; set; }
-            public bool InternalUse { get; set; }
-            public bool HasValueChecking { get; set; }  // Set to avoid default checking against values listed for documentation
-
-            public string ArgumentText
-            {
-                get { return ARG_PREFIX + Name; }
-            }
-
-            public string GetArgumentTextWithValue(string value)
-            {
-                if (ValueExample == null)
-                    throw new ValueUnexpectedException(this);
-                else if (Values != null && !Values.Any(v => v.Equals(value, StringComparison.CurrentCultureIgnoreCase)))
-                    throw new ValueInvalidException(this, value, Values);
-
-                return ArgumentText + '=' + value;
-            }
-
-            public static string operator +(Argument arg, string value)
-            {
-                return arg.GetArgumentTextWithValue(value);
-            }
-
-            public static implicit operator string(Argument arg)
-            {
-                return arg.ArgumentText;
-            }
-
-            public string ArgumentDescription
-            {
-                get
-                {
-                    var retValue = ArgumentText;
-                    if (ValueExample != null)
-                    {
-                        var valueText = '=' + (WrapValue ? Environment.NewLine : string.Empty) + ValueExample();
-                        if (OptionalValue)
-                            valueText = '[' + valueText + ']';
-                        retValue += valueText;
-                    }
-                    return retValue;
-                }
-            }
-
-            public override string ToString()
-            {
-                return ArgumentDescription;
-            }
-
-            public static string ValuesToExample(IEnumerable<string> options)
-            {
-                var sb = new StringBuilder();
-                sb.Append('<');
-                foreach (var o in options)
-                {
-                    if (sb.Length > 1)
-                        sb.Append(@" | ");
-                    sb.Append(o);
-                }
-                sb.Append('>');
-                return sb.ToString();
-            }
-
-            public static string ValuesToExample(params string[] options)
-            {
-                return ValuesToExample((IEnumerable<string>) options);
-            }
-
-            public static NameValuePair Parse(string arg)
-            {
-                if (!arg.StartsWith(ARG_PREFIX))
-                    return NameValuePair.EMPTY;
-
-                string name, value = null;
-                arg = arg.Substring(2);
-                int indexEqualsSign = arg.IndexOf('=');
-                if (indexEqualsSign >= 0)
-                {
-                    name = arg.Substring(0, indexEqualsSign);
-                    value = arg.Substring(indexEqualsSign + 1);
-                }
-                else
-                {
-                    name = arg;
-                }
-                return new NameValuePair(name, value);
-            }
         }
 
         /// <summary>
@@ -3033,405 +2885,76 @@ namespace pwiz.Skyline
             }
         }
 
-        public class NameValuePair
+        /// <summary>
+        /// Supplies Skyline's localized descriptions, usage-table headers, and value-error
+        /// messages to the PortableUtil CLI-argument framework. Message templates are copied
+        /// verbatim from the former nested value exceptions to keep output byte-identical.
+        /// </summary>
+        private class SkylineArgUsageProvider : IArgUsageProvider
         {
-            public static NameValuePair EMPTY = new NameValuePair(null, null);
-
-            public NameValuePair(string name, string value)
+            public string GetDescription(string argName)
             {
-                Name = name;
-                Value = value;
+                return CommandArgUsage.ResourceManager.GetString(@"_" + argName.Replace('-', '_'));
             }
 
-            public string Name { get; private set; }
-            public string Value { get; private set; }
+            public string AppliesToHeader => CommandArgUsage.CommandArgGroup_ToString_Applies_To;
+            public string ArgumentHeader => CommandArgUsage.CommandArgGroup_ToString_Argument;
+            public string DescriptionHeader => CommandArgUsage.CommandArgGroup_ToString_Description;
 
-            public Argument Match { get; private set; }
-
-            public bool ValueBool
+            public string ValueMissingMessage(string argText)
             {
-                get
-                {
-                    if (IsNameOnly)
-                        return true;
-                    if (bool.TryParse(Value, out var result))
-                        return result;
-                    throw new ValueInvalidBoolException(Match, Value);
-                }
+                return string.Format(Resources.ValueMissingException_ValueMissingException_, argText);
             }
 
-            public int ValueInt
+            public string ValueUnexpectedMessage(string argText)
             {
-                get
-                {
-                    Assume.IsNotNull(Match); // Must be matched before accessing this
-                    try
-                    {
-                        return int.Parse(Value);
-                    }
-                    catch (FormatException)
-                    {
-                        throw new ValueInvalidIntException(Match, Value);
-                    }
-                }
+                return string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified, argText);
             }
 
-            public int GetValueInt(int minVal, int maxVal)
+            public string ValueInvalidMessage(string argText, string value, string[] argValues)
             {
-                int v = ValueInt;
-                if (minVal > v || v > maxVal)
-                    throw new ValueOutOfRangeIntException(Match, v, minVal, maxVal);
-                return v;
+                return string.Format(CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, value, argText, string.Join(@", ", argValues));
             }
 
-            public double ValueDouble
+            public string ValueInvalidBoolMessage(string argText, string value)
             {
-                get
-                {
-                    Assume.IsNotNull(Match); // Must be matched before accessing this
-                    double valueDouble;
-                    // Try both local and invariant formats to make batch files more portable
-                    if (!double.TryParse(Value, out valueDouble) && !double.TryParse(Value, NumberStyles.Float, CultureInfo.InvariantCulture, out valueDouble))
-                        throw new ValueInvalidDoubleException(Match, Value);
-                    return valueDouble;
-                }
+                return string.Format(CommandArgUsage.ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_, value, argText, BOOL_VALUE());
             }
 
-            public double GetValueDouble(double minVal, double maxVal)
+            public string ValueInvalidIntMessage(string argText, string value)
             {
-                double v = ValueDouble;
-                if (minVal > v || v > maxVal)
-                    throw new ValueOutOfRangeDoubleException(Match, v, minVal, maxVal);
-                return v;
+                return string.Format(Resources.ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_, value, argText);
             }
 
-            public DateTime ValueDate
+            public string ValueOutOfRangeIntMessage(string argText, int value, int minVal, int maxVal)
             {
-                get
-                {
-                    Assume.IsNotNull(Match); // Must be matched before accessing this
-                    try
-                    {
-                        // Try local format
-                        return Convert.ToDateTime(Value);
-                    }
-                    catch (Exception)
-                    {
-                        try
-                        {
-                            // Try invariant format to make command-line batch files more portable
-                            return Convert.ToDateTime(Value, CultureInfo.InvariantCulture);
-                        }
-                        catch (Exception)
-                        {
-                            throw new ValueInvalidDateException(Match, Value);
-                        }
-                    }
-                }
+                return string.Format(Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__, value, argText, minVal, maxVal);
             }
 
-            public string ValueFullPath
+            public string ValueInvalidDoubleMessage(string argText, string value)
             {
-                get
-                {
-                    try
-                    {
-                        if (IsRemoteUrl(Value))
-                            return Value;
-                        return Path.GetFullPath(Value);
-                    }
-                    catch (Exception)
-                    {
-                        throw new ValueInvalidPathException(Match, Value);
-                    }
-                }
+                return string.Format(Resources.ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_, value, argText);
             }
 
-            public bool IsEmpty { get { return string.IsNullOrEmpty(Name); } }
-            public bool IsNameOnly { get { return string.IsNullOrEmpty(Value); } }
-
-            public bool IsMatch(Argument arg)
+            public string ValueOutOfRangeDoubleMessage(string argText, double value, double minVal, double maxVal)
             {
-                if (!Name.Equals(arg.Name))
-                    return false;
-                if (arg.ValueExample == null && !IsNameOnly)
-                    throw new ValueUnexpectedException(arg);
-                if (arg.ValueExample != null)
-                {
-                    if (IsNameOnly)
-                    {
-                        if (!arg.OptionalValue)
-                            throw new ValueMissingException(arg);
-                    }
-                    else
-                    {
-                        var val = Value;
-                        if (arg.Values != null && !arg.HasValueChecking && !arg.Values.Any(v => v.Equals(val, StringComparison.CurrentCultureIgnoreCase)))
-                            throw new ValueInvalidException(arg, Value, arg.Values);
-                    }
-                }
-
-                Match = arg;
-                return true;
+                return string.Format(Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__, value, argText, minVal, maxVal);
             }
 
-            public bool IsValue(string value)
+            public string ValueInvalidDateMessage(string argText, string value)
             {
-                return value.Equals(Value, StringComparison.CurrentCultureIgnoreCase);
-            }
-        }
-
-        public class ArgumentGroup : IUsageBlock
-        {
-            private readonly Func<string> _getTitle;
-
-            public ArgumentGroup(Func<string> getTitle, bool showHeaders, params Argument[] args)
-            {
-                _getTitle = getTitle;
-                Args = args;
-                ShowHeaders = showHeaders;
-                Dependencies = new Dictionary<Argument, Argument>();
+                return string.Format(Resources.ValueInvalidDateException_ValueInvalidDateException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_, value, argText);
             }
 
-            public string Title { get { return _getTitle(); } }
-            public Func<string> Preamble { get; set; }
-            public Func<string> Postamble { get; set; }
-            public IList<Argument> Args { get; private set; }
-            public bool ShowHeaders { get; private set; }
-
-            public IDictionary<Argument, Argument> Dependencies { get; set; }
-
-            public Func<CommandArgs, bool> Validate { get; set; }
-
-            public int? LeftColumnWidth { get; set; }
-
-            public bool IncludeInUsage
+            public string ValueInvalidPathMessage(string argText, string value)
             {
-                get { return !Args.All(a => a.InternalUse); }
-            }
-
-            public override string ToString()
-            {
-                return ToString(78, null, true);
-            }
-
-            public string ToString(int width, string formatType)
-            {
-                return ToString(width, formatType, false);
-            }
-
-            private string ToString(int width, string formatType, bool forDebugging)
-            {
-                if (!IncludeInUsage && !forDebugging)
-                    return string.Empty;
-
-                var ct = new ConsoleTable
-                {
-                    Title = Title,
-                    Borders = formatType != ARG_VALUE_NO_BORDERS,
-                    Ascii = formatType == ARG_VALUE_ASCII
-                };
-                if (Preamble != null)
-                    ct.Preamble = Preamble();
-                if (Postamble != null)
-                    ct.Postamble = Postamble();
-                ct.Width = width;
-
-                bool hasAppliesTo = Args.Any(a => a.AppliesTo != null);
-                if (ShowHeaders)
-                {
-                    if (hasAppliesTo)
-                        ct.SetHeaders(CommandArgUsage.CommandArgGroup_ToString_Applies_To,
-                            CommandArgUsage.CommandArgGroup_ToString_Argument,
-                            CommandArgUsage.CommandArgGroup_ToString_Description);
-                    else
-                        ct.SetHeaders(CommandArgUsage.CommandArgGroup_ToString_Argument,
-                            CommandArgUsage.CommandArgGroup_ToString_Description);
-                }
-
-                var usageArgs = Args.Where(a => !a.InternalUse).ToList();
-                foreach (var commandArg in usageArgs)
-                {
-                    if (hasAppliesTo)
-                        ct.AddRow(commandArg.AppliesTo ?? string.Empty, commandArg.ArgumentDescription, commandArg.Description);
-                    else
-                        ct.AddRow(commandArg.ArgumentDescription, commandArg.Description);
-                }
-
-                int GetIdealArgumentWidth(Argument a)
-                {
-                    int maxWidth = width / 2;
-
-                    // if value is on a separate line or the argument by itself is over the max width, just use argument plus =
-                    if (a.WrapValue || a.ArgumentText.Length + 2 > maxWidth)
-                        return a.ArgumentText.Length + 2;
-
-                    // if value is included on single line, set a reasonable limit
-                    return Math.Min(maxWidth, a.ArgumentDescription.Length);
-                }
-
-                if (!hasAppliesTo)
-                {
-                    int minLines = int.MaxValue;
-                    int bestWidth = 0;
-                    for (int leftColumnWidth = usageArgs.Max(GetIdealArgumentWidth); leftColumnWidth < width - 10; leftColumnWidth += 5)
-                    {
-                        ct.Widths = new[] { leftColumnWidth, width - leftColumnWidth - 3 };   // 3 borders
-                        int numLines = ct.ToString().Split(new [] { Environment.NewLine }, StringSplitOptions.None).Length;
-                        if (bestWidth == 0 || numLines <= minLines)
-                        {
-                            minLines = numLines;
-                            bestWidth = leftColumnWidth;
-                        }
-                    }
-                    ct.Widths = new[] { bestWidth, width - bestWidth - 3 };   // 3 borders
-                }
-
-                return ct.ToString();
-            }
-
-            public string ToHtmlString()
-            {
-                if (!IncludeInUsage)
-                    return string.Empty;
-
-                // ReSharper disable LocalizableElement
-                var sb = new StringBuilder();
-                sb.AppendLine("<div class=\"RowType\">" + HtmlEncode(Title) + "</div>");
-                if (Preamble != null)
-                    sb.AppendLine("<p>" + Preamble() + "</p>");
-                sb.AppendLine("<table>");
-                bool hasAppliesTo = Args.Any(a => a.AppliesTo != null);
-                if (ShowHeaders)
-                {
-                    sb.Append("<tr>");
-
-                    if (hasAppliesTo)
-                        sb.Append("<th>").Append(CommandArgUsage.CommandArgGroup_ToString_Applies_To).Append("</th>");
-                    sb.Append("<th>").Append(CommandArgUsage.CommandArgGroup_ToString_Argument).Append("</th>");
-                    sb.Append("<th>").Append(CommandArgUsage.CommandArgGroup_ToString_Description).Append("</th>");
-
-                    sb.AppendLine("</tr>");
-                }
-                foreach (var commandArg in Args.Where(a => !a.InternalUse))
-                {
-                    sb.Append("<tr>");
-
-                    if (hasAppliesTo)
-                        sb.Append("<td>").Append(commandArg.AppliesTo != null ? HtmlEncode(commandArg.AppliesTo) : "&nbsp;").Append("</td>");
-                    string argDescription = HtmlEncode(commandArg.ArgumentDescription);
-                    if (!argDescription.Contains('|') && !WRAPPABLE_LIST_TYPE_VALUES.Contains(commandArg.ValueExample))
-                        argDescription = argDescription.Replace(" ", "&nbsp;");
-                    argDescription = argDescription.Replace(Environment.NewLine, "<br/>");
-                    sb.Append("<td>").Append(argDescription).Append("</td>");
-                    sb.Append("<td>").Append(HtmlEncode(commandArg.Description)).Append("</td>");
-
-                    sb.AppendLine("</tr>");
-                }
-                sb.AppendLine("</table>");
-                if (Postamble != null)
-                    sb.AppendLine("<p>" + Postamble() + "</p>");
-
-                return sb.ToString();
-                // ReSharper restore LocalizableElement
-            }
-
-            // Regular expression for an argument: a hyphen surrounded by zero or more word characters
-            // (i.e. letters, numbers or UnicodeCategory.ConnectorPunctuation) or hyphens
-            private static readonly Regex REGEX_ARGUMENT = new Regex(@"[\w-]*-[\w-]*",
-                RegexOptions.Compiled | RegexOptions.CultureInvariant);
-            /// <summary>
-            /// HTML encodes the string.
-            /// Also, puts &lt;nobr> tags around everything that contains a hyphen so that argument names do not get broken across lines.
-            /// </summary>
-            private static string HtmlEncode(string str)
-            {
-                str = str ?? string.Empty;
-                var result = new StringBuilder();
-                int charIndex = 0;
-                var matchCollection = REGEX_ARGUMENT.Matches(str);
-                foreach (Match match in matchCollection)
-                {
-                    result.Append(HttpUtility.HtmlEncode(str.Substring(charIndex, match.Index - charIndex)));
-                    // ReSharper disable LocalizableElement
-                    result.Append("<nobr>");
-                    result.Append(HttpUtility.HtmlEncode(match.Value));
-                    result.Append("</nobr>");
-                    // ReSharper restore LocalizableElement
-                    charIndex = match.Index + match.Length;
-                }
-
-                result.Append(HttpUtility.HtmlEncode(str.Substring(charIndex)));
-                return result.ToString();
-            }
-        }
-
-        public interface IUsageBlock
-        {
-            string ToString(int width, string formatType);
-            string ToHtmlString();
-        }
-
-
-        public class ValueMissingException : UsageException
-        {
-            public ValueMissingException(Argument arg)
-                : base(string.Format(Resources.ValueMissingException_ValueMissingException_, arg.ArgumentText))
-            {
-            }
-        }
-
-        public class ValueUnexpectedException : UsageException
-        {
-            public ValueUnexpectedException(Argument arg)
-                : base(string.Format(Resources.ValueUnexpectedException_ValueUnexpectedException_The_argument__0__should_not_have_a_value_specified, arg.ArgumentText))
-            {
-            }
-        }
-
-        public class ValueInvalidException : UsageException
-        {
-            public ValueInvalidException(Argument arg, string value, string[] argValues)
-                : base(string.Format(CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_, value, arg.ArgumentText, string.Join(@", ", argValues)))
-            {
-            }
-        }
-
-        public class ValueInvalidBoolException : UsageException
-        {
-            public ValueInvalidBoolException(Argument arg, string value)
-                : base(string.Format(CommandArgUsage.ValueInvalidBoolException_ValueInvalidBoolException_The_value___0___is_not_valid_for_the_argument___1____it_must_be__2_, value, arg.ArgumentText, BOOL_VALUE()))
-            {
-            }
-        }
-
-        public class ValueInvalidDoubleException : UsageException
-        {
-            public ValueInvalidDoubleException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidDoubleException_ValueInvalidDoubleException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_decimal_number_, value, arg.ArgumentText))
-            {
-            }
-        }
-
-        public class ValueOutOfRangeDoubleException : UsageException
-        {
-            public ValueOutOfRangeDoubleException(Argument arg, double value, double minVal, double maxVal)
-                : base(string.Format(Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__, value, arg.ArgumentText, minVal, maxVal))
-            {
-            }
-        }
-
-        public class ValueInvalidIntException : UsageException
-        {
-            public ValueInvalidIntException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidIntException_ValueInvalidIntException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_integer_, value, arg.ArgumentText))
-            {
+                return string.Format(Resources.ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_, value, argText);
             }
         }
 
         public class ValueInvalidNumberListException : UsageException
         {
-            public ValueInvalidNumberListException(Argument arg, string value)
+            public ValueInvalidNumberListException(ArgumentBase arg, string value)
                 : base(string.Format(Resources.ValueInvalidNumberListException_ValueInvalidNumberListException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_list_of_decimal_numbers_, value, arg.ArgumentText))
             {
             }
@@ -3439,7 +2962,7 @@ namespace pwiz.Skyline
 
         public class ValueInvalidChargeListException : UsageException
         {
-            public ValueInvalidChargeListException(Argument arg, string value)
+            public ValueInvalidChargeListException(ArgumentBase arg, string value)
                 : base(string.Format(Resources.ValueInvalidChargeListException_ValueInvalidChargeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_integers_, value, arg.ArgumentText))
             {
             }
@@ -3447,7 +2970,7 @@ namespace pwiz.Skyline
 
         public class ValueInvalidIonTypeListException : UsageException
         {
-            public ValueInvalidIonTypeListException(Argument arg, string value)
+            public ValueInvalidIonTypeListException(ArgumentBase arg, string value)
                 : base(string.Format(Resources.ValueInvalidIonTypeListException_ValueInvalidIonTypeListException_The_value___0___is_not_valid_for_the_argument__1__which_requires_an_comma_separated_list_of_fragment_ion_types__a__b__c__x__y__z__p__, value, arg.ArgumentText))
             {
             }
@@ -3455,7 +2978,7 @@ namespace pwiz.Skyline
 
         public class ValueInvalidAnnotationTargetListException : UsageException
         {
-            public ValueInvalidAnnotationTargetListException(Argument arg, string value, string annotationTargets)
+            public ValueInvalidAnnotationTargetListException(ArgumentBase arg, string value, string annotationTargets)
                 : base(string.Format(SkylineResources.ValueInvalidAnnotationTargetListException_ValueInvalidAnnotationTargetListException_The_value__0___is_not_valid_for_the_argument___1___which_requires_a_comma_separated_list_of_annotation_targets___2___, value, arg.ArgumentText, annotationTargets))
             {
             }
@@ -3463,7 +2986,7 @@ namespace pwiz.Skyline
 
         public class ValueInvalidModTerminusException : ValueInvalidException
         {
-            public ValueInvalidModTerminusException(Argument arg, string value)
+            public ValueInvalidModTerminusException(ArgumentBase arg, string value)
                 : base(arg, value, new []{ ModTerminus.N.ToString(), ModTerminus.C.ToString() })
             {
             }
@@ -3471,7 +2994,7 @@ namespace pwiz.Skyline
 
         public class ValueInvalidAminoAcidException : UsageException
         {
-            public ValueInvalidAminoAcidException(Argument arg, string value)
+            public ValueInvalidAminoAcidException(ArgumentBase arg, string value)
                 : base(string.Format(
                     CommandArgUsage.ValueInvalidException_ValueInvalidException_The_value___0___is_not_valid_for_the_argument__1___Use_one_of__2_,
                     value, arg.ArgumentText, MOD_AA_VALUE()))
@@ -3481,7 +3004,7 @@ namespace pwiz.Skyline
 
         public class ValueInvalidModException : UsageException
         {
-            public ValueInvalidModException(Argument arg, string mod, ArgumentException ex)
+            public ValueInvalidModException(ArgumentBase arg, string mod, ArgumentException ex)
                 : base(string.Format(CommandArgUsage.ValueInvalidModException_ValueInvalidModException_Unable_to_add_peptide_modification___0_____1_, mod, ex.Message))
             {
             }
@@ -3489,41 +3012,11 @@ namespace pwiz.Skyline
 
         public class ValueInvalidMzToleranceException : UsageException
         {
-            public ValueInvalidMzToleranceException(Argument arg, string value)
+            public ValueInvalidMzToleranceException(ArgumentBase arg, string value)
                 : base(string.Format(Resources.ValueInvalidMzToleranceException_ValueInvalidMzToleranceException_The_value__0__is_not_valid_for_the_argument__1__which_requires_a_value_and_a_unit__For_example___2__, value, arg.ArgumentText, arg.ValueExample()))
             {
             }
         }
 
-        public class ValueOutOfRangeIntException : UsageException
-        {
-            public ValueOutOfRangeIntException(Argument arg, int value, int minVal, int maxVal)
-                : base(string.Format(Resources.ValueOutOfRangeDoubleException_ValueOutOfRangeException_The_value___0___for_the_argument__1__must_be_between__2__and__3__, value, arg.ArgumentText, minVal, maxVal))
-            {
-            }
-        }
-
-        public class ValueInvalidDateException : UsageException
-        {
-            public ValueInvalidDateException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidDateException_ValueInvalidDateException_The_value___0___is_not_valid_for_the_argument__1__which_requires_a_date_time_value_, value, arg.ArgumentText))
-            {
-            }
-        }
-
-        public class ValueInvalidPathException : UsageException
-        {
-            public ValueInvalidPathException(Argument arg, string value)
-                : base(string.Format(Resources.ValueInvalidPathException_ValueInvalidPathException_The_value___0___is_not_valid_for_the_argument__1__failed_attempting_to_convert_it_to_a_full_file_path_, value, arg.ArgumentText))
-            {
-            }
-        }
-
-        public class UsageException : ArgumentException
-        {
-            protected UsageException(string message) : base(message)
-            {
-            }
-        }
     }
 }

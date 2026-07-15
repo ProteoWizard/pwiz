@@ -480,7 +480,12 @@ namespace pwiz.Skyline.Model.DdaSearch
 
         private void GetPercolatorScores(string percolatorTsvFilepath, Dictionary<string, double> qvalueByPsmId)
         {
-            var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
+            // Dispose the reader so the file handle is released before the next search's
+            // percolator run, which writes to the same output directory; a leaked
+            // StreamReader holds the .psms.txt read-locked and makes the next percolator
+            // fail with "Could not open the file for writing" (seen intermittently under
+            // code coverage, where GC frees the handle too late).
+            using var percolatorTargetPsmsReader = new DsvFileReader(percolatorTsvFilepath, TextUtil.SEPARATOR_TSV);
             int psmIdColumn = percolatorTargetPsmsReader.GetFieldIndex(@"PSMId");
             int qvalueColumn = percolatorTargetPsmsReader.GetFieldIndex(@"q-value");
             int filenameColumn = percolatorTargetPsmsReader.GetFieldIndex(@"filename");
