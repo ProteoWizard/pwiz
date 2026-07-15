@@ -354,9 +354,6 @@
   <data name="CvMaxHeight">
     <value>Cv Max Height</value>
   </data>
-  <data name="CvParameterValue">
-    <value>Parameter Value</value>
-  </data>
   <data name="CvRetentionTime">
     <value>Cv Retention Time</value>
   </data>
@@ -368,9 +365,6 @@
   </data>
   <data name="CvTotalAreaRatio">
     <value>Cv Total Area Ratio</value>
-  </data>
-  <data name="CvValues">
-    <value>CV Parameter Values</value>
   </data>
   <data name="CycleTimeAcrossPeak">
     <value>Cycle Time Across Peak</value>

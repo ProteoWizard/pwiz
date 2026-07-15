@@ -18,11 +18,9 @@
  */
 using System.Globalization;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Filtering;
-using pwiz.Skyline.Controls.Spectra;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results.Spectra;
@@ -115,29 +113,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(unfilteredPoints, Points(filterNotDeclared));
 
             VerifyEditorOffersCvColumns();
-            VerifyGridShowsCvColumns();
-        }
-
-        /// <summary>
-        /// The Spectrum Grid lists the discovered CV columns (opt-in) and, when one is checked, shows it
-        /// as a grid column under its friendly name.
-        /// </summary>
-        private void VerifyGridShowsCvColumns()
-        {
-            var bpiColumn = SpectrumClassColumn.CvParam(@"MS:1000505", @"base peak intensity", true);
-            var bpiName = bpiColumn.GetLocalizedColumnName(CultureInfo.CurrentCulture);
-
-            var grid = ShowDialog<SpectrumGridForm>(() => SkylineWindow.ViewMenu.ShowSpectrumGridForm());
-            WaitForConditionUI(() => grid.IsComplete());
-            RunUI(() => grid.SetSpectrumClassColumnCheckState(bpiColumn, CheckState.Checked));
-            WaitForConditionUI(() => grid.IsComplete());
-            RunUI(() =>
-            {
-                var headers = grid.DataGridView.Columns.Cast<DataGridViewColumn>().Select(c => c.HeaderText).ToList();
-                Assert.IsTrue(headers.Contains(bpiName),
-                    @"grid should show the base peak intensity column; headers: " + string.Join(@", ", headers));
-            });
-            OkDialog(grid, grid.Close);
         }
 
         /// <summary>

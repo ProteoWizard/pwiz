@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
 using JetBrains.Annotations;
 using pwiz.Common.DataBinding;
 using pwiz.Common.DataBinding.Attributes;
@@ -45,15 +43,6 @@ namespace pwiz.Skyline.Model.Results.Spectra
                 }
             }
         }
-
-        /// <summary>
-        /// Values of the dynamic mzML CV/user-parameter columns for this class, keyed by the column's
-        /// encoded name. These columns are not fixed properties of this POCO (they are only known at
-        /// runtime), so they are carried here and read back by the dynamic column's
-        /// <see cref="SpectrumClassColumn.GetValue(SpectrumClass)"/>; the grid binds them as lookups into
-        /// this dictionary.
-        /// </summary>
-        public IDictionary<string, CvParameterValue> CvValues { get; } = new Dictionary<string, CvParameterValue>();
 
         [Format(Formats.Mz)]
         public SpectrumPrecursors Ms1Precursors
@@ -101,45 +90,5 @@ namespace pwiz.Skyline.Model.Results.Spectra
         public double? ConstantNeutralLoss { get; private set; } // Negative value means neutral gain
 
         public double? SourceOffsetVoltage { get; private set; }
-    }
-
-    /// <summary>
-    /// Wraps a single uninterpreted mzML CV/user-parameter value carried in
-    /// <see cref="SpectrumClass.CvValues"/>. It exists so the databinding gives the dictionary's value
-    /// column a real caption: a bare <c>object</c> dictionary value surfaces a column named "Value", which
-    /// the column-caption localization test forbids. The value is the term's text, shown via
-    /// <see cref="ToString"/>; <see cref="RawValue"/> is read back by the dynamic column's
-    /// <see cref="SpectrumClassColumn.GetValue(SpectrumClass)"/> for grid grouping and filtering.
-    /// </summary>
-    [InvariantDisplayName(nameof(CvParameterValue))]
-    public class CvParameterValue : IComparable
-    {
-        public CvParameterValue(object value)
-        {
-            RawValue = value;
-        }
-
-        // Internal (not a public property) so the databinding does not expose it as another column.
-        internal object RawValue { get; }
-
-        public override string ToString()
-        {
-            return RawValue?.ToString() ?? string.Empty;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is CvParameterValue other && Equals(RawValue, other.RawValue);
-        }
-
-        public override int GetHashCode()
-        {
-            return RawValue?.GetHashCode() ?? 0;
-        }
-
-        public int CompareTo(object obj)
-        {
-            return string.Compare(ToString(), obj?.ToString(), StringComparison.CurrentCulture);
-        }
     }
 }

@@ -354,9 +354,6 @@ values.</value>
   <data name="CvMaxHeight">
     <value>Cv Max Height</value>
   </data>
-  <data name="CvParameterValue">
-    <value>The value of one uninterpreted mzML controlled-vocabulary or user parameter.</value>
-  </data>
   <data name="CvRetentionTime">
     <value>Coefficient of variation (CV) of the transition RetentionTime values.</value>
   </data>
@@ -368,9 +365,6 @@ values.</value>
   </data>
   <data name="CvTotalAreaRatio">
     <value>Coefficient of variation (CV) of the precursor TotalAreaRatio values</value>
-  </data>
-  <data name="CvValues">
-    <value>Values of the uninterpreted mzML controlled-vocabulary and user parameters, keyed by parameter.</value>
   </data>
   <data name="CycleTimeAcrossPeak">
     <value>Cycle time (in seconds) across the integrated peak.</value>

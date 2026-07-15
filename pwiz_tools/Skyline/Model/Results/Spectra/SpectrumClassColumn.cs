@@ -506,7 +506,7 @@ namespace pwiz.Skyline.Model.Results.Spectra
         /// static columns it is not bound to a <see cref="SpectrumClass"/> property: it reads its value
         /// straight from <see cref="SpectrumMetadata.OtherParams"/>. The spectrum-filter predicate reads
         /// it via <see cref="GetValue(SpectrumMetadata)"/>; the <see cref="SpectrumClass"/> POCO has no
-        /// such property, so its value is carried in <see cref="SpectrumClass.CvValues"/> for the grid.
+        /// such property, so the <see cref="SpectrumClass"/> accessors are not supported.
         /// </summary>
         private class CvParamColumn : SpectrumClassColumn
         {
@@ -548,12 +548,12 @@ namespace pwiz.Skyline.Model.Results.Spectra
 
             public override object GetValue(SpectrumClass spectrumClass)
             {
-                return spectrumClass.CvValues.TryGetValue(ColumnName, out var value) ? value?.RawValue : null;
+                throw new NotSupportedException();
             }
 
             public override void SetValue(SpectrumClass spectrumClass, object value)
             {
-                spectrumClass.CvValues[ColumnName] = value == null ? null : new CvParameterValue(value);
+                throw new NotSupportedException();
             }
 
             public override string GetLocalizedColumnName(CultureInfo cultureInfo)
