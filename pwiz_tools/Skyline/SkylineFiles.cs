@@ -1182,12 +1182,17 @@ namespace pwiz.Skyline
                         longWaitDlg.Message = Path.GetFileName(fileName);
                         longWaitDlg.PerformWork(this, 800, progressMonitor =>
                         {
-                            document.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
                             // If the user has chosen "Save As", and the document has a
-                            // document specific spectral library, copy this library to 
-                            // the new name.
+                            // document specific spectral library, copy this library to
+                            // the new name and rename the library within the document
+                            // before serializing. This ensures the saved file references
+                            // the library by its new name (including on each precursor's
+                            // spectrum header info) so that re-opening it does not require
+                            // a slow settings update.
                             if (!Equals(DocumentFilePath, fileName))
-                                SaveDocumentLibraryAs(fileName);
+                                document = SaveDocumentLibraryAs(fileName);
+
+                            document.SerializeToFile(saver.SafeName, fileName, SkylineVersion.CURRENT, progressMonitor);
 
                             saver.Commit();
                         });
@@ -1282,50 +1287,89 @@ namespace pwiz.Skyline
             }
         }
 
-        private void SaveDocumentLibraryAs(string newDocFilePath)
+        /// <summary>
+        /// When saving to a new name ("Save As"), copies the document-specific spectral library
+        /// to the new name and updates the document to reference the library by its new name. This
+        /// includes renaming the library on each precursor's spectrum header info so that the saved
+        /// file does not require a slow settings update the next time it is opened. Returns the
+        /// updated document (which has also been set as the current document), or the current
+        /// document unchanged if there is no document-specific library to rename.
+        /// </summary>
+        private SrmDocument SaveDocumentLibraryAs(string newDocFilePath)
         {
+            var document = Document;
             string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
             string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
-            // If the document has a document-specific library, and the files for it
-            // exist on disk, and it's not stale due to conversion of document to small molecule representation
-            var document = Document;
             string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
-            if (document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
-                && File.Exists(oldDocLibFile)
-                && !Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
+            // If the document has no document-specific library, or the files for it do not
+            // exist on disk, or it's stale due to conversion of document to small molecule
+            // representation, there is nothing to rename.
+            if (!document.Settings.PeptideSettings.Libraries.HasDocumentLibrary
+                || !File.Exists(oldDocLibFile)
+                || Equals(newDocLibFile.Replace(BiblioSpecLiteSpec.DotConvertedToSmallMolecules, string.Empty), oldDocLibFile))
             {
-                using (var saverLib = new FileSaver(newDocLibFile))
-                {
-                    FileSaver saverRedundant = null;
-                    if (File.Exists(oldRedundantDocLibFile))
-                    {
-                        string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(newDocFilePath);
-                        saverRedundant = new FileSaver(newRedundantDocLibFile);
-                    }
-                    using (saverRedundant)
-                    {
-                        saverLib.CopyFile(oldDocLibFile);
-                        if (saverRedundant != null)
-                        {
-                            saverRedundant.CopyFile(oldRedundantDocLibFile);
-                        }
-                        saverLib.Commit();
-                        if (saverRedundant != null)
-                        {
-                            saverRedundant.Commit();
-                        }
-                    }
-                }
-
-                // Update the document library settings to point to the new library.
-                SrmDocument docOriginal, docNew;
-                do
-                {
-                    docOriginal = Document;
-                    docNew = docOriginal.ChangeSettingsNoDiff(docOriginal.Settings.ChangeDocumentLibraryPath(newDocFilePath));                        
-                }
-                while (!SetDocument(docNew, docOriginal));
+                return document;
             }
+
+            using (var saverLib = new FileSaver(newDocLibFile))
+            {
+                FileSaver saverRedundant = null;
+                if (File.Exists(oldRedundantDocLibFile))
+                {
+                    string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(newDocFilePath);
+                    saverRedundant = new FileSaver(newRedundantDocLibFile);
+                }
+                using (saverRedundant)
+                {
+                    saverLib.CopyFile(oldDocLibFile);
+                    if (saverRedundant != null)
+                    {
+                        saverRedundant.CopyFile(oldRedundantDocLibFile);
+                    }
+                    saverLib.Commit();
+                    if (saverRedundant != null)
+                    {
+                        saverRedundant.Commit();
+                    }
+                }
+            }
+
+            // Update the document library settings to point to the new library, and rename the
+            // library on each precursor's spectrum header info to match.
+            SrmDocument docOriginal, docNew;
+            do
+            {
+                docOriginal = Document;
+                docNew = ChangeDocumentLibraryName(docOriginal, newDocFilePath);
+            }
+            while (!SetDocument(docNew, docOriginal));
+            return docNew;
+        }
+
+        /// <summary>
+        /// Returns a copy of <paramref name="document"/> whose document-specific spectral library
+        /// has been renamed for the new document path. Both the library settings and the library
+        /// name stored on each precursor's spectrum header info are updated, so that the saved
+        /// document is self-consistent and does not require a slow settings update when re-opened.
+        /// </summary>
+        private static SrmDocument ChangeDocumentLibraryName(SrmDocument document, string newDocFilePath)
+        {
+            var oldName = document.Settings.PeptideSettings.Libraries.LibrarySpecs
+                .FirstOrDefault(spec => spec != null && spec.IsDocumentLibrary)?.Name;
+            var newName = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newDocFilePath).Name;
+            var docNew = document.ChangeSettingsNoDiff(document.Settings.ChangeDocumentLibraryPath(newDocFilePath));
+            if (oldName == null || Equals(oldName, newName))
+                return docNew;
+
+            return (SrmDocument) docNew.ChangeAll(node =>
+            {
+                if (node is TransitionGroupDocNode nodeGroup && nodeGroup.LibInfo != null &&
+                    Equals(nodeGroup.LibInfo.LibraryName, oldName))
+                {
+                    return nodeGroup.ChangeLibInfo(nodeGroup.LibInfo.ChangeLibraryName(newName));
+                }
+                return node;
+            }, (int) SrmDocument.Level.TransitionGroups);
         }
 
         private void SaveLayout(string fileName)

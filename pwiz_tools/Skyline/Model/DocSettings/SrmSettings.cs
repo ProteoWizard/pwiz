@@ -566,7 +566,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     var newDocumentLibrarySpec = BiblioSpecLiteSpec.GetDocumentLibrarySpec(newPath);
                     specs[i] = newDocumentLibrarySpec;
-                    oldDocumentLibrary = libs[i] as BiblioSpecLiteLibrary;
+                    oldDocumentLibrary = peptideLibraries.Libraries[i] as BiblioSpecLiteLibrary;
                     if (oldDocumentLibrary != null)
                     {
                         newDocumentLibrary = oldDocumentLibrary.ChangeLibrarySpec(newDocumentLibrarySpec, FileStreamManager.Default.ConnectionPool);
