@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Parquet.Net" Version="4.25.0" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 

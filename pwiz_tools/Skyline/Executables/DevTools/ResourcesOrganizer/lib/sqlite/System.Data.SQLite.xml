@@ -44,6 +44,381 @@
             Gets the source code time-stamp value.
             </summary>
         </member>
+        <member name="T:System.Data.SQLite.FlagsOperation">
+            <summary>
+            These are the possible operations used to mutate a flags enumeration
+            value.
+            </summary>
+        </member>
+        <member name="T:System.Data.SQLite.TraceCategory">
+            <summary>
+            These are the trace categories used by various components within this
+            library.
+            </summary>
+        </member>
+        <member name="T:System.Data.SQLite.HelperMethods">
+            <summary>
+            This static class provides some methods that are shared between the
+            native library pre-loader and other classes.
+            </summary>
+            <summary>
+            This static class provides some methods that are shared between the
+            native library pre-loader and other classes.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.HelperMethods.staticSyncRoot">
+            <summary>
+            This lock is used to protect the static <see cref="F:System.Data.SQLite.HelperMethods.isMono" /> and
+            <see cref="F:System.Data.SQLite.HelperMethods.isDotNetCore" /> fields.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.HelperMethods.MonoRuntimeType">
+            <summary>
+            This type is only present when running on Mono.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.HelperMethods.DotNetCoreLibType">
+            <summary>
+            This type is only present when running on .NET Core.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.HelperMethods.isMono">
+            <summary>
+            Keeps track of whether we are running on Mono.  Initially null, it
+            is set by the <see cref="M:System.Data.SQLite.HelperMethods.IsMono" /> method on its first call.
+            Later, it is returned verbatim by the <see cref="M:System.Data.SQLite.HelperMethods.IsMono" /> method.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.HelperMethods.isDotNetCore">
+            <summary>
+            Keeps track of whether we are running on .NET Core.  Initially null,
+            it is set by the <see cref="M:System.Data.SQLite.HelperMethods.IsDotNetCore" /> method on its first
+            call.  Later, it is returned verbatim by the
+            <see cref="M:System.Data.SQLite.HelperMethods.IsDotNetCore" /> method.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.HelperMethods.debuggerBreak">
+            <summary>
+            Keeps track of whether we successfully invoked the
+            <see cref="M:System.Diagnostics.Debugger.Break" /> method.  Initially null, it is set by
+            the <see cref="M:System.Data.SQLite.HelperMethods.MaybeBreakIntoDebugger(System.Boolean)" /> method on its first call.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.HelperMethods.traceCategories">
+            <summary>
+            These are the currently enabled categories of trace messages.  If a
+            trace message belongs to one of these categories, it will be emitted;
+            otherwise, it will be silently dropped.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.HelperMethods.traceCategoriesSet">
+            <summary>
+            This boolean flag will be non-zero when the enabled trace categories
+            have been setup.
+            </summary>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.GetProcessId">
+            <summary>
+            Determines the ID of the current process.  Only used for debugging.
+            </summary>
+            <returns>
+            The ID of the current process -OR- zero if it cannot be determined.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.IsMono">
+            <summary>
+            Determines whether or not this assembly is running on Mono.
+            </summary>
+            <returns>
+            Non-zero if this assembly is running on Mono.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.IsTraceCategoryEnabled(System.Data.SQLite.TraceCategory)">
+            <summary>
+            Determines if the specified trace category is enabled.  Disabled
+            trace categories will not have any associated messages emitted.
+            </summary>
+            <param name="category">
+            The trace category to check.
+            </param>
+            <returns>
+            Non-zero if the specified trace category is enabled.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.ResetBreakIntoDebugger">
+            <summary>
+            Resets the cached value for the "PreLoadSQLite_BreakIntoDebugger"
+            configuration setting.
+            </summary>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.MaybeBreakIntoDebugger(System.Boolean)">
+            <summary>
+            If the "PreLoadSQLite_BreakIntoDebugger" configuration setting is
+            present (e.g. via the environment), give the interactive user an
+            opportunity to attach a debugger to the current process; otherwise,
+            do nothing.
+            </summary>
+            <param name="enabled">
+            Non-zero if the caller detected "PreLoadSQLite_BreakIntoDebugger"
+            configuration setting.
+            </param>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.GetThreadId">
+            <summary>
+            Determines the ID of the current thread.  Only used for debugging.
+            </summary>
+            <returns>
+            The ID of the current thread -OR- zero if it cannot be determined.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.IsWindows">
+            <summary>
+            Determines if the current process is running on one of the Windows
+            [sub-]platforms.
+            </summary>
+            <returns>
+            Non-zero when running on Windows; otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.StringFormat(System.IFormatProvider,System.String,System.Object[])">
+            <summary>
+            This is a wrapper around the
+            <see cref="M:System.String.Format(System.IFormatProvider,System.String,System.Object[])" />
+            method.  On Mono, it has to call the method overload without the
+            <see cref="T:System.IFormatProvider" /> parameter, due to a bug in Mono.
+            </summary>
+            <param name="provider">
+            This is used for culture-specific formatting.
+            </param>
+            <param name="format">
+            The format string.
+            </param>
+            <param name="args">
+            An array the objects to format.
+            </param>
+            <returns>
+            The resulting string.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.IsDotNetCore">
+            <summary>
+            Determines whether or not this assembly is running on .NET Core.
+            </summary>
+            <returns>
+            Non-zero if this assembly is running on .NET Core.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.ParseTraceCategories(System.String)">
+             <summary>
+             Attempts to determine which trace categories should be enabled based
+             on the specified string value, which must be in the following general
+             format:
+            
+                 [prefix1][name1][separator1] ... [prefixN][nameN][separatorN]
+            
+             The [prefix] portion of each name may be ommited.  When present, it
+             must be one of the following characters: '+' (plus), '-' (minus),
+             or '=' (equals).  The [name] is case insensitive and must be one of
+             names defined in the <see cref="T:System.Data.SQLite.TraceCategory" /> enumeration.  The
+             [separator] portions are required and must be one of the following
+             characters: '\t' (horizontal tab), '\n' (line feed), ' ' (space),
+             or ',' (comma).
+            
+             Initially, any [name] will be added to the mask of enabled trace
+             categories; however, when [prefix] is present, it may alter this
+             behavior, e.g. the '-' character is used to remove an enabled trace
+             category and the '=' character is used to reset the mask of enabled
+             trace categories.  Finally, the '+' character is used to restore the
+             initial behavior of adding to the mask of enabled trace categories.
+             </summary>
+             <param name="value">
+             The string containing one or more trace categories to enable.  In
+             general, this value will come from a configuration file -OR- the
+             process environment.
+             </param>
+             <returns>
+             Mask of enable trace categories -OR- null to indicate an error was
+             encountered during processing.
+             </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.AreTraceCategoriesSet">
+            <summary>
+            Determines if the enabled trace categories have already been set.
+            </summary>
+            <returns>
+            Non-zero if the enabled trace categories have already been set;
+            otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.SetTraceCategories(System.Data.SQLite.TraceCategory)">
+            <summary>
+            Changes the set of trace categories that are enabled.  Disabled
+            trace categories will not have any associated messages emitted.
+            </summary>
+            <param name="categories">
+            The trace categories to enable.  Any trace categories not present
+            in this mask will be disabled.
+            </param>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.Trace(System.String,System.Data.SQLite.TraceCategory)">
+            <summary>
+            Attempts to emit a message to the tracing subsystem via the
+            <see cref="M:System.Diagnostics.Trace.WriteLine(System.String)" /> method.
+            </summary>
+            <param name="message">
+            The message to emit.
+            </param>
+            <param name="category">
+            The category to which the message belongs.
+            </param>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.ToDisplayString(System.Object)">
+            <summary>
+            Attempts to convert an object value to a string suitable for display
+            to humans.
+            </summary>
+            <param name="value">
+            The object value to create a string representation of.
+            </param>
+            <returns>
+            A string representation of the <paramref name="value" /> parameter
+            -OR- null if it cannot be determined.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.ToDisplayString(System.Array)">
+            <summary>
+            Attempts to convert an array value to a string suitable for display
+            to humans.
+            </summary>
+            <param name="array">
+            The array value to create a string representation of.
+            </param>
+            <returns>
+            A string representation of the <paramref name="array" /> parameter
+            -OR- null if it cannot be determined.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.HasFlags(System.Data.SQLite.SQLiteConnectionFlags,System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if the specified flags are present within the flags
+            associated with the parent connection object.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <param name="hasFlags">
+            The flags to check for.
+            </param>
+            <returns>
+            Non-zero if the specified flag or flags were present; otherwise,
+            zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.LogPrepare(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if preparing a query should be logged.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if the query preparation should be logged; otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.LogPreBind(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if pre-parameter binding should be logged.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if the pre-parameter binding should be logged; otherwise,
+            zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.LogBind(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if parameter binding should be logged.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if the parameter binding should be logged; otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.LogCallbackExceptions(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if an exception in a native callback should be logged.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if the exception should be logged; otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.LogBackup(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if backup API errors should be logged.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if the backup API error should be logged; otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.NoLogModule(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if logging for the <see cref="T:System.Data.SQLite.SQLiteModule" /> class is
+            disabled.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if logging for the <see cref="T:System.Data.SQLite.SQLiteModule" /> class is
+            disabled; otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.LogModuleError(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if <see cref="T:System.Data.SQLite.SQLiteModule" /> errors should be logged.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if the <see cref="T:System.Data.SQLite.SQLiteModule" /> error should be logged;
+            otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.LogModuleException(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if <see cref="T:System.Data.SQLite.SQLiteModule" /> exceptions should be
+            logged.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if the <see cref="T:System.Data.SQLite.SQLiteModule" /> exception should be
+            logged; otherwise, zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.HelperMethods.LogRetry(System.Data.SQLite.SQLiteConnectionFlags)">
+            <summary>
+            Determines if retrying a query should be logged.
+            </summary>
+            <param name="flags">
+            The flags associated with the parent connection object.
+            </param>
+            <returns>
+            Non-zero if the query preparation should be logged; otherwise, zero.
+            </returns>
+        </member>
         <member name="T:System.Data.SQLite.SQLiteLogCallback">
              <summary>
              This is the method signature for the SQLite core library logging callback
@@ -987,6 +1362,42 @@
             <param name="disposing">Non-zero if connection is being disposed, zero otherwise.</param>
             <returns>Returns non-zero if the connection was actually closed (i.e. and not simply returned to a pool, etc).</returns>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteBase.Serialize(System.String)">
+            <summary>
+            Attempts to serialize the specified (or default)
+            <paramref name="schema" /> of the current database and
+            returns the resulting byte array.
+            </summary>
+            <param name="schema">
+            The name of the database schema (e.g. "main") to attempt to
+            serialize.  This parameter may be null.
+            </param>
+            <returns>
+            The raw database bytes, which may later be passed to the
+            <see cref="M:System.Data.SQLite.SQLiteBase.Deserialize(System.String,System.Byte[],System.Boolean)" /> method.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteBase.Deserialize(System.String,System.Byte[],System.Boolean)">
+            <summary>
+            Attempts to deserialize into the specified (or default)
+            <paramref name="schema" /> of the current database, based
+            on the <paramref name="data" /> raw database bytes, and
+            then makes the resulting in-memory database accessible.
+            </summary>
+            <param name="schema">
+            The name of the schema to deserialize the raw database
+            bytes into.
+            </param>
+            <param name="data">
+            The raw database bytes.  This parameter must have been
+            obtained form the <see cref="M:System.Data.SQLite.SQLiteBase.Serialize(System.String)" /> method -AND-
+            may not be null.
+            </param>
+            <param name="readOnly">
+            Non-zero if the resulting in-memory database should be
+            read-only.
+            </param>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteBase.SetTimeout(System.Int32)">
             <summary>
             Sets the busy timeout on the connection.  SQLiteCommand will call this before executing any command.
@@ -1346,11 +1757,6 @@
             </summary>
             <param name="rc">The SQLite return code.</param>
             <returns>The error message or null if it cannot be found.</returns>
-        </member>
-        <member name="T:System.Data.SQLite.ISQLiteSchemaExtensions">
-             <summary>
-            
-             </summary>
         </member>
         <member name="M:System.Data.SQLite.ISQLiteSchemaExtensions.BuildTempSchema(System.Data.SQLite.SQLiteConnection)">
             <summary>
@@ -1742,6 +2148,26 @@
             Enable logging of internal retries during statment preparation
             and stepping.
             </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteConnectionFlags.ConnectionPoolOnly">
+            <summary>
+            If a connection cannot be opened using the connection pool, throw
+            an exception instead of default behavior of falling back to using
+            a non-pooled connection.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteConnectionFlags.AggressiveDisposal">
+             <summary>
+             Be more aggressive about disposing of unused native resources,
+             e.g. connections, transactions, commands, data readers, blobs,
+             etc.
+            
+             WARNING: This flag is enabled by default and should not be
+                      disabled unless there is a very good reason, e.g.
+                      an application that relies on the legacy disposal
+                      behavior.
+            
+             </summary>
         </member>
         <member name="F:System.Data.SQLite.SQLiteConnectionFlags.BindAndGetAllAsText">
             <summary>
@@ -3110,6 +3536,39 @@
             <param name="sourceCommand"></param>
             <returns></returns>
         </member>
+        <member name="T:System.Data.SQLite.PasswordMode">
+            <summary>
+            This enumeration is used with the
+            <see cref="T:System.Data.SQLite.SQLiteGetPasswordCallback" /> callback in order
+            to determine which of the connection string properties is
+            to be set with its returned string value.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.PasswordMode.None">
+            <summary>
+            No password mode, skip setting the password.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.PasswordMode.Password">
+            <summary>
+            Use the "Password" connection string property.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.PasswordMode.HexPassword">
+            <summary>
+            Use the "HexPassword" connection string property.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.PasswordMode.TextPassword">
+            <summary>
+            Use the "TextPassword" connection string property.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.PasswordMode.TextHexPassword">
+            <summary>
+            Use the "TextHexPassword" connection string property.
+            </summary>
+        </member>
         <member name="T:System.Data.SQLite.SQLiteDataReaderValue">
             <summary>
             This class represents a single value to be returned
@@ -3565,6 +4024,23 @@
             is unavailable or unsuitable, an exception will be thrown.
             </param>
         </member>
+        <member name="T:System.Data.SQLite.SQLiteGetPasswordCallback">
+            <summary>
+            This represents a method to be called to obtain the encryption
+            password for the associated connection, which is passed in the
+            <paramref name="connection" /> parameter.
+            </summary>
+            <param name="connection">
+            The connection being opened.
+            </param>
+            <param name="passwordMode">
+            The called method may modify this parameter in order to change
+            which connection string property is used to setup the password.
+            </param>
+            <returns>
+            The password string to use when opening the connection.
+            </returns>
+        </member>
         <member name="T:System.Data.SQLite.SQLiteTypeCallbacks">
             <summary>
             This class represents the custom data type handling callbacks
@@ -3681,6 +4157,12 @@
         <member name="T:System.Data.SQLite.ConnectionEventArgs">
             <summary>
             Event data for connection event handlers.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.ConnectionEventArgs.createCount">
+            <summary>
+            Returns the number of instances of this class that have been created
+            within this application domain.
             </summary>
         </member>
         <member name="F:System.Data.SQLite.ConnectionEventArgs.EventType">
@@ -3837,12 +4319,24 @@
             <description>null</description>
             </item>
             <item>
-            <description>NoDefaultFlags</description>
+            <description>IncludeDefaultFlags</description>
             <description>
-            <b>True</b> - Do not combine the specified (or existing) connection flags with the value of the
+            <b>True</b> - Combine the specified connection flags, if any, with the value of the
             <see cref="P:System.Data.SQLite.SQLiteConnection.DefaultFlags" /> property.
             <br/>
-            <b>False</b> - Combine the specified (or existing) connection flags with the value of the
+            <b>False</b> - Do not combine the specified connection flags, if any, with the value of the
+            <see cref="P:System.Data.SQLite.SQLiteConnection.DefaultFlags" /> property.
+            </description>
+            <description>N</description>
+            <description>True</description>
+            </item>
+            <item>
+            <description>NoDefaultFlags</description>
+            <description>
+            <b>True</b> - Do not combine the pre-existing connection flags, if any, with the value of the
+            <see cref="P:System.Data.SQLite.SQLiteConnection.DefaultFlags" /> property.
+            <br/>
+            <b>False</b> - Combine the pre-existing connection flags, if any, with the value of the
             <see cref="P:System.Data.SQLite.SQLiteConnection.DefaultFlags" /> property.
             </description>
             <description>N</description>
@@ -3971,8 +4465,8 @@
             <item>
             <description>Password</description>
             <description>
-            {password} - Using this parameter requires that the legacy CryptoAPI based
-            codec (or the SQLite Encryption Extension) be enabled at compile-time for
+            {password} - Using this parameter requires that the legacy CryptoAPI-based
+            (RC4) codec (or the SQLite Encryption Extension) be enabled at compile-time for
             both the native interop assembly and the core managed assemblies; otherwise,
             using this parameter may result in an exception being thrown when attempting
             to open the connection.
@@ -3985,7 +4479,7 @@
             <description>
             {hexPassword} - Must contain a sequence of zero or more hexadecimal encoded
             byte values without a leading "0x" prefix.  Using this parameter requires
-            that the legacy CryptoAPI based codec (or the SQLite Encryption Extension)
+            that the legacy CryptoAPI-based (RC4) codec (or the SQLite Encryption Extension)
             be enabled at compile-time for both the native interop assembly and the
             core managed assemblies; otherwise, using this parameter may result in an
             exception being thrown when attempting to open the connection.
@@ -3996,8 +4490,8 @@
             <item>
             <description>TextPassword</description>
             <description>
-            {password} - Using this parameter requires that the legacy CryptoAPI based
-            codec (or the SQLite Encryption Extension) be enabled at compile-time for
+            {password} - Using this parameter requires that the legacy CryptoAPI-based
+            (RC4) codec (or the SQLite Encryption Extension) be enabled at compile-time for
             both the native interop assembly and the core managed assemblies; otherwise,
             using this parameter may result in an exception being thrown when attempting
             to open the connection.
@@ -4010,7 +4504,7 @@
             <description>
             {hexPassword} - Must contain a sequence of zero or more hexadecimal encoded
             byte values without a leading "0x" prefix.  Using this parameter requires
-            that the legacy CryptoAPI based codec (or the SQLite Encryption Extension)
+            that the legacy CryptoAPI-based (RC4) codec (or the SQLite Encryption Extension)
             be enabled at compile-time for both the native interop assembly and the
             core managed assemblies; otherwise, using this parameter may result in an
             exception being thrown when attempting to open the connection.
@@ -4185,6 +4679,16 @@
             <description>3</description>
             </item>
             <item>
+            <description>StepRetries</description>
+            <description>
+            The maximum number of retries when stepping a SQL statement.  This
+            normally only applies to stepping errors resulting from the database
+            being locked or its schema being changed.
+            </description>
+            <description>N</description>
+            <description>40</description>
+            </item>
+            <item>
             <description>ProgressOps</description>
             <description>
             The approximate number of virtual machine instructions between progress
@@ -4247,6 +4751,18 @@
             <summary>
             The <see cref="T:System.Data.SQLite.SQLiteConnection" /> instance (for this thread) that
             had the most recent call to <see cref="M:System.Data.SQLite.SQLiteConnection.Open" />.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteConnection._onChangedHit">
+            <summary>
+            Used to hold the number of times the <see cref="E:System.Data.SQLite.SQLiteConnection.Changed" /> event
+            should have been fired.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteConnection._onChangedMiss">
+            <summary>
+            Used to hold the number of times the <see cref="E:System.Data.SQLite.SQLiteConnection.Changed" /> event
+            should have been skipped.
             </summary>
         </member>
         <member name="F:System.Data.SQLite.SQLiteConnection._connectionState">
@@ -4567,6 +5083,23 @@
             <returns>
             The built-in implementation of the <see cref="T:System.Data.SQLite.ISQLiteConnectionPool" />
             interface -OR- null if it cannot be created.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.CanOnChanged(System.Data.SQLite.SQLiteConnection,System.Boolean)">
+            <summary>
+            Attempts to determine if <see cref="E:System.Data.SQLite.SQLiteConnection.Changed" /> events can be
+            raised.
+            </summary>
+            <param name="connection">
+            The connection associated with this event, if any.
+            </param>
+            <param name="ignoreDisposed">
+            Non-zero if disposal status of the specified connection should
+            not be considered.
+            </param>
+            <returns>
+            Non-zero if <see cref="E:System.Data.SQLite.SQLiteConnection.Changed" /> events are currently enabled
+            for the specified connection; otherwise, zero.
             </returns>
         </member>
         <member name="M:System.Data.SQLite.SQLiteConnection.OnChanged(System.Data.SQLite.SQLiteConnection,System.Data.SQLite.ConnectionEventArgs)">
@@ -5462,6 +5995,49 @@
             The transaction isolation level that should be used.
             </returns>
         </member>
+        <member name="F:System.Data.SQLite.SQLiteConnection._getPasswordCallback">
+            <summary>
+            Gets or sets the callback method that can be used to provide a
+            connection string password when one is NOT already specified in
+            the connection string itself.
+            </summary>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.Serialize(System.String)">
+            <summary>
+            Attempts to serialize the specified (or default)
+            <paramref name="schema" /> of the current database and
+            returns the resulting byte array.
+            </summary>
+            <param name="schema">
+            The name of the database schema (e.g. "main") to attempt to
+            serialize.  This parameter may be null.
+            </param>
+            <returns>
+            The raw database bytes, which may later be passed to the
+            <see cref="M:System.Data.SQLite.SQLiteConnection.Deserialize(System.String,System.Byte[],System.Boolean)" /> method.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteConnection.Deserialize(System.String,System.Byte[],System.Boolean)">
+            <summary>
+            Attempts to deserialize into the specified (or default)
+            <paramref name="schema" /> of the current database, based
+            on the <paramref name="data" /> raw database bytes, and
+            then makes the resulting in-memory database accessible.
+            </summary>
+            <param name="schema">
+            The name of the schema to deserialize the raw database
+            bytes into.
+            </param>
+            <param name="data">
+            The raw database bytes.  This parameter must have been
+            obtained form the <see cref="M:System.Data.SQLite.SQLiteConnection.Serialize(System.String)" /> method -AND-
+            may not be null.
+            </param>
+            <param name="readOnly">
+            Non-zero if the resulting in-memory database should be
+            read-only.
+            </param>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteConnection.Open">
             <summary>
             Opens the connection using the parameters found in the <see cref="P:System.Data.SQLite.SQLiteConnection.ConnectionString" />.
@@ -5692,9 +6268,9 @@
         </member>
         <member name="P:System.Data.SQLite.SQLiteConnection.DefineConstants">
             <summary>
-            Returns a string containing the define constants (i.e. compile-time
-            options) used to compile the core managed assembly, delimited with
-            spaces.
+            Returns a string containing the list of unified define constants
+            (i.e. compile-time options) used to compile the core managed and
+            interop assemblies, delimited with spaces.
             </summary>
         </member>
         <member name="P:System.Data.SQLite.SQLiteConnection.SQLiteVersion">
@@ -5754,6 +6330,13 @@
             cannot be obtained for any reason, a null value may be returned.
             </summary>
         </member>
+        <member name="P:System.Data.SQLite.SQLiteConnection.ProviderDefineConstants">
+            <summary>
+            Returns a string containing the define constants (i.e. compile-time
+            options) used to compile the core managed assembly, delimited with
+            spaces.
+            </summary>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteConnection.TryGetLastCachedSetting(System.String,System.Object,System.Object@)">
             <summary>
             Queries and returns the value of the specified setting, using the
@@ -5798,6 +6381,11 @@
         <member name="P:System.Data.SQLite.SQLiteConnection.SharedFlags">
             <summary>
             The extra connection flags to be used for all opened connections.
+            </summary>
+        </member>
+        <member name="P:System.Data.SQLite.SQLiteConnection.Tag">
+            <summary>
+            Gets or sets an arbitrary data ("tag") associated with this connection instance.
             </summary>
         </member>
         <member name="P:System.Data.SQLite.SQLiteConnection.State">
@@ -5850,8 +6438,9 @@
             WARNING: This method always throws an exception unless the library
                      has been built with encryption support.
             </code>
-            Attempts to decrypt a database file that was encrypted using the legacy CryptoAPI-based
-            RC4 codec that was previously included with System.Data.SQLite.
+            Attempts to decrypt a database file that was encrypted using the
+            legacy CryptoAPI-based (RC4) codec that was previously included with
+            System.Data.SQLite.
             </summary>
             <param name="fileName">
             The fully qualified name of the (legacy) encrypted database file.
@@ -7996,6 +8585,22 @@
             The DateTime format string to use for the specified DateTimeKind.
             </returns>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteConvert.ToString(System.Collections.Generic.IList{System.String},System.Boolean)">
+            <summary>
+            Build list-formatted string from a list of string elements.
+            </summary>
+            <param name="list">
+            The list of strings to process.
+            </param>
+            <param name="emptyOnNull">
+            Non-zero if this method should avoid returning a null value
+            when the input list is null.
+            </param>
+            <returns>
+            Either the list-formatted string -OR- null if it cannot be
+            determined.
+            </returns>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteConvert.ToString(System.DateTime)">
             <summary>
             Converts a string into a DateTime, using the DateTimeFormat, DateTimeKind,
@@ -8172,10 +8777,17 @@
         </member>
         <member name="M:System.Data.SQLite.SQLiteConvert.TypeToDbType(System.Type)">
             <summary>
-            For a given intrinsic type, return a DbType
+            Attempt to convert the specified <see cref="T:System.Type" /> to a
+            <see cref="T:System.Data.DbType" /> suitable for use with this library.
             </summary>
-            <param name="typ">The native type to convert</param>
-            <returns>The corresponding (closest match) DbType</returns>
+            <param name="type">
+            The type to convert.
+            </param>
+            <returns>
+            Either a specific <see cref="T:System.Data.DbType" /> -OR- the default
+            <see cref="T:System.Data.DbType" /> (i.e. <see cref="F:System.Data.DbType.String" />)
+            if a more specific <see cref="T:System.Data.DbType" /> is not matched.
+            </returns>
         </member>
         <member name="M:System.Data.SQLite.SQLiteConvert.DbTypeToColumnSize(System.Data.DbType)">
             <summary>
@@ -8565,6 +9177,12 @@
         <member name="F:System.Data.SQLite.SQLiteConnectionEventType.Canceled">
             <summary>
             The <see cref="M:System.Data.SQLite.SQLiteConnection.Cancel" /> method was invoked.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteConnectionEventType.DataReaderPreview">
+            <summary>
+            The <see cref="T:System.Data.SQLite.SQLiteDataReader" /> is preparing to return
+            a row of data.
             </summary>
         </member>
         <member name="T:System.Data.SQLite.SQLiteDateFormats">
@@ -9245,6 +9863,11 @@
         <member name="F:System.Data.SQLite.SQLiteDataReader._disposeCommand">
             <summary>
             If set, then dispose of the command object when the reader is finished
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteDataReader._statementList">
+            <summary>
+            The SQL command text, broken into individual SQL statements as they are executed
             </summary>
         </member>
         <member name="F:System.Data.SQLite.SQLiteDataReader._throwOnDisposed">
@@ -10263,6 +10886,12 @@
             File system corruption was detected during a read or write.
             </summary>
         </member>
+        <member name="F:System.Data.SQLite.SQLiteErrorCode.IoErr_In_Page">
+            <summary>
+            An exception was caught during use of mapped memory.
+            In general, this applies only to the WAL journal mode.
+            </summary>
+        </member>
         <member name="F:System.Data.SQLite.SQLiteErrorCode.Locked_SharedCache">
             <summary>
             A database table is locked in shared-cache mode.
@@ -10658,6 +11287,19 @@
              audited and found to be free of potentially security-adverse side-effects
              and information-leaks.
              </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteFunctionFlags.SQLITE_RESULT_SUBTYPE">
+            <summary>
+            The SQLITE_RESULT_SUBTYPE flag indicates to SQLite that a function
+            might call sqlite3_result_subtype() to cause a sub-type to be
+            associated with its result.  Every function that invokes
+            sqlite3_result_subtype() should have this property.  If it does not,
+            then the call to sqlite3_result_subtype() might become a no-op if the
+            function is used as term in an expression index.  On the other hand,
+            SQL functions that never invoke sqlite3_result_subtype() should avoid
+            setting this property, as the purpose of this property is to disable
+            certain optimizations that are incompatible with subtypes.
+            </summary>
         </member>
         <member name="T:System.Data.SQLite.SQLiteFunction">
              <summary>
@@ -12501,7 +13143,7 @@
             <param name="scale">Ignored</param>
             <param name="sourceColumn">The source column</param>
             <param name="rowVersion">The row version information</param>
-            <param name="value">The initial value to assign the parameter</param>   
+            <param name="value">The initial value to assign the parameter</param>
         </member>
         <member name="M:System.Data.SQLite.SQLiteParameter.#ctor(System.String,System.Data.DbType,System.Int32,System.Data.ParameterDirection,System.Byte,System.Byte,System.String,System.Data.DataRowVersion,System.Boolean,System.Object)">
             <summary>
@@ -12608,6 +13250,35 @@
             </summary>
             <returns>A new, unassociated SQLiteParameter</returns>
         </member>
+        <member name="M:System.Data.SQLite.SQLiteParameter.CreateNameForIndex(System.Int32,System.Boolean)">
+            <summary>
+            Attempts to build a name suitable for use with an index-only
+            (unnamed) parameter.
+            </summary>
+            <param name="index">The index for the parameter.</param>
+            <param name="placeholder">
+            Non-zero if the returned name should be a placeholder, i.e.
+            an unnamed parameter that does not use a syntax supported by
+            the SQLite core library.
+            </param>
+            <returns>The built name -OR- null if it cannot be built.</returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteParameter.IsUnnamedPlaceholder(System.String,System.Int32@)">
+            <summary>
+            Returns non-zero if the specified parameter name appears to
+            refer to an unnamed parameter placeholder.
+            </summary>
+            <param name="name">
+            The parameter name to check.
+            </param>
+            <param name="index">
+            The parameter index or negative one if it cannot be determined.
+            </param>
+            <returns>
+            Non-zero if the specified parameter name represents an unnamed
+            placeholder parameter.
+            </returns>
+        </member>
         <member name="T:System.Data.SQLite.SQLiteParameterCollection">
             <summary>
             SQLite implementation of DbParameterCollection.
@@ -12652,6 +13323,13 @@
         <member name="P:System.Data.SQLite.SQLiteParameterCollection.SyncRoot">
             <summary>
             Returns null
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteParameterCollection.noCase">
+            <summary>
+            Gets or sets the case-insensitivity setting for use when mappping
+            parameters.  This should only be set immediately after creating a
+            <see cref="T:System.Data.SQLite.SQLiteParameterCollection" /> instance.
             </summary>
         </member>
         <member name="M:System.Data.SQLite.SQLiteParameterCollection.GetEnumerator">
@@ -12910,6 +13588,12 @@
             The flags associated with the parent connection object.
             </summary>
         </member>
+        <member name="F:System.Data.SQLite.SQLiteStatement._referenceCount">
+            <summary>
+            The reference count for this statement, which may be shared between
+            a <see cref="T:System.Data.SQLite.SQLiteCommand" /> and a <see cref="T:System.Data.SQLite.SQLiteDataReader" />.
+            </summary>
+        </member>
         <member name="M:System.Data.SQLite.SQLiteStatement.#ctor(System.Data.SQLite.SQLiteBase,System.Data.SQLite.SQLiteConnectionFlags,System.Data.SQLite.SQLiteStatementHandle,System.String,System.Data.SQLite.SQLiteStatement)">
             <summary>
             Initializes the statement and attempts to get all information about parameters in the statement
@@ -12940,13 +13624,24 @@
             </param>
             <returns>Non-zero if the number of changed rows was fetched.</returns>
         </member>
-        <member name="M:System.Data.SQLite.SQLiteStatement.MapParameter(System.String,System.Data.SQLite.SQLiteParameter)">
+        <member name="M:System.Data.SQLite.SQLiteStatement.MapUnnamedParameter(System.String,System.Data.SQLite.SQLiteParameter,System.Boolean)">
+            <summary>
+            This method attempts to map the specified named placeholder
+            parameter, i.e. an unnamed parameter that has been given an
+            placeholder name.
+            </summary>
+            <param name="s">The placeholder parameter name to map.</param>
+            <param name="p">The parameter to assign it.</param>
+            <param name="noCase">Non-zero to ignore case.</param>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteStatement.MapParameter(System.String,System.Data.SQLite.SQLiteParameter,System.Boolean)">
             <summary>
             Called by SQLiteParameterCollection, this function determines if the specified parameter name belongs to
             this statement, and if so, keeps a reference to the parameter so it can be bound later.
             </summary>
             <param name="s">The parameter name to map</param>
             <param name="p">The parameter to assign it</param>
+            <param name="noCase">Non-zero to ignore case.</param>
         </member>
         <member name="M:System.Data.SQLite.SQLiteStatement.BindParameters">
             <summary>
@@ -13167,245 +13862,11 @@
             Non-zero if this transaction is valid; otherwise, false.
             </returns>
         </member>
-        <member name="T:System.Data.SQLite.HelperMethods">
+        <member name="T:System.Data.SQLite.DebugData">
             <summary>
-            This static class provides some methods that are shared between the
-            native library pre-loader and other classes.
+            This class encapsulates some tracking data that is used for debugging
+            and testing purposes.
             </summary>
-        </member>
-        <member name="F:System.Data.SQLite.HelperMethods.staticSyncRoot">
-            <summary>
-            This lock is used to protect the static <see cref="F:System.Data.SQLite.HelperMethods.isMono" /> and
-            <see cref="F:System.Data.SQLite.HelperMethods.isDotNetCore" /> fields.
-            </summary>
-        </member>
-        <member name="F:System.Data.SQLite.HelperMethods.MonoRuntimeType">
-            <summary>
-            This type is only present when running on Mono.
-            </summary>
-        </member>
-        <member name="F:System.Data.SQLite.HelperMethods.DotNetCoreLibType">
-            <summary>
-            This type is only present when running on .NET Core.
-            </summary>
-        </member>
-        <member name="F:System.Data.SQLite.HelperMethods.isMono">
-            <summary>
-            Keeps track of whether we are running on Mono.  Initially null, it is
-            set by the <see cref="M:System.Data.SQLite.HelperMethods.IsMono" /> method on its first call.  Later, it
-            is returned verbatim by the <see cref="M:System.Data.SQLite.HelperMethods.IsMono" /> method.
-            </summary>
-        </member>
-        <member name="F:System.Data.SQLite.HelperMethods.isDotNetCore">
-            <summary>
-            Keeps track of whether we are running on .NET Core.  Initially null,
-            it is set by the <see cref="M:System.Data.SQLite.HelperMethods.IsDotNetCore" /> method on its first
-            call.  Later, it is returned verbatim by the
-            <see cref="M:System.Data.SQLite.HelperMethods.IsDotNetCore" /> method.
-            </summary>
-        </member>
-        <member name="F:System.Data.SQLite.HelperMethods.debuggerBreak">
-            <summary>
-            Keeps track of whether we successfully invoked the
-            <see cref="M:System.Diagnostics.Debugger.Break" /> method.  Initially null, it is set by
-            the <see cref="M:System.Data.SQLite.HelperMethods.MaybeBreakIntoDebugger" /> method on its first call.
-            </summary>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.GetProcessId">
-            <summary>
-            Determines the ID of the current process.  Only used for debugging.
-            </summary>
-            <returns>
-            The ID of the current process -OR- zero if it cannot be determined.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.IsMono">
-            <summary>
-            Determines whether or not this assembly is running on Mono.
-            </summary>
-            <returns>
-            Non-zero if this assembly is running on Mono.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.IsDotNetCore">
-            <summary>
-            Determines whether or not this assembly is running on .NET Core.
-            </summary>
-            <returns>
-            Non-zero if this assembly is running on .NET Core.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.ResetBreakIntoDebugger">
-            <summary>
-            Resets the cached value for the "PreLoadSQLite_BreakIntoDebugger"
-            configuration setting.
-            </summary>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.MaybeBreakIntoDebugger">
-            <summary>
-            If the "PreLoadSQLite_BreakIntoDebugger" configuration setting is
-            present (e.g. via the environment), give the interactive user an
-            opportunity to attach a debugger to the current process; otherwise,
-            do nothing.
-            </summary>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.GetThreadId">
-            <summary>
-            Determines the ID of the current thread.  Only used for debugging.
-            </summary>
-            <returns>
-            The ID of the current thread -OR- zero if it cannot be determined.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.HasFlags(System.Data.SQLite.SQLiteConnectionFlags,System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if the specified flags are present within the flags
-            associated with the parent connection object.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <param name="hasFlags">
-            The flags to check for.
-            </param>
-            <returns>
-            Non-zero if the specified flag or flags were present; otherwise,
-            zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.LogPrepare(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if preparing a query should be logged.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if the query preparation should be logged; otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.LogPreBind(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if pre-parameter binding should be logged.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if the pre-parameter binding should be logged; otherwise,
-            zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.LogBind(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if parameter binding should be logged.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if the parameter binding should be logged; otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.LogCallbackExceptions(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if an exception in a native callback should be logged.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if the exception should be logged; otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.LogBackup(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if backup API errors should be logged.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if the backup API error should be logged; otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.NoLogModule(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if logging for the <see cref="T:System.Data.SQLite.SQLiteModule" /> class is
-            disabled.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if logging for the <see cref="T:System.Data.SQLite.SQLiteModule" /> class is
-            disabled; otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.LogModuleError(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if <see cref="T:System.Data.SQLite.SQLiteModule" /> errors should be logged.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if the <see cref="T:System.Data.SQLite.SQLiteModule" /> error should be logged;
-            otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.LogModuleException(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if <see cref="T:System.Data.SQLite.SQLiteModule" /> exceptions should be
-            logged.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if the <see cref="T:System.Data.SQLite.SQLiteModule" /> exception should be
-            logged; otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.LogRetry(System.Data.SQLite.SQLiteConnectionFlags)">
-            <summary>
-            Determines if retrying a query should be logged.
-            </summary>
-            <param name="flags">
-            The flags associated with the parent connection object.
-            </param>
-            <returns>
-            Non-zero if the query preparation should be logged; otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.IsWindows">
-            <summary>
-            Determines if the current process is running on one of the Windows
-            [sub-]platforms.
-            </summary>
-            <returns>
-            Non-zero when running on Windows; otherwise, zero.
-            </returns>
-        </member>
-        <member name="M:System.Data.SQLite.HelperMethods.StringFormat(System.IFormatProvider,System.String,System.Object[])">
-            <summary>
-            This is a wrapper around the
-            <see cref="M:System.String.Format(System.IFormatProvider,System.String,System.Object[])" /> method.
-            On Mono, it has to call the method overload without the
-            <see cref="T:System.IFormatProvider" /> parameter, due to a bug in Mono.
-            </summary>
-            <param name="provider">
-            This is used for culture-specific formatting.
-            </param>
-            <param name="format">
-            The format string.
-            </param>
-            <param name="args">
-            An array the objects to format.
-            </param>
-            <returns>
-            The resulting string.
-            </returns>
         </member>
         <member name="T:System.Data.SQLite.NativeLibraryHelper">
             <summary>
@@ -13723,6 +14184,17 @@
             SQLite interop assembly into the current process.
             </summary>
         </member>
+        <member name="F:System.Data.SQLite.UnsafeNativeMethods.processorArchitectureRuntimes">
+            <summary>
+            This dictionary stores the mappings between processor architecture
+            names and runtime names.  These mappings are now used for two
+            purposes.  First, they are used to determine if the assembly code
+            base should be used instead of the location, based upon whether one
+            or more of the named sub-directories exist within the assembly code
+            base.  Second, they are used to assist in loading the appropriate
+            SQLite interop assembly into the current process.
+            </summary>
+        </member>
         <member name="F:System.Data.SQLite.UnsafeNativeMethods.cachedAssemblyDirectory">
             <summary>
             This is the cached return value from the
@@ -14022,11 +14494,15 @@
             zero (failure).
             </returns>
         </member>
-        <member name="M:System.Data.SQLite.UnsafeNativeMethods.GetBaseDirectory">
+        <member name="M:System.Data.SQLite.UnsafeNativeMethods.GetBaseDirectory(System.Boolean)">
             <summary>
             Queries and returns the base directory of the current application
             domain.
             </summary>
+            <param name="overrideOnly">
+            Non-zero if this method should only consider a base directory that
+            has been manually overridden by the application.
+            </param>
             <returns>
             The base directory for the current application domain -OR- null if it
             cannot be determined.
@@ -14067,7 +14543,23 @@
             if it cannot be determined.
             </returns>
         </member>
-        <member name="M:System.Data.SQLite.UnsafeNativeMethods.PreLoadSQLiteDll(System.String,System.String,System.Boolean,System.String@,System.IntPtr@)">
+        <member name="M:System.Data.SQLite.UnsafeNativeMethods.GetRuntimeName(System.String,System.Boolean)">
+            <summary>
+            Given the processor architecture, returns the name of the runtime.
+            </summary>
+            <param name="processorArchitecture">
+            The processor architecture to be translated to a runtime name.
+            </param>
+            <returns>
+            <param name="forUseAsPath">
+            Non-zero if the component separators within the runtime name should
+            be replaced with directory separators.
+            </param>
+            The runtime name for the specified processor architecture -OR- null
+            if it cannot be determined.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.UnsafeNativeMethods.PreLoadSQLiteDll(System.String,System.String,System.Boolean,System.Boolean,System.String@,System.IntPtr@)">
             <summary>
             Attempts to load the native SQLite library based on the specified
             directory and processor architecture.
@@ -14085,6 +14577,10 @@
             <param name="allowBaseDirectoryOnly">
             Non-zero indicates that the native SQLite library can be loaded
             from the base directory itself.
+            </param>
+            <param name="whatIf">
+            Non-zero to skip loading of the native SQLite library, i.e. only
+            set the native module file name.
             </param>
             <param name="nativeModuleFileName">
             The candidate native module file name to load will be stored here,
@@ -14136,7 +14632,7 @@
         </member>
         <member name="P:System.Data.SQLite.SR.Keywords">
             <summary>
-              Looks up a localized string similar to ALL,ALTER,AND,AS,AUTOINCREMENT,BETWEEN,BY,CASE,CHECK,COLLATE,COMMIT,CONSTRAINT,CREATE,CROSS,DEFAULT,DEFERRABLE,DELETE,DISTINCT,DROP,ELSE,ESCAPE,EXCEPT,FOREIGN,FROM,FULL,GROUP,HAVING,IN,INDEX,INNER,INSERT,INTERSECT,INTO,IS,ISNULL,JOIN,LEFT,LIMIT,NATURAL,NOT,NOTNULL,NULL,ON,OR,ORDER,OUTER,PRIMARY,REFERENCES,RIGHT,ROLLBACK,SELECT,SET,TABLE,THEN,TO,TRANSACTION,UNION,UNIQUE,UPDATE,USING,VALUES,WHEN,WHERE.
+              Looks up a localized string similar to ABORT,ACTION,ADD,AFTER,ALL,ALTER,ALWAYS,ANALYZE,AND,AS,ASC,ATTACH,AUTOINCREMENT,BEFORE,BEGIN,BETWEEN,BY,CASCADE,CASE,CAST,CHECK,COLLATE,COLUMN,COMMIT,CONFLICT,CONSTRAINT,CREATE,CROSS,CURRENT,CURRENT_DATE,CURRENT_TIME,CURRENT_TIMESTAMP,DATABASE,DEFAULT,DEFERRABLE,DEFERRED,DELETE,DESC,DETACH,DISTINCT,DO,DROP,EACH,ELSE,END,ESCAPE,EXCEPT,EXCLUDE,EXCLUSIVE,EXISTS,EXPLAIN,FAIL,FILTER,FIRST,FOLLOWING,FOR,FOREIGN,FROM,FULL,GENERATED,GLOB,GROUP,GROUPS,HAVING,IF,IGNORE,IMMEDIATE,IN,INDEX,INDEXED,INITIALLY,INNER,INSERT,INSTEAD,INTERSECT,INTO,IS,ISNULL,JOIN,KEY,LAST,LEFT,LIKE,LIMIT,MATCH,MATERIALIZED,NATURAL,NO,NOT,NOTHING,NOTNULL,NULL,NULLS,OF,OFFSET,ON,OR,ORDER,OTHERS,OUTER,OVER,PARTITION,PLAN,PRAGMA,PRECEDING,PRIMARY,QUERY,RAISE,RANGE,RECURSIVE,REFERENCES,REGEXP,REINDEX,RELEASE,RENAME,REPLACE,RESTRICT,RETURNING,RIGHT,ROLLBACK,ROW,ROWS,SAVEPOINT,SELECT,SET,TABLE,TEMP,TEMPORARY,THEN,TIES,TO,TRANSACTION,TRIGGER,UNBOUNDED,UNION,UNIQUE,UPDATE,USING,VACUUM,VALUES,VIEW,VIRTUAL,WHEN,WHERE,WINDOW,WITH,WITHOUT.
             </summary>
         </member>
         <member name="P:System.Data.SQLite.SR.MetaDataCollections">
@@ -14181,6 +14677,12 @@
         <member name="F:System.Data.SQLite.OpResult.Skipped">
             <summary>
             The operation was either skipped -OR- will not be performed.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.OpResult.Queued">
+            <summary>
+            The operation will be attempted later, possibly via a secondary
+            thread, event loop, etc.
             </summary>
         </member>
         <member name="T:System.Data.SQLite.SQLiteExtra">
@@ -17449,6 +17951,66 @@
             This class contains static methods that are used to allocate,
             manipulate, and free native memory provided by the SQLite core library.
             </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteMemory.syncRoot">
+            <summary>
+            This object instance is used to synchronize access to the other
+            static fields of this class.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteMemory.bytesAllocated">
+            <summary>
+            The total number of outstanding memory bytes allocated by this
+            class using the SQLite core library.
+            </summary>
+        </member>
+        <member name="F:System.Data.SQLite.SQLiteMemory.maximumBytesAllocated">
+            <summary>
+            The maximum number of outstanding memory bytes ever allocated by
+            this class using the SQLite core library.
+            </summary>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteMemory.GetBlockSize(System.IntPtr)">
+            <summary>
+            Attempts to determine the size of the specified memory block.  If
+            the <see cref="M:System.Data.SQLite.SQLiteMemory.Size64(System.IntPtr)" /> method can be used, the returned value
+            may be larger than <see cref="F:System.Int32.MaxValue" />.  A message may
+            be sent to the logging subsystem if an error is encountered.
+            </summary>
+            <param name="pMemory">
+            The native pointer to the memory block previously obtained from
+            the <see cref="M:System.Data.SQLite.SQLiteMemory.Allocate(System.Int32)" />, <see cref="M:System.Data.SQLite.SQLiteMemory.Allocate64(System.UInt64)" />,
+            <see cref="M:System.Data.SQLite.SQLiteMemory.AllocateUntracked(System.Int32)" />, or
+            <see cref="M:System.Data.SQLite.SQLiteMemory.Allocate64Untracked(System.UInt64)" /> methods or directly from the
+            SQLite core library.
+            </param>
+            <returns>
+            The size of the specified memory block -OR- zero if the 32-bit
+            signed value reported from the native API was less than zero.
+            </returns>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteMemory.MemoryWasAllocated(System.IntPtr)">
+            <summary>
+            Adjusts the total number of (tracked) bytes that are currently
+            considered to be allocated by this class.  The total number is
+            increased by the total size of the memory block pointed to by
+            <paramref name="pMemory" />.  If the new total number exceeds
+            the previously seen maximum, the maximum will be reset.
+            </summary>
+            <param name="pMemory">
+            A native pointer to newly allocated memory.
+            </param>
+        </member>
+        <member name="M:System.Data.SQLite.SQLiteMemory.MemoryIsBeingFreed(System.IntPtr)">
+            <summary>
+            Adjusts the total number of (tracked) bytes that are currently
+            considered to be allocated by this class.  The total number is
+            decreased by the total size of the memory block pointed to by
+            <paramref name="pMemory" />.
+            </summary>
+            <param name="pMemory">
+            A native pointer to allocated memory that is going to be freed.
+            </param>
         </member>
         <member name="M:System.Data.SQLite.SQLiteMemory.CanUseSize64">
             <summary>

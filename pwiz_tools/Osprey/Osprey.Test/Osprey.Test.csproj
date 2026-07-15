@@ -13,7 +13,7 @@
     <PackageReference Include="MSTest.TestFramework" Version="3.6.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Parquet.Net" Version="4.25.0" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
     <!--
       Parquet.Net writes use IronCompress + ZstdSharp for Zstd compression,
       which needs the native nironcompress.dll deployed alongside the test
