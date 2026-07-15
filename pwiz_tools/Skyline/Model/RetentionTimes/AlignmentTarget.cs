@@ -464,7 +464,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
             public Library Library { get; private set; }
 
             /// <summary>
-            /// Returns a copy of this <see cref="LibraryTarget"/> which uses a different <see cref="Library"/>.
+            /// Returns a copy of this which uses a different <see cref="Library"/>.
             /// This is used when a library has been renamed but is otherwise unchanged, so that the alignment
             /// target continues to compare equal and the existing alignments do not have to be recomputed.
             /// </summary>

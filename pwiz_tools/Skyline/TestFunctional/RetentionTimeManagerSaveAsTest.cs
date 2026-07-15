@@ -20,7 +20,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.CommonMsData;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.SkylineTestUtil;
 
@@ -31,7 +30,7 @@ namespace pwiz.SkylineTestFunctional
     /// recompute the retention time alignments. When a document aligns to a Document Library, saving
     /// to a new name renames that library. The alignment target holds a reference to the library, so
     /// unless the alignment target is updated in step with the rename, the target looks different and
-    /// all of the retention time alignments get needlessly discarded and recomputed.
+    /// all the retention time alignments get needlessly discarded and recomputed.
     /// </summary>
     [TestClass]
     public class RetentionTimeManagerSaveAsTest : AbstractFunctionalTest
