@@ -574,6 +574,12 @@ namespace pwiz.Skyline.Util {
             }
         }
 
+        public static string ZipVfs_EnsureVfsRegistered_Unable_to_load__0_ {
+            get {
+                return ResourceManager.GetString("ZipVfs_EnsureVfsRegistered_Unable_to_load__0_", resourceCulture);
+            }
+        }
+
         public static string PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened {
             get {
                 return ResourceManager.GetString("PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" +

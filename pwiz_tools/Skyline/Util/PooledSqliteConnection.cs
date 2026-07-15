@@ -38,6 +38,10 @@ namespace pwiz.Skyline.Util
 
         protected override IDisposable Connect()
         {
+            // The .blib may be stored uncompressed inside an in-place .sky.zip; if so, open it
+            // through the zip VFS at its byte range instead of as an ordinary file.
+            if (new FilePath(FilePath).TryGetZipByteRange(out var zipFilePath, out var dataOffset, out var length))
+                return ZipVfs.OpenConnection(zipFilePath, dataOffset, length);
             return SqliteOperations.OpenConnection(FilePath);
         }
 

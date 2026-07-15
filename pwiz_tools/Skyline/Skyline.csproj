@@ -4175,6 +4175,10 @@
       <Link>SQLite.Interop.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="..\..\libraries\SQLite\$(Platform)\zipvfs_ext.dll">
+      <Link>zipvfs_ext.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Condition=" '$(Platform)' == 'x86' " Include="..\Shared\ProteowizardWrapper\obj\x86\timsdata.dll">
       <Link>timsdata.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -5415,6 +5419,7 @@
     <Compile Include="Util\PooledSqliteConnection.cs" />
     <Compile Include="Util\PooledZipEntryStream.cs" />
     <Compile Include="Util\RandomAccessZipFile.cs" />
+    <Compile Include="Util\ZipVfs.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\TextRendererHelper.cs" />
     <Compile Include="Util\UtilInstall.cs" />
