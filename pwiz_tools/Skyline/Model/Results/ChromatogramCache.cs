@@ -1966,7 +1966,8 @@ namespace pwiz.Skyline.Model.Results
             using (ReadStream.ReaderWriterLock.GetReadLock())
             {
                 var cancellationToken = ReadStream.ReaderWriterLock.CancellationToken;
-                using (var stream = new FileStream(CachePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                // CachePath (.skyd) may live inside an in-place .sky.zip, so go through FilePath.
+                using (var stream = new FilePath(CachePath).OpenRead())
                 {
                     if (peaks != null)
                     {

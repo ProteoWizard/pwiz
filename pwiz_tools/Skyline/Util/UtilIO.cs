@@ -732,7 +732,13 @@ namespace pwiz.Skyline.Util
                 if (mode != FileMode.Open)
                     stream = new FileStream(path, mode);
                 else
-                    stream = new FileStream(path, mode, FileAccess.Read, FileShare.Read);
+                {
+                    // Reading may be from a file stored inside a .zip (e.g. an in-place .sky.zip).
+                    var filePath = new FilePath(path);
+                    stream = filePath.IsInZipFile
+                        ? filePath.OpenRead()
+                        : new FileStream(path, mode, FileAccess.Read, FileShare.Read);
+                }
             }
             catch (Exception x)
             {
@@ -755,6 +761,10 @@ namespace pwiz.Skyline.Util
 
         public IPooledStream CreatePooledStream(string path, bool buffer)
         {
+            // The file may be stored inside a .zip (e.g. a .skyd in an in-place .sky.zip).
+            var filePath = new FilePath(path);
+            if (filePath.IsInZipFile)
+                return filePath.OpenPooledStream(ConnectionPool);
             return new PooledFileStream(this, path, buffer);
         }
 

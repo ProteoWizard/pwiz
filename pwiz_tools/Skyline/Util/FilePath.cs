@@ -88,6 +88,23 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Creates a pooled stream over a stored (uncompressed) zip entry. Throws if this path is
+        /// not inside a zip; the caller should check <see cref="IsInZipFile"/> first.
+        /// </summary>
+        public IPooledStream OpenPooledStream(ConnectionPool connectionPool)
+        {
+            if (!TryParseZip(out var zipFilePath, out var entryName))
+                throw new InvalidOperationException(string.Format(
+                    UtilResources.FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file, Path));
+            var zip = new RandomAccessZipFile(zipFilePath);
+            var entry = zip.FindEntry(entryName);
+            if (entry == null)
+                throw new FileNotFoundException(string.Format(
+                    UtilResources.FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_, entryName, zipFilePath), Path);
+            return new PooledZipEntryStream(connectionPool, zip, entry, Path);
+        }
+
+        /// <summary>
         /// The last-write time of the file. For a path inside a zip this is the time of the
         /// outermost .zip file (the whole archive is what actually changes on disk).
         /// </summary>

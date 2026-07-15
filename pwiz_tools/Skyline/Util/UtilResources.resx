@@ -272,6 +272,9 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_" xml:space="preserve">
     <value>The entry {0} was not found in the zip file {1}.</value>
   </data>
+  <data name="FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file" xml:space="preserve">
+    <value>{0} is not a path inside a zip file.</value>
+  </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Uploading_File" xml:space="preserve">
     <value>Uploading File</value>
   </data>

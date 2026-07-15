@@ -1312,12 +1312,14 @@ namespace pwiz.Skyline.Model.Results
 
         public MeasuredResults LoadFinalCache(string cachePath, IProgressStatus status, ILoadMonitor loader, SrmDocument doc)
         {
-            if (!File.Exists(cachePath))
+            // The cache (.skyd) may live inside an in-place .sky.zip, so go through FilePath.
+            var cacheFilePath = new FilePath(cachePath);
+            if (!cacheFilePath.Exists())
             {
                 return ChangeFinalCacheIncomplete(true);
             }
 
-            using var stream = File.OpenRead(cachePath);
+            using var stream = cacheFilePath.OpenRead();
             var cachedFilePaths = ChromatogramCache.GetCachedFilePaths(stream).ToHashSet();
             if (!Chromatograms.SelectMany(chrom => chrom.MSDataFilePaths).All(cachedFilePaths.Contains))
             {

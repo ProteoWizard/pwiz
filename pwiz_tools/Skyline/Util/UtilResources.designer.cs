@@ -568,6 +568,12 @@ namespace pwiz.Skyline.Util {
             }
         }
 
+        public static string FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file {
+            get {
+                return ResourceManager.GetString("FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file", resourceCulture);
+            }
+        }
+
         public static string PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened {
             get {
                 return ResourceManager.GetString("PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" +
