@@ -888,6 +888,10 @@ namespace pwiz.Osprey.Tasks
             }
             else if (!librarySuppliesDecoys)
             {
+                // GenerateAllWithCollisionDetection interns the freshly-minted
+                // decoy strings ("DECOY_"+accession / modified sequence) through
+                // its own pool and logs the collapse summary; no post-pass
+                // interning is needed here.
                 decoys = DecoyGenerator.GenerateAllWithCollisionDetection(
                     library, config, ctx.LogInfo, out List<LibraryEntry> validTargets);
                 library = validTargets;
@@ -1045,7 +1049,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.ExitCode = 1;
                     return false;
                 }
-                var manifestStats = manifest.ApplyToLibrary(library, pairingState);
+                var manifestStats = manifest.ApplyToLibrary(library, pairingState, ctx.LogInfo);
                 pairingStats.NPairedViaManifest = manifestStats.NPaired;
                 if (manifestStats.NProteinsReplaced > 0)
                 {
@@ -1677,6 +1681,20 @@ namespace pwiz.Osprey.Tasks
                     _calibrationMassUnit = !string.IsNullOrEmpty(ms1Cal?.Unit) ? ms1Cal.Unit : ms2Cal?.Unit;
             }
 
+            // Calibration-phase memory boundary (companion to the perfile-scoring-peak
+            // capture below). The [MEM] line's working_set peak is the calibration
+            // high-water mark before scoring pushes it higher; its managed_heap is taken
+            // WITHOUT a forced GC, so the ~1.65 GB float[][] dense XCorr cache
+            // (Calibrator.PreprocessWindowsForXcorr) -- released inside ResolveCalibration
+            // but not yet collected here -- is still counted, sizing the calibration peak.
+            // The paired retention snapshot forces its own GC first (dotMemory), so it
+            // captures the post-calibration FLOOR that scoring inherits (library + spectra)
+            // rather than the transient cache. Both are no-ops off a profiling run
+            // (OSPREY_LOG_MEMORY unset / no dotMemory attached), so the batch and the
+            // regression golden are unaffected; the per-file fan-out reaches this per file.
+            ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"post-calibration");
+            ProfilerHooks.CaptureRetentionSnapshot(@"post-calibration");
+
             // Optional early exit after Stage 3 (calibration only, no main search).
             // Used for Stage 1-3 perf benchmarking and walking up to the main
             // search incrementally without paying the Stage 4 cost.
@@ -1805,7 +1823,12 @@ namespace pwiz.Osprey.Tasks
                 fullLibrary, spectra, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
-                context);
+                context,
+                // Stage-4 scores a file once, then only DeduplicateDoubleCounting
+                // (RT-only) touches these spectra -- let RunCoelutionScoring free
+                // each raw m/z array as it builds the calibrated copy, so the two
+                // ~4 GB copies never coexist. Stage-6 rescore must NOT set this.
+                consumeInputMzs: true);
             swScoring.Stop();
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001

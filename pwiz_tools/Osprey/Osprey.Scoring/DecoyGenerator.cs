@@ -148,13 +148,48 @@ namespace pwiz.Osprey.Scoring
             decoy.Fragments = RecalculateFragments(target, positionMapping, decoySequence);
 
             // Update protein IDs to indicate decoy
-            decoy.ProteinIds = new List<string>();
-            foreach (string p in target.ProteinIds)
-                decoy.ProteinIds.Add("DECOY_" + p);
-
-            decoy.GeneNames = new List<string>(target.GeneNames);
+            decoy.ProteinIds = BuildDecoyProteinIds(target.ProteinIds, null);
+            decoy.GeneNames = CopyGeneNames(target.GeneNames, null);
 
             return decoy;
+        }
+
+        /// <summary>
+        /// Build the decoy's protein IDs ("DECOY_" + each target accession),
+        /// interning through <paramref name="interner"/> when supplied. Empty /
+        /// null input yields the shared empty array.
+        /// </summary>
+        private static string[] BuildDecoyProteinIds(
+            IReadOnlyList<string> targetProteinIds, LibraryStringInterner interner)
+        {
+            if (targetProteinIds == null || targetProteinIds.Count == 0)
+                return Array.Empty<string>();
+            var pids = new string[targetProteinIds.Count];
+            for (int i = 0; i < targetProteinIds.Count; i++)
+            {
+                string decoyAcc = "DECOY_" + targetProteinIds[i];
+                pids[i] = interner != null ? interner.Intern(decoyAcc) : decoyAcc;
+            }
+            return pids;
+        }
+
+        /// <summary>
+        /// Copy the target's gene names into the decoy, interning through
+        /// <paramref name="interner"/> when supplied. Empty / null input yields
+        /// the shared empty array.
+        /// </summary>
+        private static string[] CopyGeneNames(
+            IReadOnlyList<string> targetGeneNames, LibraryStringInterner interner)
+        {
+            if (targetGeneNames == null || targetGeneNames.Count == 0)
+                return Array.Empty<string>();
+            var genes = new string[targetGeneNames.Count];
+            for (int i = 0; i < targetGeneNames.Count; i++)
+            {
+                string g = targetGeneNames[i];
+                genes[i] = interner != null ? interner.Intern(g) : g;
+            }
+            return genes;
         }
 
         /// <summary>
@@ -238,7 +273,16 @@ namespace pwiz.Osprey.Scoring
                 results[i] = (null, null, 3);
             });
 
-            // Collect results (sequential, preserves order)
+            // Collect results (sequential, preserves order). Interning runs
+            // here rather than in the parallel body because the pool is a plain
+            // single-threaded dictionary. Decoys mint fresh strings ("DECOY_" +
+            // accession, "DECOY_" + modified sequence) that the target load
+            // never interned, so every decoy peptide of a protein would
+            // otherwise hold a duplicate copy (huge proteins -- titin / obscurin
+            // / nebulin -- dominate the string-duplicate retention view). One
+            // pool per decoy build; only object identity changes, so the
+            // regression golden stays byte-identical.
+            var interner = new LibraryStringInterner();
             validTargets = new List<LibraryEntry>(targets.Count);
             var decoys = new List<LibraryEntry>(targets.Count);
             foreach (var r in results)
@@ -246,16 +290,63 @@ namespace pwiz.Osprey.Scoring
                 switch (r.kind)
                 {
                     case 0: nSkipped++; break;
-                    case 1: nReversed++; validTargets.Add(r.target); decoys.Add(r.decoy); break;
-                    case 2: nCycled++; validTargets.Add(r.target); decoys.Add(r.decoy); break;
+                    case 1: nReversed++; validTargets.Add(r.target); decoys.Add(InternDecoy(r.decoy, interner)); break;
+                    case 2: nCycled++; validTargets.Add(r.target); decoys.Add(InternDecoy(r.decoy, interner)); break;
                     case 3: nExcluded++; break;
                 }
             }
 
+            interner.LogSummary(logInfo);
             logInfo(string.Format(
                 "Generated {0} decoys from {1} targets ({2} excluded due to collisions)",
                 decoys.Count, targets.Count, nExcluded));
             return decoys;
+        }
+
+        /// <summary>
+        /// Intern the freshly-minted string fields of a decoy entry (Sequence,
+        /// ModifiedSequence, each Modification.Name, ProteinIds, GeneNames)
+        /// through the shared pool. The decoy was just built by this class, so
+        /// reassigning its interned arrays touches nothing shared. Only string
+        /// identity changes.
+        /// </summary>
+        private static LibraryEntry InternDecoy(LibraryEntry decoy, LibraryStringInterner interner)
+        {
+            decoy.Sequence = interner.Intern(decoy.Sequence);
+            decoy.ModifiedSequence = interner.Intern(decoy.ModifiedSequence);
+
+            var mods = decoy.Modifications;
+            if (mods.Count > 0)
+            {
+                var internedMods = new Modification[mods.Count];
+                for (int i = 0; i < mods.Count; i++)
+                {
+                    var m = mods[i];
+                    m.Name = interner.Intern(m.Name);
+                    internedMods[i] = m;
+                }
+                decoy.Modifications = internedMods;
+            }
+
+            var pids = decoy.ProteinIds;
+            if (pids.Count > 0)
+            {
+                var internedPids = new string[pids.Count];
+                for (int i = 0; i < pids.Count; i++)
+                    internedPids[i] = interner.Intern(pids[i]);
+                decoy.ProteinIds = internedPids;
+            }
+
+            var genes = decoy.GeneNames;
+            if (genes.Count > 0)
+            {
+                var internedGenes = new string[genes.Count];
+                for (int i = 0; i < genes.Count; i++)
+                    internedGenes[i] = interner.Intern(genes[i]);
+                decoy.GeneNames = internedGenes;
+            }
+
+            return decoy;
         }
 
         /// <summary>
@@ -278,10 +369,10 @@ namespace pwiz.Osprey.Scoring
                 target.Modifications, positionMapping);
             decoy.Fragments = RecalculateFragmentsStatic(
                 target, positionMapping, decoySequence);
-            decoy.ProteinIds = new List<string>();
-            foreach (string p in target.ProteinIds)
-                decoy.ProteinIds.Add("DECOY_" + p);
-            decoy.GeneNames = new List<string>(target.GeneNames);
+            // Strings stay un-interned here (this runs in a Parallel.For body);
+            // the sequential collection loop interns every decoy afterwards.
+            decoy.ProteinIds = BuildDecoyProteinIds(target.ProteinIds, null);
+            decoy.GeneNames = CopyGeneNames(target.GeneNames, null);
             return decoy;
         }
 
@@ -395,14 +486,14 @@ namespace pwiz.Osprey.Scoring
         /// AnalysisPipeline can build decoys using a collision-checked sequence
         /// while reusing the remapping logic.
         /// </summary>
-        public static List<Modification> RemapModificationsStatic(
-            List<Modification> modifications, int[] positionMapping)
+        public static Modification[] RemapModificationsStatic(
+            IReadOnlyList<Modification> modifications, int[] positionMapping)
         {
             var instance = new DecoyGenerator();
             return instance.RemapModifications(modifications, positionMapping);
         }
 
-        private List<Modification> RemapModifications(List<Modification> modifications, int[] positionMapping)
+        private Modification[] RemapModifications(IReadOnlyList<Modification> modifications, int[] positionMapping)
         {
             // Create reverse mapping: old_pos -> new_pos
             var reverseMap = new Dictionary<int, int>();
@@ -411,6 +502,9 @@ namespace pwiz.Osprey.Scoring
                 reverseMap[positionMapping[newPos]] = newPos;
             }
 
+            // A modification whose old position has no entry in the reverse map
+            // is dropped, so the count is not known up front; accumulate in a
+            // list and return an array (empty -> shared empty array).
             var remapped = new List<Modification>();
             foreach (var m in modifications)
             {
@@ -426,21 +520,21 @@ namespace pwiz.Osprey.Scoring
                     });
                 }
             }
-            return remapped;
+            return remapped.Count == 0 ? Array.Empty<Modification>() : remapped.ToArray();
         }
 
         /// <summary>
         /// Public static wrapper for <see cref="RecalculateFragments"/> so that
         /// AnalysisPipeline can rebuild fragments for a collision-checked decoy.
         /// </summary>
-        public static List<LibraryFragment> RecalculateFragmentsStatic(
+        public static LibraryFragment[] RecalculateFragmentsStatic(
             LibraryEntry target, int[] positionMapping, string decoySequence)
         {
             var instance = new DecoyGenerator();
             return instance.RecalculateFragments(target, positionMapping, decoySequence);
         }
 
-        private List<LibraryFragment> RecalculateFragments(
+        private LibraryFragment[] RecalculateFragments(
             LibraryEntry target, int[] positionMapping, string decoySequence)
         {
             int seqLen = target.Sequence.Length;
@@ -513,7 +607,10 @@ namespace pwiz.Osprey.Scoring
                 }
             }
 
-            return result;
+            // Fragments are filtered (b/y swap can drop out-of-range or
+            // uncomputable ordinals), so the count is not known up front;
+            // accumulate in a list and return an array.
+            return result.Count == 0 ? Array.Empty<LibraryFragment>() : result.ToArray();
         }
 
         private double? CalculateFragmentMz(
