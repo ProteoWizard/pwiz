@@ -1827,7 +1827,12 @@ namespace pwiz.Osprey.Tasks
                 fullLibrary, spectra, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
-                context);
+                context,
+                // Stage-4 scores a file once, then only DeduplicateDoubleCounting
+                // (RT-only) touches these spectra -- let RunCoelutionScoring free
+                // each raw m/z array as it builds the calibrated copy, so the two
+                // ~4 GB copies never coexist. Stage-6 rescore must NOT set this.
+                consumeInputMzs: true);
             swScoring.Stop();
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001

@@ -71,7 +71,8 @@ namespace pwiz.Osprey.Scoring
             MzCalibrationResult ms2Calibration,
             MzCalibrationResult ms1Calibration,
             ScoringContext context,
-            string passLabel = null)
+            string passLabel = null,
+            bool consumeInputMzs = false)
         {
             var config = context.Config;
             var allEntries = new List<FdrEntry>();
@@ -120,6 +121,16 @@ namespace pwiz.Osprey.Scoring
                         Mzs = correctedMzs,
                         Intensities = s.Intensities
                     });
+                    // Free the input's m/z array as we copy it: on a calibrated
+                    // file the calibrated copy doubles the ~4 GB of MS2 m/z during
+                    // scoring, and the caller no longer needs the raw m/z after this
+                    // call (DeduplicateDoubleCounting reads only RetentionTime).
+                    // Intensities are shared into the copy, so keep them. Gated by
+                    // consumeInputMzs: only the single Stage-4 caller passes true --
+                    // the Stage-6 rescore loop calls this repeatedly on ONE shared
+                    // spectra list, so it must NOT null (the next call reads s.Mzs).
+                    if (consumeInputMzs)
+                        s.Mzs = null;
                 }
             }
             else
