@@ -2881,6 +2881,18 @@ namespace pwiz.Skyline {
                 return ResourceManager.GetString("SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read", resourceCulture);
             }
         }
+
+        public static string SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__", resourceCulture);
+            }
+        }
+
+        public static string SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_", resourceCulture);
+            }
+        }
         
         /// <summary>
         ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings..

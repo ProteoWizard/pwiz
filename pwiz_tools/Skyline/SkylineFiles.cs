@@ -221,6 +221,17 @@ namespace pwiz.Skyline
 
         public bool OpenSharedFile(string zipPath, FormEx parentWindow = null)
         {
+            // CONSIDER: If every file that needs random access (.skyd, .blib) is stored
+            // uncompressed, open the document in place from the .zip without extracting
+            // (sets SharedZipFilePath). For now, always extract.
+            return ExtractAndOpenSharedFile(zipPath, parentWindow);
+        }
+
+        /// <summary>
+        /// Extracts a .sky.zip to a new folder next to it and opens the extracted document.
+        /// </summary>
+        private bool ExtractAndOpenSharedFile(string zipPath, FormEx parentWindow = null)
+        {
             try
             {
                 var sharing = new SrmDocumentSharing(zipPath);
@@ -294,6 +305,9 @@ namespace pwiz.Skyline
 
         public bool OpenFile(string path, FormEx parentWindow = null)
         {
+            // Opening a document normally (from a file on disk) clears any in-place .zip backing.
+            SharedZipFilePath = null;
+
             // Remove any extraneous temporary chromatogram spill files.
             // ReSharper disable LocalizableElement
             var spillDirectory = Path.Combine(Path.GetDirectoryName(path) ?? "", "xic");
@@ -3522,8 +3536,30 @@ namespace pwiz.Skyline
             ShowImportPeptideSearchDlg(ImportPeptideSearchDlg.Workflow.feature_detection);
         }
 
+        /// <summary>
+        /// When the current document was opened directly (in place) from a .sky.zip without
+        /// extracting, this is the path of that .zip; otherwise null. Operations that need the
+        /// document's files on disk prompt to extract first (see <see cref="CheckDocumentExists"/>).
+        /// </summary>
+        public string SharedZipFilePath { get; set; }
+
         private bool CheckDocumentExists(String errorMsg)
         {
+            // A document opened directly from a .zip has no files on disk to modify. Offer to
+            // extract everything to a folder first, then reopen from there.
+            if (SharedZipFilePath != null)
+            {
+                var message = TextUtil.LineSeparate(
+                    string.Format(SkylineResources.SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__, SharedZipFilePath),
+                    SkylineResources.SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_);
+                if (MultiButtonMsgDlg.Show(this, message, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                    return false;
+                // Extract to a new folder and reopen from there (this clears SharedZipFilePath).
+                // The operation is aborted; the user re-initiates it now that the files are on disk.
+                ExtractAndOpenSharedFile(SharedZipFilePath, this);
+                return false;
+            }
+
             if (string.IsNullOrEmpty(DocumentFilePath))
             {
                 if (MultiButtonMsgDlg.Show(this,errorMsg,Resources.OK) == DialogResult.Cancel)
