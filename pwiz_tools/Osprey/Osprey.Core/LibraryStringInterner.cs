@@ -76,6 +76,31 @@ namespace pwiz.Osprey.Core
         }
 
         /// <summary>
+        /// Intern every element of <paramref name="items"/> and return them as a
+        /// fresh array (null / empty -&gt; the shared empty array), preserving
+        /// enumeration order. The array-backed form (rather than a <c>List</c>)
+        /// drops the per-list growth slack, matching how the loaders and decoy
+        /// generator fill <c>LibraryEntry</c> members. Values other than string
+        /// identity are unchanged, so output stays byte-identical.
+        /// </summary>
+        public string[] InternToArray(ICollection<string> items)
+        {
+            if (items == null || items.Count == 0)
+                return Array.Empty<string>();
+            var result = new string[items.Count];
+            int i = 0;
+            foreach (var s in items)
+                result[i++] = Intern(s);
+            return result;
+        }
+
+        /// <summary>Number of distinct values the pool retains.</summary>
+        public int DistinctCount { get { return _pool.Count; } }
+
+        /// <summary>Total non-null <see cref="Intern"/> calls seen.</summary>
+        public long TotalReferences { get { return _totalRefs; } }
+
+        /// <summary>
         /// Log a one-line distinct/total summary of what this pool collapsed.
         /// No-op when <paramref name="logInfo"/> is null.
         /// </summary>

@@ -261,7 +261,8 @@ namespace pwiz.Osprey.IO
         /// manifest's <c>peptide_type</c> column is taken as the source
         /// of truth.
         /// </summary>
-        public ManifestApplyStats ApplyToLibrary(IList<LibraryEntry> library, PairingState state)
+        public ManifestApplyStats ApplyToLibrary(IList<LibraryEntry> library, PairingState state,
+            Action<string> logInfo = null)
         {
             var stats = new ManifestApplyStats();
             if (library == null || library.Count == 0 || state == null)
@@ -335,11 +336,30 @@ namespace pwiz.Osprey.IO
 
             // Replace library ProteinIds with the manifest's clean
             // accessions for every sequence the manifest covers and
-            // whose stored ProteinIds disagree.
+            // whose stored ProteinIds disagree. The manifest overrides
+            // nearly every entry of a library-decoy run (one source
+            // protein maps to many peptides), so materialize each
+            // replacement through a shared interner into a read-only
+            // array: a fresh List per entry would discard the loader's
+            // string interning for almost the whole resident library.
+            // Interning is identity-only, so output stays byte-identical.
             stats.NProteinsReplaced = proteinOverride.Count;
-            foreach (var kv in proteinOverride)
+            if (proteinOverride.Count > 0)
             {
-                library[kv.Key].ProteinIds = new List<string>(kv.Value);
+                var interner = new LibraryStringInterner();
+                foreach (var kv in proteinOverride)
+                    library[kv.Key].ProteinIds = interner.InternToArray(kv.Value);
+                if (logInfo != null)
+                {
+                    long total = interner.TotalReferences;
+                    double pct = total > 0
+                        ? 100.0 * (total - interner.DistinctCount) / total
+                        : 0.0;
+                    logInfo(string.Format(
+                        @"Library-decoy mode: interned manifest protein accessions " +
+                        @"({0} distinct / {1} total, {2:F1}% collapsed)",
+                        interner.DistinctCount, total, pct));
+                }
             }
 
             // Walk every target-side bucket; pair with the matching

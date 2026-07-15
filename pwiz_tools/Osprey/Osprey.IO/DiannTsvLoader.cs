@@ -110,8 +110,8 @@ namespace pwiz.Osprey.IO
                     data.Charge, data.PrecursorMz, data.RetentionTime);
                 entry.Modifications = modifications;
                 entry.Fragments = data.Fragments.ToArray();
-                entry.ProteinIds = InternToArray(data.ProteinIds, interner);
-                entry.GeneNames = InternToArray(data.GeneNames, interner);
+                entry.ProteinIds = interner.InternToArray(data.ProteinIds);
+                entry.GeneNames = interner.InternToArray(data.GeneNames);
                 entry.IsDecoy = data.IsDecoy;
 
                 entries.Add(entry);
@@ -139,20 +139,6 @@ namespace pwiz.Osprey.IO
                 m.Name = interner.Intern(m.Name);
                 result[i] = m;
             }
-            return result;
-        }
-
-        /// <summary>
-        /// Intern each element of <paramref name="list"/> and return them as an
-        /// array (empty / null -> shared empty array).
-        /// </summary>
-        private static string[] InternToArray(List<string> list, LibraryStringInterner interner)
-        {
-            if (list == null || list.Count == 0)
-                return Array.Empty<string>();
-            var result = new string[list.Count];
-            for (int i = 0; i < list.Count; i++)
-                result[i] = interner.Intern(list[i]);
             return result;
         }
 

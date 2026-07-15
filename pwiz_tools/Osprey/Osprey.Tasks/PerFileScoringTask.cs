@@ -1049,7 +1049,7 @@ namespace pwiz.Osprey.Tasks
                     ctx.ExitCode = 1;
                     return false;
                 }
-                var manifestStats = manifest.ApplyToLibrary(library, pairingState);
+                var manifestStats = manifest.ApplyToLibrary(library, pairingState, ctx.LogInfo);
                 pairingStats.NPairedViaManifest = manifestStats.NPaired;
                 if (manifestStats.NProteinsReplaced > 0)
                 {
