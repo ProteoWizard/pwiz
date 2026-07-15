@@ -266,6 +266,18 @@ namespace pwiz.Osprey.Tasks
                     perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                 if (fileResult != null)
                     scoredFileNames.Add(fileName);
+                // Single-file scoring memory boundary. The pre-GC line's working_set
+                // peak is the in-scoring high-water mark (the ~tens-of-GB envelope one
+                // file's Stage 1-4 needs); the forced-GC line is the PERSISTENT set that
+                // survives -- the two together separate transient scoring buffers from
+                // genuinely retained structure ("why does one file need so much, and
+                // what is actually held"). When a dotMemory session is attached
+                // (Profile-Osprey.ps1 -MemoryProfile) the forced-GC probe also captures a
+                // retention snapshot here. Zero cost when OSPREY_LOG_MEMORY is unset; the
+                // multi-file batch never takes this single-file branch.
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"single file scored (pre-GC)");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-scored-live",
+                    string.Format(@"(post-GC, after scoring {0})", fileName));
             }
             else if (effectiveParallelism == 1)
             {
@@ -1701,6 +1713,19 @@ namespace pwiz.Osprey.Tasks
             var scoredEntries = ScoreAndDeduplicate(
                 fullLibrary, spectra, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
+
+            // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
+            // work targets. Here scoredEntries still hold every heavy per-entry array
+            // (Features / CwtCandidates / FragmentMzs / FragmentIntensities /
+            // ReferenceXic*), and the spectra + library are still resident. Those arrays
+            // are dropped a few lines below (the #4355 write-then-null), so the later
+            // perfile-scored-live probe captures only the post-release floor and CANNOT
+            // show them -- a forced-GC snapshot never captures unreferenced objects.
+            // Deliberately a direct SnapshotReady-gated capture (NOT via a forced-GC [MEM]
+            // boundary): a no-op on the batch (no profiler attached), fires only under
+            // Profile-Osprey.ps1 -MemoryProfile, and dotMemory forces its own GC so the
+            // captured live set is the true retained peak (arrays are live here, so kept).
+            ProfilerHooks.CaptureRetentionSnapshot(@"perfile-scoring-peak");
 
             // Optional: write per-entry feature TSV for comparison against Rust's PIN output
             if (config.WritePin)
