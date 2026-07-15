@@ -193,6 +193,7 @@
     <Compile Include="RemovePeakFromAllTest.cs" />
     <Compile Include="ReorderElementsTest.cs" />
     <Compile Include="ReportsHelpDocumentationTest.cs" />
+    <Compile Include="RetentionTimeManagerSaveAsTest.cs" />
     <Compile Include="RetentionTimeManagerTest.cs" />
     <Compile Include="RetentionTimeRegressionExceptionTest.cs" />
     <Compile Include="RunToRunRecalcRegressionTest.cs" />

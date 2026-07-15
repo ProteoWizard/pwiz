@@ -463,6 +463,16 @@ namespace pwiz.Skyline.Model.RetentionTimes
 
             public Library Library { get; private set; }
 
+            /// <summary>
+            /// Returns a copy of this <see cref="LibraryTarget"/> which uses a different <see cref="Library"/>.
+            /// This is used when a library has been renamed but is otherwise unchanged, so that the alignment
+            /// target continues to compare equal and the existing alignments do not have to be recomputed.
+            /// </summary>
+            public LibraryTarget ChangeLibrary(Library library)
+            {
+                return new LibraryTarget(RegressionMethod, library);
+            }
+
             protected override double? ScoreSequence(Target target)
             {
                 return _medianRetentionTimes.Value?.GetRetentionTime(target);
