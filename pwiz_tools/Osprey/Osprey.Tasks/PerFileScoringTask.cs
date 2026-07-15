@@ -266,6 +266,18 @@ namespace pwiz.Osprey.Tasks
                     perFileCalibrations, perFileIsolationMz, validityKey, ctx);
                 if (fileResult != null)
                     scoredFileNames.Add(fileName);
+                // Single-file scoring memory boundary. The pre-GC line's working_set
+                // peak is the in-scoring high-water mark (the ~tens-of-GB envelope one
+                // file's Stage 1-4 needs); the forced-GC line is the PERSISTENT set that
+                // survives -- the two together separate transient scoring buffers from
+                // genuinely retained structure ("why does one file need so much, and
+                // what is actually held"). When a dotMemory session is attached
+                // (Profile-Osprey.ps1 -MemoryProfile) the forced-GC probe also captures a
+                // retention snapshot here. Zero cost when OSPREY_LOG_MEMORY is unset; the
+                // multi-file batch never takes this single-file branch.
+                ProfilerHooks.LogMemoryStatsIfEnabled(ctx.LogInfo, @"single file scored (pre-GC)");
+                ProfilerHooks.LogManagedHeapAfterGcIfEnabled(ctx.LogInfo, @"perfile-scored-live",
+                    string.Format(@"(post-GC, after scoring {0})", fileName));
             }
             else if (effectiveParallelism == 1)
             {
