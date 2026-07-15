@@ -49,7 +49,8 @@ public static class SpectrumListFactory
 
     /// <summary>Applies a single filter specification, providing the document's <see cref="MSData"/>
     /// for filters that need run-level metadata (e.g. <c>titleMaker</c>).</summary>
-    public static ISpectrumList Wrap(ISpectrumList inner, string filterSpec, MSData? msd)
+    public static ISpectrumList Wrap(ISpectrumList inner, string filterSpec, MSData? msd,
+                                     IterationListenerRegistry? ilr = null)
     {
         ArgumentNullException.ThrowIfNull(inner);
         ArgumentException.ThrowIfNullOrWhiteSpace(filterSpec);
@@ -62,6 +63,16 @@ public static class SpectrumListFactory
         if (!s_builders.TryGetValue(NormalizeName(name), out var builder))
             throw new ArgumentException($"Unknown filter '{name}'. Known: {string.Join(", ", s_builders.Keys)}");
 
+        // diaUmpire is the only ported filter that reports progress, and the generic
+        // builder delegate has no IterationListenerRegistry slot; hand it the registry
+        // directly so its "[step N of M]" messages reach the log. cpp threads the ilr to
+        // every filterCreator, but diaUmpire is the only consumer we currently need it for.
+        if (ilr != null && NormalizeName(name) == "diaumpire")
+        {
+            ArgumentNullException.ThrowIfNull(msd, "diaUmpire needs the source MSData (for run + instrument context).");
+            return ParseDiaUmpire(args, msd, inner, ilr);
+        }
+
         return builder(args, inner, msd);
     }
 
@@ -70,12 +81,13 @@ public static class SpectrumListFactory
         => Wrap(inner, filterSpecs, msd: null);
 
     /// <summary>Applies a sequence of filters in order, with MSData context.</summary>
-    public static ISpectrumList Wrap(ISpectrumList inner, IEnumerable<string> filterSpecs, MSData? msd)
+    public static ISpectrumList Wrap(ISpectrumList inner, IEnumerable<string> filterSpecs, MSData? msd,
+                                     IterationListenerRegistry? ilr = null)
     {
         ArgumentNullException.ThrowIfNull(inner);
         ArgumentNullException.ThrowIfNull(filterSpecs);
         foreach (var spec in filterSpecs)
-            inner = Wrap(inner, spec, msd);
+            inner = Wrap(inner, spec, msd, ilr);
         return inner;
     }
 
@@ -86,7 +98,7 @@ public static class SpectrumListFactory
     /// document-level <see cref="MSData.DataProcessings"/> list. Returns the (possibly new)
     /// inner spectrum list — same return as the cpp factory.
     /// </summary>
-    public static ISpectrumList Wrap(MSData msd, IList<string> filterSpecs)
+    public static ISpectrumList Wrap(MSData msd, IList<string> filterSpecs, IterationListenerRegistry? ilr = null)
     {
         ArgumentNullException.ThrowIfNull(msd);
         ArgumentNullException.ThrowIfNull(filterSpecs);
@@ -94,7 +106,7 @@ public static class SpectrumListFactory
         var sl = msd.Run.SpectrumList;
         if (sl is null) return null!;
 
-        sl = Wrap(sl, filterSpecs, msd);
+        sl = Wrap(sl, filterSpecs, msd, ilr);
         msd.Run.SpectrumList = sl;
 
         // Promote any new DataProcessing record on the wrapped list to the top-level
@@ -920,7 +932,8 @@ public static class SpectrumListFactory
             _ => throw new ArgumentException($"demultiplex: unknown optimization '{s}'"),
         };
 
-    private static DiaUmpire.SpectrumList_DiaUmpire ParseDiaUmpire(string args, MSData msd, ISpectrumList inner)
+    private static DiaUmpire.SpectrumList_DiaUmpire ParseDiaUmpire(string args, MSData msd, ISpectrumList inner,
+                                                                   IterationListenerRegistry? ilr = null)
     {
         // cpp filterCreator_diaUmpire: required `params=<filepath>`, no other args.
         string paramsFilepath = TakeKeyValue(ref args, "params=", "");
@@ -939,7 +952,7 @@ public static class SpectrumListFactory
         if (!string.IsNullOrEmpty(args))
             throw new ArgumentException($"diaUmpire: unhandled text in argument string: \"{args}\"");
 
-        return new DiaUmpire.SpectrumList_DiaUmpire(msd, inner, new DiaUmpire.Config(paramsFilepath));
+        return new DiaUmpire.SpectrumList_DiaUmpire(msd, inner, new DiaUmpire.Config(paramsFilepath), ilr);
     }
 
     private static SpectrumList_MZRefiner ParseMzRefiner(string args, MSData msd)

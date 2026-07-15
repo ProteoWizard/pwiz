@@ -16,6 +16,7 @@ public sealed class Converter
     private readonly MsConvertConfig _config;
     private readonly TextWriter _log;
     private readonly ReaderList _readers;
+    private readonly IterationListenerRegistry? _progressRegistry;
 
     /// <summary>Creates a converter with the given configuration. Output goes to <paramref name="log"/> (stderr-style).</summary>
     public Converter(MsConvertConfig config, TextWriter? log = null)
@@ -23,6 +24,16 @@ public sealed class Converter
         ArgumentNullException.ThrowIfNull(config);
         _config = config;
         _log = log ?? TextWriter.Null;
+        // In verbose mode, one shared progress registry drives both the filter chain
+        // (e.g. diaUmpire's "[step N of M]" messages during its lazy pull) and the
+        // writer's per-spectrum progress, so long-running filters report progress to the
+        // log/host. Period 100 so even smallish files show intermediate lines (the
+        // registry always fires on the final iteration).
+        if (_config.Verbose)
+        {
+            _progressRegistry = new IterationListenerRegistry();
+            _progressRegistry.AddListener(new ConsoleProgressListener(_log), iterationPeriod: 100);
+        }
         // Include Thermo + Bruker + Waters + Agilent + Sciex alongside the built-in mzML/MGF
         // readers so vendor files auto-detect by extension/identity. Vendor projects always
         // build, so Reader.Identify() works in every configuration. When the build was made
@@ -199,7 +210,7 @@ public sealed class Converter
             // MSData-shaped overload threads the run context through to filters that need it
             // (mzRefiner, turbocharger, precursorRefine, titleMaker) AND promotes new
             // DataProcessing records to msd.DataProcessings.
-            SpectrumListFactory.Wrap(msd, _config.Filters);
+            SpectrumListFactory.Wrap(msd, _config.Filters, _progressRegistry);
         }
 
         if (_config.ChromatogramFilters.Count > 0 && msd.Run.ChromatogramList is not null)
@@ -230,16 +241,6 @@ public sealed class Converter
             outputFile += ".gz";
         if (_config.Verbose) _log.WriteLine($"writing {outputFile}");
 
-        // In verbose mode, attach a console listener so per-spectrum progress shows up on the
-        // log. Period of 100 so smallish files still show at least one intermediate line (the
-        // registry always fires on the final iteration).
-        IterationListenerRegistry? registry = null;
-        if (_config.Verbose)
-        {
-            registry = new IterationListenerRegistry();
-            registry.AddListener(new ConsoleProgressListener(_log), iterationPeriod: 100);
-        }
-
         // Write to <outputFile>.partial, then rename. Mirrors cpp msconvert.cpp's
         // writeAtomically — prevents an incomplete file from being mistaken for a
         // valid conversion when the vendor library throws partway through (e.g.
@@ -253,7 +254,7 @@ public sealed class Converter
         if (File.Exists(partial)) File.Delete(partial);
         try
         {
-            MSDataFile.Write(msd, partial, _config.WriteConfig, registry);
+            MSDataFile.Write(msd, partial, _config.WriteConfig, _progressRegistry);
         }
         catch
         {
