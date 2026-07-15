@@ -50,6 +50,15 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public static readonly string[] RandomAccessExtensions = { @".skyd", @".blib" };
 
+        /// <summary>
+        /// The file name suffixes a shared document .zip is expected to contain. For now, a .zip is
+        /// opened in place (without extracting) only if it contains only these and its
+        /// <see cref="RandomAccessExtensions"/> files are stored uncompressed. (Longer term
+        /// <c>OpenSharedFile</c> will start reading the .sky from the zip and decide, once it has read
+        /// the settings_summary, whether it can read everything in place or must extract.)
+        /// </summary>
+        public static readonly string[] DocumentZipSuffixes = { @".sky", @".sky.view", @".sky.log", @".skyd", @".blib" };
+
         private TemporaryDirectory _tempDir;
         public static string FILTER_SHARING
         {

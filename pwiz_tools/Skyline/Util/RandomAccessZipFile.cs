@@ -84,6 +84,30 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// True if every entry's name ends with one of the given suffixes (case-insensitive). Used
+        /// to recognize a .sky.zip that contains only the expected document files (so it is safe to
+        /// open in place). Suffixes may be compound, e.g. ".sky.view".
+        /// </summary>
+        public bool ContainsOnlyEntriesWithSuffixes(params string[] suffixes)
+        {
+            foreach (var entry in Entries)
+            {
+                bool matched = false;
+                foreach (var suffix in suffixes)
+                {
+                    if (entry.FileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched)
+                    return false;
+            }
+            return true;
+        }
+
+        /// <summary>
         /// Finds the entry whose in-zip path matches <paramref name="entryPath"/>, comparing on the
         /// full path with separators normalized to '/', case-insensitively. Returns null if none.
         /// </summary>

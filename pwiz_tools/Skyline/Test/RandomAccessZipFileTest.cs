@@ -250,6 +250,36 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(skyPath.TryGetZipByteRange(out _, out _, out _));
         }
 
+        [TestMethod]
+        public void TestContainsOnlyEntriesWithSuffixes()
+        {
+            TestContext.EnsureTestResultsDir();
+            var bytes = MakeRandomBytes(10000, seed: 5);
+            var suffixes = new[] { ".sky", ".sky.view", ".sky.log", ".skyd", ".blib" };
+            string docOnly = TestContext.GetTestResultsPath("doconly.zip");
+            string hasExtra = TestContext.GetTestResultsPath("hasextra.zip");
+
+            using (var zf = new ZipFile(Encoding.UTF8))
+            {
+                var d = zf.AddEntry("doc.skyd", bytes); d.CompressionMethod = CompressionMethod.None;
+                var b = zf.AddEntry("lib.blib", bytes); b.CompressionMethod = CompressionMethod.None;
+                zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 2000)));
+                zf.AddEntry("doc.sky.view", Encoding.UTF8.GetBytes(new string('y', 500)));
+                zf.Save(docOnly);
+            }
+            using (var zf = new ZipFile(Encoding.UTF8))
+            {
+                zf.AddEntry("doc.sky", Encoding.UTF8.GetBytes(new string('x', 2000)));
+                zf.AddEntry("extra.raw", bytes); // not an allowed document suffix
+                zf.Save(hasExtra);
+            }
+
+            Assert.IsTrue(new RandomAccessZipFile(docOnly).ContainsOnlyEntriesWithSuffixes(suffixes));
+            Assert.IsFalse(new RandomAccessZipFile(hasExtra).ContainsOnlyEntriesWithSuffixes(suffixes));
+            // ".sky.view" must not be mistaken for ".sky" or a disallowed ".view".
+            Assert.IsTrue(new RandomAccessZipFile(docOnly).ContainsOnlyEntriesWithSuffixes(suffixes));
+        }
+
         private static byte[] MakeRandomBytes(int count, int seed)
         {
             var rnd = new Random(seed);
