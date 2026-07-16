@@ -28,6 +28,7 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Osprey.Chromatography;
 using pwiz.Osprey.Core;
+using pwiz.Osprey.IO;
 using pwiz.Osprey.Scoring;
 using pwiz.Osprey.Tasks;
 
@@ -1237,6 +1238,77 @@ namespace pwiz.Osprey.Test
             for (int i = 0; i < triples.Length; i += 3)
                 map[(uint)triples[i]] = new KeyValuePair<double, double>(triples[i + 1], triples[i + 2]);
             return map;
+        }
+
+        #endregion
+
+        #region Streaming calibration window resolution
+
+        /// <summary>
+        /// Verifies the streaming-calibration window resolver
+        /// (<see cref="Calibrator.TryResolveCalibrationWindow"/>) reproduces the resident
+        /// window resolution's four branches: a direct key hit with the Contains collision
+        /// guard, the neighbour +/-1 keys (taken WITHOUT a Contains check), the linear scan
+        /// for the first containing window, and no-match. This is the permanent verifier for
+        /// the fallback sub-paths a standard tiled-DIA golden file may never exercise -- the
+        /// only place streaming calibration could silently diverge from the resident path.
+        /// </summary>
+        [TestMethod]
+        public void TestStreamingCalibrationWindowResolution()
+        {
+            // Three windows, added out of key order so the file-order linear scan is exercised:
+            //   C narrow at key 7000, A wide at key 5000, B wide at key 6000.
+            var ms2 = new List<Spectrum>
+            {
+                MakeCalWindowMs2(700.00, 0.02, 0.02), // C: Contains [699.98, 700.02), key 7000
+                MakeCalWindowMs2(500.00, 0.50, 0.50), // A: Contains [499.50, 500.50), key 5000
+                MakeCalWindowMs2(600.00, 2.00, 2.00), // B: Contains [598.00, 602.00), key 6000
+            };
+            string path = Path.GetTempFileName();
+            try
+            {
+                SpectraCache.SaveSpectraCache(path, ms2, new List<MS1Spectrum>());
+                var index = SpectraWindowIndex.BuildFromCache(path);
+                Assert.IsNotNull(index);
+
+                int key;
+                // 1. Direct hit + Contains -> the entry's own window key.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(500.00, index, out key));
+                Assert.AreEqual(5000, key);
+                // 2. Direct hit + NOT Contains: round(699.96*10)=7000 hits C, but 699.96 is
+                //    below C's [699.98, 700.02) -> the collision guard returns false (no fallthrough).
+                Assert.IsFalse(Calibrator.TryResolveCalibrationWindow(699.96, index, out key));
+                // 3. Neighbour -1: round(500.12*10)=5001 absent, 5000 present -> 5000 (no Contains check).
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(500.12, index, out key));
+                Assert.AreEqual(5000, key);
+                // 4. Neighbour +1: round(599.92*10)=5999 absent, 5998 absent, 6000 present -> 6000.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(599.92, index, out key));
+                Assert.AreEqual(6000, key);
+                // 5. Linear scan: round(598.50*10)=5985, +/-1 absent, but 598.50 is in B [598, 602) -> 6000.
+                Assert.IsTrue(Calibrator.TryResolveCalibrationWindow(598.50, index, out key));
+                Assert.AreEqual(6000, key);
+                // 6. No window contains 800.0 -> false.
+                Assert.IsFalse(Calibrator.TryResolveCalibrationWindow(800.00, index, out key));
+            }
+            finally
+            {
+                File.Delete(path);
+            }
+        }
+
+        // A minimal MS2 with a specific isolation window (center +/- offsets) and two peaks,
+        // for the window-resolution test.
+        private static Spectrum MakeCalWindowMs2(double center, double lowerOffset, double upperOffset)
+        {
+            return new Spectrum
+            {
+                ScanNumber = (uint)(center * 10),
+                RetentionTime = 10.0,
+                PrecursorMz = center,
+                IsolationWindow = new IsolationWindow(center, lowerOffset, upperOffset),
+                Mzs = new[] { 150.0, 250.0 },
+                Intensities = new[] { 100f, 200f }
+            };
         }
 
         #endregion

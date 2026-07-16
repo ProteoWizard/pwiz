@@ -1681,7 +1681,7 @@ namespace pwiz.Osprey.Tasks
         /// file-encounter order) WITHOUT loading peaks. Returns false when no window resolves
         /// (the entry produces no match, as in the resident path).
         /// </summary>
-        private static bool TryResolveCalibrationWindow(
+        internal static bool TryResolveCalibrationWindow(
             double precursorMz, SpectraWindowIndex windowIndex, out int resolvedWindowKey)
         {
             int windowKey = (int)Math.Round(precursorMz * 10.0);
