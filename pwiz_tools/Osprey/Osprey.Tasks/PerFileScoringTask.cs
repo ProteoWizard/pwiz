@@ -1817,18 +1817,20 @@ namespace pwiz.Osprey.Tasks
             ScoringContext context, OspreyConfig config,
             string fileName, PipelineContext ctx)
         {
-            // Run coelution scoring across all isolation windows
+            // Run coelution scoring across all isolation windows. Stage-4 scores a
+            // file once, then only DeduplicateDoubleCounting (RT-only) touches these
+            // spectra -- consumeInputMzs frees each raw m/z array as the resident
+            // provider builds the calibrated copy, so the two ~4 GB copies never
+            // coexist. (Stage-6 rescore must NOT set this: it re-scores one shared
+            // list repeatedly.) The provider's Ms2RetentionTimes carry the only
+            // spectra data the dedup below needs.
+            var spectraProvider = new ResidentWindowSpectraProvider(spectra, ms2Cal, consumeInputMzs: true);
             var swScoring = Stopwatch.StartNew();
             var scoredEntries = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
-                fullLibrary, spectra, ms1Spectra,
+                fullLibrary, spectraProvider, ms1Spectra,
                 isolationWindows, rtCalibration,
                 ms2Cal, ms1Cal,
-                context,
-                // Stage-4 scores a file once, then only DeduplicateDoubleCounting
-                // (RT-only) touches these spectra -- let RunCoelutionScoring free
-                // each raw m/z array as it builds the calibrated copy, so the two
-                // ~4 GB copies never coexist. Stage-6 rescore must NOT set this.
-                consumeInputMzs: true);
+                context);
             swScoring.Stop();
             double scoringSeconds = swScoring.Elapsed.TotalSeconds;
             double ratePerSec = scoringSeconds > 0.001
@@ -1851,7 +1853,7 @@ namespace pwiz.Osprey.Tasks
             // window). Mirrors osprey/crates/osprey/src/pipeline.rs at the
             // same call site, between scoring and pair-deduplication.
             scoredEntries = ScoringTaskShared.Pipeline(ctx).DeduplicateDoubleCounting(
-                scoredEntries, fullLibrary, spectra, ms2Cal,
+                scoredEntries, fullLibrary, spectraProvider.Ms2RetentionTimes, ms2Cal,
                 isolationWindows, config);
             nScoredTargets = scoredEntries.Count(e => !e.IsDecoy);
             nScoredDecoys = scoredEntries.Count(e => e.IsDecoy);
