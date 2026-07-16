@@ -1728,15 +1728,42 @@ namespace pwiz.Osprey.Tasks
             // in ScoringPipeline feeds this slice -- the long phase that shows the
             // bulk of a file's motion on the aggregate line.
             MultiProgressReporter.Current?.BeginSegment();
+
+            // Build the window-spectra source for scoring. Calibration (Stage 3) is
+            // done, so the whole resident MS2 list is no longer needed at once:
+            // index the on-disk cache and STREAM each isolation window's peaks in and
+            // out during scoring, releasing the ~6 GB resident MS2 first. The cache
+            // is normally present -- LoadSpectra either loaded it or wrote it after
+            // parsing mzML. Fall back to the resident provider (which materializes the
+            // calibrated copy, as before) only when the cache cannot be indexed (a
+            // save failure or a fingerprint change); output is identical either way.
+            IWindowSpectraProvider spectraProvider;
+            var windowIndex = SpectraWindowIndex.BuildFromCache(
+                SpectraCache.GetCachePath(inputFile), inputFile);
+            if (windowIndex != null && windowIndex.Ms2Count == spectra.Count)
+            {
+                // Release the resident MS2 before scoring reads it back per window.
+                spectra = null;
+                spectraProvider = new StreamingWindowSpectraProvider(windowIndex, ms2Cal);
+            }
+            else
+            {
+                var resident = new ResidentWindowSpectraProvider(spectra, ms2Cal, consumeInputMzs: true);
+                spectra = null; // the provider's calibrated copy now owns the peaks
+                spectraProvider = resident;
+            }
+
             var scoredEntries = ScoreAndDeduplicate(
-                fullLibrary, spectra, ms1Spectra, isolationWindows,
+                fullLibrary, spectraProvider, ms1Spectra, isolationWindows,
                 rtCalibration, ms2Cal, ms1Cal, context, config, fileName, ctx);
 
             // Retention snapshot at the in-scoring PEAK -- this is the moment the memory
             // work targets. Here scoredEntries still hold every heavy per-entry array
             // (Features / CwtCandidates / FragmentMzs / FragmentIntensities /
-            // ReferenceXic*), and the spectra + library are still resident. Those arrays
-            // are dropped a few lines below (the #4355 write-then-null), so the later
+            // ReferenceXic*) and the library is still resident, but the resident MS2 is
+            // gone on the streaming path (dropped above), which is the reduction this
+            // snapshot exists to confirm. Those per-entry arrays are dropped a few lines
+            // below (the #4355 write-then-null), so the later
             // perfile-scored-live probe captures only the post-release floor and CANNOT
             // show them -- a forced-GC snapshot never captures unreferenced objects.
             // Deliberately a direct SnapshotReady-gated capture (NOT via a forced-GC [MEM]
@@ -1810,21 +1837,17 @@ namespace pwiz.Osprey.Tasks
         /// </summary>
         private List<FdrEntry> ScoreAndDeduplicate(
             List<LibraryEntry> fullLibrary,
-            List<Spectrum> spectra, List<MS1Spectrum> ms1Spectra,
+            IWindowSpectraProvider spectraProvider, List<MS1Spectrum> ms1Spectra,
             List<IsolationWindow> isolationWindows,
             RTCalibration rtCalibration,
             MzCalibrationResult ms2Cal, MzCalibrationResult ms1Cal,
             ScoringContext context, OspreyConfig config,
             string fileName, PipelineContext ctx)
         {
-            // Run coelution scoring across all isolation windows. Stage-4 scores a
-            // file once, then only DeduplicateDoubleCounting (RT-only) touches these
-            // spectra -- consumeInputMzs frees each raw m/z array as the resident
-            // provider builds the calibrated copy, so the two ~4 GB copies never
-            // coexist. (Stage-6 rescore must NOT set this: it re-scores one shared
-            // list repeatedly.) The provider's Ms2RetentionTimes carry the only
-            // spectra data the dedup below needs.
-            var spectraProvider = new ResidentWindowSpectraProvider(spectra, ms2Cal, consumeInputMzs: true);
+            // Run coelution scoring across all isolation windows from the caller's
+            // window-spectra source (streaming per window, or the resident fallback).
+            // Stage-4 scores a file once; then only DeduplicateDoubleCounting touches
+            // the spectra, and it needs only the MS2 RTs the provider carries.
             var swScoring = Stopwatch.StartNew();
             var scoredEntries = ScoringTaskShared.Pipeline(ctx).RunCoelutionScoring(
                 fullLibrary, spectraProvider, ms1Spectra,
