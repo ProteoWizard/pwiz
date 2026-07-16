@@ -1873,6 +1873,26 @@ namespace pwiz.Skyline {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to In order to perform this operation, the files must first be extracted to a folder. Do you want to extract them now?.
+        /// </summary>
+        public static string SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_mu" +
+                        "st_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This document was opened directly from the shared file &apos;{0}&apos;..
+        /// </summary>
+        public static string SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_share" +
+                        "d_file__0__", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Click OK to open the document anyway..
         /// </summary>
         public static string SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway {
@@ -2882,18 +2902,6 @@ namespace pwiz.Skyline {
             }
         }
 
-        public static string SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__", resourceCulture);
-            }
-        }
-
-        public static string SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_ {
-            get {
-                return ResourceManager.GetString("SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_", resourceCulture);
-            }
-        }
-        
         /// <summary>
         ///   Looks up a localized string similar to Go to Tools &gt; Options &gt; Panorama tab to add the server to your settings..
         /// </summary>

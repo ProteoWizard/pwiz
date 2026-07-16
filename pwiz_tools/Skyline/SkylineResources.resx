@@ -656,6 +656,12 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   <data name="SkylineWindow_ChangeSettings_Change_settings" xml:space="preserve">
     <value>Change settings</value>
   </data>
+  <data name="SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_" xml:space="preserve">
+    <value>In order to perform this operation, the files must first be extracted to a folder. Do you want to extract them now?</value>
+  </data>
+  <data name="SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__" xml:space="preserve">
+    <value>This document was opened directly from the shared file '{0}'.</value>
+  </data>
   <data name="SkylineWindow_CheckResults_Click_OK_to_open_the_document_anyway" xml:space="preserve">
     <value>Click OK to open the document anyway.</value>
   </data>
@@ -979,12 +985,6 @@ Try uninstalling and reinstalling Skyline, or contact your IT department if the 
   </data>
   <data name="SkylineWindow_OpenSharedFile_The_zip_file__0__cannot_be_read" xml:space="preserve">
     <value>The zip file {0} cannot be read.</value>
-  </data>
-  <data name="SkylineWindow_CheckDocumentExists_This_document_was_opened_directly_from_the_shared_file__0__" xml:space="preserve">
-    <value>This document was opened directly from the shared file '{0}'.</value>
-  </data>
-  <data name="SkylineWindow_CheckDocumentExists_In_order_to_perform_this_operation__the_files_must_first_be_extracted_to_a_folder__Do_you_want_to_extract_them_now_" xml:space="preserve">
-    <value>In order to perform this operation, the files must first be extracted to a folder. Do you want to extract them now?</value>
   </data>
   <data name="SkylineWindow_PublishToSavedUri_This_file_was_last_uploaded_to___0_" xml:space="preserve">
     <value>This file was last uploaded to: {0}</value>

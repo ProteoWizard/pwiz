@@ -257,18 +257,21 @@ namespace pwiz.Skyline.Util
                 int dataPos = pos + 4;
                 if (id == ZIP64_EXTRA_ID)
                 {
+                    // Only read within this extra field's own declared size (and never past the
+                    // buffer), so a malformed size can't pull bytes from a following extra field.
+                    int fieldEnd = Math.Min(dataPos + size, extra.Length);
                     // Fields appear in this fixed order, but only for those that were the sentinel.
-                    if (needUncompressed && dataPos + 8 <= extra.Length)
+                    if (needUncompressed && dataPos + 8 <= fieldEnd)
                     {
                         uncompressedSize = BitConverter.ToInt64(extra, dataPos);
                         dataPos += 8;
                     }
-                    if (needCompressed && dataPos + 8 <= extra.Length)
+                    if (needCompressed && dataPos + 8 <= fieldEnd)
                     {
                         compressedSize = BitConverter.ToInt64(extra, dataPos);
                         dataPos += 8;
                     }
-                    if (needOffset && dataPos + 8 <= extra.Length)
+                    if (needOffset && dataPos + 8 <= fieldEnd)
                     {
                         localHeaderOffset = BitConverter.ToInt64(extra, dataPos);
                     }
@@ -476,20 +479,24 @@ namespace pwiz.Skyline.Util
 
         public override long Seek(long offset, SeekOrigin origin)
         {
+            long newPosition;
             switch (origin)
             {
                 case SeekOrigin.Begin:
-                    _position = offset;
+                    newPosition = offset;
                     break;
                 case SeekOrigin.Current:
-                    _position += offset;
+                    newPosition = _position + offset;
                     break;
                 case SeekOrigin.End:
-                    _position = _length + offset;
+                    newPosition = _length + offset;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(origin));
             }
+            if (newPosition < 0)
+                throw new IOException(@"An attempt was made to move the position before the beginning of the stream.");
+            _position = newPosition;
             return _position;
         }
 

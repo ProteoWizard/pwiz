@@ -184,6 +184,12 @@ Recognized isotopes include: {2}</value>
   <data name="DirectoryEx_DirectoryCopy_Source_directory_does_not_exist_or_could_not_be_found__" xml:space="preserve">
     <value>Source directory does not exist or could not be found: </value>
   </data>
+  <data name="FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file" xml:space="preserve">
+    <value>{0} is not a path inside a zip file.</value>
+  </data>
+  <data name="FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_" xml:space="preserve">
+    <value>The entry {0} was not found in the zip file {1}.</value>
+  </data>
   <data name="FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists" xml:space="preserve">
     <value>Cannot save to {0}. Check the path to make sure the directory exists.</value>
   </data>
@@ -269,15 +275,6 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   <data name="PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" xml:space="preserve">
     <value>The file {0} has been modified, since it was first opened.</value>
   </data>
-  <data name="FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_" xml:space="preserve">
-    <value>The entry {0} was not found in the zip file {1}.</value>
-  </data>
-  <data name="FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file" xml:space="preserve">
-    <value>{0} is not a path inside a zip file.</value>
-  </data>
-  <data name="ZipVfs_EnsureVfsRegistered_Unable_to_load__0_" xml:space="preserve">
-    <value>Unable to load {0}.</value>
-  </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Uploading_File" xml:space="preserve">
     <value>Uploading File</value>
   </data>
@@ -310,6 +307,9 @@ Charge states are inferred from the presence of these adduct components:{1}</val
   </data>
   <data name="XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element" xml:space="preserve">
     <value>Attempt to serialize list missing an element.</value>
+  </data>
+  <data name="ZipVfs_EnsureVfsRegistered_Unable_to_load__0_" xml:space="preserve">
+    <value>Unable to load {0}.</value>
   </data>
   <data name="ParsedMolecule_SplitFormulaAndMasses_Cannot_parse___0___as_a_mass_offset_in_the_text___1___" xml:space="preserve">
     <value>Cannot parse "{0}" as a mass offset in the text "{1}"</value>

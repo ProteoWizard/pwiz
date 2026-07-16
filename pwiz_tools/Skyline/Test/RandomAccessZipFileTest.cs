@@ -118,6 +118,11 @@ namespace pwiz.SkylineTest
                 int n = window.Read(buf, 0, 100);
                 Assert.AreEqual(10, n);
                 Assert.AreEqual(0, window.Read(buf, 0, 100));
+
+                // Seek honors the same bounds as the Position setter: seeking before the start throws.
+                Assert.AreEqual(length, window.Seek(0, SeekOrigin.End));
+                AssertEx.ThrowsException<IOException>(() => window.Seek(-1, SeekOrigin.Begin));
+                AssertEx.ThrowsException<IOException>(() => window.Seek(-length - 1, SeekOrigin.End));
             }
         }
 

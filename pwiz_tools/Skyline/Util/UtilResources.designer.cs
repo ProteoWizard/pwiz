@@ -317,6 +317,24 @@ namespace pwiz.Skyline.Util {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} is not a path inside a zip file..
+        /// </summary>
+        public static string FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file {
+            get {
+                return ResourceManager.GetString("FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The entry {0} was not found in the zip file {1}..
+        /// </summary>
+        public static string FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_ {
+            get {
+                return ResourceManager.GetString("FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Cannot save to {0}. Check the path to make sure the directory exists..
         /// </summary>
         public static string FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists {
@@ -562,24 +580,6 @@ namespace pwiz.Skyline.Util {
         /// <summary>
         ///   Looks up a localized string similar to The file {0} has been modified, since it was first opened..
         /// </summary>
-        public static string FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_ {
-            get {
-                return ResourceManager.GetString("FilePath_OpenRead_The_entry__0__was_not_found_in_the_zip_file__1_", resourceCulture);
-            }
-        }
-
-        public static string FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file {
-            get {
-                return ResourceManager.GetString("FilePath_OpenPooledStream__0__is_not_a_path_inside_a_zip_file", resourceCulture);
-            }
-        }
-
-        public static string ZipVfs_EnsureVfsRegistered_Unable_to_load__0_ {
-            get {
-                return ResourceManager.GetString("ZipVfs_EnsureVfsRegistered_Unable_to_load__0_", resourceCulture);
-            }
-        }
-
         public static string PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened {
             get {
                 return ResourceManager.GetString("PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened" +
@@ -683,6 +683,15 @@ namespace pwiz.Skyline.Util {
         public static string XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element {
             get {
                 return ResourceManager.GetString("XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to load {0}..
+        /// </summary>
+        public static string ZipVfs_EnsureVfsRegistered_Unable_to_load__0_ {
+            get {
+                return ResourceManager.GetString("ZipVfs_EnsureVfsRegistered_Unable_to_load__0_", resourceCulture);
             }
         }
     }
