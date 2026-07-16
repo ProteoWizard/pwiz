@@ -2272,16 +2272,29 @@ namespace pwiz.Osprey.Tasks
             string cachePath = SpectraCache.GetCachePath(inputFile);
             if (File.Exists(cachePath))
             {
-                // Cache hit: index the file directly (header pass only) -- never build the
-                // full MS2 list. Returns null when stale/invalid (bad magic/version or the
-                // source fingerprint changed), which falls through to a re-parse below.
-                var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
-                if (hit != null)
+                try
                 {
-                    ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
-                    return hit;
+                    // Cache hit: index the file directly (header pass only) -- never build the
+                    // full MS2 list. Returns null when stale/invalid (bad magic/version or the
+                    // source fingerprint changed), which falls through to a re-parse below.
+                    var hit = SpectraWindowIndex.BuildFromCache(cachePath, inputFile);
+                    if (hit != null)
+                    {
+                        ctx.LogInfo(string.Format("Streaming spectra from cache: {0}", cachePath));
+                        return hit;
+                    }
+                    ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
                 }
-                ctx.LogInfo("Spectra cache stale or invalid; re-parsing mzML.");
+                catch (Exception ex)
+                {
+                    // A present-but-corrupt/truncated cache body (intact header, e.g. an
+                    // interrupted write) throws during the index pass; re-parse the mzML and
+                    // rewrite the cache rather than faulting the file. Matches the old
+                    // LoadSpectra fallback. Only the miss-path re-index below stays a hard
+                    // error, since that indexes a cache we just wrote.
+                    ctx.LogWarning(string.Format(
+                        "Failed to index spectra cache: {0}. Re-parsing mzML.", ex.Message));
+                }
             }
 
             // Miss/stale/absent: parse the mzML once (materialized only transiently here),

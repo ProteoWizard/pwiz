@@ -675,6 +675,30 @@ namespace pwiz.Osprey.Test
                 Assert.AreEqual(full.Ms2Spectra.Count, index.AllMs2Rts.Count);
                 for (int i = 0; i < full.Ms2Spectra.Count; i++)
                     Assert.AreEqual(full.Ms2Spectra[i].RetentionTime, index.AllMs2Rts[i], 0.0);
+
+                // MS1 loaded off the same header pass (after the MS2 records) is byte-identical
+                // to the full load's MS1 -- streaming Stages 1-4 get MS1 without the MS2 list.
+                Assert.AreEqual(full.Ms1Spectra.Count, index.Ms1Spectra.Count);
+                for (int i = 0; i < full.Ms1Spectra.Count; i++)
+                {
+                    Assert.AreEqual(full.Ms1Spectra[i].ScanNumber, index.Ms1Spectra[i].ScanNumber);
+                    Assert.AreEqual(full.Ms1Spectra[i].RetentionTime, index.Ms1Spectra[i].RetentionTime, 0.0);
+                    CollectionAssert.AreEqual(full.Ms1Spectra[i].Mzs, index.Ms1Spectra[i].Mzs);
+                    CollectionAssert.AreEqual(full.Ms1Spectra[i].Intensities, index.Ms1Spectra[i].Intensities);
+                }
+
+                // First-cycle isolation windows: the distinct windows of DIA cycle 1 (records
+                // 1-3; record 4's 500.03 repeats key 5000 and ends the cycle), each carrying
+                // that key's first record's window, sorted by center. Mirrors
+                // ScoringTaskShared.ExtractIsolationWindows so scoring's window fan-out is
+                // unchanged without materializing the MS2 list.
+                Assert.AreEqual(3, index.IsolationWindows.Count);
+                for (int i = 0; i < 3; i++)
+                {
+                    Assert.AreEqual(ms2[i].IsolationWindow.Center, index.IsolationWindows[i].Center, 0.0);
+                    Assert.AreEqual(ms2[i].IsolationWindow.LowerOffset, index.IsolationWindows[i].LowerOffset, 0.0);
+                    Assert.AreEqual(ms2[i].IsolationWindow.UpperOffset, index.IsolationWindows[i].UpperOffset, 0.0);
+                }
             }
             finally
             {
