@@ -1209,5 +1209,47 @@ namespace pwiz.Osprey.Test
                 list.Add(new KeyValuePair<string, List<FdrEntry>>("file" + (i + 1), files[i]));
             return list;
         }
+
+        /// <summary>
+        /// Frontier math on a fully hand-computable case: N=4 runs, r=1 (combined factor 2),
+        /// 10% target. 100 real precursors detected in all 4 runs (run-q 0.005, best-peak exp-q
+        /// 0.01); 100 real detected in only 1 run (exp-q 0.20, off the exp grid); 10 entrapment
+        /// detected in 1 run (exp-q 0.20). Every asserted value is derived by hand.
+        /// </summary>
+        [TestMethod]
+        public void TestReproducibilityFrontier()
+        {
+            var precs = new List<ModelDiagnosticsData.FrontierPrec>();
+            for (int i = 0; i < 100; i++) precs.Add(MakeFrontierPrec(false, 0.01, 0.005, 4));
+            for (int i = 0; i < 100; i++) precs.Add(MakeFrontierPrec(false, 0.20, 0.005, 1));
+            for (int i = 0; i < 10; i++) precs.Add(MakeFrontierPrec(true, 0.20, 0.005, 1));
+
+            var f = ModelDiagnosticsData.BuildFrontier(precs, 4, 1.0, 0.10);
+            Assert.IsNotNull(f);
+            Assert.AreEqual(4, f.N);
+            Assert.AreEqual(0.10, f.Target, 1e-9);
+            // per-run: k=1 admits all 200 real at 20/210 = 9.5% FDP (<= 10%); k>=2 keeps only the
+            // 100 four-run real (entrapment does not reproduce) at 0% FDP.
+            CollectionAssert.AreEqual(new[] { 200, 100, 100, 100 }, f.PerRun.Yield);
+            Assert.AreEqual(1, f.PeakK);
+            Assert.AreEqual(200, f.PerRunPeak);
+            // best-peak "standard": real with exp-q <= 10% -> only the 100 with exp-q 0.01.
+            Assert.AreEqual(100, f.BestPeak);
+            Assert.AreEqual(0.0, f.BestPeakFdp, 1e-9);
+            Assert.AreEqual(1.0, f.GainPct, 1e-9);        // (200-100)/100
+            Assert.AreEqual(0.5, f.SacrificePct, 1e-9);   // (200-100)/200
+            // experiment-wide sees only the 100 exp-q-0.01 real (the 0.20 group is off-grid).
+            Assert.AreEqual(100, f.ExpPeak);
+            // content overlap at the peak: per-run-optimal = all 200 real; exp-optimal = the 100
+            // exp-q-0.01 real. Intersection 100, union 200 => Jaccard 0.5.
+            Assert.AreEqual(0.5, f.OverlapJaccard, 1e-9);
+        }
+
+        private static ModelDiagnosticsData.FrontierPrec MakeFrontierPrec(bool entrapment, double expQ, double runQ, int nRuns)
+        {
+            var p = new ModelDiagnosticsData.FrontierPrec { IsEntrapment = entrapment, MinExpQ = expQ };
+            p.RunQBins[ModelDiagnosticsData.FrontierBin(runQ)] = (ushort)nRuns;
+            return p;
+        }
     }
 }

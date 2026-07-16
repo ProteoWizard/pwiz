@@ -595,6 +595,27 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                 data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
             }
 
+            // ---- reproducibility frontier (first-pass, pre-compaction; entrapment-gated) ----
+            // Mirror the streaming accumulator: fold every un-gated target-side row through the
+            // shared FoldFrontier so the two paths byte-match.
+            if (data.HasEntrapment)
+            {
+                double r = entrapmentRatio > 0 ? entrapmentRatio : 1.0;
+                var frontier = new Dictionary<string, FrontierPrec>(StringComparer.Ordinal);
+                foreach (var kvp in perFileEntries)
+                    foreach (var e in kvp.Value)
+                    {
+                        if (e.IsDecoy)
+                            continue;
+                        bool isEntrap = haveManifest
+                            && classByBaseId.TryGetValue(e.EntryId & BASE_ID_MASK, out var fcls)
+                            && fcls == EntrapmentClass.PTarget;
+                        FoldFrontier(frontier, e.ModifiedSequence + "|" + e.Charge, isEntrap,
+                            e.EffectiveRunQvalue(fdrLevel), e.EffectiveExperimentQvalue(fdrLevel));
+                    }
+                data.Frontier = BuildFrontier(frontier.Values, perFileEntries.Count, r, runFdr);
+            }
+
             return data;
         }
 

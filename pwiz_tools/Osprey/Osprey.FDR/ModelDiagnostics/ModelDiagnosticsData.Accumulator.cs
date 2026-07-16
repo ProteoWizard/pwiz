@@ -94,6 +94,11 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
             private readonly Dictionary<uint, EntrapmentClass> _tClass =
                 new Dictionary<uint, EntrapmentClass>();
 
+            // Frontier: un-gated first-pass run-q distribution per target-side precursor, the
+            // one input the reproducibility frontier needs beyond the gated cross-run sets.
+            private readonly Dictionary<string, FrontierPrec> _frontier =
+                new Dictionary<string, FrontierPrec>(StringComparer.Ordinal);
+
             /// <param name="runNames">Input-file names in scoring (input-file) order -- the x for
             /// the per-file table and cross-run curves; also fixes <see cref="FileCount"/>.</param>
             /// <param name="classByBaseId">library base_id -> target-side entrapment class, exactly
@@ -222,6 +227,12 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
                     }
                 }
 
+                // Frontier: fold the UN-GATED first-pass row into the per-precursor run-q tally
+                // (target side only; decoys are not part of the entrapment-measured frontier).
+                if (!isDecoy)
+                    FoldFrontier(_frontier, key, isEntrap,
+                        q.EffectiveRunQvalue(_fdrLevel), q.EffectiveExperimentQvalue(_fdrLevel));
+
                 // --- win fraction per base_id (== BuildWinFraction: best target vs best decoy) ---
                 if (!_bt.TryGetValue(baseId, out var slot))
                 {
@@ -311,6 +322,10 @@ namespace pwiz.Osprey.FDR.ModelDiagnostics
 
                 if (data.HasEntrapment)
                     data.FdpViews = BuildFdpViewsFromPrecs(precs, r, 1);
+
+                // Reproducibility frontier (first-pass, pre-compaction; entrapment-gated).
+                if (data.HasEntrapment)
+                    data.Frontier = BuildFrontier(_frontier.Values, _nFiles, r, _runFdr);
 
                 return data;
             }

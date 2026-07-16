@@ -412,10 +412,8 @@ code{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--grid);pa
       says nothing about <i>how many</i> runs a precursor reproduces in, reproducibility is independent information &mdash; so
       even the experiment-wide gate gains here, and the two routes converge on nearly the same peptides. The dashed line is the
       experiment-wide q&le;target <b>standard</b> (best-peak, no run requirement); the frontier rising above it is the reproducible
-      detections that standard forgoes at the same entrapment-validated FDP. <b>Prototype &mdash; 1st pass only:</b> computed offline
-      from the un-gated <b>1st-pass</b> q distribution, so it reflects 1st-pass q-values and <b>does not change with the
-      Pass&nbsp;1 / Pass&nbsp;2 switch</b> &mdash; the loosen-q sweep needs the full pre-compaction candidate pool, which only the
-      1st pass carries (the 2nd pass is already FDR-compacted). Not yet part of the standard diagnostic data.</p>
+      detections that standard forgoes at the same entrapment-validated FDP. <b>First pass only:</b> the loosen-q sweep needs the
+      full un-gated pre-compaction candidate pool, so this panel is empty in Pass&nbsp;2 (already FDR-compacted).</p>
     <div class="kpis" id="frontierKpis"></div>
     <div class="legend" id="frontierLegend"></div>
     <div class="chartbox" id="frontierChart"></div>
@@ -1405,14 +1403,25 @@ function renderReproTab(b){
     document.getElementById("yieldCutoffNote").innerHTML=note;
   }
 
-  // Prototype iso-FDR frontier: yield (left) + loosest q-cutoff Q* (right) vs run-count
+  // Iso-FDR frontier: yield (left) + loosest q-cutoff Q* (right) vs run-count
   // requirement, both scopes precomputed offline into D.frontier. Dual axis (two different
   // quantities, one scope), scope chosen by the local toggle.
   function drawFrontier(){
     const fr=D.frontier, card=document.getElementById("frontierCard");
     if(!fr||!fr.perRun){if(card)card.style.display="none";return;}
     card.style.display="";
-    const v=scope===0?fr.experiment:fr.perRun, Nn=fr.N, yld=v.yield, qs=v.q;
+    // First-pass, pre-compaction construction: on pass 2 the un-gated candidate pool the loosen-q
+    // sweep needs is gone, so show the explanation with no graph (no message needed on pass 1).
+    if(b.pass===2){
+      document.getElementById("frontierChart").innerHTML="";
+      const kp2=document.getElementById("frontierKpis"); if(kp2)kp2.innerHTML="";
+      const lg2=document.getElementById("frontierLegend"); if(lg2)lg2.innerHTML="";
+      document.getElementById("frontierNote").innerHTML="This panel is a <b>first-pass, pre-compaction</b> "+
+        "view: floating the q-cutoff needs the full un-gated candidate pool, which the second pass no longer "+
+        "carries (it is already FDR-compacted). Switch to <b>Pass 1</b> to see it.";
+      return;
+    }
+    const v=scope===0?fr.experiment:fr.perRun, Nn=fr.n, yld=v.yield, qs=v.q;
     const host=document.getElementById("frontierChart");host.innerHTML="";
     const W=700,Hh=340,rm=60,box={l:66,t:18,w:W-66-rm,h:Hh-70};
     const s=svg(W,Hh);host.appendChild(s);
